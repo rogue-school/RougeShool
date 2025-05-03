@@ -4,7 +4,7 @@ using Game.Enemy;
 
 namespace Game.Cards
 {
-    [CreateAssetMenu(menuName = "Card System/Enemy Skill Deck")]
+    [CreateAssetMenu(menuName = "Game Assets/Decks/Enemy Skill Deck")]
     public class EnemySkillDeck : ScriptableObject
     {
         [System.Serializable]

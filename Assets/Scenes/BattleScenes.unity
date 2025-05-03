@@ -284,8 +284,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5fd1ad23edc2bc3428640bfdc41af74a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  player: {fileID: 1166901446}
   playerCardUI: {fileID: 1764266822}
+  enemyCardUI: {fileID: 0}
 --- !u!4 &141623132
 Transform:
   m_ObjectHideFlags: 0
@@ -330,12 +330,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cd5c287de08d24449a42d9952ac12c4d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerUnit: {fileID: 1166901446}
-  cardUIPrefab: {fileID: 0}
-  cardSlots:
-  - {fileID: 439083382}
-  - {fileID: 1797708712}
-  - {fileID: 1156389211}
+  cardSlots: []
 --- !u!4 &222427078
 Transform:
   m_ObjectHideFlags: 0
@@ -1964,8 +1959,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   nameText: {fileID: 1336747713}
-  hpText: {fileID: 878983662}
   portraitImage: {fileID: 864588343}
+  hpText: {fileID: 878983662}
 --- !u!1 &1797708711
 GameObject:
   m_ObjectHideFlags: 0

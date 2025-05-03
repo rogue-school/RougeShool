@@ -1,31 +1,30 @@
 using UnityEngine;
+using Game.Managers;
+using Game.Cards;
+using Game.Characters;
 using Game.Interface;
-using Game.UI;
+using Game.Battle;
 
 namespace Game.UI
 {
-    /// <summary>
-    /// 적의 카드 슬롯 UI에서 SkillCardUI를 표시하고 카드 설정 기능을 담당합니다.
-    /// </summary>
-    public class EnemyCardSlotUI : MonoBehaviour, ICardSlot
+    public class EnemyCardSlotUI : MonoBehaviour
     {
-        [SerializeField] private SkillCardUI cardUI;
-        private ISkillCard currentCard;
+        [SerializeField] private ISkillCard currentCard;
 
         public void SetCard(ISkillCard card)
         {
             currentCard = card;
-            cardUI.SetCard(card);
         }
 
-        public ISkillCard GetCard() => currentCard;
-
-        public bool HasCard() => currentCard != null;
-
-        public void Clear()
+        public void ExecuteEffect(CharacterBase caster, CharacterBase target)
         {
-            currentCard = null;
-            cardUI.SetCard(null);
+            if (BattleTurnManager.Instance.ConsumePlayerBlock())
+            {
+                Debug.Log("[EnemyCardSlotUI] 플레이어의 방어 효과로 적의 공격이 무효화되었습니다.");
+                return;
+            }
+
+            currentCard?.CreateEffect()?.ExecuteEffect(caster, target);
         }
     }
 }

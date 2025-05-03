@@ -1,9 +1,9 @@
-using Game.Units;
+using Game.Characters;
 
-namespace Game.Effects
+namespace Game.Interface
 {
     public interface ICardEffect
     {
-        void ExecuteEffect(Unit caster, Unit target);
+        void ExecuteEffect(CharacterBase caster, CharacterBase target);
     }
 }

@@ -1,31 +1,41 @@
 using UnityEngine;
+using UnityEngine.UI;
+using Game.Cards;
 using Game.Interface;
-using Game.UI;
 
 namespace Game.UI
 {
     /// <summary>
-    /// 플레이어 카드 슬롯 UI에서 SkillCardUI를 표시하고 카드 설정 기능을 담당합니다.
+    /// 플레이어 카드 슬롯 UI를 제어합니다.
     /// </summary>
-    public class PlayerCardSlotUI : MonoBehaviour, ICardSlot
+    public class PlayerCardSlotUI : MonoBehaviour
     {
-        [SerializeField] private SkillCardUI cardUI;
+        [SerializeField] private Image cardImage;
         private ISkillCard currentCard;
 
         public void SetCard(ISkillCard card)
         {
             currentCard = card;
-            cardUI.SetCard(card);
+
+            if (cardImage != null)
+            {
+                cardImage.enabled = true;
+                // cardImage.sprite = card.GetArtwork(); ← 실제 이미지 설정이 필요하다면 사용
+            }
         }
 
-        public ISkillCard GetCard() => currentCard;
-
-        public bool HasCard() => currentCard != null;
-
-        public void Clear()
+        /// <summary>
+        /// 카드 슬롯을 비웁니다.
+        /// </summary>
+        public void ClearSlot()
         {
             currentCard = null;
-            cardUI.SetCard(null);
+
+            if (cardImage != null)
+            {
+                cardImage.sprite = null;
+                cardImage.enabled = false;
+            }
         }
     }
 }

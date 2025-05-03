@@ -1,14 +1,11 @@
 using UnityEngine;
 using UnityEngine.UI;
 using Game.Cards;
-using Game.Units;
 using Game.Interface;
+using Game.Characters;
 
 namespace Game.Battle
 {
-    /// <summary>
-    /// 전투 슬롯에서 카드 효과를 실행하는 UI 슬롯입니다.
-    /// </summary>
     public class BattleCardSlotUI : MonoBehaviour, ICardSlot
     {
         public Image cardImage;
@@ -18,11 +15,10 @@ namespace Game.Battle
         {
             currentCard = card;
             cardImage.enabled = true;
-            // cardImage.sprite = card.GetArtwork(); // 추가 연동 가능
+            // cardImage.sprite = card.GetArtwork();
         }
 
         public ISkillCard GetCard() => currentCard;
-
         public bool HasCard() => currentCard != null;
 
         public void Clear()
@@ -32,7 +28,7 @@ namespace Game.Battle
             cardImage.enabled = false;
         }
 
-        public void ExecuteEffect(Unit caster, Unit target)
+        public void ExecuteEffect(CharacterBase caster, CharacterBase target)
         {
             currentCard?.CreateEffect()?.ExecuteEffect(caster, target);
         }

@@ -1,14 +1,13 @@
 using UnityEngine;
 using Game.Interface;
 using Game.Cards;
-using Game.Effects;
 
 namespace Game.Player
 {
     /// <summary>
     /// 플레이어 전용 스킬 카드 데이터입니다.
     /// </summary>
-    [CreateAssetMenu(menuName = "Card/PlayerSkillCard")]
+    [CreateAssetMenu(menuName = "Game Assets/Skill Cards/Player Skill Card")]
     public class PlayerSkillCard : ScriptableObject, ISkillCard
     {
         [Header("기본 정보")]

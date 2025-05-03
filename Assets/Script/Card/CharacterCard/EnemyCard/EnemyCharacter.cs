@@ -1,20 +1,22 @@
 using UnityEngine;
 using Game.Cards;
 
-namespace Game.Units
+namespace Game.Characters
 {
-    public class EnemyUnit : Unit
+    /// <summary>
+    /// 적 캐릭터 클래스입니다.
+    /// </summary>
+    public class EnemyCharacter : CharacterBase
     {
         public EnemyCharacterData characterData;
 
         private void Awake()
         {
-            currentHP = characterData.maxHP;
+            maxHP = characterData.maxHP;
+            currentHP = maxHP;
         }
 
         public override string GetName() => characterData.characterName;
         public override Sprite GetPortrait() => characterData.portrait;
-        public override int GetMaxHP() => characterData.maxHP;
     }
 }
-

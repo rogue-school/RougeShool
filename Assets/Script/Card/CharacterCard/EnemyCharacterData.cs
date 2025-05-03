@@ -4,7 +4,7 @@ using Game.Enemy;
 
 namespace Game.Cards
 {
-    [CreateAssetMenu(menuName = "Card System/Enemy Character")]
+    [CreateAssetMenu(menuName = "Game Assets/Characters/Enemy Character")]
     public class EnemyCharacterData : ScriptableObject
     {
         public string characterName;
