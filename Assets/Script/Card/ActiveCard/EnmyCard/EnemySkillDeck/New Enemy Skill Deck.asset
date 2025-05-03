@@ -12,4 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9cff11d00aca1ae41bcbc7a920f29d7e, type: 3}
   m_Name: New Enemy Skill Deck
   m_EditorClassIdentifier: 
-  cards: []
+  cards:
+  - card: {fileID: 0}
+    probability: 0
+  - card: {fileID: 0}
+    probability: 0
