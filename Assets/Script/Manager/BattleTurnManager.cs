@@ -1,21 +1,20 @@
-using System.Collections.Generic;
 using UnityEngine;
-using Game.Interface;
 using Game.Battle;
-using Game.Characters;
+using Game.Interface;
+using Game.UI;
 
 namespace Game.Battle
 {
     /// <summary>
-    /// 전투의 턴 흐름, 슬롯 예약, 방어 상태 등을 제어합니다.
+    /// 전투 턴의 흐름과 상태를 제어하는 매니저 클래스입니다.
+    /// 턴 시작, 종료, 가드 활성화, 슬롯 예약 등의 기능을 포함합니다.
     /// </summary>
     public class BattleTurnManager : MonoBehaviour
     {
         public static BattleTurnManager Instance { get; private set; }
 
-        private Dictionary<SlotPosition, CharacterBase> reservedEnemySlots = new();
-        private bool playerBlockActive = false;
-        private bool enemyBlockActive = false;
+        private bool playerGuardActive = false;
+        private bool enemyGuardActive = false;
 
         private void Awake()
         {
@@ -24,95 +23,96 @@ namespace Game.Battle
                 Destroy(gameObject);
                 return;
             }
+
             Instance = this;
-
-            reservedEnemySlots = new Dictionary<SlotPosition, CharacterBase>
-            {
-                { SlotPosition.Front, null },
-                { SlotPosition.Back, null }
-            };
         }
 
         /// <summary>
-        /// 플레이어의 방어 상태를 활성화합니다.
-        /// </summary>
-        public void ActivatePlayerBlock()
-        {
-            playerBlockActive = true;
-        }
-
-        /// <summary>
-        /// 적의 방어 상태를 활성화합니다.
-        /// </summary>
-        public void ActivateEnemyBlock()
-        {
-            enemyBlockActive = true;
-        }
-
-        /// <summary>
-        /// 적의 공격을 플레이어가 방어할 수 있다면 true 반환하고 상태 해제
-        /// </summary>
-        public bool ConsumePlayerBlock()
-        {
-            if (playerBlockActive)
-            {
-                playerBlockActive = false;
-                return true;
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// 플레이어의 공격을 적이 방어할 수 있다면 true 반환하고 상태 해제
-        /// </summary>
-        public bool ConsumeEnemyBlock()
-        {
-            if (enemyBlockActive)
-            {
-                enemyBlockActive = false;
-                return true;
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// 적이 다음 턴에 슬롯을 강제로 선점하도록 예약합니다.
-        /// </summary>
-        public void ReserveEnemySlot(SlotPosition slot, CharacterBase enemy)
-        {
-            reservedEnemySlots[slot] = enemy;
-            Debug.Log($"[BattleTurnManager] {slot} 슬롯이 {enemy.name}에게 예약되었습니다.");
-        }
-
-        /// <summary>
-        /// 해당 슬롯에 예약된 적을 반환합니다. (없으면 null)
-        /// </summary>
-        public CharacterBase GetReservedEnemy(SlotPosition slot)
-        {
-            return reservedEnemySlots.TryGetValue(slot, out var enemy) ? enemy : null;
-        }
-
-        /// <summary>
-        /// 모든 슬롯 예약을 초기화합니다.
-        /// </summary>
-        public void ClearAllReservations()
-        {
-            foreach (var key in reservedEnemySlots.Keys)
-                reservedEnemySlots[key] = null;
-        }
-
-        /// <summary>
-        /// 전투의 새 턴을 시작합니다.
-        /// (추후 확장: 턴 순서 정렬, 카드 활성화 등)
+        /// 새 턴을 시작하며, 슬롯을 초기화하거나 적 AI 행동을 준비합니다.
         /// </summary>
         public void StartNewTurn()
         {
-            Debug.Log("[BattleTurnManager] 새로운 턴을 시작합니다.");
+            Debug.Log("[BattleTurn] 새 턴 시작");
 
-            // 슬롯 예약 초기화
-            ClearAllReservations();
+            // 여기서 필요한 초기화 로직이 있다면 추가
+            playerGuardActive = false;
+            enemyGuardActive = false;
 
-            // 필요 시 턴 순서 확정, 카드 효과 활성화 등 추가
+            // 예: AI 스킬 선택, 카드 생성 등
+        }
+
+        /// <summary>
+        /// 전투 턴을 종료합니다.
+        /// </summary>
+        public void EndTurn()
+        {
+            Debug.Log("[BattleTurn] 턴 종료");
+            playerGuardActive = false;
+            enemyGuardActive = false;
+        }
+
+        /// <summary>
+        /// 플레이어의 가드 효과를 활성화합니다.
+        /// </summary>
+        public void ActivatePlayerGuard()
+        {
+            playerGuardActive = true;
+            Debug.Log("[Guard] 플레이어 가드 활성화됨");
+        }
+
+        /// <summary>
+        /// 적의 가드 효과를 활성화합니다.
+        /// </summary>
+        public void ActivateEnemyGuard()
+        {
+            enemyGuardActive = true;
+            Debug.Log("[Guard] 적 가드 활성화됨");
+        }
+
+        /// <summary>
+        /// 플레이어 가드를 소비하며 차단 여부를 반환합니다.
+        /// </summary>
+        public bool ConsumePlayerGuard()
+        {
+            if (playerGuardActive)
+            {
+                playerGuardActive = false;
+                Debug.Log("[Guard] 플레이어 가드로 적의 공격 무효화");
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 적 가드를 소비하며 차단 여부를 반환합니다.
+        /// </summary>
+        public bool ConsumeEnemyGuard()
+        {
+            if (enemyGuardActive)
+            {
+                enemyGuardActive = false;
+                Debug.Log("[Guard] 적 가드로 플레이어의 공격 무효화");
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 적 카드가 특정 슬롯에 예약되도록 설정합니다.
+        /// </summary>
+        public void ReserveEnemySlot(SlotPosition position, ISkillCard card)
+        {
+            BattleSlotManager.Instance.SetSlot(false, position, card);
+            Debug.Log($"[BattleTurn] 적 슬롯 예약됨 - 위치: {position}, 카드: {card?.GetName()}");
+        }
+
+        /// <summary>
+        /// 플레이어 카드가 특정 슬롯에 예약되도록 설정합니다.
+        /// </summary>
+        public void ReservePlayerSlot(SlotPosition position, ISkillCard card)
+        {
+            BattleSlotManager.Instance.SetSlot(true, position, card);
+            Debug.Log($"[BattleTurn] 플레이어 슬롯 예약됨 - 위치: {position}, 카드: {card?.GetName()}");
         }
     }
 }

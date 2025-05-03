@@ -6,6 +6,7 @@ namespace Game.Player
 {
     /// <summary>
     /// 플레이어 전용 스킬 카드 데이터입니다.
+    /// 카드의 기본 정보와 이펙트를 ScriptableObject로 연결합니다.
     /// </summary>
     [CreateAssetMenu(menuName = "Game Assets/Skill Cards/Player Skill Card")]
     public class PlayerSkillCard : ScriptableObject, ISkillCard
@@ -17,9 +18,8 @@ namespace Game.Player
         [SerializeField] private CardType type;
         [SerializeField] private int coolTime = 0;
 
-        [Header("카드 효과 수치")]
-        [SerializeField] private int attackPower = 5;   // SlashEffect용
-        [SerializeField] private int blockValue = 3;    // BlockEffect용
+        [Header("카드 효과 연결")]
+        [SerializeField] private ScriptableObject effectObject;
 
         public string GetName() => cardName;
         public string GetDescription() => description;
@@ -27,14 +27,16 @@ namespace Game.Player
         public int GetCoolTime() => coolTime;
         public CardType GetCardType() => type;
 
+        /// <summary>
+        /// 카드의 실제 효과 인스턴스를 생성합니다.
+        /// </summary>
         public ICardEffect CreateEffect()
         {
-            return type switch
-            {
-                CardType.Attack => new SlashEffect(attackPower),
-                CardType.Defense => new BlockEffect(blockValue),
-                _ => null
-            };
+            if (effectObject is ICardEffect effect)
+                return effect;
+
+            Debug.LogWarning($"[PlayerSkillCard] '{cardName}'에 효과가 설정되지 않았습니다.");
+            return null;
         }
     }
 }

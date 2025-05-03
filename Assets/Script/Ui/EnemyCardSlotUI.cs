@@ -18,7 +18,7 @@ namespace Game.UI
 
         public void ExecuteEffect(CharacterBase caster, CharacterBase target)
         {
-            if (BattleTurnManager.Instance.ConsumePlayerBlock())
+            if (BattleTurnManager.Instance.ConsumePlayerGuard())
             {
                 Debug.Log("[EnemyCardSlotUI] 플레이어의 방어 효과로 적의 공격이 무효화되었습니다.");
                 return;
