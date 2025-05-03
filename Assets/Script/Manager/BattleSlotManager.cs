@@ -1,44 +1,34 @@
 using UnityEngine;
-using Game.Cards;
+using Game.Interface;
+using Game.Units;
+using Game.Battle;
+using Game.UI;
 
 namespace Game.Battle
 {
+    /// <summary>
+    /// 플레이어 전투 슬롯에 카드가 모두 등록되었는지 확인하고, 실행하는 매니저입니다.
+    /// </summary>
     public class BattleSlotManager : MonoBehaviour
     {
-        public CombatSlotUI firstSlot;
-        public CombatSlotUI secondSlot;
+        [SerializeField] private BattleCardSlotUI frontSlot;
+        [SerializeField] private BattleCardSlotUI backSlot;
 
-        public bool IsReady() => firstSlot.HasCard() && secondSlot.HasCard();
+        [SerializeField] private PlayerUnit playerUnit;
+        [SerializeField] private EnemyUnit enemyUnit;
+
+        public bool IsReady()
+        {
+            return frontSlot.HasCard() && backSlot.HasCard();
+        }
 
         public void StartBattle()
         {
-            if (!IsReady()) return;
+            frontSlot.ExecuteEffect(playerUnit, enemyUnit);
+            backSlot.ExecuteEffect(playerUnit, enemyUnit);
 
-            Debug.Log("=== 전투 시작 ===");
-            firstSlot.ExecuteEffect(null, null);
-            secondSlot.ExecuteEffect(null, null);
-
-            firstSlot.Clear();
-            secondSlot.Clear();
+            frontSlot.Clear();
+            backSlot.Clear();
         }
-
-        public bool TrySetCard(PlayerCardData card)
-        {
-            if (!firstSlot.HasCard())
-            {
-                firstSlot.SetCard(card);
-                return true;
-            }
-
-            if (!secondSlot.HasCard())
-            {
-                secondSlot.SetCard(card);
-                return true;
-            }
-
-            return false;
-        }
-
-        public bool HasEmptySlot() => !firstSlot.HasCard() || !secondSlot.HasCard();
     }
 }

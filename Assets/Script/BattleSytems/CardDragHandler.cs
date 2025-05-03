@@ -1,40 +1,26 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using Game.Interface;
 
-namespace Game.Cards
+namespace Game.Battle
 {
-    [RequireComponent(typeof(CanvasGroup))]
-    public class CardDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+    /// <summary>
+    /// 드래그한 카드를 전투 슬롯에 드롭했을 때 처리하는 핸들러입니다.
+    /// </summary>
+    public class CardDropToSlotHandler : MonoBehaviour, IDropHandler
     {
-        private RectTransform rectTransform;
-        private CanvasGroup canvasGroup;
-        private Vector3 originalPosition;
-        private Transform originalParent;
+        [SerializeField] private MonoBehaviour targetSlot;
 
-        private void Awake()
+        public void OnDrop(PointerEventData eventData)
         {
-            rectTransform = GetComponent<RectTransform>();
-            canvasGroup = GetComponent<CanvasGroup>();
-        }
-
-        public void OnBeginDrag(PointerEventData eventData)
-        {
-            originalPosition = rectTransform.position;
-            originalParent = transform.parent;
-            canvasGroup.blocksRaycasts = false;
-            transform.SetParent(transform.root); // 드래그 중 최상위로
-        }
-
-        public void OnDrag(PointerEventData eventData)
-        {
-            rectTransform.position = Input.mousePosition;
-        }
-
-        public void OnEndDrag(PointerEventData eventData)
-        {
-            transform.position = originalPosition;
-            transform.SetParent(originalParent);
-            canvasGroup.blocksRaycasts = true;
+            if (targetSlot is ICardSlot cardSlot && eventData.pointerDrag != null)
+            {
+                var dragHandler = eventData.pointerDrag.GetComponent<CardDragHandler>();
+                if (dragHandler != null && dragHandler.HasCard())
+                {
+                    cardSlot.SetCard(dragHandler.GetCard());
+                }
+            }
         }
     }
 }

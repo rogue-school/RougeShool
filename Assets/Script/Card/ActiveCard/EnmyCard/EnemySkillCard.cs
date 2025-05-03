@@ -1,0 +1,28 @@
+using UnityEngine;
+using Game.Interface;
+using Game.Effects;
+
+namespace Game.Enemy
+{
+    /// <summary>
+    /// 적 전용 스킬 카드 데이터입니다.
+    /// </summary>
+    [CreateAssetMenu(menuName = "Card/EnemySkillCard")]
+    public class EnemySkillCard : ScriptableObject, ISkillCard
+    {
+        [SerializeField] private string cardName;
+        [SerializeField] private string description;
+        [SerializeField] private Sprite artwork;
+        [SerializeField] private bool isDebuff;
+
+        public string GetName() => cardName;
+        public string GetDescription() => description;
+        public Sprite GetArtwork() => artwork;
+        public bool IsDebuff() => isDebuff;
+
+        public ICardEffect CreateEffect()
+        {
+            return new SlashEffect();
+        }
+    }
+}

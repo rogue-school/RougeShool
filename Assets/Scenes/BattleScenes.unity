@@ -1321,11 +1321,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c76c9eba74241f34490b93cd46c35c8e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currentHP: 10
-  maxHP: 10
-  block: 0
+  maxHP: 20
+  currentHP: 20
   characterData: {fileID: 11400000, guid: 9c9d0e1934596a8468c019151192d34f, type: 2}
-  isForcedRearNextTurn: 0
 --- !u!4 &1166901447
 Transform:
   m_ObjectHideFlags: 0
@@ -1966,8 +1964,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   nameText: {fileID: 1336747713}
-  portraitImage: {fileID: 864588343}
   hpText: {fileID: 878983662}
+  portraitImage: {fileID: 864588343}
 --- !u!1 &1797708711
 GameObject:
   m_ObjectHideFlags: 0

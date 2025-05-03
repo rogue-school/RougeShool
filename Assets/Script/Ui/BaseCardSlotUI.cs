@@ -1,33 +1,38 @@
 using UnityEngine;
-using UnityEngine.UI;
+using Game.Cards;
+using Game.Interface;
 
-namespace Game.Cards
+namespace Game.UI
 {
-    public class BaseCardSlotUI : MonoBehaviour, ICardSlot
+    /// <summary>
+    /// 카드 슬롯의 기본 동작을 정의한 추상 클래스입니다.
+    /// </summary>
+    public abstract class BaseCardSlotUI : MonoBehaviour, ICardSlot
     {
-        public Image cardImage;
-        protected PlayerCardData currentCard;
+        protected ISkillCard currentCard;
 
-        public virtual void SetCard(PlayerCardData card)
+        /// <summary>
+        /// 카드 데이터를 슬롯에 설정합니다.
+        /// </summary>
+        public virtual void SetCard(ISkillCard card)
         {
             currentCard = card;
-            if (cardImage != null)
-            {
-                cardImage.enabled = true;
-            }
         }
 
+        /// <summary>
+        /// 슬롯에 저장된 카드 데이터를 반환합니다.
+        /// </summary>
+        public virtual ISkillCard GetCard()
+        {
+            return currentCard;
+        }
+
+        /// <summary>
+        /// 슬롯을 비웁니다.
+        /// </summary>
         public virtual void Clear()
         {
             currentCard = null;
-            if (cardImage != null)
-            {
-                cardImage.sprite = null;
-                cardImage.enabled = false;
-            }
         }
-
-        public virtual PlayerCardData GetCard() => currentCard;
-        public virtual bool HasCard() => currentCard != null;
     }
 }
