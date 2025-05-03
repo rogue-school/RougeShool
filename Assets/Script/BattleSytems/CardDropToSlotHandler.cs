@@ -1,24 +1,27 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
-using Game.UI;
 using Game.Interface;
+using Game.UI;
 
 namespace Game.Battle
 {
     /// <summary>
-    /// 플레이어가 카드를 드래그하여 전투 슬롯에 놓았을 때 처리합니다.
+    /// 드래그한 카드를 슬롯에 드롭했을 때 처리하는 핸들러입니다.
     /// </summary>
-    public class BattleSlotDropHandler : MonoBehaviour, IDropHandler
+    public class CardDropToSlotHandler : MonoBehaviour, IDropHandler
     {
+        [SerializeField] private MonoBehaviour targetSlot;
+
         public void OnDrop(PointerEventData eventData)
         {
-            var dragged = eventData.pointerDrag;
-            if (dragged != null && dragged.TryGetComponent(out CardUI draggedCard))
+            if (targetSlot is ICardSlot cardSlot && eventData.pointerDrag != null)
             {
-                if (TryGetComponent(out ICardSlot slot))
+                var draggedCard = eventData.pointerDrag.GetComponent<SkillCardUI>();
+                var dragHandler = eventData.pointerDrag.GetComponent<CardDragHandler>();
+
+                if (draggedCard != null && dragHandler != null && dragHandler.HasCard())
                 {
-                    slot.SetCard(draggedCard.cardData);
-                    Destroy(dragged); // 드래그한 원본 제거
+                    cardSlot.SetCard(dragHandler.GetCard());
                 }
             }
         }

@@ -14,6 +14,7 @@ namespace Game.Enemy
         [SerializeField] private string description;
         [SerializeField] private Sprite artwork;
         [SerializeField] private bool isDebuff;
+        [SerializeField] private int damage = 3;
 
         public string GetName() => cardName;
         public string GetDescription() => description;
@@ -22,7 +23,7 @@ namespace Game.Enemy
 
         public ICardEffect CreateEffect()
         {
-            return new SlashEffect();
+            return new SlashEffect(damage);
         }
     }
 }

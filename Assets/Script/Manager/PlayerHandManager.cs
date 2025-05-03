@@ -1,6 +1,4 @@
 using UnityEngine;
-using Game.Cards;
-using UnityEngine;
 using Game.Interface;
 using Game.UI;
 

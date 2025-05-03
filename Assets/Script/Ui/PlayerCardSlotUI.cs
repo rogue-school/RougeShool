@@ -1,28 +1,31 @@
 using UnityEngine;
-using Game.Cards;
 using Game.Interface;
+using Game.UI;
 
 namespace Game.UI
 {
     /// <summary>
-    /// 플레이어 핸드 슬롯 UI에 사용되는 카드 슬롯 컴포넌트입니다.
+    /// 플레이어 카드 슬롯 UI에서 SkillCardUI를 표시하고 카드 설정 기능을 담당합니다.
     /// </summary>
-    public class PlayerCardSlotUI : BaseCardSlotUI
+    public class PlayerCardSlotUI : MonoBehaviour, ICardSlot
     {
         [SerializeField] private SkillCardUI cardUI;
+        private ISkillCard currentCard;
 
-        public override void SetCard(ISkillCard card)
+        public void SetCard(ISkillCard card)
         {
-            base.SetCard(card);
-            if (cardUI != null)
-                cardUI.SetCard(card);
+            currentCard = card;
+            cardUI.SetCard(card);
         }
 
-        public override void Clear()
+        public ISkillCard GetCard() => currentCard;
+
+        public bool HasCard() => currentCard != null;
+
+        public void Clear()
         {
-            base.Clear();
-            if (cardUI != null)
-                cardUI.SetCard(null);
+            currentCard = null;
+            cardUI.SetCard(null);
         }
     }
 }
