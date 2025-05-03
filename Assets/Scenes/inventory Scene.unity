@@ -689,8 +689,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   MaxHp: 20
   currentHp: 0
-  mulyak: 2
+  mulyak: 3
   infoText: {fileID: 1753462368}
+  targetObjectToDisable: {fileID: 418493542}
 --- !u!4 &1030534405
 Transform:
   m_ObjectHideFlags: 0

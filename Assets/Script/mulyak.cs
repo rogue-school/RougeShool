@@ -1,43 +1,51 @@
 using UnityEngine;
-using TMPro; // TextMeshPro 네임스페이스 추가
+using TMPro;
 
 public class ButtonListener : MonoBehaviour
 {
     public int MaxHp = 20;
     public int currentHp;
     public int mulyak = 3;
-    public TextMeshProUGUI infoText; // TextMeshPro용 텍스트 컴포넌트
+    public TextMeshProUGUI infoText;
+    public GameObject targetObjectToDisable;
 
     public void OnButtonClicked()
     {
-        print("물약을 사용했습니다.");
+        // 물약이 없으면 아무 동작도 하지 않음
+        if (mulyak <= 0)
+        {
+            infoText.text = "물약 없음";
 
-        // 텍스트 먼저 설정
-        if (mulyak == 3)
-        {
-            infoText.text = "mulyak X3";
-        }
-        else if (mulyak == 2)
-        {
-            infoText.text = "mulyak X2";
-        }
-        else if (mulyak == 1)
-        {
-            infoText.text = "mulyak X1";
-        }
-        else
-        {
-            infoText.text = "none mulyak";
-            return; // 물약이 없으면 종료
+            if (targetObjectToDisable != null)
+            {
+                targetObjectToDisable.SetActive(false);
+            }
+
+            return;
         }
 
-        // 체력 회복
+        // 체력 회복 (최대 체력 초과 방지)
         if (currentHp < MaxHp)
         {
             currentHp += 1;
         }
 
-        // 물약 소모
+        // 물약 사용
         mulyak -= 1;
+
+        // 텍스트 갱신: 물약이 남아 있으면 수 표시, 없으면 "물약 없음"
+        if (mulyak > 0)
+        {
+            infoText.text = $"mulyak X{mulyak}";
+        }
+        else
+        {
+            infoText.text = "물약 없음";
+
+            if (targetObjectToDisable != null)
+            {
+                targetObjectToDisable.SetActive(false);
+            }
+        }
     }
 }
