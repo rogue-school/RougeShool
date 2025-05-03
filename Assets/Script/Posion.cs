@@ -5,7 +5,7 @@ public class ButtonListener : MonoBehaviour
 {
     public int MaxHp = 20;
     public int currentHp;
-    public int mulyak = 3;
+    public int Posion = 3;
     private int prevMulyak; // 이전 물약 수 기억용
 
     public TextMeshProUGUI infoText;
@@ -13,7 +13,7 @@ public class ButtonListener : MonoBehaviour
 
     void Start()
     {
-        prevMulyak = mulyak; // 초기값 설정
+        prevMulyak = Posion; // 초기값 설정
         UpdateMulyakText();
     }
 
@@ -21,20 +21,20 @@ public class ButtonListener : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.W))
         {
-            mulyak += 1;
+            Posion += 1;
         }
 
         // 물약 수가 바뀌었을 때만 텍스트 갱신
-        if (mulyak != prevMulyak)
+        if (Posion != prevMulyak)
         {
             UpdateMulyakText();
-            prevMulyak = mulyak;
+            prevMulyak = Posion;
         }
     }
 
     public void OnButtonClicked()
     {
-        if (mulyak <= 0)
+        if (Posion <= 0)
         {
             return;
         }
@@ -44,14 +44,14 @@ public class ButtonListener : MonoBehaviour
             currentHp += 1;
         }
 
-        mulyak -= 1;
+        Posion -= 1;
     }
 
     private void UpdateMulyakText()
     {
-        if (mulyak > 0)
+        if (Posion > 0)
         {
-            infoText.text = $"mulyak X{mulyak}";
+            infoText.text = $"Posion X{Posion}";
             if (targetObjectToToggle != null)
                 targetObjectToToggle.SetActive(true);
         }

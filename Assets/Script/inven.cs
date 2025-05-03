@@ -9,14 +9,22 @@ public class ClickEventTest : MonoBehaviour
     {
         inventoryPanel.SetActive(activeInventory);
     }
+
+   
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.I))
         {
-            Debug.Log("인벤토리 활성화");
-            activeInventory = !activeInventory;
-            inventoryPanel.SetActive(activeInventory);
+            Debug.Log("클릭해서 인벤 활성화.");
+
         }
+    }
+
+    public void OnButtonClicked()
+    {
+        Debug.Log("인벤토리 활성화");
+        activeInventory = !activeInventory;
+        inventoryPanel.SetActive(activeInventory);
     }
 }
 
