@@ -689,9 +689,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   MaxHp: 20
   currentHp: 0
-  mulyak: 3
+  mulyak: 5
   infoText: {fileID: 1753462368}
-  targetObjectToDisable: {fileID: 418493542}
+  targetObjectToToggle: {fileID: 418493542}
 --- !u!4 &1030534405
 Transform:
   m_ObjectHideFlags: 0
@@ -1259,7 +1259,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: mulyak X3
+  m_text: mulyak Xn
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
