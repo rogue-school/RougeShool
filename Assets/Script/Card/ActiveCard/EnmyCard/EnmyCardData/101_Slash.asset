@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 30650a2f8e9c5994d84e2dd6e15b358b, type: 3}
-  m_Name: New Enemy Skill Card
+  m_Name: 101_Slash
   m_EditorClassIdentifier: 
-  cardName: 
+  cardName: 101_Slash
   description: 
-  artwork: {fileID: 0}
+  artwork: {fileID: -6939695964637348897, guid: a26671c704a724041a6cdc0fae77efc7, type: 3}
   isDebuff: 0
-  damage: 3
+  damage: 1

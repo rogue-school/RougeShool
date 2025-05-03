@@ -1,7 +1,6 @@
 using Game.Battle;
 using Game.Characters;
 using Game.Interface;
-using Game.Managers;
 
 namespace Game.Effects
 {
@@ -12,17 +11,22 @@ namespace Game.Effects
     public class ForceNextSlotEffect : ICardEffect
     {
         private readonly SlotPosition reservedSlot;
+        private readonly ISkillCard sourceCard;
 
-        public ForceNextSlotEffect(SlotPosition slot = SlotPosition.Front)
+        /// <summary>
+        /// 슬롯과 카드 정보를 받아 강제 슬롯 예약 효과를 구성합니다.
+        /// </summary>
+        public ForceNextSlotEffect(ISkillCard card, SlotPosition slot = SlotPosition.Front)
         {
             reservedSlot = slot;
+            sourceCard = card;
         }
 
         public void ExecuteEffect(CharacterBase caster, CharacterBase target)
         {
             if (caster.CompareTag("Enemy"))
             {
-                BattleTurnManager.Instance.ReserveEnemySlot(reservedSlot, caster);
+                BattleTurnManager.Instance.ReserveEnemySlot(reservedSlot, sourceCard);
                 UnityEngine.Debug.Log($"[ForceNextSlotEffect] {reservedSlot} 슬롯을 {caster.name}이 다음 턴에 강제로 선점합니다.");
             }
         }

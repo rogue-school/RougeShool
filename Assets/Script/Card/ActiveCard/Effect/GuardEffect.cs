@@ -9,7 +9,7 @@ namespace Game.Effect
     /// 이 카드가 선공 슬롯에 있을 경우, 상대방의 후공 공격을 무효화합니다.
     /// 플레이어 또는 적 모두 사용할 수 있습니다.
     /// </summary>
-    [CreateAssetMenu(fileName = "GuardEffect", menuName = "CardEffects/GuardEffect")]
+   
     public class GuardEffect : ScriptableObject, ICardEffect
     {
         [SerializeField] private bool isPlayer; // 이 효과가 플레이어인지 적에게 적용되는지 여부

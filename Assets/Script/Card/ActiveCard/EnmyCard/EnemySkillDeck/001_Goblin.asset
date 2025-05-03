@@ -10,10 +10,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9cff11d00aca1ae41bcbc7a920f29d7e, type: 3}
-  m_Name: New Enemy Skill Deck
+  m_Name: 001_Goblin
   m_EditorClassIdentifier: 
   cards:
-  - card: {fileID: 0}
-    probability: 0
-  - card: {fileID: 0}
-    probability: 0
+  - card: {fileID: 11400000, guid: 79bc20c3476f58c4a9d21c343df216a4, type: 2}
+    probability: 1

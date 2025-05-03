@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9cff11d00aca1ae41bcbc7a920f29d7e, type: 3}
+  m_Name: 002_Slime
+  m_EditorClassIdentifier: 
+  cards:
+  - card: {fileID: 11400000, guid: d736795d63abc38478276b872a204d43, type: 2}
+    probability: 0.7
+  - card: {fileID: 11400000, guid: 2a404d37263e6744b98e802bd5c8fa79, type: 2}
+    probability: 0.3

@@ -15,7 +15,6 @@ namespace Game.Player
         [SerializeField] private string cardName;
         [SerializeField] private string description;
         [SerializeField] private Sprite artwork;
-        [SerializeField] private CardType type;
         [SerializeField] private int coolTime = 0;
 
         [Header("카드 효과 연결")]
@@ -25,7 +24,6 @@ namespace Game.Player
         public string GetDescription() => description;
         public Sprite GetArtwork() => artwork;
         public int GetCoolTime() => coolTime;
-        public CardType GetCardType() => type;
 
         /// <summary>
         /// 카드의 실제 효과 인스턴스를 생성합니다.
