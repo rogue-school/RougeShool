@@ -17,5 +17,5 @@ MonoBehaviour:
   maxHP: 20
   skillCards:
   - {fileID: 11400000, guid: b8030e378dd2c77419baa0042f6e7f00, type: 2}
-  - {fileID: 11400000, guid: b8030e378dd2c77419baa0042f6e7f00, type: 2}
-  - {fileID: 11400000, guid: b8030e378dd2c77419baa0042f6e7f00, type: 2}
+  - {fileID: 11400000, guid: 9ecdb94030e253d41bac32241fc149e6, type: 2}
+  - {fileID: 11400000, guid: 2dd6afdd21d3c4743b8c6c9027dcfafd, type: 2}

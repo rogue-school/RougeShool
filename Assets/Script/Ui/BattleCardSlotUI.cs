@@ -30,7 +30,12 @@ namespace Game.Battle
 
         public void ExecuteEffect(CharacterBase caster, CharacterBase target)
         {
-            currentCard?.CreateEffect()?.ExecuteEffect(caster, target);
+            if (currentCard == null) return;
+
+            foreach (var effect in currentCard.CreateEffects())
+            {
+                effect?.ExecuteEffect(caster, target);
+            }
         }
     }
 }

@@ -333,8 +333,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5fd1ad23edc2bc3428640bfdc41af74a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerCardUI: {fileID: 0}
-  enemyCardUI: {fileID: 0}
+  playerCardUI: {fileID: 1948332649}
+  enemyCardUI: {fileID: 1948332649}
 --- !u!4 &141623132
 Transform:
   m_ObjectHideFlags: 0
@@ -774,6 +774,51 @@ Transform:
   - {fileID: 1032418003}
   - {fileID: 1984701624}
   m_Father: {fileID: 1169703889}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &788067213
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 788067215}
+  - component: {fileID: 788067214}
+  m_Layer: 0
+  m_Name: EnemyHandManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &788067214
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 788067213}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 123d7a65580bacc46bfc39d9b36ead66, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enemyDeck: {fileID: 0}
+--- !u!4 &788067215
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 788067213}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -188.81378, y: 362.21045, z: -2.95498}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1505425240}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &807723803
 GameObject:
@@ -1777,6 +1822,7 @@ Transform:
   - {fileID: 276178815}
   - {fileID: 807723805}
   - {fileID: 141623132}
+  - {fileID: 788067215}
   - {fileID: 1928046128}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -2017,7 +2063,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4a9de94e04f0d3b4cb8ffab237bf2a12, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  handManager: {fileID: 0}
+  handManager: {fileID: 788067214}
 --- !u!1 &1948332648
 GameObject:
   m_ObjectHideFlags: 0

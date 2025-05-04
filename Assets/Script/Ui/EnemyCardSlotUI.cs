@@ -24,7 +24,10 @@ namespace Game.UI
                 return;
             }
 
-            currentCard?.CreateEffect()?.ExecuteEffect(caster, target);
+            if (currentCard == null) return;
+
+            foreach (var effect in currentCard.CreateEffects())
+                effect.ExecuteEffect(caster, target);
         }
     }
 }

@@ -9,11 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 306bab3a4da46a144a108202d6b20039, type: 3}
-  m_Name: New Player Skill Card
+  m_Script: {fileID: 11500000, guid: 97a804dfa3cab074c86817b6284bc46e, type: 3}
+  m_Name: Guard
   m_EditorClassIdentifier: 
-  cardName: 
-  description: 
-  artwork: {fileID: 0}
-  coolTime: -2
-  effectObject: {fileID: 0}
+  isPlayer: 1

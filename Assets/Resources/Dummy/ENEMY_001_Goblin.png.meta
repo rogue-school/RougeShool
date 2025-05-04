@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      ENEMY_001_Goblin_0: 2111737616767120531
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
