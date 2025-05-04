@@ -15,5 +15,7 @@ MonoBehaviour:
   cardName: 103_FilthThrow
   description: 
   artwork: {fileID: 0}
-  isDebuff: 0
   damage: 1
+  effectObjects:
+  - {fileID: 11400000, guid: 21f08687b4ccb7a488b95b06178d02aa, type: 2}
+  - {fileID: 11400000, guid: 48b0f7567f5bd0a41ab6649587e254b2, type: 2}

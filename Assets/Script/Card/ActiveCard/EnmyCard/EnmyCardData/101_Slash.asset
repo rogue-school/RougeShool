@@ -15,5 +15,6 @@ MonoBehaviour:
   cardName: 101_Slash
   description: 
   artwork: {fileID: -6939695964637348897, guid: a26671c704a724041a6cdc0fae77efc7, type: 3}
-  isDebuff: 0
   damage: 1
+  effectObjects:
+  - {fileID: 11400000, guid: 21f08687b4ccb7a488b95b06178d02aa, type: 2}

@@ -15,5 +15,6 @@ MonoBehaviour:
   cardName: 102_MucusExplosion
   description: 
   artwork: {fileID: 0}
-  isDebuff: 0
   damage: 2
+  effectObjects:
+  - {fileID: 11400000, guid: 21f08687b4ccb7a488b95b06178d02aa, type: 2}

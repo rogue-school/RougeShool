@@ -1,12 +1,12 @@
 namespace Game.Battle
 {
     /// <summary>
-    /// 카드가 배치될 슬롯의 위치를 나타냅니다.
-    /// 확장 시 Middle, Reserve 등 추가 가능
+    /// 전투 슬롯의 위치를 지정하는 열거형입니다.
+    /// FRONT: 선공 슬롯, BACK: 후공 슬롯
     /// </summary>
     public enum SlotPosition
     {
-        Front = 0, // 선공 슬롯
-        Back = 1   // 후공 슬롯
+        FRONT,
+        BACK
     }
 }

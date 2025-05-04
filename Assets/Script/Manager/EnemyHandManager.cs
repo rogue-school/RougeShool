@@ -1,33 +1,82 @@
 using UnityEngine;
-using Game.Interface;
 using Game.Cards;
+using Game.Interface;
+using Game.UI;
+using Game.Enemy;
+using Game.Utility;
+using System;
 
 namespace Game.Managers
 {
     /// <summary>
-    /// 적의 핸드 슬롯(3칸)을 관리하고, 전투 시 1번 슬롯의 카드를 꺼내는 매니저입니다.
+    /// 적의 핸드 카드와 슬롯을 관리합니다.
+    /// 팩토리를 통해 실제 전투 카드 인스턴스를 생성합니다.
     /// </summary>
     public class EnemyHandManager : MonoBehaviour
     {
-        [SerializeField] private ISkillCard[] handSlots = new ISkillCard[3];
-        [SerializeField] private EnemySkillDeck enemyDeck;
+        private EnemySkillDeck enemyDeck;
+        private EnemyCardSlotUI[] handSlots;
+        private SkillCardUI cardUIPrefab;
 
-        public void InitializeHand()
+        private void Awake()
         {
-            for (int i = 0; i < handSlots.Length; i++)
-                handSlots[i] = enemyDeck.GetRandomCard();
+            // 덱 자동 로드 (Resources/EnemyDecks/DefaultEnemyDeck.asset)
+            enemyDeck = Resources.Load<EnemySkillDeck>("EnemyDecks/DefaultEnemyDeck");
+
+            // 카드 프리팹 자동 로드 (Resources/UI/SkillCardUI.prefab)
+            cardUIPrefab = Resources.Load<SkillCardUI>("UI/SkillCardUI");
+
+            handSlots = FindObjectsOfType<EnemyCardSlotUI>();
+            Array.Sort(handSlots, (a, b) => a.name.CompareTo(b.name));
         }
 
-        public void AdvanceSlots()
+        private void Start()
         {
-            handSlots[0] = handSlots[1];
-            handSlots[1] = handSlots[2];
-            handSlots[2] = enemyDeck.GetRandomCard();
+            GenerateInitialHand();
+        }
+
+        public void GenerateInitialHand()
+        {
+            if (enemyDeck == null || enemyDeck.cards.Count == 0) return;
+
+            for (int i = 0; i < handSlots.Length; i++)
+            {
+                var so = enemyDeck.GetRandomCard();
+
+                // 임시 수치 지정 (향후 외부 수치 테이블 연동 가능)
+                int damage = UnityEngine.Random.Range(5, 15);
+
+                var runtimeCard = SkillCardFactory.CreateEnemyCard(so, damage);
+
+                var cardUI = Instantiate(cardUIPrefab, handSlots[i].transform);
+                cardUI.SetCard(runtimeCard);
+
+                handSlots[i].SetCard(runtimeCard);
+            }
+        }
+
+        public ISkillCard GetSlotCard(int index)
+        {
+            if (index < 0 || index >= handSlots.Length) return null;
+            return handSlots[index].GetCard();
         }
 
         public ISkillCard GetCardForCombat()
         {
-            return handSlots[0];
+            return GetSlotCard(0);
+        }
+
+        public void AdvanceSlots()
+        {
+            for (int i = 0; i < handSlots.Length - 1; i++)
+            {
+                var nextCard = handSlots[i + 1].GetCard();
+                handSlots[i].SetCard(nextCard);
+            }
+
+            var so = enemyDeck.GetRandomCard();
+            var runtimeCard = SkillCardFactory.CreateEnemyCard(so, UnityEngine.Random.Range(5, 15));
+            handSlots[handSlots.Length - 1].SetCard(runtimeCard);
         }
     }
 }

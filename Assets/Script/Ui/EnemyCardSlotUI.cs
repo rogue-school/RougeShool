@@ -1,33 +1,27 @@
 using UnityEngine;
-using Game.Managers;
-using Game.Cards;
-using Game.Characters;
 using Game.Interface;
-using Game.Battle;
 
 namespace Game.UI
 {
-    public class EnemyCardSlotUI : MonoBehaviour
+    /// <summary>
+    /// 적 전용 카드 슬롯 UI입니다. 턴 시작 시 적의 카드를 이 슬롯에서 꺼냅니다.
+    /// </summary>
+    public class EnemyCardSlotUI : BattleCardSlotUI
     {
-        [SerializeField] private ISkillCard currentCard;
-
-        public void SetCard(ISkillCard card)
+        /// <summary>
+        /// 슬롯에 설정된 카드를 가져옵니다.
+        /// </summary>
+        public new ISkillCard GetCard()
         {
-            currentCard = card;
+            return base.GetCard();
         }
 
-        public void ExecuteEffect(CharacterBase caster, CharacterBase target)
+        /// <summary>
+        /// 슬롯을 초기화하여 적 카드 연결을 제거합니다.
+        /// </summary>
+        public override void Clear()
         {
-            if (BattleTurnManager.Instance.ConsumePlayerGuard())
-            {
-                Debug.Log("[EnemyCardSlotUI] 플레이어의 방어 효과로 적의 공격이 무효화되었습니다.");
-                return;
-            }
-
-            if (currentCard == null) return;
-
-            foreach (var effect in currentCard.CreateEffects())
-                effect.ExecuteEffect(caster, target);
+            base.Clear();
         }
     }
 }

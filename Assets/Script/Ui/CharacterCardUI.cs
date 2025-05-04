@@ -23,33 +23,22 @@ namespace Game.UI
 
         private CharacterBase targetCharacter;
 
-        /// <summary>
-        /// 플레이어 캐릭터 UI 초기화
-        /// </summary>
         public void Initialize(PlayerCharacterData data, CharacterBase character)
         {
             nameText.text = data.characterName;
             portraitImage.sprite = data.portrait;
             targetCharacter = character;
-
             UpdateHP();
         }
 
-        /// <summary>
-        /// 적 캐릭터 UI 초기화
-        /// </summary>
         public void Initialize(EnemyCharacterData data, CharacterBase character)
         {
             nameText.text = data.characterName;
             portraitImage.sprite = data.portrait;
             targetCharacter = character;
-
             UpdateHP();
         }
 
-        /// <summary>
-        /// 외부에서 체력 UI를 수동 갱신할 수 있도록 제공
-        /// </summary>
         public void UpdateHP()
         {
             if (targetCharacter != null)
@@ -58,9 +47,6 @@ namespace Game.UI
             }
         }
 
-        /// <summary>
-        /// 현재 상태이상 아이콘을 전부 제거합니다.
-        /// </summary>
         public void ClearStatusEffects()
         {
             foreach (Transform child in statusEffectContainer)
@@ -69,10 +55,6 @@ namespace Game.UI
             }
         }
 
-        /// <summary>
-        /// 새로운 상태이상 아이콘을 추가합니다.
-        /// </summary>
-        /// <param name="icon">표시할 스프라이트</param>
         public void AddStatusEffectIcon(Sprite icon)
         {
             GameObject iconObj = Instantiate(statusEffectIconPrefab, statusEffectContainer);
@@ -83,6 +65,14 @@ namespace Game.UI
                 image.enabled = true;
             }
         }
+
+        /// <summary>
+        /// UI 전체 갱신용 메서드입니다. 외부 파사드에서 통합 호출용
+        /// </summary>
+        public void UpdateUI()
+        {
+            UpdateHP();
+            Debug.Log("[CharacterCardUI] 전체 UI 업데이트 완료");
+        }
     }
 }
-

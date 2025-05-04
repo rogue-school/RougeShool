@@ -1,19 +1,27 @@
 using UnityEngine;
+using Game.Characters;
 using Game.Cards;
 
-namespace Game.Characters
+namespace Game.Enemy
 {
     /// <summary>
-    /// 적 캐릭터 클래스입니다.
+    /// 적 캐릭터 클래스입니다. 인스펙터에서 SO를 자동으로 참조하여 초기화합니다.
     /// </summary>
     public class EnemyCharacter : CharacterBase
     {
-        public EnemyCharacterData characterData;
+        [Header("적 캐릭터 데이터")]
+        [SerializeField] private EnemyCharacterData characterData;
 
         private void Awake()
         {
-            maxHP = characterData.maxHP;
-            currentHP = maxHP;
+            if (characterData != null)
+            {
+                base.Initialize(characterData.maxHP);
+            }
+            else
+            {
+                Debug.LogError($"[{name}] EnemyCharacterData가 연결되지 않았습니다.");
+            }
         }
 
         public override string GetName() => characterData.characterName;

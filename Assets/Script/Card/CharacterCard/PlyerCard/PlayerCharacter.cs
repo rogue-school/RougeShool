@@ -1,23 +1,27 @@
 using UnityEngine;
+using Game.Characters;
 using Game.Cards;
 
-namespace Game.Characters
+namespace Game.Player
 {
     /// <summary>
-    /// 선택된 플레이어 캐릭터를 초기화하고 전투 기능을 제공합니다.
+    /// 플레이어 캐릭터 클래스입니다. 인스펙터에서 SO를 자동으로 참조하여 초기화합니다.
     /// </summary>
     public class PlayerCharacter : CharacterBase
     {
-        public PlayerCharacterData characterData;
+        [Header("플레이어 캐릭터 데이터")]
+        [SerializeField] private PlayerCharacterData characterData;
 
-        /// <summary>
-        /// 외부에서 선택된 캐릭터 데이터를 주입받아 초기화합니다.
-        /// </summary>
-        public void Initialize(PlayerCharacterData data)
+        private void Awake()
         {
-            characterData = data;
-            maxHP = characterData.maxHP;
-            currentHP = maxHP;
+            if (characterData != null)
+            {
+                base.Initialize(characterData.maxHP);
+            }
+            else
+            {
+                Debug.LogError($"[{name}] PlayerCharacterData가 연결되지 않았습니다.");
+            }
         }
 
         public override string GetName() => characterData.characterName;

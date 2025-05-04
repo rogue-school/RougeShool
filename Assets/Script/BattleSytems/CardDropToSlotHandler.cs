@@ -1,29 +1,36 @@
 using UnityEngine;
-using UnityEngine.EventSystems;
 using Game.Interface;
-using Game.UI;
+using Game.Events;
 
 namespace Game.Battle
 {
     /// <summary>
-    /// 드래그한 카드를 슬롯에 드롭했을 때 처리하는 핸들러입니다.
+    /// 드래그된 카드를 슬롯에 드롭했을 때, 해당 슬롯에 할당하는 역할을 수행합니다.
     /// </summary>
-    public class CardDropToSlotHandler : MonoBehaviour, IDropHandler
+    public class CardDropToSlotHandler : MonoBehaviour
     {
-        [SerializeField] private MonoBehaviour targetSlot;
+        private ICardSlot slot;
 
-        public void OnDrop(PointerEventData eventData)
+        private void Awake()
         {
-            if (targetSlot is ICardSlot cardSlot && eventData.pointerDrag != null)
-            {
-                var draggedCard = eventData.pointerDrag.GetComponent<SkillCardUI>();
-                var dragHandler = eventData.pointerDrag.GetComponent<CardDragHandler>();
+            slot = GetComponent<ICardSlot>();
+            if (slot == null)
+                Debug.LogError("[CardDropToSlotHandler] ICardSlot 컴포넌트를 찾을 수 없습니다.");
+        }
 
-                if (draggedCard != null && dragHandler != null && dragHandler.HasCard())
-                {
-                    cardSlot.SetCard(dragHandler.GetCard());
-                }
-            }
+        private void OnMouseUpAsButton()
+        {
+            ISkillCard draggedCard = CardDragHandler.CurrentCard;
+            if (draggedCard == null || slot == null) return;
+
+            // 슬롯에 카드 할당
+            slot.SetCard(draggedCard);
+
+            // 모든 리스너에게 카드 드롭 알림 전송
+            CardDropEventSystem.NotifyCardDropped(draggedCard, slot);
+
+            // 드래그 해제
+            CardDragHandler.Clear();
         }
     }
 }

@@ -1,58 +1,75 @@
 using UnityEngine;
+using System.Collections.Generic;
 using Game.Characters;
-using Game.Managers;
-using Game.Battle;
+using Game.Enemy;
+using Game.Cards;
 
-namespace Game.Stage
+namespace Game.Managers
 {
+    /// <summary>
+    /// 현재 스테이지에 등장할 적 유닛을 관리하고 EnemySpawner에 전달합니다.
+    /// </summary>
     public class StageManager : MonoBehaviour
     {
-        [Header("스테이지 적 프리팹 목록")]
-        [SerializeField] private GameObject[] enemyPrefabs;
+        [SerializeField] private EnemySpawnerManager enemySpawner;
 
-        [Header("연동 매니저")]
-        [SerializeField] private EnemySpawner enemySpawner;
-        [SerializeField] private BattleInitializer battleInitializer;
-        [SerializeField] private BattleTurnManager turnManager;
+        [Header("스테이지 데이터")]
+        [SerializeField] private EnemyCharacterData[] currentStageEnemies;
 
-        [Header("플레이어 참조")]
-        [SerializeField] private PlayerCharacter playerUnit;
-
-        private int currentStage = 0;
-        private EnemyCharacter currentEnemy;
-
-        private void Start()
+        private void Awake()
         {
-            SpawnNextEnemy();
+            AutoBindSpawner();
+            LoadCurrentStageData();
+            SpawnEnemies();
         }
 
-        public void SpawnNextEnemy()
+        /// <summary>
+        /// EnemySpawner를 자동으로 참조합니다.
+        /// </summary>
+        private void AutoBindSpawner()
         {
-            if (currentStage >= enemyPrefabs.Length)
+            if (enemySpawner == null)
             {
-                Debug.Log("[StageManager] 모든 스테이지를 완료했습니다!");
-                return;
+                enemySpawner = FindObjectOfType<EnemySpawnerManager>();
+                Debug.Log("[StageManager] EnemySpawner 자동 연결 완료");
             }
-
-            currentEnemy = enemySpawner.SpawnEnemy(enemyPrefabs[currentStage]);
-            currentStage++;
-
-            battleInitializer.Player = playerUnit;
-            battleInitializer.Enemy = currentEnemy;
-
-            battleInitializer.playerCardUI.Initialize(playerUnit.characterData, playerUnit);
-            battleInitializer.enemyCardUI.Initialize(currentEnemy.characterData, currentEnemy);
-
-            turnManager.StartNewTurn();
         }
 
-        public void OnEnemyDefeated()
+        /// <summary>
+        /// 현재 스테이지의 적 캐릭터 데이터를 불러옵니다.
+        /// 향후 확장 시 외부 JSON 또는 Resources에서 불러올 수 있음.
+        /// </summary>
+        private void LoadCurrentStageData()
         {
-            if (currentEnemy != null && currentEnemy.GetCurrentHP() <= 0)
+            if (currentStageEnemies == null || currentStageEnemies.Length == 0)
             {
-                Debug.Log("[StageManager] 적을 처치했습니다. 다음 적을 소환합니다.");
-                SpawnNextEnemy();
+                Debug.LogWarning("[StageManager] currentStageEnemies가 비어 있습니다. 기본 데이터 적용 필요.");
+                // 예시: Resources에서 로드
+                // currentStageEnemies = Resources.LoadAll<EnemyCharacterData>("Stage1");
             }
+        }
+
+        /// <summary>
+        /// 현재 스테이지에 등장할 적들을 생성합니다.
+        /// </summary>
+        private void SpawnEnemies()
+        {
+            if (enemySpawner == null || currentStageEnemies == null) return;
+
+            foreach (var enemyData in currentStageEnemies)
+            {
+                enemySpawner.SpawnEnemy(enemyData);
+            }
+
+            Debug.Log($"[StageManager] {currentStageEnemies.Length}명의 적을 생성했습니다.");
+        }
+
+        /// <summary>
+        /// 현재 스테이지에 설정된 적 데이터 반환 (외부 접근용)
+        /// </summary>
+        public EnemyCharacterData[] GetEnemies()
+        {
+            return currentStageEnemies;
         }
     }
 }

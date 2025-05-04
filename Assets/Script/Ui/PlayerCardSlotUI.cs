@@ -1,41 +1,27 @@
 using UnityEngine;
-using UnityEngine.UI;
-using Game.Cards;
 using Game.Interface;
 
 namespace Game.UI
 {
     /// <summary>
-    /// 플레이어 카드 슬롯 UI를 제어합니다.
+    /// 플레이어 전용 카드 슬롯 UI입니다. 카드 배치 및 제거, 전투 처리용으로 사용됩니다.
     /// </summary>
-    public class PlayerCardSlotUI : MonoBehaviour
+    public class PlayerCardSlotUI : BattleCardSlotUI
     {
-        [SerializeField] private Image cardImage;
-        private ISkillCard currentCard;
-
-        public void SetCard(ISkillCard card)
+        /// <summary>
+        /// 슬롯에 설정된 카드를 가져옵니다.
+        /// </summary>
+        public new ISkillCard GetCard()
         {
-            currentCard = card;
-
-            if (cardImage != null)
-            {
-                cardImage.enabled = true;
-                // cardImage.sprite = card.GetArtwork(); ← 실제 이미지 설정이 필요하다면 사용
-            }
+            return base.GetCard();
         }
 
         /// <summary>
-        /// 카드 슬롯을 비웁니다.
+        /// 슬롯에 설정된 카드를 제거합니다.
         /// </summary>
-        public void ClearSlot()
+        public override void Clear()
         {
-            currentCard = null;
-
-            if (cardImage != null)
-            {
-                cardImage.sprite = null;
-                cardImage.enabled = false;
-            }
+            base.Clear();
         }
     }
 }

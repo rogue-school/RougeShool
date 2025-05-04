@@ -1,40 +1,36 @@
 using UnityEngine;
-using UnityEngine.UI;
-using Game.Cards;
 using Game.Interface;
-using Game.Characters;
+using Game.Battle;
 
-namespace Game.Battle
+namespace Game.UI
 {
-    public class BattleCardSlotUI : MonoBehaviour, ICardSlot
+    /// <summary>
+    /// 전투 카드 슬롯 UI입니다. 슬롯 이름 기반으로 위치를 자동 지정합니다.
+    /// </summary>
+    public class BattleCardSlotUI : BaseCardSlotUI
     {
-        public Image cardImage;
-        private ISkillCard currentCard;
+        [Tooltip("이 슬롯의 위치 (자동 설정됩니다)")]
+        [SerializeField] private SlotPosition position;
 
-        public void SetCard(ISkillCard card)
+        public override SlotPosition Position => position;
+
+        private void Awake()
         {
-            currentCard = card;
-            cardImage.enabled = true;
-            // cardImage.sprite = card.GetArtwork();
+            AutoBind(); // 자동 위치 설정
         }
 
-        public ISkillCard GetCard() => currentCard;
-        public bool HasCard() => currentCard != null;
-
-        public void Clear()
+        /// <summary>
+        /// 오브젝트 이름을 기반으로 슬롯 위치를 자동 추론합니다.
+        /// </summary>
+        public override void AutoBind()
         {
-            currentCard = null;
-            cardImage.sprite = null;
-            cardImage.enabled = false;
-        }
-
-        public void ExecuteEffect(CharacterBase caster, CharacterBase target)
-        {
-            if (currentCard == null) return;
-
-            foreach (var effect in currentCard.CreateEffects())
+            foreach (SlotPosition pos in System.Enum.GetValues(typeof(SlotPosition)))
             {
-                effect?.ExecuteEffect(caster, target);
+                if (name.ToUpper().Contains(pos.ToString().ToUpper()))
+                {
+                    position = pos;
+                    break;
+                }
             }
         }
     }
