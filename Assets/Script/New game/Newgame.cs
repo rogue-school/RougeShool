@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class Buttonsword : MonoBehaviour
+public class Playbutton : MonoBehaviour
 {
     public string sceneToLoad; // Inspector에서 지정 가능
 
