@@ -1,30 +1,45 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI;
+using System.Collections;
 
 public class ButtonListener : MonoBehaviour
 {
     public int MaxHp = 20;
     public int currentHp;
     public int Posion = 3;
-    private int prevMulyak; // 이전 물약 수 기억용
+    private int prevMulyak;
+    private bool canUse = true;
 
     public TextMeshProUGUI infoText;
+    public TextMeshProUGUI potionCountText;
     public GameObject targetObjectToToggle;
 
-    void Start()
+    public Button usePotionButton;
+    public TextMeshProUGUI buttonText;
+    public Image cooldownFillImage;
+    public TextMeshProUGUI cooldownText; // ← 추가: 남은 쿨타임 텍스트
+
+    private void Start()
     {
-        prevMulyak = Posion; // 초기값 설정
+        prevMulyak = Posion;
         UpdateMulyakText();
+        UpdateButtonVisual();
+
+        if (cooldownFillImage != null)
+            cooldownFillImage.fillAmount = 1f;
+
+        if (cooldownText != null)
+            cooldownText.text = "";
     }
 
-    void Update()
+    private void Update()
     {
         if (Input.GetKeyDown(KeyCode.W))
         {
             Posion += 1;
         }
 
-        // 물약 수가 바뀌었을 때만 텍스트 갱신
         if (Posion != prevMulyak)
         {
             UpdateMulyakText();
@@ -34,17 +49,50 @@ public class ButtonListener : MonoBehaviour
 
     public void OnButtonClicked()
     {
-        if (Posion <= 0)
-        {
+        if (!canUse || Posion <= 0)
             return;
-        }
 
         if (currentHp < MaxHp)
-        {
             currentHp += 1;
-        }
 
         Posion -= 1;
+        StartCoroutine(PotionCooldown());
+    }
+
+    private IEnumerator PotionCooldown()
+    {
+        canUse = false;
+        usePotionButton.interactable = false;
+        usePotionButton.image.color = Color.gray;
+
+        float cooldown = 1f;
+        float timer = 0f;
+
+        if (cooldownFillImage != null)
+            cooldownFillImage.fillAmount = 0f;
+
+        if (cooldownText != null)
+            cooldownText.text = $"{cooldown:0.0}s";
+
+        while (timer < cooldown)
+        {
+            timer += Time.deltaTime;
+
+            if (cooldownFillImage != null)
+                cooldownFillImage.fillAmount = timer / cooldown;
+
+            if (cooldownText != null)
+                cooldownText.text = $"{(cooldown - timer):0.0}s";
+
+            yield return null;
+        }
+
+        canUse = true;
+
+        if (cooldownText != null)
+            cooldownText.text = "";
+
+        UpdateButtonVisual();
     }
 
     private void UpdateMulyakText()
@@ -57,9 +105,39 @@ public class ButtonListener : MonoBehaviour
         }
         else
         {
-            infoText.text = "물약 없음";
+            infoText.text = "None Posion";
             if (targetObjectToToggle != null)
                 targetObjectToToggle.SetActive(false);
+        }
+
+        if (potionCountText != null)
+        {
+            potionCountText.text = $"남은 물약: {Posion}";
+        }
+
+        UpdateButtonVisual();
+    }
+
+    private void UpdateButtonVisual()
+    {
+        if (usePotionButton == null || buttonText == null) return;
+
+        if (!canUse || Posion <= 0)
+        {
+            usePotionButton.interactable = false;
+            usePotionButton.image.color = Color.gray;
+
+            if (canUse)
+                buttonText.text = "None Posion";
+        }
+        else
+        {
+            usePotionButton.interactable = true;
+            usePotionButton.image.color = Color.white;
+            buttonText.text = $"Posion X{Posion}";
+
+            if (cooldownFillImage != null)
+                cooldownFillImage.fillAmount = 1f;
         }
     }
 }
