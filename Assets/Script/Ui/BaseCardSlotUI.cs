@@ -1,36 +1,39 @@
 using UnityEngine;
-using UnityEngine.UI;
-using Game.Interface;
 using Game.Battle;
+using Game.Interface;
 
 namespace Game.UI
 {
     /// <summary>
-    /// 모든 카드 슬롯 UI의 기본 클래스입니다.
-    /// 슬롯 위치 정보 및 카드 참조 기능을 제공합니다.
+    /// 모든 카드 슬롯 UI의 베이스 클래스입니다. 자동 바인딩, 카드 처리, 슬롯 위치 관리 등 공통 기능을 포함합니다.
     /// </summary>
-    public abstract class BaseCardSlotUI : MonoBehaviour
+    public class BaseCardSlotUI : MonoBehaviour, ICardSlot
     {
-        [Header("슬롯 테두리 이미지")]
-        [SerializeField] protected Image frame;
+        /// <summary>
+        /// 이 슬롯의 전투 내 위치입니다.
+        /// </summary>
+        public virtual SlotPosition Position { get; protected set; }
 
+        /// <summary>
+        /// 현재 슬롯에 연결된 카드 참조입니다.
+        /// </summary>
         protected ISkillCard card;
 
         /// <summary>
-        /// 이 슬롯이 담당하는 위치를 반환합니다.
+        /// 슬롯 자동 바인딩 여부
         /// </summary>
-        public abstract SlotPosition Position { get; }
+        protected bool isBound = false;
 
         /// <summary>
-        /// 카드 설정
+        /// 자동으로 슬롯 위치를 추론하여 설정합니다.
         /// </summary>
-        public virtual void SetCard(ISkillCard skillCard)
+        public virtual void AutoBind()
         {
-            card = skillCard;
+            isBound = true;
         }
 
         /// <summary>
-        /// 카드 제거
+        /// 슬롯을 초기화합니다. 카드 연결 해제 및 UI 정리.
         /// </summary>
         public virtual void Clear()
         {
@@ -38,24 +41,28 @@ namespace Game.UI
         }
 
         /// <summary>
-        /// 카드 유무 확인
+        /// 슬롯에 카드를 설정합니다.
         /// </summary>
-        public bool HasCard()
+        /// <param name="newCard">슬롯에 연결할 스킬 카드</param>
+        public virtual void SetCard(ISkillCard newCard)
         {
-            return card != null;
+            card = newCard;
         }
 
         /// <summary>
-        /// 카드 반환
+        /// 현재 슬롯에 설정된 카드를 반환합니다.
         /// </summary>
-        public ISkillCard GetCard()
+        public virtual ISkillCard GetCard()
         {
             return card;
         }
 
         /// <summary>
-        /// 슬롯의 위치를 자동 설정합니다. 하위 클래스에서 재정의할 수 있습니다.
+        /// 슬롯의 위치를 외부에서 강제로 설정합니다.
         /// </summary>
-        public virtual void AutoBind() { }
+        public virtual void SetSlotPosition(SlotPosition newPosition)
+        {
+            Position = newPosition;
+        }
     }
 }

@@ -13,6 +13,11 @@ namespace Game.Interface
         void SetCard(ISkillCard card);
 
         /// <summary>
+        /// 슬롯을 비우는 공통 메서드입니다.
+        /// </summary>
+        void Clear();
+
+        /// <summary>
         /// 슬롯에 저장된 카드 데이터를 반환합니다.
         /// </summary>
         ISkillCard GetCard();

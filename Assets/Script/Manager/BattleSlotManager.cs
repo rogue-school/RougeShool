@@ -16,13 +16,13 @@ namespace Game.Managers
 
         private void Awake()
         {
-            AutoBindSlots();
+            AutoBindAndAssignSlotPositions();
         }
 
         /// <summary>
-        /// 씬에 존재하는 모든 BattleCardSlotUI 컴포넌트를 자동으로 수집하고 분류합니다.
+        /// 씬에 존재하는 모든 BattleCardSlotUI를 자동 수집하고 이름 기준으로 포지션을 자동 설정합니다.
         /// </summary>
-        private void AutoBindSlots()
+        private void AutoBindAndAssignSlotPositions()
         {
             allSlots = FindObjectsOfType<BattleCardSlotUI>();
             Array.Sort(allSlots, (a, b) => a.name.CompareTo(b.name));
@@ -31,7 +31,9 @@ namespace Game.Managers
 
             foreach (var slot in allSlots)
             {
-                SlotPosition position = slot.Position;
+                // 슬롯 이름을 기준으로 위치를 유추
+                SlotPosition position = InferSlotPositionFromName(slot.name);
+                slot.SetSlotPosition(position); // 슬롯에 위치 설정
 
                 if (!slotGroups.ContainsKey(position))
                     slotGroups[position] = new List<BattleCardSlotUI>();
@@ -39,7 +41,22 @@ namespace Game.Managers
                 slotGroups[position].Add(slot);
             }
 
-            Debug.Log($"[BattleSlotManager] 슬롯 자동 수집 완료 - 총 {allSlots.Length}개");
+            Debug.Log($"[BattleSlotManager] 슬롯 자동 수집 및 위치 할당 완료 - 총 {allSlots.Length}개");
+        }
+
+        /// <summary>
+        /// 슬롯 오브젝트 이름을 분석하여 SlotPosition을 유추합니다.
+        /// </summary>
+        private SlotPosition InferSlotPositionFromName(string name)
+        {
+            if (name.ToLower().Contains("front"))
+                return SlotPosition.FRONT;
+            else if (name.ToLower().Contains("back"))
+                return SlotPosition.BACK;
+            else if (name.ToLower().Contains("support"))
+                return SlotPosition.SUPPORT;
+            else
+                return SlotPosition.UNKNOWN; // 확장 고려
         }
 
         /// <summary>

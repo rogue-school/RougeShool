@@ -1,39 +1,37 @@
-using Game.Interface;
+using UnityEngine;
+using Game.Cards;
 using Game.Characters;
-using System.Collections.Generic;
+using Game.Interface;
 
-namespace Game.Cards
+namespace Game.Managers
 {
     /// <summary>
-    /// 카드의 이펙트를 커맨드 패턴으로 실행합니다.
+    /// 카드 실행을 담당하는 매니저입니다.
     /// </summary>
-    public static class CardExecutor
+    public class CardExecutor : MonoBehaviour
     {
-        /// <summary>
-        /// 카드를 실행 가능한 커맨드 목록으로 변환합니다.
-        /// </summary>
-        public static List<ICardEffectCommand> CreateCommands(ISkillCard card, CharacterBase caster, CharacterBase target)
-        {
-            var commands = new List<ICardEffectCommand>();
+        public static CardExecutor Instance { get; private set; }
 
-            foreach (var effect in card.CreateEffects())
+        private void Awake()
+        {
+            if (Instance != null && Instance != this)
             {
-                int power = card.GetEffectPower(effect);
-                var cmd = new CardEffectCommand(effect, caster, target, power);
-                commands.Add(cmd);
+                Destroy(gameObject);
+                return;
             }
 
-            return commands;
+            Instance = this;
         }
 
         /// <summary>
-        /// 모든 커맨드를 실행합니다.
+        /// 스킬 카드를 실행합니다.
         /// </summary>
-        public static void ExecuteCard(ISkillCard card, CharacterBase caster, CharacterBase target)
+        public void ExecuteCard(ISkillCard card, CharacterBase caster, CharacterBase target)
         {
-            foreach (var command in CreateCommands(card, caster, target))
+            foreach (var effect in card.CreateEffects())
             {
-                command.Execute();
+                int value = card.GetEffectPower(effect);
+                effect.ExecuteEffect(caster, target, value);
             }
         }
     }

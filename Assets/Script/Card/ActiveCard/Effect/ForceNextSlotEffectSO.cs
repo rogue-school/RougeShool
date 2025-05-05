@@ -1,23 +1,20 @@
 using UnityEngine;
-using Game.Interface;
-using Game.Characters;
 using Game.Battle;
-using Game.Managers;
+using Game.Characters;
 using Game.Effect;
+using Game.Managers;
 
-namespace Game.Effects
+namespace Game.Cards
 {
-    /// <summary>
-    /// 적이 다음 턴에 전투 슬롯을 강제로 선점하도록 예약하는 이펙트입니다.
-    /// </summary>
-    [CreateAssetMenu(menuName = "CardEffect/ForceNextSlot")]
+    [CreateAssetMenu(menuName = "CardEffects/ForceNextSlotEffect")]
     public class ForceNextSlotEffectSO : ScriptableObject, ICardEffect
     {
         public void ExecuteEffect(CharacterBase caster, CharacterBase target, int value)
         {
-            // 적의 다음 선공 슬롯 예약 (기본은 FRONT)
-            BattleTurnManager.Instance?.ReserveEnemySlot(SlotPosition.FRONT);
-            Debug.Log("[ForceNextSlotEffectSO] 적이 다음 턴에 선공 슬롯을 예약했습니다.");
+            if (BattleTurnManager.Instance is ITurnStateController controller)
+            {
+                controller.ReserveEnemySlot(SlotPosition.FRONT);
+            }
         }
     }
 }

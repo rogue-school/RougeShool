@@ -29,10 +29,18 @@ namespace Game.UI
                 return;
             }
 
-            nameText.text = card.GetCardName(); // ISkillCard에서 이름 가져오기
-            descriptionText.text = card.GetDescription(); // 설명
-            artworkImage.sprite = card.GetArtwork(); // 아트 이미지
+            nameText.text = card.GetCardName();
+            descriptionText.text = card.GetDescription();
+            artworkImage.sprite = card.GetArtwork();
             artworkImage.enabled = true;
+        }
+
+        /// <summary>
+        /// 카드 UI를 초기화합니다.
+        /// </summary>
+        public void Clear()
+        {
+            SetCard(null); // UI 요소 초기화
         }
     }
 }

@@ -9,10 +9,12 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8776838771207742757}
+  - component: {fileID: 8307468483761351015}
+  - component: {fileID: 3987182127275672895}
   - component: {fileID: 5424052764318159677}
   - component: {fileID: 4698009349228901394}
   m_Layer: 0
-  m_Name: Image
+  m_Name: CharaterCardUI
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -40,6 +42,38 @@ RectTransform:
   m_AnchoredPosition: {x: 235, y: -312}
   m_SizeDelta: {x: 400, y: 380}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &8307468483761351015
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5205250108856485}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6d2d1c013d8116458217b5f4985508a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  nameText: {fileID: 1366074243177763354}
+  portraitImage: {fileID: 6828424614105559056}
+  hpText: {fileID: 2671161406445264331}
+  statusEffectContainer: {fileID: 0}
+  statusEffectIconPrefab: {fileID: 0}
+--- !u!114 &3987182127275672895
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5205250108856485}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a492adcb963f774c881f978f0e9de3e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentHP: 0
+  maxHP: 0
+  characterData: {fileID: 0}
 --- !u!222 &5424052764318159677
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -435,8 +469,8 @@ GameObject:
   m_Component:
   - component: {fileID: 8948802225807959017}
   m_Layer: 0
-  m_Name: PlayerCharacterCard
-  m_TagString: Player
+  m_Name: EnemyCharacterCard
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

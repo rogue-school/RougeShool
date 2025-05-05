@@ -1,6 +1,7 @@
 using UnityEngine;
 using Game.Characters;
 using Game.Cards;
+using Game.Battle;
 
 namespace Game.Enemy
 {
@@ -12,8 +13,13 @@ namespace Game.Enemy
         [Header("적 캐릭터 데이터")]
         [SerializeField] private EnemyCharacterData characterData;
 
-        private void Awake()
+        public SlotPosition SlotPosition { get; private set; }
+
+        public void Initialize(EnemyCharacterData data, SlotPosition position)
         {
+            characterData = data;
+            SlotPosition = position;
+
             if (characterData != null)
             {
                 base.Initialize(characterData.maxHP);

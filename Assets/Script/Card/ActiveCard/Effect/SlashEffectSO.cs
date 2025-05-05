@@ -4,7 +4,7 @@ using Game.Effect;
 
 namespace Game.Effect
 {
-    [CreateAssetMenu(menuName = "Game Assets/Effects/Slash Effect")]
+    [CreateAssetMenu(menuName = "CardEffects/SlashEffect")]
     public class SlashEffectSO : ScriptableObject, ICardEffect
     {
         public void ExecuteEffect(CharacterBase caster, CharacterBase target, int value)
