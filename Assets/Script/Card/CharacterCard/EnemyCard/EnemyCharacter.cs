@@ -1,36 +1,34 @@
 using UnityEngine;
-using Game.Characters;
-using Game.Cards;
+using Game.Slots;
 using Game.Battle;
+using Game.Cards;
+using Game.Enemy;
+using Game.Interface;
 
-namespace Game.Enemy
+namespace Game.Characters
 {
     /// <summary>
-    /// 적 캐릭터 클래스입니다. 인스펙터에서 SO를 자동으로 참조하여 초기화합니다.
+    /// 전투 중 등장하는 적 캐릭터. CharacterBase를 상속하고, ICharacter 인터페이스를 구현합니다.
     /// </summary>
-    public class EnemyCharacter : CharacterBase
+    public class EnemyCharacter : CharacterBase, ICharacter
     {
-        [Header("적 캐릭터 데이터")]
         [SerializeField] private EnemyCharacterData characterData;
 
-        public SlotPosition SlotPosition { get; private set; }
+        public override BattleSlotPosition BattleSlotPosition => characterData.battleSlotPosition;
+        public override string characterName => characterData.characterName;
+        public override Sprite portrait => characterData.portrait;
 
-        public void Initialize(EnemyCharacterData data, SlotPosition position)
+        public override string GetName() => characterName;
+        public override Sprite GetPortrait() => portrait;
+
+        public override void Initialize(int hp)
         {
-            characterData = data;
-            SlotPosition = position;
-
-            if (characterData != null)
-            {
-                base.Initialize(characterData.maxHP);
-            }
-            else
-            {
-                Debug.LogError($"[{name}] EnemyCharacterData가 연결되지 않았습니다.");
-            }
+            base.Initialize(hp);
+            maxHP = characterData.maxHP;
+            currentHP = maxHP;
         }
 
-        public override string GetName() => characterData.characterName;
-        public override Sprite GetPortrait() => characterData.portrait;
+        public int GetMaxHP() => maxHP;
+        public int GetCurrentHP() => currentHP;
     }
 }

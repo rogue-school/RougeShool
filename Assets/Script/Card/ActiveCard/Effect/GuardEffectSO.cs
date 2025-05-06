@@ -3,6 +3,7 @@ using Game.Battle;
 using Game.Characters;
 using Game.Effect;
 using Game.Managers;
+using Game.Interface;
 
 namespace Game.Cards
 {

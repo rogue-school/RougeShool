@@ -3,6 +3,7 @@ using Game.Battle;
 using Game.Characters;
 using Game.Effect;
 using Game.Managers;
+using Game.Interface;
 
 namespace Game.Cards
 {
@@ -13,7 +14,7 @@ namespace Game.Cards
         {
             if (BattleTurnManager.Instance is ITurnStateController controller)
             {
-                controller.ReserveEnemySlot(SlotPosition.FRONT);
+                controller.ReserveEnemySlot(BattleSlotPosition.FIRST);
             }
         }
     }

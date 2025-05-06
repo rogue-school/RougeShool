@@ -71,9 +71,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5a492adcb963f774c881f978f0e9de3e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currentHP: 0
-  maxHP: 0
-  characterData: {fileID: 0}
+  currentHP: 3
+  maxHP: 3
+  characterData: {fileID: 11400000, guid: 108def2387b83ed419893e2db0906a67, type: 2}
 --- !u!222 &5424052764318159677
 CanvasRenderer:
   m_ObjectHideFlags: 0

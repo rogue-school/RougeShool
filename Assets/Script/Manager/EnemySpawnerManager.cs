@@ -1,63 +1,55 @@
 using UnityEngine;
-using Game.Characters;
-using Game.Battle;
-using Game.Enemy;
 using System.Collections.Generic;
-using Game.Cards;
+using Game.Slots;
+using Game.Battle;
+using Game.Characters;
+using Game.Managers;
 
-namespace Game.Managers
+namespace Game.Enemy
 {
     /// <summary>
-    /// 적 캐릭터를 슬롯 기반으로 관리하는 매니저입니다.
+    /// 전투 시작 시 EnemyCharacter를 지정된 슬롯에 배치하고 초기화합니다.
     /// </summary>
     public class EnemySpawnerManager : MonoBehaviour
     {
-        public static EnemySpawnerManager Instance { get; private set; }
-
         [SerializeField] private GameObject enemyPrefab;
-        [SerializeField] private Transform[] spawnPoints;
 
-        private readonly List<EnemyCharacter> enemies = new();
+        private List<EnemyCharacter> spawnedEnemies = new List<EnemyCharacter>();
 
-        private void Awake()
+        /// <summary>
+        /// 지정된 위치에 적을 생성하고 초기화합니다.
+        /// </summary>
+        public void SpawnEnemy(EnemyCharacterData data, BattleSlotPosition battleSlotPosition)
         {
-            if (Instance != null && Instance != this)
+            // 지정된 위치에 해당하는 슬롯을 찾는다
+            var slot = SlotRegistry.Instance.GetSlot(
+                SlotOwner.Enemy,
+                SlotRole.CharacterSpawn,
+                battleSlotPosition
+            );
+
+            if (slot == null)
             {
-                Destroy(gameObject);
+                Debug.LogError($"[EnemySpawnerManager] Enemy {battleSlotPosition} 슬롯을 찾지 못했습니다.");
                 return;
             }
 
-            Instance = this;
-        }
+            // 슬롯 위치에 적 프리팹 생성
+            GameObject instance = Instantiate(enemyPrefab, slot.transform.position, Quaternion.identity);
+            EnemyCharacter enemy = instance.GetComponent<EnemyCharacter>();
 
-        public void SpawnEnemy(EnemyCharacterData data, SlotPosition position)
-        {
-            var spawnIndex = (int)position;
-            if (spawnIndex >= spawnPoints.Length)
+            if (enemy == null)
             {
-                Debug.LogWarning($"[EnemySpawnerManager] 유효하지 않은 슬롯 위치: {position}");
+                Debug.LogError("[EnemySpawnerManager] 생성된 오브젝트에 EnemyCharacter 컴포넌트가 없습니다.");
                 return;
             }
 
-            var spawned = Instantiate(enemyPrefab, spawnPoints[spawnIndex].position, Quaternion.identity);
-            var enemy = spawned.GetComponent<EnemyCharacter>();
-            if (enemy != null)
-            {
-                enemy.Initialize(data, position);
-                enemies.Add(enemy);
-            }
+            enemy.Initialize(data.maxHP);
+            spawnedEnemies.Add(enemy);
+
+            Debug.Log($"[EnemySpawnerManager] 적 캐릭터가 {battleSlotPosition} 슬롯에 배치되었습니다.");
         }
 
-        public EnemyCharacter GetEnemyBySlot(SlotPosition position)
-        {
-            foreach (var enemy in enemies)
-            {
-                if (enemy.SlotPosition == position)
-                    return enemy;
-            }
-
-            Debug.LogWarning($"[EnemySpawnerManager] 슬롯 {position}에 해당하는 적이 없습니다.");
-            return null;
-        }
+        public List<EnemyCharacter> GetAllEnemies() => spawnedEnemies;
     }
 }

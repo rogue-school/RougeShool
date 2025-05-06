@@ -1,29 +1,60 @@
 using UnityEngine;
-using Game.Interface;
+using Game.Battle;
 using Game.Cards;
+using Game.Characters;
+using Game.Interface;
+using Game.Managers;
+using Game.Slots;
 
 namespace Game.UI
 {
     /// <summary>
-    /// 적 전용 카드 슬롯 UI.
-    /// 애니메이션 외 추가 UI 없음. 기본 기능만 사용.
+    /// 적 캐릭터가 사용하는 전투 카드 슬롯 UI
     /// </summary>
     public class EnemyCardSlotUI : BaseCardSlotUI
     {
-        public override void SetCard(ISkillCard newCard)
+        private ISkillCard card;
+
+        private void Awake()
         {
-            base.SetCard(newCard);
+            AutoBind();
         }
 
-        public override ISkillCard GetCard()
+        public override void AutoBind()
         {
-            return base.GetCard();
+            SlotAnchor anchor = GetComponent<SlotAnchor>();
+            if (anchor != null)
+            {
+                Position = anchor.battleSlotPosition;
+                caster = EnemyManager.Instance.GetEnemyBySlot(Position);
+                target = PlayerManager.Instance.GetPlayer() as ICharacter;
+            }
         }
 
-        public override void Clear()
+        public override void ExecuteCardAutomatically()
         {
-            base.Clear();
-            // 향후 효과 연출 추가 가능
+            if (card == null || caster == null || target == null)
+            {
+                Debug.LogWarning("[EnemyCardSlotUI] 카드 실행 불가: 카드 또는 캐릭터가 null");
+                return;
+            }
+
+            CardExecutor.Execute(card, caster, target);
+        }
+
+        public void SetCard(ISkillCard card)
+        {
+            this.card = card;
+        }
+
+        public void Clear()
+        {
+            this.card = null;
+        }
+
+        public ISkillCard GetCard()
+        {
+            return this.card;
         }
     }
 }

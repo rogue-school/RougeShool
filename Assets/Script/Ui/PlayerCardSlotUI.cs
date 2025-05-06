@@ -1,32 +1,68 @@
 using UnityEngine;
-using Game.Interface;
+using Game.Battle;
 using Game.Cards;
+using Game.Characters;
+using Game.Slots;
+using Game.Interface;
+using Game.Managers;
 
 namespace Game.UI
 {
     /// <summary>
-    /// 플레이어 전용 카드 슬롯 UI.
-    /// UI 반영 및 드래그 처리가 포함됩니다.
+    /// 플레이어가 사용하는 전투 카드 슬롯 UI
     /// </summary>
     public class PlayerCardSlotUI : BaseCardSlotUI
     {
-        [SerializeField] private SkillCardUI cardUI;
+        private ISkillCard card;
 
-        public override void SetCard(ISkillCard newCard)
+        private void Awake()
         {
-            base.SetCard(newCard);
-            cardUI?.SetCard(newCard);
+            AutoBind();
         }
 
-        public override ISkillCard GetCard()
+        public override void AutoBind()
         {
-            return base.GetCard();
+            SlotAnchor anchor = GetComponent<SlotAnchor>();
+            if (anchor != null)
+            {
+                Position = anchor.battleSlotPosition;
+
+                caster = PlayerManager.Instance.GetPlayer() as ICharacter;
+                target = EnemyManager.Instance.GetRandomEnemy();
+
+                Debug.Log($"[PlayerCardSlotUI] 위치 바인딩 완료 - {Position}");
+            }
+            else
+            {
+                Debug.LogWarning("[PlayerCardSlotUI] SlotAnchor가 누락되었습니다.");
+            }
         }
 
-        public override void Clear()
+        public override void ExecuteCardAutomatically()
         {
-            base.Clear();
-            cardUI?.Clear(); // UI 초기화 포함
+            if (card == null || caster == null || target == null)
+            {
+                Debug.LogWarning("[PlayerCardSlotUI] 카드, 캐스터 또는 타겟이 누락되었습니다.");
+                return;
+            }
+
+            CardExecutor.Execute(card, caster, target);
+            Debug.Log($"[PlayerCardSlotUI] 카드 실행됨 - {card.GetCardName()} → {target.GetName()}");
+        }
+
+        public void SetCard(ISkillCard card)
+        {
+            this.card = card;
+        }
+
+        public void Clear()
+        {
+            this.card = null;
+        }
+
+        public ISkillCard GetCard()
+        {
+            return this.card;
         }
     }
 }

@@ -1,7 +1,7 @@
 using UnityEngine;
-using Game.Battle;
 using Game.Managers;
 using Game.Interface;
+using Game.Battle;
 using Game.BattleStates;
 
 namespace Game.Managers
@@ -11,7 +11,6 @@ namespace Game.Managers
     /// </summary>
     public class BattleTurnManager : MonoBehaviour
     {
-        // 싱글톤 인스턴스 추가
         public static BattleTurnManager Instance { get; private set; }
 
         private IBattleTurnState currentState;
@@ -27,31 +26,22 @@ namespace Game.Managers
             Instance = this;
         }
 
-        /// <summary>
-        /// 턴 상태를 전환합니다.
-        /// </summary>
         public void SetState(IBattleTurnState newState)
         {
             currentState = newState;
             Debug.Log($"[BattleTurnManager] 상태 전환: {newState.GetType().Name}");
         }
 
-        /// <summary>
-        /// 플레이어가 방어 상태일 때 상태 등록합니다.
-        /// </summary>
         public void RegisterPlayerGuard()
         {
             Debug.Log("[BattleTurnManager] 플레이어 방어 상태 등록");
-            SetState(new Game.BattleStates.PlayerGuardedState(this));
+            SetState(new Game.BattleStates.PlayerGuardedState(this)); // 명시적 네임스페이스 지정
         }
 
-        /// <summary>
-        /// 적의 다음 턴 슬롯을 예약합니다.
-        /// </summary>
-        public void ReserveEnemySlot(SlotPosition slot)
+        public void ReserveEnemySlot(BattleSlotPosition slot)
         {
             Debug.Log($"[BattleTurnManager] 적이 슬롯 {slot}을 예약함");
-            // 예약 처리는 BattleSlotManager 등에서 연동
+            // 슬롯 예약 처리 구현 필요
         }
     }
 }

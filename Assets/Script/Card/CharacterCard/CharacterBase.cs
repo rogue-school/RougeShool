@@ -1,91 +1,81 @@
-using System.Collections.Generic;
 using UnityEngine;
+using System.Collections.Generic;
 using Game.Interface;
+using Game.Slots;
+using Game.Battle;
 
 namespace Game.Characters
 {
-    /// <summary>
-    /// 캐릭터의 기본 속성 및 기능을 정의한 베이스 클래스입니다.
-    /// </summary>
-    public abstract class CharacterBase : MonoBehaviour
+    public abstract class CharacterBase : MonoBehaviour, ICharacter
     {
         [SerializeField] protected int currentHP;
         [SerializeField] protected int maxHP;
 
-        // 턴마다 실행되는 지속 효과 리스트
-        private readonly List<IPerTurnEffect> perTurnEffects = new();
+        protected List<IPerTurnEffect> perTurnEffects = new();
 
-        /// <summary>
-        /// 현재 체력을 반환합니다.
-        /// </summary>
-        public int GetCurrentHP() => currentHP;
+        public virtual int CurrentHP => currentHP;
+        public virtual int MaxHP => maxHP;
+        public virtual bool IsDead => currentHP <= 0;
 
-        /// <summary>
-        /// 최대 체력을 반환합니다.
-        /// </summary>
-        public int GetMaxHP() => maxHP;
+        public abstract BattleSlotPosition BattleSlotPosition { get; }
 
-        /// <summary>
-        /// 캐릭터가 피해를 받습니다.
-        /// </summary>
-        public virtual void TakeDamage(int value)
-        {
-            currentHP -= value;
-            currentHP = Mathf.Max(currentHP, 0);
-        }
+        public abstract string characterName { get; }
+        public abstract Sprite portrait { get; }
 
-        /// <summary>
-        /// 캐릭터의 체력을 회복합니다.
-        /// </summary>
-        public virtual void Heal(int value)
-        {
-            currentHP += value;
-            currentHP = Mathf.Min(currentHP, maxHP);
-        }
+        public abstract string GetName();
+        public abstract Sprite GetPortrait();
 
-        /// <summary>
-        /// 캐릭터를 초기화합니다.
-        /// </summary>
+        public virtual int GetMaxHP() => maxHP;
+        public virtual int GetCurrentHP() => currentHP;
+
         public virtual void Initialize(int hp)
         {
             maxHP = hp;
-            currentHP = maxHP;
+            currentHP = hp;
+            perTurnEffects.Clear();
         }
 
-        /// <summary>
-        /// 캐릭터가 사망했는지 여부를 반환합니다.
-        /// </summary>
-        public bool IsDead => currentHP <= 0;
+        public virtual void TakeDamage(int amount)
+        {
+            currentHP -= amount;
+            currentHP = Mathf.Max(0, currentHP);
+            Debug.Log($"[{characterName}] 피해 {amount} → 현재 체력: {currentHP}");
 
-        /// <summary>
-        /// 지속 효과를 등록합니다.
-        /// </summary>
-        public void RegisterPerTurnEffect(IPerTurnEffect effect)
+            if (IsDead)
+                OnDeath();
+        }
+
+        public virtual void Heal(int amount)
+        {
+            currentHP += amount;
+            currentHP = Mathf.Min(currentHP, maxHP);
+            Debug.Log($"[{characterName}] 회복 {amount} → 현재 체력: {currentHP}");
+        }
+
+        public virtual void RegisterPerTurnEffect(IPerTurnEffect effect)
         {
             perTurnEffects.Add(effect);
+            Debug.Log($"[{characterName}] 지속 효과 등록됨: {effect.GetType().Name}");
         }
 
-        /// <summary>
-        /// 모든 지속 효과를 한 턴 실행합니다.
-        /// </summary>
-        public void TriggerPerTurnEffects()
+        public virtual void ExecutePerTurnEffects()
         {
-            foreach (var effect in perTurnEffects.ToArray())
+            for (int i = perTurnEffects.Count - 1; i >= 0; i--)
             {
+                var effect = perTurnEffects[i];
                 effect.OnTurnStart(this);
-                if (effect.IsExpired || IsDead)
-                    perTurnEffects.Remove(effect);
+
+                if (effect.IsExpired)
+                {
+                    Debug.Log($"[{characterName}] 지속 효과 종료: {effect.GetType().Name}");
+                    perTurnEffects.RemoveAt(i);
+                }
             }
         }
 
-        /// <summary>
-        /// 이름을 반환합니다 (자식 클래스에서 구현).
-        /// </summary>
-        public abstract string GetName();
-
-        /// <summary>
-        /// 초상화 이미지를 반환합니다 (자식 클래스에서 구현).
-        /// </summary>
-        public abstract Sprite GetPortrait();
+        protected virtual void OnDeath()
+        {
+            Debug.Log($"[{characterName}] 사망했습니다.");
+        }
     }
 }

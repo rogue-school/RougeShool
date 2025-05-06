@@ -1,30 +1,28 @@
 using UnityEngine;
-using Game.Characters;
+using Game.Slots;
+using Game.Battle;
 using Game.Cards;
+using Game.Player;
 
-namespace Game.Player
+namespace Game.Characters
 {
-    /// <summary>
-    /// 플레이어 캐릭터 클래스입니다. 인스펙터에서 SO를 자동으로 참조하여 초기화합니다.
-    /// </summary>
     public class PlayerCharacter : CharacterBase
     {
-        [Header("플레이어 캐릭터 데이터")]
         [SerializeField] private PlayerCharacterData characterData;
 
-        private void Awake()
-        {
-            if (characterData != null)
-            {
-                base.Initialize(characterData.maxHP);
-            }
-            else
-            {
-                Debug.LogError($"[{name}] PlayerCharacterData가 연결되지 않았습니다.");
-            }
-        }
+        public override BattleSlotPosition BattleSlotPosition => characterData.battleSlotPosition;
 
-        public override string GetName() => characterData.characterName;
-        public override Sprite GetPortrait() => characterData.portrait;
+        public override string characterName => characterData.characterName;
+        public override Sprite portrait => characterData.portrait;
+
+        public override string GetName() => characterName;
+        public override Sprite GetPortrait() => portrait;
+
+        public override void Initialize(int hp)
+        {
+            base.Initialize(hp);
+            maxHP = characterData.maxHP;
+            currentHP = maxHP;
+        }
     }
 }

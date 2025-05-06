@@ -15,8 +15,10 @@ MonoBehaviour:
   characterName: BOSS_001_Orc_Axe
   portrait: {fileID: 0}
   maxHP: 7
+  slotPosition: 1
   initialDeck:
   - {fileID: 11400000, guid: 5c658f031d6699c44a3e22a362e0d0a7, type: 2}
   - {fileID: 11400000, guid: a9eaadba1003adf4aae03649b3826ce5, type: 2}
   passiveSkills:
   - {fileID: 11400000, guid: 5477804a0f0606a40b972cbd00faec1e, type: 2}
+  battleSlotPosition: 0

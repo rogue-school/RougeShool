@@ -1,20 +1,32 @@
 using UnityEngine;
 using Game.UI;
+using Game.Characters;
 
-namespace Game.Battle.Initialization
+namespace Game.Managers
 {
-    /// <summary>
-    /// UI 요소(캐릭터 카드 등)를 초기화합니다.
-    /// </summary>
-    public static class UIInitializer
+    public class UIInitializer : MonoBehaviour
     {
-        public static void SetupCharacterUI()
-        {
-            var ui = Object.FindObjectOfType<CharacterCardUI>();
-            if (ui != null)
-                ui.UpdateUI();
+        public static UIInitializer Instance { get; private set; }
 
-            Debug.Log("[UIInitializer] 캐릭터 UI 초기화 완료");
+        private void Awake()
+        {
+            Instance = this;
+        }
+
+        public void SetupCharacterUI()
+        {
+            var uiCards = GameObject.FindObjectsOfType<CharacterCardUI>();
+
+            foreach (var ui in uiCards)
+            {
+                var character = ui.GetComponentInParent<CharacterBase>();
+                if (character == null)
+                {
+                    Debug.LogWarning($"[UIInitializer] {ui.name} 주변에 CharacterBase를 찾을 수 없습니다.");
+                    continue;
+                }
+                ui.Initialize(character);
+            }
         }
     }
 }

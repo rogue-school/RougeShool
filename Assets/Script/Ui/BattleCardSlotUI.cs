@@ -1,109 +1,93 @@
 using UnityEngine;
-using UnityEngine.UI;
-using Game.Interface;
+using Game.Slots;
 using Game.Cards;
-using Game.Battle;
-using Game.Managers;
 using Game.Characters;
+using Game.Battle;
+using Game.Interface;
+using Game.Managers;
 
 namespace Game.UI
 {
     /// <summary>
-    /// 전투 중 슬롯에 배치된 스킬 카드 UI를 관리하는 클래스입니다.
-    /// 자동 슬롯 위치 추론 및 카드 실행 시 캐스터/타겟 자동 설정이 포함됩니다.
+    /// 실제 전투에서 카드가 드롭되어 실행되는 슬롯 UI.
+    /// SlotAnchor를 기반으로 자동 위치 바인딩 및 캐스터/타겟 설정을 담당합니다.
     /// </summary>
     public class BattleCardSlotUI : BaseCardSlotUI
     {
-        [SerializeField] private Image highlightImage;
+        [SerializeField] private SlotOwner owner;
 
         /// <summary>
-        /// 현재 슬롯에 할당된 카드의 위치를 나타냅니다.
-        /// 자동 추론 시스템과 연동됩니다.
+        /// 이 슬롯의 전투상 포지션 (FIRST / SECOND)
         /// </summary>
-        public SlotPosition Position { get; private set; }
-
-        private CharacterBase caster;
-        private CharacterBase target;
+        public BattleSlotPosition Position { get; private set; }
 
         /// <summary>
-        /// 슬롯 초기화 시 자동으로 위치를 추론하고, 캐스터/타겟도 설정합니다.
+        /// 슬롯 초기화 시 SlotAnchor 정보 바인딩
         /// </summary>
         public override void AutoBind()
         {
             base.AutoBind();
 
-            // 이름 기반으로 슬롯 위치를 자동 추론
-            Position = InferSlotPositionFromName(name);
-
-            // 자동 캐릭터 설정
-            InitializeCasterAndTarget();
-        }
-
-        /// <summary>
-        /// 슬롯에서 카드가 제거될 때 호출됩니다.
-        /// </summary>
-        public override void Clear()
-        {
-            base.Clear();
-
-            // 강조 이미지가 있다면 비활성화
-            if (highlightImage != null)
-                highlightImage.enabled = false;
-        }
-
-        /// <summary>
-        /// 이름 기반으로 슬롯 위치를 추론합니다.
-        /// </summary>
-        /// <param name="slotName">슬롯의 이름</param>
-        /// <returns>추론된 슬롯 포지션</returns>
-        private SlotPosition InferSlotPositionFromName(string slotName)
-        {
-            string lower = slotName.ToLower();
-            if (lower.Contains("front")) return SlotPosition.FRONT;
-            if (lower.Contains("back")) return SlotPosition.BACK;
-            if (lower.Contains("support")) return SlotPosition.SUPPORT;
-
-            return SlotPosition.UNKNOWN;
-        }
-
-        /// <summary>
-        /// 슬롯 이름 또는 위치 정보를 기반으로 캐스터와 타겟을 자동 설정합니다.
-        /// </summary>
-        private void InitializeCasterAndTarget()
-        {
-            string lowerName = name.ToLower();
-            if (lowerName.Contains("enemy"))
+            SlotAnchor anchor = GetComponent<SlotAnchor>();
+            if (anchor != null)
             {
-                caster = EnemySpawnerManager.Instance.GetEnemyBySlot(Position);
-                target = PlayerManager.Instance.GetPlayer();
+                Position = anchor.battleSlotPosition;
+                owner = anchor.owner;
+
+                InitializeCasterAndTarget();
+                Debug.Log($"[BattleCardSlotUI] 슬롯 위치 자동 설정 완료: {Position}");
             }
-            else // 기본적으로 플레이어 슬롯
+            else
             {
-                caster = PlayerManager.Instance.GetPlayer();
-                target = EnemySpawnerManager.Instance.GetEnemyBySlot(Position);
+                Debug.LogWarning($"[BattleCardSlotUI] SlotAnchor가 없습니다: {gameObject.name}");
             }
         }
 
         /// <summary>
-        /// 슬롯에 있는 카드를 자동으로 실행합니다.
-        /// 내부적으로 캐스터와 타겟을 자동 추론합니다.
+        /// 이 슬롯에 드롭된 카드를 자동으로 실행
         /// </summary>
-        public void ExecuteCardAutomatically()
+        public override void ExecuteCardAutomatically()
         {
-            var card = GetCard();
+            ISkillCard card = GetCard();
             if (card == null)
             {
-                Debug.LogWarning($"[BattleCardSlotUI] 슬롯 {Position}에 카드가 없습니다.");
+                Debug.LogWarning("[BattleCardSlotUI] 실행할 카드가 없습니다.");
                 return;
             }
 
             if (caster == null || target == null)
             {
-                Debug.LogError($"[BattleCardSlotUI] 캐스터 또는 타겟이 설정되지 않았습니다.");
+                Debug.LogWarning("[BattleCardSlotUI] 캐스터 또는 타겟이 할당되지 않았습니다.");
                 return;
             }
 
-            CardExecutor.Instance.ExecuteCard(card, caster, target);
+            CardExecutor.Execute(card, caster, target);
+            Debug.Log($"[BattleCardSlotUI] {card.GetCardName()} 실행됨 → {caster.GetName()} → {target.GetName()}");
+        }
+
+        /// <summary>
+        /// 캐스터와 타겟 자동 결정 (소유자 기준)
+        /// </summary>
+        private void InitializeCasterAndTarget()
+        {
+            if (owner == SlotOwner.Player)
+            {
+                caster = PlayerManager.Instance.GetPlayer() as ICharacter;
+                target = EnemyManager.Instance.GetRandomEnemy();
+            }
+            else
+            {
+                caster = EnemyManager.Instance.GetEnemyBySlot(Position);
+                target = PlayerManager.Instance.GetPlayer() as ICharacter;
+            }
+        }
+
+        /// <summary>
+        /// 외부에서 슬롯 위치를 수동 설정 가능하도록 제공
+        /// </summary>
+        public void SetSlotPosition(BattleSlotPosition position)
+        {
+            this.Position = position;
         }
     }
 }

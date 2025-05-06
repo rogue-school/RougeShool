@@ -1,68 +1,48 @@
 using UnityEngine;
 using Game.Battle;
+using Game.Cards;
+using Game.Characters;
 using Game.Interface;
 
 namespace Game.UI
 {
     /// <summary>
-    /// 모든 카드 슬롯 UI의 베이스 클래스입니다. 자동 바인딩, 카드 처리, 슬롯 위치 관리 등 공통 기능을 포함합니다.
+    /// 카드가 드롭될 수 있는 모든 슬롯 UI의 기본 베이스 클래스입니다.
+    /// 캐스터, 타겟, 슬롯 위치와 관련된 기본 동작을 정의합니다.
     /// </summary>
-    public class BaseCardSlotUI : MonoBehaviour, ICardSlot
+    public abstract class BaseCardSlotUI : MonoBehaviour
     {
-        /// <summary>
-        /// 이 슬롯의 전투 내 위치입니다.
-        /// </summary>
-        public virtual SlotPosition Position { get; protected set; }
+        [Header("카드가 드롭될 슬롯의 전투 포지션")]
+        public BattleSlotPosition Position;
+
+        [Header("이 슬롯에서 카드를 실행할 주체 (캐스터)")]
+        protected ICharacter caster;
+
+        [Header("이 슬롯의 대상 (타겟)")]
+        protected ICharacter target;
 
         /// <summary>
-        /// 현재 슬롯에 연결된 카드 참조입니다.
-        /// </summary>
-        protected ISkillCard card;
-
-        /// <summary>
-        /// 슬롯 자동 바인딩 여부
-        /// </summary>
-        protected bool isBound = false;
-
-        /// <summary>
-        /// 자동으로 슬롯 위치를 추론하여 설정합니다.
+        /// 슬롯 위치를 자동으로 바인딩하거나 설정합니다.
+        /// 파생 클래스에서 오버라이드할 수 있습니다.
         /// </summary>
         public virtual void AutoBind()
         {
-            isBound = true;
+            // 기본 구현은 없음. 파생 클래스에서 필요 시 SlotAnchor를 기반으로 바인딩
         }
 
         /// <summary>
-        /// 슬롯을 초기화합니다. 카드 연결 해제 및 UI 정리.
-        /// </summary>
-        public virtual void Clear()
-        {
-            card = null;
-        }
-
-        /// <summary>
-        /// 슬롯에 카드를 설정합니다.
-        /// </summary>
-        /// <param name="newCard">슬롯에 연결할 스킬 카드</param>
-        public virtual void SetCard(ISkillCard newCard)
-        {
-            card = newCard;
-        }
-
-        /// <summary>
-        /// 현재 슬롯에 설정된 카드를 반환합니다.
+        /// 슬롯에 드롭된 카드를 반환합니다.
+        /// 실제 구현은 UI 슬롯의 구조에 따라 다릅니다.
         /// </summary>
         public virtual ISkillCard GetCard()
         {
-            return card;
+            return GetComponentInChildren<ISkillCard>();
         }
 
         /// <summary>
-        /// 슬롯의 위치를 외부에서 강제로 설정합니다.
+        /// 슬롯에 드롭된 카드를 실행합니다.
+        /// 반드시 오버라이드해야 하는 메서드입니다.
         /// </summary>
-        public virtual void SetSlotPosition(SlotPosition newPosition)
-        {
-            Position = newPosition;
-        }
+        public abstract void ExecuteCardAutomatically();
     }
 }

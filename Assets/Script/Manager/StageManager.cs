@@ -7,14 +7,9 @@ using Game.Battle;
 
 namespace Game.Managers
 {
-    /// <summary>
-    /// 현재 스테이지에 등장할 적 유닛을 관리하고 EnemySpawner에 전달합니다.
-    /// </summary>
     public class StageManager : MonoBehaviour
     {
         [SerializeField] private EnemySpawnerManager enemySpawner;
-
-        [Header("스테이지 데이터")]
         [SerializeField] private EnemyCharacterData[] currentStageEnemies;
 
         private void Awake()
@@ -45,25 +40,20 @@ namespace Game.Managers
         {
             if (enemySpawner == null || currentStageEnemies == null) return;
 
-            SlotPosition[] defaultSlots = {
-                SlotPosition.FRONT,
-                SlotPosition.BACK,
-                SlotPosition.SUPPORT
+            BattleSlotPosition[] defaultSlots = {
+                BattleSlotPosition.FIRST,
+                BattleSlotPosition.SECOND
             };
 
             for (int i = 0; i < currentStageEnemies.Length; i++)
             {
-                var position = (i < defaultSlots.Length) ? defaultSlots[i] : SlotPosition.UNKNOWN;
+                var position = (i < defaultSlots.Length) ? defaultSlots[i] : BattleSlotPosition.FIRST;
                 enemySpawner.SpawnEnemy(currentStageEnemies[i], position);
             }
 
             Debug.Log($"[StageManager] {currentStageEnemies.Length}명의 적을 생성했습니다.");
         }
 
-        public EnemyCharacterData[] GetEnemies()
-        {
-            return currentStageEnemies;
-        }
+        public EnemyCharacterData[] GetEnemies() => currentStageEnemies;
     }
 }
-

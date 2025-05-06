@@ -244,6 +244,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 23450892}
   m_CullTransparentMesh: 1
+--- !u!4 &38746566 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8948802225807959017, guid: dfcadbf16af9b18459e230e26ad2583d, type: 3}
+  m_PrefabInstance: {fileID: 796818143017460611}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &39016576
 GameObject:
   m_ObjectHideFlags: 0
@@ -435,9 +440,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 9ecdb94030e253d41bac32241fc149e6, type: 2}
   - {fileID: 11400000, guid: 2dd6afdd21d3c4743b8c6c9027dcfafd, type: 2}
   handSlots:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 1472770858}
+  - {fileID: 1398598832}
+  - {fileID: 1121632703}
   defaultDamages: 010000000200000000000000
   defaultCoolTimes: 010000000100000002000000
 --- !u!4 &222427078
@@ -508,9 +513,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 310403835}
+  - component: {fileID: 310403836}
   - component: {fileID: 310403838}
   - component: {fileID: 310403837}
-  - component: {fileID: 310403836}
   m_Layer: 5
   m_Name: EnmmyHandCardSlot_0
   m_TagString: Untagged
@@ -549,6 +554,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 756d1121fd6045646aca6a705296a28e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Position: 0
 --- !u!114 &310403837
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -745,6 +751,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 756d1121fd6045646aca6a705296a28e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Position: 0
 --- !u!1 &370404083
 GameObject:
   m_ObjectHideFlags: 0
@@ -754,9 +761,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 370404084}
+  - component: {fileID: 370404085}
   - component: {fileID: 370404087}
   - component: {fileID: 370404086}
-  - component: {fileID: 370404085}
   m_Layer: 5
   m_Name: BattleCardSlot_0
   m_TagString: Untagged
@@ -795,7 +802,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8e577a043647406468e6260f29b73dd1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  highlightImage: {fileID: 0}
+  Position: 0
+  owner: 0
 --- !u!114 &370404086
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -879,7 +887,7 @@ GameObject:
   m_Component:
   - component: {fileID: 451205497}
   m_Layer: 0
-  m_Name: PlayerCharacterSpawn
+  m_Name: PlayerCharacterSpawnPoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1131,9 +1139,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cf103878b7b2ece498701ad9b8db6d3a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemyPrefab: {fileID: 9176189440528920728, guid: dfcadbf16af9b18459e230e26ad2583d, type: 3}
-  spawnPoints:
-  - {fileID: 1039390903}
+  enemyPrefab: {fileID: 0}
 --- !u!4 &845725939
 Transform:
   m_ObjectHideFlags: 0
@@ -1158,9 +1164,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 898015902}
+  - component: {fileID: 898015903}
   - component: {fileID: 898015905}
   - component: {fileID: 898015904}
-  - component: {fileID: 898015903}
   m_Layer: 5
   m_Name: BattleCardSlot_1
   m_TagString: Untagged
@@ -1199,7 +1205,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8e577a043647406468e6260f29b73dd1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  highlightImage: {fileID: 0}
+  Position: 0
+  owner: 0
 --- !u!114 &898015904
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1247,9 +1254,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 936305808}
+  - component: {fileID: 936305809}
   - component: {fileID: 936305811}
   - component: {fileID: 936305810}
-  - component: {fileID: 936305809}
   m_Layer: 5
   m_Name: EnmmyHandCardSlot_1
   m_TagString: Untagged
@@ -1288,6 +1295,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 756d1121fd6045646aca6a705296a28e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Position: 0
 --- !u!114 &936305810
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1336,7 +1344,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1039390903}
   m_Layer: 0
-  m_Name: EnmmyCharacterSpawn
+  m_Name: EnmmyCharacterSpawnPoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1356,6 +1364,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 23450893}
+  - {fileID: 38746566}
   m_Father: {fileID: 720867401}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1048110913
@@ -1477,7 +1486,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3eded7541a832e54bad3646adb32fc6b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cardUI: {fileID: 0}
+  Position: 0
 --- !u!1 &1121632701
 GameObject:
   m_ObjectHideFlags: 0
@@ -1487,9 +1496,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1121632702}
+  - component: {fileID: 1121632703}
   - component: {fileID: 1121632705}
   - component: {fileID: 1121632704}
-  - component: {fileID: 1121632703}
   m_Layer: 5
   m_Name: PlayerHandCardSlot_2
   m_TagString: Untagged
@@ -1528,7 +1537,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3eded7541a832e54bad3646adb32fc6b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cardUI: {fileID: 0}
+  Position: 0
 --- !u!114 &1121632704
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1746,7 +1755,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3eded7541a832e54bad3646adb32fc6b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cardUI: {fileID: 0}
+  Position: 0
 --- !u!1 &1277188923
 GameObject:
   m_ObjectHideFlags: 0
@@ -2062,9 +2071,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1398598831}
+  - component: {fileID: 1398598832}
   - component: {fileID: 1398598834}
   - component: {fileID: 1398598833}
-  - component: {fileID: 1398598832}
   m_Layer: 5
   m_Name: PlayerHandCardSlot_1
   m_TagString: Untagged
@@ -2103,7 +2112,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3eded7541a832e54bad3646adb32fc6b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cardUI: {fileID: 0}
+  Position: 0
 --- !u!114 &1398598833
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2184,9 +2193,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1472770857}
+  - component: {fileID: 1472770858}
   - component: {fileID: 1472770860}
   - component: {fileID: 1472770859}
-  - component: {fileID: 1472770858}
   m_Layer: 5
   m_Name: PlayerHandCardSlot_0
   m_TagString: Untagged
@@ -2225,7 +2234,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3eded7541a832e54bad3646adb32fc6b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cardUI: {fileID: 0}
+  Position: 0
 --- !u!114 &1472770859
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2308,7 +2317,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3eded7541a832e54bad3646adb32fc6b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cardUI: {fileID: 0}
+  Position: 0
 --- !u!1 &1505425239
 GameObject:
   m_ObjectHideFlags: 0
@@ -2484,8 +2493,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1711342676}
   - component: {fileID: 1711342679}
-  - component: {fileID: 1711342678}
   - component: {fileID: 1711342677}
+  - component: {fileID: 1711342678}
   m_Layer: 5
   m_Name: EnmmyHandCardSlot_2
   m_TagString: Untagged
@@ -2524,6 +2533,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 756d1121fd6045646aca6a705296a28e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Position: 0
 --- !u!114 &1711342678
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2654,7 +2664,7 @@ GameObject:
   - component: {fileID: 1754872953}
   - component: {fileID: 1754872954}
   m_Layer: 0
-  m_Name: BattleCardSlot_1
+  m_Name: BattleCardSlot_01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2684,9 +2694,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 1754872952}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8c9c382dddf548348a0ff982dd1abbc2, type: 3}
+  m_Script: {fileID: 11500000, guid: 8e577a043647406468e6260f29b73dd1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Position: 0
+  owner: 0
 --- !u!1 &1758762901
 GameObject:
   m_ObjectHideFlags: 0
@@ -2698,7 +2710,7 @@ GameObject:
   - component: {fileID: 1758762902}
   - component: {fileID: 1758762903}
   m_Layer: 0
-  m_Name: BattleCardSlot_0
+  m_Name: BattleCardSlot_00
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2728,9 +2740,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 1758762901}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8c9c382dddf548348a0ff982dd1abbc2, type: 3}
+  m_Script: {fileID: 11500000, guid: 8e577a043647406468e6260f29b73dd1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Position: 0
+  owner: 0
 --- !u!1 &1815938472
 GameObject:
   m_ObjectHideFlags: 0
@@ -3116,6 +3130,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 756d1121fd6045646aca6a705296a28e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Position: 0
 --- !u!1 &2078837269
 GameObject:
   m_ObjectHideFlags: 0
@@ -3160,25 +3175,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 756d1121fd6045646aca6a705296a28e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!1001 &2603210179569648608
+  Position: 0
+--- !u!1001 &796818143017460611
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 0}
+    m_TransformParent: {fileID: 1039390903}
     m_Modifications:
     - target: {fileID: 8948802225807959017, guid: dfcadbf16af9b18459e230e26ad2583d, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 681
+      value: -562
       objectReference: {fileID: 0}
     - target: {fileID: 8948802225807959017, guid: dfcadbf16af9b18459e230e26ad2583d, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 474
+      value: 236
       objectReference: {fileID: 0}
     - target: {fileID: 8948802225807959017, guid: dfcadbf16af9b18459e230e26ad2583d, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.6419301
+      value: 4.8639264
       objectReference: {fileID: 0}
     - target: {fileID: 8948802225807959017, guid: dfcadbf16af9b18459e230e26ad2583d, type: 3}
       propertyPath: m_LocalRotation.w
@@ -3186,15 +3202,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8948802225807959017, guid: dfcadbf16af9b18459e230e26ad2583d, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 8948802225807959017, guid: dfcadbf16af9b18459e230e26ad2583d, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 8948802225807959017, guid: dfcadbf16af9b18459e230e26ad2583d, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 8948802225807959017, guid: dfcadbf16af9b18459e230e26ad2583d, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -3210,7 +3226,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9176189440528920728, guid: dfcadbf16af9b18459e230e26ad2583d, type: 3}
       propertyPath: m_Name
-      value: CharacterCard
+      value: EnemyCharacterCard
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -3228,4 +3244,3 @@ SceneRoots:
   - {fileID: 426899612}
   - {fileID: 1461527169}
   - {fileID: 1169703889}
-  - {fileID: 2603210179569648608}
