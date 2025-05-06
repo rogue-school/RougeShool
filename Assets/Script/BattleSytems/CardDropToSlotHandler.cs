@@ -15,21 +15,35 @@ namespace Game.Battle
         {
             slot = GetComponent<ICardSlot>();
             if (slot == null)
-                Debug.LogError("[CardDropToSlotHandler] ICardSlot 컴포넌트를 찾을 수 없습니다.");
+            {
+                Debug.LogError("[CardDropToSlotHandler] ICardSlot 인터페이스를 구현한 컴포넌트를 찾을 수 없습니다.");
+            }
         }
 
         private void OnMouseUpAsButton()
         {
             ISkillCard draggedCard = CardDragHandler.CurrentCard;
-            if (draggedCard == null || slot == null) return;
+
+            if (draggedCard == null)
+            {
+                Debug.LogWarning("[CardDropToSlotHandler] 드롭할 카드가 없습니다.");
+                return;
+            }
+
+            if (slot == null)
+            {
+                Debug.LogError("[CardDropToSlotHandler] 슬롯이 초기화되지 않았습니다.");
+                return;
+            }
 
             // 슬롯에 카드 할당
             slot.SetCard(draggedCard);
+            Debug.Log($"[CardDropToSlotHandler] 카드가 슬롯에 드롭됨: {draggedCard.GetCardName()}");
 
-            // 모든 리스너에게 카드 드롭 알림 전송
+            // 이벤트 브로드캐스트
             CardDropEventSystem.NotifyCardDropped(draggedCard, slot);
 
-            // 드래그 해제
+            // 드래그 종료
             CardDragHandler.Clear();
         }
     }

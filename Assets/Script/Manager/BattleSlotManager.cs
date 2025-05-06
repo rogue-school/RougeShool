@@ -1,7 +1,7 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
-using Game.Battle;
+using Game.Slots;
 using Game.UI;
 
 namespace Game.Managers

@@ -1,4 +1,4 @@
-using Game.Battle;
+using Game.Slots;
 using Game.Player;
 using System.Collections.Generic;
 using UnityEngine;

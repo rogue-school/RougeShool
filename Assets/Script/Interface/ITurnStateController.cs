@@ -1,4 +1,4 @@
-using Game.Battle;
+using Game.Slots;
 
 namespace Game.Interface
 {

@@ -1,5 +1,5 @@
 using UnityEngine;
-using Game.Battle;
+using Game.Slots;
 using Game.Characters;
 using Game.Effect;
 using Game.Managers;

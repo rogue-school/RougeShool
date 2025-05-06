@@ -1,11 +1,11 @@
-namespace Game.Battle
+namespace Game.Slots
 {
     /// <summary>
-    /// 전투에서의 슬롯 순서를 나타냅니다 (선턴 / 후턴).
+    /// 전투 순서 슬롯 위치 (선턴 / 후턴)
     /// </summary>
     public enum BattleSlotPosition
     {
-        FIRST,   // 선턴
-        SECOND  // 후턴
+        FIRST,
+        SECOND
     }
 }

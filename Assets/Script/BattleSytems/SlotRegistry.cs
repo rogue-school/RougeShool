@@ -1,13 +1,11 @@
 using UnityEngine;
 using System.Collections.Generic;
 using Game.Slots;
-using Game.Battle;
 
 namespace Game.Managers
 {
     /// <summary>
-    /// 씬 내의 모든 슬롯(SlotAnchor)을 수집하고 필터링하는 중앙 슬롯 관리자입니다.
-    /// 캐릭터, 카드 드롭, UI용 슬롯을 위치/역할 기준으로 쉽게 조회할 수 있습니다.
+    /// 씬 내의 모든 슬롯(SlotAnchor)을 수집하고 포지션/용도 기준으로 조회할 수 있는 슬롯 관리자입니다.
     /// </summary>
     public class SlotRegistry : MonoBehaviour
     {
@@ -29,28 +27,33 @@ namespace Game.Managers
         }
 
         /// <summary>
-        /// 소유자, 용도, 전투 위치에 정확히 일치하는 슬롯 하나를 반환합니다.
+        /// 전투 실행 슬롯 (선/후공 슬롯) 조회
         /// </summary>
-        public SlotAnchor GetSlot(SlotOwner owner, SlotRole role, BattleSlotPosition battleSlotPosition)
+        public SlotAnchor GetBattleSlot(BattleSlotPosition position)
+        {
+            return allAnchors.Find(a => a.battleSlotPosition == position);
+        }
+
+        /// <summary>
+        /// 캐릭터 배치 슬롯 (플레이어 또는 적 위치) 조회
+        /// </summary>
+        public SlotAnchor GetCharacterSlot(CharacterSlotPosition position)
         {
             return allAnchors.Find(a =>
-                a.owner == owner &&
-                a.role == role &&
-                a.battleSlotPosition == battleSlotPosition
+                a.role == SlotRole.CharacterSpawn &&
+                a.characterSlotPosition == position
             );
         }
-
         /// <summary>
-        /// 소유자와 용도 기준으로 슬롯 여러 개를 반환합니다.
-        /// 예: 모든 Player 카드 드롭 슬롯
+        /// 스킬 카드 핸드 슬롯 (플레이어 또는 적 핸드 슬롯) 조회
         /// </summary>
-        public List<SlotAnchor> GetAll(SlotOwner owner, SlotRole role)
+        public SlotAnchor GetSkillCardSlot(SkillCardSlotPosition position)
         {
-            return allAnchors.FindAll(a => a.owner == owner && a.role == role);
+            return allAnchors.Find(a => a.skillCardSlotPosition == position);
         }
 
         /// <summary>
-        /// 전체 슬롯 리스트 반환 (디버깅용)
+        /// 디버깅용: 모든 슬롯 반환
         /// </summary>
         public List<SlotAnchor> GetAll() => allAnchors;
     }

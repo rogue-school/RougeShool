@@ -1,7 +1,5 @@
 using UnityEngine;
-using Game.Battle;
 using Game.Cards;
-using Game.Characters;
 using Game.Interface;
 using Game.Managers;
 using Game.Slots;
@@ -9,11 +7,16 @@ using Game.Slots;
 namespace Game.UI
 {
     /// <summary>
-    /// 적 캐릭터가 사용하는 전투 카드 슬롯 UI
+    /// 적 캐릭터가 사용하는 스킬 카드 핸드 슬롯 UI
     /// </summary>
     public class EnemyCardSlotUI : BaseCardSlotUI
     {
         private ISkillCard card;
+
+        /// <summary>
+        /// 이 슬롯의 위치 정보 (예: ENEMY_SLOT_1, ENEMY_SLOT_2, ...)
+        /// </summary>
+        public SkillCardSlotPosition Position { get; private set; }
 
         private void Awake()
         {
@@ -25,8 +28,10 @@ namespace Game.UI
             SlotAnchor anchor = GetComponent<SlotAnchor>();
             if (anchor != null)
             {
-                Position = anchor.battleSlotPosition;
-                caster = EnemyManager.Instance.GetEnemyBySlot(Position);
+                Position = anchor.skillCardSlotPosition;
+
+                // 현재 설계상 적은 1명만 존재하므로 GetEnemyBySlot(Position) 대신 GetEnemy() 사용
+                caster = EnemyManager.Instance.GetCurrentEnemy(); // 단일 적 기준
                 target = PlayerManager.Instance.GetPlayer() as ICharacter;
             }
         }

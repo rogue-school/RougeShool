@@ -1,7 +1,5 @@
 using UnityEngine;
-using Game.Battle;
 using Game.Cards;
-using Game.Characters;
 using Game.Slots;
 using Game.Interface;
 using Game.Managers;
@@ -9,11 +7,16 @@ using Game.Managers;
 namespace Game.UI
 {
     /// <summary>
-    /// 플레이어가 사용하는 전투 카드 슬롯 UI
+    /// 플레이어가 사용하는 스킬 카드 핸드 슬롯 UI
     /// </summary>
     public class PlayerCardSlotUI : BaseCardSlotUI
     {
         private ISkillCard card;
+
+        /// <summary>
+        /// 핸드 슬롯 위치 (PLAYER_SLOT_1, PLAYER_SLOT_2, ...)
+        /// </summary>
+        public SkillCardSlotPosition Position { get; private set; }
 
         private void Awake()
         {
@@ -25,16 +28,16 @@ namespace Game.UI
             SlotAnchor anchor = GetComponent<SlotAnchor>();
             if (anchor != null)
             {
-                Position = anchor.battleSlotPosition;
+                Position = anchor.skillCardSlotPosition;
 
                 caster = PlayerManager.Instance.GetPlayer() as ICharacter;
-                target = EnemyManager.Instance.GetRandomEnemy();
+                target = EnemyManager.Instance.GetCurrentEnemy(); // 구조상 단일 적만 존재
 
-                Debug.Log($"[PlayerCardSlotUI] 위치 바인딩 완료 - {Position}");
+                Debug.Log($"[PlayerCardSlotUI] 슬롯 자동 바인딩 완료 - {Position}");
             }
             else
             {
-                Debug.LogWarning("[PlayerCardSlotUI] SlotAnchor가 누락되었습니다.");
+                Debug.LogWarning("[PlayerCardSlotUI] SlotAnchor가 없습니다.");
             }
         }
 
@@ -42,7 +45,7 @@ namespace Game.UI
         {
             if (card == null || caster == null || target == null)
             {
-                Debug.LogWarning("[PlayerCardSlotUI] 카드, 캐스터 또는 타겟이 누락되었습니다.");
+                Debug.LogWarning("[PlayerCardSlotUI] 카드 실행 불가: 카드 또는 캐릭터가 null");
                 return;
             }
 

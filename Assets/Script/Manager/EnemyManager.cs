@@ -1,6 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
-using Game.Battle;
+using Game.Slots;
 using Game.Characters;
 
 namespace Game.Managers
@@ -46,6 +46,14 @@ namespace Game.Managers
                 return null;
 
             return activeEnemies[Random.Range(0, activeEnemies.Count)];
+        }
+
+        public EnemyCharacter GetCurrentEnemy()
+        {
+            if (activeEnemies.Count > 0)
+                return activeEnemies[0];
+
+            return null;
         }
     }
 }

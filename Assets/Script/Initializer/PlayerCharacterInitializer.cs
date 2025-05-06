@@ -8,13 +8,13 @@ namespace Game.Battle
     /// <summary>
     /// 전투 시작 시 플레이어 캐릭터를 지정된 슬롯에 배치하고 초기화합니다.
     /// </summary>
-    public class CharacterInitializer : MonoBehaviour
+    public class PlayerCharacterInitializer : MonoBehaviour
     {
         [SerializeField] private GameObject playerPrefab;
 
         private void Awake()
         {
-            Setup(); // 자동 실행도 유지
+            Setup(); // 자동 실행
         }
 
         /// <summary>
@@ -22,16 +22,12 @@ namespace Game.Battle
         /// </summary>
         public void Setup()
         {
-            // 슬롯 레지스트리에서 플레이어용 FIRST 슬롯을 가져온다
-            var slot = SlotRegistry.Instance.GetSlot(
-                SlotOwner.Player,
-                SlotRole.CharacterSpawn,
-                BattleSlotPosition.FIRST
-            );
+            // 캐릭터 배치용 슬롯에서 플레이어 위치 가져오기
+            var slot = SlotRegistry.Instance.GetCharacterSlot(CharacterSlotPosition.PLAYER_POSITION);
 
             if (slot == null)
             {
-                Debug.LogError("[CharacterInitializer] Player FIRST 슬롯을 찾을 수 없습니다.");
+                Debug.LogError("[CharacterInitializer] PLAYER_POSITION 슬롯을 찾을 수 없습니다.");
                 return;
             }
 

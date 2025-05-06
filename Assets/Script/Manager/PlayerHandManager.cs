@@ -1,32 +1,31 @@
 using UnityEngine;
-using System;
+using System.Collections.Generic;
 using Game.Player;
 using Game.UI;
 using Game.Cards;
 using Game.Interface;
+using Game.Slots;
+using Game.Managers;
 using Game.Utility;
 
 namespace Game.Managers
 {
     /// <summary>
     /// 플레이어의 핸드 슬롯에 스킬 카드를 배치하고 관리하는 매니저입니다.
-    /// 카드 데이터(SO)와 수치를 조합하여 런타임 카드 인스턴스를 생성합니다.
     /// </summary>
     public class PlayerHandManager : MonoBehaviour
     {
         [Header("기본 스킬 카드 세트")]
         [SerializeField] private PlayerSkillCard[] defaultCards;
 
-        [Header("핸드 슬롯들")]
-        [SerializeField] private PlayerCardSlotUI[] handSlots;
-
-        // 예시: 기본 수치 하드코딩 또는 나중에 외부 데이터 연동
         [SerializeField] private int[] defaultDamages;
         [SerializeField] private int[] defaultCoolTimes;
 
+        private Dictionary<SkillCardSlotPosition, PlayerCardSlotUI> handSlotDict;
+
         private void Awake()
         {
-            AutoBindSlots();
+            BindSlotsFromScene();
         }
 
         private void Start()
@@ -34,21 +33,27 @@ namespace Game.Managers
             GenerateInitialHand();
         }
 
-        private void AutoBindSlots()
+        private void BindSlotsFromScene()
         {
-            if (handSlots == null || handSlots.Length == 0)
+            handSlotDict = new Dictionary<SkillCardSlotPosition, PlayerCardSlotUI>();
+
+            var allSlots = FindObjectsOfType<PlayerCardSlotUI>();
+            foreach (var slot in allSlots)
             {
-                handSlots = FindObjectsOfType<PlayerCardSlotUI>();
-                Array.Sort(handSlots, (a, b) => a.name.CompareTo(b.name));
-                Debug.Log($"[PlayerHandManager] 자동 슬롯 참조 완료 - 총 {handSlots.Length}개");
+                if (!handSlotDict.ContainsKey(slot.Position))
+                {
+                    handSlotDict.Add(slot.Position, slot);
+                }
             }
+
+            Debug.Log($"[PlayerHandManager] 슬롯 자동 등록 완료: {handSlotDict.Count}개");
         }
 
         private void GenerateInitialHand()
         {
             ClearAll();
 
-            for (int i = 0; i < handSlots.Length && i < defaultCards.Length; i++)
+            for (int i = 0; i < defaultCards.Length; i++)
             {
                 var cardData = defaultCards[i];
                 if (cardData != null)
@@ -57,22 +62,32 @@ namespace Game.Managers
                     int coolTime = (i < defaultCoolTimes.Length) ? defaultCoolTimes[i] : 0;
 
                     ISkillCard runtimeCard = SkillCardFactory.CreatePlayerCard(cardData, damage, coolTime);
-                    handSlots[i].SetCard(runtimeCard);
 
-                    Debug.Log($"[PlayerHandManager] 슬롯 {i}에 카드 설정됨: {runtimeCard.GetCardName()}");
+                    SkillCardSlotPosition slotPos = (SkillCardSlotPosition)System.Enum.Parse(
+                        typeof(SkillCardSlotPosition), $"PLAYER_SLOT_{i + 1}"
+                    );
+
+                    if (handSlotDict.TryGetValue(slotPos, out var slot))
+                    {
+                        slot.SetCard(runtimeCard);
+                        Debug.Log($"[PlayerHandManager] {slotPos}에 카드 설정됨: {runtimeCard.GetCardName()}");
+                    }
                 }
             }
         }
 
-        public ISkillCard GetSlotCard(int index)
+        public ISkillCard GetSlotCard(SkillCardSlotPosition position)
         {
-            if (index < 0 || index >= handSlots.Length) return null;
-            return handSlots[index].GetCard();
+            if (handSlotDict.TryGetValue(position, out var slot))
+            {
+                return slot.GetCard();
+            }
+            return null;
         }
 
         public void ClearAll()
         {
-            foreach (var slot in handSlots)
+            foreach (var slot in handSlotDict.Values)
                 slot.Clear();
         }
     }

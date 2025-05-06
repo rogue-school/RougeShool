@@ -1,8 +1,6 @@
 using UnityEngine;
-using Game.Managers;
-using Game.Interface;
 using Game.Battle;
-using Game.BattleStates;
+using Game.Slots;
 
 namespace Game.Managers
 {
