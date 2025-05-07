@@ -1,7 +1,6 @@
 using Game.Player;
 using Game.Cards;
 using Game.Interface;
-using System.Collections.Generic;
 using Game.Enemy;
 
 namespace Game.Utility
@@ -14,25 +13,30 @@ namespace Game.Utility
     {
         public static ISkillCard CreatePlayerCard(PlayerSkillCard cardData, int damage, int coolTime)
         {
-            return new RuntimeSkillCard(
+            var card = new RuntimeSkillCard(
                 cardData.GetCardName(),
                 cardData.GetDescription(),
                 cardData.GetArtwork(),
-                cardData.GetEffects(),
-                damage,
-                coolTime
+                cardData.CreateEffects(), // 4번째: 효과 리스트
+                damage,                   // 5번째: 공격력
+                coolTime                  // 6번째: 쿨타임
             );
+
+            return card;
         }
+
         public static ISkillCard CreateEnemyCard(EnemySkillCard cardData, int damage)
         {
-            return new RuntimeSkillCard(
+            var card = new RuntimeSkillCard(
                 cardData.GetCardName(),
                 cardData.GetDescription(),
                 cardData.GetArtwork(),
-                cardData.GetEffects(),
-                damage,
-                0 // 적은 쿨타임 없음
+                cardData.CreateEffects(), // 4번째: 효과 리스트
+                damage,                   // 5번째: 공격력
+                0                         // 6번째: 쿨타임 없음
             );
+
+            return card;
         }
     }
 }

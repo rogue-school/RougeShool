@@ -1,20 +1,32 @@
+using System.Linq;
 using UnityEngine;
-using Game.UI;
+using Game.Interface;
+using Game.Managers;
 
-namespace Game.Battle.Initialization
+namespace Game.Initialization
 {
     /// <summary>
-    /// 전투 슬롯들을 자동으로 찾고 초기화하는 유틸리티입니다.
+    /// 씬에 존재하는 모든 슬롯을 자동 탐색하고 SlotRegistry에 등록합니다.
     /// </summary>
-    public static class SlotInitializer
+    public class SlotInitializer : MonoBehaviour
     {
-        public static void AutoBindAllSlots()
+        private void Awake()
         {
-            var slots = Object.FindObjectsOfType<BaseCardSlotUI>();
-            foreach (var slot in slots)
-                slot.AutoBind();
+            AutoBindAllSlots();
+        }
 
-            Debug.Log("[SlotInitializer] 모든 슬롯 자동 바인딩 완료");
+        public void AutoBindAllSlots()
+        {
+            var handSlots = FindObjectsOfType<MonoBehaviour>(true).OfType<IHandCardSlot>().ToArray();
+            SlotRegistry.Instance.RegisterHandSlots(handSlots);
+
+            var combatSlots = FindObjectsOfType<MonoBehaviour>(true).OfType<ICombatCardSlot>().ToArray();
+            SlotRegistry.Instance.RegisterCombatSlots(combatSlots);
+
+            var characterSlots = FindObjectsOfType<MonoBehaviour>(true).OfType<ICharacterSlot>().ToArray();
+            SlotRegistry.Instance.RegisterCharacterSlots(characterSlots);
+
+            Debug.Log($"[SlotInitializer] 슬롯 자동 등록 완료: 핸드({handSlots.Length}), 전투({combatSlots.Length}), 캐릭터({characterSlots.Length})");
         }
     }
 }

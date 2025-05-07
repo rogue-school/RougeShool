@@ -1,5 +1,4 @@
 using UnityEngine;
-using Game.Battle;
 using Game.Characters;
 using Game.Effect;
 using Game.Managers;
@@ -12,7 +11,7 @@ namespace Game.Cards
     {
         public void ExecuteEffect(CharacterBase caster, CharacterBase target, int value)
         {
-            if (BattleTurnManager.Instance is ITurnStateController controller)
+            if (CombatTurnManager.Instance is ITurnStateController controller)
             {
                 controller.RegisterPlayerGuard();
             }

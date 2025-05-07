@@ -1,48 +1,27 @@
 using UnityEngine;
-using Game.Characters;
-using Game.Slots;
-using Game.Managers;
+using Game.Player;
+using Game.Data;
 
-namespace Game.Battle
+namespace Game.Initialization
 {
-    /// <summary>
-    /// 전투 시작 시 플레이어 캐릭터를 지정된 슬롯에 배치하고 초기화합니다.
-    /// </summary>
     public class PlayerCharacterInitializer : MonoBehaviour
     {
-        [SerializeField] private GameObject playerPrefab;
+        [SerializeField] private PlayerCharacter playerPrefab;
+        [SerializeField] private Transform spawnPoint;
+        [SerializeField] private PlayerCharacterData defaultData;
 
-        private void Awake()
+        public void SpawnPlayer(PlayerCharacterData data)
         {
-            Setup(); // 자동 실행
+            var player = Instantiate(playerPrefab, spawnPoint.position, Quaternion.identity);
+            player.SetCharacterData(data);
         }
 
-        /// <summary>
-        /// 외부에서도 호출 가능한 Setup 함수
-        /// </summary>
         public void Setup()
         {
-            // 캐릭터 배치용 슬롯에서 플레이어 위치 가져오기
-            var slot = SlotRegistry.Instance.GetCharacterSlot(CharacterSlotPosition.PLAYER_POSITION);
-
-            if (slot == null)
-            {
-                Debug.LogError("[CharacterInitializer] PLAYER_POSITION 슬롯을 찾을 수 없습니다.");
-                return;
-            }
-
-            // 슬롯 위치에 플레이어 프리팹 생성
-            GameObject instance = Instantiate(playerPrefab, slot.transform.position, Quaternion.identity);
-            CharacterBase character = instance.GetComponent<CharacterBase>();
-
-            if (character == null)
-            {
-                Debug.LogError("[CharacterInitializer] 생성된 오브젝트에 CharacterBase가 없습니다.");
-                return;
-            }
-
-            character.Initialize(character.MaxHP);
-            Debug.Log("[CharacterInitializer] 플레이어 캐릭터가 슬롯에 배치되었습니다.");
+            if (defaultData != null)
+                SpawnPlayer(defaultData);
+            else
+                Debug.LogWarning("[PlayerCharacterInitializer] 기본 데이터가 설정되지 않았습니다.");
         }
     }
 }

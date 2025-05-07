@@ -1,32 +1,40 @@
 using UnityEngine;
-using Game.UI;
-using Game.Characters;
+using Game.Managers;
+using Game.Interface;
+using Game.Slots;
 
-namespace Game.Managers
+namespace Game.Initialization
 {
+    /// <summary>
+    /// 캐릭터 UI 슬롯에 캐릭터를 배치하는 초기화 스크립트입니다.
+    /// </summary>
     public class UIInitializer : MonoBehaviour
     {
-        public static UIInitializer Instance { get; private set; }
-
         private void Awake()
         {
-            Instance = this;
+            SetupCharacterUI();
         }
 
+        /// <summary>
+        /// 외부에서 수동으로 호출할 수 있는 UI 초기화 메서드
+        /// </summary>
         public void SetupCharacterUI()
         {
-            var uiCards = GameObject.FindObjectsOfType<CharacterCardUI>();
-
-            foreach (var ui in uiCards)
+            foreach (var slot in SlotRegistry.Instance.CharacterSlots)
             {
-                var character = ui.GetComponentInParent<CharacterBase>();
-                if (character == null)
+                switch (slot.GetOwner())
                 {
-                    Debug.LogWarning($"[UIInitializer] {ui.name} 주변에 CharacterBase를 찾을 수 없습니다.");
-                    continue;
+                    case SlotOwner.PLAYER:
+                        slot.SetCharacter(PlayerManager.Instance.GetPlayer());
+                        break;
+
+                    case SlotOwner.ENEMY:
+                        slot.SetCharacter(EnemyManager.Instance.GetCurrentEnemy());
+                        break;
                 }
-                ui.Initialize(character);
             }
+
+            Debug.Log("[UIInitializer] 캐릭터 UI 슬롯 초기화 완료");
         }
     }
 }

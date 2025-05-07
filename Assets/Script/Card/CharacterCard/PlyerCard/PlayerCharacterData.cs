@@ -1,20 +1,18 @@
-using Game.Slots;
-using Game.Player;
-using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Game Assets/Charater/PlayerCharacter", fileName = "NewPlayerCharacter")]
-public class PlayerCharacterData : ScriptableObject
+namespace Game.Data
 {
-    public string characterName;
-    public Sprite portrait;
-    public int maxHP;
+    /// <summary>
+    /// 플레이어 캐릭터의 기본 능력치를 저장하는 데이터
+    /// </summary>
+    [CreateAssetMenu(menuName = "Game/Character/Player Character Data")]
+    public class PlayerCharacterData : ScriptableObject
+    {
+        public string displayName;
+        public int maxHP;
+        public Sprite portrait;
+        public AudioClip voiceClip;
 
-    [Header("배치 슬롯 위치")]
-    public BattleSlotPosition slotPosition;
-
-    [Header("사용 가능한 스킬 카드 목록")]
-    public List<PlayerSkillCard> skillCards;
-
-    public BattleSlotPosition battleSlotPosition;
+        // 추가 확장 가능 필드 예: public int baseAttack;
+    }
 }

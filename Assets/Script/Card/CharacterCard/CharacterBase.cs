@@ -1,81 +1,80 @@
 using UnityEngine;
 using System.Collections.Generic;
 using Game.Interface;
-using Game.Slots;
-using Game.Battle;
 
 namespace Game.Characters
 {
+    /// <summary>
+    /// 플레이어 및 적 캐릭터의 공통 기반 클래스입니다.
+    /// 체력, 이름, 상태이펙트 등의 공통 속성을 포함합니다.
+    /// </summary>
     public abstract class CharacterBase : MonoBehaviour, ICharacter
     {
-        [SerializeField] protected int currentHP;
-        [SerializeField] protected int maxHP;
+        protected int maxHP;
+        protected int currentHP;
 
         protected List<IPerTurnEffect> perTurnEffects = new();
 
-        public virtual int CurrentHP => currentHP;
-        public virtual int MaxHP => maxHP;
-        public virtual bool IsDead => currentHP <= 0;
+        public virtual string GetName() => gameObject.name;
 
-        public abstract BattleSlotPosition BattleSlotPosition { get; }
+        public virtual int GetHP() => currentHP;
 
-        public abstract string characterName { get; }
-        public abstract Sprite portrait { get; }
-
-        public abstract string GetName();
-        public abstract Sprite GetPortrait();
+        public int GetCurrentHP() => currentHP;
 
         public virtual int GetMaxHP() => maxHP;
-        public virtual int GetCurrentHP() => currentHP;
 
-        public virtual void Initialize(int hp)
-        {
-            maxHP = hp;
-            currentHP = hp;
-            perTurnEffects.Clear();
-        }
+        public virtual Sprite GetPortrait() => null; // 자식 클래스에서 override 가능
 
         public virtual void TakeDamage(int amount)
         {
-            currentHP -= amount;
-            currentHP = Mathf.Max(0, currentHP);
-            Debug.Log($"[{characterName}] 피해 {amount} → 현재 체력: {currentHP}");
+            currentHP = Mathf.Max(currentHP - amount, 0);
+            Debug.Log($"{GetName()} 피해: -{amount}, 남은 체력: {currentHP}");
 
-            if (IsDead)
-                OnDeath();
+            if (currentHP <= 0)
+                Die();
         }
 
         public virtual void Heal(int amount)
         {
-            currentHP += amount;
-            currentHP = Mathf.Min(currentHP, maxHP);
-            Debug.Log($"[{characterName}] 회복 {amount} → 현재 체력: {currentHP}");
+            currentHP = Mathf.Min(currentHP + amount, maxHP);
+            Debug.Log($"{GetName()} 회복: +{amount}, 현재 체력: {currentHP}");
+        }
+
+        public virtual void Die()
+        {
+            Debug.Log($"{GetName()} 사망 처리됨.");
+        }
+
+        public virtual void SetMaxHP(int value)
+        {
+            maxHP = value;
+            currentHP = maxHP;
         }
 
         public virtual void RegisterPerTurnEffect(IPerTurnEffect effect)
         {
-            perTurnEffects.Add(effect);
-            Debug.Log($"[{characterName}] 지속 효과 등록됨: {effect.GetType().Name}");
+            if (!perTurnEffects.Contains(effect))
+            {
+                perTurnEffects.Add(effect);
+            }
         }
 
-        public virtual void ExecutePerTurnEffects()
+        public virtual void ProcessTurnEffects()
         {
-            for (int i = perTurnEffects.Count - 1; i >= 0; i--)
+            foreach (var effect in perTurnEffects.ToArray())
             {
-                var effect = perTurnEffects[i];
-                effect.OnTurnStart(this);
+                effect.ApplyPerTurn(this);
 
-                if (effect.IsExpired)
+                if (effect.IsFinished())
                 {
-                    Debug.Log($"[{characterName}] 지속 효과 종료: {effect.GetType().Name}");
-                    perTurnEffects.RemoveAt(i);
+                    perTurnEffects.Remove(effect);
                 }
             }
         }
 
-        protected virtual void OnDeath()
+        public bool IsDead()
         {
-            Debug.Log($"[{characterName}] 사망했습니다.");
+            return currentHP <= 0;
         }
     }
 }

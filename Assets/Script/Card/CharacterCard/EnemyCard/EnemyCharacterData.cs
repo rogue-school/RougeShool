@@ -1,23 +1,36 @@
-using Game.Slots;
-using Game.Enemy;
-using System.Collections.Generic;
 using UnityEngine;
+using Game.Enemy;
 
-[CreateAssetMenu(menuName = "Game Assets/Charater/EnemyCharacter", fileName = "EnemyCharacter")]
-public class EnemyCharacterData : ScriptableObject
+namespace Game.Data
 {
-    public string characterName;
-    public Sprite portrait;
-    public int maxHP;
+    /// <summary>
+    /// 적 캐릭터의 능력치 및 스킬 덱을 저장하는 데이터
+    /// </summary>
+    [CreateAssetMenu(menuName = "Game/Character/Enemy Character Data")]
+    public class EnemyCharacterData : ScriptableObject
+    {
+        public string displayName;
+        public int maxHP;
+        public EnemySkillCard[] skillDeck;
 
-    [Header("배치 슬롯 위치")]
-    public BattleSlotPosition slotPosition;
+        /// <summary>
+        /// 랜덤 스킬 카드 1장을 반환
+        /// </summary>
+        public EnemySkillCard GetRandomSkillCard()
+        {
+            if (skillDeck == null || skillDeck.Length == 0)
+                return null;
 
-    [Header("전투 시 사용할 스킬 카드")]
-    public List<EnemySkillCard> initialDeck;
+            int index = Random.Range(0, skillDeck.Length);
+            return skillDeck[index];
+        }
 
-    [Header("패시브 효과 카드 (전투 전 자동 적용)")]
-    public List<EnemySkillCard> passiveSkills;
-
-    public BattleSlotPosition battleSlotPosition;
+        /// <summary>
+        /// 카드별 공격력 수치를 계산 (데이터에 따라 확장 가능)
+        /// </summary>
+        public int GetSkillPowerFor(EnemySkillCard card)
+        {
+            return Random.Range(5, 15); // 임시 기본값
+        }
+    }
 }

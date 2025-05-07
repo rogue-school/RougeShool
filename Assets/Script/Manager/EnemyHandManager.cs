@@ -1,11 +1,11 @@
 using UnityEngine;
+using System.Collections.Generic;
 using Game.Cards;
 using Game.Interface;
-using Game.UI;
-using Game.Enemy;
-using Game.Utility;
+using Game.UI.Hand;
 using Game.Slots;
-using System.Collections.Generic;
+using Game.UI;
+using Game.Utility;
 
 namespace Game.Managers
 {
@@ -15,16 +15,29 @@ namespace Game.Managers
     /// </summary>
     public class EnemyHandManager : MonoBehaviour
     {
-        private EnemySkillDeck enemyDeck;
-        private SkillCardUI cardUIPrefab;
-        private Dictionary<SkillCardSlotPosition, EnemyCardSlotUI> handSlotDict;
+        public static EnemyHandManager Instance { get; private set; }
+
+        [SerializeField] private EnemySkillDeck enemyDeck;
+        [SerializeField] private SkillCardUI cardUIPrefab;
+
+        private Dictionary<SkillCardSlotPosition, IHandCardSlot> handSlots;
 
         private void Awake()
         {
-            enemyDeck = Resources.Load<EnemySkillDeck>("EnemyDecks/DefaultEnemyDeck");
-            cardUIPrefab = Resources.Load<SkillCardUI>("UI/SkillCardUI");
+            if (Instance != null && Instance != this)
+            {
+                Destroy(this);
+                return;
+            }
+            Instance = this;
 
-            BindSlotsFromScene();
+            if (enemyDeck == null)
+                enemyDeck = Resources.Load<EnemySkillDeck>("EnemyDecks/DefaultEnemyDeck");
+
+            if (cardUIPrefab == null)
+                cardUIPrefab = Resources.Load<SkillCardUI>("UI/SkillCardUI");
+
+            handSlots = SlotRegistry.Instance.GetHandSlots(SlotOwner.ENEMY);
         }
 
         private void Start()
@@ -32,42 +45,23 @@ namespace Game.Managers
             GenerateInitialHand();
         }
 
-        private void BindSlotsFromScene()
-        {
-            handSlotDict = new Dictionary<SkillCardSlotPosition, EnemyCardSlotUI>();
-
-            var allSlots = FindObjectsOfType<EnemyCardSlotUI>();
-            foreach (var slot in allSlots)
-            {
-                if (!handSlotDict.ContainsKey(slot.Position))
-                {
-                    handSlotDict.Add(slot.Position, slot);
-                }
-            }
-
-            Debug.Log($"[EnemyHandManager] 슬롯 자동 등록 완료: {handSlotDict.Count}개");
-        }
-
         public void GenerateInitialHand()
         {
-            if (enemyDeck == null || enemyDeck.cards.Count == 0) return;
-
-            foreach (var kvp in handSlotDict)
+            foreach (var kvp in handSlots)
             {
                 var so = enemyDeck.GetRandomCard();
-                int damage = UnityEngine.Random.Range(5, 15);
-                var runtimeCard = SkillCardFactory.CreateEnemyCard(so, damage);
+                var runtimeCard = SkillCardFactory.CreateEnemyCard(so, Random.Range(5, 15));
 
-                var cardUI = Instantiate(cardUIPrefab, kvp.Value.transform);
+                var cardUI = Instantiate(cardUIPrefab, ((MonoBehaviour)kvp.Value).transform);
                 cardUI.SetCard(runtimeCard);
 
                 kvp.Value.SetCard(runtimeCard);
             }
         }
 
-        public ISkillCard GetSlotCard(SkillCardSlotPosition pos)
+        public ISkillCard GetSlotCard(SkillCardSlotPosition position)
         {
-            return handSlotDict.TryGetValue(pos, out var slot) ? slot.GetCard() : null;
+            return handSlots.TryGetValue(position, out var slot) ? slot.GetCard() : null;
         }
 
         public ISkillCard GetCardForCombat()
@@ -80,20 +74,12 @@ namespace Game.Managers
             ISkillCard card2 = GetSlotCard(SkillCardSlotPosition.ENEMY_SLOT_2);
             ISkillCard card3 = GetSlotCard(SkillCardSlotPosition.ENEMY_SLOT_3);
 
-            // 1 <- 2, 2 <- 3
-            if (handSlotDict.TryGetValue(SkillCardSlotPosition.ENEMY_SLOT_1, out var slot1))
-                slot1.SetCard(card2);
+            handSlots[SkillCardSlotPosition.ENEMY_SLOT_1].SetCard(card2);
+            handSlots[SkillCardSlotPosition.ENEMY_SLOT_2].SetCard(card3);
 
-            if (handSlotDict.TryGetValue(SkillCardSlotPosition.ENEMY_SLOT_2, out var slot2))
-                slot2.SetCard(card3);
-
-            // 3 <- 새 카드
-            if (handSlotDict.TryGetValue(SkillCardSlotPosition.ENEMY_SLOT_3, out var slot3))
-            {
-                var so = enemyDeck.GetRandomCard();
-                var newCard = SkillCardFactory.CreateEnemyCard(so, UnityEngine.Random.Range(5, 15));
-                slot3.SetCard(newCard);
-            }
+            var so = enemyDeck.GetRandomCard();
+            var newCard = SkillCardFactory.CreateEnemyCard(so, Random.Range(5, 15));
+            handSlots[SkillCardSlotPosition.ENEMY_SLOT_3].SetCard(newCard);
         }
     }
 }

@@ -1,28 +1,41 @@
 using UnityEngine;
-using Game.Slots;
-using Game.Battle;
-using Game.Cards;
-using Game.Player;
+using Game.Characters;
+using Game.Data;
 
-namespace Game.Characters
+namespace Game.Player
 {
+    /// <summary>
+    /// 플레이어 캐릭터. 캐릭터 데이터 기반으로 초기화되며, CharacterBase를 상속받습니다.
+    /// </summary>
     public class PlayerCharacter : CharacterBase
     {
         [SerializeField] private PlayerCharacterData characterData;
 
-        public override BattleSlotPosition BattleSlotPosition => characterData.battleSlotPosition;
+        public PlayerCharacterData Data => characterData;
 
-        public override string characterName => characterData.characterName;
-        public override Sprite portrait => characterData.portrait;
-
-        public override string GetName() => characterName;
-        public override Sprite GetPortrait() => portrait;
-
-        public override void Initialize(int hp)
+        public void Initialize(int maxHP)
         {
-            base.Initialize(hp);
-            maxHP = characterData.maxHP;
-            currentHP = maxHP;
+            SetMaxHP(maxHP);
+        }
+
+        private void Awake()
+        {
+            if (characterData != null)
+            {
+                SetMaxHP(characterData.maxHP);
+                Debug.Log($"[PlayerCharacter] {characterData.displayName} 초기화 완료");
+            }
+        }
+
+        public void SetCharacterData(PlayerCharacterData data)
+        {
+            characterData = data;
+        }
+
+        public override void Die()
+        {
+            base.Die();
+            Debug.Log("[PlayerCharacter] 사망 → 게임 오버 처리 필요");
         }
     }
 }

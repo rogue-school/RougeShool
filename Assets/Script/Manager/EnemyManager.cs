@@ -1,16 +1,17 @@
 using UnityEngine;
-using System.Collections.Generic;
-using Game.Slots;
-using Game.Characters;
+using Game.Enemy;
 
 namespace Game.Managers
 {
+    /// <summary>
+    /// 전투 씬에 등장한 현재 적 캐릭터를 관리하는 매니저입니다.
+    /// 적은 항상 한 명만 존재합니다.
+    /// </summary>
     public class EnemyManager : MonoBehaviour
     {
         public static EnemyManager Instance { get; private set; }
 
-        [SerializeField]
-        private List<EnemyCharacter> activeEnemies = new(); // 여러 적 관리
+        private EnemyCharacter currentEnemy;
 
         private void Awake()
         {
@@ -19,41 +20,31 @@ namespace Game.Managers
                 Destroy(gameObject);
                 return;
             }
-
             Instance = this;
         }
 
-        public void RegisterEnemy(EnemyCharacter enemy)
+        /// <summary>
+        /// 현재 씬에 등장한 적을 설정합니다.
+        /// </summary>
+        public void SetEnemy(EnemyCharacter enemy)
         {
-            if (!activeEnemies.Contains(enemy))
-                activeEnemies.Add(enemy);
+            currentEnemy = enemy;
         }
 
-        public EnemyCharacter GetEnemyBySlot(BattleSlotPosition position)
-        {
-            foreach (var enemy in activeEnemies)
-            {
-                if (enemy.BattleSlotPosition == position)
-                    return enemy;
-            }
-
-            return null;
-        }
-
-        public EnemyCharacter GetRandomEnemy()
-        {
-            if (activeEnemies.Count == 0)
-                return null;
-
-            return activeEnemies[Random.Range(0, activeEnemies.Count)];
-        }
-
+        /// <summary>
+        /// 현재 적 캐릭터를 반환합니다.
+        /// </summary>
         public EnemyCharacter GetCurrentEnemy()
         {
-            if (activeEnemies.Count > 0)
-                return activeEnemies[0];
+            return currentEnemy;
+        }
 
-            return null;
+        /// <summary>
+        /// 현재 적 캐릭터가 존재하는지 여부
+        /// </summary>
+        public bool HasEnemy()
+        {
+            return currentEnemy != null;
         }
     }
 }

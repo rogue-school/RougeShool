@@ -5,7 +5,7 @@ namespace Game.Slots
     /// </summary>
     public enum SlotOwner
     {
-        Player,
-        Enemy
+        PLAYER,
+        ENEMY
     }
 }

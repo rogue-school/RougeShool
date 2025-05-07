@@ -9,6 +9,6 @@ namespace Game.Interface
     {
         void RegisterPlayerGuard();
 
-        void ReserveEnemySlot(BattleSlotPosition slot);
+        void ReserveEnemySlot(CombatSlotPosition slot);
     }
 }

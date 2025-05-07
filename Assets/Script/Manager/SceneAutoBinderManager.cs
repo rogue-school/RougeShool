@@ -1,8 +1,5 @@
 using UnityEngine;
-using System;
 using Game.Managers;
-using Game.Battle;
-using Game.UI;
 
 namespace Game.Utility
 {
@@ -11,13 +8,13 @@ namespace Game.Utility
     /// </summary>
     public class SceneAutoBinderManager : MonoBehaviour
     {
-        [SerializeField] private BattleSlotManager battleSlotManager;
+        [SerializeField] private CombatSlotManager battleSlotManager;
         [SerializeField] private PlayerHandManager playerHandManager;
         [SerializeField] private EnemyHandManager enemyHandManager;
 
         private void Awake()
         {
-            battleSlotManager ??= FindObjectOfType<BattleSlotManager>();
+            battleSlotManager ??= FindObjectOfType<CombatSlotManager>();
             playerHandManager ??= FindObjectOfType<PlayerHandManager>();
             enemyHandManager ??= FindObjectOfType<EnemyHandManager>();
 

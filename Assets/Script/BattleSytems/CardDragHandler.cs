@@ -1,30 +1,43 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using Game.Interface;
 
-namespace Game.Battle
+namespace Game.Utility
 {
     /// <summary>
-    /// 드래그 중인 카드 정보를 저장하고 접근할 수 있는 클래스입니다.
-    /// 싱글턴 대신 정적 필드 방식으로 간단히 처리합니다.
+    /// 카드 드래그 동작을 처리합니다.
+    /// 카드 UI에 부착되어 드래그를 지원합니다.
     /// </summary>
-    public class CardDragHandler : MonoBehaviour
+    public class CardDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
-        public static ISkillCard CurrentCard { get; private set; }
+        private CanvasGroup canvasGroup;
+        private RectTransform rectTransform;
+        private Vector3 originalPosition;
+        private Transform originalParent;
 
-        /// <summary>
-        /// 드래그 시작 시 카드 등록
-        /// </summary>
-        public static void SetDraggedCard(ISkillCard card)
+        private void Awake()
         {
-            CurrentCard = card;
+            canvasGroup = GetComponent<CanvasGroup>();
+            rectTransform = GetComponent<RectTransform>();
         }
 
-        /// <summary>
-        /// 드래그 종료 시 카드 초기화
-        /// </summary>
-        public static void Clear()
+        public void OnBeginDrag(PointerEventData eventData)
         {
-            CurrentCard = null;
+            originalPosition = rectTransform.position;
+            originalParent = transform.parent;
+            canvasGroup.blocksRaycasts = false;
+        }
+
+        public void OnDrag(PointerEventData eventData)
+        {
+            rectTransform.position = eventData.position;
+        }
+
+        public void OnEndDrag(PointerEventData eventData)
+        {
+            rectTransform.position = originalPosition;
+            transform.SetParent(originalParent);
+            canvasGroup.blocksRaycasts = true;
         }
     }
 }

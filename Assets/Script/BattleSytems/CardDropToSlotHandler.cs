@@ -1,50 +1,44 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using Game.Interface;
-using Game.Events;
+using Game.Slots;
+using Game.UI;
 
-namespace Game.Battle
+namespace Game.Utility
 {
     /// <summary>
-    /// 드래그된 카드를 슬롯에 드롭했을 때, 해당 슬롯에 할당하는 역할을 수행합니다.
+    /// 카드가 드롭되었을 때의 처리를 담당합니다.
+    /// 슬롯 오브젝트에 부착되어야 하며, ICombatCardSlot을 구현한 슬롯이어야 합니다.
     /// </summary>
-    public class CardDropToSlotHandler : MonoBehaviour
+    public class CardDropToSlotHandler : MonoBehaviour, IDropHandler
     {
-        private ICardSlot slot;
-
-        private void Awake()
+        public void OnDrop(PointerEventData eventData)
         {
-            slot = GetComponent<ICardSlot>();
-            if (slot == null)
-            {
-                Debug.LogError("[CardDropToSlotHandler] ICardSlot 인터페이스를 구현한 컴포넌트를 찾을 수 없습니다.");
-            }
-        }
+            // 드래그된 카드가 있는지 확인
+            GameObject draggedObject = eventData.pointerDrag;
+            if (draggedObject == null) return;
 
-        private void OnMouseUpAsButton()
-        {
-            ISkillCard draggedCard = CardDragHandler.CurrentCard;
+            // 드래그된 카드가 ISkillCardUI를 포함하고 있는지 확인
+            SkillCardUI cardUI = draggedObject.GetComponent<SkillCardUI>();
+            if (cardUI == null) return;
 
-            if (draggedCard == null)
-            {
-                Debug.LogWarning("[CardDropToSlotHandler] 드롭할 카드가 없습니다.");
-                return;
-            }
+            ISkillCard card = cardUI.GetCard();
+            if (card == null) return;
 
-            if (slot == null)
-            {
-                Debug.LogError("[CardDropToSlotHandler] 슬롯이 초기화되지 않았습니다.");
-                return;
-            }
+            // 드롭된 슬롯이 ICombatCardSlot인지 확인
+            var slot = GetComponent<ICombatCardSlot>();
+            if (slot == null) return;
 
-            // 슬롯에 카드 할당
-            slot.SetCard(draggedCard);
-            Debug.Log($"[CardDropToSlotHandler] 카드가 슬롯에 드롭됨: {draggedCard.GetCardName()}");
+            // 카드에 슬롯 위치를 주입하고 슬롯에 등록
+            var combatPos = slot.GetCombatPosition();
+            card.SetCombatSlot(combatPos);
+            slot.SetCard(card);
 
-            // 이벤트 브로드캐스트
-            CardDropEventSystem.NotifyCardDropped(draggedCard, slot);
+            // 카드 UI를 슬롯에 붙임
+            draggedObject.transform.SetParent(((MonoBehaviour)slot).transform);
+            draggedObject.transform.localPosition = Vector3.zero;
 
-            // 드래그 종료
-            CardDragHandler.Clear();
+            Debug.Log($"[CardDropToSlotHandler] 카드 드롭 성공: {card.GetCardName()} → {combatPos}");
         }
     }
 }

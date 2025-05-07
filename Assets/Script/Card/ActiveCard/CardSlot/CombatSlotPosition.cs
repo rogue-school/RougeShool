@@ -1,9 +1,9 @@
 namespace Game.Slots
 {
     /// <summary>
-    /// 전투 순서 슬롯 위치 (선턴 / 후턴)
+    /// 전투 실행 슬롯 위치 (선공 / 후공)
     /// </summary>
-    public enum BattleSlotPosition
+    public enum CombatSlotPosition
     {
         FIRST,
         SECOND

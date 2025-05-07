@@ -12,9 +12,9 @@ namespace Game.Cards
     {
         public void ExecuteEffect(CharacterBase caster, CharacterBase target, int value)
         {
-            if (BattleTurnManager.Instance is ITurnStateController controller)
+            if (CombatTurnManager.Instance is ITurnStateController controller)
             {
-                controller.ReserveEnemySlot(BattleSlotPosition.FIRST);
+                controller.ReserveEnemySlot(CombatSlotPosition.FIRST);
             }
         }
     }

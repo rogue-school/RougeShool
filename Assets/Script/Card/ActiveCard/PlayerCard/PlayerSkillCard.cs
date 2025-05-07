@@ -1,42 +1,57 @@
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
 using Game.Interface;
+using Game.Slots;
 using Game.Effect;
 
 namespace Game.Player
 {
     /// <summary>
-    /// 플레이어가 사용하는 공격 스킬 카드의 ScriptableObject 정의입니다.
-    /// 효과 및 카드 메타데이터만 포함합니다.
-    /// 수치는 외부에서 주입됩니다.
+    /// 플레이어가 사용하는 스킬 카드의 데이터 ScriptableObject입니다.
+    /// 기본 정보(이름, 설명, 쿨타임, 효과)를 포함하고, 런타임에서 슬롯 위치를 설정할 수 있습니다.
     /// </summary>
-    [CreateAssetMenu(menuName = "Game Assets/Skill Cards/Player Skill Card")]
-    public class PlayerSkillCard : ScriptableObject
+    [CreateAssetMenu(menuName = "Game/Card/Player Skill Card")]
+    public class PlayerSkillCard : ScriptableObject, ISkillCard
     {
-        [Header("카드 정보")]
+        [Header("기본 카드 정보")]
         [SerializeField] private string cardName;
         [SerializeField] private string description;
         [SerializeField] private Sprite artwork;
+        [SerializeField] private int coolTime;
 
-        [Header("이 카드가 가지는 효과")]
+        [Header("카드 효과")]
         [SerializeField] private List<ScriptableObject> effectObjects;
+
+        // 외부에서 주입될 변수
+        private int power;
+
+        // 슬롯 정보
+        private SkillCardSlotPosition? handSlot = null;
+        private CombatSlotPosition? combatSlot = null;
 
         public string GetCardName() => cardName;
         public string GetDescription() => description;
         public Sprite GetArtwork() => artwork;
+        public int GetCoolTime() => coolTime;
+        public int GetEffectPower(ICardEffect effect) => power;
 
-        /// <summary>
-        /// 안전한 형변환을 통해 ICardEffect 리스트를 반환합니다.
-        /// </summary>
-        public List<ICardEffect> GetEffects()
+        public List<ICardEffect> CreateEffects()
         {
-            List<ICardEffect> effects = new();
+            var list = new List<ICardEffect>();
             foreach (var obj in effectObjects)
             {
                 if (obj is ICardEffect effect)
-                    effects.Add(effect);
+                    list.Add(effect);
             }
-            return effects;
+            return list;
         }
+
+        public void SetPower(int value) => power = value;
+
+        public void SetHandSlot(SkillCardSlotPosition slot) => handSlot = slot;
+        public SkillCardSlotPosition? GetHandSlot() => handSlot;
+
+        public void SetCombatSlot(CombatSlotPosition slot) => combatSlot = slot;
+        public CombatSlotPosition? GetCombatSlot() => combatSlot;
     }
 }

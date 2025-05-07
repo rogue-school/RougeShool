@@ -15,7 +15,7 @@ namespace Game.Slots
         public SlotRole role;
 
         [Header("전투 턴 슬롯 위치 (선공/후공)")]
-        public BattleSlotPosition battleSlotPosition;
+        public CombatSlotPosition battleSlotPosition;
 
         [Header("캐릭터 배치 슬롯 위치 (플레이어/적)")]
         public CharacterSlotPosition characterSlotPosition;
@@ -26,7 +26,7 @@ namespace Game.Slots
 #if UNITY_EDITOR
         private void OnDrawGizmos()
         {
-            Gizmos.color = owner == SlotOwner.Player ? Color.cyan : Color.red;
+            Gizmos.color = owner == SlotOwner.PLAYER ? Color.cyan : Color.red;
             Gizmos.DrawWireCube(transform.position, Vector3.one * 0.5f);
 
             string label = $"Owner: {owner}\n" +

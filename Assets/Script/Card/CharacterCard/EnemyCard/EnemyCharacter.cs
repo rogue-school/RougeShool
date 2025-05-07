@@ -1,34 +1,40 @@
 using UnityEngine;
-using Game.Slots;
-using Game.Battle;
-using Game.Cards;
-using Game.Enemy;
-using Game.Interface;
+using Game.Characters;
+using Game.Data;
 
-namespace Game.Characters
+namespace Game.Enemy
 {
     /// <summary>
-    /// 전투 중 등장하는 적 캐릭터. CharacterBase를 상속하고, ICharacter 인터페이스를 구현합니다.
+    /// 적 캐릭터. EnemyCharacterData를 기반으로 초기화되며, CharacterBase를 상속합니다.
     /// </summary>
-    public class EnemyCharacter : CharacterBase, ICharacter
+    public class EnemyCharacter : CharacterBase
     {
         [SerializeField] private EnemyCharacterData characterData;
 
-        public override BattleSlotPosition BattleSlotPosition => characterData.battleSlotPosition;
-        public override string characterName => characterData.characterName;
-        public override Sprite portrait => characterData.portrait;
+        public EnemyCharacterData Data => characterData;
 
-        public override string GetName() => characterName;
-        public override Sprite GetPortrait() => portrait;
-
-        public override void Initialize(int hp)
+        public void Initialize(int maxHP)
         {
-            base.Initialize(hp);
-            maxHP = characterData.maxHP;
-            currentHP = maxHP;
+            SetMaxHP(maxHP);
+        }
+        private void Awake()
+        {
+            if (characterData != null)
+            {
+                SetMaxHP(characterData.maxHP);
+                Debug.Log($"[EnemyCharacter] {characterData.displayName} 초기화 완료");
+            }
         }
 
-        public int GetMaxHP() => maxHP;
-        public int GetCurrentHP() => currentHP;
+        public void SetCharacterData(EnemyCharacterData data)
+        {
+            characterData = data;
+        }
+
+        public override void Die()
+        {
+            base.Die();
+            Debug.Log("[EnemyCharacter] 사망 → 전투 종료 처리 필요");
+        }
     }
 }

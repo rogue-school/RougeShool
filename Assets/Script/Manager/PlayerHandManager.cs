@@ -1,94 +1,95 @@
 using UnityEngine;
 using System.Collections.Generic;
-using Game.Player;
-using Game.UI;
-using Game.Cards;
 using Game.Interface;
+using Game.UI.Hand;
+using Game.Player;
 using Game.Slots;
-using Game.Managers;
-using Game.Utility;
+using Game.Combat.Turn;
 
 namespace Game.Managers
 {
     /// <summary>
-    /// 플레이어의 핸드 슬롯에 스킬 카드를 배치하고 관리하는 매니저입니다.
+    /// 플레이어의 핸드 슬롯과 카드 초기화를 담당하며,
+    /// 카드 드래그 후 전투 슬롯 자동 배치를 지원합니다.
     /// </summary>
     public class PlayerHandManager : MonoBehaviour
     {
-        [Header("기본 스킬 카드 세트")]
         [SerializeField] private PlayerSkillCard[] defaultCards;
-
         [SerializeField] private int[] defaultDamages;
         [SerializeField] private int[] defaultCoolTimes;
 
-        private Dictionary<SkillCardSlotPosition, PlayerCardSlotUI> handSlotDict;
+        private Dictionary<SkillCardSlotPosition, IHandCardSlot> handSlots;
 
         private void Awake()
         {
-            BindSlotsFromScene();
+            handSlots = SlotRegistry.Instance.GetHandSlots(SlotOwner.PLAYER);
         }
 
-        private void Start()
-        {
-            GenerateInitialHand();
-        }
-
-        private void BindSlotsFromScene()
-        {
-            handSlotDict = new Dictionary<SkillCardSlotPosition, PlayerCardSlotUI>();
-
-            var allSlots = FindObjectsOfType<PlayerCardSlotUI>();
-            foreach (var slot in allSlots)
-            {
-                if (!handSlotDict.ContainsKey(slot.Position))
-                {
-                    handSlotDict.Add(slot.Position, slot);
-                }
-            }
-
-            Debug.Log($"[PlayerHandManager] 슬롯 자동 등록 완료: {handSlotDict.Count}개");
-        }
-
-        private void GenerateInitialHand()
+        /// <summary>
+        /// 전투 시작 시 초기 핸드 카드 생성 및 슬롯에 설정
+        /// </summary>
+        public void GenerateInitialHand()
         {
             ClearAll();
 
-            for (int i = 0; i < defaultCards.Length; i++)
+            int i = 0;
+            foreach (var kvp in handSlots)
             {
-                var cardData = defaultCards[i];
-                if (cardData != null)
-                {
-                    int damage = (i < defaultDamages.Length) ? defaultDamages[i] : 5;
-                    int coolTime = (i < defaultCoolTimes.Length) ? defaultCoolTimes[i] : 0;
+                var card = ScriptableObject.Instantiate(defaultCards[i]);
+                card.SetPower(defaultDamages[i]);
+                card.SetCoolTime(defaultCoolTimes[i]);
 
-                    ISkillCard runtimeCard = SkillCardFactory.CreatePlayerCard(cardData, damage, coolTime);
-
-                    SkillCardSlotPosition slotPos = (SkillCardSlotPosition)System.Enum.Parse(
-                        typeof(SkillCardSlotPosition), $"PLAYER_SLOT_{i + 1}"
-                    );
-
-                    if (handSlotDict.TryGetValue(slotPos, out var slot))
-                    {
-                        slot.SetCard(runtimeCard);
-                        Debug.Log($"[PlayerHandManager] {slotPos}에 카드 설정됨: {runtimeCard.GetCardName()}");
-                    }
-                }
+                kvp.Value.SetCard(card);
+                i++;
             }
         }
 
-        public ISkillCard GetSlotCard(SkillCardSlotPosition position)
-        {
-            if (handSlotDict.TryGetValue(position, out var slot))
-            {
-                return slot.GetCard();
-            }
-            return null;
-        }
-
+        /// <summary>
+        /// 핸드 슬롯 전부 비움
+        /// </summary>
         public void ClearAll()
         {
-            foreach (var slot in handSlotDict.Values)
-                slot.Clear();
+            foreach (var kvp in handSlots)
+            {
+                kvp.Value.Clear();
+            }
+        }
+
+        /// <summary>
+        /// 특정 슬롯 위치의 카드를 가져옴
+        /// </summary>
+        public ISkillCard GetSlotCard(SkillCardSlotPosition position)
+        {
+            return handSlots.TryGetValue(position, out var slot) ? slot.GetCard() : null;
+        }
+
+        /// <summary>
+        /// 플레이어가 핸드에서 선택한 카드 등록 요청 (외부에서 호출)
+        /// → 전투 슬롯에 자동 배치됨
+        /// </summary>
+        public void SubmitCardFromHand(ISkillCard selectedCard)
+        {
+            if (selectedCard == null)
+            {
+                Debug.LogWarning("[PlayerHandManager] 선택된 카드가 null입니다.");
+                return;
+            }
+
+            CombatTurnManager turnManager = FindObjectOfType<CombatTurnManager>();
+            if (turnManager != null)
+            {
+                turnManager.RegisterPlayerCard(selectedCard);
+                Debug.Log($"[PlayerHandManager] 카드 제출 완료: {selectedCard.GetCardName()}");
+            }
+
+            foreach (var kvp in handSlots)
+            {
+                if (kvp.Value.GetCard() == selectedCard)
+                {
+                    kvp.Value.Clear();
+                    break;
+                }
+            }
         }
     }
 }

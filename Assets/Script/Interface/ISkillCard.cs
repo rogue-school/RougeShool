@@ -1,11 +1,13 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Game.Slots;
 using Game.Effect;
 
 namespace Game.Interface
 {
     /// <summary>
     /// 모든 스킬 카드(플레이어 및 적)가 구현해야 하는 공통 인터페이스입니다.
+    /// 슬롯 위치(핸드 / 전투) 정보를 각각 별도로 관리합니다.
     /// </summary>
     public interface ISkillCard
     {
@@ -38,5 +40,25 @@ namespace Game.Interface
         /// 해당 효과에 대한 수치 (공격력 등)를 반환
         /// </summary>
         int GetEffectPower(ICardEffect effect);
+
+        /// <summary>
+        /// 핸드 슬롯 위치 설정
+        /// </summary>
+        void SetHandSlot(SkillCardSlotPosition slot);
+
+        /// <summary>
+        /// 핸드 슬롯 위치 반환
+        /// </summary>
+        SkillCardSlotPosition? GetHandSlot();
+
+        /// <summary>
+        /// 전투 슬롯 위치 설정
+        /// </summary>
+        void SetCombatSlot(CombatSlotPosition slot);
+
+        /// <summary>
+        /// 전투 슬롯 위치 반환
+        /// </summary>
+        CombatSlotPosition? GetCombatSlot();
     }
 }
