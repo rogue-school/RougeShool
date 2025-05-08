@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using Game.Cards;
 using Game.Interface;
-using Game.UI.Hand;
+using Game.Managers;
 using Game.Slots;
 using Game.UI;
 using Game.Utility;

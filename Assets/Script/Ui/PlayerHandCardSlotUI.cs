@@ -1,5 +1,4 @@
 using UnityEngine;
-using Game.Cards;
 using Game.Interface;
 using Game.Slots;
 
@@ -20,7 +19,7 @@ namespace Game.UI.Hand
         public void SetCard(ISkillCard card)
         {
             currentCard = card;
-            currentCard.SetOwnerSlot(position);
+            currentCard.SetHandSlot(position);
         }
 
         public ISkillCard GetCard()

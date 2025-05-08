@@ -12,14 +12,24 @@ namespace Game.Managers
     /// </summary>
     public class CombatTurnManager : MonoBehaviour
     {
-        private ICombatTurnState currentState;
+        public static CombatTurnManager Instance { get; private set; }
 
+        private ICombatTurnState currentState;
         private ISkillCard enemyCard;
         private ISkillCard playerCard;
 
-        /// <summary>
-        /// 턴 상태를 설정하고 상태 전환을 수행합니다.
-        /// </summary>
+        private void Awake()
+        {
+            // 싱글톤 초기화
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+
         public void SetState(ICombatTurnState newState)
         {
             currentState?.ExitState();
@@ -34,17 +44,11 @@ namespace Game.Managers
             currentState?.ExecuteState();
         }
 
-        /// <summary>
-        /// 적이 사용하는 카드 등록
-        /// </summary>
         public void ReserveEnemyCard(ISkillCard card)
         {
             enemyCard = card;
         }
 
-        /// <summary>
-        /// 플레이어가 핸드에서 제출한 카드 등록 → 두 카드가 모두 준비되면 전투 실행
-        /// </summary>
         public void RegisterPlayerCard(ISkillCard card)
         {
             playerCard = card;
@@ -55,15 +59,12 @@ namespace Game.Managers
                 Debug.LogWarning("[CombatTurnManager] 적 카드가 아직 준비되지 않았습니다.");
         }
 
-        /// <summary>
-        /// 전투 슬롯에 배치된 두 카드를 실행
-        /// </summary>
         private void ExecuteCombat()
         {
             var slotFirst = SlotRegistry.Instance.GetCombatSlot(CombatSlotPosition.FIRST);
             var slotSecond = SlotRegistry.Instance.GetCombatSlot(CombatSlotPosition.SECOND);
 
-            if (enemyCard.GetOwnerSlot() == CombatSlotPosition.FIRST)
+            if (enemyCard.GetCombatSlot() == CombatSlotPosition.FIRST)
             {
                 slotFirst.SetCard(enemyCard);
                 slotSecond.SetCard(playerCard);
@@ -79,7 +80,6 @@ namespace Game.Managers
 
             Debug.Log("[CombatTurnManager] 전투 실행 완료");
 
-            // 다음 턴 준비
             playerCard = null;
             enemyCard = null;
             EnemyHandManager.Instance.AdvanceSlots();

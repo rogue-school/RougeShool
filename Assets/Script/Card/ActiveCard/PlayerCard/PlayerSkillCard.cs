@@ -45,6 +45,10 @@ namespace Game.Player
             }
             return list;
         }
+        public void SetCoolTime(int value)
+        {
+            this.coolTime = value;
+        }
 
         public void SetPower(int value) => power = value;
 

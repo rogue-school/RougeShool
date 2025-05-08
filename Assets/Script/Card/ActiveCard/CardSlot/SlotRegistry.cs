@@ -48,6 +48,8 @@ namespace Game.Managers
 
         public IEnumerable<IHandCardSlot> GetAllHandSlots() => handSlots.Values;
 
+        public IEnumerable<IHandCardSlot> GetHandSlots() => GetAllHandSlots();
+
         #endregion
 
         #region Combat Slots
@@ -92,6 +94,23 @@ namespace Game.Managers
 
         public IEnumerable<ICharacterSlot> GetAllCharacterSlots() => characterSlots.Values;
 
+        public IEnumerable<ICharacterSlot> CharacterSlots => GetAllCharacterSlots();
+
         #endregion
+
+        public Dictionary<SkillCardSlotPosition, IHandCardSlot> GetHandSlots(SlotOwner owner)
+        {
+            Dictionary<SkillCardSlotPosition, IHandCardSlot> result = new();
+
+            foreach (var kvp in handSlots)
+            {
+                if (kvp.Value.GetOwner() == owner)
+                {
+                    result[kvp.Key] = kvp.Value;
+                }
+            }
+
+            return result;
+        }
     }
 }

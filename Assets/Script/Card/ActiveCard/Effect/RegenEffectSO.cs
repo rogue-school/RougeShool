@@ -1,7 +1,7 @@
 using UnityEngine;
 using Game.Interface;
-using Game.Characters;
 using Game.Effect;
+using Game.Characters;
 
 namespace Game.Cards
 {
@@ -15,7 +15,6 @@ namespace Game.Cards
         {
             target.RegisterPerTurnEffect(new RegenEffect(power));
         }
-
         public string GetEffectDescription()
         {
             return $"턴마다 체력 {1} 회복 (영구 효과)";
@@ -31,9 +30,9 @@ namespace Game.Cards
             this.amount = amount;
         }
 
-        public void OnTurnStart(CharacterBase owner)
+        public void OnTurnStart(ICharacter owner)
         {
-            if (!owner.IsDead)
+            if (!owner.IsDead())
             {
                 owner.Heal(amount);
             }

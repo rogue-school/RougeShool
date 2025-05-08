@@ -2,6 +2,7 @@ using UnityEngine;
 using Game.Interface;
 using Game.Slots;
 using Game.Managers;
+using Game.Characters;
 
 namespace Game.UI.Combat
 {
@@ -49,8 +50,13 @@ namespace Game.UI.Combat
             var enemy = EnemyManager.Instance.GetCurrentEnemy();
             var player = PlayerManager.Instance.GetPlayer();
 
-            var owner = (currentCard.GetCombatSlot() == CombatSlotPosition.FIRST) ? enemy : player;
-            var target = (owner == enemy) ? player : enemy;
+            CharacterBase owner = (currentCard.GetCombatSlot() == CombatSlotPosition.FIRST)
+                ? (CharacterBase)enemy
+                : (CharacterBase)player;
+
+            CharacterBase target = (owner == enemy)
+                ? (CharacterBase)player
+                : (CharacterBase)enemy;
 
             foreach (var effect in currentCard.CreateEffects())
             {

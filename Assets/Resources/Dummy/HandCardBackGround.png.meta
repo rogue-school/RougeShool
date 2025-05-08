@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      HandCardBackGround_0: -2379253703820978347
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

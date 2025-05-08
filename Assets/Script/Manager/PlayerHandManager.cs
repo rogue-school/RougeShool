@@ -22,7 +22,15 @@ namespace Game.Managers
 
         private void Awake()
         {
-            handSlots = SlotRegistry.Instance.GetHandSlots(SlotOwner.PLAYER);
+            handSlots = new Dictionary<SkillCardSlotPosition, IHandCardSlot>();
+
+            foreach (var slot in SlotRegistry.Instance.GetAllHandSlots())
+            {
+                if (slot.GetOwner() == SlotOwner.PLAYER)
+                {
+                    handSlots[slot.GetSlotPosition()] = slot;
+                }
+            }
         }
 
         /// <summary>

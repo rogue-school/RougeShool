@@ -8,14 +8,14 @@ namespace Game.Effect
     public interface IPerTurnEffect
     {
         /// <summary>
-        /// 턴 시작 시 효과를 적용합니다.
+        /// 턴 시작 시 실행되는 메서드입니다.
         /// </summary>
-        /// <param name="target">효과가 적용되는 대상</param>
-        void ApplyPerTurn(ICharacter target);
+        /// <param name="owner">효과를 적용받는 캐릭터</param>
+        void OnTurnStart(ICharacter owner);
 
         /// <summary>
-        /// 해당 효과가 만료되었는지 여부를 반환합니다.
+        /// 효과가 만료되었는지 여부를 반환합니다.
         /// </summary>
-        bool IsFinished();
+        bool IsExpired { get; }
     }
 }

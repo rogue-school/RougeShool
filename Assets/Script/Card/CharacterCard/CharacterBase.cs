@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using Game.Interface;
+using Game.Effect;
 
 namespace Game.Characters
 {
@@ -63,9 +64,9 @@ namespace Game.Characters
         {
             foreach (var effect in perTurnEffects.ToArray())
             {
-                effect.ApplyPerTurn(this);
+                effect.OnTurnStart(this);
 
-                if (effect.IsFinished())
+                if (effect.IsExpired)
                 {
                     perTurnEffects.Remove(effect);
                 }
