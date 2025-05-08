@@ -17,13 +17,13 @@ namespace Game.Initialization
 
         public void AutoBindAllSlots()
         {
-            var handSlots = FindObjectsOfType<MonoBehaviour>(true).OfType<IHandCardSlot>().ToArray();
+            var handSlots = FindObjectsOfType<MonoBehaviour>(false).OfType<IHandCardSlot>().ToArray();
             SlotRegistry.Instance.RegisterHandSlots(handSlots);
 
-            var combatSlots = FindObjectsOfType<MonoBehaviour>(true).OfType<ICombatCardSlot>().ToArray();
+            var combatSlots = FindObjectsOfType<MonoBehaviour>(false).OfType<ICombatCardSlot>().ToArray();
             SlotRegistry.Instance.RegisterCombatSlots(combatSlots);
 
-            var characterSlots = FindObjectsOfType<MonoBehaviour>(true).OfType<ICharacterSlot>().ToArray();
+            var characterSlots = FindObjectsOfType<MonoBehaviour>(false).OfType<ICharacterSlot>().ToArray();
             SlotRegistry.Instance.RegisterCharacterSlots(characterSlots);
 
             Debug.Log($"[SlotInitializer] 슬롯 자동 등록 완료: 핸드({handSlots.Length}), 전투({combatSlots.Length}), 캐릭터({characterSlots.Length})");

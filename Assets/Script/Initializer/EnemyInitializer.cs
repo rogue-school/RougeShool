@@ -1,27 +1,39 @@
 using UnityEngine;
 using Game.Enemy;
 using Game.Data;
+using Game.Interface;
+using Game.Slots;
+using Game.Managers;
 
 namespace Game.Initialization
 {
     public class EnemyInitializer : MonoBehaviour
     {
         [SerializeField] private EnemyCharacter enemyPrefab;
-        [SerializeField] private Transform spawnPoint;
         [SerializeField] private EnemyCharacterData defaultData;
-
-        public void SpawnEnemy(EnemyCharacterData data)
-        {
-            var enemy = Instantiate(enemyPrefab, spawnPoint.position, Quaternion.identity);
-            enemy.SetCharacterData(data);
-        }
 
         public void Setup()
         {
-            if (defaultData != null)
-                SpawnEnemy(defaultData);
-            else
-                Debug.LogWarning("[EnemyInitializer] 기본 데이터가 설정되지 않았습니다.");
+            if (defaultData == null)
+            {
+                Debug.LogWarning("[EnemyInitializer] 기본 데이터가 없습니다.");
+                return;
+            }
+
+            var slot = SlotRegistry.Instance.GetCharacterSlot(SlotOwner.ENEMY);
+
+            if (slot == null)
+            {
+                Debug.LogError("[EnemyInitializer] 적 캐릭터 슬롯이 등록되지 않았습니다.");
+                return;
+            }
+
+            var enemyGO = Instantiate(enemyPrefab, ((MonoBehaviour)slot).transform.position, Quaternion.identity);
+            EnemyCharacter enemy = enemyGO.GetComponent<EnemyCharacter>();
+            enemy.SetCharacterData(defaultData);
+            slot.SetCharacter(enemy);
+
+            Debug.Log("[EnemyInitializer] 적 캐릭터가 슬롯에 배치되었습니다.");
         }
     }
 }
