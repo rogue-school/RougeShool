@@ -8,8 +8,8 @@ using Game.Slots;
 namespace Game.UI
 {
     /// <summary>
-    /// 카드의 UI를 담당하며, 이름, 파워, 아트 이미지를 표시합니다.
-    /// 슬롯 정보는 표시하지 않는 단순화된 버전입니다.
+    /// 카드 UI를 관리하는 컴포넌트입니다.
+    /// 카드 이름, 파워, 아트워크를 표시합니다.
     /// </summary>
     public class SkillCardUI : MonoBehaviour
     {
@@ -21,26 +21,37 @@ namespace Game.UI
         private ISkillCard card;
 
         /// <summary>
-        /// 카드 데이터를 받아 UI 텍스트와 이미지를 설정합니다.
+        /// 카드 데이터를 바탕으로 UI를 업데이트합니다.
         /// </summary>
+        /// <param name="newCard">설정할 카드 데이터</param>
         public void SetCard(ISkillCard newCard)
         {
             card = newCard;
 
-            Debug.Log($"[SkillCardUI] SetCard 호출됨: {card?.GetCardName()}");
+            if (card == null)
+            {
+                Debug.LogWarning("[SkillCardUI] 카드가 null입니다.");
+                return;
+            }
 
-            if (cardNameText != null)
-                cardNameText.text = card.GetCardName();
+            cardNameText.text = card.GetCardName();
+            powerText.text = $"Power: {card.GetEffectPower(null)}";
 
-            if (powerText != null)
-                powerText.text = $"Power: {card.GetEffectPower(null)}";
+            Sprite art = card.GetArtwork();
+            if (cardArtImage != null && art != null)
+            {
+                cardArtImage.sprite = art;
+            }
+            else
+            {
+                Debug.LogWarning("[SkillCardUI] 아트워크 이미지가 없습니다.");
+            }
 
-            if (cardArtImage != null && card is ScriptableObject so && so is ICardArtProvider provider)
-                cardArtImage.sprite = provider.GetArt();
+            Debug.Log($"[SkillCardUI] 카드 UI 설정 완료: {card.GetCardName()}");
         }
 
         /// <summary>
-        /// 현재 할당된 카드 데이터를 반환합니다.
+        /// 현재 설정된 카드 데이터 반환
         /// </summary>
         public ISkillCard GetCard() => card;
     }

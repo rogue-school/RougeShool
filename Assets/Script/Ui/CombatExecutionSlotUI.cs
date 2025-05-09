@@ -3,6 +3,7 @@ using Game.Interface;
 using Game.Slots;
 using Game.Managers;
 using Game.Characters;
+using Game.UI;
 
 namespace Game.UI.Combat
 {
@@ -14,6 +15,9 @@ namespace Game.UI.Combat
     {
         [SerializeField] private CombatSlotPosition position;
         private ISkillCard currentCard;
+
+        // 추가: 카드 UI 참조용 필드
+        private SkillCardUI currentCardUI;
 
         public CombatSlotPosition GetCombatPosition() => position;
 
@@ -30,17 +34,27 @@ namespace Game.UI.Combat
         public void SetCard(ISkillCard card)
         {
             currentCard = card;
-            currentCard.SetCombatSlot(position); // 전투 슬롯 위치 주입
+            currentCard?.SetCombatSlot(position);
         }
 
-        public ISkillCard GetCard()
-        {
-            return currentCard;
-        }
+        public ISkillCard GetCard() => currentCard;
 
         public void Clear()
         {
             currentCard = null;
+            currentCardUI = null;
+        }
+
+        // 새로 구현: 카드 UI 저장
+        public void SetCardUI(SkillCardUI cardUI)
+        {
+            currentCardUI = cardUI;
+        }
+
+        // 새로 구현: 카드 UI 반환
+        public SkillCardUI GetCardUI()
+        {
+            return currentCardUI;
         }
 
         public void ExecuteCardAutomatically()

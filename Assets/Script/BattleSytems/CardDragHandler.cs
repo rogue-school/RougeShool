@@ -1,43 +1,46 @@
-using UnityEngine;
 using UnityEngine.EventSystems;
-using Game.Interface;
+using UnityEngine;
 
-namespace Game.Utility
+public class CardDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
-    /// <summary>
-    /// 카드 드래그 동작을 처리합니다.
-    /// 카드 UI에 부착되어 드래그를 지원합니다.
-    /// </summary>
-    public class CardDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+    public Vector3 OriginalPosition { get; private set; }
+    public Transform OriginalParent { get; private set; }
+    public bool droppedSuccessfully = false;
+
+    private CanvasGroup canvasGroup;
+    private RectTransform rectTransform;
+
+    private void Awake()
     {
-        private CanvasGroup canvasGroup;
-        private RectTransform rectTransform;
-        private Vector3 originalPosition;
-        private Transform originalParent;
+        canvasGroup = GetComponent<CanvasGroup>();
+        rectTransform = GetComponent<RectTransform>();
+    }
 
-        private void Awake()
-        {
-            canvasGroup = GetComponent<CanvasGroup>();
-            rectTransform = GetComponent<RectTransform>();
-        }
+    public void OnBeginDrag(PointerEventData eventData)
+    {
+        OriginalPosition = transform.localPosition;
+        OriginalParent = transform.parent;
+        droppedSuccessfully = false;
 
-        public void OnBeginDrag(PointerEventData eventData)
-        {
-            originalPosition = rectTransform.position;
-            originalParent = transform.parent;
-            canvasGroup.blocksRaycasts = false;
-        }
+        var canvas = gameObject.AddComponent<Canvas>();
+        canvas.overrideSorting = true;
+        canvas.sortingOrder = 1000;
+    }
 
-        public void OnDrag(PointerEventData eventData)
-        {
-            rectTransform.position = eventData.position;
-        }
+    public void OnDrag(PointerEventData eventData)
+    {
+        rectTransform.position = eventData.position;
+    }
 
-        public void OnEndDrag(PointerEventData eventData)
+    public void OnEndDrag(PointerEventData eventData)
+    {
+        Destroy(GetComponent<Canvas>());
+
+        if (!droppedSuccessfully)
         {
-            rectTransform.position = originalPosition;
-            transform.SetParent(originalParent);
-            canvasGroup.blocksRaycasts = true;
+            transform.SetParent(OriginalParent);
+            transform.localPosition = OriginalPosition;
+            transform.localScale = Vector3.one;
         }
     }
 }

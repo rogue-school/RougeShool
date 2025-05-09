@@ -34,7 +34,10 @@ namespace Game.Initialization
                 return;
             }
 
-            var enemyGO = Instantiate(enemyPrefab, ((MonoBehaviour)slot).transform.position, Quaternion.identity);
+            var slotTransform = ((MonoBehaviour)slot).transform;
+            var enemyGO = Instantiate(enemyPrefab, slotTransform);
+            enemyGO.transform.localPosition = Vector3.zero;
+
             spawnedEnemy = enemyGO.GetComponent<EnemyCharacter>();
 
             if (spawnedEnemy == null)

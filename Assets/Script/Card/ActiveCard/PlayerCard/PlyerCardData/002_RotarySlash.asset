@@ -14,8 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardName: 002_RotarySlash
   description: 
-  artwork: {fileID: 0}
-  damage: 2
+  artwork: {fileID: 1353180748540979296, guid: 28ba14dc7d921214285c4d71ba430dea, type: 3}
   coolTime: 1
   effectObjects:
   - {fileID: 11400000, guid: 21f08687b4ccb7a488b95b06178d02aa, type: 2}

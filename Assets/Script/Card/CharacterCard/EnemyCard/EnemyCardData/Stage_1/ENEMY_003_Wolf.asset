@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   displayName: ENEMY_003_Wolf
   maxHP: 3
-  portrait: {fileID: 0}
+  portrait: {fileID: 6692101548216023899, guid: c78109012d379f64e9761e56bc318cee, type: 3}
   skillDeck:
   - card: {fileID: 11400000, guid: 860e87b95a59e3644aa46d207d36700e, type: 2}
     damage: 2

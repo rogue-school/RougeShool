@@ -64,8 +64,22 @@ namespace Game.Enemy
             if (hpText != null)
                 hpText.text = $"HP {currentHP} / {characterData.maxHP}";
 
-            if (portraitImage != null && characterData.portrait != null)
-                portraitImage.sprite = characterData.portrait;
+            if (portraitImage != null)
+            {
+                if (characterData.portrait != null)
+                {
+                    portraitImage.sprite = characterData.portrait;
+                    Debug.Log($"[EnemyCharacter] 아트워크 설정 완료: {characterData.portrait.name}");
+                }
+                else
+                {
+                    Debug.LogWarning("[EnemyCharacter] characterData.portrait가 null입니다.");
+                }
+            }
+            else
+            {
+                Debug.LogError("[EnemyCharacter] portraitImage 컴포넌트가 연결되지 않았습니다.");
+            }
         }
 
         /// <summary>

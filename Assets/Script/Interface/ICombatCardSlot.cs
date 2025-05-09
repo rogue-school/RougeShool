@@ -1,4 +1,5 @@
 using Game.Slots;
+using Game.UI;
 
 namespace Game.Interface
 {
@@ -6,6 +7,8 @@ namespace Game.Interface
     {
         void SetCard(ISkillCard card);
         void Clear();
+        void SetCardUI(SkillCardUI cardUI);
+        SkillCardUI GetCardUI();
         ISkillCard GetCard();
 
         CombatSlotPosition GetCombatPosition();
