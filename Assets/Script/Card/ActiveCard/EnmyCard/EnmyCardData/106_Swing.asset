@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardName: 106_Swing
   description: 
-  artwork: {fileID: 0}
+  artwork: {fileID: 7086814622668607131, guid: c72bde62c8eaf2543bcdcff8d1db8022, type: 3}
+  basePower: 2
   effectObjects:
   - {fileID: 11400000, guid: 21f08687b4ccb7a488b95b06178d02aa, type: 2}
   - {fileID: 11400000, guid: e81a4128331244f4b84ccd5f0dbe8c62, type: 2}

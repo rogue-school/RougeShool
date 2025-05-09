@@ -12,13 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 861458062e34fcd4685dff11b945e1b9, type: 3}
   m_Name: BOSS_001_Orc_Axe
   m_EditorClassIdentifier: 
-  characterName: BOSS_001_Orc_Axe
-  portrait: {fileID: 0}
+  displayName: BOSS_001_Orc_Axe
   maxHP: 7
-  slotPosition: 1
-  initialDeck:
-  - {fileID: 11400000, guid: 5c658f031d6699c44a3e22a362e0d0a7, type: 2}
-  - {fileID: 11400000, guid: a9eaadba1003adf4aae03649b3826ce5, type: 2}
-  passiveSkills:
+  portrait: {fileID: 0}
+  skillDeck:
+  - card: {fileID: 11400000, guid: 5c658f031d6699c44a3e22a362e0d0a7, type: 2}
+    damage: 2
+  - card: {fileID: 11400000, guid: a9eaadba1003adf4aae03649b3826ce5, type: 2}
+    damage: 3
+  passiveEffects:
   - {fileID: 11400000, guid: 5477804a0f0606a40b972cbd00faec1e, type: 2}
-  battleSlotPosition: 0

@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 861458062e34fcd4685dff11b945e1b9, type: 3}
   m_Name: ENEMY_003_Wolf
   m_EditorClassIdentifier: 
-  characterName: ENEMY_003_Wolf
-  portrait: {fileID: 0}
+  displayName: ENEMY_003_Wolf
   maxHP: 3
-  slotPosition: 1
-  initialDeck:
-  - {fileID: 11400000, guid: 860e87b95a59e3644aa46d207d36700e, type: 2}
-  - {fileID: 11400000, guid: 9451dead8b9e75d47ae4f75adda0f518, type: 2}
-  passiveSkills: []
-  battleSlotPosition: 0
+  portrait: {fileID: 0}
+  skillDeck:
+  - card: {fileID: 11400000, guid: 860e87b95a59e3644aa46d207d36700e, type: 2}
+    damage: 2
+  - card: {fileID: 11400000, guid: 9451dead8b9e75d47ae4f75adda0f518, type: 2}
+    damage: 1
+  passiveEffects: []

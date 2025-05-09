@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 861458062e34fcd4685dff11b945e1b9, type: 3}
   m_Name: ENEMY_002_Slime
   m_EditorClassIdentifier: 
-  characterName: ENEMY_002_Slime
-  portrait: {fileID: -7282886668606283007, guid: 05ccc850e175244408c6f1dded4a67a0, type: 3}
+  displayName: ENEMY_002_Slime
   maxHP: 3
-  slotPosition: 1
-  initialDeck:
-  - {fileID: 11400000, guid: d736795d63abc38478276b872a204d43, type: 2}
-  - {fileID: 11400000, guid: 2a404d37263e6744b98e802bd5c8fa79, type: 2}
-  passiveSkills: []
-  battleSlotPosition: 0
+  portrait: {fileID: -7282886668606283007, guid: 05ccc850e175244408c6f1dded4a67a0, type: 3}
+  skillDeck:
+  - card: {fileID: 11400000, guid: d736795d63abc38478276b872a204d43, type: 2}
+    damage: 2
+  - card: {fileID: 11400000, guid: 2a404d37263e6744b98e802bd5c8fa79, type: 2}
+    damage: 1
+  passiveEffects: []

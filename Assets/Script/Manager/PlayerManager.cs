@@ -28,5 +28,13 @@ namespace Game.Managers
         /// 플레이어 캐릭터를 반환합니다.
         /// </summary>
         public PlayerCharacter GetPlayer() => player;
+
+        /// <summary>
+        /// 플레이어 캐릭터를 런타임 중 설정합니다.
+        /// </summary>
+        public void SetPlayer(PlayerCharacter player)
+        {
+            this.player = player;
+        }
     }
 }

@@ -1,13 +1,16 @@
 fileFormatVersion: 2
-guid: a26671c704a724041a6cdc0fae77efc7
+guid: bf48ed00129e48643ba09be27a302b6f
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -6939695964637348897
-    second: slash_0
+      213: 3703626461721088364
+    second: "\uD560\uD034\uAE30_0"
   - first:
-      213: 4408985956767555964
-    second: slash_1
+      213: -5843521719522542593
+    second: "\uD560\uD034\uAE30_1"
+  - first:
+      213: 7077054527879473160
+    second: "\uD560\uD034\uAE30_2"
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -103,13 +106,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: slash_0
+      name: "\uD560\uD034\uAE30_0"
       rect:
         serializedVersion: 2
-        x: 0
-        y: 37
-        width: 512
-        height: 472
+        x: 1
+        y: 6
+        width: 32
+        height: 41
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -118,20 +121,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: fdb349ac94f31bf90800000000000000
-      internalID: -6939695964637348897
+      spriteID: c615f9fe4ace56330800000000000000
+      internalID: 3703626461721088364
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: slash_1
+      name: "\uD560\uD034\uAE30_1"
       rect:
         serializedVersion: 2
-        x: 392
-        y: 3
-        width: 120
-        height: 74
+        x: 8
+        y: 4
+        width: 35
+        height: 44
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -140,8 +143,30 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: c71e0dc2e5ddf2d30800000000000000
-      internalID: 4408985956767555964
+      spriteID: ffb3496d4f3a7eea0800000000000000
+      internalID: -5843521719522542593
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uD560\uD034\uAE30_2"
+      rect:
+        serializedVersion: 2
+        x: 15
+        y: 2
+        width: 32
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8086356e89fb63260800000000000000
+      internalID: 7077054527879473160
       vertices: []
       indices: 
       edges: []
@@ -159,9 +184,7 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable:
-      slash_0: -6939695964637348897
-      slash_1: 4408985956767555964
+    nameFileIdTable: {}
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

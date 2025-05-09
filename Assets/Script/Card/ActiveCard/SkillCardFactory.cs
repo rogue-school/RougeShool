@@ -2,6 +2,9 @@ using Game.Player;
 using Game.Cards;
 using Game.Interface;
 using Game.Enemy;
+using System.Collections.Generic;
+using UnityEngine;
+using Game.Effect;
 
 namespace Game.Utility
 {
@@ -11,32 +14,48 @@ namespace Game.Utility
     /// </summary>
     public static class SkillCardFactory
     {
+        /// <summary>
+        /// 플레이어 카드 생성
+        /// </summary>
         public static ISkillCard CreatePlayerCard(PlayerSkillCard cardData, int damage, int coolTime)
         {
-            var card = new RuntimeSkillCard(
+            return CreateRuntimeCard(
                 cardData.GetCardName(),
                 cardData.GetDescription(),
                 cardData.GetArtwork(),
-                cardData.CreateEffects(), // 4번째: 효과 리스트
-                damage,                   // 5번째: 공격력
-                coolTime                  // 6번째: 쿨타임
+                cardData.CreateEffects(),
+                damage,
+                coolTime
             );
-
-            return card;
         }
 
+        /// <summary>
+        /// 적 카드 생성 (쿨타임은 항상 0)
+        /// </summary>
         public static ISkillCard CreateEnemyCard(EnemySkillCard cardData, int damage)
         {
-            var card = new RuntimeSkillCard(
+            return CreateRuntimeCard(
                 cardData.GetCardName(),
                 cardData.GetDescription(),
                 cardData.GetArtwork(),
-                cardData.CreateEffects(), // 4번째: 효과 리스트
-                damage,                   // 5번째: 공격력
-                0                         // 6번째: 쿨타임 없음
+                cardData.CreateEffects(),
+                damage,
+                0
             );
+        }
 
-            return card;
+        /// <summary>
+        /// 런타임 카드 생성 공통 처리
+        /// </summary>
+        private static ISkillCard CreateRuntimeCard(
+            string name,
+            string description,
+            Sprite artwork,
+            List<ICardEffect> effects,
+            int power,
+            int coolTime)
+        {
+            return new RuntimeSkillCard(name, description, artwork, effects, power, coolTime);
         }
     }
 }

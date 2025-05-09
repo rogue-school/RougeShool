@@ -12,11 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 861458062e34fcd4685dff11b945e1b9, type: 3}
   m_Name: ENEMY_001_Goblin
   m_EditorClassIdentifier: 
-  characterName: ENEMY_001_Goblin
-  portrait: {fileID: 2111737616767120531, guid: d174ab94a0ee96d49b8b20b1927aa004, type: 3}
+  displayName: ENEMY_001_Goblin
   maxHP: 2
-  slotPosition: 1
-  initialDeck:
-  - {fileID: 11400000, guid: 79bc20c3476f58c4a9d21c343df216a4, type: 2}
-  passiveSkills: []
-  battleSlotPosition: 0
+  portrait: {fileID: 2111737616767120531, guid: d174ab94a0ee96d49b8b20b1927aa004, type: 3}
+  skillDeck:
+  - card: {fileID: 11400000, guid: 79bc20c3476f58c4a9d21c343df216a4, type: 2}
+    damage: 1
+  passiveEffects: []

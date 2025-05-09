@@ -4,15 +4,29 @@ using Game.Enemy;
 
 namespace Game.Managers
 {
+    /// <summary>
+    /// 스테이지 데이터를 기반으로 적을 소환하는 매니저
+    /// </summary>
     public class StageManager : MonoBehaviour
     {
+        public static StageManager Instance { get; private set; }
+
+        [Header("스폰 대상 매니저")]
         [SerializeField] private EnemySpawnerManager enemySpawner;
-        [SerializeField] private EnemyCharacterData[] currentStageEnemies;
+
+        [Header("스테이지 데이터")]
+        [SerializeField] private StageData currentStage;
 
         private void Awake()
         {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
+
             AutoBindSpawner();
-            LoadCurrentStageData();
             SpawnEnemies();
         }
 
@@ -20,29 +34,33 @@ namespace Game.Managers
         {
             if (enemySpawner == null)
             {
-                enemySpawner = FindObjectOfType<EnemySpawnerManager>();
-                Debug.Log("[StageManager] EnemySpawner 자동 연결 완료");
-            }
-        }
-
-        private void LoadCurrentStageData()
-        {
-            if (currentStageEnemies == null || currentStageEnemies.Length == 0)
-            {
-                Debug.LogWarning("[StageManager] currentStageEnemies가 비어 있습니다. 기본 데이터 적용 필요.");
+                enemySpawner = Object.FindFirstObjectByType<EnemySpawnerManager>();
+                if (enemySpawner != null)
+                    Debug.Log("[StageManager] EnemySpawner 자동 연결 완료");
+                else
+                    Debug.LogError("[StageManager] EnemySpawner를 찾을 수 없습니다.");
             }
         }
 
         private void SpawnEnemies()
         {
-            if (enemySpawner == null || currentStageEnemies == null || currentStageEnemies.Length == 0) return;
+            if (currentStage == null || currentStage.enemies == null || currentStage.enemies.Length == 0)
+            {
+                Debug.LogWarning("[StageManager] 적 데이터가 없습니다.");
+                return;
+            }
 
-            // 현재 구조에선 하나의 적만 등장하므로 첫 번째 적만 소환
-            enemySpawner.SpawnEnemy(currentStageEnemies[0]);
+            EnemyCharacter spawnedEnemy = enemySpawner.SpawnEnemy(currentStage.enemies[0]);
 
-            Debug.Log($"[StageManager] 적 캐릭터 생성 완료: {currentStageEnemies[0].displayName}");
+            if (spawnedEnemy != null && EnemyHandManager.Instance != null)
+            {
+                EnemyHandManager.Instance.Initialize(spawnedEnemy);
+                EnemyHandManager.Instance.GenerateInitialHand();
+            }
+
+            Debug.Log($"[StageManager] 스테이지 적 생성 및 핸드 카드 초기화 완료: {currentStage.enemies[0].displayName}");
         }
 
-        public EnemyCharacterData[] GetEnemies() => currentStageEnemies;
+        public StageData GetCurrentStage() => currentStage;
     }
 }

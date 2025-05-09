@@ -10,11 +10,26 @@ namespace Game.Battle.Initialization
     {
         public static void SetupHands()
         {
-            var playerHand = Object.FindObjectOfType<PlayerHandManager>();
-            var enemyHand = Object.FindObjectOfType<EnemyHandManager>();
+            var playerHand = Object.FindFirstObjectByType<PlayerHandManager>();
+            var enemyHand = Object.FindFirstObjectByType<EnemyHandManager>();
 
-            playerHand?.ClearAll();
-            enemyHand?.GenerateInitialHand();
+            if (playerHand == null)
+            {
+                Debug.LogError("[HandInitializer] PlayerHandManager를 찾을 수 없습니다.");
+            }
+            else
+            {
+                playerHand.ClearAll();
+            }
+
+            if (enemyHand == null)
+            {
+                Debug.LogError("[HandInitializer] EnemyHandManager를 찾을 수 없습니다.");
+            }
+            else
+            {
+                enemyHand.GenerateInitialHand();
+            }
 
             Debug.Log("[HandInitializer] 플레이어/적 핸드 초기화 완료");
         }

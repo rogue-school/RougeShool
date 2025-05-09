@@ -18,8 +18,23 @@ namespace Game.Utils
         /// <returns>생성된 SkillCardUI 인스턴스</returns>
         public static SkillCardUI CreateUI(SkillCardUI prefab, Transform parent, ISkillCard card)
         {
-            var instance = Object.Instantiate(prefab, parent);
+            Debug.Log("[SkillCardUIFactory] 카드 UI 프리팹 인스턴스 생성 시작");
+
+            var instance = Object.Instantiate(prefab, parent, false);
+            if (instance == null)
+            {
+                Debug.LogError("[SkillCardUIFactory] 인스턴스화 실패");
+                return null;
+            }
+
             instance.SetCard(card);
+            Debug.Log("[SkillCardUIFactory] 카드 UI 인스턴스화 및 카드 설정 완료");
+
+            RectTransform rect = instance.GetComponent<RectTransform>();
+            rect.anchoredPosition = Vector2.zero;
+            rect.localRotation = Quaternion.identity;
+            rect.localScale = Vector3.one;
+
             return instance;
         }
     }

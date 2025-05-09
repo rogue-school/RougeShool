@@ -7,7 +7,7 @@ using Game.Managers;
 namespace Game.Enemy
 {
     /// <summary>
-    /// 전투 시작 시 EnemyCharacter를 지정된 슬롯에 배치하고 초기화합니다.
+    /// 적 캐릭터를 슬롯에 배치하는 스포너 매니저입니다.
     /// </summary>
     public class EnemySpawnerManager : MonoBehaviour
     {
@@ -15,14 +15,14 @@ namespace Game.Enemy
 
         private List<EnemyCharacter> spawnedEnemies = new List<EnemyCharacter>();
 
-        public void SpawnEnemy(EnemyCharacterData data)
+        public EnemyCharacter SpawnEnemy(EnemyCharacterData data)
         {
             var slot = SlotRegistry.Instance.GetCharacterSlot(SlotOwner.ENEMY);
 
             if (slot == null)
             {
                 Debug.LogError("[EnemySpawnerManager] ENEMY 슬롯을 찾지 못했습니다.");
-                return;
+                return null;
             }
 
             GameObject instance = Instantiate(enemyPrefab, ((MonoBehaviour)slot).transform.position, Quaternion.identity);
@@ -31,13 +31,15 @@ namespace Game.Enemy
             if (enemy == null)
             {
                 Debug.LogError("[EnemySpawnerManager] EnemyCharacter 컴포넌트를 찾을 수 없습니다.");
-                return;
+                return null;
             }
 
-            enemy.Initialize(data.maxHP);
+            enemy.SetCharacterData(data);
+            slot.SetCharacter(enemy);
             spawnedEnemies.Add(enemy);
 
-            Debug.Log("[EnemySpawnerManager] 적 캐릭터가 슬롯에 배치되었습니다.");
+            Debug.Log($"[EnemySpawnerManager] 적 캐릭터 배치 완료: {data.displayName}");
+            return enemy;
         }
 
         public List<EnemyCharacter> GetAllEnemies() => spawnedEnemies;

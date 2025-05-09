@@ -1,36 +1,55 @@
 using UnityEngine;
+using System.Collections.Generic;
 using Game.Enemy;
+using Game.Interface; // ICardEffect용 (필요한 경우)
 
 namespace Game.Data
 {
-    /// <summary>
-    /// 적 캐릭터의 능력치 및 스킬 덱을 저장하는 데이터
-    /// </summary>
     [CreateAssetMenu(menuName = "Game/Character/Enemy Character Data")]
     public class EnemyCharacterData : ScriptableObject
     {
         public string displayName;
         public int maxHP;
-        public EnemySkillCard[] skillDeck;
+        public Sprite portrait;
 
-        /// <summary>
-        /// 랜덤 스킬 카드 1장을 반환
-        /// </summary>
-        public EnemySkillCard GetRandomSkillCard()
+        [System.Serializable]
+        public class SkillCardEntry
         {
-            if (skillDeck == null || skillDeck.Length == 0)
-                return null;
+            public EnemySkillCard card;
+            public int damage;
+        }
 
-            int index = Random.Range(0, skillDeck.Length);
+        [Header("고정 스킬 카드 덱")]
+        [SerializeField] private List<SkillCardEntry> skillDeck = new();
+
+        [Header("패시브 이펙트 (Regen, Buff 등)")]
+        [SerializeField] private List<ScriptableObject> passiveEffects = new();
+        public SkillCardEntry GetRandomEntry()
+        {
+            if (skillDeck == null || skillDeck.Count == 0)
+            {
+                Debug.LogWarning("[EnemyCharacterData] 스킬 덱이 비어 있습니다.");
+                return null;
+            }
+
+            int index = Random.Range(0, skillDeck.Count);
             return skillDeck[index];
         }
 
-        /// <summary>
-        /// 카드별 공격력 수치를 계산 (데이터에 따라 확장 가능)
-        /// </summary>
-        public int GetSkillPowerFor(EnemySkillCard card)
+        public int GetDamageOfCard(EnemySkillCard card)
         {
-            return Random.Range(5, 15); // 임시 기본값
+            foreach (var entry in skillDeck)
+            {
+                if (entry.card == card)
+                    return entry.damage;
+            }
+
+            Debug.LogWarning($"[EnemyCharacterData] 카드 '{card?.name}'에 대한 데미지가 정의되지 않았습니다.");
+            return 5;
         }
+
+        public List<SkillCardEntry> GetAllCards() => skillDeck;
+
+        public List<ScriptableObject> GetPassiveEffects() => passiveEffects; // 필요 시 public getter도 제공
     }
 }

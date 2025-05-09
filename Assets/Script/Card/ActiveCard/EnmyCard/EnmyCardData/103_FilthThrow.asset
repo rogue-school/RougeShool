@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardName: 103_FilthThrow
   description: 
-  artwork: {fileID: 0}
-  damage: 1
+  artwork: {fileID: -2548547513753419691, guid: dc707e8296c97b34b9d8c06b1e9af0f3, type: 3}
+  basePower: 1
   effectObjects:
   - {fileID: 11400000, guid: 21f08687b4ccb7a488b95b06178d02aa, type: 2}
   - {fileID: 11400000, guid: 48b0f7567f5bd0a41ab6649587e254b2, type: 2}

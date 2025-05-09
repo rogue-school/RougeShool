@@ -1,5 +1,4 @@
 using UnityEngine;
-using System;
 using System.Collections.Generic;
 using Game.Slots;
 using Game.UI.Combat;
@@ -7,7 +6,7 @@ using Game.UI.Combat;
 namespace Game.Managers
 {
     /// <summary>
-    /// 전투 실행 슬롯을 자동 수집하고, CombatSlotPosition 기준으로 그룹화 및 관리하는 매니저입니다.
+    /// 전투 실행 슬롯을 자동 수집하고, 사전에 설정된 CombatSlotPosition 값으로 그룹화 및 관리하는 매니저입니다.
     /// </summary>
     public class CombatSlotManager : MonoBehaviour
     {
@@ -16,23 +15,20 @@ namespace Game.Managers
 
         private void Awake()
         {
-            AutoBindAndAssignSlotPositions();
+            AutoBindAndGroupByPosition();
         }
 
         /// <summary>
-        /// 씬 상의 모든 전투 슬롯을 자동으로 수집하고, 이름 기반으로 CombatSlotPosition을 추론하여 그룹화합니다.
+        /// 씬 내 모든 전투 슬롯을 수집하고, 인스펙터에서 수동으로 설정된 CombatSlotPosition을 기준으로 그룹화합니다.
         /// </summary>
-        private void AutoBindAndAssignSlotPositions()
+        private void AutoBindAndGroupByPosition()
         {
-            allSlots = FindObjectsOfType<CombatExecutionSlotUI>();
-            Array.Sort(allSlots, (a, b) => a.name.CompareTo(b.name));
-
+            allSlots = FindObjectsByType<CombatExecutionSlotUI>(FindObjectsSortMode.None);
             slotGroups = new Dictionary<CombatSlotPosition, List<CombatExecutionSlotUI>>();
 
             foreach (var slot in allSlots)
             {
-                CombatSlotPosition position = InferSlotPositionFromName(slot.name);
-                slot.SetCombatPosition(position);
+                CombatSlotPosition position = slot.GetCombatPosition(); // 수동 설정값 사용
 
                 if (!slotGroups.ContainsKey(position))
                     slotGroups[position] = new List<CombatExecutionSlotUI>();
@@ -40,21 +36,7 @@ namespace Game.Managers
                 slotGroups[position].Add(slot);
             }
 
-            Debug.Log($"[CombatSlotManager] 전투 슬롯 자동 수집 및 위치 할당 완료 - 총 {allSlots.Length}개");
-        }
-
-        /// <summary>
-        /// 슬롯 이름에서 전투 포지션을 추론합니다. 예: "FirstSlot", "SecondSlot"
-        /// </summary>
-        private CombatSlotPosition InferSlotPositionFromName(string name)
-        {
-            name = name.ToLower();
-            if (name.Contains("first"))
-                return CombatSlotPosition.FIRST;
-            else if (name.Contains("second"))
-                return CombatSlotPosition.SECOND;
-            else
-                return CombatSlotPosition.FIRST; // fallback
+            Debug.Log($"[CombatSlotManager] 전투 슬롯 자동 수집 및 위치 그룹화 완료 - 총 {allSlots.Length}개");
         }
 
         /// <summary>

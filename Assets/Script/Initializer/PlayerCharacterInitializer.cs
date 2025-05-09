@@ -1,7 +1,6 @@
 using UnityEngine;
 using Game.Player;
 using Game.Data;
-using Game.Interface;
 using Game.Slots;
 using Game.Managers;
 
@@ -24,17 +23,29 @@ namespace Game.Initialization
             }
 
             var slot = SlotRegistry.Instance.GetCharacterSlot(SlotOwner.PLAYER);
-
             if (slot == null)
             {
                 Debug.LogError("[PlayerCharacterInitializer] 플레이어 캐릭터 슬롯이 등록되지 않았습니다.");
                 return;
             }
 
-            var playerGO = Instantiate(playerPrefab, ((MonoBehaviour)slot).transform.position, Quaternion.identity);
+            // 슬롯 위치에 프리팹 생성 + 슬롯을 부모로 지정
+            var playerGO = Instantiate(playerPrefab, ((MonoBehaviour)slot).transform);
+
+            // 위치 초기화
+            RectTransform rt = playerGO.GetComponent<RectTransform>();
+            if (rt != null)
+            {
+                rt.anchoredPosition = Vector2.zero;
+                rt.localRotation = Quaternion.identity;
+                rt.localScale = Vector3.one;
+            }
+
             PlayerCharacter player = playerGO.GetComponent<PlayerCharacter>();
             player.SetCharacterData(defaultData);
             slot.SetCharacter(player);
+
+            PlayerManager.Instance.SetPlayer(player); // 매니저에 등록 (선택적)
 
             Debug.Log("[PlayerCharacterInitializer] 플레이어 캐릭터가 슬롯에 배치되었습니다.");
         }

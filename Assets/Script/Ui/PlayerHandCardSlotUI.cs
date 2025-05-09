@@ -1,6 +1,8 @@
 using UnityEngine;
 using Game.Interface;
 using Game.Slots;
+using Game.Utils;
+using Game.UI;
 
 namespace Game.UI.Hand
 {
@@ -10,26 +12,53 @@ namespace Game.UI.Hand
     public class PlayerHandCardSlotUI : MonoBehaviour, IHandCardSlot
     {
         [SerializeField] private SkillCardSlotPosition position;
+        [SerializeField] private SkillCardUI skillCardUIPrefab;
+
         private ISkillCard currentCard;
+        private SkillCardUI currentCardUI;
 
         public SkillCardSlotPosition GetSlotPosition() => position;
 
         public SlotOwner GetOwner() => SlotOwner.PLAYER;
 
-        public void SetCard(ISkillCard card)
+        /// <summary>
+        /// 카드 UI 프리팹을 외부에서 주입받습니다.
+        /// </summary>
+        public void InjectUIFactory(SkillCardUI prefab)
         {
-            currentCard = card;
-            currentCard.SetHandSlot(position);
+            skillCardUIPrefab = prefab;
         }
 
-        public ISkillCard GetCard()
+        public void SetCard(ISkillCard card)
         {
-            return currentCard;
+            Debug.Log($"[PlayerHandCardSlotUI] SetCard 호출됨: {card?.GetCardName()}");
+
+            currentCard = card;
+            currentCard.SetHandSlot(position);
+
+            if (currentCardUI != null)
+                Destroy(currentCardUI.gameObject);
+
+            currentCardUI = SkillCardUIFactory.CreateUI(skillCardUIPrefab, transform, card);
+
+            if (currentCardUI != null)
+                Debug.Log($"[PlayerHandCardSlotUI] 카드 UI 생성 완료: {currentCardUI.name}");
+            else
+                Debug.LogError("[PlayerHandCardSlotUI] 카드 UI 생성 실패");
         }
+
+
+        public ISkillCard GetCard() => currentCard;
 
         public void Clear()
         {
             currentCard = null;
+
+            if (currentCardUI != null)
+            {
+                Destroy(currentCardUI.gameObject);
+                currentCardUI = null;
+            }
         }
     }
 }

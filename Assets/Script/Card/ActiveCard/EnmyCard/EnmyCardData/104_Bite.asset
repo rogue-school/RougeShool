@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardName: 104_Bite
   description: 
-  artwork: {fileID: 0}
+  artwork: {fileID: -4210270633776242855, guid: 85a3280756aa76e46bda6c66d1a7554c, type: 3}
+  basePower: 2
   effectObjects:
   - {fileID: 11400000, guid: 21f08687b4ccb7a488b95b06178d02aa, type: 2}

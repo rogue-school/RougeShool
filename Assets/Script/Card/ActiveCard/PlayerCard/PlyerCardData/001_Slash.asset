@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardName: 001_Slash
   description: 
-  artwork: {fileID: -6939695964637348897, guid: a26671c704a724041a6cdc0fae77efc7, type: 3}
+  artwork: {fileID: 2915364802761599010, guid: 3e2f01c746df69b45a3a06f0511027cd, type: 3}
+  coolTime: 0
   effectObjects:
   - {fileID: 11400000, guid: 21f08687b4ccb7a488b95b06178d02aa, type: 2}
