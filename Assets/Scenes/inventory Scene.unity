@@ -863,7 +863,7 @@ MonoBehaviour:
   inventoryPanel: {fileID: 856660392}
   bagButton: {fileID: 817294630}
   closeButton: {fileID: 2142721638}
-  animationDuration: 0.3
+  animationDuration: 0.2
   closedPosition: {x: 1200, y: 0}
   openPosition: {x: 735, y: 0}
 --- !u!1 &1234935386
@@ -1444,7 +1444,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1789113559
 RectTransform:
   m_ObjectHideFlags: 0
