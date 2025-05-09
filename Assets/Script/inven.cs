@@ -17,6 +17,13 @@ public class InventoryAnimator : MonoBehaviour
 
     private void Start()
     {
+        // Null 체크 추가 (디버깅에 도움)
+        if (inventoryPanel == null || closeButton == null || bagButton == null)
+        {
+            Debug.LogError("InventoryAnimator: UI references are not assigned.");
+            return;
+        }
+
         inventoryPanel.gameObject.SetActive(false); // 처음엔 안 보이게
         closeButton.onClick.AddListener(CloseInventory);
         bagButton.onClick.AddListener(OpenInventory);

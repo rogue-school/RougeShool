@@ -12,7 +12,6 @@ public class ButtonListener : MonoBehaviour
     private bool canUse = true;
 
     public TextMeshProUGUI infoText;
-    public TextMeshProUGUI potionCountText;
     public GameObject targetObjectToToggle;
 
     public Button usePotionButton;
@@ -110,10 +109,6 @@ public class ButtonListener : MonoBehaviour
                 targetObjectToToggle.SetActive(false);
         }
 
-        if (potionCountText != null)
-        {
-            potionCountText.text = $"남은 물약: {Posion}";
-        }
 
         UpdateButtonVisual();
     }
