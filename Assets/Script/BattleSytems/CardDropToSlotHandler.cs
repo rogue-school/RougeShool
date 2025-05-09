@@ -4,6 +4,10 @@ using Game.UI;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
+/// <summary>
+/// 플레이어 카드가 전투 슬롯에 드롭되었을 때 처리하는 핸들러입니다.
+/// 적 카드가 존재하면 드롭을 막고, 기존 플레이어 카드가 있다면 교체합니다.
+/// </summary>
 public class CardDropToSlotHandler : MonoBehaviour, IDropHandler
 {
     public void OnDrop(PointerEventData eventData)
@@ -23,14 +27,14 @@ public class CardDropToSlotHandler : MonoBehaviour, IDropHandler
         var oldCard = slot.GetCard();
         var oldCardUI = slot.GetCardUI();
 
-        // 적 카드가 이미 있는 경우 드롭 실패
-        if (oldCard != null && !(oldCard is RuntimeSkillCard))
+        // 적 카드가 이미 있으면 드롭 금지
+        if (oldCard != null && !IsPlayerCard(oldCard))
         {
-            Debug.LogWarning("[DropHandler] 슬롯에 적 카드가 있어 드롭 실패");
+            Debug.LogWarning("[DropHandler] 해당 슬롯에 적 카드가 있어 드롭 불가");
             return;
         }
 
-        // 기존 플레이어 카드가 있으면 원래 위치로 되돌림
+        // 기존 플레이어 카드 복귀
         if (oldCardUI != null)
         {
             var oldDragHandler = oldCardUI.GetComponent<CardDragHandler>();
@@ -41,7 +45,7 @@ public class CardDropToSlotHandler : MonoBehaviour, IDropHandler
                 oldCardUI.transform.localScale = Vector3.one;
             }
 
-            slot.Clear(); //  슬롯에서 기존 카드 정보 제거
+            slot.Clear(); // 슬롯 참조만 초기화 (파괴는 하지 않음)
         }
 
         // 새 카드 등록
@@ -49,16 +53,22 @@ public class CardDropToSlotHandler : MonoBehaviour, IDropHandler
         slot.SetCard(newCard);
         slot.SetCardUI(newCardUI);
 
-        // UI 이동
+        // UI를 슬롯에 배치
         draggedObject.transform.SetParent(((MonoBehaviour)slot).transform);
         draggedObject.transform.localPosition = Vector3.zero;
         draggedObject.transform.localScale = Vector3.one;
 
-        // 드롭 성공 표시
+        // 드롭 성공 처리
         var dragHandler = draggedObject.GetComponent<CardDragHandler>();
         if (dragHandler != null)
             dragHandler.droppedSuccessfully = true;
 
         Debug.Log($"[DropHandler] 카드 교체 완료: {newCard.GetCardName()} → {slot.GetCombatPosition()}");
+    }
+
+    private bool IsPlayerCard(ISkillCard card)
+    {
+        var handSlot = card.GetHandSlot();
+        return handSlot.HasValue && handSlot.Value.ToString().Contains("PLAYER");
     }
 }

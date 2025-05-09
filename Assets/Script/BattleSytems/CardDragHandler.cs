@@ -1,5 +1,7 @@
-using UnityEngine.EventSystems;
+using Game.Interface;
+using Game.UI;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class CardDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
@@ -41,6 +43,15 @@ public class CardDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
             transform.SetParent(OriginalParent);
             transform.localPosition = OriginalPosition;
             transform.localScale = Vector3.one;
+
+            //  슬롯에서 나 자신을 제거해줘야 겹침 방지됨
+            var slot = GetComponentInParent<ICombatCardSlot>();
+            if (slot != null && slot.GetCardUI() == GetComponent<SkillCardUI>())
+            {
+                slot.Clear();
+            }
+
+            Debug.LogWarning("[CardDragHandler] 드롭 실패 - 위치 복귀 및 슬롯 정리 완료");
         }
     }
 }

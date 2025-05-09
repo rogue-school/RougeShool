@@ -58,7 +58,9 @@ namespace Game.Combat
             playerHandManager?.GenerateInitialHand();
             enemyHandManager?.GenerateInitialHand();
 
-            Debug.Log("[CombatInitializerManager] 전투 초기화 완료");
+            // 8. 적 첫 번째 카드 CombatTurnManager에 등록
+            CombatTurnManager.Instance.BeginEnemyTurn();
         }
+
     }
 }

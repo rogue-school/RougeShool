@@ -9,27 +9,19 @@ namespace Game.UI.Combat
 {
     /// <summary>
     /// 실제 전투가 실행되는 슬롯의 UI를 제어하는 컴포넌트입니다.
-    /// 카드가 배치되고 실행되는 물리 슬롯을 나타냅니다.
     /// </summary>
     public class CombatExecutionSlotUI : MonoBehaviour, ICombatCardSlot
     {
         [SerializeField] private CombatSlotPosition position;
         private ISkillCard currentCard;
-
-        // 추가: 카드 UI 참조용 필드
         private SkillCardUI currentCardUI;
 
         public CombatSlotPosition GetCombatPosition() => position;
 
-        public void SetCombatPosition(CombatSlotPosition newPosition)
-        {
-            this.position = newPosition;
-        }
+        public void SetCombatPosition(CombatSlotPosition newPosition) => position = newPosition;
 
-        public SlotOwner GetOwner()
-        {
-            return position == CombatSlotPosition.FIRST ? SlotOwner.ENEMY : SlotOwner.PLAYER;
-        }
+        public SlotOwner GetOwner() =>
+            position == CombatSlotPosition.FIRST ? SlotOwner.ENEMY : SlotOwner.PLAYER;
 
         public void SetCard(ISkillCard card)
         {
@@ -41,21 +33,14 @@ namespace Game.UI.Combat
 
         public void Clear()
         {
+            Debug.LogWarning($"[Clear] 슬롯 클리어 호출됨: {gameObject.name}");
             currentCard = null;
             currentCardUI = null;
         }
 
-        // 새로 구현: 카드 UI 저장
-        public void SetCardUI(SkillCardUI cardUI)
-        {
-            currentCardUI = cardUI;
-        }
+        public void SetCardUI(SkillCardUI cardUI) => currentCardUI = cardUI;
 
-        // 새로 구현: 카드 UI 반환
-        public SkillCardUI GetCardUI()
-        {
-            return currentCardUI;
-        }
+        public SkillCardUI GetCardUI() => currentCardUI;
 
         public void ExecuteCardAutomatically()
         {
@@ -65,12 +50,9 @@ namespace Game.UI.Combat
             var player = PlayerManager.Instance.GetPlayer();
 
             CharacterBase owner = (currentCard.GetCombatSlot() == CombatSlotPosition.FIRST)
-                ? (CharacterBase)enemy
-                : (CharacterBase)player;
+                ? (CharacterBase)enemy : (CharacterBase)player;
 
-            CharacterBase target = (owner == enemy)
-                ? (CharacterBase)player
-                : (CharacterBase)enemy;
+            CharacterBase target = (owner == enemy) ? (CharacterBase)player : (CharacterBase)enemy;
 
             foreach (var effect in currentCard.CreateEffects())
             {
