@@ -860,7 +860,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0aebd95d609caf8489a346f058cbcf51, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  inventoryPanel: {fileID: 856660388}
+  inventoryPanel: {fileID: 856660392}
+  bagButton: {fileID: 817294630}
+  closeButton: {fileID: 2142721638}
+  animationDuration: 0.3
+  closedPosition: {x: 1200, y: 0}
+  openPosition: {x: 735, y: 0}
 --- !u!1 &1234935386
 GameObject:
   m_ObjectHideFlags: 0
@@ -1109,7 +1114,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0aebd95d609caf8489a346f058cbcf51, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  inventoryPanel: {fileID: 856660388}
+  inventoryPanel: {fileID: 856660392}
+  bagButton: {fileID: 0}
+  closeButton: {fileID: 0}
+  animationDuration: 0.3
+  closedPosition: {x: 1000, y: 0}
+  openPosition: {x: 0, y: 0}
 --- !u!114 &1547123641
 MonoBehaviour:
   m_ObjectHideFlags: 0
