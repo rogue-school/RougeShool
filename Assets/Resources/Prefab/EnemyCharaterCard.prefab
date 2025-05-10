@@ -418,6 +418,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   position: 1
   owner: 1
+  nameText: {fileID: 3990270840846056283}
+  hpText: {fileID: 6969683324459299986}
+  hpSlider: {fileID: 0}
 --- !u!1 &8157524478772256498
 GameObject:
   m_ObjectHideFlags: 0

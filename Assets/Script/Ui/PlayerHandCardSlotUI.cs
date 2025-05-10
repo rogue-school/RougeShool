@@ -31,7 +31,7 @@ namespace Game.UI.Hand
 
         public void SetCard(ISkillCard card)
         {
-            Debug.Log($"[PlayerHandCardSlotUI] SetCard 호출됨: {card?.GetCardName()}");
+            //Debug.Log($"[PlayerHandCardSlotUI] SetCard 호출됨: {card?.GetCardName()}");
 
             currentCard = card;
             currentCard.SetHandSlot(position);
@@ -42,11 +42,10 @@ namespace Game.UI.Hand
             currentCardUI = SkillCardUIFactory.CreateUI(skillCardUIPrefab, transform, card);
 
             if (currentCardUI != null)
-                Debug.Log($"[PlayerHandCardSlotUI] 카드 UI 생성 완료: {currentCardUI.name}");
+            Debug.Log($"[PlayerHandCardSlotUI] 카드 UI 생성 완료: {currentCardUI.name}");
             else
-                Debug.LogError("[PlayerHandCardSlotUI] 카드 UI 생성 실패");
+            Debug.LogError("[PlayerHandCardSlotUI] 카드 UI 생성 실패");
         }
-
 
         public ISkillCard GetCard() => currentCard;
 
@@ -59,6 +58,25 @@ namespace Game.UI.Hand
                 Destroy(currentCardUI.gameObject);
                 currentCardUI = null;
             }
+        }
+        public void SetInteractable(bool interactable)
+        {
+            if (currentCardUI != null)
+                currentCardUI.SetInteractable(interactable);
+        }
+
+        public void SetCoolTimeDisplay(int coolTime, bool isOnCooldown)
+        {
+            if (currentCardUI != null)
+                currentCardUI.ShowCoolTime(coolTime, isOnCooldown);
+        }
+
+        /// <summary>
+        /// 현재 슬롯에 카드가 있는지 여부
+        /// </summary>
+        public bool HasCard()
+        {
+            return currentCard != null;
         }
     }
 }

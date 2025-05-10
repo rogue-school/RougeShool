@@ -17,6 +17,7 @@ namespace Game.Player
         [SerializeField] private TextMeshProUGUI nameText;
         [SerializeField] private Image portraitImage;
         [SerializeField] private TextMeshProUGUI hpText;
+        [SerializeField] private Slider hpSlider;
 
         public PlayerCharacterData Data => characterData;
 
@@ -62,11 +63,27 @@ namespace Game.Player
 
             if (hpText != null)
                 hpText.text = $"HP {GetCurrentHP()} / {GetMaxHP()}";
+
+            if (hpSlider != null)
+                hpSlider.value = (float)GetCurrentHP() / GetMaxHP();
+        }
+
+        public override void TakeDamage(int amount)
+        {
+            base.TakeDamage(amount);
+            ApplyDataToUI();
+        }
+
+        public override void Heal(int amount)
+        {
+            base.Heal(amount);
+            ApplyDataToUI();
         }
 
         public override void Die()
         {
             base.Die();
+            ApplyDataToUI();
             Debug.Log("[PlayerCharacter] 사망 → 게임 오버 처리 필요");
         }
     }

@@ -1,11 +1,11 @@
-using UnityEngine;
 using Game.Managers;
-using Game.Combat.Turn;
+using UnityEngine;
 
 namespace Game.Combat.Turn
 {
     /// <summary>
     /// 기본 컴뱃 턴 처리 상태입니다.
+    /// 현재 특별한 동작은 없으며 상태 전환 예시를 포함합니다.
     /// </summary>
     public class DefaultCombatState : ICombatTurnState
     {
@@ -18,21 +18,21 @@ namespace Game.Combat.Turn
 
         public void EnterState()
         {
-            Debug.Log("기본 상태 진입: DefaultCombatState");
+            Debug.Log("[DefaultCombatState] 상태 진입");
         }
 
         public void ExecuteState()
         {
-            // 기본 턴 로직 실행
-            Debug.Log("기본 전투 턴이 실행되었습니다.");
+            // 예시 로직: 상태 유지 또는 전환 가능
+            Debug.Log("[DefaultCombatState] 기본 턴 상태 실행 중");
 
-            // 예시: 상태 전환
+            // 예: 상태 전환
             // turnManager.SetState(new PlayerGuardedState(turnManager));
         }
 
         public void ExitState()
         {
-            Debug.Log("기본 상태 종료: DefaultCombatState");
+            Debug.Log("[DefaultCombatState] 상태 종료");
         }
     }
 }

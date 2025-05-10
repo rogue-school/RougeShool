@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Game.Interface;
 using Game.Slots;
@@ -24,6 +25,7 @@ namespace Game.Managers
                 Destroy(gameObject);
                 return;
             }
+
             Instance = this;
             DontDestroyOnLoad(gameObject);
         }
@@ -48,7 +50,10 @@ namespace Game.Managers
 
         public IEnumerable<IHandCardSlot> GetAllHandSlots() => handSlots.Values;
 
-        public IEnumerable<IHandCardSlot> GetHandSlots() => GetAllHandSlots();
+        public IEnumerable<IHandCardSlot> GetHandSlots(SlotOwner owner)
+        {
+            return handSlots.Values.Where(slot => slot.GetOwner() == owner);
+        }
 
         #endregion
 
@@ -87,30 +92,32 @@ namespace Game.Managers
             Debug.Log($"[SlotRegistry] Character 슬롯 {characterSlots.Count}개 등록됨");
         }
 
+        /// <summary>
+        /// 지정된 오너에 해당하는 캐릭터 슬롯들을 반환합니다.
+        /// 현재 구조상 오너당 1개만 저장되므로 단일 슬롯만 반환됩니다.
+        /// </summary>
+        public IEnumerable<ICharacterSlot> GetCharacterSlots(SlotOwner owner)
+        {
+            if (characterSlots.TryGetValue(owner, out var slot))
+                yield return slot;
+        }
+
+        /// <summary>
+        /// 전체 캐릭터 슬롯 반환
+        /// </summary>
+        public IEnumerable<ICharacterSlot> GetCharacterSlots()
+        {
+            return characterSlots.Values;
+        }
+
+        #endregion
+        /// <summary>
+        /// 지정된 오너에 대한 단일 캐릭터 슬롯 반환 (오너당 1개만 존재하는 경우)
+        /// </summary>
         public ICharacterSlot GetCharacterSlot(SlotOwner owner)
         {
             return characterSlots.TryGetValue(owner, out var slot) ? slot : null;
         }
 
-        public IEnumerable<ICharacterSlot> GetAllCharacterSlots() => characterSlots.Values;
-
-        public IEnumerable<ICharacterSlot> CharacterSlots => GetAllCharacterSlots();
-
-        #endregion
-
-        public Dictionary<SkillCardSlotPosition, IHandCardSlot> GetHandSlots(SlotOwner owner)
-        {
-            Dictionary<SkillCardSlotPosition, IHandCardSlot> result = new();
-
-            foreach (var kvp in handSlots)
-            {
-                if (kvp.Value.GetOwner() == owner)
-                {
-                    result[kvp.Key] = kvp.Value;
-                }
-            }
-
-            return result;
-        }
     }
 }

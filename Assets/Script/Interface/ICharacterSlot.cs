@@ -1,5 +1,5 @@
 using Game.Slots;
-using Game.Interface;
+using UnityEngine;
 
 namespace Game.Interface
 {
@@ -11,5 +11,6 @@ namespace Game.Interface
 
         CharacterSlotPosition GetSlotPosition();
         SlotOwner GetOwner();
+        Transform GetTransform();
     }
 }

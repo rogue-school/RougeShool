@@ -8,7 +8,7 @@ namespace Game.Player
 {
     /// <summary>
     /// 플레이어가 사용하는 스킬 카드의 데이터 ScriptableObject입니다.
-    /// 기본 정보(이름, 설명, 쿨타임, 효과)를 포함하고, 런타임에서 슬롯 위치를 설정할 수 있습니다.
+    /// 기본 정보(이름, 설명, 쿨타임, 효과)를 포함하고, 런타임에서 슬롯 위치 및 쿨타임 상태를 관리합니다.
     /// </summary>
     [CreateAssetMenu(menuName = "Game/Card/Player Skill Card")]
     public class PlayerSkillCard : ScriptableObject, ISkillCard
@@ -22,10 +22,10 @@ namespace Game.Player
         [Header("카드 효과")]
         [SerializeField] private List<ScriptableObject> effectObjects;
 
-        // 외부에서 주입될 변수
         private int power;
+        private int currentCoolTime = 0;
+        public SlotOwner GetOwner() => SlotOwner.PLAYER;
 
-        // 슬롯 정보
         private SkillCardSlotPosition? handSlot = null;
         private CombatSlotPosition? combatSlot = null;
 
@@ -33,6 +33,7 @@ namespace Game.Player
         public string GetDescription() => description;
         public Sprite GetArtwork() => artwork;
         public int GetCoolTime() => coolTime;
+        public int GetCurrentCoolTime() => currentCoolTime;
         public int GetEffectPower(ICardEffect effect) => power;
 
         public List<ICardEffect> CreateEffects()
@@ -45,11 +46,8 @@ namespace Game.Player
             }
             return list;
         }
-        public void SetCoolTime(int value)
-        {
-            this.coolTime = value;
-        }
 
+        public void SetCoolTime(int value) => coolTime = value;
         public void SetPower(int value) => power = value;
 
         public void SetHandSlot(SkillCardSlotPosition slot) => handSlot = slot;
@@ -57,5 +55,27 @@ namespace Game.Player
 
         public void SetCombatSlot(CombatSlotPosition slot) => combatSlot = slot;
         public CombatSlotPosition? GetCombatSlot() => combatSlot;
+
+        /// <summary>
+        /// 쿨타임 시작 (스킬 사용 시 호출)
+        /// </summary>
+        public void ActivateCoolTime()
+        {
+            currentCoolTime = coolTime;
+        }
+
+        /// <summary>
+        /// 쿨타임 1 감소 (턴 종료 시 호출)
+        /// </summary>
+        public void TickCoolDown()
+        {
+            if (currentCoolTime > 0)
+                currentCoolTime--;
+        }
+
+        /// <summary>
+        /// 현재 쿨타임 중인지 확인
+        /// </summary>
+        public bool IsOnCoolDown() => currentCoolTime > 0;
     }
 }

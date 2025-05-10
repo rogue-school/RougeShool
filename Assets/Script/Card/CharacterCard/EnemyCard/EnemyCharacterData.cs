@@ -12,6 +12,9 @@ namespace Game.Data
         public int maxHP;
         public Sprite portrait;
 
+        [Header("프리팹 참조")]
+        public GameObject prefab;
+
         [System.Serializable]
         public class SkillCardEntry
         {

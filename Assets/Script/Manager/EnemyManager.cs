@@ -24,27 +24,27 @@ namespace Game.Managers
         }
 
         /// <summary>
-        /// 현재 씬에 등장한 적을 설정합니다.
+        /// 적 캐릭터 등록 (겹치는 Register 메서드 통합)
         /// </summary>
         public void SetEnemy(EnemyCharacter enemy)
         {
+            if (enemy == null)
+            {
+                Debug.LogWarning("[EnemyManager] 등록된 적이 null입니다.");
+                return;
+            }
+
             currentEnemy = enemy;
+            Debug.Log($"[EnemyManager] 적 등록 완료: {enemy.name}");
         }
 
-        /// <summary>
-        /// 현재 적 캐릭터를 반환합니다.
-        /// </summary>
         public EnemyCharacter GetCurrentEnemy()
         {
+            if (currentEnemy == null)
+                Debug.LogWarning("[EnemyManager] 적 캐릭터가 설정되지 않았습니다.");
             return currentEnemy;
         }
 
-        /// <summary>
-        /// 현재 적 캐릭터가 존재하는지 여부
-        /// </summary>
-        public bool HasEnemy()
-        {
-            return currentEnemy != null;
-        }
+        public bool HasEnemy() => currentEnemy != null;
     }
 }

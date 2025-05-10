@@ -5,60 +5,21 @@ using Game.Effect;
 
 namespace Game.Interface
 {
-    /// <summary>
-    /// 모든 스킬 카드(플레이어 및 적)가 구현해야 하는 공통 인터페이스입니다.
-    /// 슬롯 위치(핸드 / 전투) 정보를 각각 별도로 관리합니다.
-    /// </summary>
     public interface ISkillCard
     {
-        /// <summary>
-        /// 카드 이름 반환
-        /// </summary>
         string GetCardName();
-
-        /// <summary>
-        /// 카드 설명 반환
-        /// </summary>
         string GetDescription();
-
-        /// <summary>
-        /// 카드 아트워크 반환
-        /// </summary>
         Sprite GetArtwork();
-
-        /// <summary>
-        /// 카드 쿨타임 (적은 0으로 고정 가능)
-        /// </summary>
         int GetCoolTime();
-
-        /// <summary>
-        /// 연결된 효과 리스트를 반환
-        /// </summary>
+        int GetEffectPower(ICardEffect effect);
         List<ICardEffect> CreateEffects();
 
-        /// <summary>
-        /// 해당 효과에 대한 수치 (공격력 등)를 반환
-        /// </summary>
-        int GetEffectPower(ICardEffect effect);
-
-        /// <summary>
-        /// 핸드 슬롯 위치 설정
-        /// </summary>
         void SetHandSlot(SkillCardSlotPosition slot);
-
-        /// <summary>
-        /// 핸드 슬롯 위치 반환
-        /// </summary>
         SkillCardSlotPosition? GetHandSlot();
 
-        /// <summary>
-        /// 전투 슬롯 위치 설정
-        /// </summary>
         void SetCombatSlot(CombatSlotPosition slot);
-
-        /// <summary>
-        /// 전투 슬롯 위치 반환
-        /// </summary>
         CombatSlotPosition? GetCombatSlot();
+
+        SlotOwner GetOwner();
     }
 }

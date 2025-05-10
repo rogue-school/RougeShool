@@ -11,17 +11,17 @@ namespace Game.Cards
     [CreateAssetMenu(menuName = "CardEffects/BleedEffect")]
     public class BleedEffectSO : ScriptableObject, ICardEffect
     {
+        [SerializeField] private int bleedDamage = 1;
         [SerializeField] private int duration = 3;
 
-        public void ExecuteEffect(CharacterBase caster, CharacterBase target, int power)
+        public void ExecuteEffect(CharacterBase caster, CharacterBase target, int ignoredPower)
         {
-            target.RegisterPerTurnEffect(new BleedEffect(power, duration));
+            target.RegisterPerTurnEffect(new BleedEffect(bleedDamage, duration));
         }
-
 
         public string GetEffectDescription()
         {
-            return $"출혈: 턴마다 체력 {1} 감소 ({duration}턴)";
+            return $"출혈: 매턴 {bleedDamage} 피해, {duration}턴 지속";
         }
     }
 

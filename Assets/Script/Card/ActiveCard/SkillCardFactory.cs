@@ -5,6 +5,7 @@ using Game.Enemy;
 using System.Collections.Generic;
 using UnityEngine;
 using Game.Effect;
+using Game.Slots;
 
 namespace Game.Utility
 {
@@ -25,7 +26,8 @@ namespace Game.Utility
                 cardData.GetArtwork(),
                 cardData.CreateEffects(),
                 damage,
-                coolTime
+                coolTime,
+                SlotOwner.PLAYER
             );
         }
 
@@ -40,7 +42,8 @@ namespace Game.Utility
                 cardData.GetArtwork(),
                 cardData.CreateEffects(),
                 damage,
-                0
+                0,
+                SlotOwner.ENEMY
             );
         }
 
@@ -53,9 +56,11 @@ namespace Game.Utility
             Sprite artwork,
             List<ICardEffect> effects,
             int power,
-            int coolTime)
+            int coolTime,
+            SlotOwner owner
+        )
         {
-            return new RuntimeSkillCard(name, description, artwork, effects, power, coolTime);
+            return new RuntimeSkillCard(name, description, artwork, effects, power, coolTime, owner);
         }
     }
 }

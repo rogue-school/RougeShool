@@ -6,6 +6,7 @@ namespace Game.Interface
     {
         string GetName();
         int GetHP();
+        int GetCurrentHP();
         int GetMaxHP();
         void TakeDamage(int amount);
         void Heal(int amount);

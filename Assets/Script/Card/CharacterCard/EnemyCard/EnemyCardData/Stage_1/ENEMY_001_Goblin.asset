@@ -15,6 +15,7 @@ MonoBehaviour:
   displayName: ENEMY_001_Goblin
   maxHP: 2
   portrait: {fileID: 2111737616767120531, guid: d174ab94a0ee96d49b8b20b1927aa004, type: 3}
+  prefab: {fileID: 7769799778275336730, guid: 2c6e844c91775424681f573a6951211e, type: 3}
   skillDeck:
   - card: {fileID: 11400000, guid: 79bc20c3476f58c4a9d21c343df216a4, type: 2}
     damage: 1

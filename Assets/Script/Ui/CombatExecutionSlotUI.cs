@@ -3,13 +3,11 @@ using Game.Interface;
 using Game.Slots;
 using Game.Managers;
 using Game.Characters;
-using Game.UI;
+using Game.Cards;
+using Game.Effect;
 
 namespace Game.UI.Combat
 {
-    /// <summary>
-    /// 실제 전투가 실행되는 슬롯의 UI를 제어하는 컴포넌트입니다.
-    /// </summary>
     public class CombatExecutionSlotUI : MonoBehaviour, ICombatCardSlot
     {
         [SerializeField] private CombatSlotPosition position;
@@ -17,11 +15,8 @@ namespace Game.UI.Combat
         private SkillCardUI currentCardUI;
 
         public CombatSlotPosition GetCombatPosition() => position;
-
         public void SetCombatPosition(CombatSlotPosition newPosition) => position = newPosition;
-
-        public SlotOwner GetOwner() =>
-            position == CombatSlotPosition.FIRST ? SlotOwner.ENEMY : SlotOwner.PLAYER;
+        public SlotOwner GetOwner() => position == CombatSlotPosition.FIRST ? SlotOwner.ENEMY : SlotOwner.PLAYER;
 
         public void SetCard(ISkillCard card)
         {
@@ -33,31 +28,63 @@ namespace Game.UI.Combat
 
         public void Clear()
         {
-            Debug.LogWarning($"[Clear] 슬롯 클리어 호출됨: {gameObject.name}");
             currentCard = null;
-            currentCardUI = null;
+
+            if (currentCardUI != null)
+            {
+                Destroy(currentCardUI.gameObject);
+                currentCardUI = null;
+            }
+
+            Debug.Log($"[CombatExecutionSlotUI] 슬롯 클리어 완료: {gameObject.name}");
         }
 
-        public void SetCardUI(SkillCardUI cardUI) => currentCardUI = cardUI;
 
+        public void SetCardUI(SkillCardUI cardUI) => currentCardUI = cardUI;
         public SkillCardUI GetCardUI() => currentCardUI;
 
         public void ExecuteCardAutomatically()
         {
-            if (currentCard == null) return;
+            if (currentCard == null)
+            {
+                Debug.LogWarning("[CombatExecutionSlotUI] currentCard가 null입니다.");
+                return;
+            }
 
-            var enemy = EnemyManager.Instance.GetCurrentEnemy();
-            var player = PlayerManager.Instance.GetPlayer();
+            CharacterBase caster = null;
+            CharacterBase target = null;
 
-            CharacterBase owner = (currentCard.GetCombatSlot() == CombatSlotPosition.FIRST)
-                ? (CharacterBase)enemy : (CharacterBase)player;
+            if (currentCard.GetOwner() == SlotOwner.PLAYER)
+            {
+                caster = PlayerManager.Instance?.GetPlayer();
+                target = EnemyManager.Instance?.GetCurrentEnemy();
+            }
+            else
+            {
+                caster = EnemyManager.Instance?.GetCurrentEnemy();
+                target = PlayerManager.Instance?.GetPlayer();
+            }
 
-            CharacterBase target = (owner == enemy) ? (CharacterBase)player : (CharacterBase)enemy;
+            if (caster == null || target == null || target.IsDead())
+            {
+                Debug.LogWarning($"[CombatExecutionSlotUI] 이펙트 실행 생략: 대상이 null 또는 사망 상태입니다.");
+                return;
+            }
 
             foreach (var effect in currentCard.CreateEffects())
             {
+                if (effect == null) continue;
+
                 int power = currentCard.GetEffectPower(effect);
-                effect.ExecuteEffect(owner, target, power);
+                effect.ExecuteEffect(caster, target, power);
+
+                string effectName = effect.GetType().Name;
+                Debug.Log($"[CombatExecutionSlotUI] 실행됨 → {effectName}, {caster.name} → {target.name}, power: {power}");
+
+                if (effect is IPerTurnEffect)
+                {
+                    Debug.Log($"[CombatExecutionSlotUI] 지속 이펙트 적용됨: {effectName}");
+                }
             }
         }
     }

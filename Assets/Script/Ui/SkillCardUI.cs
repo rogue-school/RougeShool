@@ -18,6 +18,12 @@ namespace Game.UI
         [SerializeField] private TextMeshProUGUI powerText;
         [SerializeField] private Image cardArtImage;
 
+        [Header("쿨타임 표시")]
+        [SerializeField] private GameObject coolTimeOverlay;
+        [SerializeField] private TextMeshProUGUI coolTimeText;
+        [SerializeField] private CanvasGroup canvasGroup;
+
+
         private ISkillCard card;
 
         /// <summary>
@@ -30,7 +36,7 @@ namespace Game.UI
 
             if (card == null)
             {
-                Debug.LogWarning("[SkillCardUI] 카드가 null입니다.");
+               // Debug.LogWarning("[SkillCardUI] 카드가 null입니다.");
                 return;
             }
 
@@ -44,10 +50,22 @@ namespace Game.UI
             }
             else
             {
-                Debug.LogWarning("[SkillCardUI] 아트워크 이미지가 없습니다.");
+                //Debug.LogWarning("[SkillCardUI] 아트워크 이미지가 없습니다.");
             }
 
-            Debug.Log($"[SkillCardUI] 카드 UI 설정 완료: {card.GetCardName()}");
+            //Debug.Log($"[SkillCardUI] 카드 UI 설정 완료: {card.GetCardName()}");
+        }
+
+        public void SetInteractable(bool value)
+        {
+            if (canvasGroup != null)
+                canvasGroup.alpha = value ? 1f : 0.5f;
+        }
+
+        public void ShowCoolTime(int coolTime, bool show)
+        {
+            if (coolTimeOverlay != null) coolTimeOverlay.SetActive(show);
+            if (coolTimeText != null) coolTimeText.text = show ? coolTime.ToString() : "";
         }
 
         /// <summary>

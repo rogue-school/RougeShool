@@ -31,5 +31,13 @@ namespace Game.UI.Hand
         {
             currentCard = null;
         }
+
+        /// <summary>
+        /// 현재 슬롯에 카드가 있는지 여부
+        /// </summary>
+        public bool HasCard()
+        {
+            return currentCard != null;
+        }
     }
 }

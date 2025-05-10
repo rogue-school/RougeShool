@@ -20,7 +20,7 @@ namespace Game.Initialization
         /// </summary>
         public void SetupCharacterUI()
         {
-            foreach (var slot in SlotRegistry.Instance.CharacterSlots)
+            foreach (var slot in SlotRegistry.Instance.GetCharacterSlots())
             {
                 switch (slot.GetOwner())
                 {

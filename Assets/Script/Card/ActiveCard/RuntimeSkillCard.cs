@@ -19,6 +19,7 @@ namespace Game.Cards
         private int power;
         private int coolTime;
         private List<ICardEffect> effects;
+        private SlotOwner owner;
 
         private SkillCardSlotPosition? handSlot = null;
         private CombatSlotPosition? combatSlot = null;
@@ -32,7 +33,9 @@ namespace Game.Cards
             Sprite art,
             List<ICardEffect> effects,
             int power,
-            int coolTime)
+            int coolTime,
+            SlotOwner owner
+        )
         {
             this.cardName = name;
             this.description = desc;
@@ -40,6 +43,7 @@ namespace Game.Cards
             this.effects = effects;
             this.power = power;
             this.coolTime = coolTime;
+            this.owner = owner;
         }
 
         public string GetCardName() => cardName;
@@ -48,6 +52,7 @@ namespace Game.Cards
         public int GetCoolTime() => coolTime;
         public int GetEffectPower(ICardEffect effect) => power;
         public List<ICardEffect> CreateEffects() => effects;
+        public SlotOwner GetOwner() => owner;
 
         public void SetPower(int value) => power = value;
 

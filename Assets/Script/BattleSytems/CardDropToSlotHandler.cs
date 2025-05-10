@@ -1,5 +1,6 @@
 using Game.Cards;
 using Game.Interface;
+using Game.Managers;
 using Game.UI;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -62,6 +63,8 @@ public class CardDropToSlotHandler : MonoBehaviour, IDropHandler
         var dragHandler = draggedObject.GetComponent<CardDragHandler>();
         if (dragHandler != null)
             dragHandler.droppedSuccessfully = true;
+
+        CombatTurnManager.Instance.RegisterPlayerCard(newCard);
 
         Debug.Log($"[DropHandler] 카드 교체 완료: {newCard.GetCardName()} → {slot.GetCombatPosition()}");
     }

@@ -38,13 +38,14 @@ namespace Game.Combat
 
             // 4. 스테이지에서 적 데이터 가져오기 → 적 소환
             var stage = StageManager.Instance.GetCurrentStage();
-            if (stage != null && stage.enemies != null && stage.enemies.Length > 0)
+            if (stage != null && stage.enemies != null && stage.enemies.Count > 0)
             {
                 enemyInitializer?.SetupWithData(stage.enemies[0]);
             }
             else
             {
                 Debug.LogError("[CombatInitializerManager] 현재 스테이지에 적 데이터가 없습니다.");
+                yield break;
             }
 
             // 5. 프레임 종료까지 대기 (UI 포함 모든 생성 완료 보장)
@@ -52,6 +53,15 @@ namespace Game.Combat
 
             // 6. 적 핸드 매니저 초기화
             EnemyCharacter enemy = enemyInitializer.GetSpawnedEnemy();
+            if (enemy == null)
+            {
+                Debug.LogError("[CombatInitializerManager] 적 캐릭터 인스턴스가 생성되지 않았습니다.");
+                yield break;
+            }
+
+            //  EnemyManager에 적 등록
+            EnemyManager.Instance.SetEnemy(enemy);
+
             enemyHandManager?.Initialize(enemy);
 
             // 7. 핸드 카드 생성
@@ -61,6 +71,5 @@ namespace Game.Combat
             // 8. 적 첫 번째 카드 CombatTurnManager에 등록
             CombatTurnManager.Instance.BeginEnemyTurn();
         }
-
     }
 }

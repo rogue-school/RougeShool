@@ -4,9 +4,9 @@ using Game.Cards;
 using Game.Interface;
 using Game.Slots;
 using Game.UI;
-using Game.Utility;
 using Game.Enemy;
 using Game.Data;
+using Game.Utility;
 
 namespace Game.Managers
 {
@@ -19,8 +19,8 @@ namespace Game.Managers
 
         [SerializeField] private SkillCardUI cardUIPrefab;
 
-        private Dictionary<SkillCardSlotPosition, IHandCardSlot> handSlots;
-        private Dictionary<SkillCardSlotPosition, SkillCardUI> cardUIs;
+        private Dictionary<SkillCardSlotPosition, IHandCardSlot> handSlots = new();
+        private Dictionary<SkillCardSlotPosition, SkillCardUI> cardUIs = new();
 
         private EnemyCharacter currentEnemy;
 
@@ -34,59 +34,74 @@ namespace Game.Managers
             Instance = this;
         }
 
-        /// <summary>
-        /// 적 캐릭터 정보를 기반으로 슬롯과 덱을 초기화합니다.
-        /// </summary>
         public void Initialize(EnemyCharacter enemy)
         {
             currentEnemy = enemy;
-            if (currentEnemy?.Data == null)
-            {
-                Debug.LogError("[EnemyHandManager] 적 캐릭터 또는 데이터가 null입니다.");
-                return;
-            }
 
             if (cardUIPrefab == null)
                 cardUIPrefab = Resources.Load<SkillCardUI>("UI/SkillCardUI");
 
-            handSlots = SlotRegistry.Instance.GetHandSlots(SlotOwner.ENEMY);
-            cardUIs = new Dictionary<SkillCardSlotPosition, SkillCardUI>();
+            handSlots.Clear();
+            foreach (var slot in SlotRegistry.Instance.GetHandSlots(SlotOwner.ENEMY))
+                handSlots[slot.GetSlotPosition()] = slot;
 
-            Debug.Log($"[EnemyHandManager] 슬롯 초기화 완료 - 슬롯 수: {handSlots?.Count}");
+            cardUIs.Clear();
+
+            if (handSlots.Count == 0)
+                Debug.LogError("[EnemyHandManager] 적 핸드 슬롯이 초기화되지 않았습니다.");
         }
 
-        /// <summary>
-        /// 핸드 슬롯에 초기 카드를 생성하여 채웁니다.
-        /// </summary>
         public void GenerateInitialHand()
         {
-            if (currentEnemy?.Data == null)
-            {
-                Debug.LogError("[EnemyHandManager] 적 정보가 없어서 핸드 생성 불가");
-                return;
-            }
-
-            foreach (var kvp in handSlots)
-            {
-                CreateCardInSlot(kvp.Key);
-            }
-
-            Debug.Log("[EnemyHandManager] 핸드 카드 생성 완료");
+            CreateCardInSlot(SkillCardSlotPosition.ENEMY_SLOT_3);
+            FillEmptySlots();
         }
 
-        /// <summary>
-        /// 특정 슬롯에 새 카드를 생성하고 UI를 배치합니다.
-        /// </summary>
+        public void AdvanceSlots()
+        {
+            FillEmptySlots();
+        }
+
+        public void FillEmptySlots()
+        {
+            bool moved;
+            do
+            {
+                moved = false;
+
+                if (IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_1) && !IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_2))
+                {
+                    ShiftCard(SkillCardSlotPosition.ENEMY_SLOT_2, SkillCardSlotPosition.ENEMY_SLOT_1);
+                    moved = true;
+                }
+
+                if (IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_2) && !IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_3))
+                {
+                    ShiftCard(SkillCardSlotPosition.ENEMY_SLOT_3, SkillCardSlotPosition.ENEMY_SLOT_2);
+                    moved = true;
+                }
+
+                if (IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_3))
+                {
+                    CreateCardInSlot(SkillCardSlotPosition.ENEMY_SLOT_3);
+                    moved = true;
+                }
+
+            } while (moved);
+        }
+
+        private bool IsSlotEmpty(SkillCardSlotPosition position)
+        {
+            return handSlots[position].GetCard() == null;
+        }
+
         private void CreateCardInSlot(SkillCardSlotPosition position)
         {
             var slot = handSlots[position];
             var entry = currentEnemy.Data.GetRandomEntry();
 
             if (entry?.card == null)
-            {
-                Debug.LogWarning($"[EnemyHandManager] 카드 정보가 유효하지 않음 - 슬롯: {position}");
                 return;
-            }
 
             var runtimeCard = SkillCardFactory.CreateEnemyCard(entry.card, entry.damage);
             runtimeCard.SetHandSlot(position);
@@ -96,45 +111,15 @@ namespace Game.Managers
 
             slot.SetCard(runtimeCard);
             cardUIs[position] = cardUI;
-
-            Debug.Log($"[EnemyHandManager] 카드 생성 완료 - 슬롯: {position}, 카드: {runtimeCard.GetCardName()}");
         }
 
-        /// <summary>
-        /// 전투에 사용할 고정 슬롯의 카드 반환 (ENEMY_SLOT_1)
-        /// </summary>
-        public ISkillCard GetCardForCombat()
-        {
-            return GetSlotCard(SkillCardSlotPosition.ENEMY_SLOT_1);
-        }
-
-        public ISkillCard GetSlotCard(SkillCardSlotPosition position)
-        {
-            return handSlots.TryGetValue(position, out var slot) ? slot.GetCard() : null;
-        }
-
-        /// <summary>
-        /// 적 핸드 슬롯들을 앞으로 밀고 새 카드를 뒤에 추가합니다.
-        /// </summary>
-        public void AdvanceSlots()
-        {
-            ShiftCard(SkillCardSlotPosition.ENEMY_SLOT_2, SkillCardSlotPosition.ENEMY_SLOT_1);
-            ShiftCard(SkillCardSlotPosition.ENEMY_SLOT_3, SkillCardSlotPosition.ENEMY_SLOT_2);
-
-            CreateCardInSlot(SkillCardSlotPosition.ENEMY_SLOT_3);
-
-            Debug.Log("[EnemyHandManager] 슬롯 전진 및 새 카드 추가 완료");
-        }
-
-        /// <summary>
-        /// 한 슬롯의 카드를 다른 슬롯으로 이동합니다.
-        /// </summary>
         private void ShiftCard(SkillCardSlotPosition from, SkillCardSlotPosition to)
         {
             var fromSlot = handSlots[from];
             var toSlot = handSlots[to];
 
             var card = fromSlot.GetCard();
+            fromSlot.Clear();
             toSlot.SetCard(card);
             card?.SetHandSlot(to);
 
@@ -148,9 +133,16 @@ namespace Game.Managers
             }
         }
 
-        /// <summary>
-        /// 특정 인덱스의 카드 UI를 반환합니다. (0: ENEMY_SLOT_1)
-        /// </summary>
+        public ISkillCard GetCardForCombat()
+        {
+            return GetSlotCard(SkillCardSlotPosition.ENEMY_SLOT_1);
+        }
+
+        public ISkillCard GetSlotCard(SkillCardSlotPosition position)
+        {
+            return handSlots.TryGetValue(position, out var slot) ? slot.GetCard() : null;
+        }
+
         public SkillCardUI GetCardUI(int index)
         {
             var slotPos = index switch
@@ -162,6 +154,38 @@ namespace Game.Managers
             };
 
             return cardUIs.TryGetValue(slotPos, out var ui) ? ui : null;
+        }
+
+        /// <summary>
+        /// 슬롯과 카드 UI 모두 제거합니다.
+        /// </summary>
+        public void ClearAllSlots()
+        {
+            foreach (var slot in handSlots.Values)
+                slot.Clear();
+
+            foreach (var ui in cardUIs.Values)
+                if (ui != null) Destroy(ui.gameObject);
+
+            cardUIs.Clear();
+
+            Debug.Log("[EnemyHandManager] 모든 핸드 슬롯 클리어 완료");
+        }
+
+        /// <summary>
+        /// UI를 완전히 제거하고 슬롯도 초기화합니다.
+        /// </summary>
+        public void ClearAllUI()
+        {
+            foreach (var slot in SlotRegistry.Instance.GetHandSlots(SlotOwner.ENEMY))
+                slot.Clear();
+
+            foreach (var ui in cardUIs.Values)
+                if (ui != null) Destroy(ui.gameObject);
+
+            cardUIs.Clear();
+
+            Debug.Log("[EnemyHandManager] 모든 핸드 UI 정리 완료");
         }
     }
 }

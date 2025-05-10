@@ -7,13 +7,14 @@ using Game.Managers;
 namespace Game.Enemy
 {
     /// <summary>
-    /// 적 캐릭터를 슬롯에 배치하는 스포너 매니저입니다.
+    /// 적 캐릭터를 전투 UI 슬롯에 배치하는 스포너 매니저입니다.
     /// </summary>
     public class EnemySpawnerManager : MonoBehaviour
     {
+        [Header("전투 슬롯에 등장할 적 프리팹 (기본값)")]
         [SerializeField] private GameObject enemyPrefab;
 
-        private List<EnemyCharacter> spawnedEnemies = new List<EnemyCharacter>();
+        private readonly List<EnemyCharacter> spawnedEnemies = new();
 
         public EnemyCharacter SpawnEnemy(EnemyCharacterData data)
         {
@@ -25,9 +26,17 @@ namespace Game.Enemy
                 return null;
             }
 
-            GameObject instance = Instantiate(enemyPrefab, ((MonoBehaviour)slot).transform.position, Quaternion.identity);
-            EnemyCharacter enemy = instance.GetComponent<EnemyCharacter>();
+            // 기존 자식 제거
+            foreach (Transform child in slot.GetTransform())
+            {
+                Destroy(child.gameObject);
+            }
 
+            GameObject instance = Instantiate(data.prefab != null ? data.prefab : enemyPrefab, slot.GetTransform());
+            instance.transform.localPosition = Vector3.zero;
+            instance.transform.localScale = Vector3.one;
+
+            EnemyCharacter enemy = instance.GetComponent<EnemyCharacter>();
             if (enemy == null)
             {
                 Debug.LogError("[EnemySpawnerManager] EnemyCharacter 컴포넌트를 찾을 수 없습니다.");
@@ -41,6 +50,7 @@ namespace Game.Enemy
             Debug.Log($"[EnemySpawnerManager] 적 캐릭터 배치 완료: {data.displayName}");
             return enemy;
         }
+
 
         public List<EnemyCharacter> GetAllEnemies() => spawnedEnemies;
     }

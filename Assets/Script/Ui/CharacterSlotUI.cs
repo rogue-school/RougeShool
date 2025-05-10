@@ -24,10 +24,9 @@ namespace Game.UI
         }
 
         public ICharacter GetCharacter() => character;
-
         public CharacterSlotPosition GetSlotPosition() => slotPosition;
-
         public SlotOwner GetOwner() => owner;
+        public Transform GetTransform() => this.transform;
 
         public void Clear()
         {
