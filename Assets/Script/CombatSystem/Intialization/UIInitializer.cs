@@ -1,6 +1,6 @@
 using UnityEngine;
 using Game.CombatSystem.Enemy;
-using Game.CombatSystem.Player;
+using Game.CombatSystem.Core;
 using Game.CombatSystem.Slot;
 
 namespace Game.CombatSystem.Intialization

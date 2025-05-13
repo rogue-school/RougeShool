@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections.Generic;
-using Game.CombatSystem.Core;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
 using Game.CombatSystem.UI;
@@ -9,7 +8,7 @@ using Game.SkillCardSystem.Runtime;
 using Game.SkillCardSystem.Slot;
 using Game.SkillCardSystem.UI;
 
-namespace Game.CombatSystem.Player
+namespace Game.CombatSystem.Core
 {
     /// <summary>
     /// 플레이어 핸드 카드 초기화 및 전투 슬롯 연동을 관리합니다.

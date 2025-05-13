@@ -2,7 +2,7 @@ using UnityEngine;
 using Game.SkillCardSystem.Interface;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Core;
-using Game.CombatSystem.Player;
+using Game.CombatSystem.Core;
 using Game.CombatSystem.Enemy;
 using Game.CombatSystem.Slot;
 

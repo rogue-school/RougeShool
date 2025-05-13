@@ -1,20 +1,47 @@
 using UnityEngine;
 using System.Collections.Generic;
 using Game.CombatSystem.Slot;
+using Game.CombatSystem.UI;
+using Game.SkillCardSystem.Interface;
 
-namespace Game.CombatSystem.UI
+namespace Game.CombatSystem.Core
 {
     /// <summary>
     /// 전투 실행 슬롯을 자동 수집하고, 사전에 설정된 CombatSlotPosition 값으로 그룹화 및 관리하는 매니저입니다.
     /// </summary>
     public class CombatSlotManager : MonoBehaviour
     {
+        public static CombatSlotManager Instance { get; private set; }
+
         private CombatExecutionSlotUI[] allSlots;
         private Dictionary<CombatSlotPosition, List<CombatExecutionSlotUI>> slotGroups;
 
         private void Awake()
         {
+            Instance = this;
             AutoBindAndGroupByPosition();
+        }
+
+        public void ReserveSlot(SlotOwner owner, ISkillCard card)
+        {
+            // 선공/후공 슬롯 중 비어 있는 곳에 카드를 올림 (랜덤)
+            var positions = new[] {
+        CombatSlotPosition.FIRST,
+        CombatSlotPosition.SECOND
+    };
+
+            CombatSlotPosition selectedPosition = Random.value < 0.5f ? positions[0] : positions[1];
+
+            var slot = GetFirstSlot(selectedPosition);
+            if (slot != null)
+            {
+                slot.SetCard(card);
+                Debug.Log($"[CombatSlotManager] {owner}의 카드가 {selectedPosition} 슬롯에 배치됨");
+            }
+            else
+            {
+                Debug.LogWarning($"[CombatSlotManager] {selectedPosition} 슬롯에 배치 실패 (비어 있는 슬롯 없음)");
+            }
         }
 
         /// <summary>

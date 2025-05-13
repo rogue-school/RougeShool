@@ -1,13 +1,13 @@
 using UnityEngine;
 using System.Collections;
 using Game.CharacterSystem.Core;
-using Game.CombatSystem.Core;
 using Game.CombatSystem.Enemy;
-using Game.CombatSystem.Player;
 using Game.CombatSystem.Slot;
 using Game.CombatSystem.Stage;
+using Game.CombatSystem.Intialization;
+using Game.CombatSystem.State;
 
-namespace Game.CombatSystem.Intialization
+namespace Game.CombatSystem.Core
 {
     /// <summary>
     /// 전투 씬에서 모든 초기화 과정을 수행하는 전담 매니저입니다.
@@ -62,17 +62,15 @@ namespace Game.CombatSystem.Intialization
                 yield break;
             }
 
-            //  EnemyManager에 적 등록
             EnemyManager.Instance.SetEnemy(enemy);
-
             enemyHandManager?.Initialize(enemy);
 
-            // 7. 핸드 카드 생성
+            // 7. 플레이어 핸드 카드 생성
             playerHandManager?.GenerateInitialHand();
             enemyHandManager?.GenerateInitialHand();
 
-            // 8. 적 첫 번째 카드 CombatTurnManager에 등록
-            CombatTurnManager.Instance.BeginEnemyTurn();
+            // 8. 전투 턴 상태 머신 시작 (전투 준비 상태부터)
+            CombatTurnManager.Instance.ChangeState(new CombatPrepareState(CombatTurnManager.Instance));
         }
     }
 }

@@ -1,8 +1,8 @@
 using UnityEngine;
 using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Data;
-using Game.CombatSystem.Player;
 using Game.CombatSystem.Slot;
+using Game.CombatSystem.Core;
 
 namespace Game.CombatSystem.Intialization
 {

@@ -1,6 +1,5 @@
 using UnityEngine;
-using Game.CombatSystem.Enemy;
-using Game.CombatSystem.Player;
+using Game.CombatSystem.Core;
 
 namespace Game.CombatSystem.Intialization
 {

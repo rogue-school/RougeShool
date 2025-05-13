@@ -1,7 +1,8 @@
 using UnityEngine;
 using Game.CombatSystem.Enemy;
+using Game.CombatSystem.Stage;
 
-namespace Game.CombatSystem.Stage
+namespace Game.CombatSystem.Core
 {
     /// <summary>
     /// 스테이지 데이터를 기반으로 적을 순차적으로 소환하는 매니저입니다.
@@ -48,6 +49,17 @@ namespace Game.CombatSystem.Stage
         }
 
         /// <summary>
+        /// 현재 스테이지에 다음 적이 존재하는지 확인합니다.
+        /// </summary>
+        public bool HasNextEnemy()
+        {
+            var stage = GetCurrentStage();
+            if (stage == null || stage.enemies == null) return false;
+
+            return currentEnemyIndex < stage.enemies.Count;
+        }
+
+        /// <summary>
         /// 다음 적을 소환하고 전투 준비를 합니다.
         /// </summary>
         public void SpawnNextEnemy()
@@ -85,6 +97,9 @@ namespace Game.CombatSystem.Stage
             Debug.Log($"[StageManager] 적 소환 완료: {data.displayName}");
         }
 
+        /// <summary>
+        /// 현재 전투 스테이지 반환
+        /// </summary>
         public StageData GetCurrentStage() => currentStage;
     }
 }

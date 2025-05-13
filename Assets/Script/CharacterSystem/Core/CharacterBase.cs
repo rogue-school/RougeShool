@@ -40,7 +40,7 @@ namespace Game.CharacterSystem.Core
 
             Debug.Log($"{GetName()} 피해: -{amount}, 남은 체력: {currentHP}");
 
-            if (currentHP <= 0)
+            if (IsDead())
                 Die();
         }
 
@@ -100,7 +100,10 @@ namespace Game.CharacterSystem.Core
             }
         }
 
-        public bool IsDead()
+        /// <summary>
+        /// 캐릭터가 사망했는지 여부를 판단합니다. 이후 부활 처리 등 커스터마이징 시 활용.
+        /// </summary>
+        public virtual bool IsDead()
         {
             return currentHP <= 0;
         }

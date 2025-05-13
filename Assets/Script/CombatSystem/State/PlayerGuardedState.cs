@@ -1,7 +1,8 @@
 using UnityEngine;
 using Game.CombatSystem.Interface;
+using Game.CombatSystem.Core;
 
-namespace Game.CombatSystem.Core
+namespace Game.CombatSystem.State
 {
     /// <summary>
     /// 플레이어가 가드 상태일 때의 컴뱃 턴 상태입니다.
@@ -26,7 +27,7 @@ namespace Game.CombatSystem.Core
             // 방어 처리 로직 등...
 
             // 다음 상태로 전환
-            turnManager.SetState(new DefaultCombatState(turnManager));
+            turnManager.RequestStateChange(new DefaultCombatState(turnManager));
         }
 
         public void ExitState()

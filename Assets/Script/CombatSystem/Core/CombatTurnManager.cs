@@ -1,17 +1,15 @@
 using System.Collections;
 using UnityEngine;
-using Game.CombatSystem.Enemy;
 using Game.CombatSystem.Interface;
-using Game.CombatSystem.Player;
 using Game.CombatSystem.Slot;
-using Game.CombatSystem.Stage;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Runtime;
 using Game.SkillCardSystem.Slot;
+using Game.CombatSystem.State;
 
 namespace Game.CombatSystem.Core
 {
-    public class CombatTurnManager : MonoBehaviour
+    public class CombatTurnManager : MonoBehaviour, ITurnStateController
     {
         public static CombatTurnManager Instance { get; private set; }
 
@@ -20,6 +18,7 @@ namespace Game.CombatSystem.Core
         private CombatSlotPosition enemySlot;
 
         private ICombatTurnState currentState;
+        private ICombatTurnState pendingNextState;
 
         private void Awake()
         {
@@ -31,66 +30,92 @@ namespace Game.CombatSystem.Core
             Instance = this;
         }
 
+        private void Start()
+        {
+            RequestStateChange(new CombatPrepareState(this));
+        }
+
         private void Update()
         {
             currentState?.ExecuteState();
+
+            if (pendingNextState != null)
+            {
+                ChangeState(pendingNextState);
+                pendingNextState = null;
+            }
         }
 
-        public void SetState(ICombatTurnState newState)
+        public void ChangeState(ICombatTurnState newState)
         {
             currentState?.ExitState();
             currentState = newState;
             currentState?.EnterState();
         }
 
-        public void BeginEnemyTurn()
+        public void RequestStateChange(ICombatTurnState newState)
         {
-            enemyCard = EnemyHandManager.Instance.GetCardForCombat();
-            if (enemyCard == null)
-            {
-                Debug.LogWarning("[CombatTurnManager] 적 핸드 카드가 비어 있습니다.");
-                return;
-            }
-
-            enemySlot = (Random.value < 0.5f) ? CombatSlotPosition.FIRST : CombatSlotPosition.SECOND;
-            enemyCard.SetCombatSlot(enemySlot);
-
-            var combatSlot = SlotRegistry.Instance.GetCombatSlot(enemySlot);
-            combatSlot.SetCard(enemyCard);
-
-            var enemyCardUI = EnemyHandManager.Instance.GetCardUI(0);
-            if (enemyCardUI != null)
-            {
-                combatSlot.SetCardUI(enemyCardUI);
-                enemyCardUI.transform.SetParent(((MonoBehaviour)combatSlot).transform);
-                enemyCardUI.transform.localPosition = Vector3.zero;
-                enemyCardUI.transform.localScale = Vector3.one;
-            }
-
-            Debug.Log($"[CombatTurnManager] 적 카드 전투 슬롯 등록 완료 → {enemySlot}");
-
-            var handSlot = SlotRegistry.Instance.GetHandSlot(SkillCardSlotPosition.ENEMY_SLOT_1);
-            handSlot?.Clear();
-
-            EnemyHandManager.Instance.AdvanceSlots();
+            pendingNextState = newState;
         }
 
-        public void RegisterPlayerCard(ISkillCard card)
+        public void TriggerTurnStart()
         {
-            playerCard = card;
+            if (currentState is CombatPlayerInputState inputState)
+            {
+                inputState.TriggerTurnStart();
+            }
+        }
+
+        public void RegisterPlayerCard(ISkillCard card) => playerCard = card;
+        public void RegisterEnemyCard(ISkillCard card) => enemyCard = card;
+        public ISkillCard GetPlayerCard() => playerCard;
+        public ISkillCard GetEnemyCard() => enemyCard;
+
+        public void ClearCards()
+        {
+            playerCard = null;
+            enemyCard = null;
         }
 
         public bool AreBothSlotsReady() => enemyCard != null && playerCard != null;
 
-        public void ExecuteCombat()
-        {
-            if (!AreBothSlotsReady())
-            {
-                Debug.LogWarning("[CombatTurnManager] 카드가 모두 준비되지 않았습니다.");
-                return;
-            }
+        public void ExecuteCombat() => StartCoroutine(ExecuteCombatSequence());
 
-            StartCoroutine(ExecuteCombatSequence());
+        public void RegisterPlayerGuard()
+        {
+            PlayerManager.Instance.GetPlayer()?.SetGuarded(true);
+            Debug.Log("[CombatTurnManager] 플레이어 방어 상태 등록됨");
+        }
+
+        public void ReserveEnemySlot(CombatSlotPosition slot)
+        {
+            var card = EnemyHandManager.Instance.GetCardForCombat();
+            if (card != null)
+            {
+                card.SetCombatSlot(slot);
+                var combatSlot = SlotRegistry.Instance.GetCombatSlot(slot);
+                combatSlot.SetCard(card);
+
+                var cardUI = EnemyHandManager.Instance.GetCardUI(0);
+                if (cardUI != null)
+                {
+                    combatSlot.SetCardUI(cardUI);
+                    cardUI.transform.SetParent(((MonoBehaviour)combatSlot).transform);
+                    cardUI.transform.localPosition = Vector3.zero;
+                    cardUI.transform.localScale = Vector3.one;
+                }
+
+                var handSlot = SlotRegistry.Instance.GetHandSlot(SkillCardSlotPosition.ENEMY_SLOT_1);
+                handSlot?.Clear();
+
+                EnemyHandManager.Instance.AdvanceSlots();
+
+                Debug.Log($"[CombatTurnManager] 적 카드 슬롯 예약 완료 → {slot}");
+            }
+            else
+            {
+                Debug.LogWarning("[CombatTurnManager] 적 카드가 없어 슬롯 예약 실패");
+            }
         }
 
         private IEnumerator ExecuteCombatSequence()
@@ -128,9 +153,7 @@ namespace Game.CombatSystem.Core
 
             slotFirst.Clear();
             slotSecond.Clear();
-
-            enemyCard = null;
-            playerCard = null;
+            ClearCards();
 
             yield return new WaitForSeconds(0.5f);
 
@@ -145,7 +168,7 @@ namespace Game.CombatSystem.Core
                 yield return new WaitForSeconds(0.5f);
             }
 
-            BeginEnemyTurn();
+            RequestStateChange(new CombatPrepareState(this));
         }
     }
 }

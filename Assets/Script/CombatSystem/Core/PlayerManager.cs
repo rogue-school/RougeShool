@@ -1,7 +1,7 @@
 using UnityEngine;
 using Game.CharacterSystem.Core;
 
-namespace Game.CombatSystem.Player
+namespace Game.CombatSystem.Core
 {
     /// <summary>
     /// 플레이어 캐릭터 및 핸드 시스템을 관리하는 매니저입니다.

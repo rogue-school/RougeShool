@@ -1,9 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Data;
-using Game.CombatSystem.Enemy;
+using Game.CombatSystem.Core;
 using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 

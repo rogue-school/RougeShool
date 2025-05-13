@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Collections.Generic;
 using Game.CharacterSystem.Core;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
@@ -7,8 +6,9 @@ using Game.SkillCardSystem.Factory;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Slot;
 using Game.SkillCardSystem.UI;
+using System.Collections.Generic;
 
-namespace Game.CombatSystem.Enemy
+namespace Game.CombatSystem.Core
 {
     /// <summary>
     /// 적의 핸드 카드와 슬롯을 관리합니다.
@@ -88,6 +88,37 @@ namespace Game.CombatSystem.Enemy
                 }
 
             } while (moved);
+        }
+
+        public void GenerateSkillCard(int index)
+        {
+            SkillCardSlotPosition position = index switch
+            {
+                0 => SkillCardSlotPosition.ENEMY_SLOT_1,
+                1 => SkillCardSlotPosition.ENEMY_SLOT_2,
+                2 => SkillCardSlotPosition.ENEMY_SLOT_3,
+                _ => SkillCardSlotPosition.ENEMY_SLOT_1
+            };
+
+            CreateCardInSlot(position);
+        }
+
+        public ISkillCard GetCard(int index)
+        {
+            SkillCardSlotPosition position = index switch
+            {
+                0 => SkillCardSlotPosition.ENEMY_SLOT_1,
+                1 => SkillCardSlotPosition.ENEMY_SLOT_2,
+                2 => SkillCardSlotPosition.ENEMY_SLOT_3,
+                _ => SkillCardSlotPosition.ENEMY_SLOT_1
+            };
+
+            return GetSlotCard(position);
+        }
+
+        public void ShiftCardsLeft()
+        {
+            FillEmptySlots();
         }
 
         private bool IsSlotEmpty(SkillCardSlotPosition position)

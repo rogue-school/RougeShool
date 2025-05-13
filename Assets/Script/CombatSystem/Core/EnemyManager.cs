@@ -1,7 +1,7 @@
 using UnityEngine;
 using Game.CharacterSystem.Core;
 
-namespace Game.CombatSystem.Enemy
+namespace Game.CombatSystem.Core
 {
     /// <summary>
     /// 전투 씬에 등장한 현재 적 캐릭터를 관리하는 매니저입니다.
@@ -43,6 +43,21 @@ namespace Game.CombatSystem.Enemy
             if (currentEnemy == null)
                 Debug.LogWarning("[EnemyManager] 적 캐릭터가 설정되지 않았습니다.");
             return currentEnemy;
+        }
+
+        public EnemyCharacter GetEnemy()
+        {
+            return GetCurrentEnemy();
+        }
+
+        public void RemoveEnemy()
+        {
+            if (currentEnemy != null)
+            {
+                Destroy(currentEnemy.gameObject);
+                currentEnemy = null;
+                Debug.Log("[EnemyManager] 적 제거 완료");
+            }
         }
 
         public bool HasEnemy() => currentEnemy != null;

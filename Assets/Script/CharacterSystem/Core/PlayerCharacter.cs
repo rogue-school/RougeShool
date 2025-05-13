@@ -18,6 +18,8 @@ namespace Game.CharacterSystem.Core
         [SerializeField] private TextMeshProUGUI hpText;
         [SerializeField] private Slider hpSlider;
 
+        private bool isGuarded = false;
+
         public PlayerCharacterData Data => characterData;
 
         /// <summary>
@@ -85,5 +87,19 @@ namespace Game.CharacterSystem.Core
             ApplyDataToUI();
             Debug.Log("[PlayerCharacter] 사망 → 게임 오버 처리 필요");
         }
+
+        /// <summary>
+        /// 현재 방어 상태 여부를 설정합니다.
+        /// </summary>
+        public void SetGuarded(bool value)
+        {
+            isGuarded = value;
+            Debug.Log($"[PlayerCharacter] 방어 상태 설정됨: {isGuarded}");
+        }
+
+        /// <summary>
+        /// 방어 상태인지 확인합니다.
+        /// </summary>
+        public bool IsGuarded() => isGuarded;
     }
 }
