@@ -13,27 +13,25 @@ namespace Game.Utility
     /// </summary>
     public class CombatBootstrapInstaller : MonoBehaviour
     {
-        [Header("전투 초기화 관리자")]
-        [SerializeField] private CombatInitializerManager combatInitializer;
+        [Header("전투 흐름 관리자 (Flow Coordinator)")]
+        [SerializeField] private CombatFlowCoordinator combatFlowCoordinator;
 
         private void Start()
         {
             Debug.Log("[CombatBootstrapInstaller] Start() 진입");
 
-            if (combatInitializer == null)
+            if (combatFlowCoordinator == null)
             {
-                Debug.LogError("[CombatBootstrapInstaller] CombatInitializerManager가 연결되지 않았습니다.");
+                Debug.LogError("[CombatBootstrapInstaller] CombatFlowCoordinator가 연결되지 않았습니다.");
                 return;
             }
 
             InjectDependencies();
+            combatFlowCoordinator.StartCombatFlow();
         }
 
         private void InjectDependencies()
         {
-            //Debug.Log("[CombatBootstrapInstaller] 의존성 검색 시작");
-
-            // Resolve all dependencies
             var slotInitializer = Resolve<ISlotInitializer>();
             var playerInitializer = Resolve<IPlayerCharacterInitializer>();
             var enemyInitializer = Resolve<IEnemyInitializer>();
@@ -47,74 +45,49 @@ namespace Game.Utility
             var slotRegistry = Resolve<ISlotRegistry>();
             var playerManager = Resolve<IPlayerManager>();
 
-            if (playerManager == null)
-            {
-                //Debug.LogError("[CombatBootstrapInstaller] PlayerManager를 찾지 못했습니다. 초기화 중단");
-                return;
-            }
+            if (playerManager == null) return;
 
-            // 1. PlayerCharacterInitializer에 PlayerManager 주입
-            if (playerInitializer != null)
-            {
-                playerInitializer.Inject(playerManager);
-                //Debug.Log("[CombatBootstrapInstaller] PlayerCharacterInitializer에 PlayerManager 주입 완료");
-            }
+            // PlayerCharacterInitializer에 PlayerManager 주입
+            playerInitializer?.Inject(playerManager);
 
-            // 2. PlayerHandManager → PlayerManager
+            // PlayerManager에 핸드 매니저 연결
             if (playerHandManager != null)
-            {
                 playerManager.SetPlayerHandManager(playerHandManager);
-                //Debug.Log("[CombatBootstrapInstaller] PlayerManager에 PlayerHandManager 등록 완료");
-            }
 
-            // 3. StageManager <-> SpawnerManager 간 상호 주입
+            // StageManager <-> SpawnerManager 상호 주입
             if (stageManager is StageManager concreteStage &&
                 spawner is EnemySpawnerManager concreteSpawner &&
                 enemyManager != null && enemyHandManager != null)
             {
-                concreteStage.Inject(concreteSpawner, enemyManager, enemyHandManager); // StageManager에 주입
-                concreteSpawner.InjectStageManager(concreteStage);                      // SpawnerManager에 StageManager 주입
-                //Debug.Log("[CombatBootstrapInstaller] StageManager <-> SpawnerManager 의존성 주입 완료");
-            }
-            else
-            {
-                //Debug.LogWarning("[CombatBootstrapInstaller] StageManager 또는 SpawnerManager 주입 실패");
+                concreteStage.Inject(concreteSpawner, enemyManager, enemyHandManager);
+                concreteSpawner.InjectStageManager(concreteStage);
             }
 
-            // 4. CombatInitializerManager에 모든 의존성 주입
-            //Debug.Log("[CombatBootstrapInstaller] CombatInitializerManager.Inject() 수행 시작");
-            combatInitializer.Inject(
+            // CombatFlowCoordinator에 모든 의존성 주입
+            combatFlowCoordinator.Inject(
                 slotInitializer,
                 playerInitializer,
                 enemyInitializer,
                 playerHandManager,
                 enemyHandManager,
                 enemyManager,
+                spawner,
                 turnManager,
                 stageManager,
                 stateFactory,
                 slotRegistry,
                 playerManager
             );
-            //Debug.Log("[CombatBootstrapInstaller] CombatInitializerManager 의존성 주입 완료");
         }
 
-        /// <summary>
-        /// 지정한 인터페이스 타입의 컴포넌트를 모든 오브젝트에서 탐색
-        /// </summary>
         private T Resolve<T>() where T : class
         {
             var objects = Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             foreach (var obj in objects)
             {
                 if (obj is T target)
-                {
-                    //Debug.Log($"[CombatBootstrapInstaller] {typeof(T).Name} 구현체 발견 → {obj.name}");
                     return target;
-                }
             }
-
-            //Debug.LogWarning($"[CombatBootstrapInstaller] {typeof(T).Name} 구현체를 찾지 못했습니다.");
             return null;
         }
 

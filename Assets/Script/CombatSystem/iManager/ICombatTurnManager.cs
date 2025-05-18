@@ -3,10 +3,8 @@ using Game.CombatSystem.Slot;
 
 namespace Game.CombatSystem.Interface
 {
-    public interface ICombatTurnManager
+    public interface ICombatTurnManager : ITurnStateController
     {
-        void RegisterPlayerGuard();
-        void ReserveEnemySlot(CombatSlotPosition slot);
         bool IsPlayerGuarded();
         CombatSlotPosition GetReservedEnemySlot();
         void ResetGuardAndReservation();
@@ -15,7 +13,5 @@ namespace Game.CombatSystem.Interface
         void RegisterEnemyCard(ISkillCard card);
         bool AreBothSlotsReady();
         void ExecuteCombat();
-
-        void RequestStateChange(ICombatTurnState nextState);
     }
 }

@@ -6,10 +6,6 @@ using Game.IManager;
 
 namespace Game.CombatSystem.State
 {
-    /// <summary>
-    /// 후공 턴 상태입니다. 전투 슬롯의 후공 카드를 실행한 후 결과 상태로 전이합니다.
-    /// 단, 타겟이 사망한 경우 카드는 무효화됩니다.
-    /// </summary>
     public class CombatSecondAttackState : ICombatTurnState
     {
         private readonly ITurnStateController controller;
@@ -47,7 +43,7 @@ namespace Game.CombatSystem.State
 
             if (target == null || target.IsDead())
             {
-                Debug.Log("[CombatSecondAttackState] 후공 카드 대상 사망 → 카드 실행 생략");
+                Debug.Log("[CombatSecondAttackState] 타겟이 사망하여 실행 생략");
             }
             else
             {
@@ -57,10 +53,7 @@ namespace Game.CombatSystem.State
             controller.RequestStateChange(stateFactory.CreateResultState());
         }
 
-        public void ExecuteState()
-        {
-            // 자동 실행 상태이므로 별도 로직 없음
-        }
+        public void ExecuteState() { }
 
         public void ExitState()
         {

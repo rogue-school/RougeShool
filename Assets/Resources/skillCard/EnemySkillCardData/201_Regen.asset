@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30650a2f8e9c5994d84e2dd6e15b358b, type: 3}
   m_Name: 201_Regen
   m_EditorClassIdentifier: 
-  cardName: 201_Regen
+  cardName: "\uC7AC\uC0DD"
   description: 
   artwork: {fileID: 147353212943988270, guid: a894782fb08c943469d0ce1a2a65b3ad, type: 3}
   basePower: 0

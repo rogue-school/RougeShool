@@ -272,7 +272,7 @@ GameObject:
   - component: {fileID: 141623132}
   - component: {fileID: 141623133}
   m_Layer: 0
-  m_Name: CombatnitializerManager
+  m_Name: CombatFlowCoordinator
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -902,7 +902,7 @@ MonoBehaviour:
   autoBinder: {fileID: 1907976450}
   stateFactoryInstaller: {fileID: 1524601454}
   bootstrapInstaller: {fileID: 1631832073}
-  initializerManager: {fileID: 141623133}
+  flowCoordinator: {fileID: 141623133}
 --- !u!1 &720867400
 GameObject:
   m_ObjectHideFlags: 0
@@ -1086,7 +1086,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -3698823626108733835, guid: 44fc98a94b2eacc4b8db65645a8f8df6, type: 3}
+  m_Sprite: {fileID: 5309834861264466584, guid: 8ddce0bf2369c8b40b6c0345c0617f95, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1556,7 +1556,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 243, y: -388}
+  m_AnchoredPosition: {x: 233, y: -367}
   m_SizeDelta: {x: 100, y: 120}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1016954161
@@ -1623,7 +1623,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -595353952390168928, guid: 6989555f7ea2dc9488b6cff2c46bd4bc, type: 3}
+  m_Sprite: {fileID: 5342801015690890752, guid: 721d16f9a10b87a48907b2a53f5d8e3c, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2533,7 +2533,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 1020, y: -430}
+  m_AnchoredPosition: {x: 1016, y: -421.6}
   m_SizeDelta: {x: 650, y: 300}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1350619528
@@ -2556,7 +2556,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -3698823626108733835, guid: 44fc98a94b2eacc4b8db65645a8f8df6, type: 3}
+  m_Sprite: {fileID: 5309834861264466584, guid: 8ddce0bf2369c8b40b6c0345c0617f95, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -3148,7 +3148,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerHandManagerSource: {fileID: 222427077}
   enemyHandManagerSource: {fileID: 1411433833}
-  enemySpawnerManagerSource: {fileID: 845725938}
+  spawnerManagerSource: {fileID: 845725938}
   combatSlotManagerSource: {fileID: 807723806}
   stageManagerSource: {fileID: 1057591}
   victoryManagerSource: {fileID: 1115407941}
@@ -3349,7 +3349,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36b7ddad67609c34e8233c0693a68fda, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  combatInitializer: {fileID: 141623133}
+  combatFlowCoordinator: {fileID: 141623133}
 --- !u!1 &1711342675
 GameObject:
   m_ObjectHideFlags: 0
@@ -3522,7 +3522,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -473, y: 476}
+  m_AnchoredPosition: {x: -470, y: 470}
   m_SizeDelta: {x: 650, y: 300}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1815938474
@@ -3545,7 +3545,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -3698823626108733835, guid: 44fc98a94b2eacc4b8db65645a8f8df6, type: 3}
+  m_Sprite: {fileID: 5309834861264466584, guid: 8ddce0bf2369c8b40b6c0345c0617f95, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -3908,10 +3908,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1016954160}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 11}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: -6.6}
+  m_SizeDelta: {x: 85.1106, y: 76.6945}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2086127217
 MonoBehaviour:
@@ -3933,12 +3933,10 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Trun
-
-    Start'
+  m_text: "\uC2DC\uC791"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: b0a1a9fb6dd729c42bafbfc32d92a969, type: 2}
+  m_sharedMaterial: {fileID: -5323965694959088355, guid: b0a1a9fb6dd729c42bafbfc32d92a969, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -3962,8 +3960,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 24
-  m_fontSizeBase: 24
+  m_fontSize: 30
+  m_fontSizeBase: 30
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18

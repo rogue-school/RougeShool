@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30650a2f8e9c5994d84e2dd6e15b358b, type: 3}
   m_Name: 105_Rake
   m_EditorClassIdentifier: 
-  cardName: 105_Rake
+  cardName: "\uD560\uD034\uAE30"
   description: 
   artwork: {fileID: -5843521719522542593, guid: bf48ed00129e48643ba09be27a302b6f, type: 3}
   basePower: 1

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 861458062e34fcd4685dff11b945e1b9, type: 3}
   m_Name: ENEMY_002_Slime
   m_EditorClassIdentifier: 
-  displayName: ENEMY_002_Slime
+  displayName: "\uC2AC\uB77C\uC784"
   maxHP: 3
   portrait: {fileID: -7282886668606283007, guid: 05ccc850e175244408c6f1dded4a67a0, type: 3}
   prefab: {fileID: 7769799778275336730, guid: 2c6e844c91775424681f573a6951211e, type: 3}

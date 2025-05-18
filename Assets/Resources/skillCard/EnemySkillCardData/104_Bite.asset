@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30650a2f8e9c5994d84e2dd6e15b358b, type: 3}
   m_Name: 104_Bite
   m_EditorClassIdentifier: 
-  cardName: 104_Bite
+  cardName: "\uBB3C\uAE30"
   description: 
   artwork: {fileID: -4210270633776242855, guid: 85a3280756aa76e46bda6c66d1a7554c, type: 3}
   basePower: 2

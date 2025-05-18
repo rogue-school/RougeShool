@@ -34,9 +34,11 @@ namespace Game.CombatSystem.State
         {
             Debug.Log("[CombatResultState] 결과 정리 시작");
 
+            // 플레이어, 적 턴 효과 처리
             context.GetPlayer()?.ProcessTurnEffects();
             context.GetEnemy()?.ProcessTurnEffects();
 
+            // 플레이어 카드 쿨타임 처리
             foreach (var slot in playerHandManager.GetAllHandSlots())
             {
                 var card = slot.GetCard();
@@ -49,16 +51,20 @@ namespace Game.CombatSystem.State
                 }
             }
 
+            // 적 핸드 클리어
             enemyHandManager.ClearAllSlots();
             enemyHandManager.ClearAllUI();
 
+            // 적 사망 시 다음 적 스폰
             var enemy = context.GetEnemy();
             if (enemy == null || enemy.IsDead())
             {
                 stageManager.SpawnNextEnemy();
             }
 
-            controller.RequestStateChange(stateFactory.CreatePrepareState());
+            // 다음 상태로 전이
+            var nextState = stateFactory.CreatePrepareState();
+            controller.RequestStateChange(nextState);
         }
 
         public void ExecuteState() { }

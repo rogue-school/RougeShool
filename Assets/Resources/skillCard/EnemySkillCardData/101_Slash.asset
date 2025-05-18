@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30650a2f8e9c5994d84e2dd6e15b358b, type: 3}
   m_Name: 101_Slash
   m_EditorClassIdentifier: 
-  cardName: 101_Slash
+  cardName: "\uBCA0\uAE30"
   description: 
   artwork: {fileID: 2915364802761599010, guid: 3e2f01c746df69b45a3a06f0511027cd, type: 3}
   basePower: 1

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 306bab3a4da46a144a108202d6b20039, type: 3}
   m_Name: 002_RotarySlash
   m_EditorClassIdentifier: 
-  cardName: 002_RotarySlash
+  cardName: "\uD68C\uC804\uBCA0\uAE30"
   description: 
   artwork: {fileID: 1353180748540979296, guid: 032247162a4693c4abe20987b4d1f949, type: 3}
   coolTime: 1
