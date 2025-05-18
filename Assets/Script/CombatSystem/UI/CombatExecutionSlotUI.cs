@@ -1,23 +1,36 @@
 using UnityEngine;
-using Game.CharacterSystem.Core;
-using Game.CombatSystem.Enemy;
 using Game.CombatSystem.Interface;
-using Game.CombatSystem.Core;
 using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.UI;
 
 namespace Game.CombatSystem.UI
 {
+    /// <summary>
+    /// 전투 실행 슬롯 UI의 실제 구현입니다.
+    /// 카드와 UI 참조를 저장하고 자동 실행을 지원합니다.
+    /// 실행 로직은 외부 컨텍스트(ICardExecutionContext)를 통해 위임합니다.
+    /// </summary>
     public class CombatExecutionSlotUI : MonoBehaviour, ICombatCardSlot
     {
         [SerializeField] private CombatSlotPosition position;
+
         private ISkillCard currentCard;
         private SkillCardUI currentCardUI;
+        private ICardExecutionContext context;
+
+        /// <summary>
+        /// CombatTurnManager를 의존성 주입으로 설정합니다.
+        /// </summary>
+        public void Inject(ICardExecutionContext executionContext)
+        {
+            this.context = executionContext;
+        }
 
         public CombatSlotPosition GetCombatPosition() => position;
-        public void SetCombatPosition(CombatSlotPosition newPosition) => position = newPosition;
-        public SlotOwner GetOwner() => position == CombatSlotPosition.FIRST ? SlotOwner.ENEMY : SlotOwner.PLAYER;
+
+        public SlotOwner GetOwner() =>
+            position == CombatSlotPosition.FIRST ? SlotOwner.ENEMY : SlotOwner.PLAYER;
 
         public void SetCard(ISkillCard card)
         {
@@ -26,6 +39,10 @@ namespace Game.CombatSystem.UI
         }
 
         public ISkillCard GetCard() => currentCard;
+
+        public void SetCardUI(SkillCardUI cardUI) => currentCardUI = cardUI;
+
+        public SkillCardUI GetCardUI() => currentCardUI;
 
         public void Clear()
         {
@@ -40,9 +57,7 @@ namespace Game.CombatSystem.UI
             Debug.Log($"[CombatExecutionSlotUI] 슬롯 클리어 완료: {gameObject.name}");
         }
 
-
-        public void SetCardUI(SkillCardUI cardUI) => currentCardUI = cardUI;
-        public SkillCardUI GetCardUI() => currentCardUI;
+        public bool HasCard() => currentCard != null;
 
         public void ExecuteCardAutomatically()
         {
@@ -52,41 +67,23 @@ namespace Game.CombatSystem.UI
                 return;
             }
 
-            CharacterBase caster = null;
-            CharacterBase target = null;
-
-            if (currentCard.GetOwner() == SlotOwner.PLAYER)
+            if (context == null)
             {
-                caster = PlayerManager.Instance?.GetPlayer();
-                target = EnemyManager.Instance?.GetCurrentEnemy();
-            }
-            else
-            {
-                caster = EnemyManager.Instance?.GetCurrentEnemy();
-                target = PlayerManager.Instance?.GetPlayer();
-            }
-
-            if (caster == null || target == null || target.IsDead())
-            {
-                Debug.LogWarning($"[CombatExecutionSlotUI] 이펙트 실행 생략: 대상이 null 또는 사망 상태입니다.");
+                Debug.LogError("[CombatExecutionSlotUI] ICardExecutionContext가 주입되지 않았습니다.");
                 return;
             }
 
-            foreach (var effect in currentCard.CreateEffects())
+            currentCard.ExecuteCardAutomatically(context);
+        }
+        public void ExecuteCardAutomatically(ICardExecutionContext ctx)
+        {
+            if (currentCard == null)
             {
-                if (effect == null) continue;
-
-                int power = currentCard.GetEffectPower(effect);
-                effect.ExecuteEffect(caster, target, power);
-
-                string effectName = effect.GetType().Name;
-                Debug.Log($"[CombatExecutionSlotUI] 실행됨 → {effectName}, {caster.name} → {target.name}, power: {power}");
-
-                if (effect is IPerTurnEffect)
-                {
-                    Debug.Log($"[CombatExecutionSlotUI] 지속 이펙트 적용됨: {effectName}");
-                }
+                Debug.LogWarning("[CombatExecutionSlotUI] currentCard가 null입니다.");
+                return;
             }
+
+            currentCard.ExecuteCardAutomatically(ctx);
         }
     }
 }

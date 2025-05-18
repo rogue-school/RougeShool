@@ -2,22 +2,26 @@ using UnityEngine;
 using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Interface;
 using Game.SkillCardSystem.Interface;
+using Game.CombatSystem.Interface;
 
 namespace Game.SkillCardSystem.Effects
 {
-    /// <summary>
-    /// 턴마다 체력을 회복하는 재생 효과입니다. (영구 지속)
-    /// </summary>
     [CreateAssetMenu(menuName = "CardEffects/RegenEffect")]
     public class RegenEffectSO : ScriptableObject, ICardEffect
     {
-        public void ExecuteEffect(CharacterBase caster, CharacterBase target, int power)
+        public void ExecuteEffect(CharacterBase caster, CharacterBase target, int power, ITurnStateController controller = null)
         {
             target.RegisterPerTurnEffect(new RegenEffect(power));
         }
-        public string GetEffectDescription()
+
+        public string GetEffectName()
         {
-            return $"턴마다 체력 {1} 회복 (영구 효과)";
+            return "Regen";
+        }
+
+        public string GetDescription()
+        {
+            return "턴마다 일정량의 체력을 회복합니다. (영구 효과)";
         }
     }
 
@@ -38,6 +42,6 @@ namespace Game.SkillCardSystem.Effects
             }
         }
 
-        public bool IsExpired => false; // 무제한 지속
+        public bool IsExpired => false;
     }
 }

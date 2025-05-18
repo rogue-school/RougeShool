@@ -2,13 +2,13 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Game.CharacterSystem.Data;
-using Game.CombatSystem.Core;
 using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
+using Game.CharacterSystem.Interface;
 
 namespace Game.CharacterSystem.Core
 {
-    public class EnemyCharacter : CharacterBase
+    public class EnemyCharacter : CharacterBase, IEnemyCharacter
     {
         [SerializeField] private EnemyCharacterData characterData;
 
@@ -79,21 +79,16 @@ namespace Game.CharacterSystem.Core
 
         public override void Die()
         {
+            base.Die();
+
             Debug.Log($"[EnemyCharacter] 사망 → 다음 적 소환은 CombatTurnManager가 담당함");
 
-            // 핸드 슬롯 정리
-            EnemyHandManager.Instance.ClearAllSlots();
+            // 이곳에서는 더 이상 핸드/슬롯 정리하지 않음
+        }
 
-            // 캐릭터 슬롯 정리
-            foreach (var slot in SlotRegistry.Instance.GetCharacterSlots(SlotOwner.ENEMY))
-                slot.Clear();
-
-            // 전투 슬롯 정리 (자신이 올렸던 카드 포함)
-            foreach (var slot in SlotRegistry.Instance.GetAllCombatSlots())
-            {
-                if (slot.GetOwner() == SlotOwner.ENEMY)
-                    slot.Clear();
-            }
+        public string GetCharacterName()
+        {
+            return characterData?.displayName ?? "Unnamed Enemy";
         }
     }
 }

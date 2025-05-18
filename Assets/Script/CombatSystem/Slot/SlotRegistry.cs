@@ -4,14 +4,14 @@ using UnityEngine;
 using Game.CharacterSystem.Interface;
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Slot;
+using Game.IManager;
 
 namespace Game.CombatSystem.Slot
 {
     /// <summary>
     /// 모든 슬롯을 중앙에서 관리하는 싱글톤 클래스입니다.
-    /// 핸드 슬롯, 전투 슬롯, 캐릭터 슬롯을 분리하여 저장하고 조회합니다.
     /// </summary>
-    public class SlotRegistry : MonoBehaviour
+    public class SlotRegistry : MonoBehaviour, ISlotRegistry
     {
         public static SlotRegistry Instance { get; private set; }
 
@@ -28,6 +28,14 @@ namespace Game.CombatSystem.Slot
             }
 
             Instance = this;
+            //Debug.Log("[SlotRegistry] 인스턴스 초기화 완료");
+
+            if (transform.parent != null)
+            {
+                //Debug.LogWarning("[SlotRegistry] DontDestroyOnLoad를 위해 부모에서 분리합니다.");
+                transform.SetParent(null);
+            }
+
             DontDestroyOnLoad(gameObject);
         }
 
@@ -36,25 +44,26 @@ namespace Game.CombatSystem.Slot
         public void RegisterHandSlots(IHandCardSlot[] slots)
         {
             handSlots.Clear();
+            //Debug.Log($"[SlotRegistry] Hand 슬롯 등록 시작: {slots.Length}개");
+
             foreach (var slot in slots)
             {
-                if (!handSlots.ContainsKey(slot.GetSlotPosition()))
-                    handSlots.Add(slot.GetSlotPosition(), slot);
+                var key = slot.GetSlotPosition();
+                if (!handSlots.ContainsKey(key))
+                {
+                    handSlots.Add(key, slot);
+                    //Debug.Log($" → 등록됨: {key} / {((MonoBehaviour)slot).name}");
+                }
             }
-            Debug.Log($"[SlotRegistry] Hand 슬롯 {handSlots.Count}개 등록됨");
         }
 
         public IHandCardSlot GetHandSlot(SkillCardSlotPosition position)
-        {
-            return handSlots.TryGetValue(position, out var slot) ? slot : null;
-        }
+            => handSlots.TryGetValue(position, out var slot) ? slot : null;
 
         public IEnumerable<IHandCardSlot> GetAllHandSlots() => handSlots.Values;
 
         public IEnumerable<IHandCardSlot> GetHandSlots(SlotOwner owner)
-        {
-            return handSlots.Values.Where(slot => slot.GetOwner() == owner);
-        }
+            => handSlots.Values.Where(slot => slot.GetOwner() == owner);
 
         #endregion
 
@@ -63,20 +72,29 @@ namespace Game.CombatSystem.Slot
         public void RegisterCombatSlots(ICombatCardSlot[] slots)
         {
             combatSlots.Clear();
+            //Debug.Log($"[SlotRegistry] Combat 슬롯 등록 시작: {slots.Length}개");
+
             foreach (var slot in slots)
             {
-                if (!combatSlots.ContainsKey(slot.GetCombatPosition()))
-                    combatSlots.Add(slot.GetCombatPosition(), slot);
+                var key = slot.GetCombatPosition();
+                if (!combatSlots.ContainsKey(key))
+                {
+                    combatSlots.Add(key, slot);
+                    //Debug.Log($" → 등록됨: {key} / {((MonoBehaviour)slot).name}");
+                }
             }
-            Debug.Log($"[SlotRegistry] Combat 슬롯 {combatSlots.Count}개 등록됨");
         }
 
         public ICombatCardSlot GetCombatSlot(CombatSlotPosition position)
-        {
-            return combatSlots.TryGetValue(position, out var slot) ? slot : null;
-        }
+            => combatSlots.TryGetValue(position, out var slot) ? slot : null;
 
         public IEnumerable<ICombatCardSlot> GetAllCombatSlots() => combatSlots.Values;
+
+        public IEnumerable<ICombatCardSlot> GetCombatSlots()
+        {
+            //Debug.Log("[SlotRegistry] 모든 전투 슬롯 반환 요청됨");
+            return combatSlots.Values;
+        }
 
         #endregion
 
@@ -85,40 +103,62 @@ namespace Game.CombatSystem.Slot
         public void RegisterCharacterSlots(ICharacterSlot[] slots)
         {
             characterSlots.Clear();
+           // Debug.Log($"[SlotRegistry] Character 슬롯 등록 시작: {slots.Length}개");
+
             foreach (var slot in slots)
             {
-                if (!characterSlots.ContainsKey(slot.GetOwner()))
-                    characterSlots.Add(slot.GetOwner(), slot);
+                var owner = slot.GetOwner();
+                if (!characterSlots.ContainsKey(owner))
+                {
+                    characterSlots.Add(owner, slot);
+                    //Debug.Log($" → 등록됨: {owner} / {((MonoBehaviour)slot).name}");
+                }
+                else
+                {
+                    //Debug.LogWarning($"[SlotRegistry] 중복된 소유자 슬롯: {owner}");
+                }
             }
-            Debug.Log($"[SlotRegistry] Character 슬롯 {characterSlots.Count}개 등록됨");
         }
 
-        /// <summary>
-        /// 지정된 오너에 해당하는 캐릭터 슬롯들을 반환합니다.
-        /// 현재 구조상 오너당 1개만 저장되므로 단일 슬롯만 반환됩니다.
-        /// </summary>
-        public IEnumerable<ICharacterSlot> GetCharacterSlots(SlotOwner owner)
+        public ICharacterSlot GetCharacterSlot(SlotOwner owner)
         {
+            //Debug.Log($"[SlotRegistry] GetCharacterSlot 호출 - 요청: {owner}");
+
             if (characterSlots.TryGetValue(owner, out var slot))
-                yield return slot;
+            {
+                //Debug.Log($" → 슬롯 반환됨: {((MonoBehaviour)slot).name}");
+                return slot;
+            }
+
+            //Debug.LogWarning($"[SlotRegistry] {owner}용 캐릭터 슬롯을 찾을 수 없습니다.");
+            return null;
         }
 
-        /// <summary>
-        /// 전체 캐릭터 슬롯 반환
-        /// </summary>
         public IEnumerable<ICharacterSlot> GetCharacterSlots()
         {
+            //Debug.Log("[SlotRegistry] 모든 캐릭터 슬롯 요청됨");
             return characterSlots.Values;
         }
 
-        #endregion
-        /// <summary>
-        /// 지정된 오너에 대한 단일 캐릭터 슬롯 반환 (오너당 1개만 존재하는 경우)
-        /// </summary>
-        public ICharacterSlot GetCharacterSlot(SlotOwner owner)
+        public IEnumerable<ICharacterSlot> GetCharacterSlots(SlotOwner owner)
         {
-            return characterSlots.TryGetValue(owner, out var slot) ? slot : null;
+            if (characterSlots.TryGetValue(owner, out var slot))
+            {
+                yield return slot;
+            }
+        }
+        public void Initialize()
+        {
+            if (transform.parent != null)
+            {
+                //Debug.LogWarning("[SlotRegistry] DontDestroyOnLoad를 위해 부모에서 분리합니다.");
+                transform.SetParent(null);
+            }
+
+            DontDestroyOnLoad(gameObject);
+           // Debug.Log("[SlotRegistry] 수동 초기화 완료");
         }
 
+        #endregion
     }
 }

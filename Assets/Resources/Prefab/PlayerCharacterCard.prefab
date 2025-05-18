@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7108402241666552278}
   - component: {fileID: 6515069228709645013}
-  - component: {fileID: 3086149388028690089}
+  - component: {fileID: 4088457067113692024}
   m_Layer: 5
   m_Name: PlayerCharacterCard
   m_TagString: Untagged
@@ -54,7 +54,8 @@ MonoBehaviour:
   nameText: {fileID: 8289530968991228569}
   portraitImage: {fileID: 4212231588447136040}
   hpText: {fileID: 4820315423849995655}
---- !u!114 &3086149388028690089
+  hpSlider: {fileID: 0}
+--- !u!114 &4088457067113692024
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -63,14 +64,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 3064394028095851597}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e6d2d1c013d8116458217b5f4985508a, type: 3}
+  m_Script: {fileID: 11500000, guid: 5988b34a720b55c4499dd9ececd298c6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  position: 0
-  owner: 0
   nameText: {fileID: 8289530968991228569}
   hpText: {fileID: 4820315423849995655}
   hpSlider: {fileID: 0}
+  portraitImage: {fileID: 4212231588447136040}
 --- !u!1 &3327596217819687330
 GameObject:
   m_ObjectHideFlags: 0

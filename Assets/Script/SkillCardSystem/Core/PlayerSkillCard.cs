@@ -1,31 +1,31 @@
-using System.Collections.Generic;
 using UnityEngine;
-using Game.CombatSystem.Slot;
+using System.Collections.Generic;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Slot;
+using Game.CombatSystem.Slot;
+using Game.CombatSystem.Interface;
+using Game.CharacterSystem.Interface;
 
 namespace Game.SkillCardSystem.Core
 {
     /// <summary>
-    /// 플레이어가 사용하는 스킬 카드의 데이터 ScriptableObject입니다.
-    /// 기본 정보(이름, 설명, 쿨타임, 효과)를 포함하고, 런타임에서 슬롯 위치 및 쿨타임 상태를 관리합니다.
+    /// ScriptableObject 기반의 플레이어 스킬 카드 데이터입니다.
+    /// 런타임에서 실행되지는 않으며, 정보 제공용으로만 사용됩니다.
     /// </summary>
     [CreateAssetMenu(menuName = "Game/Card/Player Skill Card")]
     public class PlayerSkillCard : ScriptableObject, ISkillCard
     {
-        [Header("기본 카드 정보")]
+        [Header("기본 카드 데이터")]
         [SerializeField] private string cardName;
         [SerializeField] private string description;
         [SerializeField] private Sprite artwork;
         [SerializeField] private int coolTime;
+        [SerializeField] private int power;
 
-        [Header("카드 효과")]
+        [Header("카드 효과 (ICardEffect ScriptableObject 연결)")]
         [SerializeField] private List<ScriptableObject> effectObjects;
 
-        private int power;
         private int currentCoolTime = 0;
-        public SlotOwner GetOwner() => SlotOwner.PLAYER;
-
         private SkillCardSlotPosition? handSlot = null;
         private CombatSlotPosition? combatSlot = null;
 
@@ -35,6 +35,7 @@ namespace Game.SkillCardSystem.Core
         public int GetCoolTime() => coolTime;
         public int GetCurrentCoolTime() => currentCoolTime;
         public int GetEffectPower(ICardEffect effect) => power;
+        public SlotOwner GetOwner() => SlotOwner.PLAYER;
 
         public List<ICardEffect> CreateEffects()
         {
@@ -56,26 +57,28 @@ namespace Game.SkillCardSystem.Core
         public void SetCombatSlot(CombatSlotPosition slot) => combatSlot = slot;
         public CombatSlotPosition? GetCombatSlot() => combatSlot;
 
-        /// <summary>
-        /// 쿨타임 시작 (스킬 사용 시 호출)
-        /// </summary>
-        public void ActivateCoolTime()
-        {
-            currentCoolTime = coolTime;
-        }
-
-        /// <summary>
-        /// 쿨타임 1 감소 (턴 종료 시 호출)
-        /// </summary>
-        public void TickCoolDown()
-        {
-            if (currentCoolTime > 0)
-                currentCoolTime--;
-        }
-
-        /// <summary>
-        /// 현재 쿨타임 중인지 확인
-        /// </summary>
+        public void ActivateCoolTime() => currentCoolTime = coolTime;
+        public void TickCoolDown() => currentCoolTime = Mathf.Max(0, currentCoolTime - 1);
         public bool IsOnCoolDown() => currentCoolTime > 0;
+
+        /// <summary>
+        /// ScriptableObject는 직접 실행되지 않도록 방지 로그 출력
+        /// </summary>
+        public void ExecuteCardAutomatically(ICardExecutionContext context)
+        {
+            Debug.LogWarning("[PlayerSkillCard] ScriptableObject는 직접 실행되지 않습니다.");
+        }
+
+        public ICharacter GetOwner(ICardExecutionContext context)
+        {
+            Debug.LogWarning("[PlayerSkillCard] GetOwner는 런타임 카드에서 호출되어야 합니다.");
+            return null;
+        }
+
+        public ICharacter GetTarget(ICardExecutionContext context)
+        {
+            Debug.LogWarning("[PlayerSkillCard] GetTarget는 런타임 카드에서 호출되어야 합니다.");
+            return null;
+        }
     }
 }

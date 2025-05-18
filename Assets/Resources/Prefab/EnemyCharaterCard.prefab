@@ -360,7 +360,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2886042496763500975}
   - component: {fileID: 1784468190560083363}
-  - component: {fileID: 2688882768964488100}
+  - component: {fileID: 8744304457702177956}
   m_Layer: 5
   m_Name: EnemyCharaterCard
   m_TagString: Untagged
@@ -404,7 +404,7 @@ MonoBehaviour:
   nameText: {fileID: 3990270840846056283}
   hpText: {fileID: 6969683324459299986}
   portraitImage: {fileID: 1631975328147475406}
---- !u!114 &2688882768964488100
+--- !u!114 &8744304457702177956
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -413,14 +413,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 7769799778275336730}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e6d2d1c013d8116458217b5f4985508a, type: 3}
+  m_Script: {fileID: 11500000, guid: 5988b34a720b55c4499dd9ececd298c6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  position: 1
-  owner: 1
   nameText: {fileID: 3990270840846056283}
   hpText: {fileID: 6969683324459299986}
   hpSlider: {fileID: 0}
+  portraitImage: {fileID: 1631975328147475406}
 --- !u!1 &8157524478772256498
 GameObject:
   m_ObjectHideFlags: 0

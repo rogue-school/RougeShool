@@ -1,7 +1,7 @@
 using UnityEngine;
-using Game.CombatSystem.Enemy;
-using Game.CombatSystem.Core;
 using Game.CombatSystem.Slot;
+using Game.IManager;
+using Game.CharacterSystem.Interface;
 
 namespace Game.CombatSystem.Intialization
 {
@@ -10,31 +10,39 @@ namespace Game.CombatSystem.Intialization
     /// </summary>
     public class UIInitializer : MonoBehaviour
     {
-        private void Awake()
+        private IPlayerManager playerManager;
+        private IEnemyManager enemyManager;
+        private ISlotRegistry slotRegistry;
+
+        public void Initialize(IPlayerManager playerManager, IEnemyManager enemyManager, ISlotRegistry slotRegistry)
         {
-            SetupCharacterUI();
+            this.playerManager = playerManager;
+            this.enemyManager = enemyManager;
+            this.slotRegistry = slotRegistry;
         }
 
-        /// <summary>
-        /// 외부에서 수동으로 호출할 수 있는 UI 초기화 메서드
-        /// </summary>
+        private void Awake()
+        {
+            // 기본 동작은 제거하거나 외부에서 Initialize 호출 보장
+        }
+
         public void SetupCharacterUI()
         {
-            foreach (var slot in SlotRegistry.Instance.GetCharacterSlots())
+            foreach (var slot in slotRegistry.GetCharacterSlots())
             {
                 switch (slot.GetOwner())
                 {
                     case SlotOwner.PLAYER:
-                        slot.SetCharacter(PlayerManager.Instance.GetPlayer());
+                        slot.SetCharacter(playerManager.GetPlayer());
                         break;
 
                     case SlotOwner.ENEMY:
-                        slot.SetCharacter(EnemyManager.Instance.GetCurrentEnemy());
+                        slot.SetCharacter(enemyManager.GetCurrentEnemy());
                         break;
                 }
             }
 
-            Debug.Log("[UIInitializer] 캐릭터 UI 슬롯 초기화 완료");
+            Debug.Log("[UIInitializer] 캐릭터 UI 슬롯 초기화 완료 (DI 기반)");
         }
     }
 }

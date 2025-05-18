@@ -1,16 +1,13 @@
 using System.Collections.Generic;
 using UnityEngine;
-using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Slot;
+using Game.CombatSystem.Slot;
+using Game.CombatSystem.Interface;
+using Game.CharacterSystem.Interface;
 
 namespace Game.SkillCardSystem.Core
 {
-    /// <summary>
-    /// 적 스킬 카드의 순수 데이터 ScriptableObject입니다.
-    /// 이름, 설명, 아트워크, 기본 파워, 이펙트 정보를 포함합니다.
-    /// 런타임 상태 정보는 포함하지 않습니다.
-    /// </summary>
     [CreateAssetMenu(menuName = "Game/Card/Enemy Skill Card")]
     public class EnemySkillCard : ScriptableObject, ISkillCard
     {
@@ -26,14 +23,9 @@ namespace Game.SkillCardSystem.Core
         public string GetCardName() => cardName;
         public string GetDescription() => description;
         public Sprite GetArtwork() => artwork;
-        public SlotOwner GetOwner() => SlotOwner.ENEMY;
-
-        /// <summary>
-        /// 적 카드는 쿨타임이 없습니다 (항상 0 반환)
-        /// </summary>
         public int GetCoolTime() => 0;
-
         public int GetEffectPower(ICardEffect effect) => basePower;
+        public SlotOwner GetOwner() => SlotOwner.ENEMY;
 
         public List<ICardEffect> CreateEffects()
         {
@@ -46,10 +38,26 @@ namespace Game.SkillCardSystem.Core
             return list;
         }
 
-        // 슬롯 및 파워 변경은 런타임 카드에서 관리하므로 제거
         public void SetHandSlot(SkillCardSlotPosition slot) { }
         public SkillCardSlotPosition? GetHandSlot() => null;
         public void SetCombatSlot(CombatSlotPosition slot) { }
         public CombatSlotPosition? GetCombatSlot() => null;
+
+        public void ExecuteCardAutomatically(ICardExecutionContext context)
+        {
+            Debug.LogWarning("[EnemySkillCard] ScriptableObject는 직접 실행되지 않습니다.");
+        }
+
+        public ICharacter GetOwner(ICardExecutionContext context)
+        {
+            Debug.LogWarning("[EnemySkillCard] GetOwner는 런타임 카드에서 호출되어야 합니다.");
+            return null;
+        }
+
+        public ICharacter GetTarget(ICardExecutionContext context)
+        {
+            Debug.LogWarning("[EnemySkillCard] GetTarget는 런타임 카드에서 호출되어야 합니다.");
+            return null;
+        }
     }
 }

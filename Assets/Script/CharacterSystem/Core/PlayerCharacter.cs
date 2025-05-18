@@ -2,13 +2,12 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Game.CharacterSystem.Data;
+using Game.CharacterSystem.Interface;
+using Game.SkillCardSystem.Runtime;
 
 namespace Game.CharacterSystem.Core
 {
-    /// <summary>
-    /// 플레이어 캐릭터. 캐릭터 데이터 기반으로 초기화되며, CharacterBase를 상속받습니다.
-    /// </summary>
-    public class PlayerCharacter : CharacterBase
+    public class PlayerCharacter : CharacterBase, IPlayerCharacter
     {
         [SerializeField] private PlayerCharacterData characterData;
 
@@ -19,17 +18,9 @@ namespace Game.CharacterSystem.Core
         [SerializeField] private Slider hpSlider;
 
         private bool isGuarded = false;
+        private PlayerSkillCardRuntime lastUsedCard;
 
         public PlayerCharacterData Data => characterData;
-
-        /// <summary>
-        /// 외부에서 직접 초기화 시 사용
-        /// </summary>
-        public void Initialize(int maxHP)
-        {
-            SetMaxHP(maxHP);
-            ApplyDataToUI();
-        }
 
         private void Awake()
         {
@@ -41,9 +32,6 @@ namespace Game.CharacterSystem.Core
             }
         }
 
-        /// <summary>
-        /// 외부에서 ScriptableObject 데이터 주입 시 사용
-        /// </summary>
         public void SetCharacterData(PlayerCharacterData data)
         {
             characterData = data;
@@ -51,9 +39,6 @@ namespace Game.CharacterSystem.Core
             ApplyDataToUI();
         }
 
-        /// <summary>
-        /// ScriptableObject 기반 UI 요소 반영
-        /// </summary>
         private void ApplyDataToUI()
         {
             if (nameText != null)
@@ -88,18 +73,25 @@ namespace Game.CharacterSystem.Core
             Debug.Log("[PlayerCharacter] 사망 → 게임 오버 처리 필요");
         }
 
-        /// <summary>
-        /// 현재 방어 상태 여부를 설정합니다.
-        /// </summary>
         public void SetGuarded(bool value)
         {
             isGuarded = value;
             Debug.Log($"[PlayerCharacter] 방어 상태 설정됨: {isGuarded}");
         }
 
-        /// <summary>
-        /// 방어 상태인지 확인합니다.
-        /// </summary>
         public bool IsGuarded() => isGuarded;
+
+        public void SetLastUsedCard(PlayerSkillCardRuntime card)
+        {
+            lastUsedCard = card;
+        }
+
+        public PlayerSkillCardRuntime GetLastUsedCard() => lastUsedCard;
+
+        public void RestoreCardToHand(PlayerSkillCardRuntime card)
+        {
+            lastUsedCard = null;
+            Debug.Log("[PlayerCharacter] 핸드에 카드 복귀 처리 완료");
+        }
     }
 }

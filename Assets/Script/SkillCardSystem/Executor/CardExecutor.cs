@@ -1,19 +1,27 @@
 using UnityEngine;
 using Game.SkillCardSystem.Interface;
 using Game.CharacterSystem.Interface;
-using Game.CharacterSystem.Core;
-using Game.CombatSystem.Core;
-using Game.CombatSystem.Enemy;
 using Game.CombatSystem.Slot;
+using Game.IManager;
+using Game.CharacterSystem.Core;
 
 namespace Game.SkillCardSystem.Executor
 {
     /// <summary>
-    /// 전투 슬롯에 배치된 카드를 실행하는 로직을 담당합니다.
+    /// 전투 슬롯에 배치된 스킬 카드를 실행하는 서비스 클래스입니다.
     /// </summary>
-    public static class CardExecutor
+    public class CardExecutor : ICardExecutor
     {
-        public static void Execute(ISkillCard card)
+        private readonly IPlayerManager playerManager;
+        private readonly IEnemyManager enemyManager;
+
+        public CardExecutor(IPlayerManager playerManager, IEnemyManager enemyManager)
+        {
+            this.playerManager = playerManager;
+            this.enemyManager = enemyManager;
+        }
+
+        public void ExecuteCard(ISkillCard card)
         {
             if (card == null)
             {
@@ -21,36 +29,29 @@ namespace Game.SkillCardSystem.Executor
                 return;
             }
 
-            ICharacter enemy = EnemyManager.Instance.GetCurrentEnemy();
-            ICharacter player = PlayerManager.Instance.GetPlayer();
-
-            // nullable → 명시적 변환 처리
-            var nullableSlot = card.GetCombatSlot();
-            if (!nullableSlot.HasValue)
+            var slot = card.GetCombatSlot();
+            if (!slot.HasValue)
             {
                 Debug.LogError("[CardExecutor] 카드의 전투 슬롯 정보가 없습니다.");
                 return;
             }
 
-            CombatSlotPosition slotPosition = nullableSlot.Value;
+            // 시전자/대상자 추출
+            ICharacter caster = (slot.Value == CombatSlotPosition.FIRST) ? enemyManager.GetEnemy() : playerManager.GetPlayer();
+            ICharacter target = (caster == enemyManager.GetEnemy()) ? playerManager.GetPlayer() : enemyManager.GetEnemy();
 
-            ICharacter owner = (slotPosition == CombatSlotPosition.FIRST) ? enemy : player;
-            ICharacter target = (owner == enemy) ? player : enemy;
-
-            // CharacterBase로 캐스팅
-            if (owner is CharacterBase ownerChar && target is CharacterBase targetChar)
+            if (caster is not CharacterBase casterChar || target is not CharacterBase targetChar)
             {
-                foreach (var effect in card.CreateEffects())
-                {
-                    int power = card.GetEffectPower(effect);
-                    effect.ExecuteEffect(ownerChar, targetChar, power);
-                }
-
-                Debug.Log($"[CardExecutor] 카드 실행 완료: {card.GetCardName()} → 공격자: {ownerChar}, 대상: {targetChar}");
+                Debug.LogError("[CardExecutor] 캐릭터가 CharacterBase 타입이 아닙니다.");
+                return;
             }
-            else
+
+            foreach (var effect in card.CreateEffects())
             {
-                Debug.LogError("[CardExecutor] 캐릭터 타입이 CharacterBase로 캐스팅되지 않았습니다.");
+                int power = card.GetEffectPower(effect);
+                effect.ExecuteEffect(casterChar, targetChar, power);
+
+                Debug.Log($"[CardExecutor] 실행됨: {card.GetCardName()} → {effect.GetType().Name}, power: {power}");
             }
         }
     }

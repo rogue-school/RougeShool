@@ -1,5 +1,6 @@
 using UnityEngine;
 using Game.CombatSystem.Interface;
+using Game.CombatSystem.Manager;
 
 namespace Game.CombatSystem.Core
 {

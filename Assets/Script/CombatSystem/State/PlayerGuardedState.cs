@@ -1,6 +1,7 @@
 using UnityEngine;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Core;
+using Game.CombatSystem.Manager;
 
 namespace Game.CombatSystem.State
 {

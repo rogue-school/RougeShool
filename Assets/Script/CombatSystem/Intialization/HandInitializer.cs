@@ -1,5 +1,5 @@
 using UnityEngine;
-using Game.CombatSystem.Core;
+using Game.CombatSystem.Manager;
 
 namespace Game.CombatSystem.Intialization
 {

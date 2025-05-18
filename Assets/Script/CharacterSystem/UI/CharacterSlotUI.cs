@@ -2,12 +2,10 @@ using UnityEngine;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Slot;
 using Game.CombatSystem.Slot;
+using Game.CharacterSystem.Core;
 
 namespace Game.CharacterSystem.UI
 {
-    /// <summary>
-    /// 캐릭터(플레이어/적)가 배치되는 슬롯 UI
-    /// </summary>
     public class CharacterSlotUI : MonoBehaviour, ICharacterSlot
     {
         [SerializeField] private CharacterSlotPosition slotPosition;
@@ -19,19 +17,21 @@ namespace Game.CharacterSystem.UI
         {
             this.character = character;
 
-            // 위치도 자동으로 설정
+            if (character is CharacterBase baseChar)
+            {
+                var uiController = GetComponentInChildren<CharacterUIController>();
+                if (uiController != null)
+                    baseChar.SetCardUI(uiController);
+            }
+
             if (character is MonoBehaviour mb)
                 mb.transform.position = transform.position;
         }
 
         public ICharacter GetCharacter() => character;
+        public void Clear() => character = null;
         public CharacterSlotPosition GetSlotPosition() => slotPosition;
         public SlotOwner GetOwner() => owner;
-        public Transform GetTransform() => this.transform;
-
-        public void Clear()
-        {
-            character = null;
-        }
+        public Transform GetTransform() => transform;
     }
 }

@@ -18,7 +18,8 @@ namespace Game.CharacterSystem.Core
         protected List<IPerTurnEffect> perTurnEffects = new();
 
         // HP UI를 갱신할 UI 참조 (연결 필수)
-        protected CharacterCardUI characterCardUI;
+        protected CharacterUIController characterCardUI;
+
 
         public virtual string GetName() => gameObject.name;
 
@@ -68,11 +69,12 @@ namespace Game.CharacterSystem.Core
         /// <summary>
         /// UI 참조를 연결합니다.
         /// </summary>
-        public virtual void SetCardUI(CharacterCardUI ui)
+        public virtual void SetCardUI(CharacterUIController ui)
         {
             characterCardUI = ui;
-            characterCardUI.SetHP(currentHP, maxHP); // 즉시 UI 동기화
+            characterCardUI?.Initialize(this);
         }
+
 
         public virtual void Die()
         {

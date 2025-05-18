@@ -1,38 +1,37 @@
 using UnityEngine;
 using Game.CombatSystem.Interface;
-using Game.CombatSystem.Core;
+using Game.IManager;
 
 namespace Game.CombatSystem.State
 {
     /// <summary>
-    /// 플레이어가 사망하여 게임 오버가 되었을 때 진입하는 상태입니다.
-    /// 외부 UI 시스템에 게임 오버를 요청합니다.
+    /// 전투 패배 상태입니다. 플레이어가 사망했을 경우 게임오버 UI를 출력합니다.
     /// </summary>
     public class CombatGameOverState : ICombatTurnState
     {
-        private readonly ITurnStateController controller;
+        private readonly IGameOverManager gameOverManager;
 
-        public CombatGameOverState(ITurnStateController controller)
+        public CombatGameOverState(IGameOverManager gameOverManager)
         {
-            this.controller = controller;
+            this.gameOverManager = gameOverManager;
         }
 
         public void EnterState()
         {
-            Debug.Log("[CombatGameOverState] 게임 오버 상태 진입");
+            Debug.Log("[CombatGameOverState] 게임오버 상태 진입");
 
-            // 게임 오버 UI 호출 (GameOverManager 또는 UIController에서 처리 예정)
-            GameOverManager.Instance?.ShowGameOver();
+            // UI 출력, 재시작 버튼 등 외부 흐름 제어는 매니저에서 수행
+            gameOverManager.ShowGameOverUI();
         }
 
         public void ExecuteState()
         {
-            // 게임 오버 상태는 정지 상태이므로 별도 로직 없음
+            // 외부 UI 처리 상태. 로직 없음.
         }
 
         public void ExitState()
         {
-            Debug.Log("[CombatGameOverState] 상태 종료 (재시작 또는 메인 메뉴 이동 등)");
+            Debug.Log("[CombatGameOverState] 게임오버 상태 종료");
         }
     }
 }

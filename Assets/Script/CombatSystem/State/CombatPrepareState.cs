@@ -1,56 +1,102 @@
 using UnityEngine;
 using Game.CombatSystem.Interface;
-using Game.CombatSystem.Core;
-using Game.SkillCardSystem.Interface;
+using Game.IManager;
 using Game.CombatSystem.Slot;
+using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Slot;
 
 namespace Game.CombatSystem.State
 {
-    /// <summary>
-    /// 전투 준비 단계 상태입니다. 적 캐릭터 소환 및 스킬카드 초기화를 담당합니다.
-    /// </summary>
     public class CombatPrepareState : ICombatTurnState
     {
-        private readonly ITurnStateController controller;
+        private readonly ICombatTurnManager controller;
+        private readonly IEnemySpawnerManager spawnerManager;
+        private readonly IEnemyHandManager enemyHandManager;
+        private readonly ICombatStateFactory stateFactory;
 
-        public CombatPrepareState(ITurnStateController controller)
+        public CombatPrepareState(
+            ICombatTurnManager controller,
+            IEnemySpawnerManager spawnerManager,
+            IEnemyHandManager enemyHandManager,
+            ICombatStateFactory stateFactory)
         {
             this.controller = controller;
+            this.spawnerManager = spawnerManager;
+            this.enemyHandManager = enemyHandManager;
+            this.stateFactory = stateFactory;
         }
 
         public void EnterState()
         {
-            Debug.Log("[CombatPrepareState] 전투 준비 상태 진입");
-
-            // 1. 적 소환
-            StageManager.Instance.SpawnNextEnemy();
-
-            // 2. 적 카드 초기 핸드 구성
-            EnemyHandManager.Instance.GenerateInitialHand();
-
-            // 3. 적이 1번 슬롯 카드로 공격 슬롯 예약 (랜덤)
-            ISkillCard enemyCard = EnemyHandManager.Instance.GetSlotCard(SkillCardSlotPosition.ENEMY_SLOT_1);
-            if (enemyCard != null)
+            if (spawnerManager == null || enemyHandManager == null || controller == null || stateFactory == null)
             {
-                CombatTurnManager.Instance.ReserveEnemySlot(Random.value < 0.5f ? CombatSlotPosition.FIRST : CombatSlotPosition.SECOND);
+                Debug.LogError("[CombatPrepareState] 의존성 누락 - 상태 전이를 수행할 수 없습니다.");
+                return;
             }
 
-            // 4. 핸드 정렬 (앞으로 밀기), 3번 슬롯 새 카드 생성
-            EnemyHandManager.Instance.AdvanceSlots();
+            if (!IsEnemySlotReady())
+            {
+                Debug.LogWarning("[CombatPrepareState] ENEMY 슬롯이 준비되지 않아 적 스폰을 건너뜁니다.");
+            }
+            else
+            {
+                Debug.Log("[CombatPrepareState] 적 스폰 시도");
+                spawnerManager.SpawnInitialEnemy();
 
-            Debug.Log("[CombatPrepareState] 준비 완료, 플레이어 입력 대기 상태로 전환 예정");
-            controller.RequestStateChange(new CombatPlayerInputState(controller));
+                Debug.Log("[CombatPrepareState] 적 핸드 초기화 시도");
+                enemyHandManager.GenerateInitialHand();
+
+                // EnemyHandManager를 통해 직접 전투 카드 가져오기
+                var enemyCard = enemyHandManager.GetCardForCombat();
+                if (enemyCard != null)
+                {
+                    var slot = Random.value < 0.5f
+                        ? CombatSlotPosition.FIRST
+                        : CombatSlotPosition.SECOND;
+
+                    controller.ReserveEnemySlot(slot);
+
+                    var combatSlot = SlotRegistry.Instance?.GetCombatSlot(slot);
+                    if (combatSlot != null)
+                        combatSlot.SetCard(enemyCard);
+                    else
+                        Debug.LogWarning($"[CombatPrepareState] 전투 슬롯 {slot} 찾기 실패");
+                }
+                else
+                {
+                    Debug.LogWarning("[CombatPrepareState] 적 핸드에 카드가 없어 전투 슬롯 배치를 건너뜁니다.");
+                }
+            }
+
+            var nextState = stateFactory.CreatePlayerInputState();
+            if (nextState == null)
+            {
+                Debug.LogError("[CombatPrepareState] PlayerInputState 생성 실패");
+                return;
+            }
+
+            controller.RequestStateChange(nextState);
+            Debug.Log("[CombatPrepareState] PlayerInputState로 전이 요청됨");
         }
 
-        public void ExecuteState()
+        private bool IsEnemySlotReady()
         {
-            // 플레이어가 카드를 전투 슬롯에 올리면 버튼이 활성화됨 (외부 처리)
+            var registry = SlotRegistry.Instance;
+            if (registry == null)
+            {
+                Debug.LogWarning("[CombatPrepareState] SlotRegistry.Instance가 아직 null입니다.");
+                return false;
+            }
+
+            var slot = registry.GetCharacterSlot(SlotOwner.ENEMY);
+            return slot != null;
         }
+
+        public void ExecuteState() { }
 
         public void ExitState()
         {
-            Debug.Log("[CombatPrepareState] 종료");
+            Debug.Log("[CombatPrepareState] 전투 준비 상태 종료");
         }
     }
 }

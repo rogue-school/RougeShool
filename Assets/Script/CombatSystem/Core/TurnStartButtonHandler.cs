@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using Game.CombatSystem.Interface;
 
 namespace Game.CombatSystem.Core
 {
@@ -11,6 +12,13 @@ namespace Game.CombatSystem.Core
     public class TurnStartButtonHandler : MonoBehaviour
     {
         [SerializeField] private Button turnStartButton;
+
+        private ICombatTurnManager turnManager;
+
+        public void Inject(ICombatTurnManager manager)
+        {
+            turnManager = manager;
+        }
 
         private void Start()
         {
@@ -28,44 +36,31 @@ namespace Game.CombatSystem.Core
             UpdateButtonState();
         }
 
-        /// <summary>
-        /// 버튼 활성화 여부 갱신
-        /// </summary>
         private void UpdateButtonState()
         {
-            if (CombatTurnManager.Instance == null || turnStartButton == null)
+            if (turnManager == null || turnStartButton == null)
             {
                 SetInteractable(false);
                 return;
             }
 
-            // 카드가 두 장 모두 준비된 경우만 활성화
-            bool shouldBeInteractable = CombatTurnManager.Instance.AreBothSlotsReady();
-
-            // 버튼이 이미 클릭되어 비활성화된 경우 다시 활성화하지 않음
+            bool shouldBeInteractable = turnManager.AreBothSlotsReady();
             if (!turnStartButton.interactable && shouldBeInteractable)
                 SetInteractable(true);
         }
 
-        /// <summary>
-        /// 버튼 상태 설정
-        /// </summary>
         private void SetInteractable(bool value)
         {
             if (turnStartButton != null)
                 turnStartButton.interactable = value;
         }
 
-        /// <summary>
-        /// 턴 시작 버튼 클릭 시 전투 실행
-        /// </summary>
         private void OnTurnStartClicked()
         {
-            if (CombatTurnManager.Instance != null)
+            if (turnManager != null)
             {
-                // 즉시 비활성화하여 중복 클릭 방지
                 SetInteractable(false);
-                CombatTurnManager.Instance.ExecuteCombat();
+                turnManager.ExecuteCombat();
             }
         }
     }

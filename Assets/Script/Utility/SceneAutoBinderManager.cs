@@ -1,5 +1,5 @@
 using UnityEngine;
-using Game.CombatSystem.Core;
+using Game.CombatSystem.Manager;
 
 namespace Game.Utility
 {
@@ -19,7 +19,25 @@ namespace Game.Utility
             playerHandManager ??= FindFirstObjectByType<PlayerHandManager>();
             enemyHandManager ??= FindFirstObjectByType<EnemyHandManager>();
 
-            Debug.Log("[SceneAutoBinderManager] 자동 바인딩 완료");
+            if (battleSlotManager == null)
+                Debug.LogWarning("[SceneAutoBinderManager] CombatSlotManager를 찾지 못했습니다.");
+
+            if (playerHandManager == null)
+                Debug.LogWarning("[SceneAutoBinderManager] PlayerHandManager를 찾지 못했습니다.");
+
+            if (enemyHandManager == null)
+                Debug.LogWarning("[SceneAutoBinderManager] EnemyHandManager를 찾지 못했습니다.");
+
+            //Debug.Log("[SceneAutoBinderManager] 자동 바인딩 완료");
         }
+        public void Initialize()
+        {
+            battleSlotManager ??= FindFirstObjectByType<CombatSlotManager>();
+            playerHandManager ??= FindFirstObjectByType<PlayerHandManager>();
+            enemyHandManager ??= FindFirstObjectByType<EnemyHandManager>();
+
+            //Debug.Log("[SceneAutoBinderManager] 수동 바인딩 완료");
+        }
+
     }
 }

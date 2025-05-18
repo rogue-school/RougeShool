@@ -1,71 +1,70 @@
 using UnityEngine;
 using Game.CombatSystem.Interface;
-using Game.CombatSystem.Core;
-using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Slot;
-using Game.Utility;
-using Game.CombatSystem.Enemy;
+using Game.SkillCardSystem.Interface;
+using Game.IManager;
 
 namespace Game.CombatSystem.State
 {
     /// <summary>
-    /// 후공 턴 상태입니다. 후공 슬롯의 스킬카드를 실행하며, 적이 사망했을 경우 무효 처리됩니다.
+    /// 후공 턴 상태입니다. 전투 슬롯의 후공 카드를 실행한 후 결과 상태로 전이합니다.
+    /// 단, 타겟이 사망한 경우 카드는 무효화됩니다.
     /// </summary>
     public class CombatSecondAttackState : ICombatTurnState
     {
         private readonly ITurnStateController controller;
+        private readonly ICombatSlotManager slotManager;
+        private readonly ICardExecutionContext context;
+        private readonly ICombatStateFactory stateFactory;
 
-        public CombatSecondAttackState(ITurnStateController controller)
+        public CombatSecondAttackState(
+            ITurnStateController controller,
+            ICombatSlotManager slotManager,
+            ICardExecutionContext context,
+            ICombatStateFactory stateFactory)
         {
             this.controller = controller;
+            this.slotManager = slotManager;
+            this.context = context;
+            this.stateFactory = stateFactory;
         }
 
         public void EnterState()
         {
             Debug.Log("[CombatSecondAttackState] 후공 턴 시작");
 
-            var enemy = EnemyManager.Instance.GetCurrentEnemy();
-            if (enemy == null || enemy.IsDead())
+            var secondSlot = slotManager.GetSlot(CombatSlotPosition.SECOND);
+            if (secondSlot == null || !secondSlot.HasCard())
             {
-                Debug.Log("[CombatSecondAttackState] 적이 이미 사망했습니다. 후공 카드 무효화");
-                controller.RequestStateChange(new CombatResultState(controller));
+                Debug.LogWarning("[CombatSecondAttackState] 후공 슬롯이 비어 있음 → 결과 상태로 전이");
+                controller.RequestStateChange(stateFactory.CreateResultState());
                 return;
             }
 
-            var slot = CombatSlotManager.Instance.GetFirstSlot(CombatSlotPosition.SECOND);
-            if (slot == null)
+            ISkillCard secondCard = secondSlot.GetCard();
+            var caster = secondCard.GetOwner(context);
+            var target = secondCard.GetTarget(context);
+
+            if (target == null || target.IsDead())
             {
-                Debug.LogWarning("[CombatSecondAttackState] 후공 슬롯이 비어있습니다.");
-                controller.RequestStateChange(new CombatResultState(controller));
-                return;
+                Debug.Log("[CombatSecondAttackState] 후공 카드 대상 사망 → 카드 실행 생략");
+            }
+            else
+            {
+                secondSlot.ExecuteCardAutomatically(context);
             }
 
-            ISkillCard card = slot.GetCard();
-            if (card == null)
-            {
-                Debug.LogWarning("[CombatSecondAttackState] 후공 카드가 없습니다.");
-                controller.RequestStateChange(new CombatResultState(controller));
-                return;
-            }
-
-            slot.ExecuteCardAutomatically();
-
-            if (PlayerManager.Instance.GetPlayer()?.IsDead() == true)
-            {
-                Debug.Log("[CombatSecondAttackState] 플레이어 사망 - 게임 오버");
-                GameOverManager.Instance?.ShowGameOver();
-                return;
-            }
-
-            controller.RequestStateChange(new CombatResultState(controller));
+            controller.RequestStateChange(stateFactory.CreateResultState());
         }
 
-        public void ExecuteState() { }
+        public void ExecuteState()
+        {
+            // 자동 실행 상태이므로 별도 로직 없음
+        }
 
         public void ExitState()
         {
             Debug.Log("[CombatSecondAttackState] 후공 턴 종료");
         }
     }
-
 }

@@ -18,15 +18,26 @@ namespace Game.SkillCardSystem.Factory
         /// </summary>
         public static ISkillCard CreatePlayerCard(PlayerSkillCard cardData, int damage, int coolTime)
         {
-            return CreateRuntimeCard(
+            if (cardData == null)
+            {
+                Debug.LogError("[SkillCardFactory] PlayerSkillCard 데이터가 null입니다.");
+                return null;
+            }
+
+            var effects = CloneEffects(cardData.CreateEffects());
+
+            var card = CreateRuntimeCard(
                 cardData.GetCardName(),
                 cardData.GetDescription(),
                 cardData.GetArtwork(),
-                cardData.CreateEffects(),
+                effects,
                 damage,
                 coolTime,
                 SlotOwner.PLAYER
             );
+
+            Debug.Log($"[SkillCardFactory] 플레이어 카드 생성 완료 → {cardData.GetCardName()}");
+            return card;
         }
 
         /// <summary>
@@ -34,15 +45,26 @@ namespace Game.SkillCardSystem.Factory
         /// </summary>
         public static ISkillCard CreateEnemyCard(EnemySkillCard cardData, int damage)
         {
-            return CreateRuntimeCard(
+            if (cardData == null)
+            {
+                Debug.LogError("[SkillCardFactory] EnemySkillCard 데이터가 null입니다.");
+                return null;
+            }
+
+            var effects = CloneEffects(cardData.CreateEffects());
+
+            var card = CreateRuntimeCard(
                 cardData.GetCardName(),
                 cardData.GetDescription(),
                 cardData.GetArtwork(),
-                cardData.CreateEffects(),
+                effects,
                 damage,
                 0,
                 SlotOwner.ENEMY
             );
+
+            Debug.Log($"[SkillCardFactory] 적 카드 생성 완료 → {cardData.GetCardName()}");
+            return card;
         }
 
         /// <summary>
@@ -59,6 +81,21 @@ namespace Game.SkillCardSystem.Factory
         )
         {
             return new RuntimeSkillCard(name, description, artwork, effects, power, coolTime, owner);
+        }
+
+        /// <summary>
+        /// 카드 효과 목록 복제
+        /// </summary>
+        private static List<ICardEffect> CloneEffects(List<ICardEffect> original)
+        {
+            if (original == null)
+                return new List<ICardEffect>();
+
+            var clone = new List<ICardEffect>(original.Count);
+            foreach (var effect in original)
+                clone.Add(effect); // 필요 시 ICardEffect.Clone() 도입 가능
+
+            return clone;
         }
     }
 }

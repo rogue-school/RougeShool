@@ -1,16 +1,14 @@
 using System.Collections.Generic;
 using UnityEngine;
-using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Slot;
 using Game.CombatSystem.Slot;
+using Game.SkillCardSystem.Interface;
+using Game.CombatSystem.Interface;
+using Game.CharacterSystem.Interface;
+using Game.CharacterSystem.Core;
 
 namespace Game.SkillCardSystem.Runtime
 {
-    /// <summary>
-    /// 전투 중 생성되는 실시간 스킬 카드입니다.
-    /// PlayerSkillCard 또는 EnemySkillCard를 기반으로 만들어지며,
-    /// 개별 수치(파워, 쿨타임)와 슬롯 정보를 포함합니다.
-    /// </summary>
     public class RuntimeSkillCard : ISkillCard
     {
         private string cardName;
@@ -24,9 +22,6 @@ namespace Game.SkillCardSystem.Runtime
         private SkillCardSlotPosition? handSlot = null;
         private CombatSlotPosition? combatSlot = null;
 
-        /// <summary>
-        /// 런타임 스킬 카드 생성자
-        /// </summary>
         public RuntimeSkillCard(
             string name,
             string desc,
@@ -40,7 +35,7 @@ namespace Game.SkillCardSystem.Runtime
             this.cardName = name;
             this.description = desc;
             this.artwork = art;
-            this.effects = effects;
+            this.effects = effects != null ? new List<ICardEffect>(effects) : new List<ICardEffect>();
             this.power = power;
             this.coolTime = coolTime;
             this.owner = owner;
@@ -50,8 +45,9 @@ namespace Game.SkillCardSystem.Runtime
         public string GetDescription() => description;
         public Sprite GetArtwork() => artwork;
         public int GetCoolTime() => coolTime;
+        public void SetCoolTime(int time) => coolTime = time;
         public int GetEffectPower(ICardEffect effect) => power;
-        public List<ICardEffect> CreateEffects() => effects;
+        public List<ICardEffect> CreateEffects() => new List<ICardEffect>(effects);
         public SlotOwner GetOwner() => owner;
 
         public void SetPower(int value) => power = value;
@@ -61,5 +57,48 @@ namespace Game.SkillCardSystem.Runtime
 
         public void SetCombatSlot(CombatSlotPosition slot) => combatSlot = slot;
         public CombatSlotPosition? GetCombatSlot() => combatSlot;
+
+        public void ExecuteCardAutomatically(ICardExecutionContext context)
+        {
+            if (context == null)
+            {
+                Debug.LogError("[RuntimeSkillCard] context가 null입니다.");
+                return;
+            }
+
+            CharacterBase caster = GetOwner(context) as CharacterBase;
+            CharacterBase target = GetTarget(context) as CharacterBase;
+
+            if (caster == null || target == null || target.IsDead())
+            {
+                Debug.LogWarning("[RuntimeSkillCard] 유효한 시전자 또는 대상이 없거나 대상이 사망 상태입니다.");
+                return;
+            }
+
+            Debug.Log($"[RuntimeSkillCard] 자동 실행 시작 → {cardName}, 공격력: {power}, 효과 수: {effects.Count}");
+
+            foreach (var effect in effects)
+            {
+                if (effect == null) continue;
+
+                int value = GetEffectPower(effect);
+                effect.ExecuteEffect(caster, target, value);
+                Debug.Log($" → 효과 적용: {effect.GetType().Name}, 값: {value}");
+            }
+        }
+
+        public ICharacter GetOwner(ICardExecutionContext context)
+        {
+            return owner == SlotOwner.PLAYER
+                ? context.GetPlayer()
+                : context.GetEnemy();
+        }
+
+        public ICharacter GetTarget(ICardExecutionContext context)
+        {
+            return owner == SlotOwner.PLAYER
+                ? context.GetEnemy()
+                : context.GetPlayer();
+        }
     }
 }
