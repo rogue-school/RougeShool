@@ -8,6 +8,7 @@ namespace Game.CombatSystem.Core
     public class CombatStateFactory : ICombatStateFactory
     {
         private readonly ICombatTurnManager combatTurnManager;
+        private readonly ICombatFlowCoordinator flowCoordinator;
         private readonly IPlayerHandManager playerHandManager;
         private readonly IEnemyHandManager enemyHandManager;
         private readonly IEnemySpawnerManager enemySpawnerManager;
@@ -21,6 +22,7 @@ namespace Game.CombatSystem.Core
 
         public CombatStateFactory(
             ICombatTurnManager combatTurnManager,
+            ICombatFlowCoordinator flowCoordinator,
             IPlayerHandManager playerHandManager,
             IEnemyHandManager enemyHandManager,
             IEnemySpawnerManager enemySpawnerManager,
@@ -33,6 +35,7 @@ namespace Game.CombatSystem.Core
             this.turnStateController = combatTurnManager as ITurnStateController ?? throw new ArgumentException("combatTurnManager는 ITurnStateController를 구현해야 합니다.");
             this.cardExecutionContext = combatTurnManager as ICardExecutionContext ?? throw new ArgumentException("combatTurnManager는 ICardExecutionContext를 구현해야 합니다.");
 
+            this.flowCoordinator = flowCoordinator ?? throw new ArgumentNullException(nameof(flowCoordinator));
             this.playerHandManager = playerHandManager ?? throw new ArgumentNullException(nameof(playerHandManager));
             this.enemyHandManager = enemyHandManager ?? throw new ArgumentNullException(nameof(enemyHandManager));
             this.enemySpawnerManager = enemySpawnerManager ?? throw new ArgumentNullException(nameof(enemySpawnerManager));
@@ -44,63 +47,37 @@ namespace Game.CombatSystem.Core
 
         public ICombatTurnState CreatePrepareState()
         {
-            return new CombatPrepareState(
-                combatTurnManager,
-                enemySpawnerManager,
-                enemyHandManager,
-                this
-            );
+            return new CombatPrepareState(combatTurnManager, flowCoordinator, this);
         }
 
         public ICombatTurnState CreatePlayerInputState()
         {
-            return new CombatPlayerInputState(
-                turnStateController,
-                playerHandManager,
-                this
-            );
+            return new CombatPlayerInputState(turnStateController, flowCoordinator, this);
         }
 
         public ICombatTurnState CreateFirstAttackState()
         {
-            return new CombatFirstAttackState(
-                turnStateController,
-                combatSlotManager,
-                cardExecutionContext,
-                this
-            );
+            return new CombatFirstAttackState(turnStateController, flowCoordinator, cardExecutionContext, this);
         }
 
         public ICombatTurnState CreateSecondAttackState()
         {
-            return new CombatSecondAttackState(
-                turnStateController,
-                combatSlotManager,
-                cardExecutionContext,
-                this
-            );
+            return new CombatSecondAttackState(turnStateController, flowCoordinator, cardExecutionContext, this);
         }
 
         public ICombatTurnState CreateResultState()
         {
-            return new CombatResultState(
-                turnStateController,
-                cardExecutionContext,
-                enemyHandManager,
-                stageManager,
-                playerHandManager,
-                this
-            );
+            return new CombatResultState(turnStateController, flowCoordinator, cardExecutionContext, this);
         }
 
         public ICombatTurnState CreateVictoryState()
         {
-            return new CombatVictoryState(victoryManager);
+            return new CombatVictoryState(combatTurnManager, flowCoordinator, this);
         }
 
         public ICombatTurnState CreateGameOverState()
         {
-            return new CombatGameOverState(gameOverManager);
+            return new CombatGameOverState(combatTurnManager, flowCoordinator, this);
         }
     }
 }

@@ -7,7 +7,8 @@ using Game.IManager;
 
 namespace Game.CombatSystem.Manager
 {
-    public class CombatTurnManager : MonoBehaviour, ICombatTurnManager, ITurnStateController, ICardExecutionContext
+    public class CombatTurnManager : MonoBehaviour,
+        ICombatTurnManager, ITurnStateController, ICardExecutionContext
     {
         [SerializeField] private bool autoStart = true;
 
@@ -92,40 +93,21 @@ namespace Game.CombatSystem.Manager
 
         public ICombatTurnState GetCurrentState() => currentState;
 
-        // -----------------------------------
+        // ----------------------------
         // ITurnStateController 구현
-        // -----------------------------------
+        // ----------------------------
         public void RegisterPlayerGuard()
         {
             isPlayerGuarded = true;
         }
 
+        public bool IsPlayerGuarded() => isPlayerGuarded;
+
         public void ReserveEnemySlot(CombatSlotPosition slot)
         {
             reservedEnemySlot = slot;
             Debug.Log($"[CombatTurnManager] 적 공격 슬롯 예약됨 → {slot}");
-
-            // EnemyHandManager를 통해 카드 확보
-            var enemyHandManager = enemyManager?.GetEnemyHandManager();
-            var card = enemyHandManager?.GetCardForCombat();
-            if (card == null)
-            {
-                Debug.LogWarning("[CombatTurnManager] 적 카드가 없어 전투 슬롯 배치를 건너뜁니다.");
-                return;
-            }
-
-            var combatSlot = SlotRegistry.Instance?.GetCombatSlot(slot);
-            if (combatSlot == null)
-            {
-                Debug.LogError($"[CombatTurnManager] 전투 슬롯({slot})을 찾을 수 없습니다.");
-                return;
-            }
-
-            combatSlot.SetCard(card);
-            Debug.Log($"[CombatTurnManager] 적 카드 {card.GetCardName()} → 슬롯 {slot}에 배치됨");
         }
-
-        public bool IsPlayerGuarded() => isPlayerGuarded;
 
         public CombatSlotPosition GetReservedEnemySlot() => reservedEnemySlot;
 
@@ -135,9 +117,9 @@ namespace Game.CombatSystem.Manager
             reservedEnemySlot = CombatSlotPosition.NONE;
         }
 
-        // -----------------------------------
-        // 전투 슬롯 관련
-        // -----------------------------------
+        // ----------------------------
+        // 전투 카드 등록 및 전투 개시
+        // ----------------------------
         public void RegisterPlayerCard(ISkillCard card)
         {
             registeredPlayerCard = card;
@@ -153,24 +135,20 @@ namespace Game.CombatSystem.Manager
         public void ExecuteCombat()
         {
             var next = stateFactory?.CreateFirstAttackState();
-            if (next == null)
-            {
+            if (next != null)
+                RequestStateChange(next);
+            else
                 Debug.LogError("[CombatTurnManager] FirstAttackState 생성 실패");
-                return;
-            }
-
-            RequestStateChange(next);
         }
 
-        // -----------------------------------
+        // ----------------------------
         // ICardExecutionContext 구현
-        // -----------------------------------
+        // ----------------------------
         public IPlayerCharacter GetPlayer()
         {
             var player = playerManager?.GetPlayer();
             if (player == null)
                 Debug.LogError("[CombatTurnManager] 플레이어 캐릭터 참조 실패");
-
             return player;
         }
 
@@ -179,7 +157,6 @@ namespace Game.CombatSystem.Manager
             var enemy = enemyManager?.GetEnemy();
             if (enemy == null)
                 Debug.LogError("[CombatTurnManager] 적 캐릭터 참조 실패");
-
             return enemy;
         }
     }

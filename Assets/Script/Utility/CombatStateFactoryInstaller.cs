@@ -18,6 +18,8 @@ namespace Game.Utility
         [SerializeField] private MonoBehaviour stageManagerSource;
         [SerializeField] private MonoBehaviour victoryManagerSource;
         [SerializeField] private MonoBehaviour gameOverManagerSource;
+        [SerializeField] private MonoBehaviour flowCoordinatorSource; // 추가됨
+
         [SerializeField] private CombatTurnManager combatTurnManager;
 
         private void Awake() => Initialize();
@@ -30,7 +32,8 @@ namespace Game.Utility
                 !TryCast(out ICombatSlotManager combatSlotManager, combatSlotManagerSource) ||
                 !TryCast(out IStageManager stageManager, stageManagerSource) ||
                 !TryCast(out IVictoryManager victoryManager, victoryManagerSource) ||
-                !TryCast(out IGameOverManager gameOverManager, gameOverManagerSource))
+                !TryCast(out IGameOverManager gameOverManager, gameOverManagerSource) ||
+                !TryCast(out ICombatFlowCoordinator flowCoordinator, flowCoordinatorSource)) // 추가됨
             {
                 Debug.LogError("[CombatStateFactoryInstaller] 필수 매니저 캐스팅 실패");
                 enabled = false;
@@ -47,6 +50,7 @@ namespace Game.Utility
 
             factory = new CombatStateFactory(
                 combatTurnManager,
+                flowCoordinator, // 추가됨
                 playerHandManager,
                 enemyHandManager,
                 spawnerManager,

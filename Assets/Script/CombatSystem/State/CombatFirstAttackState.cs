@@ -1,66 +1,54 @@
-using UnityEngine;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
-using Game.SkillCardSystem.Interface;
+using UnityEngine;
+using System.Collections;
 using Game.IManager;
 
 namespace Game.CombatSystem.State
 {
     public class CombatFirstAttackState : ICombatTurnState
     {
-        private readonly ITurnStateController controller;
-        private readonly ICombatSlotManager slotManager;
-        private readonly ICardExecutionContext executionContext;
+        private readonly ICombatTurnManager turnManager;
+        private readonly ICombatFlowCoordinator flowCoordinator;
         private readonly ICombatStateFactory stateFactory;
+        private readonly ISlotRegistry slotRegistry;
 
         public CombatFirstAttackState(
-            ITurnStateController controller,
-            ICombatSlotManager slotManager,
-            ICardExecutionContext executionContext,
-            ICombatStateFactory stateFactory)
+            ICombatTurnManager turnManager,
+            ICombatFlowCoordinator flowCoordinator,
+            ICombatStateFactory stateFactory,
+            ISlotRegistry slotRegistry)
         {
-            this.controller = controller;
-            this.slotManager = slotManager;
-            this.executionContext = executionContext;
+            this.turnManager = turnManager;
+            this.flowCoordinator = flowCoordinator;
             this.stateFactory = stateFactory;
+            this.slotRegistry = slotRegistry;
         }
 
         public void EnterState()
         {
-            Debug.Log("[CombatFirstAttackState] 선공 턴 시작");
+            Debug.Log("[State] CombatFirstAttackState: 선공 슬롯 전투 시작");
 
-            var firstSlot = slotManager.GetSlot(CombatSlotPosition.FIRST);
-            if (firstSlot == null || !firstSlot.HasCard())
+            if (flowCoordinator is MonoBehaviour mono)
             {
-                Debug.LogWarning("[CombatFirstAttackState] 선공 슬롯이 비어 있음 → 후공 상태로 전이");
-                controller.RequestStateChange(stateFactory.CreateSecondAttackState());
-                return;
+                mono.StartCoroutine(AttackRoutine());
             }
-
-            ISkillCard firstCard = firstSlot.GetCard();
-
-            firstSlot.ExecuteCardAutomatically(executionContext);
-
-            if (executionContext.GetPlayer().IsDead())
+            else
             {
-                Debug.Log("[CombatFirstAttackState] 플레이어 사망 → GameOverState");
-                controller.RequestStateChange(stateFactory.CreateGameOverState());
-                return;
+                Debug.LogError("flowCoordinator가 MonoBehaviour가 아닙니다. Coroutine 실행 불가.");
             }
+        }
 
-            if (executionContext.GetEnemy().IsDead())
-            {
-                Debug.Log("[CombatFirstAttackState] 적 사망 감지");
-            }
+        private IEnumerator AttackRoutine()
+        {
+            yield return flowCoordinator.PerformFirstAttack();
 
-            controller.RequestStateChange(stateFactory.CreateSecondAttackState());
+            var nextState = stateFactory.CreateSecondAttackState();
+            turnManager.RequestStateChange(nextState);
         }
 
         public void ExecuteState() { }
 
-        public void ExitState()
-        {
-            Debug.Log("[CombatFirstAttackState] 선공 턴 종료");
-        }
+        public void ExitState() { }
     }
 }
