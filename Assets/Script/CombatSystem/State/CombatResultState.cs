@@ -1,59 +1,71 @@
-using UnityEngine;
 using Game.CombatSystem.Interface;
-using Game.CombatSystem.Manager;
+using Game.CombatSystem.Slot;
+using UnityEngine;
 using System.Collections;
+using Game.IManager;
 
 namespace Game.CombatSystem.State
 {
     public class CombatResultState : ICombatTurnState
     {
-        private readonly ICombatTurnManager controller;
+        private readonly ICombatTurnManager turnManager;
         private readonly ICombatFlowCoordinator flowCoordinator;
         private readonly ICombatStateFactory stateFactory;
+        private readonly ISlotRegistry slotRegistry;
 
         public CombatResultState(
-            ICombatTurnManager controller,
+            ICombatTurnManager turnManager,
             ICombatFlowCoordinator flowCoordinator,
-            ICombatStateFactory stateFactory)
+            ICombatStateFactory stateFactory,
+            ISlotRegistry slotRegistry)
         {
-            this.controller = controller;
+            this.turnManager = turnManager;
             this.flowCoordinator = flowCoordinator;
             this.stateFactory = stateFactory;
+            this.slotRegistry = slotRegistry;
         }
 
         public void EnterState()
         {
-            Debug.Log("[CombatResultState] 상태 진입 - 결과 처리 시작");
+            Debug.Log("[State] CombatResultState: 전투 결과 판단 시작");
 
-            if (controller is MonoBehaviour behaviour)
-                behaviour.StartCoroutine(HandleResultPhase());
+            if (flowCoordinator is MonoBehaviour mono)
+            {
+                mono.StartCoroutine(ResultRoutine());
+            }
             else
-                Debug.LogError("[CombatResultState] controller는 MonoBehaviour가 아닙니다.");
+            {
+                Debug.LogError("flowCoordinator가 MonoBehaviour가 아닙니다. Coroutine 실행 불가.");
+            }
         }
 
-        private IEnumerator HandleResultPhase()
+        private IEnumerator ResultRoutine()
         {
             yield return flowCoordinator.PerformResultPhase();
 
-            // 전투 승리 조건 확인
-            bool hasMoreEnemies = flowCoordinator.CheckHasNextEnemy(); // 이 메서드는 새로 정의 필요
-            ICombatTurnState nextState;
-
-            if (hasMoreEnemies)
-                nextState = stateFactory.CreatePrepareState();
-            else if (flowCoordinator.IsPlayerDead()) // 이 메서드도 마찬가지로 flowCoordinator에 위임 가능
-                nextState = stateFactory.CreateGameOverState();
+            // 결과 확인 후 상태 전이
+            if (flowCoordinator.IsPlayerDead())
+            {
+                Debug.Log("[State] CombatResultState: 플레이어 사망 → GameOver");
+                var nextState = stateFactory.CreateGameOverState();
+                turnManager.RequestStateChange(nextState);
+            }
+            else if (!flowCoordinator.CheckHasNextEnemy())
+            {
+                Debug.Log("[State] CombatResultState: 모든 적 처치 → Victory");
+                var nextState = stateFactory.CreateVictoryState();
+                turnManager.RequestStateChange(nextState);
+            }
             else
-                nextState = stateFactory.CreateVictoryState();
-
-            controller.RequestStateChange(nextState);
+            {
+                Debug.Log("[State] CombatResultState: 다음 적 준비");
+                var nextState = stateFactory.CreatePrepareState();
+                turnManager.RequestStateChange(nextState);
+            }
         }
 
         public void ExecuteState() { }
 
-        public void ExitState()
-        {
-            Debug.Log("[CombatResultState] 상태 종료");
-        }
+        public void ExitState() { }
     }
 }
