@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: a590fdc3c82dc31468e53a7746ea2c3e
+guid: c332ac7b309c770498a99b4f79710fc8
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -1198700444080552474
-    second: "\uAC801_0"
+      213: -4029819251187114856
+    second: weapon_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,7 +100,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: "\uAC801_0"
+      name: weapon_0
       rect:
         serializedVersion: 2
         x: 0
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 6e5c97e0c4c5d5fe0800000000000000
-      internalID: -1198700444080552474
+      spriteID: 89c16ffedb43318c0800000000000000
+      internalID: -4029819251187114856
       vertices: []
       indices: 
       edges: []
