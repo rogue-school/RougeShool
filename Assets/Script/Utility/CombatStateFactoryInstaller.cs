@@ -18,7 +18,8 @@ namespace Game.Utility
         [SerializeField] private MonoBehaviour stageManagerSource;
         [SerializeField] private MonoBehaviour victoryManagerSource;
         [SerializeField] private MonoBehaviour gameOverManagerSource;
-        [SerializeField] private MonoBehaviour flowCoordinatorSource; // 추가됨
+        [SerializeField] private MonoBehaviour flowCoordinatorSource;
+        [SerializeField] private MonoBehaviour slotRegistrySource;
 
         [SerializeField] private CombatTurnManager combatTurnManager;
 
@@ -33,7 +34,8 @@ namespace Game.Utility
                 !TryCast(out IStageManager stageManager, stageManagerSource) ||
                 !TryCast(out IVictoryManager victoryManager, victoryManagerSource) ||
                 !TryCast(out IGameOverManager gameOverManager, gameOverManagerSource) ||
-                !TryCast(out ICombatFlowCoordinator flowCoordinator, flowCoordinatorSource)) // 추가됨
+                !TryCast(out ICombatFlowCoordinator flowCoordinator, flowCoordinatorSource) ||
+                !TryCast(out ISlotRegistry slotRegistry, slotRegistrySource))
             {
                 Debug.LogError("[CombatStateFactoryInstaller] 필수 매니저 캐스팅 실패");
                 enabled = false;
@@ -50,14 +52,15 @@ namespace Game.Utility
 
             factory = new CombatStateFactory(
                 combatTurnManager,
-                flowCoordinator, // 추가됨
+                flowCoordinator,
                 playerHandManager,
                 enemyHandManager,
                 spawnerManager,
                 combatSlotManager,
                 stageManager,
                 victoryManager,
-                gameOverManager
+                gameOverManager,
+                slotRegistry
             );
 
             combatTurnManager.InjectFactory(this);
@@ -75,7 +78,6 @@ namespace Game.Utility
             return true;
         }
 
-        // 위임
         public ICombatTurnState CreatePrepareState() => factory.CreatePrepareState();
         public ICombatTurnState CreatePlayerInputState() => factory.CreatePlayerInputState();
         public ICombatTurnState CreateFirstAttackState() => factory.CreateFirstAttackState();

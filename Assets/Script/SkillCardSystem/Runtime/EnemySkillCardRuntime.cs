@@ -1,64 +1,62 @@
 using UnityEngine;
 using System.Collections.Generic;
+using Game.SkillCardSystem.Data;
 using Game.SkillCardSystem.Interface;
-using Game.SkillCardSystem.Core;
 using Game.SkillCardSystem.Slot;
 using Game.CombatSystem.Slot;
 using Game.CombatSystem.Interface;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Core;
+using Game.CombatSystem.Core;
 
 namespace Game.SkillCardSystem.Runtime
 {
     public class EnemySkillCardRuntime : ISkillCard
     {
-        private EnemySkillCard baseCard;
+        public SkillCardData CardData { get; }
+        private List<ICardEffect> effects;
         private int power;
+        private SlotOwner owner;
+        private SkillCardSlotPosition? handSlot;
         private CombatSlotPosition? combatSlot;
 
-        public EnemySkillCardRuntime(EnemySkillCard baseCard, int power)
+        public EnemySkillCardRuntime(SkillCardData data, List<ICardEffect> effects, int power)
         {
-            this.baseCard = baseCard;
+            CardData = data;
+            this.effects = effects ?? new List<ICardEffect>();
             this.power = power;
+            this.owner = SlotOwner.ENEMY;
         }
 
-        public string GetCardName() => baseCard.GetCardName();
-        public string GetDescription() => baseCard.GetDescription();
-        public Sprite GetArtwork() => baseCard.GetArtwork();
-        public int GetCoolTime() => 0;
+        public string GetCardName() => CardData.Name;
+        public string GetDescription() => CardData.Description;
+        public Sprite GetArtwork() => CardData.Artwork;
+        public int GetCoolTime() => CardData.CoolTime;
         public int GetEffectPower(ICardEffect effect) => power;
-        public List<ICardEffect> CreateEffects() => baseCard.CreateEffects();
+        public List<ICardEffect> CreateEffects() => new List<ICardEffect>(effects);
+        public SlotOwner GetOwner() => owner;
 
-        public SlotOwner GetOwner() => SlotOwner.ENEMY;
+        public void SetHandSlot(SkillCardSlotPosition slot) => handSlot = slot;
+        public SkillCardSlotPosition? GetHandSlot() => handSlot;
 
         public void SetCombatSlot(CombatSlotPosition slot) => combatSlot = slot;
         public CombatSlotPosition? GetCombatSlot() => combatSlot;
 
-        public void SetHandSlot(SkillCardSlotPosition slot) { }
-        public SkillCardSlotPosition? GetHandSlot() => null;
-
         public void ExecuteCardAutomatically(ICardExecutionContext context)
         {
-            var caster = GetOwner(context) as CharacterBase;
-            var target = GetTarget(context) as CharacterBase;
+            CharacterBase caster = GetOwner(context) as CharacterBase;
+            CharacterBase target = GetTarget(context) as CharacterBase;
 
-            if (caster == null || target == null || target.IsDead()) return;
-
-            foreach (var effect in CreateEffects())
+            foreach (var effect in effects)
             {
                 int value = GetEffectPower(effect);
                 effect.ExecuteEffect(caster, target, value);
             }
         }
 
-        public ICharacter GetOwner(ICardExecutionContext context)
-        {
-            return context.GetEnemy(); // 적 카드의 시전자
-        }
+        public void ExecuteSkill() => ExecuteCardAutomatically(new DefaultCardExecutionContext(this));
 
-        public ICharacter GetTarget(ICardExecutionContext context)
-        {
-            return context.GetPlayer(); // 적 카드의 대상은 플레이어
-        }
+        public ICharacter GetOwner(ICardExecutionContext context) => context.GetEnemy();
+        public ICharacter GetTarget(ICardExecutionContext context) => context.GetPlayer();
     }
 }

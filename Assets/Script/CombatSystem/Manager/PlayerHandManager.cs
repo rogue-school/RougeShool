@@ -2,13 +2,15 @@ using UnityEngine;
 using System.Collections.Generic;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
-using Game.CombatSystem.UI;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Runtime;
 using Game.SkillCardSystem.Slot;
 using Game.SkillCardSystem.UI;
 using Game.IManager;
 using Game.CharacterSystem.Interface;
+using Game.CombatSystem.UI;
+using Game.SkillCardSystem.Data;
+using Game.CharacterSystem.Data;
 
 namespace Game.CombatSystem.Manager
 {
@@ -33,29 +35,16 @@ namespace Game.CombatSystem.Manager
 
         public void Initialize()
         {
-            if (slotRegistry == null)
+            if (slotRegistry == null || player == null)
             {
-                Debug.LogError("[PlayerHandManager] SlotRegistry가 주입되지 않았습니다.");
-                return;
-            }
-
-            if (player == null)
-            {
-                Debug.LogError("[PlayerHandManager] Player가 주입되지 않았습니다. 초기화를 중단합니다.");
+                Debug.LogError("[PlayerHandManager] 필수 의존성이 누락되었습니다.");
                 return;
             }
 
             handSlots = new Dictionary<SkillCardSlotPosition, IHandCardSlot>();
             runtimeCards = new Dictionary<SkillCardSlotPosition, PlayerSkillCardRuntime>();
 
-            var slots = slotRegistry.GetHandSlots(SlotOwner.PLAYER);
-            if (slots == null)
-            {
-                Debug.LogError("[PlayerHandManager] Player 슬롯 조회 실패");
-                return;
-            }
-
-            foreach (var slot in slots)
+            foreach (var slot in slotRegistry.GetHandSlots(SlotOwner.PLAYER))
             {
                 if (slot == null) continue;
                 handSlots[slot.GetSlotPosition()] = slot;
@@ -68,34 +57,34 @@ namespace Game.CombatSystem.Manager
         {
             ClearAll();
 
-            if (player == null || player.Data == null)
+            // 슬롯 위치 고정
+            SkillCardSlotPosition[] orderedSlots = new[]
             {
-                Debug.LogWarning("[PlayerHandManager] 플레이어 데이터가 없어서 핸드를 생성하지 않습니다.");
+        SkillCardSlotPosition.PLAYER_SLOT_1,
+        SkillCardSlotPosition.PLAYER_SLOT_2,
+        SkillCardSlotPosition.PLAYER_SLOT_3,
+    };
+
+            // 여기에서 직접 캐릭터에 따른 카드 3장을 고정으로 배정 (예시)
+            var selectedCharacter = player?.Data;
+            if (selectedCharacter == null)
+            {
+                Debug.LogWarning("[PlayerHandManager] 플레이어 데이터가 없습니다.");
                 return;
             }
 
-            var skillDeck = player.Data.skillDeck;
-            SkillCardSlotPosition[] orderedSlots = new[]
-            {
-                SkillCardSlotPosition.PLAYER_SLOT_1,
-                SkillCardSlotPosition.PLAYER_SLOT_2,
-                SkillCardSlotPosition.PLAYER_SLOT_3,
-            };
+            // 여기에 실제 캐릭터에 따라 카드 지정하는 매핑 로직 필요
+            List<PlayerSkillCard> deck = GetFixedDeckForCharacter(selectedCharacter);
 
-            int count = Mathf.Min(skillDeck.Count, orderedSlots.Length);
-
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < Mathf.Min(deck.Count, orderedSlots.Length); i++)
             {
-                var entry = skillDeck[i];
-                var card = entry.card;
-                int damage = entry.damage;
-                int coolTime = card.GetCoolTime();
+                var card = deck[i];
                 var slotPos = orderedSlots[i];
 
                 if (!handSlots.TryGetValue(slotPos, out var slot))
                     continue;
 
-                var runtimeCard = new PlayerSkillCardRuntime(card, damage, coolTime);
+                var runtimeCard = new PlayerSkillCardRuntime(card);
                 runtimeCard.SetHandSlot(slotPos);
                 runtimeCards[slotPos] = runtimeCard;
 
@@ -105,6 +94,40 @@ namespace Game.CombatSystem.Manager
                 slot.SetCard(runtimeCard);
             }
         }
+        private List<PlayerSkillCard> GetFixedDeckForCharacter(PlayerCharacterData data)
+        {
+            // 여기에 사용할 카드들 직접 연결
+            // (예: Resources.Load 또는 Inspector로 참조)
+            // 아래는 예시이며, 실제 카드들은 적절히 설정해야 합니다.
+
+            if (data.displayName == "Warrior")
+            {
+                return new List<PlayerSkillCard>
+        {
+            Resources.Load<PlayerSkillCard>("Cards/Warrior/Slash"),
+            Resources.Load<PlayerSkillCard>("Cards/Warrior/ShieldBash"),
+            Resources.Load<PlayerSkillCard>("Cards/Warrior/BattleCry"),
+        };
+            }
+            else if (data.displayName == "Mage")
+            {
+                return new List<PlayerSkillCard>
+        {
+            Resources.Load<PlayerSkillCard>("Cards/Mage/Fireball"),
+            Resources.Load<PlayerSkillCard>("Cards/Mage/IceBolt"),
+            Resources.Load<PlayerSkillCard>("Cards/Mage/ArcaneShield"),
+        };
+            }
+
+            // 기본값
+            return new List<PlayerSkillCard>
+    {
+        Resources.Load<PlayerSkillCard>("Cards/Common/Strike"),
+        Resources.Load<PlayerSkillCard>("Cards/Common/Block"),
+        Resources.Load<PlayerSkillCard>("Cards/Common/Focus"),
+    };
+        }
+
 
         public void RestoreCardToHand(PlayerSkillCardRuntime card)
         {
@@ -120,9 +143,7 @@ namespace Game.CombatSystem.Manager
             slot.SetCard(card);
 
             if (card is PlayerSkillCardRuntime runtimeCard && slot is PlayerHandCardSlotUI uiSlot)
-            {
                 UpdateCardUI(runtimeCard, uiSlot);
-            }
         }
 
         public void TickCoolTime()
@@ -134,9 +155,7 @@ namespace Game.CombatSystem.Manager
                 card.SetCoolTime(newCoolTime);
 
                 if (handSlots.TryGetValue(kvp.Key, out var slot) && slot is PlayerHandCardSlotUI uiSlot)
-                {
                     UpdateCardUI(card, uiSlot);
-                }
             }
         }
 
@@ -157,7 +176,6 @@ namespace Game.CombatSystem.Manager
         {
             int coolTime = runtimeCard.GetCoolTime();
             bool isCooldown = coolTime > 0;
-
             uiSlot.SetInteractable(!isCooldown);
             uiSlot.SetCoolTimeDisplay(coolTime, isCooldown);
         }
@@ -173,5 +191,7 @@ namespace Game.CombatSystem.Manager
         }
 
         public IEnumerable<IHandCardSlot> GetAllHandSlots() => handSlots?.Values;
+
+        public void EnableInput(bool isEnabled) => EnableCardInteraction(isEnabled);
     }
 }

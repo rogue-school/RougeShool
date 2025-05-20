@@ -1,51 +1,54 @@
-using UnityEngine;
 using Game.CombatSystem.Interface;
-using Game.CombatSystem.Manager;
+using Game.CombatSystem.Slot;
+using UnityEngine;
 using System.Collections;
+using Game.IManager;
 
 namespace Game.CombatSystem.State
 {
     public class CombatGameOverState : ICombatTurnState
     {
-        private readonly ICombatTurnManager controller;
+        private readonly ICombatTurnManager turnManager;
         private readonly ICombatFlowCoordinator flowCoordinator;
         private readonly ICombatStateFactory stateFactory;
+        private readonly ISlotRegistry slotRegistry;
 
         public CombatGameOverState(
-            ICombatTurnManager controller,
+            ICombatTurnManager turnManager,
             ICombatFlowCoordinator flowCoordinator,
-            ICombatStateFactory stateFactory)
+            ICombatStateFactory stateFactory,
+            ISlotRegistry slotRegistry)
         {
-            this.controller = controller;
+            this.turnManager = turnManager;
             this.flowCoordinator = flowCoordinator;
             this.stateFactory = stateFactory;
+            this.slotRegistry = slotRegistry;
         }
 
         public void EnterState()
         {
-            Debug.Log("[CombatGameOverState] 상태 진입 - 게임 오버 처리");
+            Debug.Log("[State] CombatGameOverState: 게임 오버 처리 시작");
 
-            if (controller is MonoBehaviour mono)
-                mono.StartCoroutine(HandleGameOver());
+            if (flowCoordinator is MonoBehaviour mono)
+            {
+                mono.StartCoroutine(GameOverRoutine());
+            }
             else
-                Debug.LogError("[CombatGameOverState] controller가 MonoBehaviour를 구현하지 않아 코루틴 실행 불가");
+            {
+                Debug.LogError("flowCoordinator가 MonoBehaviour가 아닙니다. Coroutine 실행 불가.");
+            }
         }
 
-        private IEnumerator HandleGameOver()
+        private IEnumerator GameOverRoutine()
         {
             yield return flowCoordinator.PerformGameOverPhase();
 
-            Debug.Log("[CombatGameOverState] 게임 오버 처리 완료 - 상태 전이 없음 또는 씬 전환 등");
-
-            // 상태 전이 없음: 게임 종료 화면에서 직접 메인 메뉴로 이동하거나 재시작 버튼 클릭 등 외부 제어로 처리.
-            // 예를 들어 외부 UI 시스템에서 컨트롤하거나 씬 로더 호출
+            // 게임 오버 이후 씬 전환 또는 UI 처리 예정
+            Debug.Log("[State] CombatGameOverState: 게임 오버 처리 완료");
         }
 
         public void ExecuteState() { }
 
-        public void ExitState()
-        {
-            Debug.Log("[CombatGameOverState] 상태 종료");
-        }
+        public void ExitState() { }
     }
 }

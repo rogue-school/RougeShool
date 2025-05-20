@@ -17,22 +17,45 @@ namespace Game.SkillCardSystem.UI
         /// <returns>생성된 SkillCardUI 인스턴스</returns>
         public static SkillCardUI CreateUI(SkillCardUI prefab, Transform parent, ISkillCard card)
         {
-            Debug.Log("[SkillCardUIFactory] 카드 UI 프리팹 인스턴스 생성 시작");
+            if (prefab == null)
+            {
+                Debug.LogError("[SkillCardUIFactory] 카드 UI 프리팹이 null입니다.");
+                return null;
+            }
+
+            if (parent == null)
+            {
+                Debug.LogError("[SkillCardUIFactory] 부모 트랜스폼이 null입니다.");
+                return null;
+            }
+
+            if (card == null)
+            {
+                Debug.LogError("[SkillCardUIFactory] 카드 데이터가 null입니다.");
+                return null;
+            }
+
+            Debug.Log("[SkillCardUIFactory] 카드 UI 인스턴스 생성 시작");
 
             var instance = Object.Instantiate(prefab, parent, false);
             if (instance == null)
             {
-                Debug.LogError("[SkillCardUIFactory] 인스턴스화 실패");
+                Debug.LogError("[SkillCardUIFactory] 인스턴스화 실패 - 프리팹 오류?");
                 return null;
             }
 
             instance.SetCard(card);
-            Debug.Log("[SkillCardUIFactory] 카드 UI 인스턴스화 및 카드 설정 완료");
 
+            // RectTransform 초기화
             RectTransform rect = instance.GetComponent<RectTransform>();
-            rect.anchoredPosition = Vector2.zero;
-            rect.localRotation = Quaternion.identity;
-            rect.localScale = Vector3.one;
+            if (rect != null)
+            {
+                rect.anchoredPosition = Vector2.zero;
+                rect.localRotation = Quaternion.identity;
+                rect.localScale = Vector3.one;
+            }
+
+            Debug.Log($"[SkillCardUIFactory] 카드 UI 생성 완료 → {card.GetCardName()}");
 
             return instance;
         }

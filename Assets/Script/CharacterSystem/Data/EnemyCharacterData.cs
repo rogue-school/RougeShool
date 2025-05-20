@@ -18,7 +18,7 @@ namespace Game.CharacterSystem.Data
         public class SkillCardEntry
         {
             public EnemySkillCard card;
-            public int damage;
+            // public int damage; // 제거됨
         }
 
         [Header("고정 스킬 카드 덱")]
@@ -26,6 +26,10 @@ namespace Game.CharacterSystem.Data
 
         [Header("패시브 이펙트 (Regen, Buff 등)")]
         [SerializeField] private List<ScriptableObject> passiveEffects = new();
+
+        /// <summary>
+        /// 스킬 카드 덱에서 무작위 카드 1장을 반환합니다.
+        /// </summary>
         public SkillCardEntry GetRandomEntry()
         {
             if (skillDeck == null || skillDeck.Count == 0)
@@ -38,20 +42,16 @@ namespace Game.CharacterSystem.Data
             return skillDeck[index];
         }
 
+        /// <summary>
+        /// 주어진 카드의 데미지를 반환합니다. 카드 자체의 CardData에서 추출됩니다.
+        /// </summary>
         public int GetDamageOfCard(EnemySkillCard card)
         {
-            foreach (var entry in skillDeck)
-            {
-                if (entry.card == card)
-                    return entry.damage;
-            }
-
-            Debug.LogWarning($"[EnemyCharacterData] 카드 '{card?.name}'에 대한 데미지가 정의되지 않았습니다.");
-            return 5;
+            return card?.CardData.Damage ?? 5; // 기본값 5
         }
 
         public List<SkillCardEntry> GetAllCards() => skillDeck;
 
-        public List<ScriptableObject> GetPassiveEffects() => passiveEffects; // 필요 시 public getter도 제공
+        public List<ScriptableObject> GetPassiveEffects() => passiveEffects;
     }
 }

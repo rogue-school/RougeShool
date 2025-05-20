@@ -5,16 +5,17 @@ using Game.CombatSystem.Interface;
 using Game.CombatSystem.Manager;
 using Game.CombatSystem.Stage;
 using Game.CharacterSystem.Interface;
+using Game.SkillCardSystem.UI;
 
 namespace Game.Utility
 {
-    /// <summary>
-    /// 전투 씬에서 필요한 모든 매니저와 컴포넌트를 찾아 의존성 주입을 수행합니다.
-    /// </summary>
     public class CombatBootstrapInstaller : MonoBehaviour
     {
-        [Header("전투 흐름 관리자 (Flow Coordinator)")]
+        [Header("전투 흐름 관리자")]
         [SerializeField] private CombatFlowCoordinator combatFlowCoordinator;
+
+        [Header("SkillCard UI 프리팹")]
+        [SerializeField] private SkillCardUI skillCardUIPrefab;
 
         private void Start()
         {
@@ -47,14 +48,10 @@ namespace Game.Utility
 
             if (playerManager == null) return;
 
-            // PlayerCharacterInitializer에 PlayerManager 주입
             playerInitializer?.Inject(playerManager);
-
-            // PlayerManager에 핸드 매니저 연결
             if (playerHandManager != null)
                 playerManager.SetPlayerHandManager(playerHandManager);
 
-            // StageManager <-> SpawnerManager 상호 주입
             if (stageManager is StageManager concreteStage &&
                 spawner is EnemySpawnerManager concreteSpawner &&
                 enemyManager != null && enemyHandManager != null)
@@ -63,21 +60,20 @@ namespace Game.Utility
                 concreteSpawner.InjectStageManager(concreteStage);
             }
 
-            // CombatFlowCoordinator에 모든 의존성 주입
+            // 프리팹 주입 포함
             combatFlowCoordinator.Inject(
-                slotInitializer,
-                playerInitializer,
-                enemyInitializer,
-                playerHandManager,
-                enemyHandManager,
-                enemyManager,
-                spawner,
-                turnManager,
-                stageManager,
-                stateFactory,
                 slotRegistry,
-                playerManager
+                enemyHandManager,
+                playerHandManager,
+                spawner,
+                playerManager,
+                stageManager,
+                enemyManager,
+                turnManager,
+                stateFactory
             );
+
+            combatFlowCoordinator.InjectUI(skillCardUIPrefab);
         }
 
         private T Resolve<T>() where T : class
@@ -90,13 +86,10 @@ namespace Game.Utility
             }
             return null;
         }
-
-        /// <summary>
-        /// 외부에서 호출 가능한 수동 초기화 메서드
-        /// </summary>
         public void Initialize()
         {
             InjectDependencies();
         }
     }
 }
+

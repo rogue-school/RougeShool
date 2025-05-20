@@ -42,15 +42,26 @@ namespace Game.CombatSystem.State
 
         private IEnumerator PrepareRoutine()
         {
-            yield return flowCoordinator.PerformCombatPreparation();
+            bool prepareSuccess = false;
+            yield return flowCoordinator.PerformCombatPreparation(success => prepareSuccess = success);
+
+            if (!prepareSuccess)
+            {
+                Debug.LogError("[State] CombatPrepareState: 준비 실패 → 상태 전이 중단");
+                yield break;
+            }
 
             Debug.Log("[State] CombatPrepareState: 준비 완료, 입력 상태로 전이");
             var nextState = stateFactory.CreatePlayerInputState();
             turnManager.RequestStateChange(nextState);
         }
 
+
         public void ExecuteState() { }
 
-        public void ExitState() { }
+        public void ExitState()
+        {
+            Debug.Log("[State] CombatPrepareState: 상태 종료");
+        }
     }
 }

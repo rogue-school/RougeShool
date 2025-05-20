@@ -22,6 +22,7 @@ namespace Game.IManager
         void TickCoolTime();
         void RestoreCardToHand(PlayerSkillCardRuntime card);
         void EnableCardInteraction(bool isEnabled);
+        void EnableInput(bool isEnabled);
 
         /// <summary>
         /// 현재 핸드 슬롯들을 반환합니다.

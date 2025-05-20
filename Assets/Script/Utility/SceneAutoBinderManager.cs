@@ -28,7 +28,7 @@ namespace Game.Utility
             if (enemyHandManager == null)
                 Debug.LogWarning("[SceneAutoBinderManager] EnemyHandManager를 찾지 못했습니다.");
 
-            //Debug.Log("[SceneAutoBinderManager] 자동 바인딩 완료");
+            Debug.Log("[SceneAutoBinderManager] 자동 바인딩 완료");
         }
         public void Initialize()
         {
@@ -36,7 +36,7 @@ namespace Game.Utility
             playerHandManager ??= FindFirstObjectByType<PlayerHandManager>();
             enemyHandManager ??= FindFirstObjectByType<EnemyHandManager>();
 
-            //Debug.Log("[SceneAutoBinderManager] 수동 바인딩 완료");
+            Debug.Log("[SceneAutoBinderManager] 수동 바인딩 완료");
         }
 
     }

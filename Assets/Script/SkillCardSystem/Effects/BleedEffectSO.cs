@@ -6,7 +6,7 @@ using Game.CombatSystem.Interface;
 
 namespace Game.SkillCardSystem.Effects
 {
-    [CreateAssetMenu(menuName = "CardEffects/BleedEffect")]
+    [CreateAssetMenu(menuName = "Game/CardEffects/BleedEffect")]
     public class BleedEffectSO : ScriptableObject, ICardEffect
     {
         [SerializeField] private int bleedDamage = 1;

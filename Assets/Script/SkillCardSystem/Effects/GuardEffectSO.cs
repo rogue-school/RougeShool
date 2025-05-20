@@ -5,7 +5,7 @@ using Game.SkillCardSystem.Interface;
 
 namespace Game.SkillCardSystem.Effects
 {
-    [CreateAssetMenu(menuName = "CardEffects/GuardEffect")]
+    [CreateAssetMenu(menuName = "Game/CardEffects/GuardEffect")]
     public class GuardEffectSO : ScriptableObject, ICardEffect
     {
         public void ExecuteEffect(CharacterBase caster, CharacterBase target, int value, ITurnStateController controller = null)

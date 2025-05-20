@@ -223,7 +223,7 @@ GameObject:
   - component: {fileID: 2107292546744318623}
   - component: {fileID: 5437476015204815559}
   m_Layer: 5
-  m_Name: Damege
+  m_Name: Damage
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -401,7 +401,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cardNameText: {fileID: 3075953388335426547}
-  powerText: {fileID: 5437476015204815559}
+  damageText: {fileID: 5437476015204815559}
   cardArtImage: {fileID: 7159907467691358965}
   coolTimeOverlay: {fileID: 0}
   coolTimeText: {fileID: 0}

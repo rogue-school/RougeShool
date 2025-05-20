@@ -51,7 +51,7 @@ namespace Game.SkillCardSystem.Executor
                 int power = card.GetEffectPower(effect);
                 effect.ExecuteEffect(casterChar, targetChar, power);
 
-                Debug.Log($"[CardExecutor] ½ÇÇàµÊ: {card.GetCardName()} ¡æ {effect.GetType().Name}, power: {power}");
+                Debug.Log($"[CardExecutor] ½ÇÇàµÊ: {card.CardData.Name} ¡æ {effect.GetType().Name}, power: {power}");
             }
         }
     }

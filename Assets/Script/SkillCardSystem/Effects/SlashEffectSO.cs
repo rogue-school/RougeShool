@@ -5,7 +5,7 @@ using Game.CombatSystem.Interface;
 
 namespace Game.SkillCardSystem.Effects
 {
-    [CreateAssetMenu(menuName = "CardEffects/SlashEffect")]
+    [CreateAssetMenu(menuName = "Game/CardEffects/SlashEffect")]
     public class SlashEffectSO : ScriptableObject, ICardEffect
     {
         [SerializeField] private int baseDamage = 5;

@@ -1,30 +1,25 @@
-using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.UI;
+using Game.CombatSystem.Slot;
 
 namespace Game.CombatSystem.Interface
 {
     public interface ICombatCardSlot
     {
-        void SetCard(ISkillCard card);
-        void Clear();
-        void SetCardUI(SkillCardUI cardUI);
-        SkillCardUI GetCardUI();
-        ISkillCard GetCard();
-
         CombatSlotPosition GetCombatPosition();
         SlotOwner GetOwner();
 
-        /// <summary>
-        /// 슬롯에 있는 카드를 자동 실행합니다.
-        /// </summary>
-        void ExecuteCardAutomatically();
+        ISkillCard GetCard();
+        void SetCard(ISkillCard card);
 
-        void ExecuteCardAutomatically(ICardExecutionContext context);
+        SkillCardUI GetCardUI();
+        void SetCardUI(SkillCardUI cardUI);
 
-        /// <summary>
-        /// 슬롯에 카드가 존재하는지 여부를 반환합니다.
-        /// </summary>
+        void Clear();
         bool HasCard();
+        bool IsEmpty();
+
+        void ExecuteCardAutomatically();
+        void ExecuteCardAutomatically(ICardExecutionContext ctx);
     }
 }

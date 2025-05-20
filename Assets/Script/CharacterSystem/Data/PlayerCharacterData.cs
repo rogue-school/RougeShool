@@ -1,6 +1,7 @@
 using System.Collections.Generic;
-using Game.SkillCardSystem.Core;
 using UnityEngine;
+using Game.SkillCardSystem.Data;
+using Game.SkillCardSystem.Deck;
 
 namespace Game.CharacterSystem.Data
 {
@@ -11,13 +12,7 @@ namespace Game.CharacterSystem.Data
         public Sprite portrait;
         public int maxHP;
 
-        [System.Serializable]
-        public class SkillCardEntry
-        {
-            public PlayerSkillCard card;
-            public int damage;
-        }
+        public PlayerSkillDeck skillDeck;
 
-        public List<SkillCardEntry> skillDeck;
     }
 }

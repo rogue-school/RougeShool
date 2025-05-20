@@ -6,7 +6,7 @@ using Game.SkillCardSystem.Interface;
 
 namespace Game.SkillCardSystem.Effects
 {
-    [CreateAssetMenu(menuName = "CardEffects/ForceNextSlotEffect")]
+    [CreateAssetMenu(menuName = "Game/CardEffects/ForceNextSlotEffect")]
     public class ForceNextSlotEffectSO : ScriptableObject, ICardEffect
     {
         public void ExecuteEffect(CharacterBase caster, CharacterBase target, int value, ITurnStateController controller = null)

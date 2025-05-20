@@ -1,56 +1,48 @@
 using System.Collections.Generic;
 using UnityEngine;
-using Game.SkillCardSystem.Slot;
-using Game.CombatSystem.Slot;
+using Game.SkillCardSystem.Data;
 using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Interface;
+using Game.CombatSystem.Slot;
+using Game.SkillCardSystem.Slot;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Core;
+using Game.CombatSystem.Core;
 
 namespace Game.SkillCardSystem.Runtime
 {
     public class RuntimeSkillCard : ISkillCard
     {
-        private string cardName;
-        private string description;
-        private Sprite artwork;
-        private int power;
-        private int coolTime;
+        public SkillCardData CardData { get; private set; }
+
         private List<ICardEffect> effects;
         private SlotOwner owner;
 
-        private SkillCardSlotPosition? handSlot = null;
-        private CombatSlotPosition? combatSlot = null;
+        private SkillCardSlotPosition? handSlot;
+        private CombatSlotPosition? combatSlot;
 
-        public RuntimeSkillCard(
-            string name,
-            string desc,
-            Sprite art,
-            List<ICardEffect> effects,
-            int power,
-            int coolTime,
-            SlotOwner owner
-        )
+        public RuntimeSkillCard(SkillCardData cardData, List<ICardEffect> effects, SlotOwner owner)
         {
-            this.cardName = name;
-            this.description = desc;
-            this.artwork = art;
-            this.effects = effects != null ? new List<ICardEffect>(effects) : new List<ICardEffect>();
-            this.power = power;
-            this.coolTime = coolTime;
+            this.CardData = cardData;
+            this.effects = effects ?? new List<ICardEffect>();
             this.owner = owner;
         }
 
-        public string GetCardName() => cardName;
-        public string GetDescription() => description;
-        public Sprite GetArtwork() => artwork;
-        public int GetCoolTime() => coolTime;
-        public void SetCoolTime(int time) => coolTime = time;
-        public int GetEffectPower(ICardEffect effect) => power;
-        public List<ICardEffect> CreateEffects() => new List<ICardEffect>(effects);
-        public SlotOwner GetOwner() => owner;
+        // ----- ISkillCard 메서드 구현 -----
 
-        public void SetPower(int value) => power = value;
+        public string GetCardName() => CardData.Name;
+
+        public string GetDescription() => CardData.Description;
+
+        public Sprite GetArtwork() => CardData.Artwork;
+
+        public int GetCoolTime() => CardData.CoolTime;
+
+        public int GetEffectPower(ICardEffect effect) => 10; // 기본값 또는 커스터마이즈
+
+        public List<ICardEffect> CreateEffects() => new List<ICardEffect>(effects);
+
+        public SlotOwner GetOwner() => owner;
 
         public void SetHandSlot(SkillCardSlotPosition slot) => handSlot = slot;
         public SkillCardSlotPosition? GetHandSlot() => handSlot;
@@ -60,45 +52,35 @@ namespace Game.SkillCardSystem.Runtime
 
         public void ExecuteCardAutomatically(ICardExecutionContext context)
         {
-            if (context == null)
-            {
-                Debug.LogError("[RuntimeSkillCard] context가 null입니다.");
-                return;
-            }
-
-            CharacterBase caster = GetOwner(context) as CharacterBase;
-            CharacterBase target = GetTarget(context) as CharacterBase;
+            var caster = GetOwner(context) as CharacterBase;
+            var target = GetTarget(context) as CharacterBase;
 
             if (caster == null || target == null || target.IsDead())
             {
-                Debug.LogWarning("[RuntimeSkillCard] 유효한 시전자 또는 대상이 없거나 대상이 사망 상태입니다.");
+                Debug.LogWarning("[RuntimeSkillCard] 유효하지 않은 대상입니다.");
                 return;
             }
 
-            Debug.Log($"[RuntimeSkillCard] 자동 실행 시작 → {cardName}, 공격력: {power}, 효과 수: {effects.Count}");
-
             foreach (var effect in effects)
             {
-                if (effect == null) continue;
-
                 int value = GetEffectPower(effect);
                 effect.ExecuteEffect(caster, target, value);
-                Debug.Log($" → 효과 적용: {effect.GetType().Name}, 값: {value}");
             }
+        }
+
+        public void ExecuteSkill()
+        {
+            ExecuteCardAutomatically(new DefaultCardExecutionContext(this));
         }
 
         public ICharacter GetOwner(ICardExecutionContext context)
         {
-            return owner == SlotOwner.PLAYER
-                ? context.GetPlayer()
-                : context.GetEnemy();
+            return owner == SlotOwner.PLAYER ? context.GetPlayer() : context.GetEnemy();
         }
 
         public ICharacter GetTarget(ICardExecutionContext context)
         {
-            return owner == SlotOwner.PLAYER
-                ? context.GetEnemy()
-                : context.GetPlayer();
+            return owner == SlotOwner.PLAYER ? context.GetEnemy() : context.GetPlayer();
         }
     }
 }

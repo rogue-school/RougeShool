@@ -52,14 +52,26 @@ namespace Game.CombatSystem.Manager
                 Debug.Log($"[EnemyHandManager] 적 슬롯 {handSlots.Count}개 초기화 완료");
 
             if (cardUIPrefab == null)
-                cardUIPrefab = Resources.Load<SkillCardUI>("UI/SkillCardUI");
+            {
+                cardUIPrefab = Resources.Load<SkillCardUI>("Prefab/EnemySkillCard");
+                if (cardUIPrefab == null)
+                    Debug.LogError("[EnemyHandManager] cardUIPrefab 로드 실패 - 'Resources/Prefab/EnemySkillCard'가 존재하지 않거나 SkillCardUI가 붙어있지 않음");
+            }
         }
+
 
         public void GenerateInitialHand()
         {
             if (handSlots.Count == 0)
             {
                 Debug.LogWarning("[EnemyHandManager] 핸드 슬롯이 비어있습니다. 초기 핸드 생성 불가.");
+                return;
+            }
+
+            // 이미 슬롯 1에 카드가 있으면 핸드가 있다고 판단
+            if (GetSlotCard(SkillCardSlotPosition.ENEMY_SLOT_1) != null)
+            {
+                Debug.Log("[EnemyHandManager] 이미 초기 핸드가 생성되어 있습니다. 중복 생성을 방지합니다.");
                 return;
             }
 
@@ -158,6 +170,12 @@ namespace Game.CombatSystem.Manager
 
         private void CreateCardInSlot(SkillCardSlotPosition pos)
         {
+            if (cardUIPrefab == null)
+            {
+                Debug.LogError($"[EnemyHandManager] 카드 생성 실패 - cardUIPrefab이 null입니다. Resources/Prefab/EnemySkillCard 경로 또는 인스펙터 확인 필요");
+                return;
+            }
+
             if (!handSlots.TryGetValue(pos, out var slot))
             {
                 Debug.LogWarning($"[EnemyHandManager] 카드 생성 실패 - 슬롯 {pos} 없음");
@@ -183,17 +201,31 @@ namespace Game.CombatSystem.Manager
                 return;
             }
 
-            var runtimeCard = SkillCardFactory.CreateEnemyCard(entry.card, entry.damage);
+            int damage = entry.card.CardData.Damage;
+            var runtimeCard = SkillCardFactory.CreateEnemyCard(entry.card, damage);
+            if (runtimeCard == null)
+            {
+                Debug.LogError("[EnemyHandManager] SkillCardFactory.CreateEnemyCard()에서 카드 생성 실패 - null 반환");
+                return;
+            }
+
             runtimeCard.SetHandSlot(pos);
 
+            // Instantiate 전에 null 체크 통과함
             var cardUI = Instantiate(cardUIPrefab, ((MonoBehaviour)slot).transform);
-            cardUI.SetCard(runtimeCard);
+            if (cardUI == null)
+            {
+                Debug.LogError("[EnemyHandManager] Instantiate 결과 cardUI가 null입니다.");
+                return;
+            }
 
+            cardUI.SetCard(runtimeCard);
             slot.SetCard(runtimeCard);
             cardUIs[pos] = cardUI;
 
             Debug.Log($"[EnemyHandManager] {pos}에 카드 생성 완료");
         }
+
 
         private bool TryShift(SkillCardSlotPosition from, SkillCardSlotPosition to)
         {
@@ -238,6 +270,11 @@ namespace Game.CombatSystem.Manager
             Debug.Log($"[TryShift] 카드 이동 성공: {from} → {to}");
             return true;
 
+        }
+        public void ClearHand()
+        {
+            ClearAllSlots();
+            ClearAllUI();
         }
     }
 }

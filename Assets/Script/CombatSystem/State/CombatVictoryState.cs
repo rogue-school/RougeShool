@@ -1,64 +1,64 @@
-using UnityEngine;
 using Game.CombatSystem.Interface;
-using Game.CombatSystem.Manager;
+using Game.CombatSystem.Slot;
+using UnityEngine;
 using System.Collections;
+using Game.IManager;
 
 namespace Game.CombatSystem.State
 {
     public class CombatVictoryState : ICombatTurnState
     {
-        private readonly ICombatTurnManager controller;
+        private readonly ICombatTurnManager turnManager;
         private readonly ICombatFlowCoordinator flowCoordinator;
         private readonly ICombatStateFactory stateFactory;
+        private readonly ISlotRegistry slotRegistry;
 
         public CombatVictoryState(
-            ICombatTurnManager controller,
+            ICombatTurnManager turnManager,
             ICombatFlowCoordinator flowCoordinator,
-            ICombatStateFactory stateFactory)
+            ICombatStateFactory stateFactory,
+            ISlotRegistry slotRegistry)
         {
-            this.controller = controller;
+            this.turnManager = turnManager;
             this.flowCoordinator = flowCoordinator;
             this.stateFactory = stateFactory;
+            this.slotRegistry = slotRegistry;
         }
 
         public void EnterState()
         {
-            Debug.Log("[CombatVictoryState] 상태 진입 - 승리 처리 및 다음 적 준비");
+            Debug.Log("[State] CombatVictoryState: 승리 처리 시작");
 
-            if (controller is MonoBehaviour mono)
-                mono.StartCoroutine(HandleVictory());
+            if (flowCoordinator is MonoBehaviour mono)
+            {
+                mono.StartCoroutine(VictoryRoutine());
+            }
             else
-                Debug.LogError("[CombatVictoryState] controller가 MonoBehaviour를 구현하지 않아 코루틴 실행 불가");
+            {
+                Debug.LogError("flowCoordinator가 MonoBehaviour가 아닙니다. Coroutine 실행 불가.");
+            }
         }
 
-        private IEnumerator HandleVictory()
+        private IEnumerator VictoryRoutine()
         {
             yield return flowCoordinator.PerformVictoryPhase();
 
-            bool hasNextEnemy = flowCoordinator.CheckHasNextEnemy();
-            ICombatTurnState nextState;
-
-            if (hasNextEnemy)
+            // 다음 적이 있으면 PrepareState, 없으면 현재 전투 종료
+            if (flowCoordinator.CheckHasNextEnemy())
             {
-                nextState = stateFactory.CreatePrepareState();
-                Debug.Log("[CombatVictoryState] 다음 적 존재 → Prepare 상태로 전이");
+                Debug.Log("[State] 다음 적이 있어 PrepareState로 전이");
+                var nextState = stateFactory.CreatePrepareState();
+                turnManager.RequestStateChange(nextState);
             }
             else
             {
-                Debug.Log("[CombatVictoryState] 모든 적 처치 → 스테이지 종료 처리 가능");
-                // 다음 스테이지 전환 또는 결과 화면 등으로 이동 가능
-                // 여기서 상태 전이를 생략하거나 외부 시스템으로 넘길 수 있음
-                yield break;
+                Debug.Log("[State] 전투 종료, Victory 상태 종료");
+                // TODO: 전투 UI 종료 처리 등
             }
-
-            controller.RequestStateChange(nextState);
         }
 
         public void ExecuteState() { }
 
-        public void ExitState()
-        {
-            Debug.Log("[CombatVictoryState] 상태 종료");
-        }
+        public void ExitState() { }
     }
 }

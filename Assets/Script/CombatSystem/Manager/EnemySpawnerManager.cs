@@ -58,6 +58,16 @@ namespace Game.CombatSystem.Manager
                 return null;
             }
 
+            var existingEnemy = slot.GetCharacter() as EnemyCharacter;
+
+            // 적이 이미 존재하고 살아있으면 재사용
+            if (existingEnemy != null && !existingEnemy.IsDead())
+            {
+                Debug.LogWarning("[EnemySpawnerManager] 살아있는 적이 이미 존재합니다. 재생성하지 않습니다.");
+                return existingEnemy;
+            }
+
+            // 기존 자식 오브젝트 제거
             Debug.Log("[EnemySpawnerManager] 기존 슬롯 자식 오브젝트 제거 시작");
             foreach (Transform child in slot.GetTransform())
                 Destroy(child.gameObject);

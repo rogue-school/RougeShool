@@ -38,7 +38,7 @@ namespace Game.CombatSystem.Manager
 
             if (!TryGetNextEnemyData(out var enemyData))
             {
-                Debug.LogWarning("[StageManager] 다음 적 데이터를 가져올 수 없습니다. 적이 없거나 인덱스 초과");
+                Debug.LogWarning("[StageManager] 다음 적 데이터를 가져올 수 없습니다.");
                 return;
             }
 
@@ -51,29 +51,26 @@ namespace Game.CombatSystem.Manager
             var enemy = spawnerManager.SpawnEnemy(enemyData);
             if (enemy == null)
             {
-                Debug.LogError("[StageManager] SpawnEnemy 실패 - null 반환됨");
-                return;
+                Debug.LogError($"[StageManager] SpawnEnemy 실패 - 적 생성 실패: {enemyData.displayName}");
+                return; // **핵심: 여기서 바로 중단**
             }
 
             RegisterEnemy(enemy);
             SetupEnemyHand(enemy);
+            Debug.Log($"[StageManager] 적 소환 완료: {enemyData.displayName} (Index: {currentEnemyIndex})");
 
-            Debug.Log($"[StageManager] 적 소환 완료: {enemyData.displayName} (Index: {currentEnemyIndex - 1})");
+            currentEnemyIndex++; // **정상 생성 후에만 인덱스 증가**
         }
+
+
 
         private bool TryGetNextEnemyData(out EnemyCharacterData data)
         {
             data = null;
 
-            if (currentStage == null)
+            if (currentStage == null || currentStage.enemies == null || currentStage.enemies.Count == 0)
             {
-                Debug.LogError("[StageManager] currentStage가 null입니다.");
-                return false;
-            }
-
-            if (currentStage.enemies == null || currentStage.enemies.Count == 0)
-            {
-                Debug.LogError("[StageManager] 스테이지 적 리스트가 비어 있습니다.");
+                Debug.LogError("[StageManager] 스테이지 또는 적 리스트가 비어 있습니다.");
                 return false;
             }
 
@@ -83,10 +80,10 @@ namespace Game.CombatSystem.Manager
                 return false;
             }
 
-            data = currentStage.enemies[currentEnemyIndex++];
+            data = currentStage.enemies[currentEnemyIndex];
             if (data == null)
             {
-                Debug.LogError($"[StageManager] Enemy 데이터가 null입니다. Index: {currentEnemyIndex - 1}");
+                Debug.LogError($"[StageManager] Enemy 데이터가 null입니다. Index: {currentEnemyIndex}");
                 return false;
             }
 

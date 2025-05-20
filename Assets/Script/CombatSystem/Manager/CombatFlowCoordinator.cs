@@ -1,15 +1,22 @@
 using UnityEngine;
+using System;
 using System.Collections;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Slot;
 using Game.IManager;
 using Game.CharacterSystem.Interface;
+using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.UI;
 
 namespace Game.CombatSystem.Manager
 {
     public class CombatFlowCoordinator : MonoBehaviour, ICombatFlowCoordinator
     {
+
+        [Header("UI 프리팹")]
+        [SerializeField] private SkillCardUI skillCardUIPrefab;
+
         private ISlotRegistry slotRegistry;
         private IEnemyHandManager enemyHandManager;
         private IPlayerHandManager playerHandManager;
@@ -17,15 +24,19 @@ namespace Game.CombatSystem.Manager
         private IPlayerManager playerManager;
         private IStageManager stageManager;
         private IEnemyManager enemyManager;
+        private ICombatTurnManager turnManager;
+        private ICombatStateFactory stateFactory;
 
-        public void InjectDependencies(
+        public void Inject(
             ISlotRegistry slotRegistry,
             IEnemyHandManager enemyHandManager,
             IPlayerHandManager playerHandManager,
             IEnemySpawnerManager spawnerManager,
             IPlayerManager playerManager,
             IStageManager stageManager,
-            IEnemyManager enemyManager)
+            IEnemyManager enemyManager,
+            ICombatTurnManager turnManager,
+            ICombatStateFactory stateFactory)
         {
             this.slotRegistry = slotRegistry;
             this.enemyHandManager = enemyHandManager;
@@ -34,150 +45,152 @@ namespace Game.CombatSystem.Manager
             this.playerManager = playerManager;
             this.stageManager = stageManager;
             this.enemyManager = enemyManager;
-
-            if (slotRegistry == null || enemyHandManager == null || playerHandManager == null ||
-                spawnerManager == null || playerManager == null || stageManager == null || enemyManager == null)
-            {
-                Debug.LogError("[CombatFlowCoordinator] 의존성 주입 실패: 일부 구성 요소가 null입니다.");
-            }
+            this.turnManager = turnManager;
+            this.stateFactory = stateFactory;
         }
 
-        public IEnumerator PerformCombatPreparation()
+        public void InjectUI(SkillCardUI prefab)
         {
-            Debug.Log("[Flow] 전투 준비: 적 소환 + 핸드 생성 + 슬롯 배치");
+            this.skillCardUIPrefab = prefab;
+        }
 
+        public void InjectTurnStateDependencies(ICombatTurnManager turnManager, ICombatStateFactory stateFactory)
+        {
+            this.turnManager = turnManager;
+            this.stateFactory = stateFactory;
+        }
+
+        public void StartCombatFlow()
+        {
+            turnManager.RequestStateChange(stateFactory.CreatePrepareState());
+        }
+
+        public IEnumerator PerformCombatPreparation() => PerformCombatPreparation(null);
+
+        public IEnumerator PerformCombatPreparation(Action<bool> onComplete = null)
+        {
+            Debug.Log("[Flow] 전투 준비: 플레이어 생성 → 적 소환 → 핸드 준비 → 슬롯 배치");
+
+            // 1. 플레이어 생성
+            playerManager.CreateAndRegisterPlayer();  // 플레이어 오브젝트 생성 및 핸드 매니저 초기화 포함
+            yield return null;
+
+            // 2. 적 생성
             spawnerManager.SpawnInitialEnemy();
             yield return null;
 
-            enemyHandManager.GenerateInitialHand();
-            yield return null;
+            // 3. 적 카드 확인
+            var enemy = enemyManager.GetEnemy();
+            if (enemy == null)
+            {
+                Debug.LogError("[Flow] 적 생성 실패: EnemyManager에 없음");
+                onComplete?.Invoke(false);
+                yield break;
+            }
 
             var card = enemyHandManager.GetSlotCard(SkillCardSlotPosition.ENEMY_SLOT_1);
-            if (card != null)
-            {
-                var slot = Random.value < 0.5f ? CombatSlotPosition.FIRST : CombatSlotPosition.SECOND;
-                var combatSlot = slotRegistry?.GetCombatSlot(slot);
+            var ui = enemyHandManager.GetCardUI(0) as SkillCardUI;
 
-                if (combatSlot != null && combatSlot.IsEmpty())
-                {
-                    combatSlot.SetCard(card);
-                    Debug.Log($"[Flow] 적 카드 '{card.GetCardName()}' → 전투 슬롯 {slot} 배치 완료");
-                }
-                else
-                {
-                    Debug.LogWarning($"[Flow] 전투 슬롯 {slot}이 이미 사용 중이거나 찾을 수 없습니다.");
-                }
-            }
-            else
+            if (card == null || ui == null)
             {
-                Debug.LogWarning("[Flow] 적 슬롯 1에 카드 없음");
+                Debug.LogError("[Flow] EnemyHandManager에서 카드 또는 UI 가져오기 실패");
+                LogEnemyHandSlots();
+                onComplete?.Invoke(false);
+                yield break;
             }
 
-            yield return null;
+            // 4. 적 카드 슬롯 배치
+            CombatSlotPosition targetSlot = CombatSlotPosition.FIRST;
+            var combatSlot = slotRegistry.GetCombatSlot(targetSlot);
+
+            if (combatSlot == null || !combatSlot.IsEmpty())
+            {
+                targetSlot = CombatSlotPosition.SECOND;
+                combatSlot = slotRegistry.GetCombatSlot(targetSlot);
+            }
+
+            if (combatSlot == null || !combatSlot.IsEmpty())
+            {
+                Debug.LogError("[Flow] 사용 가능한 전투 슬롯 없음");
+                onComplete?.Invoke(false);
+                yield break;
+            }
+
+            combatSlot.SetCard(card);
+            combatSlot.SetCardUI(ui);
+
+            ui.transform.SetParent(((MonoBehaviour)combatSlot).transform);
+            ui.transform.localPosition = Vector3.zero;
+            ui.transform.localScale = Vector3.one;
+
+            Debug.Log($"[Flow] 카드 '{card.GetCardName()}' → 전투 슬롯 {targetSlot} 배치 및 UI 이동 완료");
+
+            onComplete?.Invoke(true);
+        }
+
+        private void LogEnemyHandSlots()
+        {
+            Debug.Log("[Debug] EnemyHand 슬롯 상태 출력:");
+            foreach (SkillCardSlotPosition pos in Enum.GetValues(typeof(SkillCardSlotPosition)))
+            {
+                var slotCard = enemyHandManager.GetSlotCard(pos);
+                Debug.Log($" → {pos}: {(slotCard != null ? slotCard.CardData.Name : "비어 있음")}");
+            }
         }
 
         public IEnumerator EnablePlayerInput()
         {
-            Debug.Log("[Flow] 플레이어 입력 활성화");
             playerHandManager.EnableInput(true);
             yield return null;
         }
 
         public IEnumerator DisablePlayerInput()
         {
-            Debug.Log("[Flow] 플레이어 입력 비활성화");
             playerHandManager.EnableInput(false);
             yield return null;
         }
 
         public IEnumerator PerformFirstAttack()
         {
-            Debug.Log("[Flow] 선공 처리 시작");
-
-            var firstSlot = slotRegistry?.GetCombatSlot(CombatSlotPosition.FIRST);
-            if (firstSlot == null || firstSlot.IsEmpty())
-            {
-                Debug.LogWarning("[Flow] 선공 슬롯 비어 있음 - 스킵");
-                yield break;
-            }
-
-            var card = firstSlot.GetCard();
-            if (card == null)
-            {
-                Debug.LogWarning("[Flow] 선공 슬롯에 카드 없음");
-                yield break;
-            }
-
-            card.ExecuteSkill(); // 실제 공격 로직 수행 (내부에서 대상 판단 및 실행)
+            var slot = slotRegistry.GetCombatSlot(CombatSlotPosition.FIRST);
+            var card = slot?.GetCard();
+            card?.ExecuteSkill();
             yield return new WaitForSeconds(0.5f);
-
-            firstSlot.Clear();
-            Debug.Log("[Flow] 선공 슬롯 정리 완료");
-
-            yield return null;
+            slot?.Clear();
         }
 
         public IEnumerator PerformSecondAttack()
         {
-            Debug.Log("[Flow] 후공 처리 시작");
-
-            var secondSlot = slotRegistry?.GetCombatSlot(CombatSlotPosition.SECOND);
-            if (secondSlot == null || secondSlot.IsEmpty())
-            {
-                Debug.LogWarning("[Flow] 후공 슬롯 비어 있음 - 스킵");
-                yield break;
-            }
-
-            var card = secondSlot.GetCard();
-            if (card == null)
-            {
-                Debug.LogWarning("[Flow] 후공 슬롯에 카드 없음");
-                yield break;
-            }
-
-            card.ExecuteSkill(); // 실제 공격 로직 수행
+            var slot = slotRegistry.GetCombatSlot(CombatSlotPosition.SECOND);
+            var card = slot?.GetCard();
+            card?.ExecuteSkill();
             yield return new WaitForSeconds(0.5f);
-
-            secondSlot.Clear();
-            Debug.Log("[Flow] 후공 슬롯 정리 완료");
-
-            yield return null;
+            slot?.Clear();
         }
 
         public IEnumerator PerformResultPhase()
         {
-            Debug.Log("[Flow] 결과 처리 단계");
-
-            // 캐릭터 상태 체크
-            var player = playerManager?.GetPlayer();
-            var enemy = enemyManager?.GetEnemy();
-
-            if (player != null && player.IsDead())
+            if (IsPlayerDead())
             {
-                Debug.Log("[Flow] 플레이어 사망 - 게임 오버 상태로 전이");
-                var gameOverState = stateFactory.CreateGameOverState();
-                turnManager.RequestStateChange(gameOverState);
+                turnManager.RequestStateChange(stateFactory.CreateGameOverState());
                 yield break;
             }
 
-            if (enemy != null && enemy.IsDead())
+            if (IsEnemyDead())
             {
-                Debug.Log("[Flow] 적 사망 - 승리 상태로 전이");
-                var victoryState = stateFactory.CreateVictoryState();
-                turnManager.RequestStateChange(victoryState);
+                if (CheckHasNextEnemy())
+                    turnManager.RequestStateChange(stateFactory.CreatePrepareState());
+                else
+                    turnManager.RequestStateChange(stateFactory.CreateVictoryState());
+
                 yield break;
             }
 
-            Debug.Log("[Flow] 전투 지속 - 다시 준비 상태로 전이");
-            var prepareState = stateFactory.CreatePrepareState();
-            turnManager.RequestStateChange(prepareState);
-            yield return null;
+            turnManager.RequestStateChange(stateFactory.CreatePlayerInputState());
         }
 
         public IEnumerator PerformVictoryPhase()
         {
-            Debug.Log("[Flow] 승리 처리 - 보상 및 다음 적 준비");
-
             enemyHandManager.ClearHand();
             enemyManager.ClearEnemy();
 
@@ -185,14 +198,11 @@ namespace Game.CombatSystem.Manager
             {
                 stageManager.SpawnNextEnemy();
                 yield return new WaitForSeconds(0.5f);
-
-                var prepareState = stateFactory.CreatePrepareState();
-                turnManager.RequestStateChange(prepareState);
+                turnManager.RequestStateChange(stateFactory.CreatePrepareState());
             }
             else
             {
-                Debug.Log("[Flow] 스테이지 클리어 - 다음 스테이지 로딩");
-                // TODO: 다음 스테이지로 넘어가는 로직 작성
+                Debug.Log("[Flow] 스테이지 클리어 완료");
             }
 
             yield return null;
@@ -201,10 +211,24 @@ namespace Game.CombatSystem.Manager
         public IEnumerator PerformGameOverPhase()
         {
             Debug.Log("[Flow] 게임 오버 처리");
-
-            // UI나 씬 전환
-            // TODO: GameOver 화면 표시 또는 로비 씬 로딩
             yield return new WaitForSeconds(1.0f);
+        }
+
+        public bool IsPlayerDead()
+        {
+            var player = playerManager?.GetPlayer();
+            return player == null || player.IsDead();
+        }
+
+        public bool IsEnemyDead()
+        {
+            var enemy = enemyManager?.GetEnemy();
+            return enemy == null || enemy.IsDead();
+        }
+
+        public bool CheckHasNextEnemy()
+        {
+            return stageManager?.HasNextEnemy() ?? false;
         }
     }
 }

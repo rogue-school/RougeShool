@@ -17,5 +17,15 @@ namespace Game.CombatSystem.Interface
         /// 적 캐릭터를 반환합니다.
         /// </summary>
         IEnemyCharacter GetEnemy();
+
+        /// <summary>
+        /// 현재 카드 실행의 시전자 캐릭터를 반환합니다.
+        /// </summary>
+        ICharacter GetSourceCharacter();
+
+        /// <summary>
+        /// 현재 카드 실행의 대상 캐릭터를 반환합니다.
+        /// </summary>
+        ICharacter GetTargetCharacter();
     }
 }

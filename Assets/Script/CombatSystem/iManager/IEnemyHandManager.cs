@@ -15,6 +15,7 @@ namespace Game.IManager
         void AdvanceSlots();
         void ClearAllSlots();
         void ClearAllUI();
+        void ClearHand();
         ISkillCard GetSlotCard(SkillCardSlotPosition position);
         ISkillCard GetCardForCombat();
         ISkillCardUI GetCardUI(int index);

@@ -12,10 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30650a2f8e9c5994d84e2dd6e15b358b, type: 3}
   m_Name: 103_FilthThrow
   m_EditorClassIdentifier: 
-  cardName: "\uC624\uBB3C\uD22C\uCC99"
-  description: 
-  artwork: {fileID: -2548547513753419691, guid: dc707e8296c97b34b9d8c06b1e9af0f3, type: 3}
-  basePower: 1
-  effectObjects:
+  CardData:
+    Name: "\uC624\uBB3C \uD22C\uCC99"
+    Description: 
+    Artwork: {fileID: -2548547513753419691, guid: dc707e8296c97b34b9d8c06b1e9af0f3, type: 3}
+    CoolTime: 0
+    Damage: 1
+  effects:
   - {fileID: 11400000, guid: 21f08687b4ccb7a488b95b06178d02aa, type: 2}
   - {fileID: 11400000, guid: 48b0f7567f5bd0a41ab6649587e254b2, type: 2}

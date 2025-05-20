@@ -305,6 +305,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5fd1ad23edc2bc3428640bfdc41af74a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  skillCardUIPrefab: {fileID: 0}
 --- !u!1 &164975573
 GameObject:
   m_ObjectHideFlags: 0
@@ -350,7 +351,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerPrefab: {fileID: 6515069228709645013, guid: 8475e0b2803738446a6cb8a5b49f9ca3, type: 3}
-  defaultData: {fileID: 11400000, guid: ab1776b7ea2fc8e4483fb0df354c53d5, type: 2}
+  defaultData: {fileID: 0}
 --- !u!1 &203583034
 GameObject:
   m_ObjectHideFlags: 0
@@ -854,6 +855,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c70699d735b1963428df43904099bb3d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerPrefab: {fileID: 0}
+  handManager: {fileID: 0}
+  defaultCharacterData: {fileID: 11400000, guid: 09c242a71ef51f7479baa0e5ae122d6c, type: 2}
 --- !u!1 &713415034
 GameObject:
   m_ObjectHideFlags: 0
@@ -1685,7 +1689,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 52d87a1f48c008947a2caf5ee4a2d274, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameOverUI: {fileID: 0}
+  gameOverUI: {fileID: 1048110913}
 --- !u!1 &1048110913
 GameObject:
   m_ObjectHideFlags: 0
@@ -1982,7 +1986,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7fec5fa7649ce6e46ae5ac5c2e2a3920, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  victoryUI: {fileID: 0}
+  victoryUI: {fileID: 1048110913}
 --- !u!1 &1121632701
 GameObject:
   m_ObjectHideFlags: 0
@@ -2496,6 +2500,54 @@ RectTransform:
   m_AnchoredPosition: {x: 829, y: -122.3}
   m_SizeDelta: {x: 160, y: 155.3929}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1344925020
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1344925022}
+  - component: {fileID: 1344925021}
+  m_Layer: 0
+  m_Name: Hill
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!111 &1344925021
+Animation:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1344925020}
+  m_Enabled: 1
+  serializedVersion: 4
+  m_Animation: {fileID: 7400000, guid: 79b159f32e302e64da5fe49345a48372, type: 2}
+  m_Animations: []
+  m_WrapMode: 0
+  m_PlayAutomatically: 1
+  m_AnimatePhysics: 0
+  m_UpdateMode: 0
+  m_CullingType: 0
+--- !u!4 &1344925022
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1344925020}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 350.84442, y: 317.71436, z: -7.896804}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1350619526
 GameObject:
   m_ObjectHideFlags: 0
@@ -3153,6 +3205,8 @@ MonoBehaviour:
   stageManagerSource: {fileID: 1057591}
   victoryManagerSource: {fileID: 1115407941}
   gameOverManagerSource: {fileID: 1029641943}
+  flowCoordinatorSource: {fileID: 141623133}
+  slotRegistrySource: {fileID: 495820475}
   combatTurnManager: {fileID: 276178814}
 --- !u!1 &1556217183
 GameObject:
@@ -3350,6 +3404,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   combatFlowCoordinator: {fileID: 141623133}
+  skillCardUIPrefab: {fileID: 0}
 --- !u!1 &1711342675
 GameObject:
   m_ObjectHideFlags: 0
@@ -4157,3 +4212,4 @@ SceneRoots:
   - {fileID: 1169703889}
   - {fileID: 1556217186}
   - {fileID: 1594079383}
+  - {fileID: 1344925022}

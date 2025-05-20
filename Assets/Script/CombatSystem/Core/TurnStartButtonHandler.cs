@@ -4,20 +4,17 @@ using Game.CombatSystem.Interface;
 
 namespace Game.CombatSystem.Core
 {
-    /// <summary>
-    /// 턴 시작 버튼을 제어하는 스크립트입니다.
-    /// 두 슬롯이 모두 카드로 채워졌을 때만 버튼이 활성화됩니다.
-    /// 버튼은 한 번만 클릭되도록 설정됩니다.
-    /// </summary>
     public class TurnStartButtonHandler : MonoBehaviour
     {
         [SerializeField] private Button turnStartButton;
 
         private ICombatTurnManager turnManager;
+        private ITurnStartConditionChecker turnConditionChecker;
 
-        public void Inject(ICombatTurnManager manager)
+        public void Inject(ICombatTurnManager manager, ITurnStartConditionChecker checker)
         {
             turnManager = manager;
+            turnConditionChecker = checker;
         }
 
         private void Start()
@@ -33,35 +30,22 @@ namespace Game.CombatSystem.Core
 
         private void Update()
         {
-            UpdateButtonState();
-        }
-
-        private void UpdateButtonState()
-        {
-            if (turnManager == null || turnStartButton == null)
-            {
-                SetInteractable(false);
+            if (turnStartButton == null || turnConditionChecker == null)
                 return;
-            }
 
-            bool shouldBeInteractable = turnManager.AreBothSlotsReady();
-            if (!turnStartButton.interactable && shouldBeInteractable)
-                SetInteractable(true);
+            SetInteractable(turnConditionChecker.CanStartTurn());
         }
 
         private void SetInteractable(bool value)
         {
-            if (turnStartButton != null)
+            if (turnStartButton.interactable != value)
                 turnStartButton.interactable = value;
         }
 
         private void OnTurnStartClicked()
         {
-            if (turnManager != null)
-            {
-                SetInteractable(false);
-                turnManager.ExecuteCombat();
-            }
+            SetInteractable(false);
+            turnManager?.ExecuteCombat();
         }
     }
 }

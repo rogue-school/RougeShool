@@ -7,6 +7,7 @@ namespace Game.IManager
     /// </summary>
     public interface IPlayerManager
     {
+
         /// <summary>플레이어 캐릭터를 등록합니다.</summary>
         void SetPlayer(IPlayerCharacter player);
 
@@ -18,5 +19,10 @@ namespace Game.IManager
 
         /// <summary>핸드 매니저를 반환합니다.</summary>
         IPlayerHandManager GetPlayerHandManager();
+
+        /// <summary>
+        /// 선택된 캐릭터를 기반으로 플레이어 생성 및 핸드 초기화를 수행합니다.
+        /// </summary>
+        void CreateAndRegisterPlayer();
     }
 }

@@ -1,4 +1,5 @@
 using Game.CombatSystem.Interface;
+using Game.CombatSystem.Slot;
 using Game.CombatSystem.State;
 using Game.IManager;
 using System;
@@ -19,6 +20,7 @@ namespace Game.CombatSystem.Core
 
         private readonly ITurnStateController turnStateController;
         private readonly ICardExecutionContext cardExecutionContext;
+        private readonly ISlotRegistry slotRegistry;
 
         public CombatStateFactory(
             ICombatTurnManager combatTurnManager,
@@ -29,7 +31,8 @@ namespace Game.CombatSystem.Core
             ICombatSlotManager combatSlotManager,
             IStageManager stageManager,
             IVictoryManager victoryManager,
-            IGameOverManager gameOverManager)
+            IGameOverManager gameOverManager,
+            ISlotRegistry slotRegistry)
         {
             this.combatTurnManager = combatTurnManager ?? throw new ArgumentNullException(nameof(combatTurnManager));
             this.turnStateController = combatTurnManager as ITurnStateController ?? throw new ArgumentException("combatTurnManager는 ITurnStateController를 구현해야 합니다.");
@@ -47,37 +50,38 @@ namespace Game.CombatSystem.Core
 
         public ICombatTurnState CreatePrepareState()
         {
-            return new CombatPrepareState(combatTurnManager, flowCoordinator, this);
+            return new CombatPrepareState(combatTurnManager, flowCoordinator, this, slotRegistry);
         }
 
         public ICombatTurnState CreatePlayerInputState()
         {
-            return new CombatPlayerInputState(turnStateController, flowCoordinator, this);
+            return new CombatPlayerInputState(combatTurnManager, flowCoordinator, this, slotRegistry);
         }
 
         public ICombatTurnState CreateFirstAttackState()
         {
-            return new CombatFirstAttackState(turnStateController, flowCoordinator, cardExecutionContext, this);
+            return new CombatFirstAttackState(combatTurnManager, flowCoordinator, this, slotRegistry);
         }
 
         public ICombatTurnState CreateSecondAttackState()
         {
-            return new CombatSecondAttackState(turnStateController, flowCoordinator, cardExecutionContext, this);
+            return new CombatSecondAttackState(combatTurnManager, flowCoordinator, this, slotRegistry);
         }
 
         public ICombatTurnState CreateResultState()
         {
-            return new CombatResultState(turnStateController, flowCoordinator, cardExecutionContext, this);
+            return new CombatResultState(combatTurnManager, flowCoordinator, this, slotRegistry);
         }
 
         public ICombatTurnState CreateVictoryState()
         {
-            return new CombatVictoryState(combatTurnManager, flowCoordinator, this);
+            return new CombatVictoryState(combatTurnManager, flowCoordinator, this, slotRegistry);
         }
 
         public ICombatTurnState CreateGameOverState()
         {
-            return new CombatGameOverState(combatTurnManager, flowCoordinator, this);
+            return new CombatGameOverState(combatTurnManager, flowCoordinator, this, slotRegistry);
         }
+
     }
 }

@@ -6,7 +6,7 @@ using Game.CombatSystem.Interface;
 
 namespace Game.SkillCardSystem.Effects
 {
-    [CreateAssetMenu(menuName = "CardEffects/RegenEffect")]
+    [CreateAssetMenu(menuName = "Game/CardEffects/RegenEffect")]
     public class RegenEffectSO : ScriptableObject, ICardEffect
     {
         public void ExecuteEffect(CharacterBase caster, CharacterBase target, int power, ITurnStateController controller = null)

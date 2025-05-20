@@ -55,7 +55,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cardNameText: {fileID: 6343866420080280198}
-  powerText: {fileID: 4373988456861928914}
+  damageText: {fileID: 4373988456861928914}
   cardArtImage: {fileID: 8351446843463734416}
   coolTimeOverlay: {fileID: 0}
   coolTimeText: {fileID: 0}
@@ -72,7 +72,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4849b92b114c9b34e973eccb11880e72, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  droppedSuccessfully: 0
+  droppedSuccessfully: 1
 --- !u!222 &650616450906029805
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -334,7 +334,7 @@ GameObject:
   - component: {fileID: 4027442856382686398}
   - component: {fileID: 4373988456861928914}
   m_Layer: 5
-  m_Name: Damege
+  m_Name: Damage
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
