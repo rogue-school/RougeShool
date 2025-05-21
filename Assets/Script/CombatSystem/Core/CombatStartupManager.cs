@@ -25,7 +25,6 @@ public class CombatStartupManager : MonoBehaviour
         Debug.Log("[CombatStartupManager] 슬롯 레지스트리 초기화 시작");
         slotRegistry.Initialize();
 
-        //  슬롯 자동 바인딩 호출 (신규 API 사용)
         var slotInitializer = Object.FindFirstObjectByType<SlotInitializer>();
         if (slotInitializer != null)
         {
@@ -37,30 +36,27 @@ public class CombatStartupManager : MonoBehaviour
             Debug.LogError("[CombatStartupManager] SlotInitializer를 찾을 수 없습니다.");
         }
 
-        // 씬 내 컴포넌트 자동 바인딩
         autoBinder.Initialize();
         yield return null;
-        yield return null;
 
-        // 상태 팩토리 생성
         stateFactoryInstaller.Initialize();
         yield return null;
 
-        // 전투 의존성 주입
         bootstrapInstaller.Initialize();
         yield return null;
 
-        // 전투 흐름 시작
+        var turnManager = Object.FindFirstObjectByType<CombatTurnManager>();
+        if (turnManager != null)
+        {
+            turnManager.Initialize();
+            Debug.Log("[CombatStartupManager] CombatTurnManager 초기화 완료");
+        }
+        else
+        {
+            Debug.LogError("[CombatStartupManager] CombatTurnManager를 찾을 수 없습니다.");
+        }
+
         flowCoordinator.StartCombatFlow();
         yield return null;
-    }
-
-    private bool ValidateAll()
-    {
-        return slotRegistry != null &&
-               autoBinder != null &&
-               stateFactoryInstaller != null &&
-               bootstrapInstaller != null &&
-               flowCoordinator != null;
     }
 }

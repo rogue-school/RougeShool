@@ -3,9 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Game.CharacterSystem.Data;
-using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
-using Game.SkillCardSystem.Data;
 using Game.CharacterSystem.Interface;
 
 namespace Game.CharacterSystem.Core
@@ -24,34 +22,45 @@ namespace Game.CharacterSystem.Core
         public EnemyCharacterData Data => characterData;
 
         /// <summary>
-        /// 초기화: 데이터 설정 및 패시브/스킬카드 준비
+        /// 적 캐릭터를 데이터 기반으로 초기화합니다.
         /// </summary>
         public void Initialize(EnemyCharacterData data)
         {
-            SetCharacterData(data);
-        }
+            if (data == null)
+            {
+                Debug.LogWarning("[EnemyCharacter] 초기화 실패 - EnemyCharacterData가 null입니다.");
+                return;
+            }
 
-        public void SetCharacterData(EnemyCharacterData data)
-        {
             characterData = data;
 
-            if (characterData != null)
-            {
-                SetMaxHP(characterData.maxHP);
-                skillCardEntries = new List<EnemyCharacterData.SkillCardEntry>(characterData.GetAllCards());
-                UpdateUI();
-                ApplyPassiveEffects();
+            SetMaxHP(data.maxHP);
 
-                Debug.Log($"[EnemyCharacter] {characterData.displayName} 초기화 완료");
-            }
-            else
+            skillCardEntries = new List<EnemyCharacterData.SkillCardEntry>(data.GetAllCards());
+
+            UpdateUI();
+            ApplyPassiveEffects();
+
+            Debug.Log($"[EnemyCharacter] '{characterData.displayName}' 초기화 완료");
+        }
+
+
+        public EnemyCharacterData.SkillCardEntry GetRandomCardEntry()
+        {
+            if (skillCardEntries == null || skillCardEntries.Count == 0)
             {
-                Debug.LogWarning("[EnemyCharacter] characterData가 null입니다!");
+                Debug.LogWarning("[EnemyCharacter] 랜덤 카드 추출 실패 - 카드 목록이 비어 있습니다.");
+                return null;
             }
+
+            int index = Random.Range(0, skillCardEntries.Count);
+            return skillCardEntries[index];
         }
 
         private void UpdateUI()
         {
+            if (characterData == null) return;
+
             if (nameText != null)
                 nameText.text = characterData.displayName;
 
@@ -65,30 +74,13 @@ namespace Game.CharacterSystem.Core
         private void ApplyPassiveEffects()
         {
             var effects = characterData?.GetPassiveEffects();
-            if (effects == null) return;
+            if (effects == null || effects.Count == 0) return;
 
             foreach (var obj in effects)
             {
                 if (obj is ICardEffect effect)
-                {
                     effect.ExecuteEffect(this, this, 0);
-                }
             }
-        }
-
-        /// <summary>
-        /// 스킬 카드 풀에서 랜덤한 카드를 가져옵니다.
-        /// </summary>
-        public EnemyCharacterData.SkillCardEntry GetRandomCardEntry()
-        {
-            if (skillCardEntries == null || skillCardEntries.Count == 0)
-            {
-                Debug.LogWarning("[EnemyCharacter] 스킬 카드가 존재하지 않습니다.");
-                return null;
-            }
-
-            int index = Random.Range(0, skillCardEntries.Count);
-            return skillCardEntries[index];
         }
 
         public override void TakeDamage(int amount)
@@ -107,8 +99,7 @@ namespace Game.CharacterSystem.Core
         {
             base.Die();
             UpdateUI();
-
-            Debug.Log($"[EnemyCharacter] 사망 처리 완료 → 다음 적 소환은 외부 매니저에서 진행");
+            Debug.Log($"[EnemyCharacter] '{characterData?.displayName}' 사망 처리 완료");
         }
 
         public string GetCharacterName()

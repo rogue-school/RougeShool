@@ -7,6 +7,7 @@ namespace Game.CharacterSystem.Data
     [CreateAssetMenu(menuName = "Game/Character/Enemy Character Data")]
     public class EnemyCharacterData : ScriptableObject
     {
+        [Header("기본 정보")]
         public string displayName;
         public int maxHP;
         public Sprite portrait;
@@ -18,7 +19,6 @@ namespace Game.CharacterSystem.Data
         public class SkillCardEntry
         {
             public EnemySkillCard card;
-            // public int damage; // 제거됨
         }
 
         [Header("고정 스킬 카드 덱")]
@@ -28,13 +28,13 @@ namespace Game.CharacterSystem.Data
         [SerializeField] private List<ScriptableObject> passiveEffects = new();
 
         /// <summary>
-        /// 스킬 카드 덱에서 무작위 카드 1장을 반환합니다.
+        /// 고정 덱에서 무작위 카드를 반환합니다.
         /// </summary>
         public SkillCardEntry GetRandomEntry()
         {
             if (skillDeck == null || skillDeck.Count == 0)
             {
-                Debug.LogWarning("[EnemyCharacterData] 스킬 덱이 비어 있습니다.");
+                Debug.LogWarning($"[EnemyCharacterData] '{displayName}'의 스킬 덱이 비어 있습니다.");
                 return null;
             }
 
@@ -43,15 +43,13 @@ namespace Game.CharacterSystem.Data
         }
 
         /// <summary>
-        /// 주어진 카드의 데미지를 반환합니다. 카드 자체의 CardData에서 추출됩니다.
+        /// 전체 스킬 카드 덱 반환
         /// </summary>
-        public int GetDamageOfCard(EnemySkillCard card)
-        {
-            return card?.CardData.Damage ?? 5; // 기본값 5
-        }
-
         public List<SkillCardEntry> GetAllCards() => skillDeck;
 
+        /// <summary>
+        /// 패시브 이펙트 목록 반환
+        /// </summary>
         public List<ScriptableObject> GetPassiveEffects() => passiveEffects;
     }
 }

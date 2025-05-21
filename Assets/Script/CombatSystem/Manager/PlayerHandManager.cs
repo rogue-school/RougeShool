@@ -57,32 +57,28 @@ namespace Game.CombatSystem.Manager
         {
             ClearAll();
 
-            // 슬롯 위치 고정
             SkillCardSlotPosition[] orderedSlots = new[]
             {
-        SkillCardSlotPosition.PLAYER_SLOT_1,
-        SkillCardSlotPosition.PLAYER_SLOT_2,
-        SkillCardSlotPosition.PLAYER_SLOT_3,
-    };
+                SkillCardSlotPosition.PLAYER_SLOT_1,
+                SkillCardSlotPosition.PLAYER_SLOT_2,
+                SkillCardSlotPosition.PLAYER_SLOT_3
+            };
 
-            // 여기에서 직접 캐릭터에 따른 카드 3장을 고정으로 배정 (예시)
             var selectedCharacter = player?.Data;
-            if (selectedCharacter == null)
+            if (selectedCharacter == null || selectedCharacter.skillDeck == null)
             {
-                Debug.LogWarning("[PlayerHandManager] 플레이어 데이터가 없습니다.");
+                Debug.LogWarning("[PlayerHandManager] 플레이어 데이터 또는 스킬 덱이 없습니다.");
                 return;
             }
 
-            // 여기에 실제 캐릭터에 따라 카드 지정하는 매핑 로직 필요
-            List<PlayerSkillCard> deck = GetFixedDeckForCharacter(selectedCharacter);
+            List<PlayerSkillCard> deck = selectedCharacter.skillDeck.GetCards();
 
             for (int i = 0; i < Mathf.Min(deck.Count, orderedSlots.Length); i++)
             {
                 var card = deck[i];
                 var slotPos = orderedSlots[i];
 
-                if (!handSlots.TryGetValue(slotPos, out var slot))
-                    continue;
+                if (!handSlots.TryGetValue(slotPos, out var slot)) continue;
 
                 var runtimeCard = new PlayerSkillCardRuntime(card);
                 runtimeCard.SetHandSlot(slotPos);
@@ -92,42 +88,12 @@ namespace Game.CombatSystem.Manager
                     uiSlot.InjectUIFactory(skillCardUIPrefab);
 
                 slot.SetCard(runtimeCard);
+                UpdateCardUI(runtimeCard, (PlayerHandCardSlotUI)slot);
             }
+
+            // 플레이어 핸드 슬롯 상태 확인
+            LogPlayerHandSlotStates();  // 상태 출력
         }
-        private List<PlayerSkillCard> GetFixedDeckForCharacter(PlayerCharacterData data)
-        {
-            // 여기에 사용할 카드들 직접 연결
-            // (예: Resources.Load 또는 Inspector로 참조)
-            // 아래는 예시이며, 실제 카드들은 적절히 설정해야 합니다.
-
-            if (data.displayName == "Warrior")
-            {
-                return new List<PlayerSkillCard>
-        {
-            Resources.Load<PlayerSkillCard>("Cards/Warrior/Slash"),
-            Resources.Load<PlayerSkillCard>("Cards/Warrior/ShieldBash"),
-            Resources.Load<PlayerSkillCard>("Cards/Warrior/BattleCry"),
-        };
-            }
-            else if (data.displayName == "Mage")
-            {
-                return new List<PlayerSkillCard>
-        {
-            Resources.Load<PlayerSkillCard>("Cards/Mage/Fireball"),
-            Resources.Load<PlayerSkillCard>("Cards/Mage/IceBolt"),
-            Resources.Load<PlayerSkillCard>("Cards/Mage/ArcaneShield"),
-        };
-            }
-
-            // 기본값
-            return new List<PlayerSkillCard>
-    {
-        Resources.Load<PlayerSkillCard>("Cards/Common/Strike"),
-        Resources.Load<PlayerSkillCard>("Cards/Common/Block"),
-        Resources.Load<PlayerSkillCard>("Cards/Common/Focus"),
-    };
-        }
-
 
         public void RestoreCardToHand(PlayerSkillCardRuntime card)
         {
@@ -193,5 +159,32 @@ namespace Game.CombatSystem.Manager
         public IEnumerable<IHandCardSlot> GetAllHandSlots() => handSlots?.Values;
 
         public void EnableInput(bool isEnabled) => EnableCardInteraction(isEnabled);
+
+        // 플레이어 핸드 슬롯 상태 확인
+        public void LogPlayerHandSlotStates()
+        {
+            Debug.Log("[PlayerHandManager] 슬롯 상태 확인:");
+
+            // 3개의 슬롯에 대해 반복하면서 각 슬롯의 카드 상태를 확인
+            for (int i = 0; i < 3; i++)
+            {
+                SkillCardSlotPosition pos = (SkillCardSlotPosition)(i + 1); // PLAYER_SLOT_1부터 3까지
+                var card = GetSlotCard(pos);
+                var ui = GetCardUI(i);
+
+                Debug.Log($" → {pos}: 카드 = {card?.CardData.Name ?? "없음"}, UI = {(ui != null ? "있음" : "없음")}");
+            }
+        }
+
+        private ISkillCard GetSlotCard(SkillCardSlotPosition pos)
+        {
+            return handSlots.TryGetValue(pos, out var slot) ? slot.GetCard() : null;
+        }
+
+        private ISkillCardUI GetCardUI(int index)
+        {
+            SkillCardSlotPosition pos = (SkillCardSlotPosition)(index + 1);
+            return handSlots.TryGetValue(pos, out var slot) && slot.GetCardUI() != null ? slot.GetCardUI() : null;
+        }
     }
 }

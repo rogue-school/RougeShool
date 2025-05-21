@@ -45,6 +45,19 @@ namespace Game.Manager
                 return;
             }
 
+            // 슬롯에 배치
+            var slot = SlotRegistry.Instance?.GetCharacterSlot(SlotOwner.PLAYER);
+            if (slot == null)
+            {
+                Debug.LogError("[PlayerManager] PLAYER용 캐릭터 슬롯을 찾을 수 없습니다.");
+                return;
+            }
+
+            playerGO.transform.SetParent(slot.GetTransform());
+            playerGO.transform.localPosition = Vector3.zero;
+            playerGO.transform.localRotation = Quaternion.identity;
+            playerGO.transform.localScale = Vector3.one;
+
             if (character is PlayerCharacter concreteCharacter)
                 concreteCharacter.SetCharacterData(selectedData);
 
@@ -62,6 +75,7 @@ namespace Game.Manager
 
             SetPlayerHandManager(handManager);
         }
+
 
         public void SetPlayer(IPlayerCharacter player)
         {

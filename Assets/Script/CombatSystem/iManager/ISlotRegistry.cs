@@ -15,7 +15,9 @@ namespace Game.IManager
         IEnumerable<IHandCardSlot> GetHandSlots(SlotOwner owner);
         IEnumerable<ICombatCardSlot> GetCombatSlots();
         ICharacterSlot GetCharacterSlot(SlotOwner owner);
-        ICombatCardSlot GetCombatSlot(CombatSlotPosition position); // 명확히 인터페이스에 포함
-        void Initialize(); // 수동 초기화 메서드 포함
+        ICombatCardSlot GetCombatSlot(CombatSlotPosition position);
+        IHandCardSlot GetHandSlot(SkillCardSlotPosition position);
+
+        void Initialize();
     }
 }

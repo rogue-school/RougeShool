@@ -3,7 +3,6 @@ using UnityEngine.EventSystems;
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.UI;
-using Game.CombatSystem.DragDrop;
 
 namespace Game.CombatSystem.DragDrop
 {
@@ -26,21 +25,36 @@ namespace Game.CombatSystem.DragDrop
         public void OnDrop(PointerEventData eventData)
         {
             GameObject draggedObject = eventData.pointerDrag;
-            if (draggedObject == null) return;
+            if (draggedObject == null)
+            {
+                Debug.LogWarning("[DropHandler] 드래그된 객체가 없습니다.");
+                return;
+            }
 
             SkillCardUI newCardUI = draggedObject.GetComponent<SkillCardUI>();
-            if (newCardUI == null) return;
+            if (newCardUI == null)
+            {
+                Debug.LogWarning("[DropHandler] 카드 UI가 없습니다.");
+                return;
+            }
 
             ISkillCard newCard = newCardUI.GetCard();
-            if (newCard == null) return;
+            if (newCard == null)
+            {
+                Debug.LogWarning("[DropHandler] 카드 정보가 없습니다.");
+                return;
+            }
 
             var slot = GetComponent<ICombatCardSlot>();
-            if (slot == null) return;
+            if (slot == null)
+            {
+                Debug.LogWarning("[DropHandler] 슬롯이 없습니다.");
+                return;
+            }
 
             var oldCard = slot.GetCard();
             var oldCardUI = slot.GetCardUI();
 
-            // 적 카드가 이미 있으면 드롭 금지
             if (oldCard != null && !IsPlayerCard(oldCard))
             {
                 Debug.LogWarning("[DropHandler] 해당 슬롯에 적 카드가 있어 드롭 불가");
@@ -81,6 +95,7 @@ namespace Game.CombatSystem.DragDrop
 
             Debug.Log($"[DropHandler] 카드 교체 완료: {newCard.GetCardName()} → {slot.GetCombatPosition()}");
         }
+
 
         private bool IsPlayerCard(ISkillCard card)
         {

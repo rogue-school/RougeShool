@@ -93,7 +93,7 @@ namespace Game.CombatSystem.Manager
                 return null;
             }
 
-            enemy.SetCharacterData(data);
+            enemy.Initialize(data);
             slot.SetCharacter(enemy);
             spawnedEnemies.Add(enemy);
 

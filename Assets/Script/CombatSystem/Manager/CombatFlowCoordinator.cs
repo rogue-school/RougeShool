@@ -13,7 +13,6 @@ namespace Game.CombatSystem.Manager
 {
     public class CombatFlowCoordinator : MonoBehaviour, ICombatFlowCoordinator
     {
-
         [Header("UI 프리팹")]
         [SerializeField] private SkillCardUI skillCardUIPrefab;
 
@@ -49,10 +48,7 @@ namespace Game.CombatSystem.Manager
             this.stateFactory = stateFactory;
         }
 
-        public void InjectUI(SkillCardUI prefab)
-        {
-            this.skillCardUIPrefab = prefab;
-        }
+        public void InjectUI(SkillCardUI prefab) => this.skillCardUIPrefab = prefab;
 
         public void InjectTurnStateDependencies(ICombatTurnManager turnManager, ICombatStateFactory stateFactory)
         {
@@ -62,8 +58,10 @@ namespace Game.CombatSystem.Manager
 
         public void StartCombatFlow()
         {
-            turnManager.RequestStateChange(stateFactory.CreatePrepareState());
+            Debug.Log("[CombatFlowCoordinator] 전투 흐름 시작");
+            // 상태 전이는 CombatTurnManager.Initialize()에서 처리됨
         }
+
 
         public IEnumerator PerformCombatPreparation() => PerformCombatPreparation(null);
 
@@ -71,16 +69,13 @@ namespace Game.CombatSystem.Manager
         {
             Debug.Log("[Flow] 전투 준비: 플레이어 생성 → 적 소환 → 핸드 준비 → 슬롯 배치");
 
-            // 1. 플레이어 생성
-            playerManager.CreateAndRegisterPlayer();  // 플레이어 오브젝트 생성 및 핸드 매니저 초기화 포함
+            playerManager.CreateAndRegisterPlayer();  // 1. 플레이어 생성
             yield return null;
 
-            // 2. 적 생성
-            spawnerManager.SpawnInitialEnemy();
+            spawnerManager.SpawnInitialEnemy();  // 2. 적 생성
             yield return null;
 
-            // 3. 적 카드 확인
-            var enemy = enemyManager.GetEnemy();
+            var enemy = enemyManager.GetEnemy();  // 3. 적 확인
             if (enemy == null)
             {
                 Debug.LogError("[Flow] 적 생성 실패: EnemyManager에 없음");
@@ -88,24 +83,31 @@ namespace Game.CombatSystem.Manager
                 yield break;
             }
 
+            // 카드 및 UI를 가져옴, UI는 제거하지 않음
             var card = enemyHandManager.GetSlotCard(SkillCardSlotPosition.ENEMY_SLOT_1);
-            var ui = enemyHandManager.GetCardUI(0) as SkillCardUI;
+            var ui = enemyHandManager.RemoveCardFromSlot(SkillCardSlotPosition.ENEMY_SLOT_1);
 
             if (card == null || ui == null)
             {
                 Debug.LogError("[Flow] EnemyHandManager에서 카드 또는 UI 가져오기 실패");
-                LogEnemyHandSlots();
+                enemyHandManager.LogHandSlotStates();
                 onComplete?.Invoke(false);
                 yield break;
             }
 
-            // 4. 적 카드 슬롯 배치
-            CombatSlotPosition targetSlot = CombatSlotPosition.FIRST;
+            // 전투 슬롯에 카드 배치
+            CombatSlotPosition targetSlot = UnityEngine.Random.value < 0.5f
+                ? CombatSlotPosition.FIRST
+                : CombatSlotPosition.SECOND;
+
             var combatSlot = slotRegistry.GetCombatSlot(targetSlot);
 
             if (combatSlot == null || !combatSlot.IsEmpty())
             {
-                targetSlot = CombatSlotPosition.SECOND;
+                targetSlot = (targetSlot == CombatSlotPosition.FIRST)
+                    ? CombatSlotPosition.SECOND
+                    : CombatSlotPosition.FIRST;
+
                 combatSlot = slotRegistry.GetCombatSlot(targetSlot);
             }
 
@@ -116,27 +118,38 @@ namespace Game.CombatSystem.Manager
                 yield break;
             }
 
+            // 슬롯에 카드와 UI를 설정
             combatSlot.SetCard(card);
-            combatSlot.SetCardUI(ui);
+            combatSlot.SetCardUI(ui);  // UI가 정상적으로 설정됨
 
+            // UI 이동 처리
             ui.transform.SetParent(((MonoBehaviour)combatSlot).transform);
             ui.transform.localPosition = Vector3.zero;
             ui.transform.localScale = Vector3.one;
 
-            Debug.Log($"[Flow] 카드 '{card.GetCardName()}' → 전투 슬롯 {targetSlot} 배치 및 UI 이동 완료");
+            Debug.Log($"[Flow] 카드 '{card.GetCardName()}' → 전투 슬롯 {targetSlot} 배치 완료");
+
+            // 핸드 슬롯 자동 보충
+            enemyHandManager.FillEmptySlots();
+            Debug.Log("[Flow] 핸드 슬롯 자동 보충 완료");
 
             onComplete?.Invoke(true);
         }
 
-        private void LogEnemyHandSlots()
+
+        public void LogHandSlotStates()
         {
-            Debug.Log("[Debug] EnemyHand 슬롯 상태 출력:");
-            foreach (SkillCardSlotPosition pos in Enum.GetValues(typeof(SkillCardSlotPosition)))
+            Debug.Log("[EnemyHandManager] 슬롯 상태 확인:");
+            for (int i = 0; i < 3; i++)
             {
-                var slotCard = enemyHandManager.GetSlotCard(pos);
-                Debug.Log($" → {pos}: {(slotCard != null ? slotCard.CardData.Name : "비어 있음")}");
+                SkillCardSlotPosition pos = (SkillCardSlotPosition)(i + 3);  // ENEMY_SLOT_1~3
+                var card = enemyHandManager.GetSlotCard(pos);  // 수정됨
+                var ui = enemyHandManager.GetCardUI(i);        // 수정됨
+
+                Debug.Log($" → {pos}: 카드 = {card?.CardData.Name ?? "없음"}, UI = {(ui != null ? "있음" : "없음")}");
             }
         }
+
 
         public IEnumerator EnablePlayerInput()
         {
@@ -157,6 +170,9 @@ namespace Game.CombatSystem.Manager
             card?.ExecuteSkill();
             yield return new WaitForSeconds(0.5f);
             slot?.Clear();
+
+            // 핸드 보충
+            enemyHandManager.AdvanceSlots();
         }
 
         public IEnumerator PerformSecondAttack()
@@ -166,6 +182,9 @@ namespace Game.CombatSystem.Manager
             card?.ExecuteSkill();
             yield return new WaitForSeconds(0.5f);
             slot?.Clear();
+
+            // 핸드 보충
+            enemyHandManager.AdvanceSlots();
         }
 
         public IEnumerator PerformResultPhase()

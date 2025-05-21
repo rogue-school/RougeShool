@@ -46,6 +46,7 @@ namespace Game.CombatSystem.Core
             this.stageManager = stageManager ?? throw new ArgumentNullException(nameof(stageManager));
             this.victoryManager = victoryManager ?? throw new ArgumentNullException(nameof(victoryManager));
             this.gameOverManager = gameOverManager ?? throw new ArgumentNullException(nameof(gameOverManager));
+            this.slotRegistry = slotRegistry ?? throw new ArgumentNullException(nameof(slotRegistry));
         }
 
         public ICombatTurnState CreatePrepareState()

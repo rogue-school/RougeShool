@@ -50,7 +50,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c76c9eba74241f34490b93cd46c35c8e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  characterData: {fileID: 11400000, guid: 09c242a71ef51f7479baa0e5ae122d6c, type: 2}
+  characterData: {fileID: 0}
   nameText: {fileID: 8289530968991228569}
   portraitImage: {fileID: 4212231588447136040}
   hpText: {fileID: 4820315423849995655}

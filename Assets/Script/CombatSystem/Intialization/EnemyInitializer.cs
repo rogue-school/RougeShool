@@ -110,7 +110,7 @@ namespace Game.CombatSystem.Initialization
         private void ApplyCharacterData(EnemyCharacter enemy, EnemyCharacterData data)
         {
             Debug.Log("[EnemyInitializer] 캐릭터 데이터 적용 시작");
-            enemy.SetCharacterData(data);
+            enemy.Initialize(data);
         }
 
         private void RegisterToSlot(ICharacterSlot slot, EnemyCharacter enemy)

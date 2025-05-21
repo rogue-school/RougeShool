@@ -1,9 +1,9 @@
 using UnityEngine;
-using Game.CharacterSystem.Interface;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 using Game.IManager;
+using Game.CharacterSystem.Interface;
 
 namespace Game.CombatSystem.Manager
 {
@@ -11,10 +11,8 @@ namespace Game.CombatSystem.Manager
         ICombatTurnManager,
         ITurnStateController,
         ICardExecutionContext,
-        ITurnStartConditionChecker // ← 신규 인터페이스로 분리
+        ITurnStartConditionChecker
     {
-        [SerializeField] private bool autoStart = true;
-
         private ICombatStateFactory stateFactory;
         private ICombatTurnState currentState;
         private ICombatTurnState pendingNextState;
@@ -28,18 +26,6 @@ namespace Game.CombatSystem.Manager
         private IPlayerManager playerManager;
         private IEnemyManager enemyManager;
 
-        private void Start()
-        {
-            if (autoStart)
-                Initialize();
-        }
-
-        private void Update()
-        {
-            currentState?.ExecuteState();
-            if (pendingNextState != null)
-                ApplyPendingState();
-        }
 
         public void Initialize()
         {
@@ -59,21 +45,19 @@ namespace Game.CombatSystem.Manager
             RequestStateChange(prepareState);
         }
 
+        private void Update()
+        {
+            currentState?.ExecuteState();
+            if (pendingNextState != null)
+                ApplyPendingState();
+        }
+
         public void InjectFactory(ICombatStateFactory factory) => stateFactory = factory;
 
         public void InjectManagers(IPlayerManager playerManager, IEnemyManager enemyManager)
         {
             this.playerManager = playerManager;
             this.enemyManager = enemyManager;
-        }
-
-        public void ChangeState(ICombatTurnState newState)
-        {
-            if (newState == null || currentState == newState) return;
-
-            currentState?.ExitState();
-            currentState = newState;
-            currentState.EnterState();
         }
 
         public void RequestStateChange(ICombatTurnState nextState)
@@ -87,16 +71,22 @@ namespace Game.CombatSystem.Manager
             pendingNextState = null;
         }
 
+        public void ChangeState(ICombatTurnState newState)
+        {
+            if (newState == null || currentState == newState) return;
+
+            Debug.Log($"[CombatTurnManager] 상태 전이: {currentState?.GetType().Name ?? "None"} → {newState.GetType().Name}");
+
+            currentState?.ExitState();
+            currentState = newState;
+            currentState.EnterState();
+        }
+
         public ICombatTurnState GetCurrentState() => currentState;
 
-        // Guard 및 슬롯 예약
         public void RegisterPlayerGuard() => isPlayerGuarded = true;
         public bool IsPlayerGuarded() => isPlayerGuarded;
-        public void ReserveEnemySlot(CombatSlotPosition slot)
-        {
-            reservedEnemySlot = slot;
-            Debug.Log($"[CombatTurnManager] 적 공격 슬롯 예약됨 → {slot}");
-        }
+        public void ReserveEnemySlot(CombatSlotPosition slot) => reservedEnemySlot = slot;
         public CombatSlotPosition GetReservedEnemySlot() => reservedEnemySlot;
         public void ResetGuardAndReservation()
         {
@@ -104,12 +94,11 @@ namespace Game.CombatSystem.Manager
             reservedEnemySlot = CombatSlotPosition.NONE;
         }
 
-        // 전투 카드 등록 및 실행
         public void RegisterPlayerCard(ISkillCard card) => registeredPlayerCard = card;
         public void RegisterEnemyCard(ISkillCard card) => registeredEnemyCard = card;
 
         public bool AreBothSlotsReady() => registeredPlayerCard != null && registeredEnemyCard != null;
-        public bool CanStartTurn() => AreBothSlotsReady(); // ITurnStartConditionChecker용
+        public bool CanStartTurn() => AreBothSlotsReady();
 
         public void ExecuteCombat()
         {
@@ -126,18 +115,10 @@ namespace Game.CombatSystem.Manager
                 Debug.LogError("[CombatTurnManager] FirstAttackState 생성 실패");
         }
 
-        // 카드 실행 컨텍스트
         public IPlayerCharacter GetPlayer() => playerManager?.GetPlayer();
         public IEnemyCharacter GetEnemy() => enemyManager?.GetEnemy();
-        public ICharacter GetSourceCharacter()
-        {
-            Debug.LogWarning("[CombatTurnManager] GetSourceCharacter() 호출됨 - 기본 없음");
-            return null;
-        }
-        public ICharacter GetTargetCharacter()
-        {
-            Debug.LogWarning("[CombatTurnManager] GetTargetCharacter() 호출됨 - 기본 없음");
-            return null;
-        }
+
+        public ICharacter GetSourceCharacter() => null;
+        public ICharacter GetTargetCharacter() => null;
     }
 }

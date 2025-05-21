@@ -13,5 +13,6 @@ namespace Game.CombatSystem.Interface
         void RegisterEnemyCard(ISkillCard card);
         bool AreBothSlotsReady();
         void ExecuteCombat();
+        bool CanStartTurn();
     }
 }

@@ -3,6 +3,7 @@ using Game.CombatSystem.Stage;
 using Game.IManager;
 using Game.CharacterSystem.Data;
 using Game.CharacterSystem.Interface;
+using Game.CombatSystem.Interface;
 
 namespace Game.CombatSystem.Manager
 {
@@ -28,8 +29,6 @@ namespace Game.CombatSystem.Manager
             this.spawnerManager = spawner;
             this.enemyManager = enemyManager;
             this.handManager = handManager;
-
-            //Debug.Log("[StageManager] 의존성 주입 완료");
         }
 
         public void SpawnNextEnemy()
@@ -52,17 +51,17 @@ namespace Game.CombatSystem.Manager
             if (enemy == null)
             {
                 Debug.LogError($"[StageManager] SpawnEnemy 실패 - 적 생성 실패: {enemyData.displayName}");
-                return; // **핵심: 여기서 바로 중단**
+                return;
             }
 
             RegisterEnemy(enemy);
             SetupEnemyHand(enemy);
-            Debug.Log($"[StageManager] 적 소환 완료: {enemyData.displayName} (Index: {currentEnemyIndex})");
 
-            currentEnemyIndex++; // **정상 생성 후에만 인덱스 증가**
+            Debug.Log($"[StageManager] 적 소환 완료 → 등록된 적: {enemy.GetCharacterName()} (index: {currentEnemyIndex}) / 데이터 기준: {enemyData.displayName}");
+
+
+            currentEnemyIndex++; // 소환 성공 및 출력 후에 증가시킴
         }
-
-
 
         private bool TryGetNextEnemyData(out EnemyCharacterData data)
         {
@@ -103,6 +102,7 @@ namespace Game.CombatSystem.Manager
                 Debug.LogError("[StageManager] spawnerManager가 주입되지 않았습니다.");
                 return false;
             }
+
             return true;
         }
 
