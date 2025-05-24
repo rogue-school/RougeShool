@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 861458062e34fcd4685dff11b945e1b9, type: 3}
   m_Name: BOSS_001_Orc_Axe
   m_EditorClassIdentifier: 
-  displayName: "\uC624\uD06C"
-  maxHP: 7
-  portrait: {fileID: -7138972354531345420, guid: 5603a5a28d318354583a5d8409710a16, type: 3}
-  prefab: {fileID: 7769799778275336730, guid: 2c6e844c91775424681f573a6951211e, type: 3}
-  skillDeck:
-  - card: {fileID: 11400000, guid: 888eefdbb32105c49b9f56bbd105ed63, type: 2}
-  - card: {fileID: 11400000, guid: 17272803ffb06ae46967e3b6904a3cc8, type: 2}
-  passiveEffects:
+  <DisplayName>k__BackingField: "\uC624\uD06C"
+  <MaxHP>k__BackingField: 7
+  <Portrait>k__BackingField: {fileID: -7138972354531345420, guid: 5603a5a28d318354583a5d8409710a16, type: 3}
+  <Prefab>k__BackingField: {fileID: 7769799778275336730, guid: 2c6e844c91775424681f573a6951211e, type: 3}
+  <SkillDeck>k__BackingField:
+  - Card: {fileID: 11400000, guid: 888eefdbb32105c49b9f56bbd105ed63, type: 2}
+  - Card: {fileID: 11400000, guid: 17272803ffb06ae46967e3b6904a3cc8, type: 2}
+  <PassiveEffects>k__BackingField:
   - {fileID: 11400000, guid: 4bc7bf6beeff3ba4e9a9dca6b4379981, type: 2}

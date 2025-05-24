@@ -1,58 +1,38 @@
 using UnityEngine;
 using Game.SkillCardSystem.Interface;
-using Game.CharacterSystem.Interface;
-using Game.CombatSystem.Slot;
-using Game.IManager;
-using Game.CharacterSystem.Core;
+using Game.CombatSystem.Interface;
+using Game.SkillCardSystem.Executor;
 
-namespace Game.SkillCardSystem.Executor
+namespace Game.CombatSystem.Executor
 {
-    /// <summary>
-    /// 전투 슬롯에 배치된 스킬 카드를 실행하는 서비스 클래스입니다.
-    /// </summary>
     public class CardExecutor : ICardExecutor
     {
-        private readonly IPlayerManager playerManager;
-        private readonly IEnemyManager enemyManager;
+        private readonly ICardExecutionContextProvider contextProvider;
 
-        public CardExecutor(IPlayerManager playerManager, IEnemyManager enemyManager)
+        public CardExecutor(ICardExecutionContextProvider contextProvider)
         {
-            this.playerManager = playerManager;
-            this.enemyManager = enemyManager;
+            this.contextProvider = contextProvider;
         }
 
-        public void ExecuteCard(ISkillCard card)
+        public void Execute(ISkillCard card, ICardExecutionContext context)
         {
-            if (card == null)
+            if (card == null || context == null)
             {
-                Debug.LogWarning("[CardExecutor] 실행할 카드가 null입니다.");
-                return;
-            }
-
-            var slot = card.GetCombatSlot();
-            if (!slot.HasValue)
-            {
-                Debug.LogError("[CardExecutor] 카드의 전투 슬롯 정보가 없습니다.");
-                return;
-            }
-
-            // 시전자/대상자 추출
-            ICharacter caster = (slot.Value == CombatSlotPosition.FIRST) ? enemyManager.GetEnemy() : playerManager.GetPlayer();
-            ICharacter target = (caster == enemyManager.GetEnemy()) ? playerManager.GetPlayer() : enemyManager.GetEnemy();
-
-            if (caster is not CharacterBase casterChar || target is not CharacterBase targetChar)
-            {
-                Debug.LogError("[CardExecutor] 캐릭터가 CharacterBase 타입이 아닙니다.");
+                Debug.LogError("[CardExecutor] 카드 또는 컨텍스트가 null입니다.");
                 return;
             }
 
             foreach (var effect in card.CreateEffects())
             {
                 int power = card.GetEffectPower(effect);
-                effect.ExecuteEffect(casterChar, targetChar, power);
-
-                Debug.Log($"[CardExecutor] 실행됨: {card.CardData.Name} → {effect.GetType().Name}, power: {power}");
+                effect.ApplyEffect(context, power);
             }
+        }
+
+        public void Execute(ISkillCard card, ITurnCardRegistry registry)
+        {
+            var context = contextProvider.CreateContext(card);
+            Execute(card, context);
         }
     }
 }

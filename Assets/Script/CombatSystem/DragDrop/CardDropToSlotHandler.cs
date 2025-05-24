@@ -3,104 +3,105 @@ using UnityEngine.EventSystems;
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.UI;
+using Game.CombatSystem.Utility;
+using Game.CombatSystem.Slot;
 
 namespace Game.CombatSystem.DragDrop
 {
-    /// <summary>
-    /// 플레이어 카드가 전투 슬롯에 드롭되었을 때 처리하는 핸들러입니다.
-    /// 적 카드가 존재하면 드롭을 막고, 기존 플레이어 카드가 있다면 교체합니다.
-    /// </summary>
     public class CardDropToSlotHandler : MonoBehaviour, IDropHandler
     {
-        private ICombatTurnManager turnManager;
+        private ITurnCardRegistry cardRegistry;
 
-        /// <summary>
-        /// CombatTurnManager를 외부에서 주입합니다.
-        /// </summary>
-        public void Inject(ICombatTurnManager turnManager)
+        public void Inject(ITurnCardRegistry registry)
         {
-            this.turnManager = turnManager;
+            this.cardRegistry = registry;
         }
 
         public void OnDrop(PointerEventData eventData)
         {
-            GameObject draggedObject = eventData.pointerDrag;
+            var draggedObject = eventData?.pointerDrag;
             if (draggedObject == null)
             {
-                Debug.LogWarning("[DropHandler] 드래그된 객체가 없습니다.");
+                Debug.LogWarning("[DropHandler] 드래그된 객체가 null입니다.");
                 return;
             }
 
-            SkillCardUI newCardUI = draggedObject.GetComponent<SkillCardUI>();
-            if (newCardUI == null)
+            if (!draggedObject.TryGetComponent(out SkillCardUI newCardUI))
             {
-                Debug.LogWarning("[DropHandler] 카드 UI가 없습니다.");
+                Debug.LogWarning("[DropHandler] SkillCardUI 컴포넌트를 찾을 수 없습니다.");
                 return;
             }
 
-            ISkillCard newCard = newCardUI.GetCard();
+            var newCard = newCardUI.GetCard();
             if (newCard == null)
             {
-                Debug.LogWarning("[DropHandler] 카드 정보가 없습니다.");
+                Debug.LogWarning("[DropHandler] SkillCard가 null입니다.");
                 return;
             }
 
-            var slot = GetComponent<ICombatCardSlot>();
-            if (slot == null)
+            if (!TryGetComponent(out ICombatCardSlot slot))
             {
-                Debug.LogWarning("[DropHandler] 슬롯이 없습니다.");
+                Debug.LogWarning("[DropHandler] 드롭 대상이 ICombatCardSlot이 아님. 드롭 실패 처리.");
+                if (draggedObject.TryGetComponent(out CardDragHandler handler))
+                {
+                    handler.droppedSuccessfully = false;
+                }
+                return;
+            }
+
+            if (!draggedObject.TryGetComponent(out CardDragHandler dragHandler))
+            {
+                Debug.LogWarning("[DropHandler] 드래그 핸들러(CardDragHandler)를 찾을 수 없습니다.");
+                return;
+            }
+
+            var slotOwner = slot.GetOwner();
+            var combatPosition = slot.GetCombatPosition();
+
+            Debug.Log($"[DropHandler] 드롭 시도: 카드 = {newCard.GetCardName()}, 슬롯 = {combatPosition}, 슬롯 소유자 = {slotOwner}");
+
+            // 슬롯이 플레이어 것이 아닌 경우 드롭 불가
+            if (slotOwner != SlotOwner.PLAYER)
+            {
+                dragHandler.droppedSuccessfully = false;
+                Debug.LogWarning("[DropHandler] 플레이어 슬롯이 아님. 드롭 거부.");
+                return;
+            }
+
+            // 카드가 플레이어 카드가 아닌 경우 드롭 불가
+            if (!CardValidator.IsPlayerCard(newCard))
+            {
+                dragHandler.droppedSuccessfully = false;
+                Debug.LogWarning("[DropHandler] 플레이어 카드가 아님. 드롭 거부.");
                 return;
             }
 
             var oldCard = slot.GetCard();
             var oldCardUI = slot.GetCardUI();
 
-            if (oldCard != null && !IsPlayerCard(oldCard))
+            // 기존에 적 카드가 올라와 있으면 드롭 불가
+            if (oldCard != null && !CardValidator.IsPlayerCard(oldCard))
             {
-                Debug.LogWarning("[DropHandler] 해당 슬롯에 적 카드가 있어 드롭 불가");
+                dragHandler.droppedSuccessfully = false;
+                Debug.LogWarning("[DropHandler] 적 카드 위에 드롭은 불가. 드롭 거부.");
                 return;
             }
 
-            // 기존 플레이어 카드 복귀
+            // 기존 카드가 있으면 되돌리기
             if (oldCardUI != null)
             {
-                var oldDragHandler = oldCardUI.GetComponent<CardDragHandler>();
-                if (oldDragHandler != null)
-                {
-                    oldCardUI.transform.SetParent(oldDragHandler.OriginalParent);
-                    oldCardUI.transform.localPosition = oldDragHandler.OriginalPosition;
-                    oldCardUI.transform.localScale = Vector3.one;
-                }
-
-                slot.Clear(); // 슬롯 참조 초기화
+                Debug.Log("[DropHandler] 기존 카드가 있어 원래 위치로 복귀 처리.");
+                CardSlotHelper.ResetCardToOriginal(oldCardUI);
+                cardRegistry.ClearSlot(combatPosition);
             }
 
-            // 새 카드 등록
-            newCard.SetCombatSlot(slot.GetCombatPosition());
-            slot.SetCard(newCard);
-            slot.SetCardUI(newCardUI);
+            // 슬롯에 카드 등록 및 UI 연결
+            CardRegistrar.RegisterCard(slot, newCard, newCardUI);
+            CardSlotHelper.AttachCardToSlot(newCardUI, (MonoBehaviour)slot);
+            cardRegistry.RegisterPlayerCard(combatPosition, newCard);
 
-            // UI를 슬롯에 배치
-            draggedObject.transform.SetParent(((MonoBehaviour)slot).transform);
-            draggedObject.transform.localPosition = Vector3.zero;
-            draggedObject.transform.localScale = Vector3.one;
-
-            // 드롭 성공 처리
-            var dragHandler = draggedObject.GetComponent<CardDragHandler>();
-            if (dragHandler != null)
-                dragHandler.droppedSuccessfully = true;
-
-            // 카드 등록 (DI 방식으로 주입된 turnManager 사용)
-            turnManager?.RegisterPlayerCard(newCard);
-
-            Debug.Log($"[DropHandler] 카드 교체 완료: {newCard.GetCardName()} → {slot.GetCombatPosition()}");
-        }
-
-
-        private bool IsPlayerCard(ISkillCard card)
-        {
-            var handSlot = card.GetHandSlot();
-            return handSlot.HasValue && handSlot.Value.ToString().Contains("PLAYER");
+            dragHandler.droppedSuccessfully = true;
+            Debug.Log($"[DropHandler] 드롭 성공! 카드: {newCard.GetCardName()} → 슬롯: {combatPosition}");
         }
     }
 }

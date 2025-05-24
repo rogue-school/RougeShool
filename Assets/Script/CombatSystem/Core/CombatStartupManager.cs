@@ -4,16 +4,19 @@ using Game.CombatSystem.Manager;
 using Game.Utility;
 using Game.CombatSystem.Slot;
 using Game.CombatSystem.Core;
+using Game.CombatSystem.Utility;
 
 [DefaultExecutionOrder(-1000)]
 public class CombatStartupManager : MonoBehaviour
 {
     [Header("의존성 매니저")]
     [SerializeField] private SlotRegistry slotRegistry;
+    [SerializeField] private SlotInitializer slotInitializer;
     [SerializeField] private SceneAutoBinderManager autoBinder;
     [SerializeField] private CombatStateFactoryInstaller stateFactoryInstaller;
     [SerializeField] private CombatBootstrapInstaller bootstrapInstaller;
     [SerializeField] private CombatFlowCoordinator flowCoordinator;
+    [SerializeField] private CombatTurnManager turnManager;
 
     private void Start()
     {
@@ -25,7 +28,6 @@ public class CombatStartupManager : MonoBehaviour
         Debug.Log("[CombatStartupManager] 슬롯 레지스트리 초기화 시작");
         slotRegistry.Initialize();
 
-        var slotInitializer = Object.FindFirstObjectByType<SlotInitializer>();
         if (slotInitializer != null)
         {
             slotInitializer.AutoBindAllSlots();
@@ -33,7 +35,7 @@ public class CombatStartupManager : MonoBehaviour
         }
         else
         {
-            Debug.LogError("[CombatStartupManager] SlotInitializer를 찾을 수 없습니다.");
+            Debug.LogError("[CombatStartupManager] SlotInitializer가 연결되지 않았습니다.");
         }
 
         autoBinder.Initialize();
@@ -45,7 +47,6 @@ public class CombatStartupManager : MonoBehaviour
         bootstrapInstaller.Initialize();
         yield return null;
 
-        var turnManager = Object.FindFirstObjectByType<CombatTurnManager>();
         if (turnManager != null)
         {
             turnManager.Initialize();
@@ -53,7 +54,7 @@ public class CombatStartupManager : MonoBehaviour
         }
         else
         {
-            Debug.LogError("[CombatStartupManager] CombatTurnManager를 찾을 수 없습니다.");
+            Debug.LogError("[CombatStartupManager] CombatTurnManager가 연결되지 않았습니다.");
         }
 
         flowCoordinator.StartCombatFlow();

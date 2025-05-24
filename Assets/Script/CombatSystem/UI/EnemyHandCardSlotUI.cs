@@ -17,6 +17,12 @@ namespace Game.CombatSystem.UI
         public SkillCardSlotPosition GetSlotPosition() => position;
 
         public SlotOwner GetOwner() => SlotOwner.ENEMY;
+        private ISkillCardUI currentCardUI;
+
+        public ISkillCardUI GetCardUI()
+        {
+            return currentCardUI;
+        }
 
         public void SetCard(ISkillCard card)
         {

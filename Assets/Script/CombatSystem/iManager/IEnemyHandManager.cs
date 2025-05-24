@@ -17,5 +17,7 @@ namespace Game.CombatSystem.Interface
         void ClearHand();
         void LogHandSlotStates();
         SkillCardUI RemoveCardFromSlot(SkillCardSlotPosition pos);
+        (ISkillCard card, SkillCardUI ui) PopCardFromSlot(SkillCardSlotPosition pos);
+
     }
 }

@@ -6,46 +6,49 @@ namespace Game.CombatSystem.Core
 {
     public class TurnStartButtonHandler : MonoBehaviour
     {
-        [SerializeField] private Button turnStartButton;
+        [SerializeField] private Button startButton;
 
-        private ICombatTurnManager turnManager;
-        private ITurnStartConditionChecker turnConditionChecker;
+        private ITurnStartConditionChecker conditionChecker;
+        private ITurnStateController turnStateController;
+        private ICombatStateFactory stateFactory;
 
-        public void Inject(ICombatTurnManager manager, ITurnStartConditionChecker checker)
+        public void Inject(
+            ITurnStartConditionChecker conditionChecker,
+            ITurnStateController turnStateController,
+            ICombatStateFactory stateFactory)
         {
-            turnManager = manager;
-            turnConditionChecker = checker;
+            this.conditionChecker = conditionChecker;
+            this.turnStateController = turnStateController;
+            this.stateFactory = stateFactory;
         }
 
-        private void Start()
+        private void Awake()
         {
-            if (turnStartButton == null)
-                turnStartButton = GetComponent<Button>();
+            if (startButton != null)
+                startButton.onClick.AddListener(OnStartButtonClicked);
+        }
 
-            if (turnStartButton != null)
-                turnStartButton.onClick.AddListener(OnTurnStartClicked);
-
-            SetInteractable(false);
+        private void OnDestroy()
+        {
+            if (startButton != null)
+                startButton.onClick.RemoveListener(OnStartButtonClicked);
         }
 
         private void Update()
         {
-            if (turnStartButton == null || turnConditionChecker == null)
-                return;
-
-            SetInteractable(turnConditionChecker.CanStartTurn());
+            if (startButton != null && conditionChecker != null)
+                startButton.interactable = conditionChecker.CanStartTurn();
         }
 
-        private void SetInteractable(bool value)
+        private void OnStartButtonClicked()
         {
-            if (turnStartButton.interactable != value)
-                turnStartButton.interactable = value;
-        }
+            if (conditionChecker != null && conditionChecker.CanStartTurn())
+            {
+                Debug.Log("[TurnStartButtonHandler] 전투 시작 버튼 클릭됨");
 
-        private void OnTurnStartClicked()
-        {
-            SetInteractable(false);
-            turnManager?.ExecuteCombat();
+                var nextState = stateFactory.CreateFirstAttackState();
+                turnStateController.RequestStateChange(nextState);
+            }
         }
     }
 }

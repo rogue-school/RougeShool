@@ -400,7 +400,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5a492adcb963f774c881f978f0e9de3e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  characterData: {fileID: 11400000, guid: 108def2387b83ed419893e2db0906a67, type: 2}
+  characterData: {fileID: 0}
   nameText: {fileID: 3990270840846056283}
   hpText: {fileID: 6969683324459299986}
   portraitImage: {fileID: 1631975328147475406}

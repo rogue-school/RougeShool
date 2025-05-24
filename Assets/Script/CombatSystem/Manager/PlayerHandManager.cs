@@ -65,13 +65,13 @@ namespace Game.CombatSystem.Manager
             };
 
             var selectedCharacter = player?.Data;
-            if (selectedCharacter == null || selectedCharacter.skillDeck == null)
+            if (selectedCharacter == null || selectedCharacter.SkillDeck == null)
             {
                 Debug.LogWarning("[PlayerHandManager] 플레이어 데이터 또는 스킬 덱이 없습니다.");
                 return;
             }
 
-            List<PlayerSkillCard> deck = selectedCharacter.skillDeck.GetCards();
+            List<PlayerSkillCard> deck = selectedCharacter.SkillDeck.GetCards();
 
             for (int i = 0; i < Mathf.Min(deck.Count, orderedSlots.Length); i++)
             {
@@ -91,14 +91,10 @@ namespace Game.CombatSystem.Manager
                 UpdateCardUI(runtimeCard, (PlayerHandCardSlotUI)slot);
             }
 
-            // 플레이어 핸드 슬롯 상태 확인
-            LogPlayerHandSlotStates();  // 상태 출력
+            LogPlayerHandSlotStates();
         }
 
-        public void RestoreCardToHand(PlayerSkillCardRuntime card)
-        {
-            RestoreCardToHand((ISkillCard)card);
-        }
+        public void RestoreCardToHand(PlayerSkillCardRuntime card) => RestoreCardToHand((ISkillCard)card);
 
         public void RestoreCardToHand(ISkillCard card)
         {
@@ -138,13 +134,7 @@ namespace Game.CombatSystem.Manager
             }
         }
 
-        private void UpdateCardUI(PlayerSkillCardRuntime runtimeCard, PlayerHandCardSlotUI uiSlot)
-        {
-            int coolTime = runtimeCard.GetCoolTime();
-            bool isCooldown = coolTime > 0;
-            uiSlot.SetInteractable(!isCooldown);
-            uiSlot.SetCoolTimeDisplay(coolTime, isCooldown);
-        }
+        public void EnableInput(bool isEnabled) => EnableCardInteraction(isEnabled);
 
         public void ClearAll()
         {
@@ -158,33 +148,41 @@ namespace Game.CombatSystem.Manager
 
         public IEnumerable<IHandCardSlot> GetAllHandSlots() => handSlots?.Values;
 
-        public void EnableInput(bool isEnabled) => EnableCardInteraction(isEnabled);
+        private void UpdateCardUI(PlayerSkillCardRuntime runtimeCard, PlayerHandCardSlotUI uiSlot)
+        {
+            int coolTime = runtimeCard.GetCoolTime();
+            bool isCooldown = coolTime > 0;
+            uiSlot.SetInteractable(!isCooldown);
+            uiSlot.SetCoolTimeDisplay(coolTime, isCooldown);
+        }
 
-        // 플레이어 핸드 슬롯 상태 확인
         public void LogPlayerHandSlotStates()
         {
             Debug.Log("[PlayerHandManager] 슬롯 상태 확인:");
 
-            // 3개의 슬롯에 대해 반복하면서 각 슬롯의 카드 상태를 확인
-            for (int i = 0; i < 3; i++)
+            SkillCardSlotPosition[] positions = new[]
             {
-                SkillCardSlotPosition pos = (SkillCardSlotPosition)(i + 1); // PLAYER_SLOT_1부터 3까지
-                var card = GetSlotCard(pos);
-                var ui = GetCardUI(i);
+                SkillCardSlotPosition.PLAYER_SLOT_1,
+                SkillCardSlotPosition.PLAYER_SLOT_2,
+                SkillCardSlotPosition.PLAYER_SLOT_3
+            };
 
+            foreach (var pos in positions)
+            {
+                var card = GetCardInSlot(pos);
+                var ui = GetCardUIInSlot(pos);
                 Debug.Log($" → {pos}: 카드 = {card?.CardData.Name ?? "없음"}, UI = {(ui != null ? "있음" : "없음")}");
             }
         }
 
-        private ISkillCard GetSlotCard(SkillCardSlotPosition pos)
+        public ISkillCard GetCardInSlot(SkillCardSlotPosition pos)
         {
             return handSlots.TryGetValue(pos, out var slot) ? slot.GetCard() : null;
         }
 
-        private ISkillCardUI GetCardUI(int index)
+        public ISkillCardUI GetCardUIInSlot(SkillCardSlotPosition pos)
         {
-            SkillCardSlotPosition pos = (SkillCardSlotPosition)(index + 1);
-            return handSlots.TryGetValue(pos, out var slot) && slot.GetCardUI() != null ? slot.GetCardUI() : null;
+            return handSlots.TryGetValue(pos, out var slot) ? slot.GetCardUI() : null;
         }
     }
 }

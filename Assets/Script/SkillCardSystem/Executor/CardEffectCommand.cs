@@ -1,29 +1,27 @@
 using Game.SkillCardSystem.Interface;
-using Game.CharacterSystem.Core;
+using Game.CombatSystem.Interface;
+using Game.SkillCardSystem.Effect;
 
 namespace Game.SkillCardSystem.Executor
 {
-    /// <summary>
-    /// 하나의 이펙트를 실행하는 명령 객체입니다.
-    /// </summary>
     public class CardEffectCommand : ICardEffectCommand
     {
         private readonly ICardEffect effect;
-        private readonly CharacterBase caster;
-        private readonly CharacterBase target;
+        private readonly ICardExecutionContext context;
         private readonly int power;
+        private readonly ITurnStateController controller;
 
-        public CardEffectCommand(ICardEffect effect, CharacterBase caster, CharacterBase target, int power)
+        public CardEffectCommand(ICardEffect effect, ICardExecutionContext context, int power, ITurnStateController controller = null)
         {
             this.effect = effect;
-            this.caster = caster;
-            this.target = target;
+            this.context = context;
             this.power = power;
+            this.controller = controller;
         }
 
         public void Execute()
         {
-            effect.ExecuteEffect(caster, target, power);
+            effect.ApplyEffect(context, power, controller);
         }
     }
 }

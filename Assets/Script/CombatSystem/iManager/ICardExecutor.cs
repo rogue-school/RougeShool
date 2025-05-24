@@ -1,9 +1,10 @@
 using Game.SkillCardSystem.Interface;
 
-namespace Game.IManager
+namespace Game.CombatSystem.Interface
 {
     public interface ICardExecutor
     {
-        void ExecuteCard(ISkillCard card);
+        void Execute(ISkillCard card, ICardExecutionContext context);
+        void Execute(ISkillCard card, ITurnCardRegistry registry);
     }
 }

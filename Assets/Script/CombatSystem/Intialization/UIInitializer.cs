@@ -2,6 +2,7 @@ using UnityEngine;
 using Game.CombatSystem.Slot;
 using Game.IManager;
 using Game.CharacterSystem.Interface;
+using Game.CombatSystem.Interface;
 
 namespace Game.CombatSystem.Intialization
 {
@@ -19,11 +20,6 @@ namespace Game.CombatSystem.Intialization
             this.playerManager = playerManager;
             this.enemyManager = enemyManager;
             this.slotRegistry = slotRegistry;
-        }
-
-        private void Awake()
-        {
-            // 기본 동작은 제거하거나 외부에서 Initialize 호출 보장
         }
 
         public void SetupCharacterUI()

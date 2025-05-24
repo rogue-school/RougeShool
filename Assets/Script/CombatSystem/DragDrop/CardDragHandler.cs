@@ -1,57 +1,74 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
-using Game.CombatSystem.Interface;
-using Game.SkillCardSystem.UI;
+using Game.CombatSystem.Utility;
 
-public class CardDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+namespace Game.CombatSystem.DragDrop
 {
-    public Vector3 OriginalPosition { get; private set; }
-    public Transform OriginalParent { get; private set; }
-    public bool droppedSuccessfully = false;
-
-    private CanvasGroup canvasGroup;
-    private RectTransform rectTransform;
-
-    private void Awake()
+    public class CardDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
-        canvasGroup = GetComponent<CanvasGroup>();
-        rectTransform = GetComponent<RectTransform>();
-    }
+        public Transform OriginalParent { get; set; }
+        public Vector3 OriginalWorldPosition { get; set; }
+        public bool droppedSuccessfully = false;
 
-    public void OnBeginDrag(PointerEventData eventData)
-    {
-        OriginalPosition = transform.localPosition;
-        OriginalParent = transform.parent;
-        droppedSuccessfully = false;
+        private Canvas canvas;
+        private CanvasGroup canvasGroup;
+        private RectTransform rectTransform;
 
-        var canvas = gameObject.AddComponent<Canvas>();
-        canvas.overrideSorting = true;
-        canvas.sortingOrder = 1000;
-    }
-
-    public void OnDrag(PointerEventData eventData)
-    {
-        rectTransform.position = eventData.position;
-    }
-
-    public void OnEndDrag(PointerEventData eventData)
-    {
-        Destroy(GetComponent<Canvas>());
-
-        if (!droppedSuccessfully)
+        private void Awake()
         {
-            transform.SetParent(OriginalParent);
-            transform.localPosition = OriginalPosition;
-            transform.localScale = Vector3.one;
+            rectTransform = GetComponent<RectTransform>();
+            canvasGroup = GetComponent<CanvasGroup>();
+            canvas = GetComponentInParent<Canvas>();
+        }
 
-            //  슬롯에서 나 자신을 제거해줘야 겹침 방지됨
-            var slot = GetComponentInParent<ICombatCardSlot>();
-            if (slot != null && slot.GetCardUI() == GetComponent<SkillCardUI>())
+        public void OnBeginDrag(PointerEventData eventData)
+        {
+            // 위치는 처음 드래그 시작할 때만 저장
+            if (OriginalParent == null)
             {
-                slot.Clear();
+                OriginalParent = transform.parent;
+                OriginalWorldPosition = transform.position;
+                Debug.Log($"[DragHandler] 최초 저장: 위치={OriginalWorldPosition}, 부모={OriginalParent.name}");
             }
 
-            Debug.LogWarning("[CardDragHandler] 드롭 실패 - 위치 복귀 및 슬롯 정리 완료");
+            canvasGroup.alpha = 0.8f;
+            canvasGroup.blocksRaycasts = false;
+            transform.SetParent(canvas.transform, true); // worldPosition 유지
+
+            Debug.Log($"[DragHandler] 드래그 시작: {gameObject.name}, 현재 위치: {transform.position}");
+        }
+
+        public void OnDrag(PointerEventData eventData)
+        {
+            if (canvas == null) return;
+
+            Vector2 localPoint;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                canvas.transform as RectTransform,
+                eventData.position,
+                eventData.pressEventCamera,
+                out localPoint
+            );
+            rectTransform.localPosition = localPoint;
+        }
+
+        public void OnEndDrag(PointerEventData eventData)
+        {
+            if (!droppedSuccessfully)
+            {
+                CardSlotHelper.ResetCardToOriginal(GetComponent<SkillCardSystem.UI.SkillCardUI>());
+                Debug.Log($"[DragHandler] 유효 슬롯 위에 드롭되지 않음. 복귀 처리됨");
+            }
+            else
+            {
+                Debug.Log("[DragHandler] 드롭 성공");
+            }
+
+            canvasGroup.alpha = 1f;
+            canvasGroup.blocksRaycasts = true;
+            droppedSuccessfully = false;
+
+            Debug.Log("[DragHandler] 드래그 종료");
         }
     }
 }

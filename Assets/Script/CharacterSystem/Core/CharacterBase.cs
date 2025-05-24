@@ -8,38 +8,74 @@ namespace Game.CharacterSystem.Core
 {
     /// <summary>
     /// 플레이어 및 적 캐릭터의 공통 기반 클래스입니다.
-    /// 체력, 이름, 상태이펙트 등의 공통 속성을 포함합니다.
+    /// 체력, 이름, 상태 이펙트, UI 연동 등의 기능을 제공합니다.
     /// </summary>
     public abstract class CharacterBase : MonoBehaviour, ICharacter
     {
+        /// <summary>
+        /// 최대 체력 수치입니다.
+        /// </summary>
         protected int maxHP;
+
+        /// <summary>
+        /// 현재 체력 수치입니다.
+        /// </summary>
         protected int currentHP;
 
+        /// <summary>
+        /// 매 턴마다 처리되는 효과 목록입니다.
+        /// </summary>
         protected List<IPerTurnEffect> perTurnEffects = new();
 
-        // HP UI를 갱신할 UI 참조 (연결 필수)
+        /// <summary>
+        /// 체력 UI를 제어하는 컴포넌트입니다.
+        /// </summary>
         protected CharacterUIController characterCardUI;
 
+        protected bool isGuarded = false;
 
-        public virtual string GetName() => gameObject.name;
 
+        public virtual void SetGuarded(bool value)
+        {
+            isGuarded = value;
+            Debug.Log($"[{GetCharacterName()}] 가드 상태: {isGuarded}");
+        }
+        public virtual bool IsGuarded() => isGuarded;
+
+        /// <summary>
+        /// 캐릭터의 이름을 반환합니다.
+        /// </summary>
+        public virtual string GetCharacterName() => gameObject.name;
+
+        /// <summary>
+        /// 현재 체력 수치를 반환합니다.
+        /// </summary>
         public virtual int GetHP() => currentHP;
 
+        /// <summary>
+        /// 현재 체력을 반환합니다.
+        /// </summary>
         public int GetCurrentHP() => currentHP;
 
+        /// <summary>
+        /// 최대 체력을 반환합니다.
+        /// </summary>
         public virtual int GetMaxHP() => maxHP;
 
+        /// <summary>
+        /// 캐릭터의 초상화 스프라이트를 반환합니다 (하위 클래스에서 재정의 예상).
+        /// </summary>
         public virtual Sprite GetPortrait() => null;
 
         /// <summary>
-        /// 체력을 감소시키고 UI를 갱신합니다.
+        /// 데미지를 입히고 체력 UI를 갱신합니다.
         /// </summary>
         public virtual void TakeDamage(int amount)
         {
             currentHP = Mathf.Max(currentHP - amount, 0);
             characterCardUI?.SetHP(currentHP, maxHP);
 
-            Debug.Log($"{GetName()} 피해: -{amount}, 남은 체력: {currentHP}");
+            Debug.Log($"[{GetCharacterName()}] 피해: -{amount}, 남은 체력: {currentHP}");
 
             if (IsDead())
                 Die();
@@ -53,11 +89,11 @@ namespace Game.CharacterSystem.Core
             currentHP = Mathf.Min(currentHP + amount, maxHP);
             characterCardUI?.SetHP(currentHP, maxHP);
 
-            Debug.Log($"{GetName()} 회복: +{amount}, 현재 체력: {currentHP}");
+            Debug.Log($"[{GetCharacterName()}] 회복: +{amount}, 현재 체력: {currentHP}");
         }
 
         /// <summary>
-        /// 최대 체력 설정 및 UI 초기화.
+        /// 최대 체력 설정 및 현재 체력 초기화, UI 동기화 처리.
         /// </summary>
         public virtual void SetMaxHP(int value)
         {
@@ -67,7 +103,7 @@ namespace Game.CharacterSystem.Core
         }
 
         /// <summary>
-        /// UI 참조를 연결합니다.
+        /// UI 컴포넌트를 외부에서 주입받아 연결합니다.
         /// </summary>
         public virtual void SetCardUI(CharacterUIController ui)
         {
@@ -75,12 +111,17 @@ namespace Game.CharacterSystem.Core
             characterCardUI?.Initialize(this);
         }
 
-
+        /// <summary>
+        /// 캐릭터가 사망했을 때 호출됩니다. (오버라이딩 가능)
+        /// </summary>
         public virtual void Die()
         {
-            Debug.Log($"{GetName()} 사망 처리됨.");
+            Debug.Log($"[{GetCharacterName()}] 사망 처리됨.");
         }
 
+        /// <summary>
+        /// 매 턴 적용되는 효과를 등록합니다.
+        /// </summary>
         public virtual void RegisterPerTurnEffect(IPerTurnEffect effect)
         {
             if (!perTurnEffects.Contains(effect))
@@ -89,6 +130,9 @@ namespace Game.CharacterSystem.Core
             }
         }
 
+        /// <summary>
+        /// 모든 등록된 턴 효과를 처리하고, 만료된 효과를 제거합니다.
+        /// </summary>
         public virtual void ProcessTurnEffects()
         {
             foreach (var effect in perTurnEffects.ToArray())
@@ -103,11 +147,8 @@ namespace Game.CharacterSystem.Core
         }
 
         /// <summary>
-        /// 캐릭터가 사망했는지 여부를 판단합니다. 이후 부활 처리 등 커스터마이징 시 활용.
+        /// 현재 캐릭터가 사망 상태인지 여부를 반환합니다.
         /// </summary>
-        public virtual bool IsDead()
-        {
-            return currentHP <= 0;
-        }
+        public virtual bool IsDead() => currentHP <= 0;
     }
 }

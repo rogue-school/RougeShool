@@ -12,5 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7dc1f22aa53c70b49809c4928fc4c25d, type: 3}
   m_Name: ForceNextSlotEffect
   m_EditorClassIdentifier: 
-  reservedSlot: 0
-  isEnemy: 1
+  effectName: 
+  description: 
+  forcedSlot: 2

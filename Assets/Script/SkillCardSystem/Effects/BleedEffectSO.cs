@@ -1,53 +1,29 @@
-using UnityEngine;
-using Game.CharacterSystem.Core;
-using Game.CharacterSystem.Interface;
-using Game.SkillCardSystem.Interface;
+ï»¿using UnityEngine;
 using Game.CombatSystem.Interface;
+using Game.SkillCardSystem.Interface;
+using Game.CharacterSystem.Interface;
+using Game.SkillCardSystem.Effect; // â¬…ï¸ ëˆ„ë½ë˜ì—ˆë˜ ë¶€ë¶„
 
 namespace Game.SkillCardSystem.Effects
 {
-    [CreateAssetMenu(menuName = "Game/CardEffects/BleedEffect")]
-    public class BleedEffectSO : ScriptableObject, ICardEffect
+    [CreateAssetMenu(fileName = "BleedEffect", menuName = "SkillEffects/BleedEffect")]
+    public class BleedEffectSO : SkillCardEffectSO
     {
-        [SerializeField] private int bleedDamage = 1;
-        [SerializeField] private int duration = 3;
+        [SerializeField] private int bleedAmount;
+        [SerializeField] private int duration;
 
-        public void ExecuteEffect(CharacterBase caster, CharacterBase target, int ignoredPower, ITurnStateController controller = null)
+        public override void ApplyEffect(ICardExecutionContext context, int power, ITurnStateController controller)
         {
-            target.RegisterPerTurnEffect(new BleedEffect(bleedDamage, duration));
-        }
-
-        public string GetEffectName()
-        {
-            return "Bleed";
-        }
-
-        public string GetDescription()
-        {
-            return $"ÃâÇ÷: ¸ÅÅÏ {bleedDamage} ÇÇÇØ, {duration}ÅÏ Áö¼Ó";
-        }
-    }
-
-    public class BleedEffect : IPerTurnEffect
-    {
-        private readonly int damage;
-        private int remainingTurns;
-
-        public BleedEffect(int damage, int duration)
-        {
-            this.damage = damage;
-            this.remainingTurns = duration;
-        }
-
-        public void OnTurnStart(ICharacter owner)
-        {
-            if (!owner.IsDead())
+            if (context.Target == null)
             {
-                owner.TakeDamage(damage);
-                remainingTurns--;
+                Debug.LogWarning("[BleedEffectSO] ëŒ€ìƒì´ nullìž…ë‹ˆë‹¤.");
+                return;
             }
-        }
 
-        public bool IsExpired => remainingTurns <= 0;
+            var effect = new BleedEffect(bleedAmount + power, duration);
+            context.Target.RegisterPerTurnEffect(effect);
+
+            Debug.Log($"[BleedEffectSO] {context.Target.GetCharacterName()}ì—ê²Œ ì¶œí˜ˆ íš¨ê³¼ ì ìš©: {bleedAmount + power} (ì§€ì† {duration}í„´)");
+        }
     }
 }

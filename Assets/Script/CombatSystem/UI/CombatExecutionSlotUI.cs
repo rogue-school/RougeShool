@@ -16,7 +16,15 @@ namespace Game.CombatSystem.UI
 
         public void Inject(ICardExecutionContext executionContext) => this.context = executionContext;
 
-        public CombatSlotPosition GetCombatPosition() => position;
+        public CombatFieldSlotPosition GetCombatPosition()
+        {
+            return position switch
+            {
+                CombatSlotPosition.FIRST => CombatFieldSlotPosition.FIELD_LEFT,
+                CombatSlotPosition.SECOND => CombatFieldSlotPosition.FIELD_RIGHT,
+                _ => CombatFieldSlotPosition.NONE
+            };
+        }
 
         public SlotOwner GetOwner() =>
             position == CombatSlotPosition.FIRST ? SlotOwner.ENEMY : SlotOwner.PLAYER;

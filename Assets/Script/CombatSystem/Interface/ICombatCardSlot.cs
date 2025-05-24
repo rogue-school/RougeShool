@@ -6,7 +6,7 @@ namespace Game.CombatSystem.Interface
 {
     public interface ICombatCardSlot
     {
-        CombatSlotPosition GetCombatPosition();
+        CombatFieldSlotPosition GetCombatPosition();
         SlotOwner GetOwner();
 
         ISkillCard GetCard();

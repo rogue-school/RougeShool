@@ -1,4 +1,6 @@
 using Game.CharacterSystem.Interface;
+using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.Slot;
 
 namespace Game.IManager
 {
@@ -24,5 +26,7 @@ namespace Game.IManager
         /// 선택된 캐릭터를 기반으로 플레이어 생성 및 핸드 초기화를 수행합니다.
         /// </summary>
         void CreateAndRegisterPlayer();
+        ISkillCard GetCardInSlot(SkillCardSlotPosition pos);
+        ISkillCardUI GetCardUIInSlot(SkillCardSlotPosition pos);
     }
 }

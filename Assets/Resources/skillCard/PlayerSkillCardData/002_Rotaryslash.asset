@@ -17,6 +17,6 @@ MonoBehaviour:
     Description: 
     Artwork: {fileID: 1353180748540979296, guid: 032247162a4693c4abe20987b4d1f949, type: 3}
     CoolTime: 1
-    Damage: 1
+    Damage: 2
   effects:
   - {fileID: 11400000, guid: 21f08687b4ccb7a488b95b06178d02aa, type: 2}

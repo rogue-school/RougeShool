@@ -17,5 +17,6 @@ namespace Game.CombatSystem.Interface
         /// 현재 슬롯에 카드가 있는지 여부
         /// </summary>
         bool HasCard();
+        ISkillCardUI GetCardUI();
     }
 }

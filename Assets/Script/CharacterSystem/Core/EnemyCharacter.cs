@@ -5,6 +5,7 @@ using TMPro;
 using Game.CharacterSystem.Data;
 using Game.SkillCardSystem.Interface;
 using Game.CharacterSystem.Interface;
+using Game.CombatSystem.Context;
 
 namespace Game.CharacterSystem.Core
 {
@@ -21,90 +22,73 @@ namespace Game.CharacterSystem.Core
 
         public EnemyCharacterData Data => characterData;
 
-        /// <summary>
-        /// 적 캐릭터를 데이터 기반으로 초기화합니다.
-        /// </summary>
         public void Initialize(EnemyCharacterData data)
         {
             if (data == null)
             {
-                Debug.LogWarning("[EnemyCharacter] 초기화 실패 - EnemyCharacterData가 null입니다.");
+                Debug.LogWarning("[EnemyCharacter] 초기화 실패 - null 데이터");
                 return;
             }
 
             characterData = data;
-
-            SetMaxHP(data.maxHP);
-
+            SetMaxHP(data.MaxHP);
             skillCardEntries = new List<EnemyCharacterData.SkillCardEntry>(data.GetAllCards());
 
-            UpdateUI();
+            RefreshUI();
             ApplyPassiveEffects();
 
-            Debug.Log($"[EnemyCharacter] '{characterData.displayName}' 초기화 완료");
+            Debug.Log($"[EnemyCharacter] '{characterData.DisplayName}' 초기화 완료");
         }
 
-
-        public EnemyCharacterData.SkillCardEntry GetRandomCardEntry()
-        {
-            if (skillCardEntries == null || skillCardEntries.Count == 0)
-            {
-                Debug.LogWarning("[EnemyCharacter] 랜덤 카드 추출 실패 - 카드 목록이 비어 있습니다.");
-                return null;
-            }
-
-            int index = Random.Range(0, skillCardEntries.Count);
-            return skillCardEntries[index];
-        }
-
-        private void UpdateUI()
+        private void RefreshUI()
         {
             if (characterData == null) return;
 
-            if (nameText != null)
-                nameText.text = characterData.displayName;
-
-            if (hpText != null)
-                hpText.text = $"HP {GetCurrentHP()} / {GetMaxHP()}";
-
-            if (portraitImage != null && characterData.portrait != null)
-                portraitImage.sprite = characterData.portrait;
+            nameText.text = GetCharacterName();
+            hpText.text = $"HP {GetCurrentHP()} / {GetMaxHP()}";
+            portraitImage.sprite = characterData.Portrait;
         }
 
         private void ApplyPassiveEffects()
         {
             var effects = characterData?.GetPassiveEffects();
-            if (effects == null || effects.Count == 0) return;
+            if (effects == null) return;
 
-            foreach (var obj in effects)
+            foreach (var effect in effects)
             {
-                if (obj is ICardEffect effect)
-                    effect.ExecuteEffect(this, this, 0);
+                if (effect is ICardEffect cardEffect)
+                    cardEffect.ApplyEffect(new DefaultCardExecutionContext(null, this, this), 0);
             }
+        }
+
+        public EnemyCharacterData.SkillCardEntry GetRandomCardEntry()
+        {
+            if (skillCardEntries == null || skillCardEntries.Count == 0)
+                return null;
+
+            int index = Random.Range(0, skillCardEntries.Count);
+            return skillCardEntries[index];
         }
 
         public override void TakeDamage(int amount)
         {
             base.TakeDamage(amount);
-            UpdateUI();
+            RefreshUI();
         }
 
         public override void Heal(int amount)
         {
             base.Heal(amount);
-            UpdateUI();
+            RefreshUI();
         }
 
         public override void Die()
         {
             base.Die();
-            UpdateUI();
-            Debug.Log($"[EnemyCharacter] '{characterData?.displayName}' 사망 처리 완료");
+            RefreshUI();
+            Debug.Log($"[EnemyCharacter] '{GetCharacterName()}' 사망 처리");
         }
 
-        public string GetCharacterName()
-        {
-            return characterData?.displayName ?? "Unnamed Enemy";
-        }
+        public override string GetCharacterName() => characterData?.DisplayName ?? "Unnamed Enemy";
     }
 }

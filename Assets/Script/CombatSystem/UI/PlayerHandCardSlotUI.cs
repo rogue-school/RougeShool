@@ -21,6 +21,10 @@ namespace Game.CombatSystem.UI
         public SkillCardSlotPosition GetSlotPosition() => position;
 
         public SlotOwner GetOwner() => SlotOwner.PLAYER;
+        public ISkillCardUI GetCardUI()
+        {
+            return currentCardUI;
+        }
 
         /// <summary>
         /// 카드 UI 프리팹을 외부에서 주입받습니다.

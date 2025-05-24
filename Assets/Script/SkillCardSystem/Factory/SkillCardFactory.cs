@@ -6,7 +6,7 @@ using UnityEngine;
 
 public static class SkillCardFactory
 {
-    public static ISkillCard CreateEnemyCard(EnemySkillCard cardData, int damage)
+    public static ISkillCard CreateEnemyCard(EnemySkillCard cardData)
     {
         if (cardData == null)
         {
@@ -18,8 +18,7 @@ public static class SkillCardFactory
 
         return new EnemySkillCardRuntime(
             cardData.CardData,
-            effects,
-            damage
+            effects
         );
     }
 

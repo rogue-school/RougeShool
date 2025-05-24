@@ -3,9 +3,13 @@ using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Slot;
 using Game.CombatSystem.Slot;
 using Game.CharacterSystem.Core;
+using Game.CharacterSystem.UI;
 
 namespace Game.CharacterSystem.UI
 {
+    /// <summary>
+    /// 캐릭터 슬롯에 캐릭터를 배치하고 UI를 초기화하는 클래스입니다.
+    /// </summary>
     public class CharacterSlotUI : MonoBehaviour, ICharacterSlot
     {
         [SerializeField] private CharacterSlotPosition slotPosition;
@@ -17,6 +21,12 @@ namespace Game.CharacterSystem.UI
         {
             this.character = character;
 
+            if (character == null)
+            {
+                Debug.LogWarning($"[CharacterSlotUI] SetCharacter()에 null이 전달되었습니다. 슬롯 위치: {slotPosition}");
+                return;
+            }
+
             if (character is CharacterBase baseChar)
             {
                 var uiController = GetComponentInChildren<CharacterUIController>();
@@ -24,8 +34,14 @@ namespace Game.CharacterSystem.UI
                     baseChar.SetCardUI(uiController);
             }
 
+            // 캐릭터 오브젝트를 슬롯 위치로 이동
             if (character is MonoBehaviour mb)
-                mb.transform.position = transform.position;
+            {
+                mb.transform.SetParent(transform, false);
+                mb.transform.localPosition = Vector3.zero;
+                mb.transform.localRotation = Quaternion.identity;
+                mb.transform.localScale = Vector3.one;
+            }
         }
 
         public ICharacter GetCharacter() => character;

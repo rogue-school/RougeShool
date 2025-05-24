@@ -4,6 +4,7 @@ using Game.CombatSystem.Slot;
 using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Interface;
 using Game.IManager;
+using Game.CombatSystem.Manager;
 
 namespace Game.CombatSystem.Initialization
 {

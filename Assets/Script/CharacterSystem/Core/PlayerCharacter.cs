@@ -1,97 +1,130 @@
 using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
 using Game.CharacterSystem.Data;
 using Game.CharacterSystem.Interface;
 using Game.SkillCardSystem.Runtime;
+using Game.SkillCardSystem.Interface;
+using System.Collections.Generic;
+using TMPro;
+using UnityEngine.UI;
+using Game.IManager;
+using Game.SkillCardSystem.Slot;
 
 namespace Game.CharacterSystem.Core
 {
-    public class PlayerCharacter : CharacterBase, IPlayerCharacter
+    public class PlayerCharacter : MonoBehaviour, IPlayerCharacter
     {
-        [SerializeField] private PlayerCharacterData characterData;
+        [Header("캐릭터 데이터")]
+        [field: SerializeField] public PlayerCharacterData Data { get; private set; }
 
         [Header("UI Components")]
         [SerializeField] private TextMeshProUGUI nameText;
-        [SerializeField] private Image portraitImage;
         [SerializeField] private TextMeshProUGUI hpText;
-        [SerializeField] private Slider hpSlider;
+        [SerializeField] private Image portraitImage;
 
-        private bool isGuarded = false;
-        private PlayerSkillCardRuntime lastUsedCard;
-
-        public PlayerCharacterData Data => characterData;
+        private int currentHP;
+        private bool isGuarded;
+        private ISkillCard lastUsedCard;
+        private readonly List<IPerTurnEffect> perTurnEffects = new();
 
         private void Awake()
         {
-            if (characterData != null)
+            if (Data == null)
             {
-                SetMaxHP(characterData.maxHP);
-                ApplyDataToUI();
-                Debug.Log($"[PlayerCharacter] {characterData.displayName} 초기화 완료");
+                Debug.LogWarning("[PlayerCharacter] PlayerCharacterData가 설정되지 않았습니다. 외부 주입이 필요합니다.");
+                return;
             }
+
+            InitializeCharacter(Data);
         }
 
         public void SetCharacterData(PlayerCharacterData data)
         {
-            characterData = data;
-            SetMaxHP(data.maxHP);
-            ApplyDataToUI();
+            Data = data;
+            InitializeCharacter(data);
         }
 
-        private void ApplyDataToUI()
+        private void InitializeCharacter(PlayerCharacterData data)
+        {
+            currentHP = data.MaxHP;
+            UpdateUI();
+        }
+
+        private void UpdateUI()
         {
             if (nameText != null)
-                nameText.text = characterData.displayName;
-
-            if (portraitImage != null)
-                portraitImage.sprite = characterData.portrait;
+                nameText.text = Data.DisplayName;
 
             if (hpText != null)
-                hpText.text = $"HP {GetCurrentHP()} / {GetMaxHP()}";
+                hpText.text = $"{currentHP} / {Data.MaxHP}";
 
-            if (hpSlider != null)
-                hpSlider.value = (float)GetCurrentHP() / GetMaxHP();
+            if (portraitImage != null)
+                portraitImage.sprite = Data.Portrait;
         }
 
-        public override void TakeDamage(int amount)
-        {
-            base.TakeDamage(amount);
-            ApplyDataToUI();
-        }
-
-        public override void Heal(int amount)
-        {
-            base.Heal(amount);
-            ApplyDataToUI();
-        }
-
-        public override void Die()
-        {
-            base.Die();
-            ApplyDataToUI();
-            Debug.Log("[PlayerCharacter] 사망 → 게임 오버 처리 필요");
-        }
-
-        public void SetGuarded(bool value)
-        {
-            isGuarded = value;
-            Debug.Log($"[PlayerCharacter] 방어 상태 설정됨: {isGuarded}");
-        }
-
+        public void SetGuarded(bool isGuarded) => this.isGuarded = isGuarded;
         public bool IsGuarded() => isGuarded;
 
-        public void SetLastUsedCard(PlayerSkillCardRuntime card)
+        public void SetLastUsedCard(ISkillCard card) => lastUsedCard = card;
+        public ISkillCard GetLastUsedCard() => lastUsedCard;
+
+        public void RestoreCardToHand(ISkillCard card)
         {
-            lastUsedCard = card;
+            if (card?.CardData.Name != null)
+                Debug.Log($"[PlayerCharacter] 카드 복귀: {card.CardData.Name}");
         }
 
-        public PlayerSkillCardRuntime GetLastUsedCard() => lastUsedCard;
+        public bool IsAlive() => currentHP > 0;
+        public bool IsDead() => currentHP <= 0;
 
-        public void RestoreCardToHand(PlayerSkillCardRuntime card)
+        public void TakeDamage(int amount)
         {
-            lastUsedCard = null;
-            Debug.Log("[PlayerCharacter] 핸드에 카드 복귀 처리 완료");
+            currentHP = Mathf.Max(0, currentHP - amount);
+            Debug.Log($"[PlayerCharacter] 피해 받음: {amount}, 남은 HP: {currentHP}");
+            UpdateUI();
+        }
+
+        public void Heal(int amount)
+        {
+            currentHP = Mathf.Min(currentHP + amount, Data.MaxHP);
+            UpdateUI();
+        }
+
+        public int GetCurrentHP() => currentHP;
+        public int GetMaxHP() => Data.MaxHP;
+
+        public string GetCharacterName() => Data.DisplayName;
+        public int GetHP() => currentHP;
+
+        private IPlayerHandManager handManager;
+
+        public void RegisterPerTurnEffect(IPerTurnEffect effect)
+        {
+            if (effect != null)
+                perTurnEffects.Add(effect);
+        }
+
+        public void ProcessTurnEffects()
+        {
+            foreach (var effect in perTurnEffects.ToArray())
+            {
+                effect.OnTurnStart(this);
+                if (effect.IsExpired)
+                    perTurnEffects.Remove(effect);
+            }
+        }
+        public void InjectHandManager(IPlayerHandManager manager)
+        {
+            handManager = manager;
+        }
+
+        public ISkillCard GetCardInHandSlot(SkillCardSlotPosition pos)
+        {
+            return handManager?.GetCardInSlot(pos);
+        }
+
+        public ISkillCardUI GetCardUIInHandSlot(SkillCardSlotPosition pos)
+        {
+            return handManager?.GetCardUIInSlot(pos);
         }
     }
 }

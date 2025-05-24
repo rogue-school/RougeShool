@@ -6,7 +6,7 @@ namespace Game.CombatSystem.Slot
     /// <summary>
     /// 카드 슬롯 관련 유틸리티 기능을 제공합니다.
     /// </summary>
-    public static class SlotUtility
+    public static class ShiftHandSlotsForward
     {
         /// <summary>
         /// 슬롯 배열의 카드들을 한 칸씩 앞으로 당기고 마지막 슬롯은 비웁니다.

@@ -72,16 +72,16 @@ namespace Game.CombatSystem.Manager
             foreach (Transform child in slot.GetTransform())
                 Destroy(child.gameObject);
 
-            var prefabToUse = data.prefab != null ? data.prefab : defaultEnemyPrefab;
+            var prefabToUse = data.Prefab != null ? data.Prefab : defaultEnemyPrefab;
             if (prefabToUse == null)
             {
                 Debug.LogError("[EnemySpawnerManager] 사용할 적 프리팹이 없습니다.");
                 return null;
             }
 
-            Debug.Log($"[EnemySpawnerManager] 프리팹 인스턴스 생성: {data.displayName}");
+            Debug.Log($"[EnemySpawnerManager] 프리팹 인스턴스 생성: {data.DisplayName}");
             var instance = Instantiate(prefabToUse, slot.GetTransform());
-            instance.name = $"Enemy_{data.displayName}";
+            instance.name = data.DisplayName;
             instance.transform.localPosition = Vector3.zero;
             instance.transform.localRotation = Quaternion.identity;
             instance.transform.localScale = Vector3.one;
@@ -97,7 +97,7 @@ namespace Game.CombatSystem.Manager
             slot.SetCharacter(enemy);
             spawnedEnemies.Add(enemy);
 
-            Debug.Log($"[EnemySpawnerManager] 적 소환 완료: {data.displayName}");
+            Debug.Log($"[EnemySpawnerManager] 적 소환 완료: {data.DisplayName}");
             return enemy;
         }
 

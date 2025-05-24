@@ -50,14 +50,14 @@ namespace Game.CombatSystem.Manager
             var enemy = spawnerManager.SpawnEnemy(enemyData);
             if (enemy == null)
             {
-                Debug.LogError($"[StageManager] SpawnEnemy 실패 - 적 생성 실패: {enemyData.displayName}");
+                Debug.LogError($"[StageManager] SpawnEnemy 실패 - 적 생성 실패: {enemyData.DisplayName}");
                 return;
             }
 
             RegisterEnemy(enemy);
             SetupEnemyHand(enemy);
 
-            Debug.Log($"[StageManager] 적 소환 완료 → 등록된 적: {enemy.GetCharacterName()} (index: {currentEnemyIndex}) / 데이터 기준: {enemyData.displayName}");
+            Debug.Log($"[StageManager] 적 소환 완료 → 등록된 적: {enemy.GetCharacterName()} (index: {currentEnemyIndex}) / 데이터 기준: {enemyData.DisplayName}");
 
 
             currentEnemyIndex++; // 소환 성공 및 출력 후에 증가시킴
@@ -86,9 +86,9 @@ namespace Game.CombatSystem.Manager
                 return false;
             }
 
-            if (data.prefab == null)
+            if (data.Prefab == null)
             {
-                Debug.LogError($"[StageManager] Enemy 프리팹이 null입니다. Name: {data.displayName}");
+                Debug.LogError($"[StageManager] Enemy 프리팹이 null입니다. Name: {data.DisplayName}");
                 return false;
             }
 

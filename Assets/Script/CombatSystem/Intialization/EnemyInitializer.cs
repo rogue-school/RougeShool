@@ -86,7 +86,7 @@ namespace Game.CombatSystem.Initialization
         {
             Debug.Log("[EnemyInitializer] 적 프리팹 인스턴스화 시도");
 
-            var prefab = data.prefab ?? defaultEnemyPrefab;
+            var prefab = data.Prefab ?? defaultEnemyPrefab;
             if (prefab == null)
             {
                 Debug.LogError("[EnemyInitializer] 사용할 적 프리팹이 없습니다.");
@@ -94,7 +94,7 @@ namespace Game.CombatSystem.Initialization
             }
 
             var instance = Instantiate(prefab, ((MonoBehaviour)slot).transform);
-            instance.name = $"Enemy_{data.displayName}";
+            instance.name = $"Enemy_{data.DisplayName}";
 
             if (!instance.TryGetComponent(out EnemyCharacter enemy))
             {

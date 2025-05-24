@@ -1,42 +1,32 @@
-using Game.CombatSystem.Interface;
-using Game.SkillCardSystem.Interface;
 using Game.CharacterSystem.Interface;
+using Game.SkillCardSystem.Interface;
+using Game.CombatSystem.Interface;
 
-namespace Game.CombatSystem.Core
+namespace Game.CombatSystem.Context
 {
-    /// <summary>
-    /// 기본 카드 실행 컨텍스트 구현.
-    /// 카드 인스턴스로부터 실행 주체(Owner)와 대상(Target)을 유추합니다.
-    /// </summary>
     public class DefaultCardExecutionContext : ICardExecutionContext
     {
-        private readonly ISkillCard card;
+        public ISkillCard Card { get; private set; }
+        public ICharacter Source { get; private set; }
+        public ICharacter Target { get; private set; }
 
-        public DefaultCardExecutionContext(ISkillCard card)
+        public DefaultCardExecutionContext(ISkillCard card, ICharacter source, ICharacter target)
         {
-            this.card = card;
+            Card = card;
+            Source = source;
+            Target = target;
         }
-
-        public ISkillCard GetCard() => card;
 
         public IPlayerCharacter GetPlayer()
         {
-            return GetSourceCharacter() as IPlayerCharacter;
+            return Source is IPlayerCharacter player ? player :
+                   Target is IPlayerCharacter tPlayer ? tPlayer : null;
         }
 
         public IEnemyCharacter GetEnemy()
         {
-            return GetTargetCharacter() as IEnemyCharacter;
-        }
-
-        public ICharacter GetSourceCharacter()
-        {
-            return card.GetOwner(this);
-        }
-
-        public ICharacter GetTargetCharacter()
-        {
-            return card.GetTarget(this);
+            return Source is IEnemyCharacter enemy ? enemy :
+                   Target is IEnemyCharacter tEnemy ? tEnemy : null;
         }
     }
 }

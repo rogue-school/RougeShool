@@ -3,8 +3,9 @@ using Game.CombatSystem.Interface;
 using Game.IManager;
 using Game.CombatSystem.Core;
 using Game.CombatSystem.Manager;
+using Game.CombatSystem.Context;
 
-namespace Game.Utility
+namespace Game.CombatSystem.Utility
 {
     public class CombatStateFactoryInstaller : MonoBehaviour, ICombatStateFactory
     {
@@ -22,6 +23,7 @@ namespace Game.Utility
         [SerializeField] private MonoBehaviour slotRegistrySource;
 
         [SerializeField] private CombatTurnManager combatTurnManager;
+        [SerializeField] private MonoBehaviour turnStateControllerSource;
 
         private void Awake() => Initialize();
 
@@ -35,23 +37,21 @@ namespace Game.Utility
                 !TryCast(out IVictoryManager victoryManager, victoryManagerSource) ||
                 !TryCast(out IGameOverManager gameOverManager, gameOverManagerSource) ||
                 !TryCast(out ICombatFlowCoordinator flowCoordinator, flowCoordinatorSource) ||
-                !TryCast(out ISlotRegistry slotRegistry, slotRegistrySource))
+                !TryCast(out ISlotRegistry slotRegistry, slotRegistrySource) ||
+                !TryCast(out ITurnStateController turnController, turnStateControllerSource))
             {
                 Debug.LogError("[CombatStateFactoryInstaller] 필수 매니저 캐스팅 실패");
                 enabled = false;
                 return;
             }
 
-            if (!(combatTurnManager is ITurnStateController turnController) ||
-                !(combatTurnManager is ICardExecutionContext executionContext))
-            {
-                Debug.LogError("[CombatStateFactoryInstaller] CombatTurnManager는 필수 인터페이스를 구현해야 합니다.");
-                enabled = false;
-                return;
-            }
+            // DefaultCardExecutionContext는 MonoBehaviour가 아니므로 직접 생성
+            var executionContext = new DefaultCardExecutionContext(null, null, null);
 
             factory = new CombatStateFactory(
                 combatTurnManager,
+                turnController,
+                executionContext,
                 flowCoordinator,
                 playerHandManager,
                 enemyHandManager,

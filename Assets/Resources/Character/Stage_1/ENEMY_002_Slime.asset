@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 861458062e34fcd4685dff11b945e1b9, type: 3}
   m_Name: ENEMY_002_Slime
   m_EditorClassIdentifier: 
-  displayName: "\uC2AC\uB77C\uC784"
-  maxHP: 3
-  portrait: {fileID: -7282886668606283007, guid: 05ccc850e175244408c6f1dded4a67a0, type: 3}
-  prefab: {fileID: 7769799778275336730, guid: 2c6e844c91775424681f573a6951211e, type: 3}
-  skillDeck:
-  - card: {fileID: 11400000, guid: e0a26135de8a5cc4fb8584333a13f940, type: 2}
-  - card: {fileID: 11400000, guid: dadf093733361954cb83506b04576d43, type: 2}
-  passiveEffects: []
+  <DisplayName>k__BackingField: "\uC2AC\uB77C\uC784"
+  <MaxHP>k__BackingField: 3
+  <Portrait>k__BackingField: {fileID: -7282886668606283007, guid: 05ccc850e175244408c6f1dded4a67a0, type: 3}
+  <Prefab>k__BackingField: {fileID: 7769799778275336730, guid: 2c6e844c91775424681f573a6951211e, type: 3}
+  <SkillDeck>k__BackingField:
+  - Card: {fileID: 11400000, guid: e0a26135de8a5cc4fb8584333a13f940, type: 2}
+  - Card: {fileID: 11400000, guid: dadf093733361954cb83506b04576d43, type: 2}
+  <PassiveEffects>k__BackingField: []
