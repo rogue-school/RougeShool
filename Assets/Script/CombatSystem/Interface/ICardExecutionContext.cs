@@ -1,21 +1,18 @@
-using Game.CharacterSystem.Core;
+using Game.SkillCardSystem.Interface;
 using Game.CharacterSystem.Interface;
 
 namespace Game.CombatSystem.Interface
 {
     /// <summary>
-    /// 카드 이펙트 실행 시 필요한 컨텍스트 정보 (시전자 / 대상자 등)를 제공합니다.
+    /// 카드 실행 중 필요한 소유자, 대상자, 카드 정보를 제공하는 컨텍스트 인터페이스.
     /// </summary>
     public interface ICardExecutionContext
     {
-        /// <summary>
-        /// 플레이어 캐릭터를 반환합니다.
-        /// </summary>
-        IPlayerCharacter GetPlayer();
+        ISkillCard Card { get; }
+        ICharacter Source { get; }
+        ICharacter Target { get; }
 
-        /// <summary>
-        /// 적 캐릭터를 반환합니다.
-        /// </summary>
+        IPlayerCharacter GetPlayer();
         IEnemyCharacter GetEnemy();
     }
 }

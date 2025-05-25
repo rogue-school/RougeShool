@@ -1,10 +1,10 @@
+﻿using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
-using Game.CharacterSystem.Interface;
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Slot;
-using Game.IManager;
+using Game.CharacterSystem.Interface;
+using Game.CombatSystem.Utility;
 
 namespace Game.CombatSystem.Slot
 {
@@ -61,10 +61,17 @@ namespace Game.CombatSystem.Slot
             combatSlots.Clear();
             foreach (var slot in slots)
             {
-                var key = slot.GetCombatPosition();
+                var fieldSlot = slot.GetCombatPosition();
+                var key = SlotPositionUtil.ToExecutionSlot(fieldSlot);
                 if (!combatSlots.ContainsKey(key))
                     combatSlots.Add(key, slot);
             }
+        }
+
+        public ICombatCardSlot GetCombatSlot(CombatFieldSlotPosition fieldPosition)
+        {
+            var execSlot = SlotPositionUtil.ToExecutionSlot(fieldPosition);
+            return combatSlots.TryGetValue(execSlot, out var slot) ? slot : null;
         }
 
         public ICombatCardSlot GetCombatSlot(CombatSlotPosition position)

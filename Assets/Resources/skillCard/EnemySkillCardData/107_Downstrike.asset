@@ -12,9 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30650a2f8e9c5994d84e2dd6e15b358b, type: 3}
   m_Name: 107_Downstrike
   m_EditorClassIdentifier: 
-  cardName: "\uB0B4\uB824\uCC0D\uAE30"
-  description: 
-  artwork: {fileID: 4264714366617519430, guid: 00fe0d12d678fec4dae1b3dc98c7832e, type: 3}
-  basePower: 3
-  effectObjects:
-  - {fileID: 11400000, guid: 21f08687b4ccb7a488b95b06178d02aa, type: 2}
+  CardData:
+    Name: 107_Downstrike
+    Description: 
+    Artwork: {fileID: 4264714366617519430, guid: 00fe0d12d678fec4dae1b3dc98c7832e, type: 3}
+    CoolTime: 0
+    Damage: 3
+  effects:
+  - {fileID: 11400000, guid: ce18b924503840146a6d33dfb483c54c, type: 2}

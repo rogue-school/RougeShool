@@ -3,6 +3,7 @@ using Game.CombatSystem.Stage;
 using Game.IManager;
 using Game.CharacterSystem.Data;
 using Game.CharacterSystem.Interface;
+using Game.CombatSystem.Interface;
 
 namespace Game.CombatSystem.Manager
 {
@@ -28,8 +29,6 @@ namespace Game.CombatSystem.Manager
             this.spawnerManager = spawner;
             this.enemyManager = enemyManager;
             this.handManager = handManager;
-
-            //Debug.Log("[StageManager] 의존성 주입 완료");
         }
 
         public void SpawnNextEnemy()
@@ -38,7 +37,7 @@ namespace Game.CombatSystem.Manager
 
             if (!TryGetNextEnemyData(out var enemyData))
             {
-                Debug.LogWarning("[StageManager] 다음 적 데이터를 가져올 수 없습니다. 적이 없거나 인덱스 초과");
+                Debug.LogWarning("[StageManager] 다음 적 데이터를 가져올 수 없습니다.");
                 return;
             }
 
@@ -51,29 +50,26 @@ namespace Game.CombatSystem.Manager
             var enemy = spawnerManager.SpawnEnemy(enemyData);
             if (enemy == null)
             {
-                Debug.LogError("[StageManager] SpawnEnemy 실패 - null 반환됨");
+                Debug.LogError($"[StageManager] SpawnEnemy 실패 - 적 생성 실패: {enemyData.DisplayName}");
                 return;
             }
 
             RegisterEnemy(enemy);
             SetupEnemyHand(enemy);
 
-            Debug.Log($"[StageManager] 적 소환 완료: {enemyData.displayName} (Index: {currentEnemyIndex - 1})");
+            Debug.Log($"[StageManager] 적 소환 완료 → 등록된 적: {enemy.GetCharacterName()} (index: {currentEnemyIndex}) / 데이터 기준: {enemyData.DisplayName}");
+
+
+            currentEnemyIndex++; // 소환 성공 및 출력 후에 증가시킴
         }
 
         private bool TryGetNextEnemyData(out EnemyCharacterData data)
         {
             data = null;
 
-            if (currentStage == null)
+            if (currentStage == null || currentStage.enemies == null || currentStage.enemies.Count == 0)
             {
-                Debug.LogError("[StageManager] currentStage가 null입니다.");
-                return false;
-            }
-
-            if (currentStage.enemies == null || currentStage.enemies.Count == 0)
-            {
-                Debug.LogError("[StageManager] 스테이지 적 리스트가 비어 있습니다.");
+                Debug.LogError("[StageManager] 스테이지 또는 적 리스트가 비어 있습니다.");
                 return false;
             }
 
@@ -83,16 +79,16 @@ namespace Game.CombatSystem.Manager
                 return false;
             }
 
-            data = currentStage.enemies[currentEnemyIndex++];
+            data = currentStage.enemies[currentEnemyIndex];
             if (data == null)
             {
-                Debug.LogError($"[StageManager] Enemy 데이터가 null입니다. Index: {currentEnemyIndex - 1}");
+                Debug.LogError($"[StageManager] Enemy 데이터가 null입니다. Index: {currentEnemyIndex}");
                 return false;
             }
 
-            if (data.prefab == null)
+            if (data.Prefab == null)
             {
-                Debug.LogError($"[StageManager] Enemy 프리팹이 null입니다. Name: {data.displayName}");
+                Debug.LogError($"[StageManager] Enemy 프리팹이 null입니다. Name: {data.DisplayName}");
                 return false;
             }
 
@@ -106,6 +102,7 @@ namespace Game.CombatSystem.Manager
                 Debug.LogError("[StageManager] spawnerManager가 주입되지 않았습니다.");
                 return false;
             }
+
             return true;
         }
 

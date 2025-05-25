@@ -1,37 +1,26 @@
+using Game.CombatSystem.Interface;
+using Game.IManager;
+using Game.SkillCardSystem.Interface;
 using UnityEngine;
-using Game.CombatSystem.Manager;
 
-namespace Game.CombatSystem.Intialization
+namespace Game.CombatSystem.Initializer
 {
-    /// <summary>
-    /// 플레이어 및 적 핸드의 카드를 초기화합니다.
-    /// </summary>
-    public static class HandInitializer
+    public class HandInitializer : IHandInitializer
     {
-        public static void SetupHands()
+        private readonly IPlayerHandManager playerHand;
+        private readonly IEnemyHandManager enemyHand;
+
+        public HandInitializer(IPlayerHandManager playerHand, IEnemyHandManager enemyHand)
         {
-            var playerHand = Object.FindFirstObjectByType<PlayerHandManager>();
-            var enemyHand = Object.FindFirstObjectByType<EnemyHandManager>();
+            this.playerHand = playerHand;
+            this.enemyHand = enemyHand;
+        }
 
-            if (playerHand == null)
-            {
-                Debug.LogError("[HandInitializer] PlayerHandManager를 찾을 수 없습니다.");
-            }
-            else
-            {
-                playerHand.ClearAll();
-            }
-
-            if (enemyHand == null)
-            {
-                Debug.LogError("[HandInitializer] EnemyHandManager를 찾을 수 없습니다.");
-            }
-            else
-            {
-                enemyHand.GenerateInitialHand();
-            }
-
-            Debug.Log("[HandInitializer] 플레이어/적 핸드 초기화 완료");
+        public void SetupHands()
+        {
+            playerHand.ClearAll();
+            enemyHand.GenerateInitialHand();
+            Debug.Log("[HandInitializer] 핸드 초기화 완료");
         }
     }
 }

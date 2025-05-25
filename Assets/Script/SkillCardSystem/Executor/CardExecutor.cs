@@ -1,57 +1,42 @@
+using System.Collections.Generic;
 using UnityEngine;
 using Game.SkillCardSystem.Interface;
-using Game.CharacterSystem.Interface;
-using Game.CombatSystem.Slot;
-using Game.IManager;
-using Game.CharacterSystem.Core;
+using Game.CombatSystem.Interface;
+using Game.SkillCardSystem.Effects;
 
 namespace Game.SkillCardSystem.Executor
 {
     /// <summary>
-    /// 전투 슬롯에 배치된 스킬 카드를 실행하는 서비스 클래스입니다.
+    /// 스킬 카드를 실행하여 그 안의 이펙트들을 순차적으로 실행하는 서비스.
     /// </summary>
     public class CardExecutor : ICardExecutor
     {
-        private readonly IPlayerManager playerManager;
-        private readonly IEnemyManager enemyManager;
-
-        public CardExecutor(IPlayerManager playerManager, IEnemyManager enemyManager)
+        public void Execute(ISkillCard card, ICardExecutionContext context, ITurnStateController controller)
         {
-            this.playerManager = playerManager;
-            this.enemyManager = enemyManager;
-        }
-
-        public void ExecuteCard(ISkillCard card)
-        {
-            if (card == null)
+            if (card == null || context == null)
             {
-                Debug.LogWarning("[CardExecutor] 실행할 카드가 null입니다.");
+                Debug.LogError("[CardExecutor] 카드 또는 컨텍스트가 null입니다.");
                 return;
             }
 
-            var slot = card.GetCombatSlot();
-            if (!slot.HasValue)
+            List<SkillCardEffectSO> effects = card.CreateEffects() as List<SkillCardEffectSO>;
+
+            if (effects == null || effects.Count == 0)
             {
-                Debug.LogError("[CardExecutor] 카드의 전투 슬롯 정보가 없습니다.");
+                Debug.LogWarning($"[CardExecutor] 카드 '{card.GetCardName()}' 에 연결된 이펙트가 없습니다.");
                 return;
             }
 
-            // 시전자/대상자 추출
-            ICharacter caster = (slot.Value == CombatSlotPosition.FIRST) ? enemyManager.GetEnemy() : playerManager.GetPlayer();
-            ICharacter target = (caster == enemyManager.GetEnemy()) ? playerManager.GetPlayer() : enemyManager.GetEnemy();
+            int power = card.GetEffectPower(null); // 기본적으로 SkillCardData.Damage 사용
 
-            if (caster is not CharacterBase casterChar || target is not CharacterBase targetChar)
+            Debug.Log($"[CardExecutor] {card.GetCardName()} → 효과 {effects.Count}개 실행 (power: {power})");
+
+            foreach (var effect in effects)
             {
-                Debug.LogError("[CardExecutor] 캐릭터가 CharacterBase 타입이 아닙니다.");
-                return;
-            }
+                if (effect == null) continue;
 
-            foreach (var effect in card.CreateEffects())
-            {
-                int power = card.GetEffectPower(effect);
-                effect.ExecuteEffect(casterChar, targetChar, power);
-
-                Debug.Log($"[CardExecutor] 실행됨: {card.GetCardName()} → {effect.GetType().Name}, power: {power}");
+                ICardEffectCommand command = effect.CreateEffectCommand(power);
+                command.Execute(context, controller);
             }
         }
     }

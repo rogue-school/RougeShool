@@ -1,10 +1,11 @@
 using UnityEngine;
-using UnityEngine.UI;
 using TMPro;
+using UnityEngine.UI;
+using System.Collections.Generic;
 using Game.CharacterSystem.Data;
-using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 using Game.CharacterSystem.Interface;
+using Game.CombatSystem.Context;
 
 namespace Game.CharacterSystem.Core
 {
@@ -17,78 +18,69 @@ namespace Game.CharacterSystem.Core
         [SerializeField] private TextMeshProUGUI hpText;
         [SerializeField] private Image portraitImage;
 
+        private List<EnemyCharacterData.SkillCardEntry> skillCardEntries = new();
+
         public EnemyCharacterData Data => characterData;
 
         public void Initialize(EnemyCharacterData data)
         {
-            SetCharacterData(data);
-        }
+            if (data == null)
+            {
+                Debug.LogWarning("[EnemyCharacter] 초기화 실패 - null 데이터");
+                return;
+            }
 
-        public void SetCharacterData(EnemyCharacterData data)
-        {
             characterData = data;
+            SetMaxHP(data.MaxHP);
+            skillCardEntries = new List<EnemyCharacterData.SkillCardEntry>(data.GetAllCards());
 
-            if (characterData != null)
-            {
-                SetMaxHP(characterData.maxHP);
-                UpdateUI();
-                ApplyPassiveEffects();
-                Debug.Log($"[EnemyCharacter] {characterData.displayName} 초기화 완료");
-            }
-            else
-            {
-                Debug.LogWarning("[EnemyCharacter] characterData가 null입니다!");
-            }
+            RefreshUI();
+            ApplyPassiveEffects();
+
+            Debug.Log($"[EnemyCharacter] '{characterData.DisplayName}' 초기화 완료");
         }
 
-        private void UpdateUI()
+        private void RefreshUI()
         {
-            nameText.text = characterData.displayName;
-            hpText.text = $"HP {GetCurrentHP()} / {GetMaxHP()}";
-            if (portraitImage != null && characterData.portrait != null)
-            {
-                portraitImage.sprite = characterData.portrait;
-            }
+            nameText.text = GetCharacterName();
+            hpText.text = $"HP {currentHP} / {GetMaxHP()}";
+            portraitImage.sprite = characterData.Portrait;
         }
 
         private void ApplyPassiveEffects()
         {
-            var effects = characterData?.GetPassiveEffects();
-            if (effects == null) return;
-
-            foreach (var obj in effects)
+            foreach (var effect in characterData?.GetPassiveEffects())
             {
-                if (obj is ICardEffect effect)
-                {
-                    effect.ExecuteEffect(this, this, 0);
-                }
+                if (effect is ICardEffect cardEffect)
+                    cardEffect.ApplyEffect(new DefaultCardExecutionContext(null, this, this), 0);
             }
+        }
+
+        public EnemyCharacterData.SkillCardEntry GetRandomCardEntry()
+        {
+            if (skillCardEntries.Count == 0) return null;
+            return skillCardEntries[Random.Range(0, skillCardEntries.Count)];
         }
 
         public override void TakeDamage(int amount)
         {
             base.TakeDamage(amount);
-            UpdateUI();
+            RefreshUI();
         }
 
         public override void Heal(int amount)
         {
             base.Heal(amount);
-            UpdateUI();
+            RefreshUI();
         }
 
         public override void Die()
         {
             base.Die();
-
-            Debug.Log($"[EnemyCharacter] 사망 → 다음 적 소환은 CombatTurnManager가 담당함");
-
-            // 이곳에서는 더 이상 핸드/슬롯 정리하지 않음
+            RefreshUI();
+            Debug.Log($"[EnemyCharacter] '{GetCharacterName()}' 사망 처리");
         }
 
-        public string GetCharacterName()
-        {
-            return characterData?.displayName ?? "Unnamed Enemy";
-        }
+        public override string GetCharacterName() => characterData?.DisplayName ?? "Unnamed Enemy";
     }
 }

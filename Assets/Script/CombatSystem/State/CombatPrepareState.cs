@@ -1,57 +1,67 @@
-using UnityEngine;
 using Game.CombatSystem.Interface;
-using Game.IManager;
-using Game.SkillCardSystem.Slot;
 using Game.CombatSystem.Slot;
+using UnityEngine;
+using System.Collections;
+using Game.IManager;
 
 namespace Game.CombatSystem.State
 {
     public class CombatPrepareState : ICombatTurnState
     {
-        private readonly ICombatTurnManager controller;
-        private readonly IEnemySpawnerManager spawnerManager;
-        private readonly IEnemyHandManager enemyHandManager;
+        private readonly ICombatTurnManager turnManager;
+        private readonly ICombatFlowCoordinator flowCoordinator;
         private readonly ICombatStateFactory stateFactory;
+        private readonly ISlotRegistry slotRegistry;
 
         public CombatPrepareState(
-            ICombatTurnManager controller,
-            IEnemySpawnerManager spawnerManager,
-            IEnemyHandManager enemyHandManager,
-            ICombatStateFactory stateFactory)
+            ICombatTurnManager turnManager,
+            ICombatFlowCoordinator flowCoordinator,
+            ICombatStateFactory stateFactory,
+            ISlotRegistry slotRegistry)
         {
-            this.controller = controller;
-            this.spawnerManager = spawnerManager;
-            this.enemyHandManager = enemyHandManager;
+            this.turnManager = turnManager;
+            this.flowCoordinator = flowCoordinator;
             this.stateFactory = stateFactory;
+            this.slotRegistry = slotRegistry;
         }
 
         public void EnterState()
         {
-            Debug.Log("[CombatPrepareState] 상태 진입 - 적 스폰 및 카드 배치");
+            Debug.Log("[State] CombatPrepareState: 적 생성 및 슬롯 준비 시작");
 
-            spawnerManager.SpawnInitialEnemy();
-            enemyHandManager.GenerateInitialHand();
-
-            var card = enemyHandManager.GetSlotCard(SkillCardSlotPosition.ENEMY_SLOT_1);
-            if (card != null)
+            // flowCoordinator가 MonoBehaviour 기반이므로 StartCoroutine 사용 가능
+            if (flowCoordinator is MonoBehaviour mono)
             {
-                var slot = Random.value < 0.5f ? CombatSlotPosition.FIRST : CombatSlotPosition.SECOND;
-                controller.ReserveEnemySlot(slot);
+                mono.StartCoroutine(PrepareRoutine());
+            }
+            else
+            {
+                Debug.LogError("flowCoordinator가 MonoBehaviour가 아닙니다. Coroutine 실행 불가.");
+            }
+        }
 
-                var combatSlot = SlotRegistry.Instance?.GetCombatSlot(slot);
-                combatSlot?.SetCard(card);
-                Debug.Log($"[CombatPrepareState] 적 카드 '{card.GetCardName()}' → 전투 슬롯 {slot}에 배치");
+        private IEnumerator PrepareRoutine()
+        {
+            bool prepareSuccess = false;
+            yield return flowCoordinator.PerformCombatPreparation(success => prepareSuccess = success);
+
+            if (!prepareSuccess)
+            {
+                Debug.LogError("[State] CombatPrepareState: 준비 실패 → 상태 전이 중단");
+                yield break;
             }
 
+            Debug.Log("[State] CombatPrepareState: 준비 완료, 입력 상태로 전이");
             var nextState = stateFactory.CreatePlayerInputState();
-            controller.RequestStateChange(nextState);
+            turnManager.RequestStateChange(nextState);
         }
+
 
         public void ExecuteState() { }
 
         public void ExitState()
         {
-            Debug.Log("[CombatPrepareState] 상태 종료");
+            Debug.Log("[State] CombatPrepareState: 상태 종료");
         }
     }
 }

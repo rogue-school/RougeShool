@@ -12,9 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30650a2f8e9c5994d84e2dd6e15b358b, type: 3}
   m_Name: 104_Bite
   m_EditorClassIdentifier: 
-  cardName: "\uBB3C\uAE30"
-  description: 
-  artwork: {fileID: -4210270633776242855, guid: 85a3280756aa76e46bda6c66d1a7554c, type: 3}
-  basePower: 2
-  effectObjects:
-  - {fileID: 11400000, guid: 21f08687b4ccb7a488b95b06178d02aa, type: 2}
+  CardData:
+    Name: "\uBB3C\uAE30"
+    Description: 
+    Artwork: {fileID: -4210270633776242855, guid: 85a3280756aa76e46bda6c66d1a7554c, type: 3}
+    CoolTime: 0
+    Damage: 2
+  effects:
+  - {fileID: 11400000, guid: ce18b924503840146a6d33dfb483c54c, type: 2}

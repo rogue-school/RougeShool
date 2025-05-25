@@ -1,34 +1,23 @@
 using UnityEngine;
-using Game.CharacterSystem.Core;
-using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.Effects;
+using Game.SkillCardSystem.Executor;
+using Game.CombatSystem.Interface;
 
-namespace Game.SkillCardSystem.Effects
+namespace Game.SkillCardSystem.Effect
 {
-    [CreateAssetMenu(menuName = "CardEffects/GuardEffect")]
-    public class GuardEffectSO : ScriptableObject, ICardEffect
+    [CreateAssetMenu(fileName = "GuardEffect", menuName = "SkillEffects/GuardEffect")]
+    public class GuardEffectSO : SkillCardEffectSO
     {
-        public void ExecuteEffect(CharacterBase caster, CharacterBase target, int value, ITurnStateController controller = null)
+        public override ICardEffectCommand CreateEffectCommand(int power)
         {
-            if (controller != null)
-            {
-                controller.RegisterPlayerGuard();
-                Debug.Log("[GuardEffectSO] 플레이어 방어 상태 등록됨");
-            }
-            else
-            {
-                Debug.LogWarning("[GuardEffectSO] controller가 null이므로 Guard 등록 실패");
-            }
+            return new GuardEffectCommand();
+        }
+        public override void ApplyEffect(ICardExecutionContext context, int value, ITurnStateController controller = null)
+        {
+            context.Target?.GainGuard(value);
+            Debug.Log($"[GuardEffectSO] {context.Target?.GetCharacterName()}에게 가드 {value} 적용");
         }
 
-        public string GetEffectName()
-        {
-            return "Guard";
-        }
-
-        public string GetDescription()
-        {
-            return "이번 턴 동안 플레이어가 방어 상태가 됩니다.";
-        }
     }
 }

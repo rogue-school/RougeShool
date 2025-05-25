@@ -1,91 +1,128 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.EventSystems;
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.UI;
-using Game.CombatSystem.DragDrop;
+using Game.CombatSystem.Utility;
+using Game.CombatSystem.Slot;
+using Game.CombatSystem.Core;
 
 namespace Game.CombatSystem.DragDrop
 {
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î Ä«µå°¡ ÀüÅõ ½½·Ô¿¡ µå·ÓµÇ¾úÀ» ¶§ Ã³¸®ÇÏ´Â ÇÚµé·¯ÀÔ´Ï´Ù.
-    /// Àû Ä«µå°¡ Á¸ÀçÇÏ¸é µå·ÓÀ» ¸·°í, ±âÁ¸ ÇÃ·¹ÀÌ¾î Ä«µå°¡ ÀÖ´Ù¸é ±³Ã¼ÇÕ´Ï´Ù.
+    /// ì¹´ë“œê°€ ì „íˆ¬ ìŠ¬ë¡¯ ìœ„ì— ë“œë¡­ë  ë•Œ ì²˜ë¦¬í•˜ëŠ” í•¸ë“¤ëŸ¬
     /// </summary>
     public class CardDropToSlotHandler : MonoBehaviour, IDropHandler
     {
-        private ICombatTurnManager turnManager;
+        private ITurnCardRegistry cardRegistry;
+        private ICombatFlowCoordinator flowCoordinator;
+        private ICombatTurnManager combatTurnManager;
 
         /// <summary>
-        /// CombatTurnManager¸¦ ¿ÜºÎ¿¡¼­ ÁÖÀÔÇÕ´Ï´Ù.
+        /// ê¸°ë³¸ ì¹´ë“œ ë“±ë¡ ì‹œìŠ¤í…œ ì£¼ì…
         /// </summary>
-        public void Inject(ICombatTurnManager turnManager)
+        public void Inject(ITurnCardRegistry registry)
         {
-            this.turnManager = turnManager;
+            this.cardRegistry = registry;
+        }
+
+        /// <summary>
+        /// ì˜ì¡´ì„± ì¼ê´„ ì£¼ì… (BootstrapInstallerìš©)
+        /// </summary>
+        public void InjectDependencies(ITurnCardRegistry registry, ICombatFlowCoordinator coordinator, ICombatTurnManager turnManager)
+        {
+            this.cardRegistry = registry;
+            this.flowCoordinator = coordinator;
+            this.combatTurnManager = turnManager;
+        }
+
+        private void Awake()
+        {
+            // ì˜ˆì™¸ì ìœ¼ë¡œ ìˆ˜ë™ ì£¼ì…ì´ ì—†ìœ¼ë©´ ê¸°ë³¸ FlowCoordinator ê²€ìƒ‰
+            if (flowCoordinator == null)
+            {
+                flowCoordinator = Object.FindFirstObjectByType<CombatFlowCoordinator>();
+            }
         }
 
         public void OnDrop(PointerEventData eventData)
         {
-            GameObject draggedObject = eventData.pointerDrag;
-            if (draggedObject == null) return;
-
-            SkillCardUI newCardUI = draggedObject.GetComponent<SkillCardUI>();
-            if (newCardUI == null) return;
-
-            ISkillCard newCard = newCardUI.GetCard();
-            if (newCard == null) return;
-
-            var slot = GetComponent<ICombatCardSlot>();
-            if (slot == null) return;
-
-            var oldCard = slot.GetCard();
-            var oldCardUI = slot.GetCardUI();
-
-            // Àû Ä«µå°¡ ÀÌ¹Ì ÀÖÀ¸¸é µå·Ó ±İÁö
-            if (oldCard != null && !IsPlayerCard(oldCard))
+            if (flowCoordinator == null || !flowCoordinator.IsPlayerInputEnabled())
             {
-                Debug.LogWarning("[DropHandler] ÇØ´ç ½½·Ô¿¡ Àû Ä«µå°¡ ÀÖ¾î µå·Ó ºÒ°¡");
+                Debug.LogWarning("[DropHandler] ë“œë¡­ ê±°ë¶€: í”Œë ˆì´ì–´ ì…ë ¥ì´ ë¹„í™œì„±í™”ë¨");
                 return;
             }
 
-            // ±âÁ¸ ÇÃ·¹ÀÌ¾î Ä«µå º¹±Í
-            if (oldCardUI != null)
+            if (eventData?.pointerDrag == null)
             {
-                var oldDragHandler = oldCardUI.GetComponent<CardDragHandler>();
-                if (oldDragHandler != null)
-                {
-                    oldCardUI.transform.SetParent(oldDragHandler.OriginalParent);
-                    oldCardUI.transform.localPosition = oldDragHandler.OriginalPosition;
-                    oldCardUI.transform.localScale = Vector3.one;
-                }
-
-                slot.Clear(); // ½½·Ô ÂüÁ¶ ÃÊ±âÈ­
+                Debug.LogWarning("[DropHandler] ë“œë˜ê·¸ëœ ì˜¤ë¸Œì íŠ¸ê°€ nullì…ë‹ˆë‹¤.");
+                return;
             }
 
-            // »õ Ä«µå µî·Ï
-            newCard.SetCombatSlot(slot.GetCombatPosition());
-            slot.SetCard(newCard);
-            slot.SetCardUI(newCardUI);
+            if (!eventData.pointerDrag.TryGetComponent(out SkillCardUI newCardUI) || newCardUI.GetCard() == null)
+            {
+                Debug.LogWarning("[DropHandler] SkillCardUI ë˜ëŠ” ì¹´ë“œ ë°ì´í„°ê°€ ì—†ìŠµë‹ˆë‹¤.");
+                return;
+            }
 
-            // UI¸¦ ½½·Ô¿¡ ¹èÄ¡
-            draggedObject.transform.SetParent(((MonoBehaviour)slot).transform);
-            draggedObject.transform.localPosition = Vector3.zero;
-            draggedObject.transform.localScale = Vector3.one;
+            var newCard = newCardUI.GetCard();
 
-            // µå·Ó ¼º°ø Ã³¸®
-            var dragHandler = draggedObject.GetComponent<CardDragHandler>();
-            if (dragHandler != null)
-                dragHandler.droppedSuccessfully = true;
+            if (!eventData.pointerDrag.TryGetComponent(out CardDragHandler dragHandler))
+            {
+                Debug.LogError("[DropHandler] ë“œë˜ê·¸ í•¸ë“¤ëŸ¬(CardDragHandler)ê°€ ì—†ìŠµë‹ˆë‹¤.");
+                return;
+            }
 
-            // Ä«µå µî·Ï (DI ¹æ½ÄÀ¸·Î ÁÖÀÔµÈ turnManager »ç¿ë)
-            turnManager?.RegisterPlayerCard(newCard);
+            if (!TryGetComponent(out ICombatCardSlot slot))
+            {
+                Debug.LogError("[DropHandler] ë“œë¡­ ëŒ€ìƒì— ICombatCardSlotì´ ì—†ìŠµë‹ˆë‹¤.");
+                dragHandler.droppedSuccessfully = false;
+                return;
+            }
 
-            Debug.Log($"[DropHandler] Ä«µå ±³Ã¼ ¿Ï·á: {newCard.GetCardName()} ¡æ {slot.GetCombatPosition()}");
-        }
+            if (cardRegistry == null)
+            {
+                Debug.LogError("[DropHandler] cardRegistryê°€ ì£¼ì…ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
+                dragHandler.droppedSuccessfully = false;
+                return;
+            }
 
-        private bool IsPlayerCard(ISkillCard card)
-        {
-            var handSlot = card.GetHandSlot();
-            return handSlot.HasValue && handSlot.Value.ToString().Contains("PLAYER");
+            if (!newCard.IsFromPlayer())
+            {
+                Debug.LogWarning("[DropHandler] í”Œë ˆì´ì–´ ì¹´ë“œê°€ ì•„ë‹Œ ê²½ìš° ë“œë¡­ ë¶ˆê°€");
+                dragHandler.droppedSuccessfully = false;
+                return;
+            }
+
+            var existingCard = slot.GetCard();
+            var existingCardUI = slot.GetCardUI();
+
+            // ì  ì¹´ë“œ ë®ì–´ì“°ê¸° ë°©ì§€
+            if (existingCard != null && !existingCard.IsFromPlayer())
+            {
+                Debug.LogWarning("[DropHandler] ì  ì¹´ë“œê°€ ìŠ¬ë¡¯ì— ì¡´ì¬. ë®ì–´ì“°ê¸° ê¸ˆì§€");
+                dragHandler.droppedSuccessfully = false;
+                return;
+            }
+
+            // ê¸°ì¡´ ì¹´ë“œê°€ ìˆë‹¤ë©´ ë³µê·€ ë° ìŠ¬ë¡¯ ì´ˆê¸°í™”
+            if (existingCardUI != null)
+            {
+                CardSlotHelper.ResetCardToOriginal(existingCardUI);
+                cardRegistry.ClearSlot(SlotPositionUtil.ToExecutionSlot(slot.GetCombatPosition()));
+            }
+
+            // ì¹´ë“œ ë“±ë¡ ë° ë°°ì¹˜
+            CardRegistrar.RegisterCard(slot, newCard, newCardUI);
+            CardSlotHelper.AttachCardToSlot(newCardUI, (MonoBehaviour)slot);
+            cardRegistry.RegisterPlayerCard(SlotPositionUtil.ToExecutionSlot(slot.GetCombatPosition()), newCard);
+
+            // CombatTurnManagerì— ë“±ë¡ (ì „íˆ¬ ì‹œì‘ ì¡°ê±´ íŒë‹¨ìš©)
+            combatTurnManager?.RegisterPlayerCard(SlotPositionUtil.ToExecutionSlot(slot.GetCombatPosition()), newCard);
+
+            dragHandler.droppedSuccessfully = true;
+            Debug.Log($"[DropHandler] ë“œë¡­ ì„±ê³µ: ì¹´ë“œ '{newCard.CardData.Name}' ì´ ìŠ¬ë¡¯ {slot.GetCombatPosition()} ì— ë“±ë¡ë¨");
         }
     }
 }
+

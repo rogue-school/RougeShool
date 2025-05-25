@@ -1,77 +1,71 @@
-using UnityEngine;
 using Game.CombatSystem.Interface;
-using Game.SkillCardSystem.Runtime;
+using Game.CombatSystem.Slot;
+using UnityEngine;
+using System.Collections;
 using Game.IManager;
 
 namespace Game.CombatSystem.State
 {
     public class CombatResultState : ICombatTurnState
     {
-        private readonly ITurnStateController controller;
-        private readonly ICardExecutionContext context;
-        private readonly IEnemyHandManager enemyHandManager;
-        private readonly IStageManager stageManager;
-        private readonly IPlayerHandManager playerHandManager;
+        private readonly ICombatTurnManager turnManager;
+        private readonly ICombatFlowCoordinator flowCoordinator;
         private readonly ICombatStateFactory stateFactory;
+        private readonly ISlotRegistry slotRegistry;
 
         public CombatResultState(
-            ITurnStateController controller,
-            ICardExecutionContext context,
-            IEnemyHandManager enemyHandManager,
-            IStageManager stageManager,
-            IPlayerHandManager playerHandManager,
-            ICombatStateFactory stateFactory)
+            ICombatTurnManager turnManager,
+            ICombatFlowCoordinator flowCoordinator,
+            ICombatStateFactory stateFactory,
+            ISlotRegistry slotRegistry)
         {
-            this.controller = controller;
-            this.context = context;
-            this.enemyHandManager = enemyHandManager;
-            this.stageManager = stageManager;
-            this.playerHandManager = playerHandManager;
+            this.turnManager = turnManager;
+            this.flowCoordinator = flowCoordinator;
             this.stateFactory = stateFactory;
+            this.slotRegistry = slotRegistry;
         }
 
         public void EnterState()
         {
-            Debug.Log("[CombatResultState] 결과 정리 시작");
+            Debug.Log("[State] CombatResultState: 전투 결과 판단 시작");
 
-            // 플레이어, 적 턴 효과 처리
-            context.GetPlayer()?.ProcessTurnEffects();
-            context.GetEnemy()?.ProcessTurnEffects();
-
-            // 플레이어 카드 쿨타임 처리
-            foreach (var slot in playerHandManager.GetAllHandSlots())
+            if (flowCoordinator is MonoBehaviour mono)
             {
-                var card = slot.GetCard();
-                if (card is PlayerSkillCardRuntime runtime)
-                {
-                    runtime.ActivateCoolTime();
-                    runtime.TickCoolTime();
-                    playerHandManager.RestoreCardToHand(runtime);
-                    slot.Clear();
-                }
+                mono.StartCoroutine(ResultRoutine());
             }
-
-            // 적 핸드 클리어
-            enemyHandManager.ClearAllSlots();
-            enemyHandManager.ClearAllUI();
-
-            // 적 사망 시 다음 적 스폰
-            var enemy = context.GetEnemy();
-            if (enemy == null || enemy.IsDead())
+            else
             {
-                stageManager.SpawnNextEnemy();
+                Debug.LogError("flowCoordinator가 MonoBehaviour가 아닙니다. Coroutine 실행 불가.");
             }
+        }
 
-            // 다음 상태로 전이
-            var nextState = stateFactory.CreatePrepareState();
-            controller.RequestStateChange(nextState);
+        private IEnumerator ResultRoutine()
+        {
+            yield return flowCoordinator.PerformResultPhase();
+
+            // 결과 확인 후 상태 전이
+            if (flowCoordinator.IsPlayerDead())
+            {
+                Debug.Log("[State] CombatResultState: 플레이어 사망 → GameOver");
+                var nextState = stateFactory.CreateGameOverState();
+                turnManager.RequestStateChange(nextState);
+            }
+            else if (!flowCoordinator.CheckHasNextEnemy())
+            {
+                Debug.Log("[State] CombatResultState: 모든 적 처치 → Victory");
+                var nextState = stateFactory.CreateVictoryState();
+                turnManager.RequestStateChange(nextState);
+            }
+            else
+            {
+                Debug.Log("[State] CombatResultState: 다음 적 준비");
+                var nextState = stateFactory.CreatePrepareState();
+                turnManager.RequestStateChange(nextState);
+            }
         }
 
         public void ExecuteState() { }
 
-        public void ExitState()
-        {
-            Debug.Log("[CombatResultState] 결과 정리 종료");
-        }
+        public void ExitState() { }
     }
 }

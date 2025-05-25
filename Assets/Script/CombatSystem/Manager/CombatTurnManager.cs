@@ -1,33 +1,50 @@
-using UnityEngine;
-using Game.CharacterSystem.Interface;
+ï»¿using UnityEngine;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
-using Game.IManager;
+using System;
 
 namespace Game.CombatSystem.Manager
 {
-    public class CombatTurnManager : MonoBehaviour, ICombatTurnManager, ITurnStateController, ICardExecutionContext
+    /// <summary>
+    /// ì „íˆ¬ í„´ ìƒíƒœ ì „ì´ì™€ ì¹´ë“œ ë“±ë¡ ìƒíƒœë¥¼ ê´€ë¦¬í•˜ëŠ” ë§¤ë‹ˆì €
+    /// </summary>
+    public class CombatTurnManager : MonoBehaviour, ICombatTurnManager, ITurnStateController, ITurnStartConditionChecker
     {
-        [SerializeField] private bool autoStart = true;
-
         private ICombatStateFactory stateFactory;
         private ICombatTurnState currentState;
         private ICombatTurnState pendingNextState;
 
-        private ISkillCard registeredPlayerCard;
+        private CombatSlotPosition? reservedEnemySlot;
+
         private ISkillCard registeredEnemyCard;
+        private ISkillCard registeredPlayerCard;
 
-        private bool isPlayerGuarded = false;
-        private CombatSlotPosition reservedEnemySlot = CombatSlotPosition.NONE;
+        public event Action<bool> OnTurnReadyChanged;
 
-        private IPlayerManager playerManager;
-        private IEnemyManager enemyManager;
+        private bool isTurnReady;
 
-        private void Start()
+        public void InjectFactory(ICombatStateFactory factory)
         {
-            if (autoStart)
-                Initialize();
+            stateFactory = factory;
+        }
+
+        public void Initialize()
+        {
+            if (stateFactory == null)
+            {
+                Debug.LogError("[CombatTurnManager] ìƒíƒœ íŒ©í† ë¦¬ ì£¼ì… ëˆ„ë½ë¨");
+                return;
+            }
+
+            var prepareState = stateFactory.CreatePrepareState();
+            if (prepareState == null)
+            {
+                Debug.LogError("[CombatTurnManager] ì¤€ë¹„ ìƒíƒœ ìƒì„± ì‹¤íŒ¨");
+                return;
+            }
+
+            RequestStateChange(prepareState);
         }
 
         private void Update()
@@ -35,48 +52,7 @@ namespace Game.CombatSystem.Manager
             currentState?.ExecuteState();
 
             if (pendingNextState != null)
-            {
                 ApplyPendingState();
-            }
-        }
-
-        public void InjectFactory(ICombatStateFactory factory)
-        {
-            this.stateFactory = factory;
-        }
-
-        public void InjectManagers(IPlayerManager playerManager, IEnemyManager enemyManager)
-        {
-            this.playerManager = playerManager;
-            this.enemyManager = enemyManager;
-        }
-
-        public void Initialize()
-        {
-            if (stateFactory == null)
-            {
-                Debug.LogError("[CombatTurnManager] »óÅÂ ÆÑÅä¸®°¡ ÁÖÀÔµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
-                return;
-            }
-
-            var prepareState = stateFactory.CreatePrepareState();
-            if (prepareState == null)
-            {
-                Debug.LogError("[CombatTurnManager] PrepareState »ı¼º ½ÇÆĞ");
-                return;
-            }
-
-            RequestStateChange(prepareState);
-        }
-
-        public void ChangeState(ICombatTurnState newState)
-        {
-            if (newState == null || currentState == newState)
-                return;
-
-            currentState?.ExitState();
-            currentState = newState;
-            currentState.EnterState();
         }
 
         public void RequestStateChange(ICombatTurnState nextState)
@@ -90,97 +66,87 @@ namespace Game.CombatSystem.Manager
             pendingNextState = null;
         }
 
+        public void ChangeState(ICombatTurnState newState)
+        {
+            if (newState == null || currentState == newState)
+                return;
+
+            Debug.Log($"[CombatTurnManager] ìƒíƒœ ì „ì´: {currentState?.GetType().Name ?? "None"} â†’ {newState.GetType().Name}");
+
+            currentState?.ExitState();
+            currentState = newState;
+            currentState.EnterState();
+        }
+
         public ICombatTurnState GetCurrentState() => currentState;
 
-        // -----------------------------------
-        // ITurnStateController ±¸Çö
-        // -----------------------------------
-        public void RegisterPlayerGuard()
-        {
-            isPlayerGuarded = true;
-        }
-
-        public void ReserveEnemySlot(CombatSlotPosition slot)
+        public void ReserveNextEnemySlot(CombatSlotPosition slot)
         {
             reservedEnemySlot = slot;
-            Debug.Log($"[CombatTurnManager] Àû °ø°İ ½½·Ô ¿¹¾àµÊ ¡æ {slot}");
-
-            // EnemyHandManager¸¦ ÅëÇØ Ä«µå È®º¸
-            var enemyHandManager = enemyManager?.GetEnemyHandManager();
-            var card = enemyHandManager?.GetCardForCombat();
-            if (card == null)
-            {
-                Debug.LogWarning("[CombatTurnManager] Àû Ä«µå°¡ ¾ø¾î ÀüÅõ ½½·Ô ¹èÄ¡¸¦ °Ç³Ê¶İ´Ï´Ù.");
-                return;
-            }
-
-            var combatSlot = SlotRegistry.Instance?.GetCombatSlot(slot);
-            if (combatSlot == null)
-            {
-                Debug.LogError($"[CombatTurnManager] ÀüÅõ ½½·Ô({slot})À» Ã£À» ¼ö ¾ø½À´Ï´Ù.");
-                return;
-            }
-
-            combatSlot.SetCard(card);
-            Debug.Log($"[CombatTurnManager] Àû Ä«µå {card.GetCardName()} ¡æ ½½·Ô {slot}¿¡ ¹èÄ¡µÊ");
+            Debug.Log($"[CombatTurnManager] ë‹¤ìŒ ì  ìŠ¬ë¡¯ ì˜ˆì•½ë¨: {slot}");
         }
 
-        public bool IsPlayerGuarded() => isPlayerGuarded;
+        public CombatSlotPosition? GetReservedEnemySlot() => reservedEnemySlot;
 
-        public CombatSlotPosition GetReservedEnemySlot() => reservedEnemySlot;
-
-        public void ResetGuardAndReservation()
+        public void RegisterPlayerGuard()
         {
-            isPlayerGuarded = false;
-            reservedEnemySlot = CombatSlotPosition.NONE;
-        }
-
-        // -----------------------------------
-        // ÀüÅõ ½½·Ô °ü·Ã
-        // -----------------------------------
-        public void RegisterPlayerCard(ISkillCard card)
-        {
-            registeredPlayerCard = card;
+            Debug.Log("[CombatTurnManager] í”Œë ˆì´ì–´ ê°€ë“œ ë“±ë¡ í˜¸ì¶œë¨ (í˜„ì¬ ë™ì‘ ì—†ìŒ)");
         }
 
         public void RegisterEnemyCard(ISkillCard card)
         {
-            registeredEnemyCard = card;
-        }
-
-        public bool AreBothSlotsReady() => registeredPlayerCard != null && registeredEnemyCard != null;
-
-        public void ExecuteCombat()
-        {
-            var next = stateFactory?.CreateFirstAttackState();
-            if (next == null)
+            if (card == null)
             {
-                Debug.LogError("[CombatTurnManager] FirstAttackState »ı¼º ½ÇÆĞ");
+                Debug.LogError("[CombatTurnManager] ì  ì¹´ë“œ ë“±ë¡ ì‹¤íŒ¨: null");
                 return;
             }
 
-            RequestStateChange(next);
+            registeredEnemyCard = card;
+            Debug.Log($"[CombatTurnManager] ì  ì¹´ë“œ ë“±ë¡ë¨: {card.CardData?.Name ?? "Unknown"}");
+
+            UpdateTurnReady();
         }
 
-        // -----------------------------------
-        // ICardExecutionContext ±¸Çö
-        // -----------------------------------
-        public IPlayerCharacter GetPlayer()
+        public void RegisterPlayerCard(ISkillCard card)
         {
-            var player = playerManager?.GetPlayer();
-            if (player == null)
-                Debug.LogError("[CombatTurnManager] ÇÃ·¹ÀÌ¾î Ä³¸¯ÅÍ ÂüÁ¶ ½ÇÆĞ");
+            if (card == null)
+            {
+                Debug.LogError("[CombatTurnManager] í”Œë ˆì´ì–´ ì¹´ë“œ ë“±ë¡ ì‹¤íŒ¨: null");
+                return;
+            }
 
-            return player;
+            registeredPlayerCard = card;
+            Debug.Log($"[CombatTurnManager] í”Œë ˆì´ì–´ ì¹´ë“œ ë“±ë¡ë¨: {card.CardData?.Name ?? "Unknown"}");
+
+            UpdateTurnReady();
         }
 
-        public IEnemyCharacter GetEnemy()
+        public void RegisterPlayerCard(CombatSlotPosition position, ISkillCard card)
         {
-            var enemy = enemyManager?.GetEnemy();
-            if (enemy == null)
-                Debug.LogError("[CombatTurnManager] Àû Ä³¸¯ÅÍ ÂüÁ¶ ½ÇÆĞ");
-
-            return enemy;
+            Debug.Log($"[CombatTurnManager] RegisterPlayerCard (ìœ„ì¹˜: {position}, ì¹´ë“œ: {card?.CardData?.Name ?? "null"})");
+            RegisterPlayerCard(card);
         }
+
+        private void UpdateTurnReady()
+        {
+            bool current = registeredEnemyCard != null && registeredPlayerCard != null;
+
+            if (isTurnReady != current)
+            {
+                isTurnReady = current;
+                Debug.Log($"[CombatTurnManager] ì „íˆ¬ ì‹œì‘ ê°€ëŠ¥ ìƒíƒœ ë³€ê²½ â†’ {isTurnReady}");
+
+                try
+                {
+                    OnTurnReadyChanged?.Invoke(isTurnReady);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"[CombatTurnManager] OnTurnReadyChanged ì´ë²¤íŠ¸ í˜¸ì¶œ ì¤‘ ì˜ˆì™¸ ë°œìƒ: {e.Message}");
+                }
+            }
+        }
+
+        public bool CanStartTurn() => isTurnReady;
     }
 }

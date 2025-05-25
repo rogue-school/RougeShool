@@ -1,97 +1,79 @@
 using UnityEngine;
-using UnityEngine.UI;
 using TMPro;
+using UnityEngine.UI;
+using System.Collections.Generic;
 using Game.CharacterSystem.Data;
+using Game.SkillCardSystem.Interface;
 using Game.CharacterSystem.Interface;
-using Game.SkillCardSystem.Runtime;
+using Game.SkillCardSystem.Slot;
+using Game.IManager;
 
 namespace Game.CharacterSystem.Core
 {
     public class PlayerCharacter : CharacterBase, IPlayerCharacter
     {
-        [SerializeField] private PlayerCharacterData characterData;
+        [field: SerializeField] public PlayerCharacterData Data { get; private set; }
 
         [Header("UI Components")]
         [SerializeField] private TextMeshProUGUI nameText;
-        [SerializeField] private Image portraitImage;
         [SerializeField] private TextMeshProUGUI hpText;
-        [SerializeField] private Slider hpSlider;
+        [SerializeField] private Image portraitImage;
 
-        private bool isGuarded = false;
-        private PlayerSkillCardRuntime lastUsedCard;
-
-        public PlayerCharacterData Data => characterData;
+        private ISkillCard lastUsedCard;
+        private IPlayerHandManager handManager;
 
         private void Awake()
         {
-            if (characterData != null)
-            {
-                SetMaxHP(characterData.maxHP);
-                ApplyDataToUI();
-                Debug.Log($"[PlayerCharacter] {characterData.displayName} 초기화 완료");
-            }
+            if (Data != null)
+                InitializeCharacter(Data);
         }
 
         public void SetCharacterData(PlayerCharacterData data)
         {
-            characterData = data;
-            SetMaxHP(data.maxHP);
-            ApplyDataToUI();
+            Data = data;
+            InitializeCharacter(data);
         }
 
-        private void ApplyDataToUI()
+        private void InitializeCharacter(PlayerCharacterData data)
         {
-            if (nameText != null)
-                nameText.text = characterData.displayName;
+            SetMaxHP(data.MaxHP);
+            UpdateUI();
+        }
 
-            if (portraitImage != null)
-                portraitImage.sprite = characterData.portrait;
-
-            if (hpText != null)
-                hpText.text = $"HP {GetCurrentHP()} / {GetMaxHP()}";
-
-            if (hpSlider != null)
-                hpSlider.value = (float)GetCurrentHP() / GetMaxHP();
+        private void UpdateUI()
+        {
+            if (nameText != null) nameText.text = Data?.DisplayName ?? "???";
+            if (hpText != null) hpText.text = $"{currentHP} / {Data?.MaxHP ?? 0}";
+            if (portraitImage != null && Data != null) portraitImage.sprite = Data.Portrait;
         }
 
         public override void TakeDamage(int amount)
         {
             base.TakeDamage(amount);
-            ApplyDataToUI();
+            UpdateUI(); // 체력 감소 시 UI 갱신
         }
 
         public override void Heal(int amount)
         {
             base.Heal(amount);
-            ApplyDataToUI();
+            UpdateUI(); // 체력 회복 시 UI 갱신
         }
 
-        public override void Die()
+        public void InjectHandManager(IPlayerHandManager manager) => handManager = manager;
+
+        public ISkillCard GetCardInHandSlot(SkillCardSlotPosition pos) => handManager?.GetCardInSlot(pos);
+        public ISkillCardUI GetCardUIInHandSlot(SkillCardSlotPosition pos) => handManager?.GetCardUIInSlot(pos);
+
+        public void SetLastUsedCard(ISkillCard card) => lastUsedCard = card;
+        public ISkillCard GetLastUsedCard() => lastUsedCard;
+
+        public void RestoreCardToHand(ISkillCard card)
         {
-            base.Die();
-            ApplyDataToUI();
-            Debug.Log("[PlayerCharacter] 사망 → 게임 오버 처리 필요");
+            Debug.Log($"[PlayerCharacter] 카드 복귀: {card?.CardData?.Name}");
         }
 
-        public void SetGuarded(bool value)
-        {
-            isGuarded = value;
-            Debug.Log($"[PlayerCharacter] 방어 상태 설정됨: {isGuarded}");
-        }
+        public override string GetCharacterName() => Data.DisplayName;
 
-        public bool IsGuarded() => isGuarded;
-
-        public void SetLastUsedCard(PlayerSkillCardRuntime card)
-        {
-            lastUsedCard = card;
-        }
-
-        public PlayerSkillCardRuntime GetLastUsedCard() => lastUsedCard;
-
-        public void RestoreCardToHand(PlayerSkillCardRuntime card)
-        {
-            lastUsedCard = null;
-            Debug.Log("[PlayerCharacter] 핸드에 카드 복귀 처리 완료");
-        }
+        public override bool IsAlive() => base.IsAlive(); // 명시적으로 override
     }
 }

@@ -1,4 +1,5 @@
 using Game.CombatSystem.Interface;
+using Game.CombatSystem.Slot;
 using Game.CombatSystem.State;
 using Game.IManager;
 using System;
@@ -8,6 +9,7 @@ namespace Game.CombatSystem.Core
     public class CombatStateFactory : ICombatStateFactory
     {
         private readonly ICombatTurnManager combatTurnManager;
+        private readonly ICombatFlowCoordinator flowCoordinator;
         private readonly IPlayerHandManager playerHandManager;
         private readonly IEnemyHandManager enemyHandManager;
         private readonly IEnemySpawnerManager enemySpawnerManager;
@@ -15,24 +17,29 @@ namespace Game.CombatSystem.Core
         private readonly IStageManager stageManager;
         private readonly IVictoryManager victoryManager;
         private readonly IGameOverManager gameOverManager;
-
         private readonly ITurnStateController turnStateController;
         private readonly ICardExecutionContext cardExecutionContext;
+        private readonly ISlotRegistry slotRegistry;
 
         public CombatStateFactory(
             ICombatTurnManager combatTurnManager,
+            ITurnStateController turnStateController,
+            ICardExecutionContext cardExecutionContext,
+            ICombatFlowCoordinator flowCoordinator,
             IPlayerHandManager playerHandManager,
             IEnemyHandManager enemyHandManager,
             IEnemySpawnerManager enemySpawnerManager,
             ICombatSlotManager combatSlotManager,
             IStageManager stageManager,
             IVictoryManager victoryManager,
-            IGameOverManager gameOverManager)
+            IGameOverManager gameOverManager,
+            ISlotRegistry slotRegistry)
         {
             this.combatTurnManager = combatTurnManager ?? throw new ArgumentNullException(nameof(combatTurnManager));
-            this.turnStateController = combatTurnManager as ITurnStateController ?? throw new ArgumentException("combatTurnManager는 ITurnStateController를 구현해야 합니다.");
-            this.cardExecutionContext = combatTurnManager as ICardExecutionContext ?? throw new ArgumentException("combatTurnManager는 ICardExecutionContext를 구현해야 합니다.");
+            this.turnStateController = turnStateController ?? throw new ArgumentNullException(nameof(turnStateController));
+            this.cardExecutionContext = cardExecutionContext ?? throw new ArgumentNullException(nameof(cardExecutionContext));
 
+            this.flowCoordinator = flowCoordinator ?? throw new ArgumentNullException(nameof(flowCoordinator));
             this.playerHandManager = playerHandManager ?? throw new ArgumentNullException(nameof(playerHandManager));
             this.enemyHandManager = enemyHandManager ?? throw new ArgumentNullException(nameof(enemyHandManager));
             this.enemySpawnerManager = enemySpawnerManager ?? throw new ArgumentNullException(nameof(enemySpawnerManager));
@@ -40,67 +47,28 @@ namespace Game.CombatSystem.Core
             this.stageManager = stageManager ?? throw new ArgumentNullException(nameof(stageManager));
             this.victoryManager = victoryManager ?? throw new ArgumentNullException(nameof(victoryManager));
             this.gameOverManager = gameOverManager ?? throw new ArgumentNullException(nameof(gameOverManager));
+            this.slotRegistry = slotRegistry ?? throw new ArgumentNullException(nameof(slotRegistry));
         }
 
-        public ICombatTurnState CreatePrepareState()
-        {
-            return new CombatPrepareState(
-                combatTurnManager,
-                enemySpawnerManager,
-                enemyHandManager,
-                this
-            );
-        }
+        public ICombatTurnState CreatePrepareState() =>
+            new CombatPrepareState(combatTurnManager, flowCoordinator, this, slotRegistry);
 
-        public ICombatTurnState CreatePlayerInputState()
-        {
-            return new CombatPlayerInputState(
-                turnStateController,
-                playerHandManager,
-                this
-            );
-        }
+        public ICombatTurnState CreatePlayerInputState() =>
+            new CombatPlayerInputState(combatTurnManager, flowCoordinator, this, slotRegistry);
 
-        public ICombatTurnState CreateFirstAttackState()
-        {
-            return new CombatFirstAttackState(
-                turnStateController,
-                combatSlotManager,
-                cardExecutionContext,
-                this
-            );
-        }
+        public ICombatTurnState CreateFirstAttackState() =>
+            new CombatFirstAttackState(combatTurnManager, flowCoordinator, this, slotRegistry);
 
-        public ICombatTurnState CreateSecondAttackState()
-        {
-            return new CombatSecondAttackState(
-                turnStateController,
-                combatSlotManager,
-                cardExecutionContext,
-                this
-            );
-        }
+        public ICombatTurnState CreateSecondAttackState() =>
+            new CombatSecondAttackState(combatTurnManager, flowCoordinator, this, slotRegistry);
 
-        public ICombatTurnState CreateResultState()
-        {
-            return new CombatResultState(
-                turnStateController,
-                cardExecutionContext,
-                enemyHandManager,
-                stageManager,
-                playerHandManager,
-                this
-            );
-        }
+        public ICombatTurnState CreateResultState() =>
+            new CombatResultState(combatTurnManager, flowCoordinator, this, slotRegistry);
 
-        public ICombatTurnState CreateVictoryState()
-        {
-            return new CombatVictoryState(victoryManager);
-        }
+        public ICombatTurnState CreateVictoryState() =>
+            new CombatVictoryState(combatTurnManager, flowCoordinator, this, slotRegistry);
 
-        public ICombatTurnState CreateGameOverState()
-        {
-            return new CombatGameOverState(gameOverManager);
-        }
+        public ICombatTurnState CreateGameOverState() =>
+            new CombatGameOverState(combatTurnManager, flowCoordinator, this, slotRegistry);
     }
 }

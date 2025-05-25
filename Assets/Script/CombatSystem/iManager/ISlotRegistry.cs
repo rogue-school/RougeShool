@@ -1,21 +1,29 @@
 using System.Collections.Generic;
+using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Slot;
 using Game.CombatSystem.Slot;
 using Game.CharacterSystem.Interface;
-using Game.CombatSystem.Interface;
 
-namespace Game.IManager
+namespace Game.CombatSystem.Interface
 {
-    /// <summary>
-    /// 전투 슬롯을 통합적으로 관리하는 슬롯 레지스트리 인터페이스입니다.
-    /// </summary>
     public interface ISlotRegistry
     {
-        IEnumerable<ICharacterSlot> GetCharacterSlots();
+        // Hand Slots
+        void RegisterHandSlots(IHandCardSlot[] slots);
+        IHandCardSlot GetHandSlot(SkillCardSlotPosition position);
+        IEnumerable<IHandCardSlot> GetAllHandSlots();
         IEnumerable<IHandCardSlot> GetHandSlots(SlotOwner owner);
+
+        // Combat Slots
+        void RegisterCombatSlots(ICombatCardSlot[] slots);
+        ICombatCardSlot GetCombatSlot(CombatSlotPosition position);
+        ICombatCardSlot GetCombatSlot(CombatFieldSlotPosition fieldPosition);
+        IEnumerable<ICombatCardSlot> GetAllCombatSlots();
         IEnumerable<ICombatCardSlot> GetCombatSlots();
+
+        // Character Slots
+        void RegisterCharacterSlots(ICharacterSlot[] slots);
         ICharacterSlot GetCharacterSlot(SlotOwner owner);
-        ICombatCardSlot GetCombatSlot(CombatSlotPosition position); // 명확히 인터페이스에 포함
-        void Initialize(); // 수동 초기화 메서드 포함
+        IEnumerable<ICharacterSlot> GetCharacterSlots();
     }
 }

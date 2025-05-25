@@ -58,20 +58,30 @@ namespace Game.CombatSystem.Manager
                 return null;
             }
 
+            var existingEnemy = slot.GetCharacter() as EnemyCharacter;
+
+            // 적이 이미 존재하고 살아있으면 재사용
+            if (existingEnemy != null && !existingEnemy.IsDead())
+            {
+                Debug.LogWarning("[EnemySpawnerManager] 살아있는 적이 이미 존재합니다. 재생성하지 않습니다.");
+                return existingEnemy;
+            }
+
+            // 기존 자식 오브젝트 제거
             Debug.Log("[EnemySpawnerManager] 기존 슬롯 자식 오브젝트 제거 시작");
             foreach (Transform child in slot.GetTransform())
                 Destroy(child.gameObject);
 
-            var prefabToUse = data.prefab != null ? data.prefab : defaultEnemyPrefab;
+            var prefabToUse = data.Prefab != null ? data.Prefab : defaultEnemyPrefab;
             if (prefabToUse == null)
             {
                 Debug.LogError("[EnemySpawnerManager] 사용할 적 프리팹이 없습니다.");
                 return null;
             }
 
-            Debug.Log($"[EnemySpawnerManager] 프리팹 인스턴스 생성: {data.displayName}");
+            Debug.Log($"[EnemySpawnerManager] 프리팹 인스턴스 생성: {data.DisplayName}");
             var instance = Instantiate(prefabToUse, slot.GetTransform());
-            instance.name = $"Enemy_{data.displayName}";
+            instance.name = data.DisplayName;
             instance.transform.localPosition = Vector3.zero;
             instance.transform.localRotation = Quaternion.identity;
             instance.transform.localScale = Vector3.one;
@@ -83,11 +93,11 @@ namespace Game.CombatSystem.Manager
                 return null;
             }
 
-            enemy.SetCharacterData(data);
+            enemy.Initialize(data);
             slot.SetCharacter(enemy);
             spawnedEnemies.Add(enemy);
 
-            Debug.Log($"[EnemySpawnerManager] 적 소환 완료: {data.displayName}");
+            Debug.Log($"[EnemySpawnerManager] 적 소환 완료: {data.DisplayName}");
             return enemy;
         }
 

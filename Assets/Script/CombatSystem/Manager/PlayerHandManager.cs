@@ -2,13 +2,15 @@ using UnityEngine;
 using System.Collections.Generic;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
-using Game.CombatSystem.UI;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Runtime;
 using Game.SkillCardSystem.Slot;
 using Game.SkillCardSystem.UI;
 using Game.IManager;
 using Game.CharacterSystem.Interface;
+using Game.CombatSystem.UI;
+using Game.SkillCardSystem.Data;
+using Game.CharacterSystem.Data;
 
 namespace Game.CombatSystem.Manager
 {
@@ -33,29 +35,16 @@ namespace Game.CombatSystem.Manager
 
         public void Initialize()
         {
-            if (slotRegistry == null)
+            if (slotRegistry == null || player == null)
             {
-                Debug.LogError("[PlayerHandManager] SlotRegistry가 주입되지 않았습니다.");
-                return;
-            }
-
-            if (player == null)
-            {
-                Debug.LogError("[PlayerHandManager] Player가 주입되지 않았습니다. 초기화를 중단합니다.");
+                Debug.LogError("[PlayerHandManager] 필수 의존성이 누락되었습니다.");
                 return;
             }
 
             handSlots = new Dictionary<SkillCardSlotPosition, IHandCardSlot>();
             runtimeCards = new Dictionary<SkillCardSlotPosition, PlayerSkillCardRuntime>();
 
-            var slots = slotRegistry.GetHandSlots(SlotOwner.PLAYER);
-            if (slots == null)
-            {
-                Debug.LogError("[PlayerHandManager] Player 슬롯 조회 실패");
-                return;
-            }
-
-            foreach (var slot in slots)
+            foreach (var slot in slotRegistry.GetHandSlots(SlotOwner.PLAYER))
             {
                 if (slot == null) continue;
                 handSlots[slot.GetSlotPosition()] = slot;
@@ -68,34 +57,39 @@ namespace Game.CombatSystem.Manager
         {
             ClearAll();
 
-            if (player == null || player.Data == null)
+            SkillCardSlotPosition[] orderedSlots = new[]
             {
-                Debug.LogWarning("[PlayerHandManager] 플레이어 데이터가 없어서 핸드를 생성하지 않습니다.");
+        SkillCardSlotPosition.PLAYER_SLOT_1,
+        SkillCardSlotPosition.PLAYER_SLOT_2,
+        SkillCardSlotPosition.PLAYER_SLOT_3
+    };
+
+            var selectedCharacter = player?.Data;
+            if (selectedCharacter == null || selectedCharacter.SkillDeck == null)
+            {
+                Debug.LogWarning("[PlayerHandManager] 플레이어 데이터 또는 스킬 덱이 없습니다.");
                 return;
             }
 
-            var skillDeck = player.Data.skillDeck;
-            SkillCardSlotPosition[] orderedSlots = new[]
+            List<PlayerSkillCard> deck = selectedCharacter.SkillDeck.GetCards();
+            if (deck == null)
             {
-                SkillCardSlotPosition.PLAYER_SLOT_1,
-                SkillCardSlotPosition.PLAYER_SLOT_2,
-                SkillCardSlotPosition.PLAYER_SLOT_3,
-            };
+                Debug.LogWarning("[PlayerHandManager] SkillDeck.GetCards() 결과가 null입니다.");
+                return;
+            }
 
-            int count = Mathf.Min(skillDeck.Count, orderedSlots.Length);
-
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < Mathf.Min(deck.Count, orderedSlots.Length); i++)
             {
-                var entry = skillDeck[i];
-                var card = entry.card;
-                int damage = entry.damage;
-                int coolTime = card.GetCoolTime();
+                var card = deck[i];
                 var slotPos = orderedSlots[i];
 
-                if (!handSlots.TryGetValue(slotPos, out var slot))
+                if (!handSlots.TryGetValue(slotPos, out var slot) || slot == null)
+                {
+                    Debug.LogWarning($"[PlayerHandManager] 핸드 슬롯 {slotPos} 이 존재하지 않음");
                     continue;
+                }
 
-                var runtimeCard = new PlayerSkillCardRuntime(card, damage, coolTime);
+                var runtimeCard = new PlayerSkillCardRuntime(card);
                 runtimeCard.SetHandSlot(slotPos);
                 runtimeCards[slotPos] = runtimeCard;
 
@@ -103,13 +97,16 @@ namespace Game.CombatSystem.Manager
                     uiSlot.InjectUIFactory(skillCardUIPrefab);
 
                 slot.SetCard(runtimeCard);
+
+                if (slot is PlayerHandCardSlotUI uiSlot2)
+                    UpdateCardUI(runtimeCard, uiSlot2);
             }
+
+            LogPlayerHandSlotStates();
         }
 
-        public void RestoreCardToHand(PlayerSkillCardRuntime card)
-        {
-            RestoreCardToHand((ISkillCard)card);
-        }
+
+        public void RestoreCardToHand(PlayerSkillCardRuntime card) => RestoreCardToHand((ISkillCard)card);
 
         public void RestoreCardToHand(ISkillCard card)
         {
@@ -120,9 +117,7 @@ namespace Game.CombatSystem.Manager
             slot.SetCard(card);
 
             if (card is PlayerSkillCardRuntime runtimeCard && slot is PlayerHandCardSlotUI uiSlot)
-            {
                 UpdateCardUI(runtimeCard, uiSlot);
-            }
         }
 
         public void TickCoolTime()
@@ -134,9 +129,7 @@ namespace Game.CombatSystem.Manager
                 card.SetCoolTime(newCoolTime);
 
                 if (handSlots.TryGetValue(kvp.Key, out var slot) && slot is PlayerHandCardSlotUI uiSlot)
-                {
                     UpdateCardUI(card, uiSlot);
-                }
             }
         }
 
@@ -146,21 +139,14 @@ namespace Game.CombatSystem.Manager
             {
                 if (slot is PlayerHandCardSlotUI uiSlot)
                 {
-                    var card = uiSlot.GetCard();
-                    bool canInteract = isEnabled && card is PlayerSkillCardRuntime runtimeCard && runtimeCard.GetCoolTime() == 0;
+                    var card = uiSlot.GetCard() as PlayerSkillCardRuntime;
+                    bool canInteract = isEnabled && card != null && card.GetCoolTime() == 0;
                     uiSlot.SetInteractable(canInteract);
                 }
             }
         }
 
-        private void UpdateCardUI(PlayerSkillCardRuntime runtimeCard, PlayerHandCardSlotUI uiSlot)
-        {
-            int coolTime = runtimeCard.GetCoolTime();
-            bool isCooldown = coolTime > 0;
-
-            uiSlot.SetInteractable(!isCooldown);
-            uiSlot.SetCoolTimeDisplay(coolTime, isCooldown);
-        }
+        public void EnableInput(bool isEnabled) => EnableCardInteraction(isEnabled);
 
         public void ClearAll()
         {
@@ -173,5 +159,45 @@ namespace Game.CombatSystem.Manager
         }
 
         public IEnumerable<IHandCardSlot> GetAllHandSlots() => handSlots?.Values;
+
+        private void UpdateCardUI(PlayerSkillCardRuntime runtimeCard, PlayerHandCardSlotUI uiSlot)
+        {
+            if (runtimeCard == null || uiSlot == null) return;
+
+            int coolTime = runtimeCard.GetCoolTime();
+            bool isCooldown = coolTime > 0;
+
+            uiSlot.SetInteractable(!isCooldown);
+            uiSlot.SetCoolTimeDisplay(coolTime, isCooldown);
+        }
+
+        public void LogPlayerHandSlotStates()
+        {
+            Debug.Log("[PlayerHandManager] 슬롯 상태 확인:");
+
+            SkillCardSlotPosition[] positions = new[]
+            {
+                SkillCardSlotPosition.PLAYER_SLOT_1,
+                SkillCardSlotPosition.PLAYER_SLOT_2,
+                SkillCardSlotPosition.PLAYER_SLOT_3
+            };
+
+            foreach (var pos in positions)
+            {
+                var card = GetCardInSlot(pos);
+                var ui = GetCardUIInSlot(pos);
+                Debug.Log($" → {pos}: 카드 = {card?.CardData.Name ?? "없음"}, UI = {(ui != null ? "있음" : "없음")}");
+            }
+        }
+
+        public ISkillCard GetCardInSlot(SkillCardSlotPosition pos)
+        {
+            return handSlots.TryGetValue(pos, out var slot) ? slot.GetCard() : null;
+        }
+
+        public ISkillCardUI GetCardUIInSlot(SkillCardSlotPosition pos)
+        {
+            return handSlots.TryGetValue(pos, out var slot) ? slot.GetCardUI() : null;
+        }
     }
 }
