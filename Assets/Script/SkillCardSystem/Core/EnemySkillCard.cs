@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.Effects;
 using Game.SkillCardSystem.Data;
 
 namespace Game.SkillCardSystem.Core
@@ -11,17 +12,11 @@ namespace Game.SkillCardSystem.Core
         public SkillCardData CardData;
 
         [Header("카드 실행 시 적용할 효과 목록")]
-        [SerializeField] private List<ScriptableObject> effects = new();
+        [SerializeField] private List<SkillCardEffectSO> effects = new();
 
-        public List<ICardEffect> CreateEffects()
+        public List<SkillCardEffectSO> CreateEffects()
         {
-            var list = new List<ICardEffect>();
-            foreach (var obj in effects)
-            {
-                if (obj is ICardEffect effect)
-                    list.Add(effect);
-            }
-            return list;
+            return effects ?? new List<SkillCardEffectSO>();
         }
 
         public string GetCardName() => CardData.Name;

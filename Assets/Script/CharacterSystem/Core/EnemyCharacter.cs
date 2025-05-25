@@ -1,7 +1,7 @@
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using TMPro;
+using UnityEngine.UI;
+using System.Collections.Generic;
 using Game.CharacterSystem.Data;
 using Game.SkillCardSystem.Interface;
 using Game.CharacterSystem.Interface;
@@ -42,19 +42,14 @@ namespace Game.CharacterSystem.Core
 
         private void RefreshUI()
         {
-            if (characterData == null) return;
-
             nameText.text = GetCharacterName();
-            hpText.text = $"HP {GetCurrentHP()} / {GetMaxHP()}";
+            hpText.text = $"HP {currentHP} / {GetMaxHP()}";
             portraitImage.sprite = characterData.Portrait;
         }
 
         private void ApplyPassiveEffects()
         {
-            var effects = characterData?.GetPassiveEffects();
-            if (effects == null) return;
-
-            foreach (var effect in effects)
+            foreach (var effect in characterData?.GetPassiveEffects())
             {
                 if (effect is ICardEffect cardEffect)
                     cardEffect.ApplyEffect(new DefaultCardExecutionContext(null, this, this), 0);
@@ -63,11 +58,8 @@ namespace Game.CharacterSystem.Core
 
         public EnemyCharacterData.SkillCardEntry GetRandomCardEntry()
         {
-            if (skillCardEntries == null || skillCardEntries.Count == 0)
-                return null;
-
-            int index = Random.Range(0, skillCardEntries.Count);
-            return skillCardEntries[index];
+            if (skillCardEntries.Count == 0) return null;
+            return skillCardEntries[Random.Range(0, skillCardEntries.Count)];
         }
 
         public override void TakeDamage(int amount)

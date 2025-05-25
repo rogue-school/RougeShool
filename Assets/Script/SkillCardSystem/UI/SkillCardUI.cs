@@ -39,7 +39,7 @@ namespace Game.SkillCardSystem.UI
 
             // 데미지 표시
             if (damageText != null)
-                damageText.text = $"Damage: {card.CardData.Damage}";
+                damageText.text = $"Damage: {card.CardData?.Damage ?? 0}";
 
             // 아트워크 설정
             if (cardArtImage != null && card.GetArtwork() != null)

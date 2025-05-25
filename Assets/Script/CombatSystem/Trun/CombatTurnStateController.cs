@@ -1,5 +1,6 @@
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
+using Game.SkillCardSystem.Interface;
 using UnityEngine;
 
 namespace Game.CombatSystem.Turn
@@ -7,7 +8,6 @@ namespace Game.CombatSystem.Turn
     public class CombatTurnStateController : ITurnStateController
     {
         private ICombatTurnState currentState;
-
         private CombatSlotPosition? reservedEnemySlot;
 
         public void SetInitialState(ICombatTurnState state)
@@ -25,22 +25,27 @@ namespace Game.CombatSystem.Turn
             currentState?.ExecuteState();
         }
 
-        // 인터페이스에서 요구하는 정확한 시그니처의 구현
         public void ReserveNextEnemySlot(CombatSlotPosition slot)
         {
             reservedEnemySlot = slot;
         }
 
-        // 선택적: 다른 시스템에서 접근 가능하게 하기 위한 getter
         public CombatSlotPosition? GetReservedEnemySlot()
         {
             return reservedEnemySlot;
         }
+
         public void RegisterPlayerGuard()
         {
             Debug.Log("[CombatTurnStateController] RegisterPlayerGuard() 호출됨");
-            // 이 부분은 필요에 따라 나중에 구현 가능
+            // 가드 관련 처리 필요 시 구현
         }
 
+        //  인터페이스 메서드 완성
+        public void RegisterPlayerCard(CombatSlotPosition position, ISkillCard card)
+        {
+            Debug.Log($"[CombatTurnStateController] RegisterPlayerCard 호출됨: 위치={position}, 카드={card?.CardData?.Name ?? "null"}");
+            // 실제 전투 카드 등록 로직이 필요한 경우, CombatTurnManager 같은 곳으로 위임하는 구조를 만들 수 있습니다.
+        }
     }
 }

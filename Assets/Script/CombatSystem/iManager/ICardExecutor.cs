@@ -1,10 +1,9 @@
-using Game.SkillCardSystem.Interface;
+using Game.CombatSystem.Interface;
 
-namespace Game.CombatSystem.Interface
+namespace Game.SkillCardSystem.Interface
 {
     public interface ICardExecutor
     {
-        void Execute(ISkillCard card, ICardExecutionContext context);
-        void Execute(ISkillCard card, ITurnCardRegistry registry);
+        void Execute(ISkillCard card, ICardExecutionContext context, ITurnStateController controller);
     }
 }

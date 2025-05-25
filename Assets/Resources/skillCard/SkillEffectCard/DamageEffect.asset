@@ -9,7 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 42cab4fb18c53b94c92414a24abedfe3, type: 3}
-  m_Name: SlashEffect
+  m_Script: {fileID: 11500000, guid: c99f9986ee567b24f93ae39101e69206, type: 3}
+  m_Name: DamageEffect
   m_EditorClassIdentifier: 
-  baseDamage: 1
+  effectName: 
+  description: 
+  damageAmount: 0

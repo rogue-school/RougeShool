@@ -64,6 +64,7 @@ namespace Game.CharacterSystem.Interface
 
         void SetGuarded(bool isGuarded);
         bool IsGuarded();
+        void GainGuard(int amount);
 
     }
 }

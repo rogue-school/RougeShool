@@ -1,5 +1,5 @@
 using UnityEngine;
-using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.Effects;
 using System.Collections.Generic;
 
 namespace Game.SkillCardSystem.Data
@@ -12,17 +12,11 @@ namespace Game.SkillCardSystem.Data
         public int GetCoolTime() => CardData.CoolTime;
 
         [Header("카드 효과 목록")]
-        [SerializeField] private List<ScriptableObject> effects;
+        [SerializeField] private List<SkillCardEffectSO> effects;
 
-        public List<ICardEffect> CreateEffects()
+        public List<SkillCardEffectSO> CreateEffects()
         {
-            var list = new List<ICardEffect>();
-            foreach (var obj in effects)
-            {
-                if (obj is ICardEffect effect)
-                    list.Add(effect);
-            }
-            return list;
+            return effects ?? new List<SkillCardEffectSO>();
         }
     }
 }

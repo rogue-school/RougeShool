@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Game.SkillCardSystem.Effects;
 using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Slot;
 using Game.CombatSystem.Interface;
@@ -17,12 +18,11 @@ namespace Game.SkillCardSystem.Interface
         string GetDescription();
         Sprite GetArtwork();
         int GetCoolTime();
-        int GetEffectPower(ICardEffect effect);
-        List<ICardEffect> CreateEffects();
+        int GetEffectPower(SkillCardEffectSO effect);
+        List<SkillCardEffectSO> CreateEffects();
 
         void SetHandSlot(SkillCardSlotPosition slot);
         SkillCardSlotPosition? GetHandSlot();
-
         void SetCombatSlot(CombatSlotPosition slot);
         CombatSlotPosition? GetCombatSlot();
 
@@ -34,6 +34,7 @@ namespace Game.SkillCardSystem.Interface
 
         ICharacter GetOwner(ICardExecutionContext context);
         ICharacter GetTarget(ICardExecutionContext context);
+
         void ExecuteSkill(ICharacter source, ICharacter target)
         {
             var context = new DefaultCardExecutionContext(this, source, target);

@@ -1,7 +1,7 @@
 using UnityEngine;
-using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Effects;
+using Game.CombatSystem.Interface;
 
 namespace Game.SkillCardSystem.Effect
 {
@@ -10,18 +10,15 @@ namespace Game.SkillCardSystem.Effect
     {
         [SerializeField] private int damageAmount;
 
-        public override void ApplyEffect(ICardExecutionContext context, int power, ITurnStateController controller)
+        public override ICardEffectCommand CreateEffectCommand(int power)
         {
-            if (context.Target == null)
-            {
-                Debug.LogWarning("[DamageEffectSO] 대상이 null입니다. 효과를 적용할 수 없습니다.");
-                return;
-            }
-
-            int totalDamage = damageAmount + power;
-            context.Target.TakeDamage(totalDamage);
-
-            Debug.Log($"[DamageEffectSO] {context.Source?.GetCharacterName()} 가 {context.Target.GetCharacterName()} 에게 {totalDamage} 피해를 입힘");
+            return new DamageEffectCommand(damageAmount + power);
         }
+        public override void ApplyEffect(ICardExecutionContext context, int value, ITurnStateController controller = null)
+        {
+            context.Target?.TakeDamage(value);
+            Debug.Log($"[DamageEffectSO] {context.Source?.GetCharacterName()}가 {context.Target?.GetCharacterName()}에게 {value} 피해를 입힘");
+        }
+
     }
 }

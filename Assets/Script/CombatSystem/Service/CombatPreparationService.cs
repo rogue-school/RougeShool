@@ -20,6 +20,7 @@ namespace Game.CombatSystem.Service
         private readonly ISlotRegistry slotRegistry;
         private readonly ITurnCardRegistry turnCardRegistry;
         private readonly ICardPlacementService cardPlacementService;
+        private readonly ICombatTurnManager combatTurnManager;
 
         public CombatPreparationService(
             IPlayerManager playerManager,
@@ -28,7 +29,8 @@ namespace Game.CombatSystem.Service
             IEnemyHandManager enemyHandManager,
             ISlotRegistry slotRegistry,
             ITurnCardRegistry turnCardRegistry,
-            ICardPlacementService cardPlacementService)
+            ICardPlacementService cardPlacementService,
+            ICombatTurnManager combatTurnManager)
         {
             this.playerManager = playerManager;
             this.spawnerManager = spawnerManager;
@@ -37,22 +39,23 @@ namespace Game.CombatSystem.Service
             this.slotRegistry = slotRegistry;
             this.turnCardRegistry = turnCardRegistry;
             this.cardPlacementService = cardPlacementService;
+            this.combatTurnManager = combatTurnManager;
         }
 
         public IEnumerator PrepareCombat(Action<bool> onComplete)
         {
-            Debug.Log("[Preparation] 플레이어 생성 시작");
+            Debug.Log("[CombatPreparationService] 전투 준비 시작");
+
             playerManager.CreateAndRegisterPlayer();
             yield return null;
 
-            Debug.Log("[Preparation] 적 생성 시작");
             spawnerManager.SpawnInitialEnemy();
             yield return null;
 
             var enemy = enemyManager.GetEnemy();
             if (enemy == null)
             {
-                Debug.LogError("[Preparation] 적 생성 실패");
+                Debug.LogError("[CombatPreparationService] 적 생성 실패");
                 onComplete?.Invoke(false);
                 yield break;
             }
@@ -60,56 +63,35 @@ namespace Game.CombatSystem.Service
             var (enemyCard, enemyUI) = enemyHandManager.PopCardFromSlot(SkillCardSlotPosition.ENEMY_SLOT_1);
             if (enemyCard == null || enemyUI == null)
             {
-                Debug.LogError("[Preparation] 적 카드 또는 UI 불러오기 실패");
-                enemyHandManager.LogHandSlotStates();
+                Debug.LogError("[CombatPreparationService] 적 카드 슬롯 비어 있음");
                 onComplete?.Invoke(false);
                 yield break;
             }
 
-            var player = playerManager.GetPlayer();
-            var playerCard = player?.GetCardInHandSlot(SkillCardSlotPosition.PLAYER_SLOT_1);
-            var playerUI = player?.GetCardUIInHandSlot(SkillCardSlotPosition.PLAYER_SLOT_1) as SkillCardUI;
+            var slotOrder = UnityEngine.Random.value < 0.5f
+                ? new[] { CombatSlotPosition.FIRST, CombatSlotPosition.SECOND }
+                : new[] { CombatSlotPosition.SECOND, CombatSlotPosition.FIRST };
 
-            if (playerCard == null || playerUI == null)
+            CombatSlotPosition playerSlot = slotOrder[0];
+            CombatSlotPosition enemySlot = slotOrder[1];
+
+            var enemyCombatSlot = slotRegistry.GetCombatSlot(enemySlot);
+            if (enemyCombatSlot == null)
             {
-                Debug.LogError("[Preparation] 플레이어 카드 또는 UI 불러오기 실패");
+                Debug.LogError("[CombatPreparationService] 전투 슬롯 가져오기 실패 (Enemy)");
                 onComplete?.Invoke(false);
                 yield break;
             }
 
-            // 선공 / 후공 슬롯을 무작위로 결정
-            bool playerGoesFirst = UnityEngine.Random.value < 0.5f;
-
-            CombatFieldSlotPosition playerSlotPos = playerGoesFirst
-                ? CombatFieldSlotPosition.FIELD_LEFT
-                : CombatFieldSlotPosition.FIELD_RIGHT;
-
-            CombatFieldSlotPosition enemySlotPos = playerGoesFirst
-                ? CombatFieldSlotPosition.FIELD_RIGHT
-                : CombatFieldSlotPosition.FIELD_LEFT;
-
-            var playerCombatSlot = slotRegistry.GetCombatSlot(playerSlotPos);
-            var enemyCombatSlot = slotRegistry.GetCombatSlot(enemySlotPos);
-
-            if (playerCombatSlot == null || enemyCombatSlot == null)
-            {
-                Debug.LogError("[Preparation] 전투 슬롯이 유효하지 않음");
-                onComplete?.Invoke(false);
-                yield break;
-            }
-
-            // 슬롯에 카드 배치
-            cardPlacementService.PlaceCardInSlot(playerCard, playerUI, playerCombatSlot);
             cardPlacementService.PlaceCardInSlot(enemyCard, enemyUI, enemyCombatSlot);
 
-            // 등록
-            turnCardRegistry.RegisterPlayerCard(playerSlotPos, playerCard);
-            turnCardRegistry.ReserveNextEnemySlot(SlotPositionUtil.ToExecutionSlot(enemySlotPos));
+            turnCardRegistry.RegisterEnemyCard(enemyCard);
+            turnCardRegistry.ReserveNextEnemySlot(enemySlot);
+            combatTurnManager.RegisterEnemyCard(enemyCard);
 
-            // 적 핸드 슬롯 보충
             enemyHandManager.FillEmptySlots();
 
-            Debug.Log("[Preparation] 전투 준비 완료");
+            Debug.Log($"[CombatPreparationService] 전투 준비 완료 - EnemyCard: {enemyCard.CardData.Name}");
             onComplete?.Invoke(true);
         }
     }

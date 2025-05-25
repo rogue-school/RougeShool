@@ -1,4 +1,4 @@
-using Game.CombatSystem.Interface;
+using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 
 namespace Game.CombatSystem.Interface
@@ -25,6 +25,20 @@ namespace Game.CombatSystem.Interface
         /// 현재 전투 턴 상태를 반환합니다.
         /// </summary>
         ICombatTurnState GetCurrentState();
+
+        /// <summary>
+        /// 플레이어 카드 등록 (간단 버전)
+        /// </summary>
+        void RegisterPlayerCard(ISkillCard card);
+
+        /// <summary>
+        /// 적 카드 등록
+        /// </summary>
         void RegisterEnemyCard(ISkillCard card);
+
+        /// <summary>
+        /// 플레이어 카드 등록 (슬롯 위치 지정 버전)
+        /// </summary>
+        void RegisterPlayerCard(CombatSlotPosition position, ISkillCard card);
     }
 }

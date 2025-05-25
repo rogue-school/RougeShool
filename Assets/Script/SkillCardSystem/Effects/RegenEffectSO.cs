@@ -1,7 +1,7 @@
 using UnityEngine;
-using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Effect;
+using Game.CombatSystem.Interface;
 
 namespace Game.SkillCardSystem.Effects
 {
@@ -11,19 +11,16 @@ namespace Game.SkillCardSystem.Effects
         [SerializeField] private int healPerTurn;
         [SerializeField] private int duration;
 
-        public override void ApplyEffect(ICardExecutionContext context, int power, ITurnStateController controller)
+        public override ICardEffectCommand CreateEffectCommand(int power)
         {
-            if (context.Target == null)
-            {
-                Debug.LogWarning("[RegenEffectSO] 대상이 null입니다.");
-                return;
-            }
-
-            var totalHeal = healPerTurn + power;
-            var effect = new RegenEffect(totalHeal, duration);
-            context.Target.RegisterPerTurnEffect(effect);
-
-            Debug.Log($"[RegenEffectSO] {context.Target.GetCharacterName()} 재생 효과 적용: {totalHeal} (지속 {duration}턴)");
+            return new RegenEffectCommand(healPerTurn + power, duration);
+        }
+    
+    public override void ApplyEffect(ICardExecutionContext context, int value, ITurnStateController controller = null)
+        {
+            var regen = new RegenEffect(value, 2);
+            context.Target?.RegisterPerTurnEffect(regen);
+            Debug.Log($"[RegenEffectSO] {context.Target?.GetCharacterName()}에게 재생 {value} 적용");
         }
     }
 }

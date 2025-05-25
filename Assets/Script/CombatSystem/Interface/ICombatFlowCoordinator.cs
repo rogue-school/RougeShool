@@ -7,8 +7,10 @@ namespace Game.CombatSystem.Interface
     {
         IEnumerator PerformCombatPreparation();
         IEnumerator PerformCombatPreparation(Action<bool> onComplete);
-        IEnumerator EnablePlayerInput();
-        IEnumerator DisablePlayerInput();
+
+        void EnablePlayerInput();
+        void DisablePlayerInput();
+
         IEnumerator PerformFirstAttack();
         IEnumerator PerformSecondAttack();
         IEnumerator PerformResultPhase();
@@ -18,8 +20,10 @@ namespace Game.CombatSystem.Interface
         bool IsPlayerDead();
         bool IsEnemyDead();
         bool CheckHasNextEnemy();
+        bool IsPlayerInputEnabled();
 
         void InjectTurnStateDependencies(ICombatTurnManager turnManager, ICombatStateFactory stateFactory);
         void StartCombatFlow();
     }
+
 }

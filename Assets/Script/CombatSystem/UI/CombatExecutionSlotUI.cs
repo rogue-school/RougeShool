@@ -6,16 +6,29 @@ using Game.SkillCardSystem.UI;
 
 namespace Game.CombatSystem.UI
 {
+    /// <summary>
+    /// 전투 실행 슬롯 UI 클래스 (카드 1장과 그 UI를 보관 및 실행)
+    /// </summary>
     public class CombatExecutionSlotUI : MonoBehaviour, ICombatCardSlot
     {
-        [SerializeField] private CombatSlotPosition position;
+        [SerializeField]
+        private CombatSlotPosition position;
 
         private ISkillCard currentCard;
         private SkillCardUI currentCardUI;
         private ICardExecutionContext context;
 
-        public void Inject(ICardExecutionContext executionContext) => this.context = executionContext;
+        /// <summary>
+        /// 외부에서 카드 실행 컨텍스트를 주입
+        /// </summary>
+        public void Inject(ICardExecutionContext executionContext)
+        {
+            this.context = executionContext;
+        }
 
+        /// <summary>
+        /// 현재 슬롯의 전투 필드 내 위치 (왼쪽/오른쪽)
+        /// </summary>
         public CombatFieldSlotPosition GetCombatPosition()
         {
             return position switch
@@ -25,9 +38,6 @@ namespace Game.CombatSystem.UI
                 _ => CombatFieldSlotPosition.NONE
             };
         }
-
-        public SlotOwner GetOwner() =>
-            position == CombatSlotPosition.FIRST ? SlotOwner.ENEMY : SlotOwner.PLAYER;
 
         public ISkillCard GetCard() => currentCard;
 
@@ -39,11 +49,15 @@ namespace Game.CombatSystem.UI
 
         public SkillCardUI GetCardUI() => currentCardUI;
 
-        public void SetCardUI(SkillCardUI cardUI) => currentCardUI = cardUI;
+        public void SetCardUI(SkillCardUI cardUI)
+        {
+            currentCardUI = cardUI;
+        }
 
         public void Clear()
         {
             currentCard = null;
+
             if (currentCardUI != null)
             {
                 Destroy(currentCardUI.gameObject);
@@ -61,13 +75,13 @@ namespace Game.CombatSystem.UI
         {
             if (currentCard == null)
             {
-                Debug.LogWarning("[CombatExecutionSlotUI] currentCard가 null입니다.");
+                Debug.LogWarning("[CombatExecutionSlotUI] 실행 불가: 카드 없음");
                 return;
             }
 
             if (context == null)
             {
-                Debug.LogError("[CombatExecutionSlotUI] ICardExecutionContext가 주입되지 않았습니다.");
+                Debug.LogError("[CombatExecutionSlotUI] 실행 불가: 컨텍스트 미지정");
                 return;
             }
 
@@ -78,7 +92,7 @@ namespace Game.CombatSystem.UI
         {
             if (currentCard == null)
             {
-                Debug.LogWarning("[CombatExecutionSlotUI] currentCard가 null입니다.");
+                Debug.LogWarning("[CombatExecutionSlotUI] 실행 불가: 카드 없음");
                 return;
             }
 

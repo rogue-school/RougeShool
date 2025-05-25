@@ -1,6 +1,7 @@
 using Game.SkillCardSystem.Core;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Runtime;
+using Game.SkillCardSystem.Effects;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -22,11 +23,11 @@ public static class SkillCardFactory
         );
     }
 
-    private static List<ICardEffect> CloneEffects(List<ICardEffect> original)
+    private static List<SkillCardEffectSO> CloneEffects(List<SkillCardEffectSO> original)
     {
-        var clone = new List<ICardEffect>();
+        var clone = new List<SkillCardEffectSO>();
         foreach (var effect in original)
-            clone.Add(effect); // 향후 Clone() 확장 가능
+            clone.Add(effect); // 추후 DeepClone() 확장 가능
 
         return clone;
     }

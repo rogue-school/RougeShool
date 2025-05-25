@@ -59,10 +59,10 @@ namespace Game.CombatSystem.Manager
 
             SkillCardSlotPosition[] orderedSlots = new[]
             {
-                SkillCardSlotPosition.PLAYER_SLOT_1,
-                SkillCardSlotPosition.PLAYER_SLOT_2,
-                SkillCardSlotPosition.PLAYER_SLOT_3
-            };
+        SkillCardSlotPosition.PLAYER_SLOT_1,
+        SkillCardSlotPosition.PLAYER_SLOT_2,
+        SkillCardSlotPosition.PLAYER_SLOT_3
+    };
 
             var selectedCharacter = player?.Data;
             if (selectedCharacter == null || selectedCharacter.SkillDeck == null)
@@ -72,13 +72,22 @@ namespace Game.CombatSystem.Manager
             }
 
             List<PlayerSkillCard> deck = selectedCharacter.SkillDeck.GetCards();
+            if (deck == null)
+            {
+                Debug.LogWarning("[PlayerHandManager] SkillDeck.GetCards() 결과가 null입니다.");
+                return;
+            }
 
             for (int i = 0; i < Mathf.Min(deck.Count, orderedSlots.Length); i++)
             {
                 var card = deck[i];
                 var slotPos = orderedSlots[i];
 
-                if (!handSlots.TryGetValue(slotPos, out var slot)) continue;
+                if (!handSlots.TryGetValue(slotPos, out var slot) || slot == null)
+                {
+                    Debug.LogWarning($"[PlayerHandManager] 핸드 슬롯 {slotPos} 이 존재하지 않음");
+                    continue;
+                }
 
                 var runtimeCard = new PlayerSkillCardRuntime(card);
                 runtimeCard.SetHandSlot(slotPos);
@@ -88,11 +97,14 @@ namespace Game.CombatSystem.Manager
                     uiSlot.InjectUIFactory(skillCardUIPrefab);
 
                 slot.SetCard(runtimeCard);
-                UpdateCardUI(runtimeCard, (PlayerHandCardSlotUI)slot);
+
+                if (slot is PlayerHandCardSlotUI uiSlot2)
+                    UpdateCardUI(runtimeCard, uiSlot2);
             }
 
             LogPlayerHandSlotStates();
         }
+
 
         public void RestoreCardToHand(PlayerSkillCardRuntime card) => RestoreCardToHand((ISkillCard)card);
 
@@ -127,8 +139,8 @@ namespace Game.CombatSystem.Manager
             {
                 if (slot is PlayerHandCardSlotUI uiSlot)
                 {
-                    var card = uiSlot.GetCard();
-                    bool canInteract = isEnabled && card is PlayerSkillCardRuntime runtimeCard && runtimeCard.GetCoolTime() == 0;
+                    var card = uiSlot.GetCard() as PlayerSkillCardRuntime;
+                    bool canInteract = isEnabled && card != null && card.GetCoolTime() == 0;
                     uiSlot.SetInteractable(canInteract);
                 }
             }
@@ -150,8 +162,11 @@ namespace Game.CombatSystem.Manager
 
         private void UpdateCardUI(PlayerSkillCardRuntime runtimeCard, PlayerHandCardSlotUI uiSlot)
         {
+            if (runtimeCard == null || uiSlot == null) return;
+
             int coolTime = runtimeCard.GetCoolTime();
             bool isCooldown = coolTime > 0;
+
             uiSlot.SetInteractable(!isCooldown);
             uiSlot.SetCoolTimeDisplay(coolTime, isCooldown);
         }

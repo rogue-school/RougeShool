@@ -10,6 +10,7 @@ namespace Game.CombatSystem.Initialization
 {
     /// <summary>
     /// 플레이어 캐릭터를 초기화하고 슬롯에 배치합니다.
+    /// PlayerManager에서 직접 캐릭터 등록 및 데이터 주입을 처리할 수 있도록 협력합니다.
     /// </summary>
     public class PlayerCharacterInitializer : MonoBehaviour, IPlayerCharacterInitializer
     {
@@ -31,23 +32,16 @@ namespace Game.CombatSystem.Initialization
             if (!ValidateData()) return;
 
             var slot = GetPlayerSlot();
-            if (slot == null)
-            {
-                Debug.LogError("[PlayerCharacterInitializer] 플레이어 슬롯을 찾을 수 없습니다.");
-                return;
-            }
+            if (slot == null) return;
 
             ClearSlotChildren(slot);
 
             var player = InstantiateAndConfigureCharacter(slot);
-            if (player == null)
-            {
-                Debug.LogError("[PlayerCharacterInitializer] 캐릭터 인스턴스 생성 실패");
-                return;
-            }
+            if (player == null) return;
 
             ApplyCharacterData(player);
             RegisterToManager(slot, player);
+            DebugSkillDeck(player);
         }
 
         private bool ValidateData()
@@ -55,12 +49,6 @@ namespace Game.CombatSystem.Initialization
             if (playerPrefab == null)
             {
                 Debug.LogError("[PlayerCharacterInitializer] playerPrefab이 지정되지 않았습니다.");
-                return false;
-            }
-
-            if (defaultData == null)
-            {
-                Debug.LogWarning("[PlayerCharacterInitializer] defaultData가 null입니다.");
                 return false;
             }
 
@@ -127,7 +115,19 @@ namespace Game.CombatSystem.Initialization
         private void ApplyCharacterData(PlayerCharacter player)
         {
             Debug.Log("[PlayerCharacterInitializer] 캐릭터 데이터 적용 시작");
-            player.SetCharacterData(defaultData);
+
+            PlayerCharacterData selectedData =
+                playerManager?.GetPlayer()?.Data ??
+                PlayerCharacterSelector.SelectedCharacter ??
+                defaultData;
+
+            if (selectedData == null)
+            {
+                Debug.LogError("[PlayerCharacterInitializer] 캐릭터 데이터가 없습니다.");
+                return;
+            }
+
+            player.SetCharacterData(selectedData);
         }
 
         private void RegisterToManager(ICharacterSlot slot, PlayerCharacter player)
@@ -146,6 +146,23 @@ namespace Game.CombatSystem.Initialization
             }
 
             Debug.Log("[PlayerCharacterInitializer] 플레이어 캐릭터 초기화 완료");
+        }
+
+        private void DebugSkillDeck(PlayerCharacter player)
+        {
+            if (player?.Data?.SkillDeck == null)
+            {
+                Debug.LogWarning("[PlayerCharacterInitializer] 플레이어 데이터 또는 스킬 덱이 없습니다.");
+                return;
+            }
+
+            var cards = player.Data.SkillDeck.GetCards();
+            Debug.Log($"[PlayerCharacterInitializer] 선택된 캐릭터: {player.Data.DisplayName}, 스킬 카드 수: {cards.Count}");
+
+            foreach (var card in cards)
+            {
+                Debug.Log($" → 카드: {card.name}, 효과 수: {card.CreateEffects()?.Count}");
+            }
         }
     }
 }

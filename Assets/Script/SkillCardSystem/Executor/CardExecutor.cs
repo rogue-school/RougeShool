@@ -1,20 +1,17 @@
+using System.Collections.Generic;
 using UnityEngine;
 using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Interface;
-using Game.SkillCardSystem.Executor;
+using Game.SkillCardSystem.Effects;
 
-namespace Game.CombatSystem.Executor
+namespace Game.SkillCardSystem.Executor
 {
+    /// <summary>
+    /// 스킬 카드를 실행하여 그 안의 이펙트들을 순차적으로 실행하는 서비스.
+    /// </summary>
     public class CardExecutor : ICardExecutor
     {
-        private readonly ICardExecutionContextProvider contextProvider;
-
-        public CardExecutor(ICardExecutionContextProvider contextProvider)
-        {
-            this.contextProvider = contextProvider;
-        }
-
-        public void Execute(ISkillCard card, ICardExecutionContext context)
+        public void Execute(ISkillCard card, ICardExecutionContext context, ITurnStateController controller)
         {
             if (card == null || context == null)
             {
@@ -22,17 +19,25 @@ namespace Game.CombatSystem.Executor
                 return;
             }
 
-            foreach (var effect in card.CreateEffects())
-            {
-                int power = card.GetEffectPower(effect);
-                effect.ApplyEffect(context, power);
-            }
-        }
+            List<SkillCardEffectSO> effects = card.CreateEffects() as List<SkillCardEffectSO>;
 
-        public void Execute(ISkillCard card, ITurnCardRegistry registry)
-        {
-            var context = contextProvider.CreateContext(card);
-            Execute(card, context);
+            if (effects == null || effects.Count == 0)
+            {
+                Debug.LogWarning($"[CardExecutor] 카드 '{card.GetCardName()}' 에 연결된 이펙트가 없습니다.");
+                return;
+            }
+
+            int power = card.GetEffectPower(null); // 기본적으로 SkillCardData.Damage 사용
+
+            Debug.Log($"[CardExecutor] {card.GetCardName()} → 효과 {effects.Count}개 실행 (power: {power})");
+
+            foreach (var effect in effects)
+            {
+                if (effect == null) continue;
+
+                ICardEffectCommand command = effect.CreateEffectCommand(power);
+                command.Execute(context, controller);
+            }
         }
     }
 }

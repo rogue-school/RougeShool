@@ -3,7 +3,7 @@ using Game.CombatSystem.Interface;
 using Game.CharacterSystem.Interface;
 using Game.SkillCardSystem.Interface;
 
-namespace Game.SkillCardSystem.Effect
+namespace Game.SkillCardSystem.Effects
 {
     public class BleedEffect : IPerTurnEffect
     {

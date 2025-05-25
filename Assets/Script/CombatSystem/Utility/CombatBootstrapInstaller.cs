@@ -11,6 +11,8 @@ using Game.SkillCardSystem.Runtime;
 using Game.SkillCardSystem.Executor;
 using Game.SkillCardSystem.Interface;
 using Game.Manager;
+using Game.CombatSystem.Executor;
+using Game.CombatSystem.DragDrop;
 
 namespace Game.CombatSystem.Utility
 {
@@ -40,31 +42,38 @@ namespace Game.CombatSystem.Utility
         {
             Debug.Log("[Installer] Initialize() 호출됨");
 
-            // Stage 관련 상호 의존 주입
             stageManager.Inject(enemySpawnerManager, enemyManager, enemyHandManager);
             enemySpawnerManager.InjectStageManager(stageManager);
             playerManager.SetPlayerHandManager(playerHandManager);
+            playerManager.SetSlotRegistry(slotRegistry);
 
-            // 인터페이스 기반 서비스 생성
+            ITurnCardRegistry turnCardRegistry = new TurnCardRegistry();
+            enemyHandManager.InjectRegistry(turnCardRegistry);
+
             ICombatPreparationService preparationService = new CombatPreparationService(
                 playerManager,
                 enemySpawnerManager,
                 enemyManager,
                 enemyHandManager,
                 slotRegistry,
-                combatTurnManager,
-                new CardPlacementService()
+                turnCardRegistry,
+                new CardPlacementService(),
+                combatTurnManager
             );
 
             IPlayerInputController inputController = new PlayerInputController(playerHandManager);
+            ICardExecutionContextProvider contextProvider = null;
+            ICardExecutor cardExecutor = new CardExecutor();
 
-            ICardExecutionContextProvider contextProvider = new DefaultCardExecutionContextProvider(playerManager, enemyManager);
-            ICardExecutor cardExecutor = new CardExecutor(contextProvider); // 인자 누락 수정
-            ICombatExecutor executor = new CombatExecutorService(slotRegistry, contextProvider, cardExecutor, enemyHandManager);
+            ICombatExecutor executor = new CombatExecutorService(
+                slotRegistry,
+                contextProvider,
+                cardExecutor,
+                enemyHandManager
+            );
 
             ICombatStateFactory stateFactory = stateFactoryInstaller;
 
-            // FlowCoordinator 주입
             combatFlowCoordinator.Inject(
                 slotRegistry,
                 enemyHandManager,
@@ -76,19 +85,22 @@ namespace Game.CombatSystem.Utility
                 combatTurnManager,
                 stateFactory
             );
+
             combatFlowCoordinator.InjectUI(skillCardUIPrefab);
             combatFlowCoordinator.InjectTurnStateDependencies(combatTurnManager, stateFactory);
             combatFlowCoordinator.InjectExternalServices(preparationService, inputController, executor);
 
-            // TurnStartButtonHandler 주입
             if (turnStartButtonHandler != null && combatTurnManager is ITurnStartConditionChecker checker)
             {
                 turnStartButtonHandler.Inject(checker, combatTurnManager, stateFactory);
                 Debug.Log("[Installer] TurnStartButtonHandler.Inject() 완료");
             }
-            else
+
+            var dropHandlers = FindObjectsByType<CardDropToSlotHandler>(FindObjectsSortMode.None);
+            foreach (var handler in dropHandlers)
             {
-                Debug.LogWarning("[Installer] TurnStartButtonHandler 또는 조건 검사기 주입 실패");
+                handler.InjectDependencies(turnCardRegistry, combatFlowCoordinator, combatTurnManager);
+                Debug.Log($"[Installer] CardDropToSlotHandler 의존성 주입 완료: {handler.gameObject.name}");
             }
         }
     }

@@ -1,8 +1,9 @@
 using UnityEngine;
-using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Effects;
+using Game.SkillCardSystem.Effect;
+using Game.CombatSystem.Interface;
 
 namespace Game.SkillCardSystem.Effect
 {
@@ -11,29 +12,21 @@ namespace Game.SkillCardSystem.Effect
     {
         [SerializeField] private CombatSlotPosition forcedSlot = CombatSlotPosition.FIRST;
 
-        public override void ApplyEffect(ICardExecutionContext context, int power, ITurnStateController controller)
+        public override ICardEffectCommand CreateEffectCommand(int power)
         {
-            if (context.Target == null || context.Card == null)
+            return new ForceNextSlotEffectCommand(forcedSlot);
+        }
+    
+    public override void ApplyEffect(ICardExecutionContext context, int value, ITurnStateController controller = null)
+        {
+            if (controller == null)
             {
-                Debug.LogWarning("[ForceNextSlotEffectSO] 대상 또는 카드 정보가 누락되었습니다.");
+                Debug.LogWarning("[ForceNextSlotEffectSO] TurnStateController가 null입니다.");
                 return;
             }
 
-            if (context.Card.IsFromPlayer())
-            {
-                Debug.LogWarning("[ForceNextSlotEffectSO] 플레이어 카드에는 강제 슬롯 적용 불가");
-                return;
-            }
-
-            if (controller is ITurnCardRegistry registry)
-            {
-                registry.ReserveNextEnemySlot(forcedSlot);
-                Debug.Log($"[ForceNextSlotEffectSO] 다음 적 카드 슬롯 강제 설정: {forcedSlot}");
-            }
-            else
-            {
-                Debug.LogError("[ForceNextSlotEffectSO] 컨트롤러가 ITurnCardRegistry를 구현하지 않음");
-            }
+            controller.ReserveNextEnemySlot((CombatSlotPosition)value); // 예: value → enum값
+            Debug.Log($"[ForceNextSlotEffectSO] 다음 적 행동 슬롯 강제 예약: {((CombatSlotPosition)value)}");
         }
     }
 }

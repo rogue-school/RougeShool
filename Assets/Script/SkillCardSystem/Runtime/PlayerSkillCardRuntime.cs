@@ -1,7 +1,8 @@
 using UnityEngine;
 using System.Collections.Generic;
-using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Data;
+using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.Effects;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Core;
 using Game.CombatSystem.Interface;
@@ -12,26 +13,36 @@ using Game.CombatSystem.Context;
 public class PlayerSkillCardRuntime : ISkillCard
 {
     public SkillCardData CardData { get; private set; }
-    private List<ICardEffect> effects;
+
+    private List<SkillCardEffectSO> effects;
     private int coolTime;
-    private SlotOwner owner = SlotOwner.PLAYER;
+    private readonly SlotOwner owner = SlotOwner.PLAYER;
     private SkillCardSlotPosition? handSlot;
     private CombatSlotPosition? combatSlot;
 
     public PlayerSkillCardRuntime(PlayerSkillCard data)
     {
+        if (data == null || data.CardData == null)
+        {
+            Debug.LogError("[PlayerSkillCardRuntime] null 데이터. 기본값으로 초기화됨.");
+            CardData = new SkillCardData("Unnamed", "No description", null, 0, 0);
+            effects = new List<SkillCardEffectSO>();
+            coolTime = 0;
+            return;
+        }
+
         CardData = data.CardData;
-        effects = data.CreateEffects();
+        effects = data.CreateEffects() ?? new List<SkillCardEffectSO>();
         coolTime = CardData.CoolTime;
     }
 
-    public string GetCardName() => CardData.Name;
-    public string GetDescription() => CardData.Description;
-    public Sprite GetArtwork() => CardData.Artwork;
+    public string GetCardName() => CardData?.Name ?? "[No Name]";
+    public string GetDescription() => CardData?.Description ?? "[No Description]";
+    public Sprite GetArtwork() => CardData?.Artwork;
     public int GetCoolTime() => coolTime;
     public void SetCoolTime(int time) => coolTime = Mathf.Max(0, time);
-    public int GetEffectPower(ICardEffect effect) => CardData.Damage;
-    public List<ICardEffect> CreateEffects() => new(effects);
+    public int GetEffectPower(SkillCardEffectSO effect) => CardData?.Damage ?? 0;
+    public List<SkillCardEffectSO> CreateEffects() => new(effects);
 
     public SlotOwner GetOwner() => owner;
     public bool IsFromPlayer() => true;
@@ -41,6 +52,9 @@ public class PlayerSkillCardRuntime : ISkillCard
     public void SetCombatSlot(CombatSlotPosition slot) => combatSlot = slot;
     public CombatSlotPosition? GetCombatSlot() => combatSlot;
 
+    public void ExecuteSkill() =>
+        throw new System.InvalidOperationException("[PlayerSkillCardRuntime] source/target이 필요합니다.");
+
     public void ExecuteSkill(ICharacter source, ICharacter target)
     {
         var context = new DefaultCardExecutionContext(this, source, target);
@@ -49,27 +63,27 @@ public class PlayerSkillCardRuntime : ISkillCard
 
     public void ExecuteCardAutomatically(ICardExecutionContext context)
     {
-        var caster = context.Source as CharacterBase;
-        var targetChar = context.Target as CharacterBase;
-
-        if (caster == null || targetChar == null || targetChar.IsDead())
+        if (context?.Source is not CharacterBase || context.Target is not CharacterBase targetChar)
         {
-            Debug.LogWarning("[PlayerSkillCardRuntime] 유효하지 않은 시전자/대상자");
+            Debug.LogWarning("[PlayerSkillCardRuntime] 잘못된 context 또는 대상");
+            return;
+        }
+
+        if (targetChar.IsDead())
+        {
+            Debug.LogWarning("[PlayerSkillCardRuntime] 대상이 사망 상태입니다.");
             return;
         }
 
         foreach (var effect in effects)
         {
-            int value = GetEffectPower(effect);
-            effect.ApplyEffect(context, value);
+            int power = GetEffectPower(effect);
+            var command = effect.CreateEffectCommand(power);
+            command.Execute(context, null);
+            Debug.Log($"[PlayerSkillCardRuntime] {GetCardName()} → {effect.GetType().Name}, power: {power}");
         }
     }
 
-    public void ExecuteSkill()
-    {
-        throw new System.InvalidOperationException("[PlayerSkillCardRuntime] ExecuteSkill()에는 source/target이 필요합니다.");
-    }
-
-    public ICharacter GetOwner(ICardExecutionContext context) => context.GetPlayer();
-    public ICharacter GetTarget(ICardExecutionContext context) => context.GetEnemy();
+    public ICharacter GetOwner(ICardExecutionContext context) => context?.GetPlayer();
+    public ICharacter GetTarget(ICardExecutionContext context) => context?.GetEnemy();
 }

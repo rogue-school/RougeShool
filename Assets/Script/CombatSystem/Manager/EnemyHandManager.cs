@@ -107,10 +107,17 @@ namespace Game.CombatSystem.Manager
             cardUI.SetCard(runtimeCard);
 
             slot.SetCard(runtimeCard);
+
+            if (slot is IHandCardSlot handSlotWithUI && handSlotWithUI is Game.CombatSystem.UI.EnemyHandCardSlotUI uiSlot)
+            {
+                uiSlot.SetCardUI(cardUI);
+            }
+
             cardUIs[pos] = cardUI;
 
             Debug.Log($"[EnemyHandManager] 카드 생성 완료 → {entry.Card.CardData.Name} → {pos}");
         }
+
 
         public ISkillCard GetCardForCombat()
         {
@@ -176,15 +183,28 @@ namespace Game.CombatSystem.Manager
             var card = slot.GetCard();
             var ui = cardUIs.TryGetValue(pos, out var foundUI) ? foundUI : null;
 
+            // 슬롯 클리어
             slot.Clear();
+
+            // 핸드 슬롯 UI에서 카드 UI 참조도 명시적으로 제거
+            if (slot is IHandCardSlot handSlotWithUI && handSlotWithUI is Game.CombatSystem.UI.EnemyHandCardSlotUI uiSlot)
+            {
+                uiSlot.SetCardUI(null); // UI 참조 제거
+            }
+
             if (ui != null)
             {
-                ui.transform.SetParent(null); // UI 위치 꼬임 방지
+                ui.transform.SetParent(null); // 위치 꼬임 방지
                 cardUIs.Remove(pos);
+                // 선택사항: 여기서 Destroy() 하지 않고 전투 슬롯에 넘김
+                // => 전투 슬롯에 재사용할 수 있도록 함
             }
+
+            Debug.Log($"[EnemyHandManager] PopCardFromSlot: {pos} 슬롯에서 카드 '{card?.GetCardName()}' / UI 추출 완료");
 
             return (card, ui);
         }
+
 
 
         public void LogHandSlotStates()

@@ -1,8 +1,8 @@
 ﻿using UnityEngine;
-using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Interface;
-using Game.CharacterSystem.Interface;
-using Game.SkillCardSystem.Effect; // ⬅️ 누락되었던 부분
+using Game.SkillCardSystem.Effects;
+using Game.SkillCardSystem.Effect;
+using Game.CombatSystem.Interface;
 
 namespace Game.SkillCardSystem.Effects
 {
@@ -12,18 +12,15 @@ namespace Game.SkillCardSystem.Effects
         [SerializeField] private int bleedAmount;
         [SerializeField] private int duration;
 
-        public override void ApplyEffect(ICardExecutionContext context, int power, ITurnStateController controller)
+        public override ICardEffectCommand CreateEffectCommand(int power)
         {
-            if (context.Target == null)
-            {
-                Debug.LogWarning("[BleedEffectSO] 대상이 null입니다.");
-                return;
-            }
-
-            var effect = new BleedEffect(bleedAmount + power, duration);
-            context.Target.RegisterPerTurnEffect(effect);
-
-            Debug.Log($"[BleedEffectSO] {context.Target.GetCharacterName()}에게 출혈 효과 적용: {bleedAmount + power} (지속 {duration}턴)");
+            return new BleedEffectCommand(bleedAmount + power, duration);
+        }
+        public override void ApplyEffect(ICardExecutionContext context, int value, ITurnStateController controller = null)
+        {
+            var bleed = new BleedEffect(value, 3); // 예: 지속 턴 수 2
+            context.Target?.RegisterPerTurnEffect(bleed);
+            Debug.Log($"[BleedEffectSO] {context.Target?.GetCharacterName()}에게 출혈 {value} 적용");
         }
     }
 }

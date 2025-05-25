@@ -27,6 +27,7 @@ namespace Game.CombatSystem.Service
             ui.transform.localScale = Vector3.one;
 
             Debug.Log($"[CardPlacementService] 카드 '{card.GetCardName()}' 슬롯 {slot.GetCombatPosition()}에 배치 완료");
+            Debug.Log($"[CardPlacementService] UI 위치: {ui.transform.position}, 부모: {ui.transform.parent?.name}");
         }
     }
 }

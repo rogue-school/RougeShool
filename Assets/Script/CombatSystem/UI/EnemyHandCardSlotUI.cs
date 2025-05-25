@@ -13,31 +13,34 @@ namespace Game.CombatSystem.UI
     {
         [SerializeField] private SkillCardSlotPosition position;
         private ISkillCard currentCard;
+        private ISkillCardUI currentCardUI; // 할당 전용 필드
 
         public SkillCardSlotPosition GetSlotPosition() => position;
 
         public SlotOwner GetOwner() => SlotOwner.ENEMY;
-        private ISkillCardUI currentCardUI;
 
-        public ISkillCardUI GetCardUI()
-        {
-            return currentCardUI;
-        }
+        public ISkillCard GetCard() => currentCard;
+
+        public ISkillCardUI GetCardUI() => currentCardUI;
 
         public void SetCard(ISkillCard card)
         {
             currentCard = card;
-            currentCard.SetHandSlot(position);
+            currentCard?.SetHandSlot(position);
         }
 
-        public ISkillCard GetCard()
+        /// <summary>
+        /// 외부에서 카드 UI를 설정합니다.
+        /// </summary>
+        public void SetCardUI(ISkillCardUI ui)
         {
-            return currentCard;
+            currentCardUI = ui;
         }
 
         public void Clear()
         {
             currentCard = null;
+            currentCardUI = null;
         }
 
         /// <summary>

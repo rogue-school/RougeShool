@@ -1,13 +1,10 @@
 using UnityEngine;
 using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Interface;
+using Game.SkillCardSystem.Effects;
 
 namespace Game.SkillCardSystem.Executor
 {
-    /// <summary>
-    /// 카드 실행을 실제로 수행하는 서비스 클래스입니다.
-    /// 카드에 등록된 모든 이펙트를 반복 실행합니다.
-    /// </summary>
     public class CardExecutorService : ICardExecutor
     {
         private readonly ICardExecutionContextProvider contextProvider;
@@ -17,7 +14,7 @@ namespace Game.SkillCardSystem.Executor
             this.contextProvider = contextProvider;
         }
 
-        public void Execute(ISkillCard card, ICardExecutionContext context)
+        public void Execute(ISkillCard card, ICardExecutionContext context, ITurnStateController controller)
         {
             if (card == null || context == null)
             {
@@ -28,15 +25,11 @@ namespace Game.SkillCardSystem.Executor
             foreach (var effect in card.CreateEffects())
             {
                 int power = card.GetEffectPower(effect);
-                effect.ApplyEffect(context, power);
-                Debug.Log($"[CardExecutorService] {card.GetCardName()} → {effect.GetEffectName()}, power: {power}");
-            }
-        }
+                var command = effect.CreateEffectCommand(power);
+                command.Execute(context, controller);
 
-        public void Execute(ISkillCard card, ITurnCardRegistry registry)
-        {
-            var context = contextProvider.CreateContext(card);
-            Execute(card, context);
+                Debug.Log($"[CardExecutorService] {card.GetCardName()} → {effect.GetType().Name}, power: {power}");
+            }
         }
     }
 }

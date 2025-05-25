@@ -6,7 +6,7 @@ namespace Game.SkillCardSystem.Data
     /// 스킬 카드의 정적 정보를 담는 구조체입니다.
     /// </summary>
     [System.Serializable]
-    public struct SkillCardData
+    public class SkillCardData
     {
         public string Name;
         public string Description;
@@ -23,4 +23,5 @@ namespace Game.SkillCardSystem.Data
             Damage = damage;
         }
     }
+
 }

@@ -19,5 +19,5 @@ MonoBehaviour:
     CoolTime: 0
     Damage: 1
   effects:
-  - {fileID: 11400000, guid: 21f08687b4ccb7a488b95b06178d02aa, type: 2}
+  - {fileID: 11400000, guid: ce18b924503840146a6d33dfb483c54c, type: 2}
   - {fileID: 11400000, guid: 48b0f7567f5bd0a41ab6649587e254b2, type: 2}

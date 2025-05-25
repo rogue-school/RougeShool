@@ -1,4 +1,5 @@
 using Game.CharacterSystem.Data;
+using Game.IManager;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Slot;
 
@@ -36,5 +37,6 @@ namespace Game.CharacterSystem.Interface
 
         ISkillCard GetCardInHandSlot(SkillCardSlotPosition pos);
         ISkillCardUI GetCardUIInHandSlot(SkillCardSlotPosition pos);
+        void InjectHandManager(IPlayerHandManager manager);
     }
 }
