@@ -10,5 +10,6 @@ namespace Game.CombatSystem.Interface
         void ClearSlot(CombatSlotPosition slot);
         CombatSlotPosition? GetReservedEnemySlot();
         void ReserveNextEnemySlot(CombatSlotPosition slot);
+        void Reset();
     }
 }

@@ -28,5 +28,6 @@ namespace Game.IManager
         void CreateAndRegisterPlayer();
         ISkillCard GetCardInSlot(SkillCardSlotPosition pos);
         ISkillCardUI GetCardUIInSlot(SkillCardSlotPosition pos);
+        void Reset();
     }
 }

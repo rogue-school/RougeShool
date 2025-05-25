@@ -40,5 +40,6 @@ namespace Game.CombatSystem.Interface
         /// 플레이어 카드 등록 (슬롯 위치 지정 버전)
         /// </summary>
         void RegisterPlayerCard(CombatSlotPosition position, ISkillCard card);
+        void Reset();
     }
 }

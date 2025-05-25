@@ -123,6 +123,11 @@ namespace Game.Manager
             this.playerCharacter = player;
             Debug.Log("[PlayerManager] 플레이어 등록 완료");
         }
+        public void Reset()
+        {
+            // 플레이어 상태 초기화 로직 구현
+            Debug.Log("[PlayerManager] Reset");
+        }
 
         public IPlayerCharacter GetPlayer() => playerCharacter;
 

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Slot;
+using UnityEngine;
 
 namespace Game.CombatSystem.Service
 {
@@ -35,6 +36,11 @@ namespace Game.CombatSystem.Service
         public void ReserveNextEnemySlot(CombatSlotPosition slot)
         {
             reservedEnemySlot = slot;
+        }
+        public void Reset()
+        {
+            // 카드 등록 정보 초기화
+            Debug.Log("[TurnCardRegistry] Reset");
         }
     }
 }

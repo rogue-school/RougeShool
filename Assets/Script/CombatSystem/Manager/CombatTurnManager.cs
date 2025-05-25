@@ -146,6 +146,11 @@ namespace Game.CombatSystem.Manager
                 }
             }
         }
+        public void Reset()
+        {
+            // 전투 턴 상태 초기화
+            Debug.Log("[CombatTurnManager] Reset");
+        }
 
         public bool CanStartTurn() => isTurnReady;
     }
