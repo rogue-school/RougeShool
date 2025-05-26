@@ -37,9 +37,15 @@ namespace Game.CharacterSystem.Core
 
         public virtual void TakeDamage(int amount)
         {
+            if (amount <= 0)
+            {
+                Debug.LogWarning($"[{GetCharacterName()}] 잘못된 피해량 무시됨: {amount}");
+                return;
+            }
+
             currentHP = Mathf.Max(currentHP - amount, 0);
             characterCardUI?.SetHP(currentHP, maxHP);
-            Debug.Log($"[{GetCharacterName()}] 피해: -{amount}, 남은 체력: {currentHP}");
+            Debug.Log($"[{GetCharacterName()}] 피해: {amount}, 남은 체력: {currentHP}");
 
             if (IsDead())
                 Die();
@@ -47,9 +53,15 @@ namespace Game.CharacterSystem.Core
 
         public virtual void Heal(int amount)
         {
+            if (amount <= 0)
+            {
+                Debug.LogWarning($"[{GetCharacterName()}] 잘못된 회복량 무시됨: {amount}");
+                return;
+            }
+
             currentHP = Mathf.Min(currentHP + amount, maxHP);
             characterCardUI?.SetHP(currentHP, maxHP);
-            Debug.Log($"[{GetCharacterName()}] 회복: +{amount}, 현재 체력: {currentHP}");
+            Debug.Log($"[{GetCharacterName()}] 회복: {amount}, 현재 체력: {currentHP}");
         }
 
         public virtual void SetMaxHP(int value)

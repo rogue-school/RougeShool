@@ -23,7 +23,7 @@ namespace Game.SkillCardSystem.UI
                 return null;
             }
 
-            Debug.Log($"[SkillCardUIFactory] 카드 UI 생성 시작 - 카드: {card.GetCardName()}");
+            //Debug.Log($"[SkillCardUIFactory] 카드 UI 생성 시작 - 카드: {card.GetCardName()}");
 
             var instance = Object.Instantiate(prefab, parent, false);
             if (instance == null)
@@ -41,7 +41,7 @@ namespace Game.SkillCardSystem.UI
                 rect.localScale = Vector3.one;
             }
 
-            Debug.Log($"[SkillCardUIFactory] 카드 UI 생성 완료 - {card.GetCardName()}");
+            //Debug.Log($"[SkillCardUIFactory] 카드 UI 생성 완료 - {card.GetCardName()}");
             return instance;
         }
     }

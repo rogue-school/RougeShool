@@ -1,61 +1,57 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using Game.CharacterSystem.Interface;
 using Game.IManager;
-using Game.CharacterSystem.Core;
-using Game.CharacterSystem.Data;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Slot;
 using Game.SkillCardSystem.UI;
-using Game.CombatSystem.Slot;
 using Game.CombatSystem.Interface;
-using Game.CombatSystem.Manager;
+using Game.CharacterSystem.Data;
 
 namespace Game.Manager
 {
+    /// <summary>
+    /// í”Œë ˆì´ì–´ ìºë¦­í„° ë° í•¸ë“œ ê´€ë¦¬ ì±…ì„ì„ ê°€ì§€ëŠ” ë§¤ë‹ˆì €.
+    /// SRP: ìºë¦­í„° ìƒì„±/ë“±ë¡ ë° í•¸ë“œ ì´ˆê¸°í™”ë§Œ ì±…ì„.
+    /// DIP/ISP: ì¸í„°í˜ì´ìŠ¤ ë¶„ë¦¬ ë° ì˜ì¡´ ì—­ì „ ì ìš©.
+    /// </summary>
     public class PlayerManager : MonoBehaviour, IPlayerManager
     {
-        [Header("ÇÁ¸®ÆÕ ¹× ¿¬°á")]
+        [Header("í”„ë¦¬íŒ¹ ë° ìŠ¬ë¡¯")]
         [SerializeField] private GameObject playerPrefab;
         [SerializeField] private Transform playerSlot;
-        [SerializeField] private PlayerHandManager handManager;
 
-        [Header("±âº» Ä³¸¯ÅÍ µ¥ÀÌÅÍ")]
+        [Header("ê¸°ë³¸ ìºë¦­í„° ë°ì´í„°")]
         [SerializeField] private PlayerCharacterData defaultCharacterData;
 
         private IPlayerCharacter playerCharacter;
         private IPlayerCharacterSelector selector;
-        private ISlotRegistry slotRegistry;
+        private IPlayerHandManager handManager;
+        private IHandSlotRegistry slotRegistry; // âœ… ISlotRegistry â†’ IHandSlotRegistry
 
-        public void SetPlayerCharacterSelector(IPlayerCharacterSelector selector)
-        {
-            this.selector = selector;
-        }
+        public void SetPlayerCharacterSelector(IPlayerCharacterSelector selector) => this.selector = selector;
 
-        public void SetSlotRegistry(ISlotRegistry registry)
+        public void SetSlotRegistry(IHandSlotRegistry registry)
         {
             this.slotRegistry = registry;
-            Debug.Log("[PlayerManager] ½½·Ô ·¹Áö½ºÆ®¸® µî·Ï ¿Ï·á");
+            Debug.Log("[PlayerManager] í•¸ë“œ ìŠ¬ë¡¯ ë ˆì§€ìŠ¤íŠ¸ë¦¬ ë“±ë¡ ì™„ë£Œ");
         }
-
 
         public void SetPlayerHandManager(IPlayerHandManager manager)
         {
-            this.handManager = manager as PlayerHandManager;
-            Debug.Log("[PlayerManager] ÇÚµå ¸Å´ÏÀú µî·Ï ¿Ï·á");
+            this.handManager = manager;
+            Debug.Log("[PlayerManager] í•¸ë“œ ë§¤ë‹ˆì € ë“±ë¡ ì™„ë£Œ");
 
             if (playerCharacter != null)
-            {
-                playerCharacter.InjectHandManager(this.handManager);
-            }
+                playerCharacter.InjectHandManager(handManager);
         }
 
         public void CreateAndRegisterPlayer()
         {
-            Debug.Log("[PlayerManager] CreateAndRegisterPlayer() È£ÃâµÊ");
+            Debug.Log("[PlayerManager] CreateAndRegisterPlayer() í˜¸ì¶œë¨");
 
             if (playerCharacter != null)
             {
-                Debug.Log("[PlayerManager] ±âÁ¸ ÇÃ·¹ÀÌ¾î Àç»ç¿ë");
+                Debug.Log("[PlayerManager] ê¸°ì¡´ í”Œë ˆì´ì–´ ì¬ì‚¬ìš©");
                 InjectHandAndInitialize();
                 return;
             }
@@ -63,24 +59,23 @@ namespace Game.Manager
             var selectedData = selector?.GetSelectedCharacter() ?? defaultCharacterData;
             if (selectedData == null)
             {
-                Debug.LogError("[PlayerManager] ¼±ÅÃµÈ Ä³¸¯ÅÍ µ¥ÀÌÅÍ°¡ ¾ø½À´Ï´Ù.");
+                Debug.LogError("[PlayerManager] ì„ íƒëœ ìºë¦­í„° ë°ì´í„°ê°€ ì—†ìŠµë‹ˆë‹¤.");
                 return;
             }
 
-            var playerGO = Instantiate(playerPrefab, playerSlot.position, Quaternion.identity);
-            var character = playerGO.GetComponent<IPlayerCharacter>();
-            if (character == null)
+            var instance = Instantiate(playerPrefab, playerSlot.position, Quaternion.identity);
+            instance.transform.SetParent(playerSlot, false);
+            instance.transform.localPosition = Vector3.zero;
+            instance.transform.localRotation = Quaternion.identity;
+            instance.transform.localScale = Vector3.one;
+
+            if (!instance.TryGetComponent(out IPlayerCharacter character))
             {
-                Debug.LogError("[PlayerManager] IPlayerCharacter ÄÄÆ÷³ÍÆ® ´©¶ôµÊ");
+                Debug.LogError("[PlayerManager] IPlayerCharacter ì»´í¬ë„ŒíŠ¸ ëˆ„ë½ë¨");
                 return;
             }
 
-            if (character is PlayerCharacter concrete)
-            {
-                concrete.SetCharacterData(selectedData);
-            }
-
-            SetTransform(playerGO, playerSlot);
+            character.SetCharacterData(selectedData);
             SetPlayer(character);
             InjectHandAndInitialize();
         }
@@ -89,7 +84,7 @@ namespace Game.Manager
         {
             if (playerCharacter == null || handManager == null || slotRegistry == null)
             {
-                Debug.LogError("[PlayerManager] ÇÃ·¹ÀÌ¾î ¶Ç´Â ÇÚµå ¸Å´ÏÀú ¶Ç´Â ½½·Ô ·¹Áö½ºÆ®¸®°¡ ´©¶ôµÇ¾ú½À´Ï´Ù.");
+                Debug.LogError("[PlayerManager] ì˜ì¡´ì„±ì´ ëˆ„ë½ë˜ì—ˆìŠµë‹ˆë‹¤.");
                 return;
             }
 
@@ -101,40 +96,22 @@ namespace Game.Manager
             playerCharacter.InjectHandManager(handManager);
         }
 
-        private void SetTransform(GameObject obj, Transform parent)
-        {
-            if (obj.TryGetComponent(out RectTransform rect))
-            {
-                rect.SetParent(parent as RectTransform, false);
-                rect.anchoredPosition = Vector2.zero;
-            }
-            else
-            {
-                obj.transform.SetParent(parent, false);
-                obj.transform.localPosition = Vector3.zero;
-            }
-
-            obj.transform.localRotation = Quaternion.identity;
-            obj.transform.localScale = Vector3.one;
-        }
-
         public void SetPlayer(IPlayerCharacter player)
         {
             this.playerCharacter = player;
-            Debug.Log("[PlayerManager] ÇÃ·¹ÀÌ¾î µî·Ï ¿Ï·á");
-        }
-        public void Reset()
-        {
-            // ÇÃ·¹ÀÌ¾î »óÅÂ ÃÊ±âÈ­ ·ÎÁ÷ ±¸Çö
-            Debug.Log("[PlayerManager] Reset");
+            Debug.Log("[PlayerManager] í”Œë ˆì´ì–´ ë“±ë¡ ì™„ë£Œ");
         }
 
         public IPlayerCharacter GetPlayer() => playerCharacter;
-
         public IPlayerHandManager GetPlayerHandManager() => handManager;
 
         public ISkillCard GetCardInSlot(SkillCardSlotPosition pos) => handManager?.GetCardInSlot(pos);
-
         public ISkillCardUI GetCardUIInSlot(SkillCardSlotPosition pos) => handManager?.GetCardUIInSlot(pos);
+
+        public void Reset()
+        {
+            Debug.Log("[PlayerManager] Reset í˜¸ì¶œ");
+            // í•„ìš”í•œ ê²½ìš° ìƒíƒœ ì´ˆê¸°í™” ê°€ëŠ¥
+        }
     }
 }

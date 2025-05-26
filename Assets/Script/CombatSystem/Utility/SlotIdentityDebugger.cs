@@ -28,6 +28,6 @@ public class SlotIdentityDebugger : MonoBehaviour
             type = "Not a CombatCardSlot";
         }
 
-        Debug.Log($"[SlotIdentityDebugger] {gameObject.name} ¡æ {type}, Owner: {owner}");
+        //Debug.Log($"[SlotIdentityDebugger] {gameObject.name} ¡æ {type}, Owner: {owner}");
     }
 }

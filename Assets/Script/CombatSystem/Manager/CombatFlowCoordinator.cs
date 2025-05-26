@@ -6,15 +6,11 @@ using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.UI;
 using Game.IManager;
 using Game.SkillCardSystem.Interface;
-using Game.SkillCardSystem.Executor;
 using Game.CharacterSystem.Interface;
-using Game.CombatSystem.Service;
-using Game.CombatSystem.Context;
-using Game.CombatSystem.Executor;
 
 namespace Game.CombatSystem.Core
 {
-    public class CombatFlowCoordinator : MonoBehaviour, ICombatFlowCoordinator
+    public class CombatFlowCoordinator : MonoBehaviour, ICombatFlowCoordinator, ICharacterDeathListener
     {
         private ISlotRegistry slotRegistry;
         private IEnemyHandManager enemyHandManager;
@@ -25,14 +21,17 @@ namespace Game.CombatSystem.Core
         private IEnemyManager enemyManager;
         private ICombatTurnManager turnManager;
         private ICombatStateFactory stateFactory;
+
         private ICombatPreparationService preparationService;
         private IPlayerInputController inputController;
         private ICombatExecutor executor;
+        private ICardExecutor cardExecutor;
+        private ICardExecutionContextProvider contextProvider;
 
         private SkillCardUI skillCardPrefab;
-
         private bool playerInputEnabled = false;
 
+        // 기본 게임 컴포넌트 의존성 주입
         public void Inject(
             ISlotRegistry slotRegistry,
             IEnemyHandManager enemyHandManager,
@@ -55,25 +54,34 @@ namespace Game.CombatSystem.Core
             this.stateFactory = stateFactory;
         }
 
+        // UI 프리팹 주입
         public void InjectUI(SkillCardUI skillCardPrefab)
         {
             this.skillCardPrefab = skillCardPrefab;
         }
 
+        // 턴 상태 매니저/팩토리 주입
         public void InjectTurnStateDependencies(ICombatTurnManager turnManager, ICombatStateFactory stateFactory)
         {
             this.turnManager = turnManager;
             this.stateFactory = stateFactory;
         }
 
-        public void InjectExternalServices(
+        // 외부 서비스 주입: 실행기, 입력 컨트롤러, 준비 서비스, 컨텍스트 제공자
+        public void ConstructFlowDependencies(
             ICombatPreparationService preparationService,
             IPlayerInputController inputController,
-            ICombatExecutor executor)
+            ICombatExecutor executor,
+            ICardExecutionContextProvider contextProvider,
+            ICardExecutor cardExecutor)
         {
             this.preparationService = preparationService;
             this.inputController = inputController;
             this.executor = executor;
+            this.contextProvider = contextProvider;
+            this.cardExecutor = cardExecutor;
+
+            this.executor?.InjectExecutionDependencies(this.contextProvider, this.cardExecutor);
         }
 
         public IEnumerator PerformCombatPreparation()
@@ -91,44 +99,28 @@ namespace Game.CombatSystem.Core
                 yield break;
             }
 
-            // ✅ 이전 적 및 핸드 정리
             var prevEnemy = enemyManager?.GetEnemy();
             if (prevEnemy != null)
             {
                 Debug.Log("[CombatFlowCoordinator] 이전 적 핸드 정리");
-                enemyHandManager?.ClearHand();               // 카드 UI 제거
-                enemyManager?.ClearEnemy();                  // 이전 적 캐릭터 제거
+                enemyHandManager?.ClearHand();
+                enemyManager?.ClearEnemy();
             }
 
             yield return preparationService.PrepareCombat(success =>
             {
-                if (success)
+                if (!success)
                 {
-                    Debug.Log("[CombatFlowCoordinator] 전투 준비 완료. 컨텍스트/실행기 주입 시작.");
-
-                    var player = playerManager.GetPlayer();
-                    var enemy = enemyManager.GetEnemy();
-
-                    if (player == null || enemy == null)
-                    {
-                        Debug.LogError("[CombatFlowCoordinator] 플레이어나 적 캐릭터가 null입니다. 주입 실패.");
-                        onComplete?.Invoke(false);
-                        return;
-                    }
-
-                    var contextProvider = new DefaultCardExecutionContextProvider(player, enemy);
-                    var cardExecutor = new CardExecutor();
-
-                    executor?.InjectExecutionDependencies(contextProvider, cardExecutor);
-                    Debug.Log("[CombatFlowCoordinator] 카드 실행기 및 컨텍스트 프로바이더 주입 완료.");
+                    Debug.LogError("[CombatFlowCoordinator] 전투 준비 실패");
+                    onComplete?.Invoke(false);
+                    return;
                 }
 
-                onComplete?.Invoke(success);
-            
+                Debug.Log("[CombatFlowCoordinator] 전투 준비 완료");
+                onComplete?.Invoke(true);
             });
         }
 
-        // ✅ 변경된 메서드: IEnumerator → void
         public void EnablePlayerInput()
         {
             playerInputEnabled = true;
@@ -138,7 +130,6 @@ namespace Game.CombatSystem.Core
             playerHandManager?.EnableInput(true);
         }
 
-        // ✅ 변경된 메서드: IEnumerator → void
         public void DisablePlayerInput()
         {
             playerInputEnabled = false;
@@ -186,6 +177,18 @@ namespace Game.CombatSystem.Core
         {
             Debug.Log("[CombatFlowCoordinator] StartCombatFlow 호출됨");
             turnManager?.Initialize();
+        }
+
+        public void OnCharacterDied(ICharacter character)
+        {
+            if (character is IEnemyCharacter)
+            {
+                Debug.Log("[CombatFlowCoordinator] 적 사망 감지 → 참조 정리 및 슬롯 초기화");
+                enemyManager?.ClearEnemy();
+
+                var slot = slotRegistry?.GetCharacterSlot(SlotOwner.ENEMY);
+                slot?.SetCharacter(null);
+            }
         }
     }
 }

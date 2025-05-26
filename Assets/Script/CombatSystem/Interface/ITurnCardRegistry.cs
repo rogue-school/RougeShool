@@ -1,15 +1,22 @@
-﻿using Game.SkillCardSystem.Interface;
-using Game.CombatSystem.Slot;
+﻿using Game.CombatSystem.Slot;
+using Game.SkillCardSystem.Interface;
 
 namespace Game.CombatSystem.Interface
 {
     public interface ITurnCardRegistry
     {
-        void RegisterPlayerCard(CombatSlotPosition slot, ISkillCard card);
+        void RegisterPlayerCard(CombatSlotPosition position, ISkillCard card);
         void RegisterEnemyCard(ISkillCard card);
-        void ClearSlot(CombatSlotPosition slot);
+
+        ISkillCard GetPlayerCard(CombatSlotPosition position);
+        ISkillCard GetEnemyCard();
+
+        void ClearPlayerCard(CombatSlotPosition position);
+        void ClearEnemyCard();
+
         CombatSlotPosition? GetReservedEnemySlot();
-        void ReserveNextEnemySlot(CombatSlotPosition slot);
+        void ReserveNextEnemySlot(CombatSlotPosition position);
+
         void Reset();
     }
 }

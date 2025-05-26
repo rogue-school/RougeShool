@@ -6,6 +6,7 @@ using Game.CharacterSystem.Data;
 using Game.SkillCardSystem.Interface;
 using Game.CharacterSystem.Interface;
 using Game.CombatSystem.Context;
+using Game.CombatSystem.Interface;
 
 namespace Game.CharacterSystem.Core
 {
@@ -21,6 +22,7 @@ namespace Game.CharacterSystem.Core
         private List<EnemyCharacterData.SkillCardEntry> skillCardEntries = new();
 
         public EnemyCharacterData Data => characterData;
+        private ICharacterDeathListener deathListener;
 
         public void Initialize(EnemyCharacterData data)
         {
@@ -73,12 +75,18 @@ namespace Game.CharacterSystem.Core
             base.Heal(amount);
             RefreshUI();
         }
+        public void SetDeathListener(ICharacterDeathListener listener)
+        {
+            deathListener = listener;
+        }
 
         public override void Die()
         {
             base.Die();
             RefreshUI();
             Debug.Log($"[EnemyCharacter] '{GetCharacterName()}' »ç¸Á Ã³¸®");
+
+            deathListener?.OnCharacterDied(this);
         }
 
         public override string GetCharacterName() => characterData?.DisplayName ?? "Unnamed Enemy";

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Data;
-using Game.IManager;
+using Game.CombatSystem.Utility;
 
 namespace Game.IManager
 {
@@ -19,8 +19,8 @@ namespace Game.IManager
         /// 지정된 적 데이터를 기반으로 적을 인스턴스화하고 슬롯에 배치합니다.
         /// </summary>
         /// <param name="data">소환할 적 캐릭터 데이터</param>
-        /// <returns>소환된 적 캐릭터 인스턴스</returns>
-        EnemyCharacter SpawnEnemy(EnemyCharacterData data);
+        /// <returns>소환 결과 (새 적 여부 포함)</returns>
+        EnemySpawnResult SpawnEnemy(EnemyCharacterData data);
 
         /// <summary>
         /// 현재까지 소환된 모든 적 캐릭터 리스트를 반환합니다.

@@ -1,107 +1,68 @@
-using UnityEngine;
-using Game.CombatSystem.Core;
+Ôªøusing UnityEngine;
 using Game.IManager;
-using Game.CombatSystem.Interface;
-using Game.CombatSystem.Manager;
-using Game.CombatSystem.Context;
-using Game.SkillCardSystem.UI;
-using Game.CombatSystem.Slot;
-using Game.CombatSystem.Service;
-using Game.SkillCardSystem.Runtime;
-using Game.SkillCardSystem.Executor;
-using Game.SkillCardSystem.Interface;
-using Game.Manager;
+using Game.CombatSystem.Core;
 using Game.CombatSystem.Executor;
-using Game.CombatSystem.DragDrop;
+using Game.CombatSystem.Manager;
+using Game.CombatSystem.Service;
+using Game.CombatSystem.Slot;
+using Game.SkillCardSystem.Executor;
+using Game.SkillCardSystem.UI;
+using Game.CombatSystem.Utility;
+using Game.CombatSystem.Interface;
+using Game.CombatSystem.Context;
+using Game.Manager;
 
-namespace Game.CombatSystem.Utility
+public class CombatBootstrapInstaller : MonoBehaviour
 {
-    public class CombatBootstrapInstaller : MonoBehaviour
+    [Header("Ïª¥Ìè¨ÎÑåÌä∏ Ìï†Îãπ")]
+    [SerializeField] private CombatFlowCoordinator flowCoordinator;
+    [SerializeField] private CombatTurnManager combatTurnManager;
+    [SerializeField] private EnemySpawnerManager enemySpawnerManager;
+    [SerializeField] private EnemyManager enemyManager;
+    [SerializeField] private PlayerManager playerManager;
+    [SerializeField] private StageManager stageManager;
+    [SerializeField] private EnemyHandManager enemyHandManager;
+    [SerializeField] private PlayerHandManager playerHandManager;
+    [SerializeField] private SlotRegistry slotRegistry;
+
+    private void Awake()
     {
-        [Header("«ŸΩ… ø¿∫Í¡ß∆Æ")]
-        [SerializeField] private CombatFlowCoordinator combatFlowCoordinator;
-        [SerializeField] private TurnStartButtonHandler turnStartButtonHandler;
-        [SerializeField] private SkillCardUI skillCardUIPrefab;
+        // 1. Ïä¨Î°Ø Î†àÏßÄÏä§Ìä∏Î¶¨ Ï¥àÍ∏∞Ìôî (ÏûÑÏãú Ïã±Í∏ÄÌÜ§ ÏÇ¨Ïö©)
+        SlotRegistry.Instance = slotRegistry;
 
-        [Header("¿«¡∏ ¥ÎªÛ (MonoBehaviour ±‚π› ƒƒ∆˜≥Õ∆Æ)")]
-        [SerializeField] private CombatTurnManager combatTurnManager;
-        [SerializeField] private PlayerManager playerManager;
-        [SerializeField] private EnemyManager enemyManager;
-        [SerializeField] private EnemySpawnerManager enemySpawnerManager;
-        [SerializeField] private PlayerHandManager playerHandManager;
-        [SerializeField] private EnemyHandManager enemyHandManager;
-        [SerializeField] private StageManager stageManager;
-        [SerializeField] private SlotInitializer slotInitializer;
-        [SerializeField] private CombatSlotManager slotManager;
+        // 2. Îß§ÎãàÏ†Ä Í∞Ñ ÏùòÏ°¥ÏÑ± Ï£ºÏûÖ
+        stageManager.InjectEnemySpawner(enemySpawnerManager);
+        enemySpawnerManager.InjectStageManager(stageManager);
+        enemySpawnerManager.InjectEnemyManager(enemyManager);
+        enemyManager.SetEnemyHandManager(enemyHandManager);
+        playerManager.InjectHandManager(playerHandManager);
+        flowCoordinator.InjectCombatTurnManager(combatTurnManager);
+        combatTurnManager.SetFlowCoordinator(flowCoordinator);
 
-        [Header("º≥¡§ ¥ÎªÛ")]
-        [SerializeField] private SlotRegistry slotRegistry;
-        [SerializeField] private CombatStateFactoryInstaller stateFactoryInstaller;
+        // 3. ÏÑúÎπÑÏä§ Íµ¨ÏÑ±
+        var contextProvider = new DefaultCardExecutionContextProvider(playerManager, enemyManager);
+        var cardExecutor = new CardExecutor();
+        var placementService = new CardPlacementService();
+        var turnCardRegistry = new TurnCardRegistry();
 
-        public void Initialize()
-        {
-            Debug.Log("[Installer] Initialize() »£√‚µ ");
+        var executorService = new CombatExecutorService(
+            cardExecutor, contextProvider, turnCardRegistry, combatTurnManager);
 
-            stageManager.Inject(enemySpawnerManager, enemyManager, enemyHandManager);
-            enemySpawnerManager.InjectStageManager(stageManager);
-            playerManager.SetPlayerHandManager(playerHandManager);
-            playerManager.SetSlotRegistry(slotRegistry);
+        var preparationService = new CombatPreparationService(
+            playerManager, enemySpawnerManager, enemyManager,
+            enemyHandManager, slotRegistry, turnCardRegistry,
+            placementService, combatTurnManager
+        );
 
-            ITurnCardRegistry turnCardRegistry = new TurnCardRegistry();
-            enemyHandManager.InjectRegistry(turnCardRegistry);
+        var playerInputController = new PlayerInputController(
+            flowCoordinator, turnCardRegistry, combatTurnManager);
 
-            ICombatPreparationService preparationService = new CombatPreparationService(
-                playerManager,
-                enemySpawnerManager,
-                enemyManager,
-                enemyHandManager,
-                slotRegistry,
-                turnCardRegistry,
-                new CardPlacementService(),
-                combatTurnManager
-            );
-
-            IPlayerInputController inputController = new PlayerInputController(playerHandManager);
-            ICardExecutionContextProvider contextProvider = null;
-            ICardExecutor cardExecutor = new CardExecutor();
-
-            ICombatExecutor executor = new CombatExecutorService(
-                slotRegistry,
-                contextProvider,
-                cardExecutor,
-                enemyHandManager
-            );
-
-            ICombatStateFactory stateFactory = stateFactoryInstaller;
-
-            combatFlowCoordinator.Inject(
-                slotRegistry,
-                enemyHandManager,
-                playerHandManager,
-                enemySpawnerManager,
-                playerManager,
-                stageManager,
-                enemyManager,
-                combatTurnManager,
-                stateFactory
-            );
-
-            combatFlowCoordinator.InjectUI(skillCardUIPrefab);
-            combatFlowCoordinator.InjectTurnStateDependencies(combatTurnManager, stateFactory);
-            combatFlowCoordinator.InjectExternalServices(preparationService, inputController, executor);
-
-            if (turnStartButtonHandler != null && combatTurnManager is ITurnStartConditionChecker checker)
-            {
-                turnStartButtonHandler.Inject(checker, combatTurnManager, stateFactory);
-                Debug.Log("[Installer] TurnStartButtonHandler.Inject() øœ∑·");
-            }
-
-            var dropHandlers = FindObjectsByType<CardDropToSlotHandler>(FindObjectsSortMode.None);
-            foreach (var handler in dropHandlers)
-            {
-                handler.InjectDependencies(turnCardRegistry, combatFlowCoordinator, combatTurnManager);
-                Debug.Log($"[Installer] CardDropToSlotHandler ¿«¡∏º∫ ¡÷¿‘ øœ∑·: {handler.gameObject.name}");
-            }
-        }
+        // 4. FlowCoordinatorÏóê ÏÑúÎπÑÏä§ Ï£ºÏûÖ
+        flowCoordinator.ConstructServices(
+            preparationService,
+            playerInputController,
+            executorService,
+            turnCardRegistry
+        );
     }
 }

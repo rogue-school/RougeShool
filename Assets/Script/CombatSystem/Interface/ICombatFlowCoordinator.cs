@@ -1,5 +1,5 @@
-using System;
 using System.Collections;
+using System;
 
 namespace Game.CombatSystem.Interface
 {
@@ -25,5 +25,4 @@ namespace Game.CombatSystem.Interface
         void InjectTurnStateDependencies(ICombatTurnManager turnManager, ICombatStateFactory stateFactory);
         void StartCombatFlow();
     }
-
 }

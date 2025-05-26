@@ -1,18 +1,22 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using Game.CombatSystem.Stage;
 using Game.IManager;
 using Game.CharacterSystem.Data;
 using Game.CharacterSystem.Interface;
 using Game.CombatSystem.Interface;
+using Game.CombatSystem.Utility;
+using Game.CharacterSystem.Core;
 
 namespace Game.CombatSystem.Manager
 {
     /// <summary>
-    /// ½ºÅ×ÀÌÁö µ¥ÀÌÅÍ¸¦ ±â¹İÀ¸·Î ÀûÀ» ¼øÂ÷ÀûÀ¸·Î ¼ÒÈ¯ÇÏ´Â ¸Å´ÏÀúÀÔ´Ï´Ù.
+    /// ìŠ¤í…Œì´ì§€ ë°ì´í„°ë¥¼ ê¸°ë°˜ìœ¼ë¡œ ì ì„ ìˆœì°¨ì ìœ¼ë¡œ ì†Œí™˜í•˜ëŠ” ë§¤ë‹ˆì €ì…ë‹ˆë‹¤.
+    /// SRP: ì  ì†Œí™˜ ìš”ì²­ ë° ì¸ë±ìŠ¤ë§Œ ê´€ë¦¬í•©ë‹ˆë‹¤.
+    /// DIP: flowCoordinatorì— ì§ì ‘ ì˜ì¡´í•˜ì§€ ì•Šìœ¼ë©°, DeathListenerë§Œ ì „ë‹¬í•©ë‹ˆë‹¤.
     /// </summary>
     public class StageManager : MonoBehaviour, IStageManager
     {
-        [Header("½ºÅ×ÀÌÁö µ¥ÀÌÅÍ")]
+        [Header("ìŠ¤í…Œì´ì§€ ë°ì´í„°")]
         [SerializeField] private StageData currentStage;
 
         private int currentEnemyIndex = 0;
@@ -20,47 +24,57 @@ namespace Game.CombatSystem.Manager
         private IEnemySpawnerManager spawnerManager;
         private IEnemyManager enemyManager;
         private IEnemyHandManager handManager;
+        private IEnemySpawnValidator spawnValidator;
+        private ICharacterDeathListener deathListener;
 
         public void Inject(
             IEnemySpawnerManager spawner,
             IEnemyManager enemyManager,
-            IEnemyHandManager handManager)
+            IEnemyHandManager handManager,
+            IEnemySpawnValidator spawnValidator,
+            ICharacterDeathListener deathListener)
         {
             this.spawnerManager = spawner;
             this.enemyManager = enemyManager;
             this.handManager = handManager;
+            this.spawnValidator = spawnValidator;
+            this.deathListener = deathListener;
         }
 
         public void SpawnNextEnemy()
         {
-            Debug.Log($"[StageManager] SpawnNextEnemy È£Ãâ - ÇöÀç ÀÎµ¦½º: {currentEnemyIndex}");
+            Debug.Log($"[StageManager] SpawnNextEnemy í˜¸ì¶œ - í˜„ì¬ ì¸ë±ìŠ¤: {currentEnemyIndex}");
+
+            if (!spawnValidator.CanSpawnEnemy())
+            {
+                Debug.LogWarning("[StageManager] í˜„ì¬ ì ì´ ì‚´ì•„ìˆìœ¼ë¯€ë¡œ ìƒˆ ì ì„ ì†Œí™˜í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.");
+                return;
+            }
 
             if (!TryGetNextEnemyData(out var enemyData))
             {
-                Debug.LogWarning("[StageManager] ´ÙÀ½ Àû µ¥ÀÌÅÍ¸¦ °¡Á®¿Ã ¼ö ¾ø½À´Ï´Ù.");
+                Debug.LogWarning("[StageManager] ë‹¤ìŒ ì  ë°ì´í„°ë¥¼ ê°€ì ¸ì˜¬ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.");
                 return;
             }
 
-            if (!ValidateSpawner())
+            var result = spawnerManager.SpawnEnemy(enemyData);
+            if (result == null || result.Enemy == null)
             {
-                Debug.LogError("[StageManager] SpawnerManager°¡ ÁÖÀÔµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+                Debug.LogError("[StageManager] ì  ìƒì„± ì‹¤íŒ¨ ë˜ëŠ” null ë°˜í™˜");
                 return;
             }
 
-            var enemy = spawnerManager.SpawnEnemy(enemyData);
-            if (enemy == null)
+            if (!result.IsNewlySpawned)
             {
-                Debug.LogError($"[StageManager] SpawnEnemy ½ÇÆĞ - Àû »ı¼º ½ÇÆĞ: {enemyData.DisplayName}");
+                Debug.LogWarning("[StageManager] ìƒˆ ì ì´ ì•„ë‹Œ ê¸°ì¡´ ì ì…ë‹ˆë‹¤. ì¸ë±ìŠ¤ ì¦ê°€ ìƒëµ");
                 return;
             }
 
-            RegisterEnemy(enemy);
-            SetupEnemyHand(enemy);
+            RegisterEnemy(result.Enemy);
+            SetupEnemyHand(result.Enemy);
+            currentEnemyIndex++;
 
-            Debug.Log($"[StageManager] Àû ¼ÒÈ¯ ¿Ï·á ¡æ µî·ÏµÈ Àû: {enemy.GetCharacterName()} (index: {currentEnemyIndex}) / µ¥ÀÌÅÍ ±âÁØ: {enemyData.DisplayName}");
-
-
-            currentEnemyIndex++; // ¼ÒÈ¯ ¼º°ø ¹× Ãâ·Â ÈÄ¿¡ Áõ°¡½ÃÅ´
+            Debug.Log($"[StageManager] ì  ì†Œí™˜ ì™„ë£Œ: {result.Enemy.GetCharacterName()} (index: {currentEnemyIndex})");
         }
 
         private bool TryGetNextEnemyData(out EnemyCharacterData data)
@@ -69,37 +83,20 @@ namespace Game.CombatSystem.Manager
 
             if (currentStage == null || currentStage.enemies == null || currentStage.enemies.Count == 0)
             {
-                Debug.LogError("[StageManager] ½ºÅ×ÀÌÁö ¶Ç´Â Àû ¸®½ºÆ®°¡ ºñ¾î ÀÖ½À´Ï´Ù.");
+                Debug.LogError("[StageManager] ìŠ¤í…Œì´ì§€ ë˜ëŠ” ì  ë¦¬ìŠ¤íŠ¸ê°€ ë¹„ì–´ ìˆìŠµë‹ˆë‹¤.");
                 return false;
             }
 
             if (currentEnemyIndex >= currentStage.enemies.Count)
             {
-                Debug.Log("[StageManager] ¸ğµç ÀûÀÌ ¼ÒÈ¯µÇ¾ú½À´Ï´Ù.");
+                Debug.Log("[StageManager] ëª¨ë“  ì ì´ ì†Œí™˜ë˜ì—ˆìŠµë‹ˆë‹¤.");
                 return false;
             }
 
             data = currentStage.enemies[currentEnemyIndex];
-            if (data == null)
+            if (data == null || data.Prefab == null)
             {
-                Debug.LogError($"[StageManager] Enemy µ¥ÀÌÅÍ°¡ nullÀÔ´Ï´Ù. Index: {currentEnemyIndex}");
-                return false;
-            }
-
-            if (data.Prefab == null)
-            {
-                Debug.LogError($"[StageManager] Enemy ÇÁ¸®ÆÕÀÌ nullÀÔ´Ï´Ù. Name: {data.DisplayName}");
-                return false;
-            }
-
-            return true;
-        }
-
-        private bool ValidateSpawner()
-        {
-            if (spawnerManager == null)
-            {
-                Debug.LogError("[StageManager] spawnerManager°¡ ÁÖÀÔµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+                Debug.LogError($"[StageManager] Enemy ë°ì´í„°ê°€ ìœ íš¨í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤. Index: {currentEnemyIndex}");
                 return false;
             }
 
@@ -110,25 +107,31 @@ namespace Game.CombatSystem.Manager
         {
             if (enemyManager == null)
             {
-                Debug.LogWarning("[StageManager] enemyManager°¡ ÁÖÀÔµÇÁö ¾Ê¾Ò½À´Ï´Ù. Register »ı·«");
+                Debug.LogWarning("[StageManager] enemyManagerê°€ ì£¼ì…ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤. Register ìƒëµ");
                 return;
             }
 
             enemyManager.RegisterEnemy(enemy);
-            Debug.Log($"[StageManager] Àû µî·Ï ¿Ï·á: {enemy.GetCharacterName()}");
+
+            if (enemy is EnemyCharacter concreteEnemy && deathListener != null)
+            {
+                concreteEnemy.SetDeathListener(deathListener);
+            }
+
+            Debug.Log($"[StageManager] ì  ë“±ë¡ ì™„ë£Œ: {enemy.GetCharacterName()}");
         }
 
         private void SetupEnemyHand(IEnemyCharacter enemy)
         {
             if (handManager == null)
             {
-                Debug.LogWarning("[StageManager] handManager°¡ ÁÖÀÔµÇÁö ¾Ê¾Ò½À´Ï´Ù. ÃÊ±âÈ­ »ı·«");
+                Debug.LogWarning("[StageManager] handManagerê°€ ì£¼ì…ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤. ì´ˆê¸°í™” ìƒëµ");
                 return;
             }
 
             handManager.Initialize(enemy);
             handManager.GenerateInitialHand();
-            Debug.Log("[StageManager] EnemyHandManager ÃÊ±âÈ­ ¹× ÃÊ±â ÇÚµå »ı¼º ¿Ï·á");
+            Debug.Log("[StageManager] EnemyHandManager ì´ˆê¸°í™” ë° ì´ˆê¸° í•¸ë“œ ìƒì„± ì™„ë£Œ");
         }
 
         public StageData GetCurrentStage() => currentStage;
@@ -139,8 +142,19 @@ namespace Game.CombatSystem.Manager
                            currentStage.enemies != null &&
                            currentEnemyIndex < currentStage.enemies.Count;
 
-            Debug.Log($"[StageManager] HasNextEnemy? ¡æ {hasNext}");
+            Debug.Log($"[StageManager] HasNextEnemy? â†’ {hasNext}");
             return hasNext;
+        }
+
+        public EnemyCharacterData PeekNextEnemyData()
+        {
+            if (currentStage == null || currentStage.enemies == null || currentEnemyIndex >= currentStage.enemies.Count)
+            {
+                Debug.LogWarning("[StageManager] PeekNextEnemyData: ë” ì´ìƒ ë‚¨ì€ ì ì´ ì—†ìŠµë‹ˆë‹¤.");
+                return null;
+            }
+
+            return currentStage.enemies[currentEnemyIndex];
         }
     }
 }

@@ -84,7 +84,7 @@ namespace Game.CombatSystem.Manager
                 cardUIs.Remove(from);
             }
 
-            Debug.Log($"[EnemyHandManager] 카드 {card.GetCardName()} 이동: {from} → {to}");
+            //Debug.Log($"[EnemyHandManager] 카드 {card.GetCardName()} 이동: {from} → {to}");
             return true;
         }
 
@@ -115,7 +115,7 @@ namespace Game.CombatSystem.Manager
 
             cardUIs[pos] = cardUI;
 
-            Debug.Log($"[EnemyHandManager] 카드 생성 완료 → {entry.Card.CardData.Name} → {pos}");
+            //Debug.Log($"[EnemyHandManager] 카드 생성 완료 → {entry.Card.CardData.Name} → {pos}");
         }
 
 

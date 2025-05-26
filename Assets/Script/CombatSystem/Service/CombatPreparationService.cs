@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections;
 using UnityEngine;
 using Game.CombatSystem.Interface;
@@ -7,7 +7,6 @@ using Game.SkillCardSystem.UI;
 using Game.CombatSystem.Slot;
 using Game.IManager;
 using Game.SkillCardSystem.Slot;
-using Game.CombatSystem.Utility;
 
 namespace Game.CombatSystem.Service
 {
@@ -21,6 +20,8 @@ namespace Game.CombatSystem.Service
         private readonly ITurnCardRegistry turnCardRegistry;
         private readonly ICardPlacementService cardPlacementService;
         private readonly ICombatTurnManager combatTurnManager;
+        private readonly IEnemyCardSelector enemyCardSelector;
+        private readonly ISlotSelector slotSelector;
 
         public CombatPreparationService(
             IPlayerManager playerManager,
@@ -30,7 +31,9 @@ namespace Game.CombatSystem.Service
             ISlotRegistry slotRegistry,
             ITurnCardRegistry turnCardRegistry,
             ICardPlacementService cardPlacementService,
-            ICombatTurnManager combatTurnManager)
+            ICombatTurnManager combatTurnManager,
+            IEnemyCardSelector enemyCardSelector,
+            ISlotSelector slotSelector)
         {
             this.playerManager = playerManager;
             this.spawnerManager = spawnerManager;
@@ -40,58 +43,60 @@ namespace Game.CombatSystem.Service
             this.turnCardRegistry = turnCardRegistry;
             this.cardPlacementService = cardPlacementService;
             this.combatTurnManager = combatTurnManager;
+            this.enemyCardSelector = enemyCardSelector;
+            this.slotSelector = slotSelector;
         }
 
         public IEnumerator PrepareCombat(Action<bool> onComplete)
         {
-            Debug.Log("[CombatPreparationService] ÀüÅõ ÁØºñ ½ÃÀÛ");
+            Debug.Log("[CombatPreparationService] ì „íˆ¬ ì¤€ë¹„ ì‹œì‘");
 
             playerManager.CreateAndRegisterPlayer();
             yield return null;
 
-            spawnerManager.SpawnInitialEnemy();
-            yield return null;
-
             var enemy = enemyManager.GetEnemy();
-            if (enemy == null)
+            if (enemy == null || enemy.IsDead())
             {
-                Debug.LogError("[CombatPreparationService] Àû »ı¼º ½ÇÆĞ");
+                spawnerManager.SpawnInitialEnemy();
+                yield return null;
+
+                enemy = enemyManager.GetEnemy();
+                if (enemy == null || enemy.IsDead())
+                {
+                    Debug.LogError("[CombatPreparationService] ìœ íš¨í•œ ì ì´ ì—†ìŠµë‹ˆë‹¤.");
+                    onComplete?.Invoke(false);
+                    yield break;
+                }
+            }
+
+            var enemyCard = enemyCardSelector.SelectCard(enemy);
+            var cardUI = enemyHandManager.GetCardUIInHandSlot(SkillCardSlotPosition.ENEMY_SLOT_1);
+
+            if (enemyCard == null || cardUI == null)
+            {
+                Debug.LogError("[CombatPreparationService] ì  ì¹´ë“œ ë˜ëŠ” UIê°€ nullì…ë‹ˆë‹¤.");
                 onComplete?.Invoke(false);
                 yield break;
             }
 
-            var (enemyCard, enemyUI) = enemyHandManager.PopCardFromSlot(SkillCardSlotPosition.ENEMY_SLOT_1);
-            if (enemyCard == null || enemyUI == null)
-            {
-                Debug.LogError("[CombatPreparationService] Àû Ä«µå ½½·Ô ºñ¾î ÀÖÀ½");
-                onComplete?.Invoke(false);
-                yield break;
-            }
-
-            var slotOrder = UnityEngine.Random.value < 0.5f
-                ? new[] { CombatSlotPosition.FIRST, CombatSlotPosition.SECOND }
-                : new[] { CombatSlotPosition.SECOND, CombatSlotPosition.FIRST };
-
-            CombatSlotPosition playerSlot = slotOrder[0];
-            CombatSlotPosition enemySlot = slotOrder[1];
-
+            var (playerSlot, enemySlot) = slotSelector.SelectSlots();
             var enemyCombatSlot = slotRegistry.GetCombatSlot(enemySlot);
+
             if (enemyCombatSlot == null)
             {
-                Debug.LogError("[CombatPreparationService] ÀüÅõ ½½·Ô °¡Á®¿À±â ½ÇÆĞ (Enemy)");
+                Debug.LogError("[CombatPreparationService] ì  ì „íˆ¬ ìŠ¬ë¡¯ì„ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.");
                 onComplete?.Invoke(false);
                 yield break;
             }
 
-            cardPlacementService.PlaceCardInSlot(enemyCard, enemyUI, enemyCombatSlot);
-
+            cardPlacementService.PlaceCardInSlot(enemyCard, cardUI, enemyCombatSlot);
             turnCardRegistry.RegisterEnemyCard(enemyCard);
             turnCardRegistry.ReserveNextEnemySlot(enemySlot);
             combatTurnManager.RegisterEnemyCard(enemyCard);
 
             enemyHandManager.FillEmptySlots();
 
-            Debug.Log($"[CombatPreparationService] ÀüÅõ ÁØºñ ¿Ï·á - EnemyCard: {enemyCard.CardData.Name}");
+            Debug.Log($"[CombatPreparationService] ì „íˆ¬ ì¤€ë¹„ ì™„ë£Œ - EnemyCard: {enemyCard.CardData?.Name ?? "Unknown"}");
             onComplete?.Invoke(true);
         }
     }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Data;
 using Game.CombatSystem.Slot;
+using Game.CombatSystem.Utility;
 using Game.IManager;
 
 namespace Game.CombatSystem.Manager
@@ -16,12 +17,20 @@ namespace Game.CombatSystem.Manager
         [SerializeField] private GameObject defaultEnemyPrefab;
 
         private IStageManager stageManager;
+        private IEnemyManager enemyManager; //  추가
+
         private readonly List<EnemyCharacter> spawnedEnemies = new();
 
         public void InjectStageManager(IStageManager stageManager)
         {
             this.stageManager = stageManager;
             Debug.Log("[EnemySpawnerManager] StageManager가 주입되었습니다.");
+        }
+
+        public void InjectEnemyManager(IEnemyManager enemyManager) //  추가
+        {
+            this.enemyManager = enemyManager;
+            Debug.Log("[EnemySpawnerManager] EnemyManager가 주입되었습니다.");
         }
 
         public void SpawnInitialEnemy()
@@ -36,7 +45,7 @@ namespace Game.CombatSystem.Manager
             stageManager.SpawnNextEnemy();
         }
 
-        public EnemyCharacter SpawnEnemy(EnemyCharacterData data)
+        public EnemySpawnResult SpawnEnemy(EnemyCharacterData data)
         {
             if (data == null)
             {
@@ -60,11 +69,10 @@ namespace Game.CombatSystem.Manager
 
             var existingEnemy = slot.GetCharacter() as EnemyCharacter;
 
-            // 적이 이미 존재하고 살아있으면 재사용
             if (existingEnemy != null && !existingEnemy.IsDead())
             {
                 Debug.LogWarning("[EnemySpawnerManager] 살아있는 적이 이미 존재합니다. 재생성하지 않습니다.");
-                return existingEnemy;
+                return new EnemySpawnResult(existingEnemy, false);
             }
 
             // 기존 자식 오브젝트 제거
@@ -97,8 +105,18 @@ namespace Game.CombatSystem.Manager
             slot.SetCharacter(enemy);
             spawnedEnemies.Add(enemy);
 
+            if (enemyManager != null) //  안전 체크 후 등록
+            {
+                enemyManager.RegisterEnemy(enemy);
+                Debug.Log("[EnemySpawnerManager] EnemyManager에 적 등록 완료");
+            }
+            else
+            {
+                Debug.LogWarning("[EnemySpawnerManager] EnemyManager가 주입되지 않아 등록되지 않았습니다.");
+            }
+
             Debug.Log($"[EnemySpawnerManager] 적 소환 완료: {data.DisplayName}");
-            return enemy;
+            return new EnemySpawnResult(enemy, true);
         }
 
         public List<EnemyCharacter> GetAllEnemies()

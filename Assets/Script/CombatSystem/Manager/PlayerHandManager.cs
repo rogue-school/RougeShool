@@ -173,7 +173,7 @@ namespace Game.CombatSystem.Manager
 
         public void LogPlayerHandSlotStates()
         {
-            Debug.Log("[PlayerHandManager] 슬롯 상태 확인:");
+            //Debug.Log("[PlayerHandManager] 슬롯 상태 확인:");
 
             SkillCardSlotPosition[] positions = new[]
             {
@@ -186,7 +186,7 @@ namespace Game.CombatSystem.Manager
             {
                 var card = GetCardInSlot(pos);
                 var ui = GetCardUIInSlot(pos);
-                Debug.Log($" → {pos}: 카드 = {card?.CardData.Name ?? "없음"}, UI = {(ui != null ? "있음" : "없음")}");
+                //Debug.Log($" → {pos}: 카드 = {card?.CardData.Name ?? "없음"}, UI = {(ui != null ? "있음" : "없음")}");
             }
         }
 

@@ -43,23 +43,28 @@ namespace Game.CombatSystem.State
         {
             yield return flowCoordinator.PerformResultPhase();
 
-            // 결과 확인 후 상태 전이
             if (flowCoordinator.IsPlayerDead())
             {
                 Debug.Log("[State] CombatResultState: 플레이어 사망 → GameOver");
                 var nextState = stateFactory.CreateGameOverState();
                 turnManager.RequestStateChange(nextState);
             }
-            else if (!flowCoordinator.CheckHasNextEnemy())
+            else if (!flowCoordinator.IsEnemyDead())
             {
-                Debug.Log("[State] CombatResultState: 모든 적 처치 → Victory");
-                var nextState = stateFactory.CreateVictoryState();
+                Debug.Log("[State] CombatResultState: 적이 아직 살아 있음 → 다음 턴 준비");
+                var nextState = stateFactory.CreatePrepareState(); // 또는 PlayerInputState
+                turnManager.RequestStateChange(nextState);
+            }
+            else if (flowCoordinator.CheckHasNextEnemy())
+            {
+                Debug.Log("[State] CombatResultState: 적 사망 + 다음 적 존재 → 다음 적 준비");
+                var nextState = stateFactory.CreatePrepareState();
                 turnManager.RequestStateChange(nextState);
             }
             else
             {
-                Debug.Log("[State] CombatResultState: 다음 적 준비");
-                var nextState = stateFactory.CreatePrepareState();
+                Debug.Log("[State] CombatResultState: 적 사망 + 다음 적 없음 → Victory");
+                var nextState = stateFactory.CreateVictoryState();
                 turnManager.RequestStateChange(nextState);
             }
         }

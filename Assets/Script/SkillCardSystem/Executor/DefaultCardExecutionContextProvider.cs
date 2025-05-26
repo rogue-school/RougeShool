@@ -3,11 +3,12 @@ using Game.SkillCardSystem.Interface;
 using Game.CharacterSystem.Interface;
 using UnityEngine;
 using Game.SkillCardSystem.Executor;
+using System;
 
 namespace Game.CombatSystem.Context
 {
     /// <summary>
-    /// 카드의 소유자(플레이어/적)에 따라 자동으로 Source/Target을 설정해주는 기본 컨텍스트 제공자.
+    /// 카드 소유자에 따라 Source/Target을 자동 할당하는 기본 실행 컨텍스트 생성기
     /// </summary>
     public class DefaultCardExecutionContextProvider : ICardExecutionContextProvider
     {
@@ -16,22 +17,35 @@ namespace Game.CombatSystem.Context
 
         public DefaultCardExecutionContextProvider(IPlayerCharacter player, IEnemyCharacter enemy)
         {
-            this.player = player;
-            this.enemy = enemy;
+            this.player = player ?? throw new ArgumentNullException(nameof(player));
+            this.enemy = enemy ?? throw new ArgumentNullException(nameof(enemy));
         }
 
         public ICardExecutionContext CreateContext(ISkillCard card)
         {
             if (card == null)
+                throw new ArgumentNullException(nameof(card), "[ExecutionContextProvider] 카드가 null입니다.");
+
+            var source = GetSourceCharacter(card);
+            var target = GetTargetCharacter(card);
+
+            if (source == null || target == null)
             {
-                Debug.LogError("[DefaultCardExecutionContextProvider] 카드가 null입니다.");
+                Debug.LogError("[ExecutionContextProvider] Source 또는 Target이 null입니다. 카드 실행 취소.");
                 return null;
             }
 
-            ICharacter source = card.IsFromPlayer() ? player : enemy;
-            ICharacter target = card.IsFromPlayer() ? enemy : player;
-
             return new DefaultCardExecutionContext(card, source, target);
+        }
+
+        private ICharacter GetSourceCharacter(ISkillCard card)
+        {
+            return card.IsFromPlayer() ? player : enemy;
+        }
+
+        private ICharacter GetTargetCharacter(ISkillCard card)
+        {
+            return card.IsFromPlayer() ? enemy : player;
         }
     }
 }

@@ -30,7 +30,7 @@ namespace Game.CombatSystem.DragDrop
         {
             if (flowCoordinator == null || !flowCoordinator.IsPlayerInputEnabled())
             {
-                Debug.LogWarning("[DragHandler] 현재 상태에서 드래그 불가");
+                //Debug.LogWarning("[DragHandler] 현재 상태에서 드래그 불가");
                 return;
             }
 
@@ -38,13 +38,13 @@ namespace Game.CombatSystem.DragDrop
             {
                 OriginalParent = transform.parent;
                 OriginalWorldPosition = transform.position;
-                Debug.Log($"[DragHandler] 최초 저장: 위치={OriginalWorldPosition}, 부모={OriginalParent?.name}");
+                //Debug.Log($"[DragHandler] 최초 저장: 위치={OriginalWorldPosition}, 부모={OriginalParent?.name}");
             }
 
             canvasGroup.alpha = 0.8f;
             canvasGroup.blocksRaycasts = false;
             transform.SetParent(canvas.transform, true);
-            Debug.Log($"[DragHandler] 드래그 시작: {gameObject.name}, 현재 위치: {transform.position}");
+            //Debug.Log($"[DragHandler] 드래그 시작: {gameObject.name}, 현재 위치: {transform.position}");
         }
 
         public void OnDrag(PointerEventData eventData)

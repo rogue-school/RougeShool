@@ -19,7 +19,10 @@ namespace Game.CombatSystem.Core
         private readonly IGameOverManager gameOverManager;
         private readonly ITurnStateController turnStateController;
         private readonly ICardExecutionContext cardExecutionContext;
-        private readonly ISlotRegistry slotRegistry;
+
+        private readonly IHandSlotRegistry handSlotRegistry;
+        private readonly ICombatSlotRegistry combatSlotRegistry;
+        private readonly ICharacterSlotRegistry characterSlotRegistry;
 
         public CombatStateFactory(
             ICombatTurnManager combatTurnManager,
@@ -33,12 +36,14 @@ namespace Game.CombatSystem.Core
             IStageManager stageManager,
             IVictoryManager victoryManager,
             IGameOverManager gameOverManager,
-            ISlotRegistry slotRegistry)
+            IHandSlotRegistry handSlotRegistry,
+            ICombatSlotRegistry combatSlotRegistry,
+            ICharacterSlotRegistry characterSlotRegistry
+        )
         {
             this.combatTurnManager = combatTurnManager ?? throw new ArgumentNullException(nameof(combatTurnManager));
             this.turnStateController = turnStateController ?? throw new ArgumentNullException(nameof(turnStateController));
             this.cardExecutionContext = cardExecutionContext ?? throw new ArgumentNullException(nameof(cardExecutionContext));
-
             this.flowCoordinator = flowCoordinator ?? throw new ArgumentNullException(nameof(flowCoordinator));
             this.playerHandManager = playerHandManager ?? throw new ArgumentNullException(nameof(playerHandManager));
             this.enemyHandManager = enemyHandManager ?? throw new ArgumentNullException(nameof(enemyHandManager));
@@ -47,28 +52,30 @@ namespace Game.CombatSystem.Core
             this.stageManager = stageManager ?? throw new ArgumentNullException(nameof(stageManager));
             this.victoryManager = victoryManager ?? throw new ArgumentNullException(nameof(victoryManager));
             this.gameOverManager = gameOverManager ?? throw new ArgumentNullException(nameof(gameOverManager));
-            this.slotRegistry = slotRegistry ?? throw new ArgumentNullException(nameof(slotRegistry));
+            this.handSlotRegistry = handSlotRegistry ?? throw new ArgumentNullException(nameof(handSlotRegistry));
+            this.combatSlotRegistry = combatSlotRegistry ?? throw new ArgumentNullException(nameof(combatSlotRegistry));
+            this.characterSlotRegistry = characterSlotRegistry ?? throw new ArgumentNullException(nameof(characterSlotRegistry));
         }
 
         public ICombatTurnState CreatePrepareState() =>
-            new CombatPrepareState(combatTurnManager, flowCoordinator, this, slotRegistry);
+            new CombatPrepareState(combatTurnManager, flowCoordinator, this, characterSlotRegistry);
 
         public ICombatTurnState CreatePlayerInputState() =>
-            new CombatPlayerInputState(combatTurnManager, flowCoordinator, this, slotRegistry);
+            new CombatPlayerInputState(combatTurnManager, flowCoordinator, this, handSlotRegistry);
 
         public ICombatTurnState CreateFirstAttackState() =>
-            new CombatFirstAttackState(combatTurnManager, flowCoordinator, this, slotRegistry);
+            new CombatFirstAttackState(combatTurnManager, flowCoordinator, this, combatSlotRegistry);
 
         public ICombatTurnState CreateSecondAttackState() =>
-            new CombatSecondAttackState(combatTurnManager, flowCoordinator, this, slotRegistry);
+            new CombatSecondAttackState(combatTurnManager, flowCoordinator, this, combatSlotRegistry);
 
         public ICombatTurnState CreateResultState() =>
-            new CombatResultState(combatTurnManager, flowCoordinator, this, slotRegistry);
+            new CombatResultState(combatTurnManager, flowCoordinator, this, combatSlotRegistry);
 
         public ICombatTurnState CreateVictoryState() =>
-            new CombatVictoryState(combatTurnManager, flowCoordinator, this, slotRegistry);
+            new CombatVictoryState(combatTurnManager, flowCoordinator, this, characterSlotRegistry);
 
         public ICombatTurnState CreateGameOverState() =>
-            new CombatGameOverState(combatTurnManager, flowCoordinator, this, slotRegistry);
+            new CombatGameOverState(combatTurnManager, flowCoordinator, this, characterSlotRegistry);
     }
 }
