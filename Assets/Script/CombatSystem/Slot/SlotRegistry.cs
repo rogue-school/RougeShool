@@ -3,28 +3,31 @@ using Game.CombatSystem.Interface;
 
 namespace Game.CombatSystem.Slot
 {
-    public class SlotRegistry : MonoBehaviour
+    public class SlotRegistry : MonoBehaviour, ISlotRegistry
     {
-        public static SlotRegistry Instance { get; private set; }
+        [SerializeField] private Transform handSlotRoot;
+        [SerializeField] private Transform combatSlotRoot;
+        [SerializeField] private Transform characterSlotRoot;
 
-        public IHandSlotRegistry HandSlots { get; private set; }
-        public ICombatSlotRegistry CombatSlots { get; private set; }
-        public ICharacterSlotRegistry CharacterSlots { get; private set; }
+        private IHandSlotRegistry handSlots;
+        private ICombatSlotRegistry combatSlots;
+        private ICharacterSlotRegistry characterSlots;
 
-        private void Awake()
+        public void Initialize()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
+            handSlots = new HandSlotRegistry(handSlotRoot);
+            combatSlots = new CombatSlotRegistry(combatSlotRoot);
+            characterSlots = new CharacterSlotRegistry(characterSlotRoot);
+        }
 
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
+        public IHandSlotRegistry GetHandSlotRegistry() => handSlots;
+        public ICombatSlotRegistry GetCombatSlotRegistry() => combatSlots;
+        public ICharacterSlotRegistry GetCharacterSlotRegistry() => characterSlots;
 
-            HandSlots = new HandSlotRegistry();
-            CombatSlots = new CombatSlotRegistry();
-            CharacterSlots = new CharacterSlotRegistry();
+        // ✅ ISlotRegistry 인터페이스 구현
+        public ICombatCardSlot GetCombatSlot(CombatSlotPosition position)
+        {
+            return combatSlots.GetCombatSlot(position);
         }
     }
 }

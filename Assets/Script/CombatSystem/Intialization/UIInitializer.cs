@@ -13,18 +13,18 @@ namespace Game.CombatSystem.Intialization
     {
         private IPlayerManager playerManager;
         private IEnemyManager enemyManager;
-        private ISlotRegistry slotRegistry;
+        private ICharacterSlotRegistry characterSlotRegistry;
 
-        public void Initialize(IPlayerManager playerManager, IEnemyManager enemyManager, ISlotRegistry slotRegistry)
+        public void Initialize(IPlayerManager playerManager, IEnemyManager enemyManager, ICharacterSlotRegistry characterSlotRegistry)
         {
             this.playerManager = playerManager;
             this.enemyManager = enemyManager;
-            this.slotRegistry = slotRegistry;
+            this.characterSlotRegistry = characterSlotRegistry;
         }
 
         public void SetupCharacterUI()
         {
-            foreach (var slot in slotRegistry.GetCharacterSlots())
+            foreach (var slot in characterSlotRegistry.GetAllCharacterSlots())
             {
                 switch (slot.GetOwner())
                 {

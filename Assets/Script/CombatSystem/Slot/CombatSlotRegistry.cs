@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Utility;
 
@@ -7,6 +8,12 @@ namespace Game.CombatSystem.Slot
     public class CombatSlotRegistry : ICombatSlotRegistry
     {
         private readonly Dictionary<CombatSlotPosition, ICombatCardSlot> combatSlots = new();
+
+        public CombatSlotRegistry(Transform root)
+        {
+            var slots = root.GetComponentsInChildren<ICombatCardSlot>(includeInactive: true);
+            RegisterCombatSlots(slots);
+        }
 
         public void RegisterCombatSlots(IEnumerable<ICombatCardSlot> slots)
         {

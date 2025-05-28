@@ -5,6 +5,7 @@ using Game.CharacterSystem.Data;
 using Game.CombatSystem.Slot;
 using Game.CombatSystem.Utility;
 using Game.IManager;
+using Game.CombatSystem.Interface;
 
 namespace Game.CombatSystem.Manager
 {
@@ -17,7 +18,8 @@ namespace Game.CombatSystem.Manager
         [SerializeField] private GameObject defaultEnemyPrefab;
 
         private IStageManager stageManager;
-        private IEnemyManager enemyManager; //  추가
+        private IEnemyManager enemyManager;
+        private ISlotRegistry slotRegistry; // 추가된 DI 필드
 
         private readonly List<EnemyCharacter> spawnedEnemies = new();
 
@@ -27,10 +29,16 @@ namespace Game.CombatSystem.Manager
             Debug.Log("[EnemySpawnerManager] StageManager가 주입되었습니다.");
         }
 
-        public void InjectEnemyManager(IEnemyManager enemyManager) //  추가
+        public void InjectEnemyManager(IEnemyManager enemyManager)
         {
             this.enemyManager = enemyManager;
             Debug.Log("[EnemySpawnerManager] EnemyManager가 주입되었습니다.");
+        }
+
+        public void InjectSlotRegistry(ISlotRegistry slotRegistry) // DI 메서드 추가
+        {
+            this.slotRegistry = slotRegistry;
+            Debug.Log("[EnemySpawnerManager] SlotRegistry가 주입되었습니다.");
         }
 
         public void SpawnInitialEnemy()
@@ -53,14 +61,13 @@ namespace Game.CombatSystem.Manager
                 return null;
             }
 
-            var slotRegistry = SlotRegistry.Instance;
             if (slotRegistry == null)
             {
-                Debug.LogError("[EnemySpawnerManager] SlotRegistry.Instance가 null입니다. 적 소환 실패.");
+                Debug.LogError("[EnemySpawnerManager] SlotRegistry가 주입되지 않았습니다.");
                 return null;
             }
 
-            var slot = slotRegistry.GetCharacterSlot(SlotOwner.ENEMY);
+            var slot = slotRegistry.GetCharacterSlotRegistry()?.GetCharacterSlot(SlotOwner.ENEMY);
             if (slot == null)
             {
                 Debug.LogError("[EnemySpawnerManager] ENEMY용 캐릭터 슬롯을 찾을 수 없습니다.");
@@ -68,7 +75,6 @@ namespace Game.CombatSystem.Manager
             }
 
             var existingEnemy = slot.GetCharacter() as EnemyCharacter;
-
             if (existingEnemy != null && !existingEnemy.IsDead())
             {
                 Debug.LogWarning("[EnemySpawnerManager] 살아있는 적이 이미 존재합니다. 재생성하지 않습니다.");
@@ -76,7 +82,6 @@ namespace Game.CombatSystem.Manager
             }
 
             // 기존 자식 오브젝트 제거
-            Debug.Log("[EnemySpawnerManager] 기존 슬롯 자식 오브젝트 제거 시작");
             foreach (Transform child in slot.GetTransform())
                 Destroy(child.gameObject);
 
@@ -87,7 +92,6 @@ namespace Game.CombatSystem.Manager
                 return null;
             }
 
-            Debug.Log($"[EnemySpawnerManager] 프리팹 인스턴스 생성: {data.DisplayName}");
             var instance = Instantiate(prefabToUse, slot.GetTransform());
             instance.name = data.DisplayName;
             instance.transform.localPosition = Vector3.zero;
@@ -105,7 +109,7 @@ namespace Game.CombatSystem.Manager
             slot.SetCharacter(enemy);
             spawnedEnemies.Add(enemy);
 
-            if (enemyManager != null) //  안전 체크 후 등록
+            if (enemyManager != null)
             {
                 enemyManager.RegisterEnemy(enemy);
                 Debug.Log("[EnemySpawnerManager] EnemyManager에 적 등록 완료");

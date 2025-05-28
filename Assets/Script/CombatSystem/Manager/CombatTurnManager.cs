@@ -4,26 +4,23 @@ using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 
-public class CombatTurnManager : MonoBehaviour,
-    ICombatTurnManager,
-    ITurnStateController,
-    ITurnStartConditionChecker,
-    ITurnCardRegistry,
-    IEnemySlotReservationService
+public class CombatTurnManager : MonoBehaviour, ICombatTurnManager, ITurnStateController
 {
     private ICombatStateFactory stateFactory;
     private ICombatTurnState currentState;
     private ICombatTurnState pendingNextState;
+    private ITurnCardRegistry cardRegistry;
 
     private CombatSlotPosition? reservedEnemySlot;
 
-    private ISkillCard registeredEnemyCard;
-    private ISkillCard registeredPlayerCard;
-
-    private bool isTurnReady;
     public event Action<bool> OnTurnReadyChanged;
+    private bool isTurnReady;
 
-    public void InjectFactory(ICombatStateFactory factory) => stateFactory = factory;
+    public void Inject(ICombatStateFactory stateFactory, ITurnCardRegistry cardRegistry)
+    {
+        this.stateFactory = stateFactory;
+        this.cardRegistry = cardRegistry;
+    }
 
     public void Initialize()
     {
@@ -51,7 +48,10 @@ public class CombatTurnManager : MonoBehaviour,
             ApplyPendingState();
     }
 
-    public void RequestStateChange(ICombatTurnState nextState) => pendingNextState = nextState;
+    public void RequestStateChange(ICombatTurnState nextState)
+    {
+        pendingNextState = nextState;
+    }
 
     private void ApplyPendingState()
     {
@@ -59,13 +59,12 @@ public class CombatTurnManager : MonoBehaviour,
         pendingNextState = null;
     }
 
-    public void ChangeState(ICombatTurnState newState)
+    private void ChangeState(ICombatTurnState newState)
     {
         if (newState == null || currentState == newState)
             return;
 
         Debug.Log($"[CombatTurnManager] 상태 전이: {currentState?.GetType().Name ?? "None"} → {newState.GetType().Name}");
-
         currentState?.ExitState();
         currentState = newState;
         currentState.EnterState();
@@ -73,84 +72,42 @@ public class CombatTurnManager : MonoBehaviour,
 
     public ICombatTurnState GetCurrentState() => currentState;
 
-    public void RegisterEnemyCard(ISkillCard card)
+    public void Reset()
     {
-        if (card == null)
-        {
-            Debug.LogError("[CombatTurnManager] 적 카드 등록 실패: null");
-            return;
-        }
-
-        registeredEnemyCard = card;
-        Debug.Log($"[CombatTurnManager] 적 카드 등록됨: {card.CardData?.Name ?? "Unknown"}");
-        UpdateTurnReady();
+        Debug.Log("[CombatTurnManager] Reset 호출됨");
+        currentState = null;
+        pendingNextState = null;
+        isTurnReady = false;
+        reservedEnemySlot = null;
     }
 
-    public void RegisterPlayerCard(ISkillCard card)
+    public void UpdateTurnReady()
     {
-        if (card == null)
-        {
-            Debug.LogError("[CombatTurnManager] 플레이어 카드 등록 실패: null");
-            return;
-        }
+        bool ready = cardRegistry.GetEnemyCard() != null &&
+                     cardRegistry.GetPlayerCard(CombatSlotPosition.FIRST) != null;
 
-        registeredPlayerCard = card;
-        Debug.Log($"[CombatTurnManager] 플레이어 카드 등록됨: {card.CardData?.Name ?? "Unknown"}");
-        UpdateTurnReady();
-    }
-
-    public void RegisterPlayerCard(CombatSlotPosition position, ISkillCard card)
-    {
-        Debug.Log($"[CombatTurnManager] RegisterPlayerCard 위치: {position}, 카드: {card?.CardData?.Name ?? "null"}");
-        RegisterPlayerCard(card);
-    }
-
-    private void UpdateTurnReady()
-    {
-        bool ready = registeredEnemyCard != null && registeredPlayerCard != null;
         if (isTurnReady != ready)
         {
             isTurnReady = ready;
             Debug.Log($"[CombatTurnManager] 전투 시작 가능 상태 변경 → {isTurnReady}");
-            NotifyTurnReadyChanged();
-        }
-    }
-
-    private void NotifyTurnReadyChanged()
-    {
-        try
-        {
             OnTurnReadyChanged?.Invoke(isTurnReady);
         }
-        catch (Exception e)
-        {
-            Debug.LogError($"[CombatTurnManager] OnTurnReadyChanged 예외: {e.Message}");
-        }
     }
 
-    public void ReserveNextEnemySlot(CombatSlotPosition slot)
+    public void RegisterPlayerCard(CombatSlotPosition slot, ISkillCard card)
     {
-        reservedEnemySlot = slot;
-        Debug.Log($"[CombatTurnManager] 다음 적 슬롯 예약됨: {slot}");
+        cardRegistry?.RegisterPlayerCard(slot, card);
+        UpdateTurnReady();
     }
-
-    public CombatSlotPosition? GetReservedEnemySlot() => reservedEnemySlot;
 
     public bool CanStartTurn() => isTurnReady;
 
-    public void Reset()
+    // --- [New] ITurnStateController 구현 ---
+    public void ReserveNextEnemySlot(CombatSlotPosition slot)
     {
-        Debug.Log("[CombatTurnManager] Reset 호출됨");
-        ClearRegisteredCards();
-        reservedEnemySlot = null;
-        currentState = null;
-        pendingNextState = null;
+        reservedEnemySlot = slot;
+        Debug.Log($"[CombatTurnManager] 다음 적 슬롯 예약됨 → {slot}");
     }
 
-    private void ClearRegisteredCards()
-    {
-        registeredEnemyCard = null;
-        registeredPlayerCard = null;
-        isTurnReady = false;
-    }
+    public CombatSlotPosition? GetReservedEnemySlot() => reservedEnemySlot;
 }

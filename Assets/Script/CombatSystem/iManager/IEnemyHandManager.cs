@@ -2,12 +2,14 @@ using Game.CharacterSystem.Interface;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Slot;
 using Game.SkillCardSystem.UI;
+using Game.CombatSystem.Slot;
+using Game.SkillCardSystem.Factory;
 
 namespace Game.CombatSystem.Interface
 {
     public interface IEnemyHandManager
     {
-        void Initialize(IEnemyCharacter enemy);
+        void Initialize(IEnemyCharacter enemy, ISlotRegistry slotRegistry, ISkillCardFactory cardFactory);
         void GenerateInitialHand();
         void FillEmptySlots();
         void AdvanceSlots();
@@ -18,6 +20,5 @@ namespace Game.CombatSystem.Interface
         void LogHandSlotStates();
         SkillCardUI RemoveCardFromSlot(SkillCardSlotPosition pos);
         (ISkillCard card, SkillCardUI ui) PopCardFromSlot(SkillCardSlotPosition pos);
-
     }
 }

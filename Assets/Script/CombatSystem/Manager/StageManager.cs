@@ -6,14 +6,11 @@ using Game.CharacterSystem.Interface;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Utility;
 using Game.CharacterSystem.Core;
+using Game.SkillCardSystem.Factory;
+using Game.SkillCardSystem.Interface;
 
 namespace Game.CombatSystem.Manager
 {
-    /// <summary>
-    /// 스테이지 데이터를 기반으로 적을 순차적으로 소환하는 매니저입니다.
-    /// SRP: 적 소환 요청 및 인덱스만 관리합니다.
-    /// DIP: flowCoordinator에 직접 의존하지 않으며, DeathListener만 전달합니다.
-    /// </summary>
     public class StageManager : MonoBehaviour, IStageManager
     {
         [Header("스테이지 데이터")]
@@ -26,19 +23,25 @@ namespace Game.CombatSystem.Manager
         private IEnemyHandManager handManager;
         private IEnemySpawnValidator spawnValidator;
         private ICharacterDeathListener deathListener;
+        private ISlotRegistry slotRegistry;
+        private ISkillCardFactory cardFactory;
 
         public void Inject(
             IEnemySpawnerManager spawner,
             IEnemyManager enemyManager,
             IEnemyHandManager handManager,
             IEnemySpawnValidator spawnValidator,
-            ICharacterDeathListener deathListener)
+            ICharacterDeathListener deathListener,
+            ISlotRegistry slotRegistry,
+            ISkillCardFactory cardFactory)
         {
             this.spawnerManager = spawner;
             this.enemyManager = enemyManager;
             this.handManager = handManager;
             this.spawnValidator = spawnValidator;
             this.deathListener = deathListener;
+            this.slotRegistry = slotRegistry;
+            this.cardFactory = cardFactory;
         }
 
         public void SpawnNextEnemy()
@@ -77,6 +80,38 @@ namespace Game.CombatSystem.Manager
             Debug.Log($"[StageManager] 적 소환 완료: {result.Enemy.GetCharacterName()} (index: {currentEnemyIndex})");
         }
 
+        private void SetupEnemyHand(IEnemyCharacter enemy)
+        {
+            if (handManager == null || slotRegistry == null || cardFactory == null)
+            {
+                Debug.LogWarning("[StageManager] HandManager 초기화 인자 누락");
+                return;
+            }
+
+            handManager.Initialize(enemy, slotRegistry, cardFactory);
+            handManager.GenerateInitialHand();
+
+            Debug.Log("[StageManager] EnemyHandManager 초기화 및 초기 핸드 생성 완료");
+        }
+
+        private void RegisterEnemy(IEnemyCharacter enemy)
+        {
+            if (enemyManager == null)
+            {
+                Debug.LogWarning("[StageManager] enemyManager가 주입되지 않았습니다. Register 생략");
+                return;
+            }
+
+            enemyManager.RegisterEnemy(enemy);
+
+            if (enemy is EnemyCharacter concreteEnemy && deathListener != null)
+            {
+                concreteEnemy.SetDeathListener(deathListener);
+            }
+
+            Debug.Log($"[StageManager] 적 등록 완료: {enemy.GetCharacterName()}");
+        }
+
         private bool TryGetNextEnemyData(out EnemyCharacterData data)
         {
             data = null;
@@ -101,37 +136,6 @@ namespace Game.CombatSystem.Manager
             }
 
             return true;
-        }
-
-        private void RegisterEnemy(IEnemyCharacter enemy)
-        {
-            if (enemyManager == null)
-            {
-                Debug.LogWarning("[StageManager] enemyManager가 주입되지 않았습니다. Register 생략");
-                return;
-            }
-
-            enemyManager.RegisterEnemy(enemy);
-
-            if (enemy is EnemyCharacter concreteEnemy && deathListener != null)
-            {
-                concreteEnemy.SetDeathListener(deathListener);
-            }
-
-            Debug.Log($"[StageManager] 적 등록 완료: {enemy.GetCharacterName()}");
-        }
-
-        private void SetupEnemyHand(IEnemyCharacter enemy)
-        {
-            if (handManager == null)
-            {
-                Debug.LogWarning("[StageManager] handManager가 주입되지 않았습니다. 초기화 생략");
-                return;
-            }
-
-            handManager.Initialize(enemy);
-            handManager.GenerateInitialHand();
-            Debug.Log("[StageManager] EnemyHandManager 초기화 및 초기 핸드 생성 완료");
         }
 
         public StageData GetCurrentStage() => currentStage;

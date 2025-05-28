@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using System.Collections.Generic;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Effects;
@@ -11,13 +11,15 @@ namespace Game.SkillCardSystem.Core
     {
         public SkillCardData CardData;
 
-        [Header("Ä«µå ½ÇÇà ½Ã Àû¿ëÇÒ È¿°ú ¸ñ·Ï")]
+        [Header("ì¹´ë“œ ì‹¤í–‰ ì‹œ ì ìš©í•  íš¨ê³¼ ëª©ë¡")]
         [SerializeField] private List<SkillCardEffectSO> effects = new();
 
         public List<SkillCardEffectSO> CreateEffects()
         {
             return effects ?? new List<SkillCardEffectSO>();
         }
+
+        public SkillCardData GetCardData() => CardData; // âœ… ì¶”ê°€
 
         public string GetCardName() => CardData.Name;
         public int GetDamage() => CardData.Damage;

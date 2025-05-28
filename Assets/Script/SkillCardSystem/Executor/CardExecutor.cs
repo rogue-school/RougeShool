@@ -3,40 +3,48 @@ using UnityEngine;
 using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Effects;
+using Game.SkillCardSystem.Factory;
+using Game.SkillCardSystem.Validator;
 
 namespace Game.SkillCardSystem.Executor
 {
-    /// <summary>
-    /// 스킬 카드를 실행하여 그 안의 이펙트들을 순차적으로 실행하는 서비스.
-    /// </summary>
     public class CardExecutor : ICardExecutor
     {
+        private readonly ICardEffectCommandFactory commandFactory;
+        private readonly ICardExecutionValidator validator;
+
+        public CardExecutor(
+            ICardEffectCommandFactory commandFactory,
+            ICardExecutionValidator validator)
+        {
+            this.commandFactory = commandFactory;
+            this.validator = validator;
+        }
+
         public void Execute(ISkillCard card, ICardExecutionContext context, ITurnStateController controller)
         {
-            if (card == null || context == null)
+            if (!validator.CanExecute(card, context))
             {
-                Debug.LogError("[CardExecutor] 카드 또는 컨텍스트가 null입니다.");
+                Debug.LogWarning($"[CardExecutor] 실행 조건 불충족: {card?.GetCardName() ?? "알 수 없음"}");
                 return;
             }
 
-            List<SkillCardEffectSO> effects = card.CreateEffects() as List<SkillCardEffectSO>;
-
+            var effects = card.CreateEffects();
             if (effects == null || effects.Count == 0)
             {
-                Debug.LogWarning($"[CardExecutor] 카드 '{card.GetCardName()}' 에 연결된 이펙트가 없습니다.");
+                Debug.LogWarning($"[CardExecutor] '{card.GetCardName()}'에 등록된 이펙트가 없습니다.");
                 return;
             }
-
-            int power = card.GetEffectPower(null); // 기본적으로 SkillCardData.Damage 사용
-
-            Debug.Log($"[CardExecutor] {card.GetCardName()} → 효과 {effects.Count}개 실행 (power: {power})");
 
             foreach (var effect in effects)
             {
                 if (effect == null) continue;
 
-                ICardEffectCommand command = effect.CreateEffectCommand(power);
+                int power = card.GetEffectPower(effect);
+                var command = commandFactory.Create(effect, power);
                 command.Execute(context, controller);
+
+                Debug.Log($"[CardExecutor] {card.GetCardName()} → {effect.GetType().Name}, power: {power}");
             }
         }
     }

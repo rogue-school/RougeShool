@@ -12,7 +12,7 @@ namespace Game.CombatSystem.Core
 {
     public class CombatFlowCoordinator : MonoBehaviour, ICombatFlowCoordinator, ICharacterDeathListener
     {
-        private ISlotRegistry slotRegistry;
+        private ICharacterSlotRegistry characterSlotRegistry;
         private IEnemyHandManager enemyHandManager;
         private IPlayerHandManager playerHandManager;
         private IEnemySpawnerManager enemySpawner;
@@ -31,9 +31,9 @@ namespace Game.CombatSystem.Core
         private SkillCardUI skillCardPrefab;
         private bool playerInputEnabled = false;
 
-        // 기본 게임 컴포넌트 의존성 주입
+        // === 기본 컴포넌트 주입 ===
         public void Inject(
-            ISlotRegistry slotRegistry,
+            ICharacterSlotRegistry characterSlotRegistry,
             IEnemyHandManager enemyHandManager,
             IPlayerHandManager playerHandManager,
             IEnemySpawnerManager enemySpawner,
@@ -43,7 +43,7 @@ namespace Game.CombatSystem.Core
             ICombatTurnManager turnManager,
             ICombatStateFactory stateFactory)
         {
-            this.slotRegistry = slotRegistry;
+            this.characterSlotRegistry = characterSlotRegistry;
             this.enemyHandManager = enemyHandManager;
             this.playerHandManager = playerHandManager;
             this.enemySpawner = enemySpawner;
@@ -54,20 +54,22 @@ namespace Game.CombatSystem.Core
             this.stateFactory = stateFactory;
         }
 
-        // UI 프리팹 주입
+        // === UI 프리팹 주입 ===
         public void InjectUI(SkillCardUI skillCardPrefab)
         {
             this.skillCardPrefab = skillCardPrefab;
         }
 
-        // 턴 상태 매니저/팩토리 주입
-        public void InjectTurnStateDependencies(ICombatTurnManager turnManager, ICombatStateFactory stateFactory)
+        // === 턴 상태 의존성 주입 ===
+        public void InjectTurnStateDependencies(
+            ICombatTurnManager turnManager,
+            ICombatStateFactory stateFactory)
         {
             this.turnManager = turnManager;
             this.stateFactory = stateFactory;
         }
 
-        // 외부 서비스 주입: 실행기, 입력 컨트롤러, 준비 서비스, 컨텍스트 제공자
+        // === 외부 서비스 주입 ===
         public void ConstructFlowDependencies(
             ICombatPreparationService preparationService,
             IPlayerInputController inputController,
@@ -81,9 +83,10 @@ namespace Game.CombatSystem.Core
             this.contextProvider = contextProvider;
             this.cardExecutor = cardExecutor;
 
-            this.executor?.InjectExecutionDependencies(this.contextProvider, this.cardExecutor);
+            executor?.InjectExecutionDependencies(contextProvider, cardExecutor);
         }
 
+        // === 전투 준비 ===
         public IEnumerator PerformCombatPreparation()
         {
             bool success = false;
@@ -121,6 +124,7 @@ namespace Game.CombatSystem.Core
             });
         }
 
+        // === 입력 제어 ===
         public void EnablePlayerInput()
         {
             playerInputEnabled = true;
@@ -141,6 +145,7 @@ namespace Game.CombatSystem.Core
 
         public bool IsPlayerInputEnabled() => playerInputEnabled;
 
+        // === 전투 실행 ===
         public IEnumerator PerformFirstAttack()
         {
             Debug.Log("[CombatFlowCoordinator] PerformFirstAttack 호출");
@@ -159,6 +164,7 @@ namespace Game.CombatSystem.Core
                 Debug.LogError("[CombatFlowCoordinator] executor가 null입니다.");
         }
 
+        // === 후속 상태 처리 ===
         public IEnumerator PerformResultPhase() => CoroutineStub("PerformResultPhase");
         public IEnumerator PerformVictoryPhase() => CoroutineStub("PerformVictoryPhase");
         public IEnumerator PerformGameOverPhase() => CoroutineStub("PerformGameOverPhase");
@@ -169,6 +175,7 @@ namespace Game.CombatSystem.Core
             yield return null;
         }
 
+        // === 전투 상태 확인 ===
         public bool IsPlayerDead() => playerManager?.GetPlayer()?.IsDead() ?? true;
         public bool IsEnemyDead() => enemyManager?.GetEnemy()?.IsDead() ?? true;
         public bool CheckHasNextEnemy() => stageManager?.HasNextEnemy() ?? false;
@@ -179,6 +186,7 @@ namespace Game.CombatSystem.Core
             turnManager?.Initialize();
         }
 
+        // === 캐릭터 사망 처리 ===
         public void OnCharacterDied(ICharacter character)
         {
             if (character is IEnemyCharacter)
@@ -186,7 +194,7 @@ namespace Game.CombatSystem.Core
                 Debug.Log("[CombatFlowCoordinator] 적 사망 감지 → 참조 정리 및 슬롯 초기화");
                 enemyManager?.ClearEnemy();
 
-                var slot = slotRegistry?.GetCharacterSlot(SlotOwner.ENEMY);
+                var slot = characterSlotRegistry?.GetCharacterSlot(SlotOwner.ENEMY);
                 slot?.SetCharacter(null);
             }
         }

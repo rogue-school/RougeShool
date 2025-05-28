@@ -1,8 +1,6 @@
 using Game.CombatSystem.Interface;
-using Game.CombatSystem.Slot;
 using UnityEngine;
 using System.Collections;
-using Game.IManager;
 
 namespace Game.CombatSystem.State
 {
@@ -11,18 +9,15 @@ namespace Game.CombatSystem.State
         private readonly ICombatTurnManager turnManager;
         private readonly ICombatFlowCoordinator flowCoordinator;
         private readonly ICombatStateFactory stateFactory;
-        private readonly ISlotRegistry slotRegistry;
 
         public CombatGameOverState(
             ICombatTurnManager turnManager,
             ICombatFlowCoordinator flowCoordinator,
-            ICombatStateFactory stateFactory,
-            ISlotRegistry slotRegistry)
+            ICombatStateFactory stateFactory)
         {
             this.turnManager = turnManager;
             this.flowCoordinator = flowCoordinator;
             this.stateFactory = stateFactory;
-            this.slotRegistry = slotRegistry;
         }
 
         public void EnterState()

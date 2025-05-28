@@ -1,33 +1,19 @@
-using System.Collections.Generic;
-using Game.SkillCardSystem.Slot;
 using Game.SkillCardSystem.Interface;
-using Game.SkillCardSystem.Runtime;
-using Game.CharacterSystem.Interface;
-using Game.CombatSystem.Slot;
-using Game.CombatSystem.Interface;
+using Game.SkillCardSystem.Slot;
 
-namespace Game.IManager
+public interface IPlayerHandManager
 {
-    /// <summary>
-    /// 플레이어의 스킬 카드 핸드를 제어하는 매니저 인터페이스입니다.
-    /// </summary>
-    public interface IPlayerHandManager
-    {
-        /// <summary>핸드 매니저 초기화에 필요한 의존성 주입</summary>
-        void Inject(IPlayerCharacter player, IHandSlotRegistry slotRegistry, ICombatTurnManager turnManager);
+    void Inject(IPlayerCharacter owner, IHandSlotRegistry slotRegistry, ISkillCardFactory cardFactory);
+    void Initialize();
+    void GenerateInitialHand();
 
-        void Initialize();
-        void GenerateInitialHand();
-        void TickCoolTime();
-        void RestoreCardToHand(PlayerSkillCardRuntime card);
-        void RestoreCardToHand(ISkillCard card); // 오버로드
+    ISkillCard GetCardInSlot(SkillCardSlotPosition pos);
+    ISkillCardUI GetCardUIInSlot(SkillCardSlotPosition pos);
 
-        void EnableCardInteraction(bool isEnabled);
-        void EnableInput(bool isEnabled);
-        void ClearAll();
+    void RestoreCardToHand(ISkillCard card);
+    void LogPlayerHandSlotStates();
 
-        ISkillCard GetCardInSlot(SkillCardSlotPosition pos);
-        ISkillCardUI GetCardUIInSlot(SkillCardSlotPosition pos);
-        IEnumerable<IHandCardSlot> GetAllHandSlots();
-    }
+    // 누락된 메서드 추가
+    void EnableInput(bool isEnabled);
+    void ClearAll();
 }

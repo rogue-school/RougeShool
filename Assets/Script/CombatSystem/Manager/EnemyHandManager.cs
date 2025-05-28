@@ -1,4 +1,4 @@
-using UnityEngine;
+Ôªøusing UnityEngine;
 using System.Collections.Generic;
 using Game.CharacterSystem.Interface;
 using Game.CombatSystem.Interface;
@@ -8,28 +8,38 @@ using Game.SkillCardSystem.Slot;
 using Game.SkillCardSystem.UI;
 using Game.CombatSystem.Slot;
 using Game.Utility;
+using Game.SkillCardSystem.Factory;
+using Game.SkillCardSystem.Data;
 
 namespace Game.CombatSystem.Manager
 {
     public class EnemyHandManager : MonoBehaviour, IEnemyHandManager
     {
-        [Header("UI «¡∏Æ∆’")]
+        [Header("UI ÌîÑÎ¶¨Ìåπ")]
         [SerializeField] private SkillCardUI cardUIPrefab;
 
         private readonly Dictionary<SkillCardSlotPosition, IHandCardSlot> handSlots = new();
         private readonly Dictionary<SkillCardSlotPosition, SkillCardUI> cardUIs = new();
 
         private IEnemyCharacter currentEnemy;
+        private ISlotRegistry slotRegistry;
+        private ISkillCardFactory cardFactory;
         private ITurnCardRegistry cardRegistry;
 
-        public void Initialize(IEnemyCharacter enemy)
+        public void Initialize(IEnemyCharacter enemy, ISlotRegistry slotRegistry, ISkillCardFactory cardFactory)
         {
             currentEnemy = enemy;
+            this.slotRegistry = slotRegistry;
+            this.cardFactory = cardFactory;
+
             handSlots.Clear();
             cardUIs.Clear();
 
-            foreach (var slot in SlotRegistry.Instance.GetHandSlots(SlotOwner.ENEMY))
+            // ‚úÖ ÏàòÏ†ï: GetSlots ‚Üí GetHandSlots
+            foreach (var slot in slotRegistry.GetHandSlotRegistry().GetHandSlots(SlotOwner.ENEMY))
+            {
                 handSlots[slot.GetSlotPosition()] = slot;
+            }
 
             if (cardUIPrefab == null)
                 cardUIPrefab = Resources.Load<SkillCardUI>("UI/SkillCardUI");
@@ -84,7 +94,6 @@ namespace Game.CombatSystem.Manager
                 cardUIs.Remove(from);
             }
 
-            //Debug.Log($"[EnemyHandManager] ƒ´µÂ {card.GetCardName()} ¿Ãµø: {from} °Ê {to}");
             return true;
         }
 
@@ -100,7 +109,10 @@ namespace Game.CombatSystem.Manager
             var entry = currentEnemy?.Data?.GetRandomEntry();
             if (entry?.Card == null) return;
 
-            var runtimeCard = SkillCardFactory.CreateEnemyCard(entry.Card);
+            var cardData = entry.Card.GetCardData(); // SkillCardData
+            var effects = entry.Card.CreateEffects();
+
+            var runtimeCard = cardFactory.CreateEnemyCard(cardData, effects);
             runtimeCard.SetHandSlot(pos);
 
             var cardUI = Instantiate(cardUIPrefab, ((MonoBehaviour)slot).transform);
@@ -114,10 +126,7 @@ namespace Game.CombatSystem.Manager
             }
 
             cardUIs[pos] = cardUI;
-
-            //Debug.Log($"[EnemyHandManager] ƒ´µÂ ª˝º∫ øœ∑· °Ê {entry.Card.CardData.Name} °Ê {pos}");
         }
-
 
         public ISkillCard GetCardForCombat()
         {
@@ -183,34 +192,29 @@ namespace Game.CombatSystem.Manager
             var card = slot.GetCard();
             var ui = cardUIs.TryGetValue(pos, out var foundUI) ? foundUI : null;
 
-            // ΩΩ∑‘ ≈¨∏ÆæÓ
             slot.Clear();
 
-            // «⁄µÂ ΩΩ∑‘ UIø°º≠ ƒ´µÂ UI ¬¸¡∂µµ ∏ÌΩ√¿˚¿∏∑Œ ¡¶∞≈
             if (slot is IHandCardSlot handSlotWithUI && handSlotWithUI is Game.CombatSystem.UI.EnemyHandCardSlotUI uiSlot)
             {
-                uiSlot.SetCardUI(null); // UI ¬¸¡∂ ¡¶∞≈
+                uiSlot.SetCardUI(null);
             }
 
             if (ui != null)
             {
-                ui.transform.SetParent(null); // ¿ßƒ° ≤ø¿” πÊ¡ˆ
+                ui.transform.SetParent(null);
                 cardUIs.Remove(pos);
-                // º±≈√ªÁ«◊: ø©±‚º≠ Destroy() «œ¡ˆ æ ∞Ì ¿¸≈ı ΩΩ∑‘ø° ≥—±Ë
-                // => ¿¸≈ı ΩΩ∑‘ø° ¿ÁªÁøÎ«“ ºˆ ¿÷µµ∑œ «‘
             }
 
-            Debug.Log($"[EnemyHandManager] PopCardFromSlot: {pos} ΩΩ∑‘ø°º≠ ƒ´µÂ '{card?.GetCardName()}' / UI √ﬂ√‚ øœ∑·");
+            Debug.Log($"[EnemyHandManager] PopCardFromSlot: {pos} Ïä¨Î°ØÏóêÏÑú Ïπ¥Îìú '{card?.GetCardName()}' / UI Ï∂îÏ∂ú ÏôÑÎ£å");
 
             return (card, ui);
         }
 
-
-
         public void LogHandSlotStates()
         {
             foreach (var kvp in handSlots)
-                Debug.Log($"[Slot {kvp.Key}] ƒ´µÂ ¡∏¿Á ø©∫Œ: {kvp.Value?.GetCard() != null}");
+                Debug.Log($"[Slot {kvp.Key}] Ïπ¥Îìú Ï°¥Ïû¨ Ïó¨Î∂Ä: {kvp.Value?.GetCard() != null}");
         }
     }
 }
+

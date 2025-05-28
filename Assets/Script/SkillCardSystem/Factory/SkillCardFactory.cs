@@ -1,34 +1,60 @@
-using Game.SkillCardSystem.Core;
+using UnityEngine;
+using Game.SkillCardSystem.Data;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Runtime;
 using Game.SkillCardSystem.Effects;
 using System.Collections.Generic;
-using UnityEngine;
 
-public static class SkillCardFactory
+namespace Game.SkillCardSystem.Factory
 {
-    public static ISkillCard CreateEnemyCard(EnemySkillCard cardData)
+    /// <summary>
+    /// 스킬 카드 런타임 객체를 생성하는 팩토리입니다.
+    /// SRP: 런타임 카드 인스턴스를 생성하는 책임만 가집니다.
+    /// DIP: SkillCardData, Effect 정보를 기반으로 생성합니다.
+    /// </summary>
+    public class SkillCardFactory : ISkillCardFactory
     {
-        if (cardData == null)
+        public ISkillCard CreateEnemyCard(SkillCardData data, List<SkillCardEffectSO> effects)
         {
-            Debug.LogError("[SkillCardFactory] EnemySkillCard 데이터가 null입니다.");
-            return null;
+            if (data == null)
+            {
+                Debug.LogError("[SkillCardFactory] Enemy SkillCardData가 null입니다.");
+                return null;
+            }
+
+            if (effects == null)
+            {
+                Debug.LogWarning("[SkillCardFactory] EnemyCard 효과 리스트가 null입니다. 빈 리스트로 대체합니다.");
+                effects = new List<SkillCardEffectSO>();
+            }
+
+            return new EnemySkillCardRuntime(data, CloneEffects(effects));
         }
 
-        var effects = CloneEffects(cardData.CreateEffects());
+        public ISkillCard CreatePlayerCard(SkillCardData data, List<SkillCardEffectSO> effects)
+        {
+            if (data == null)
+            {
+                Debug.LogError("[SkillCardFactory] Player SkillCardData가 null입니다.");
+                return null;
+            }
 
-        return new EnemySkillCardRuntime(
-            cardData.CardData,
-            effects
-        );
-    }
+            if (effects == null)
+            {
+                Debug.LogWarning("[SkillCardFactory] PlayerCard 효과 리스트가 null입니다. 빈 리스트로 대체합니다.");
+                effects = new List<SkillCardEffectSO>();
+            }
 
-    private static List<SkillCardEffectSO> CloneEffects(List<SkillCardEffectSO> original)
-    {
-        var clone = new List<SkillCardEffectSO>();
-        foreach (var effect in original)
-            clone.Add(effect); // 추후 DeepClone() 확장 가능
+            return new PlayerSkillCardRuntime(data, CloneEffects(effects));
+        }
 
-        return clone;
+        /// <summary>
+        /// 효과 리스트를 복제합니다. (현재는 얕은 복사)
+        /// 필요 시 ScriptableObject 복제 또는 DeepCopy 구조로 확장 가능합니다.
+        /// </summary>
+        private List<SkillCardEffectSO> CloneEffects(List<SkillCardEffectSO> original)
+        {
+            return new List<SkillCardEffectSO>(original);
+        }
     }
 }

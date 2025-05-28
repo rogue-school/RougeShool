@@ -57,6 +57,18 @@ namespace Game.CombatSystem.Service
             Debug.Log("[TurnCardRegistry] 적 카드 제거됨");
         }
 
+        public void ClearSlot(CombatSlotPosition slot)
+        {
+            if (playerCards.ContainsKey(slot))
+            {
+                ClearPlayerCard(slot);
+            }
+            else
+            {
+                Debug.LogWarning($"[TurnCardRegistry] 알 수 없는 플레이어 슬롯: {slot}");
+            }
+        }
+
         public CombatSlotPosition? GetReservedEnemySlot() => reservedEnemySlot;
 
         public void ReserveNextEnemySlot(CombatSlotPosition slot)

@@ -11,18 +11,15 @@ namespace Game.CombatSystem.State
         private readonly ICombatTurnManager turnManager;
         private readonly ICombatFlowCoordinator flowCoordinator;
         private readonly ICombatStateFactory stateFactory;
-        private readonly ISlotRegistry slotRegistry;
 
         public CombatSecondAttackState(
             ICombatTurnManager turnManager,
             ICombatFlowCoordinator flowCoordinator,
-            ICombatStateFactory stateFactory,
-            ISlotRegistry slotRegistry)
+            ICombatStateFactory stateFactory)
         {
             this.turnManager = turnManager;
             this.flowCoordinator = flowCoordinator;
             this.stateFactory = stateFactory;
-            this.slotRegistry = slotRegistry;
         }
 
         public void EnterState()
@@ -30,25 +27,20 @@ namespace Game.CombatSystem.State
             Debug.Log("[State] CombatSecondAttackState: 후공 슬롯 전투 시작");
 
             if (flowCoordinator is MonoBehaviour mono)
-            {
                 mono.StartCoroutine(AttackRoutine());
-            }
             else
-            {
                 Debug.LogError("flowCoordinator가 MonoBehaviour가 아닙니다. Coroutine 실행 불가.");
-            }
         }
 
         private IEnumerator AttackRoutine()
         {
             yield return flowCoordinator.PerformSecondAttack();
 
-            var nextState = stateFactory.CreateResultState();
-            turnManager.RequestStateChange(nextState);
+            Debug.Log("[State] 후공 전투 완료 → Result 상태로 전이");
+            turnManager.RequestStateChange(stateFactory.CreateResultState());
         }
 
         public void ExecuteState() { }
-
         public void ExitState() { }
     }
 }

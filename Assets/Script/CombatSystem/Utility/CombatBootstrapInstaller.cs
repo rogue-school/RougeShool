@@ -6,7 +6,7 @@ using Game.CombatSystem.Manager;
 using Game.CombatSystem.Service;
 using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Executor;
-using Game.SkillCardSystem.UI;
+using Game.SkillCardSystem.Core;
 using Game.CombatSystem.Utility;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Context;
@@ -24,11 +24,14 @@ public class CombatBootstrapInstaller : MonoBehaviour
     [SerializeField] private EnemyHandManager enemyHandManager;
     [SerializeField] private PlayerHandManager playerHandManager;
     [SerializeField] private SlotRegistry slotRegistry;
+    [SerializeField] private SlotInitializer slotInitializer; // 주입 대상
 
     private void Awake()
     {
-        // 1. 슬롯 레지스트리 초기화 (임시 싱글톤 사용)
-        SlotRegistry.Instance = slotRegistry;
+        // 1. 슬롯 레지스트리 초기화 및 주입
+        slotRegistry.Initialize();
+        slotInitializer.Inject(slotRegistry);
+        slotInitializer.AutoBindAllSlots();
 
         // 2. 매니저 간 의존성 주입
         stageManager.InjectEnemySpawner(enemySpawnerManager);

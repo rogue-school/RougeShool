@@ -1,6 +1,7 @@
-using Game.CombatSystem.Slot;
+ï»¿using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Slot;
+using Game.SkillCardSystem.UI;
 
 namespace Game.CombatSystem.Interface
 {
@@ -13,10 +14,11 @@ namespace Game.CombatSystem.Interface
         SkillCardSlotPosition GetSlotPosition();
         SlotOwner GetOwner();
 
-        /// <summary>
-        /// ÇöÀç ½½·Ô¿¡ Ä«µå°¡ ÀÖ´ÂÁö ¿©ºÎ
-        /// </summary>
         bool HasCard();
         ISkillCardUI GetCardUI();
+
+        // âœ… ì¶”ê°€í•  ë©”ì„œë“œë“¤:
+        SkillCardUI AttachCard(ISkillCard card); // ì¹´ë“œ UIë¥¼ ì—°ê²°í•˜ê³  ë°˜í™˜
+        void DetachCard();                       // ì¹´ë“œ UIë¥¼ ì œê±°
     }
 }

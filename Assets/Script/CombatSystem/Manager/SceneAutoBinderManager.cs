@@ -1,5 +1,6 @@
 using UnityEngine;
 using Game.CombatSystem.Manager;
+using Game.SkillCardSystem.Core;
 
 namespace Game.Utility
 {

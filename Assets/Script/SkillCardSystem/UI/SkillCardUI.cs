@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Game.SkillCardSystem.Interface;
+using Game.CombatSystem.DragDrop;
 
 namespace Game.SkillCardSystem.UI
 {
@@ -33,15 +34,12 @@ namespace Game.SkillCardSystem.UI
                 return;
             }
 
-            // 카드 이름 표시
             if (cardNameText != null)
                 cardNameText.text = card.GetCardName();
 
-            // 데미지 표시
             if (damageText != null)
                 damageText.text = $"Damage: {card.CardData?.Damage ?? 0}";
 
-            // 아트워크 설정
             if (cardArtImage != null && card.GetArtwork() != null)
                 cardArtImage.sprite = card.GetArtwork();
         }
@@ -61,6 +59,21 @@ namespace Game.SkillCardSystem.UI
 
             if (coolTimeText != null)
                 coolTimeText.text = show ? coolTime.ToString() : "";
+        }
+
+        /// <summary>
+        /// 드래그 가능 여부 설정
+        /// </summary>
+        public void SetDraggable(bool isEnabled)
+        {
+            if (TryGetComponent(out CardDragHandler dragHandler))
+            {
+                dragHandler.enabled = isEnabled;
+            }
+            else
+            {
+                Debug.LogWarning("[SkillCardUI] CardDragHandler 컴포넌트를 찾을 수 없습니다.");
+            }
         }
     }
 }

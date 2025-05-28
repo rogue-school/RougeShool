@@ -1,22 +1,21 @@
 ﻿using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 
-namespace Game.CombatSystem.Interface
+public interface ITurnCardRegistry
 {
-    public interface ITurnCardRegistry
-    {
-        void RegisterPlayerCard(CombatSlotPosition position, ISkillCard card);
-        void RegisterEnemyCard(ISkillCard card);
+    void RegisterPlayerCard(CombatSlotPosition position, ISkillCard card);
+    void RegisterEnemyCard(ISkillCard card);
 
-        ISkillCard GetPlayerCard(CombatSlotPosition position);
-        ISkillCard GetEnemyCard();
+    ISkillCard GetPlayerCard(CombatSlotPosition position);
+    ISkillCard GetEnemyCard();
 
-        void ClearPlayerCard(CombatSlotPosition position);
-        void ClearEnemyCard();
+    void ClearPlayerCard(CombatSlotPosition position);
+    void ClearEnemyCard();
 
-        CombatSlotPosition? GetReservedEnemySlot();
-        void ReserveNextEnemySlot(CombatSlotPosition position);
+    CombatSlotPosition? GetReservedEnemySlot();
+    void ReserveNextEnemySlot(CombatSlotPosition position);
+    void Reset();
 
-        void Reset();
-    }
+    // 누락된 메서드 추가
+    void ClearSlot(CombatSlotPosition position); // 편의 함수로 정의
 }

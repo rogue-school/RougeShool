@@ -8,5 +8,6 @@ namespace Game.CombatSystem.Interface
     {
         IEnumerator PerformAttack(CombatSlotPosition slotPosition);
         void InjectExecutionDependencies(ICardExecutionContextProvider provider, ICardExecutor executor);
+        void SetTurnController(ITurnStateController controller);
     }
 }
