@@ -85,5 +85,8 @@ namespace Game.CombatSystem.Manager
 
         public void ReserveNextEnemySlot(CombatSlotPosition slot) => reservedEnemySlot = slot;
         public CombatSlotPosition? GetReservedEnemySlot() => reservedEnemySlot;
+
+        // FSM 상태에서 사용할 팩토리 접근용 메서드
+        public ICombatStateFactory GetStateFactory() => stateFactory;
     }
 }

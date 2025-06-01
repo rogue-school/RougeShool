@@ -43,16 +43,10 @@ namespace Game.CombatSystem.Core
             StartCoroutine(PerformCombatPreparation(onComplete));
         }
 
-        public IEnumerator PerformCombatPreparation()
-        {
-            yield return PerformCombatPreparation(_ => { });
-        }
+        public IEnumerator PerformCombatPreparation() => PerformCombatPreparation(_ => { });
 
         public IEnumerator PerformCombatPreparation(Action<bool> onComplete)
         {
-            Debug.Log("[CombatFlowCoordinator] 이전 적 핸드 정리");
-            enemyHandManager.ClearHand();
-
             var enemy = enemyManager.GetEnemy();
             if (enemy == null)
             {
@@ -64,19 +58,21 @@ namespace Game.CombatSystem.Core
             Debug.Log($"[CombatFlowCoordinator] 적 사용 가능: {enemy.GetName()}");
             yield return new WaitForSeconds(0.5f);
 
-            // 적 선공 여부 결정
             bool enemyFirst = UnityEngine.Random.value < 0.5f;
             var slotToRegister = enemyFirst ? CombatSlotPosition.FIRST : CombatSlotPosition.SECOND;
 
-            // 카드 추출 및 등록
-            var (card, cardUI) = enemyHandManager.PopCardFromSlot(SkillCardSlotPosition.ENEMY_SLOT_3);
-            if (card != null)
+            var result = enemyHandManager.PopFirstAvailableCard();
+            if (result is (ISkillCard card, SkillCardUI cardUI))
             {
                 Debug.Log($"[CombatFlowCoordinator] 적 카드 등록: {card.GetCardName()} → 슬롯: {slotToRegister}");
-
-                turnCardRegistry.RegisterCard(slotToRegister, card, cardUI);
+                turnCardRegistry.RegisterCard(slotToRegister, card, cardUI, SlotOwner.ENEMY);
                 RegisterCardToCombatSlotUI(slotToRegister, card, cardUI);
-                enemyHandManager.RegisterCardToSlot(SkillCardSlotPosition.ENEMY_SLOT_3, card, cardUI);
+            }
+            else
+            {
+                Debug.LogWarning("[CombatFlowCoordinator] 적 핸드에 사용 가능한 카드 없음");
+                onComplete?.Invoke(false);
+                yield break;
             }
 
             enemyHandManager.FillEmptySlots();
@@ -101,7 +97,7 @@ namespace Game.CombatSystem.Core
             }
             else
             {
-                Debug.LogError($"[CombatFlowCoordinator] 전투 슬롯 {pos}을 찾을 수 없거나 ICombatExecutionSlot 아님");
+                Debug.LogError($"[CombatFlowCoordinator] 전투 슬롯 {pos}을 찾을 수 없거나 ICombatCardSlot 아님");
             }
         }
 
@@ -110,9 +106,7 @@ namespace Game.CombatSystem.Core
             StartCoroutine(PerformFirstAttack(onComplete));
         }
 
-        public IEnumerator PerformFirstAttack() => PerformFirstAttack(null);
-
-        public IEnumerator PerformFirstAttack(Action onComplete)
+        public IEnumerator PerformFirstAttack(Action onComplete = null)
         {
             Debug.Log("[CombatFlowCoordinator] 첫 번째 공격 시작");
             yield return new WaitForSeconds(1f);
@@ -160,6 +154,49 @@ namespace Game.CombatSystem.Core
         {
             enemyHandManager.ClearHand();
             Debug.Log("[CombatFlowCoordinator] 승리 후 적 핸드 정리 완료");
+        }
+
+        private Action onStartButtonPressed;
+
+        public void ShowPlayerCardSelectionUI()
+        {
+            Debug.Log("[CombatFlowCoordinator] 플레이어 카드 선택 UI 표시");
+            // TODO: UI 표시 로직
+        }
+
+        public void HidePlayerCardSelectionUI()
+        {
+            Debug.Log("[CombatFlowCoordinator] 플레이어 카드 선택 UI 숨김");
+            // TODO: UI 숨김 로직
+        }
+
+        public void EnableStartButton()
+        {
+            Debug.Log("[CombatFlowCoordinator] 전투 시작 버튼 활성화");
+            // TODO: 버튼 활성화 로직
+        }
+
+        public void DisableStartButton()
+        {
+            Debug.Log("[CombatFlowCoordinator] 전투 시작 버튼 비활성화");
+            // TODO: 버튼 비활성화 로직
+        }
+
+        public void RegisterStartButton(Action callback)
+        {
+            Debug.Log("[CombatFlowCoordinator] 전투 시작 버튼 콜백 등록");
+            onStartButtonPressed = callback;
+        }
+
+        public void UnregisterStartButton()
+        {
+            Debug.Log("[CombatFlowCoordinator] 전투 시작 버튼 콜백 해제");
+            onStartButtonPressed = null;
+        }
+
+        public void OnStartButtonClickedExternally()
+        {
+            onStartButtonPressed?.Invoke();
         }
     }
 }

@@ -2,60 +2,75 @@ using System.Collections.Generic;
 using UnityEngine;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Utility;
+using System.Linq;
 
 namespace Game.CombatSystem.Slot
 {
     public class CombatSlotRegistry : MonoBehaviour, ICombatSlotRegistry
     {
-        private readonly Dictionary<CombatSlotPosition, ICombatCardSlot> slotByPosition = new();
-        private readonly Dictionary<CombatFieldSlotPosition, ICombatCardSlot> slotByFieldPosition = new();
-        private readonly List<ICombatCardSlot> allSlots = new();
+        private readonly Dictionary<CombatSlotPosition, ICombatCardSlot> _slotByPosition = new();
+        private readonly Dictionary<CombatFieldSlotPosition, ICombatCardSlot> _slotByFieldPosition = new();
+        private readonly List<ICombatCardSlot> _allSlots = new();
 
         public void RegisterCombatSlots(IEnumerable<ICombatCardSlot> slots)
         {
-            slotByPosition.Clear();
-            slotByFieldPosition.Clear();
-            allSlots.Clear();
+            _slotByPosition.Clear();
+            _slotByFieldPosition.Clear();
+            _allSlots.Clear();
+
+            int registeredCount = 0;
 
             foreach (var slot in slots)
             {
-                if (slot is MonoBehaviour mb)
+                if (slot is not MonoBehaviour monoSlot)
                 {
-                    var holder = mb.GetComponent<CombatSlotPositionHolder>();
-                    if (holder == null)
-                    {
-                        Debug.LogWarning($"[CombatSlotRegistry] CombatSlotPositionHolder가 없습니다: {mb.name}");
-                        continue;
-                    }
-
-                    slotByPosition[holder.SlotPosition] = slot;
-                    slotByFieldPosition[holder.FieldSlotPosition] = slot;
-                    allSlots.Add(slot);
+                    Debug.LogWarning($"[CombatSlotRegistry] 슬롯은 MonoBehaviour 기반이어야 합니다: {slot}");
+                    continue;
                 }
+
+                var holder = monoSlot.GetComponent<CombatSlotPositionHolder>();
+                if (holder == null)
+                {
+                    Debug.LogWarning($"[CombatSlotRegistry] CombatSlotPositionHolder 컴포넌트 누락: {monoSlot.name}");
+                    continue;
+                }
+
+                if (_slotByPosition.ContainsKey(holder.SlotPosition))
+                {
+                    Debug.LogError($"[CombatSlotRegistry] 중복된 CombatSlotPosition: {holder.SlotPosition} - {monoSlot.name}");
+                    continue;
+                }
+
+                if (_slotByFieldPosition.ContainsKey(holder.FieldSlotPosition))
+                {
+                    Debug.LogError($"[CombatSlotRegistry] 중복된 CombatFieldSlotPosition: {holder.FieldSlotPosition} - {monoSlot.name}");
+                    continue;
+                }
+
+                _slotByPosition.Add(holder.SlotPosition, slot);
+                _slotByFieldPosition.Add(holder.FieldSlotPosition, slot);
+                _allSlots.Add(slot);
+                registeredCount++;
             }
+
+            Debug.Log($"[CombatSlotRegistry] 슬롯 등록 완료 - 총 등록 수: {registeredCount}");
         }
 
         public ICombatCardSlot GetCombatSlot(CombatSlotPosition position)
         {
-            slotByPosition.TryGetValue(position, out var slot);
+            _slotByPosition.TryGetValue(position, out var slot);
             return slot;
         }
 
         public ICombatCardSlot GetCombatSlot(CombatFieldSlotPosition fieldPosition)
         {
-            slotByFieldPosition.TryGetValue(fieldPosition, out var slot);
+            _slotByFieldPosition.TryGetValue(fieldPosition, out var slot);
             return slot;
         }
 
-        public IEnumerable<ICombatCardSlot> GetAllCombatSlots()
-        {
-            return allSlots;
-        }
+        public IEnumerable<ICombatCardSlot> GetAllCombatSlots() => _allSlots;
 
-        // 아래 메서드는 기존 SlotRegistry의 간접 호출 대상입니다.
-        public ICombatCardSlot GetSlotByPosition(CombatSlotPosition position)
-        {
-            return GetCombatSlot(position);
-        }
+        // 호환성 유지용
+        public ICombatCardSlot GetSlotByPosition(CombatSlotPosition position) => GetCombatSlot(position);
     }
 }

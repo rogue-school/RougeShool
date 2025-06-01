@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Game.CombatSystem.Interface;
+using Zenject;
 
 namespace Game.CombatSystem.Core
 {
@@ -62,6 +63,7 @@ namespace Game.CombatSystem.Core
             }
 
             Debug.Log("<color=lime>[CombatStartupManager] 모든 초기화 단계 완료</color>");
+
         }
     }
 }

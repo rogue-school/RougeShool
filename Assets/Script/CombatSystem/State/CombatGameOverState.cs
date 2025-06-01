@@ -1,4 +1,6 @@
 using Game.CombatSystem.Interface;
+using Game.CombatSystem.Slot;
+using Game.Utility;
 using UnityEngine;
 using System.Collections;
 
@@ -8,41 +10,33 @@ namespace Game.CombatSystem.State
     {
         private readonly ICombatTurnManager turnManager;
         private readonly ICombatFlowCoordinator flowCoordinator;
-        private readonly ICombatStateFactory stateFactory;
         private readonly ICombatSlotRegistry slotRegistry;
+        private readonly ICoroutineRunner coroutineRunner;
 
         public CombatGameOverState(
             ICombatTurnManager turnManager,
             ICombatFlowCoordinator flowCoordinator,
-            ICombatStateFactory stateFactory,
-            ICombatSlotRegistry slotRegistry)
+            ICombatSlotRegistry slotRegistry,
+            ICoroutineRunner coroutineRunner)
         {
             this.turnManager = turnManager;
             this.flowCoordinator = flowCoordinator;
-            this.stateFactory = stateFactory;
             this.slotRegistry = slotRegistry;
+            this.coroutineRunner = coroutineRunner;
         }
 
         public void EnterState()
         {
-            Debug.Log("[State] CombatGameOverState: 게임 오버 처리 시작");
-
-            if (flowCoordinator is MonoBehaviour mono)
-            {
-                mono.StartCoroutine(GameOverRoutine());
-            }
-            else
-            {
-                Debug.LogError("flowCoordinator가 MonoBehaviour가 아닙니다. Coroutine 실행 불가.");
-            }
+            Debug.Log("[CombatGameOverState] 상태 진입 - 게임 오버 처리 시작");
+            coroutineRunner.RunCoroutine(GameOverRoutine());
         }
 
         private IEnumerator GameOverRoutine()
         {
             yield return flowCoordinator.PerformGameOverPhase();
 
-            // 게임 오버 이후 씬 전환 또는 UI 처리 예정
-            Debug.Log("[State] CombatGameOverState: 게임 오버 처리 완료");
+            // TODO: 게임 오버 후 UI나 씬 전환 처리
+            Debug.Log("[CombatGameOverState] 게임 오버 처리 완료");
         }
 
         public void ExecuteState() { }

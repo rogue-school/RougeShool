@@ -1,7 +1,7 @@
 using UnityEngine;
 using Zenject;
-using Game.CombatSystem.Core;
 using Game.CombatSystem.Interface;
+using Game.CombatSystem.Core;
 using Game.CombatSystem.Service;
 using Game.CombatSystem.Slot;
 using Game.CombatSystem.Context;
@@ -20,6 +20,9 @@ using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Interface;
 using Game.Utility.GameFlow;
 using Game.SkillCardSystem.UI;
+using Game.CombatSystem.State;
+using Game.CombatSystem.Factory;
+using Game.Utility;
 
 public class CombatInstaller : MonoInstaller
 {
@@ -27,6 +30,7 @@ public class CombatInstaller : MonoInstaller
 
     public override void InstallBindings()
     {
+        BindStateFactories();
         BindMonoBehaviours();
         BindServices();
         BindExecutionContext();
@@ -36,8 +40,24 @@ public class CombatInstaller : MonoInstaller
         BindUIPrefabs();
     }
 
+    private void BindStateFactories()
+    {
+        // 외부 팩토리 방식으로 상태 바인딩
+        Container.Bind<IFactory<CombatPrepareState>>().To<CombatPrepareStateFactory>().AsTransient();
+        Container.Bind<IFactory<CombatPlayerInputState>>().To<CombatPlayerInputStateFactory>().AsTransient();
+        Container.Bind<IFactory<CombatFirstAttackState>>().To<CombatFirstAttackStateFactory>().AsTransient();
+        Container.Bind<IFactory<CombatSecondAttackState>>().To<CombatSecondAttackStateFactory>().AsTransient();
+        Container.Bind<IFactory<CombatResultState>>().To<CombatResultStateFactory>().AsTransient();
+        Container.Bind<IFactory<CombatVictoryState>>().To<CombatVictoryStateFactory>().AsTransient();
+        Container.Bind<IFactory<CombatGameOverState>>().To<CombatGameOverStateFactory>().AsTransient();
+
+        Container.Bind<ICombatStateFactory>().To<CombatStateFactory>().AsSingle();
+    }
+
     private void BindMonoBehaviours()
     {
+        Debug.Log("[CombatInstaller] BindMonoBehaviours 시작");
+
         BindMono<ICombatFlowCoordinator, CombatFlowCoordinator>();
         BindMono<IPlayerManager, PlayerManager>();
         BindMono<IEnemyManager, EnemyManager>();
@@ -50,15 +70,18 @@ public class CombatInstaller : MonoInstaller
         BindMono<IStageManager, StageManager>();
         BindMono<ICharacterDeathListener, CharacterDeathHandler>();
         BindMono<IPlayerCharacterSelector, PlayerCharacterSelector>();
+        BindMono<ICoroutineRunner, CoroutineRunner>();
         BindMonoInterfaces<CombatTurnManager>();
+
+        Debug.Log("[CombatInstaller] BindMonoBehaviours 완료");
     }
 
     private void BindServices()
     {
+        Debug.Log("[CombatInstaller] BindServices 시작");
+
         Container.Bind<ICombatPreparationService>().To<CombatPreparationService>().AsSingle();
         Container.Bind<ICardPlacementService>().To<CardPlacementService>().AsSingle();
-
-        Container.Bind<ICombatStateFactory>().To<CombatStateFactory>().AsSingle();
         Container.Bind<ITurnCardRegistry>().To<TurnCardRegistry>().AsSingle();
         Container.Bind<ISlotSelector>().To<SlotSelector>().AsSingle();
 
@@ -71,16 +94,22 @@ public class CombatInstaller : MonoInstaller
         Container.Bind<IEnemySpawnValidator>().To<DefaultEnemySpawnValidator>().AsSingle();
         Container.Bind<IPlayerInputController>().To<PlayerInputController>().AsSingle();
         Container.Bind<ISkillCardFactory>().To<SkillCardFactory>().AsSingle();
+
+        Debug.Log("[CombatInstaller] BindServices 완료");
     }
 
     private void BindExecutionContext()
     {
+        Debug.Log("[CombatInstaller] BindExecutionContext");
+
         var ctx = new DefaultCardExecutionContext(null, null, null);
         Container.Bind<ICardExecutionContext>().FromInstance(ctx).AsSingle();
     }
 
     private void BindSlotSystem()
     {
+        Debug.Log("[CombatInstaller] BindSlotSystem");
+
         var slotRegistry = Object.FindFirstObjectByType<SlotRegistry>();
         if (slotRegistry == null)
         {
@@ -99,6 +128,8 @@ public class CombatInstaller : MonoInstaller
 
     private void BindInitializerSteps()
     {
+        Debug.Log("[CombatInstaller] BindInitializerSteps");
+
         BindMonoInterfaces<SlotInitializationStep>();
         BindMonoInterfaces<FlowCoordinatorInitializationStep>();
         BindMonoInterfaces<PlayerCharacterInitializer>();
@@ -111,6 +142,8 @@ public class CombatInstaller : MonoInstaller
 
     private void BindSceneLoader()
     {
+        Debug.Log("[CombatInstaller] BindSceneLoader");
+
         var loader = Object.FindFirstObjectByType<SceneLoader>();
         if (loader == null)
         {
@@ -123,6 +156,8 @@ public class CombatInstaller : MonoInstaller
 
     private void BindUIPrefabs()
     {
+        Debug.Log("[CombatInstaller] BindUIPrefabs");
+
         if (cardUIPrefab == null)
         {
             Debug.LogError("[CombatInstaller] SkillCardUI 프리팹이 설정되지 않았습니다!");
@@ -132,7 +167,6 @@ public class CombatInstaller : MonoInstaller
         Container.Bind<SkillCardUI>().FromInstance(cardUIPrefab).AsSingle();
     }
 
-    // 헬퍼 메서드: MonoBehaviour 바인딩 간소화
     private void BindMono<TInterface, TImpl>() where TImpl : Component, TInterface
     {
         Container.Bind<TInterface>().To<TImpl>().FromComponentInHierarchy().AsSingle();

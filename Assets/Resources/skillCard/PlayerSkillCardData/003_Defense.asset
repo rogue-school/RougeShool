@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CardData:
     Name: "\uBC29\uC5B4"
-    Description: 
+    Description: "\uBC29\uC5B4"
     Artwork: {fileID: 6247231596762095836, guid: 67b60e054fa6f5048bf7446e3e114f7f, type: 3}
     CoolTime: 2
     Damage: 0

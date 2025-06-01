@@ -1,6 +1,10 @@
+using UnityEngine;
+using System.Collections;
+using Zenject;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
-using UnityEngine;
+using Game.SkillCardSystem.Interface;
+using Game.Utility;
 
 namespace Game.CombatSystem.State
 {
@@ -8,57 +12,98 @@ namespace Game.CombatSystem.State
     {
         private readonly ICombatTurnManager turnManager;
         private readonly ICombatFlowCoordinator flowCoordinator;
-        private readonly ICombatStateFactory stateFactory;
-        private readonly ICombatSlotRegistry slotRegistry;
+        private readonly IEnemyHandManager enemyHandManager;
+        private readonly IPlayerHandManager playerHandManager;
+        private readonly ITurnCardRegistry cardRegistry;
+        private readonly ICoroutineRunner coroutineRunner;
 
-        private bool isStateEntered = false;
+        private bool isStateEntered;
+        private bool isButtonClicked;
 
+        [Inject]
         public CombatPrepareState(
             ICombatTurnManager turnManager,
             ICombatFlowCoordinator flowCoordinator,
-            ICombatStateFactory stateFactory,
-            ICombatSlotRegistry slotRegistry)
+            IEnemyHandManager enemyHandManager,
+            IPlayerHandManager playerHandManager,
+            ITurnCardRegistry cardRegistry,
+            ICoroutineRunner coroutineRunner)
         {
             this.turnManager = turnManager;
             this.flowCoordinator = flowCoordinator;
-            this.stateFactory = stateFactory;
-            this.slotRegistry = slotRegistry;
+            this.enemyHandManager = enemyHandManager;
+            this.playerHandManager = playerHandManager;
+            this.cardRegistry = cardRegistry;
+            this.coroutineRunner = coroutineRunner;
         }
 
         public void EnterState()
         {
-            if (isStateEntered) return;
-
-            isStateEntered = true;
-            Debug.Log("[CombatPrepareState] 진입");
-
-            flowCoordinator.DisablePlayerInput();
-            flowCoordinator.RequestCombatPreparation(OnPrepareComplete);
-        }
-
-        private void OnPrepareComplete(bool success)
-        {
-            if (!success)
+            if (isStateEntered)
             {
-                Debug.LogError("[CombatPrepareState] 전투 준비 실패 → 게임 오버 상태로 전환");
-
-                var failState = stateFactory.CreateGameOverState();
-                turnManager.RequestStateChange(failState);
+                Debug.LogWarning("[CombatPrepareState] 이미 상태에 진입했습니다. 중복 호출 방지됨");
                 return;
             }
 
-            Debug.Log("[CombatPrepareState] 전투 준비 완료 → 플레이어 입력 상태로 전환");
+            isStateEntered = true;
+            isButtonClicked = false;
 
-            var next = stateFactory.CreatePlayerInputState();
-            turnManager.RequestStateChange(next);
+            Debug.Log("<color=yellow>[CombatPrepareState] 상태 진입</color>");
+
+            flowCoordinator.DisablePlayerInput();
+            cardRegistry.Reset();
+
+            coroutineRunner.RunCoroutine(PrepareRoutine());
         }
 
-        public void ExecuteState() { }
+        private IEnumerator PrepareRoutine()
+        {
+            yield return flowCoordinator.RegisterEnemyCard();
+
+            flowCoordinator.ShowPlayerCardSelectionUI();
+            flowCoordinator.DisableStartButton();
+            flowCoordinator.RegisterStartButton(OnStartButtonClicked);
+
+            // 플레이어가 카드 선택 완료할 때까지 대기
+            yield return new WaitUntil(() => cardRegistry.HasPlayerCard());
+
+            flowCoordinator.EnableStartButton();
+            Debug.Log("<color=lime>[CombatPrepareState] 플레이어 카드 선택 완료 → 시작 버튼 활성화</color>");
+        }
+
+        private void OnStartButtonClicked()
+        {
+            if (isButtonClicked)
+            {
+                Debug.LogWarning("[CombatPrepareState] 시작 버튼이 이미 클릭됨. 중복 클릭 방지됨");
+                return;
+            }
+
+            isButtonClicked = true;
+
+            Debug.Log("<color=cyan>[CombatPrepareState] 전투 시작 버튼 클릭됨</color>");
+
+            flowCoordinator.HidePlayerCardSelectionUI();
+            flowCoordinator.UnregisterStartButton();
+
+            var nextState = turnManager.GetStateFactory().CreateFirstAttackState();
+            turnManager.RequestStateChange(nextState);
+        }
+
+        public void ExecuteState()
+        {
+            // 이 상태에서는 실시간 로직 없음
+        }
 
         public void ExitState()
         {
-            Debug.Log("[CombatPrepareState] 종료");
+            Debug.Log("<color=grey>[CombatPrepareState] 상태 종료</color>");
+
+            flowCoordinator.UnregisterStartButton();
+            flowCoordinator.HidePlayerCardSelectionUI();
+
             isStateEntered = false;
+            isButtonClicked = false;
         }
     }
 }

@@ -1,8 +1,8 @@
 ﻿using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
+using Game.Utility;
 using UnityEngine;
 using System.Collections;
-using Game.IManager;
 
 namespace Game.CombatSystem.State
 {
@@ -10,29 +10,25 @@ namespace Game.CombatSystem.State
     {
         private readonly ICombatTurnManager turnManager;
         private readonly ICombatFlowCoordinator flowCoordinator;
-        private readonly ICombatStateFactory stateFactory;
         private readonly ICombatSlotRegistry slotRegistry;
+        private readonly ICoroutineRunner coroutineRunner;
 
         public CombatVictoryState(
             ICombatTurnManager turnManager,
             ICombatFlowCoordinator flowCoordinator,
-            ICombatStateFactory stateFactory,
-            ICombatSlotRegistry slotRegistry)
+            ICombatSlotRegistry slotRegistry,
+            ICoroutineRunner coroutineRunner)
         {
             this.turnManager = turnManager;
             this.flowCoordinator = flowCoordinator;
-            this.stateFactory = stateFactory;
             this.slotRegistry = slotRegistry;
+            this.coroutineRunner = coroutineRunner;
         }
 
         public void EnterState()
         {
-            Debug.Log("[State] CombatVictoryState: 승리 처리 시작");
-
-            if (flowCoordinator is MonoBehaviour mono)
-                mono.StartCoroutine(VictoryRoutine());
-            else
-                Debug.LogError("flowCoordinator가 MonoBehaviour가 아님");
+            Debug.Log("[CombatVictoryState] 상태 진입 - 승리 처리 시작");
+            coroutineRunner.RunCoroutine(VictoryRoutine());
         }
 
         private IEnumerator VictoryRoutine()
@@ -41,17 +37,18 @@ namespace Game.CombatSystem.State
 
             if (flowCoordinator.CheckHasNextEnemy())
             {
-                Debug.Log("[State] 다음 적이 있어 PrepareState로 전이");
-                turnManager.RequestStateChange(stateFactory.CreatePrepareState());
+                Debug.Log("[CombatVictoryState] 다음 적이 있어 PrepareState로 전이");
+                turnManager.RequestStateChange(turnManager.GetStateFactory().CreatePrepareState());
             }
             else
             {
-                Debug.Log("[State] 전투 종료, Cleanup 실행");
+                Debug.Log("[CombatVictoryState] 최종 승리, 전투 정리 시작");
                 flowCoordinator.CleanupAfterVictory();
             }
         }
 
         public void ExecuteState() { }
+
         public void ExitState() { }
     }
 }

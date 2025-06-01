@@ -1,28 +1,28 @@
+using System.Collections;
 using Game.CharacterSystem.Interface;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Slot;
 using Game.SkillCardSystem.UI;
 
-namespace Game.CombatSystem.Interface
+public interface IEnemyHandManager
 {
-    public interface IEnemyHandManager
-    {
-        void Initialize(IEnemyCharacter enemy); // slotRegistry, cardFactory는 DI로 이미 주입됨
-        void GenerateInitialHand();
-        void FillEmptySlots();
-        void AdvanceSlots();
+    void Initialize(IEnemyCharacter enemy);
+    void GenerateInitialHand();
+    void FillEmptySlots();
+    void AdvanceSlots();
 
-        ISkillCard GetCardForCombat();
-        ISkillCard GetSlotCard(SkillCardSlotPosition pos);
-        ISkillCardUI GetCardUI(int index);
+    IEnumerator StepwiseFillSlotsFromBack(float delay = 0.5f); // ← 여기에 추가
 
-        void ClearHand();
-        void LogHandSlotStates();
+    ISkillCard GetCardForCombat();
+    ISkillCard GetSlotCard(SkillCardSlotPosition pos);
+    ISkillCardUI GetCardUI(int index);
 
-        SkillCardUI RemoveCardFromSlot(SkillCardSlotPosition pos);
-        (ISkillCard card, SkillCardUI ui) PopCardFromSlot(SkillCardSlotPosition pos);
+    void ClearHand();
+    void LogHandSlotStates();
 
-        ISkillCard PickCardForSlot(SkillCardSlotPosition pos);
-        void RegisterCardToSlot(SkillCardSlotPosition pos, ISkillCard card, SkillCardUI ui);
-    }
+    SkillCardUI RemoveCardFromSlot(SkillCardSlotPosition pos);
+    (ISkillCard card, SkillCardUI ui) PopCardFromSlot(SkillCardSlotPosition pos);
+
+    ISkillCard PickCardForSlot(SkillCardSlotPosition pos);
+    void RegisterCardToSlot(SkillCardSlotPosition pos, ISkillCard card, SkillCardUI ui);
 }

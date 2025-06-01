@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CardData:
     Name: 107_Downstrike
-    Description: 
+    Description: "\uD53C\uD574\uB97C 3 \uC90D\uB2C8\uB2E4"
     Artwork: {fileID: 4264714366617519430, guid: 00fe0d12d678fec4dae1b3dc98c7832e, type: 3}
     CoolTime: 0
     Damage: 3

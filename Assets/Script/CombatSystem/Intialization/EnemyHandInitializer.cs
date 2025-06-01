@@ -34,10 +34,11 @@ namespace Game.CombatSystem.Initialization
             }
 
             _handManager.Initialize(enemy);
-            _handManager.GenerateInitialHand();
+            yield return StartCoroutine(_handManager.StepwiseFillSlotsFromBack(0.5f));
+            _handManager.FillEmptySlots(); // <-- 이 줄 추가
 
             Debug.Log("[EnemyHandInitializer] 적 핸드 초기화 완료");
-            yield return null;
         }
+
     }
 }

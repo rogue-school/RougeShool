@@ -16,6 +16,7 @@ namespace Game.SkillCardSystem.UI
         [SerializeField] private TextMeshProUGUI cardNameText;
         [SerializeField] private TextMeshProUGUI damageText;
         [SerializeField] private Image cardArtImage;
+        [SerializeField] private TextMeshProUGUI descriptionText;
 
         [Header("ÄðÅ¸ÀÓ Ç¥½Ã")]
         [SerializeField] private GameObject coolTimeOverlay;
@@ -39,6 +40,9 @@ namespace Game.SkillCardSystem.UI
 
             if (damageText != null)
                 damageText.text = $"Damage: {card.CardData?.Damage ?? 0}";
+
+            if (descriptionText != null)
+                descriptionText.text = card.GetDescription();
 
             if (cardArtImage != null && card.GetArtwork() != null)
                 cardArtImage.sprite = card.GetArtwork();

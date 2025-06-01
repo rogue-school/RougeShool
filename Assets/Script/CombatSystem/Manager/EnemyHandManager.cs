@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 using Zenject;
 using Game.CharacterSystem.Interface;
@@ -53,35 +54,49 @@ namespace Game.CombatSystem.Manager
             if (cardUIPrefab == null)
                 cardUIPrefab = Resources.Load<SkillCardUI>("UI/SkillCardUI");
         }
-        public void FillEmptySlots()
-        {
-            FillAllEmptySlots();
-        }
+
+        public void FillEmptySlots() => StartCoroutine(StepwiseFillSlotsFromBack());
 
         public void GenerateInitialHand()
         {
             ClearHand();
-            FillAllEmptySlots();
+            StartCoroutine(StepwiseFillSlotsFromBack());
         }
 
-        public void AdvanceSlots()
-        {
-            ShiftSlot(SkillCardSlotPosition.ENEMY_SLOT_2, SkillCardSlotPosition.ENEMY_SLOT_1);
-            ShiftSlot(SkillCardSlotPosition.ENEMY_SLOT_3, SkillCardSlotPosition.ENEMY_SLOT_2);
-            FillAllEmptySlots();
-        }
+        public void AdvanceSlots() => StartCoroutine(StepwiseFillSlotsFromBack());
 
-        private void FillAllEmptySlots()
+        public IEnumerator StepwiseFillSlotsFromBack(float delay = 0.5f)
         {
-            foreach (var pos in new[]
+            while (true)
             {
-                SkillCardSlotPosition.ENEMY_SLOT_1,
-                SkillCardSlotPosition.ENEMY_SLOT_2,
-                SkillCardSlotPosition.ENEMY_SLOT_3
-            })
-            {
-                if (IsSlotEmpty(pos))
-                    CreateCardInSlot(pos);
+                if (IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_3))
+                {
+                    CreateCardInSlot(SkillCardSlotPosition.ENEMY_SLOT_3);
+                    yield return new WaitForSeconds(delay);
+                }
+
+                if (IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_2) &&
+                    !IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_3))
+                {
+                    ShiftSlot(SkillCardSlotPosition.ENEMY_SLOT_3, SkillCardSlotPosition.ENEMY_SLOT_2);
+                    yield return new WaitForSeconds(delay);
+                }
+
+                if (IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_1) &&
+                    !IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_2))
+                {
+                    ShiftSlot(SkillCardSlotPosition.ENEMY_SLOT_2, SkillCardSlotPosition.ENEMY_SLOT_1);
+                    yield return new WaitForSeconds(delay);
+                }
+
+                if (!IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_1) &&
+                    !IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_2) &&
+                    !IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_3))
+                {
+                    yield break;
+                }
+
+                yield return null;
             }
         }
 
@@ -109,6 +124,7 @@ namespace Game.CombatSystem.Manager
                 cardUIs.Remove(from);
             }
 
+            Debug.Log($"[EnemyHandManager] 카드 이동: {from} → {to}");
             return true;
         }
 
@@ -211,6 +227,29 @@ namespace Game.CombatSystem.Manager
 
             Debug.Log($"[EnemyHandManager] PopCardFromSlot: {pos} - 카드: {card?.GetCardName() ?? "없음"}");
             return (card, ui);
+        }
+
+        public (ISkillCard card, SkillCardUI ui) PopFirstAvailableCard()
+        {
+            var slotOrder = new[]
+            {
+                SkillCardSlotPosition.ENEMY_SLOT_1,
+                SkillCardSlotPosition.ENEMY_SLOT_2,
+                SkillCardSlotPosition.ENEMY_SLOT_3,
+            };
+
+            foreach (var slot in slotOrder)
+            {
+                var (card, ui) = PopCardFromSlot(slot);
+                if (card != null)
+                {
+                    Debug.Log($"[EnemyHandManager] PopFirstAvailableCard - 선택된 슬롯: {slot}, 카드: {card.GetCardName()}");
+                    return (card, ui);
+                }
+            }
+
+            Debug.LogWarning("[EnemyHandManager] PopFirstAvailableCard - 사용 가능한 카드 없음");
+            return (null, null);
         }
 
         public void RegisterCardToSlot(SkillCardSlotPosition pos, ISkillCard card, SkillCardUI ui)

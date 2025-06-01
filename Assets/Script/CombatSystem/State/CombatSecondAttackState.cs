@@ -1,40 +1,45 @@
 using Game.CombatSystem.Interface;
+using Game.Utility;
 using System.Collections;
 using UnityEngine;
 
-public class CombatSecondAttackState : ICombatTurnState
+namespace Game.CombatSystem.State
 {
-    private readonly ICombatTurnManager turnManager;
-    private readonly ICombatFlowCoordinator flowCoordinator;
-    private readonly ICombatStateFactory stateFactory;
-    private readonly ICombatSlotRegistry slotRegistry;
-
-    public CombatSecondAttackState(
-        ICombatTurnManager turnManager,
-        ICombatFlowCoordinator flowCoordinator,
-        ICombatStateFactory stateFactory,
-        ICombatSlotRegistry slotRegistry)
+    public class CombatSecondAttackState : ICombatTurnState
     {
-        this.turnManager = turnManager;
-        this.flowCoordinator = flowCoordinator;
-        this.stateFactory = stateFactory;
-        this.slotRegistry = slotRegistry;
-    }
+        private readonly ICombatTurnManager turnManager;
+        private readonly ICombatFlowCoordinator flowCoordinator;
+        private readonly ICombatSlotRegistry slotRegistry;
+        private readonly ICoroutineRunner coroutineRunner;
 
-    public void EnterState()
-    {
-        if (flowCoordinator is MonoBehaviour mono)
-            mono.StartCoroutine(AttackRoutine());
-        else
-            Debug.LogError("flowCoordinator가 MonoBehaviour가 아닙니다. Coroutine 실행 불가.");
-    }
+        public CombatSecondAttackState(
+            ICombatTurnManager turnManager,
+            ICombatFlowCoordinator flowCoordinator,
+            ICombatSlotRegistry slotRegistry,
+            ICoroutineRunner coroutineRunner)
+        {
+            this.turnManager = turnManager;
+            this.flowCoordinator = flowCoordinator;
+            this.slotRegistry = slotRegistry;
+            this.coroutineRunner = coroutineRunner;
+        }
 
-    private IEnumerator AttackRoutine()
-    {
-        yield return flowCoordinator.PerformSecondAttack();
-        turnManager.RequestStateChange(stateFactory.CreateResultState());
-    }
+        public void EnterState()
+        {
+            Debug.Log("[CombatSecondAttackState] 상태 진입");
+            coroutineRunner.RunCoroutine(AttackRoutine());
+        }
 
-    public void ExecuteState() { }
-    public void ExitState() { }
+        private IEnumerator AttackRoutine()
+        {
+            yield return flowCoordinator.PerformSecondAttack();
+
+            var next = turnManager.GetStateFactory().CreateResultState();
+            turnManager.RequestStateChange(next);
+        }
+
+        public void ExecuteState() { }
+
+        public void ExitState() { }
+    }
 }

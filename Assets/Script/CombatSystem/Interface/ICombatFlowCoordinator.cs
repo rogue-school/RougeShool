@@ -1,5 +1,7 @@
-using System.Collections;
 using System;
+using System.Collections;
+using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.UI;
 
 namespace Game.CombatSystem.Interface
 {
@@ -27,7 +29,18 @@ namespace Game.CombatSystem.Interface
         void RequestCombatPreparation(Action<bool> onComplete);
         void RequestFirstAttack(Action onComplete = null);
 
-        // 추가
+        void ShowPlayerCardSelectionUI();
+        void HidePlayerCardSelectionUI();
+
+        void EnableStartButton();
+        void DisableStartButton();
+
+        void RegisterStartButton(Action onClick);
+        void UnregisterStartButton();
+
+        IEnumerator RegisterEnemyCard();
+
+        // 클린업
         void CleanupAfterVictory();
     }
 }

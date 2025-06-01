@@ -32,7 +32,8 @@ namespace Game.CombatSystem.State
 
         public void ExecuteState()
         {
-            // 입력 대기 중일 뿐이므로 로직 없음
+            // 플레이어의 입력을 대기하는 상태이므로, 이곳에는 실행 로직 없음
+            // 턴 시작 버튼이 눌리면 TurnStateController가 상태 전이 요청함
         }
 
         public void ExitState()
@@ -41,5 +42,6 @@ namespace Game.CombatSystem.State
 
             flowCoordinator.DisablePlayerInput();
         }
+        public class Factory : Zenject.PlaceholderFactory<CombatPlayerInputState> { }
     }
 }
