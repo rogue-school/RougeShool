@@ -1,35 +1,32 @@
 using UnityEngine;
-using Game.CharacterSystem.Core;
-using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.Effects;
+using Game.SkillCardSystem.Effect;
+using Game.CombatSystem.Interface;
 
-namespace Game.SkillCardSystem.Effects
+namespace Game.SkillCardSystem.Effect
 {
-    [CreateAssetMenu(menuName = "CardEffects/ForceNextSlotEffect")]
-    public class ForceNextSlotEffectSO : ScriptableObject, ICardEffect
+    [CreateAssetMenu(fileName = "ForceNextSlotEffect", menuName = "SkillEffects/ForceNextSlotEffect")]
+    public class ForceNextSlotEffectSO : SkillCardEffectSO
     {
-        public void ExecuteEffect(CharacterBase caster, CharacterBase target, int value, ITurnStateController controller = null)
-        {
-            if (controller != null)
-            {
-                controller.ReserveEnemySlot(CombatSlotPosition.FIRST);
-                Debug.Log("[ForceNextSlotEffectSO] 다음 턴 적 슬롯을 FIRST로 예약");
-            }
-            else
-            {
-                Debug.LogWarning("[ForceNextSlotEffectSO] controller가 null입니다.");
-            }
-        }
+        [SerializeField] private CombatSlotPosition forcedSlot = CombatSlotPosition.FIRST;
 
-        public string GetEffectName()
+        public override ICardEffectCommand CreateEffectCommand(int power)
         {
-            return "Force Slot";
+            return new ForceNextSlotEffectCommand(forcedSlot);
         }
-
-        public string GetDescription()
+    
+    public override void ApplyEffect(ICardExecutionContext context, int value, ITurnStateController controller = null)
         {
-            return "다음 턴 적 슬롯을 FIRST(선공)로 고정합니다.";
+            if (controller == null)
+            {
+                Debug.LogWarning("[ForceNextSlotEffectSO] TurnStateController가 null입니다.");
+                return;
+            }
+
+            controller.ReserveNextEnemySlot((CombatSlotPosition)value); // 예: value → enum값
+            Debug.Log($"[ForceNextSlotEffectSO] 다음 적 행동 슬롯 강제 예약: {((CombatSlotPosition)value)}");
         }
     }
 }

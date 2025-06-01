@@ -1,63 +1,28 @@
+ï»¿using UnityEngine;
 using System.Collections.Generic;
-using UnityEngine;
 using Game.SkillCardSystem.Interface;
-using Game.SkillCardSystem.Slot;
-using Game.CombatSystem.Slot;
-using Game.CombatSystem.Interface;
-using Game.CharacterSystem.Interface;
+using Game.SkillCardSystem.Effects;
+using Game.SkillCardSystem.Data;
 
 namespace Game.SkillCardSystem.Core
 {
-    [CreateAssetMenu(menuName = "Game/Card/Enemy Skill Card")]
-    public class EnemySkillCard : ScriptableObject, ISkillCard
+    [CreateAssetMenu(menuName = "Game/SkillCard/Enemy Skill Card")]
+    public class EnemySkillCard : ScriptableObject
     {
-        [Header("±âº» Ä«µå Á¤º¸")]
-        [SerializeField] private string cardName;
-        [SerializeField] private string description;
-        [SerializeField] private Sprite artwork;
-        [SerializeField] private int basePower;
+        public SkillCardData CardData;
 
-        [Header("Ä«µå È¿°ú")]
-        [SerializeField] private List<ScriptableObject> effectObjects;
+        [Header("ì¹´ë“œ ì‹¤í–‰ ì‹œ ì ìš©í•  íš¨ê³¼ ëª©ë¡")]
+        [SerializeField] private List<SkillCardEffectSO> effects = new();
 
-        public string GetCardName() => cardName;
-        public string GetDescription() => description;
-        public Sprite GetArtwork() => artwork;
-        public int GetCoolTime() => 0;
-        public int GetEffectPower(ICardEffect effect) => basePower;
-        public SlotOwner GetOwner() => SlotOwner.ENEMY;
-
-        public List<ICardEffect> CreateEffects()
+        public List<SkillCardEffectSO> CreateEffects()
         {
-            var list = new List<ICardEffect>();
-            foreach (var obj in effectObjects)
-            {
-                if (obj is ICardEffect effect)
-                    list.Add(effect);
-            }
-            return list;
+            return effects ?? new List<SkillCardEffectSO>();
         }
 
-        public void SetHandSlot(SkillCardSlotPosition slot) { }
-        public SkillCardSlotPosition? GetHandSlot() => null;
-        public void SetCombatSlot(CombatSlotPosition slot) { }
-        public CombatSlotPosition? GetCombatSlot() => null;
+        public SkillCardData GetCardData() => CardData;
 
-        public void ExecuteCardAutomatically(ICardExecutionContext context)
-        {
-            Debug.LogWarning("[EnemySkillCard] ScriptableObject´Â Á÷Á¢ ½ÇÇàµÇÁö ¾Ê½À´Ï´Ù.");
-        }
-
-        public ICharacter GetOwner(ICardExecutionContext context)
-        {
-            Debug.LogWarning("[EnemySkillCard] GetOwner´Â ·±Å¸ÀÓ Ä«µå¿¡¼­ È£ÃâµÇ¾î¾ß ÇÕ´Ï´Ù.");
-            return null;
-        }
-
-        public ICharacter GetTarget(ICardExecutionContext context)
-        {
-            Debug.LogWarning("[EnemySkillCard] GetTarget´Â ·±Å¸ÀÓ Ä«µå¿¡¼­ È£ÃâµÇ¾î¾ß ÇÕ´Ï´Ù.");
-            return null;
-        }
+        public string GetCardName() => CardData.Name;
+        public int GetDamage() => CardData.Damage;
+        public int GetCoolTime() => CardData.CoolTime;
     }
 }

@@ -8,7 +8,6 @@ namespace Game.CharacterSystem.Interface
     public interface IEnemyCharacter : ICharacter
     {
         EnemyCharacterData Data { get; }
-
-        string GetCharacterName();
+        string GetName();
     }
 }

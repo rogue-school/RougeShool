@@ -1,4 +1,5 @@
 using UnityEngine;
+using Zenject;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
@@ -7,48 +8,63 @@ using Game.SkillCardSystem.UI;
 
 namespace Game.CombatSystem.UI
 {
-    /// <summary>
-    /// 플레이어 핸드에 있는 카드 슬롯 UI입니다.
-    /// </summary>
     public class PlayerHandCardSlotUI : MonoBehaviour, IHandCardSlot
     {
         [SerializeField] private SkillCardSlotPosition position;
-        [SerializeField] private SkillCardUI skillCardUIPrefab;
 
         private ISkillCard currentCard;
         private SkillCardUI currentCardUI;
+        private SkillCardUI cardUIPrefab;
+
+        [Inject]
+        public void Construct(SkillCardUI cardUIPrefab)
+        {
+            this.cardUIPrefab = cardUIPrefab;
+        }
 
         public SkillCardSlotPosition GetSlotPosition() => position;
-
         public SlotOwner GetOwner() => SlotOwner.PLAYER;
-
-        /// <summary>
-        /// 카드 UI 프리팹을 외부에서 주입받습니다.
-        /// </summary>
-        public void InjectUIFactory(SkillCardUI prefab)
-        {
-            skillCardUIPrefab = prefab;
-        }
+        public ISkillCard GetCard() => currentCard;
+        public ISkillCardUI GetCardUI() => currentCardUI;
+        public bool HasCard() => currentCard != null;
 
         public void SetCard(ISkillCard card)
         {
-            //Debug.Log($"[PlayerHandCardSlotUI] SetCard 호출됨: {card?.GetCardName()}");
+            SetCardInternal(card, cardUIPrefab);
+        }
 
+        public SkillCardUI AttachCard(ISkillCard card)
+        {
+            SetCard(card);
+            return currentCardUI;
+        }
+
+        public SkillCardUI AttachCard(ISkillCard card, SkillCardUI prefab)
+        {
+            SetCardInternal(card, prefab);
+            return currentCardUI;
+        }
+
+        private void SetCardInternal(ISkillCard card, SkillCardUI prefab)
+        {
             currentCard = card;
             currentCard.SetHandSlot(position);
 
             if (currentCardUI != null)
                 Destroy(currentCardUI.gameObject);
 
-            currentCardUI = SkillCardUIFactory.CreateUI(skillCardUIPrefab, transform, card);
+            currentCardUI = SkillCardUIFactory.CreateUI(prefab, transform, card);
 
             if (currentCardUI != null)
-            Debug.Log($"[PlayerHandCardSlotUI] 카드 UI 생성 완료: {currentCardUI.name}");
+                Debug.Log($"[PlayerHandCardSlotUI] 카드 UI 생성 완료: {currentCardUI.name}");
             else
-            Debug.LogError("[PlayerHandCardSlotUI] 카드 UI 생성 실패");
+                Debug.LogError("[PlayerHandCardSlotUI] 카드 UI 생성 실패");
         }
 
-        public ISkillCard GetCard() => currentCard;
+        public void DetachCard()
+        {
+            Clear();
+        }
 
         public void Clear()
         {
@@ -60,6 +76,7 @@ namespace Game.CombatSystem.UI
                 currentCardUI = null;
             }
         }
+
         public void SetInteractable(bool interactable)
         {
             if (currentCardUI != null)
@@ -68,16 +85,7 @@ namespace Game.CombatSystem.UI
 
         public void SetCoolTimeDisplay(int coolTime, bool isOnCooldown)
         {
-            if (currentCardUI != null)
-                currentCardUI.ShowCoolTime(coolTime, isOnCooldown);
-        }
-
-        /// <summary>
-        /// 현재 슬롯에 카드가 있는지 여부
-        /// </summary>
-        public bool HasCard()
-        {
-            return currentCard != null;
+            currentCardUI?.ShowCoolTime(coolTime, isOnCooldown);
         }
     }
 }

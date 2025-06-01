@@ -1,57 +1,50 @@
+using System.Collections.Generic;
 using UnityEngine;
 using Game.SkillCardSystem.Interface;
-using Game.CharacterSystem.Interface;
-using Game.CombatSystem.Slot;
-using Game.IManager;
-using Game.CharacterSystem.Core;
+using Game.CombatSystem.Interface;
+using Game.SkillCardSystem.Effects;
+using Game.SkillCardSystem.Factory;
+using Game.SkillCardSystem.Validator;
 
 namespace Game.SkillCardSystem.Executor
 {
-    /// <summary>
-    /// 전투 슬롯에 배치된 스킬 카드를 실행하는 서비스 클래스입니다.
-    /// </summary>
     public class CardExecutor : ICardExecutor
     {
-        private readonly IPlayerManager playerManager;
-        private readonly IEnemyManager enemyManager;
+        private readonly ICardEffectCommandFactory commandFactory;
+        private readonly ICardExecutionValidator validator;
 
-        public CardExecutor(IPlayerManager playerManager, IEnemyManager enemyManager)
+        public CardExecutor(
+            ICardEffectCommandFactory commandFactory,
+            ICardExecutionValidator validator)
         {
-            this.playerManager = playerManager;
-            this.enemyManager = enemyManager;
+            this.commandFactory = commandFactory;
+            this.validator = validator;
         }
 
-        public void ExecuteCard(ISkillCard card)
+        public void Execute(ISkillCard card, ICardExecutionContext context, ITurnStateController controller)
         {
-            if (card == null)
+            if (!validator.CanExecute(card, context))
             {
-                Debug.LogWarning("[CardExecutor] 실행할 카드가 null입니다.");
+                Debug.LogWarning($"[CardExecutor] 실행 조건 불충족: {card?.GetCardName() ?? "알 수 없음"}");
                 return;
             }
 
-            var slot = card.GetCombatSlot();
-            if (!slot.HasValue)
+            var effects = card.CreateEffects();
+            if (effects == null || effects.Count == 0)
             {
-                Debug.LogError("[CardExecutor] 카드의 전투 슬롯 정보가 없습니다.");
+                Debug.LogWarning($"[CardExecutor] '{card.GetCardName()}'에 등록된 이펙트가 없습니다.");
                 return;
             }
 
-            // 시전자/대상자 추출
-            ICharacter caster = (slot.Value == CombatSlotPosition.FIRST) ? enemyManager.GetEnemy() : playerManager.GetPlayer();
-            ICharacter target = (caster == enemyManager.GetEnemy()) ? playerManager.GetPlayer() : enemyManager.GetEnemy();
-
-            if (caster is not CharacterBase casterChar || target is not CharacterBase targetChar)
+            foreach (var effect in effects)
             {
-                Debug.LogError("[CardExecutor] 캐릭터가 CharacterBase 타입이 아닙니다.");
-                return;
-            }
+                if (effect == null) continue;
 
-            foreach (var effect in card.CreateEffects())
-            {
                 int power = card.GetEffectPower(effect);
-                effect.ExecuteEffect(casterChar, targetChar, power);
+                var command = commandFactory.Create(effect, power);
+                command.Execute(context, controller);
 
-                Debug.Log($"[CardExecutor] 실행됨: {card.GetCardName()} → {effect.GetType().Name}, power: {power}");
+                Debug.Log($"[CardExecutor] {card.GetCardName()} → {effect.GetType().Name}, power: {power}");
             }
         }
     }

@@ -1,186 +1,165 @@
-using UnityEngine;
+ï»¿using System;
 using System.Collections;
-using Game.CharacterSystem.Interface;
+using UnityEngine;
+using Zenject;
 using Game.CombatSystem.Interface;
-using Game.IManager;
 using Game.CombatSystem.Slot;
+using Game.IManager;
+using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Slot;
+using Game.SkillCardSystem.UI;
 
-namespace Game.CombatSystem.Manager
+namespace Game.CombatSystem.Core
 {
-    public class CombatFlowCoordinator : MonoBehaviour
+    public class CombatFlowCoordinator : MonoBehaviour, ICombatFlowCoordinator
     {
-        private ISlotInitializer slotInitializer;
-        private IPlayerCharacterInitializer playerInitializer;
-        private IEnemyInitializer enemyInitializer;
-        private IPlayerHandManager playerHandManager;
-        private IEnemyHandManager enemyHandManager;
-        private IEnemyManager enemyManager;
-        private IEnemySpawnerManager spawnerManager;
-        private ICombatTurnManager turnManager;
-        private IStageManager stageManager;
-        private ICombatStateFactory stateFactory;
-        private ISlotRegistry slotRegistry;
-        private IPlayerManager playerManager;
+        [Inject] private IStageManager stageManager;
+        [Inject] private IPlayerManager playerManager;
+        [Inject] private IEnemyManager enemyManager;
+        [Inject] private IPlayerHandManager playerHandManager;
+        [Inject] private IEnemyHandManager enemyHandManager;
+        [Inject] private ITurnCardRegistry turnCardRegistry;
+        [Inject] private ICombatPreparationService preparationService;
+        [Inject] private ISlotRegistry slotRegistry;
 
-        public void Inject(
-            ISlotInitializer slotInitializer,
-            IPlayerCharacterInitializer playerInitializer,
-            IEnemyInitializer enemyInitializer,
-            IPlayerHandManager playerHandManager,
-            IEnemyHandManager enemyHandManager,
-            IEnemyManager enemyManager,
-            IEnemySpawnerManager spawnerManager,
-            ICombatTurnManager turnManager,
-            IStageManager stageManager,
-            ICombatStateFactory stateFactory,
-            ISlotRegistry slotRegistry,
-            IPlayerManager playerManager)
+        private ICombatTurnManager turnManager;
+        private ICombatStateFactory stateFactory;
+        private bool playerInputEnabled = false;
+
+        public void InjectTurnStateDependencies(ICombatTurnManager turnManager, ICombatStateFactory stateFactory)
         {
-            this.slotInitializer = slotInitializer;
-            this.playerInitializer = playerInitializer;
-            this.enemyInitializer = enemyInitializer;
-            this.playerHandManager = playerHandManager;
-            this.enemyHandManager = enemyHandManager;
-            this.enemyManager = enemyManager;
-            this.spawnerManager = spawnerManager;
             this.turnManager = turnManager;
-            this.stageManager = stageManager;
             this.stateFactory = stateFactory;
-            this.slotRegistry = slotRegistry;
-            this.playerManager = playerManager;
         }
 
         public void StartCombatFlow()
         {
-            StartCoroutine(RunCombatStartupFlow());
+            var initialState = stateFactory.CreatePrepareState();
+            turnManager.ChangeState(initialState);
         }
 
-        private IEnumerator RunCombatStartupFlow()
+        public void RequestCombatPreparation(Action<bool> onComplete)
         {
-            Debug.Log("[CombatFlowCoordinator] === ÀüÅõ ÃÊ±âÈ­ ·çÆ¾ ½ÃÀÛ ===");
-
-            yield return InitializeSlots();
-            yield return InitializePlayer();
-            yield return InitializeEnemy();
-            yield return GenerateHands();
-
-            yield return new WaitForEndOfFrame(); // »óÅÂ ÀüÀÌ ÇÑ ÇÁ·¹ÀÓ Áö¿¬
-            yield return StartCombat();
-
-            Debug.Log("[CombatFlowCoordinator] === ÀüÅõ ÃÊ±âÈ­ ·çÆ¾ ¿Ï·á ===");
+            StartCoroutine(PerformCombatPreparation(onComplete));
         }
 
-        private IEnumerator InitializeSlots()
+        public IEnumerator PerformCombatPreparation()
         {
-            Debug.Log("[CombatFlowCoordinator] ½½·Ô ÃÊ±âÈ­");
-
-            slotInitializer?.AutoBindAllSlots();
-
-            var playerSlot = slotRegistry?.GetCharacterSlot(SlotOwner.PLAYER);
-            var enemySlot = slotRegistry?.GetCharacterSlot(SlotOwner.ENEMY);
-
-            Debug.Log($"[CombatFlowCoordinator] PlayerSlot: {playerSlot?.GetTransform()?.name}");
-            Debug.Log($"[CombatFlowCoordinator] EnemySlot: {enemySlot?.GetTransform()?.name}");
-
-            yield return null;
+            yield return PerformCombatPreparation(_ => { });
         }
 
-        private IEnumerator InitializePlayer()
+        public IEnumerator PerformCombatPreparation(Action<bool> onComplete)
         {
-            Debug.Log("[CombatFlowCoordinator] ÇÃ·¹ÀÌ¾î ÃÊ±âÈ­");
+            Debug.Log("[CombatFlowCoordinator] ì´ì „ ì  í•¸ë“œ ì •ë¦¬");
+            enemyHandManager.ClearHand();
 
-            playerInitializer?.Setup();
-            yield return null;
-
-            var player = playerManager?.GetPlayer();
-            playerHandManager?.Inject(player, slotRegistry, turnManager);
-            playerHandManager?.Initialize();
-
-            yield return null;
-        }
-
-        private IEnumerator InitializeEnemy()
-        {
-            Debug.Log("[CombatFlowCoordinator] Àû ÃÊ±âÈ­");
-
-            var enemyData = stageManager?.GetCurrentStage()?.enemies?[0];
-            if (enemyData == null)
-            {
-                Debug.LogError("[CombatFlowCoordinator] Àû µ¥ÀÌÅÍ ¾øÀ½");
-                yield break;
-            }
-
-            enemyInitializer?.SetupWithData(enemyData);
-            yield return null;
-
-            var enemy = enemyInitializer?.GetSpawnedEnemy();
+            var enemy = enemyManager.GetEnemy();
             if (enemy == null)
             {
-                Debug.LogError("[CombatFlowCoordinator] Àû »ı¼º ½ÇÆĞ");
+                Debug.LogWarning("[CombatFlowCoordinator] ì ì´ ì¡´ì¬í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤. ì´ˆê¸°í™” ì‹¤íŒ¨");
+                onComplete?.Invoke(false);
                 yield break;
             }
 
-            enemyManager?.RegisterEnemy(enemy);
-            enemyHandManager?.Initialize(enemy);
+            Debug.Log($"[CombatFlowCoordinator] ì  ì‚¬ìš© ê°€ëŠ¥: {enemy.GetName()}");
+            yield return new WaitForSeconds(0.5f);
 
-            yield return null;
-        }
+            // ì  ì„ ê³µ ì—¬ë¶€ ê²°ì •
+            bool enemyFirst = UnityEngine.Random.value < 0.5f;
+            var slotToRegister = enemyFirst ? CombatSlotPosition.FIRST : CombatSlotPosition.SECOND;
 
-        private IEnumerator GenerateHands()
-        {
-            Debug.Log("[CombatFlowCoordinator] ÇÚµå »ı¼º");
-
-            playerHandManager?.GenerateInitialHand();
-            enemyHandManager?.GenerateInitialHand();
-
-            yield return null;
-        }
-
-        private IEnumerator StartCombat()
-        {
-            Debug.Log("[CombatFlowCoordinator] »óÅÂ ÀüÀÌ ½ÃÀÛ");
-
-            // ½ÇÁúÀûÀÎ ÁØºñ ·ÎÁ÷ ¼öÇà
-            yield return PerformCombatPreparation();
-
-            var state = stateFactory?.CreatePrepareState();
-            if (state == null)
-            {
-                Debug.LogError("[CombatFlowCoordinator] »óÅÂ »ı¼º ½ÇÆĞ");
-                yield break;
-            }
-
-            turnManager?.RequestStateChange(state);
-            yield return null;
-        }
-
-        private IEnumerator PerformCombatPreparation()
-        {
-            Debug.Log("[CombatFlowCoordinator] ÀüÅõ ÁØºñ ·ÎÁ÷ ½ÇÇà");
-
-            spawnerManager?.SpawnInitialEnemy(); // Àû ½ºÆù
-            yield return null;
-
-            enemyHandManager?.GenerateInitialHand(); // Àû ÇÚµå »ı¼º
-            yield return null;
-
-            // Ä«µå ¹èÄ¡ ½Ãµµ (½½·Ô1¿¡ Ä«µå°¡ ÀÖÀ» °æ¿ì)
-            var card = enemyHandManager?.GetSlotCard(SkillCardSlotPosition.ENEMY_SLOT_1);
+            // ì¹´ë“œ ì¶”ì¶œ ë° ë“±ë¡
+            var (card, cardUI) = enemyHandManager.PopCardFromSlot(SkillCardSlotPosition.ENEMY_SLOT_3);
             if (card != null)
             {
-                var slot = Random.value < 0.5f ? CombatSlotPosition.FIRST : CombatSlotPosition.SECOND;
-                var combatSlot = slotRegistry?.GetCombatSlot(slot);
-                combatSlot?.SetCard(card);
-                turnManager?.ReserveEnemySlot(slot);
-                Debug.Log($"[CombatFlowCoordinator] Àû Ä«µå '{card.GetCardName()}' ÀüÅõ ½½·Ô {slot}¿¡ ¹èÄ¡ ¿Ï·á");
+                Debug.Log($"[CombatFlowCoordinator] ì  ì¹´ë“œ ë“±ë¡: {card.GetCardName()} â†’ ìŠ¬ë¡¯: {slotToRegister}");
+
+                turnCardRegistry.RegisterCard(slotToRegister, card, cardUI);
+                RegisterCardToCombatSlotUI(slotToRegister, card, cardUI);
+                enemyHandManager.RegisterCardToSlot(SkillCardSlotPosition.ENEMY_SLOT_3, card, cardUI);
+            }
+
+            enemyHandManager.FillEmptySlots();
+            yield return new WaitForSeconds(0.5f);
+
+            Debug.Log("[CombatFlowCoordinator] ì „íˆ¬ ì¤€ë¹„ ì™„ë£Œ");
+            onComplete?.Invoke(true);
+        }
+
+        private void RegisterCardToCombatSlotUI(CombatSlotPosition pos, ISkillCard card, SkillCardUI ui)
+        {
+            var slot = slotRegistry.GetCombatSlot(pos);
+            if (slot is ICombatCardSlot combatSlot)
+            {
+                ui.transform.SetParent(combatSlot.GetTransform());
+                ui.transform.localPosition = Vector3.zero;
+                ui.transform.localScale = Vector3.one;
+                combatSlot.SetCard(card);
+                combatSlot.SetCardUI(ui);
+
+                Debug.Log($"[CombatFlowCoordinator] CombatSlotì— ì¹´ë“œ UI ì ìš© ì™„ë£Œ: {card.GetCardName()} â†’ {pos}");
             }
             else
             {
-                Debug.LogWarning("[CombatFlowCoordinator] Àû ½½·Ô 1¿¡ Ä«µå°¡ ¾ø¾î ÀüÅõ ½½·Ô ¹èÄ¡ ½ºÅµ");
+                Debug.LogError($"[CombatFlowCoordinator] ì „íˆ¬ ìŠ¬ë¡¯ {pos}ì„ ì°¾ì„ ìˆ˜ ì—†ê±°ë‚˜ ICombatExecutionSlot ì•„ë‹˜");
             }
+        }
 
-            yield return null;
+        public void RequestFirstAttack(Action onComplete = null)
+        {
+            StartCoroutine(PerformFirstAttack(onComplete));
+        }
+
+        public IEnumerator PerformFirstAttack() => PerformFirstAttack(null);
+
+        public IEnumerator PerformFirstAttack(Action onComplete)
+        {
+            Debug.Log("[CombatFlowCoordinator] ì²« ë²ˆì§¸ ê³µê²© ì‹œì‘");
+            yield return new WaitForSeconds(1f);
+            Debug.Log("[CombatFlowCoordinator] ì²« ë²ˆì§¸ ê³µê²© ì¢…ë£Œ");
+            onComplete?.Invoke();
+        }
+
+        public IEnumerator PerformSecondAttack()
+        {
+            Debug.Log("[CombatFlowCoordinator] ë‘ ë²ˆì§¸ ê³µê²© ì‹œì‘");
+            yield return new WaitForSeconds(1f);
+            Debug.Log("[CombatFlowCoordinator] ë‘ ë²ˆì§¸ ê³µê²© ì¢…ë£Œ");
+        }
+
+        public IEnumerator PerformResultPhase()
+        {
+            Debug.Log("[CombatFlowCoordinator] ê²°ê³¼ ì²˜ë¦¬ ì‹œì‘");
+            yield return new WaitForSeconds(1f);
+            Debug.Log("[CombatFlowCoordinator] ê²°ê³¼ ì²˜ë¦¬ ì™„ë£Œ");
+        }
+
+        public IEnumerator PerformVictoryPhase()
+        {
+            Debug.Log("[CombatFlowCoordinator] ìŠ¹ë¦¬ ì²˜ë¦¬ ì‹œì‘");
+            yield return new WaitForSeconds(1f);
+            Debug.Log("[CombatFlowCoordinator] ìŠ¹ë¦¬ ì²˜ë¦¬ ì™„ë£Œ");
+        }
+
+        public IEnumerator PerformGameOverPhase()
+        {
+            Debug.Log("[CombatFlowCoordinator] ê²Œì„ ì˜¤ë²„ ì²˜ë¦¬ ì‹œì‘");
+            yield return new WaitForSeconds(1f);
+            Debug.Log("[CombatFlowCoordinator] ê²Œì„ ì˜¤ë²„ ì²˜ë¦¬ ì™„ë£Œ");
+        }
+
+        public void EnablePlayerInput() => playerInputEnabled = true;
+        public void DisablePlayerInput() => playerInputEnabled = false;
+        public bool IsPlayerInputEnabled() => playerInputEnabled;
+
+        public bool IsPlayerDead() => playerManager.GetPlayer() == null;
+        public bool IsEnemyDead() => enemyManager.GetEnemy() == null;
+        public bool CheckHasNextEnemy() => stageManager.HasNextEnemy();
+
+        public void CleanupAfterVictory()
+        {
+            enemyHandManager.ClearHand();
+            Debug.Log("[CombatFlowCoordinator] ìŠ¹ë¦¬ í›„ ì  í•¸ë“œ ì •ë¦¬ ì™„ë£Œ");
         }
     }
 }

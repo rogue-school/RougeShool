@@ -4,97 +4,78 @@ using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Data;
 using Game.CombatSystem.Slot;
 using Game.IManager;
+using Game.CombatSystem.Interface;
+using Zenject;
+using Game.CombatSystem.Utility;
 
 namespace Game.CombatSystem.Manager
 {
     /// <summary>
-    /// 적 캐릭터를 전투 슬롯에 소환하고 관리하는 매니저입니다.
+    /// 적 캐릭터 프리팹을 스폰하여 슬롯에 배치하는 매니저입니다.
+    /// 실제 전투 설정은 StageManager와 HandManager에서 수행됩니다.
     /// </summary>
     public class EnemySpawnerManager : MonoBehaviour, IEnemySpawnerManager
     {
         [Header("기본 적 프리팹")]
         [SerializeField] private GameObject defaultEnemyPrefab;
 
-        private IStageManager stageManager;
+        [Inject] private ISlotRegistry slotRegistry;
+        [Inject] private IEnemyManager enemyManager;
+
         private readonly List<EnemyCharacter> spawnedEnemies = new();
 
-        public void InjectStageManager(IStageManager stageManager)
+        public EnemySpawnResult SpawnEnemy(EnemyCharacterData data)
         {
-            this.stageManager = stageManager;
-            Debug.Log("[EnemySpawnerManager] StageManager가 주입되었습니다.");
-        }
-
-        public void SpawnInitialEnemy()
-        {
-            if (stageManager == null)
-            {
-                Debug.LogError("[EnemySpawnerManager] StageManager가 주입되지 않았습니다. 초기 적을 소환할 수 없습니다.");
-                return;
-            }
-
-            Debug.Log("[EnemySpawnerManager] 초기 적 소환 시도 → StageManager.SpawnNextEnemy 호출");
-            stageManager.SpawnNextEnemy();
-        }
-
-        public EnemyCharacter SpawnEnemy(EnemyCharacterData data)
-        {
-            if (data == null)
-            {
-                Debug.LogError("[EnemySpawnerManager] EnemyCharacterData가 null입니다. 적 소환 중단.");
+            if (data == null || slotRegistry == null)
                 return null;
-            }
 
-            var slotRegistry = SlotRegistry.Instance;
-            if (slotRegistry == null)
-            {
-                Debug.LogError("[EnemySpawnerManager] SlotRegistry.Instance가 null입니다. 적 소환 실패.");
-                return null;
-            }
-
-            var slot = slotRegistry.GetCharacterSlot(SlotOwner.ENEMY);
+            var slot = slotRegistry.GetCharacterSlotRegistry()?.GetCharacterSlot(SlotOwner.ENEMY);
             if (slot == null)
             {
-                Debug.LogError("[EnemySpawnerManager] ENEMY용 캐릭터 슬롯을 찾을 수 없습니다.");
+                Debug.LogError("[EnemySpawnerManager] 적 캐릭터 슬롯을 찾을 수 없습니다.");
                 return null;
             }
 
-            Debug.Log("[EnemySpawnerManager] 기존 슬롯 자식 오브젝트 제거 시작");
+            // 기존 적 제거
+            var existing = slot.GetCharacter() as EnemyCharacter;
+            if (existing != null && !existing.IsDead())
+                return new EnemySpawnResult(existing, false);
+
             foreach (Transform child in slot.GetTransform())
                 Destroy(child.gameObject);
 
-            var prefabToUse = data.prefab != null ? data.prefab : defaultEnemyPrefab;
-            if (prefabToUse == null)
+            var prefab = data.Prefab ?? defaultEnemyPrefab;
+            if (prefab == null)
             {
-                Debug.LogError("[EnemySpawnerManager] 사용할 적 프리팹이 없습니다.");
+                Debug.LogError("[EnemySpawnerManager] 프리팹이 설정되지 않았습니다.");
                 return null;
             }
 
-            Debug.Log($"[EnemySpawnerManager] 프리팹 인스턴스 생성: {data.displayName}");
-            var instance = Instantiate(prefabToUse, slot.GetTransform());
-            instance.name = $"Enemy_{data.displayName}";
+            var instance = Instantiate(prefab, slot.GetTransform());
+            instance.name = data.DisplayName;
             instance.transform.localPosition = Vector3.zero;
-            instance.transform.localRotation = Quaternion.identity;
-            instance.transform.localScale = Vector3.one;
 
             if (!instance.TryGetComponent(out EnemyCharacter enemy))
             {
-                Debug.LogError("[EnemySpawnerManager] EnemyCharacter 컴포넌트를 찾지 못했습니다. 인스턴스 파괴.");
+                Debug.LogError("[EnemySpawnerManager] EnemyCharacter 컴포넌트 누락");
                 Destroy(instance);
                 return null;
             }
 
-            enemy.SetCharacterData(data);
+            enemy.Initialize(data);
             slot.SetCharacter(enemy);
+
+            enemyManager?.RegisterEnemy(enemy);
             spawnedEnemies.Add(enemy);
 
-            Debug.Log($"[EnemySpawnerManager] 적 소환 완료: {data.displayName}");
-            return enemy;
+            return new EnemySpawnResult(enemy, true);
         }
 
-        public List<EnemyCharacter> GetAllEnemies()
+        public void SpawnInitialEnemy()
         {
-            Debug.Log($"[EnemySpawnerManager] 현재 소환된 적 수: {spawnedEnemies.Count}");
-            return spawnedEnemies;
+            Debug.LogWarning("[EnemySpawnerManager] StageManager를 통해 적을 생성하세요. 이 메서드는 더 이상 사용되지 않습니다.");
         }
+
+        public List<EnemyCharacter> GetAllEnemies() => spawnedEnemies;
     }
 }

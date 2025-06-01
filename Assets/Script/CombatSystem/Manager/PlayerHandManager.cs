@@ -1,177 +1,115 @@
-using UnityEngine;
 using System.Collections.Generic;
-using Game.CombatSystem.Interface;
-using Game.CombatSystem.Slot;
-using Game.CombatSystem.UI;
+using UnityEngine;
+using Zenject;
 using Game.SkillCardSystem.Interface;
-using Game.SkillCardSystem.Runtime;
 using Game.SkillCardSystem.Slot;
 using Game.SkillCardSystem.UI;
-using Game.IManager;
 using Game.CharacterSystem.Interface;
+using Game.SkillCardSystem.Factory;
+using Game.CombatSystem.Interface;
 
-namespace Game.CombatSystem.Manager
+namespace Game.SkillCardSystem.Core
 {
     public class PlayerHandManager : MonoBehaviour, IPlayerHandManager
     {
-        [Header("UI 프리팹")]
-        [SerializeField] private SkillCardUI skillCardUIPrefab;
+        private IPlayerCharacter owner;
+        private IHandSlotRegistry slotRegistry;
+        private ISkillCardFactory cardFactory;
+        private SkillCardUI cardUIPrefab;
 
-        private Dictionary<SkillCardSlotPosition, IHandCardSlot> handSlots;
-        private Dictionary<SkillCardSlotPosition, PlayerSkillCardRuntime> runtimeCards;
+        private readonly Dictionary<SkillCardSlotPosition, ISkillCard> cards = new();
+        private readonly Dictionary<SkillCardSlotPosition, SkillCardUI> cardUIs = new();
 
-        private IPlayerCharacter player;
-        private ISlotRegistry slotRegistry;
-        private ICombatTurnManager turnManager;
-
-        public void Inject(IPlayerCharacter player, ISlotRegistry slotRegistry, ICombatTurnManager turnManager)
+        [Inject]
+        public void Construct(
+            ISlotRegistry slotRegistry,
+            ISkillCardFactory cardFactory,
+            SkillCardUI cardUIPrefab)
         {
-            this.player = player;
-            this.slotRegistry = slotRegistry;
-            this.turnManager = turnManager;
+            this.slotRegistry = slotRegistry.GetHandSlotRegistry();
+            this.cardFactory = cardFactory;
+            this.cardUIPrefab = cardUIPrefab;
+
+            cards.Clear();
+            cardUIs.Clear();
         }
 
-        public void Initialize()
+        public void SetPlayer(IPlayerCharacter player)
         {
-            if (slotRegistry == null)
-            {
-                Debug.LogError("[PlayerHandManager] SlotRegistry가 주입되지 않았습니다.");
-                return;
-            }
-
-            if (player == null)
-            {
-                Debug.LogError("[PlayerHandManager] Player가 주입되지 않았습니다. 초기화를 중단합니다.");
-                return;
-            }
-
-            handSlots = new Dictionary<SkillCardSlotPosition, IHandCardSlot>();
-            runtimeCards = new Dictionary<SkillCardSlotPosition, PlayerSkillCardRuntime>();
-
-            var slots = slotRegistry.GetHandSlots(SlotOwner.PLAYER);
-            if (slots == null)
-            {
-                Debug.LogError("[PlayerHandManager] Player 슬롯 조회 실패");
-                return;
-            }
-
-            foreach (var slot in slots)
-            {
-                if (slot == null) continue;
-                handSlots[slot.GetSlotPosition()] = slot;
-            }
-
-            Debug.Log($"[PlayerHandManager] Player 슬롯 {handSlots.Count}개 초기화 완료");
+            this.owner = player;
         }
 
         public void GenerateInitialHand()
         {
-            ClearAll();
-
-            if (player == null || player.Data == null)
+            var deck = owner?.Data?.SkillDeck;
+            if (deck == null)
             {
-                Debug.LogWarning("[PlayerHandManager] 플레이어 데이터가 없어서 핸드를 생성하지 않습니다.");
+                Debug.LogError("[PlayerHandManager] 플레이어 덱이 비어 있음");
                 return;
             }
 
-            var skillDeck = player.Data.skillDeck;
-            SkillCardSlotPosition[] orderedSlots = new[]
+            foreach (var entry in deck.Cards)
             {
-                SkillCardSlotPosition.PLAYER_SLOT_1,
-                SkillCardSlotPosition.PLAYER_SLOT_2,
-                SkillCardSlotPosition.PLAYER_SLOT_3,
-            };
+                var pos = entry.Slot;
+                var card = cardFactory.CreatePlayerCard(entry.Card.CardData, entry.Card.CreateEffects());
 
-            int count = Mathf.Min(skillDeck.Count, orderedSlots.Length);
+                cards[pos] = card;
 
-            for (int i = 0; i < count; i++)
-            {
-                var entry = skillDeck[i];
-                var card = entry.card;
-                int damage = entry.damage;
-                int coolTime = card.GetCoolTime();
-                var slotPos = orderedSlots[i];
-
-                if (!handSlots.TryGetValue(slotPos, out var slot))
-                    continue;
-
-                var runtimeCard = new PlayerSkillCardRuntime(card, damage, coolTime);
-                runtimeCard.SetHandSlot(slotPos);
-                runtimeCards[slotPos] = runtimeCard;
-
-                if (slot is PlayerHandCardSlotUI uiSlot)
-                    uiSlot.InjectUIFactory(skillCardUIPrefab);
-
-                slot.SetCard(runtimeCard);
+                var slot = slotRegistry.GetPlayerHandSlot(pos);
+                if (slot != null)
+                {
+                    var ui = slot.AttachCard(card, cardUIPrefab);
+                    if (ui != null) cardUIs[pos] = ui;
+                }
             }
         }
 
-        public void RestoreCardToHand(PlayerSkillCardRuntime card)
-        {
-            RestoreCardToHand((ISkillCard)card);
-        }
+        public ISkillCard GetCardInSlot(SkillCardSlotPosition pos) =>
+            cards.TryGetValue(pos, out var c) ? c : null;
+
+        public ISkillCardUI GetCardUIInSlot(SkillCardSlotPosition pos) =>
+            cardUIs.TryGetValue(pos, out var ui) ? ui : null;
 
         public void RestoreCardToHand(ISkillCard card)
         {
-            var slotPos = card.GetHandSlot();
-            if (!slotPos.HasValue || !handSlots.TryGetValue(slotPos.Value, out var slot))
-                return;
-
-            slot.SetCard(card);
-
-            if (card is PlayerSkillCardRuntime runtimeCard && slot is PlayerHandCardSlotUI uiSlot)
+            foreach (var kvp in cards)
             {
-                UpdateCardUI(runtimeCard, uiSlot);
-            }
-        }
-
-        public void TickCoolTime()
-        {
-            foreach (var kvp in runtimeCards)
-            {
-                var card = kvp.Value;
-                int newCoolTime = Mathf.Max(0, card.GetCoolTime() - 1);
-                card.SetCoolTime(newCoolTime);
-
-                if (handSlots.TryGetValue(kvp.Key, out var slot) && slot is PlayerHandCardSlotUI uiSlot)
+                if (kvp.Value == null)
                 {
-                    UpdateCardUI(card, uiSlot);
+                    cards[kvp.Key] = card;
+                    var slot = slotRegistry.GetPlayerHandSlot(kvp.Key);
+                    if (slot != null)
+                    {
+                        var ui = slot.AttachCard(card, cardUIPrefab);
+                        if (ui != null) cardUIs[kvp.Key] = ui;
+                    }
+                    return;
                 }
             }
         }
 
-        public void EnableCardInteraction(bool isEnabled)
+        public void LogPlayerHandSlotStates()
         {
-            foreach (var slot in handSlots.Values)
+            foreach (SkillCardSlotPosition pos in System.Enum.GetValues(typeof(SkillCardSlotPosition)))
             {
-                if (slot is PlayerHandCardSlotUI uiSlot)
-                {
-                    var card = uiSlot.GetCard();
-                    bool canInteract = isEnabled && card is PlayerSkillCardRuntime runtimeCard && runtimeCard.GetCoolTime() == 0;
-                    uiSlot.SetInteractable(canInteract);
-                }
+                var card = GetCardInSlot(pos);
+                Debug.Log($"슬롯 {pos}: {(card != null ? card.CardData.Name : "비어 있음")}");
             }
         }
 
-        private void UpdateCardUI(PlayerSkillCardRuntime runtimeCard, PlayerHandCardSlotUI uiSlot)
+        public void EnableInput(bool enable)
         {
-            int coolTime = runtimeCard.GetCoolTime();
-            bool isCooldown = coolTime > 0;
-
-            uiSlot.SetInteractable(!isCooldown);
-            uiSlot.SetCoolTimeDisplay(coolTime, isCooldown);
+            foreach (var ui in cardUIs.Values)
+                ui?.SetDraggable(enable);
         }
 
         public void ClearAll()
         {
-            if (handSlots == null) return;
+            foreach (var pos in cards.Keys)
+                slotRegistry.GetPlayerHandSlot(pos)?.DetachCard();
 
-            foreach (var slot in handSlots.Values)
-                slot.Clear();
-
-            runtimeCards?.Clear();
+            cards.Clear();
+            cardUIs.Clear();
         }
-
-        public IEnumerable<IHandCardSlot> GetAllHandSlots() => handSlots?.Values;
     }
 }

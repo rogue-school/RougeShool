@@ -1,47 +1,26 @@
 using UnityEngine;
-using Game.CharacterSystem.Core;
-using Game.CharacterSystem.Interface;
 using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.Effect;
 using Game.CombatSystem.Interface;
 
 namespace Game.SkillCardSystem.Effects
 {
-    [CreateAssetMenu(menuName = "CardEffects/RegenEffect")]
-    public class RegenEffectSO : ScriptableObject, ICardEffect
+    [CreateAssetMenu(fileName = "RegenEffect", menuName = "SkillEffects/RegenEffect")]
+    public class RegenEffectSO : SkillCardEffectSO
     {
-        public void ExecuteEffect(CharacterBase caster, CharacterBase target, int power, ITurnStateController controller = null)
+        [SerializeField] private int healPerTurn;
+        [SerializeField] private int duration;
+
+        public override ICardEffectCommand CreateEffectCommand(int power)
         {
-            target.RegisterPerTurnEffect(new RegenEffect(power));
+            return new RegenEffectCommand(healPerTurn + power, duration);
         }
-
-        public string GetEffectName()
+    
+    public override void ApplyEffect(ICardExecutionContext context, int value, ITurnStateController controller = null)
         {
-            return "Regen";
+            var regen = new RegenEffect(value, 2);
+            context.Target?.RegisterPerTurnEffect(regen);
+            Debug.Log($"[RegenEffectSO] {context.Target?.GetCharacterName()}에게 재생 {value} 적용");
         }
-
-        public string GetDescription()
-        {
-            return "턴마다 일정량의 체력을 회복합니다. (영구 효과)";
-        }
-    }
-
-    public class RegenEffect : IPerTurnEffect
-    {
-        private readonly int amount;
-
-        public RegenEffect(int amount)
-        {
-            this.amount = amount;
-        }
-
-        public void OnTurnStart(ICharacter owner)
-        {
-            if (!owner.IsDead())
-            {
-                owner.Heal(amount);
-            }
-        }
-
-        public bool IsExpired => false;
     }
 }

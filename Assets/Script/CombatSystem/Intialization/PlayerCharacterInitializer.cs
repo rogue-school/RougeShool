@@ -1,150 +1,143 @@
 using UnityEngine;
+using Zenject;
+using System.Collections;
 using Game.CharacterSystem.Data;
 using Game.CombatSystem.Slot;
 using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Interface;
 using Game.IManager;
+using Game.CombatSystem.Interface;
+using Game.SkillCardSystem.Core;
 
 namespace Game.CombatSystem.Initialization
 {
-    /// <summary>
-    /// 플레이어 캐릭터를 초기화하고 슬롯에 배치합니다.
-    /// </summary>
-    public class PlayerCharacterInitializer : MonoBehaviour, IPlayerCharacterInitializer
+    public class PlayerCharacterInitializer : MonoBehaviour, IPlayerCharacterInitializer, ICombatInitializerStep
     {
         [SerializeField] private PlayerCharacter playerPrefab;
         [SerializeField] private PlayerCharacterData defaultData;
 
-        private IPlayerManager playerManager;
+        [Header("초기화 순서 (낮을수록 먼저 실행됨)")]
+        [SerializeField] private int order = 10;
+        public int Order => order;
 
-        public void Inject(IPlayerManager playerManager)
+        private IPlayerManager playerManager;
+        private ISlotRegistry slotRegistry;
+
+        [Inject]
+        public void Inject(IPlayerManager playerManager, ISlotRegistry slotRegistry)
         {
             this.playerManager = playerManager;
-            //Debug.Log("[PlayerCharacterInitializer] IPlayerManager 주입 완료");
+            this.slotRegistry = slotRegistry;
+            Debug.Log("[PlayerCharacterInitializer] IPlayerManager, ISlotRegistry 주입 완료");
+        }
+
+        public IEnumerator Initialize()
+        {
+            Debug.Log("[PlayerCharacterInitializer] Initialize() 시작");
+
+            yield return new WaitUntil(() =>
+                slotRegistry is SlotRegistry concrete && concrete.IsInitialized);
+
+            Setup();
         }
 
         public void Setup()
         {
-            //Debug.Log("[PlayerCharacterInitializer] Setup() 호출됨");
+            Debug.Log("[PlayerCharacterInitializer] Setup() 호출됨");
 
-            if (!ValidateData()) return;
+            if (!ValidateData())
+            {
+                Debug.LogError("[PlayerCharacterInitializer] 유효하지 않은 초기화 데이터입니다.");
+                return;
+            }
 
             var slot = GetPlayerSlot();
-            if (slot == null)
-            {
-                //Debug.LogError("[PlayerCharacterInitializer] 플레이어 슬롯을 찾을 수 없습니다.");
-                return;
-            }
+            if (slot == null) return;
 
-            ClearSlotChildren(slot);
+            Transform slotTransform = ((MonoBehaviour)slot).transform;
 
-            var player = InstantiateAndConfigureCharacter(slot);
-            if (player == null)
-            {
-                //Debug.LogError("[PlayerCharacterInitializer] 캐릭터 인스턴스 생성 실패");
-                return;
-            }
-
-            ApplyCharacterData(player);
-            RegisterToManager(slot, player);
-        }
-
-        private bool ValidateData()
-        {
-            if (playerPrefab == null)
-            {
-                //Debug.LogError("[PlayerCharacterInitializer] playerPrefab이 지정되지 않았습니다.");
-                return false;
-            }
-
-            if (defaultData == null)
-            {
-                //Debug.LogWarning("[PlayerCharacterInitializer] defaultData가 null입니다.");
-                return false;
-            }
-
-            if (SlotRegistry.Instance == null)
-            {
-                //Debug.LogError("[PlayerCharacterInitializer] SlotRegistry 인스턴스를 찾을 수 없습니다.");
-                return false;
-            }
-
-            return true;
-        }
-
-        private ICharacterSlot GetPlayerSlot()
-        {
-            //Debug.Log("[PlayerCharacterInitializer] GetPlayerSlot 호출됨");
-
-            var slot = SlotRegistry.Instance.GetCharacterSlot(SlotOwner.PLAYER);
-            if (slot == null)
-            {
-                //Debug.LogError("[PlayerCharacterInitializer] SlotRegistry에서 플레이어 슬롯을 가져오지 못했습니다.");
-            }
-            else
-            {
-                //Debug.Log($"[PlayerCharacterInitializer] 슬롯 이름: {((MonoBehaviour)slot).gameObject.name}");
-            }
-
-            return slot;
-        }
-
-        private void ClearSlotChildren(ICharacterSlot slot)
-        {
-            //Debug.Log("[PlayerCharacterInitializer] 기존 슬롯 자식 오브젝트 제거 시작");
-            foreach (Transform child in ((MonoBehaviour)slot).transform)
-            {
-                //Debug.Log($" → 제거 대상: {child.name}");
+            // 기존 자식 제거
+            foreach (Transform child in slotTransform)
                 Destroy(child.gameObject);
-            }
-        }
 
-        private PlayerCharacter InstantiateAndConfigureCharacter(ICharacterSlot slot)
-        {
-            //Debug.Log("[PlayerCharacterInitializer] 캐릭터 프리팹 인스턴스 생성 중");
+            // 캐릭터 생성 및 부모 설정
+            var player = Instantiate(playerPrefab);
+            player.name = "PlayerCharacter";
+            player.transform.SetParent(slotTransform, false); // worldPositionStays = false
 
-            var playerGO = Instantiate(playerPrefab, ((MonoBehaviour)slot).transform);
-            playerGO.name = "PlayerCharacter";
-
-            if (playerGO.TryGetComponent(out RectTransform rt))
+            // RectTransform 정렬
+            if (player.TryGetComponent(out RectTransform rt))
             {
+                rt.anchorMin = new Vector2(0.5f, 0.5f);
+                rt.anchorMax = new Vector2(0.5f, 0.5f);
+                rt.pivot = new Vector2(0.5f, 0.5f);
                 rt.anchoredPosition = Vector2.zero;
+                rt.localPosition = Vector3.zero;
                 rt.localRotation = Quaternion.identity;
                 rt.localScale = Vector3.one;
             }
 
-            if (!playerGO.TryGetComponent(out PlayerCharacter player))
+            // PlayerCharacter 컴포넌트 확인
+            if (!player.TryGetComponent(out PlayerCharacter character))
             {
-                //Debug.LogError("[PlayerCharacterInitializer] PlayerCharacter 컴포넌트를 찾을 수 없습니다.");
-                Destroy(playerGO);
+                Debug.LogError("[PlayerCharacterInitializer] PlayerCharacter 컴포넌트를 찾을 수 없습니다.");
+                Destroy(player.gameObject);
+                return;
+            }
+
+            // 데이터 설정
+            var data = ResolvePlayerData();
+            if (data == null)
+            {
+                Debug.LogError("[PlayerCharacterInitializer] 캐릭터 데이터가 없습니다.");
+                return;
+            }
+
+            character.SetCharacterData(data);
+            slot.SetCharacter(character);
+            playerManager?.SetPlayer(character);
+
+            // 카드 정보 출력
+            var cards = data.SkillDeck?.GetCards();
+            Debug.Log($"[PlayerCharacterInitializer] 카드 수: {cards?.Count}");
+
+            if (cards != null)
+            {
+                foreach (var entry in cards)
+                    Debug.Log($" → 카드: {entry.GetCardName()}, 효과 수: {entry.CreateEffects()?.Count ?? 0}");
+            }
+        }
+
+        private bool ValidateData()
+        {
+            return playerPrefab != null && slotRegistry != null;
+        }
+
+        private ICharacterSlot GetPlayerSlot()
+        {
+            var registry = slotRegistry?.GetCharacterSlotRegistry();
+            if (registry == null)
+            {
+                Debug.LogError("[PlayerCharacterInitializer] CharacterSlotRegistry가 null입니다.");
                 return null;
             }
 
-            return player;
+            var slot = registry.GetCharacterSlot(SlotOwner.PLAYER);
+            if (slot == null)
+                Debug.LogError("[PlayerCharacterInitializer] SlotOwner.PLAYER에 해당하는 캐릭터 슬롯이 없습니다.");
+
+            return slot;
         }
 
-        private void ApplyCharacterData(PlayerCharacter player)
+        private PlayerCharacterData ResolvePlayerData()
         {
-            //Debug.Log("[PlayerCharacterInitializer] 캐릭터 데이터 적용 시작");
-            player.SetCharacterData(defaultData);
-        }
+            if (PlayerCharacterSelector.SelectedCharacter != null)
+                return PlayerCharacterSelector.SelectedCharacter;
 
-        private void RegisterToManager(ICharacterSlot slot, PlayerCharacter player)
-        {
-            //Debug.Log("[PlayerCharacterInitializer] 슬롯 및 매니저에 캐릭터 등록");
-            slot.SetCharacter(player);
+            if (playerManager?.GetPlayer()?.Data != null)
+                return playerManager.GetPlayer().Data;
 
-            if (playerManager != null)
-            {
-                playerManager.SetPlayer(player);
-                //Debug.Log("[PlayerCharacterInitializer] PlayerManager에 캐릭터 등록 완료");
-            }
-            else
-            {
-                //Debug.LogWarning("[PlayerCharacterInitializer] PlayerManager가 주입되지 않았습니다.");
-            }
-
-            //Debug.Log("[PlayerCharacterInitializer] 플레이어 캐릭터 초기화 완료");
+            return defaultData;
         }
     }
 }

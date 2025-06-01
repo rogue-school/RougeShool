@@ -1,57 +1,68 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
-using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.UI;
+using Game.CombatSystem.Interface;
+using Game.CombatSystem.Utility;
 
-public class CardDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+namespace Game.CombatSystem.DragDrop
 {
-    public Vector3 OriginalPosition { get; private set; }
-    public Transform OriginalParent { get; private set; }
-    public bool droppedSuccessfully = false;
-
-    private CanvasGroup canvasGroup;
-    private RectTransform rectTransform;
-
-    private void Awake()
+    public class CardDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
-        canvasGroup = GetComponent<CanvasGroup>();
-        rectTransform = GetComponent<RectTransform>();
-    }
+        public Transform OriginalParent { get; set; }
+        public Vector3 OriginalWorldPosition { get; set; }
+        public bool droppedSuccessfully = false;
 
-    public void OnBeginDrag(PointerEventData eventData)
-    {
-        OriginalPosition = transform.localPosition;
-        OriginalParent = transform.parent;
-        droppedSuccessfully = false;
+        private Canvas canvas;
+        private CanvasGroup canvasGroup;
+        private RectTransform rectTransform;
+        private ICombatFlowCoordinator flowCoordinator;
 
-        var canvas = gameObject.AddComponent<Canvas>();
-        canvas.overrideSorting = true;
-        canvas.sortingOrder = 1000;
-    }
-
-    public void OnDrag(PointerEventData eventData)
-    {
-        rectTransform.position = eventData.position;
-    }
-
-    public void OnEndDrag(PointerEventData eventData)
-    {
-        Destroy(GetComponent<Canvas>());
-
-        if (!droppedSuccessfully)
+        public void Inject(ICombatFlowCoordinator coordinator)
         {
-            transform.SetParent(OriginalParent);
-            transform.localPosition = OriginalPosition;
-            transform.localScale = Vector3.one;
+            this.flowCoordinator = coordinator;
+        }
 
-            //  슬롯에서 나 자신을 제거해줘야 겹침 방지됨
-            var slot = GetComponentInParent<ICombatCardSlot>();
-            if (slot != null && slot.GetCardUI() == GetComponent<SkillCardUI>())
+        private void Awake()
+        {
+            rectTransform = GetComponent<RectTransform>();
+            canvasGroup = GetComponent<CanvasGroup>();
+            canvas = GetComponentInParent<Canvas>();
+        }
+
+        public void OnBeginDrag(PointerEventData eventData)
+        {
+            if (!PlayerInputGuard.CanProceed(flowCoordinator)) return;
+
+            OriginalParent ??= transform.parent;
+            OriginalWorldPosition = transform.position;
+
+            canvasGroup.alpha = 0.8f;
+            canvasGroup.blocksRaycasts = false;
+            transform.SetParent(canvas.transform, true);
+        }
+
+        public void OnDrag(PointerEventData eventData)
+        {
+            if (!PlayerInputGuard.CanProceed(flowCoordinator)) return;
+
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                canvas.transform as RectTransform,
+                eventData.position,
+                eventData.pressEventCamera,
+                out Vector2 localPoint))
             {
-                slot.Clear();
+                rectTransform.localPosition = localPoint;
             }
+        }
 
-            Debug.LogWarning("[CardDragHandler] 드롭 실패 - 위치 복귀 및 슬롯 정리 완료");
+        public void OnEndDrag(PointerEventData eventData)
+        {
+            if (!droppedSuccessfully)
+                CardSlotHelper.ResetCardToOriginal(GetComponent<SkillCardUI>());
+
+            canvasGroup.alpha = 1f;
+            canvasGroup.blocksRaycasts = true;
+            droppedSuccessfully = false;
         }
     }
 }

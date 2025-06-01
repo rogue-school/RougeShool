@@ -1,101 +1,60 @@
-using System.Collections.Generic;
 using UnityEngine;
+using Game.SkillCardSystem.Data;
 using Game.SkillCardSystem.Interface;
-using Game.SkillCardSystem.Core;
 using Game.SkillCardSystem.Runtime;
-using Game.CombatSystem.Slot;
+using Game.SkillCardSystem.Effects;
+using System.Collections.Generic;
 
 namespace Game.SkillCardSystem.Factory
 {
     /// <summary>
-    /// 카드 데이터(ScriptableObject)와 외부 수치를 결합하여
-    /// 런타임 카드 인스턴스를 생성하는 팩토리입니다.
+    /// 스킬 카드 런타임 객체를 생성하는 팩토리입니다.
+    /// SRP: 런타임 카드 인스턴스를 생성하는 책임만 가집니다.
+    /// DIP: SkillCardData, Effect 정보를 기반으로 생성합니다.
     /// </summary>
-    public static class SkillCardFactory
+    public class SkillCardFactory : ISkillCardFactory
     {
-        /// <summary>
-        /// 플레이어 카드 생성
-        /// </summary>
-        public static ISkillCard CreatePlayerCard(PlayerSkillCard cardData, int damage, int coolTime)
+        public ISkillCard CreateEnemyCard(SkillCardData data, List<SkillCardEffectSO> effects)
         {
-            if (cardData == null)
+            if (data == null)
             {
-                Debug.LogError("[SkillCardFactory] PlayerSkillCard 데이터가 null입니다.");
+                Debug.LogError("[SkillCardFactory] Enemy SkillCardData가 null입니다.");
                 return null;
             }
 
-            var effects = CloneEffects(cardData.CreateEffects());
+            if (effects == null)
+            {
+                Debug.LogWarning("[SkillCardFactory] EnemyCard 효과 리스트가 null입니다. 빈 리스트로 대체합니다.");
+                effects = new List<SkillCardEffectSO>();
+            }
 
-            var card = CreateRuntimeCard(
-                cardData.GetCardName(),
-                cardData.GetDescription(),
-                cardData.GetArtwork(),
-                effects,
-                damage,
-                coolTime,
-                SlotOwner.PLAYER
-            );
-
-            Debug.Log($"[SkillCardFactory] 플레이어 카드 생성 완료 → {cardData.GetCardName()}");
-            return card;
+            return new EnemySkillCardRuntime(data, CloneEffects(effects));
         }
 
-        /// <summary>
-        /// 적 카드 생성 (쿨타임은 항상 0)
-        /// </summary>
-        public static ISkillCard CreateEnemyCard(EnemySkillCard cardData, int damage)
+        public ISkillCard CreatePlayerCard(SkillCardData data, List<SkillCardEffectSO> effects)
         {
-            if (cardData == null)
+            if (data == null)
             {
-                Debug.LogError("[SkillCardFactory] EnemySkillCard 데이터가 null입니다.");
+                Debug.LogError("[SkillCardFactory] Player SkillCardData가 null입니다.");
                 return null;
             }
 
-            var effects = CloneEffects(cardData.CreateEffects());
+            if (effects == null)
+            {
+                Debug.LogWarning("[SkillCardFactory] PlayerCard 효과 리스트가 null입니다. 빈 리스트로 대체합니다.");
+                effects = new List<SkillCardEffectSO>();
+            }
 
-            var card = CreateRuntimeCard(
-                cardData.GetCardName(),
-                cardData.GetDescription(),
-                cardData.GetArtwork(),
-                effects,
-                damage,
-                0,
-                SlotOwner.ENEMY
-            );
-
-            Debug.Log($"[SkillCardFactory] 적 카드 생성 완료 → {cardData.GetCardName()}");
-            return card;
+            return new PlayerSkillCardRuntime(data, CloneEffects(effects));
         }
 
         /// <summary>
-        /// 런타임 카드 생성 공통 처리
+        /// 효과 리스트를 복제합니다. (현재는 얕은 복사)
+        /// 필요 시 ScriptableObject 복제 또는 DeepCopy 구조로 확장 가능합니다.
         /// </summary>
-        private static ISkillCard CreateRuntimeCard(
-            string name,
-            string description,
-            Sprite artwork,
-            List<ICardEffect> effects,
-            int power,
-            int coolTime,
-            SlotOwner owner
-        )
+        private List<SkillCardEffectSO> CloneEffects(List<SkillCardEffectSO> original)
         {
-            return new RuntimeSkillCard(name, description, artwork, effects, power, coolTime, owner);
-        }
-
-        /// <summary>
-        /// 카드 효과 목록 복제
-        /// </summary>
-        private static List<ICardEffect> CloneEffects(List<ICardEffect> original)
-        {
-            if (original == null)
-                return new List<ICardEffect>();
-
-            var clone = new List<ICardEffect>(original.Count);
-            foreach (var effect in original)
-                clone.Add(effect); // 필요 시 ICardEffect.Clone() 도입 가능
-
-            return clone;
+            return new List<SkillCardEffectSO>(original);
         }
     }
 }

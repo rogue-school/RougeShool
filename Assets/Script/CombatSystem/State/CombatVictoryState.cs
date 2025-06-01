@@ -1,29 +1,57 @@
+ï»¿using Game.CombatSystem.Interface;
+using Game.CombatSystem.Slot;
 using UnityEngine;
-using Game.CombatSystem.Interface;
+using System.Collections;
 using Game.IManager;
 
 namespace Game.CombatSystem.State
 {
     public class CombatVictoryState : ICombatTurnState
     {
-        private readonly IVictoryManager victoryManager;
+        private readonly ICombatTurnManager turnManager;
+        private readonly ICombatFlowCoordinator flowCoordinator;
+        private readonly ICombatStateFactory stateFactory;
+        private readonly ICombatSlotRegistry slotRegistry;
 
-        public CombatVictoryState(IVictoryManager victoryManager)
+        public CombatVictoryState(
+            ICombatTurnManager turnManager,
+            ICombatFlowCoordinator flowCoordinator,
+            ICombatStateFactory stateFactory,
+            ICombatSlotRegistry slotRegistry)
         {
-            this.victoryManager = victoryManager;
+            this.turnManager = turnManager;
+            this.flowCoordinator = flowCoordinator;
+            this.stateFactory = stateFactory;
+            this.slotRegistry = slotRegistry;
         }
 
         public void EnterState()
         {
-            Debug.Log("[CombatVictoryState] ÀüÅõ ½Â¸® »óÅÂ ÁøÀÔ");
-            victoryManager.ShowVictoryUI();
+            Debug.Log("[State] CombatVictoryState: ìŠ¹ë¦¬ ì²˜ë¦¬ ì‹œì‘");
+
+            if (flowCoordinator is MonoBehaviour mono)
+                mono.StartCoroutine(VictoryRoutine());
+            else
+                Debug.LogError("flowCoordinatorê°€ MonoBehaviourê°€ ì•„ë‹˜");
+        }
+
+        private IEnumerator VictoryRoutine()
+        {
+            yield return flowCoordinator.PerformVictoryPhase();
+
+            if (flowCoordinator.CheckHasNextEnemy())
+            {
+                Debug.Log("[State] ë‹¤ìŒ ì ì´ ìˆì–´ PrepareStateë¡œ ì „ì´");
+                turnManager.RequestStateChange(stateFactory.CreatePrepareState());
+            }
+            else
+            {
+                Debug.Log("[State] ì „íˆ¬ ì¢…ë£Œ, Cleanup ì‹¤í–‰");
+                flowCoordinator.CleanupAfterVictory();
+            }
         }
 
         public void ExecuteState() { }
-
-        public void ExitState()
-        {
-            Debug.Log("[CombatVictoryState] ÀüÅõ ½Â¸® »óÅÂ Á¾·á");
-        }
+        public void ExitState() { }
     }
 }

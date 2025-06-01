@@ -12,5 +12,6 @@ namespace Game.IManager
         void ClearEnemy();
 
         IEnemyHandManager GetEnemyHandManager();
+        void Reset();
     }
 }

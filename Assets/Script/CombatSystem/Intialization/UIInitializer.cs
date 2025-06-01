@@ -2,6 +2,7 @@ using UnityEngine;
 using Game.CombatSystem.Slot;
 using Game.IManager;
 using Game.CharacterSystem.Interface;
+using Game.CombatSystem.Interface;
 
 namespace Game.CombatSystem.Intialization
 {
@@ -12,23 +13,18 @@ namespace Game.CombatSystem.Intialization
     {
         private IPlayerManager playerManager;
         private IEnemyManager enemyManager;
-        private ISlotRegistry slotRegistry;
+        private ICharacterSlotRegistry characterSlotRegistry;
 
-        public void Initialize(IPlayerManager playerManager, IEnemyManager enemyManager, ISlotRegistry slotRegistry)
+        public void Initialize(IPlayerManager playerManager, IEnemyManager enemyManager, ICharacterSlotRegistry characterSlotRegistry)
         {
             this.playerManager = playerManager;
             this.enemyManager = enemyManager;
-            this.slotRegistry = slotRegistry;
-        }
-
-        private void Awake()
-        {
-            // 기본 동작은 제거하거나 외부에서 Initialize 호출 보장
+            this.characterSlotRegistry = characterSlotRegistry;
         }
 
         public void SetupCharacterUI()
         {
-            foreach (var slot in slotRegistry.GetCharacterSlots())
+            foreach (var slot in characterSlotRegistry.GetAllCharacterSlots())
             {
                 switch (slot.GetOwner())
                 {

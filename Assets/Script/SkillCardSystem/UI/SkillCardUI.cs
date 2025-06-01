@@ -2,18 +2,19 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Game.SkillCardSystem.Interface;
+using Game.CombatSystem.DragDrop;
 
 namespace Game.SkillCardSystem.UI
 {
     /// <summary>
     /// 카드 UI를 관리하는 컴포넌트입니다.
-    /// 카드 이름, 파워, 아트워크를 표시합니다.
+    /// 카드 이름, 데미지, 아트워크, 쿨타임을 표시합니다.
     /// </summary>
     public class SkillCardUI : MonoBehaviour, ISkillCardUI
     {
         [Header("UI Components")]
         [SerializeField] private TextMeshProUGUI cardNameText;
-        [SerializeField] private TextMeshProUGUI powerText;
+        [SerializeField] private TextMeshProUGUI damageText;
         [SerializeField] private Image cardArtImage;
 
         [Header("쿨타임 표시")]
@@ -27,14 +28,20 @@ namespace Game.SkillCardSystem.UI
         {
             card = newCard;
 
-            if (card == null) return;
+            if (card == null)
+            {
+                Debug.LogWarning("[SkillCardUI] 설정할 카드가 null입니다.");
+                return;
+            }
 
-            cardNameText.text = card.GetCardName();
-            powerText.text = $"Power: {card.GetEffectPower(null)}";
+            if (cardNameText != null)
+                cardNameText.text = card.GetCardName();
 
-            Sprite art = card.GetArtwork();
-            if (cardArtImage != null && art != null)
-                cardArtImage.sprite = art;
+            if (damageText != null)
+                damageText.text = $"Damage: {card.CardData?.Damage ?? 0}";
+
+            if (cardArtImage != null && card.GetArtwork() != null)
+                cardArtImage.sprite = card.GetArtwork();
         }
 
         public ISkillCard GetCard() => card;
@@ -47,8 +54,26 @@ namespace Game.SkillCardSystem.UI
 
         public void ShowCoolTime(int coolTime, bool show)
         {
-            if (coolTimeOverlay != null) coolTimeOverlay.SetActive(show);
-            if (coolTimeText != null) coolTimeText.text = show ? coolTime.ToString() : "";
+            if (coolTimeOverlay != null)
+                coolTimeOverlay.SetActive(show);
+
+            if (coolTimeText != null)
+                coolTimeText.text = show ? coolTime.ToString() : "";
+        }
+
+        /// <summary>
+        /// 드래그 가능 여부 설정
+        /// </summary>
+        public void SetDraggable(bool isEnabled)
+        {
+            if (TryGetComponent(out CardDragHandler dragHandler))
+            {
+                dragHandler.enabled = isEnabled;
+            }
+            else
+            {
+                Debug.LogWarning("[SkillCardUI] CardDragHandler 컴포넌트를 찾을 수 없습니다.");
+            }
         }
     }
 }

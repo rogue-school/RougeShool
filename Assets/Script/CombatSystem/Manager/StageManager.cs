@@ -1,149 +1,93 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using Game.CombatSystem.Stage;
 using Game.IManager;
 using Game.CharacterSystem.Data;
 using Game.CharacterSystem.Interface;
+using Game.CombatSystem.Interface;
+using Game.CharacterSystem.Core;
+using Zenject;
 
 namespace Game.CombatSystem.Manager
 {
     /// <summary>
-    /// ½ºÅ×ÀÌÁö µ¥ÀÌÅÍ¸¦ ±â¹İÀ¸·Î ÀûÀ» ¼øÂ÷ÀûÀ¸·Î ¼ÒÈ¯ÇÏ´Â ¸Å´ÏÀúÀÔ´Ï´Ù.
+    /// í˜„ì¬ ìŠ¤í…Œì´ì§€ë¥¼ ê´€ë¦¬í•˜ê³ , ì  ìºë¦­í„° ë°ì´í„°ë¥¼ ê¸°ë°˜ìœ¼ë¡œ ì ì„ ìƒì„±í•©ë‹ˆë‹¤.
+    /// í•¸ë“œ ìƒì„±ì€ EnemyHandInitializerì—ì„œ ìˆ˜í–‰ë˜ë¯€ë¡œ ì—¬ê¸°ì„œëŠ” ìºë¦­í„°ë§Œ ë“±ë¡í•©ë‹ˆë‹¤.
     /// </summary>
     public class StageManager : MonoBehaviour, IStageManager
     {
-        [Header("½ºÅ×ÀÌÁö µ¥ÀÌÅÍ")]
+        [Header("ìŠ¤í…Œì´ì§€ ë°ì´í„°")]
         [SerializeField] private StageData currentStage;
 
         private int currentEnemyIndex = 0;
+        private bool isSpawning = false;
 
-        private IEnemySpawnerManager spawnerManager;
-        private IEnemyManager enemyManager;
-        private IEnemyHandManager handManager;
-
-        public void Inject(
-            IEnemySpawnerManager spawner,
-            IEnemyManager enemyManager,
-            IEnemyHandManager handManager)
-        {
-            this.spawnerManager = spawner;
-            this.enemyManager = enemyManager;
-            this.handManager = handManager;
-
-            //Debug.Log("[StageManager] ÀÇÁ¸¼º ÁÖÀÔ ¿Ï·á");
-        }
+        [Inject] private IEnemySpawnerManager spawnerManager;
+        [Inject] private IEnemyManager enemyManager;
+        [Inject] private IEnemySpawnValidator spawnValidator;
+        [Inject] private ICharacterDeathListener deathListener;
 
         public void SpawnNextEnemy()
         {
-            Debug.Log($"[StageManager] SpawnNextEnemy È£Ãâ - ÇöÀç ÀÎµ¦½º: {currentEnemyIndex}");
-
-            if (!TryGetNextEnemyData(out var enemyData))
+            if (isSpawning)
             {
-                Debug.LogWarning("[StageManager] ´ÙÀ½ Àû µ¥ÀÌÅÍ¸¦ °¡Á®¿Ã ¼ö ¾ø½À´Ï´Ù. ÀûÀÌ ¾ø°Å³ª ÀÎµ¦½º ÃÊ°ú");
+                Debug.LogWarning("[StageManager] ì¤‘ë³µ ìŠ¤í° ë°©ì§€");
                 return;
             }
 
-            if (!ValidateSpawner())
+            if (!spawnValidator.CanSpawnEnemy())
             {
-                Debug.LogError("[StageManager] SpawnerManager°¡ ÁÖÀÔµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+                Debug.LogWarning("[StageManager] ìŠ¤í° ì¡°ê±´ ë¯¸ì¶©ì¡±");
                 return;
             }
 
-            var enemy = spawnerManager.SpawnEnemy(enemyData);
-            if (enemy == null)
+            if (enemyManager.GetEnemy() != null)
             {
-                Debug.LogError("[StageManager] SpawnEnemy ½ÇÆĞ - null ¹İÈ¯µÊ");
+                Debug.LogWarning("[StageManager] ì´ë¯¸ ì ì´ ì¡´ì¬í•©ë‹ˆë‹¤.");
                 return;
             }
 
-            RegisterEnemy(enemy);
-            SetupEnemyHand(enemy);
+            if (!TryGetNextEnemyData(out var data))
+            {
+                Debug.LogWarning("[StageManager] ë‹¤ìŒ ì  ë°ì´í„°ë¥¼ ê°€ì ¸ì˜¬ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.");
+                return;
+            }
 
-            Debug.Log($"[StageManager] Àû ¼ÒÈ¯ ¿Ï·á: {enemyData.displayName} (Index: {currentEnemyIndex - 1})");
+            isSpawning = true;
+
+            var result = spawnerManager.SpawnEnemy(data);
+            if (result?.Enemy == null)
+            {
+                Debug.LogError("[StageManager] ì  ìƒì„± ì‹¤íŒ¨");
+                isSpawning = false;
+                return;
+            }
+
+            RegisterEnemy(result.Enemy);
+            currentEnemyIndex++;
+
+            isSpawning = false;
+            Debug.Log("[StageManager] ì  ìƒì„± ì™„ë£Œ");
+        }
+
+        private void RegisterEnemy(IEnemyCharacter enemy)
+        {
+            enemyManager.RegisterEnemy(enemy);
+            if (enemy is EnemyCharacter concrete && deathListener != null)
+                concrete.SetDeathListener(deathListener);
         }
 
         private bool TryGetNextEnemyData(out EnemyCharacterData data)
         {
             data = null;
-
-            if (currentStage == null)
-            {
-                Debug.LogError("[StageManager] currentStage°¡ nullÀÔ´Ï´Ù.");
+            if (currentStage == null || currentStage.enemies == null || currentEnemyIndex >= currentStage.enemies.Count)
                 return false;
-            }
 
-            if (currentStage.enemies == null || currentStage.enemies.Count == 0)
-            {
-                Debug.LogError("[StageManager] ½ºÅ×ÀÌÁö Àû ¸®½ºÆ®°¡ ºñ¾î ÀÖ½À´Ï´Ù.");
-                return false;
-            }
-
-            if (currentEnemyIndex >= currentStage.enemies.Count)
-            {
-                Debug.Log("[StageManager] ¸ğµç ÀûÀÌ ¼ÒÈ¯µÇ¾ú½À´Ï´Ù.");
-                return false;
-            }
-
-            data = currentStage.enemies[currentEnemyIndex++];
-            if (data == null)
-            {
-                Debug.LogError($"[StageManager] Enemy µ¥ÀÌÅÍ°¡ nullÀÔ´Ï´Ù. Index: {currentEnemyIndex - 1}");
-                return false;
-            }
-
-            if (data.prefab == null)
-            {
-                Debug.LogError($"[StageManager] Enemy ÇÁ¸®ÆÕÀÌ nullÀÔ´Ï´Ù. Name: {data.displayName}");
-                return false;
-            }
-
-            return true;
-        }
-
-        private bool ValidateSpawner()
-        {
-            if (spawnerManager == null)
-            {
-                Debug.LogError("[StageManager] spawnerManager°¡ ÁÖÀÔµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
-                return false;
-            }
-            return true;
-        }
-
-        private void RegisterEnemy(IEnemyCharacter enemy)
-        {
-            if (enemyManager == null)
-            {
-                Debug.LogWarning("[StageManager] enemyManager°¡ ÁÖÀÔµÇÁö ¾Ê¾Ò½À´Ï´Ù. Register »ı·«");
-                return;
-            }
-
-            enemyManager.RegisterEnemy(enemy);
-            Debug.Log($"[StageManager] Àû µî·Ï ¿Ï·á: {enemy.GetCharacterName()}");
-        }
-
-        private void SetupEnemyHand(IEnemyCharacter enemy)
-        {
-            if (handManager == null)
-            {
-                Debug.LogWarning("[StageManager] handManager°¡ ÁÖÀÔµÇÁö ¾Ê¾Ò½À´Ï´Ù. ÃÊ±âÈ­ »ı·«");
-                return;
-            }
-
-            handManager.Initialize(enemy);
-            handManager.GenerateInitialHand();
-            Debug.Log("[StageManager] EnemyHandManager ÃÊ±âÈ­ ¹× ÃÊ±â ÇÚµå »ı¼º ¿Ï·á");
+            data = currentStage.enemies[currentEnemyIndex];
+            return data != null && data.Prefab != null;
         }
 
         public StageData GetCurrentStage() => currentStage;
-
-        public bool HasNextEnemy()
-        {
-            bool hasNext = currentStage != null &&
-                           currentStage.enemies != null &&
-                           currentEnemyIndex < currentStage.enemies.Count;
-
-            Debug.Log($"[StageManager] HasNextEnemy? ¡æ {hasNext}");
-            return hasNext;
-        }
+        public bool HasNextEnemy() => currentStage != null && currentEnemyIndex < currentStage.enemies.Count;
+        public EnemyCharacterData PeekNextEnemyData() => HasNextEnemy() ? currentStage.enemies[currentEnemyIndex] : null;
     }
 }

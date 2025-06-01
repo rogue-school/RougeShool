@@ -12,13 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 861458062e34fcd4685dff11b945e1b9, type: 3}
   m_Name: ENEMY_003_Wolf
   m_EditorClassIdentifier: 
-  displayName: "\uB291\uB300"
-  maxHP: 3
-  portrait: {fileID: 6692101548216023899, guid: c78109012d379f64e9761e56bc318cee, type: 3}
-  prefab: {fileID: 7769799778275336730, guid: 2c6e844c91775424681f573a6951211e, type: 3}
-  skillDeck:
-  - card: {fileID: 11400000, guid: 860e87b95a59e3644aa46d207d36700e, type: 2}
-    damage: 2
-  - card: {fileID: 11400000, guid: 9451dead8b9e75d47ae4f75adda0f518, type: 2}
-    damage: 1
-  passiveEffects: []
+  <DisplayName>k__BackingField: "\uB291\uB300"
+  <MaxHP>k__BackingField: 5
+  <Portrait>k__BackingField: {fileID: 6692101548216023899, guid: c78109012d379f64e9761e56bc318cee, type: 3}
+  <Prefab>k__BackingField: {fileID: 7769799778275336730, guid: 2c6e844c91775424681f573a6951211e, type: 3}
+  <EnemyDeck>k__BackingField: {fileID: 11400000, guid: 7d7038311455d3c40b73d5817d50b125, type: 2}
+  <PassiveEffects>k__BackingField: []

@@ -1,63 +1,40 @@
-using UnityEngine;
 using Game.CombatSystem.Interface;
-using Game.CombatSystem.Slot;
-using Game.SkillCardSystem.Interface;
-using Game.IManager;
+using System.Collections;
+using UnityEngine;
 
-namespace Game.CombatSystem.State
+public class CombatSecondAttackState : ICombatTurnState
 {
-    public class CombatSecondAttackState : ICombatTurnState
+    private readonly ICombatTurnManager turnManager;
+    private readonly ICombatFlowCoordinator flowCoordinator;
+    private readonly ICombatStateFactory stateFactory;
+    private readonly ICombatSlotRegistry slotRegistry;
+
+    public CombatSecondAttackState(
+        ICombatTurnManager turnManager,
+        ICombatFlowCoordinator flowCoordinator,
+        ICombatStateFactory stateFactory,
+        ICombatSlotRegistry slotRegistry)
     {
-        private readonly ITurnStateController controller;
-        private readonly ICombatSlotManager slotManager;
-        private readonly ICardExecutionContext context;
-        private readonly ICombatStateFactory stateFactory;
-
-        public CombatSecondAttackState(
-            ITurnStateController controller,
-            ICombatSlotManager slotManager,
-            ICardExecutionContext context,
-            ICombatStateFactory stateFactory)
-        {
-            this.controller = controller;
-            this.slotManager = slotManager;
-            this.context = context;
-            this.stateFactory = stateFactory;
-        }
-
-        public void EnterState()
-        {
-            Debug.Log("[CombatSecondAttackState] 후공 턴 시작");
-
-            var secondSlot = slotManager.GetSlot(CombatSlotPosition.SECOND);
-            if (secondSlot == null || !secondSlot.HasCard())
-            {
-                Debug.LogWarning("[CombatSecondAttackState] 후공 슬롯이 비어 있음 → 결과 상태로 전이");
-                controller.RequestStateChange(stateFactory.CreateResultState());
-                return;
-            }
-
-            ISkillCard secondCard = secondSlot.GetCard();
-            var caster = secondCard.GetOwner(context);
-            var target = secondCard.GetTarget(context);
-
-            if (target == null || target.IsDead())
-            {
-                Debug.Log("[CombatSecondAttackState] 타겟이 사망하여 실행 생략");
-            }
-            else
-            {
-                secondSlot.ExecuteCardAutomatically(context);
-            }
-
-            controller.RequestStateChange(stateFactory.CreateResultState());
-        }
-
-        public void ExecuteState() { }
-
-        public void ExitState()
-        {
-            Debug.Log("[CombatSecondAttackState] 후공 턴 종료");
-        }
+        this.turnManager = turnManager;
+        this.flowCoordinator = flowCoordinator;
+        this.stateFactory = stateFactory;
+        this.slotRegistry = slotRegistry;
     }
+
+    public void EnterState()
+    {
+        if (flowCoordinator is MonoBehaviour mono)
+            mono.StartCoroutine(AttackRoutine());
+        else
+            Debug.LogError("flowCoordinator가 MonoBehaviour가 아닙니다. Coroutine 실행 불가.");
+    }
+
+    private IEnumerator AttackRoutine()
+    {
+        yield return flowCoordinator.PerformSecondAttack();
+        turnManager.RequestStateChange(stateFactory.CreateResultState());
+    }
+
+    public void ExecuteState() { }
+    public void ExitState() { }
 }

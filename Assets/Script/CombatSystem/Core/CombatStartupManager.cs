@@ -1,48 +1,67 @@
-using System.Collections;
 using UnityEngine;
-using Game.CombatSystem.Manager;
-using Game.Utility;
-using Game.CombatSystem.Slot;
-using Game.CombatSystem.Core; // ← CombatFlowCoordinator 네임스페이스 추가
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using Game.CombatSystem.Interface;
 
-[DefaultExecutionOrder(-1000)]
-public class CombatStartupManager : MonoBehaviour
+namespace Game.CombatSystem.Core
 {
-    [Header("의존성 매니저")]
-    [SerializeField] private SlotRegistry slotRegistry;
-    [SerializeField] private SceneAutoBinderManager autoBinder;
-    [SerializeField] private CombatStateFactoryInstaller stateFactoryInstaller;
-    [SerializeField] private CombatBootstrapInstaller bootstrapInstaller;
-    [SerializeField] private CombatFlowCoordinator flowCoordinator; // ← 올바른 타입으로 수정
-
-    private void Start()
+    public class CombatStartupManager : MonoBehaviour
     {
-        StartCoroutine(StartupRoutine());
-    }
+        private List<ICombatInitializerStep> steps;
 
-    private IEnumerator StartupRoutine()
-    {
-        slotRegistry.Initialize();
-        autoBinder.Initialize();
-        yield return null;
-        yield return null;
+        private void Awake()
+        {
+            steps = FindInitializerSteps();
+            if (steps.Count == 0)
+            {
+                Debug.LogWarning("[CombatStartupManager] 초기화 스텝이 하나도 존재하지 않습니다.");
+            }
+            else
+            {
+                Debug.Log($"[CombatStartupManager] {steps.Count}개 초기화 스텝 수집 완료 (Order 기준 정렬)");
+            }
+        }
 
-        stateFactoryInstaller.Initialize();
-        yield return null;
+        private void Start()
+        {
+            StartCoroutine(StartupRoutine());
+        }
 
-        bootstrapInstaller.Initialize();
-        yield return null;
+        private List<ICombatInitializerStep> FindInitializerSteps()
+        {
+            return Object.FindObjectsByType<MonoBehaviour>(
+                    FindObjectsInactive.Include,
+                    FindObjectsSortMode.None)
+                .OfType<ICombatInitializerStep>()
+                .OrderBy(step => step.Order)
+                .ToList();
+        }
 
-        flowCoordinator.StartCombatFlow(); // ← 전투 흐름 시작
-        yield return null;
-    }
+        private IEnumerator StartupRoutine()
+        {
+            foreach (var step in steps)
+            {
+                Debug.Log($"[CombatStartupManager] 초기화 시작: {step.GetType().Name} (Order: {step.Order})");
 
-    private bool ValidateAll()
-    {
-        return slotRegistry != null &&
-               autoBinder != null &&
-               stateFactoryInstaller != null &&
-               bootstrapInstaller != null &&
-               flowCoordinator != null; // ← 이름 변경 반영
+                IEnumerator routine = null;
+                try
+                {
+                    routine = step.Initialize();
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogError($"[CombatStartupManager] {step.GetType().Name} 초기화 중 예외 발생: {ex.Message}");
+                    continue;
+                }
+
+                if (routine != null)
+                    yield return routine;
+
+                Debug.Log($"[CombatStartupManager] 초기화 완료: {step.GetType().Name}");
+            }
+
+            Debug.Log("<color=lime>[CombatStartupManager] 모든 초기화 단계 완료</color>");
+        }
     }
 }

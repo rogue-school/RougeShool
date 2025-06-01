@@ -1,91 +1,49 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.EventSystems;
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.UI;
-using Game.CombatSystem.DragDrop;
+using Game.CombatSystem.Utility;
 
 namespace Game.CombatSystem.DragDrop
 {
-    /// <summary>
-    /// ÇÃ·¹ÀÌ¾î Ä«µå°¡ ÀüÅõ ½½·Ô¿¡ µå·ÓµÇ¾úÀ» ¶§ Ã³¸®ÇÏ´Â ÇÚµé·¯ÀÔ´Ï´Ù.
-    /// Àû Ä«µå°¡ Á¸ÀçÇÏ¸é µå·ÓÀ» ¸·°í, ±âÁ¸ ÇÃ·¹ÀÌ¾î Ä«µå°¡ ÀÖ´Ù¸é ±³Ã¼ÇÕ´Ï´Ù.
-    /// </summary>
     public class CardDropToSlotHandler : MonoBehaviour, IDropHandler
     {
-        private ICombatTurnManager turnManager;
+        private CardDropService dropService;
+        private ICombatFlowCoordinator flowCoordinator;
 
-        /// <summary>
-        /// CombatTurnManager¸¦ ¿ÜºÎ¿¡¼­ ÁÖÀÔÇÕ´Ï´Ù.
-        /// </summary>
-        public void Inject(ICombatTurnManager turnManager)
+        public void Inject(CardDropService dropService, ICombatFlowCoordinator coordinator)
         {
-            this.turnManager = turnManager;
+            this.dropService = dropService;
+            this.flowCoordinator = coordinator;
         }
 
         public void OnDrop(PointerEventData eventData)
         {
-            GameObject draggedObject = eventData.pointerDrag;
-            if (draggedObject == null) return;
+            if (!PlayerInputGuard.CanProceed(flowCoordinator)) return;
 
-            SkillCardUI newCardUI = draggedObject.GetComponent<SkillCardUI>();
-            if (newCardUI == null) return;
-
-            ISkillCard newCard = newCardUI.GetCard();
-            if (newCard == null) return;
-
+            var cardUI = eventData.pointerDrag?.GetComponent<SkillCardUI>();
+            var card = cardUI?.GetCard();
+            var dragHandler = eventData.pointerDrag?.GetComponent<CardDragHandler>();
             var slot = GetComponent<ICombatCardSlot>();
-            if (slot == null) return;
 
-            var oldCard = slot.GetCard();
-            var oldCardUI = slot.GetCardUI();
-
-            // Àû Ä«µå°¡ ÀÌ¹Ì ÀÖÀ¸¸é µå·Ó ±İÁö
-            if (oldCard != null && !IsPlayerCard(oldCard))
+            if (cardUI == null || card == null || dragHandler == null || slot == null)
             {
-                Debug.LogWarning("[DropHandler] ÇØ´ç ½½·Ô¿¡ Àû Ä«µå°¡ ÀÖ¾î µå·Ó ºÒ°¡");
+                Debug.LogWarning("[DropHandler] í•„ìˆ˜ ìš”ì†Œê°€ ëˆ„ë½ë¨");
                 return;
             }
 
-            // ±âÁ¸ ÇÃ·¹ÀÌ¾î Ä«µå º¹±Í
-            if (oldCardUI != null)
+            if (dropService.TryDropCard(card, cardUI, slot, out var message))
             {
-                var oldDragHandler = oldCardUI.GetComponent<CardDragHandler>();
-                if (oldDragHandler != null)
-                {
-                    oldCardUI.transform.SetParent(oldDragHandler.OriginalParent);
-                    oldCardUI.transform.localPosition = oldDragHandler.OriginalPosition;
-                    oldCardUI.transform.localScale = Vector3.one;
-                }
-
-                slot.Clear(); // ½½·Ô ÂüÁ¶ ÃÊ±âÈ­
-            }
-
-            // »õ Ä«µå µî·Ï
-            newCard.SetCombatSlot(slot.GetCombatPosition());
-            slot.SetCard(newCard);
-            slot.SetCardUI(newCardUI);
-
-            // UI¸¦ ½½·Ô¿¡ ¹èÄ¡
-            draggedObject.transform.SetParent(((MonoBehaviour)slot).transform);
-            draggedObject.transform.localPosition = Vector3.zero;
-            draggedObject.transform.localScale = Vector3.one;
-
-            // µå·Ó ¼º°ø Ã³¸®
-            var dragHandler = draggedObject.GetComponent<CardDragHandler>();
-            if (dragHandler != null)
                 dragHandler.droppedSuccessfully = true;
-
-            // Ä«µå µî·Ï (DI ¹æ½ÄÀ¸·Î ÁÖÀÔµÈ turnManager »ç¿ë)
-            turnManager?.RegisterPlayerCard(newCard);
-
-            Debug.Log($"[DropHandler] Ä«µå ±³Ã¼ ¿Ï·á: {newCard.GetCardName()} ¡æ {slot.GetCombatPosition()}");
-        }
-
-        private bool IsPlayerCard(ISkillCard card)
-        {
-            var handSlot = card.GetHandSlot();
-            return handSlot.HasValue && handSlot.Value.ToString().Contains("PLAYER");
+                Debug.Log($"[DropHandler] ë“œë¡­ ì„±ê³µ: {card.CardData.Name}");
+            }
+            else
+            {
+                dragHandler.droppedSuccessfully = false;
+                CardSlotHelper.ResetCardToOriginal(cardUI);
+                Debug.LogWarning($"[DropHandler] ë“œë¡­ ì‹¤íŒ¨: {message}");
+            }
         }
     }
 }

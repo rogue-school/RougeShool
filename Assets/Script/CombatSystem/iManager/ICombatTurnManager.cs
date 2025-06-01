@@ -1,17 +1,18 @@
+﻿using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
-using Game.CombatSystem.Slot;
 
 namespace Game.CombatSystem.Interface
 {
-    public interface ICombatTurnManager : ITurnStateController
+    public interface ICombatTurnManager
     {
-        bool IsPlayerGuarded();
-        CombatSlotPosition GetReservedEnemySlot();
-        void ResetGuardAndReservation();
+        void Initialize();
+        ICombatTurnState GetCurrentState();
+        void Reset();
+        void RegisterPlayerCard(CombatSlotPosition position, ISkillCard card);
+        void RequestStateChange(ICombatTurnState nextState);
 
-        void RegisterPlayerCard(ISkillCard card);
-        void RegisterEnemyCard(ISkillCard card);
-        bool AreBothSlotsReady();
-        void ExecuteCombat();
+        // 추가됨
+        CombatSlotPosition? GetReservedEnemySlot();
+        void ChangeState(ICombatTurnState newState); // 누락되었던 정의 추가
     }
 }

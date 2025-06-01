@@ -1,77 +1,58 @@
-using UnityEngine;
 using Game.CombatSystem.Interface;
-using Game.SkillCardSystem.Runtime;
-using Game.IManager;
+using Game.CombatSystem.Slot;
+using UnityEngine;
+using System.Collections;
 
 namespace Game.CombatSystem.State
 {
     public class CombatResultState : ICombatTurnState
     {
-        private readonly ITurnStateController controller;
-        private readonly ICardExecutionContext context;
-        private readonly IEnemyHandManager enemyHandManager;
-        private readonly IStageManager stageManager;
-        private readonly IPlayerHandManager playerHandManager;
+        private readonly ICombatTurnManager turnManager;
+        private readonly ICombatFlowCoordinator flowCoordinator;
         private readonly ICombatStateFactory stateFactory;
+        private readonly ICombatSlotRegistry slotRegistry;
 
         public CombatResultState(
-            ITurnStateController controller,
-            ICardExecutionContext context,
-            IEnemyHandManager enemyHandManager,
-            IStageManager stageManager,
-            IPlayerHandManager playerHandManager,
-            ICombatStateFactory stateFactory)
+            ICombatTurnManager turnManager,
+            ICombatFlowCoordinator flowCoordinator,
+            ICombatStateFactory stateFactory,
+            ICombatSlotRegistry slotRegistry)
         {
-            this.controller = controller;
-            this.context = context;
-            this.enemyHandManager = enemyHandManager;
-            this.stageManager = stageManager;
-            this.playerHandManager = playerHandManager;
+            this.turnManager = turnManager;
+            this.flowCoordinator = flowCoordinator;
             this.stateFactory = stateFactory;
+            this.slotRegistry = slotRegistry;
         }
 
         public void EnterState()
         {
-            Debug.Log("[CombatResultState] 결과 정리 시작");
+            if (flowCoordinator is MonoBehaviour mono)
+                mono.StartCoroutine(ResultRoutine());
+            else
+                Debug.LogError("Coroutine 실행 불가: flowCoordinator가 MonoBehaviour가 아님");
+        }
 
-            // 플레이어, 적 턴 효과 처리
-            context.GetPlayer()?.ProcessTurnEffects();
-            context.GetEnemy()?.ProcessTurnEffects();
+        private IEnumerator ResultRoutine()
+        {
+            yield return flowCoordinator.PerformResultPhase();
 
-            // 플레이어 카드 쿨타임 처리
-            foreach (var slot in playerHandManager.GetAllHandSlots())
+            if (flowCoordinator.IsPlayerDead())
             {
-                var card = slot.GetCard();
-                if (card is PlayerSkillCardRuntime runtime)
-                {
-                    runtime.ActivateCoolTime();
-                    runtime.TickCoolTime();
-                    playerHandManager.RestoreCardToHand(runtime);
-                    slot.Clear();
-                }
+                turnManager.RequestStateChange(stateFactory.CreateGameOverState());
             }
-
-            // 적 핸드 클리어
-            enemyHandManager.ClearAllSlots();
-            enemyHandManager.ClearAllUI();
-
-            // 적 사망 시 다음 적 스폰
-            var enemy = context.GetEnemy();
-            if (enemy == null || enemy.IsDead())
+            else if (flowCoordinator.IsEnemyDead())
             {
-                stageManager.SpawnNextEnemy();
+                turnManager.RequestStateChange(flowCoordinator.CheckHasNextEnemy()
+                    ? stateFactory.CreatePrepareState()
+                    : stateFactory.CreateVictoryState());
             }
-
-            // 다음 상태로 전이
-            var nextState = stateFactory.CreatePrepareState();
-            controller.RequestStateChange(nextState);
+            else
+            {
+                turnManager.RequestStateChange(stateFactory.CreatePrepareState());
+            }
         }
 
         public void ExecuteState() { }
-
-        public void ExitState()
-        {
-            Debug.Log("[CombatResultState] 결과 정리 종료");
-        }
+        public void ExitState() { }
     }
 }

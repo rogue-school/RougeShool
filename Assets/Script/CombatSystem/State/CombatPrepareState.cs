@@ -1,57 +1,64 @@
-using UnityEngine;
 using Game.CombatSystem.Interface;
-using Game.IManager;
-using Game.SkillCardSystem.Slot;
 using Game.CombatSystem.Slot;
+using UnityEngine;
 
 namespace Game.CombatSystem.State
 {
     public class CombatPrepareState : ICombatTurnState
     {
-        private readonly ICombatTurnManager controller;
-        private readonly IEnemySpawnerManager spawnerManager;
-        private readonly IEnemyHandManager enemyHandManager;
+        private readonly ICombatTurnManager turnManager;
+        private readonly ICombatFlowCoordinator flowCoordinator;
         private readonly ICombatStateFactory stateFactory;
+        private readonly ICombatSlotRegistry slotRegistry;
+
+        private bool isStateEntered = false;
 
         public CombatPrepareState(
-            ICombatTurnManager controller,
-            IEnemySpawnerManager spawnerManager,
-            IEnemyHandManager enemyHandManager,
-            ICombatStateFactory stateFactory)
+            ICombatTurnManager turnManager,
+            ICombatFlowCoordinator flowCoordinator,
+            ICombatStateFactory stateFactory,
+            ICombatSlotRegistry slotRegistry)
         {
-            this.controller = controller;
-            this.spawnerManager = spawnerManager;
-            this.enemyHandManager = enemyHandManager;
+            this.turnManager = turnManager;
+            this.flowCoordinator = flowCoordinator;
             this.stateFactory = stateFactory;
+            this.slotRegistry = slotRegistry;
         }
 
         public void EnterState()
         {
-            Debug.Log("[CombatPrepareState] 상태 진입 - 적 스폰 및 카드 배치");
+            if (isStateEntered) return;
 
-            spawnerManager.SpawnInitialEnemy();
-            enemyHandManager.GenerateInitialHand();
+            isStateEntered = true;
+            Debug.Log("[CombatPrepareState] 진입");
 
-            var card = enemyHandManager.GetSlotCard(SkillCardSlotPosition.ENEMY_SLOT_1);
-            if (card != null)
+            flowCoordinator.DisablePlayerInput();
+            flowCoordinator.RequestCombatPreparation(OnPrepareComplete);
+        }
+
+        private void OnPrepareComplete(bool success)
+        {
+            if (!success)
             {
-                var slot = Random.value < 0.5f ? CombatSlotPosition.FIRST : CombatSlotPosition.SECOND;
-                controller.ReserveEnemySlot(slot);
+                Debug.LogError("[CombatPrepareState] 전투 준비 실패 → 게임 오버 상태로 전환");
 
-                var combatSlot = SlotRegistry.Instance?.GetCombatSlot(slot);
-                combatSlot?.SetCard(card);
-                Debug.Log($"[CombatPrepareState] 적 카드 '{card.GetCardName()}' → 전투 슬롯 {slot}에 배치");
+                var failState = stateFactory.CreateGameOverState();
+                turnManager.RequestStateChange(failState);
+                return;
             }
 
-            var nextState = stateFactory.CreatePlayerInputState();
-            controller.RequestStateChange(nextState);
+            Debug.Log("[CombatPrepareState] 전투 준비 완료 → 플레이어 입력 상태로 전환");
+
+            var next = stateFactory.CreatePlayerInputState();
+            turnManager.RequestStateChange(next);
         }
 
         public void ExecuteState() { }
 
         public void ExitState()
         {
-            Debug.Log("[CombatPrepareState] 상태 종료");
+            Debug.Log("[CombatPrepareState] 종료");
+            isStateEntered = false;
         }
     }
 }

@@ -34,4 +34,9 @@ public class EnemyManager : MonoBehaviour, IEnemyManager
     {
         return enemyHandManager;
     }
+    public void Reset()
+    {
+        // 적 상태 초기화 로직 구현
+        Debug.Log("[EnemyManager] Reset");
+    }
 }

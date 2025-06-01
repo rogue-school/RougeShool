@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using System.Collections.Generic;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.UI;
@@ -6,59 +6,64 @@ using Game.SkillCardSystem.Interface;
 
 namespace Game.CharacterSystem.Core
 {
-    /// <summary>
-    /// ÇÃ·¹ÀÌ¾î ¹× Àû Ä³¸¯ÅÍÀÇ °øÅë ±â¹İ Å¬·¡½ºÀÔ´Ï´Ù.
-    /// Ã¼·Â, ÀÌ¸§, »óÅÂÀÌÆåÆ® µîÀÇ °øÅë ¼Ó¼ºÀ» Æ÷ÇÔÇÕ´Ï´Ù.
-    /// </summary>
     public abstract class CharacterBase : MonoBehaviour, ICharacter
     {
         protected int maxHP;
         protected int currentHP;
-
+        protected int currentGuard;
         protected List<IPerTurnEffect> perTurnEffects = new();
-
-        // HP UI¸¦ °»½ÅÇÒ UI ÂüÁ¶ (¿¬°á ÇÊ¼ö)
         protected CharacterUIController characterCardUI;
+        protected bool isGuarded = false;
 
-
-        public virtual string GetName() => gameObject.name;
-
+        public virtual string GetCharacterName() => gameObject.name;
         public virtual int GetHP() => currentHP;
-
         public int GetCurrentHP() => currentHP;
-
         public virtual int GetMaxHP() => maxHP;
-
         public virtual Sprite GetPortrait() => null;
 
-        /// <summary>
-        /// Ã¼·ÂÀ» °¨¼Ò½ÃÅ°°í UI¸¦ °»½ÅÇÕ´Ï´Ù.
-        /// </summary>
+        public virtual void SetGuarded(bool value)
+        {
+            isGuarded = value;
+            Debug.Log($"[{GetCharacterName()}] ê°€ë“œ ìƒíƒœ: {isGuarded}");
+        }
+
+        public virtual bool IsGuarded() => isGuarded;
+
+        public virtual void GainGuard(int amount)
+        {
+            currentGuard += amount;
+            Debug.Log($"[{GetCharacterName()}] ê°€ë“œ +{amount} â†’ í˜„ì¬ ê°€ë“œ: {currentGuard}");
+        }
+
         public virtual void TakeDamage(int amount)
         {
+            if (amount <= 0)
+            {
+                Debug.LogWarning($"[{GetCharacterName()}] ì˜ëª»ëœ í”¼í•´ëŸ‰ ë¬´ì‹œë¨: {amount}");
+                return;
+            }
+
             currentHP = Mathf.Max(currentHP - amount, 0);
             characterCardUI?.SetHP(currentHP, maxHP);
-
-            Debug.Log($"{GetName()} ÇÇÇØ: -{amount}, ³²Àº Ã¼·Â: {currentHP}");
+            Debug.Log($"[{GetCharacterName()}] í”¼í•´: {amount}, ë‚¨ì€ ì²´ë ¥: {currentHP}");
 
             if (IsDead())
                 Die();
         }
 
-        /// <summary>
-        /// Ã¼·ÂÀ» È¸º¹ÇÏ°í UI¸¦ °»½ÅÇÕ´Ï´Ù.
-        /// </summary>
         public virtual void Heal(int amount)
         {
+            if (amount <= 0)
+            {
+                Debug.LogWarning($"[{GetCharacterName()}] ì˜ëª»ëœ íšŒë³µëŸ‰ ë¬´ì‹œë¨: {amount}");
+                return;
+            }
+
             currentHP = Mathf.Min(currentHP + amount, maxHP);
             characterCardUI?.SetHP(currentHP, maxHP);
-
-            Debug.Log($"{GetName()} È¸º¹: +{amount}, ÇöÀç Ã¼·Â: {currentHP}");
+            Debug.Log($"[{GetCharacterName()}] íšŒë³µ: {amount}, í˜„ì¬ ì²´ë ¥: {currentHP}");
         }
 
-        /// <summary>
-        /// ÃÖ´ë Ã¼·Â ¼³Á¤ ¹× UI ÃÊ±âÈ­.
-        /// </summary>
         public virtual void SetMaxHP(int value)
         {
             maxHP = value;
@@ -66,19 +71,15 @@ namespace Game.CharacterSystem.Core
             characterCardUI?.SetHP(currentHP, maxHP);
         }
 
-        /// <summary>
-        /// UI ÂüÁ¶¸¦ ¿¬°áÇÕ´Ï´Ù.
-        /// </summary>
         public virtual void SetCardUI(CharacterUIController ui)
         {
             characterCardUI = ui;
             characterCardUI?.Initialize(this);
         }
 
-
         public virtual void Die()
         {
-            Debug.Log($"{GetName()} »ç¸Á Ã³¸®µÊ.");
+            Debug.Log($"[{GetCharacterName()}] ì‚¬ë§ ì²˜ë¦¬ë¨.");
         }
 
         public virtual void RegisterPerTurnEffect(IPerTurnEffect effect)
@@ -94,20 +95,14 @@ namespace Game.CharacterSystem.Core
             foreach (var effect in perTurnEffects.ToArray())
             {
                 effect.OnTurnStart(this);
-
                 if (effect.IsExpired)
-                {
                     perTurnEffects.Remove(effect);
-                }
             }
         }
 
-        /// <summary>
-        /// Ä³¸¯ÅÍ°¡ »ç¸ÁÇß´ÂÁö ¿©ºÎ¸¦ ÆÇ´ÜÇÕ´Ï´Ù. ÀÌÈÄ ºÎÈ° Ã³¸® µî Ä¿½ºÅÍ¸¶ÀÌÂ¡ ½Ã È°¿ë.
-        /// </summary>
-        public virtual bool IsDead()
-        {
-            return currentHP <= 0;
-        }
+        public virtual bool IsDead() => currentHP <= 0;
+        public virtual bool IsAlive() => currentHP > 0;
+
+        public abstract bool IsPlayerControlled(); // ë°˜ë“œì‹œ ìì‹ í´ë˜ìŠ¤ì—ì„œ êµ¬í˜„
     }
 }

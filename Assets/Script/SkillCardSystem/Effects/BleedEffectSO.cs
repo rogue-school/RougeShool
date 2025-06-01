@@ -1,53 +1,26 @@
-using UnityEngine;
-using Game.CharacterSystem.Core;
-using Game.CharacterSystem.Interface;
+ï»¿using UnityEngine;
 using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.Effects;
+using Game.SkillCardSystem.Effect;
 using Game.CombatSystem.Interface;
 
 namespace Game.SkillCardSystem.Effects
 {
-    [CreateAssetMenu(menuName = "CardEffects/BleedEffect")]
-    public class BleedEffectSO : ScriptableObject, ICardEffect
+    [CreateAssetMenu(fileName = "BleedEffect", menuName = "SkillEffects/BleedEffect")]
+    public class BleedEffectSO : SkillCardEffectSO
     {
-        [SerializeField] private int bleedDamage = 1;
-        [SerializeField] private int duration = 3;
+        [SerializeField] private int bleedAmount;
+        [SerializeField] private int duration;
 
-        public void ExecuteEffect(CharacterBase caster, CharacterBase target, int ignoredPower, ITurnStateController controller = null)
+        public override ICardEffectCommand CreateEffectCommand(int power)
         {
-            target.RegisterPerTurnEffect(new BleedEffect(bleedDamage, duration));
+            return new BleedEffectCommand(bleedAmount + power, duration);
         }
-
-        public string GetEffectName()
+        public override void ApplyEffect(ICardExecutionContext context, int value, ITurnStateController controller = null)
         {
-            return "Bleed";
+            var bleed = new BleedEffect(value, 3); // ì˜ˆ: ì§€ì† í„´ ìˆ˜ 2
+            context.Target?.RegisterPerTurnEffect(bleed);
+            Debug.Log($"[BleedEffectSO] {context.Target?.GetCharacterName()}ì—ê²Œ ì¶œí˜ˆ {value} ì ìš©");
         }
-
-        public string GetDescription()
-        {
-            return $"ÃâÇ÷: ¸ÅÅÏ {bleedDamage} ÇÇÇØ, {duration}ÅÏ Áö¼Ó";
-        }
-    }
-
-    public class BleedEffect : IPerTurnEffect
-    {
-        private readonly int damage;
-        private int remainingTurns;
-
-        public BleedEffect(int damage, int duration)
-        {
-            this.damage = damage;
-            this.remainingTurns = duration;
-        }
-
-        public void OnTurnStart(ICharacter owner)
-        {
-            if (!owner.IsDead())
-            {
-                owner.TakeDamage(damage);
-                remainingTurns--;
-            }
-        }
-
-        public bool IsExpired => remainingTurns <= 0;
     }
 }

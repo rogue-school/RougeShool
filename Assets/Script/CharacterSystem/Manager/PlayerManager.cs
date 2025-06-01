@@ -1,45 +1,91 @@
-using UnityEngine;
+ï»¿using UnityEngine;
+using Zenject;
 using Game.CharacterSystem.Interface;
 using Game.IManager;
+using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.Slot;
+using Game.SkillCardSystem.UI;
+using Game.CombatSystem.Interface;
+using Game.CharacterSystem.Data;
 
 namespace Game.Manager
 {
-    /// <summary>
-    /// ÇÃ·¹ÀÌ¾î Ä³¸¯ÅÍ¿Í ÇÚµå ¸Å´ÏÀú¸¦ °ü¸®ÇÏ´Â Å¬·¡½ºÀÔ´Ï´Ù.
-    /// </summary>
     public class PlayerManager : MonoBehaviour, IPlayerManager
     {
-        private IPlayerCharacter player;
+        [Header("í”„ë¦¬íŒ¹ ë° ìŠ¬ë¡¯")]
+        [SerializeField] private GameObject playerPrefab;
+        [SerializeField] private Transform playerSlot;
+
+        [Header("ê¸°ë³¸ ìºë¦­í„° ë°ì´í„°")]
+        [SerializeField] private PlayerCharacterData defaultCharacterData;
+
+        private IPlayerCharacter playerCharacter;
+
+        private IPlayerCharacterSelector characterSelector;
         private IPlayerHandManager handManager;
+
+        [Inject]
+        public void Construct(
+            IPlayerCharacterSelector characterSelector,
+            IPlayerHandManager handManager)
+        {
+            this.characterSelector = characterSelector;
+            this.handManager = handManager;
+        }
+
+        public void CreateAndRegisterPlayer()
+        {
+            if (playerCharacter != null)
+            {
+                InitializeHandManager();
+                return;
+            }
+
+            var selectedData = characterSelector?.GetSelectedCharacter() ?? defaultCharacterData;
+            if (selectedData == null)
+            {
+                Debug.LogError("[PlayerManager] ì„ íƒëœ ìºë¦­í„° ë°ì´í„°ê°€ ì—†ìŠµë‹ˆë‹¤.");
+                return;
+            }
+
+            var instance = Instantiate(playerPrefab, playerSlot);
+            if (!instance.TryGetComponent(out IPlayerCharacter character))
+            {
+                Debug.LogError("[PlayerManager] IPlayerCharacter ì»´í¬ë„ŒíŠ¸ ëˆ„ë½");
+                Destroy(instance);
+                return;
+            }
+
+            character.SetCharacterData(selectedData);
+            SetPlayer(character);
+            InitializeHandManager();
+        }
+
+        private void InitializeHandManager()
+        {
+            handManager.GenerateInitialHand();
+            handManager.LogPlayerHandSlotStates();
+            playerCharacter.InjectHandManager(handManager);
+        }
 
         public void SetPlayer(IPlayerCharacter player)
         {
-            this.player = player;
-            Debug.Log("[PlayerManager] ÇÃ·¹ÀÌ¾î Ä³¸¯ÅÍ°¡ µî·ÏµÇ¾ú½À´Ï´Ù.");
+            playerCharacter = player;
         }
 
-        public IPlayerCharacter GetPlayer()
-        {
-            if (player == null)
-            {
-                Debug.LogWarning("[PlayerManager] ÇÃ·¹ÀÌ¾î Ä³¸¯ÅÍ°¡ ¾ÆÁ÷ µî·ÏµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
-            }
-            return player;
-        }
+        public IPlayerCharacter GetPlayer() => playerCharacter;
 
-        public void SetPlayerHandManager(IPlayerHandManager manager)
-        {
-            handManager = manager;
-            Debug.Log("[PlayerManager] ÇÚµå ¸Å´ÏÀú°¡ µî·ÏµÇ¾ú½À´Ï´Ù.");
-        }
+        public IPlayerHandManager GetPlayerHandManager() => handManager;
 
-        public IPlayerHandManager GetPlayerHandManager()
+        public ISkillCard GetCardInSlot(SkillCardSlotPosition pos) =>
+            handManager?.GetCardInSlot(pos);
+
+        public ISkillCardUI GetCardUIInSlot(SkillCardSlotPosition pos) =>
+            handManager?.GetCardUIInSlot(pos);
+
+        public void Reset()
         {
-            if (handManager == null)
-            {
-                Debug.LogWarning("[PlayerManager] ÇÚµå ¸Å´ÏÀú°¡ ¾ÆÁ÷ µî·ÏµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
-            }
-            return handManager;
+            Debug.Log("[PlayerManager] Reset í˜¸ì¶œë¨");
         }
     }
 }

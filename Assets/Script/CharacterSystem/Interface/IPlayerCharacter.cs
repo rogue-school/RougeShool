@@ -1,41 +1,20 @@
 using Game.CharacterSystem.Data;
-using Game.SkillCardSystem.Runtime;
+using Game.CharacterSystem.Interface;
+using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.Slot;
 
-namespace Game.CharacterSystem.Interface
+public interface IPlayerCharacter : ICharacter
 {
-    /// <summary>
-    /// 플레이어 캐릭터를 제어하기 위한 인터페이스입니다.
-    /// </summary>
-    public interface IPlayerCharacter : ICharacter
-    {
-        /// <summary>
-        /// 현재 캐릭터의 방어 상태를 설정합니다.
-        /// </summary>
-        void SetGuarded(bool isGuarded);
+    void SetLastUsedCard(ISkillCard card);
+    ISkillCard GetLastUsedCard();
+    void RestoreCardToHand(ISkillCard card);
+    PlayerCharacterData Data { get; }
+    bool IsAlive();
 
-        /// <summary>
-        /// 현재 캐릭터가 방어 중인지 여부를 반환합니다.
-        /// </summary>
-        bool IsGuarded();
+    ISkillCard GetCardInHandSlot(SkillCardSlotPosition pos);
+    ISkillCardUI GetCardUIInHandSlot(SkillCardSlotPosition pos);
+    void InjectHandManager(IPlayerHandManager manager);
 
-        /// <summary>
-        /// 마지막으로 사용한 스킬 카드를 저장합니다.
-        /// </summary>
-        void SetLastUsedCard(PlayerSkillCardRuntime card);
-
-        /// <summary>
-        /// 마지막으로 사용한 스킬 카드를 반환합니다.
-        /// </summary>
-        PlayerSkillCardRuntime GetLastUsedCard();
-
-        /// <summary>
-        /// 특정 스킬 카드를 핸드로 복귀시킵니다.
-        /// </summary>
-        void RestoreCardToHand(PlayerSkillCardRuntime card);
-
-        /// <summary>
-        /// 플레이어의 캐릭터 데이터 (덱 등 포함).
-        /// </summary>
-        PlayerCharacterData Data { get; }
-    }
+    // 누락된 메서드 추가
+    void SetCharacterData(PlayerCharacterData data);
 }

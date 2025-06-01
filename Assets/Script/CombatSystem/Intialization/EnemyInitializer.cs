@@ -4,6 +4,7 @@ using Game.CombatSystem.Slot;
 using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Interface;
 using Game.IManager;
+using Game.CombatSystem.Interface;
 
 namespace Game.CombatSystem.Initialization
 {
@@ -17,6 +18,13 @@ namespace Game.CombatSystem.Initialization
         [SerializeField] private EnemyCharacterData defaultEnemyData;
 
         private IEnemyCharacter spawnedEnemy;
+        private ISlotRegistry slotRegistry;
+
+        public void Inject(ISlotRegistry slotRegistry)
+        {
+            this.slotRegistry = slotRegistry;
+            Debug.Log("[EnemyInitializer] ISlotRegistry 주입 완료");
+        }
 
         public void SetupWithData(EnemyCharacterData data)
         {
@@ -56,9 +64,14 @@ namespace Game.CombatSystem.Initialization
 
         private ICharacterSlot GetEnemySlot()
         {
-            Debug.Log("[EnemyInitializer] 적 슬롯 가져오기 시도");
+            if (slotRegistry == null)
+            {
+                Debug.LogError("[EnemyInitializer] ISlotRegistry가 주입되지 않았습니다.");
+                return null;
+            }
 
-            var slot = SlotRegistry.Instance?.GetCharacterSlot(SlotOwner.ENEMY);
+            var slot = slotRegistry.GetCharacterSlotRegistry().GetCharacterSlot(SlotOwner.ENEMY);
+
             if (slot == null)
             {
                 Debug.LogError("[EnemyInitializer] ENEMY용 캐릭터 슬롯을 찾지 못했습니다.");
@@ -86,7 +99,7 @@ namespace Game.CombatSystem.Initialization
         {
             Debug.Log("[EnemyInitializer] 적 프리팹 인스턴스화 시도");
 
-            var prefab = data.prefab ?? defaultEnemyPrefab;
+            var prefab = data.Prefab ?? defaultEnemyPrefab;
             if (prefab == null)
             {
                 Debug.LogError("[EnemyInitializer] 사용할 적 프리팹이 없습니다.");
@@ -94,7 +107,7 @@ namespace Game.CombatSystem.Initialization
             }
 
             var instance = Instantiate(prefab, ((MonoBehaviour)slot).transform);
-            instance.name = $"Enemy_{data.displayName}";
+            instance.name = $"Enemy_{data.DisplayName}";
 
             if (!instance.TryGetComponent(out EnemyCharacter enemy))
             {
@@ -110,14 +123,13 @@ namespace Game.CombatSystem.Initialization
         private void ApplyCharacterData(EnemyCharacter enemy, EnemyCharacterData data)
         {
             Debug.Log("[EnemyInitializer] 캐릭터 데이터 적용 시작");
-            enemy.SetCharacterData(data);
+            enemy.Initialize(data);
         }
 
         private void RegisterToSlot(ICharacterSlot slot, EnemyCharacter enemy)
         {
             Debug.Log("[EnemyInitializer] 슬롯에 적 캐릭터 등록 시작");
             slot.SetCharacter(enemy);
-
             spawnedEnemy = enemy;
             Debug.Log("[EnemyInitializer] 적 캐릭터 슬롯 등록 및 내부 참조 완료");
         }

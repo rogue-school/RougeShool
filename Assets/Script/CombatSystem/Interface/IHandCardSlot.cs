@@ -1,6 +1,7 @@
-using Game.CombatSystem.Slot;
+ï»¿using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Slot;
+using Game.SkillCardSystem.UI;
 
 namespace Game.CombatSystem.Interface
 {
@@ -13,9 +14,11 @@ namespace Game.CombatSystem.Interface
         SkillCardSlotPosition GetSlotPosition();
         SlotOwner GetOwner();
 
-        /// <summary>
-        /// ÇöÀç ½½·Ô¿¡ Ä«µå°¡ ÀÖ´ÂÁö ¿©ºÎ
-        /// </summary>
         bool HasCard();
+        ISkillCardUI GetCardUI();
+
+        SkillCardUI AttachCard(ISkillCard card);                         // Zenject í”„ë¦¬íŒ¹ ê¸°ë°˜
+        SkillCardUI AttachCard(ISkillCard card, SkillCardUI prefab);    // ëª…ì‹œì  í”„ë¦¬íŒ¹ ì „ë‹¬
+        void DetachCard();                                              // ì¹´ë“œ ë° UI ì œê±°
     }
 }

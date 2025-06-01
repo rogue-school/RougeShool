@@ -2,35 +2,36 @@ using UnityEngine;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
-using Game.SkillCardSystem.UI;
 
 namespace Game.CombatSystem.UI
 {
-    /// <summary>
-    /// 전투 실행 슬롯 UI의 실제 구현입니다.
-    /// 카드와 UI 참조를 저장하고 자동 실행을 지원합니다.
-    /// 실행 로직은 외부 컨텍스트(ICardExecutionContext)를 통해 위임합니다.
-    /// </summary>
     public class CombatExecutionSlotUI : MonoBehaviour, ICombatCardSlot
     {
-        [SerializeField] private CombatSlotPosition position;
+        [SerializeField]
+        private CombatSlotPosition position;
 
         private ISkillCard currentCard;
-        private SkillCardUI currentCardUI;
+        private ISkillCardUI currentCardUI;
         private ICardExecutionContext context;
 
-        /// <summary>
-        /// CombatTurnManager를 의존성 주입으로 설정합니다.
-        /// </summary>
+        public CombatSlotPosition Position => position;
+
         public void Inject(ICardExecutionContext executionContext)
         {
             this.context = executionContext;
         }
 
-        public CombatSlotPosition GetCombatPosition() => position;
+        public CombatFieldSlotPosition GetCombatPosition()
+        {
+            return position switch
+            {
+                CombatSlotPosition.FIRST => CombatFieldSlotPosition.FIELD_LEFT,
+                CombatSlotPosition.SECOND => CombatFieldSlotPosition.FIELD_RIGHT,
+                _ => CombatFieldSlotPosition.NONE
+            };
+        }
 
-        public SlotOwner GetOwner() =>
-            position == CombatSlotPosition.FIRST ? SlotOwner.ENEMY : SlotOwner.PLAYER;
+        public ISkillCard GetCard() => currentCard;
 
         public void SetCard(ISkillCard card)
         {
@@ -38,52 +39,69 @@ namespace Game.CombatSystem.UI
             currentCard?.SetCombatSlot(position);
         }
 
-        public ISkillCard GetCard() => currentCard;
+        public ISkillCardUI GetCardUI() => currentCardUI;
 
-        public void SetCardUI(SkillCardUI cardUI) => currentCardUI = cardUI;
+        public void SetCardUI(ISkillCardUI cardUI)
+        {
+            currentCardUI = cardUI;
 
-        public SkillCardUI GetCardUI() => currentCardUI;
+            if (cardUI is MonoBehaviour uiMb)
+            {
+                uiMb.transform.SetParent(this.transform);
+                uiMb.transform.localPosition = Vector3.zero;
+                uiMb.transform.localScale = Vector3.one;
+            }
+        }
 
         public void Clear()
         {
             currentCard = null;
 
-            if (currentCardUI != null)
+            if (currentCardUI is MonoBehaviour uiMb)
             {
-                Destroy(currentCardUI.gameObject);
-                currentCardUI = null;
+                Destroy(uiMb.gameObject);
             }
+
+            currentCardUI = null;
 
             Debug.Log($"[CombatExecutionSlotUI] 슬롯 클리어 완료: {gameObject.name}");
         }
 
         public bool HasCard() => currentCard != null;
 
+        public bool IsEmpty() => !HasCard();
+
         public void ExecuteCardAutomatically()
         {
             if (currentCard == null)
             {
-                Debug.LogWarning("[CombatExecutionSlotUI] currentCard가 null입니다.");
+                Debug.LogWarning("[CombatExecutionSlotUI] 실행 불가: 카드 없음");
                 return;
             }
 
             if (context == null)
             {
-                Debug.LogError("[CombatExecutionSlotUI] ICardExecutionContext가 주입되지 않았습니다.");
+                Debug.LogError("[CombatExecutionSlotUI] 실행 불가: 컨텍스트 미지정");
                 return;
             }
 
             currentCard.ExecuteCardAutomatically(context);
         }
+
         public void ExecuteCardAutomatically(ICardExecutionContext ctx)
         {
             if (currentCard == null)
             {
-                Debug.LogWarning("[CombatExecutionSlotUI] currentCard가 null입니다.");
+                Debug.LogWarning("[CombatExecutionSlotUI] 실행 불가: 카드 없음");
                 return;
             }
 
             currentCard.ExecuteCardAutomatically(ctx);
         }
+        public Transform GetTransform()
+        {
+            return this.transform;
+        }
+
     }
 }
