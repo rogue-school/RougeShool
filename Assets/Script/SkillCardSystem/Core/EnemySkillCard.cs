@@ -19,7 +19,7 @@ namespace Game.SkillCardSystem.Core
             return effects ?? new List<SkillCardEffectSO>();
         }
 
-        public SkillCardData GetCardData() => CardData; // ✅ 추가
+        public SkillCardData GetCardData() => CardData;
 
         public string GetCardName() => CardData.Name;
         public int GetDamage() => CardData.Damage;

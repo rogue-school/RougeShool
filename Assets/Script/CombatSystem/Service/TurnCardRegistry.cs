@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Slot;
+using Game.SkillCardSystem.UI;
 using UnityEngine;
 
 namespace Game.CombatSystem.Service
@@ -34,6 +35,14 @@ namespace Game.CombatSystem.Service
 
             enemyCard = card;
             Debug.Log($"[TurnCardRegistry] 적 카드 등록됨 - {card.CardData?.Name ?? "Unknown"}");
+        }
+
+        public void RegisterCard(CombatSlotPosition position, ISkillCard card, SkillCardUI ui)
+        {
+            // 현재 구조에서는 플레이어 카드 등록만 처리
+            RegisterPlayerCard(position, card);
+
+            Debug.Log($"[TurnCardRegistry] RegisterCard() 호출됨 - 슬롯: {position}, 카드: {card?.CardData?.Name ?? "null"} (UI 포함)");
         }
 
         public ISkillCard GetPlayerCard(CombatSlotPosition slot) =>

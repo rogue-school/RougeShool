@@ -1,4 +1,5 @@
 using Game.CombatSystem.Interface;
+using Game.SkillCardSystem.Interface;
 using System;
 
 namespace Game.CombatSystem.Service

@@ -17,7 +17,7 @@ namespace Game.CombatSystem.Initialization
         [SerializeField] private PlayerCharacterData defaultData;
 
         [Header("초기화 순서 (낮을수록 먼저 실행됨)")]
-        [SerializeField] private int order = 20;
+        [SerializeField] private int order = 10;
         public int Order => order;
 
         private IPlayerManager playerManager;

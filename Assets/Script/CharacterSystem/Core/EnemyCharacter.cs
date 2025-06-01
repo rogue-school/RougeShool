@@ -22,6 +22,7 @@ namespace Game.CharacterSystem.Core
 
         private EnemySkillDeck skillDeck;
         private ICharacterDeathListener deathListener;
+        public string GetName() => GetCharacterName();
 
         public EnemyCharacterData Data => characterData;
         public override bool IsPlayerControlled() => false;
@@ -62,8 +63,30 @@ namespace Game.CharacterSystem.Core
 
         public EnemySkillDeck.CardEntry GetRandomCardEntry()
         {
-            return skillDeck?.GetRandomEntry();
+            if (skillDeck == null)
+            {
+                Debug.LogError("[EnemyCharacter] 스킬 덱이 null입니다. EnemyDeck이 제대로 연결되지 않았을 수 있습니다.");
+                return null;
+            }
+
+            var entry = skillDeck.GetRandomEntry();
+
+            if (entry == null)
+            {
+                Debug.LogError("[EnemyCharacter] GetRandomEntry()가 null을 반환했습니다. 덱이 비어있거나 확률이 잘못 설정되었을 수 있습니다.");
+            }
+            else if (entry.card == null)
+            {
+                Debug.LogError("[EnemyCharacter] GetRandomEntry()에서 선택된 카드 엔트리에 카드가 없습니다 (entry.card == null)");
+            }
+            else
+            {
+                Debug.Log($"[EnemyCharacter] 카드 선택 완료: {entry.card.name} (확률: {entry.probability})");
+            }
+
+            return entry;
         }
+
 
         public override void TakeDamage(int amount)
         {

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using Game.CombatSystem.Interface;
+using Game.CombatSystem.Slot;
 
 namespace Game.CombatSystem.Slot
 {
@@ -18,6 +19,11 @@ namespace Game.CombatSystem.Slot
         public ICombatCardSlot GetCombatSlot(CombatSlotPosition position)
         {
             return combatSlotRegistry?.GetSlotByPosition(position);
+        }
+
+        public ICombatCardSlot GetCombatSlot(CombatFieldSlotPosition position)
+        {
+            return combatSlotRegistry.GetCombatSlot(position);
         }
 
         public void MarkInitialized() => IsInitialized = true;

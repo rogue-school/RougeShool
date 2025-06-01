@@ -1,7 +1,7 @@
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.State;
 using Game.IManager;
-using Game.CombatSystem.Slot;
+using Game.SkillCardSystem.Interface;
 
 public class CombatStateFactory : ICombatStateFactory
 {

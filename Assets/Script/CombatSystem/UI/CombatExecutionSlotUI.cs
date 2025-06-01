@@ -98,5 +98,10 @@ namespace Game.CombatSystem.UI
 
             currentCard.ExecuteCardAutomatically(ctx);
         }
+        public Transform GetTransform()
+        {
+            return this.transform;
+        }
+
     }
 }

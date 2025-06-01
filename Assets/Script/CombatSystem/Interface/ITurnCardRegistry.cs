@@ -1,16 +1,17 @@
 ﻿using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.UI;
 
 namespace Game.CombatSystem.Interface
 {
-    /// <summary>
-    /// 턴별 카드 등록 및 조회를 위한 카드 레지스트리 인터페이스입니다.
-    /// </summary>
     public interface ITurnCardRegistry
     {
         // 카드 등록
         void RegisterPlayerCard(CombatSlotPosition position, ISkillCard card);
         void RegisterEnemyCard(ISkillCard card);
+
+        // 카드 등록 UI 포함 (CombatFlowCoordinator에서 사용됨)
+        void RegisterCard(CombatSlotPosition position, ISkillCard card, SkillCardUI cardUI); // 새로 추가됨
 
         // 카드 조회
         ISkillCard GetPlayerCard(CombatSlotPosition position);
@@ -19,7 +20,7 @@ namespace Game.CombatSystem.Interface
         // 카드 제거
         void ClearPlayerCard(CombatSlotPosition position);
         void ClearEnemyCard();
-        void ClearSlot(CombatSlotPosition position); // 플레이어 슬롯만 정리 (편의 함수)
+        void ClearSlot(CombatSlotPosition position); // 플레이어 슬롯만 정리
 
         // 턴 제어 상태
         CombatSlotPosition? GetReservedEnemySlot();

@@ -17,7 +17,8 @@ namespace Game.CombatSystem.Interface
         bool HasCard();
         ISkillCardUI GetCardUI();
 
-        SkillCardUI AttachCard(ISkillCard card); // 카드 UI를 연결하고 반환
-        void DetachCard();                       // 카드 UI를 제거
+        SkillCardUI AttachCard(ISkillCard card);                         // Zenject 프리팹 기반
+        SkillCardUI AttachCard(ISkillCard card, SkillCardUI prefab);    // 명시적 프리팹 전달
+        void DetachCard();                                              // 카드 및 UI 제거
     }
 }

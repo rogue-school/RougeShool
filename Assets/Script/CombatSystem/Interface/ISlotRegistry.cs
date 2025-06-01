@@ -1,3 +1,5 @@
+using Game.CombatSystem.Slot;
+
 namespace Game.CombatSystem.Interface
 {
     public interface ISlotRegistry
@@ -5,7 +7,12 @@ namespace Game.CombatSystem.Interface
         IHandSlotRegistry GetHandSlotRegistry();
         ICombatSlotRegistry GetCombatSlotRegistry();
         ICharacterSlotRegistry GetCharacterSlotRegistry();
-        void MarkInitialized(); // 인터페이스에 명시적으로 선언
+
+        // 직접 슬롯 접근 메서드 추가
+        ICombatCardSlot GetCombatSlot(CombatSlotPosition position);
+        ICombatCardSlot GetCombatSlot(CombatFieldSlotPosition fieldPosition);
+
+        void MarkInitialized();
         bool IsInitialized { get; }
     }
 }

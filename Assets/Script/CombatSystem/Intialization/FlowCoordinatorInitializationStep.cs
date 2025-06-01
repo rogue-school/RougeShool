@@ -9,7 +9,7 @@ namespace Game.CombatSystem.Initialization
     {
         [Inject] private ICombatFlowCoordinator flowCoordinator;
 
-        public int Order => 10;
+        public int Order => 50;
 
         public IEnumerator Initialize()
         {

@@ -1,5 +1,6 @@
-using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Slot;
+using Game.SkillCardSystem.Interface;
+using UnityEngine;
 
 namespace Game.CombatSystem.Interface
 {
@@ -11,8 +12,8 @@ namespace Game.CombatSystem.Interface
         ISkillCard GetCard();
         void SetCard(ISkillCard card);
 
-        ISkillCardUI GetCardUI();               
-        void SetCardUI(ISkillCardUI cardUI);     
+        ISkillCardUI GetCardUI();
+        void SetCardUI(ISkillCardUI cardUI);
 
         void Clear();
 
@@ -21,5 +22,7 @@ namespace Game.CombatSystem.Interface
 
         void ExecuteCardAutomatically();
         void ExecuteCardAutomatically(ICardExecutionContext ctx);
+
+        Transform GetTransform();
     }
 }

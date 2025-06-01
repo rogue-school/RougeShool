@@ -27,7 +27,7 @@ namespace Game.CombatSystem.Interface
         void RequestCombatPreparation(Action<bool> onComplete);
         void RequestFirstAttack(Action onComplete = null);
 
-        //  추가
+        // 추가
         void CleanupAfterVictory();
     }
 }

@@ -46,7 +46,7 @@ namespace Game.CombatSystem.Manager
             pendingNextState = null;
         }
 
-        private void ChangeState(ICombatTurnState newState)
+        public void ChangeState(ICombatTurnState newState)
         {
             currentState?.ExitState();
             currentState = newState;

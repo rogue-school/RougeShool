@@ -1,11 +1,12 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Zenject;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Slot;
-using Game.SkillCardSystem.Deck;
 using Game.SkillCardSystem.UI;
 using Game.CharacterSystem.Interface;
 using Game.SkillCardSystem.Factory;
+using Game.CombatSystem.Interface;
 
 namespace Game.SkillCardSystem.Core
 {
@@ -14,76 +15,60 @@ namespace Game.SkillCardSystem.Core
         private IPlayerCharacter owner;
         private IHandSlotRegistry slotRegistry;
         private ISkillCardFactory cardFactory;
+        private SkillCardUI cardUIPrefab;
 
         private readonly Dictionary<SkillCardSlotPosition, ISkillCard> cards = new();
         private readonly Dictionary<SkillCardSlotPosition, SkillCardUI> cardUIs = new();
 
-        public void Inject(
-            IPlayerCharacter owner,
-            IHandSlotRegistry slotRegistry,
-            ISkillCardFactory cardFactory)
+        [Inject]
+        public void Construct(
+            ISlotRegistry slotRegistry,
+            ISkillCardFactory cardFactory,
+            SkillCardUI cardUIPrefab)
         {
-            this.owner = owner;
-            this.slotRegistry = slotRegistry;
+            this.slotRegistry = slotRegistry.GetHandSlotRegistry();
             this.cardFactory = cardFactory;
-        }
+            this.cardUIPrefab = cardUIPrefab;
 
-        public void Initialize()
-        {
             cards.Clear();
             cardUIs.Clear();
         }
 
+        public void SetPlayer(IPlayerCharacter player)
+        {
+            this.owner = player;
+        }
+
         public void GenerateInitialHand()
         {
-            if (owner?.Data?.SkillDeck == null)
+            var deck = owner?.Data?.SkillDeck;
+            if (deck == null)
             {
-                Debug.LogError("[PlayerHandManager] 플레이어 덱이 비어 있습니다.");
+                Debug.LogError("[PlayerHandManager] 플레이어 덱이 비어 있음");
                 return;
             }
 
-            var deck = owner.Data.SkillDeck;
-
-            foreach (var cardEntry in deck.Cards)
+            foreach (var entry in deck.Cards)
             {
-                var pos = cardEntry.Slot;
-                var cardSO = cardEntry.Card;
-
-                if (cardSO == null)
-                {
-                    Debug.LogWarning($"[PlayerHandManager] 카드 데이터가 null입니다. 슬롯: {pos}");
-                    continue;
-                }
-
-                var effects = cardSO.CreateEffects(); // 확실하게 정의되어 있어야 함
-                var card = cardFactory.CreatePlayerCard(cardSO.CardData, cardSO.CreateEffects());
-
+                var pos = entry.Slot;
+                var card = cardFactory.CreatePlayerCard(entry.Card.CardData, entry.Card.CreateEffects());
 
                 cards[pos] = card;
 
-                var ui = slotRegistry.GetPlayerHandSlot(pos)?.AttachCard(card);
-                if (ui != null)
+                var slot = slotRegistry.GetPlayerHandSlot(pos);
+                if (slot != null)
                 {
-                    cardUIs[pos] = ui;
-                }
-                else
-                {
-                    Debug.LogWarning($"[PlayerHandManager] 슬롯 {pos}에 카드 UI를 붙일 수 없습니다.");
+                    var ui = slot.AttachCard(card, cardUIPrefab);
+                    if (ui != null) cardUIs[pos] = ui;
                 }
             }
         }
 
-        public ISkillCard GetCardInSlot(SkillCardSlotPosition pos)
-        {
-            cards.TryGetValue(pos, out var card);
-            return card;
-        }
+        public ISkillCard GetCardInSlot(SkillCardSlotPosition pos) =>
+            cards.TryGetValue(pos, out var c) ? c : null;
 
-        public ISkillCardUI GetCardUIInSlot(SkillCardSlotPosition pos)
-        {
-            cardUIs.TryGetValue(pos, out var ui);
-            return ui;
-        }
+        public ISkillCardUI GetCardUIInSlot(SkillCardSlotPosition pos) =>
+            cardUIs.TryGetValue(pos, out var ui) ? ui : null;
 
         public void RestoreCardToHand(ISkillCard card)
         {
@@ -92,16 +77,15 @@ namespace Game.SkillCardSystem.Core
                 if (kvp.Value == null)
                 {
                     cards[kvp.Key] = card;
-                    var ui = slotRegistry.GetPlayerHandSlot(kvp.Key)?.AttachCard(card);
-                    if (ui != null)
-                        cardUIs[kvp.Key] = ui;
-
-                    Debug.Log($"[PlayerHandManager] 카드가 {kvp.Key} 슬롯에 복귀됨");
+                    var slot = slotRegistry.GetPlayerHandSlot(kvp.Key);
+                    if (slot != null)
+                    {
+                        var ui = slot.AttachCard(card, cardUIPrefab);
+                        if (ui != null) cardUIs[kvp.Key] = ui;
+                    }
                     return;
                 }
             }
-
-            Debug.LogWarning("[PlayerHandManager] 빈 슬롯이 없어 카드를 복귀할 수 없습니다.");
         }
 
         public void LogPlayerHandSlotStates()
@@ -109,34 +93,23 @@ namespace Game.SkillCardSystem.Core
             foreach (SkillCardSlotPosition pos in System.Enum.GetValues(typeof(SkillCardSlotPosition)))
             {
                 var card = GetCardInSlot(pos);
-                var status = card != null ? card.CardData.Name : "(없음)";
-                Debug.Log($"[PlayerHandManager] 슬롯 {pos}: {status}");
+                Debug.Log($"슬롯 {pos}: {(card != null ? card.CardData.Name : "비어 있음")}");
             }
         }
 
         public void EnableInput(bool enable)
         {
             foreach (var ui in cardUIs.Values)
-            {
-                if (ui != null)
-                    ui.SetDraggable(enable);
-            }
-
-            Debug.Log($"[PlayerHandManager] 입력 {(enable ? "활성화" : "비활성화")}");
+                ui?.SetDraggable(enable);
         }
 
         public void ClearAll()
         {
             foreach (var pos in cards.Keys)
-            {
-                var slot = slotRegistry.GetPlayerHandSlot(pos);
-                slot?.DetachCard();
-            }
+                slotRegistry.GetPlayerHandSlot(pos)?.DetachCard();
 
             cards.Clear();
             cardUIs.Clear();
-
-            Debug.Log("[PlayerHandManager] 모든 핸드 슬롯 초기화 완료");
         }
     }
 }

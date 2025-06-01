@@ -11,6 +11,8 @@ namespace Game.CombatSystem.State
         private readonly ICombatStateFactory stateFactory;
         private readonly ICombatSlotRegistry slotRegistry;
 
+        private bool isStateEntered = false;
+
         public CombatPrepareState(
             ICombatTurnManager turnManager,
             ICombatFlowCoordinator flowCoordinator,
@@ -25,6 +27,9 @@ namespace Game.CombatSystem.State
 
         public void EnterState()
         {
+            if (isStateEntered) return;
+
+            isStateEntered = true;
             Debug.Log("[CombatPrepareState] 진입");
 
             flowCoordinator.DisablePlayerInput();
@@ -35,7 +40,10 @@ namespace Game.CombatSystem.State
         {
             if (!success)
             {
-                Debug.LogError("[CombatPrepareState] 전투 준비 실패");
+                Debug.LogError("[CombatPrepareState] 전투 준비 실패 → 게임 오버 상태로 전환");
+
+                var failState = stateFactory.CreateGameOverState();
+                turnManager.RequestStateChange(failState);
                 return;
             }
 
@@ -50,6 +58,7 @@ namespace Game.CombatSystem.State
         public void ExitState()
         {
             Debug.Log("[CombatPrepareState] 종료");
+            isStateEntered = false;
         }
     }
 }

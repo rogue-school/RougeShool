@@ -4,6 +4,7 @@ using Game.CharacterSystem.Data;
 using Game.IManager;
 using Game.Utility.GameFlow;
 using Game.CharacterSystem.Interface;
+using Zenject;
 
 namespace Game.CharacterSystem.Core
 {
@@ -14,12 +15,13 @@ namespace Game.CharacterSystem.Core
 
         private ISceneLoader sceneLoader;
 
-        public static PlayerCharacterData SelectedCharacter { get; private set; }
-
-        public void Inject(ISceneLoader loader)
+        [Inject]
+        public void Construct(ISceneLoader loader)
         {
             sceneLoader = loader;
         }
+
+        public static PlayerCharacterData SelectedCharacter { get; private set; }
 
         public void SelectCharacter(int index)
         {
@@ -39,6 +41,7 @@ namespace Game.CharacterSystem.Core
             SelectedCharacter = data;
             Debug.Log($"[Selector] 강제 캐릭터 설정됨: {data.DisplayName}");
         }
+
         public PlayerCharacterData GetSelectedCharacter()
         {
             return SelectedCharacter;

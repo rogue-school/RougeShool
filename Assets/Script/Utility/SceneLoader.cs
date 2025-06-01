@@ -1,11 +1,12 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI; // Button 사용을 위해 필요
+using UnityEngine.UI;
+using Game.Utility.GameFlow;
 
-public class SceneLoader : MonoBehaviour
+public class SceneLoader : MonoBehaviour, ISceneLoader
 {
-    [SerializeField] private Button targetButton; // 버튼 연결 (Inspector에서 지정)
-    [SerializeField] private string sceneToLoad;  // 이동할 씬 이름
+    [SerializeField] private Button targetButton;
+    [SerializeField] private string sceneToLoad;
 
     private void Start()
     {
@@ -23,12 +24,17 @@ public class SceneLoader : MonoBehaviour
     {
         if (!string.IsNullOrEmpty(sceneToLoad))
         {
-            Debug.Log("버튼을 클릭했습니다. 씬 이동 중: " + sceneToLoad);
-            SceneManager.LoadScene(sceneToLoad);
+            LoadScene(sceneToLoad);
         }
         else
         {
             Debug.LogWarning("이동할 씬 이름이 설정되지 않았습니다.");
         }
+    }
+
+    public void LoadScene(string sceneName)
+    {
+        Debug.Log($"[SceneLoader] 씬 이동 중: {sceneName}");
+        SceneManager.LoadScene(sceneName);
     }
 }

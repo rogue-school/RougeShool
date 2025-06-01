@@ -13,16 +13,15 @@ namespace Game.CombatSystem.UI
     public class EnemyHandCardSlotUI : MonoBehaviour, IHandCardSlot
     {
         [SerializeField] private SkillCardSlotPosition position;
+
         private ISkillCard currentCard;
-        private ISkillCardUI currentCardUI; // 할당 전용 필드
+        private ISkillCardUI currentCardUI;
 
         public SkillCardSlotPosition GetSlotPosition() => position;
-
         public SlotOwner GetOwner() => SlotOwner.ENEMY;
-
         public ISkillCard GetCard() => currentCard;
-
         public ISkillCardUI GetCardUI() => currentCardUI;
+        public bool HasCard() => currentCard != null;
 
         public void SetCard(ISkillCard card)
         {
@@ -30,9 +29,6 @@ namespace Game.CombatSystem.UI
             currentCard?.SetHandSlot(position);
         }
 
-        /// <summary>
-        /// 외부에서 카드 UI를 설정합니다.
-        /// </summary>
         public void SetCardUI(ISkillCardUI ui)
         {
             currentCardUI = ui;
@@ -44,22 +40,22 @@ namespace Game.CombatSystem.UI
             currentCardUI = null;
         }
 
-        /// <summary>
-        /// 현재 슬롯에 카드가 있는지 여부
-        /// </summary>
-        public bool HasCard()
-        {
-            return currentCard != null;
-        }
         public SkillCardUI AttachCard(ISkillCard card)
         {
-            SetCard(card); // 내부적으로 currentCard 할당
-            return null;   // 적 카드의 경우 UI를 따로 생성하지 않는다면 null 반환
+            SetCard(card);
+            return null; // 적은 카드 UI를 생성하지 않음
+        }
+
+        public SkillCardUI AttachCard(ISkillCard card, SkillCardUI prefab)
+        {
+            // IHandCardSlot 인터페이스 충족을 위해 구현 필요
+            SetCard(card);
+            return null; // 적은 카드 UI를 생성하지 않음
         }
 
         public void DetachCard()
         {
-            Clear(); // currentCard, currentCardUI 초기화
+            Clear();
         }
     }
 }
