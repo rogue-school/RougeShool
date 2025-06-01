@@ -11,7 +11,7 @@ public interface IEnemyHandManager
     void FillEmptySlots();
     void AdvanceSlots();
 
-    IEnumerator StepwiseFillSlotsFromBack(float delay = 0.5f); // ← 여기에 추가
+    IEnumerator StepwiseFillSlotsFromBack(float delay = 0.5f);
 
     ISkillCard GetCardForCombat();
     ISkillCard GetSlotCard(SkillCardSlotPosition pos);
@@ -25,4 +25,7 @@ public interface IEnemyHandManager
 
     ISkillCard PickCardForSlot(SkillCardSlotPosition pos);
     void RegisterCardToSlot(SkillCardSlotPosition pos, ISkillCard card, SkillCardUI ui);
+
+    // 누락된 메서드 추가
+    (ISkillCard card, SkillCardUI ui) PopFirstAvailableCard();
 }

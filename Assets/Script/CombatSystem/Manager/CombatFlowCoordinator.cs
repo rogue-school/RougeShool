@@ -61,8 +61,8 @@ namespace Game.CombatSystem.Core
             bool enemyFirst = UnityEngine.Random.value < 0.5f;
             var slotToRegister = enemyFirst ? CombatSlotPosition.FIRST : CombatSlotPosition.SECOND;
 
-            var result = enemyHandManager.PopFirstAvailableCard();
-            if (result is (ISkillCard card, SkillCardUI cardUI))
+            var (card, cardUI) = enemyHandManager.PopFirstAvailableCard();
+            if (card != null)
             {
                 Debug.Log($"[CombatFlowCoordinator] 적 카드 등록: {card.GetCardName()} → 슬롯: {slotToRegister}");
                 turnCardRegistry.RegisterCard(slotToRegister, card, cardUI, SlotOwner.ENEMY);
@@ -81,6 +81,8 @@ namespace Game.CombatSystem.Core
             Debug.Log("[CombatFlowCoordinator] 전투 준비 완료");
             onComplete?.Invoke(true);
         }
+
+        public IEnumerator RegisterEnemyCard() => PerformCombatPreparation();
 
         private void RegisterCardToCombatSlotUI(CombatSlotPosition pos, ISkillCard card, SkillCardUI ui)
         {
@@ -198,5 +200,10 @@ namespace Game.CombatSystem.Core
         {
             onStartButtonPressed?.Invoke();
         }
+        public IEnumerator PerformFirstAttack()
+        {
+            return PerformFirstAttack(null); // 매개변수 있는 메서드 호출
+        }
+
     }
 }

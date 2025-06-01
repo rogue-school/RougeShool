@@ -15,11 +15,13 @@ namespace Game.CombatSystem.UI
         private ISkillCard currentCard;
         private SkillCardUI currentCardUI;
         private SkillCardUI cardUIPrefab;
+        private ICombatFlowCoordinator flowCoordinator;
 
         [Inject]
-        public void Construct(SkillCardUI cardUIPrefab)
+        public void Construct(SkillCardUI cardUIPrefab, ICombatFlowCoordinator flowCoordinator)
         {
             this.cardUIPrefab = cardUIPrefab;
+            this.flowCoordinator = flowCoordinator;
         }
 
         public SkillCardSlotPosition GetSlotPosition() => position;
@@ -53,7 +55,7 @@ namespace Game.CombatSystem.UI
             if (currentCardUI != null)
                 Destroy(currentCardUI.gameObject);
 
-            currentCardUI = SkillCardUIFactory.CreateUI(prefab, transform, card);
+            currentCardUI = SkillCardUIFactory.CreateUI(prefab, transform, card, flowCoordinator);
 
             if (currentCardUI != null)
                 Debug.Log($"[PlayerHandCardSlotUI] 카드 UI 생성 완료: {currentCardUI.name}");

@@ -1,5 +1,7 @@
 using UnityEngine;
 using Game.SkillCardSystem.Interface;
+using Game.CombatSystem.DragDrop;
+using Game.CombatSystem.Interface;
 
 namespace Game.SkillCardSystem.UI
 {
@@ -15,15 +17,13 @@ namespace Game.SkillCardSystem.UI
         /// <param name="parent">부모 트랜스폼</param>
         /// <param name="card">카드 데이터</param>
         /// <returns>생성된 SkillCardUI 인스턴스</returns>
-        public static SkillCardUI CreateUI(SkillCardUI prefab, Transform parent, ISkillCard card)
+        public static SkillCardUI CreateUI(SkillCardUI prefab,Transform parent,ISkillCard card,ICombatFlowCoordinator flowCoordinator)
         {
             if (prefab == null || parent == null || card == null)
             {
                 Debug.LogError("[SkillCardUIFactory] 카드 UI 생성 실패 - null 인자 존재");
                 return null;
             }
-
-            //Debug.Log($"[SkillCardUIFactory] 카드 UI 생성 시작 - 카드: {card.GetCardName()}");
 
             var instance = Object.Instantiate(prefab, parent, false);
             if (instance == null)
@@ -41,8 +41,16 @@ namespace Game.SkillCardSystem.UI
                 rect.localScale = Vector3.one;
             }
 
-            //Debug.Log($"[SkillCardUIFactory] 카드 UI 생성 완료 - {card.GetCardName()}");
+            if (instance.TryGetComponent(out CardDragHandler dragHandler))
+            {
+                if (flowCoordinator != null)
+                    dragHandler.Inject(flowCoordinator);
+                else
+                    Debug.LogWarning("[SkillCardUIFactory] flowCoordinator가 null입니다.");
+            }
+
             return instance;
         }
+
     }
 }
