@@ -5,29 +5,21 @@ namespace Game.CombatSystem.Slot
 {
     public class SlotRegistry : MonoBehaviour, ISlotRegistry
     {
-        [SerializeField] private Transform handSlotRoot;
-        [SerializeField] private Transform combatSlotRoot;
-        [SerializeField] private Transform characterSlotRoot;
+        [SerializeField] private HandSlotRegistry handSlotRegistry;
+        [SerializeField] private CombatSlotRegistry combatSlotRegistry;
+        [SerializeField] private CharacterSlotRegistry characterSlotRegistry;
 
-        private IHandSlotRegistry handSlots;
-        private ICombatSlotRegistry combatSlots;
-        private ICharacterSlotRegistry characterSlots;
+        public bool IsInitialized { get; private set; }
 
-        public void Initialize()
-        {
-            handSlots = new HandSlotRegistry(handSlotRoot);
-            combatSlots = new CombatSlotRegistry(combatSlotRoot);
-            characterSlots = new CharacterSlotRegistry(characterSlotRoot);
-        }
+        public IHandSlotRegistry GetHandSlotRegistry() => handSlotRegistry;
+        public ICombatSlotRegistry GetCombatSlotRegistry() => combatSlotRegistry;
+        public ICharacterSlotRegistry GetCharacterSlotRegistry() => characterSlotRegistry;
 
-        public IHandSlotRegistry GetHandSlotRegistry() => handSlots;
-        public ICombatSlotRegistry GetCombatSlotRegistry() => combatSlots;
-        public ICharacterSlotRegistry GetCharacterSlotRegistry() => characterSlots;
-
-        // ✅ ISlotRegistry 인터페이스 구현
         public ICombatCardSlot GetCombatSlot(CombatSlotPosition position)
         {
-            return combatSlots.GetCombatSlot(position);
+            return combatSlotRegistry?.GetSlotByPosition(position);
         }
+
+        public void MarkInitialized() => IsInitialized = true;
     }
 }

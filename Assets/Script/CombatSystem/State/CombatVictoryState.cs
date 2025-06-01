@@ -11,15 +11,18 @@ namespace Game.CombatSystem.State
         private readonly ICombatTurnManager turnManager;
         private readonly ICombatFlowCoordinator flowCoordinator;
         private readonly ICombatStateFactory stateFactory;
+        private readonly ICombatSlotRegistry slotRegistry;
 
         public CombatVictoryState(
             ICombatTurnManager turnManager,
             ICombatFlowCoordinator flowCoordinator,
-            ICombatStateFactory stateFactory)
+            ICombatStateFactory stateFactory,
+            ICombatSlotRegistry slotRegistry)
         {
             this.turnManager = turnManager;
             this.flowCoordinator = flowCoordinator;
             this.stateFactory = stateFactory;
+            this.slotRegistry = slotRegistry;
         }
 
         public void EnterState()
@@ -43,8 +46,8 @@ namespace Game.CombatSystem.State
             }
             else
             {
-                Debug.Log("[State] 전투 종료, Victory 상태 종료");
-                flowCoordinator.CleanupAfterVictory(); // 🎯 새 메서드 위임 추천
+                Debug.Log("[State] 전투 종료, Cleanup 실행");
+                flowCoordinator.CleanupAfterVictory();
             }
         }
 

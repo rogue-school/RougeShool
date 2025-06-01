@@ -1,102 +1,98 @@
 ﻿using System;
 using System.Collections;
-using UnityEngine;
+using System.Linq;
 using Game.CombatSystem.Interface;
-using Game.SkillCardSystem.Interface;
-using Game.SkillCardSystem.UI;
-using Game.IManager;
-using Game.SkillCardSystem.Slot;
 using Game.CombatSystem.Slot;
+using Game.CombatSystem.Utility;
+using Game.IManager;
+using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.Runtime;
 
 namespace Game.CombatSystem.Service
 {
+    /// <summary>
+    /// 전투 준비를 담당하는 서비스.
+    /// 적 소환, 카드 배치, 턴 시스템 초기화를 수행한다.
+    /// </summary>
     public class CombatPreparationService : ICombatPreparationService
     {
         private readonly IPlayerManager playerManager;
-        private readonly IEnemySpawnerManager spawnerManager;
+        private readonly IEnemySpawnerManager enemySpawnerManager;
         private readonly IEnemyManager enemyManager;
         private readonly IEnemyHandManager enemyHandManager;
         private readonly ITurnCardRegistry turnCardRegistry;
-        private readonly ICardPlacementService cardPlacementService;
-        private readonly ICombatTurnManager combatTurnManager;
+        private readonly ICardPlacementService placementService;
+        private readonly ICombatTurnManager turnManager;
         private readonly ISlotSelector slotSelector;
         private readonly ISlotRegistry slotRegistry;
 
         public CombatPreparationService(
             IPlayerManager playerManager,
-            IEnemySpawnerManager spawnerManager,
+            IEnemySpawnerManager enemySpawnerManager,
             IEnemyManager enemyManager,
             IEnemyHandManager enemyHandManager,
             ITurnCardRegistry turnCardRegistry,
-            ICardPlacementService cardPlacementService,
-            ICombatTurnManager combatTurnManager,
+            ICardPlacementService placementService,
+            ICombatTurnManager turnManager,
             ISlotSelector slotSelector,
             ISlotRegistry slotRegistry)
         {
             this.playerManager = playerManager;
-            this.spawnerManager = spawnerManager;
+            this.enemySpawnerManager = enemySpawnerManager;
             this.enemyManager = enemyManager;
             this.enemyHandManager = enemyHandManager;
             this.turnCardRegistry = turnCardRegistry;
-            this.cardPlacementService = cardPlacementService;
-            this.combatTurnManager = combatTurnManager;
+            this.placementService = placementService;
+            this.turnManager = turnManager;
             this.slotSelector = slotSelector;
             this.slotRegistry = slotRegistry;
         }
 
         public IEnumerator PrepareCombat(Action<bool> onComplete)
         {
-            Debug.Log("[CombatPreparationService] 전투 준비 시작");
-
-            yield return EnsurePlayerExists();
-            yield return EnsureEnemyExists();
-
-            var enemyCard = enemyHandManager.GetSlotCard(SkillCardSlotPosition.ENEMY_SLOT_1);
-            var cardUI = enemyHandManager.GetCardUI((int)SkillCardSlotPosition.ENEMY_SLOT_1);
-
-            if (enemyCard == null || cardUI == null)
-            {
-                Debug.LogError("[CombatPreparationService] 핸드 슬롯 1번에 카드 또는 UI가 없습니다.");
-                onComplete?.Invoke(false);
-                yield break;
-            }
-
-            // CombatSlotPosition 반환
-            (CombatSlotPosition playerPos, CombatSlotPosition enemyPos) = slotSelector.SelectSlots();
-
-            ICombatCardSlot enemySlot = slotRegistry.GetCombatSlot(enemyPos);
-            if (enemySlot == null)
-            {
-                Debug.LogError("[CombatPreparationService] 적 전투 슬롯을 찾을 수 없습니다.");
-                onComplete?.Invoke(false);
-                yield break;
-            }
-
-            // SkillCardUI로 캐스팅
-            cardPlacementService.PlaceCardInSlot(enemyCard, (SkillCardUI)cardUI, enemySlot);
-            turnCardRegistry.RegisterEnemyCard(enemyCard);
-            turnCardRegistry.ReserveNextEnemySlot(enemySlot.Position);
-
-            enemyHandManager.FillEmptySlots();
-
-            Debug.Log($"[CombatPreparationService] 전투 준비 완료 - EnemyCard: {enemyCard.CardData?.Name ?? "Unknown"}");
-            onComplete?.Invoke(true);
-        }
-
-        private IEnumerator EnsurePlayerExists()
-        {
-            playerManager.CreateAndRegisterPlayer();
+            // 1. 적 소환
+            enemySpawnerManager.SpawnInitialEnemy();
             yield return null;
-        }
 
-        private IEnumerator EnsureEnemyExists()
-        {
-            var enemy = enemyManager.GetEnemy();
-            if (enemy == null || enemy.IsDead())
+            // 2. 플레이어 카드 등록
+            var player = playerManager.GetPlayer();
+            var deck = player?.Data?.SkillDeck;
+
+            if (deck != null)
             {
-                spawnerManager.SpawnInitialEnemy();
-                yield return null;
+                var cards = deck.GetCards();
+                var handSlots = slotRegistry.GetHandSlotRegistry().GetPlayerHandSlots().ToList();
+
+                int cardCount = cards.Count;
+                int slotCount = handSlots.Count;
+
+                for (int i = 0; i < cardCount && i < slotCount; i++)
+                {
+                    var cardEntry = cards[i];
+                    var slot = handSlots[i];
+
+                    // 카드 인스턴스 생성 (필수 인자 owner 추가)
+                    var skillCard = new PlayerSkillCardInstance(
+                        cardEntry.Card.CardData,
+                        cardEntry.CreateEffects(),
+                        SlotOwner.PLAYER
+                    );
+
+                    var combatSlotPosition = SlotPositionUtil.ToCombatSlot(cardEntry.Slot);
+
+                    if (slot is ICombatCardSlot combatSlot)
+                    {
+                        placementService.PlaceCardInSlot(skillCard, slot.GetCardUI(), combatSlot);
+                        turnCardRegistry.RegisterPlayerCard(combatSlotPosition, skillCard);
+                    }
+                }
             }
+
+            // 3. 턴 시스템 초기화
+            turnManager.Initialize();
+
+            // 4. 완료 콜백
+            onComplete?.Invoke(true);
         }
     }
 }

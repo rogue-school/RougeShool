@@ -37,5 +37,15 @@ namespace Game.CombatSystem.Utility
                 return SkillCardSlotPosition.ENEMY_SLOT_1;
             }
         }
+        public static CombatSlotPosition ToCombatSlot(SkillCardSlotPosition slot)
+        {
+            return slot switch
+            {
+                SkillCardSlotPosition.PLAYER_SLOT_1 => CombatSlotPosition.FIRST,
+                SkillCardSlotPosition.PLAYER_SLOT_2 => CombatSlotPosition.SECOND,
+                SkillCardSlotPosition.PLAYER_SLOT_3 => CombatSlotPosition.NONE, // 혹은 THIRD 추가 가능
+                _ => CombatSlotPosition.NONE
+            };
+        }
     }
 }

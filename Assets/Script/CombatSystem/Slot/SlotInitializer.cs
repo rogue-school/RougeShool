@@ -1,19 +1,15 @@
 using System.Linq;
 using UnityEngine;
-using Game.CharacterSystem.Interface;
 using Game.CombatSystem.Interface;
+using Zenject;
+using Game.CharacterSystem.Interface;
 using Game.IManager;
 
 namespace Game.CombatSystem.Slot
 {
     public class SlotInitializer : MonoBehaviour, ISlotInitializer
     {
-        private SlotRegistry _slotRegistry;
-
-        public void Inject(SlotRegistry slotRegistry)
-        {
-            _slotRegistry = slotRegistry;
-        }
+        [Inject] private ISlotRegistry _slotRegistry;
 
         public void AutoBindAllSlots()
         {
@@ -25,22 +21,32 @@ namespace Game.CombatSystem.Slot
 
             Debug.Log("[SlotInitializer] === 슬롯 자동 바인딩 시작 ===");
 
-            var monoBehaviours = Object.FindObjectsByType<MonoBehaviour>(
-                FindObjectsInactive.Include,
-                FindObjectsSortMode.None
-            );
-
-            var handSlots = monoBehaviours.OfType<IHandCardSlot>().ToArray();
-            var combatSlots = monoBehaviours.OfType<ICombatCardSlot>().ToArray();
-            var characterSlots = monoBehaviours.OfType<ICharacterSlot>().ToArray();
+            var handSlots = FindAll<IHandCardSlot>();
+            var combatSlots = FindAll<ICombatCardSlot>();
+            var characterSlots = FindAll<ICharacterSlot>();
 
             Debug.Log($"[SlotInitializer] 탐색된 슬롯 수 - 핸드: {handSlots.Length}, 전투: {combatSlots.Length}, 캐릭터: {characterSlots.Length}");
 
-            _slotRegistry.GetHandSlotRegistry().RegisterHandSlots(handSlots);
-            _slotRegistry.GetCombatSlotRegistry().RegisterCombatSlots(combatSlots);
-            _slotRegistry.GetCharacterSlotRegistry().RegisterCharacterSlots(characterSlots);
+            _slotRegistry.GetHandSlotRegistry()?.RegisterHandSlots(handSlots);
+            _slotRegistry.GetCombatSlotRegistry()?.RegisterCombatSlots(combatSlots);
+            _slotRegistry.GetCharacterSlotRegistry()?.RegisterCharacterSlots(characterSlots);
 
-            Debug.Log("[SlotInitializer] === 슬롯 자동 바인딩 완료 ===");
+            if (handSlots.Length > 0 || combatSlots.Length > 0 || characterSlots.Length > 0)
+            {
+                _slotRegistry.MarkInitialized();
+                Debug.Log("[SlotInitializer] === 슬롯 자동 바인딩 완료 ===");
+            }
+            else
+            {
+                Debug.LogWarning("[SlotInitializer] 슬롯이 하나도 탐색되지 않았습니다. 초기화를 완료하지 않습니다.");
+            }
+        }
+
+        private T[] FindAll<T>() where T : class
+        {
+            return Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+                .OfType<T>()
+                .ToArray();
         }
     }
 }

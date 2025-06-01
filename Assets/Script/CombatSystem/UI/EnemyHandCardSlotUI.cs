@@ -3,6 +3,7 @@ using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Slot;
+using Game.SkillCardSystem.UI;
 
 namespace Game.CombatSystem.UI
 {
@@ -49,6 +50,16 @@ namespace Game.CombatSystem.UI
         public bool HasCard()
         {
             return currentCard != null;
+        }
+        public SkillCardUI AttachCard(ISkillCard card)
+        {
+            SetCard(card); // 내부적으로 currentCard 할당
+            return null;   // 적 카드의 경우 UI를 따로 생성하지 않는다면 null 반환
+        }
+
+        public void DetachCard()
+        {
+            Clear(); // currentCard, currentCardUI 초기화
         }
     }
 }

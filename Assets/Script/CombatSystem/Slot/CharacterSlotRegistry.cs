@@ -1,36 +1,33 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Game.CombatSystem.Interface;
-using Game.CombatSystem.Utility;
 using Game.CharacterSystem.Interface;
+using System.Linq;
 
 namespace Game.CombatSystem.Slot
 {
-    public class CharacterSlotRegistry : ICharacterSlotRegistry
+    public class CharacterSlotRegistry : MonoBehaviour, ICharacterSlotRegistry
     {
-        private readonly Dictionary<SlotOwner, ICharacterSlot> characterSlots = new();
-
-        public CharacterSlotRegistry(Transform root)
-        {
-            var slots = root.GetComponentsInChildren<ICharacterSlot>(includeInactive: true);
-            RegisterCharacterSlots(slots);
-        }
+        private List<ICharacterSlot> characterSlots = new();
 
         public void RegisterCharacterSlots(IEnumerable<ICharacterSlot> slots)
         {
-            characterSlots.Clear();
-            foreach (var slot in slots)
-            {
-                characterSlots[slot.GetOwner()] = slot;
-            }
+            characterSlots = slots.ToList();
+        }
+
+        public IEnumerable<ICharacterSlot> GetAllCharacterSlots()
+        {
+            return characterSlots;
         }
 
         public ICharacterSlot GetCharacterSlot(SlotOwner owner)
         {
-            characterSlots.TryGetValue(owner, out var slot);
-            return slot;
+            return characterSlots.FirstOrDefault(slot => slot.GetOwner() == owner);
         }
 
-        public IEnumerable<ICharacterSlot> GetAllCharacterSlots() => characterSlots.Values;
+        public void Clear()
+        {
+            characterSlots.Clear();
+        }
     }
 }

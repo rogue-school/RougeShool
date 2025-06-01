@@ -1,63 +1,45 @@
-using System.Collections;
 using UnityEngine;
-using Game.CombatSystem.Manager;
-using Game.Utility;
-using Game.CombatSystem.Slot;
-using Game.CombatSystem.Core;
-using Game.CombatSystem.Utility;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using Game.CombatSystem.Interface;
 
-[DefaultExecutionOrder(-1000)]
-public class CombatStartupManager : MonoBehaviour
+namespace Game.CombatSystem.Core
 {
-    [Header("의존성 매니저")]
-    [SerializeField] private SlotRegistry slotRegistry;
-    [SerializeField] private SlotInitializer slotInitializer;
-    [SerializeField] private SceneAutoBinderManager autoBinder;
-    [SerializeField] private CombatStateFactoryInstaller stateFactoryInstaller;
-    [SerializeField] private CombatBootstrapInstaller bootstrapInstaller;
-    [SerializeField] private CombatFlowCoordinator flowCoordinator;
-    [SerializeField] private CombatTurnManager turnManager;
-
-    private void Start()
+    public class CombatStartupManager : MonoBehaviour
     {
-        StartCoroutine(StartupRoutine());
-    }
+        private List<ICombatInitializerStep> steps;
 
-    private IEnumerator StartupRoutine()
-    {
-        Debug.Log("[CombatStartupManager] 슬롯 레지스트리 초기화 시작");
-        slotRegistry.Initialize();
-
-        if (slotInitializer != null)
+        private void Awake()
         {
-            slotInitializer.AutoBindAllSlots();
-            Debug.Log("[CombatStartupManager] 슬롯 자동 바인딩 완료");
-        }
-        else
-        {
-            Debug.LogError("[CombatStartupManager] SlotInitializer가 연결되지 않았습니다.");
-        }
+            steps = Object.FindObjectsByType<MonoBehaviour>(
+                    FindObjectsInactive.Include,
+                    FindObjectsSortMode.None
+                )
+                .OfType<ICombatInitializerStep>()
+                .OrderBy(step => step.Order)
+                .ToList();
 
-        autoBinder.Initialize();
-        yield return null;
-
-        stateFactoryInstaller.Initialize();
-        yield return null;
-
-        bootstrapInstaller.Initialize();
-        yield return null;
-
-        if (turnManager != null)
-        {
-            turnManager.Initialize();
-            Debug.Log("[CombatStartupManager] CombatTurnManager 초기화 완료");
-        }
-        else
-        {
-            Debug.LogError("[CombatStartupManager] CombatTurnManager가 연결되지 않았습니다.");
+            if (steps.Count == 0)
+                Debug.LogWarning("[CombatStartupManager] 초기화 스텝이 없습니다.");
+            else
+                Debug.Log($"[CombatStartupManager] {steps.Count}개 초기화 스텝 수집 (Order 기준 정렬)");
         }
 
-        flowCoordinator.StartCombatFlow();
-        yield return null;
+        private void Start()
+        {
+            StartCoroutine(StartupRoutine());
+        }
+
+        private IEnumerator StartupRoutine()
+        {
+            foreach (var step in steps)
+            {
+                Debug.Log($"[CombatStartupManager] 초기화: {step.GetType().Name} (Order: {step.Order})");
+                yield return step.Initialize();
+            }
+
+            Debug.Log("[CombatStartupManager] 모든 초기화 단계 완료");
+        }
     }
 }

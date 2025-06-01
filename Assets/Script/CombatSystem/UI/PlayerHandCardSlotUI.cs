@@ -83,5 +83,15 @@ namespace Game.CombatSystem.UI
         {
             return currentCard != null;
         }
+        public SkillCardUI AttachCard(ISkillCard card)
+        {
+            SetCard(card);          // currentCard + UI 생성까지 포함
+            return currentCardUI;   // 생성된 UI 반환
+        }
+
+        public void DetachCard()
+        {
+            Clear(); // 카드 및 UI 파괴
+        }
     }
 }

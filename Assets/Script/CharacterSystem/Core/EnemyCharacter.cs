@@ -7,6 +7,7 @@ using Game.SkillCardSystem.Interface;
 using Game.CharacterSystem.Interface;
 using Game.CombatSystem.Context;
 using Game.CombatSystem.Interface;
+using Game.SkillCardSystem.Deck;
 
 namespace Game.CharacterSystem.Core
 {
@@ -19,10 +20,11 @@ namespace Game.CharacterSystem.Core
         [SerializeField] private TextMeshProUGUI hpText;
         [SerializeField] private Image portraitImage;
 
-        private List<EnemyCharacterData.SkillCardEntry> skillCardEntries = new();
+        private EnemySkillDeck skillDeck;
+        private ICharacterDeathListener deathListener;
 
         public EnemyCharacterData Data => characterData;
-        private ICharacterDeathListener deathListener;
+        public override bool IsPlayerControlled() => false;
 
         public void Initialize(EnemyCharacterData data)
         {
@@ -33,9 +35,9 @@ namespace Game.CharacterSystem.Core
             }
 
             characterData = data;
-            SetMaxHP(data.MaxHP);
-            skillCardEntries = new List<EnemyCharacterData.SkillCardEntry>(data.GetAllCards());
+            skillDeck = data.EnemyDeck;
 
+            SetMaxHP(data.MaxHP);
             RefreshUI();
             ApplyPassiveEffects();
 
@@ -51,17 +53,16 @@ namespace Game.CharacterSystem.Core
 
         private void ApplyPassiveEffects()
         {
-            foreach (var effect in characterData?.GetPassiveEffects())
+            foreach (var effect in characterData?.PassiveEffects)
             {
                 if (effect is ICardEffect cardEffect)
                     cardEffect.ApplyEffect(new DefaultCardExecutionContext(null, this, this), 0);
             }
         }
 
-        public EnemyCharacterData.SkillCardEntry GetRandomCardEntry()
+        public EnemySkillDeck.CardEntry GetRandomCardEntry()
         {
-            if (skillCardEntries.Count == 0) return null;
-            return skillCardEntries[Random.Range(0, skillCardEntries.Count)];
+            return skillDeck?.GetRandomEntry();
         }
 
         public override void TakeDamage(int amount)
@@ -75,6 +76,7 @@ namespace Game.CharacterSystem.Core
             base.Heal(amount);
             RefreshUI();
         }
+
         public void SetDeathListener(ICharacterDeathListener listener)
         {
             deathListener = listener;
@@ -85,7 +87,6 @@ namespace Game.CharacterSystem.Core
             base.Die();
             RefreshUI();
             Debug.Log($"[EnemyCharacter] '{GetCharacterName()}' »ç¸Á Ã³¸®");
-
             deathListener?.OnCharacterDied(this);
         }
 

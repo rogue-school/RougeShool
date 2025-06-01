@@ -4,11 +4,9 @@ using Game.CombatSystem.Interface;
 
 namespace Game.CombatSystem.Interface
 {
-    /// <summary>
-    /// 카드와 UI를 전투 슬롯에 배치하는 책임을 담당합니다.
-    /// </summary>
     public interface ICardPlacementService
     {
-        void PlaceCardInSlot(ISkillCard card, SkillCardUI ui, ICombatCardSlot slot);
+        // 기존에는 SkillCardUI였음 → 인터페이스 사용
+        void PlaceCardInSlot(ISkillCard card, ISkillCardUI ui, ICombatCardSlot slot);
     }
 }

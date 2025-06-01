@@ -102,5 +102,7 @@ namespace Game.CharacterSystem.Core
 
         public virtual bool IsDead() => currentHP <= 0;
         public virtual bool IsAlive() => currentHP > 0;
+
+        public abstract bool IsPlayerControlled(); // 반드시 자식 클래스에서 구현
     }
 }

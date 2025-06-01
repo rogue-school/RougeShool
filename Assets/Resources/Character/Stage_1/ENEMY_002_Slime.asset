@@ -16,7 +16,5 @@ MonoBehaviour:
   <MaxHP>k__BackingField: 3
   <Portrait>k__BackingField: {fileID: -7282886668606283007, guid: 05ccc850e175244408c6f1dded4a67a0, type: 3}
   <Prefab>k__BackingField: {fileID: 7769799778275336730, guid: 2c6e844c91775424681f573a6951211e, type: 3}
-  <SkillDeck>k__BackingField:
-  - Card: {fileID: 11400000, guid: e0a26135de8a5cc4fb8584333a13f940, type: 2}
-  - Card: {fileID: 11400000, guid: dadf093733361954cb83506b04576d43, type: 2}
+  <EnemyDeck>k__BackingField: {fileID: 11400000, guid: 5ae3f55aa1bd8fe47bd08c32133073da, type: 2}
   <PassiveEffects>k__BackingField: []

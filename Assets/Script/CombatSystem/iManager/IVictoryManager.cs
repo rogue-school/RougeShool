@@ -5,9 +5,11 @@ namespace Game.IManager
     /// </summary>
     public interface IVictoryManager
     {
-        /// <summary>
-        /// 승리 화면 또는 후속 처리 흐름을 시작합니다.
-        /// </summary>
         void ShowVictoryUI();
+
+        /// <summary>
+        /// 전투 승리 처리를 수행합니다. (캐릭터 처치 후 호출됨)
+        /// </summary>
+        void ProcessVictory(); // 추가됨
     }
 }

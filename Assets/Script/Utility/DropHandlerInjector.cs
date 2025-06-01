@@ -13,11 +13,14 @@ namespace Game.Utility
     /// </summary>
     public static class DropHandlerInjector
     {
-        public static void InjectToAllCombatSlots(ICombatSlotRegistry slotRegistry, ITurnCardRegistry cardRegistry)
+        public static void InjectToAllCombatSlots(
+            ICombatSlotRegistry slotRegistry,
+            CardDropService dropService,
+            ICombatFlowCoordinator flowCoordinator)
         {
-            if (slotRegistry == null || cardRegistry == null)
+            if (slotRegistry == null || dropService == null || flowCoordinator == null)
             {
-                Debug.LogError("[DropHandlerInjector] 슬롯 레지스트리 또는 카드 레지스트리가 null입니다.");
+                Debug.LogError("[DropHandlerInjector] 필수 인수 중 하나 이상이 null입니다.");
                 return;
             }
 
@@ -28,7 +31,7 @@ namespace Game.Utility
                     var dropHandler = slotComponent.GetComponent<CardDropToSlotHandler>();
                     if (dropHandler != null)
                     {
-                        dropHandler.Inject(cardRegistry);
+                        dropHandler.Inject(dropService, flowCoordinator);
                         Debug.Log($"[DropHandlerInjector] 드롭 핸들러 주입 완료: {slot.GetCombatPosition()}");
                     }
                     else

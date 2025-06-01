@@ -9,11 +9,6 @@ using Game.CharacterSystem.Data;
 
 namespace Game.Manager
 {
-    /// <summary>
-    /// 플레이어 캐릭터 및 핸드 관리 책임을 가지는 매니저.
-    /// SRP: 캐릭터 생성/등록 및 핸드 초기화만 책임.
-    /// DIP/ISP: 인터페이스 분리 및 의존 역전 적용.
-    /// </summary>
     public class PlayerManager : MonoBehaviour, IPlayerManager
     {
         [Header("프리팹 및 슬롯")]
@@ -26,7 +21,7 @@ namespace Game.Manager
         private IPlayerCharacter playerCharacter;
         private IPlayerCharacterSelector selector;
         private IPlayerHandManager handManager;
-        private IHandSlotRegistry slotRegistry; // ✅ ISlotRegistry → IHandSlotRegistry
+        private IHandSlotRegistry slotRegistry;
 
         public void SetPlayerCharacterSelector(IPlayerCharacterSelector selector) => this.selector = selector;
 
@@ -63,15 +58,32 @@ namespace Game.Manager
                 return;
             }
 
-            var instance = Instantiate(playerPrefab, playerSlot.position, Quaternion.identity);
-            instance.transform.SetParent(playerSlot, false);
-            instance.transform.localPosition = Vector3.zero;
-            instance.transform.localRotation = Quaternion.identity;
-            instance.transform.localScale = Vector3.one;
+            var instance = Instantiate(playerPrefab);
+            instance.name = "PlayerCharacter";
+            instance.transform.SetParent(playerSlot, false); // UI 기준 부모 설정
+
+            // UI 정렬
+            if (instance.TryGetComponent(out RectTransform rt))
+            {
+                rt.anchorMin = new Vector2(0.5f, 0.5f);
+                rt.anchorMax = new Vector2(0.5f, 0.5f);
+                rt.pivot = new Vector2(0.5f, 0.5f);
+                rt.anchoredPosition = Vector2.zero;
+                rt.localRotation = Quaternion.identity;
+                rt.localScale = Vector3.one;
+            }
+            else
+            {
+                // 일반 Transform 처리 (비 UI 상황)
+                instance.transform.localPosition = Vector3.zero;
+                instance.transform.localRotation = Quaternion.identity;
+                instance.transform.localScale = Vector3.one;
+            }
 
             if (!instance.TryGetComponent(out IPlayerCharacter character))
             {
                 Debug.LogError("[PlayerManager] IPlayerCharacter 컴포넌트 누락됨");
+                Destroy(instance);
                 return;
             }
 
@@ -111,7 +123,6 @@ namespace Game.Manager
         public void Reset()
         {
             Debug.Log("[PlayerManager] Reset 호출");
-            // 필요한 경우 상태 초기화 가능
         }
     }
 }

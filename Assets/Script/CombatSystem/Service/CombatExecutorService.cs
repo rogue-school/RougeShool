@@ -8,17 +8,14 @@ using Game.CombatSystem.Utility;
 namespace Game.CombatSystem.Executor
 {
     /// <summary>
-    /// 전투 슬롯에 등록된 스킬 카드를 실행하는 서비스입니다.
-    /// SRP: 카드 실행만 책임집니다.
-    /// DIP: ICombatSlotRegistry, ICardExecutor, ICardExecutionContextProvider 인터페이스에 의존합니다.
+    /// 전투 실행 서비스. 슬롯에 배치된 카드를 실행하고 결과를 처리함.
     /// </summary>
-    public class CombatExecutorService : ICombatExecutor
+    public class CombatExecutorService : ICombatExecutorService, ICombatExecutor
     {
         private readonly ICombatSlotRegistry combatSlotRegistry;
-        private readonly IEnemyHandManager enemyHandManager;
-
         private ICardExecutionContextProvider contextProvider;
         private ICardExecutor cardExecutor;
+        private readonly IEnemyHandManager enemyHandManager;
         private ITurnStateController turnController;
 
         public CombatExecutorService(
@@ -33,17 +30,18 @@ namespace Game.CombatSystem.Executor
             this.enemyHandManager = enemyHandManager;
         }
 
-        public void InjectExecutionDependencies(ICardExecutionContextProvider provider, ICardExecutor executor)
+        /// <summary>
+        /// CombatFlowCoordinator 또는 GameManager에서 호출하여 실행
+        /// </summary>
+        public IEnumerator ExecuteCombatPhase()
         {
-            contextProvider = provider;
-            cardExecutor = executor;
+            yield return PerformAttack(CombatSlotPosition.FIRST);
+            yield return PerformAttack(CombatSlotPosition.SECOND);
         }
 
-        public void SetTurnController(ITurnStateController controller)
-        {
-            turnController = controller;
-        }
-
+        /// <summary>
+        /// 단일 슬롯 위치에 대해 카드 실행을 수행
+        /// </summary>
         public IEnumerator PerformAttack(CombatSlotPosition slotPosition)
         {
             var fieldSlot = SlotPositionUtil.ToFieldSlot(slotPosition);
@@ -67,10 +65,27 @@ namespace Game.CombatSystem.Executor
             var context = contextProvider.CreateContext(card);
             cardExecutor.Execute(card, context, turnController);
 
-            yield return new WaitForSeconds(0.5f); // 추후 IWaitService 등으로 분리 가능
+            yield return new WaitForSeconds(0.5f);
 
-            slot.Clear(); // 필요 시 ICombatSlotClearService로 추출 가능
+            slot.Clear();
             Debug.Log($"[Executor] 슬롯 {slotPosition} 클리어 완료");
+        }
+
+        /// <summary>
+        /// 동적으로 Execution 관련 종속 객체를 변경할 수 있음
+        /// </summary>
+        public void InjectExecutionDependencies(ICardExecutionContextProvider provider, ICardExecutor executor)
+        {
+            contextProvider = provider;
+            cardExecutor = executor;
+        }
+
+        /// <summary>
+        /// 턴 상태 제어기 주입
+        /// </summary>
+        public void SetTurnController(ITurnStateController controller)
+        {
+            turnController = controller;
         }
     }
 }

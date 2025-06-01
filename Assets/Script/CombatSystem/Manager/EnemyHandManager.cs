@@ -10,6 +10,7 @@ using Game.CombatSystem.Slot;
 using Game.Utility;
 using Game.SkillCardSystem.Factory;
 using Game.SkillCardSystem.Data;
+using Game.CharacterSystem.Core;
 
 namespace Game.CombatSystem.Manager
 {
@@ -35,7 +36,7 @@ namespace Game.CombatSystem.Manager
             handSlots.Clear();
             cardUIs.Clear();
 
-            // ✅ 수정: GetSlots → GetHandSlots
+            // 수정: GetSlots → GetHandSlots
             foreach (var slot in slotRegistry.GetHandSlotRegistry().GetHandSlots(SlotOwner.ENEMY))
             {
                 handSlots[slot.GetSlotPosition()] = slot;
@@ -106,21 +107,29 @@ namespace Game.CombatSystem.Manager
         {
             if (!handSlots.TryGetValue(pos, out var slot)) return;
 
-            var entry = currentEnemy?.Data?.GetRandomEntry();
-            if (entry?.Card == null) return;
+            // 변경된 부분: 확률 기반 덱에서 카드 추출
+            var entry = (currentEnemy as EnemyCharacter)?.GetRandomCardEntry();
+            if (entry?.card == null)
+            {
+                Debug.LogWarning("[EnemyHandManager] 적 카드 생성 실패: 덱에서 추출된 카드가 null");
+                return;
+            }
 
-            var cardData = entry.Card.GetCardData(); // SkillCardData
-            var effects = entry.Card.CreateEffects();
+            var cardData = entry.card.GetCardData();
+            var effects = entry.card.CreateEffects();
 
             var runtimeCard = cardFactory.CreateEnemyCard(cardData, effects);
             runtimeCard.SetHandSlot(pos);
 
             var cardUI = Instantiate(cardUIPrefab, ((MonoBehaviour)slot).transform);
             cardUI.SetCard(runtimeCard);
+            cardUI.transform.localPosition = Vector3.zero;
+            cardUI.transform.localScale = Vector3.one;
+            cardUI.gameObject.SetActive(true);
 
             slot.SetCard(runtimeCard);
 
-            if (slot is IHandCardSlot handSlotWithUI && handSlotWithUI is Game.CombatSystem.UI.EnemyHandCardSlotUI uiSlot)
+            if (slot is Game.CombatSystem.UI.EnemyHandCardSlotUI uiSlot)
             {
                 uiSlot.SetCardUI(cardUI);
             }

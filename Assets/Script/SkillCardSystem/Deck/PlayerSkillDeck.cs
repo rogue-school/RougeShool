@@ -19,5 +19,11 @@ namespace Game.SkillCardSystem.Deck
 
             return cards[index];
         }
+
+        //  이 메서드를 추가하세요
+        public List<PlayerSkillCardEntry> GetCards()
+        {
+            return Cards;
+        }
     }
 }

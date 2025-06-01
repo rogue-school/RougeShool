@@ -1,9 +1,8 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
-using Game.CombatSystem.Utility;
-using Game.CombatSystem.Interface;
-using Game.CombatSystem.Core;
 using Game.SkillCardSystem.UI;
+using Game.CombatSystem.Interface;
+using Game.CombatSystem.Utility;
 
 namespace Game.CombatSystem.DragDrop
 {
@@ -18,38 +17,33 @@ namespace Game.CombatSystem.DragDrop
         private RectTransform rectTransform;
         private ICombatFlowCoordinator flowCoordinator;
 
+        public void Inject(ICombatFlowCoordinator coordinator)
+        {
+            this.flowCoordinator = coordinator;
+        }
+
         private void Awake()
         {
             rectTransform = GetComponent<RectTransform>();
             canvasGroup = GetComponent<CanvasGroup>();
             canvas = GetComponentInParent<Canvas>();
-            flowCoordinator = Object.FindFirstObjectByType<CombatFlowCoordinator>();
         }
 
         public void OnBeginDrag(PointerEventData eventData)
         {
-            if (flowCoordinator == null || !flowCoordinator.IsPlayerInputEnabled())
-            {
-                //Debug.LogWarning("[DragHandler] 현재 상태에서 드래그 불가");
-                return;
-            }
+            if (!PlayerInputGuard.CanProceed(flowCoordinator)) return;
 
-            if (OriginalParent == null)
-            {
-                OriginalParent = transform.parent;
-                OriginalWorldPosition = transform.position;
-                //Debug.Log($"[DragHandler] 최초 저장: 위치={OriginalWorldPosition}, 부모={OriginalParent?.name}");
-            }
+            OriginalParent ??= transform.parent;
+            OriginalWorldPosition = transform.position;
 
             canvasGroup.alpha = 0.8f;
             canvasGroup.blocksRaycasts = false;
             transform.SetParent(canvas.transform, true);
-            //Debug.Log($"[DragHandler] 드래그 시작: {gameObject.name}, 현재 위치: {transform.position}");
         }
 
         public void OnDrag(PointerEventData eventData)
         {
-            if (canvas == null || flowCoordinator == null || !flowCoordinator.IsPlayerInputEnabled()) return;
+            if (!PlayerInputGuard.CanProceed(flowCoordinator)) return;
 
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 canvas.transform as RectTransform,
@@ -64,19 +58,11 @@ namespace Game.CombatSystem.DragDrop
         public void OnEndDrag(PointerEventData eventData)
         {
             if (!droppedSuccessfully)
-            {
                 CardSlotHelper.ResetCardToOriginal(GetComponent<SkillCardUI>());
-                Debug.Log("[DragHandler] 유효 슬롯 위에 드롭되지 않음. 복귀 처리됨");
-            }
-            else
-            {
-                Debug.Log("[DragHandler] 드롭 성공");
-            }
 
             canvasGroup.alpha = 1f;
             canvasGroup.blocksRaycasts = true;
             droppedSuccessfully = false;
-            Debug.Log("[DragHandler] 드래그 종료");
         }
     }
 }

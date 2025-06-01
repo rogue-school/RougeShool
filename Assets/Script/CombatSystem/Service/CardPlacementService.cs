@@ -10,7 +10,7 @@ namespace Game.CombatSystem.Service
     /// </summary>
     public class CardPlacementService : ICardPlacementService
     {
-        public void PlaceCardInSlot(ISkillCard card, SkillCardUI ui, ICombatCardSlot slot)
+        public void PlaceCardInSlot(ISkillCard card, ISkillCardUI ui, ICombatCardSlot slot)
         {
             if (card == null || ui == null || slot == null)
             {
@@ -18,16 +18,23 @@ namespace Game.CombatSystem.Service
                 return;
             }
 
+            // 카드 설정
             slot.SetCard(card);
             slot.SetCardUI(ui);
 
-            var t = ((MonoBehaviour)slot).transform;
-            ui.transform.SetParent(t);
-            ui.transform.localPosition = Vector3.zero;
-            ui.transform.localScale = Vector3.one;
+            // UI 오브젝트 위치 정렬
+            if (ui is MonoBehaviour uiMb)
+            {
+                uiMb.transform.SetParent(((MonoBehaviour)slot).transform);
+                uiMb.transform.localPosition = Vector3.zero;
+                uiMb.transform.localScale = Vector3.one;
+            }
+            else
+            {
+                Debug.LogWarning("[CardPlacementService] 카드 UI가 MonoBehaviour가 아닙니다. Transform 설정을 건너뜁니다.");
+            }
 
             Debug.Log($"[CardPlacementService] 카드 '{card.GetCardName()}' 슬롯 {slot.GetCombatPosition()}에 배치 완료");
-            Debug.Log($"[CardPlacementService] UI 위치: {ui.transform.position}, 부모: {ui.transform.parent?.name}");
         }
     }
 }

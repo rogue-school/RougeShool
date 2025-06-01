@@ -4,6 +4,7 @@ using Game.CombatSystem.Slot;
 using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Interface;
 using Game.IManager;
+using Game.CombatSystem.Interface;
 
 namespace Game.CombatSystem.Initialization
 {
@@ -17,6 +18,13 @@ namespace Game.CombatSystem.Initialization
         [SerializeField] private EnemyCharacterData defaultEnemyData;
 
         private IEnemyCharacter spawnedEnemy;
+        private ISlotRegistry slotRegistry;
+
+        public void Inject(ISlotRegistry slotRegistry)
+        {
+            this.slotRegistry = slotRegistry;
+            Debug.Log("[EnemyInitializer] ISlotRegistry 주입 완료");
+        }
 
         public void SetupWithData(EnemyCharacterData data)
         {
@@ -56,9 +64,14 @@ namespace Game.CombatSystem.Initialization
 
         private ICharacterSlot GetEnemySlot()
         {
-            Debug.Log("[EnemyInitializer] 적 슬롯 가져오기 시도");
+            if (slotRegistry == null)
+            {
+                Debug.LogError("[EnemyInitializer] ISlotRegistry가 주입되지 않았습니다.");
+                return null;
+            }
 
-            var slot = SlotRegistry.Instance?.GetCharacterSlot(SlotOwner.ENEMY);
+            var slot = slotRegistry.GetCharacterSlotRegistry().GetCharacterSlot(SlotOwner.ENEMY);
+
             if (slot == null)
             {
                 Debug.LogError("[EnemyInitializer] ENEMY용 캐릭터 슬롯을 찾지 못했습니다.");
@@ -117,7 +130,6 @@ namespace Game.CombatSystem.Initialization
         {
             Debug.Log("[EnemyInitializer] 슬롯에 적 캐릭터 등록 시작");
             slot.SetCharacter(enemy);
-
             spawnedEnemy = enemy;
             Debug.Log("[EnemyInitializer] 적 캐릭터 슬롯 등록 및 내부 참조 완료");
         }

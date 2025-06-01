@@ -7,6 +7,7 @@ using Game.SkillCardSystem.UI;
 using Game.IManager;
 using Game.SkillCardSystem.Interface;
 using Game.CharacterSystem.Interface;
+using Zenject;
 
 namespace Game.CombatSystem.Core
 {
@@ -31,8 +32,8 @@ namespace Game.CombatSystem.Core
         private SkillCardUI skillCardPrefab;
         private bool playerInputEnabled = false;
 
-        // === 기본 컴포넌트 주입 ===
-        public void Inject(
+        [Inject]
+        public void Construct(
             ICharacterSlotRegistry characterSlotRegistry,
             IEnemyHandManager enemyHandManager,
             IPlayerHandManager playerHandManager,
@@ -41,7 +42,12 @@ namespace Game.CombatSystem.Core
             IStageManager stageManager,
             IEnemyManager enemyManager,
             ICombatTurnManager turnManager,
-            ICombatStateFactory stateFactory)
+            ICombatStateFactory stateFactory,
+            ICombatPreparationService preparationService,
+            IPlayerInputController inputController,
+            ICombatExecutor executor,
+            ICardExecutionContextProvider contextProvider,
+            ICardExecutor cardExecutor)
         {
             this.characterSlotRegistry = characterSlotRegistry;
             this.enemyHandManager = enemyHandManager;
@@ -52,6 +58,14 @@ namespace Game.CombatSystem.Core
             this.enemyManager = enemyManager;
             this.turnManager = turnManager;
             this.stateFactory = stateFactory;
+
+            this.preparationService = preparationService;
+            this.inputController = inputController;
+            this.executor = executor;
+            this.contextProvider = contextProvider;
+            this.cardExecutor = cardExecutor;
+
+            executor?.InjectExecutionDependencies(contextProvider, cardExecutor);
         }
 
         // === UI 프리팹 주입 ===
@@ -197,6 +211,41 @@ namespace Game.CombatSystem.Core
                 var slot = characterSlotRegistry?.GetCharacterSlot(SlotOwner.ENEMY);
                 slot?.SetCharacter(null);
             }
+        }
+        public void RequestCombatPreparation(Action<bool> onComplete)
+        {
+            if (onComplete == null)
+            {
+                Debug.LogError("[CombatFlowCoordinator] onComplete 콜백이 null입니다.");
+                return;
+            }
+
+            StartCoroutine(PerformCombatPreparation(onComplete));
+        }
+        public void RequestFirstAttack(Action onComplete = null)
+        {
+            StartCoroutine(PerformFirstAttackCoroutine(onComplete));
+        }
+
+        private IEnumerator PerformFirstAttackCoroutine(Action onComplete)
+        {
+            Debug.Log("[CombatFlowCoordinator] RequestFirstAttack 실행 시작");
+
+            if (executor != null)
+                yield return executor.PerformAttack(CombatSlotPosition.FIRST);
+            else
+                Debug.LogError("[CombatFlowCoordinator] executor가 null입니다.");
+
+            Debug.Log("[CombatFlowCoordinator] RequestFirstAttack 완료");
+            onComplete?.Invoke();
+        }
+        public void CleanupAfterVictory()
+        {
+            Debug.Log("[CombatFlowCoordinator] CleanupAfterVictory 호출됨");
+
+            enemyHandManager?.ClearHand();
+            playerHandManager?.EnableInput(false);
+            // 필요하다면 UI 정리, 리셋 등 추가
         }
     }
 }

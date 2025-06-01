@@ -2,33 +2,25 @@ using UnityEngine;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
-using Game.SkillCardSystem.UI;
 
 namespace Game.CombatSystem.UI
 {
-    /// <summary>
-    /// 전투 실행 슬롯 UI 클래스 (카드 1장과 그 UI를 보관 및 실행)
-    /// </summary>
     public class CombatExecutionSlotUI : MonoBehaviour, ICombatCardSlot
     {
         [SerializeField]
         private CombatSlotPosition position;
 
         private ISkillCard currentCard;
-        private SkillCardUI currentCardUI;
+        private ISkillCardUI currentCardUI;
         private ICardExecutionContext context;
 
-        /// <summary>
-        /// 외부에서 카드 실행 컨텍스트를 주입
-        /// </summary>
+        public CombatSlotPosition Position => position;
+
         public void Inject(ICardExecutionContext executionContext)
         {
             this.context = executionContext;
         }
 
-        /// <summary>
-        /// 현재 슬롯의 전투 필드 내 위치 (왼쪽/오른쪽)
-        /// </summary>
         public CombatFieldSlotPosition GetCombatPosition()
         {
             return position switch
@@ -47,22 +39,30 @@ namespace Game.CombatSystem.UI
             currentCard?.SetCombatSlot(position);
         }
 
-        public SkillCardUI GetCardUI() => currentCardUI;
+        public ISkillCardUI GetCardUI() => currentCardUI;
 
-        public void SetCardUI(SkillCardUI cardUI)
+        public void SetCardUI(ISkillCardUI cardUI)
         {
             currentCardUI = cardUI;
+
+            if (cardUI is MonoBehaviour uiMb)
+            {
+                uiMb.transform.SetParent(this.transform);
+                uiMb.transform.localPosition = Vector3.zero;
+                uiMb.transform.localScale = Vector3.one;
+            }
         }
 
         public void Clear()
         {
             currentCard = null;
 
-            if (currentCardUI != null)
+            if (currentCardUI is MonoBehaviour uiMb)
             {
-                Destroy(currentCardUI.gameObject);
-                currentCardUI = null;
+                Destroy(uiMb.gameObject);
             }
+
+            currentCardUI = null;
 
             Debug.Log($"[CombatExecutionSlotUI] 슬롯 클리어 완료: {gameObject.name}");
         }

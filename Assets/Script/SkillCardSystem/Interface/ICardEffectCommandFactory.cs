@@ -1,5 +1,4 @@
 using Game.SkillCardSystem.Effects;
-using Game.SkillCardSystem.Interface;
 
 namespace Game.SkillCardSystem.Interface
 {

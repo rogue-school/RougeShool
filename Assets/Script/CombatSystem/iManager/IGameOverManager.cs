@@ -5,9 +5,11 @@ namespace Game.IManager
     /// </summary>
     public interface IGameOverManager
     {
-        /// <summary>
-        /// 게임 오버 UI 및 종료 처리 흐름을 실행합니다.
-        /// </summary>
         void ShowGameOverUI();
+
+        /// <summary>
+        /// 게임 오버 처리를 수행합니다. (플레이어 사망 시 호출됨)
+        /// </summary>
+        void TriggerGameOver(); // 추가됨
     }
 }

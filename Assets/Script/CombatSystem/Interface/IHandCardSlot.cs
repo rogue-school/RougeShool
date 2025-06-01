@@ -17,7 +17,6 @@ namespace Game.CombatSystem.Interface
         bool HasCard();
         ISkillCardUI GetCardUI();
 
-        // ✅ 추가할 메서드들:
         SkillCardUI AttachCard(ISkillCard card); // 카드 UI를 연결하고 반환
         void DetachCard();                       // 카드 UI를 제거
     }

@@ -12,6 +12,8 @@ namespace Game.CombatSystem.Core
         private ITurnStateController turnStateController;
         private ICombatStateFactory stateFactory;
 
+        private bool isInjected = false;
+
         public void Inject(
             ITurnStartConditionChecker conditionChecker,
             ITurnStateController turnStateController,
@@ -20,6 +22,7 @@ namespace Game.CombatSystem.Core
             this.conditionChecker = conditionChecker;
             this.turnStateController = turnStateController;
             this.stateFactory = stateFactory;
+            isInjected = true;
 
             Debug.Log("[TurnStartButtonHandler] Inject() 호출됨");
             Debug.Log($" → conditionChecker: {(conditionChecker != null ? "OK" : "NULL")}");
@@ -48,19 +51,22 @@ namespace Game.CombatSystem.Core
 
         private void Update()
         {
-            if (startButton != null && conditionChecker != null)
-            {
-                bool canStart = conditionChecker.CanStartTurn();
-                startButton.interactable = canStart;
+            if (!isInjected)
+                return;
 
-            }
-            else
+            if (startButton == null)
             {
-                if (startButton == null)
-                    Debug.LogWarning("[TurnStartButtonHandler] startButton이 null입니다.");
-                if (conditionChecker == null)
-                    Debug.LogWarning("[TurnStartButtonHandler] conditionChecker가 null입니다.");
+                Debug.LogWarning("[TurnStartButtonHandler] startButton이 null입니다.");
+                return;
             }
+
+            if (conditionChecker == null)
+            {
+                Debug.LogWarning("[TurnStartButtonHandler] conditionChecker가 null입니다.");
+                return;
+            }
+
+            startButton.interactable = conditionChecker.CanStartTurn();
         }
 
         private void OnStartButtonClicked()

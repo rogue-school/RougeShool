@@ -21,6 +21,7 @@ namespace Game.CharacterSystem.Core
 
         private ISkillCard lastUsedCard;
         private IPlayerHandManager handManager;
+        public override bool IsPlayerControlled() => true;
 
         private void Awake()
         {

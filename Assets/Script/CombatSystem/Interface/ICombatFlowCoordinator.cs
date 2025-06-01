@@ -24,5 +24,10 @@ namespace Game.CombatSystem.Interface
 
         void InjectTurnStateDependencies(ICombatTurnManager turnManager, ICombatStateFactory stateFactory);
         void StartCombatFlow();
+        void RequestCombatPreparation(Action<bool> onComplete);
+        void RequestFirstAttack(Action onComplete = null);
+
+        //  Ãß°¡
+        void CleanupAfterVictory();
     }
 }

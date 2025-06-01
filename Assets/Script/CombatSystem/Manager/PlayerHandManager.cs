@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Slot;
-using Game.SkillCardSystem.Data;
+using Game.SkillCardSystem.Deck;
 using Game.SkillCardSystem.UI;
 using Game.CharacterSystem.Interface;
 using Game.SkillCardSystem.Factory;
@@ -49,14 +49,27 @@ namespace Game.SkillCardSystem.Core
                 var pos = cardEntry.Slot;
                 var cardSO = cardEntry.Card;
 
-                var card = cardFactory.CreatePlayerCard(cardSO);
+                if (cardSO == null)
+                {
+                    Debug.LogWarning($"[PlayerHandManager] 카드 데이터가 null입니다. 슬롯: {pos}");
+                    continue;
+                }
+
+                var effects = cardSO.CreateEffects(); // 확실하게 정의되어 있어야 함
+                var card = cardFactory.CreatePlayerCard(cardSO.CardData, cardSO.CreateEffects());
+
+
                 cards[pos] = card;
 
                 var ui = slotRegistry.GetPlayerHandSlot(pos)?.AttachCard(card);
                 if (ui != null)
+                {
                     cardUIs[pos] = ui;
+                }
                 else
+                {
                     Debug.LogWarning($"[PlayerHandManager] 슬롯 {pos}에 카드 UI를 붙일 수 없습니다.");
+                }
             }
         }
 
@@ -93,14 +106,14 @@ namespace Game.SkillCardSystem.Core
 
         public void LogPlayerHandSlotStates()
         {
-            foreach (var pos in System.Enum.GetValues(typeof(SkillCardSlotPosition)))
+            foreach (SkillCardSlotPosition pos in System.Enum.GetValues(typeof(SkillCardSlotPosition)))
             {
-                var slot = (SkillCardSlotPosition)pos;
-                var card = GetCardInSlot(slot);
+                var card = GetCardInSlot(pos);
                 var status = card != null ? card.CardData.Name : "(없음)";
-                Debug.Log($"[PlayerHandManager] 슬롯 {slot}: {status}");
+                Debug.Log($"[PlayerHandManager] 슬롯 {pos}: {status}");
             }
         }
+
         public void EnableInput(bool enable)
         {
             foreach (var ui in cardUIs.Values)
@@ -108,6 +121,7 @@ namespace Game.SkillCardSystem.Core
                 if (ui != null)
                     ui.SetDraggable(enable);
             }
+
             Debug.Log($"[PlayerHandManager] 입력 {(enable ? "활성화" : "비활성화")}");
         }
 

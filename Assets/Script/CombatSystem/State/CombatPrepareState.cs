@@ -1,8 +1,6 @@
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
 using UnityEngine;
-using System.Collections;
-using Game.IManager;
 
 namespace Game.CombatSystem.State
 {
@@ -11,47 +9,47 @@ namespace Game.CombatSystem.State
         private readonly ICombatTurnManager turnManager;
         private readonly ICombatFlowCoordinator flowCoordinator;
         private readonly ICombatStateFactory stateFactory;
+        private readonly ICombatSlotRegistry slotRegistry;
 
         public CombatPrepareState(
             ICombatTurnManager turnManager,
             ICombatFlowCoordinator flowCoordinator,
-            ICombatStateFactory stateFactory)
+            ICombatStateFactory stateFactory,
+            ICombatSlotRegistry slotRegistry)
         {
             this.turnManager = turnManager;
             this.flowCoordinator = flowCoordinator;
             this.stateFactory = stateFactory;
+            this.slotRegistry = slotRegistry;
         }
 
         public void EnterState()
         {
-            Debug.Log("[State] CombatPrepareState: 적 생성 및 슬롯 준비 시작");
+            Debug.Log("[CombatPrepareState] 진입");
 
-            if (flowCoordinator is MonoBehaviour mono)
-                mono.StartCoroutine(PrepareRoutine());
-            else
-                Debug.LogError("flowCoordinator가 MonoBehaviour가 아닙니다. Coroutine 실행 불가.");
+            flowCoordinator.DisablePlayerInput();
+            flowCoordinator.RequestCombatPreparation(OnPrepareComplete);
         }
 
-        private IEnumerator PrepareRoutine()
+        private void OnPrepareComplete(bool success)
         {
-            bool prepareSuccess = false;
-            yield return flowCoordinator.PerformCombatPreparation(success => prepareSuccess = success);
-
-            if (!prepareSuccess)
+            if (!success)
             {
-                Debug.LogError("[State] CombatPrepareState: 준비 실패 → 상태 전이 중단");
-                yield break;
+                Debug.LogError("[CombatPrepareState] 전투 준비 실패");
+                return;
             }
 
-            Debug.Log("[State] CombatPrepareState: 준비 완료, 입력 상태로 전이");
-            turnManager.RequestStateChange(stateFactory.CreatePlayerInputState());
+            Debug.Log("[CombatPrepareState] 전투 준비 완료 → 플레이어 입력 상태로 전환");
+
+            var next = stateFactory.CreatePlayerInputState();
+            turnManager.RequestStateChange(next);
         }
 
         public void ExecuteState() { }
 
         public void ExitState()
         {
-            Debug.Log("[State] CombatPrepareState: 상태 종료");
+            Debug.Log("[CombatPrepareState] 종료");
         }
     }
 }
