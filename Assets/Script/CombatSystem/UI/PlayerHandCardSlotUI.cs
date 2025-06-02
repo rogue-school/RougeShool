@@ -5,6 +5,8 @@ using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Slot;
 using Game.SkillCardSystem.UI;
+using Game.CombatSystem.Utility;
+using Game.CombatSystem.DragDrop;
 
 namespace Game.CombatSystem.UI
 {
@@ -58,10 +60,27 @@ namespace Game.CombatSystem.UI
             currentCardUI = SkillCardUIFactory.CreateUI(prefab, transform, card, flowCoordinator);
 
             if (currentCardUI != null)
+            {
+                //  정확한 부모로 강제 부착
+                CardSlotHelper.AttachCardToSlot(currentCardUI, this);
+
+                //  복귀 기준 위치 명시
+                var dragHandler = currentCardUI.GetComponent<CardDragHandler>();
+                if (dragHandler != null)
+                {
+                    dragHandler.OriginalParent = this.transform;
+                    dragHandler.OriginalWorldPosition = this.transform.position;
+                    Debug.Log($"[SetCardInternal] 강제 저장된 OriginalParent: {dragHandler.OriginalParent.name}");
+                }
+
                 Debug.Log($"[PlayerHandCardSlotUI] 카드 UI 생성 완료: {currentCardUI.name}");
+            }
             else
+            {
                 Debug.LogError("[PlayerHandCardSlotUI] 카드 UI 생성 실패");
+            }
         }
+
 
         public void DetachCard()
         {

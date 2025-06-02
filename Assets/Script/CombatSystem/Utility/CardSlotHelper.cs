@@ -21,14 +21,26 @@ namespace Game.CombatSystem.Utility
                 return;
             }
 
+            //  1. 부모 설정
             cardUI.transform.SetParent(dragHandler.OriginalParent, false);
-            cardUI.transform.position = dragHandler.OriginalWorldPosition;
-            cardUI.transform.localScale = Vector3.one;
 
-            dragHandler.OriginalParent = null;
+            //  2. localPosition 기준으로 정확하게 중심으로 맞춤
+            if (cardUI.TryGetComponent(out RectTransform rectTransform))
+            {
+                rectTransform.anchoredPosition = Vector2.zero;
+                rectTransform.localRotation = Quaternion.identity;
+                rectTransform.localScale = Vector3.one;
+            }
+            else
+            {
+                cardUI.transform.localPosition = Vector3.zero;
+                cardUI.transform.localRotation = Quaternion.identity;
+                cardUI.transform.localScale = Vector3.one;
+            }
 
-            Debug.Log($"[CardSlotHelper] 카드 복귀 완료: {cardUI.name}");
+            Debug.Log($"[CardSlotHelper] 카드 복귀 완료: {cardUI.name}, parent: {dragHandler.OriginalParent.name}");
         }
+
 
         public static void AttachCardToSlot(SkillCardUI cardUI, MonoBehaviour slotTransform)
         {
@@ -46,13 +58,11 @@ namespace Game.CombatSystem.Utility
             }
 
             rect.SetParent(slotTransform.transform, false);
-            rect.anchoredPosition = Vector2.zero;
+            rect.localPosition = Vector3.zero;
+            rect.localRotation = Quaternion.identity;
             rect.localScale = Vector3.one;
 
-            var dragHandler = cardUI.GetComponent<CardDragHandler>();
-            if (dragHandler != null)
-                dragHandler.OriginalParent = null;
-
+            // dragHandler.OriginalParent = null 제거함
             Debug.Log($"[CardSlotHelper] 카드 배치 완료: {cardUI.name} → {slotTransform.name}");
         }
     }

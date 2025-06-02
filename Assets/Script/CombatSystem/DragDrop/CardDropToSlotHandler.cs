@@ -36,6 +36,12 @@ namespace Game.CombatSystem.DragDrop
             if (dropService.TryDropCard(card, cardUI, slot, out var message))
             {
                 dragHandler.droppedSuccessfully = true;
+
+                // 드롭 성공 시 새로운 복귀 기준 지정
+                var slotTransform = ((MonoBehaviour)slot).transform;
+                dragHandler.OriginalParent = slotTransform;
+                dragHandler.OriginalWorldPosition = slotTransform.position;
+
                 Debug.Log($"[DropHandler] 드롭 성공: {card.CardData.Name}");
             }
             else
