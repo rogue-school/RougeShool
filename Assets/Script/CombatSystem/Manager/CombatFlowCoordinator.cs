@@ -56,7 +56,8 @@ namespace Game.CombatSystem.Core
             }
 
             Debug.Log($"[CombatFlowCoordinator] 적 사용 가능: {enemy.GetName()}");
-            yield return new WaitForSeconds(0.5f);
+
+            yield return new WaitForSeconds(0.5f); // 초기 대기
 
             bool enemyFirst = UnityEngine.Random.value < 0.5f;
             var slotToRegister = enemyFirst ? CombatSlotPosition.FIRST : CombatSlotPosition.SECOND;
@@ -65,8 +66,13 @@ namespace Game.CombatSystem.Core
             if (card != null)
             {
                 Debug.Log($"[CombatFlowCoordinator] 적 카드 등록: {card.GetCardName()} → 슬롯: {slotToRegister}");
+
+                // 턴 카드 등록 및 전투 슬롯 UI 등록
                 turnCardRegistry.RegisterCard(slotToRegister, card, cardUI, SlotOwner.ENEMY);
                 RegisterCardToCombatSlotUI(slotToRegister, card, cardUI);
+
+                // 카드가 이동하는 시각적 효과를 보기 위한 대기 시간
+                yield return new WaitForSeconds(0.6f);
             }
             else
             {
@@ -75,12 +81,15 @@ namespace Game.CombatSystem.Core
                 yield break;
             }
 
+            // 이제 남은 핸드 카드들을 앞으로 밀어줌
             enemyHandManager.FillEmptySlots();
-            yield return new WaitForSeconds(0.5f);
+
+            yield return new WaitForSeconds(0.5f); // 추가 대기(Optional)
 
             Debug.Log("[CombatFlowCoordinator] 전투 준비 완료");
             onComplete?.Invoke(true);
         }
+
 
         public IEnumerator RegisterEnemyCard() => PerformCombatPreparation();
 

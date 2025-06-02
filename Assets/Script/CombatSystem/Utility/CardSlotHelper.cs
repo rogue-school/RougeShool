@@ -38,7 +38,7 @@ namespace Game.CombatSystem.Utility
                 cardUI.transform.localScale = Vector3.one;
             }
 
-            Debug.Log($"[CardSlotHelper] 카드 복귀 완료: {cardUI.name}, parent: {dragHandler.OriginalParent.name}");
+            //Debug.Log($"[CardSlotHelper] 카드 복귀 완료: {cardUI.name}, parent: {dragHandler.OriginalParent.name}");
         }
 
 
