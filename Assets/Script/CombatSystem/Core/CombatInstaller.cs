@@ -23,6 +23,7 @@ using Game.SkillCardSystem.UI;
 using Game.CombatSystem.State;
 using Game.CombatSystem.Factory;
 using Game.Utility;
+using Game.CombatSystem.DragDrop;
 
 public class CombatInstaller : MonoInstaller
 {
@@ -84,7 +85,12 @@ public class CombatInstaller : MonoInstaller
         Container.Bind<IEnemySpawnValidator>().To<DefaultEnemySpawnValidator>().AsSingle();
         Container.Bind<IPlayerInputController>().To<PlayerInputController>().AsSingle();
         Container.Bind<ISkillCardFactory>().To<SkillCardFactory>().AsSingle();
+
+        Container.Bind<ICardDropValidator>().To<DefaultCardDropValidator>().AsSingle();
+        Container.Bind<ICardRegistrar>().To<DefaultCardRegistrar>().AsSingle();
+        Container.Bind<CardDropService>().AsSingle();
     }
+
 
     private void BindExecutionContext()
     {

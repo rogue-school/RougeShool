@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 using Game.SkillCardSystem.UI;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Utility;
@@ -11,7 +12,7 @@ namespace Game.CombatSystem.DragDrop
         public Transform OriginalParent { get; set; }
         public Vector3 OriginalWorldPosition { get; set; }
 
-        [HideInInspector] // 인스펙터에서 제거하여 직렬화되지 않도록 방지
+        [HideInInspector]
         public bool droppedSuccessfully = false;
 
         private Canvas canvas;
@@ -30,20 +31,21 @@ namespace Game.CombatSystem.DragDrop
             canvasGroup = GetComponent<CanvasGroup>();
             canvas = GetComponentInParent<Canvas>();
 
-            droppedSuccessfully = false; // 안전한 기본값 초기화
+            if (canvasGroup == null)
+                Debug.LogError("[CardDragHandler] ❗ CanvasGroup이 없습니다!");
         }
 
         public void OnBeginDrag(PointerEventData eventData)
         {
             if (!PlayerInputGuard.CanProceed(flowCoordinator)) return;
 
-            // OriginalParent는 카드 생성 시 이미 설정됨
             OriginalWorldPosition = transform.position;
-
             canvasGroup.alpha = 0.8f;
             canvasGroup.blocksRaycasts = false;
 
-            // 드래그 시 UI 최상위로 이동
+            foreach (var img in GetComponentsInChildren<Image>())
+                img.raycastTarget = false;
+
             transform.SetParent(canvas.transform, true);
         }
 
@@ -63,14 +65,48 @@ namespace Game.CombatSystem.DragDrop
 
         public void OnEndDrag(PointerEventData eventData)
         {
-            if (!droppedSuccessfully)
+            Debug.Log("[CardDragHandler] OnEndDrag 호출됨");
+
+            // 드롭 대상에 CardDropToSlotHandler가 없으면 강제 복귀
+            bool validDropTargetFound = false;
+            PointerEventData pointerData = new PointerEventData(EventSystem.current)
             {
-                CardSlotHelper.ResetCardToOriginal(GetComponent<SkillCardUI>());
+                position = Input.mousePosition
+            };
+            var raycastResults = new System.Collections.Generic.List<RaycastResult>();
+            EventSystem.current.RaycastAll(pointerData, raycastResults);
+
+            foreach (var result in raycastResults)
+            {
+                if (result.gameObject.GetComponent<CardDropToSlotHandler>() != null)
+                {
+                    validDropTargetFound = true;
+                    break;
+                }
+            }
+
+            if (!droppedSuccessfully || !validDropTargetFound)
+            {
+                ResetToOrigin(GetComponent<SkillCardUI>());
             }
 
             canvasGroup.alpha = 1f;
             canvasGroup.blocksRaycasts = true;
-            droppedSuccessfully = false; // 항상 다음 드래그를 위해 초기화
+            droppedSuccessfully = false;
+
+            foreach (var img in GetComponentsInChildren<Image>())
+                img.raycastTarget = true;
+        }
+
+        public void ResetToOrigin(SkillCardUI cardUI)
+        {
+            if (cardUI == null)
+            {
+                Debug.LogWarning("[CardDragHandler] ResetToOrigin 실패 - cardUI가 null입니다.");
+                return;
+            }
+
+            CardSlotHelper.ResetCardToOriginal(cardUI);
         }
     }
 }
