@@ -24,7 +24,15 @@ namespace Game.CombatSystem.Core
 
         private ICombatTurnManager turnManager;
         private ICombatStateFactory stateFactory;
+        private TurnStartButtonHandler startButtonHandler;
+
         private bool playerInputEnabled = false;
+
+        [Inject]
+        public void Construct(TurnStartButtonHandler startButtonHandler)
+        {
+            this.startButtonHandler = startButtonHandler;
+        }
 
         public void InjectTurnStateDependencies(ICombatTurnManager turnManager, ICombatStateFactory stateFactory)
         {
@@ -36,6 +44,7 @@ namespace Game.CombatSystem.Core
         {
             var initialState = stateFactory.CreatePrepareState();
             turnManager.ChangeState(initialState);
+            DisableStartButton();
         }
 
         public void RequestCombatPreparation(Action<bool> onComplete)
@@ -50,14 +59,12 @@ namespace Game.CombatSystem.Core
             var enemy = enemyManager.GetEnemy();
             if (enemy == null)
             {
-                Debug.LogWarning("[CombatFlowCoordinator] 적이 존재하지 않습니다. 초기화 실패");
+                Debug.LogWarning("[CombatFlowCoordinator] 적이 존재하지 않습니다.");
                 onComplete?.Invoke(false);
                 yield break;
             }
 
-            Debug.Log($"[CombatFlowCoordinator] 적 사용 가능: {enemy.GetName()}");
-
-            yield return new WaitForSeconds(0.5f); // 초기 대기
+            yield return new WaitForSeconds(0.5f);
 
             bool enemyFirst = UnityEngine.Random.value < 0.5f;
             var slotToRegister = enemyFirst ? CombatSlotPosition.FIRST : CombatSlotPosition.SECOND;
@@ -65,31 +72,22 @@ namespace Game.CombatSystem.Core
             var (card, cardUI) = enemyHandManager.PopFirstAvailableCard();
             if (card != null)
             {
-                Debug.Log($"[CombatFlowCoordinator] 적 카드 등록: {card.GetCardName()} → 슬롯: {slotToRegister}");
-
-                // 턴 카드 등록 및 전투 슬롯 UI 등록
                 turnCardRegistry.RegisterCard(slotToRegister, card, cardUI, SlotOwner.ENEMY);
                 RegisterCardToCombatSlotUI(slotToRegister, card, cardUI);
-
-                // 카드가 이동하는 시각적 효과를 보기 위한 대기 시간
                 yield return new WaitForSeconds(0.6f);
             }
             else
             {
-                Debug.LogWarning("[CombatFlowCoordinator] 적 핸드에 사용 가능한 카드 없음");
                 onComplete?.Invoke(false);
                 yield break;
             }
 
-            // 이제 남은 핸드 카드들을 앞으로 밀어줌
             enemyHandManager.FillEmptySlots();
-
-            yield return new WaitForSeconds(0.5f); // 추가 대기(Optional)
+            yield return new WaitForSeconds(0.5f);
 
             Debug.Log("[CombatFlowCoordinator] 전투 준비 완료");
             onComplete?.Invoke(true);
         }
-
 
         public IEnumerator RegisterEnemyCard() => PerformCombatPreparation();
 
@@ -103,21 +101,22 @@ namespace Game.CombatSystem.Core
                 ui.transform.localScale = Vector3.one;
                 combatSlot.SetCard(card);
                 combatSlot.SetCardUI(ui);
-
-                Debug.Log($"[CombatFlowCoordinator] CombatSlot에 카드 UI 적용 완료: {card.GetCardName()} → {pos}");
-            }
-            else
-            {
-                Debug.LogError($"[CombatFlowCoordinator] 전투 슬롯 {pos}을 찾을 수 없거나 ICombatCardSlot 아님");
             }
         }
 
         public void RequestFirstAttack(Action onComplete = null)
         {
-            StartCoroutine(PerformFirstAttack(onComplete));
+            StartCoroutine(PerformFirstAttackInternal(onComplete));
         }
 
-        public IEnumerator PerformFirstAttack(Action onComplete = null)
+        // 인터페이스용 구현
+        public IEnumerator PerformFirstAttack()
+        {
+            yield return PerformFirstAttackInternal(null);
+        }
+
+        // 실제 내부 로직
+        private IEnumerator PerformFirstAttackInternal(Action onComplete = null)
         {
             Debug.Log("[CombatFlowCoordinator] 첫 번째 공격 시작");
             yield return new WaitForSeconds(1f);
@@ -127,30 +126,22 @@ namespace Game.CombatSystem.Core
 
         public IEnumerator PerformSecondAttack()
         {
-            Debug.Log("[CombatFlowCoordinator] 두 번째 공격 시작");
             yield return new WaitForSeconds(1f);
-            Debug.Log("[CombatFlowCoordinator] 두 번째 공격 종료");
         }
 
         public IEnumerator PerformResultPhase()
         {
-            Debug.Log("[CombatFlowCoordinator] 결과 처리 시작");
             yield return new WaitForSeconds(1f);
-            Debug.Log("[CombatFlowCoordinator] 결과 처리 완료");
         }
 
         public IEnumerator PerformVictoryPhase()
         {
-            Debug.Log("[CombatFlowCoordinator] 승리 처리 시작");
             yield return new WaitForSeconds(1f);
-            Debug.Log("[CombatFlowCoordinator] 승리 처리 완료");
         }
 
         public IEnumerator PerformGameOverPhase()
         {
-            Debug.Log("[CombatFlowCoordinator] 게임 오버 처리 시작");
             yield return new WaitForSeconds(1f);
-            Debug.Log("[CombatFlowCoordinator] 게임 오버 처리 완료");
         }
 
         public void EnablePlayerInput() => playerInputEnabled = true;
@@ -164,55 +155,28 @@ namespace Game.CombatSystem.Core
         public void CleanupAfterVictory()
         {
             enemyHandManager.ClearHand();
-            Debug.Log("[CombatFlowCoordinator] 승리 후 적 핸드 정리 완료");
         }
 
         private Action onStartButtonPressed;
 
-        public void ShowPlayerCardSelectionUI()
-        {
-            Debug.Log("[CombatFlowCoordinator] 플레이어 카드 선택 UI 표시");
-            // TODO: UI 표시 로직
-        }
-
-        public void HidePlayerCardSelectionUI()
-        {
-            Debug.Log("[CombatFlowCoordinator] 플레이어 카드 선택 UI 숨김");
-            // TODO: UI 숨김 로직
-        }
+        public void ShowPlayerCardSelectionUI() { }
+        public void HidePlayerCardSelectionUI() { }
 
         public void EnableStartButton()
         {
             Debug.Log("[CombatFlowCoordinator] 전투 시작 버튼 활성화");
-            // TODO: 버튼 활성화 로직
+            startButtonHandler?.SetInteractable(true);
         }
 
         public void DisableStartButton()
         {
             Debug.Log("[CombatFlowCoordinator] 전투 시작 버튼 비활성화");
-            // TODO: 버튼 비활성화 로직
+            startButtonHandler?.SetInteractable(false);
         }
 
-        public void RegisterStartButton(Action callback)
-        {
-            Debug.Log("[CombatFlowCoordinator] 전투 시작 버튼 콜백 등록");
-            onStartButtonPressed = callback;
-        }
+        public void RegisterStartButton(Action callback) => onStartButtonPressed = callback;
+        public void UnregisterStartButton() => onStartButtonPressed = null;
 
-        public void UnregisterStartButton()
-        {
-            Debug.Log("[CombatFlowCoordinator] 전투 시작 버튼 콜백 해제");
-            onStartButtonPressed = null;
-        }
-
-        public void OnStartButtonClickedExternally()
-        {
-            onStartButtonPressed?.Invoke();
-        }
-        public IEnumerator PerformFirstAttack()
-        {
-            return PerformFirstAttack(null); // 매개변수 있는 메서드 호출
-        }
-
+        public void OnStartButtonClickedExternally() => onStartButtonPressed?.Invoke();
     }
 }

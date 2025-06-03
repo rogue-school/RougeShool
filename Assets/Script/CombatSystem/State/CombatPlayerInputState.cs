@@ -28,12 +28,15 @@ namespace Game.CombatSystem.State
             Debug.Log("[CombatPlayerInputState] 진입");
 
             flowCoordinator.EnablePlayerInput();
+
+            flowCoordinator.DisableStartButton(); // 초기 비활성화만 수행
+
+            // 카드 등록 시 TurnStartButtonHandler의 이벤트로 버튼 상태가 자동 평가됨
         }
 
         public void ExecuteState()
         {
-            // 플레이어의 입력을 대기하는 상태이므로, 이곳에는 실행 로직 없음
-            // 턴 시작 버튼이 눌리면 TurnStateController가 상태 전이 요청함
+            // 플레이어 입력을 대기하는 상태
         }
 
         public void ExitState()
@@ -41,7 +44,9 @@ namespace Game.CombatSystem.State
             Debug.Log("[CombatPlayerInputState] 종료");
 
             flowCoordinator.DisablePlayerInput();
+            flowCoordinator.DisableStartButton(); // 종료 시 항상 비활성화
         }
+
         public class Factory : Zenject.PlaceholderFactory<CombatPlayerInputState> { }
     }
 }

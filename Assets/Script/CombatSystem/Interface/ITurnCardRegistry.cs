@@ -1,11 +1,14 @@
 ﻿using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.UI;
 using Game.CombatSystem.Slot;
+using System;
 
 namespace Game.CombatSystem.Interface
 {
     public interface ITurnCardRegistry
     {
+        event Action OnCardStateChanged;
+
         void RegisterPlayerCard(CombatSlotPosition slot, ISkillCard card);
         void RegisterEnemyCard(ISkillCard card);
 
@@ -25,5 +28,6 @@ namespace Game.CombatSystem.Interface
         void ClearAll();
 
         bool HasPlayerCard();
+        bool HasEnemyCard();
     }
 }

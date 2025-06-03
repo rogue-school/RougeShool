@@ -28,6 +28,7 @@ using Game.CombatSystem.DragDrop;
 public class CombatInstaller : MonoInstaller
 {
     [SerializeField] private SkillCardUI cardUIPrefab;
+    [SerializeField] private TurnStartButtonHandler startButtonHandler; // 인스펙터 연결
 
     public override void InstallBindings()
     {
@@ -39,6 +40,7 @@ public class CombatInstaller : MonoInstaller
         BindInitializerSteps();
         BindSceneLoader();
         BindUIPrefabs();
+        BindUIHandlers();
     }
 
     private void BindStateFactories()
@@ -85,13 +87,13 @@ public class CombatInstaller : MonoInstaller
         Container.Bind<IEnemySpawnValidator>().To<DefaultEnemySpawnValidator>().AsSingle();
         Container.Bind<IPlayerInputController>().To<PlayerInputController>().AsSingle();
         Container.Bind<ISkillCardFactory>().To<SkillCardFactory>().AsSingle();
-
         Container.Bind<ICardDropValidator>().To<DefaultCardDropValidator>().AsSingle();
         Container.Bind<ICardRegistrar>().To<DefaultCardRegistrar>().AsSingle();
         Container.Bind<ICardReplacementHandler>().To<PlayerCardReplacementHandler>().AsSingle();
         Container.Bind<CardDropService>().AsSingle();
-    }
 
+        Container.Bind<ITurnStartConditionChecker>().To<DefaultTurnStartConditionChecker>().AsSingle(); // ★ 조건 검사기 바인딩
+    }
 
     private void BindExecutionContext()
     {
@@ -102,13 +104,18 @@ public class CombatInstaller : MonoInstaller
     private void BindSlotSystem()
     {
         var slotRegistry = Object.FindFirstObjectByType<SlotRegistry>();
-        if (slotRegistry == null) return;
+        if (slotRegistry == null)
+        {
+            Debug.LogError("[CombatInstaller] SlotRegistry를 찾을 수 없습니다.");
+            return;
+        }
 
         Container.Bind<SlotRegistry>().FromInstance(slotRegistry).AsSingle();
         Container.Bind<ISlotRegistry>().FromInstance(slotRegistry).AsSingle();
         Container.Bind<ICombatSlotRegistry>().FromInstance(slotRegistry.GetCombatSlotRegistry()).AsSingle();
         Container.Bind<IHandSlotRegistry>().FromInstance(slotRegistry.GetHandSlotRegistry()).AsSingle();
         Container.Bind<ICharacterSlotRegistry>().FromInstance(slotRegistry.GetCharacterSlotRegistry()).AsSingle();
+
         Container.BindInterfacesAndSelfTo<SlotInitializer>().FromComponentInHierarchy().AsSingle();
     }
 
@@ -127,18 +134,38 @@ public class CombatInstaller : MonoInstaller
     private void BindSceneLoader()
     {
         var loader = Object.FindFirstObjectByType<SceneLoader>();
-        if (loader == null) return;
+        if (loader == null)
+        {
+            Debug.LogError("[CombatInstaller] SceneLoader가 없습니다.");
+            return;
+        }
 
         Container.Bind<ISceneLoader>().FromInstance(loader).AsSingle();
     }
 
     private void BindUIPrefabs()
     {
-        if (cardUIPrefab == null) return;
+        if (cardUIPrefab == null)
+        {
+            Debug.LogWarning("[CombatInstaller] cardUIPrefab이 할당되지 않았습니다.");
+            return;
+        }
 
         Container.Bind<SkillCardUI>().FromInstance(cardUIPrefab).AsSingle();
     }
 
+    private void BindUIHandlers()
+    {
+        if (startButtonHandler == null)
+        {
+            Debug.LogError("[CombatInstaller] startButtonHandler가 인스펙터에 할당되지 않았습니다.");
+            return;
+        }
+
+        Container.Bind<TurnStartButtonHandler>().FromInstance(startButtonHandler).AsSingle();
+    }
+
+    // 공통 바인딩 메서드
     private void BindMono<TInterface, TImpl>() where TImpl : Component, TInterface
     {
         Container.Bind<TInterface>().To<TImpl>().FromComponentInHierarchy().AsSingle();
