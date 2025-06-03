@@ -30,16 +30,24 @@ namespace Game.CombatSystem.Service
 
         public bool TryDropCard(ISkillCard card, SkillCardUI ui, ICombatCardSlot slot, out string message)
         {
+            message = "";
+
+            // 입력 턴이 아니면 거부
+            if (!turnManager.IsPlayerInputTurn())
+            {
+                message = "플레이어 입력 턴이 아닙니다.";
+                Debug.LogWarning("[CardDropService] 입력 턴 아님");
+                return false;
+            }
+
             if (!validator.IsValidDrop(card, slot, out message))
             {
                 Debug.LogWarning($"[CardDropService] 드롭 유효성 실패: {message}");
                 return false;
             }
 
-            //  교체 처리 (핸드 복귀 포함)
             replacementHandler.ReplaceSlotCard(slot, card, ui);
 
-            //  등록기 갱신
             var execSlot = SlotPositionUtil.ToExecutionSlot(slot.GetCombatPosition());
             registry.RegisterPlayerCard(execSlot, card);
             turnManager?.RegisterPlayerCard(execSlot, card);

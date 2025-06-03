@@ -4,6 +4,7 @@ using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 using Zenject;
+using Game.CombatSystem.State;
 
 namespace Game.CombatSystem.Manager
 {
@@ -86,7 +87,11 @@ namespace Game.CombatSystem.Manager
         public void ReserveNextEnemySlot(CombatSlotPosition slot) => reservedEnemySlot = slot;
         public CombatSlotPosition? GetReservedEnemySlot() => reservedEnemySlot;
 
-        // FSM 상태에서 사용할 팩토리 접근용 메서드
         public ICombatStateFactory GetStateFactory() => stateFactory;
+
+        public bool IsPlayerInputTurn()
+        {
+            return currentState is CombatPlayerInputState;
+        }
     }
 }

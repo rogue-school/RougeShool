@@ -32,12 +32,12 @@ namespace Game.CombatSystem.DragDrop
             canvas = GetComponentInParent<Canvas>();
 
             if (canvasGroup == null)
-                Debug.LogError("[CardDragHandler]  CanvasGroup이 없습니다!");
+                Debug.LogError("[CardDragHandler] CanvasGroup이 없습니다!");
         }
 
         public void OnBeginDrag(PointerEventData eventData)
         {
-            if (!PlayerInputGuard.CanProceed(flowCoordinator)) return;
+            if (!CanDrag()) return;
 
             OriginalWorldPosition = transform.position;
             canvasGroup.alpha = 0.8f;
@@ -51,7 +51,7 @@ namespace Game.CombatSystem.DragDrop
 
         public void OnDrag(PointerEventData eventData)
         {
-            if (!PlayerInputGuard.CanProceed(flowCoordinator)) return;
+            if (!CanDrag()) return;
 
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 canvas.transform as RectTransform,
@@ -65,9 +65,14 @@ namespace Game.CombatSystem.DragDrop
 
         public void OnEndDrag(PointerEventData eventData)
         {
+            if (!CanDrag())
+            {
+                ResetToOrigin(GetComponent<SkillCardUI>());
+                return;
+            }
+
             Debug.Log("[CardDragHandler] OnEndDrag 호출됨");
 
-            // 드롭 대상 확인
             bool validDropTargetFound = false;
             var raycastResults = new System.Collections.Generic.List<RaycastResult>();
             EventSystem.current.RaycastAll(eventData, raycastResults);
@@ -92,6 +97,11 @@ namespace Game.CombatSystem.DragDrop
 
             foreach (var img in GetComponentsInChildren<Image>())
                 img.raycastTarget = true;
+        }
+
+        private bool CanDrag()
+        {
+            return flowCoordinator != null && flowCoordinator.IsPlayerInputEnabled();
         }
 
         public void ResetToOrigin(SkillCardUI cardUI)
