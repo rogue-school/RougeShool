@@ -32,7 +32,7 @@ namespace Game.CombatSystem.DragDrop
             canvas = GetComponentInParent<Canvas>();
 
             if (canvasGroup == null)
-                Debug.LogError("[CardDragHandler] ❗ CanvasGroup이 없습니다!");
+                Debug.LogError("[CardDragHandler]  CanvasGroup이 없습니다!");
         }
 
         public void OnBeginDrag(PointerEventData eventData)
@@ -67,18 +67,14 @@ namespace Game.CombatSystem.DragDrop
         {
             Debug.Log("[CardDragHandler] OnEndDrag 호출됨");
 
-            // 드롭 대상에 CardDropToSlotHandler가 없으면 강제 복귀
+            // 드롭 대상 확인
             bool validDropTargetFound = false;
-            PointerEventData pointerData = new PointerEventData(EventSystem.current)
-            {
-                position = Input.mousePosition
-            };
             var raycastResults = new System.Collections.Generic.List<RaycastResult>();
-            EventSystem.current.RaycastAll(pointerData, raycastResults);
+            EventSystem.current.RaycastAll(eventData, raycastResults);
 
             foreach (var result in raycastResults)
             {
-                if (result.gameObject.GetComponent<CardDropToSlotHandler>() != null)
+                if (result.gameObject.GetComponent<IDropHandler>() != null)
                 {
                     validDropTargetFound = true;
                     break;

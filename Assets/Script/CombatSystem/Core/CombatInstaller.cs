@@ -88,6 +88,7 @@ public class CombatInstaller : MonoInstaller
 
         Container.Bind<ICardDropValidator>().To<DefaultCardDropValidator>().AsSingle();
         Container.Bind<ICardRegistrar>().To<DefaultCardRegistrar>().AsSingle();
+        Container.Bind<ICardReplacementHandler>().To<PlayerCardReplacementHandler>().AsSingle();
         Container.Bind<CardDropService>().AsSingle();
     }
 

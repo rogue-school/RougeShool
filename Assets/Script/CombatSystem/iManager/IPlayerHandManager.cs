@@ -11,6 +11,7 @@ namespace Game.SkillCardSystem.Interface
         ISkillCard GetCardInSlot(SkillCardSlotPosition pos);
         ISkillCardUI GetCardUIInSlot(SkillCardSlotPosition pos);
         void RestoreCardToHand(ISkillCard card);
+        void RestoreCardToHand(ISkillCard card, SkillCardSlotPosition slot);
         void LogPlayerHandSlotStates();
         void EnableInput(bool enable);
         void ClearAll();

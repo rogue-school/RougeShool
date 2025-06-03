@@ -1,6 +1,9 @@
 using UnityEngine;
 using Game.SkillCardSystem.UI;
 using Game.CombatSystem.DragDrop;
+using Game.SkillCardSystem.Slot;
+using System.Linq;
+using Game.CombatSystem.UI;
 
 namespace Game.CombatSystem.Utility
 {
@@ -21,10 +24,8 @@ namespace Game.CombatSystem.Utility
                 return;
             }
 
-            //  1. 부모 설정
             cardUI.transform.SetParent(dragHandler.OriginalParent, false);
 
-            //  2. localPosition 기준으로 정확하게 중심으로 맞춤
             if (cardUI.TryGetComponent(out RectTransform rectTransform))
             {
                 rectTransform.anchoredPosition = Vector2.zero;
@@ -38,9 +39,8 @@ namespace Game.CombatSystem.Utility
                 cardUI.transform.localScale = Vector3.one;
             }
 
-            //Debug.Log($"[CardSlotHelper] 카드 복귀 완료: {cardUI.name}, parent: {dragHandler.OriginalParent.name}");
+            Debug.Log($"[CardSlotHelper] 카드 복귀 완료: {cardUI.name}");
         }
-
 
         public static void AttachCardToSlot(SkillCardUI cardUI, MonoBehaviour slotTransform)
         {
@@ -62,8 +62,24 @@ namespace Game.CombatSystem.Utility
             rect.localRotation = Quaternion.identity;
             rect.localScale = Vector3.one;
 
-            // dragHandler.OriginalParent = null 제거함
             Debug.Log($"[CardSlotHelper] 카드 배치 완료: {cardUI.name} → {slotTransform.name}");
+        }
+        public static void AttachCardToHandSlot(SkillCardUI cardUI, SkillCardSlotPosition slotPos)
+        {
+            var handSlots = Object.FindObjectsByType<PlayerHandCardSlotUI>(FindObjectsSortMode.None);
+            var targetSlot = handSlots.FirstOrDefault(s => s.GetSlotPosition() == slotPos);
+
+            if (targetSlot != null)
+            {
+                cardUI.transform.SetParent(targetSlot.transform, false);
+                cardUI.transform.position = targetSlot.transform.position;
+
+                Debug.Log($"[CardSlotHelper] 카드 핸드 슬롯 위치 복귀: {cardUI.name} → {slotPos}");
+            }
+            else
+            {
+                Debug.LogWarning($"[CardSlotHelper] 해당 핸드 슬롯을 찾을 수 없습니다: {slotPos}");
+            }
         }
     }
 }

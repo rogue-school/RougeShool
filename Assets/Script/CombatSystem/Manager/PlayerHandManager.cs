@@ -70,6 +70,9 @@ namespace Game.SkillCardSystem.Core
         public ISkillCardUI GetCardUIInSlot(SkillCardSlotPosition pos) =>
             cardUIs.TryGetValue(pos, out var ui) ? ui : null;
 
+        /// <summary>
+        /// 핸드 슬롯 중 비어있는 위치에 자동 복귀
+        /// </summary>
         public void RestoreCardToHand(ISkillCard card)
         {
             foreach (var kvp in cards)
@@ -85,6 +88,28 @@ namespace Game.SkillCardSystem.Core
                     }
                     return;
                 }
+            }
+
+            Debug.LogWarning("[PlayerHandManager] 빈 슬롯을 찾을 수 없어 카드 복귀 실패");
+        }
+
+        /// <summary>
+        /// 지정된 핸드 슬롯에 카드 복귀
+        /// </summary>
+        public void RestoreCardToHand(ISkillCard card, SkillCardSlotPosition slot)
+        {
+            cards[slot] = card;
+
+            var handSlot = slotRegistry.GetPlayerHandSlot(slot);
+            if (handSlot != null)
+            {
+                var ui = handSlot.AttachCard(card, cardUIPrefab);
+                if (ui != null)
+                    cardUIs[slot] = ui;
+            }
+            else
+            {
+                Debug.LogWarning($"[PlayerHandManager] 지정된 슬롯이 존재하지 않습니다: {slot}");
             }
         }
 

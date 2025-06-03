@@ -1,6 +1,6 @@
 using UnityEngine;
 using Game.CombatSystem.Interface;
-using Game.CombatSystem.Slot;
+using Game.CombatSystem.Service;
 using Game.CombatSystem.DragDrop;
 
 namespace Game.Utility

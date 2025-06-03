@@ -3,7 +3,7 @@ using UnityEngine.EventSystems;
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.UI;
-using Game.CombatSystem.Utility;
+using Game.CombatSystem.Service;
 using Zenject;
 
 namespace Game.CombatSystem.DragDrop
@@ -29,9 +29,9 @@ namespace Game.CombatSystem.DragDrop
             var dragHandler = eventData.pointerDrag?.GetComponent<CardDragHandler>();
             var slot = GetComponent<ICombatCardSlot>();
 
-            if (slot == null || !slot.IsEmpty())
+            if (slot == null)
             {
-                Debug.LogWarning("[DropHandler] 슬롯이 null이거나 이미 사용 중입니다.");
+                Debug.LogWarning("[DropHandler] 슬롯이 null입니다.");
                 dragHandler?.ResetToOrigin(cardUI);
                 return;
             }
