@@ -12,8 +12,6 @@ namespace Game.CombatSystem.State
     {
         private readonly ICombatTurnManager turnManager;
         private readonly ICombatFlowCoordinator flowCoordinator;
-        private readonly IEnemyHandManager enemyHandManager;
-        private readonly IPlayerHandManager playerHandManager;
         private readonly ITurnCardRegistry cardRegistry;
         private readonly ICoroutineRunner coroutineRunner;
 
@@ -24,15 +22,11 @@ namespace Game.CombatSystem.State
         public CombatPrepareState(
             ICombatTurnManager turnManager,
             ICombatFlowCoordinator flowCoordinator,
-            IEnemyHandManager enemyHandManager,
-            IPlayerHandManager playerHandManager,
             ITurnCardRegistry cardRegistry,
             ICoroutineRunner coroutineRunner)
         {
             this.turnManager = turnManager;
             this.flowCoordinator = flowCoordinator;
-            this.enemyHandManager = enemyHandManager;
-            this.playerHandManager = playerHandManager;
             this.cardRegistry = cardRegistry;
             this.coroutineRunner = coroutineRunner;
         }
@@ -58,14 +52,18 @@ namespace Game.CombatSystem.State
 
         private IEnumerator PrepareRoutine()
         {
-            yield return flowCoordinator.RegisterEnemyCard();
+            // 새로운 구조: 적 카드 등록은 CombatFlowCoordinator 내부에서 처리
+            yield return flowCoordinator.PerformCombatPreparation();
 
             flowCoordinator.ShowPlayerCardSelectionUI();
             flowCoordinator.DisableStartButton();
             flowCoordinator.RegisterStartButton(OnStartButtonClicked);
 
-            // 플레이어가 카드 선택 완료할 때까지 대기
-            yield return new WaitUntil(() => cardRegistry.HasPlayerCard());
+            // 플레이어가 카드 선택 완료할 때까지 대기 (슬롯이 하나라도 등록됐는지 확인)
+            yield return new WaitUntil(() =>
+                cardRegistry.GetCardInSlot(CombatSlotPosition.FIRST)?.IsFromPlayer() == true ||
+                cardRegistry.GetCardInSlot(CombatSlotPosition.SECOND)?.IsFromPlayer() == true
+            );
 
             flowCoordinator.EnableStartButton();
             Debug.Log("<color=lime>[CombatPrepareState] 플레이어 카드 선택 완료 → 시작 버튼 활성화</color>");
@@ -92,7 +90,7 @@ namespace Game.CombatSystem.State
 
         public void ExecuteState()
         {
-            // 이 상태에서는 실시간 로직 없음
+            // 실시간 처리 없음
         }
 
         public void ExitState()

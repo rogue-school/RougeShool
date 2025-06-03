@@ -1,8 +1,7 @@
-using Game.CombatSystem.Interface;
-using Game.CombatSystem.Slot;
-using Game.Utility;
 using UnityEngine;
 using System.Collections;
+using Game.CombatSystem.Interface;
+using Game.Utility;
 
 namespace Game.CombatSystem.State
 {
@@ -10,53 +9,52 @@ namespace Game.CombatSystem.State
     {
         private readonly ICombatTurnManager turnManager;
         private readonly ICombatFlowCoordinator flowCoordinator;
-        private readonly ICombatSlotRegistry slotRegistry;
         private readonly ICoroutineRunner coroutineRunner;
 
         public CombatResultState(
             ICombatTurnManager turnManager,
             ICombatFlowCoordinator flowCoordinator,
-            ICombatSlotRegistry slotRegistry,
             ICoroutineRunner coroutineRunner)
         {
             this.turnManager = turnManager;
             this.flowCoordinator = flowCoordinator;
-            this.slotRegistry = slotRegistry;
             this.coroutineRunner = coroutineRunner;
         }
 
         public void EnterState()
         {
             Debug.Log("[CombatResultState] 상태 진입");
-            coroutineRunner.RunCoroutine(ResultRoutine());
+
+            flowCoordinator.DisablePlayerInput();
+            coroutineRunner.RunCoroutine(ExecuteResultPhase());
         }
 
-        private IEnumerator ResultRoutine()
+        private IEnumerator ExecuteResultPhase()
         {
             yield return flowCoordinator.PerformResultPhase();
 
-            var factory = turnManager.GetStateFactory();
-
-            if (flowCoordinator.IsPlayerDead())
+            if (flowCoordinator.IsEnemyDead())
             {
-                turnManager.RequestStateChange(factory.CreateGameOverState());
+                var next = turnManager.GetStateFactory().CreateVictoryState();
+                turnManager.RequestStateChange(next);
             }
-            else if (flowCoordinator.IsEnemyDead())
+            else if (flowCoordinator.IsPlayerDead())
             {
-                turnManager.RequestStateChange(
-                    flowCoordinator.CheckHasNextEnemy()
-                        ? factory.CreatePrepareState()
-                        : factory.CreateVictoryState()
-                );
+                var next = turnManager.GetStateFactory().CreateGameOverState();
+                turnManager.RequestStateChange(next);
             }
             else
             {
-                turnManager.RequestStateChange(factory.CreatePrepareState());
+                var next = turnManager.GetStateFactory().CreatePlayerInputState();
+                turnManager.RequestStateChange(next);
             }
         }
 
         public void ExecuteState() { }
 
-        public void ExitState() { }
+        public void ExitState()
+        {
+            Debug.Log("[CombatResultState] 상태 종료");
+        }
     }
 }

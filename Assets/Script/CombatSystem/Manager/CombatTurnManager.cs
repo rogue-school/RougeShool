@@ -64,10 +64,15 @@ namespace Game.CombatSystem.Manager
             reservedEnemySlot = null;
         }
 
+        /// <summary>
+        /// 전투 시작 가능 여부를 계산
+        /// 현재는 두 슬롯이 모두 채워져 있어야 함
+        /// </summary>
         public void UpdateTurnReady()
         {
-            bool ready = cardRegistry.GetEnemyCard() != null &&
-                         cardRegistry.GetPlayerCard(CombatSlotPosition.FIRST) != null;
+            bool ready =
+                cardRegistry.GetCardInSlot(CombatSlotPosition.FIRST) != null &&
+                cardRegistry.GetCardInSlot(CombatSlotPosition.SECOND) != null;
 
             if (isTurnReady != ready)
             {
@@ -76,9 +81,12 @@ namespace Game.CombatSystem.Manager
             }
         }
 
-        public void RegisterPlayerCard(CombatSlotPosition slot, ISkillCard card)
+        /// <summary>
+        /// 카드 등록 시 호출되어 전투 준비 상태 갱신
+        /// </summary>
+        public void RegisterCard(CombatSlotPosition slot, ISkillCard card, SkillCardSystem.UI.SkillCardUI ui, SlotOwner owner)
         {
-            cardRegistry.RegisterPlayerCard(slot, card);
+            cardRegistry.RegisterCard(slot, card, ui, owner);
             UpdateTurnReady();
         }
 

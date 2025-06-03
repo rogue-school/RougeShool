@@ -4,22 +4,21 @@ using Game.SkillCardSystem.UI;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Utility;
 using Game.CombatSystem.Slot;
-using Game.CombatSystem.Service;
 
 namespace Game.CombatSystem.Service
 {
     /// <summary>
-    /// 플레이어의 전투 슬롯에 카드를 교체할 때 기존 카드를 핸드로 복귀시키고 새 카드를 배치하는 로직을 담당합니다.
+    /// 플레이어의 전투 슬롯에 카드를 교체할 때 기존 카드를 핸드로 복귀시키고 새 카드를 배치하는 로직
     /// </summary>
     public class PlayerCardReplacementHandler : ICardReplacementHandler
     {
         private readonly IPlayerHandManager handManager;
-        private readonly ITurnCardRegistry turnRegistry;
+        private readonly ITurnCardRegistry cardRegistry;
 
-        public PlayerCardReplacementHandler(IPlayerHandManager handManager, ITurnCardRegistry turnRegistry)
+        public PlayerCardReplacementHandler(IPlayerHandManager handManager, ITurnCardRegistry cardRegistry)
         {
             this.handManager = handManager;
-            this.turnRegistry = turnRegistry;
+            this.cardRegistry = cardRegistry;
         }
 
         public void ReplaceSlotCard(ICombatCardSlot slot, ISkillCard newCard, SkillCardUI newCardUI)
@@ -29,38 +28,43 @@ namespace Game.CombatSystem.Service
 
             if (oldCard != null && oldUI != null)
             {
-                // 전투 슬롯 클리어
+                // 슬롯 해제
                 CardRegistrar.ClearSlot(slot);
 
-                // 이전 슬롯 해제
+                // 이전 카드 핸드 복귀
                 var oldCombatSlot = oldCard.GetCombatSlot();
                 if (oldCombatSlot.HasValue)
-                    turnRegistry.ClearPlayerCard(oldCombatSlot.Value);
+                {
+                    cardRegistry.ClearSlot(oldCombatSlot.Value);
+                }
 
-                // 핸드 슬롯 복귀
                 var oldHandSlot = oldCard.GetHandSlot();
                 if (oldHandSlot.HasValue)
                 {
                     handManager.RestoreCardToHand(oldCard, oldHandSlot.Value);
-                    CardSlotHelper.AttachCardToHandSlot(oldUI, oldHandSlot.Value); // 새 헬퍼 메서드 필요
+                    CardSlotHelper.AttachCardToHandSlot(oldUI, oldHandSlot.Value);
                 }
                 else
                 {
-                    Debug.LogWarning("[PlayerCardReplacementHandler] 핸드 슬롯 정보 없음 → 자동 배치 시도");
+                    Debug.LogWarning("[PlayerCardReplacementHandler] 핸드 슬롯 정보 없음 → 자동 복귀");
                     handManager.RestoreCardToHand(oldCard);
-                    CardSlotHelper.ResetCardToOriginal(oldUI); // 위치 복원
+                    CardSlotHelper.ResetCardToOriginal(oldUI);
                 }
             }
 
-            // 새 카드 전투 슬롯 등록
+            // 새 카드 등록
             slot.SetCard(newCard);
             slot.SetCardUI(newCardUI);
             var execSlot = SlotPositionUtil.ToExecutionSlot(slot.GetCombatPosition());
             newCard.SetCombatSlot(execSlot);
 
+            // 카드 UI 연동
             CardSlotHelper.AttachCardToSlot(newCardUI, (MonoBehaviour)slot);
 
-            Debug.Log($"[PlayerCardReplacementHandler] 새 카드 등록 완료: {newCard.CardData?.Name} → 슬롯: {execSlot}");
+            // 전투 카드 레지스트리에 등록
+            cardRegistry.RegisterCard(execSlot, newCard, newCardUI, SlotOwner.PLAYER);
+
+            Debug.Log($"[PlayerCardReplacementHandler] 카드 교체 완료 → 슬롯: {execSlot}, 카드: {newCard.CardData?.Name}");
         }
     }
 }

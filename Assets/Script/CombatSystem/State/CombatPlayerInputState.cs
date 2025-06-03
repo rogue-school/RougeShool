@@ -1,52 +1,69 @@
-using Game.CombatSystem.Interface;
-using Game.CombatSystem.Slot;
 using UnityEngine;
+using Game.CombatSystem.Interface;
 
 namespace Game.CombatSystem.State
 {
     public class CombatPlayerInputState : ICombatTurnState
     {
-        private readonly ICombatTurnManager turnManager;
         private readonly ICombatFlowCoordinator flowCoordinator;
-        private readonly ICombatStateFactory stateFactory;
-        private readonly ICombatSlotRegistry slotRegistry;
+        private readonly ITurnCardRegistry cardRegistry;
+        private readonly ICombatTurnManager turnManager;
+
+        private bool hasStarted = false;
 
         public CombatPlayerInputState(
-            ICombatTurnManager turnManager,
             ICombatFlowCoordinator flowCoordinator,
-            ICombatStateFactory stateFactory,
-            ICombatSlotRegistry slotRegistry)
+            ITurnCardRegistry cardRegistry,
+            ICombatTurnManager turnManager)
         {
-            this.turnManager = turnManager;
             this.flowCoordinator = flowCoordinator;
-            this.stateFactory = stateFactory;
-            this.slotRegistry = slotRegistry;
+            this.cardRegistry = cardRegistry;
+            this.turnManager = turnManager;
         }
 
         public void EnterState()
         {
-            Debug.Log("[CombatPlayerInputState] 진입");
+            Debug.Log("<color=cyan>[CombatPlayerInputState] 상태 진입</color>");
+            hasStarted = false;
 
             flowCoordinator.EnablePlayerInput();
+            flowCoordinator.ShowPlayerCardSelectionUI();
+            flowCoordinator.DisableStartButton();
 
-            flowCoordinator.DisableStartButton(); // 초기 비활성화만 수행
+            flowCoordinator.RegisterStartButton(OnStartButtonPressed);
+        }
 
-            // 카드 등록 시 TurnStartButtonHandler의 이벤트로 버튼 상태가 자동 평가됨
+        private void OnStartButtonPressed()
+        {
+            if (hasStarted)
+            {
+                Debug.LogWarning("[CombatPlayerInputState] 이미 시작 버튼이 눌렸습니다.");
+                return;
+            }
+
+            hasStarted = true;
+
+            Debug.Log("[CombatPlayerInputState] 플레이어 입력 완료 → 전투 시작");
+
+            flowCoordinator.DisablePlayerInput();
+            flowCoordinator.HidePlayerCardSelectionUI();
+            flowCoordinator.UnregisterStartButton();
+
+            var next = turnManager.GetStateFactory().CreateFirstAttackState();
+            turnManager.RequestStateChange(next);
         }
 
         public void ExecuteState()
         {
-            // 플레이어 입력을 대기하는 상태
+            // 실시간 로직 없음
         }
 
         public void ExitState()
         {
-            Debug.Log("[CombatPlayerInputState] 종료");
-
+            Debug.Log("<color=grey>[CombatPlayerInputState] 상태 종료</color>");
             flowCoordinator.DisablePlayerInput();
-            flowCoordinator.DisableStartButton(); // 종료 시 항상 비활성화
+            flowCoordinator.HidePlayerCardSelectionUI();
+            flowCoordinator.UnregisterStartButton();
         }
-
-        public class Factory : Zenject.PlaceholderFactory<CombatPlayerInputState> { }
     }
 }

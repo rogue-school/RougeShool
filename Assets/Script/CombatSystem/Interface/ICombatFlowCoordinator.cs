@@ -1,7 +1,5 @@
 using System;
 using System.Collections;
-using Game.SkillCardSystem.Interface;
-using Game.SkillCardSystem.UI;
 
 namespace Game.CombatSystem.Interface
 {
@@ -38,9 +36,6 @@ namespace Game.CombatSystem.Interface
         void RegisterStartButton(Action onClick);
         void UnregisterStartButton();
 
-        IEnumerator RegisterEnemyCard();
-
-        // Å¬¸°¾÷
         void CleanupAfterVictory();
     }
 }

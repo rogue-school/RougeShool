@@ -8,6 +8,8 @@ using Game.IManager;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Slot;
 using Game.SkillCardSystem.UI;
+using Game.SkillCardSystem.Executor;
+using Game.CombatSystem.Context;
 
 namespace Game.CombatSystem.Core
 {
@@ -21,6 +23,7 @@ namespace Game.CombatSystem.Core
         [Inject] private ITurnCardRegistry turnCardRegistry;
         [Inject] private ICombatPreparationService preparationService;
         [Inject] private ISlotRegistry slotRegistry;
+        [Inject] private ICardExecutor cardExecutor;
 
         private ICombatTurnManager turnManager;
         private ICombatStateFactory stateFactory;
@@ -89,8 +92,6 @@ namespace Game.CombatSystem.Core
             onComplete?.Invoke(true);
         }
 
-        public IEnumerator RegisterEnemyCard() => PerformCombatPreparation();
-
         private void RegisterCardToCombatSlotUI(CombatSlotPosition pos, ISkillCard card, SkillCardUI ui)
         {
             var slot = slotRegistry.GetCombatSlot(pos);
@@ -109,40 +110,62 @@ namespace Game.CombatSystem.Core
             StartCoroutine(PerformFirstAttackInternal(onComplete));
         }
 
-        // 인터페이스용 구현
-        public IEnumerator PerformFirstAttack()
-        {
-            yield return PerformFirstAttackInternal(null);
-        }
+        public IEnumerator PerformFirstAttack() => PerformFirstAttackInternal(null);
 
-        // 실제 내부 로직
         private IEnumerator PerformFirstAttackInternal(Action onComplete = null)
         {
             Debug.Log("[CombatFlowCoordinator] 첫 번째 공격 시작");
+
+            var firstCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.FIRST);
+
+            if (firstCard != null)
+            {
+                ExecuteCard(firstCard);
+                Debug.Log($"[CombatFlowCoordinator] 선공 카드 실행 완료: {firstCard.GetCardName()}");
+            }
+            else
+            {
+                Debug.LogWarning("[CombatFlowCoordinator] 선공 카드가 없습니다.");
+            }
+
             yield return new WaitForSeconds(1f);
             Debug.Log("[CombatFlowCoordinator] 첫 번째 공격 종료");
+
             onComplete?.Invoke();
         }
 
         public IEnumerator PerformSecondAttack()
         {
+            Debug.Log("[CombatFlowCoordinator] 두 번째 공격 시작");
+
+            var secondCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.SECOND);
+
+            if (secondCard != null)
+            {
+                ExecuteCard(secondCard);
+                Debug.Log($"[CombatFlowCoordinator] 후공 카드 실행 완료: {secondCard.GetCardName()}");
+            }
+            else
+            {
+                Debug.LogWarning("[CombatFlowCoordinator] 후공 카드가 없습니다.");
+            }
+
             yield return new WaitForSeconds(1f);
+            Debug.Log("[CombatFlowCoordinator] 두 번째 공격 종료");
         }
 
-        public IEnumerator PerformResultPhase()
+        private void ExecuteCard(ISkillCard card)
         {
-            yield return new WaitForSeconds(1f);
+            var source = card.GetOwner(new DefaultCardExecutionContext(card, null, null));
+            var target = card.GetTarget(new DefaultCardExecutionContext(card, source, null));
+            var context = new DefaultCardExecutionContext(card, source, target);
+
+            cardExecutor.Execute(card, context, turnManager);
         }
 
-        public IEnumerator PerformVictoryPhase()
-        {
-            yield return new WaitForSeconds(1f);
-        }
-
-        public IEnumerator PerformGameOverPhase()
-        {
-            yield return new WaitForSeconds(1f);
-        }
+        public IEnumerator PerformResultPhase() { yield return new WaitForSeconds(1f); }
+        public IEnumerator PerformVictoryPhase() { yield return new WaitForSeconds(1f); }
+        public IEnumerator PerformGameOverPhase() { yield return new WaitForSeconds(1f); }
 
         public void EnablePlayerInput() => playerInputEnabled = true;
         public void DisablePlayerInput() => playerInputEnabled = false;
@@ -152,10 +175,7 @@ namespace Game.CombatSystem.Core
         public bool IsEnemyDead() => enemyManager.GetEnemy() == null;
         public bool CheckHasNextEnemy() => stageManager.HasNextEnemy();
 
-        public void CleanupAfterVictory()
-        {
-            enemyHandManager.ClearHand();
-        }
+        public void CleanupAfterVictory() => enemyHandManager.ClearHand();
 
         private Action onStartButtonPressed;
 
@@ -176,7 +196,6 @@ namespace Game.CombatSystem.Core
 
         public void RegisterStartButton(Action callback) => onStartButtonPressed = callback;
         public void UnregisterStartButton() => onStartButtonPressed = null;
-
         public void OnStartButtonClickedExternally() => onStartButtonPressed?.Invoke();
     }
 }

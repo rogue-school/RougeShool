@@ -654,6 +654,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cardUIPrefab: {fileID: 4627134175914890069, guid: dd8cb0a8e6cf7b34bbbbfe597c28aa49, type: 3}
+  startButtonHandler: {fileID: 1068135343}
 --- !u!4 &232787498
 Transform:
   m_ObjectHideFlags: 0
