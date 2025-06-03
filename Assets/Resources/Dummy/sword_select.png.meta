@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: b98c0fac734482f4b9b0e8ea424e7b7f
+guid: 1fe4dc80490073e49abe6cfdb2e91d30
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 3677669735314046117
-    second: "\uCE74\uB4DC_0"
+      213: 703342624664601243
+    second: sword_select_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: "\uCE74\uB4DC_0"
+      name: sword_select_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 197
-        height: 296
+        width: 392
+        height: 592
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 5ac399e9325b90330800000000000000
-      internalID: 3677669735314046117
+      spriteID: b9246820466c2c900800000000000000
+      internalID: 703342624664601243
       vertices: []
       indices: 
       edges: []
