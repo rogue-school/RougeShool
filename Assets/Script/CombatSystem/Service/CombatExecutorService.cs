@@ -67,7 +67,7 @@ namespace Game.CombatSystem.Executor
 
             yield return new WaitForSeconds(0.5f);
 
-            slot.Clear();
+            slot.ClearAll();
             Debug.Log($"[Executor] 슬롯 {slotPosition} 클리어 완료");
         }
 

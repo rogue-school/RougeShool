@@ -18,7 +18,7 @@ namespace Game.CombatSystem.UI
 
         public void Inject(ICardExecutionContext executionContext)
         {
-            this.context = executionContext;
+            context = executionContext;
         }
 
         public CombatFieldSlotPosition GetCombatPosition()
@@ -44,32 +44,40 @@ namespace Game.CombatSystem.UI
         public void SetCardUI(ISkillCardUI cardUI)
         {
             currentCardUI = cardUI;
+            AttachUIToSlot(cardUI);
+        }
 
+        private void AttachUIToSlot(ISkillCardUI cardUI)
+        {
             if (cardUI is MonoBehaviour uiMb)
             {
-                uiMb.transform.SetParent(this.transform);
+                uiMb.transform.SetParent(transform);
                 uiMb.transform.localPosition = Vector3.zero;
                 uiMb.transform.localScale = Vector3.one;
             }
         }
 
-        public void Clear()
+        public void ClearAll()
         {
             currentCard = null;
+            ClearCardUI();
+            Debug.Log($"[CombatExecutionSlotUI] 전체 클리어 완료: {gameObject.name}");
+        }
 
+        public void ClearCardUI()
+        {
             if (currentCardUI is MonoBehaviour uiMb)
             {
                 Destroy(uiMb.gameObject);
             }
 
             currentCardUI = null;
-
-            Debug.Log($"[CombatExecutionSlotUI] 슬롯 클리어 완료: {gameObject.name}");
+            Debug.Log($"[CombatExecutionSlotUI] 카드 UI만 제거 완료: {gameObject.name}");
         }
 
         public bool HasCard() => currentCard != null;
 
-        public bool IsEmpty() => !HasCard();
+        public bool IsEmpty() => currentCard == null && currentCardUI == null;
 
         public void ExecuteCardAutomatically()
         {
@@ -98,10 +106,7 @@ namespace Game.CombatSystem.UI
 
             currentCard.ExecuteCardAutomatically(ctx);
         }
-        public Transform GetTransform()
-        {
-            return this.transform;
-        }
 
+        public Transform GetTransform() => transform;
     }
 }

@@ -23,7 +23,7 @@ namespace Game.CombatSystem.State
 
         public void EnterState()
         {
-            Debug.Log("[CombatResultState] 상태 진입");
+            Debug.Log("<color=orange>[CombatResultState] 상태 진입</color>");
 
             flowCoordinator.DisablePlayerInput();
             coroutineRunner.RunCoroutine(ExecuteResultPhase());
@@ -35,17 +35,20 @@ namespace Game.CombatSystem.State
 
             if (flowCoordinator.IsEnemyDead())
             {
+                Debug.Log("[CombatResultState] 적 사망 → VictoryState 전환");
                 var next = turnManager.GetStateFactory().CreateVictoryState();
                 turnManager.RequestStateChange(next);
             }
             else if (flowCoordinator.IsPlayerDead())
             {
+                Debug.Log("[CombatResultState] 플레이어 사망 → GameOverState 전환");
                 var next = turnManager.GetStateFactory().CreateGameOverState();
                 turnManager.RequestStateChange(next);
             }
             else
             {
-                var next = turnManager.GetStateFactory().CreatePlayerInputState();
+                Debug.Log("[CombatResultState] 전투 계속 → PrepareState 전환");
+                var next = turnManager.GetStateFactory().CreatePrepareState();
                 turnManager.RequestStateChange(next);
             }
         }
@@ -54,7 +57,7 @@ namespace Game.CombatSystem.State
 
         public void ExitState()
         {
-            Debug.Log("[CombatResultState] 상태 종료");
+            Debug.Log("<color=grey>[CombatResultState] 상태 종료</color>");
         }
     }
 }

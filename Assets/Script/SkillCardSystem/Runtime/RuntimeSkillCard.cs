@@ -21,6 +21,8 @@ namespace Game.SkillCardSystem.Runtime
         private SkillCardSlotPosition? handSlot;
         private CombatSlotPosition? combatSlot;
 
+        private int currentCoolTime = 0;
+
         public RuntimeSkillCard(SkillCardData cardData, List<SkillCardEffectSO> effects, SlotOwner owner)
         {
             CardData = cardData;
@@ -32,6 +34,10 @@ namespace Game.SkillCardSystem.Runtime
         public string GetDescription() => CardData.Description;
         public Sprite GetArtwork() => CardData.Artwork;
         public int GetCoolTime() => CardData.CoolTime;
+        public int GetMaxCoolTime() => CardData.CoolTime;
+        public int GetCurrentCoolTime() => currentCoolTime;
+        public void SetCurrentCoolTime(int value) => currentCoolTime = Mathf.Max(0, value);
+
         public int GetEffectPower(SkillCardEffectSO effect) => CardData.Damage;
         public List<SkillCardEffectSO> CreateEffects() => new(effects);
 
@@ -72,6 +78,9 @@ namespace Game.SkillCardSystem.Runtime
                 var command = effect.CreateEffectCommand(power);
                 command.Execute(context, null);
             }
+
+            // 쿨타임 초기화
+            SetCurrentCoolTime(GetMaxCoolTime());
         }
 
         public ICharacter GetOwner(ICardExecutionContext context) =>

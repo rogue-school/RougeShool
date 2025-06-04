@@ -44,6 +44,20 @@ namespace Game.CombatSystem.Service
                 return false;
             }
 
+            if (card == null)
+            {
+                message = "카드가 null입니다.";
+                Debug.LogWarning("[CardDropService] 카드가 null입니다.");
+                return false;
+            }
+
+            if (card.GetCurrentCoolTime() > 0)
+            {
+                message = $"[CardDropService] 카드 쿨타임이 남아 있어 드롭 불가: {card.GetCardName()}";
+                Debug.LogWarning(message);
+                return false;
+            }
+
             if (!validator.IsValidDrop(card, slot, out message))
             {
                 Debug.LogWarning($"[CardDropService] 드롭 유효성 실패: {message}");

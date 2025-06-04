@@ -31,7 +31,7 @@ namespace Game.CombatSystem.DragDrop
             {
                 var slots = Object.FindObjectsByType<CombatExecutionSlotUI>(FindObjectsSortMode.None);
                 var targetSlot = slots.FirstOrDefault(s => s.Position == combatSlot);
-                targetSlot?.Clear();
+                targetSlot?.ClearAll();
             }
 
             handManager.RestoreCardToHand(card);

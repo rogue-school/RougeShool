@@ -53,6 +53,9 @@ namespace Game.SkillCardSystem.Core
                 var pos = entry.Slot;
                 var card = cardFactory.CreatePlayerCard(entry.Card.CardData, entry.Card.CreateEffects());
 
+                // 쿨타임은 0으로 초기화
+                card.SetCurrentCoolTime(0);
+
                 cards[pos] = card;
 
                 var slot = slotRegistry.GetPlayerHandSlot(pos);
@@ -70,9 +73,6 @@ namespace Game.SkillCardSystem.Core
         public ISkillCardUI GetCardUIInSlot(SkillCardSlotPosition pos) =>
             cardUIs.TryGetValue(pos, out var ui) ? ui : null;
 
-        /// <summary>
-        /// 핸드 슬롯 중 비어있는 위치에 자동 복귀
-        /// </summary>
         public void RestoreCardToHand(ISkillCard card)
         {
             foreach (var kvp in cards)
@@ -93,9 +93,6 @@ namespace Game.SkillCardSystem.Core
             Debug.LogWarning("[PlayerHandManager] 빈 슬롯을 찾을 수 없어 카드 복귀 실패");
         }
 
-        /// <summary>
-        /// 지정된 핸드 슬롯에 카드 복귀
-        /// </summary>
         public void RestoreCardToHand(ISkillCard card, SkillCardSlotPosition slot)
         {
             cards[slot] = card;
@@ -135,6 +132,20 @@ namespace Game.SkillCardSystem.Core
 
             cards.Clear();
             cardUIs.Clear();
+        }
+
+        /// <summary>
+        /// 쿨타임 관리용 카드+UI 목록 반환
+        /// </summary>
+        public IEnumerable<(ISkillCard card, ISkillCardUI ui)> GetAllHandCards()
+        {
+            foreach (var kvp in cards)
+            {
+                var slot = kvp.Key;
+                var card = kvp.Value;
+                cardUIs.TryGetValue(slot, out var ui);
+                yield return (card, ui);
+            }
         }
     }
 }

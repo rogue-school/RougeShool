@@ -1,18 +1,19 @@
-using UnityEngine;
 using System.Collections.Generic;
-using Game.SkillCardSystem.Data;
+using UnityEngine;
 using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.Data;
 using Game.SkillCardSystem.Effects;
-using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Slot;
-using Game.CombatSystem.Context;
-using Game.CharacterSystem.Interface;
+using Game.CombatSystem.Slot;
 using Game.CombatSystem.Interface;
+using Game.CharacterSystem.Interface;
+using Game.CombatSystem.Context;
 
 namespace Game.SkillCardSystem.Runtime
 {
     /// <summary>
-    /// 플레이어 스킬 카드의 런타임 구현입니다. 카드 데이터와 효과 실행을 담당합니다.
+    /// 플레이어 스킬 카드의 런타임 구현입니다.
+    /// 쿨타임, 슬롯 정보, 실행 기능을 포함합니다.
     /// </summary>
     public class PlayerSkillCardRuntime : ISkillCard
     {
@@ -23,13 +24,15 @@ namespace Game.SkillCardSystem.Runtime
 
         private SkillCardSlotPosition? handSlot;
         private CombatSlotPosition? combatSlot;
-        private int coolTime;
+
+        // 쿨타임 관련 필드
+        private int currentCoolTime;
 
         public PlayerSkillCardRuntime(SkillCardData data, List<SkillCardEffectSO> effects)
         {
             if (data == null)
             {
-                Debug.LogError("[PlayerSkillCardRuntime] SkillCardData가 null입니다. 기본값으로 초기화합니다.");
+                Debug.LogError("[PlayerSkillCardRuntime] SkillCardData가 null입니다.");
                 CardData = new SkillCardData("Unnamed", "No description", null, 0, 0);
                 this.effects = new List<SkillCardEffectSO>();
             }
@@ -39,33 +42,35 @@ namespace Game.SkillCardSystem.Runtime
                 this.effects = effects ?? new List<SkillCardEffectSO>();
             }
 
-            coolTime = CardData.CoolTime;
+            // 쿨타임을 0으로 초기화 (즉시 사용 가능)
+            currentCoolTime = 0;
         }
 
-        // === 메타 정보 ===
+        // === 기본 정보 ===
         public string GetCardName() => CardData?.Name ?? "[Unnamed]";
         public string GetDescription() => CardData?.Description ?? "[No Description]";
         public Sprite GetArtwork() => CardData?.Artwork;
-        public int GetCoolTime() => coolTime;
-        public void SetCoolTime(int time) => coolTime = Mathf.Max(0, time);
         public int GetEffectPower(SkillCardEffectSO effect) => CardData?.Damage ?? 0;
-
         public List<SkillCardEffectSO> CreateEffects() => new List<SkillCardEffectSO>(effects);
-
-        public SlotOwner GetOwner() => owner;
-        public bool IsFromPlayer() => true;
 
         // === 슬롯 정보 ===
         public void SetHandSlot(SkillCardSlotPosition slot) => handSlot = slot;
         public SkillCardSlotPosition? GetHandSlot() => handSlot;
-
         public void SetCombatSlot(CombatSlotPosition slot) => combatSlot = slot;
         public CombatSlotPosition? GetCombatSlot() => combatSlot;
+
+        public SlotOwner GetOwner() => owner;
+        public bool IsFromPlayer() => true;
+
+        // === 쿨타임 ===
+        public int GetMaxCoolTime() => CardData?.CoolTime ?? 0;
+        public int GetCurrentCoolTime() => currentCoolTime;
+        public void SetCurrentCoolTime(int value) => currentCoolTime = Mathf.Max(0, value);
 
         // === 실행 ===
         public void ExecuteSkill()
         {
-            throw new System.InvalidOperationException("[PlayerSkillCardRuntime] ExecuteSkill()에는 source/target이 필요합니다.");
+            Debug.LogWarning("[PlayerSkillCardRuntime] ExecuteSkill()는 source/target 필요");
         }
 
         public void ExecuteSkill(ICharacter source, ICharacter target)
@@ -94,9 +99,12 @@ namespace Game.SkillCardSystem.Runtime
                 }
                 else
                 {
-                    Debug.LogWarning($"[PlayerSkillCardRuntime] {GetCardName()} - 효과 명령 생성 실패: {effect.name}");
+                    Debug.LogWarning($"[PlayerSkillCardRuntime] {GetCardName()} - 효과 명령 생성 실패");
                 }
             }
+
+            // 실행 후 쿨타임 최대치로 초기화
+            SetCurrentCoolTime(GetMaxCoolTime());
         }
 
         // === 대상 정보 ===

@@ -54,7 +54,7 @@ namespace Game.CombatSystem.Manager
         public void ClearAllSlots()
         {
             foreach (var slot in combatSlots.Values)
-                slot.Clear();
+                slot.ClearAll();
         }
 
         public bool IsSlotEmpty(CombatSlotPosition position)

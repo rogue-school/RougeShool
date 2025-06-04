@@ -53,5 +53,10 @@ namespace Game.CombatSystem.Interface
         /// 전체 초기화
         /// </summary>
         void Reset();
+
+        /// <summary>
+        /// 적 카드만 제거 (플레이어 카드 보존)
+        /// </summary>
+        void ClearEnemyCardsOnly();
     }
 }

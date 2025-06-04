@@ -10,6 +10,7 @@ using Game.SkillCardSystem.Slot;
 using Game.SkillCardSystem.UI;
 using Game.SkillCardSystem.Executor;
 using Game.CombatSystem.Context;
+using Game.CharacterSystem.Interface;
 
 namespace Game.CombatSystem.Core
 {
@@ -28,7 +29,6 @@ namespace Game.CombatSystem.Core
         private ICombatTurnManager turnManager;
         private ICombatStateFactory stateFactory;
         private TurnStartButtonHandler startButtonHandler;
-
         private bool playerInputEnabled = false;
 
         [Inject]
@@ -45,7 +45,7 @@ namespace Game.CombatSystem.Core
 
         public void StartCombatFlow()
         {
-            var initialState = stateFactory.CreatePrepareState();
+            var initialState = stateFactory.CreatePlayerInputState();
             turnManager.ChangeState(initialState);
             DisableStartButton();
         }
@@ -117,20 +117,14 @@ namespace Game.CombatSystem.Core
             Debug.Log("[CombatFlowCoordinator] 첫 번째 공격 시작");
 
             var firstCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.FIRST);
-
             if (firstCard != null)
             {
                 ExecuteCard(firstCard);
                 Debug.Log($"[CombatFlowCoordinator] 선공 카드 실행 완료: {firstCard.GetCardName()}");
             }
-            else
-            {
-                Debug.LogWarning("[CombatFlowCoordinator] 선공 카드가 없습니다.");
-            }
 
             yield return new WaitForSeconds(1f);
             Debug.Log("[CombatFlowCoordinator] 첫 번째 공격 종료");
-
             onComplete?.Invoke();
         }
 
@@ -139,15 +133,10 @@ namespace Game.CombatSystem.Core
             Debug.Log("[CombatFlowCoordinator] 두 번째 공격 시작");
 
             var secondCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.SECOND);
-
             if (secondCard != null)
             {
                 ExecuteCard(secondCard);
                 Debug.Log($"[CombatFlowCoordinator] 후공 카드 실행 완료: {secondCard.GetCardName()}");
-            }
-            else
-            {
-                Debug.LogWarning("[CombatFlowCoordinator] 후공 카드가 없습니다.");
             }
 
             yield return new WaitForSeconds(1f);
@@ -156,16 +145,58 @@ namespace Game.CombatSystem.Core
 
         private void ExecuteCard(ISkillCard card)
         {
-            var source = card.GetOwner(new DefaultCardExecutionContext(card, null, null));
-            var target = card.GetTarget(new DefaultCardExecutionContext(card, source, null));
-            var context = new DefaultCardExecutionContext(card, source, target);
+            ICharacter source = card.IsFromPlayer() ? playerManager.GetPlayer() : enemyManager.GetEnemy();
+            ICharacter target = card.IsFromPlayer() ? enemyManager.GetEnemy() : playerManager.GetPlayer();
 
+            Debug.Log($"[ExecuteCard] 카드: {card.GetCardName()}, 소유자: {(card.IsFromPlayer() ? "플레이어" : "적")}");
+            Debug.Log($"[ExecuteCard] 대상: {target?.GetCharacterName() ?? "null"}, IsDead: {target?.IsDead()}, 현재 쿨타임: {card.GetCurrentCoolTime()}, 최대 쿨타임: {card.GetMaxCoolTime()}");
+
+            var context = new DefaultCardExecutionContext(card, source, target);
             cardExecutor.Execute(card, context, turnManager);
+
+            // UI만 제거하고 정보는 유지
+            var slot = slotRegistry.GetCombatSlot(card.GetCombatSlot().Value);
+            if (slot != null)
+            {
+                var cardUI = slot.GetCardUI();
+                if (cardUI is MonoBehaviour mb)
+                {
+                    GameObject.Destroy(mb.gameObject);
+                }
+                slot.SetCardUI(null);
+            }
         }
 
-        public IEnumerator PerformResultPhase() { yield return new WaitForSeconds(1f); }
-        public IEnumerator PerformVictoryPhase() { yield return new WaitForSeconds(1f); }
-        public IEnumerator PerformGameOverPhase() { yield return new WaitForSeconds(1f); }
+        public IEnumerator PerformResultPhase()
+        {
+            yield return new WaitForSeconds(1f);
+
+            // 이 시점에서 슬롯 클리어
+            ClearAllCombatSlots();
+        }
+
+        private void ClearAllCombatSlots()
+        {
+            foreach (CombatSlotPosition pos in Enum.GetValues(typeof(CombatSlotPosition)))
+            {
+                var slot = slotRegistry.GetCombatSlot(pos);
+                if (slot != null)
+                {
+                    slot.ClearAll();// 카드와 UI 모두 제거
+                }
+            }
+            Debug.Log("[CombatFlowCoordinator] 모든 전투 슬롯 클리어 완료");
+        }
+
+        public IEnumerator PerformVictoryPhase()
+        {
+            yield return new WaitForSeconds(1f);
+        }
+
+        public IEnumerator PerformGameOverPhase()
+        {
+            yield return new WaitForSeconds(1f);
+        }
 
         public void EnablePlayerInput() => playerInputEnabled = true;
         public void DisablePlayerInput() => playerInputEnabled = false;

@@ -24,6 +24,7 @@ using Game.CombatSystem.State;
 using Game.CombatSystem.Factory;
 using Game.Utility;
 using Game.CombatSystem.DragDrop;
+using Game.CombatSystem.CoolTime;
 
 public class CombatInstaller : MonoInstaller
 {
@@ -92,8 +93,11 @@ public class CombatInstaller : MonoInstaller
         Container.Bind<ICardReplacementHandler>().To<PlayerCardReplacementHandler>().AsSingle();
         Container.Bind<CardDropService>().AsSingle();
 
-        Container.Bind<ITurnStartConditionChecker>().To<DefaultTurnStartConditionChecker>().AsSingle(); // ★ 조건 검사기 바인딩
+        Container.Bind<ITurnStartConditionChecker>().To<DefaultTurnStartConditionChecker>().AsSingle();
+
+        Container.Bind<ICoolTimeHandler>().To<CoolTimeHandler>().AsSingle();
     }
+
 
     private void BindExecutionContext()
     {

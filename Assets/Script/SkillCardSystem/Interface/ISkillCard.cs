@@ -17,28 +17,29 @@ namespace Game.SkillCardSystem.Interface
         string GetCardName();
         string GetDescription();
         Sprite GetArtwork();
-        int GetCoolTime();
         int GetEffectPower(SkillCardEffectSO effect);
+
         List<SkillCardEffectSO> CreateEffects();
 
+        // 슬롯 및 소유자 정보
         void SetHandSlot(SkillCardSlotPosition slot);
         SkillCardSlotPosition? GetHandSlot();
         void SetCombatSlot(CombatSlotPosition slot);
         CombatSlotPosition? GetCombatSlot();
-
         SlotOwner GetOwner();
         bool IsFromPlayer();
 
+        // 실행
         void ExecuteCardAutomatically(ICardExecutionContext context);
         void ExecuteSkill();
+        void ExecuteSkill(ICharacter source, ICharacter target);
 
         ICharacter GetOwner(ICardExecutionContext context);
         ICharacter GetTarget(ICardExecutionContext context);
 
-        void ExecuteSkill(ICharacter source, ICharacter target)
-        {
-            var context = new DefaultCardExecutionContext(this, source, target);
-            ExecuteCardAutomatically(context);
-        }
+        // 쿨타임 관련
+        int GetMaxCoolTime();
+        int GetCurrentCoolTime();
+        void SetCurrentCoolTime(int value);
     }
 }
