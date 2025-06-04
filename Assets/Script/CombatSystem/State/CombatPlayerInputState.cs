@@ -45,6 +45,7 @@ namespace Game.CombatSystem.State
 
             Debug.Log("[CombatPlayerInputState] 플레이어 입력 완료 → 전투 시작");
 
+            flowCoordinator.DisableStartButton();
             flowCoordinator.DisablePlayerInput();
             flowCoordinator.HidePlayerCardSelectionUI();
             flowCoordinator.UnregisterStartButton();
@@ -53,17 +54,16 @@ namespace Game.CombatSystem.State
             turnManager.RequestStateChange(next);
         }
 
-        public void ExecuteState()
-        {
-            // 실시간 로직 없음
-        }
+        public void ExecuteState() { }
 
         public void ExitState()
         {
             Debug.Log("<color=grey>[CombatPlayerInputState] 상태 종료</color>");
+
             flowCoordinator.DisablePlayerInput();
             flowCoordinator.HidePlayerCardSelectionUI();
             flowCoordinator.UnregisterStartButton();
+            flowCoordinator.DisableStartButton();
         }
     }
 }

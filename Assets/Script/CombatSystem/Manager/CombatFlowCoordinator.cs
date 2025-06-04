@@ -45,8 +45,6 @@ namespace Game.CombatSystem.Core
 
         public void StartCombatFlow()
         {
-            var initialState = stateFactory.CreatePlayerInputState();
-            turnManager.ChangeState(initialState);
             DisableStartButton();
         }
 
@@ -54,6 +52,24 @@ namespace Game.CombatSystem.Core
         {
             StartCoroutine(PerformCombatPreparation(onComplete));
         }
+        public void RegisterCardToCombatSlot(CombatSlotPosition pos, ISkillCard card, SkillCardUI ui)
+        {
+            var slot = slotRegistry.GetCombatSlot(pos);
+            if (slot is ICombatCardSlot combatSlot)
+            {
+                ui.transform.SetParent(combatSlot.GetTransform());
+                ui.transform.localPosition = Vector3.zero;
+                ui.transform.localScale = Vector3.one;
+                combatSlot.SetCard(card);
+                combatSlot.SetCardUI(ui);
+            }
+        }
+
+        public ITurnCardRegistry GetTurnCardRegistry()
+        {
+            return turnCardRegistry;
+        }
+
 
         public IEnumerator PerformCombatPreparation() => PerformCombatPreparation(_ => { });
 
@@ -154,16 +170,11 @@ namespace Game.CombatSystem.Core
             var context = new DefaultCardExecutionContext(card, source, target);
             cardExecutor.Execute(card, context, turnManager);
 
-            // UI만 제거하고 정보는 유지
+            // UI만 제거하고 카드 정보는 유지
             var slot = slotRegistry.GetCombatSlot(card.GetCombatSlot().Value);
             if (slot != null)
             {
-                var cardUI = slot.GetCardUI();
-                if (cardUI is MonoBehaviour mb)
-                {
-                    GameObject.Destroy(mb.gameObject);
-                }
-                slot.SetCardUI(null);
+                slot.ClearCardUI(); // ✔ UI만 제거
             }
         }
 
@@ -171,21 +182,47 @@ namespace Game.CombatSystem.Core
         {
             yield return new WaitForSeconds(1f);
 
-            // 이 시점에서 슬롯 클리어
-            ClearAllCombatSlots();
+            // 개선된 처리
+            ClearAllSlotUIs();         // 카드 UI만 제거
+            ClearEnemyCombatSlots();   // 적 카드 정보까지 제거
+
+            Debug.Log("[CombatFlowCoordinator] 전투 결과 처리 완료 (플레이어 카드 유지)");
         }
 
+        public void ClearAllSlotUIs()
+        {
+            foreach (CombatSlotPosition pos in Enum.GetValues(typeof(CombatSlotPosition)))
+            {
+                var slot = slotRegistry.GetCombatSlot(pos);
+                slot?.ClearCardUI(); // 카드 UI만 제거
+            }
+            Debug.Log("[CombatFlowCoordinator] 모든 슬롯의 카드 UI 제거 완료");
+        }
+
+        public void ClearEnemyCombatSlots()
+        {
+            foreach (CombatSlotPosition pos in Enum.GetValues(typeof(CombatSlotPosition)))
+            {
+                var card = turnCardRegistry.GetCardInSlot(pos);
+                if (card != null && !card.IsFromPlayer())
+                {
+                    var slot = slotRegistry.GetCombatSlot(pos);
+                    slot?.ClearAll(); // 적 카드 정보 및 UI 제거
+                }
+            }
+            Debug.Log("[CombatFlowCoordinator] 적 카드만 제거 완료");
+        }
+
+        // 전체 초기화가 필요한 경우 사용 (예: 강제 리셋 등)
         private void ClearAllCombatSlots()
         {
             foreach (CombatSlotPosition pos in Enum.GetValues(typeof(CombatSlotPosition)))
             {
                 var slot = slotRegistry.GetCombatSlot(pos);
-                if (slot != null)
-                {
-                    slot.ClearAll();// 카드와 UI 모두 제거
-                }
+                slot?.ClearAll(); // 카드 + UI 전부 제거
             }
-            Debug.Log("[CombatFlowCoordinator] 모든 전투 슬롯 클리어 완료");
+
+            Debug.Log("[CombatFlowCoordinator] 모든 전투 슬롯 완전 클리어 완료");
         }
 
         public IEnumerator PerformVictoryPhase()
@@ -223,6 +260,11 @@ namespace Game.CombatSystem.Core
         {
             Debug.Log("[CombatFlowCoordinator] 전투 시작 버튼 비활성화");
             startButtonHandler?.SetInteractable(false);
+        }
+
+        public ISkillCard GetCardInSlot(CombatSlotPosition pos)
+        {
+            return turnCardRegistry.GetCardInSlot(pos);
         }
 
         public void RegisterStartButton(Action callback) => onStartButtonPressed = callback;

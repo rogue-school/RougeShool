@@ -21,8 +21,11 @@ namespace Game.CombatSystem.Initialization
         {
             Debug.Log("[FlowCoordinatorInitializationStep] 전투 준비 흐름 초기화 시작");
 
-            // 버튼 핸들러 의존성 주입
             buttonHandler.Inject(conditionChecker, (ITurnStateController)turnManager, stateFactory, cardRegistry);
+
+            turnManager.Initialize();
+            flowCoordinator.InjectTurnStateDependencies(turnManager, stateFactory);
+            flowCoordinator.StartCombatFlow();
 
             bool isComplete = false;
 
@@ -31,7 +34,6 @@ namespace Game.CombatSystem.Initialization
                 if (success)
                 {
                     Debug.Log("[FlowCoordinatorInitializationStep] 전투 준비 성공");
-                    turnManager.ChangeState(stateFactory.CreatePlayerInputState());
                 }
                 else
                 {
@@ -43,5 +45,6 @@ namespace Game.CombatSystem.Initialization
 
             yield return new WaitUntil(() => isComplete);
         }
+
     }
 }

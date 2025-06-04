@@ -1,8 +1,9 @@
 using UnityEngine;
 using System.Collections;
-using Zenject;
 using Game.CombatSystem.Interface;
+using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Slot;
+using Game.SkillCardSystem.Slot;
 using Game.Utility;
 
 namespace Game.CombatSystem.State
@@ -11,55 +12,84 @@ namespace Game.CombatSystem.State
     {
         private readonly ICombatTurnManager turnManager;
         private readonly ICombatFlowCoordinator flowCoordinator;
-        private readonly ITurnCardRegistry cardRegistry;
+        private readonly IPlayerHandManager playerHandManager;
+        private readonly IEnemyHandManager enemyHandManager;
+        private readonly ISlotRegistry slotRegistry;
         private readonly ICoroutineRunner coroutineRunner;
-        private readonly ICoolTimeHandler coolTimeHandler;
 
-        private bool isStateEntered;
-
-        [Inject]
         public CombatPrepareState(
             ICombatTurnManager turnManager,
             ICombatFlowCoordinator flowCoordinator,
-            ITurnCardRegistry cardRegistry,
-            ICoroutineRunner coroutineRunner,
-            ICoolTimeHandler coolTimeHandler)
+            IPlayerHandManager playerHandManager,
+            IEnemyHandManager enemyHandManager,
+            ISlotRegistry slotRegistry,
+            ICoroutineRunner coroutineRunner)
         {
             this.turnManager = turnManager;
             this.flowCoordinator = flowCoordinator;
-            this.cardRegistry = cardRegistry;
+            this.playerHandManager = playerHandManager;
+            this.enemyHandManager = enemyHandManager;
+            this.slotRegistry = slotRegistry;
             this.coroutineRunner = coroutineRunner;
-            this.coolTimeHandler = coolTimeHandler;
         }
 
         public void EnterState()
         {
-            if (isStateEntered)
-            {
-                Debug.LogWarning("[CombatPrepareState] 이미 상태에 진입했습니다. 중복 호출 방지됨");
-                return;
-            }
-
-            isStateEntered = true;
-
-            Debug.Log("<color=yellow>[CombatPrepareState] 상태 진입</color>");
-
-            flowCoordinator.DisablePlayerInput();
-
-            // 적 카드만 초기화 (플레이어 카드 보존)
-            cardRegistry.ClearEnemyCardsOnly();
-
+            Debug.Log("<color=cyan>[CombatPrepareState] 상태 진입</color>");
             coroutineRunner.RunCoroutine(PrepareRoutine());
         }
 
         private IEnumerator PrepareRoutine()
         {
-            coolTimeHandler.ReduceCoolTimes();
-            yield return flowCoordinator.PerformCombatPreparation();
+            ReturnPlayerCardToHand();
 
-            Debug.Log("<color=lime>[CombatPrepareState] 적 전투 준비 완료 → 플레이어 입력 상태로 이동</color>");
-            var nextState = turnManager.GetStateFactory().CreatePlayerInputState();
-            turnManager.RequestStateChange(nextState);
+            yield return new WaitForEndOfFrame();
+
+            flowCoordinator.ClearEnemyCombatSlots();
+
+            yield return new WaitForEndOfFrame();
+
+            RegisterEnemyCardToSlot();
+
+            yield return new WaitForEndOfFrame();
+
+            enemyHandManager.FillEmptySlots();
+
+            yield return new WaitForSeconds(0.1f); // 적 카드가 생성/등록되는 타이밍 고려
+
+            var next = turnManager.GetStateFactory().CreatePlayerInputState();
+            turnManager.RequestStateChange(next);
+        }
+
+        private void ReturnPlayerCardToHand()
+        {
+            foreach (CombatSlotPosition pos in System.Enum.GetValues(typeof(CombatSlotPosition)))
+            {
+                var card = flowCoordinator.GetCardInSlot(pos);
+                if (card != null && card.IsFromPlayer())
+                {
+                    playerHandManager.RemoveCard(card);
+                    playerHandManager.RestoreCardToHand(card);
+                    slotRegistry.GetCombatSlot(pos)?.ClearAll();
+                    Debug.Log($"[CombatPrepareState] 카드 복귀 완료: {card.GetCardName()}");
+                }
+            }
+        }
+
+        private void RegisterEnemyCardToSlot()
+        {
+            var (card, ui) = enemyHandManager.PopCardFromSlot(SkillCardSlotPosition.ENEMY_SLOT_1);
+            if (card == null)
+            {
+                Debug.LogWarning("[CombatPrepareState] 적 핸드 슬롯 1번에 카드 없음");
+                return;
+            }
+
+            var slotPos = CombatSlotPosition.SECOND;
+            flowCoordinator.RegisterCardToCombatSlot(slotPos, card, ui);
+            flowCoordinator.GetTurnCardRegistry().RegisterCard(slotPos, card, ui, SlotOwner.ENEMY);
+
+            Debug.Log($"[CombatPrepareState] 적 카드 등록 완료 → {card.GetCardName()}");
         }
 
         public void ExecuteState() { }
@@ -67,7 +97,6 @@ namespace Game.CombatSystem.State
         public void ExitState()
         {
             Debug.Log("<color=grey>[CombatPrepareState] 상태 종료</color>");
-            isStateEntered = false;
         }
     }
 }

@@ -16,11 +16,8 @@ namespace Game.SkillCardSystem.Interface
         void LogPlayerHandSlotStates();
         void EnableInput(bool enable);
         void ClearAll();
+        void RemoveCard(ISkillCard card);
 
-        /// <summary>
-        /// 현재 핸드에 존재하는 모든 카드와 UI를 반환합니다.
-        /// 쿨타임 처리 및 UI 갱신에 사용됩니다.
-        /// </summary>
         IEnumerable<(ISkillCard card, ISkillCardUI ui)> GetAllHandCards();
     }
 }

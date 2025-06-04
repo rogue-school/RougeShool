@@ -23,34 +23,49 @@ namespace Game.CombatSystem.Manager
 
         public void Initialize()
         {
-            var prepareState = stateFactory.CreatePrepareState();
-            if (prepareState != null)
-                RequestStateChange(prepareState);
+            Debug.Log("[CombatTurnManager] 초기 상태 PlayerInputState로 시작");
+            var inputState = stateFactory.CreatePlayerInputState();
+            RequestStateChange(inputState);
         }
 
         private void Update()
         {
             if (pendingNextState != null)
+            {
+                Debug.Log("[CombatTurnManager] 상태 전이 감지 → ApplyPendingState 호출");
                 ApplyPendingState();
+            }
 
             currentState?.ExecuteState();
         }
 
         public void RequestStateChange(ICombatTurnState nextState)
         {
+            Debug.Log($"[CombatTurnManager] 상태 전이 요청됨 → {nextState.GetType().Name}");
             pendingNextState = nextState;
         }
 
         private void ApplyPendingState()
         {
-            ChangeState(pendingNextState);
-            pendingNextState = null;
+            if (pendingNextState != null)
+            {
+                Debug.Log($"[CombatTurnManager] 상태 전이 실행 → {pendingNextState.GetType().Name}");
+                ChangeState(pendingNextState);
+                pendingNextState = null;
+            }
         }
 
         public void ChangeState(ICombatTurnState newState)
         {
+            if (currentState != null)
+                Debug.Log($"[CombatTurnManager] 상태 종료 → {currentState.GetType().Name}");
+
             currentState?.ExitState();
             currentState = newState;
+
+            if (currentState != null)
+                Debug.Log($"[CombatTurnManager] 상태 진입 → {currentState.GetType().Name}");
+
             currentState?.EnterState();
         }
 
@@ -58,16 +73,13 @@ namespace Game.CombatSystem.Manager
 
         public void Reset()
         {
+            Debug.Log("[CombatTurnManager] 상태 초기화");
             currentState = null;
             pendingNextState = null;
             isTurnReady = false;
             reservedEnemySlot = null;
         }
 
-        /// <summary>
-        /// 전투 시작 가능 여부를 계산
-        /// 현재는 두 슬롯이 모두 채워져 있어야 함
-        /// </summary>
         public void UpdateTurnReady()
         {
             bool ready =
@@ -77,16 +89,15 @@ namespace Game.CombatSystem.Manager
             if (isTurnReady != ready)
             {
                 isTurnReady = ready;
+                Debug.Log($"[CombatTurnManager] 턴 시작 가능 상태 변경 → {(ready ? "가능" : "불가능")}");
                 OnTurnReadyChanged?.Invoke(isTurnReady);
             }
         }
 
-        /// <summary>
-        /// 카드 등록 시 호출되어 전투 준비 상태 갱신
-        /// </summary>
         public void RegisterCard(CombatSlotPosition slot, ISkillCard card, SkillCardSystem.UI.SkillCardUI ui, SlotOwner owner)
         {
             cardRegistry.RegisterCard(slot, card, ui, owner);
+            Debug.Log($"[CombatTurnManager] 카드 등록 완료 → {card.GetCardName()} → 슬롯: {slot}");
             UpdateTurnReady();
         }
 

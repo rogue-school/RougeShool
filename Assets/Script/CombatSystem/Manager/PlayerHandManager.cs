@@ -53,9 +53,7 @@ namespace Game.SkillCardSystem.Core
                 var pos = entry.Slot;
                 var card = cardFactory.CreatePlayerCard(entry.Card.CardData, entry.Card.CreateEffects());
 
-                // 쿨타임은 0으로 초기화
                 card.SetCurrentCoolTime(0);
-
                 cards[pos] = card;
 
                 var slot = slotRegistry.GetPlayerHandSlot(pos);
@@ -110,6 +108,26 @@ namespace Game.SkillCardSystem.Core
             }
         }
 
+        public void RemoveCard(ISkillCard card)
+        {
+            foreach (var kvp in cards)
+            {
+                if (kvp.Value == card)
+                {
+                    var slot = slotRegistry.GetPlayerHandSlot(kvp.Key);
+                    slot?.DetachCard();
+
+                    cards[kvp.Key] = null;
+                    cardUIs.Remove(kvp.Key);
+
+                    Debug.Log($"[PlayerHandManager] 카드 제거 완료: {card.GetCardName()}");
+                    return;
+                }
+            }
+
+            Debug.LogWarning("[PlayerHandManager] 해당 카드를 찾을 수 없어 제거 실패");
+        }
+
         public void LogPlayerHandSlotStates()
         {
             foreach (SkillCardSlotPosition pos in System.Enum.GetValues(typeof(SkillCardSlotPosition)))
@@ -134,9 +152,6 @@ namespace Game.SkillCardSystem.Core
             cardUIs.Clear();
         }
 
-        /// <summary>
-        /// 쿨타임 관리용 카드+UI 목록 반환
-        /// </summary>
         public IEnumerable<(ISkillCard card, ISkillCardUI ui)> GetAllHandCards()
         {
             foreach (var kvp in cards)

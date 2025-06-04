@@ -1,5 +1,8 @@
 using System;
 using System.Collections;
+using Game.CombatSystem.Slot;
+using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.UI;
 
 namespace Game.CombatSystem.Interface
 {
@@ -26,6 +29,8 @@ namespace Game.CombatSystem.Interface
         void StartCombatFlow();
         void RequestCombatPreparation(Action<bool> onComplete);
         void RequestFirstAttack(Action onComplete = null);
+        void RegisterCardToCombatSlot(CombatSlotPosition pos, ISkillCard card, SkillCardUI ui);
+        ITurnCardRegistry GetTurnCardRegistry();
 
         void ShowPlayerCardSelectionUI();
         void HidePlayerCardSelectionUI();
@@ -37,5 +42,8 @@ namespace Game.CombatSystem.Interface
         void UnregisterStartButton();
 
         void CleanupAfterVictory();
+        void ClearEnemyCombatSlots(); // 적 카드만 제거하는 메서드
+
+        ISkillCard GetCardInSlot(CombatSlotPosition pos); // 슬롯에서 카드 가져오기
     }
 }

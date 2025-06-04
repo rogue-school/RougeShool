@@ -17,22 +17,22 @@ namespace Game.CombatSystem.Service
         private readonly ICardRegistrar registrar;
         private readonly ICombatTurnManager turnManager;
         private readonly ICardReplacementHandler replacementHandler;
+        private readonly IPlayerHandManager playerHandManager; //  주입 필요
 
         public CardDropService(
             ICardDropValidator validator,
             ICardRegistrar registrar,
             ICombatTurnManager turnManager,
-            ICardReplacementHandler replacementHandler)
+            ICardReplacementHandler replacementHandler,
+            IPlayerHandManager playerHandManager) //  추가됨
         {
             this.validator = validator;
             this.registrar = registrar;
             this.turnManager = turnManager;
             this.replacementHandler = replacementHandler;
+            this.playerHandManager = playerHandManager;
         }
 
-        /// <summary>
-        /// 드롭 가능한지 판단 후 카드 등록 로직 실행
-        /// </summary>
         public bool TryDropCard(ISkillCard card, SkillCardUI ui, ICombatCardSlot slot, out string message)
         {
             message = "";
@@ -64,17 +64,14 @@ namespace Game.CombatSystem.Service
                 return false;
             }
 
-            // 슬롯 교체 처리
             replacementHandler.ReplaceSlotCard(slot, card, ui);
 
-            // 슬롯 위치를 실행 슬롯으로 변환
             var execSlot = SlotPositionUtil.ToExecutionSlot(slot.GetCombatPosition());
-
-            // 전투 턴 매니저에 카드 등록
             turnManager.RegisterCard(execSlot, card, ui, SlotOwner.PLAYER);
 
             Debug.Log("[CardDropService] 카드 드롭 처리 완료");
             return true;
         }
+
     }
 }
