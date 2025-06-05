@@ -12,7 +12,7 @@ namespace Game.CombatSystem.Core
         [SerializeField] private Button startButton;
 
         private ITurnStartConditionChecker conditionChecker;
-        private ITurnStateController turnStateController;
+        private ICombatTurnManager turnManager;
         private ICombatStateFactory stateFactory;
         private ITurnCardRegistry cardRegistry;
 
@@ -23,12 +23,12 @@ namespace Game.CombatSystem.Core
         /// </summary>
         public void Inject(
             ITurnStartConditionChecker conditionChecker,
-            ITurnStateController turnStateController,
+            ICombatTurnManager turnManager,
             ICombatStateFactory stateFactory,
             ITurnCardRegistry cardRegistry)
         {
             this.conditionChecker = conditionChecker;
-            this.turnStateController = turnStateController;
+            this.turnManager = turnManager;
             this.stateFactory = stateFactory;
             this.cardRegistry = cardRegistry;
 
@@ -94,7 +94,7 @@ namespace Game.CombatSystem.Core
             var nextState = stateFactory?.CreateFirstAttackState();
             if (nextState != null)
             {
-                turnStateController?.RequestStateChange(nextState);
+                turnManager?.RequestStateChange(nextState);
                 Debug.Log("[TurnStartButtonHandler] 상태 전이 요청됨");
             }
             else

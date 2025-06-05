@@ -15,10 +15,10 @@ namespace Game.SkillCardSystem.Effects
         {
             return new RegenEffectCommand(healPerTurn + power, duration);
         }
-    
-    public override void ApplyEffect(ICardExecutionContext context, int value, ITurnStateController controller = null)
+
+        public override void ApplyEffect(ICardExecutionContext context, int value, ICombatTurnManager turnManager = null)
         {
-            var regen = new RegenEffect(value, 2);
+            var regen = new RegenEffect(value, duration);
             context.Target?.RegisterPerTurnEffect(regen);
             Debug.Log($"[RegenEffectSO] {context.Target?.GetCharacterName()}에게 재생 {value} 적용");
         }

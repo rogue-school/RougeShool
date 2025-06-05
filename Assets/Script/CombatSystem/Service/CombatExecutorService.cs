@@ -16,7 +16,7 @@ namespace Game.CombatSystem.Executor
         private ICardExecutionContextProvider contextProvider;
         private ICardExecutor cardExecutor;
         private readonly IEnemyHandManager enemyHandManager;
-        private ITurnStateController turnController;
+        private ICombatTurnManager turnManager;
 
         public CombatExecutorService(
             ICombatSlotRegistry combatSlotRegistry,
@@ -63,7 +63,7 @@ namespace Game.CombatSystem.Executor
             Debug.Log($"[Executor] 카드 실행 시작: {card.GetCardName()}");
 
             var context = contextProvider.CreateContext(card);
-            cardExecutor.Execute(card, context, turnController);
+            cardExecutor.Execute(card, context, turnManager);
 
             yield return new WaitForSeconds(0.5f);
 
@@ -81,11 +81,11 @@ namespace Game.CombatSystem.Executor
         }
 
         /// <summary>
-        /// 턴 상태 제어기 주입
+        /// 전투 턴 매니저 주입 (기존 ITurnStateController → ICombatTurnManager로 변경됨)
         /// </summary>
-        public void SetTurnController(ITurnStateController controller)
+        public void SetTurnManager(ICombatTurnManager manager)
         {
-            turnController = controller;
+            turnManager = manager;
         }
     }
 }

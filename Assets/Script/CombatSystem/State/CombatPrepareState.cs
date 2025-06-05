@@ -5,6 +5,7 @@ using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Slot;
 using Game.Utility;
+using Game.CombatSystem.Context;
 
 namespace Game.CombatSystem.State
 {
@@ -16,6 +17,7 @@ namespace Game.CombatSystem.State
         private readonly IEnemyHandManager enemyHandManager;
         private readonly ISlotRegistry slotRegistry;
         private readonly ICoroutineRunner coroutineRunner;
+        private readonly TurnContext turnContext; 
 
         public CombatPrepareState(
             ICombatTurnManager turnManager,
@@ -23,7 +25,8 @@ namespace Game.CombatSystem.State
             IPlayerHandManager playerHandManager,
             IEnemyHandManager enemyHandManager,
             ISlotRegistry slotRegistry,
-            ICoroutineRunner coroutineRunner)
+            ICoroutineRunner coroutineRunner,
+            TurnContext turnContext)
         {
             this.turnManager = turnManager;
             this.flowCoordinator = flowCoordinator;
@@ -31,11 +34,13 @@ namespace Game.CombatSystem.State
             this.enemyHandManager = enemyHandManager;
             this.slotRegistry = slotRegistry;
             this.coroutineRunner = coroutineRunner;
+            this.turnContext = turnContext;
         }
 
         public void EnterState()
         {
             Debug.Log("<color=cyan>[CombatPrepareState] 상태 진입</color>");
+            turnContext.Reset();
             coroutineRunner.RunCoroutine(PrepareRoutine());
         }
 
@@ -55,7 +60,7 @@ namespace Game.CombatSystem.State
 
             enemyHandManager.FillEmptySlots();
 
-            yield return new WaitForSeconds(0.1f); // 적 카드가 생성/등록되는 타이밍 고려
+            yield return new WaitForSeconds(0.1f);
 
             var next = turnManager.GetStateFactory().CreatePlayerInputState();
             turnManager.RequestStateChange(next);

@@ -13,11 +13,11 @@ namespace Game.SkillCardSystem.Effect
         {
             return new GuardEffectCommand();
         }
-        public override void ApplyEffect(ICardExecutionContext context, int value, ITurnStateController controller = null)
+
+        public override void ApplyEffect(ICardExecutionContext context, int value, ICombatTurnManager turnManager = null)
         {
             context.Target?.GainGuard(value);
             Debug.Log($"[GuardEffectSO] {context.Target?.GetCharacterName()}에게 가드 {value} 적용");
         }
-
     }
 }

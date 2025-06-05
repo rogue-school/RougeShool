@@ -21,7 +21,7 @@ namespace Game.CombatSystem.Initialization
         {
             Debug.Log("[FlowCoordinatorInitializationStep] 전투 준비 흐름 초기화 시작");
 
-            buttonHandler.Inject(conditionChecker, (ITurnStateController)turnManager, stateFactory, cardRegistry);
+            buttonHandler.Inject(conditionChecker, turnManager, stateFactory, cardRegistry);
 
             turnManager.Initialize();
             flowCoordinator.InjectTurnStateDependencies(turnManager, stateFactory);
@@ -45,6 +45,5 @@ namespace Game.CombatSystem.Initialization
 
             yield return new WaitUntil(() => isComplete);
         }
-
     }
 }

@@ -36,6 +36,9 @@ public class CombatInstaller : MonoInstaller
         BindStateFactories();
         BindMonoBehaviours();
         BindServices();
+
+        Container.Bind<TurnContext>().AsSingle();
+
         BindExecutionContext();
         BindSlotSystem();
         BindInitializerSteps();

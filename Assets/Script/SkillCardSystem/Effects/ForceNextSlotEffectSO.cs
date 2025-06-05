@@ -16,17 +16,18 @@ namespace Game.SkillCardSystem.Effect
         {
             return new ForceNextSlotEffectCommand(forcedSlot);
         }
-    
-    public override void ApplyEffect(ICardExecutionContext context, int value, ITurnStateController controller = null)
+
+        public override void ApplyEffect(ICardExecutionContext context, int value, ICombatTurnManager turnManager = null)
         {
-            if (controller == null)
+            if (turnManager == null)
             {
-                Debug.LogWarning("[ForceNextSlotEffectSO] TurnStateController가 null입니다.");
+                Debug.LogWarning("[ForceNextSlotEffectSO] CombatTurnManager가 null입니다.");
                 return;
             }
 
-            controller.ReserveNextEnemySlot((CombatSlotPosition)value); // 예: value → enum값
-            Debug.Log($"[ForceNextSlotEffectSO] 다음 적 행동 슬롯 강제 예약: {((CombatSlotPosition)value)}");
+            var slot = (CombatSlotPosition)value;
+            turnManager.ReserveNextEnemySlot(slot);
+            Debug.Log($"[ForceNextSlotEffectSO] 다음 적 행동 슬롯 강제 예약: {slot}");
         }
     }
 }

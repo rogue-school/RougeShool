@@ -3,12 +3,13 @@ using System;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.UI;
 using Zenject;
 using Game.CombatSystem.State;
 
 namespace Game.CombatSystem.Manager
 {
-    public class CombatTurnManager : MonoBehaviour, ICombatTurnManager, ITurnStateController
+    public class CombatTurnManager : MonoBehaviour, ICombatTurnManager
     {
         [Inject] private ICombatStateFactory stateFactory;
         [Inject] private ITurnCardRegistry cardRegistry;
@@ -24,15 +25,13 @@ namespace Game.CombatSystem.Manager
         public void Initialize()
         {
             Debug.Log("[CombatTurnManager] 초기 상태 PlayerInputState로 시작");
-            var inputState = stateFactory.CreatePlayerInputState();
-            RequestStateChange(inputState);
+            RequestStateChange(stateFactory.CreatePlayerInputState());
         }
 
         private void Update()
         {
             if (pendingNextState != null)
             {
-                Debug.Log("[CombatTurnManager] 상태 전이 감지 → ApplyPendingState 호출");
                 ApplyPendingState();
             }
 
@@ -45,39 +44,37 @@ namespace Game.CombatSystem.Manager
             pendingNextState = nextState;
         }
 
-        private void ApplyPendingState()
+        public void ApplyPendingState()
         {
-            if (pendingNextState != null)
-            {
-                Debug.Log($"[CombatTurnManager] 상태 전이 실행 → {pendingNextState.GetType().Name}");
-                ChangeState(pendingNextState);
-                pendingNextState = null;
-            }
+            if (pendingNextState == null) return;
+
+            Debug.Log($"[CombatTurnManager] 상태 전이 실행 → {pendingNextState.GetType().Name}");
+            ChangeState(pendingNextState);
+            pendingNextState = null;
         }
 
         public void ChangeState(ICombatTurnState newState)
         {
-            if (currentState != null)
-                Debug.Log($"[CombatTurnManager] 상태 종료 → {currentState.GetType().Name}");
-
             currentState?.ExitState();
+            Debug.Log($"[CombatTurnManager] 상태 종료 → {currentState?.GetType().Name}");
+
             currentState = newState;
 
-            if (currentState != null)
-                Debug.Log($"[CombatTurnManager] 상태 진입 → {currentState.GetType().Name}");
-
+            Debug.Log($"[CombatTurnManager] 상태 진입 → {currentState?.GetType().Name}");
             currentState?.EnterState();
         }
 
         public ICombatTurnState GetCurrentState() => currentState;
+
+        public ICombatStateFactory GetStateFactory() => stateFactory;
 
         public void Reset()
         {
             Debug.Log("[CombatTurnManager] 상태 초기화");
             currentState = null;
             pendingNextState = null;
-            isTurnReady = false;
             reservedEnemySlot = null;
+            isTurnReady = false;
         }
 
         public void UpdateTurnReady()
@@ -94,7 +91,7 @@ namespace Game.CombatSystem.Manager
             }
         }
 
-        public void RegisterCard(CombatSlotPosition slot, ISkillCard card, SkillCardSystem.UI.SkillCardUI ui, SlotOwner owner)
+        public void RegisterCard(CombatSlotPosition slot, ISkillCard card, SkillCardUI ui, SlotOwner owner)
         {
             cardRegistry.RegisterCard(slot, card, ui, owner);
             Debug.Log($"[CombatTurnManager] 카드 등록 완료 → {card.GetCardName()} → 슬롯: {slot}");
@@ -103,14 +100,10 @@ namespace Game.CombatSystem.Manager
 
         public bool CanStartTurn() => isTurnReady;
 
+        public bool IsPlayerInputTurn() => currentState is CombatPlayerInputState;
+
         public void ReserveNextEnemySlot(CombatSlotPosition slot) => reservedEnemySlot = slot;
+
         public CombatSlotPosition? GetReservedEnemySlot() => reservedEnemySlot;
-
-        public ICombatStateFactory GetStateFactory() => stateFactory;
-
-        public bool IsPlayerInputTurn()
-        {
-            return currentState is CombatPlayerInputState;
-        }
     }
 }
