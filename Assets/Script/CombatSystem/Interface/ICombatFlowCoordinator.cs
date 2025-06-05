@@ -24,6 +24,19 @@ namespace Game.CombatSystem.Interface
         bool IsEnemyDead();
         bool CheckHasNextEnemy();
         bool IsPlayerInputEnabled();
+        // 적 캐릭터 제거
+        void RemoveEnemyCharacter();
+
+        // 적 핸드 제거
+        void ClearEnemyHand();
+
+        // 적 존재 여부 확인
+        bool HasEnemy();
+
+        // 다음 적 스폰
+        void SpawnNextEnemy();
+
+
 
         void InjectTurnStateDependencies(ICombatTurnManager turnManager, ICombatStateFactory stateFactory);
         void StartCombatFlow();

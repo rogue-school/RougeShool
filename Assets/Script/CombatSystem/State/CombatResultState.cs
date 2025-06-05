@@ -24,7 +24,6 @@ namespace Game.CombatSystem.State
         public void EnterState()
         {
             Debug.Log("<color=orange>[CombatResultState] 상태 진입</color>");
-
             flowCoordinator.DisablePlayerInput();
             coroutineRunner.RunCoroutine(ExecuteResultPhase());
         }
@@ -35,7 +34,12 @@ namespace Game.CombatSystem.State
 
             if (flowCoordinator.IsEnemyDead())
             {
-                Debug.Log("[CombatResultState] 적 사망 → VictoryState 전환");
+                Debug.Log("[CombatResultState] 적 사망 → 적 정보 제거");
+
+                flowCoordinator.RemoveEnemyCharacter();
+                flowCoordinator.ClearEnemyHand();
+
+                Debug.Log("[CombatResultState] VictoryState 전환");
                 var next = turnManager.GetStateFactory().CreateVictoryState();
                 turnManager.RequestStateChange(next);
             }

@@ -18,6 +18,7 @@ public interface IEnemyHandManager
     ISkillCardUI GetCardUI(int index);
 
     void ClearHand();
+    void ClearAllCards();
     void LogHandSlotStates();
 
     SkillCardUI RemoveCardFromSlot(SkillCardSlotPosition pos);

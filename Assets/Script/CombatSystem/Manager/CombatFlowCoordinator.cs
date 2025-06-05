@@ -11,6 +11,7 @@ using Game.SkillCardSystem.UI;
 using Game.SkillCardSystem.Executor;
 using Game.CombatSystem.Context;
 using Game.CharacterSystem.Interface;
+using Game.CharacterSystem.Core;
 
 namespace Game.CombatSystem.Core
 {
@@ -120,6 +121,39 @@ namespace Game.CombatSystem.Core
                 combatSlot.SetCardUI(ui);
             }
         }
+        public void RemoveEnemyCharacter()
+        {
+            var enemy = enemyManager.GetEnemy();
+
+            if (enemy is EnemyCharacter concreteEnemy)
+            {
+                Debug.Log("[CombatFlowCoordinator] 적 캐릭터 제거");
+                Destroy(concreteEnemy.gameObject);
+                enemyManager.ClearEnemy(); // ← 수정
+            }
+            else
+            {
+                Debug.LogWarning("[CombatFlowCoordinator] EnemyCharacter로 캐스팅 실패 - 제거 불가");
+            }
+        }
+
+        public void ClearEnemyHand()
+        {
+            Debug.Log("[CombatFlowCoordinator] 적 핸드 제거");
+            enemyHandManager.ClearHand(); // ← 수정
+        }
+
+        public bool HasEnemy()
+        {
+            return enemyManager.GetEnemy() != null;
+        }
+
+        public void SpawnNextEnemy()
+        {
+            Debug.Log("[CombatFlowCoordinator] 다음 적 스폰 시도");
+            stageManager.SpawnNextEnemy();
+        }
+
 
         public void RequestFirstAttack(Action onComplete = null)
         {

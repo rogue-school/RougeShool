@@ -127,6 +127,12 @@ namespace Game.CombatSystem.Manager
             Debug.Log($"[EnemyHandManager] 카드 이동: {from} → {to}");
             return true;
         }
+        public void ClearAllCards()
+        {
+            ClearHand(); // 내부적으로 카드와 UI 모두 제거
+            Debug.Log("[EnemyHandManager] ClearAllCards() 호출됨");
+        }
+
 
         private bool IsSlotEmpty(SkillCardSlotPosition pos)
         {

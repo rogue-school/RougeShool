@@ -50,6 +50,12 @@ namespace Game.CombatSystem.State
 
             yield return new WaitForEndOfFrame();
 
+            if (!flowCoordinator.HasEnemy())
+            {
+                flowCoordinator.SpawnNextEnemy();
+                yield return new WaitForSeconds(0.5f);
+            }
+
             flowCoordinator.ClearEnemyCombatSlots();
 
             yield return new WaitForEndOfFrame();
@@ -65,6 +71,7 @@ namespace Game.CombatSystem.State
             var next = turnManager.GetStateFactory().CreatePlayerInputState();
             turnManager.RequestStateChange(next);
         }
+
 
         private void ReturnPlayerCardToHand()
         {
