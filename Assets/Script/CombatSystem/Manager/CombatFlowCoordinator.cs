@@ -124,16 +124,21 @@ namespace Game.CombatSystem.Core
         public void RemoveEnemyCharacter()
         {
             var enemy = enemyManager.GetEnemy();
+            if (enemy == null)
+            {
+                Debug.LogWarning("[CombatFlowCoordinator] 적이 이미 제거된 상태입니다.");
+                return;
+            }
 
             if (enemy is EnemyCharacter concreteEnemy)
             {
-                Debug.Log("[CombatFlowCoordinator] 적 캐릭터 제거");
                 Destroy(concreteEnemy.gameObject);
-                enemyManager.ClearEnemy(); // ← 수정
+                enemyManager.ClearEnemy();
+                Debug.Log("[CombatFlowCoordinator] 적 캐릭터 제거 완료");
             }
             else
             {
-                Debug.LogWarning("[CombatFlowCoordinator] EnemyCharacter로 캐스팅 실패 - 제거 불가");
+                Debug.LogWarning("[CombatFlowCoordinator] EnemyCharacter가 아닙니다.");
             }
         }
 
@@ -274,7 +279,12 @@ namespace Game.CombatSystem.Core
         public bool IsPlayerInputEnabled() => playerInputEnabled;
 
         public bool IsPlayerDead() => playerManager.GetPlayer() == null;
-        public bool IsEnemyDead() => enemyManager.GetEnemy() == null;
+        public bool IsEnemyDead()
+        {
+            var enemy = enemyManager.GetEnemy();
+            return enemy == null || (enemy is EnemyCharacter e && e.IsMarkedDead);
+        }
+
         public bool CheckHasNextEnemy() => stageManager.HasNextEnemy();
 
         public void CleanupAfterVictory() => enemyHandManager.ClearHand();

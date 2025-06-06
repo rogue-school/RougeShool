@@ -19,13 +19,8 @@ namespace Game.CombatSystem.Utility
         {
             if (character is EnemyCharacter)
             {
-                Debug.Log("[CharacterDeathHandler] 적 사망 처리");
+                Debug.Log("[CharacterDeathHandler] 적 사망 감지 (CombatFlow에서 후처리)");
                 turnContext.MarkEnemyDefeated();
-
-                if (stageManager.HasNextEnemy())
-                    stageManager.SpawnNextEnemy();
-                else
-                    victoryManager.ProcessVictory();
             }
             else if (character.IsPlayerControlled())
             {

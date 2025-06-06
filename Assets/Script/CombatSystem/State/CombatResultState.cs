@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using System.Collections;
 using Game.CombatSystem.Interface;
 using Game.Utility;
@@ -23,7 +23,7 @@ namespace Game.CombatSystem.State
 
         public void EnterState()
         {
-            Debug.Log("<color=orange>[CombatResultState] »óÅÂ ÁøÀÔ</color>");
+            Debug.Log("<color=orange>[CombatResultState] ìƒíƒœ ì§„ì…</color>");
             flowCoordinator.DisablePlayerInput();
             coroutineRunner.RunCoroutine(ExecuteResultPhase());
         }
@@ -34,24 +34,34 @@ namespace Game.CombatSystem.State
 
             if (flowCoordinator.IsEnemyDead())
             {
-                Debug.Log("[CombatResultState] Àû »ç¸Á ¡æ Àû Á¤º¸ Á¦°Å");
+                Debug.Log("[CombatResultState] ì  ì‚¬ë§ â†’ ì  ì •ë³´ ì œê±°");
 
                 flowCoordinator.RemoveEnemyCharacter();
                 flowCoordinator.ClearEnemyHand();
 
-                Debug.Log("[CombatResultState] VictoryState ÀüÈ¯");
-                var next = turnManager.GetStateFactory().CreateVictoryState();
-                turnManager.RequestStateChange(next);
+                if (flowCoordinator.CheckHasNextEnemy())
+                {
+                    Debug.Log("[CombatResultState] ë‹¤ìŒ ì  ìˆìŒ â†’ PrepareState ì „í™˜");
+                    flowCoordinator.SpawnNextEnemy();
+                    var next = turnManager.GetStateFactory().CreatePrepareState();
+                    turnManager.RequestStateChange(next);
+                }
+                else
+                {
+                    Debug.Log("[CombatResultState] VictoryState ì „í™˜");
+                    var next = turnManager.GetStateFactory().CreateVictoryState();
+                    turnManager.RequestStateChange(next);
+                }
             }
             else if (flowCoordinator.IsPlayerDead())
             {
-                Debug.Log("[CombatResultState] ÇÃ·¹ÀÌ¾î »ç¸Á ¡æ GameOverState ÀüÈ¯");
+                Debug.Log("[CombatResultState] í”Œë ˆì´ì–´ ì‚¬ë§ â†’ GameOverState ì „í™˜");
                 var next = turnManager.GetStateFactory().CreateGameOverState();
                 turnManager.RequestStateChange(next);
             }
             else
             {
-                Debug.Log("[CombatResultState] ÀüÅõ °è¼Ó ¡æ PrepareState ÀüÈ¯");
+                Debug.Log("[CombatResultState] ì „íˆ¬ ê³„ì† â†’ PrepareState ì „í™˜");
                 var next = turnManager.GetStateFactory().CreatePrepareState();
                 turnManager.RequestStateChange(next);
             }
@@ -61,7 +71,7 @@ namespace Game.CombatSystem.State
 
         public void ExitState()
         {
-            Debug.Log("<color=grey>[CombatResultState] »óÅÂ Á¾·á</color>");
+            Debug.Log("<color=grey>[CombatResultState] ìƒíƒœ ì¢…ë£Œ</color>");
         }
     }
 }
