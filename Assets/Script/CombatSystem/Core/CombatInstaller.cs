@@ -48,7 +48,9 @@ public class CombatInstaller : MonoInstaller
         BindUIHandlers();
 
         BindCooldownSystem();
+        BindDeathUI();
     }
+
 
 
     private void BindStateFactories()
@@ -178,6 +180,17 @@ public class CombatInstaller : MonoInstaller
     private void BindCooldownSystem()
     {
         Container.Bind<SkillCardCooldownSystem>().AsSingle();
+    }
+    private void BindDeathUI()
+    {
+        var deathUI = Object.FindFirstObjectByType<DeathUIManager>();
+        if (deathUI == null)
+        {
+            Debug.LogError("[CombatInstaller] DeathUIManager를 씬에서 찾지 못했습니다.");
+            return;
+        }
+
+        Container.Bind<DeathUIManager>().FromInstance(deathUI).AsSingle();
     }
 
     // 공통 바인딩 메서드

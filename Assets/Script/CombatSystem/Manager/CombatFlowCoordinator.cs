@@ -13,6 +13,7 @@ using Game.CombatSystem.Context;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Core;
 using Game.SkillCardSystem.Effect;
+using Game.Utility;
 
 namespace Game.CombatSystem.Core
 {
@@ -27,6 +28,9 @@ namespace Game.CombatSystem.Core
         [Inject] private ICombatPreparationService preparationService;
         [Inject] private ISlotRegistry slotRegistry;
         [Inject] private ICardExecutor cardExecutor;
+        [Inject] private ICoroutineRunner coroutineRunner;
+        [Inject] private DeathUIManager deathUIManager;
+
 
         private ICombatTurnManager turnManager;
         private ICombatStateFactory stateFactory;
@@ -263,7 +267,30 @@ namespace Game.CombatSystem.Core
 
             var slot = slotRegistry.GetCombatSlot(card.GetCombatSlot().Value);
             slot?.ClearCardUI();
+
+            if (IsPlayerDead())
+            {
+                Debug.Log("<color=red>[ExecuteCard] 플레이어 사망 감지 → 게임 오버 상태 전이</color>");
+
+                if (slotRegistry is not ICombatSlotRegistry combatSlotRegistry)
+                {
+                    Debug.LogError("[ExecuteCard] slotRegistry는 ICombatSlotRegistry를 구현하지 않았습니다.");
+                    return;
+                }
+
+                var gameOverState = new CombatGameOverState(
+                    turnManager,
+                    this,
+                    combatSlotRegistry,
+                    coroutineRunner,
+                    deathUIManager,
+                    playerManager
+                );
+
+                turnManager.RequestStateChange(gameOverState);
+            }
         }
+
 
         public IEnumerator PerformResultPhase()
         {
@@ -325,7 +352,19 @@ namespace Game.CombatSystem.Core
         public void DisablePlayerInput() => playerInputEnabled = false;
         public bool IsPlayerInputEnabled() => playerInputEnabled;
 
-        public bool IsPlayerDead() => playerManager.GetPlayer() == null;
+        public bool IsPlayerDead()
+        {
+            var player = playerManager.GetPlayer();
+            if (player == null)
+            {
+                Debug.LogWarning("[IsPlayerDead] playerManager.GetPlayer() == null");
+                return true;
+            }
+
+            Debug.Log($"[IsPlayerDead] IsDead: {player.IsDead()}, HP: {player.GetCurrentHP()}");
+            return player.IsDead();
+        }
+
         public bool IsEnemyDead()
         {
             var enemy = enemyManager.GetEnemy();
