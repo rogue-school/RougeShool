@@ -15,7 +15,7 @@ MonoBehaviour:
   CardData:
     Name: "\uC7AC\uC0DD"
     Description: 
-    Artwork: {fileID: 147353212943988270, guid: a894782fb08c943469d0ce1a2a65b3ad, type: 3}
+    Artwork: {fileID: 147353212943988270, guid: c2c71454318cb7a40b7f48fd50e92a86, type: 3}
     CoolTime: 0
     Damage: 0
   effects:
