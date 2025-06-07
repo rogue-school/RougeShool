@@ -38,57 +38,46 @@ namespace Game.CombatSystem.State
 
         private IEnumerator ExecuteResultPhase()
         {
-            // 1. 입력 차단 및 카드 복귀
-            flowCoordinator.DisablePlayerInput();
+            // 1. 플레이어 카드 복귀
             ReturnPlayerCardsToHand();
             yield return new WaitForEndOfFrame();
 
-            // 2. UI 제거 및 효과 정리
+            // 2. 전투 시각 효과 및 UI 정리
             yield return flowCoordinator.PerformResultPhase();
             yield return new WaitForEndOfFrame();
 
-            // 3. 적 또는 플레이어 사망 체크 후 다음 상태 결정
+            // 3. 사망 판정
             if (flowCoordinator.IsEnemyDead())
             {
-                Debug.Log("[CombatResultState] 적 사망 → 제거 및 다음 상태 결정");
+                Debug.Log("[CombatResultState] 적 사망 판정 완료");
 
                 flowCoordinator.RemoveEnemyCharacter();
+                flowCoordinator.ClearEnemyHand();
                 yield return new WaitForSeconds(0.2f);
 
-                if (flowCoordinator.CheckHasNextEnemy())
+                if (!flowCoordinator.CheckHasNextEnemy())
                 {
-                    Debug.Log("[CombatResultState] 다음 적 있음 → PrepareState 전환");
-
-                    flowCoordinator.SpawnNextEnemy();
-                    yield return new WaitForSeconds(0.2f);
-                }
-                else
-                {
-                    Debug.Log("[CombatResultState] 마지막 적 처치 → VictoryState 전환");
-
-                    flowCoordinator.ClearEnemyHand();
+                    Debug.Log("[CombatResultState] 마지막 적 → VictoryState로 전이");
                     yield return new WaitForEndOfFrame();
 
-                    var victory = turnManager.GetStateFactory().CreateVictoryState();
-                    turnManager.RequestStateChange(victory);
+                    turnManager.RequestStateChange(turnManager.GetStateFactory().CreateVictoryState());
                     yield break;
                 }
+
+                Debug.Log("[CombatResultState] 다음 적 있음 → PrepareState로 전이");
             }
             else if (flowCoordinator.IsPlayerDead())
             {
-                Debug.Log("[CombatResultState] 플레이어 사망 → GameOverState 전환");
-
+                Debug.Log("[CombatResultState] 플레이어 사망 판정 완료 → GameOverState로 전이");
                 yield return new WaitForSeconds(0.1f);
-                var gameOver = turnManager.GetStateFactory().CreateGameOverState();
-                turnManager.RequestStateChange(gameOver);
+
+                turnManager.RequestStateChange(turnManager.GetStateFactory().CreateGameOverState());
                 yield break;
             }
 
-            Debug.Log("[CombatResultState] 전투 지속 → PrepareState 전환");
+            // 4. 전투 지속 → 다음 준비 상태로 전이
             yield return new WaitForSeconds(0.1f);
-
-            var next = turnManager.GetStateFactory().CreatePrepareState();
-            turnManager.RequestStateChange(next);
+            turnManager.RequestStateChange(turnManager.GetStateFactory().CreatePrepareState());
         }
 
         private void ReturnPlayerCardsToHand()
@@ -100,9 +89,11 @@ namespace Game.CombatSystem.State
                 {
                     playerHandManager.RemoveCard(card);
                     playerHandManager.RestoreCardToHand(card);
-                    slotRegistry.GetCombatSlot(pos)?.ClearAll();
 
-                    Debug.Log($"[CombatResultState] 플레이어 카드 복귀 완료: {card.GetCardName()}");
+                    var slot = slotRegistry.GetCombatSlot(pos);
+                    slot?.ClearAll();
+
+                    Debug.Log($"[CombatResultState] 플레이어 카드 복귀: {card.GetCardName()}");
                 }
             }
         }

@@ -46,48 +46,45 @@ namespace Game.CombatSystem.State
 
         private IEnumerator PrepareRoutine()
         {
+            // 1. 슬롯 초기화 완료 대기
             yield return new WaitUntil(() => slotRegistry.IsInitialized);
 
-            ReturnPlayerCardToHand();
-            yield return new WaitForEndOfFrame();
-
-            // 적 없으면 생성
+            // 2. 적이 없으면 생성
             if (!flowCoordinator.HasEnemy())
             {
+                Debug.Log("[CombatPrepareState] 적이 없어 새 적 생성 시작");
                 flowCoordinator.SpawnNextEnemy();
-                yield return new WaitForSeconds(0.5f);
+                yield return new WaitUntil(() => flowCoordinator.GetEnemy() != null);
             }
 
-            // 적 핸드 초기화
+            // 3. 적 핸드 초기화
             var enemy = flowCoordinator.GetEnemy();
-            if (enemy != null && !enemyHandManager.HasInitializedEnemy(enemy))
+            if (!enemyHandManager.HasInitializedEnemy(enemy))
             {
                 enemyHandManager.Initialize(enemy);
                 yield return new WaitForEndOfFrame();
             }
 
-            // 전투 슬롯 UI 정리
-            flowCoordinator.ClearEnemyCombatSlots();
-            yield return new WaitForEndOfFrame();
-
-            // 핸드 슬롯 이동 + 새 카드 생성
+            // 4. 적 핸드 슬롯 이동 및 생성
             yield return enemyHandManager.StepwiseFillSlotsFromBack(0.3f);
 
-            // 적 카드 준비 대기
+            // 5. 적 카드 준비 완료까지 대기
             yield return WaitForEnemyCardReady();
 
-            // SLOT_1에서 전투 슬롯 등록
-            RegisterEnemyCardToSlot();
+            // 6. 적 전투 슬롯에 카드 등록
+            enemyHandManager.PopCardAndRegisterToCombatSlot(flowCoordinator);
 
-            // 비워진 핸드 슬롯을 다시 채움
+            // [ Delay 추가]
+            yield return new WaitForSeconds(0.25f); // UI가 처리될 시간을 줌
+
+            // 7. 다시 뒷칸부터 채우기
             yield return enemyHandManager.StepwiseFillSlotsFromBack(0.3f);
 
-            // 다음 상태로
+
+            // 8. 다음 상태 전이
             var next = turnManager.GetStateFactory().CreatePlayerInputState();
             turnManager.RequestStateChange(next);
         }
-
-
         private IEnumerator WaitForEnemyCardReady()
         {
             Debug.Log("[CombatPrepareState] 적 카드 등록 준비 대기 중...");
@@ -100,38 +97,6 @@ namespace Game.CombatSystem.State
                 yield return null;
             }
             Debug.Log("[CombatPrepareState] 적 카드 등록 준비 완료");
-        }
-
-        private void RegisterEnemyCardToSlot()
-        {
-            var (card, ui) = enemyHandManager.PopCardFromSlot(SkillCardSlotPosition.ENEMY_SLOT_1);
-            if (card == null || ui == null)
-            {
-                Debug.LogWarning("[CombatPrepareState] 카드 또는 UI가 null입니다.");
-                return;
-            }
-
-            var slotPos = flowCoordinator.IsEnemyFirst ? CombatSlotPosition.FIRST : CombatSlotPosition.SECOND;
-
-            flowCoordinator.RegisterCardToCombatSlot(slotPos, card, ui);
-            flowCoordinator.GetTurnCardRegistry().RegisterCard(slotPos, card, ui, SlotOwner.ENEMY);
-
-            Debug.Log($"[CombatPrepareState] 적 카드 등록 완료 → {card.GetCardName()} in {slotPos}");
-        }
-
-        private void ReturnPlayerCardToHand()
-        {
-            foreach (CombatSlotPosition pos in System.Enum.GetValues(typeof(CombatSlotPosition)))
-            {
-                var card = flowCoordinator.GetCardInSlot(pos);
-                if (card != null && card.IsFromPlayer())
-                {
-                    playerHandManager.RemoveCard(card);
-                    playerHandManager.RestoreCardToHand(card);
-                    slotRegistry.GetCombatSlot(pos)?.ClearAll();
-                    Debug.Log($"[CombatPrepareState] 카드 복귀 완료: {card.GetCardName()}");
-                }
-            }
         }
 
         public void ExecuteState() { }

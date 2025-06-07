@@ -74,7 +74,7 @@ public class EnemyCharacter : CharacterBase, IEnemyCharacter
             return;
 
         nameText.text = GetCharacterName();
-        hpText.text = $"HP {currentHP} / {GetMaxHP()}";
+        hpText.text = $"{currentHP} / {GetMaxHP()}";
         portraitImage.sprite = characterData.Portrait;
     }
 

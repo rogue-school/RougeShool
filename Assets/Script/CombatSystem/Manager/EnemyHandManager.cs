@@ -128,6 +128,30 @@ namespace Game.CombatSystem.Manager
             }
         }
 
+        private bool hasRegisteredThisTurn = false;
+
+        public (ISkillCard card, SkillCardUI ui, CombatSlotPosition pos) PopCardAndRegisterToCombatSlot(ICombatFlowCoordinator flowCoordinator)
+        {
+            var (card, ui) = PopCardFromSlot(SkillCardSlotPosition.ENEMY_SLOT_1);
+            if (card == null || ui == null)
+            {
+                Debug.LogWarning("[EnemyHandManager] 전투 슬롯 등록 실패: 카드 또는 UI가 null");
+                return (null, null, CombatSlotPosition.FIRST);
+            }
+
+            var isFirst = UnityEngine.Random.value < 0.5f;
+            var pos = isFirst ? CombatSlotPosition.FIRST : CombatSlotPosition.SECOND;
+
+            flowCoordinator.RegisterCardToCombatSlot(pos, card, ui);
+            cardRegistry.RegisterCard(pos, card, ui, SlotOwner.ENEMY);
+
+            Debug.Log($"[EnemyHandManager] 전투 슬롯 등록 완료 → {card.GetCardName()} to {pos}");
+            return (card, ui, pos);
+        }
+
+        public void ResetTurnRegistrationFlag() => hasRegisteredThisTurn = false;
+
+
         public (ISkillCard, ISkillCardUI) PeekCardInSlot(SkillCardSlotPosition position)
         {
             if (_cardsInSlots.TryGetValue(position, out var value))

@@ -11,6 +11,10 @@ namespace Game.CombatSystem.Core
     {
         private List<ICombatInitializerStep> steps;
 
+        [Inject] private ICombatTurnManager turnManager;
+        [Inject] private ICombatStateFactory stateFactory;
+
+
         private void Awake()
         {
             steps = FindInitializerSteps();
@@ -64,6 +68,8 @@ namespace Game.CombatSystem.Core
 
             Debug.Log("<color=lime>[CombatStartupManager] 모든 초기화 단계 완료</color>");
 
+            var playerInputState = stateFactory.CreatePlayerInputState();
+            turnManager.RequestStateChange(playerInputState);
         }
     }
 }

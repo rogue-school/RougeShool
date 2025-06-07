@@ -5,7 +5,6 @@ using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.UI;
 using Zenject;
-using Game.CombatSystem.State;
 
 namespace Game.CombatSystem.Manager
 {
@@ -24,8 +23,11 @@ namespace Game.CombatSystem.Manager
 
         public void Initialize()
         {
-            Debug.Log("[CombatTurnManager] 초기 상태 PlayerInputState로 시작");
-            RequestStateChange(stateFactory.CreatePlayerInputState());
+            Debug.Log("[CombatTurnManager] 초기화 완료 (초기 상태 전이 없음)");
+            currentState = null;
+            pendingNextState = null;
+            reservedEnemySlot = null;
+            isTurnReady = false;
         }
 
         private void Update()
@@ -100,7 +102,7 @@ namespace Game.CombatSystem.Manager
 
         public bool CanStartTurn() => isTurnReady;
 
-        public bool IsPlayerInputTurn() => currentState is CombatPlayerInputState;
+        public bool IsPlayerInputTurn() => currentState is State.CombatPlayerInputState;
 
         public void ReserveNextEnemySlot(CombatSlotPosition slot) => reservedEnemySlot = slot;
 
