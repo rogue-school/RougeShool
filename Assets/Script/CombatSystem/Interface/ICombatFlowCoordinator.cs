@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using Game.CharacterSystem.Interface;
 using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.UI;
@@ -26,6 +27,7 @@ namespace Game.CombatSystem.Interface
         bool IsPlayerInputEnabled();
         // 적 캐릭터 제거
         void RemoveEnemyCharacter();
+        bool IsEnemyFirst { get; }
 
         // 적 핸드 제거
         void ClearEnemyHand();
@@ -35,7 +37,7 @@ namespace Game.CombatSystem.Interface
 
         // 다음 적 스폰
         void SpawnNextEnemy();
-
+        IEnemyCharacter GetEnemy();
 
 
         void InjectTurnStateDependencies(ICombatTurnManager turnManager, ICombatStateFactory stateFactory);

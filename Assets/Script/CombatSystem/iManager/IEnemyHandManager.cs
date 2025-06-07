@@ -8,10 +8,10 @@ public interface IEnemyHandManager
 {
     void Initialize(IEnemyCharacter enemy);
     void GenerateInitialHand();
-    void FillEmptySlots();
-    void AdvanceSlots();
 
     IEnumerator StepwiseFillSlotsFromBack(float delay = 0.5f);
+    (ISkillCard card, ISkillCardUI cardUI) PeekCardInSlot(SkillCardSlotPosition position);
+
 
     ISkillCard GetCardForCombat();
     ISkillCard GetSlotCard(SkillCardSlotPosition pos);
@@ -29,4 +29,5 @@ public interface IEnemyHandManager
 
     // 누락된 메서드 추가
     (ISkillCard card, SkillCardUI ui) PopFirstAvailableCard();
+    bool HasInitializedEnemy(IEnemyCharacter enemy);
 }

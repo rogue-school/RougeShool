@@ -23,10 +23,13 @@ namespace Game.CombatSystem.Initialization
 
             buttonHandler.Inject(conditionChecker, turnManager, stateFactory, cardRegistry);
 
+            // 1. 턴 매니저 초기화만 실행 (상태 전이 X)
             turnManager.Initialize();
-            flowCoordinator.InjectTurnStateDependencies(turnManager, stateFactory);
-            flowCoordinator.StartCombatFlow();
 
+            // 2. flowCoordinator에 턴 상태 연결만 먼저 수행
+            flowCoordinator.InjectTurnStateDependencies(turnManager, stateFactory);
+
+            // 3. 전투 흐름 실행은 CombatPreparation이 완료된 후로 지연
             bool isComplete = false;
 
             flowCoordinator.RequestCombatPreparation(success =>
@@ -34,6 +37,7 @@ namespace Game.CombatSystem.Initialization
                 if (success)
                 {
                     Debug.Log("[FlowCoordinatorInitializationStep] 전투 준비 성공");
+                    flowCoordinator.StartCombatFlow(); // 여기서 실행
                 }
                 else
                 {
@@ -45,5 +49,6 @@ namespace Game.CombatSystem.Initialization
 
             yield return new WaitUntil(() => isComplete);
         }
+
     }
 }

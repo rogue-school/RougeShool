@@ -12,6 +12,10 @@ namespace Game.CombatSystem.Slot
         private readonly Dictionary<CombatFieldSlotPosition, ICombatCardSlot> _slotByFieldPosition = new();
         private readonly List<ICombatCardSlot> _allSlots = new();
 
+        private bool _isInitialized = false;
+        public bool IsInitialized => _isInitialized;
+
+
         public void RegisterCombatSlots(IEnumerable<ICombatCardSlot> slots)
         {
             _slotByPosition.Clear();
@@ -53,6 +57,7 @@ namespace Game.CombatSystem.Slot
                 registeredCount++;
             }
 
+            _isInitialized = true;
             Debug.Log($"[CombatSlotRegistry] ½½·Ô µî·Ï ¿Ï·á - ÃÑ µî·Ï ¼ö: {registeredCount}");
         }
 
