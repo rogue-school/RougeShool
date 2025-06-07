@@ -1,4 +1,5 @@
-﻿using Game.CombatSystem.Slot;
+﻿using System;
+using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.UI;
 
@@ -6,27 +7,56 @@ namespace Game.CombatSystem.Interface
 {
     public interface ITurnCardRegistry
     {
-        // 카드 등록
-        void RegisterPlayerCard(CombatSlotPosition position, ISkillCard card);
-        void RegisterEnemyCard(ISkillCard card);
+        event Action OnCardStateChanged;
 
-        // 카드 등록 UI 포함 (CombatFlowCoordinator에서 사용됨)
-        void RegisterCard(CombatSlotPosition position, ISkillCard card, SkillCardUI cardUI); // 새로 추가됨
+        /// <summary>
+        /// 전투 슬롯 위치에 따라 카드 등록
+        /// </summary>
+        void RegisterCard(CombatSlotPosition position, ISkillCard card, SkillCardUI ui, SlotOwner owner);
 
-        // 카드 조회
-        ISkillCard GetPlayerCard(CombatSlotPosition position);
-        ISkillCard GetEnemyCard();
+        /// <summary>
+        /// 해당 슬롯의 카드 가져오기
+        /// </summary>
+        ISkillCard GetCardInSlot(CombatSlotPosition position);
 
-        // 카드 제거
-        void ClearPlayerCard(CombatSlotPosition position);
-        void ClearEnemyCard();
-        void ClearSlot(CombatSlotPosition position); // 플레이어 슬롯만 정리
+        /// <summary>
+        /// 슬롯 초기화
+        /// </summary>
+        void ClearSlot(CombatSlotPosition position);
 
-        // 턴 제어 상태
+        /// <summary>
+        /// 모든 슬롯 초기화
+        /// </summary>
+        void ClearAll();
+
+        /// <summary>
+        /// 등록된 플레이어 카드 여부
+        /// </summary>
+        bool HasPlayerCard();
+
+        /// <summary>
+        /// 등록된 적 카드 여부
+        /// </summary>
+        bool HasEnemyCard();
+
+        /// <summary>
+        /// 적이 사용할 다음 슬롯을 예약
+        /// </summary>
+        void ReserveNextEnemySlot(CombatSlotPosition slot);
+
+        /// <summary>
+        /// 예약된 적 슬롯 위치 반환
+        /// </summary>
         CombatSlotPosition? GetReservedEnemySlot();
-        void ReserveNextEnemySlot(CombatSlotPosition position);
 
-        // 전체 리셋
+        /// <summary>
+        /// 전체 초기화
+        /// </summary>
         void Reset();
+
+        /// <summary>
+        /// 적 카드만 제거 (플레이어 카드 보존)
+        /// </summary>
+        void ClearEnemyCardsOnly();
     }
 }

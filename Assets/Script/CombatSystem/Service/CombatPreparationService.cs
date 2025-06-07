@@ -7,6 +7,8 @@ using Game.CombatSystem.Utility;
 using Game.IManager;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Runtime;
+using Game.SkillCardSystem.UI;
+using UnityEngine;
 
 namespace Game.CombatSystem.Service
 {
@@ -71,7 +73,7 @@ namespace Game.CombatSystem.Service
                     var cardEntry = cards[i];
                     var slot = handSlots[i];
 
-                    // 카드 인스턴스 생성 (필수 인자 owner 추가)
+                    // 카드 인스턴스 생성
                     var skillCard = new PlayerSkillCardInstance(
                         cardEntry.Card.CardData,
                         cardEntry.CreateEffects(),
@@ -82,9 +84,23 @@ namespace Game.CombatSystem.Service
 
                     if (slot is ICombatCardSlot combatSlot)
                     {
-                        placementService.PlaceCardInSlot(skillCard, slot.GetCardUI(), combatSlot);
-                        turnCardRegistry.RegisterPlayerCard(combatSlotPosition, skillCard);
+                        var cardUI = slot.GetCardUI() as SkillCardUI;
+                        if (cardUI == null)
+                        {
+                            Debug.LogError($"[CombatPreparationService] SkillCardUI 캐스팅 실패 (슬롯: {combatSlotPosition})");
+                            continue;
+                        }
+
+                        placementService.PlaceCardInSlot(skillCard, cardUI, combatSlot);
+
+                        turnCardRegistry.RegisterCard(
+                            combatSlotPosition,
+                            skillCard,
+                            cardUI,
+                            SlotOwner.PLAYER
+                        );
                     }
+
                 }
             }
 

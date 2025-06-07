@@ -53,6 +53,7 @@ namespace Game.SkillCardSystem.Core
                 var pos = entry.Slot;
                 var card = cardFactory.CreatePlayerCard(entry.Card.CardData, entry.Card.CreateEffects());
 
+                card.SetCurrentCoolTime(0);
                 cards[pos] = card;
 
                 var slot = slotRegistry.GetPlayerHandSlot(pos);
@@ -86,6 +87,45 @@ namespace Game.SkillCardSystem.Core
                     return;
                 }
             }
+
+            Debug.LogWarning("[PlayerHandManager] 빈 슬롯을 찾을 수 없어 카드 복귀 실패");
+        }
+
+        public void RestoreCardToHand(ISkillCard card, SkillCardSlotPosition slot)
+        {
+            cards[slot] = card;
+
+            var handSlot = slotRegistry.GetPlayerHandSlot(slot);
+            if (handSlot != null)
+            {
+                var ui = handSlot.AttachCard(card, cardUIPrefab);
+                if (ui != null)
+                    cardUIs[slot] = ui;
+            }
+            else
+            {
+                Debug.LogWarning($"[PlayerHandManager] 지정된 슬롯이 존재하지 않습니다: {slot}");
+            }
+        }
+
+        public void RemoveCard(ISkillCard card)
+        {
+            foreach (var kvp in cards)
+            {
+                if (kvp.Value == card)
+                {
+                    var slot = slotRegistry.GetPlayerHandSlot(kvp.Key);
+                    slot?.DetachCard();
+
+                    cards[kvp.Key] = null;
+                    cardUIs.Remove(kvp.Key);
+
+                    Debug.Log($"[PlayerHandManager] 카드 제거 완료: {card.GetCardName()}");
+                    return;
+                }
+            }
+
+            Debug.LogWarning("[PlayerHandManager] 해당 카드를 찾을 수 없어 제거 실패");
         }
 
         public void LogPlayerHandSlotStates()
@@ -110,6 +150,17 @@ namespace Game.SkillCardSystem.Core
 
             cards.Clear();
             cardUIs.Clear();
+        }
+
+        public IEnumerable<(ISkillCard card, ISkillCardUI ui)> GetAllHandCards()
+        {
+            foreach (var kvp in cards)
+            {
+                var slot = kvp.Key;
+                var card = kvp.Value;
+                cardUIs.TryGetValue(slot, out var ui);
+                yield return (card, ui);
+            }
         }
     }
 }

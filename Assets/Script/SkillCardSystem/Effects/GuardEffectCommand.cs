@@ -6,7 +6,7 @@ namespace Game.SkillCardSystem.Effect
 {
     public class GuardEffectCommand : ICardEffectCommand
     {
-        public void Execute(ICardExecutionContext context, ITurnStateController controller)
+        public void Execute(ICardExecutionContext context, ICombatTurnManager turnManager)
         {
             if (context.Target == null)
             {

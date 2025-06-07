@@ -24,6 +24,9 @@ namespace Game.SkillCardSystem.Runtime
         private SkillCardSlotPosition? handSlot;
         private CombatSlotPosition? combatSlot;
 
+        // 쿨타임 관리 필드
+        private int currentCoolTime = 0;
+
         public PlayerSkillCardInstance(SkillCardData cardData, List<SkillCardEffectSO> effects, SlotOwner owner)
         {
             this.CardData = cardData;
@@ -35,10 +38,12 @@ namespace Game.SkillCardSystem.Runtime
         public string GetDescription() => CardData?.Description ?? "";
         public Sprite GetArtwork() => CardData?.Artwork;
         public int GetCoolTime() => CardData?.CoolTime ?? 0;
+        public int GetMaxCoolTime() => CardData?.CoolTime ?? 0;
+        public int GetCurrentCoolTime() => currentCoolTime;
+        public void SetCurrentCoolTime(int value) => currentCoolTime = Mathf.Max(0, value);
 
         public int GetEffectPower(SkillCardEffectSO effect)
         {
-            // 예시로 카드의 데미지를 통일된 파워로 반환
             return CardData?.Damage ?? 0;
         }
 
@@ -65,11 +70,20 @@ namespace Game.SkillCardSystem.Runtime
                 int power = GetEffectPower(effect);
                 effect.ApplyEffect(context, power);
             }
+
+            // 쿨타임 초기화
+            SetCurrentCoolTime(GetMaxCoolTime());
         }
 
         public void ExecuteSkill()
         {
             Debug.LogWarning("[PlayerSkillCardInstance] ExecuteSkill() 호출됨 - context 없음");
+        }
+
+        public void ExecuteSkill(ICharacter source, ICharacter target)
+        {
+            var context = new DefaultCardExecutionContext(this, source, target);
+            ExecuteCardAutomatically(context);
         }
 
         public ICharacter GetOwner(ICardExecutionContext context) => context?.Source;

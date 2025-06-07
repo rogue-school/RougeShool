@@ -16,7 +16,7 @@ namespace Game.SkillCardSystem.Effect
             _duration = duration;
         }
 
-        public void Execute(ICardExecutionContext context, ITurnStateController controller)
+        public void Execute(ICardExecutionContext context, ICombatTurnManager turnManager)
         {
             if (context.Target == null)
             {
@@ -26,6 +26,7 @@ namespace Game.SkillCardSystem.Effect
 
             var effect = new BleedEffect(_amount, _duration);
             context.Target.RegisterPerTurnEffect(effect);
+
             Debug.Log($"[BleedEffectCommand] {context.Target.GetCharacterName()}에게 출혈 {_amount} 적용 (지속 {_duration}턴)");
         }
     }

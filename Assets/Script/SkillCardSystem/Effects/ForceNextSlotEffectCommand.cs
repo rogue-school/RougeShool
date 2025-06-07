@@ -14,7 +14,7 @@ namespace Game.SkillCardSystem.Effect
             _forcedSlot = forcedSlot;
         }
 
-        public void Execute(ICardExecutionContext context, ITurnStateController controller)
+        public void Execute(ICardExecutionContext context, ICombatTurnManager turnManager)
         {
             if (context.Card == null || context.Target == null)
             {
@@ -28,15 +28,8 @@ namespace Game.SkillCardSystem.Effect
                 return;
             }
 
-            if (controller is ITurnCardRegistry registry)
-            {
-                registry.ReserveNextEnemySlot(_forcedSlot);
-                Debug.Log($"[ForceNextSlotEffectCommand] 다음 적 카드 슬롯 강제 설정: {_forcedSlot}");
-            }
-            else
-            {
-                Debug.LogError("[ForceNextSlotEffectCommand] 컨트롤러가 ITurnCardRegistry를 구현하지 않음");
-            }
+            turnManager.ReserveNextEnemySlot(_forcedSlot);
+            Debug.Log($"[ForceNextSlotEffectCommand] 다음 적 카드 슬롯 강제 설정: {_forcedSlot}");
         }
     }
 }

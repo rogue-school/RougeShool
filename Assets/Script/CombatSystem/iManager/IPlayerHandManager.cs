@@ -1,6 +1,7 @@
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Slot;
 using Game.CharacterSystem.Interface;
+using System.Collections.Generic;
 
 namespace Game.SkillCardSystem.Interface
 {
@@ -11,8 +12,12 @@ namespace Game.SkillCardSystem.Interface
         ISkillCard GetCardInSlot(SkillCardSlotPosition pos);
         ISkillCardUI GetCardUIInSlot(SkillCardSlotPosition pos);
         void RestoreCardToHand(ISkillCard card);
+        void RestoreCardToHand(ISkillCard card, SkillCardSlotPosition slot);
         void LogPlayerHandSlotStates();
         void EnableInput(bool enable);
         void ClearAll();
+        void RemoveCard(ISkillCard card);
+
+        IEnumerable<(ISkillCard card, ISkillCardUI ui)> GetAllHandCards();
     }
 }

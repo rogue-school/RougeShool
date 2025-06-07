@@ -15,7 +15,7 @@ namespace Game.SkillCardSystem.Effect
             _duration = duration;
         }
 
-        public void Execute(ICardExecutionContext context, ITurnStateController controller)
+        public void Execute(ICardExecutionContext context, ICombatTurnManager turnManager)
         {
             if (context.Target == null)
             {

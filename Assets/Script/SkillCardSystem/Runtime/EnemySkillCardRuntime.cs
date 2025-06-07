@@ -24,6 +24,9 @@ namespace Game.SkillCardSystem.Runtime
         private SkillCardSlotPosition? handSlot;
         private CombatSlotPosition? combatSlot;
 
+        // 쿨타임 관리 필드
+        private int currentCoolTime = 0;
+
         public EnemySkillCardRuntime(SkillCardData cardData, List<SkillCardEffectSO> effects)
         {
             CardData = cardData ?? throw new System.ArgumentNullException(nameof(cardData));
@@ -36,7 +39,6 @@ namespace Game.SkillCardSystem.Runtime
         public Sprite GetArtwork() => CardData?.Artwork;
         public int GetCoolTime() => CardData?.CoolTime ?? 0;
         public int GetEffectPower(SkillCardEffectSO effect) => CardData?.Damage ?? 0;
-
         public List<SkillCardEffectSO> CreateEffects() => new List<SkillCardEffectSO>(effects);
 
         public SlotOwner GetOwner() => owner;
@@ -45,9 +47,13 @@ namespace Game.SkillCardSystem.Runtime
         // === 슬롯 정보 ===
         public void SetHandSlot(SkillCardSlotPosition slot) => handSlot = slot;
         public SkillCardSlotPosition? GetHandSlot() => handSlot;
-
         public void SetCombatSlot(CombatSlotPosition slot) => combatSlot = slot;
         public CombatSlotPosition? GetCombatSlot() => combatSlot;
+
+        // === 쿨타임 관련 구현 ===
+        public int GetMaxCoolTime() => CardData?.CoolTime ?? 0;
+        public int GetCurrentCoolTime() => currentCoolTime;
+        public void SetCurrentCoolTime(int value) => currentCoolTime = Mathf.Max(0, value);
 
         // === 실행 ===
         public void ExecuteSkill()
@@ -84,6 +90,9 @@ namespace Game.SkillCardSystem.Runtime
                     Debug.LogWarning($"[EnemySkillCardRuntime] {GetCardName()} - 효과 명령 생성 실패: {effect.name}");
                 }
             }
+
+            // 쿨타임 적용
+            SetCurrentCoolTime(GetMaxCoolTime());
         }
 
         // === 대상 정보 ===
