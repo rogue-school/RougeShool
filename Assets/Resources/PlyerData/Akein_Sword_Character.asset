@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   <DisplayName>k__BackingField: 
   <Portrait>k__BackingField: {fileID: 2732638886441756585, guid: 316577f9ba94697448c137fac825621d, type: 3}
-  <MaxHP>k__BackingField: 1
+  <MaxHP>k__BackingField: 20
   <SkillDeck>k__BackingField: {fileID: 11400000, guid: 01a1f3cd905df2e439aedf79636eaf13, type: 2}
