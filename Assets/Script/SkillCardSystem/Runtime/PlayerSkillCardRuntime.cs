@@ -25,7 +25,6 @@ namespace Game.SkillCardSystem.Runtime
         private SkillCardSlotPosition? handSlot;
         private CombatSlotPosition? combatSlot;
 
-        // 쿨타임 관련 필드
         private int currentCoolTime;
 
         public PlayerSkillCardRuntime(SkillCardData data, List<SkillCardEffectSO> effects)
@@ -42,8 +41,7 @@ namespace Game.SkillCardSystem.Runtime
                 this.effects = effects ?? new List<SkillCardEffectSO>();
             }
 
-            // 쿨타임을 0으로 초기화 (즉시 사용 가능)
-            currentCoolTime = 0;
+            currentCoolTime = 0; // 사용 가능 상태로 초기화
         }
 
         // === 기본 정보 ===
@@ -66,6 +64,28 @@ namespace Game.SkillCardSystem.Runtime
         public int GetMaxCoolTime() => CardData?.CoolTime ?? 0;
         public int GetCurrentCoolTime() => currentCoolTime;
         public void SetCurrentCoolTime(int value) => currentCoolTime = Mathf.Max(0, value);
+
+        /// <summary>
+        /// 쿨타임을 최대값으로 설정하여 사용 불가 상태로 만듭니다.
+        /// </summary>
+        public void StartCooldown()
+        {
+            int max = GetMaxCoolTime();
+            SetCurrentCoolTime(max);
+            Debug.Log($"[PlayerSkillCardRuntime] {GetCardName()} 쿨타임 시작: {max}");
+        }
+
+        /// <summary>
+        /// 쿨타임을 1 줄입니다.
+        /// </summary>
+        public void ReduceCooldown()
+        {
+            if (currentCoolTime > 0)
+            {
+                currentCoolTime--;
+                Debug.Log($"[PlayerSkillCardRuntime] {GetCardName()} 쿨타임 감소: {currentCoolTime}");
+            }
+        }
 
         // === 실행 ===
         public void ExecuteSkill()
@@ -103,8 +123,8 @@ namespace Game.SkillCardSystem.Runtime
                 }
             }
 
-            // 실행 후 쿨타임 최대치로 초기화
-            SetCurrentCoolTime(GetMaxCoolTime());
+            // 쿨타임 시작
+            StartCooldown();
         }
 
         // === 대상 정보 ===

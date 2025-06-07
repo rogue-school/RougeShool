@@ -25,6 +25,7 @@ using Game.CombatSystem.Factory;
 using Game.Utility;
 using Game.CombatSystem.DragDrop;
 using Game.CombatSystem.CoolTime;
+using Game.SkillCardSystem.Runtime;
 
 public class CombatInstaller : MonoInstaller
 {
@@ -45,7 +46,10 @@ public class CombatInstaller : MonoInstaller
         BindSceneLoader();
         BindUIPrefabs();
         BindUIHandlers();
+
+        BindCooldownSystem();
     }
+
 
     private void BindStateFactories()
     {
@@ -170,6 +174,10 @@ public class CombatInstaller : MonoInstaller
         }
 
         Container.Bind<TurnStartButtonHandler>().FromInstance(startButtonHandler).AsSingle();
+    }
+    private void BindCooldownSystem()
+    {
+        Container.Bind<SkillCardCooldownSystem>().AsSingle();
     }
 
     // 공통 바인딩 메서드

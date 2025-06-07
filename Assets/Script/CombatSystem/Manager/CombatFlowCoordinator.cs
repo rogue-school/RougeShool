@@ -12,6 +12,7 @@ using Game.SkillCardSystem.Executor;
 using Game.CombatSystem.Context;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Core;
+using Game.SkillCardSystem.Effect;
 
 namespace Game.CombatSystem.Core
 {
@@ -171,7 +172,7 @@ namespace Game.CombatSystem.Core
         public void ClearEnemyHand()
         {
             Debug.Log("[CombatFlowCoordinator] 적 핸드 제거");
-            enemyHandManager.ClearHand(); // ← 수정
+            enemyHandManager.ClearHand();
         }
 
         public bool HasEnemy()
@@ -214,6 +215,28 @@ namespace Game.CombatSystem.Core
             Debug.Log("[CombatFlowCoordinator] 두 번째 공격 시작");
 
             var secondCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.SECOND);
+
+            // 선공 슬롯에서 GuardEffect가 있는 플레이어 카드가 사용된 경우 → 후공 무효화
+            var firstCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.FIRST);
+            if (firstCard != null && firstCard.IsFromPlayer())
+            {
+                foreach (var effect in firstCard.CreateEffects())
+                {
+                    if (effect is GuardEffectSO)
+                    {
+                        Debug.Log("<color=orange>[CombatFlowCoordinator] 플레이어 가드 스킬 발동 → 후공 적 카드 무효화</color>");
+                        if (secondCard != null && !secondCard.IsFromPlayer())
+                        {
+                            var secondSlot = slotRegistry.GetCombatSlot(CombatSlotPosition.SECOND);
+                            secondSlot?.ClearAll();
+                            Debug.Log("<color=red>[CombatFlowCoordinator] 적 카드 제거 완료 (가드로 인한 무효화)</color>");
+                            yield break;
+                        }
+                    }
+                }
+            }
+
+            // 일반적인 후공 처리
             if (secondCard != null)
             {
                 ExecuteCard(secondCard);
@@ -223,6 +246,7 @@ namespace Game.CombatSystem.Core
             yield return new WaitForSeconds(1f);
             Debug.Log("[CombatFlowCoordinator] 두 번째 공격 종료");
         }
+
 
         private void ExecuteCard(ISkillCard card)
         {
@@ -235,21 +259,18 @@ namespace Game.CombatSystem.Core
             var context = new DefaultCardExecutionContext(card, source, target);
             cardExecutor.Execute(card, context, turnManager);
 
-            // UI만 제거하고 카드 정보는 유지
+            card.SetCurrentCoolTime(card.GetMaxCoolTime());
+
             var slot = slotRegistry.GetCombatSlot(card.GetCombatSlot().Value);
-            if (slot != null)
-            {
-                slot.ClearCardUI(); // ✔ UI만 제거
-            }
+            slot?.ClearCardUI();
         }
 
         public IEnumerator PerformResultPhase()
         {
             yield return new WaitForSeconds(1f);
 
-            // 개선된 처리
-            ClearAllSlotUIs();         // 카드 UI만 제거
-            ClearEnemyCombatSlots();   // 적 카드 정보까지 제거
+            ClearAllSlotUIs();
+            ClearEnemyCombatSlots();
 
             Debug.Log("[CombatFlowCoordinator] 전투 결과 처리 완료 (플레이어 카드 유지)");
         }
@@ -259,7 +280,7 @@ namespace Game.CombatSystem.Core
             foreach (CombatSlotPosition pos in Enum.GetValues(typeof(CombatSlotPosition)))
             {
                 var slot = slotRegistry.GetCombatSlot(pos);
-                slot?.ClearCardUI(); // 카드 UI만 제거
+                slot?.ClearCardUI();
             }
             Debug.Log("[CombatFlowCoordinator] 모든 슬롯의 카드 UI 제거 완료");
         }
@@ -272,7 +293,7 @@ namespace Game.CombatSystem.Core
                 if (card != null && !card.IsFromPlayer())
                 {
                     var slot = slotRegistry.GetCombatSlot(pos);
-                    slot?.ClearAll(); // 적 카드 정보 및 UI 제거
+                    slot?.ClearAll();
                 }
             }
             Debug.Log("[CombatFlowCoordinator] 적 카드만 제거 완료");

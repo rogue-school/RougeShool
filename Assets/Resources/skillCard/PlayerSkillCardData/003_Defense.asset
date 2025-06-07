@@ -16,7 +16,7 @@ MonoBehaviour:
     Name: "\uBC29\uC5B4"
     Description: "\uBC29\uC5B4"
     Artwork: {fileID: 6247231596762095836, guid: 67b60e054fa6f5048bf7446e3e114f7f, type: 3}
-    CoolTime: 2
+    CoolTime: 3
     Damage: 0
   effects:
   - {fileID: 11400000, guid: c2a4b772e4e133d4495e0147c4676449, type: 2}
