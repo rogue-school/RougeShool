@@ -1,28 +1,35 @@
+using System.Collections;
 using Game.CharacterSystem.Interface;
+using Game.CombatSystem.Interface;
+using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Slot;
 using Game.SkillCardSystem.UI;
 
-namespace Game.CombatSystem.Interface
+public interface IEnemyHandManager
 {
-    public interface IEnemyHandManager
-    {
-        void Initialize(IEnemyCharacter enemy); // slotRegistry, cardFactory는 DI로 이미 주입됨
-        void GenerateInitialHand();
-        void FillEmptySlots();
-        void AdvanceSlots();
+    void Initialize(IEnemyCharacter enemy);
+    void GenerateInitialHand();
 
-        ISkillCard GetCardForCombat();
-        ISkillCard GetSlotCard(SkillCardSlotPosition pos);
-        ISkillCardUI GetCardUI(int index);
+    IEnumerator StepwiseFillSlotsFromBack(float delay = 0.5f);
+    (ISkillCard card, ISkillCardUI cardUI) PeekCardInSlot(SkillCardSlotPosition position);
 
-        void ClearHand();
-        void LogHandSlotStates();
+    ISkillCard GetCardForCombat();
+    ISkillCard GetSlotCard(SkillCardSlotPosition pos);
+    ISkillCardUI GetCardUI(int index);
 
-        SkillCardUI RemoveCardFromSlot(SkillCardSlotPosition pos);
-        (ISkillCard card, SkillCardUI ui) PopCardFromSlot(SkillCardSlotPosition pos);
+    void ClearHand();
+    void ClearAllCards();
+    void LogHandSlotStates();
 
-        ISkillCard PickCardForSlot(SkillCardSlotPosition pos);
-        void RegisterCardToSlot(SkillCardSlotPosition pos, ISkillCard card, SkillCardUI ui);
-    }
+    SkillCardUI RemoveCardFromSlot(SkillCardSlotPosition pos);
+    (ISkillCard card, SkillCardUI ui) PopCardFromSlot(SkillCardSlotPosition pos);
+    (ISkillCard card, SkillCardUI ui) PopFirstAvailableCard();
+
+    ISkillCard PickCardForSlot(SkillCardSlotPosition pos);
+    void RegisterCardToSlot(SkillCardSlotPosition pos, ISkillCard card, SkillCardUI ui);
+
+    bool HasInitializedEnemy(IEnemyCharacter enemy);
+
+    (ISkillCard card, SkillCardUI ui, CombatSlotPosition pos) PopCardAndRegisterToCombatSlot(ICombatFlowCoordinator coordinator);
 }

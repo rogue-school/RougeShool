@@ -13,7 +13,7 @@ namespace Game.SkillCardSystem.Effect
             _damage = damage;
         }
 
-        public void Execute(ICardExecutionContext context, ITurnStateController controller)
+        public void Execute(ICardExecutionContext context, ICombatTurnManager turnManager)
         {
             if (context.Target == null)
             {

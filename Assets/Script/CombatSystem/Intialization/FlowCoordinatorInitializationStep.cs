@@ -2,12 +2,20 @@ using UnityEngine;
 using Zenject;
 using Game.CombatSystem.Interface;
 using System.Collections;
+using Game.CombatSystem.Core;
+using Game.CombatSystem.Manager;
 
 namespace Game.CombatSystem.Initialization
 {
     public class FlowCoordinatorInitializationStep : MonoBehaviour, ICombatInitializerStep
     {
         [Inject] private ICombatFlowCoordinator flowCoordinator;
+        [Inject] private ICombatTurnManager turnManager;
+        [Inject] private ICombatStateFactory stateFactory;
+        [Inject] private ITurnStartConditionChecker conditionChecker;
+        [Inject] private ITurnCardRegistry cardRegistry;
+        [Inject] private TurnStartButtonHandler buttonHandler;
+        [Inject] private IEnemyHandManager enemyHandManager;
 
         public int Order => 50;
 
@@ -15,15 +23,15 @@ namespace Game.CombatSystem.Initialization
         {
             Debug.Log("[FlowCoordinatorInitializationStep] 전투 준비 흐름 초기화 시작");
 
-            flowCoordinator.RequestCombatPreparation(success =>
-            {
-                if (success)
-                    Debug.Log("[FlowCoordinatorInitializationStep] 전투 준비 성공");
-                else
-                    Debug.LogError("[FlowCoordinatorInitializationStep] 전투 준비 실패");
-            });
+            buttonHandler.Inject(conditionChecker, turnManager, stateFactory, cardRegistry);
+            turnManager.Initialize();
+            flowCoordinator.InjectTurnStateDependencies(turnManager, stateFactory);
 
-            yield return null;
+            yield return flowCoordinator.PerformCombatPreparation();
+
+            Debug.Log("[FlowCoordinatorInitializationStep] 전투 준비 성공");
+            flowCoordinator.StartCombatFlow();
         }
+
     }
 }

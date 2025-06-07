@@ -16,11 +16,12 @@ namespace Game.SkillCardSystem.Effects
         {
             return new BleedEffectCommand(bleedAmount + power, duration);
         }
-        public override void ApplyEffect(ICardExecutionContext context, int value, ITurnStateController controller = null)
+
+        public override void ApplyEffect(ICardExecutionContext context, int value, ICombatTurnManager controller = null)
         {
-            var bleed = new BleedEffect(value, 3); // 예: 지속 턴 수 2
+            var bleed = new BleedEffect(value, duration); // duration 필드 사용
             context.Target?.RegisterPerTurnEffect(bleed);
-            Debug.Log($"[BleedEffectSO] {context.Target?.GetCharacterName()}에게 출혈 {value} 적용");
+            Debug.Log($"[BleedEffectSO] {context.Target?.GetCharacterName()}에게 출혈 {value} 적용 (지속 {duration}턴)");
         }
     }
 }

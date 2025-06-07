@@ -10,8 +10,10 @@ namespace Game.IManager
         IEnemyCharacter GetCurrentEnemy();
         bool HasEnemy();
         void ClearEnemy();
+        void Reset();
 
         IEnemyHandManager GetEnemyHandManager();
-        void Reset();
+
+        void UnregisterEnemy();
     }
 }

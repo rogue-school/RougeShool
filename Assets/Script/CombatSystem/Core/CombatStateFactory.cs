@@ -1,56 +1,25 @@
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.State;
-using Game.IManager;
-using Game.SkillCardSystem.Interface;
+using Zenject;
 
-public class CombatStateFactory : ICombatStateFactory
+namespace Game.CombatSystem.Factory
 {
-    private readonly ICombatTurnManager combatTurnManager;
-    private readonly ITurnStateController turnStateController;
-    private readonly ICardExecutionContext cardExecutionContext;
-    private readonly ICombatFlowCoordinator flowCoordinator;
-    private readonly IPlayerHandManager playerHandManager;
-    private readonly IEnemyHandManager enemyHandManager;
-    private readonly IEnemySpawnerManager spawnerManager;
-    private readonly ICombatSlotManager combatSlotManager;
-    private readonly IStageManager stageManager;
-    private readonly IVictoryManager victoryManager;
-    private readonly IGameOverManager gameOverManager;
-    private readonly ICombatSlotRegistry combatSlotRegistry;
-
-    public CombatStateFactory(
-        ICombatTurnManager combatTurnManager,
-        ITurnStateController turnStateController,
-        ICardExecutionContext cardExecutionContext,
-        ICombatFlowCoordinator flowCoordinator,
-        IPlayerHandManager playerHandManager,
-        IEnemyHandManager enemyHandManager,
-        IEnemySpawnerManager spawnerManager,
-        ICombatSlotManager combatSlotManager,
-        IStageManager stageManager,
-        IVictoryManager victoryManager,
-        IGameOverManager gameOverManager,
-        ISlotRegistry slotRegistry)
+    public class CombatStateFactory : ICombatStateFactory
     {
-        this.combatTurnManager = combatTurnManager;
-        this.turnStateController = turnStateController;
-        this.cardExecutionContext = cardExecutionContext;
-        this.flowCoordinator = flowCoordinator;
-        this.playerHandManager = playerHandManager;
-        this.enemyHandManager = enemyHandManager;
-        this.spawnerManager = spawnerManager;
-        this.combatSlotManager = combatSlotManager;
-        this.stageManager = stageManager;
-        this.victoryManager = victoryManager;
-        this.gameOverManager = gameOverManager;
-        this.combatSlotRegistry = slotRegistry.GetCombatSlotRegistry();
-    }
+        [Inject] private IFactory<CombatPrepareState> prepareFactory;
+        [Inject] private IFactory<CombatPlayerInputState> inputFactory;
+        [Inject] private IFactory<CombatFirstAttackState> firstAttackFactory;
+        [Inject] private IFactory<CombatSecondAttackState> secondAttackFactory;
+        [Inject] private IFactory<CombatResultState> resultFactory;
+        [Inject] private IFactory<CombatVictoryState> victoryFactory;
+        [Inject] private IFactory<CombatGameOverState> gameOverFactory;
 
-    public ICombatTurnState CreatePrepareState() => new CombatPrepareState(combatTurnManager, flowCoordinator, this, combatSlotRegistry);
-    public ICombatTurnState CreatePlayerInputState() => new CombatPlayerInputState(combatTurnManager, flowCoordinator, this, combatSlotRegistry);
-    public ICombatTurnState CreateFirstAttackState() => new CombatFirstAttackState(combatTurnManager, flowCoordinator, this, combatSlotRegistry);
-    public ICombatTurnState CreateSecondAttackState() => new CombatSecondAttackState(combatTurnManager, flowCoordinator, this, combatSlotRegistry);
-    public ICombatTurnState CreateResultState() => new CombatResultState(combatTurnManager, flowCoordinator, this, combatSlotRegistry);
-    public ICombatTurnState CreateVictoryState() => new CombatVictoryState(combatTurnManager, flowCoordinator, this, combatSlotRegistry);
-    public ICombatTurnState CreateGameOverState() => new CombatGameOverState(combatTurnManager, flowCoordinator, this, combatSlotRegistry);
+        public ICombatTurnState CreatePrepareState() => prepareFactory.Create();
+        public ICombatTurnState CreatePlayerInputState() => inputFactory.Create();
+        public ICombatTurnState CreateFirstAttackState() => firstAttackFactory.Create();
+        public ICombatTurnState CreateSecondAttackState() => secondAttackFactory.Create();
+        public ICombatTurnState CreateResultState() => resultFactory.Create();
+        public ICombatTurnState CreateVictoryState() => victoryFactory.Create();
+        public ICombatTurnState CreateGameOverState() => gameOverFactory.Create();
+    }
 }

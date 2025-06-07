@@ -1,18 +1,23 @@
 ﻿using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.UI;
 
 namespace Game.CombatSystem.Interface
 {
     public interface ICombatTurnManager
     {
         void Initialize();
-        ICombatTurnState GetCurrentState();
         void Reset();
-        void RegisterPlayerCard(CombatSlotPosition position, ISkillCard card);
-        void RequestStateChange(ICombatTurnState nextState);
 
-        // 추가됨
+        void RequestStateChange(ICombatTurnState nextState);
+        void ChangeState(ICombatTurnState newState);
+        ICombatTurnState GetCurrentState();
+        ICombatStateFactory GetStateFactory();
+
+        void ReserveNextEnemySlot(CombatSlotPosition slot);
         CombatSlotPosition? GetReservedEnemySlot();
-        void ChangeState(ICombatTurnState newState); // 누락되었던 정의 추가
+
+        bool IsPlayerInputTurn();
+        void RegisterCard(CombatSlotPosition slot, ISkillCard card, SkillCardUI ui, SlotOwner owner);
     }
 }

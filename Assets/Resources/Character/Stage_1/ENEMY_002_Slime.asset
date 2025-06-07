@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 861458062e34fcd4685dff11b945e1b9, type: 3}
   m_Name: ENEMY_002_Slime
   m_EditorClassIdentifier: 
-  <DisplayName>k__BackingField: "\uC2AC\uB77C\uC784"
+  <DisplayName>k__BackingField: 
   <MaxHP>k__BackingField: 3
-  <Portrait>k__BackingField: {fileID: -7282886668606283007, guid: 05ccc850e175244408c6f1dded4a67a0, type: 3}
+  <Portrait>k__BackingField: {fileID: 5164656773605824347, guid: eee65980d14868a41b9c914d3e9942eb, type: 3}
   <Prefab>k__BackingField: {fileID: 7769799778275336730, guid: 2c6e844c91775424681f573a6951211e, type: 3}
   <EnemyDeck>k__BackingField: {fileID: 11400000, guid: 5ae3f55aa1bd8fe47bd08c32133073da, type: 2}
   <PassiveEffects>k__BackingField: []

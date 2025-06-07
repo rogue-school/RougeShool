@@ -34,9 +34,14 @@ public class EnemyManager : MonoBehaviour, IEnemyManager
     {
         return enemyHandManager;
     }
+    public void UnregisterEnemy()
+    {
+        currentEnemy = null;
+        Debug.Log("[EnemyManager] 적 등록 해제");
+    }
+
     public void Reset()
     {
-        // 적 상태 초기화 로직 구현
         Debug.Log("[EnemyManager] Reset");
     }
 }

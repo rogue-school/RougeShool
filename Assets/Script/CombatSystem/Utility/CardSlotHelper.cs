@@ -1,6 +1,9 @@
 using UnityEngine;
 using Game.SkillCardSystem.UI;
 using Game.CombatSystem.DragDrop;
+using Game.SkillCardSystem.Slot;
+using System.Linq;
+using Game.CombatSystem.UI;
 
 namespace Game.CombatSystem.Utility
 {
@@ -22,10 +25,19 @@ namespace Game.CombatSystem.Utility
             }
 
             cardUI.transform.SetParent(dragHandler.OriginalParent, false);
-            cardUI.transform.position = dragHandler.OriginalWorldPosition;
-            cardUI.transform.localScale = Vector3.one;
 
-            dragHandler.OriginalParent = null;
+            if (cardUI.TryGetComponent(out RectTransform rectTransform))
+            {
+                rectTransform.anchoredPosition = Vector2.zero;
+                rectTransform.localRotation = Quaternion.identity;
+                rectTransform.localScale = Vector3.one;
+            }
+            else
+            {
+                cardUI.transform.localPosition = Vector3.zero;
+                cardUI.transform.localRotation = Quaternion.identity;
+                cardUI.transform.localScale = Vector3.one;
+            }
 
             Debug.Log($"[CardSlotHelper] 카드 복귀 완료: {cardUI.name}");
         }
@@ -46,14 +58,28 @@ namespace Game.CombatSystem.Utility
             }
 
             rect.SetParent(slotTransform.transform, false);
-            rect.anchoredPosition = Vector2.zero;
+            rect.localPosition = Vector3.zero;
+            rect.localRotation = Quaternion.identity;
             rect.localScale = Vector3.one;
 
-            var dragHandler = cardUI.GetComponent<CardDragHandler>();
-            if (dragHandler != null)
-                dragHandler.OriginalParent = null;
-
             Debug.Log($"[CardSlotHelper] 카드 배치 완료: {cardUI.name} → {slotTransform.name}");
+        }
+        public static void AttachCardToHandSlot(SkillCardUI cardUI, SkillCardSlotPosition slotPos)
+        {
+            var handSlots = Object.FindObjectsByType<PlayerHandCardSlotUI>(FindObjectsSortMode.None);
+            var targetSlot = handSlots.FirstOrDefault(s => s.GetSlotPosition() == slotPos);
+
+            if (targetSlot != null)
+            {
+                cardUI.transform.SetParent(targetSlot.transform, false);
+                cardUI.transform.position = targetSlot.transform.position;
+
+                Debug.Log($"[CardSlotHelper] 카드 핸드 슬롯 위치 복귀: {cardUI.name} → {slotPos}");
+            }
+            else
+            {
+                Debug.LogWarning($"[CardSlotHelper] 해당 핸드 슬롯을 찾을 수 없습니다: {slotPos}");
+            }
         }
     }
 }

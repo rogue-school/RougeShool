@@ -1,6 +1,5 @@
 using Game.CombatSystem.Interface;
 using UnityEngine;
-using System.Collections;
 
 namespace Game.CombatSystem.State
 {
@@ -8,34 +7,31 @@ namespace Game.CombatSystem.State
     {
         private readonly ICombatTurnManager turnManager;
         private readonly ICombatFlowCoordinator flowCoordinator;
-        private readonly ICombatStateFactory stateFactory;
         private readonly ICombatSlotRegistry slotRegistry;
 
         public CombatFirstAttackState(
             ICombatTurnManager turnManager,
             ICombatFlowCoordinator flowCoordinator,
-            ICombatStateFactory stateFactory,
             ICombatSlotRegistry slotRegistry)
         {
             this.turnManager = turnManager;
             this.flowCoordinator = flowCoordinator;
-            this.stateFactory = stateFactory;
             this.slotRegistry = slotRegistry;
         }
 
         public void EnterState()
         {
+            Debug.Log("[CombatFirstAttackState] 상태 진입");
+
             flowCoordinator.RequestFirstAttack(() =>
             {
-                var next = stateFactory.CreateSecondAttackState();
+                var next = turnManager.GetStateFactory().CreateSecondAttackState();
                 turnManager.RequestStateChange(next);
             });
         }
-
 
         public void ExecuteState() { }
 
         public void ExitState() { }
     }
-
 }

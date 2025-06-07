@@ -1,41 +1,77 @@
+﻿using UnityEngine;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.UI;
 using Game.CombatSystem.Interface;
+using Game.CombatSystem.Slot;
 using Game.CombatSystem.Utility;
 
-namespace Game.CombatSystem.DragDrop
+namespace Game.CombatSystem.Service
 {
+    /// <summary>
+    /// 카드 드롭 처리 서비스.
+    /// 슬롯 드롭 유효성 검사 및 교체 처리, 전투 슬롯 및 레지스트리 등록을 담당.
+    /// </summary>
     public class CardDropService
     {
         private readonly ICardDropValidator validator;
         private readonly ICardRegistrar registrar;
-        private readonly ITurnCardRegistry registry;
         private readonly ICombatTurnManager turnManager;
+        private readonly ICardReplacementHandler replacementHandler;
+        private readonly IPlayerHandManager playerHandManager; //  주입 필요
 
         public CardDropService(
             ICardDropValidator validator,
             ICardRegistrar registrar,
-            ITurnCardRegistry registry,
-            ICombatTurnManager turnManager)
+            ICombatTurnManager turnManager,
+            ICardReplacementHandler replacementHandler,
+            IPlayerHandManager playerHandManager) //  추가됨
         {
             this.validator = validator;
             this.registrar = registrar;
-            this.registry = registry;
             this.turnManager = turnManager;
+            this.replacementHandler = replacementHandler;
+            this.playerHandManager = playerHandManager;
         }
 
         public bool TryDropCard(ISkillCard card, SkillCardUI ui, ICombatCardSlot slot, out string message)
         {
-            if (!validator.IsValidDrop(card, slot, out message))
-                return false;
+            message = "";
 
-            registrar.RegisterCard(slot, card, ui);
+            if (!turnManager.IsPlayerInputTurn())
+            {
+                message = "플레이어 입력 턴이 아닙니다.";
+                Debug.LogWarning("[CardDropService] 입력 턴 아님");
+                return false;
+            }
+
+            if (card == null)
+            {
+                message = "카드가 null입니다.";
+                Debug.LogWarning("[CardDropService] 카드가 null입니다.");
+                return false;
+            }
+
+            if (card.GetCurrentCoolTime() > 0)
+            {
+                message = $"[CardDropService] 카드 쿨타임이 남아 있어 드롭 불가: {card.GetCardName()}";
+                Debug.LogWarning(message);
+                return false;
+            }
+
+            if (!validator.IsValidDrop(card, slot, out message))
+            {
+                Debug.LogWarning($"[CardDropService] 드롭 유효성 실패: {message}");
+                return false;
+            }
+
+            replacementHandler.ReplaceSlotCard(slot, card, ui);
 
             var execSlot = SlotPositionUtil.ToExecutionSlot(slot.GetCombatPosition());
-            registry.RegisterPlayerCard(execSlot, card);
-            turnManager?.RegisterPlayerCard(execSlot, card);
+            turnManager.RegisterCard(execSlot, card, ui, SlotOwner.PLAYER);
 
+            Debug.Log("[CardDropService] 카드 드롭 처리 완료");
             return true;
         }
+
     }
 }

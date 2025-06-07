@@ -1,8 +1,6 @@
-using System.Collections.Generic;
 using UnityEngine;
 using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Interface;
-using Game.SkillCardSystem.Effects;
 using Game.SkillCardSystem.Factory;
 using Game.SkillCardSystem.Validator;
 
@@ -21,7 +19,7 @@ namespace Game.SkillCardSystem.Executor
             this.validator = validator;
         }
 
-        public void Execute(ISkillCard card, ICardExecutionContext context, ITurnStateController controller)
+        public void Execute(ISkillCard card, ICardExecutionContext context, ICombatTurnManager turnManager)
         {
             if (!validator.CanExecute(card, context))
             {
@@ -42,7 +40,7 @@ namespace Game.SkillCardSystem.Executor
 
                 int power = card.GetEffectPower(effect);
                 var command = commandFactory.Create(effect, power);
-                command.Execute(context, controller);
+                command.Execute(context, turnManager); // 변경된 타입 반영
 
                 Debug.Log($"[CardExecutor] {card.GetCardName()} → {effect.GetType().Name}, power: {power}");
             }

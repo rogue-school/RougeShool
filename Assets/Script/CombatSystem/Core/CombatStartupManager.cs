@@ -3,12 +3,17 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Game.CombatSystem.Interface;
+using Zenject;
 
 namespace Game.CombatSystem.Core
 {
     public class CombatStartupManager : MonoBehaviour
     {
         private List<ICombatInitializerStep> steps;
+
+        [Inject] private ICombatTurnManager turnManager;
+        [Inject] private ICombatStateFactory stateFactory;
+
 
         private void Awake()
         {
@@ -62,6 +67,9 @@ namespace Game.CombatSystem.Core
             }
 
             Debug.Log("<color=lime>[CombatStartupManager] 모든 초기화 단계 완료</color>");
+
+            var playerInputState = stateFactory.CreatePlayerInputState();
+            turnManager.RequestStateChange(playerInputState);
         }
     }
 }
