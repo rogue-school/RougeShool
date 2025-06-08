@@ -13,6 +13,7 @@ namespace Game.SkillCardSystem.Core
     [CreateAssetMenu(menuName = "Game/SkillCard/Enemy Skill Card")]
     public class EnemySkillCard : ScriptableObject
     {
+
         [Header("카드 데이터")]
         /// <summary>
         /// 카드의 기본 정보 (이름, 쿨타임, 데미지 등)

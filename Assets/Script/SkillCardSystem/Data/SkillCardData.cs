@@ -9,6 +9,9 @@ namespace Game.SkillCardSystem.Data
     [System.Serializable]
     public class SkillCardData
     {
+        [Header("사운드")]
+        public AudioClip SfxClip;
+
         /// <summary>
         /// 카드 이름
         /// </summary>

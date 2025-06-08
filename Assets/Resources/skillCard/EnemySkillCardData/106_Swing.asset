@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: 106_Swing
   m_EditorClassIdentifier: 
   <CardData>k__BackingField:
+    SfxClip: {fileID: 8300000, guid: 4253dec50304f5049a8bf709dcd3f393, type: 3}
     Name: "\uD718\uB450\uB974\uAE30"
     Description: "\uD53C\uD574\uB97C 2 \uC785\uD799\uB2C8\uB2E4"
     Artwork: {fileID: 7086814622668607131, guid: c72bde62c8eaf2543bcdcff8d1db8022, type: 3}

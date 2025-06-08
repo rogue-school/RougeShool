@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: 104_Bite
   m_EditorClassIdentifier: 
   <CardData>k__BackingField:
+    SfxClip: {fileID: 8300000, guid: 4253dec50304f5049a8bf709dcd3f393, type: 3}
     Name: "\uBB3C\uAE30"
     Description: "\uD53C\uD574\uB8F0 2 \uC785\uD799\uB2C8\uB2E4"
     Artwork: {fileID: -4210270633776242855, guid: 85a3280756aa76e46bda6c66d1a7554c, type: 3}

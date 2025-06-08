@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: 105_Rake
   m_EditorClassIdentifier: 
   <CardData>k__BackingField:
+    SfxClip: {fileID: 8300000, guid: 4253dec50304f5049a8bf709dcd3f393, type: 3}
     Name: "\uD560\uD034\uAE30"
     Description: "\uD53C\uD574\uB97C 1 \uC785\uD799\uB2C8\uB2E4"
     Artwork: {fileID: -5843521719522542593, guid: bf48ed00129e48643ba09be27a302b6f, type: 3}

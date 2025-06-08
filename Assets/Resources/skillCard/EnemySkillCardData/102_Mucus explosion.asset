@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: 102_Mucus explosion
   m_EditorClassIdentifier: 
   <CardData>k__BackingField:
+    SfxClip: {fileID: 8300000, guid: 4253dec50304f5049a8bf709dcd3f393, type: 3}
     Name: "\uC810\uC561 \uD3ED\uBC1C"
     Description: "\uD53C\uD574\uB97C 2 \uC785\uD799\uB2C8\uB2E4"
     Artwork: {fileID: 8132184249762415382, guid: b57dcfe582903f6448c4f7db72fe2b16, type: 3}

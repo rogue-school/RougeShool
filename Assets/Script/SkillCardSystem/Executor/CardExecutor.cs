@@ -3,6 +3,7 @@ using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Factory;
 using Game.SkillCardSystem.Validator;
+using Game.Audio;
 
 namespace Game.SkillCardSystem.Executor
 {
@@ -58,6 +59,14 @@ namespace Game.SkillCardSystem.Executor
                 command?.Execute(context, turnManager);
 
                 Debug.Log($"[CardExecutor] {card.GetCardName()} → {effect.GetEffectName()}, power: {power}");
+            }
+
+            // 효과 후 카드 사운드 재생
+            var clip = card.CardData?.SfxClip;
+            if (clip != null)
+            {
+                Debug.Log($"[CardExecutor] SFX 재생 시도: {clip.name}");
+                AudioManager.Instance?.PlaySFX(clip);
             }
         }
     }

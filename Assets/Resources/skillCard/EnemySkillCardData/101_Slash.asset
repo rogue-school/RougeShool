@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: 101_Slash
   m_EditorClassIdentifier: 
   <CardData>k__BackingField:
+    SfxClip: {fileID: 8300000, guid: 4253dec50304f5049a8bf709dcd3f393, type: 3}
     Name: "\uBCA0\uAE30"
     Description: "\uD53C\uD574\uB97C 1 \uC785\uD799\uB2C8\uB2E4"
     Artwork: {fileID: 2915364802761599010, guid: 3e2f01c746df69b45a3a06f0511027cd, type: 3}
