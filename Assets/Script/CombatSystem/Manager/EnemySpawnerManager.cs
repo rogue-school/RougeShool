@@ -16,14 +16,33 @@ namespace Game.CombatSystem.Manager
     /// </summary>
     public class EnemySpawnerManager : MonoBehaviour, IEnemySpawnerManager
     {
+        #region 인스펙터 설정
+
         [Header("기본 적 프리팹")]
         [SerializeField] private GameObject defaultEnemyPrefab;
+
+        #endregion
+
+        #region 의존성
 
         [Inject] private ISlotRegistry slotRegistry;
         [Inject] private IEnemyManager enemyManager;
 
+        #endregion
+
+        #region 내부 상태
+
         private readonly List<EnemyCharacter> spawnedEnemies = new();
 
+        #endregion
+
+        #region 적 스폰 메서드
+
+        /// <summary>
+        /// 지정된 데이터 기반으로 적을 스폰하고 슬롯에 배치합니다.
+        /// </summary>
+        /// <param name="data">적 캐릭터 데이터</param>
+        /// <returns>적 스폰 결과</returns>
         public EnemySpawnResult SpawnEnemy(EnemyCharacterData data)
         {
             if (data == null || slotRegistry == null)
@@ -71,11 +90,23 @@ namespace Game.CombatSystem.Manager
             return new EnemySpawnResult(enemy, true);
         }
 
+        /// <summary>
+        /// 더 이상 사용되지 않는 초기 적 스폰 메서드입니다.
+        /// </summary>
         public void SpawnInitialEnemy()
         {
             Debug.LogWarning("[EnemySpawnerManager] StageManager를 통해 적을 생성하세요. 이 메서드는 더 이상 사용되지 않습니다.");
         }
 
+        #endregion
+
+        #region 기타 유틸리티
+
+        /// <summary>
+        /// 현재까지 스폰된 모든 적 캐릭터 리스트를 반환합니다.
+        /// </summary>
         public List<EnemyCharacter> GetAllEnemies() => spawnedEnemies;
+
+        #endregion
     }
 }

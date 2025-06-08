@@ -13,7 +13,7 @@ namespace Game.CombatSystem.Interface
     /// </summary>
     public interface ICombatFlowCoordinator
     {
-        // ─────────────── 초기화 및 준비 ───────────────
+        #region 초기화 및 준비
 
         /// <summary>
         /// 슬롯 초기화, 캐릭터 배치 등 전투 준비 절차를 수행합니다.
@@ -40,11 +40,11 @@ namespace Game.CombatSystem.Interface
         /// <summary>
         /// 턴 상태 매니저와 상태 팩토리를 주입합니다.
         /// </summary>
-        /// <param name="turnManager">턴 상태 관리 객체</param>
-        /// <param name="stateFactory">상태 생성 팩토리</param>
         void InjectTurnStateDependencies(ICombatTurnManager turnManager, ICombatStateFactory stateFactory);
 
-        // ─────────────── 전투 흐름 ───────────────
+        #endregion
+
+        #region 전투 흐름
 
         /// <summary>
         /// 선공 캐릭터의 카드 실행 절차를 수행합니다.
@@ -77,7 +77,9 @@ namespace Game.CombatSystem.Interface
         /// <param name="onComplete">완료 후 호출될 콜백</param>
         void RequestFirstAttack(Action onComplete = null);
 
-        // ─────────────── 입력 제어 ───────────────
+        #endregion
+
+        #region 입력 제어
 
         /// <summary>
         /// 플레이어의 카드 입력을 활성화합니다.
@@ -95,7 +97,9 @@ namespace Game.CombatSystem.Interface
         /// <returns>입력 가능 여부</returns>
         bool IsPlayerInputEnabled();
 
-        // ─────────────── 적 관리 ───────────────
+        #endregion
+
+        #region 적 관리
 
         /// <summary>
         /// 다음 적을 생성 및 배치합니다.
@@ -142,14 +146,18 @@ namespace Game.CombatSystem.Interface
         /// </summary>
         bool IsEnemyFirst { get; }
 
-        // ─────────────── 플레이어 상태 ───────────────
+        #endregion
+
+        #region 플레이어 상태
 
         /// <summary>
         /// 플레이어 캐릭터가 사망했는지 여부를 반환합니다.
         /// </summary>
         bool IsPlayerDead();
 
-        // ─────────────── 카드 관리 ───────────────
+        #endregion
+
+        #region 카드 관리
 
         /// <summary>
         /// 카드와 UI를 특정 전투 슬롯에 등록합니다.
@@ -163,7 +171,6 @@ namespace Game.CombatSystem.Interface
         /// 슬롯에 등록된 카드 데이터를 반환합니다.
         /// </summary>
         /// <param name="pos">슬롯 위치</param>
-        /// <returns>등록된 스킬 카드</returns>
         ISkillCard GetCardInSlot(CombatSlotPosition pos);
 
         /// <summary>
@@ -171,7 +178,9 @@ namespace Game.CombatSystem.Interface
         /// </summary>
         ITurnCardRegistry GetTurnCardRegistry();
 
-        // ─────────────── UI 제어 ───────────────
+        #endregion
+
+        #region UI 제어
 
         /// <summary>
         /// 플레이어 카드 선택 UI를 표시합니다.
@@ -196,7 +205,6 @@ namespace Game.CombatSystem.Interface
         /// <summary>
         /// 턴 시작 버튼 클릭 시 실행될 콜백을 등록합니다.
         /// </summary>
-        /// <param name="onClick">클릭 이벤트 콜백</param>
         void RegisterStartButton(Action onClick);
 
         /// <summary>
@@ -204,11 +212,15 @@ namespace Game.CombatSystem.Interface
         /// </summary>
         void UnregisterStartButton();
 
-        // ─────────────── 클린업 ───────────────
+        #endregion
+
+        #region 클린업
 
         /// <summary>
         /// 전투 승리 후 상태 정리 작업을 수행합니다.
         /// </summary>
         void CleanupAfterVictory();
+
+        #endregion
     }
 }

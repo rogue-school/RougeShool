@@ -7,13 +7,22 @@ using Game.SkillCardSystem.Interface;
 
 namespace Game.CombatSystem.Initialization
 {
+    /// <summary>
+    /// 플레이어 캐릭터의 스킬카드를 초기화하고 핸드 슬롯에 배치합니다.
+    /// </summary>
     public class PlayerSkillCardInitializer : MonoBehaviour, ICombatInitializerStep
     {
         [SerializeField] private int order = 20;
         public int Order => order;
 
+        #region 의존성 필드
+
         private IPlayerManager playerManager;
         private IPlayerHandManager handManager;
+
+        #endregion
+
+        #region 의존성 주입
 
         [Inject]
         public void Construct(IPlayerManager playerManager, IPlayerHandManager handManager)
@@ -21,6 +30,10 @@ namespace Game.CombatSystem.Initialization
             this.playerManager = playerManager;
             this.handManager = handManager;
         }
+
+        #endregion
+
+        #region 초기화 로직
 
         public IEnumerator Initialize()
         {
@@ -41,5 +54,7 @@ namespace Game.CombatSystem.Initialization
             Debug.Log("[PlayerSkillCardInitializer] 플레이어 핸드 초기화 완료");
             yield return null;
         }
+
+        #endregion
     }
 }

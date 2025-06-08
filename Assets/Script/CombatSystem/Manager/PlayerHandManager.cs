@@ -10,8 +10,14 @@ using Game.CombatSystem.Interface;
 
 namespace Game.SkillCardSystem.Core
 {
+    /// <summary>
+    /// 플레이어의 손패를 관리하는 매니저 클래스입니다.
+    /// 카드 생성, 제거, 복구 및 드래그 가능 여부 설정 등의 기능을 담당합니다.
+    /// </summary>
     public class PlayerHandManager : MonoBehaviour, IPlayerHandManager
     {
+        #region 필드
+
         private IPlayerCharacter owner;
         private IHandSlotRegistry slotRegistry;
         private ISkillCardFactory cardFactory;
@@ -19,6 +25,10 @@ namespace Game.SkillCardSystem.Core
 
         private readonly Dictionary<SkillCardSlotPosition, ISkillCard> cards = new();
         private readonly Dictionary<SkillCardSlotPosition, SkillCardUI> cardUIs = new();
+
+        #endregion
+
+        #region 의존성 주입 및 초기화
 
         [Inject]
         public void Construct(
@@ -34,11 +44,21 @@ namespace Game.SkillCardSystem.Core
             cardUIs.Clear();
         }
 
+        /// <summary>
+        /// 핸드 소유자를 설정합니다.
+        /// </summary>
         public void SetPlayer(IPlayerCharacter player)
         {
             this.owner = player;
         }
 
+        #endregion
+
+        #region 초기 핸드 구성
+
+        /// <summary>
+        /// 플레이어 덱을 기반으로 초기 핸드를 생성합니다.
+        /// </summary>
         public void GenerateInitialHand()
         {
             var deck = owner?.Data?.SkillDeck;
@@ -52,7 +72,6 @@ namespace Game.SkillCardSystem.Core
             {
                 var pos = entry.Slot;
                 var card = cardFactory.CreatePlayerCard(entry.Card.CardData, entry.Card.CreateEffects());
-
                 card.SetCurrentCoolTime(0);
                 cards[pos] = card;
 
@@ -65,12 +84,25 @@ namespace Game.SkillCardSystem.Core
             }
         }
 
+        #endregion
+
+        #region 카드 조회
+
+        /// <inheritdoc/>
         public ISkillCard GetCardInSlot(SkillCardSlotPosition pos) =>
             cards.TryGetValue(pos, out var c) ? c : null;
 
+        /// <inheritdoc/>
         public ISkillCardUI GetCardUIInSlot(SkillCardSlotPosition pos) =>
             cardUIs.TryGetValue(pos, out var ui) ? ui : null;
 
+        #endregion
+
+        #region 카드 복구
+
+        /// <summary>
+        /// 사용 가능한 빈 슬롯에 카드를 복귀시킵니다.
+        /// </summary>
         public void RestoreCardToHand(ISkillCard card)
         {
             foreach (var kvp in cards)
@@ -91,6 +123,9 @@ namespace Game.SkillCardSystem.Core
             Debug.LogWarning("[PlayerHandManager] 빈 슬롯을 찾을 수 없어 카드 복귀 실패");
         }
 
+        /// <summary>
+        /// 특정 슬롯에 카드를 복귀시킵니다.
+        /// </summary>
         public void RestoreCardToHand(ISkillCard card, SkillCardSlotPosition slot)
         {
             cards[slot] = card;
@@ -108,6 +143,13 @@ namespace Game.SkillCardSystem.Core
             }
         }
 
+        #endregion
+
+        #region 카드 제거
+
+        /// <summary>
+        /// 손패에서 특정 카드를 제거합니다.
+        /// </summary>
         public void RemoveCard(ISkillCard card)
         {
             foreach (var kvp in cards)
@@ -128,6 +170,13 @@ namespace Game.SkillCardSystem.Core
             Debug.LogWarning("[PlayerHandManager] 해당 카드를 찾을 수 없어 제거 실패");
         }
 
+        #endregion
+
+        #region 유틸리티
+
+        /// <summary>
+        /// 각 손패 슬롯의 상태를 로그로 출력합니다.
+        /// </summary>
         public void LogPlayerHandSlotStates()
         {
             foreach (SkillCardSlotPosition pos in System.Enum.GetValues(typeof(SkillCardSlotPosition)))
@@ -137,12 +186,18 @@ namespace Game.SkillCardSystem.Core
             }
         }
 
+        /// <summary>
+        /// 손패 카드들의 드래그 가능 여부를 설정합니다.
+        /// </summary>
         public void EnableInput(bool enable)
         {
             foreach (var ui in cardUIs.Values)
                 ui?.SetDraggable(enable);
         }
 
+        /// <summary>
+        /// 모든 슬롯의 카드를 제거하고 초기화합니다.
+        /// </summary>
         public void ClearAll()
         {
             foreach (var pos in cards.Keys)
@@ -152,6 +207,9 @@ namespace Game.SkillCardSystem.Core
             cardUIs.Clear();
         }
 
+        /// <summary>
+        /// 현재 손패의 모든 카드와 UI를 반환합니다.
+        /// </summary>
         public IEnumerable<(ISkillCard card, ISkillCardUI ui)> GetAllHandCards()
         {
             foreach (var kvp in cards)
@@ -162,5 +220,7 @@ namespace Game.SkillCardSystem.Core
                 yield return (card, ui);
             }
         }
+
+        #endregion
     }
 }

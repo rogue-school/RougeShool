@@ -8,17 +8,26 @@ using Game.SkillCardSystem.Interface;
 namespace Game.CombatSystem.Initialization
 {
     /// <summary>
-    /// 전투 시작 시 적 핸드 슬롯(3→2→1)을 정확한 순서로 초기화합니다.
-    /// 슬롯 3번에서만 카드가 생성되며, 앞 슬롯으로 한 칸씩 이동하며 채워집니다.
+    /// 전투 시작 시 적 핸드 슬롯을 초기화하는 스텝 클래스입니다.
+    /// 슬롯 3번부터 역순으로 카드를 생성하고 한 칸씩 이동시켜 채워 넣습니다.
     /// </summary>
     public class EnemyHandInitializer : MonoBehaviour, ICombatInitializerStep
     {
-        [SerializeField] private int order = 40;
+        [SerializeField]
+        [Tooltip("초기화 순서 (낮을수록 먼저 실행됨)")]
+        private int order = 40;
+
+        /// <inheritdoc />
         public int Order => order;
 
         private IEnemyManager _enemyManager;
         private IEnemyHandManager _handManager;
 
+        /// <summary>
+        /// 초기화에 필요한 매니저들을 주입합니다.
+        /// </summary>
+        /// <param name="enemyManager">적 캐릭터 매니저</param>
+        /// <param name="handManager">적 핸드 매니저</param>
         [Inject]
         public void Construct(IEnemyManager enemyManager, IEnemyHandManager handManager)
         {
@@ -26,6 +35,9 @@ namespace Game.CombatSystem.Initialization
             _handManager = handManager;
         }
 
+        /// <summary>
+        /// 적 핸드를 초기화하고 슬롯 3 → 2 → 1 순서로 채웁니다.
+        /// </summary>
         public IEnumerator Initialize()
         {
             Debug.Log("[EnemyHandInitializer] 적 핸드 초기화 시작");
@@ -37,10 +49,10 @@ namespace Game.CombatSystem.Initialization
                 yield break;
             }
 
-            // 적 핸드 초기화 (슬롯과 내부 상태 세팅)
+            // 적 핸드 슬롯과 상태 초기화
             _handManager.Initialize(enemy);
 
-            // 슬롯 3 → 2 → 1 순서로 생성 + 이동
+            // 슬롯 3 → 2 → 1 순서로 생성 및 이동하며 카드 채우기
             yield return _handManager.StepwiseFillSlotsFromBack(0.3f);
 
             Debug.Log("[EnemyHandInitializer] 적 핸드 초기화 완료");

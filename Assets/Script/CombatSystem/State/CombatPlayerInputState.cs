@@ -5,10 +5,13 @@ using Game.SkillCardSystem.Runtime;
 namespace Game.CombatSystem.State
 {
     /// <summary>
-    /// 플레이어 턴 입력 상태: 쿨타임 감소 + 카드 선택 UI 활성화
+    /// 플레이어의 입력을 처리하는 전투 상태입니다.
+    /// 쿨타임 감소, 카드 선택 UI 활성화, 시작 버튼 등록 등을 수행합니다.
     /// </summary>
     public class CombatPlayerInputState : ICombatTurnState
     {
+        #region 필드
+
         private readonly ICombatFlowCoordinator flowCoordinator;
         private readonly ITurnCardRegistry cardRegistry;
         private readonly ICombatTurnManager turnManager;
@@ -16,6 +19,13 @@ namespace Game.CombatSystem.State
 
         private bool hasStarted = false;
 
+        #endregion
+
+        #region 생성자
+
+        /// <summary>
+        /// CombatPlayerInputState의 생성자입니다.
+        /// </summary>
         public CombatPlayerInputState(
             ICombatFlowCoordinator flowCoordinator,
             ITurnCardRegistry cardRegistry,
@@ -28,6 +38,13 @@ namespace Game.CombatSystem.State
             this.cooldownSystem = cooldownSystem;
         }
 
+        #endregion
+
+        #region 상태 인터페이스 구현
+
+        /// <summary>
+        /// 상태 진입 시 호출됩니다. 쿨타임을 감소시키고 UI 및 입력을 활성화합니다.
+        /// </summary>
         public void EnterState()
         {
             Debug.Log("<color=cyan>[CombatPlayerInputState] 상태 진입</color>");
@@ -42,6 +59,35 @@ namespace Game.CombatSystem.State
             flowCoordinator.RegisterStartButton(OnStartButtonPressed);
         }
 
+        /// <summary>
+        /// 상태 반복 실행 중 호출됩니다. 현재는 구현되어 있지 않음.
+        /// </summary>
+        public void ExecuteState()
+        {
+            // 입력 대기 상태에서 반복 동작이 필요한 경우 확장 가능
+        }
+
+        /// <summary>
+        /// 상태 종료 시 호출됩니다. UI 및 입력을 정리합니다.
+        /// </summary>
+        public void ExitState()
+        {
+            Debug.Log("<color=grey>[CombatPlayerInputState] 상태 종료</color>");
+
+            flowCoordinator.DisablePlayerInput();
+            flowCoordinator.HidePlayerCardSelectionUI();
+            flowCoordinator.UnregisterStartButton();
+            flowCoordinator.DisableStartButton();
+        }
+
+        #endregion
+
+        #region 내부 로직
+
+        /// <summary>
+        /// 시작 버튼이 눌렸을 때 호출되는 콜백입니다.
+        /// 상태 전이를 요청합니다.
+        /// </summary>
         private void OnStartButtonPressed()
         {
             if (hasStarted)
@@ -63,19 +109,6 @@ namespace Game.CombatSystem.State
             turnManager.RequestStateChange(next);
         }
 
-        public void ExecuteState()
-        {
-            // 플레이어 입력 중일 때 반복 로직 (필요 시 확장)
-        }
-
-        public void ExitState()
-        {
-            Debug.Log("<color=grey>[CombatPlayerInputState] 상태 종료</color>");
-
-            flowCoordinator.DisablePlayerInput();
-            flowCoordinator.HidePlayerCardSelectionUI();
-            flowCoordinator.UnregisterStartButton();
-            flowCoordinator.DisableStartButton();
-        }
+        #endregion
     }
 }

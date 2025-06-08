@@ -9,7 +9,7 @@ using Game.CombatSystem.Interface;
 namespace Game.CombatSystem.Initialization
 {
     /// <summary>
-    /// 적 캐릭터를 초기화하고 슬롯에 배치합니다.
+    /// 적 캐릭터를 생성하고 슬롯에 배치하는 초기화 클래스입니다.
     /// </summary>
     public class EnemyInitializer : MonoBehaviour, IEnemyInitializer
     {
@@ -20,12 +20,26 @@ namespace Game.CombatSystem.Initialization
         private IEnemyCharacter spawnedEnemy;
         private ISlotRegistry slotRegistry;
 
+        #region 의존성 주입
+
+        /// <summary>
+        /// 슬롯 레지스트리를 주입합니다.
+        /// </summary>
+        /// <param name="slotRegistry">캐릭터 슬롯 레지스트리</param>
         public void Inject(ISlotRegistry slotRegistry)
         {
             this.slotRegistry = slotRegistry;
             Debug.Log("[EnemyInitializer] ISlotRegistry 주입 완료");
         }
 
+        #endregion
+
+        #region 캐릭터 초기화 및 배치
+
+        /// <summary>
+        /// 주어진 데이터로 적 캐릭터를 생성하고 슬롯에 배치합니다.
+        /// </summary>
+        /// <param name="data">적 캐릭터 데이터</param>
         public void SetupWithData(EnemyCharacterData data)
         {
             Debug.Log("[EnemyInitializer] SetupWithData() 호출됨");
@@ -56,12 +70,22 @@ namespace Game.CombatSystem.Initialization
             RegisterToSlot(slot, enemy);
         }
 
+        /// <summary>
+        /// 생성된 적 캐릭터를 반환합니다.
+        /// </summary>
         public IEnemyCharacter GetSpawnedEnemy()
         {
             Debug.Log("[EnemyInitializer] GetSpawnedEnemy() 호출됨");
             return spawnedEnemy;
         }
 
+        #endregion
+
+        #region 내부 유틸리티 메서드
+
+        /// <summary>
+        /// 적용 가능한 적 캐릭터 슬롯을 반환합니다.
+        /// </summary>
         private ICharacterSlot GetEnemySlot()
         {
             if (slotRegistry == null)
@@ -73,17 +97,16 @@ namespace Game.CombatSystem.Initialization
             var slot = slotRegistry.GetCharacterSlotRegistry().GetCharacterSlot(SlotOwner.ENEMY);
 
             if (slot == null)
-            {
                 Debug.LogError("[EnemyInitializer] ENEMY용 캐릭터 슬롯을 찾지 못했습니다.");
-            }
             else
-            {
                 Debug.Log($"[EnemyInitializer] 슬롯 이름: {((MonoBehaviour)slot).name}");
-            }
 
             return slot;
         }
 
+        /// <summary>
+        /// 슬롯에 존재하는 모든 자식 오브젝트를 제거합니다.
+        /// </summary>
         private void ClearSlotChildren(ICharacterSlot slot)
         {
             Debug.Log("[EnemyInitializer] 슬롯 자식 제거 시작");
@@ -95,6 +118,9 @@ namespace Game.CombatSystem.Initialization
             }
         }
 
+        /// <summary>
+        /// 적 캐릭터 프리팹을 슬롯에 인스턴스화하고 EnemyCharacter 컴포넌트를 반환합니다.
+        /// </summary>
         private EnemyCharacter InstantiateAndConfigureEnemy(EnemyCharacterData data, ICharacterSlot slot)
         {
             Debug.Log("[EnemyInitializer] 적 프리팹 인스턴스화 시도");
@@ -120,12 +146,18 @@ namespace Game.CombatSystem.Initialization
             return enemy;
         }
 
+        /// <summary>
+        /// 생성된 적 캐릭터에 데이터를 적용합니다.
+        /// </summary>
         private void ApplyCharacterData(EnemyCharacter enemy, EnemyCharacterData data)
         {
             Debug.Log("[EnemyInitializer] 캐릭터 데이터 적용 시작");
             enemy.Initialize(data);
         }
 
+        /// <summary>
+        /// 슬롯에 적 캐릭터를 등록하고 내부 참조를 갱신합니다.
+        /// </summary>
         private void RegisterToSlot(ICharacterSlot slot, EnemyCharacter enemy)
         {
             Debug.Log("[EnemyInitializer] 슬롯에 적 캐릭터 등록 시작");
@@ -133,5 +165,7 @@ namespace Game.CombatSystem.Initialization
             spawnedEnemy = enemy;
             Debug.Log("[EnemyInitializer] 적 캐릭터 슬롯 등록 및 내부 참조 완료");
         }
+
+        #endregion
     }
 }

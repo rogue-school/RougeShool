@@ -5,20 +5,24 @@ using Game.SkillCardSystem.Core;
 namespace Game.Utility
 {
     /// <summary>
-    /// 씬에서 자동으로 오브젝트를 찾아 참조를 연결하는 유틸 매니저입니다.
-    /// Unity 6000.0 이상에서는 FindFirstObjectByType을 사용합니다.
+    /// 씬 내에서 주요 매니저 오브젝트를 자동으로 검색하여 연결하는 유틸리티 클래스입니다.
+    /// Unity 6000.0 이상 버전에서는 <c>FindFirstObjectByType</c>을 사용합니다.
     /// </summary>
     public class SceneAutoBinderManager : MonoBehaviour
     {
+        #region 필드
+
         [SerializeField] private CombatSlotManager battleSlotManager;
         [SerializeField] private PlayerHandManager playerHandManager;
         [SerializeField] private EnemyHandManager enemyHandManager;
 
+        #endregion
+
+        #region Unity 라이프사이클
+
         private void Awake()
         {
-            battleSlotManager ??= FindFirstObjectByType<CombatSlotManager>();
-            playerHandManager ??= FindFirstObjectByType<PlayerHandManager>();
-            enemyHandManager ??= FindFirstObjectByType<EnemyHandManager>();
+            AutoBindReferences();
 
             if (battleSlotManager == null)
                 Debug.LogWarning("[SceneAutoBinderManager] CombatSlotManager를 찾지 못했습니다.");
@@ -31,14 +35,30 @@ namespace Game.Utility
 
             Debug.Log("[SceneAutoBinderManager] 자동 바인딩 완료");
         }
-        public void Initialize()
+
+        #endregion
+
+        #region 바인딩 메서드
+
+        /// <summary>
+        /// 필요한 매니저들을 FindFirstObjectByType을 통해 자동으로 바인딩합니다.
+        /// </summary>
+        private void AutoBindReferences()
         {
             battleSlotManager ??= FindFirstObjectByType<CombatSlotManager>();
             playerHandManager ??= FindFirstObjectByType<PlayerHandManager>();
             enemyHandManager ??= FindFirstObjectByType<EnemyHandManager>();
+        }
 
+        /// <summary>
+        /// 외부에서 수동으로 바인딩을 요청할 수 있는 메서드입니다.
+        /// </summary>
+        public void Initialize()
+        {
+            AutoBindReferences();
             Debug.Log("[SceneAutoBinderManager] 수동 바인딩 완료");
         }
 
+        #endregion
     }
 }

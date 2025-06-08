@@ -6,10 +6,18 @@ using Game.SkillCardSystem.UI;
 namespace Game.CombatSystem.Service
 {
     /// <summary>
-    /// 전투 슬롯에 카드를 배치하는 기능을 담당합니다.
+    /// 전투 슬롯에 스킬 카드를 배치하는 서비스를 제공합니다.
     /// </summary>
     public class CardPlacementService : ICardPlacementService
     {
+        #region 카드 배치
+
+        /// <summary>
+        /// 지정된 슬롯에 카드와 UI를 배치합니다.
+        /// </summary>
+        /// <param name="card">배치할 스킬 카드</param>
+        /// <param name="ui">해당 카드의 UI</param>
+        /// <param name="slot">카드를 배치할 전투 슬롯</param>
         public void PlaceCardInSlot(ISkillCard card, ISkillCardUI ui, ICombatCardSlot slot)
         {
             if (card == null || ui == null || slot == null)
@@ -36,5 +44,7 @@ namespace Game.CombatSystem.Service
 
             Debug.Log($"[CardPlacementService] 카드 '{card.GetCardName()}' 슬롯 {slot.GetCombatPosition()}에 배치 완료");
         }
+
+        #endregion
     }
 }

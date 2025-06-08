@@ -9,8 +9,13 @@ using Game.CombatSystem.Context;
 
 namespace Game.CombatSystem.State
 {
+    /// <summary>
+    /// 전투 준비 상태. 슬롯 초기화, 적 소환, 적 카드 준비 등을 처리합니다.
+    /// </summary>
     public class CombatPrepareState : ICombatTurnState
     {
+        #region 필드
+
         private readonly ICombatTurnManager turnManager;
         private readonly ICombatFlowCoordinator flowCoordinator;
         private readonly IPlayerHandManager playerHandManager;
@@ -19,6 +24,13 @@ namespace Game.CombatSystem.State
         private readonly ICoroutineRunner coroutineRunner;
         private readonly TurnContext turnContext;
 
+        #endregion
+
+        #region 생성자
+
+        /// <summary>
+        /// 전투 준비 상태 생성자
+        /// </summary>
         public CombatPrepareState(
             ICombatTurnManager turnManager,
             ICombatFlowCoordinator flowCoordinator,
@@ -37,6 +49,13 @@ namespace Game.CombatSystem.State
             this.turnContext = turnContext;
         }
 
+        #endregion
+
+        #region 상태 진입
+
+        /// <summary>
+        /// 상태 진입 시 호출됨. 준비 코루틴 시작.
+        /// </summary>
         public void EnterState()
         {
             Debug.Log("<color=cyan>[CombatPrepareState] 상태 진입</color>");
@@ -44,12 +63,17 @@ namespace Game.CombatSystem.State
             coroutineRunner.RunCoroutine(PrepareRoutine());
         }
 
+        #endregion
+
+        #region 준비 루틴
+
+        /// <summary>
+        /// 전투 준비 루틴. 슬롯 확인, 적 생성 및 카드 등록을 처리.
+        /// </summary>
         private IEnumerator PrepareRoutine()
         {
-            // 1. 슬롯 초기화 완료 대기
             yield return new WaitUntil(() => slotRegistry.IsInitialized);
 
-            // 2. 적이 없으면 생성
             if (!flowCoordinator.HasEnemy())
             {
                 Debug.Log("[CombatPrepareState] 적이 없어 새 적 생성 시작");
@@ -57,7 +81,6 @@ namespace Game.CombatSystem.State
                 yield return new WaitUntil(() => flowCoordinator.GetEnemy() != null);
             }
 
-            // 3. 적 핸드 초기화
             var enemy = flowCoordinator.GetEnemy();
             if (!enemyHandManager.HasInitializedEnemy(enemy))
             {
@@ -65,26 +88,21 @@ namespace Game.CombatSystem.State
                 yield return new WaitForEndOfFrame();
             }
 
-            // 4. 적 핸드 슬롯 이동 및 생성
             yield return enemyHandManager.StepwiseFillSlotsFromBack(0.3f);
-
-            // 5. 적 카드 준비 완료까지 대기
             yield return WaitForEnemyCardReady();
 
-            // 6. 적 전투 슬롯에 카드 등록
             enemyHandManager.PopCardAndRegisterToCombatSlot(flowCoordinator);
+            yield return new WaitForSeconds(0.25f);
 
-            // [ Delay 추가]
-            yield return new WaitForSeconds(0.25f); // UI가 처리될 시간을 줌
-
-            // 7. 다시 뒷칸부터 채우기
             yield return enemyHandManager.StepwiseFillSlotsFromBack(0.3f);
 
-
-            // 8. 다음 상태 전이
             var next = turnManager.GetStateFactory().CreatePlayerInputState();
             turnManager.RequestStateChange(next);
         }
+
+        /// <summary>
+        /// 적 카드 슬롯이 준비될 때까지 대기합니다.
+        /// </summary>
         private IEnumerator WaitForEnemyCardReady()
         {
             Debug.Log("[CombatPrepareState] 적 카드 등록 준비 대기 중...");
@@ -99,11 +117,17 @@ namespace Game.CombatSystem.State
             Debug.Log("[CombatPrepareState] 적 카드 등록 준비 완료");
         }
 
+        #endregion
+
+        #region 상태 실행 및 종료
+
         public void ExecuteState() { }
 
         public void ExitState()
         {
             Debug.Log("<color=grey>[CombatPrepareState] 상태 종료</color>");
         }
+
+        #endregion
     }
 }

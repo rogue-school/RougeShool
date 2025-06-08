@@ -7,12 +7,21 @@ using Game.CombatSystem.Slot;
 
 namespace Game.CombatSystem.Initialization
 {
+    /// <summary>
+    /// 전투 시작 시 슬롯 정보를 자동으로 바인딩하고 레지스트리에 등록하는 초기화 스텝입니다.
+    /// </summary>
     public class SlotInitializationStep : MonoBehaviour, ICombatInitializerStep
     {
+        #region 필드 및 주입
+
         [Inject] private ISlotRegistry slotRegistry;
         [Inject] private SlotInitializer slotInitializer;
 
         public int Order => 0;
+
+        #endregion
+
+        #region 초기화 메서드
 
         public IEnumerator Initialize()
         {
@@ -28,5 +37,7 @@ namespace Game.CombatSystem.Initialization
 
             Debug.Log("[SlotInitializationStep] 슬롯 초기화 완료");
         }
+
+        #endregion
     }
 }

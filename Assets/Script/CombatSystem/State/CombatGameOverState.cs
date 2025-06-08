@@ -7,59 +7,98 @@ using Game.CharacterSystem.Interface;
 using Game.Manager;
 using Game.IManager;
 
-public class CombatGameOverState : ICombatTurnState
+namespace Game.CombatSystem.State
 {
-    private readonly ICombatTurnManager turnManager;
-    private readonly ICombatFlowCoordinator flowCoordinator;
-    private readonly ICombatSlotRegistry slotRegistry;
-    private readonly ICoroutineRunner coroutineRunner;
-    private readonly DeathUIManager deathUIManager;
-    private readonly IPlayerManager playerManager;
-
-
-    public CombatGameOverState(
-        ICombatTurnManager turnManager,
-        ICombatFlowCoordinator flowCoordinator,
-        ICombatSlotRegistry slotRegistry,
-        ICoroutineRunner coroutineRunner,
-        DeathUIManager deathUIManager,
-        IPlayerManager playerManager
-    )   
+    /// <summary>
+    /// 전투 종료 상태. 게임 오버 루틴을 실행하고 UI를 표시합니다.
+    /// </summary>
+    public class CombatGameOverState : ICombatTurnState
     {
-        this.turnManager = turnManager;
-        this.flowCoordinator = flowCoordinator;
-        this.slotRegistry = slotRegistry;
-        this.coroutineRunner = coroutineRunner;
-        this.deathUIManager = deathUIManager;
-        this.playerManager = playerManager;
-    }
+        #region 필드
 
+        private readonly ICombatTurnManager turnManager;
+        private readonly ICombatFlowCoordinator flowCoordinator;
+        private readonly ICombatSlotRegistry slotRegistry;
+        private readonly ICoroutineRunner coroutineRunner;
+        private readonly DeathUIManager deathUIManager;
+        private readonly IPlayerManager playerManager;
 
-    public void EnterState()
-    {
-        Debug.Log("[CombatGameOverState] 상태 진입 - 게임 오버 처리 시작");
-        coroutineRunner.RunCoroutine(GameOverRoutine());
-    }
+        #endregion
 
-    private IEnumerator GameOverRoutine()
-    {
-        yield return flowCoordinator.PerformGameOverPhase();
+        #region 생성자
 
-        if (CheckPlayerDeath())
+        /// <summary>
+        /// CombatGameOverState 생성자
+        /// </summary>
+        public CombatGameOverState(
+            ICombatTurnManager turnManager,
+            ICombatFlowCoordinator flowCoordinator,
+            ICombatSlotRegistry slotRegistry,
+            ICoroutineRunner coroutineRunner,
+            DeathUIManager deathUIManager,
+            IPlayerManager playerManager
+        )
         {
-            deathUIManager.ShowDeathUI();
-            Debug.Log("[CombatGameOverState] 플레이어 패배 - 게임 오버 UI 표시");
+            this.turnManager = turnManager;
+            this.flowCoordinator = flowCoordinator;
+            this.slotRegistry = slotRegistry;
+            this.coroutineRunner = coroutineRunner;
+            this.deathUIManager = deathUIManager;
+            this.playerManager = playerManager;
         }
 
-        Debug.Log("[CombatGameOverState] 게임 오버 처리 완료");
-    }
+        #endregion
 
-    private bool CheckPlayerDeath()
-    {
-        var player = playerManager.GetPlayer();
-        return player == null || player.IsDead();
-    }
+        #region 상태 메서드
 
-    public void ExecuteState() { }
-    public void ExitState() { }
+        /// <summary>
+        /// 상태 진입 시 게임 오버 루틴 실행
+        /// </summary>
+        public void EnterState()
+        {
+            Debug.Log("[CombatGameOverState] 상태 진입 - 게임 오버 처리 시작");
+            coroutineRunner.RunCoroutine(GameOverRoutine());
+        }
+
+        /// <summary>
+        /// 상태 실행 중 특별한 작업 없음
+        /// </summary>
+        public void ExecuteState() { }
+
+        /// <summary>
+        /// 상태 종료 시 특별한 작업 없음
+        /// </summary>
+        public void ExitState() { }
+
+        #endregion
+
+        #region 내부 루틴
+
+        /// <summary>
+        /// 게임 오버 연출과 UI를 실행하는 루틴
+        /// </summary>
+        private IEnumerator GameOverRoutine()
+        {
+            yield return flowCoordinator.PerformGameOverPhase();
+
+            if (CheckPlayerDeath())
+            {
+                deathUIManager.ShowDeathUI();
+                Debug.Log("[CombatGameOverState] 플레이어 패배 - 게임 오버 UI 표시");
+            }
+
+            Debug.Log("[CombatGameOverState] 게임 오버 처리 완료");
+        }
+
+        /// <summary>
+        /// 플레이어가 사망했는지 확인
+        /// </summary>
+        private bool CheckPlayerDeath()
+        {
+            var player = playerManager.GetPlayer();
+            return player == null || player.IsDead();
+        }
+
+        #endregion
+    }
 }

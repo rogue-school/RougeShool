@@ -11,8 +11,13 @@ using Game.SkillCardSystem.Core;
 
 namespace Game.CombatSystem.Initialization
 {
+    /// <summary>
+    /// 플레이어 캐릭터를 생성하고 슬롯에 배치하는 초기화 컴포넌트입니다.
+    /// 전투 시작 시 실행되며, ICombatInitializerStep을 통해 순차적으로 실행됩니다.
+    /// </summary>
     public class PlayerCharacterInitializer : MonoBehaviour, IPlayerCharacterInitializer, ICombatInitializerStep
     {
+        [Header("플레이어 캐릭터 프리팹 및 기본 데이터")]
         [SerializeField] private PlayerCharacter playerPrefab;
         [SerializeField] private PlayerCharacterData defaultData;
 
@@ -23,6 +28,11 @@ namespace Game.CombatSystem.Initialization
         private IPlayerManager playerManager;
         private ISlotRegistry slotRegistry;
 
+        #region 의존성 주입
+
+        /// <summary>
+        /// 의존성 주입 메서드입니다.
+        /// </summary>
         [Inject]
         public void Inject(IPlayerManager playerManager, ISlotRegistry slotRegistry)
         {
@@ -31,6 +41,13 @@ namespace Game.CombatSystem.Initialization
             Debug.Log("[PlayerCharacterInitializer] IPlayerManager, ISlotRegistry 주입 완료");
         }
 
+        #endregion
+
+        #region ICombatInitializerStep 구현
+
+        /// <summary>
+        /// 슬롯 시스템 초기화 완료 후 실행됩니다.
+        /// </summary>
         public IEnumerator Initialize()
         {
             Debug.Log("[PlayerCharacterInitializer] Initialize() 시작");
@@ -41,6 +58,13 @@ namespace Game.CombatSystem.Initialization
             Setup();
         }
 
+        #endregion
+
+        #region 캐릭터 배치 및 설정
+
+        /// <summary>
+        /// 플레이어 캐릭터를 생성하고 슬롯에 배치합니다.
+        /// </summary>
         public void Setup()
         {
             Debug.Log("[PlayerCharacterInitializer] Setup() 호출됨");
@@ -63,7 +87,7 @@ namespace Game.CombatSystem.Initialization
             // 캐릭터 생성 및 부모 설정
             var player = Instantiate(playerPrefab);
             player.name = "PlayerCharacter";
-            player.transform.SetParent(slotTransform, false); // worldPositionStays = false
+            player.transform.SetParent(slotTransform, false);
 
             // RectTransform 정렬
             if (player.TryGetComponent(out RectTransform rt))
@@ -108,11 +132,21 @@ namespace Game.CombatSystem.Initialization
             }
         }
 
+        #endregion
+
+        #region 내부 유틸리티
+
+        /// <summary>
+        /// 플레이어 프리팹과 슬롯 레지스트리의 유효성을 검사합니다.
+        /// </summary>
         private bool ValidateData()
         {
             return playerPrefab != null && slotRegistry != null;
         }
 
+        /// <summary>
+        /// 플레이어 캐릭터를 배치할 슬롯을 조회합니다.
+        /// </summary>
         private ICharacterSlot GetPlayerSlot()
         {
             var registry = slotRegistry?.GetCharacterSlotRegistry();
@@ -129,6 +163,10 @@ namespace Game.CombatSystem.Initialization
             return slot;
         }
 
+        /// <summary>
+        /// 플레이어 캐릭터 데이터 선택 로직입니다.
+        /// 선택된 캐릭터가 있으면 그것을 사용하고, 없으면 기본 데이터를 사용합니다.
+        /// </summary>
         private PlayerCharacterData ResolvePlayerData()
         {
             if (PlayerCharacterSelector.SelectedCharacter != null)
@@ -139,5 +177,7 @@ namespace Game.CombatSystem.Initialization
 
             return defaultData;
         }
+
+        #endregion
     }
 }

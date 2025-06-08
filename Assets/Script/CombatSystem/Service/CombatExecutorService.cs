@@ -8,16 +8,22 @@ using Game.CombatSystem.Utility;
 namespace Game.CombatSystem.Executor
 {
     /// <summary>
-    /// 전투 실행 서비스. 슬롯에 배치된 카드를 실행하고 결과를 처리함.
+    /// 전투 실행 서비스.
+    /// 슬롯에 배치된 카드를 순차적으로 실행하고 결과를 처리합니다.
     /// </summary>
     public class CombatExecutorService : ICombatExecutorService, ICombatExecutor
     {
+        #region 필드 및 생성자
+
         private readonly ICombatSlotRegistry combatSlotRegistry;
         private ICardExecutionContextProvider contextProvider;
         private ICardExecutor cardExecutor;
         private readonly IEnemyHandManager enemyHandManager;
         private ICombatTurnManager turnManager;
 
+        /// <summary>
+        /// 생성자 - 전투 슬롯, 컨텍스트 제공자, 카드 실행기, 적 핸드 매니저를 주입받습니다.
+        /// </summary>
         public CombatExecutorService(
             ICombatSlotRegistry combatSlotRegistry,
             ICardExecutionContextProvider contextProvider,
@@ -30,8 +36,12 @@ namespace Game.CombatSystem.Executor
             this.enemyHandManager = enemyHandManager;
         }
 
+        #endregion
+
+        #region 전투 실행
+
         /// <summary>
-        /// CombatFlowCoordinator 또는 GameManager에서 호출하여 실행
+        /// 전체 전투 페이즈를 실행합니다. (선공 → 후공)
         /// </summary>
         public IEnumerator ExecuteCombatPhase()
         {
@@ -40,8 +50,9 @@ namespace Game.CombatSystem.Executor
         }
 
         /// <summary>
-        /// 단일 슬롯 위치에 대해 카드 실행을 수행
+        /// 지정한 슬롯 위치에 있는 카드의 효과를 실행합니다.
         /// </summary>
+        /// <param name="slotPosition">실행할 슬롯 위치 (FIRST 또는 SECOND)</param>
         public IEnumerator PerformAttack(CombatSlotPosition slotPosition)
         {
             var fieldSlot = SlotPositionUtil.ToFieldSlot(slotPosition);
@@ -71,8 +82,12 @@ namespace Game.CombatSystem.Executor
             Debug.Log($"[Executor] 슬롯 {slotPosition} 클리어 완료");
         }
 
+        #endregion
+
+        #region 종속성 주입
+
         /// <summary>
-        /// 동적으로 Execution 관련 종속 객체를 변경할 수 있음
+        /// 실행 관련 종속 객체(ICardExecutionContextProvider, ICardExecutor)를 동적으로 주입합니다.
         /// </summary>
         public void InjectExecutionDependencies(ICardExecutionContextProvider provider, ICardExecutor executor)
         {
@@ -81,11 +96,13 @@ namespace Game.CombatSystem.Executor
         }
 
         /// <summary>
-        /// 전투 턴 매니저 주입 (기존 ITurnStateController → ICombatTurnManager로 변경됨)
+        /// 전투 턴 매니저를 주입합니다.
         /// </summary>
         public void SetTurnManager(ICombatTurnManager manager)
         {
             turnManager = manager;
         }
+
+        #endregion
     }
 }

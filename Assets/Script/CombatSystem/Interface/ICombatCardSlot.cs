@@ -5,46 +5,50 @@ using Game.CombatSystem.Slot;
 namespace Game.CombatSystem.Interface
 {
     /// <summary>
-    /// 전투 슬롯에 카드 및 카드 UI를 관리하는 인터페이스입니다.
-    /// 카드 등록, 제거, 실행, 시각적 위치 등 슬롯 기능을 정의합니다.
+    /// 전투 슬롯에서 카드 및 UI를 관리하는 인터페이스입니다.
+    /// 카드 등록, 제거, 실행 등 슬롯의 핵심 기능을 제공합니다.
     /// </summary>
     public interface ICombatCardSlot
     {
         /// <summary>
-        /// 슬롯의 전투 포지션 정보입니다.
+        /// 이 슬롯의 전투 위치(예: 선공 1번, 후공 2번 등)를 나타냅니다.
+        /// 플레이어와 적이 공용으로 사용하는 위치입니다.
         /// </summary>
         CombatSlotPosition Position { get; }
 
         /// <summary>
-        /// 슬롯의 전체 전장 위치 정보를 반환합니다.
-        /// (예: 선공/후공, 전열/후열 등 복합 정보)
+        /// 슬롯의 전체 필드 포지션 정보를 반환합니다.
+        /// 예: 시전자/대상 여부, 선공/후공 등이 포함될 수 있습니다.
         /// </summary>
+        /// <returns>전장 위치 정보</returns>
         CombatFieldSlotPosition GetCombatPosition();
 
         /// <summary>
-        /// 현재 슬롯에 등록된 카드 데이터를 반환합니다.
+        /// 슬롯에 현재 등록된 스킬 카드 데이터를 반환합니다.
         /// </summary>
+        /// <returns>등록된 카드 객체 또는 null</returns>
         ISkillCard GetCard();
 
         /// <summary>
-        /// 슬롯에 카드 데이터를 등록합니다.
+        /// 슬롯에 스킬 카드 데이터를 등록합니다.
         /// </summary>
         /// <param name="card">등록할 카드 객체</param>
         void SetCard(ISkillCard card);
 
         /// <summary>
-        /// 현재 슬롯에 등록된 카드 UI를 반환합니다.
+        /// 슬롯에 등록된 카드 UI 객체를 반환합니다.
         /// </summary>
+        /// <returns>카드 UI 또는 null</returns>
         ISkillCardUI GetCardUI();
 
         /// <summary>
         /// 카드 UI를 슬롯에 등록합니다.
         /// </summary>
-        /// <param name="cardUI">카드 UI 객체</param>
+        /// <param name="cardUI">등록할 카드 UI 객체</param>
         void SetCardUI(ISkillCardUI cardUI);
 
         /// <summary>
-        /// 카드 데이터와 UI를 모두 제거합니다.
+        /// 카드 데이터와 카드 UI 모두를 제거합니다.
         /// </summary>
         void ClearAll();
 
@@ -54,31 +58,33 @@ namespace Game.CombatSystem.Interface
         void ClearCardUI();
 
         /// <summary>
-        /// 슬롯에 카드 데이터가 등록되어 있는지 확인합니다.
+        /// 슬롯에 카드 데이터가 존재하는지 여부를 반환합니다.
         /// </summary>
-        /// <returns>true면 카드 존재</returns>
+        /// <returns>카드가 있으면 true</returns>
         bool HasCard();
 
         /// <summary>
-        /// 카드 데이터와 UI 모두 등록되지 않은 상태인지 확인합니다.
+        /// 슬롯이 완전히 비어 있는지 확인합니다 (카드 + UI 모두 없음).
         /// </summary>
-        /// <returns>true면 완전히 비어 있음</returns>
+        /// <returns>완전히 비어 있다면 true</returns>
         bool IsEmpty();
 
         /// <summary>
-        /// 슬롯에 등록된 카드 데이터를 기반으로 효과를 자동 실행합니다.
+        /// 슬롯에 등록된 카드의 효과를 자동 실행합니다.
+        /// 기본 컨텍스트를 사용하거나 내부 상태에 따라 처리됩니다.
         /// </summary>
         void ExecuteCardAutomatically();
 
         /// <summary>
-        /// 주어진 컨텍스트를 사용하여 슬롯의 카드 효과를 실행합니다.
+        /// 주어진 컨텍스트를 사용하여 카드 효과를 실행합니다.
         /// </summary>
-        /// <param name="ctx">카드 실행에 필요한 컨텍스트</param>
+        /// <param name="ctx">카드 실행 컨텍스트</param>
         void ExecuteCardAutomatically(ICardExecutionContext ctx);
 
         /// <summary>
-        /// 카드 UI가 위치할 슬롯의 Transform을 반환합니다.
+        /// 카드 UI가 배치될 슬롯의 트랜스폼을 반환합니다.
         /// </summary>
+        /// <returns>UI 배치 기준이 되는 Transform</returns>
         Transform GetTransform();
     }
 }

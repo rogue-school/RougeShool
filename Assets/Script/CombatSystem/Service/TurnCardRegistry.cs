@@ -8,13 +8,30 @@ using Game.SkillCardSystem.UI;
 
 namespace Game.CombatSystem.Service
 {
+    /// <summary>
+    /// 한 턴 동안 플레이어와 적의 전투 슬롯에 등록된 카드를 관리하는 레지스트리입니다.
+    /// </summary>
     public class TurnCardRegistry : ITurnCardRegistry
     {
+        #region 필드
+
         private readonly Dictionary<CombatSlotPosition, ISkillCard> _cards = new();
         private CombatSlotPosition? _reservedEnemySlot;
 
+        #endregion
+
+        #region 이벤트
+
+        /// <summary>
+        /// 카드 상태가 변경될 때 발생하는 이벤트
+        /// </summary>
         public event Action OnCardStateChanged;
 
+        #endregion
+
+        #region 카드 등록 및 조회
+
+        /// <inheritdoc />
         public void RegisterCard(CombatSlotPosition position, ISkillCard card, SkillCardUI ui, SlotOwner owner)
         {
             if (card == null)
@@ -31,18 +48,28 @@ namespace Game.CombatSystem.Service
             OnCardStateChanged?.Invoke();
         }
 
+        /// <inheritdoc />
         public ISkillCard GetCardInSlot(CombatSlotPosition slot)
         {
             _cards.TryGetValue(slot, out var card);
             return card;
         }
 
+        #endregion
+
+        #region 클리어 및 리셋
+
+        /// <inheritdoc />
         public void ClearSlot(CombatSlotPosition slot)
         {
             if (_cards.Remove(slot))
                 OnCardStateChanged?.Invoke();
         }
 
+        /// <inheritdoc />
+        public void ClearAll() => Reset();
+
+        /// <inheritdoc />
         public void Reset()
         {
             _cards.Clear();
@@ -50,31 +77,8 @@ namespace Game.CombatSystem.Service
             OnCardStateChanged?.Invoke();
         }
 
-        public bool HasPlayerCard()
-        {
-            foreach (var card in _cards.Values)
-                if (card.IsFromPlayer()) return true;
-            return false;
-        }
-
-        public bool HasEnemyCard()
-        {
-            foreach (var card in _cards.Values)
-                if (!card.IsFromPlayer()) return true;
-            return false;
-        }
-
-        public CombatSlotPosition? GetReservedEnemySlot() => _reservedEnemySlot;
-
-        public void ReserveNextEnemySlot(CombatSlotPosition slot)
-        {
-            _reservedEnemySlot = slot;
-        }
-
-        public void ClearAll() => Reset();
-
         /// <summary>
-        /// 적 카드만 제거 (플레이어 카드 보존)
+        /// 적 카드만 제거하고 플레이어 카드 보존
         /// </summary>
         public void ClearEnemyCardsOnly()
         {
@@ -92,5 +96,42 @@ namespace Game.CombatSystem.Service
             _reservedEnemySlot = null;
             OnCardStateChanged?.Invoke();
         }
+
+        #endregion
+
+        #region 상태 확인
+
+        /// <inheritdoc />
+        public bool HasPlayerCard()
+        {
+            foreach (var card in _cards.Values)
+                if (card.IsFromPlayer()) return true;
+
+            return false;
+        }
+
+        /// <inheritdoc />
+        public bool HasEnemyCard()
+        {
+            foreach (var card in _cards.Values)
+                if (!card.IsFromPlayer()) return true;
+
+            return false;
+        }
+
+        #endregion
+
+        #region 적 슬롯 예약 관리
+
+        /// <inheritdoc />
+        public CombatSlotPosition? GetReservedEnemySlot() => _reservedEnemySlot;
+
+        /// <inheritdoc />
+        public void ReserveNextEnemySlot(CombatSlotPosition slot)
+        {
+            _reservedEnemySlot = slot;
+        }
+
+        #endregion
     }
 }

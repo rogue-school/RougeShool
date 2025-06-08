@@ -14,10 +14,12 @@ namespace Game.CombatSystem.Service
 {
     /// <summary>
     /// 전투 준비를 담당하는 서비스.
-    /// 적 소환, 카드 배치, 턴 시스템 초기화를 수행한다.
+    /// 적 소환, 플레이어 카드 배치, 턴 시스템 초기화를 수행합니다.
     /// </summary>
     public class CombatPreparationService : ICombatPreparationService
     {
+        #region 필드
+
         private readonly IPlayerManager playerManager;
         private readonly IEnemySpawnerManager enemySpawnerManager;
         private readonly IEnemyManager enemyManager;
@@ -28,6 +30,13 @@ namespace Game.CombatSystem.Service
         private readonly ISlotSelector slotSelector;
         private readonly ISlotRegistry slotRegistry;
 
+        #endregion
+
+        #region 생성자
+
+        /// <summary>
+        /// 생성자 - 모든 전투 준비에 필요한 의존성 객체를 주입받습니다.
+        /// </summary>
         public CombatPreparationService(
             IPlayerManager playerManager,
             IEnemySpawnerManager enemySpawnerManager,
@@ -50,6 +59,15 @@ namespace Game.CombatSystem.Service
             this.slotRegistry = slotRegistry;
         }
 
+        #endregion
+
+        #region 전투 준비
+
+        /// <summary>
+        /// 전투를 준비합니다.
+        /// 적 소환 → 플레이어 카드 배치 → 턴 시스템 초기화 순으로 진행됩니다.
+        /// </summary>
+        /// <param name="onComplete">전투 준비 완료 콜백</param>
         public IEnumerator PrepareCombat(Action<bool> onComplete)
         {
             // 1. 적 소환
@@ -91,6 +109,7 @@ namespace Game.CombatSystem.Service
                             continue;
                         }
 
+                        // 카드 배치 및 등록
                         placementService.PlaceCardInSlot(skillCard, cardUI, combatSlot);
 
                         turnCardRegistry.RegisterCard(
@@ -100,15 +119,16 @@ namespace Game.CombatSystem.Service
                             SlotOwner.PLAYER
                         );
                     }
-
                 }
             }
 
             // 3. 턴 시스템 초기화
             turnManager.Initialize();
 
-            // 4. 완료 콜백
+            // 4. 완료 콜백 호출
             onComplete?.Invoke(true);
         }
+
+        #endregion
     }
 }
