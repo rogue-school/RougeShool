@@ -197,7 +197,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c77269a3819de814aa58197f472e8d49, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  chosenEffect: {fileID: 7068246439263868981, guid: ea3a27c4dd2db3a409a0ac161493cd47, type: 3}
+  chosenEffect: {fileID: 4294010189161640749, guid: 52b97149ba487c94bb0fba4d467003d0, type: 3}
   loopTimeLimit: 1.7
   spawnWithoutLight: 1
   spawnWithoutSound: 1
@@ -232,7 +232,7 @@ Transform:
   - {fileID: 499812919}
   - {fileID: 2093674275}
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &499812918
 GameObject:
@@ -277,7 +277,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c77269a3819de814aa58197f472e8d49, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  chosenEffect: {fileID: 7634400487978114234, guid: daabc9ae9062ea540b453269194a553a, type: 3}
+  chosenEffect: {fileID: 649875246046758526, guid: f83d2fb2e8e420a4ebe6a4de254d19af, type: 3}
   loopTimeLimit: 1.7
   spawnWithoutLight: 1
   spawnWithoutSound: 1
@@ -675,7 +675,7 @@ Transform:
   m_LocalScale: {x: 500, y: 500, z: 500}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
 --- !u!1 &2093674274
 GameObject:
@@ -720,7 +720,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c77269a3819de814aa58197f472e8d49, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  chosenEffect: {fileID: 902906153295178857, guid: 1a4f36a94c6ff4a43884eac17eed039e, type: 3}
+  chosenEffect: {fileID: 1889961486689213479, guid: 62adec539a892f84d84c9b9c5539a32d, type: 3}
   loopTimeLimit: 1.7
   spawnWithoutLight: 1
   spawnWithoutSound: 1
