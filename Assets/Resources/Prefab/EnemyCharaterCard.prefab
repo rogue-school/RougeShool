@@ -404,6 +404,7 @@ MonoBehaviour:
   nameText: {fileID: 3990270840846056283}
   hpText: {fileID: 6969683324459299986}
   portraitImage: {fileID: 1631975328147475406}
+  hitEffectPrefab: {fileID: 4294010189161640749, guid: 52b97149ba487c94bb0fba4d467003d0, type: 3}
 --- !u!114 &8744304457702177956
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -35,6 +35,12 @@ namespace Game.SkillCardSystem.Effect
 
             context.Target.TakeDamage(damage);
 
+            // 피격 이펙트 재생 요청
+            if (context.Target is IHitEffectPlayable hitEffectTarget)
+            {
+                hitEffectTarget.PlayHitEffect();
+            }
+
             Debug.Log($"[DamageEffectCommand] {context.Source?.GetCharacterName()} → {context.Target.GetCharacterName()} 피해: {damage}");
         }
     }
