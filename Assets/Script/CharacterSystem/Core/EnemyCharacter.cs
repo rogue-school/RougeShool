@@ -9,8 +9,13 @@ using UnityEngine.UI;
 using TMPro;
 using UnityEngine;
 
+/// <summary>
+/// 적 캐릭터의 구체 구현 클래스입니다.
+/// 체력, UI, 스킬 덱, 패시브 효과, 사망 처리 등 적 전용 로직을 포함합니다.
+/// </summary>
 public class EnemyCharacter : CharacterBase, IEnemyCharacter
 {
+    [Header("Character Data")]
     [SerializeField] private EnemyCharacterData characterData;
 
     [Header("UI Components")]
@@ -22,11 +27,38 @@ public class EnemyCharacter : CharacterBase, IEnemyCharacter
     private ICharacterDeathListener deathListener;
     private bool isDead = false;
 
+    /// <summary>
+    /// 적 캐릭터의 데이터 (스크립터블 오브젝트)
+    /// </summary>
     public EnemyCharacterData Data => characterData;
+
+    /// <summary>
+    /// 플레이어 조작 여부 → 적이므로 항상 false
+    /// </summary>
     public override bool IsPlayerControlled() => false;
+
+    /// <summary>
+    /// 캐릭터 이름 반환 (표시용 이름)
+    /// </summary>
+    public override string GetCharacterName()
+    {
+        return characterData?.DisplayName ?? "Unnamed Enemy";
+    }
+
+    /// <summary>
+    /// 캐릭터 이름 반환 (IEnemyCharacter 인터페이스 구현)
+    /// </summary>
     public string GetName() => GetCharacterName();
+
+    /// <summary>
+    /// 현재 사망 상태인지 여부
+    /// </summary>
     public bool IsMarkedDead => isDead;
 
+    /// <summary>
+    /// 적 캐릭터 초기화
+    /// </summary>
+    /// <param name="data">적 캐릭터 데이터</param>
     public void Initialize(EnemyCharacterData data)
     {
         if (data == null)
@@ -45,39 +77,55 @@ public class EnemyCharacter : CharacterBase, IEnemyCharacter
         Debug.Log($"[EnemyCharacter] '{characterData.DisplayName}' 초기화 완료");
     }
 
+    /// <summary>
+    /// 사망 시 외부 이벤트 수신자를 설정합니다.
+    /// </summary>
+    /// <param name="listener">리스너</param>
     public void SetDeathListener(ICharacterDeathListener listener)
     {
         deathListener = listener;
     }
 
+    /// <summary>
+    /// 피해 처리 후 UI 갱신 및 사망 여부 판단
+    /// </summary>
+    /// <param name="amount">피해량</param>
     public override void TakeDamage(int amount)
     {
         base.TakeDamage(amount);
         RefreshUI();
 
-        // 캐릭터 사망 처리 위임 (즉시 처리 X)
         if (IsDead() && !isDead)
         {
-            MarkAsDead();
+            MarkAsDead(); // 사망 상태 갱신 및 리스너 알림
         }
     }
 
+    /// <summary>
+    /// 회복 처리 후 UI 갱신
+    /// </summary>
+    /// <param name="amount">회복량</param>
     public override void Heal(int amount)
     {
         base.Heal(amount);
         RefreshUI();
     }
 
+    /// <summary>
+    /// UI 텍스트 및 초상화 갱신
+    /// </summary>
     private void RefreshUI()
     {
-        if (characterData == null)
-            return;
+        if (characterData == null) return;
 
         nameText.text = GetCharacterName();
         hpText.text = $"{currentHP} / {GetMaxHP()}";
         portraitImage.sprite = characterData.Portrait;
     }
 
+    /// <summary>
+    /// 캐릭터에 설정된 패시브 효과를 즉시 적용합니다.
+    /// </summary>
     private void ApplyPassiveEffects()
     {
         if (characterData?.PassiveEffects == null) return;
@@ -92,6 +140,10 @@ public class EnemyCharacter : CharacterBase, IEnemyCharacter
         }
     }
 
+    /// <summary>
+    /// 적 스킬 덱에서 무작위 카드 엔트리를 반환합니다.
+    /// </summary>
+    /// <returns>무작위 카드 엔트리</returns>
     public EnemySkillDeck.CardEntry GetRandomCardEntry()
     {
         if (skillDeck == null)
@@ -114,28 +166,23 @@ public class EnemyCharacter : CharacterBase, IEnemyCharacter
         return entry;
     }
 
-    public override string GetCharacterName()
-    {
-        return characterData?.DisplayName ?? "Unnamed Enemy";
-    }
-
     /// <summary>
-    /// 외부에서 호출하여 사망 처리 트리거를 발생시킴
+    /// 외부에서 사망 처리를 명시적으로 호출할 수 있습니다.
     /// </summary>
     public void MarkAsDead()
     {
-        if (isDead)
-            return;
+        if (isDead) return;
 
         isDead = true;
         Debug.Log($"[EnemyCharacter] '{GetCharacterName()}' 사망 처리 (MarkAsDead 호출)");
         deathListener?.OnCharacterDied(this);
     }
 
-    // 실제 Die 호출 시 아무 처리도 하지 않도록 override
+    /// <summary>
+    /// 기본 Die 로직은 MarkAsDead로 대체되며, 별도 처리는 없습니다.
+    /// </summary>
     public override void Die()
     {
-        // 내부에서는 사망 플래그만 남기고 외부 위임 처리
         MarkAsDead();
     }
 }

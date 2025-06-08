@@ -1,7 +1,6 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
-using System.Collections.Generic;
 using Game.CharacterSystem.Data;
 using Game.SkillCardSystem.Interface;
 using Game.CharacterSystem.Interface;
@@ -10,9 +9,19 @@ using Game.IManager;
 
 namespace Game.CharacterSystem.Core
 {
+    /// <summary>
+    /// 플레이어 캐릭터의 구체 클래스입니다.
+    /// UI, 카드 핸들링, 플레이어 데이터 연동 등의 기능을 담당합니다.
+    /// </summary>
     public class PlayerCharacter : CharacterBase, IPlayerCharacter
     {
-        [field: SerializeField] public PlayerCharacterData Data { get; private set; }
+        #region Serialized Fields
+
+        /// <summary>
+        /// 플레이어 데이터 스크립터블 오브젝트
+        /// </summary>
+        [field: SerializeField]
+        public PlayerCharacterData Data { get; private set; }
 
         [Header("UI Components")]
         [SerializeField] private TextMeshProUGUI nameText;
@@ -20,62 +29,146 @@ namespace Game.CharacterSystem.Core
         [SerializeField] private Image portraitImage;
         [SerializeField] private TextMeshProUGUI descriptionText;
 
+        #endregion
+
+        #region Private Fields
+
         private ISkillCard lastUsedCard;
         private IPlayerHandManager handManager;
-        public override bool IsPlayerControlled() => true;
 
+        #endregion
+
+        #region Unity Lifecycle
+
+        /// <summary>
+        /// 에디터에서 설정된 데이터로 초기화합니다.
+        /// </summary>
         private void Awake()
         {
             if (Data != null)
                 InitializeCharacter(Data);
         }
 
+        #endregion
+
+        #region Initialization
+
+        /// <summary>
+        /// 외부에서 캐릭터 데이터를 설정하고 초기화합니다.
+        /// </summary>
+        /// <param name="data">플레이어 캐릭터 데이터</param>
         public void SetCharacterData(PlayerCharacterData data)
         {
             Data = data;
             InitializeCharacter(data);
         }
 
+        /// <summary>
+        /// 체력 초기화 및 UI 갱신
+        /// </summary>
+        /// <param name="data">플레이어 데이터</param>
         private void InitializeCharacter(PlayerCharacterData data)
         {
             SetMaxHP(data.MaxHP);
             UpdateUI();
         }
 
+        #endregion
+
+        #region UI Handling
+
+        /// <summary>
+        /// 이름, 체력, 초상화 등 UI 갱신
+        /// </summary>
         private void UpdateUI()
         {
-            if (nameText != null) nameText.text = Data?.DisplayName ?? "???";
-            if (hpText != null) hpText.text = $"{currentHP} / {Data?.MaxHP ?? 0}";
-            if (portraitImage != null && Data != null) portraitImage.sprite = Data.Portrait;
+            nameText.text = Data?.DisplayName ?? "???";
+            hpText.text = $"{currentHP} / {Data?.MaxHP ?? 0}";
+            portraitImage.sprite = Data?.Portrait;
         }
 
+        /// <summary>
+        /// 데미지 처리 후 UI 갱신
+        /// </summary>
+        /// <param name="amount">피해량</param>
         public override void TakeDamage(int amount)
         {
             base.TakeDamage(amount);
-            UpdateUI(); // 체력 감소 시 UI 갱신
+            UpdateUI();
         }
 
+        /// <summary>
+        /// 회복 처리 후 UI 갱신
+        /// </summary>
+        /// <param name="amount">회복량</param>
         public override void Heal(int amount)
         {
             base.Heal(amount);
-            UpdateUI(); // 체력 회복 시 UI 갱신
+            UpdateUI();
         }
 
+        #endregion
+
+        #region Card & Hand
+
+        /// <summary>
+        /// 핸드 매니저 의존성 주입
+        /// </summary>
+        /// <param name="manager">핸드 매니저 인스턴스</param>
         public void InjectHandManager(IPlayerHandManager manager) => handManager = manager;
 
+        /// <summary>
+        /// 지정 슬롯 위치의 스킬 카드 반환
+        /// </summary>
+        /// <param name="pos">슬롯 위치</param>
         public ISkillCard GetCardInHandSlot(SkillCardSlotPosition pos) => handManager?.GetCardInSlot(pos);
+
+        /// <summary>
+        /// 지정 슬롯 위치의 카드 UI 반환
+        /// </summary>
+        /// <param name="pos">슬롯 위치</param>
         public ISkillCardUI GetCardUIInHandSlot(SkillCardSlotPosition pos) => handManager?.GetCardUIInSlot(pos);
 
+        /// <summary>
+        /// 마지막 사용한 카드 설정
+        /// </summary>
+        /// <param name="card">스킬 카드</param>
         public void SetLastUsedCard(ISkillCard card) => lastUsedCard = card;
+
+        /// <summary>
+        /// 마지막 사용한 카드 반환
+        /// </summary>
         public ISkillCard GetLastUsedCard() => lastUsedCard;
 
+        /// <summary>
+        /// 지정된 카드를 핸드로 복원 (기능은 외부 구현 예정)
+        /// </summary>
+        /// <param name="card">복원할 카드</param>
         public void RestoreCardToHand(ISkillCard card)
         {
             Debug.Log($"[PlayerCharacter] 카드 복귀: {card?.CardData?.Name}");
+            // 실제 핸드 복원 로직은 handManager 내부에 구현되어야 함
         }
 
-        public override string GetCharacterName() => Data.DisplayName;
+        #endregion
 
-        public override bool IsAlive() => base.IsAlive(); // 명시적으로 override
+        #region Overrides
+
+        /// <summary>
+        /// 플레이어 캐릭터임을 나타냅니다.
+        /// </summary>
+        public override bool IsPlayerControlled() => true;
+
+        /// <summary>
+        /// 캐릭터 이름 반환
+        /// </summary>
+        public override string GetCharacterName() => Data?.DisplayName ?? "Unnamed Player";
+
+        /// <summary>
+        /// 생존 여부 반환 (명시적 override)
+        /// </summary>
+        public override bool IsAlive() => base.IsAlive();
+
+        #endregion
     }
 }

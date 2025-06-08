@@ -27,10 +27,17 @@ using Game.CombatSystem.DragDrop;
 using Game.CombatSystem.CoolTime;
 using Game.SkillCardSystem.Runtime;
 
+/// <summary>
+/// 전투 씬에서 사용하는 Zenject 설치자입니다.
+/// 필요한 서비스, 매니저, 상태머신, 슬롯, UI 등을 바인딩합니다.
+/// </summary>
 public class CombatInstaller : MonoInstaller
 {
+    [Header("카드 UI 프리팹")]
     [SerializeField] private SkillCardUI cardUIPrefab;
-    [SerializeField] private TurnStartButtonHandler startButtonHandler; // 인스펙터 연결
+
+    [Header("턴 시작 버튼 핸들러")]
+    [SerializeField] private TurnStartButtonHandler startButtonHandler;
 
     public override void InstallBindings()
     {
@@ -46,13 +53,15 @@ public class CombatInstaller : MonoInstaller
         BindSceneLoader();
         BindUIPrefabs();
         BindUIHandlers();
-
         BindCooldownSystem();
         BindDeathUI();
     }
 
+    #region 상태머신
 
-
+    /// <summary>
+    /// 전투 상태별 StateFactory 바인딩
+    /// </summary>
     private void BindStateFactories()
     {
         Container.Bind<IFactory<CombatPrepareState>>().To<CombatPrepareStateFactory>().AsTransient();
@@ -65,6 +74,13 @@ public class CombatInstaller : MonoInstaller
         Container.Bind<ICombatStateFactory>().To<CombatStateFactory>().AsSingle();
     }
 
+    #endregion
+
+    #region MonoBehaviour 및 인터페이스 바인딩
+
+    /// <summary>
+    /// 씬 내 컴포넌트에서 인터페이스 자동 바인딩
+    /// </summary>
     private void BindMonoBehaviours()
     {
         BindMono<ICombatFlowCoordinator, CombatFlowCoordinator>();
@@ -83,6 +99,13 @@ public class CombatInstaller : MonoInstaller
         BindMonoInterfaces<CombatTurnManager>();
     }
 
+    #endregion
+
+    #region 서비스 바인딩
+
+    /// <summary>
+    /// 주요 서비스 클래스 바인딩
+    /// </summary>
     private void BindServices()
     {
         Container.Bind<ICombatPreparationService>().To<CombatPreparationService>().AsSingle();
@@ -101,19 +124,30 @@ public class CombatInstaller : MonoInstaller
         Container.Bind<ICardRegistrar>().To<DefaultCardRegistrar>().AsSingle();
         Container.Bind<ICardReplacementHandler>().To<PlayerCardReplacementHandler>().AsSingle();
         Container.Bind<CardDropService>().AsSingle();
-
         Container.Bind<ITurnStartConditionChecker>().To<DefaultTurnStartConditionChecker>().AsSingle();
-
         Container.Bind<ICoolTimeHandler>().To<CoolTimeHandler>().AsSingle();
     }
 
+    #endregion
 
+    #region 컨텍스트
+
+    /// <summary>
+    /// (주의) 실행 컨텍스트를 초기화된 null 값으로 바인딩
+    /// </summary>
     private void BindExecutionContext()
     {
         var ctx = new DefaultCardExecutionContext(null, null, null);
         Container.Bind<ICardExecutionContext>().FromInstance(ctx).AsSingle();
     }
 
+    #endregion
+
+    #region 슬롯 시스템
+
+    /// <summary>
+    /// 슬롯 레지스트리와 관련 시스템 바인딩
+    /// </summary>
     private void BindSlotSystem()
     {
         var slotRegistry = Object.FindFirstObjectByType<SlotRegistry>();
@@ -132,6 +166,13 @@ public class CombatInstaller : MonoInstaller
         Container.BindInterfacesAndSelfTo<SlotInitializer>().FromComponentInHierarchy().AsSingle();
     }
 
+    #endregion
+
+    #region 초기화 단계
+
+    /// <summary>
+    /// 전투 준비 단계 초기화 요소 바인딩
+    /// </summary>
     private void BindInitializerSteps()
     {
         BindMonoInterfaces<SlotInitializationStep>();
@@ -143,6 +184,10 @@ public class CombatInstaller : MonoInstaller
 
         Container.Bind<CombatStartupManager>().FromComponentInHierarchy().AsSingle();
     }
+
+    #endregion
+
+    #region 씬 로더
 
     private void BindSceneLoader()
     {
@@ -156,6 +201,13 @@ public class CombatInstaller : MonoInstaller
         Container.Bind<ISceneLoader>().FromInstance(loader).AsSingle();
     }
 
+    #endregion
+
+    #region UI 바인딩
+
+    /// <summary>
+    /// 카드 UI 프리팹 바인딩
+    /// </summary>
     private void BindUIPrefabs()
     {
         if (cardUIPrefab == null)
@@ -167,6 +219,9 @@ public class CombatInstaller : MonoInstaller
         Container.Bind<SkillCardUI>().FromInstance(cardUIPrefab).AsSingle();
     }
 
+    /// <summary>
+    /// UI 핸들러 (버튼 등) 바인딩
+    /// </summary>
     private void BindUIHandlers()
     {
         if (startButtonHandler == null)
@@ -177,10 +232,20 @@ public class CombatInstaller : MonoInstaller
 
         Container.Bind<TurnStartButtonHandler>().FromInstance(startButtonHandler).AsSingle();
     }
+
+    #endregion
+
+    #region 쿨타임 시스템
+
     private void BindCooldownSystem()
     {
         Container.Bind<SkillCardCooldownSystem>().AsSingle();
     }
+
+    #endregion
+
+    #region 사망 UI
+
     private void BindDeathUI()
     {
         var deathUI = Object.FindFirstObjectByType<DeathUIManager>();
@@ -193,14 +258,25 @@ public class CombatInstaller : MonoInstaller
         Container.Bind<DeathUIManager>().FromInstance(deathUI).AsSingle();
     }
 
-    // 공통 바인딩 메서드
+    #endregion
+
+    #region 유틸 바인딩 메서드
+
+    /// <summary>
+    /// 특정 인터페이스에 대한 MonoBehaviour 바인딩
+    /// </summary>
     private void BindMono<TInterface, TImpl>() where TImpl : Component, TInterface
     {
         Container.Bind<TInterface>().To<TImpl>().FromComponentInHierarchy().AsSingle();
     }
 
+    /// <summary>
+    /// MonoBehaviour의 모든 인터페이스 및 자기 자신 바인딩
+    /// </summary>
     private void BindMonoInterfaces<T>() where T : Component
     {
         Container.BindInterfacesAndSelfTo<T>().FromComponentInHierarchy().AsSingle();
     }
+
+    #endregion
 }

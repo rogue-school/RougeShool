@@ -8,31 +8,41 @@ namespace Game.CharacterSystem.UI
 {
     /// <summary>
     /// 캐릭터 이름, 체력, 초상화 등 UI 요소를 관리하는 클래스입니다.
+    /// ICharacter 인터페이스와 연동되어 시각적 정보를 표시합니다.
     /// </summary>
     public class CharacterUIController : MonoBehaviour
     {
         [Header("UI 참조")]
+        [Tooltip("캐릭터 이름 표시용 텍스트")]
         [SerializeField] private TextMeshProUGUI nameText;
+
+        [Tooltip("체력 표시용 텍스트")]
         [SerializeField] private TextMeshProUGUI hpText;
+
+        [Tooltip("초상화 이미지")]
         [SerializeField] private Image portraitImage;
 
         private ICharacter character;
 
+        #region 초기화
+
         /// <summary>
-        /// UI에 캐릭터 정보를 설정합니다.
+        /// 지정된 캐릭터의 정보를 기반으로 UI를 초기화합니다.
         /// </summary>
+        /// <param name="character">UI에 연결할 캐릭터</param>
         public void Initialize(ICharacter character)
         {
             this.character = character;
 
             if (character == null)
             {
-                Debug.LogWarning("[CharacterUIController] character == null");
+                Debug.LogWarning("[CharacterUIController] Initialize() - character가 null입니다.");
                 return;
             }
 
-            nameText.text = character.GetCharacterName();
+            SetName(character.GetCharacterName());
 
+            // 추가 정보는 CharacterBase를 통해 접근
             if (character is CharacterBase baseChar)
             {
                 SetHP(baseChar.GetCurrentHP(), baseChar.GetMaxHP());
@@ -40,26 +50,47 @@ namespace Game.CharacterSystem.UI
             }
         }
 
+        #endregion
+
+        #region UI 설정
+
         /// <summary>
-        /// 체력 정보를 UI에 갱신합니다.
+        /// 이름 텍스트를 설정합니다.
         /// </summary>
-        public void SetHP(int current, int max)
+        /// <param name="name">캐릭터 이름</param>
+        private void SetName(string name)
         {
-            if (hpText == null) return;
-            hpText.text = $"{current} / {max}";
+            if (nameText != null)
+                nameText.text = name ?? "";
         }
 
         /// <summary>
-        /// 캐릭터의 초상화 스프라이트를 설정합니다.
+        /// 체력 정보를 UI에 갱신합니다.
         /// </summary>
+        /// <param name="current">현재 체력</param>
+        /// <param name="max">최대 체력</param>
+        public void SetHP(int current, int max)
+        {
+            if (hpText != null)
+                hpText.text = $"{current} / {max}";
+        }
+
+        /// <summary>
+        /// 초상화 이미지를 설정합니다.
+        /// </summary>
+        /// <param name="sprite">설정할 스프라이트</param>
         public void SetPortrait(Sprite sprite)
         {
             if (portraitImage != null && sprite != null)
                 portraitImage.sprite = sprite;
         }
 
+        #endregion
+
+        #region 초기화/제거
+
         /// <summary>
-        /// 모든 UI 정보를 초기화합니다.
+        /// 모든 UI 요소를 초기 상태로 초기화합니다.
         /// </summary>
         public void Clear()
         {
@@ -67,5 +98,7 @@ namespace Game.CharacterSystem.UI
             if (hpText != null) hpText.text = "";
             if (portraitImage != null) portraitImage.sprite = null;
         }
+
+        #endregion
     }
 }

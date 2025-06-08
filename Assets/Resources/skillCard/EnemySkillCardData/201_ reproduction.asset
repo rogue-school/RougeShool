@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30650a2f8e9c5994d84e2dd6e15b358b, type: 3}
   m_Name: 201_ reproduction
   m_EditorClassIdentifier: 
-  CardData:
+  <CardData>k__BackingField:
     Name: "\uC7AC\uC0DD"
-    Description: 
+    Description: "\uD134\uB9C8\uB2E4 \uCC44\uB825\uC744 1 \uC7AC\uC0DD\uD569\uB2C8\uB2E4"
     Artwork: {fileID: 147353212943988270, guid: a894782fb08c943469d0ce1a2a65b3ad, type: 3}
     CoolTime: 0
     Damage: 0

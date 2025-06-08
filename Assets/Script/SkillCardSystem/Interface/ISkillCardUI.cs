@@ -1,12 +1,26 @@
 namespace Game.SkillCardSystem.Interface
 {
+    /// <summary>
+    /// 스킬 카드 UI를 제어하는 인터페이스입니다.
+    /// 카드와 연결하고, 쿨타임 등 시각적 정보를 갱신합니다.
+    /// </summary>
     public interface ISkillCardUI
     {
+        /// <summary>
+        /// 이 UI에 표시할 스킬 카드를 설정합니다.
+        /// </summary>
+        /// <param name="card">연결할 카드</param>
         void SetCard(ISkillCard card);
+
+        /// <summary>
+        /// 현재 UI에 설정된 카드를 반환합니다.
+        /// </summary>
+        /// <returns>연결된 카드 객체</returns>
         ISkillCard GetCard();
 
         /// <summary>
-        /// 현재 카드의 쿨타임 정보를 기반으로 UI를 갱신합니다.
+        /// 카드의 현재 쿨타임 상태를 기반으로 UI를 갱신합니다.
+        /// 예: 텍스트, 이미지, 드래그 가능 여부 등 시각적 요소 반영.
         /// </summary>
         void UpdateCoolTimeDisplay();
     }
