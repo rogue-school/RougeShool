@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30650a2f8e9c5994d84e2dd6e15b358b, type: 3}
   m_Name: 102_Mucus explosion
   m_EditorClassIdentifier: 
-  CardData:
+  <CardData>k__BackingField:
     Name: "\uC810\uC561 \uD3ED\uBC1C"
-    Description: "\uD53C\uD574\uB97C 2 \uC90D\uB2C8\uB2E4"
+    Description: "\uD53C\uD574\uB97C 2 \uC785\uD799\uB2C8\uB2E4"
     Artwork: {fileID: 8132184249762415382, guid: b57dcfe582903f6448c4f7db72fe2b16, type: 3}
     CoolTime: 0
     Damage: 2

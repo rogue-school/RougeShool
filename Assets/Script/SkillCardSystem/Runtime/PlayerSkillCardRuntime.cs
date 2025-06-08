@@ -12,11 +12,12 @@ using Game.CombatSystem.Context;
 namespace Game.SkillCardSystem.Runtime
 {
     /// <summary>
-    /// 플레이어 스킬 카드의 런타임 구현입니다.
-    /// 쿨타임, 슬롯 정보, 실행 기능을 포함합니다.
+    /// 플레이어 스킬 카드의 런타임 구현체입니다.
+    /// 쿨타임, 슬롯 상태, 효과 실행 기능을 포함합니다.
     /// </summary>
     public class PlayerSkillCardRuntime : ISkillCard
     {
+        /// <inheritdoc/>
         public SkillCardData CardData { get; private set; }
 
         private readonly List<SkillCardEffectSO> effects;
@@ -27,6 +28,9 @@ namespace Game.SkillCardSystem.Runtime
 
         private int currentCoolTime;
 
+        /// <summary>
+        /// 생성자: 카드 데이터와 이펙트 목록을 받아 초기화합니다.
+        /// </summary>
         public PlayerSkillCardRuntime(SkillCardData data, List<SkillCardEffectSO> effects)
         {
             if (data == null)
@@ -41,32 +45,44 @@ namespace Game.SkillCardSystem.Runtime
                 this.effects = effects ?? new List<SkillCardEffectSO>();
             }
 
-            currentCoolTime = 0; // 사용 가능 상태로 초기화
+            currentCoolTime = 0; // 시작 시 쿨타임 없음
         }
 
-        // === 기본 정보 ===
+        #region === 카드 메타 정보 ===
+
         public string GetCardName() => CardData?.Name ?? "[Unnamed]";
         public string GetDescription() => CardData?.Description ?? "[No Description]";
         public Sprite GetArtwork() => CardData?.Artwork;
         public int GetEffectPower(SkillCardEffectSO effect) => CardData?.Damage ?? 0;
         public List<SkillCardEffectSO> CreateEffects() => new List<SkillCardEffectSO>(effects);
 
-        // === 슬롯 정보 ===
+        #endregion
+
+        #region === 슬롯 관련 ===
+
         public void SetHandSlot(SkillCardSlotPosition slot) => handSlot = slot;
         public SkillCardSlotPosition? GetHandSlot() => handSlot;
+
         public void SetCombatSlot(CombatSlotPosition slot) => combatSlot = slot;
         public CombatSlotPosition? GetCombatSlot() => combatSlot;
+
+        #endregion
+
+        #region === 소유자 정보 ===
 
         public SlotOwner GetOwner() => owner;
         public bool IsFromPlayer() => true;
 
-        // === 쿨타임 ===
+        #endregion
+
+        #region === 쿨타임 관련 ===
+
         public int GetMaxCoolTime() => CardData?.CoolTime ?? 0;
         public int GetCurrentCoolTime() => currentCoolTime;
         public void SetCurrentCoolTime(int value) => currentCoolTime = Mathf.Max(0, value);
 
         /// <summary>
-        /// 쿨타임을 최대값으로 설정하여 사용 불가 상태로 만듭니다.
+        /// 쿨타임을 최대값으로 설정하여 사용 불가능 상태로 만듭니다.
         /// </summary>
         public void StartCooldown()
         {
@@ -76,7 +92,7 @@ namespace Game.SkillCardSystem.Runtime
         }
 
         /// <summary>
-        /// 쿨타임을 1 줄입니다.
+        /// 쿨타임을 1 감소시킵니다.
         /// </summary>
         public void ReduceCooldown()
         {
@@ -87,18 +103,30 @@ namespace Game.SkillCardSystem.Runtime
             }
         }
 
-        // === 실행 ===
+        #endregion
+
+        #region === 실행 ===
+
+        /// <summary>
+        /// 실행 컨텍스트 없이 호출 시 경고 로그를 출력합니다.
+        /// </summary>
         public void ExecuteSkill()
         {
             Debug.LogWarning("[PlayerSkillCardRuntime] ExecuteSkill()는 source/target 필요");
         }
 
+        /// <summary>
+        /// 소스와 타겟 캐릭터를 이용해 카드 효과를 실행합니다.
+        /// </summary>
         public void ExecuteSkill(ICharacter source, ICharacter target)
         {
             var context = new DefaultCardExecutionContext(this, source, target);
             ExecuteCardAutomatically(context);
         }
 
+        /// <summary>
+        /// 지정된 실행 컨텍스트를 기반으로 카드 효과를 자동 실행합니다.
+        /// </summary>
         public void ExecuteCardAutomatically(ICardExecutionContext context)
         {
             if (context == null)
@@ -123,12 +151,16 @@ namespace Game.SkillCardSystem.Runtime
                 }
             }
 
-            // 쿨타임 시작
-            StartCooldown();
+            StartCooldown(); // 효과 실행 후 쿨타임 시작
         }
 
-        // === 대상 정보 ===
+        #endregion
+
+        #region === 대상 정보 ===
+
         public ICharacter GetOwner(ICardExecutionContext context) => context?.GetPlayer();
         public ICharacter GetTarget(ICardExecutionContext context) => context?.GetEnemy();
+
+        #endregion
     }
 }

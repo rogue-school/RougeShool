@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 306bab3a4da46a144a108202d6b20039, type: 3}
   m_Name: 001_Slash
   m_EditorClassIdentifier: 
-  CardData:
+  <CardData>k__BackingField:
     Name: "\uBCA0\uAE30"
-    Description: "\uD53C\uD574\uB97C 1 \uC90D\uB2C8\uB2E4"
-    Artwork: {fileID: 2707116141306753609, guid: 8966fbd35e62b7f49ba2373e2a394cf0, type: 3}
+    Description: "\uD53C\uD574\uB97C 1 \uC785\uD799\uB2C8\uB2E4"
+    Artwork: {fileID: -8255787894389226003, guid: b5ce5f5447383b348a798e6d691b9bcb, type: 3}
     CoolTime: 2
     Damage: 1
   effects:

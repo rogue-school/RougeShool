@@ -6,11 +6,20 @@ using Game.SkillCardSystem.Validator;
 
 namespace Game.SkillCardSystem.Executor
 {
+    /// <summary>
+    /// 스킬 카드의 이펙트를 실제로 실행하는 클래스입니다.
+    /// 유효성 검사 후 커맨드 패턴 기반으로 이펙트를 처리합니다.
+    /// </summary>
     public class CardExecutor : ICardExecutor
     {
         private readonly ICardEffectCommandFactory commandFactory;
         private readonly ICardExecutionValidator validator;
 
+        /// <summary>
+        /// CardExecutor 생성자.
+        /// </summary>
+        /// <param name="commandFactory">카드 이펙트 커맨드 생성 팩토리</param>
+        /// <param name="validator">카드 실행 유효성 검사기</param>
         public CardExecutor(
             ICardEffectCommandFactory commandFactory,
             ICardExecutionValidator validator)
@@ -19,6 +28,12 @@ namespace Game.SkillCardSystem.Executor
             this.validator = validator;
         }
 
+        /// <summary>
+        /// 주어진 카드와 컨텍스트를 기반으로 이펙트를 실행합니다.
+        /// </summary>
+        /// <param name="card">실행할 스킬 카드</param>
+        /// <param name="context">실행 컨텍스트 (시전자/대상 등)</param>
+        /// <param name="turnManager">전투 턴 매니저 (이펙트가 턴에 영향을 미칠 경우 사용)</param>
         public void Execute(ISkillCard card, ICardExecutionContext context, ICombatTurnManager turnManager)
         {
             if (!validator.CanExecute(card, context))
@@ -40,9 +55,9 @@ namespace Game.SkillCardSystem.Executor
 
                 int power = card.GetEffectPower(effect);
                 var command = commandFactory.Create(effect, power);
-                command.Execute(context, turnManager); // 변경된 타입 반영
+                command?.Execute(context, turnManager);
 
-                Debug.Log($"[CardExecutor] {card.GetCardName()} → {effect.GetType().Name}, power: {power}");
+                Debug.Log($"[CardExecutor] {card.GetCardName()} → {effect.GetEffectName()}, power: {power}");
             }
         }
     }

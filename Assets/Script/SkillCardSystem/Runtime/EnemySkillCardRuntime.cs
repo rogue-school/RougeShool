@@ -12,10 +12,13 @@ using Game.CombatSystem.Interface;
 namespace Game.SkillCardSystem.Runtime
 {
     /// <summary>
-    /// 적 전용 스킬 카드의 런타임 구현체입니다. 실행 시 ICardExecutionContext에 따라 효과를 처리합니다.
+    /// 런타임에서 실행되는 적 전용 스킬 카드 클래스입니다.
+    /// 카드 데이터, 이펙트 목록, 쿨타임 및 슬롯 정보를 포함하며,
+    /// 카드 실행 시 ICardExecutionContext를 통해 동작합니다.
     /// </summary>
     public class EnemySkillCardRuntime : ISkillCard
     {
+        /// <inheritdoc/>
         public SkillCardData CardData { get; private set; }
 
         private readonly List<SkillCardEffectSO> effects;
@@ -24,16 +27,19 @@ namespace Game.SkillCardSystem.Runtime
         private SkillCardSlotPosition? handSlot;
         private CombatSlotPosition? combatSlot;
 
-        // 쿨타임 관리 필드
         private int currentCoolTime = 0;
 
+        /// <summary>
+        /// 생성자: 카드 데이터와 이펙트 리스트를 주입받아 초기화합니다.
+        /// </summary>
         public EnemySkillCardRuntime(SkillCardData cardData, List<SkillCardEffectSO> effects)
         {
             CardData = cardData ?? throw new System.ArgumentNullException(nameof(cardData));
             this.effects = effects ?? new List<SkillCardEffectSO>();
         }
 
-        // === 메타 정보 ===
+        #region 메타 정보
+
         public string GetCardName() => CardData?.Name ?? "[Unnamed Enemy Card]";
         public string GetDescription() => CardData?.Description ?? "[No Description]";
         public Sprite GetArtwork() => CardData?.Artwork;
@@ -44,29 +50,49 @@ namespace Game.SkillCardSystem.Runtime
         public SlotOwner GetOwner() => owner;
         public bool IsFromPlayer() => false;
 
-        // === 슬롯 정보 ===
+        #endregion
+
+        #region 슬롯 정보
+
         public void SetHandSlot(SkillCardSlotPosition slot) => handSlot = slot;
         public SkillCardSlotPosition? GetHandSlot() => handSlot;
+
         public void SetCombatSlot(CombatSlotPosition slot) => combatSlot = slot;
         public CombatSlotPosition? GetCombatSlot() => combatSlot;
 
-        // === 쿨타임 관련 구현 ===
+        #endregion
+
+        #region 쿨타임 관리
+
         public int GetMaxCoolTime() => CardData?.CoolTime ?? 0;
         public int GetCurrentCoolTime() => currentCoolTime;
         public void SetCurrentCoolTime(int value) => currentCoolTime = Mathf.Max(0, value);
 
-        // === 실행 ===
+        #endregion
+
+        #region 실행 메서드
+
+        /// <summary>
+        /// source/target을 지정하지 않으면 예외를 발생시킵니다.
+        /// </summary>
         public void ExecuteSkill()
         {
             throw new System.InvalidOperationException("[EnemySkillCardRuntime] source/target이 필요합니다.");
         }
 
+        /// <summary>
+        /// 지정된 source/target과 함께 카드 실행 컨텍스트를 구성하고 실행합니다.
+        /// </summary>
         public void ExecuteSkill(ICharacter source, ICharacter target)
         {
             var context = new DefaultCardExecutionContext(this, source, target);
             ExecuteCardAutomatically(context);
         }
 
+        /// <summary>
+        /// 카드의 효과를 자동으로 실행합니다.
+        /// </summary>
+        /// <param name="context">카드 실행 컨텍스트</param>
         public void ExecuteCardAutomatically(ICardExecutionContext context)
         {
             if (context == null)
@@ -87,16 +113,20 @@ namespace Game.SkillCardSystem.Runtime
                 }
                 else
                 {
-                    Debug.LogWarning($"[EnemySkillCardRuntime] {GetCardName()} - 효과 명령 생성 실패: {effect.name}");
+                    Debug.LogWarning($"[EnemySkillCardRuntime] {GetCardName()} - 효과 명령 생성 실패: {effect?.name}");
                 }
             }
 
-            // 쿨타임 적용
-            SetCurrentCoolTime(GetMaxCoolTime());
+            SetCurrentCoolTime(GetMaxCoolTime()); // 쿨타임 리셋
         }
 
-        // === 대상 정보 ===
+        #endregion
+
+        #region 대상 추출
+
         public ICharacter GetOwner(ICardExecutionContext context) => context?.GetEnemy();
         public ICharacter GetTarget(ICardExecutionContext context) => context?.GetPlayer();
+
+        #endregion
     }
 }

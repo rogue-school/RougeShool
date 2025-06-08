@@ -5,10 +5,12 @@ using Game.CombatSystem.Interface;
 namespace Game.CombatSystem.Core
 {
     /// <summary>
-    /// 전투 시작 버튼의 상태를 조건에 따라 관리하고, 클릭 시 상태 전이를 요청합니다.
+    /// 전투 시작 버튼을 관리하는 컴포넌트입니다.
+    /// 조건에 따라 버튼의 활성화를 제어하고, 클릭 시 턴 상태를 전이합니다.
     /// </summary>
     public class TurnStartButtonHandler : MonoBehaviour
     {
+        [Header("전투 시작 버튼")]
         [SerializeField] private Button startButton;
 
         private ITurnStartConditionChecker conditionChecker;
@@ -19,7 +21,7 @@ namespace Game.CombatSystem.Core
         private bool isInjected = false;
 
         /// <summary>
-        /// Zenject를 통해 의존성 주입됩니다.
+        /// Zenject 의존성 주입 메서드
         /// </summary>
         public void Inject(
             ITurnStartConditionChecker conditionChecker,
@@ -38,6 +40,8 @@ namespace Game.CombatSystem.Core
             isInjected = true;
         }
 
+        #region 유니티 생명주기 메서드
+
         private void Awake()
         {
             if (startButton == null)
@@ -47,7 +51,7 @@ namespace Game.CombatSystem.Core
             }
 
             startButton.onClick.AddListener(OnStartButtonClicked);
-            startButton.interactable = false;
+            startButton.interactable = false; // 초기에는 비활성화
         }
 
         private void OnDestroy()
@@ -59,8 +63,12 @@ namespace Game.CombatSystem.Core
                 startButton.onClick.RemoveListener(OnStartButtonClicked);
         }
 
+        #endregion
+
+        #region 내부 로직
+
         /// <summary>
-        /// 카드 상태 변화에 따라 버튼 활성화 여부를 평가합니다.
+        /// 카드 상태가 변경되었을 때 버튼 활성화 여부를 평가합니다.
         /// </summary>
         private void EvaluateButtonInteractable()
         {
@@ -69,19 +77,12 @@ namespace Game.CombatSystem.Core
 
             bool canStart = conditionChecker.CanStartTurn();
             startButton.interactable = canStart;
+
             Debug.Log($"[TurnStartButtonHandler] 버튼 {(canStart ? "활성화됨" : "비활성화됨")}");
         }
 
         /// <summary>
-        /// 외부에서 수동으로 조건 평가를 트리거할 수 있도록 합니다.
-        /// </summary>
-        public void ForceEvaluate()
-        {
-            EvaluateButtonInteractable();
-        }
-
-        /// <summary>
-        /// 버튼 클릭 시 호출됩니다. 조건을 만족하면 첫 공격 상태로 전이합니다.
+        /// 버튼 클릭 시 상태 전이를 요청합니다.
         /// </summary>
         private void OnStartButtonClicked()
         {
@@ -103,8 +104,20 @@ namespace Game.CombatSystem.Core
             }
         }
 
+        #endregion
+
+        #region 외부 API
+
         /// <summary>
-        /// 외부에서 직접 버튼의 인터랙션 상태를 설정할 수 있습니다.
+        /// 외부에서 수동으로 버튼 활성화 조건을 평가합니다.
+        /// </summary>
+        public void ForceEvaluate()
+        {
+            EvaluateButtonInteractable();
+        }
+
+        /// <summary>
+        /// 외부에서 버튼의 활성화 상태를 강제로 설정합니다.
         /// </summary>
         public void SetInteractable(bool isEnabled)
         {
@@ -114,5 +127,7 @@ namespace Game.CombatSystem.Core
                 Debug.Log($"[TurnStartButtonHandler] 버튼 {(isEnabled ? "강제 활성화됨" : "강제 비활성화됨")}");
             }
         }
+
+        #endregion
     }
 }

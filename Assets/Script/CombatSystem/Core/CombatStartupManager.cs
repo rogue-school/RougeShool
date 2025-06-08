@@ -7,6 +7,11 @@ using Zenject;
 
 namespace Game.CombatSystem.Core
 {
+    /// <summary>
+    /// 전투 초기화 순서를 제어하는 관리자 클래스입니다.
+    /// 씬 내 모든 ICombatInitializerStep 구현체를 찾아 순서대로 초기화하고,
+    /// 초기화가 완료되면 플레이어 입력 상태로 전이합니다.
+    /// </summary>
     public class CombatStartupManager : MonoBehaviour
     {
         private List<ICombatInitializerStep> steps;
@@ -14,10 +19,15 @@ namespace Game.CombatSystem.Core
         [Inject] private ICombatTurnManager turnManager;
         [Inject] private ICombatStateFactory stateFactory;
 
+        #region Unity Methods
 
+        /// <summary>
+        /// 초기화 스텝을 수집하여 정렬합니다.
+        /// </summary>
         private void Awake()
         {
             steps = FindInitializerSteps();
+
             if (steps.Count == 0)
             {
                 Debug.LogWarning("[CombatStartupManager] 초기화 스텝이 하나도 존재하지 않습니다.");
@@ -28,11 +38,21 @@ namespace Game.CombatSystem.Core
             }
         }
 
+        /// <summary>
+        /// 초기화 루틴을 코루틴으로 시작합니다.
+        /// </summary>
         private void Start()
         {
             StartCoroutine(StartupRoutine());
         }
 
+        #endregion
+
+        #region Initialization Step Finder
+
+        /// <summary>
+        /// 씬 내 모든 ICombatInitializerStep 구현체를 찾아 순서대로 정렬합니다.
+        /// </summary>
         private List<ICombatInitializerStep> FindInitializerSteps()
         {
             return Object.FindObjectsByType<MonoBehaviour>(
@@ -43,6 +63,14 @@ namespace Game.CombatSystem.Core
                 .ToList();
         }
 
+        #endregion
+
+        #region Startup Routine
+
+        /// <summary>
+        /// 순서대로 초기화 스텝을 실행하며, 예외 처리 및 로그를 포함합니다.
+        /// 완료 후 플레이어 입력 상태로 전이합니다.
+        /// </summary>
         private IEnumerator StartupRoutine()
         {
             foreach (var step in steps)
@@ -71,5 +99,7 @@ namespace Game.CombatSystem.Core
             var playerInputState = stateFactory.CreatePlayerInputState();
             turnManager.RequestStateChange(playerInputState);
         }
+
+        #endregion
     }
 }

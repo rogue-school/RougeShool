@@ -7,27 +7,34 @@ using Game.CombatSystem.DragDrop;
 namespace Game.SkillCardSystem.UI
 {
     /// <summary>
-    /// 카드 UI를 관리하는 컴포넌트입니다.
-    /// 카드 이름, 데미지, 아트워크, 쿨타임을 표시합니다.
+    /// 스킬 카드의 이름, 설명, 이미지, 쿨타임 등 UI를 제어합니다.
+    /// 카드가 드래그 가능한 상태인지 여부도 제어합니다.
     /// </summary>
     public class SkillCardUI : MonoBehaviour, ISkillCardUI
     {
-        [Header("UI Components")]
+        #region UI Components
+
+        [Header("카드 정보 UI")]
         [SerializeField] private TextMeshProUGUI cardNameText;
         [SerializeField] private TextMeshProUGUI damageText;
-        [SerializeField] private Image cardArtImage;
         [SerializeField] private TextMeshProUGUI descriptionText;
+        [SerializeField] private Image cardArtImage;
 
-        [Header("쿨타임 표시")]
+        [Header("쿨타임 UI")]
         [SerializeField] private GameObject coolTimeOverlay;
         [SerializeField] private TextMeshProUGUI coolTimeText;
         [SerializeField] private CanvasGroup canvasGroup;
 
+        #endregion
+
         private ISkillCard card;
 
+        #region Public Methods
+
         /// <summary>
-        /// 카드 데이터를 설정하고 UI를 초기화합니다.
+        /// 스킬 카드 데이터를 설정하고 UI를 초기화합니다.
         /// </summary>
+        /// <param name="newCard">연결할 카드 인스턴스</param>
         public void SetCard(ISkillCard newCard)
         {
             card = newCard;
@@ -48,7 +55,7 @@ namespace Game.SkillCardSystem.UI
         }
 
         /// <summary>
-        /// 쿨타임 UI를 갱신하고 드래그 가능 여부를 조정합니다.
+        /// 현재 카드의 쿨타임 정보를 바탕으로 UI를 갱신합니다.
         /// </summary>
         public void UpdateCoolTimeDisplay()
         {
@@ -75,11 +82,15 @@ namespace Game.SkillCardSystem.UI
             }
         }
 
+        /// <summary>
+        /// 현재 UI에 설정된 카드를 반환합니다.
+        /// </summary>
         public ISkillCard GetCard() => card;
 
         /// <summary>
-        /// 카드의 시각적 상호작용 여부 설정 (투명도).
+        /// 카드의 상호작용 가능 여부를 설정합니다 (투명도 조절).
         /// </summary>
+        /// <param name="value">true 시 정상 표시, false 시 투명도 낮춤</param>
         public void SetInteractable(bool value)
         {
             if (canvasGroup != null)
@@ -87,21 +98,22 @@ namespace Game.SkillCardSystem.UI
         }
 
         /// <summary>
-        /// 드래그 가능 여부 설정 (핸들러 활성/비활성).
+        /// 카드의 드래그 가능 여부를 설정합니다.
         /// </summary>
+        /// <param name="isEnabled">true 시 드래그 가능</param>
         public void SetDraggable(bool isEnabled)
         {
             if (!card?.IsFromPlayer() ?? true) return;
 
             if (TryGetComponent(out CardDragHandler dragHandler))
-            {
                 dragHandler.enabled = isEnabled;
-            }
         }
 
         /// <summary>
-        /// 외부에서 쿨타임 수동 갱신 시 호출 (예: 테스트).
+        /// 외부에서 강제로 쿨타임 UI를 갱신합니다. (디버깅 또는 테스트용)
         /// </summary>
+        /// <param name="coolTime">표시할 쿨타임</param>
+        /// <param name="show">쿨타임 UI 표시 여부</param>
         public void ShowCoolTime(int coolTime, bool show)
         {
             if (coolTimeOverlay != null)
@@ -110,5 +122,7 @@ namespace Game.SkillCardSystem.UI
             if (coolTimeText != null)
                 coolTimeText.text = show ? coolTime.ToString() : "";
         }
+
+        #endregion
     }
 }

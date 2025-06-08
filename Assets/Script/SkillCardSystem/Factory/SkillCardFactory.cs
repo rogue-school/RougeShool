@@ -1,19 +1,25 @@
 using UnityEngine;
+using System.Collections.Generic;
 using Game.SkillCardSystem.Data;
+using Game.SkillCardSystem.Effects;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Runtime;
-using Game.SkillCardSystem.Effects;
-using System.Collections.Generic;
 
 namespace Game.SkillCardSystem.Factory
 {
     /// <summary>
-    /// 스킬 카드 런타임 객체를 생성하는 팩토리입니다.
-    /// SRP: 런타임 카드 인스턴스를 생성하는 책임만 가집니다.
-    /// DIP: SkillCardData, Effect 정보를 기반으로 생성합니다.
+    /// 스킬 카드 런타임 인스턴스를 생성하는 팩토리 클래스입니다.
+    /// <para>SRP: 카드 인스턴스 생성만 담당</para>
+    /// <para>DIP: SkillCardData와 Effect 데이터에 의존</para>
     /// </summary>
     public class SkillCardFactory : ISkillCardFactory
     {
+        /// <summary>
+        /// 적 캐릭터용 스킬 카드 런타임 인스턴스를 생성합니다.
+        /// </summary>
+        /// <param name="data">카드 데이터</param>
+        /// <param name="effects">카드 효과 리스트</param>
+        /// <returns>생성된 적 카드 런타임 인스턴스</returns>
         public ISkillCard CreateEnemyCard(SkillCardData data, List<SkillCardEffectSO> effects)
         {
             if (data == null)
@@ -31,6 +37,12 @@ namespace Game.SkillCardSystem.Factory
             return new EnemySkillCardRuntime(data, CloneEffects(effects));
         }
 
+        /// <summary>
+        /// 플레이어용 스킬 카드 런타임 인스턴스를 생성합니다.
+        /// </summary>
+        /// <param name="data">카드 데이터</param>
+        /// <param name="effects">카드 효과 리스트</param>
+        /// <returns>생성된 플레이어 카드 런타임 인스턴스</returns>
         public ISkillCard CreatePlayerCard(SkillCardData data, List<SkillCardEffectSO> effects)
         {
             if (data == null)
@@ -49,9 +61,10 @@ namespace Game.SkillCardSystem.Factory
         }
 
         /// <summary>
-        /// 효과 리스트를 복제합니다. (현재는 얕은 복사)
-        /// 필요 시 ScriptableObject 복제 또는 DeepCopy 구조로 확장 가능합니다.
+        /// 효과 리스트를 복제합니다. 현재는 얕은 복사이며, 필요 시 깊은 복사로 확장 가능합니다.
         /// </summary>
+        /// <param name="original">원본 효과 리스트</param>
+        /// <returns>복제된 효과 리스트</returns>
         private List<SkillCardEffectSO> CloneEffects(List<SkillCardEffectSO> original)
         {
             return new List<SkillCardEffectSO>(original);
