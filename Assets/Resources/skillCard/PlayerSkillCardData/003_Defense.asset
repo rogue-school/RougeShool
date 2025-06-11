@@ -13,7 +13,9 @@ MonoBehaviour:
   m_Name: 003_Defense
   m_EditorClassIdentifier: 
   <CardData>k__BackingField:
-    SfxClip: {fileID: 0}
+    SfxClip: {fileID: 8300000, guid: 35a7ca011fc264e42ab6efca8e8e3ee4, type: 3}
+    VisualEffectPrefab: {fileID: 0}
+    EffectDuration: 0
     Name: "\uBC29\uC5B4"
     Description: "\uC801\uC758 \uACF5\uACA9\uC744 \uBC29\uC5B4\uD569\uB2C8\uB2E4"
     Artwork: {fileID: 6247231596762095836, guid: 67b60e054fa6f5048bf7446e3e114f7f, type: 3}
