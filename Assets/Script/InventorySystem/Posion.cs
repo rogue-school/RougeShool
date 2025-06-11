@@ -98,7 +98,7 @@ public class ButtonListener : MonoBehaviour
     {
         if (Posion > 0)
         {
-            infoText.text = $"Posion X{Posion}";
+            infoText.text = $"체력포션 X {Posion}";
             if (targetObjectToToggle != null)
                 targetObjectToToggle.SetActive(true);
         }
@@ -129,7 +129,7 @@ public class ButtonListener : MonoBehaviour
         {
             usePotionButton.interactable = true;
             usePotionButton.image.color = Color.white;
-            buttonText.text = $"Posion X{Posion}";
+            buttonText.text = $"체력포션 X {Posion}";
 
             if (cooldownFillImage != null)
                 cooldownFillImage.fillAmount = 1f;
