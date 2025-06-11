@@ -1,6 +1,7 @@
 using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Data;
 using Game.CharacterSystem.Interface;
+using Game.CombatSystem.UI;
 using Game.CombatSystem.Context;
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Deck;
@@ -22,6 +23,10 @@ public class EnemyCharacter : CharacterBase, IEnemyCharacter
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private TextMeshProUGUI hpText;
     [SerializeField] private Image portraitImage;
+
+    [Header("Damage Text UI")]
+    [SerializeField] private Transform hpTextAnchor; // 데미지 텍스트 위치
+    [SerializeField] private GameObject damageTextPrefab; // 데미지 텍스트 프리팹
 
     private EnemySkillDeck skillDeck;
     private ICharacterDeathListener deathListener;
@@ -95,9 +100,19 @@ public class EnemyCharacter : CharacterBase, IEnemyCharacter
         base.TakeDamage(amount);
         RefreshUI();
 
+        // 데미지 텍스트 표시
+        if (damageTextPrefab != null && hpTextAnchor != null)
+        {
+            var instance = Instantiate(damageTextPrefab);
+            instance.transform.SetParent(hpTextAnchor, false);
+
+            var damageUI = instance.GetComponent<DamageTextUI>();
+            damageUI?.Show(amount, Color.red, "-");
+        }
+
         if (IsDead() && !isDead)
         {
-            MarkAsDead(); // 사망 상태 갱신 및 리스너 알림
+            MarkAsDead();
         }
     }
 
@@ -109,6 +124,15 @@ public class EnemyCharacter : CharacterBase, IEnemyCharacter
     {
         base.Heal(amount);
         RefreshUI();
+
+        if (damageTextPrefab != null && hpTextAnchor != null)
+        {
+            var instance = Instantiate(damageTextPrefab);
+            instance.transform.SetParent(hpTextAnchor, false);
+
+            var damageUI = instance.GetComponent<DamageTextUI>();
+            damageUI?.Show(amount, Color.green, "+");
+        }
     }
 
     /// <summary>

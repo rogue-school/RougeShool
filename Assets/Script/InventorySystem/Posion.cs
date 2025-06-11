@@ -4,20 +4,28 @@ using UnityEngine.UI;
 using System.Collections;
 using Game.CharacterSystem.Core;
 
+[RequireComponent(typeof(AudioSource))]
 public class ButtonListener : MonoBehaviour
 {
+    [Header("포션 설정")]
     public int Posion = 3;
     private int prevMulyak;
     private bool canUse = true;
+
+    [Header("플레이어 연결")]
     public PlayerCharacter playerCharacter;
 
+    [Header("UI 연결")]
     public TextMeshProUGUI infoText;
     public GameObject targetObjectToToggle;
-
     public Button usePotionButton;
     public TextMeshProUGUI buttonText;
     public Image cooldownFillImage;
-    public TextMeshProUGUI cooldownText; // ← 추가: 남은 쿨타임 텍스트
+    public TextMeshProUGUI cooldownText;
+
+    [Header("사운드")]
+    [SerializeField] private AudioClip potionUseSound;
+    private AudioSource audioSource;
 
     private void Start()
     {
@@ -31,16 +39,18 @@ public class ButtonListener : MonoBehaviour
             GameObject playerObj = GameObject.FindWithTag("Player");
 
             if (playerObj != null)
-            {
                 playerCharacter = playerObj.GetComponent<PlayerCharacter>();
-            }
 
-            yield return null; // 다음 프레임까지 대기
+            yield return null;
         }
+
+        // AudioSource 준비
+        audioSource = GetComponent<AudioSource>();
+        audioSource.playOnAwake = false;
 
         Debug.Log("[ButtonListener] PlayerCharacter 연결됨!");
 
-        // 초기화 계속 진행
+        // 초기화
         prevMulyak = Posion;
         UpdateMulyakText();
         UpdateButtonVisual();
@@ -51,8 +61,6 @@ public class ButtonListener : MonoBehaviour
         if (cooldownText != null)
             cooldownText.text = "";
     }
-
-
 
     private void Update()
     {
@@ -77,6 +85,10 @@ public class ButtonListener : MonoBehaviour
         {
             playerCharacter.Heal(1);
             Posion -= 1;
+
+            if (audioSource != null && potionUseSound != null)
+                audioSource.PlayOneShot(potionUseSound);
+
             StartCoroutine(PotionCooldown());
         }
     }
@@ -90,30 +102,21 @@ public class ButtonListener : MonoBehaviour
         float cooldown = 1f;
         float timer = 0f;
 
-        if (cooldownFillImage != null)
-            cooldownFillImage.fillAmount = 0f;
-
-        if (cooldownText != null)
-            cooldownText.text = $"{cooldown:0.0}s";
+        cooldownFillImage.fillAmount = 0f;
+        cooldownText.text = $"{cooldown:0.0}s";
 
         while (timer < cooldown)
         {
             timer += Time.deltaTime;
 
-            if (cooldownFillImage != null)
-                cooldownFillImage.fillAmount = timer / cooldown;
-
-            if (cooldownText != null)
-                cooldownText.text = $"{(cooldown - timer):0.0}s";
+            cooldownFillImage.fillAmount = timer / cooldown;
+            cooldownText.text = $"{(cooldown - timer):0.0}s";
 
             yield return null;
         }
 
         canUse = true;
-
-        if (cooldownText != null)
-            cooldownText.text = "";
-
+        cooldownText.text = "";
         UpdateButtonVisual();
     }
 
@@ -132,7 +135,6 @@ public class ButtonListener : MonoBehaviour
                 targetObjectToToggle.SetActive(false);
         }
 
-
         UpdateButtonVisual();
     }
 
@@ -144,7 +146,6 @@ public class ButtonListener : MonoBehaviour
         {
             usePotionButton.interactable = false;
             usePotionButton.image.color = Color.gray;
-
             if (canUse)
                 buttonText.text = "None Posion";
         }
@@ -153,9 +154,7 @@ public class ButtonListener : MonoBehaviour
             usePotionButton.interactable = true;
             usePotionButton.image.color = Color.white;
             buttonText.text = $"체력포션 X {Posion}";
-
-            if (cooldownFillImage != null)
-                cooldownFillImage.fillAmount = 1f;
+            cooldownFillImage.fillAmount = 1f;
         }
     }
 }

@@ -3988,7 +3988,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 2955035231636116635, guid: b8796fb3f96c63742b66fd6a628c095c, type: 3}
+  m_Sprite: {fileID: 2208447124367991660, guid: a4777081aee833346b7ba06827330449, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -4866,7 +4866,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uC784\uC2DC(\uB098\uAC00\uAE30)\n\uB514\uBC84\uAE45\uC6A9 "
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 71b8f325349a0594ba7d6be4b1e91dce, type: 2}
   m_sharedMaterial: {fileID: -3827951543870141200, guid: 71b8f325349a0594ba7d6be4b1e91dce, type: 2}
@@ -6924,9 +6924,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1f820dcbb75107e489124b4d2206b43b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MaxHp: 20
-  currentHp: 0
   Posion: 3
+  playerCharacter: {fileID: 0}
   infoText: {fileID: 984172209}
   targetObjectToToggle: {fileID: 203583034}
   usePotionButton: {fileID: 203583036}
@@ -7301,7 +7300,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 0}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

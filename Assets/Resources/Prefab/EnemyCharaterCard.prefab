@@ -248,7 +248,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -136}
+  m_AnchoredPosition: {x: 120, y: -132}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &389427766798873512
@@ -306,13 +306,13 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 34
+  m_fontSizeBase: 34
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 0
+  m_fontStyle: 1
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -404,7 +404,8 @@ MonoBehaviour:
   nameText: {fileID: 3990270840846056283}
   hpText: {fileID: 6969683324459299986}
   portraitImage: {fileID: 1631975328147475406}
-  hitEffectPrefab: {fileID: 4294010189161640749, guid: 52b97149ba487c94bb0fba4d467003d0, type: 3}
+  hpTextAnchor: {fileID: 805663586528428179}
+  damageTextPrefab: {fileID: 6781140808306196491, guid: e5df9cbbbb6c8344787434930ac5ec5b, type: 3}
 --- !u!114 &8744304457702177956
 MonoBehaviour:
   m_ObjectHideFlags: 0

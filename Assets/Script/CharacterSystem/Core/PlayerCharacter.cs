@@ -6,6 +6,7 @@ using Game.SkillCardSystem.Interface;
 using Game.CharacterSystem.Interface;
 using Game.SkillCardSystem.Slot;
 using Game.IManager;
+using Game.CombatSystem.UI;
 
 namespace Game.CharacterSystem.Core
 {
@@ -28,6 +29,11 @@ namespace Game.CharacterSystem.Core
         [SerializeField] private TextMeshProUGUI hpText;
         [SerializeField] private Image portraitImage;
         [SerializeField] private TextMeshProUGUI descriptionText;
+
+        [Header("Damage UI")]
+        [SerializeField] private Transform hpTextAnchor;
+        [SerializeField] private GameObject damageTextPrefab;
+
 
         #endregion
 
@@ -108,6 +114,15 @@ namespace Game.CharacterSystem.Core
         {
             base.TakeDamage(amount);
             UpdateUI();
+
+            if (damageTextPrefab != null && hpTextAnchor != null)
+            {
+                var instance = Instantiate(damageTextPrefab);
+                instance.transform.SetParent(hpTextAnchor, false);
+
+                var damageUI = instance.GetComponent<DamageTextUI>();
+                damageUI?.Show(amount, Color.red, "-");
+            }
         }
 
         /// <summary>
@@ -118,6 +133,15 @@ namespace Game.CharacterSystem.Core
         {
             base.Heal(amount);
             UpdateUI();
+
+            if (damageTextPrefab != null && hpTextAnchor != null)
+            {
+                var instance = Instantiate(damageTextPrefab);
+                instance.transform.SetParent(hpTextAnchor, false);
+
+                var damageUI = instance.GetComponent<DamageTextUI>();
+                damageUI?.Show(amount, Color.green, "+");
+            }
         }
 
         #endregion
