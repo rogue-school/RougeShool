@@ -70,6 +70,12 @@ namespace Game.SkillCardSystem.UI
             if (coolTimeText != null)
                 coolTimeText.text = isCooling ? currentCoolTime.ToString() : "";
 
+            if (cardArtImage != null)
+            {
+                // 회색 음영 처리: 쿨타임 중이면 회색, 아니면 원래 색
+                cardArtImage.color = isCooling ? new Color(0.3f, 0.3f, 0.3f, 1f) : Color.white;
+            }
+
             if (card.IsFromPlayer())
             {
                 SetInteractable(!isCooling);
