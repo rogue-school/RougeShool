@@ -82,9 +82,22 @@ namespace Game.CharacterSystem.Core
         /// </summary>
         private void UpdateUI()
         {
-            nameText.text = Data?.DisplayName ?? "???";
-            hpText.text = $"{currentHP} / {Data?.MaxHP ?? 0}";
-            portraitImage.sprite = Data?.Portrait;
+            if (Data == null) return;
+
+            nameText.text = Data.DisplayName;
+            portraitImage.sprite = Data.Portrait;
+
+            // 체력 숫자 및 색상 설정
+            if (currentHP >= Data.MaxHP)
+            {
+                hpText.text = Data.MaxHP.ToString(); // 최대 체력 표시
+                hpText.color = Color.white;          // 회색 또는 흰색으로 보임
+            }
+            else
+            {
+                hpText.text = currentHP.ToString();  // 현재 체력만 표시
+                hpText.color = Color.red;            // 붉은색으로 표시
+            }
         }
 
         /// <summary>

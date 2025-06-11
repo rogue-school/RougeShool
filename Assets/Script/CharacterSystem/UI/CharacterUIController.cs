@@ -71,8 +71,13 @@ namespace Game.CharacterSystem.UI
         /// <param name="max">최대 체력</param>
         public void SetHP(int current, int max)
         {
-            if (hpText != null)
-                hpText.text = $"{current} / {max}";
+            if (hpText == null) return;
+
+            // 현재 체력만 표시
+            hpText.text = current.ToString();
+
+            // 색상: 최대 체력이면 흰색, 아니면 붉은색
+            hpText.color = (current < max) ? Color.red : Color.white;
         }
 
         /// <summary>

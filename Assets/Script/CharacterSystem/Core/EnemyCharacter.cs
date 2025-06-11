@@ -119,8 +119,18 @@ public class EnemyCharacter : CharacterBase, IEnemyCharacter
         if (characterData == null) return;
 
         nameText.text = GetCharacterName();
-        hpText.text = $"{currentHP} / {GetMaxHP()}";
+        hpText.text = currentHP.ToString(); // 현재 체력만 표시
         portraitImage.sprite = characterData.Portrait;
+
+        // 체력 색상 설정: 최대 체력이면 흰색, 아니면 붉은색
+        if (currentHP >= GetMaxHP())
+        {
+            hpText.color = Color.white;
+        }
+        else
+        {
+            hpText.color = Color.red;
+        }
     }
 
     /// <summary>
