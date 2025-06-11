@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 4088457067113692024}
   m_Layer: 5
   m_Name: PlayerCharacterCard
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -55,7 +55,6 @@ MonoBehaviour:
   hpText: {fileID: 4820315423849995655}
   portraitImage: {fileID: 4212231588447136040}
   descriptionText: {fileID: 0}
-  hitEffectPrefab: {fileID: 4294010189161640749, guid: 52b97149ba487c94bb0fba4d467003d0, type: 3}
 --- !u!114 &4088457067113692024
 MonoBehaviour:
   m_ObjectHideFlags: 0

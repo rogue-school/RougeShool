@@ -2,14 +2,14 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using System.Collections;
+using Game.CharacterSystem.Core;
 
 public class ButtonListener : MonoBehaviour
 {
-    public int MaxHp = 20;
-    public int currentHp;
     public int Posion = 3;
     private int prevMulyak;
     private bool canUse = true;
+    public PlayerCharacter playerCharacter;
 
     public TextMeshProUGUI infoText;
     public GameObject targetObjectToToggle;
@@ -21,6 +21,26 @@ public class ButtonListener : MonoBehaviour
 
     private void Start()
     {
+        StartCoroutine(WaitForPlayerCharacter());
+    }
+
+    private IEnumerator WaitForPlayerCharacter()
+    {
+        while (playerCharacter == null)
+        {
+            GameObject playerObj = GameObject.FindWithTag("Player");
+
+            if (playerObj != null)
+            {
+                playerCharacter = playerObj.GetComponent<PlayerCharacter>();
+            }
+
+            yield return null; // 다음 프레임까지 대기
+        }
+
+        Debug.Log("[ButtonListener] PlayerCharacter 연결됨!");
+
+        // 초기화 계속 진행
         prevMulyak = Posion;
         UpdateMulyakText();
         UpdateButtonVisual();
@@ -31,6 +51,8 @@ public class ButtonListener : MonoBehaviour
         if (cooldownText != null)
             cooldownText.text = "";
     }
+
+
 
     private void Update()
     {
@@ -51,11 +73,12 @@ public class ButtonListener : MonoBehaviour
         if (!canUse || Posion <= 0)
             return;
 
-        if (currentHp < MaxHp)
-            currentHp += 1;
-
-        Posion -= 1;
-        StartCoroutine(PotionCooldown());
+        if (playerCharacter != null && playerCharacter.GetCurrentHP() < playerCharacter.GetMaxHP())
+        {
+            playerCharacter.Heal(1);
+            Posion -= 1;
+            StartCoroutine(PotionCooldown());
+        }
     }
 
     private IEnumerator PotionCooldown()
