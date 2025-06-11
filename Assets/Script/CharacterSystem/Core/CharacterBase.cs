@@ -11,11 +11,8 @@ namespace Game.CharacterSystem.Core
     /// 캐릭터의 기본 베이스 클래스입니다.
     /// 체력, 가드, 턴 효과, UI 연동 등의 기능을 제공합니다.
     /// </summary>
-    public abstract class CharacterBase : MonoBehaviour, ICharacter, IHitEffectPlayable
+    public abstract class CharacterBase : MonoBehaviour, ICharacter
     {
-        [Header("피격 이펙트")]
-        [SerializeField] protected GameObject hitEffectPrefab;
-
         #region 캐릭터 상태 필드
 
         /// <summary>캐릭터의 최대 체력</summary>
@@ -35,6 +32,7 @@ namespace Game.CharacterSystem.Core
 
         /// <summary>UI와 연동되는 캐릭터 카드 컨트롤러</summary>
         protected CharacterUIController characterCardUI;
+        public virtual Transform Transform => transform;
 
         #endregion
 
@@ -177,65 +175,5 @@ namespace Game.CharacterSystem.Core
         public abstract bool IsPlayerControlled();
 
         #endregion
-        public virtual void PlayHitEffect()
-        {
-            Debug.Log($"[PlayHitEffect] {GetCharacterName()} - 이펙트 실행 시도");
-
-            if (hitEffectPrefab == null)
-            {
-                Debug.LogWarning("[PlayHitEffect] hitEffectPrefab이 연결되지 않았습니다.");
-                return;
-            }
-
-            // 머리 위 위치 기준으로 스폰 (기본: 1.0f 위, 0.5f 앞으로)
-            Vector3 offset = new Vector3(0, 1f, -0.5f);
-            Vector3 spawnPosition = transform.position + offset;
-
-            GameObject effectInstance = Instantiate(hitEffectPrefab, spawnPosition, Quaternion.identity);
-            if (effectInstance == null)
-            {
-                Debug.LogError("[PlayHitEffect] 이펙트 인스턴스 생성 실패");
-                return;
-            }
-
-            Debug.Log($"[PlayHitEffect] 이펙트 생성 위치: {spawnPosition}");
-
-            // Particle System 존재 여부 확인 및 재생
-            ParticleSystem ps = effectInstance.GetComponent<ParticleSystem>();
-            if (ps != null)
-            {
-                if (!ps.isPlaying)
-                {
-                    ps.Play();
-                    Debug.Log("[PlayHitEffect] ParticleSystem 수동 재생");
-                }
-                else
-                {
-                    Debug.Log("[PlayHitEffect] ParticleSystem 자동 재생됨");
-                }
-            }
-            else
-            {
-                Debug.LogWarning("[PlayHitEffect] ParticleSystem 없음");
-            }
-
-            // Particle Renderer 설정 (없을 수도 있으니 조건부 처리)
-            ParticleSystemRenderer psRenderer = effectInstance.GetComponent<ParticleSystemRenderer>();
-            if (psRenderer != null)
-            {
-                psRenderer.sortingLayerName = "Effects"; // 사전에 프로젝트에 정의된 레이어일 것
-                psRenderer.sortingOrder = 100;
-
-                Debug.Log($"[PlayHitEffect] Sorting Layer: {psRenderer.sortingLayerName}, Order: {psRenderer.sortingOrder}");
-            }
-            else
-            {
-                Debug.LogWarning("[PlayHitEffect] ParticleSystemRenderer 없음");
-            }
-
-            // 이펙트 일정 시간 후 제거
-            Destroy(effectInstance, 2f);
-        }
-
     }
 }

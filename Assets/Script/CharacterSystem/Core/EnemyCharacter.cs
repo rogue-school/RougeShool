@@ -185,45 +185,4 @@ public class EnemyCharacter : CharacterBase, IEnemyCharacter
     {
         MarkAsDead();
     }
-    public override void PlayHitEffect()
-    {
-        Debug.Log($"[PlayHitEffect] {GetCharacterName()} - 이펙트 실행 시도");
-
-        if (hitEffectPrefab == null)
-        {
-            Debug.LogWarning("[PlayHitEffect] hitEffectPrefab이 연결되지 않았습니다.");
-            return;
-        }
-
-        // 월드 공간 기준 위치 (캐릭터 머리 위)
-        Vector3 spawnPosition = transform.position + new Vector3(0f, 0f, 0f);
-        GameObject effectInstance = Instantiate(hitEffectPrefab, spawnPosition, Quaternion.identity);
-
-        if (effectInstance == null)
-        {
-            Debug.LogError("[PlayHitEffect] 이펙트 인스턴스 생성 실패");
-            return;
-        }
-
-        Debug.Log("[PlayHitEffect] 이펙트 인스턴스 생성 완료");
-
-        // 캔버스에 넣지 않고 월드에 그대로 둠
-        effectInstance.transform.SetParent(null); // 또는 다른 월드 루트 오브젝트
-
-        // 레이어 설정: 월드 공간에 있지만 "UI"로 렌더되도록
-        var psRenderer = effectInstance.GetComponent<ParticleSystemRenderer>();
-        if (psRenderer != null)
-        {
-            psRenderer.sortingLayerName = "UI";     // 반드시 존재하는 Sorting Layer
-            psRenderer.sortingOrder = 200;          // UI 위로 올라오도록 높은 값
-
-            Debug.Log($"[PlayHitEffect] Sorting Layer: {psRenderer.sortingLayerName}, Order: {psRenderer.sortingOrder}");
-        }
-        else
-        {
-            Debug.LogWarning("[PlayHitEffect] ParticleSystemRenderer를 찾을 수 없습니다.");
-        }
-
-        Destroy(effectInstance, 2f);
-    }
 }

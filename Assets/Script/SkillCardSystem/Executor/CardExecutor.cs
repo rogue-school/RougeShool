@@ -4,6 +4,8 @@ using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Factory;
 using Game.SkillCardSystem.Validator;
 using Game.Audio;
+using Game.CharacterSystem.Interface;
+using Game.CharacterSystem.Core;
 
 namespace Game.SkillCardSystem.Executor
 {
@@ -67,6 +69,19 @@ namespace Game.SkillCardSystem.Executor
             {
                 Debug.Log($"[CardExecutor] SFX 재생 시도: {clip.name}");
                 AudioManager.Instance?.PlaySFX(clip);
+            }
+
+            // 카드 비주얼 이펙트 재생
+            var vfx = card.CardData?.VisualEffectPrefab;
+            if (vfx != null)
+            {
+                ICharacter target = context.Target;
+                if (target != null)
+                {
+                    Vector3 spawnPos = target.Transform.position + new Vector3(0, 0, 0);
+                    var instance = GameObject.Instantiate(vfx, spawnPos, Quaternion.identity);
+                    GameObject.Destroy(instance, card.CardData.EffectDuration);
+                }
             }
         }
     }

@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   <CardData>k__BackingField:
     SfxClip: {fileID: 8300000, guid: 4253dec50304f5049a8bf709dcd3f393, type: 3}
+    VisualEffectPrefab: {fileID: 4294010189161640749, guid: 52b97149ba487c94bb0fba4d467003d0, type: 3}
+    EffectDuration: 2
     Name: "\uD68C\uC804\uBCA0\uAE30"
     Description: "\uD53C\uD574\uB97C 2 \uC785\uD799\uB2C8\uB2E4"
     Artwork: {fileID: 800228030009884433, guid: b356eacdde8e73c499c1596378f2b392, type: 3}

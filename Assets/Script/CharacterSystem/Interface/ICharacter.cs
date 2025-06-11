@@ -1,4 +1,5 @@
 ﻿using Game.SkillCardSystem.Interface;
+using UnityEngine;
 
 namespace Game.CharacterSystem.Interface
 {
@@ -96,5 +97,6 @@ namespace Game.CharacterSystem.Interface
         void ProcessTurnEffects();
 
         #endregion
+        Transform Transform { get; }
     }
 }

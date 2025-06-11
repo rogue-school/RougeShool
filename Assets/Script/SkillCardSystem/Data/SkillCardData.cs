@@ -12,6 +12,13 @@ namespace Game.SkillCardSystem.Data
         [Header("사운드")]
         public AudioClip SfxClip;
 
+        [Header("비주얼 이펙트")]
+        [Tooltip("카드 실행 시 재생할 비주얼 이펙트 프리팹")]
+        public GameObject VisualEffectPrefab;
+
+        [Tooltip("이펙트 지속 시간 (초)")]
+        public float EffectDuration = 2f;
+
         /// <summary>
         /// 카드 이름
         /// </summary>
