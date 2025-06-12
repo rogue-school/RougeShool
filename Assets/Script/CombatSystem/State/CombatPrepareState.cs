@@ -72,8 +72,14 @@ namespace Game.CombatSystem.State
         /// </summary>
         private IEnumerator PrepareRoutine()
         {
+            // 슬롯 초기화 대기
             yield return new WaitUntil(() => slotRegistry.IsInitialized);
 
+            // 선공/후공 무작위 결정 (매 전투마다)
+            flowCoordinator.IsEnemyFirst = UnityEngine.Random.value < 0.5f;
+            Debug.Log($"[CombatPrepareState] IsEnemyFirst 결정됨 → {(flowCoordinator.IsEnemyFirst ? "적 선공" : "플레이어 선공")}");
+
+            // 적이 없으면 생성
             if (!flowCoordinator.HasEnemy())
             {
                 Debug.Log("[CombatPrepareState] 적이 없어 새 적 생성 시작");
@@ -81,6 +87,7 @@ namespace Game.CombatSystem.State
                 yield return new WaitUntil(() => flowCoordinator.GetEnemy() != null);
             }
 
+            // 적 초기화
             var enemy = flowCoordinator.GetEnemy();
             if (!enemyHandManager.HasInitializedEnemy(enemy))
             {
@@ -88,17 +95,23 @@ namespace Game.CombatSystem.State
                 yield return new WaitForEndOfFrame();
             }
 
+            // 적 핸드 슬롯 채우기
             yield return enemyHandManager.StepwiseFillSlotsFromBack(0.3f);
+
+            // ENEMY_SLOT_1에 카드 준비될 때까지 대기
             yield return WaitForEnemyCardReady();
 
-            // 개선된 부분: 카드 등록 애니메이션 완료까지 대기
+            // 카드 등록 (애니메이션 포함)
             yield return enemyHandManager.PopCardAndRegisterToCombatSlotCoroutine(flowCoordinator);
 
+            // 빈 슬롯 다시 채우기
             yield return enemyHandManager.StepwiseFillSlotsFromBack(0.3f);
 
+            // 다음 상태로 전환 (플레이어 입력)
             var next = turnManager.GetStateFactory().CreatePlayerInputState();
             turnManager.RequestStateChange(next);
         }
+
 
         /// <summary>
         /// 적 카드 슬롯이 준비될 때까지 대기합니다.

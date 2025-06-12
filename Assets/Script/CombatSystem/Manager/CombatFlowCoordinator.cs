@@ -48,7 +48,7 @@ namespace Game.CombatSystem.Core
         private ICombatStateFactory stateFactory;
         private TurnStartButtonHandler startButtonHandler;
         private bool playerInputEnabled = false;
-        public bool IsEnemyFirst { get; private set; }
+        public bool IsEnemyFirst { get; set; }
         private Action onStartButtonPressed;
 
         #endregion

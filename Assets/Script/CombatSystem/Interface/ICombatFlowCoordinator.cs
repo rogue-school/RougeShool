@@ -146,7 +146,8 @@ namespace Game.CombatSystem.Interface
         /// <summary>
         /// 현재 턴이 적 선공인지 여부를 반환합니다.
         /// </summary>
-        bool IsEnemyFirst { get; }
+        bool IsEnemyFirst { get; set; }
+
 
         #endregion
 
