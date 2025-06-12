@@ -117,6 +117,7 @@ namespace Game.CombatSystem.Animation
             return new Vector2(local.x, local.y);
         }
 
+
         private GameObject CreateSimpleShadow(out Image shadowImage, out RectTransform shadowRect)
         {
             GameObject shadowGO = new GameObject("MoveShadow", typeof(RectTransform), typeof(Image));

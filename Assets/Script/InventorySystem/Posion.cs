@@ -83,7 +83,7 @@ public class ButtonListener : MonoBehaviour
 
         if (playerCharacter != null && playerCharacter.GetCurrentHP() < playerCharacter.GetMaxHP())
         {
-            playerCharacter.Heal(1);
+            playerCharacter.Heal(3);
             Posion -= 1;
 
             if (audioSource != null && potionUseSound != null)
