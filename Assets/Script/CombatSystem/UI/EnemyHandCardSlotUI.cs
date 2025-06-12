@@ -30,15 +30,33 @@ namespace Game.CombatSystem.UI
             currentCard?.SetHandSlot(position);
         }
 
-        public void SetCardUI(ISkillCardUI ui)
+        public async void SetCardUI(ISkillCardUI ui)
         {
             currentCardUI = ui;
 
-            // 적 카드에도 애니메이션 자동 실행
             if (ui is MonoBehaviour uiMb)
             {
-                var animator = uiMb.GetComponent<SkillCardSpawnAnimator>();
-                animator?.PlaySpawnAnimation();
+                var spawnAnimator = uiMb.GetComponent<SkillCardSpawnAnimator>();
+                var shiftAnimator = uiMb.GetComponent<SkillCardShiftAnimator>();
+                var thisSlotRect = GetComponent<RectTransform>();
+
+                // 현재 부모 위치를 기준으로 카드가 어디 있는지 파악
+                Vector3 currentWorldPos = uiMb.transform.position;
+
+                // 임시 부모 설정 (월드 기준 위치 유지)
+                uiMb.transform.SetParent(thisSlotRect.parent, true);
+
+                // 1. 이동 애니메이션 (현재 위치 → 이 슬롯 위치)
+                if (shiftAnimator != null)
+                    await shiftAnimator.PlayMoveAnimationAsync(thisSlotRect);
+
+                // 2. 애니메이션 완료 후 이 슬롯에 부착
+                uiMb.transform.SetParent(thisSlotRect, false);
+                uiMb.transform.localPosition = Vector3.zero;
+
+                // 3. 생성 애니메이션
+                if (spawnAnimator != null)
+                    await spawnAnimator.PlaySpawnAnimationAsync();
             }
         }
 

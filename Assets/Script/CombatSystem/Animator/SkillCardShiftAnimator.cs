@@ -5,10 +5,6 @@ using System.Threading.Tasks;
 
 namespace Game.CombatSystem.Animation
 {
-    /// <summary>
-    /// 스킬 카드가 슬롯으로 이동하는 애니메이션을 처리합니다.
-    /// 이동 시 위로 살짝 떠오른 뒤 빠르게 이동하고 도착 후 흔들림과 함께 착지합니다.
-    /// </summary>
     [RequireComponent(typeof(RectTransform))]
     public class SkillCardShiftAnimator : MonoBehaviour
     {
@@ -22,11 +18,11 @@ namespace Game.CombatSystem.Animation
 
         [Header("Movement Settings")]
         [SerializeField] private float liftHeight = 20f;
-        [SerializeField] private float liftDuration = 0.2f;
-        [SerializeField] private float moveDuration = 0.4f;
-        [SerializeField] private float shakeStrength = 10f;
-        [SerializeField] private int shakeVibrato = 10;
-        [SerializeField] private float dropDuration = 0.1f;
+        [SerializeField] private float liftDuration = 0.5f;
+        [SerializeField] private float moveDuration = 0.7f;
+        [SerializeField] private float landDuration = 0.4f;
+        [SerializeField] private float shakeStrength = 3f;
+        [SerializeField] private int shakeVibrato = 4;
 
         private RectTransform rectTransform;
 
@@ -35,59 +31,77 @@ namespace Game.CombatSystem.Animation
             rectTransform = GetComponent<RectTransform>();
         }
 
-        /// <summary>
-        /// 카드 이동 애니메이션 실행
-        /// </summary>
-        /// <param name="targetSlot">도착할 슬롯 위치</param>
         public async Task PlayMoveAnimationAsync(RectTransform targetSlot)
         {
+            Debug.Log("[SkillCardShiftAnimator] 이동 애니메이션 시작");
+
+            await Task.Yield();
+
             var tcs = new TaskCompletionSource<bool>();
 
-            Vector2 originalPos = rectTransform.anchoredPosition;
-            Vector2 liftedPos = originalPos + new Vector2(0, liftHeight);
-            Vector2 targetPos = targetSlot.anchoredPosition;
+            Vector2 startPos = rectTransform.anchoredPosition;
+            Vector2 liftedPos = startPos + new Vector2(0, liftHeight);
+            Vector2 targetAnchoredPos = GetTargetAnchoredPosition(targetSlot);
+            Vector2 targetLandingPos = targetAnchoredPos;
 
-            // 그림자 생성
+            Debug.Log($"[SkillCardShiftAnimator] 현재 위치: {startPos}, 타겟 위치: {targetLandingPos}");
+
+            if (Vector2.Distance(startPos, targetLandingPos) < 1f)
+            {
+                Debug.LogWarning("[SkillCardShiftAnimator] 카드가 이미 대상 위치에 있습니다. 애니메이션 생략");
+                tcs.SetResult(true);
+                await tcs.Task;
+                return;
+            }
+
+            if (rectTransform.parent != targetSlot.parent)
+            {
+                Debug.LogWarning("[SkillCardShiftAnimator] 카드와 슬롯의 부모가 다릅니다. 위치 계산이 어긋날 수 있습니다.");
+            }
+
             GameObject shadowGO = CreateSimpleShadow(out Image shadowImage, out RectTransform shadowRect);
-            shadowRect.anchoredPosition = originalPos;
-            shadowImage.color = new Color(0f, 0f, 0f, 0f); // 투명에서 시작
+            shadowRect.anchoredPosition = startPos;
+            shadowImage.color = new Color(0f, 0f, 0f, 0f);
 
-            Sequence sequence = DOTween.Sequence();
+            Sequence seq = DOTween.Sequence();
 
-            // 1. 위로 살짝 떠오르기
-            sequence.Append(rectTransform
+            seq.Append(rectTransform
                 .DOAnchorPos(liftedPos, liftDuration)
-                .SetEase(Ease.OutCubic));
+                .SetEase(Ease.OutQuart));
 
-            // 그림자 점점 진해짐
-            sequence.Join(shadowImage
-                .DOFade(shadowAlpha, liftDuration * 0.8f)
+            seq.Join(shadowImage
+                .DOFade(shadowAlpha, liftDuration * 0.9f)
                 .SetEase(Ease.InSine));
 
-            // 2. 슬롯으로 빠르게 이동
-            sequence.AppendCallback(() =>
+            seq.AppendCallback(() =>
             {
-                if (audioSource != null && moveStartClip != null)
+                Debug.Log("[SkillCardShiftAnimator] 이동 시작");
+                if (audioSource && moveStartClip)
                     audioSource.PlayOneShot(moveStartClip);
             });
 
-            sequence.Append(rectTransform
-                .DOAnchorPos(targetPos, moveDuration)
-                .SetEase(Ease.InOutCubic));
+            seq.Append(rectTransform
+                .DOAnchorPos(targetAnchoredPos + new Vector2(0, liftHeight), moveDuration)
+                .SetEase(Ease.InOutQuad));
 
-            // 3. 도착 후 흔들리면서 착지
-            sequence.AppendCallback(() =>
+            seq.AppendCallback(() =>
             {
-                if (audioSource != null && dropClip != null)
+                Debug.Log("[SkillCardShiftAnimator] 착지 사운드 재생");
+                if (audioSource && dropClip)
                     audioSource.PlayOneShot(dropClip);
             });
 
-            sequence.Append(rectTransform
-                .DOShakeAnchorPos(dropDuration, shakeStrength, shakeVibrato, 90, false)
+            seq.Append(rectTransform
+                .DOAnchorPos(targetLandingPos, landDuration)
+                .SetEase(Ease.InCubic));
+
+            seq.Join(rectTransform
+                .DOShakeAnchorPos(landDuration, shakeStrength, shakeVibrato, 90, false)
                 .SetEase(Ease.OutSine));
 
-            sequence.OnComplete(() =>
+            seq.OnComplete(() =>
             {
+                Debug.Log("[SkillCardShiftAnimator] 이동 애니메이션 완료");
                 Destroy(shadowGO);
                 tcs.SetResult(true);
             });
@@ -95,19 +109,28 @@ namespace Game.CombatSystem.Animation
             await tcs.Task;
         }
 
-        /// <summary>
-        /// 단순 사각형 그림자를 생성합니다 (Sprite 없이 Color만으로 그림자 효과).
-        /// </summary>
+        private Vector2 GetTargetAnchoredPosition(RectTransform target)
+        {
+            Vector3 worldPos = target.TransformPoint(target.rect.center);
+            Vector3 local = rectTransform.parent.InverseTransformPoint(worldPos);
+            Debug.Log($"[SkillCardShiftAnimator] 변환된 타겟 anchoredPosition: {local}");
+            return new Vector2(local.x, local.y);
+        }
+
         private GameObject CreateSimpleShadow(out Image shadowImage, out RectTransform shadowRect)
         {
             GameObject shadowGO = new GameObject("MoveShadow", typeof(RectTransform), typeof(Image));
-            shadowGO.transform.SetParent(transform.parent, false);
+
+            // 카드와 같은 부모를 갖게 한다 (UI 기준 좌표 동일하게 유지)
+            shadowGO.transform.SetParent(rectTransform.parent, false);
 
             shadowRect = shadowGO.GetComponent<RectTransform>();
             shadowRect.anchorMin = rectTransform.anchorMin;
             shadowRect.anchorMax = rectTransform.anchorMax;
             shadowRect.pivot = rectTransform.pivot;
             shadowRect.sizeDelta = rectTransform.sizeDelta;
+            shadowRect.anchoredPosition = rectTransform.anchoredPosition; // 위치 일치
+            shadowRect.localScale = Vector3.one;
             shadowRect.SetSiblingIndex(rectTransform.GetSiblingIndex());
 
             shadowImage = shadowGO.GetComponent<Image>();

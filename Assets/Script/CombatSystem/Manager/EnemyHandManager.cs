@@ -11,6 +11,8 @@ using Game.SkillCardSystem.Deck;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
 using Game.CombatSystem.Utility;
+using Game.CombatSystem.Animation;
+using System.Threading.Tasks;
 
 namespace Game.CombatSystem.Manager
 {
@@ -349,15 +351,34 @@ namespace Game.CombatSystem.Manager
 
             var ui = cardUIs.TryGetValue(from, out var oldUI) ? oldUI : null;
 
+            // 1. UI 애니메이션 실행을 위한 준비
+            if (ui != null && ui.TryGetComponent<SkillCardShiftAnimator>(out var animator))
+            {
+                var toSlotRect = ((MonoBehaviour)toSlot).GetComponent<RectTransform>();
+
+                // 월드 좌표 유지한 채 부모 임시 변경
+                ui.transform.SetParent(toSlotRect.parent, true);
+
+                // 비동기 애니메이션 실행을 따로 처리 (동기 흐름 유지)
+                _ = animator.PlayMoveAnimationAsync(toSlotRect).ContinueWith(_ =>
+                {
+                    // 애니메이션이 끝난 후 카드 위치 갱신
+                    UnityMainThreadDispatcher.Enqueue(() =>
+                    {
+                        ui.transform.SetParent(((MonoBehaviour)toSlot).transform, false);
+                        ui.transform.localPosition = Vector3.zero;
+                        ui.transform.localScale = Vector3.one;
+                    });
+                });
+            }
+
+            // 2. 슬롯 및 카드 데이터 갱신
             fromSlot.Clear();
             toSlot.SetCard(card);
             card.SetHandSlot(to);
 
             if (ui != null)
             {
-                ui.transform.SetParent(((MonoBehaviour)toSlot).transform, false);
-                ui.transform.localPosition = Vector3.zero;
-                ui.transform.localScale = Vector3.one;
                 cardUIs[to] = ui;
                 cardUIs.Remove(from);
             }
@@ -368,6 +389,7 @@ namespace Game.CombatSystem.Manager
             Debug.Log($"[EnemyHandManager] 카드 이동: {from} → {to}");
             return true;
         }
+
 
         #endregion
     }
