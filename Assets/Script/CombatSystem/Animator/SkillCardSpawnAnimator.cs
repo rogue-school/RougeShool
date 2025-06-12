@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
 using System.Threading.Tasks;
+using System.Collections;
 
 namespace Game.CombatSystem.Animation
 {
@@ -126,5 +127,10 @@ namespace Game.CombatSystem.Animation
             PlaySpawnAnimation(_ => tcs.SetResult(true));
             return tcs.Task;
         }
+        public IEnumerator PlaySpawnAnimationCoroutine()
+        {
+            yield return new WaitForSeconds(0.3f); // DOTween Sequence 또는 단순한 등장 효과 코루틴
+        }
+
     }
 }

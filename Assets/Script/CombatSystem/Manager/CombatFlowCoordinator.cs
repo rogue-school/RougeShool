@@ -15,6 +15,8 @@ using Game.CharacterSystem.Core;
 using Game.SkillCardSystem.Effect;
 using Game.Utility;
 using Game.CombatSystem.State;
+using Game.CombatSystem.Animation;
+using System.Threading.Tasks;
 
 namespace Game.CombatSystem.Core
 {
@@ -82,9 +84,21 @@ namespace Game.CombatSystem.Core
             StartCoroutine(PerformCombatPreparation(onComplete));
         }
 
-        #endregion
+        public void RegisterCardToTurnRegistry(CombatSlotPosition pos, ISkillCard card, ISkillCardUI ui)
+        {
+            if (ui is not SkillCardUI concreteUI)
+            {
+                Debug.LogError("[CombatFlowCoordinator] RegisterCardToTurnRegistry 실패: ui가 SkillCardUI 아님");
+                return;
+            }
 
-        #region 전투 준비 단계
+            turnCardRegistry.RegisterCard(pos, card, concreteUI, SlotOwner.ENEMY);
+        }
+
+        public IEnumerator RegisterCardToCombatSlotCoroutine(CombatSlotPosition pos, ISkillCard card, ISkillCardUI ui)
+        {
+            yield return RegisterCardToCombatSlotCoroutine(pos, card, ui as SkillCardUI); // 다운캐스팅 유의
+        }
 
         public IEnumerator PerformCombatPreparation() => PerformCombatPreparation(_ => { });
 
@@ -106,6 +120,7 @@ namespace Game.CombatSystem.Core
             }
 
             yield return new WaitForSeconds(0.5f);
+
             IsEnemyFirst = UnityEngine.Random.value < 0.5f;
             var slotToRegister = IsEnemyFirst ? CombatSlotPosition.FIRST : CombatSlotPosition.SECOND;
 
@@ -121,8 +136,16 @@ namespace Game.CombatSystem.Core
             if (cardToRegister != null && uiToRegister != null)
             {
                 turnCardRegistry.RegisterCard(slotToRegister, cardToRegister, uiToRegister, SlotOwner.ENEMY);
-                RegisterCardToCombatSlot(slotToRegister, cardToRegister, uiToRegister);
-                yield return new WaitForSeconds(0.6f);
+
+                // UI 애니메이션 완료까지 대기
+                bool animationComplete = false;
+                UnityMainThreadDispatcher.Enqueue(async () =>
+                {
+                    await RegisterCardToCombatSlotAsync(slotToRegister, cardToRegister, uiToRegister);
+                    animationComplete = true;
+                });
+
+                yield return new WaitUntil(() => animationComplete);
             }
             else
             {
@@ -155,6 +178,107 @@ namespace Game.CombatSystem.Core
             ui.transform.SetParent(combatSlot.GetTransform());
             ui.transform.localPosition = Vector3.zero;
             ui.transform.localScale = Vector3.one;
+
+            combatSlot.SetCard(card);
+            combatSlot.SetCardUI(ui);
+        }
+        /// <summary>
+        /// 카드와 UI를 지정된 전투 슬롯에 애니메이션을 포함하여 등록합니다.
+        /// </summary>
+        /// <summary>
+        /// 카드와 UI를 지정된 전투 슬롯에 애니메이션을 포함하여 등록합니다.
+        /// </summary>
+        public async Task RegisterCardToCombatSlotAsync(CombatSlotPosition pos, ISkillCard card, SkillCardUI ui)
+        {
+            var slot = slotRegistry.GetCombatSlot(pos);
+            if (slot is not ICombatCardSlot combatSlot)
+            {
+                Debug.LogError($"[CombatFlowCoordinator] 전투 슬롯 {pos}이 null이거나 ICombatCardSlot이 아님.");
+                return; // 모든 경로가 Task 종료되도록 명시
+            }
+
+            var slotRectTransform = combatSlot.GetTransform() as RectTransform;
+            if (slotRectTransform == null)
+            {
+                Debug.LogError($"[CombatFlowCoordinator] 슬롯 {pos}의 Transform이 RectTransform이 아닙니다.");
+                return;
+            }
+
+            if (ui is MonoBehaviour uiMb)
+            {
+                var shiftAnimator = uiMb.GetComponent<SkillCardShiftAnimator>();
+                var spawnAnimator = uiMb.GetComponent<SkillCardSpawnAnimator>();
+
+                // 부모를 임시로 월드 유지용으로 설정
+                uiMb.transform.SetParent(slotRectTransform.parent, true);
+
+                // 이동 애니메이션
+                if (shiftAnimator != null)
+                    await shiftAnimator.PlayMoveAnimationAsync(slotRectTransform);
+
+                // 슬롯에 부착
+                uiMb.transform.SetParent(slotRectTransform, false);
+                uiMb.transform.localPosition = Vector3.zero;
+                uiMb.transform.localScale = Vector3.one;
+
+                // 등장 애니메이션
+                if (spawnAnimator != null)
+                    await spawnAnimator.PlaySpawnAnimationAsync();
+            }
+            else
+            {
+                // 애니메이션 없는 기본 처리
+                ui.transform.SetParent(slotRectTransform);
+                ui.transform.localPosition = Vector3.zero;
+                ui.transform.localScale = Vector3.one;
+            }
+
+            // 슬롯에 카드 등록
+            combatSlot.SetCard(card);
+            combatSlot.SetCardUI(ui);
+
+            // 모든 경로가 Task를 완료해야 하므로 명시적으로 종료
+            await Task.CompletedTask;
+        }
+        public IEnumerator RegisterCardToCombatSlotCoroutine(CombatSlotPosition pos, ISkillCard card, SkillCardUI ui)
+        {
+            var slot = slotRegistry.GetCombatSlot(pos);
+            if (slot is not ICombatCardSlot combatSlot)
+            {
+                Debug.LogError($"[CombatFlowCoordinator] 전투 슬롯 {pos}이 null이거나 ICombatCardSlot이 아님.");
+                yield break;
+            }
+
+            var slotRect = combatSlot.GetTransform() as RectTransform;
+            if (slotRect == null)
+            {
+                Debug.LogError($"[CombatFlowCoordinator] 슬롯 {pos}의 Transform이 RectTransform이 아님");
+                yield break;
+            }
+
+            if (ui is MonoBehaviour uiMb)
+            {
+                var shiftAnimator = uiMb.GetComponent<SkillCardShiftAnimator>();
+                var spawnAnimator = uiMb.GetComponent<SkillCardSpawnAnimator>();
+
+                uiMb.transform.SetParent(slotRect.parent, true);
+
+                if (shiftAnimator != null)
+                    yield return shiftAnimator.PlayMoveAnimationCoroutine(slotRect);
+
+                uiMb.transform.SetParent(slotRect, false);
+                uiMb.transform.localPosition = Vector3.zero;
+                uiMb.transform.localScale = Vector3.one;
+
+                if (spawnAnimator != null)
+                    yield return spawnAnimator.PlaySpawnAnimationCoroutine();
+            }
+            else
+            {
+                ui.transform.SetParent(slotRect);
+                ui.transform.localPosition = Vector3.zero;
+                ui.transform.localScale = Vector3.one;
+            }
 
             combatSlot.SetCard(card);
             combatSlot.SetCardUI(ui);

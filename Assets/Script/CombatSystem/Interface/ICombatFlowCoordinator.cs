@@ -14,6 +14,8 @@ namespace Game.CombatSystem.Interface
     public interface ICombatFlowCoordinator
     {
         #region 초기화 및 준비
+        void RegisterCardToTurnRegistry(CombatSlotPosition pos, ISkillCard card, ISkillCardUI ui);
+        IEnumerator RegisterCardToCombatSlotCoroutine(CombatSlotPosition pos, ISkillCard card, ISkillCardUI ui);
 
         /// <summary>
         /// 슬롯 초기화, 캐릭터 배치 등 전투 준비 절차를 수행합니다.

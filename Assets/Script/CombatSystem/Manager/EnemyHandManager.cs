@@ -389,8 +389,21 @@ namespace Game.CombatSystem.Manager
             Debug.Log($"[EnemyHandManager] 카드 이동: {from} → {to}");
             return true;
         }
+        public IEnumerator PopCardAndRegisterToCombatSlotCoroutine(ICombatFlowCoordinator flowCoordinator)
+        {
+            var (card, ui) = PopCardFromSlot(SkillCardSlotPosition.ENEMY_SLOT_1);
+            if (card == null || ui == null)
+            {
+                Debug.LogWarning("[EnemyHandManager] 카드 등록 실패: 카드 또는 UI가 null");
+                yield break;
+            }
 
+            var slotPos = flowCoordinator.IsEnemyFirst ? CombatSlotPosition.FIRST : CombatSlotPosition.SECOND;
 
+            flowCoordinator.RegisterCardToTurnRegistry(slotPos, card, ui);
+
+            yield return flowCoordinator.RegisterCardToCombatSlotCoroutine(slotPos, card, ui);
+        }
         #endregion
     }
 }

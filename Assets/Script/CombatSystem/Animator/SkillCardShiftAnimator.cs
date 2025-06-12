@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
 using System.Threading.Tasks;
+using System.Collections;
 
 namespace Game.CombatSystem.Animation
 {
@@ -30,6 +31,15 @@ namespace Game.CombatSystem.Animation
         {
             rectTransform = GetComponent<RectTransform>();
         }
+        public IEnumerator PlayMoveAnimationCoroutine(RectTransform targetSlot)
+        {
+            if (TryGetComponent(out RectTransform rt))
+            {
+                Vector3 targetPos = targetSlot.position;
+                yield return rt.DOMove(targetPos, 0.4f).SetEase(Ease.InOutCubic).WaitForCompletion();
+            }
+        }
+
 
         public async Task PlayMoveAnimationAsync(RectTransform targetSlot)
         {

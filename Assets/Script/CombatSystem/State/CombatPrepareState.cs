@@ -91,8 +91,8 @@ namespace Game.CombatSystem.State
             yield return enemyHandManager.StepwiseFillSlotsFromBack(0.3f);
             yield return WaitForEnemyCardReady();
 
-            enemyHandManager.PopCardAndRegisterToCombatSlot(flowCoordinator);
-            yield return new WaitForSeconds(0.25f);
+            // 개선된 부분: 카드 등록 애니메이션 완료까지 대기
+            yield return enemyHandManager.PopCardAndRegisterToCombatSlotCoroutine(flowCoordinator);
 
             yield return enemyHandManager.StepwiseFillSlotsFromBack(0.3f);
 

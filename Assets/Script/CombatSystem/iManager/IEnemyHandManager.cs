@@ -12,6 +12,8 @@ using Game.SkillCardSystem.UI;
 /// </summary>
 public interface IEnemyHandManager
 {
+    IEnumerator PopCardAndRegisterToCombatSlotCoroutine(ICombatFlowCoordinator flowCoordinator);
+
     /// <summary>
     /// 적 캐릭터를 기반으로 핸드를 초기화합니다.
     /// </summary>
