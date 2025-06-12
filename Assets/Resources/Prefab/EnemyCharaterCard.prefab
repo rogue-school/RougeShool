@@ -361,6 +361,7 @@ GameObject:
   - component: {fileID: 2886042496763500975}
   - component: {fileID: 1784468190560083363}
   - component: {fileID: 8744304457702177956}
+  - component: {fileID: 3204949284726287543}
   m_Layer: 5
   m_Name: EnemyCharaterCard
   m_TagString: Untagged
@@ -421,6 +422,18 @@ MonoBehaviour:
   nameText: {fileID: 3990270840846056283}
   hpText: {fileID: 6969683324459299986}
   portraitImage: {fileID: 1631975328147475406}
+--- !u!225 &3204949284726287543
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7769799778275336730}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &8157524478772256498
 GameObject:
   m_ObjectHideFlags: 0

@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7624428577981995439}
+  - component: {fileID: -3263682122566307004}
   - component: {fileID: 4627134175914890069}
   - component: {fileID: 8036713322244148843}
   - component: {fileID: 650616450906029805}
@@ -43,6 +44,24 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 180, y: 260}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &-3263682122566307004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 533812852039730097}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef5d6dc0f15a388488ac5161fcb19198, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  audioSource: {fileID: 0}
+  spawnSound: {fileID: 0}
+  spawnEffectPrefab: {fileID: 0}
+  initialShadowAlpha: 0.2
+  finalShadowAlpha: 1
+  cardStartOffsetY: 50
 --- !u!114 &4627134175914890069
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -57,8 +76,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardNameText: {fileID: 6343866420080280198}
   damageText: {fileID: 0}
-  cardArtImage: {fileID: 8351446843463734416}
   descriptionText: {fileID: 4373988456861928914}
+  cardArtImage: {fileID: 8351446843463734416}
   coolTimeOverlay: {fileID: 0}
   coolTimeText: {fileID: 0}
   canvasGroup: {fileID: 0}

@@ -4,6 +4,7 @@ using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Slot;
 using Game.SkillCardSystem.UI;
+using Game.CombatSystem.Animation;
 
 namespace Game.CombatSystem.UI
 {
@@ -32,6 +33,13 @@ namespace Game.CombatSystem.UI
         public void SetCardUI(ISkillCardUI ui)
         {
             currentCardUI = ui;
+
+            // 적 카드에도 애니메이션 자동 실행
+            if (ui is MonoBehaviour uiMb)
+            {
+                var animator = uiMb.GetComponent<SkillCardSpawnAnimator>();
+                animator?.PlaySpawnAnimation();
+            }
         }
 
         public void Clear()
