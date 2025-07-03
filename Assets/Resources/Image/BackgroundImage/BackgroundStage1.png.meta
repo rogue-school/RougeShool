@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 0f65f10a1180a2349b243fbed603ebc0
+guid: f7c472763a4b1c740ad9a73730b11eb6
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 6842777701766990305
-    second: card 1_0
+      213: 2208447124367991660
+    second: background_ui_forest_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: card 1_0
+      name: background_ui_forest_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 197
-        height: 296
+        width: 1920
+        height: 1080
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 1e909cea01e66fe50800000000000000
-      internalID: 6842777701766990305
+      spriteID: c63ef2175faf5ae10800000000000000
+      internalID: 2208447124367991660
       vertices: []
       indices: 
       edges: []
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      card 1_0: 6842777701766990305
+      background_ui_forest_0: 2208447124367991660
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
