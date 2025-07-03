@@ -1,0 +1,871 @@
+fileFormatVersion: 2
+guid: dfc5e66e72c5b1041bdc492055269139
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -7177521255890472194
+    second: Rogue School_0
+  - first:
+      213: 97745788072960874
+    second: Rogue School_1
+  - first:
+      213: 9170284028400994244
+    second: Rogue School_2
+  - first:
+      213: -1211322989933547219
+    second: Rogue School_3
+  - first:
+      213: 2591366105910400951
+    second: Rogue School_4
+  - first:
+      213: 1826163372218112562
+    second: Rogue School_5
+  - first:
+      213: -2903884620948720256
+    second: Rogue School_6
+  - first:
+      213: 1770261316539563137
+    second: Rogue School_7
+  - first:
+      213: -69760633710615118
+    second: Rogue School_8
+  - first:
+      213: 4535190090879050136
+    second: Rogue School_9
+  - first:
+      213: -1082719930626420394
+    second: Rogue School_10
+  - first:
+      213: 7493886047699247998
+    second: Rogue School_11
+  - first:
+      213: -7906360776973938196
+    second: Rogue School_12
+  - first:
+      213: -1318811884688066225
+    second: Rogue School_13
+  - first:
+      213: 1266312195020789657
+    second: Rogue School_14
+  - first:
+      213: 4038374765846796835
+    second: Rogue School_15
+  - first:
+      213: -5628601354854575638
+    second: Rogue School_16
+  - first:
+      213: 3640480299056788680
+    second: Rogue School_17
+  - first:
+      213: 4601967033971786625
+    second: Rogue School_18
+  - first:
+      213: -6510565887534468863
+    second: Rogue School_19
+  - first:
+      213: 4093827156760690804
+    second: Rogue School_20
+  - first:
+      213: -3121275550694501254
+    second: Rogue School_21
+  - first:
+      213: -4879526429488602786
+    second: Rogue School_22
+  - first:
+      213: -139240041208076465
+    second: Rogue School_23
+  - first:
+      213: 2934419359211578014
+    second: Rogue School_24
+  - first:
+      213: -3153229306518004994
+    second: Rogue School_25
+  - first:
+      213: 8063938525033553791
+    second: Rogue School_26
+  - first:
+      213: -3154437627316363015
+    second: Rogue School_27
+  - first:
+      213: -3971616260689476944
+    second: Rogue School_28
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Rogue School_0
+      rect:
+        serializedVersion: 2
+        x: 97
+        y: 296
+        width: 194
+        height: 569
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ef235d62272546c90800000000000000
+      internalID: -7177521255890472194
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rogue School_1
+      rect:
+        serializedVersion: 2
+        x: 279
+        y: 685
+        width: 219
+        height: 247
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a632160c6434b5100800000000000000
+      internalID: 97745788072960874
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rogue School_2
+      rect:
+        serializedVersion: 2
+        x: 456
+        y: 626
+        width: 108
+        height: 193
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4c78742dcb4634f70800000000000000
+      internalID: 9170284028400994244
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rogue School_3
+      rect:
+        serializedVersion: 2
+        x: 463
+        y: 815
+        width: 113
+        height: 156
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d213fb49824803fe0800000000000000
+      internalID: -1211322989933547219
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rogue School_4
+      rect:
+        serializedVersion: 2
+        x: 559
+        y: 759
+        width: 68
+        height: 94
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7b7d6c16eb166f320800000000000000
+      internalID: 2591366105910400951
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rogue School_5
+      rect:
+        serializedVersion: 2
+        x: 575
+        y: 639
+        width: 170
+        height: 286
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 23ad3ee59e5d75910800000000000000
+      internalID: 1826163372218112562
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rogue School_6
+      rect:
+        serializedVersion: 2
+        x: 741
+        y: 797
+        width: 48
+        height: 52
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 085b1ab925453b7d0800000000000000
+      internalID: -2903884620948720256
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rogue School_7
+      rect:
+        serializedVersion: 2
+        x: 401
+        y: 635
+        width: 50
+        height: 126
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 18cb4f3c94b319810800000000000000
+      internalID: 1770261316539563137
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rogue School_8
+      rect:
+        serializedVersion: 2
+        x: 569
+        y: 635
+        width: 53
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2b56f50c219280ff0800000000000000
+      internalID: -69760633710615118
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rogue School_9
+      rect:
+        serializedVersion: 2
+        x: 775
+        y: 694
+        width: 42
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 891a7b3fb5b30fe30800000000000000
+      internalID: 4535190090879050136
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rogue School_10
+      rect:
+        serializedVersion: 2
+        x: 247
+        y: 492
+        width: 261
+        height: 178
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 651d6c7a5f769f0f0800000000000000
+      internalID: -1082719930626420394
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rogue School_11
+      rect:
+        serializedVersion: 2
+        x: 770
+        y: 647
+        width: 22
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e73ae54f7a1aff760800000000000000
+      internalID: 7493886047699247998
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rogue School_12
+      rect:
+        serializedVersion: 2
+        x: 835
+        y: 640
+        width: 38
+        height: 48
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ce1136653c6f64290800000000000000
+      internalID: -7906360776973938196
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rogue School_13
+      rect:
+        serializedVersion: 2
+        x: 503
+        y: 446
+        width: 256
+        height: 188
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f49ba970493a2bde0800000000000000
+      internalID: -1318811884688066225
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rogue School_14
+      rect:
+        serializedVersion: 2
+        x: 746
+        y: 495
+        width: 112
+        height: 136
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 99795fe6b38d29110800000000000000
+      internalID: 1266312195020789657
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rogue School_15
+      rect:
+        serializedVersion: 2
+        x: 877
+        y: 542
+        width: 38
+        height: 52
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 32a133c04703b0830800000000000000
+      internalID: 4038374765846796835
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rogue School_16
+      rect:
+        serializedVersion: 2
+        x: 207
+        y: 304
+        width: 217
+        height: 177
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ae15c9da3e033e1b0800000000000000
+      internalID: -5628601354854575638
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rogue School_17
+      rect:
+        serializedVersion: 2
+        x: 415
+        y: 307
+        width: 138
+        height: 182
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8c4761d3b85958230800000000000000
+      internalID: 3640480299056788680
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rogue School_18
+      rect:
+        serializedVersion: 2
+        x: 544
+        y: 304
+        width: 130
+        height: 137
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 18342f792a87ddf30800000000000000
+      internalID: 4601967033971786625
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rogue School_19
+      rect:
+        serializedVersion: 2
+        x: 675
+        y: 438
+        width: 29
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1017bbad1d2d5a5a0800000000000000
+      internalID: -6510565887534468863
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rogue School_20
+      rect:
+        serializedVersion: 2
+        x: 675
+        y: 304
+        width: 128
+        height: 137
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 470819aeb1230d830800000000000000
+      internalID: 4093827156760690804
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rogue School_21
+      rect:
+        serializedVersion: 2
+        x: 798
+        y: 306
+        width: 68
+        height: 181
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a741eb28c600fa4d0800000000000000
+      internalID: -3121275550694501254
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rogue School_22
+      rect:
+        serializedVersion: 2
+        x: 871
+        y: 400
+        width: 41
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e51a332b090784cb0800000000000000
+      internalID: -4879526429488602786
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rogue School_23
+      rect:
+        serializedVersion: 2
+        x: 885
+        y: 343
+        width: 14
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f4728459be1511ef0800000000000000
+      internalID: -139240041208076465
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rogue School_24
+      rect:
+        serializedVersion: 2
+        x: 143
+        y: 255
+        width: 16
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e92e5d72cd629b820800000000000000
+      internalID: 2934419359211578014
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rogue School_25
+      rect:
+        serializedVersion: 2
+        x: 188
+        y: 105
+        width: 572
+        height: 184
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: efa94a9f6aa7d34d0800000000000000
+      internalID: -3153229306518004994
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rogue School_26
+      rect:
+        serializedVersion: 2
+        x: 293
+        y: 257
+        width: 33
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f7f563b2d5dd8ef60800000000000000
+      internalID: 8063938525033553791
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rogue School_27
+      rect:
+        serializedVersion: 2
+        x: 560
+        y: 267
+        width: 23
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9f0aeadd0bf2934d0800000000000000
+      internalID: -3154437627316363015
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Rogue School_28
+      rect:
+        serializedVersion: 2
+        x: 781
+        y: 243
+        width: 36
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0b2407dad0cf1e8c0800000000000000
+      internalID: -3971616260689476944
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Rogue School_0: -7177521255890472194
+      Rogue School_1: 97745788072960874
+      Rogue School_10: -1082719930626420394
+      Rogue School_11: 7493886047699247998
+      Rogue School_12: -7906360776973938196
+      Rogue School_13: -1318811884688066225
+      Rogue School_14: 1266312195020789657
+      Rogue School_15: 4038374765846796835
+      Rogue School_16: -5628601354854575638
+      Rogue School_17: 3640480299056788680
+      Rogue School_18: 4601967033971786625
+      Rogue School_19: -6510565887534468863
+      Rogue School_2: 9170284028400994244
+      Rogue School_20: 4093827156760690804
+      Rogue School_21: -3121275550694501254
+      Rogue School_22: -4879526429488602786
+      Rogue School_23: -139240041208076465
+      Rogue School_24: 2934419359211578014
+      Rogue School_25: -3153229306518004994
+      Rogue School_26: 8063938525033553791
+      Rogue School_27: -3154437627316363015
+      Rogue School_28: -3971616260689476944
+      Rogue School_3: -1211322989933547219
+      Rogue School_4: 2591366105910400951
+      Rogue School_5: 1826163372218112562
+      Rogue School_6: -2903884620948720256
+      Rogue School_7: 1770261316539563137
+      Rogue School_8: -69760633710615118
+      Rogue School_9: 4535190090879050136
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
