@@ -45,49 +45,80 @@ namespace Game.CombatSystem.Manager
         /// <returns>적 스폰 결과</returns>
         public EnemySpawnResult SpawnEnemy(EnemyCharacterData data)
         {
+            EnemySpawnResult result = null;
+            bool done = false;
+            StartCoroutine(SpawnEnemyWithAnimation(data, r => { result = r; done = true; }));
+            while (!done) { } // 동기 방식이므로 실제 게임에서는 코루틴 사용 권장
+            return result;
+        }
+
+        /// <summary>
+        /// 적 프리팹 생성/데이터 주입 → 등장 애니메이션(1.5초) → 슬롯/매니저 등록 → 콜백 호출까지 순차적으로 처리하는 코루틴
+        /// </summary>
+        public System.Collections.IEnumerator SpawnEnemyWithAnimation(EnemyCharacterData data, System.Action<EnemySpawnResult> onComplete)
+        {
             if (data == null || slotRegistry == null)
-                return null;
+            {
+                onComplete?.Invoke(null);
+                yield break;
+            }
 
             var slot = slotRegistry.GetCharacterSlotRegistry()?.GetCharacterSlot(SlotOwner.ENEMY);
             if (slot == null)
             {
                 Debug.LogError("[EnemySpawnerManager] 적 캐릭터 슬롯을 찾을 수 없습니다.");
-                return null;
+                onComplete?.Invoke(null);
+                yield break;
             }
 
             // 기존 적 제거
             var existing = slot.GetCharacter() as EnemyCharacter;
             if (existing != null && !existing.IsDead())
-                return new EnemySpawnResult(existing, false);
+            {
+                onComplete?.Invoke(new EnemySpawnResult(existing, false));
+                yield break;
+            }
 
             foreach (Transform child in slot.GetTransform())
-                Destroy(child.gameObject);
+                Object.Destroy(child.gameObject);
 
             var prefab = data.Prefab ?? defaultEnemyPrefab;
             if (prefab == null)
             {
                 Debug.LogError("[EnemySpawnerManager] 프리팹이 설정되지 않았습니다.");
-                return null;
+                onComplete?.Invoke(null);
+                yield break;
             }
 
-            var instance = Instantiate(prefab, slot.GetTransform());
+            var instance = Object.Instantiate(prefab, slot.GetTransform());
             instance.name = data.DisplayName;
             instance.transform.localPosition = Vector3.zero;
 
+            // 1. EnemyCharacter 컴포넌트 및 데이터 세팅 (애니메이션 전에)
             if (!instance.TryGetComponent(out EnemyCharacter enemy))
             {
                 Debug.LogError("[EnemySpawnerManager] EnemyCharacter 컴포넌트 누락");
-                Destroy(instance);
-                return null;
+                Object.Destroy(instance);
+                onComplete?.Invoke(null);
+                yield break;
+            }
+            enemy.Initialize(data); // ★ 데이터 먼저 주입
+
+            // 2. 등장 애니메이션 실행 및 대기
+            var animator = instance.GetComponent<Game.CombatSystem.Animation.CharacterSpawnAnimator>();
+            bool animDone = false;
+            if (animator != null)
+            {
+                animator.PlaySpawnAnimation(400f, 1.5f, _ => animDone = true); // 위에서 아래로, 1.5초
+                yield return new WaitUntil(() => animDone);
             }
 
-            enemy.Initialize(data);
+            // 3. 슬롯/매니저 등록
             slot.SetCharacter(enemy);
-
             enemyManager?.RegisterEnemy(enemy);
             spawnedEnemies.Add(enemy);
 
-            return new EnemySpawnResult(enemy, true);
+            onComplete?.Invoke(new EnemySpawnResult(enemy, true));
         }
 
         /// <summary>

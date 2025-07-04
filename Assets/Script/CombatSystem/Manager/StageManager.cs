@@ -6,6 +6,7 @@ using Game.CharacterSystem.Interface;
 using Game.CombatSystem.Interface;
 using Game.CharacterSystem.Core;
 using Zenject;
+using Game.CombatSystem.Utility;
 
 namespace Game.CombatSystem.Manager
 {
@@ -41,49 +42,56 @@ namespace Game.CombatSystem.Manager
         #region 적 생성 흐름
 
         /// <summary>
-        /// 다음 적을 생성하여 전투에 배치합니다.
+        /// 다음 적을 생성하여 전투에 배치합니다. (코루틴 기반)
         /// </summary>
-        public void SpawnNextEnemy()
+        public System.Collections.IEnumerator SpawnNextEnemyCoroutine()
         {
             if (isSpawning)
             {
                 Debug.LogWarning("[StageManager] 중복 스폰 방지");
-                return;
+                yield break;
             }
 
             if (!spawnValidator.CanSpawnEnemy())
             {
                 Debug.LogWarning("[StageManager] 스폰 조건 미충족");
-                return;
+                yield break;
             }
 
             if (enemyManager.GetEnemy() != null)
             {
                 Debug.LogWarning("[StageManager] 이미 적이 존재합니다.");
-                return;
+                yield break;
             }
 
             if (!TryGetNextEnemyData(out var data))
             {
                 Debug.LogWarning("[StageManager] 다음 적 데이터를 가져올 수 없습니다.");
-                return;
+                yield break;
             }
 
             isSpawning = true;
-
-            var result = spawnerManager.SpawnEnemy(data);
+            EnemySpawnResult result = null;
+            bool done = false;
+            yield return spawnerManager.SpawnEnemyWithAnimation(data, r => { result = r; done = true; });
             if (result?.Enemy == null)
             {
                 Debug.LogError("[StageManager] 적 생성 실패");
                 isSpawning = false;
-                return;
+                yield break;
             }
-
             RegisterEnemy(result.Enemy);
             currentEnemyIndex++;
-
             isSpawning = false;
             Debug.Log("[StageManager] 적 생성 완료");
+        }
+
+        /// <summary>
+        /// 기존 API 호환성을 위해 StartCoroutine으로 코루틴을 호출
+        /// </summary>
+        public void SpawnNextEnemy()
+        {
+            StartCoroutine(SpawnNextEnemyCoroutine());
         }
 
         /// <summary>

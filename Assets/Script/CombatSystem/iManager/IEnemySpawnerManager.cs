@@ -25,6 +25,11 @@ namespace Game.IManager
         EnemySpawnResult SpawnEnemy(EnemyCharacterData data);
 
         /// <summary>
+        /// 적 프리팹 생성/데이터 주입 → 등장 애니메이션 → 슬롯/매니저 등록 → 콜백 호출까지 순차적으로 처리하는 코루틴
+        /// </summary>
+        System.Collections.IEnumerator SpawnEnemyWithAnimation(EnemyCharacterData data, System.Action<EnemySpawnResult> onComplete);
+
+        /// <summary>
         /// 현재 스폰된 모든 적 캐릭터 목록을 반환합니다.
         /// </summary>
         /// <returns>적 캐릭터 리스트</returns>

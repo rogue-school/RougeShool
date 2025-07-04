@@ -407,13 +407,9 @@ MonoBehaviour:
   audioSource: {fileID: 0}
   moveStartClip: {fileID: 8300000, guid: 0b0244917c671ef43a3266c34247ebb6, type: 3}
   dropClip: {fileID: 0}
-  shadowAlpha: 0.7
-  liftHeight: 10
-  liftDuration: 0.2
-  moveDuration: 0.4
-  landDuration: 0.4
-  shakeStrength: 10
-  shakeVibrato: 10
+  liftDuration: 0.09
+  moveDuration: 0.13
+  landDuration: 0.07
 --- !u!114 &-5447726107167967776
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -428,10 +424,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   audioSource: {fileID: 607576657980173678}
   spawnSound: {fileID: 8300000, guid: 0b0244917c671ef43a3266c34247ebb6, type: 3}
+  totalDuration: 0.16
+  cardDelay: 0.04
   spawnEffectPrefab: {fileID: 0}
-  initialShadowAlpha: 0.5
-  finalShadowAlpha: 0.8
-  cardStartOffsetY: 40
 --- !u!114 &1618739127005215588
 MonoBehaviour:
   m_ObjectHideFlags: 0

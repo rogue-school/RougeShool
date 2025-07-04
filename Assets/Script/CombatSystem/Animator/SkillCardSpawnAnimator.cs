@@ -22,6 +22,10 @@ namespace Game.CombatSystem.Animation
         private float initialShadowAlpha = 0.5f;
         private float finalShadowAlpha = 0.8f;
 
+        [Header("Animation Speed")]
+        [SerializeField] private float totalDuration = 0.22f; // 기존 0.32f → 0.22f
+        [SerializeField] private float cardDelay = 0.01f;     // 기존 0.02f → 0.01f
+
         [Header("Visual Effect")]
         [SerializeField] private GameObject spawnEffectPrefab;
 
@@ -40,8 +44,8 @@ namespace Game.CombatSystem.Animation
         /// <param name="onComplete">애니메이션 완료 후 호출되는 콜백 (월드 좌표 반환)</param>
         public void PlaySpawnAnimation(System.Action<Vector3> onComplete = null)
         {
-            float totalDuration = 0.32f;
-            float cardDelay = 0.02f;
+            // float totalDuration = 0.32f;
+            // float cardDelay = 0.02f;
             float cardDropDuration = totalDuration - cardDelay;
 
             // 카드 초기 위치 설정
@@ -131,7 +135,7 @@ namespace Game.CombatSystem.Animation
         /// </summary>
         public IEnumerator PlaySpawnAnimationCoroutine()
         {
-            float totalDuration = 0.32f; // PlaySpawnAnimation의 실제 애니메이션 총 시간과 맞춤
+            // float totalDuration = 0.32f; // PlaySpawnAnimation의 실제 애니메이션 총 시간과 맞춤
             PlaySpawnAnimation();
             yield return new WaitForSeconds(totalDuration);
         }

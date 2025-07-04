@@ -27,11 +27,11 @@ namespace Game.CombatSystem.Animation
         }
 
         /// <summary>
-        /// 그림자가 먼저 도착하고, 캐릭터가 그 후 따라오는 순차적 등장 애니메이션
+        /// 등장 방향(오프셋)과 속도를 지정할 수 있는 등장 애니메이션
         /// </summary>
-        public void PlaySpawnAnimation(float verticalOffset, System.Action<Vector3> onComplete = null)
+        public void PlaySpawnAnimation(float verticalOffset, float duration = 0.8f, System.Action<Vector3> onComplete = null)
         {
-            float totalDuration = 0.5f;
+            float totalDuration = duration;
             float shadowDuration = totalDuration * 0.5f;
             float characterDuration = totalDuration * 0.5f;
 

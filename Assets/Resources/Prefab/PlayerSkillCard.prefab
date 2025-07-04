@@ -59,10 +59,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   audioSource: {fileID: -2246185612616083506}
   spawnSound: {fileID: 8300000, guid: 0b0244917c671ef43a3266c34247ebb6, type: 3}
+  totalDuration: 0.16
+  cardDelay: 0.04
   spawnEffectPrefab: {fileID: 0}
-  initialShadowAlpha: 0.2
-  finalShadowAlpha: 1
-  cardStartOffsetY: 50
 --- !u!114 &4627134175914890069
 MonoBehaviour:
   m_ObjectHideFlags: 0

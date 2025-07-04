@@ -52,10 +52,71 @@ namespace Game.CombatSystem.Initialization
         {
             Debug.Log("[PlayerCharacterInitializer] Initialize() 시작");
 
+            // 1. 슬롯 초기화 대기
             yield return new WaitUntil(() =>
                 slotRegistry is SlotRegistry concrete && concrete.IsInitialized);
 
-            Setup();
+            // 2. 캐릭터 생성 및 부모 설정
+            var slot = GetPlayerSlot();
+            if (slot == null) yield break;
+            Transform slotTransform = ((MonoBehaviour)slot).transform;
+
+            foreach (Transform child in slotTransform)
+                Object.Destroy(child.gameObject);
+
+            var player = Object.Instantiate(playerPrefab);
+            player.name = "PlayerCharacter";
+            player.transform.SetParent(slotTransform, false);
+
+            if (player.TryGetComponent(out RectTransform rt))
+            {
+                rt.anchorMin = new Vector2(0.5f, 0.5f);
+                rt.anchorMax = new Vector2(0.5f, 0.5f);
+                rt.pivot = new Vector2(0.5f, 0.5f);
+                rt.anchoredPosition = Vector2.zero;
+                rt.localPosition = Vector3.zero;
+                rt.localRotation = Quaternion.identity;
+                rt.localScale = Vector3.one;
+            }
+
+            // 3. PlayerCharacter 컴포넌트 및 데이터 세팅 (애니메이션 전에)
+            if (!player.TryGetComponent(out PlayerCharacter character))
+            {
+                Debug.LogError("[PlayerCharacterInitializer] PlayerCharacter 컴포넌트를 찾을 수 없습니다.");
+                Object.Destroy(player.gameObject);
+                yield break;
+            }
+
+            var data = ResolvePlayerData();
+            if (data == null)
+            {
+                Debug.LogError("[PlayerCharacterInitializer] 캐릭터 데이터가 없습니다.");
+                yield break;
+            }
+
+            character.SetCharacterData(data); // ★ 데이터 먼저 주입
+
+            // 4. 등장 애니메이션 실행 및 대기
+            var animator = player.GetComponent<Game.CombatSystem.Animation.CharacterSpawnAnimator>();
+            bool animDone = false;
+            if (animator != null)
+            {
+                animator.PlaySpawnAnimation(-400f, 1.5f, _ => animDone = true);
+                yield return new WaitUntil(() => animDone);
+            }
+
+            // 5. 슬롯/매니저에 등록
+            slot.SetCharacter(character);
+            playerManager?.SetPlayer(character);
+
+            // 카드 정보 출력(디버그)
+            var cards = data.SkillDeck?.GetCards();
+            Debug.Log($"[PlayerCharacterInitializer] 카드 수: {cards?.Count}");
+            if (cards != null)
+            {
+                foreach (var entry in cards)
+                    Debug.Log($" → 카드: {entry.GetCardName()}, 효과 수: {entry.CreateEffects()?.Count ?? 0}");
+            }
         }
 
         #endregion

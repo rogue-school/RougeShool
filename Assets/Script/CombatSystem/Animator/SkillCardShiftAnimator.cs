@@ -16,9 +16,10 @@ namespace Game.CombatSystem.Animation
 
         // 스킬 카드에서만 쓰는 파라미터
         private float liftHeight = 10f;
-        private float liftDuration = 0.15f;
-        private float moveDuration = 0.22f;
-        private float landDuration = 0.12f;
+        [Header("Animation Speed")]
+        [SerializeField] private float liftDuration = 0.09f;  // 기존 0.15f → 0.09f
+        [SerializeField] private float moveDuration = 0.13f;  // 기존 0.22f → 0.13f
+        [SerializeField] private float landDuration = 0.07f;  // 기존 0.12f → 0.07f
         private float shakeStrength = 3f;
         private int shakeVibrato = 4;
         private float shadowAlpha = 0.7f;
