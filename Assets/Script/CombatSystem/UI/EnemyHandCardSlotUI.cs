@@ -9,7 +9,7 @@ using Game.CombatSystem.Animation;
 namespace Game.CombatSystem.UI
 {
     /// <summary>
-    /// Àû ÇÚµå¿¡ ÀÖ´Â Ä«µå ½½·Ô UIÀÔ´Ï´Ù.
+    /// ï¿½ï¿½ ï¿½Úµå¿¡ ï¿½Ö´ï¿½ Ä«ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ UIï¿½Ô´Ï´ï¿½.
     /// </summary>
     public class EnemyHandCardSlotUI : MonoBehaviour, IHandCardSlot
     {
@@ -36,27 +36,21 @@ namespace Game.CombatSystem.UI
 
             if (ui is MonoBehaviour uiMb)
             {
-                var spawnAnimator = uiMb.GetComponent<SkillCardSpawnAnimator>();
                 var shiftAnimator = uiMb.GetComponent<SkillCardShiftAnimator>();
                 var thisSlotRect = GetComponent<RectTransform>();
 
-                // ÇöÀç ºÎ¸ğ À§Ä¡¸¦ ±âÁØÀ¸·Î Ä«µå°¡ ¾îµğ ÀÖ´ÂÁö ÆÄ¾Ç
-                Vector3 currentWorldPos = uiMb.transform.position;
-
-                // ÀÓ½Ã ºÎ¸ğ ¼³Á¤ (¿ùµå ±âÁØ À§Ä¡ À¯Áö)
+                // ì„ì‹œ ë¶€ëª¨ ë³€ê²½ (ì›”ë“œ ìœ„ì¹˜ ìœ ì§€)
                 uiMb.transform.SetParent(thisSlotRect.parent, true);
 
-                // 1. ÀÌµ¿ ¾Ö´Ï¸ŞÀÌ¼Ç (ÇöÀç À§Ä¡ ¡æ ÀÌ ½½·Ô À§Ä¡)
+                // 1. ì´ë™ ì• ë‹ˆë©”ì´ì…˜ (ì´ë™ì´ í•„ìš”í•œ ê²½ìš°ì—ë§Œ)
                 if (shiftAnimator != null)
                     await shiftAnimator.PlayMoveAnimationAsync(thisSlotRect);
 
-                // 2. ¾Ö´Ï¸ŞÀÌ¼Ç ¿Ï·á ÈÄ ÀÌ ½½·Ô¿¡ ºÎÂø
+                // 2. ì• ë‹ˆë©”ì´ì…˜ í›„ ìŠ¬ë¡¯ì— ì •ì°©
                 uiMb.transform.SetParent(thisSlotRect, false);
                 uiMb.transform.localPosition = Vector3.zero;
 
-                // 3. »ı¼º ¾Ö´Ï¸ŞÀÌ¼Ç
-                if (spawnAnimator != null)
-                    await spawnAnimator.PlaySpawnAnimationAsync();
+                // ìƒì„± ì• ë‹ˆë©”ì´ì…˜ ì‹¤í–‰ ë¶€ë¶„ ì œê±°!
             }
         }
 
@@ -69,14 +63,14 @@ namespace Game.CombatSystem.UI
         public SkillCardUI AttachCard(ISkillCard card)
         {
             SetCard(card);
-            return null; // ÀûÀº Ä«µå UI¸¦ »ı¼ºÇÏÁö ¾ÊÀ½
+            return null; // ï¿½ï¿½ï¿½ï¿½ Ä«ï¿½ï¿½ UIï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         }
 
         public SkillCardUI AttachCard(ISkillCard card, SkillCardUI prefab)
         {
-            // IHandCardSlot ÀÎÅÍÆäÀÌ½º ÃæÁ·À» À§ÇØ ±¸Çö ÇÊ¿ä
+            // IHandCardSlot ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ê¿ï¿½
             SetCard(card);
-            return null; // ÀûÀº Ä«µå UI¸¦ »ı¼ºÇÏÁö ¾ÊÀ½
+            return null; // ï¿½ï¿½ï¿½ï¿½ Ä«ï¿½ï¿½ UIï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         }
 
         public void DetachCard()

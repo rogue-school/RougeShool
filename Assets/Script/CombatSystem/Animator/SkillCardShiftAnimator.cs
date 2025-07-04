@@ -14,16 +14,14 @@ namespace Game.CombatSystem.Animation
         [SerializeField] private AudioClip moveStartClip;
         [SerializeField] private AudioClip dropClip;
 
-        [Header("Shadow Settings")]
-        [SerializeField] private float shadowAlpha = 0.7f;
-
-        [Header("Movement Settings")]
-        [SerializeField] private float liftHeight = 20f;
-        [SerializeField] private float liftDuration = 0.5f;
-        [SerializeField] private float moveDuration = 0.7f;
-        [SerializeField] private float landDuration = 0.4f;
-        [SerializeField] private float shakeStrength = 3f;
-        [SerializeField] private int shakeVibrato = 4;
+        // ë‚˜ë¨¸ì§€ëŠ” ì½”ë“œì—ì„œë§Œ ê´€ë¦¬
+        private float liftHeight = 10f;
+        private float liftDuration = 0.15f;
+        private float moveDuration = 0.22f;
+        private float landDuration = 0.12f;
+        private float shakeStrength = 3f;
+        private int shakeVibrato = 4;
+        private float shadowAlpha = 0.7f;
 
         private RectTransform rectTransform;
 
@@ -33,17 +31,15 @@ namespace Game.CombatSystem.Animation
         }
         public IEnumerator PlayMoveAnimationCoroutine(RectTransform targetSlot)
         {
-            if (TryGetComponent(out RectTransform rt))
-            {
-                Vector3 targetPos = targetSlot.position;
-                yield return rt.DOMove(targetPos, 0.4f).SetEase(Ease.InOutCubic).WaitForCompletion();
-            }
+            var task = PlayMoveAnimationAsync(targetSlot);
+            while (!task.IsCompleted)
+                yield return null;
         }
 
 
         public async Task PlayMoveAnimationAsync(RectTransform targetSlot)
         {
-            Debug.Log("[SkillCardShiftAnimator] ÀÌµ¿ ¾Ö´Ï¸ŞÀÌ¼Ç ½ÃÀÛ");
+            Debug.Log("[SkillCardShiftAnimator] ì´ë™ ì• ë‹ˆë©”ì´ì…˜ ì‹œì‘");
 
             await Task.Yield();
 
@@ -54,11 +50,11 @@ namespace Game.CombatSystem.Animation
             Vector2 targetAnchoredPos = GetTargetAnchoredPosition(targetSlot);
             Vector2 targetLandingPos = targetAnchoredPos;
 
-            Debug.Log($"[SkillCardShiftAnimator] ÇöÀç À§Ä¡: {startPos}, Å¸°Ù À§Ä¡: {targetLandingPos}");
+            Debug.Log($"[SkillCardShiftAnimator] ì‹œì‘ ìœ„ì¹˜: {startPos}, íƒ€ê²Ÿ ìœ„ì¹˜: {targetLandingPos}");
 
             if (Vector2.Distance(startPos, targetLandingPos) < 1f)
             {
-                Debug.LogWarning("[SkillCardShiftAnimator] Ä«µå°¡ ÀÌ¹Ì ´ë»ó À§Ä¡¿¡ ÀÖ½À´Ï´Ù. ¾Ö´Ï¸ŞÀÌ¼Ç »ı·«");
+                Debug.LogWarning("[SkillCardShiftAnimator] ì¹´ë“œê°€ ì´ë¯¸ ê°™ì€ ìœ„ì¹˜ì— ìˆìŠµë‹ˆë‹¤. ì• ë‹ˆë©”ì´ì…˜ ìƒëµ");
                 tcs.SetResult(true);
                 await tcs.Task;
                 return;
@@ -66,7 +62,7 @@ namespace Game.CombatSystem.Animation
 
             if (rectTransform.parent != targetSlot.parent)
             {
-                Debug.LogWarning("[SkillCardShiftAnimator] Ä«µå¿Í ½½·ÔÀÇ ºÎ¸ğ°¡ ´Ù¸¨´Ï´Ù. À§Ä¡ °è»êÀÌ ¾î±ß³¯ ¼ö ÀÖ½À´Ï´Ù.");
+                Debug.LogWarning("[SkillCardShiftAnimator] ì¹´ë“œì™€ ìŠ¬ë¡¯ì˜ ë¶€ëª¨ê°€ ë‹¤ë¦…ë‹ˆë‹¤. ìœ„ì¹˜ ê³„ì‚°ì— ì£¼ì˜.");
             }
 
             GameObject shadowGO = CreateSimpleShadow(out Image shadowImage, out RectTransform shadowRect);
@@ -75,43 +71,48 @@ namespace Game.CombatSystem.Animation
 
             Sequence seq = DOTween.Sequence();
 
+            // ë¦¬í”„íŒ…: ì¹´ë“œë§Œ ìœ„ë¡œ, ê·¸ë¦¼ìëŠ” ì œìë¦¬ì— ê³ ì •
             seq.Append(rectTransform
                 .DOAnchorPos(liftedPos, liftDuration)
                 .SetEase(Ease.OutQuart));
-
             seq.Join(shadowImage
                 .DOFade(shadowAlpha, liftDuration * 0.9f)
                 .SetEase(Ease.InSine));
+            // ê·¸ë¦¼ì ìœ„ì¹˜ëŠ” startPosì— ê³ ì •
 
             seq.AppendCallback(() =>
             {
-                Debug.Log("[SkillCardShiftAnimator] ÀÌµ¿ ½ÃÀÛ");
+                Debug.Log("[SkillCardShiftAnimator] ì´ë™ ì‹œì‘");
                 if (audioSource && moveStartClip)
                     audioSource.PlayOneShot(moveStartClip);
             });
 
+            // ì´ë™: ì¹´ë“œì™€ ê·¸ë¦¼ìê°€ í•¨ê»˜ ëª©í‘œ ìœ„ì¹˜ë¡œ (í”ë“¤ë¦¼ ì—†ìŒ)
             seq.Append(rectTransform
                 .DOAnchorPos(targetAnchoredPos + new Vector2(0, liftHeight), moveDuration)
+                .SetEase(Ease.InOutQuad));
+            seq.Join(shadowRect
+                .DOAnchorPos(new Vector2(targetAnchoredPos.x, startPos.y), moveDuration)
                 .SetEase(Ease.InOutQuad));
 
             seq.AppendCallback(() =>
             {
-                Debug.Log("[SkillCardShiftAnimator] ÂøÁö »ç¿îµå Àç»ı");
+                Debug.Log("[SkillCardShiftAnimator] ì°©ì§€ ì¤€ë¹„");
                 if (audioSource && dropClip)
                     audioSource.PlayOneShot(dropClip);
             });
 
+            // ì°©ì§€: ì¹´ë“œì™€ ê·¸ë¦¼ìê°€ í•¨ê»˜ ì°©ì§€ (ì—¬ê¸°ì„œë§Œ í”ë“¤ë¦¼)
             seq.Append(rectTransform
                 .DOAnchorPos(targetLandingPos, landDuration)
                 .SetEase(Ease.InCubic));
-
-            seq.Join(rectTransform
-                .DOShakeAnchorPos(landDuration, shakeStrength, shakeVibrato, 90, false)
-                .SetEase(Ease.OutSine));
+            seq.Join(shadowRect
+                .DOAnchorPos(new Vector2(targetLandingPos.x, startPos.y), landDuration)
+                .SetEase(Ease.InCubic));
 
             seq.OnComplete(() =>
             {
-                Debug.Log("[SkillCardShiftAnimator] ÀÌµ¿ ¾Ö´Ï¸ŞÀÌ¼Ç ¿Ï·á");
+                Debug.Log("[SkillCardShiftAnimator] ì´ë™ ì• ë‹ˆë©”ì´ì…˜ ì™„ë£Œ");
                 Destroy(shadowGO);
                 tcs.SetResult(true);
             });
@@ -123,7 +124,7 @@ namespace Game.CombatSystem.Animation
         {
             Vector3 worldPos = target.TransformPoint(target.rect.center);
             Vector3 local = rectTransform.parent.InverseTransformPoint(worldPos);
-            Debug.Log($"[SkillCardShiftAnimator] º¯È¯µÈ Å¸°Ù anchoredPosition: {local}");
+            Debug.Log($"[SkillCardShiftAnimator] ë³€í™˜ëœ ìƒëŒ€ ìœ„ì¹˜: {local}");
             return new Vector2(local.x, local.y);
         }
 
@@ -132,7 +133,7 @@ namespace Game.CombatSystem.Animation
         {
             GameObject shadowGO = new GameObject("MoveShadow", typeof(RectTransform), typeof(Image));
 
-            // Ä«µå¿Í °°Àº ºÎ¸ğ¸¦ °®°Ô ÇÑ´Ù (UI ±âÁØ ÁÂÇ¥ µ¿ÀÏÇÏ°Ô À¯Áö)
+            // ì¹´ë“œì˜ ë¶€ëª¨ë¥¼ ê·¸ë¦¼ìì˜ ë¶€ëª¨ë¡œ ì„¤ì •
             shadowGO.transform.SetParent(rectTransform.parent, false);
 
             shadowRect = shadowGO.GetComponent<RectTransform>();
@@ -140,7 +141,7 @@ namespace Game.CombatSystem.Animation
             shadowRect.anchorMax = rectTransform.anchorMax;
             shadowRect.pivot = rectTransform.pivot;
             shadowRect.sizeDelta = rectTransform.sizeDelta;
-            shadowRect.anchoredPosition = rectTransform.anchoredPosition; // À§Ä¡ ÀÏÄ¡
+            shadowRect.anchoredPosition = rectTransform.anchoredPosition; // ì‹œì‘ ìœ„ì¹˜ ì„¤ì •
             shadowRect.localScale = Vector3.one;
             shadowRect.SetSiblingIndex(rectTransform.GetSiblingIndex());
 

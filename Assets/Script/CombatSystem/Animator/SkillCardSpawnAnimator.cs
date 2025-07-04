@@ -7,8 +7,8 @@ using System.Collections;
 namespace Game.CombatSystem.Animation
 {
     /// <summary>
-    /// ½ºÅ³ Ä«µå°¡ °øÁß¿¡¼­ ³»·Á¿À´Â ¾Ö´Ï¸ŞÀÌ¼Ç°ú ±×¸²ÀÚ È¿°ú¸¦ Ã³¸®ÇÕ´Ï´Ù.
-    /// ±×¸²ÀÚ´Â °íÁ¤µÈ À§Ä¡¿¡ ¹èÄ¡µÇ°í, Ä«µå°¡ ³»·Á¿À´Â µ¿¾È Á¡Á¡ ÁøÇØÁı´Ï´Ù.
+    /// ï¿½ï¿½Å³ Ä«ï¿½å°¡ ï¿½ï¿½ï¿½ß¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´Ï¸ï¿½ï¿½Ì¼Ç°ï¿½ ï¿½×¸ï¿½ï¿½ï¿½ È¿ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
+    /// ï¿½×¸ï¿½ï¿½Ú´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½Ç°ï¿½, Ä«ï¿½å°¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.
     /// </summary>
     [RequireComponent(typeof(RectTransform), typeof(CanvasGroup))]
     public class SkillCardSpawnAnimator : MonoBehaviour
@@ -17,15 +17,13 @@ namespace Game.CombatSystem.Animation
         [SerializeField] private AudioSource audioSource;
         [SerializeField] private AudioClip spawnSound;
 
+        // ë‚˜ë¨¸ì§€ëŠ” ì½”ë“œì—ì„œë§Œ ê´€ë¦¬
+        private float cardStartOffsetY = 10f;
+        private float initialShadowAlpha = 0.5f;
+        private float finalShadowAlpha = 0.8f;
+
         [Header("Visual Effect")]
         [SerializeField] private GameObject spawnEffectPrefab;
-
-        [Header("Shadow Settings")]
-        [SerializeField] private float initialShadowAlpha = 0.5f;
-        [SerializeField] private float finalShadowAlpha = 0.8f;
-
-        [Header("Offset Settings")]
-        [SerializeField] private float cardStartOffsetY = 40f;
 
         private RectTransform rectTransform;
         private CanvasGroup canvasGroup;
@@ -37,49 +35,49 @@ namespace Game.CombatSystem.Animation
         }
 
         /// <summary>
-        /// »ı¼º ¾Ö´Ï¸ŞÀÌ¼Ç ½ÇÇà
+        /// ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½ï¿½ï¿½ï¿½
         /// </summary>
-        /// <param name="onComplete">¾Ö´Ï¸ŞÀÌ¼Ç ¿Ï·á ÈÄ È£ÃâµÉ Äİ¹é (¿ùµå ÁÂÇ¥)</param>
+        /// <param name="onComplete">ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½Ï·ï¿½ ï¿½ï¿½ È£ï¿½ï¿½ï¿½ ï¿½İ¹ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ç¥)</param>
         public void PlaySpawnAnimation(System.Action<Vector3> onComplete = null)
         {
-            float totalDuration = 0.8f;
-            float cardDelay = 0.1f;
+            float totalDuration = 0.32f;
+            float cardDelay = 0.02f;
             float cardDropDuration = totalDuration - cardDelay;
 
-            // Ä«µå ÃÊ±â À§Ä¡ ¼³Á¤
+            // Ä«ï¿½ï¿½ ï¿½Ê±ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½
             Vector2 targetPos = rectTransform.anchoredPosition;
             Vector2 cardStartPos = targetPos + new Vector2(0, cardStartOffsetY);
             rectTransform.anchoredPosition = cardStartPos;
             canvasGroup.alpha = 0f;
 
-            // ±×¸²ÀÚ »ı¼º (À§Ä¡ °íÁ¤)
+            // ï¿½×¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½)
             GameObject shadowGO = CreateSimpleRectShadow(out Image shadowImage, out RectTransform shadowRect);
             shadowRect.anchoredPosition = targetPos;
             shadowImage.color = new Color(0f, 0f, 0f, initialShadowAlpha);
 
             Sequence sequence = DOTween.Sequence();
 
-            // »ç¿îµå Àç»ı
+            // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
             sequence.OnStart(() =>
             {
                 if (audioSource != null && spawnSound != null)
                     audioSource.PlayOneShot(spawnSound);
             });
 
-            // Ä«µå µîÀå ¾Ö´Ï¸ŞÀÌ¼Ç
+            // Ä«ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½
             sequence.AppendInterval(cardDelay);
             sequence.Append(rectTransform
                 .DOAnchorPos(targetPos, cardDropDuration)
                 .SetEase(Ease.InOutCubic));
 
-            // µ¿½Ã¿¡: Ä«µå ¾ËÆÄ & ±×¸²ÀÚ ¾ËÆÄ
+            // ï¿½ï¿½ï¿½Ã¿ï¿½: Ä«ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ & ï¿½×¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             sequence.Join(canvasGroup
                 .DOFade(1f, cardDropDuration * 0.9f));
             sequence.Join(shadowImage
                 .DOFade(finalShadowAlpha, cardDropDuration)
                 .SetEase(Ease.InOutSine));
 
-            // ¿Ï·á ½Ã È¿°ú
+            // ï¿½Ï·ï¿½ ï¿½ï¿½ È¿ï¿½ï¿½
             sequence.OnComplete(() =>
             {
                 Vector3 worldPos = rectTransform.position;
@@ -96,7 +94,7 @@ namespace Game.CombatSystem.Animation
         }
 
         /// <summary>
-        /// ´Ü¼ø »ç°¢Çü ±×¸²ÀÚ¸¦ »ı¼ºÇÕ´Ï´Ù (Sprite ¾øÀÌ Color¸¸À¸·Î ±×¸²ÀÚ È¿°ú).
+        /// ï¿½Ü¼ï¿½ ï¿½ç°¢ï¿½ï¿½ ï¿½×¸ï¿½ï¿½Ú¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½ (Sprite ï¿½ï¿½ï¿½ï¿½ Colorï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½×¸ï¿½ï¿½ï¿½ È¿ï¿½ï¿½).
         /// </summary>
         private GameObject CreateSimpleRectShadow(out Image shadowImage, out RectTransform shadowRect)
         {
@@ -119,7 +117,7 @@ namespace Game.CombatSystem.Animation
         }
 
         /// <summary>
-        /// ºñµ¿±â ¹æ½ÄÀ¸·Î »ı¼º ¾Ö´Ï¸ŞÀÌ¼ÇÀ» ½ÇÇàÇÕ´Ï´Ù.
+        /// ï¿½ñµ¿±ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
         /// </summary>
         public Task PlaySpawnAnimationAsync()
         {
@@ -129,7 +127,9 @@ namespace Game.CombatSystem.Animation
         }
         public IEnumerator PlaySpawnAnimationCoroutine()
         {
-            yield return new WaitForSeconds(0.3f); // DOTween Sequence ¶Ç´Â ´Ü¼øÇÑ µîÀå È¿°ú ÄÚ·çÆ¾
+            float totalDuration = 0.32f; // PlaySpawnAnimationì˜ ì‹¤ì œ ì• ë‹ˆë©”ì´ì…˜ ì´ ì‹œê°„ê³¼ ë§ì¶¤
+            PlaySpawnAnimation();
+            yield return new WaitForSeconds(totalDuration);
         }
 
     }

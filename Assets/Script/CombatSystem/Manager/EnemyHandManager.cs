@@ -96,57 +96,41 @@ namespace Game.CombatSystem.Manager
             {
                 bool didSomething = false;
 
-                // 1단계: 3번 슬롯이 비었으면 생성
+                // 1. 3번 슬롯이 비었으면 새 카드 생성
                 if (IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_3))
                 {
-                    CreateCardInSlot(SkillCardSlotPosition.ENEMY_SLOT_3);
+                    yield return CreateCardInSlotWithAnimation(SkillCardSlotPosition.ENEMY_SLOT_3);
                     yield return new WaitForSeconds(delay);
                     didSomething = true;
                 }
 
-                // 2단계: 2번 슬롯 비었고, 3번에 있으면 이동
+                // 2. 2번 슬롯이 비었고 3번에 카드가 있으면 3→2 이동
                 if (IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_2) &&
                     !IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_3))
                 {
-                    ShiftSlot(SkillCardSlotPosition.ENEMY_SLOT_3, SkillCardSlotPosition.ENEMY_SLOT_2);
+                    yield return ShiftSlotWithAnimation(SkillCardSlotPosition.ENEMY_SLOT_3, SkillCardSlotPosition.ENEMY_SLOT_2);
                     yield return new WaitForSeconds(delay);
                     didSomething = true;
                 }
 
-                // 3단계: 다시 3번 생성
+                // 3. 3번 슬롯이 비었으면 다시 새 카드 생성
                 if (IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_3))
                 {
-                    CreateCardInSlot(SkillCardSlotPosition.ENEMY_SLOT_3);
+                    yield return CreateCardInSlotWithAnimation(SkillCardSlotPosition.ENEMY_SLOT_3);
                     yield return new WaitForSeconds(delay);
                     didSomething = true;
                 }
 
-                // 4단계: 1번 비었고, 2번에 있으면 이동
+                // 4. 1번 슬롯이 비었고 2번에 카드가 있으면 2→1 이동
                 if (IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_1) &&
                     !IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_2))
                 {
-                    ShiftSlot(SkillCardSlotPosition.ENEMY_SLOT_2, SkillCardSlotPosition.ENEMY_SLOT_1);
+                    yield return ShiftSlotWithAnimation(SkillCardSlotPosition.ENEMY_SLOT_2, SkillCardSlotPosition.ENEMY_SLOT_1);
                     yield return new WaitForSeconds(delay);
                     didSomething = true;
                 }
 
-                // 5단계: 2번 비었고, 3번에 있으면 이동
-                if (IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_2) &&
-                    !IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_3))
-                {
-                    ShiftSlot(SkillCardSlotPosition.ENEMY_SLOT_3, SkillCardSlotPosition.ENEMY_SLOT_2);
-                    yield return new WaitForSeconds(delay);
-                    didSomething = true;
-                }
-
-                // 6단계: 다시 3번 생성
-                if (IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_3))
-                {
-                    CreateCardInSlot(SkillCardSlotPosition.ENEMY_SLOT_3);
-                    yield return new WaitForSeconds(delay);
-                    didSomething = true;
-                }
-
+                // 더 이상 할 일이 없으면 종료
                 if (!didSomething)
                     yield break;
 
@@ -340,39 +324,72 @@ namespace Game.CombatSystem.Manager
             Debug.Log($"[EnemyHandManager] 카드 생성 완료: {runtimeCard.GetCardName()} → {pos}");
         }
 
-        private bool ShiftSlot(SkillCardSlotPosition from, SkillCardSlotPosition to)
+        // 카드 생성 + 생성 애니메이션 대기용 코루틴 (슬롯 할당은 애니메이션 후에)
+        private IEnumerator CreateCardInSlotWithAnimation(SkillCardSlotPosition pos)
+        {
+            if (enemyDeck == null)
+            {
+                Debug.LogError("[EnemyHandManager] EnemyDeck이 null입니다.");
+                yield break;
+            }
+
+            var entry = enemyDeck.GetRandomEntry();
+            if (entry?.card == null)
+            {
+                Debug.LogWarning("[EnemyHandManager] 생성할 카드 엔트리가 유효하지 않음");
+                yield break;
+            }
+
+            var runtimeCard = cardFactory.CreateEnemyCard(entry.card.GetCardData(), entry.card.CreateEffects());
+            var slot = handSlots[pos];
+            var cardUI = Instantiate(cardUIPrefab, (slot as MonoBehaviour)?.transform);
+            cardUI.SetCard(runtimeCard);
+            cardUI.transform.localPosition = Vector3.zero;
+            cardUI.transform.localScale = Vector3.one;
+
+            // 생성 애니메이션 실행 (슬롯에는 아직 카드 할당 X)
+            if (cardUI.TryGetComponent<SkillCardSpawnAnimator>(out var spawnAnimator))
+                yield return spawnAnimator.PlaySpawnAnimationCoroutine();
+            else
+                yield return new WaitForSeconds(0.1f);
+
+            // 애니메이션이 끝난 후 슬롯에 카드/카드UI 할당
+            slot.SetCard(runtimeCard);
+            if (slot is Game.CombatSystem.UI.EnemyHandCardSlotUI uiSlot)
+                uiSlot.SetCardUI(cardUI);
+
+            cardUIs[pos] = cardUI;
+            _cardsInSlots[pos] = (runtimeCard, cardUI);
+
+            Debug.Log($"[EnemyHandManager] 카드 생성 완료: {runtimeCard.GetCardName()} → {pos}");
+        }
+
+        private IEnumerator ShiftSlotWithAnimation(SkillCardSlotPosition from, SkillCardSlotPosition to)
         {
             if (!handSlots.TryGetValue(from, out var fromSlot) || !handSlots.TryGetValue(to, out var toSlot))
-                return false;
+                yield break;
 
             var card = fromSlot.GetCard();
             if (card == null || toSlot.GetCard() != null)
-                return false;
+                yield break;
 
             var ui = cardUIs.TryGetValue(from, out var oldUI) ? oldUI : null;
 
-            // 1. UI 애니메이션 실행을 위한 준비
             if (ui != null && ui.TryGetComponent<SkillCardShiftAnimator>(out var animator))
             {
                 var toSlotRect = ((MonoBehaviour)toSlot).GetComponent<RectTransform>();
-
-                // 월드 좌표 유지한 채 부모 임시 변경
                 ui.transform.SetParent(toSlotRect.parent, true);
 
-                // 비동기 애니메이션 실행을 따로 처리 (동기 흐름 유지)
-                _ = animator.PlayMoveAnimationAsync(toSlotRect).ContinueWith(_ =>
-                {
-                    // 애니메이션이 끝난 후 카드 위치 갱신
-                    UnityMainThreadDispatcher.Enqueue(() =>
-                    {
-                        ui.transform.SetParent(((MonoBehaviour)toSlot).transform, false);
-                        ui.transform.localPosition = Vector3.zero;
-                        ui.transform.localScale = Vector3.one;
-                    });
-                });
+                // 애니메이션이 끝날 때까지 기다림
+                yield return animator.PlayMoveAnimationCoroutine(toSlotRect);
+
+                // 애니메이션 후 위치/부모 갱신
+                ui.transform.SetParent(((MonoBehaviour)toSlot).transform, false);
+                ui.transform.localPosition = Vector3.zero;
+                ui.transform.localScale = Vector3.one;
             }
 
-            // 2. 슬롯 및 카드 데이터 갱신
+            // 슬롯 및 카드 데이터 갱신
             fromSlot.Clear();
             toSlot.SetCard(card);
             card.SetHandSlot(to);
@@ -387,7 +404,6 @@ namespace Game.CombatSystem.Manager
             _cardsInSlots.Remove(from);
 
             Debug.Log($"[EnemyHandManager] 카드 이동: {from} → {to}");
-            return true;
         }
         public IEnumerator PopCardAndRegisterToCombatSlotCoroutine(ICombatFlowCoordinator flowCoordinator)
         {
