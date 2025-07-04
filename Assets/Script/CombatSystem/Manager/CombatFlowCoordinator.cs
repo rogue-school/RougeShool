@@ -135,13 +135,13 @@ namespace Game.CombatSystem.Core
             var (cardToRegister, uiToRegister) = enemyHandManager.PopCardFromSlot(SkillCardSlotPosition.ENEMY_SLOT_1);
             if (cardToRegister != null && uiToRegister != null)
             {
-                turnCardRegistry.RegisterCard(slotToRegister, cardToRegister, uiToRegister, SlotOwner.ENEMY);
-
                 // UI 애니메이션 완료까지 대기
                 bool animationComplete = false;
                 UnityMainThreadDispatcher.Enqueue(async () =>
                 {
                     await RegisterCardToCombatSlotAsync(slotToRegister, cardToRegister, uiToRegister);
+                    // 애니메이션이 끝난 후에만 슬롯 등록
+                    turnCardRegistry.RegisterCard(slotToRegister, cardToRegister, uiToRegister, SlotOwner.ENEMY);
                     animationComplete = true;
                 });
 
@@ -209,12 +209,24 @@ namespace Game.CombatSystem.Core
                 var shiftAnimator = uiMb.GetComponent<SkillCardShiftAnimator>();
                 var spawnAnimator = uiMb.GetComponent<SkillCardSpawnAnimator>();
 
+                var rect = uiMb.GetComponent<RectTransform>();
+                if (rect != null)
+                {
+                    Debug.Log($"[Before SetParent] parent={rect.parent?.name}, anchored={rect.anchoredPosition}, world={rect.position}");
+                    Vector3 worldPos = rect.position;
+                    uiMb.transform.SetParent(slotRectTransform.parent, true);
+                    Debug.Log($"[After SetParent] parent={rect.parent?.name}, anchored={rect.anchoredPosition}, world={rect.position}");
+                    // 월드 위치 강제 세팅
+                    rect.position = worldPos;
+                    Debug.Log($"[After position fix] parent={rect.parent?.name}, anchored={rect.anchoredPosition}, world={rect.position}");
+                }
+
                 // 부모를 임시로 월드 유지용으로 설정
-                uiMb.transform.SetParent(slotRectTransform.parent, true);
+                // uiMb.transform.SetParent(slotRectTransform.parent, true);
 
                 // 이동 애니메이션
                 if (shiftAnimator != null)
-                    await shiftAnimator.PlayMoveAnimationAsync(slotRectTransform);
+                    await shiftAnimator.PlayMoveAnimationAsync(slotRectTransform, true); // 그림자도 카드와 함께 이동
 
                 // 슬롯에 부착
                 uiMb.transform.SetParent(slotRectTransform, false);
@@ -261,10 +273,19 @@ namespace Game.CombatSystem.Core
                 var shiftAnimator = uiMb.GetComponent<SkillCardShiftAnimator>();
                 var spawnAnimator = uiMb.GetComponent<SkillCardSpawnAnimator>();
 
-                uiMb.transform.SetParent(slotRect.parent, true);
+                var rect = uiMb.GetComponent<RectTransform>();
+                if (rect != null)
+                {
+                    Debug.Log($"[Before SetParent] parent={rect.parent?.name}, anchored={rect.anchoredPosition}, world={rect.position}");
+                    Vector3 worldPos = rect.position;
+                    uiMb.transform.SetParent(slotRect.parent, true);
+                    Debug.Log($"[After SetParent] parent={rect.parent?.name}, anchored={rect.anchoredPosition}, world={rect.position}");
+                    rect.position = worldPos;
+                    Debug.Log($"[After position fix] parent={rect.parent?.name}, anchored={rect.anchoredPosition}, world={rect.position}");
+                }
 
                 if (shiftAnimator != null)
-                    yield return shiftAnimator.PlayMoveAnimationCoroutine(slotRect);
+                    yield return shiftAnimator.PlayMoveAnimationCoroutine(slotRect, true); // 그림자도 카드와 함께 이동
 
                 uiMb.transform.SetParent(slotRect, false);
                 uiMb.transform.localPosition = Vector3.zero;

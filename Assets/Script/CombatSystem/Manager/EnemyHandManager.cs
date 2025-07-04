@@ -220,7 +220,11 @@ namespace Game.CombatSystem.Manager
 
             if (ui != null)
             {
-                ui.transform.SetParent(null);
+                var canvas = GameObject.FindObjectOfType<Canvas>();
+                if (canvas != null)
+                    ui.transform.SetParent(canvas.transform, true); // 월드 위치 유지!
+                else
+                    ui.transform.SetParent(null); // 예외적으로 캔버스가 없으면 기존대로
                 cardUIs.Remove(pos);
             }
 

@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using Zenject;
 using Game.CombatSystem.Interface;
 using System.Collections;
@@ -8,9 +8,9 @@ using Game.CombatSystem.Manager;
 namespace Game.CombatSystem.Initialization
 {
     /// <summary>
-    /// ÀüÅõ Èå¸§ ÃÊ±âÈ­¸¦ ´ã´çÇÏ´Â CombatInitializerStepÀÔ´Ï´Ù.
-    /// TurnManager, »óÅÂ ÆÑÅä¸®, UI ÇÚµé·¯ µîÀÇ ÀÇÁ¸¼ºÀ» ÁÖÀÔÇÏ°í,
-    /// CombatFlowCoordinator¸¦ ÅëÇØ ÀüÅõ ÁØºñ ÀıÂ÷¸¦ ¼öÇàÇÕ´Ï´Ù.
+    /// ì „íˆ¬ íë¦„ ì´ˆê¸°í™”ë¥¼ ë‹´ë‹¹í•˜ëŠ” CombatInitializerStepì…ë‹ˆë‹¤.
+    /// TurnManager, ìƒíƒœ íŒ©í† ë¦¬, UI í•¸ë“¤ëŸ¬ ë“±ì˜ ì˜ì¡´ì„±ì„ ì£¼ì…í•˜ê³ ,
+    /// CombatFlowCoordinatorë¥¼ í†µí•´ ì „íˆ¬ ì¤€ë¹„ ì ˆì°¨ë¥¼ ìˆ˜í–‰í•©ë‹ˆë‹¤.
     /// </summary>
     public class FlowCoordinatorInitializationStep : MonoBehaviour, ICombatInitializerStep
     {
@@ -23,31 +23,31 @@ namespace Game.CombatSystem.Initialization
         [Inject] private IEnemyHandManager enemyHandManager;
 
         /// <summary>
-        /// ÃÊ±âÈ­ ¼ø¼­. ÀÌ ´Ü°è´Â 50¹øÂ°·Î ½ÇÇàµË´Ï´Ù.
+        /// ì´ˆê¸°í™” ìˆœì„œ. ì´ ë‹¨ê³„ëŠ” 50ë²ˆì§¸ë¡œ ì‹¤í–‰ë©ë‹ˆë‹¤.
         /// </summary>
         public int Order => 50;
 
         /// <summary>
-        /// ÀüÅõ Èå¸§ ÃÊ±âÈ­ ÀıÂ÷¸¦ ¼öÇàÇÕ´Ï´Ù.
-        /// Turn ¹öÆ° ÇÚµé·¯, »óÅÂ ¸Å´ÏÀú µîÀ» ¼¼ÆÃÇÏ°í ÀüÅõ ÁØºñ ÄÚ·çÆ¾À» ½ÇÇàÇÕ´Ï´Ù.
+        /// ì „íˆ¬ íë¦„ ì´ˆê¸°í™” ì ˆì°¨ë¥¼ ìˆ˜í–‰í•©ë‹ˆë‹¤.
+        /// Turn ë²„íŠ¼ í•¸ë“¤ëŸ¬, ìƒíƒœ ë§¤ë‹ˆì € ë“±ì„ ì„¸íŒ…í•˜ê³  ì „íˆ¬ ì¤€ë¹„ ì½”ë£¨í‹´ì„ ì‹¤í–‰í•©ë‹ˆë‹¤.
         /// </summary>
         public IEnumerator Initialize()
         {
-            Debug.Log("[FlowCoordinatorInitializationStep] ÀüÅõ ÁØºñ Èå¸§ ÃÊ±âÈ­ ½ÃÀÛ");
+            Debug.Log("[FlowCoordinatorInitializationStep] ì „íˆ¬ ì¤€ë¹„ íë¦„ ì´ˆê¸°í™” ì‹œì‘");
 
-            // ÅÏ ½ÃÀÛ ¹öÆ° ÇÚµé·¯¿¡ ÀÇÁ¸¼º ÁÖÀÔ
+            // í„´ ì‹œì‘ ë²„íŠ¼ í•¸ë“¤ëŸ¬ì— ì˜ì¡´ì„± ì£¼ì…
             buttonHandler.Inject(conditionChecker, turnManager, stateFactory, cardRegistry);
 
-            // ÅÏ ¸Å´ÏÀú ÃÊ±âÈ­ ¹× »óÅÂ ÆÑÅä¸® ÁÖÀÔ
+            // í„´ ë§¤ë‹ˆì € ì´ˆê¸°í™” ë° ìƒíƒœ íŒ©í† ë¦¬ ì£¼ì…
             turnManager.Initialize();
             flowCoordinator.InjectTurnStateDependencies(turnManager, stateFactory);
 
-            // ÀüÅõ ÁØºñ ¼öÇà
+            // ì „íˆ¬ ì¤€ë¹„ ìˆ˜í–‰
             yield return flowCoordinator.PerformCombatPreparation();
 
-            Debug.Log("[FlowCoordinatorInitializationStep] ÀüÅõ ÁØºñ ¼º°ø");
+            Debug.Log("[FlowCoordinatorInitializationStep] ì „íˆ¬ ì¤€ë¹„ ì„±ê³µ");
 
-            // ÀüÅõ Èå¸§ ½ÃÀÛ
+            // ì „íˆ¬ íë¦„ ì‹œì‘
             flowCoordinator.StartCombatFlow();
         }
     }

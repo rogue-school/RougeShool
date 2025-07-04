@@ -29,17 +29,17 @@ namespace Game.CombatSystem.Animation
         {
             rectTransform = GetComponent<RectTransform>();
         }
-        public IEnumerator PlayMoveAnimationCoroutine(RectTransform targetSlot)
+        public IEnumerator PlayMoveAnimationCoroutine(RectTransform targetSlot, bool moveShadowWithCard = false)
         {
-            var task = PlayMoveAnimationAsync(targetSlot);
+            var task = PlayMoveAnimationAsync(targetSlot, moveShadowWithCard);
             while (!task.IsCompleted)
                 yield return null;
         }
 
 
-        public async Task PlayMoveAnimationAsync(RectTransform targetSlot)
+        public async Task PlayMoveAnimationAsync(RectTransform targetSlot, bool moveShadowWithCard = false)
         {
-            Debug.Log("[SkillCardShiftAnimator] 이동 애니메이션 시작");
+            //Debug.Log("[SkillCardShiftAnimator] 이동 애니메이션 시작");
 
             await Task.Yield();
 
@@ -82,37 +82,63 @@ namespace Game.CombatSystem.Animation
 
             seq.AppendCallback(() =>
             {
-                Debug.Log("[SkillCardShiftAnimator] 이동 시작");
+                //Debug.Log("[SkillCardShiftAnimator] 이동 시작");
                 if (audioSource && moveStartClip)
                     audioSource.PlayOneShot(moveStartClip);
             });
 
-            // 이동: 카드와 그림자가 함께 목표 위치로 (흔들림 없음)
-            seq.Append(rectTransform
-                .DOAnchorPos(targetAnchoredPos + new Vector2(0, liftHeight), moveDuration)
-                .SetEase(Ease.InOutQuad));
-            seq.Join(shadowRect
-                .DOAnchorPos(new Vector2(targetAnchoredPos.x, startPos.y), moveDuration)
-                .SetEase(Ease.InOutQuad));
+            // 이동: 분기 처리
+            if (moveShadowWithCard)
+            {
+                // 전투 슬롯 이동: 카드와 그림자가 완전히 같은 경로로 이동
+                seq.Append(rectTransform
+                    .DOAnchorPos(targetAnchoredPos + new Vector2(0, liftHeight), moveDuration)
+                    .SetEase(Ease.InOutQuad));
+                seq.Join(shadowRect
+                    .DOAnchorPos(targetAnchoredPos + new Vector2(0, liftHeight), moveDuration)
+                    .SetEase(Ease.InOutQuad));
+            }
+            else
+            {
+                // 핸드 슬롯 이동: 기존처럼 그림자는 X만 이동
+                seq.Append(rectTransform
+                    .DOAnchorPos(targetAnchoredPos + new Vector2(0, liftHeight), moveDuration)
+                    .SetEase(Ease.InOutQuad));
+                seq.Join(shadowRect
+                    .DOAnchorPos(new Vector2(targetAnchoredPos.x, startPos.y), moveDuration)
+                    .SetEase(Ease.InOutQuad));
+            }
 
             seq.AppendCallback(() =>
             {
-                Debug.Log("[SkillCardShiftAnimator] 착지 준비");
+                //Debug.Log("[SkillCardShiftAnimator] 착지 준비");
                 if (audioSource && dropClip)
                     audioSource.PlayOneShot(dropClip);
             });
 
-            // 착지: 카드와 그림자가 함께 착지 (여기서만 흔들림)
-            seq.Append(rectTransform
-                .DOAnchorPos(targetLandingPos, landDuration)
-                .SetEase(Ease.InCubic));
-            seq.Join(shadowRect
-                .DOAnchorPos(new Vector2(targetLandingPos.x, startPos.y), landDuration)
-                .SetEase(Ease.InCubic));
+            // 착지: 분기 처리
+            if (moveShadowWithCard)
+            {
+                seq.Append(rectTransform
+                    .DOAnchorPos(targetLandingPos, landDuration)
+                    .SetEase(Ease.InCubic));
+                seq.Join(shadowRect
+                    .DOAnchorPos(targetLandingPos, landDuration)
+                    .SetEase(Ease.InCubic));
+            }
+            else
+            {
+                seq.Append(rectTransform
+                    .DOAnchorPos(targetLandingPos, landDuration)
+                    .SetEase(Ease.InCubic));
+                seq.Join(shadowRect
+                    .DOAnchorPos(new Vector2(targetLandingPos.x, startPos.y), landDuration)
+                    .SetEase(Ease.InCubic));
+            }
 
             seq.OnComplete(() =>
             {
-                Debug.Log("[SkillCardShiftAnimator] 이동 애니메이션 완료");
+                //Debug.Log("[SkillCardShiftAnimator] 이동 애니메이션 완료");
                 Destroy(shadowGO);
                 tcs.SetResult(true);
             });
@@ -124,7 +150,7 @@ namespace Game.CombatSystem.Animation
         {
             Vector3 worldPos = target.TransformPoint(target.rect.center);
             Vector3 local = rectTransform.parent.InverseTransformPoint(worldPos);
-            Debug.Log($"[SkillCardShiftAnimator] 변환된 상대 위치: {local}");
+            //Debug.Log($"[SkillCardShiftAnimator] 변환된 상대 위치: {local}");
             return new Vector2(local.x, local.y);
         }
 
