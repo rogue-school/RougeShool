@@ -220,7 +220,7 @@ namespace Game.CombatSystem.Manager
 
             if (ui != null)
             {
-                var canvas = GameObject.FindObjectOfType<Canvas>();
+                var canvas = GameObject.FindFirstObjectByType<Canvas>();
                 if (canvas != null)
                     ui.transform.SetParent(canvas.transform, true); // 월드 위치 유지!
                 else

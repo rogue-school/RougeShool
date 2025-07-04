@@ -34,7 +34,6 @@ namespace Game.Manager
         #region Private Fields
 
         private IPlayerCharacter playerCharacter;
-        private IPlayerCharacterSelector characterSelector;
         private IPlayerHandManager handManager;
 
         #endregion
@@ -46,10 +45,8 @@ namespace Game.Manager
         /// </summary>
         [Inject]
         public void Construct(
-            IPlayerCharacterSelector characterSelector,
             IPlayerHandManager handManager)
         {
-            this.characterSelector = characterSelector;
             this.handManager = handManager;
         }
 
@@ -69,7 +66,10 @@ namespace Game.Manager
                 return;
             }
 
-            var selectedData = characterSelector?.GetSelectedCharacter() ?? defaultCharacterData;
+            // 캐릭터 선택은 static 변수로만 처리
+            var selectedData = GameManager.Instance != null
+                ? GameManager.Instance.selectedCharacter
+                : defaultCharacterData;
             if (selectedData == null)
             {
                 Debug.LogError("[PlayerManager] 선택된 캐릭터 데이터가 없습니다.");

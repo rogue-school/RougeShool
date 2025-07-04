@@ -94,7 +94,6 @@ public class CombatInstaller : MonoInstaller
         BindMono<IEnemySpawnerManager, EnemySpawnerManager>();
         BindMono<IStageManager, StageManager>();
         BindMono<ICharacterDeathListener, CharacterDeathHandler>();
-        BindMono<IPlayerCharacterSelector, PlayerCharacterSelector>();
         BindMono<ICoroutineRunner, CoroutineRunner>();
         BindMonoInterfaces<CombatTurnManager>();
     }

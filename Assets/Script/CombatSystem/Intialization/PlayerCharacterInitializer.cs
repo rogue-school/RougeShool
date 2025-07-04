@@ -169,13 +169,15 @@ namespace Game.CombatSystem.Initialization
         /// </summary>
         private PlayerCharacterData ResolvePlayerData()
         {
-            if (PlayerCharacterSelector.SelectedCharacter != null)
-                return PlayerCharacterSelector.SelectedCharacter;
+            // GameManager의 선택 데이터 우선 사용
+            if (GameManager.Instance != null && GameManager.Instance.selectedCharacter != null)
+                return GameManager.Instance.selectedCharacter;
 
-            if (playerManager?.GetPlayer()?.Data != null)
-                return playerManager.GetPlayer().Data;
+            if (defaultData != null)
+                return defaultData;
 
-            return defaultData;
+            Debug.LogError("[PlayerCharacterInitializer] 캐릭터 데이터가 없습니다. (selectedCharacter, defaultData 모두 null)");
+            return null;
         }
 
         #endregion
