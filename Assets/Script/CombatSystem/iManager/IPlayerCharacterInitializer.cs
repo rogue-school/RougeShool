@@ -4,22 +4,22 @@ using Game.CombatSystem.Interface;
 namespace Game.IManager
 {
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î Ä³¸¯ÅÍ ÃÊ±âÈ­ Ã¥ÀÓÀ» °¡Áö´Â ÀÎÅÍÆäÀÌ½ºÀÔ´Ï´Ù.
-    /// Ä³¸¯ÅÍ »ý¼º, ½½·Ô ¹èÄ¡ µîÀ» ¼öÇàÇÕ´Ï´Ù.
+    /// í”Œë ˆì´ì–´ ìºë¦­í„° ì´ˆê¸°í™” ì±…ìž„ì„ ê°€ì§€ëŠ” ì¸í„°íŽ˜ì´ìŠ¤ìž…ë‹ˆë‹¤.
+    /// ìºë¦­í„° ìƒì„±, ìŠ¬ë¡¯ ë°°ì¹˜ ë“±ì„ ìˆ˜í–‰í•©ë‹ˆë‹¤.
     /// </summary>
     public interface IPlayerCharacterInitializer
     {
         /// <summary>
-        /// ÇÃ·¹ÀÌ¾î Ä³¸¯ÅÍÀÇ ÃÊ±âÈ­ ·çÆ¾À» ¼öÇàÇÕ´Ï´Ù.
-        /// ¿¹: Ä³¸¯ÅÍ »ý¼º, ½½·Ô À§Ä¡ ¼³Á¤ µî
+        /// í”Œë ˆì´ì–´ ìºë¦­í„°ì˜ ì´ˆê¸°í™” ë£¨í‹´ì„ ìˆ˜í–‰í•©ë‹ˆë‹¤.
+        /// ì˜ˆ: ìºë¦­í„° ìƒì„±, ìŠ¬ë¡¯ ìœ„ì¹˜ ì„¤ì • ë“±
         /// </summary>
         void Setup();
 
         /// <summary>
-        /// ¿ÜºÎ ¸Å´ÏÀú ÀÎ½ºÅÏ½º¸¦ ÁÖÀÔ¹Þ¾Æ ³»ºÎ ·ÎÁ÷¿¡ »ç¿ëÇÕ´Ï´Ù.
+        /// ì™¸ë¶€ ë§¤ë‹ˆì € ì¸ìŠ¤í„´ìŠ¤ë¥¼ ì£¼ìž…ë°›ì•„ ë‚´ë¶€ ë¡œì§ì— ì‚¬ìš©í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="playerManager">ÇÃ·¹ÀÌ¾î ¸Å´ÏÀú ÀÎ½ºÅÏ½º</param>
-        /// <param name="slotRegistry">½½·Ô ·¹Áö½ºÆ®¸® ÀÎ½ºÅÏ½º</param>
+        /// <param name="playerManager">í”Œë ˆì´ì–´ ë§¤ë‹ˆì € ì¸ìŠ¤í„´ìŠ¤</param>
+        /// <param name="slotRegistry">ìŠ¬ë¡¯ ë ˆì§€ìŠ¤íŠ¸ë¦¬ ì¸ìŠ¤í„´ìŠ¤</param>
         void Inject(IPlayerManager playerManager, ISlotRegistry slotRegistry);
     }
 }

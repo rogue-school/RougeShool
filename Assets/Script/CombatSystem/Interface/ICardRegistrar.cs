@@ -5,25 +5,25 @@ using Game.CombatSystem.Interface;
 namespace Game.CombatSystem.Interface
 {
     /// <summary>
-    /// ÀüÅõ ½½·Ô¿¡ ½ºÅ³ Ä«µå¿Í ±×¿¡ ´ëÀÀÇÏ´Â UI¸¦ µî·ÏÇÏ´Â ±â´ÉÀ» Á¦°øÇÕ´Ï´Ù.
-    /// ½½·ÔÀº µî·ÏµÈ Ä«µå¿Í UI¸¦ ±â¹ÝÀ¸·Î ½ÇÇà ¹× ½Ã°¢Àû Ã³¸®¸¦ ¼öÇàÇÕ´Ï´Ù.
+    /// ì „íˆ¬ ìŠ¬ë¡¯ì— ìŠ¤í‚¬ ì¹´ë“œì™€ ê·¸ì— ëŒ€ì‘í•˜ëŠ” UIë¥¼ ë“±ë¡í•˜ëŠ” ê¸°ëŠ¥ì„ ì œê³µí•©ë‹ˆë‹¤.
+    /// ìŠ¬ë¡¯ì€ ë“±ë¡ëœ ì¹´ë“œì™€ UIë¥¼ ê¸°ë°˜ìœ¼ë¡œ ì‹¤í–‰ ë° ì‹œê°ì  ì²˜ë¦¬ë¥¼ ìˆ˜í–‰í•©ë‹ˆë‹¤.
     /// </summary>
     public interface ICardRegistrar
     {
         /// <summary>
-        /// ÁöÁ¤µÈ ÀüÅõ ½½·Ô¿¡ ½ºÅ³ Ä«µå ¹× ÇØ´ç UI¸¦ µî·ÏÇÕ´Ï´Ù.
-        /// µî·ÏµÈ ½½·ÔÀº Ä«µå ½ÇÇàÀÌ³ª »óÅÂ °»½Å¿¡ ÀÌ Á¤º¸¸¦ »ç¿ëÇÕ´Ï´Ù.
+        /// ì§€ì •ëœ ì „íˆ¬ ìŠ¬ë¡¯ì— ìŠ¤í‚¬ ì¹´ë“œ ë° í•´ë‹¹ UIë¥¼ ë“±ë¡í•©ë‹ˆë‹¤.
+        /// ë“±ë¡ëœ ìŠ¬ë¡¯ì€ ì¹´ë“œ ì‹¤í–‰ì´ë‚˜ ìƒíƒœ ê°±ì‹ ì— ì´ ì •ë³´ë¥¼ ì‚¬ìš©í•©ë‹ˆë‹¤.
         /// </summary>
         /// <param name="slot">
-        /// <see cref="ICombatCardSlot"/> ÀÎÅÍÆäÀÌ½º¸¦ ±¸ÇöÇÏ´Â ½½·Ô °´Ã¼.
-        /// ½ºÅ³ Ä«µå°¡ ¹èÄ¡µÇ´Â ´ë»ó ½½·ÔÀÔ´Ï´Ù.
+        /// <see cref="ICombatCardSlot"/> ì¸í„°íŽ˜ì´ìŠ¤ë¥¼ êµ¬í˜„í•˜ëŠ” ìŠ¬ë¡¯ ê°ì²´.
+        /// ìŠ¤í‚¬ ì¹´ë“œê°€ ë°°ì¹˜ë˜ëŠ” ëŒ€ìƒ ìŠ¬ë¡¯ìž…ë‹ˆë‹¤.
         /// </param>
         /// <param name="card">
-        /// <see cref="ISkillCard"/> °´Ã¼. ½½·Ô¿¡ µî·ÏµÉ ½ÇÁ¦ Ä«µå µ¥ÀÌÅÍÀÔ´Ï´Ù.
+        /// <see cref="ISkillCard"/> ê°ì²´. ìŠ¬ë¡¯ì— ë“±ë¡ë  ì‹¤ì œ ì¹´ë“œ ë°ì´í„°ìž…ë‹ˆë‹¤.
         /// </param>
         /// <param name="ui">
-        /// <see cref="SkillCardUI"/> ÄÄÆ÷³ÍÆ®. Ä«µå¿¡ ´ëÀÀÇÏ´Â UI ¿ÀºêÁ§Æ®·Î,
-        /// ½Ã°¢Àû È¿°ú ¹× µå·¡±× °ü·Ã Ã³¸®¸¦ ´ã´çÇÕ´Ï´Ù.
+        /// <see cref="SkillCardUI"/> ì»´í¬ë„ŒíŠ¸. ì¹´ë“œì— ëŒ€ì‘í•˜ëŠ” UI ì˜¤ë¸Œì íŠ¸ë¡œ,
+        /// ì‹œê°ì  íš¨ê³¼ ë° ë“œëž˜ê·¸ ê´€ë ¨ ì²˜ë¦¬ë¥¼ ë‹´ë‹¹í•©ë‹ˆë‹¤.
         /// </param>
         void RegisterCard(ICombatCardSlot slot, ISkillCard card, SkillCardUI ui);
     }

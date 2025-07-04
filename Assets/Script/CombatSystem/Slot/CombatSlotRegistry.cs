@@ -7,11 +7,11 @@ using System.Linq;
 namespace Game.CombatSystem.Slot
 {
     /// <summary>
-    /// ÀüÅõ ½½·ÔÀ» µî·ÏÇÏ°í ½½·Ô À§Ä¡¿¡ µû¶ó Á¶È¸ÇÒ ¼ö ÀÖµµ·Ï °ü¸®ÇÏ´Â ·¹Áö½ºÆ®¸®ÀÔ´Ï´Ù.
+    /// ì „íˆ¬ ìŠ¬ë¡¯ì„ ë“±ë¡í•˜ê³  ìŠ¬ë¡¯ ìœ„ì¹˜ì— ë”°ë¼ ì¡°íšŒí•  ìˆ˜ ìˆë„ë¡ ê´€ë¦¬í•˜ëŠ” ë ˆì§€ìŠ¤íŠ¸ë¦¬ì…ë‹ˆë‹¤.
     /// </summary>
     public class CombatSlotRegistry : MonoBehaviour, ICombatSlotRegistry
     {
-        #region ÇÊµå
+        #region í•„ë“œ
 
         private readonly Dictionary<CombatSlotPosition, ICombatCardSlot> _slotByPosition = new();
         private readonly Dictionary<CombatFieldSlotPosition, ICombatCardSlot> _slotByFieldPosition = new();
@@ -20,18 +20,18 @@ namespace Game.CombatSystem.Slot
         private bool _isInitialized = false;
 
         /// <summary>
-        /// ½½·Ô ·¹Áö½ºÆ®¸®°¡ ÃÊ±âÈ­µÇ¾ú´ÂÁö ¿©ºÎ
+        /// ìŠ¬ë¡¯ ë ˆì§€ìŠ¤íŠ¸ë¦¬ê°€ ì´ˆê¸°í™”ë˜ì—ˆëŠ”ì§€ ì—¬ë¶€
         /// </summary>
         public bool IsInitialized => _isInitialized;
 
         #endregion
 
-        #region ½½·Ô µî·Ï
+        #region ìŠ¬ë¡¯ ë“±ë¡
 
         /// <summary>
-        /// ½½·ÔÀ» µî·ÏÇÏ¿© ³»ºÎ µ¥ÀÌÅÍ¿¡ ÀúÀåÇÕ´Ï´Ù.
+        /// ìŠ¬ë¡¯ì„ ë“±ë¡í•˜ì—¬ ë‚´ë¶€ ë°ì´í„°ì— ì €ì¥í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="slots">µî·ÏÇÒ ÀüÅõ Ä«µå ½½·Ô ¸ñ·Ï</param>
+        /// <param name="slots">ë“±ë¡í•  ì „íˆ¬ ì¹´ë“œ ìŠ¬ë¡¯ ëª©ë¡</param>
         public void RegisterCombatSlots(IEnumerable<ICombatCardSlot> slots)
         {
             _slotByPosition.Clear();
@@ -44,26 +44,26 @@ namespace Game.CombatSystem.Slot
             {
                 if (slot is not MonoBehaviour monoSlot)
                 {
-                    Debug.LogWarning($"[CombatSlotRegistry] ½½·ÔÀº MonoBehaviour ±â¹İÀÌ¾î¾ß ÇÕ´Ï´Ù: {slot}");
+                    Debug.LogWarning($"[CombatSlotRegistry] ìŠ¬ë¡¯ì€ MonoBehaviour ê¸°ë°˜ì´ì–´ì•¼ í•©ë‹ˆë‹¤: {slot}");
                     continue;
                 }
 
                 var holder = monoSlot.GetComponent<CombatSlotPositionHolder>();
                 if (holder == null)
                 {
-                    Debug.LogWarning($"[CombatSlotRegistry] CombatSlotPositionHolder ÄÄÆ÷³ÍÆ® ´©¶ô: {monoSlot.name}");
+                    Debug.LogWarning($"[CombatSlotRegistry] CombatSlotPositionHolder ì»´í¬ë„ŒíŠ¸ ëˆ„ë½: {monoSlot.name}");
                     continue;
                 }
 
                 if (_slotByPosition.ContainsKey(holder.SlotPosition))
                 {
-                    Debug.LogError($"[CombatSlotRegistry] Áßº¹µÈ CombatSlotPosition: {holder.SlotPosition} - {monoSlot.name}");
+                    Debug.LogError($"[CombatSlotRegistry] ì¤‘ë³µëœ CombatSlotPosition: {holder.SlotPosition} - {monoSlot.name}");
                     continue;
                 }
 
                 if (_slotByFieldPosition.ContainsKey(holder.FieldSlotPosition))
                 {
-                    Debug.LogError($"[CombatSlotRegistry] Áßº¹µÈ CombatFieldSlotPosition: {holder.FieldSlotPosition} - {monoSlot.name}");
+                    Debug.LogError($"[CombatSlotRegistry] ì¤‘ë³µëœ CombatFieldSlotPosition: {holder.FieldSlotPosition} - {monoSlot.name}");
                     continue;
                 }
 
@@ -74,15 +74,15 @@ namespace Game.CombatSystem.Slot
             }
 
             _isInitialized = true;
-            Debug.Log($"[CombatSlotRegistry] ½½·Ô µî·Ï ¿Ï·á - ÃÑ µî·Ï ¼ö: {registeredCount}");
+            Debug.Log($"[CombatSlotRegistry] ìŠ¬ë¡¯ ë“±ë¡ ì™„ë£Œ - ì´ ë“±ë¡ ìˆ˜: {registeredCount}");
         }
 
         #endregion
 
-        #region ½½·Ô Á¶È¸
+        #region ìŠ¬ë¡¯ ì¡°íšŒ
 
         /// <summary>
-        /// ½ÇÇà ½½·Ô À§Ä¡¸¦ ±âÁØÀ¸·Î ½½·ÔÀ» Á¶È¸ÇÕ´Ï´Ù.
+        /// ì‹¤í–‰ ìŠ¬ë¡¯ ìœ„ì¹˜ë¥¼ ê¸°ì¤€ìœ¼ë¡œ ìŠ¬ë¡¯ì„ ì¡°íšŒí•©ë‹ˆë‹¤.
         /// </summary>
         public ICombatCardSlot GetCombatSlot(CombatSlotPosition position)
         {
@@ -91,7 +91,7 @@ namespace Game.CombatSystem.Slot
         }
 
         /// <summary>
-        /// ÇÊµå ½½·Ô À§Ä¡¸¦ ±âÁØÀ¸·Î ½½·ÔÀ» Á¶È¸ÇÕ´Ï´Ù.
+        /// í•„ë“œ ìŠ¬ë¡¯ ìœ„ì¹˜ë¥¼ ê¸°ì¤€ìœ¼ë¡œ ìŠ¬ë¡¯ì„ ì¡°íšŒí•©ë‹ˆë‹¤.
         /// </summary>
         public ICombatCardSlot GetCombatSlot(CombatFieldSlotPosition fieldPosition)
         {
@@ -100,12 +100,12 @@ namespace Game.CombatSystem.Slot
         }
 
         /// <summary>
-        /// ¸ğµç ÀüÅõ ½½·ÔÀ» ¹İÈ¯ÇÕ´Ï´Ù.
+        /// ëª¨ë“  ì „íˆ¬ ìŠ¬ë¡¯ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         public IEnumerable<ICombatCardSlot> GetAllCombatSlots() => _allSlots;
 
         /// <summary>
-        /// ±âÁ¸ ¸Ş¼­µå¿Í È£È¯À» À§ÇÑ º°Äª
+        /// ê¸°ì¡´ ë©”ì„œë“œì™€ í˜¸í™˜ì„ ìœ„í•œ ë³„ì¹­
         /// </summary>
         public ICombatCardSlot GetSlotByPosition(CombatSlotPosition position) => GetCombatSlot(position);
 

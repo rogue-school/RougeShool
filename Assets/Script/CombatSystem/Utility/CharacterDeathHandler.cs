@@ -19,12 +19,12 @@ namespace Game.CombatSystem.Utility
         {
             if (character is EnemyCharacter)
             {
-                Debug.Log("[CharacterDeathHandler] Àû »ç¸Á °¨Áö (CombatFlow¿¡¼­ ÈÄÃ³¸®)");
+                Debug.Log("[CharacterDeathHandler] ì  ì‚¬ë§ ê°ì§€ (CombatFlowì—ì„œ í›„ì²˜ë¦¬)");
                 turnContext.MarkEnemyDefeated();
             }
             else if (character.IsPlayerControlled())
             {
-                Debug.Log("[CharacterDeathHandler] ÇÃ·¹ÀÌ¾î »ç¸Á ¡æ °ÔÀÓ ¿À¹ö Ã³¸®");
+                Debug.Log("[CharacterDeathHandler] í”Œë ˆì´ì–´ ì‚¬ë§ â†’ ê²Œì„ ì˜¤ë²„ ì²˜ë¦¬");
                 gameOverManager.TriggerGameOver();
             }
         }

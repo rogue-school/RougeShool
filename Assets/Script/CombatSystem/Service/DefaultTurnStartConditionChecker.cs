@@ -4,23 +4,23 @@ using UnityEngine;
 namespace Game.CombatSystem.Service
 {
     /// <summary>
-    /// ±âº»ÀûÀÎ ÅÏ ½ÃÀÛ Á¶°ÇÀ» °Ë»çÇÏ´Â Å¬·¡½ºÀÔ´Ï´Ù.
-    /// ÇÃ·¹ÀÌ¾î¿Í Àû ¸ğµÎ Ä«µå°¡ µî·ÏµÇ¾î ÀÖ¾î¾ß ÅÏÀ» ½ÃÀÛÇÒ ¼ö ÀÖ½À´Ï´Ù.
+    /// ê¸°ë³¸ì ì¸ í„´ ì‹œì‘ ì¡°ê±´ì„ ê²€ì‚¬í•˜ëŠ” í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
+    /// í”Œë ˆì´ì–´ì™€ ì  ëª¨ë‘ ì¹´ë“œê°€ ë“±ë¡ë˜ì–´ ìˆì–´ì•¼ í„´ì„ ì‹œì‘í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
     /// </summary>
     public class DefaultTurnStartConditionChecker : ITurnStartConditionChecker
     {
-        #region ÇÊµå
+        #region í•„ë“œ
 
         private readonly ITurnCardRegistry cardRegistry;
 
         #endregion
 
-        #region »ı¼ºÀÚ
+        #region ìƒì„±ì
 
         /// <summary>
-        /// »ı¼ºÀÚ - Ä«µå µî·Ï Á¤º¸¸¦ °Ë»çÇÒ ·¹Áö½ºÆ®¸®¸¦ ÁÖÀÔ¹Ş½À´Ï´Ù.
+        /// ìƒì„±ì - ì¹´ë“œ ë“±ë¡ ì •ë³´ë¥¼ ê²€ì‚¬í•  ë ˆì§€ìŠ¤íŠ¸ë¦¬ë¥¼ ì£¼ì…ë°›ìŠµë‹ˆë‹¤.
         /// </summary>
-        /// <param name="cardRegistry">ÅÏ Ä«µå ·¹Áö½ºÆ®¸®</param>
+        /// <param name="cardRegistry">í„´ ì¹´ë“œ ë ˆì§€ìŠ¤íŠ¸ë¦¬</param>
         public DefaultTurnStartConditionChecker(ITurnCardRegistry cardRegistry)
         {
             this.cardRegistry = cardRegistry;
@@ -28,13 +28,13 @@ namespace Game.CombatSystem.Service
 
         #endregion
 
-        #region ÅÏ Á¶°Ç °Ë»ç
+        #region í„´ ì¡°ê±´ ê²€ì‚¬
 
         /// <summary>
-        /// ÅÏÀ» ½ÃÀÛÇÒ ¼ö ÀÖ´Â Á¶°ÇÀÎÁö °Ë»çÇÕ´Ï´Ù.
-        /// ÇÃ·¹ÀÌ¾î¿Í Àû ¸ğµÎ Ä«µå°¡ ÀÖ¾î¾ß true¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
+        /// í„´ì„ ì‹œì‘í•  ìˆ˜ ìˆëŠ” ì¡°ê±´ì¸ì§€ ê²€ì‚¬í•©ë‹ˆë‹¤.
+        /// í”Œë ˆì´ì–´ì™€ ì  ëª¨ë‘ ì¹´ë“œê°€ ìˆì–´ì•¼ trueë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <returns>ÅÏ ½ÃÀÛ °¡´É ¿©ºÎ</returns>
+        /// <returns>í„´ ì‹œì‘ ê°€ëŠ¥ ì—¬ë¶€</returns>
         public bool CanStartTurn()
         {
             bool result = cardRegistry.HasPlayerCard() && cardRegistry.HasEnemyCard();

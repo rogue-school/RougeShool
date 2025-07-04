@@ -7,20 +7,20 @@ using Game.CombatSystem.DragDrop;
 namespace Game.SkillCardSystem.UI
 {
     /// <summary>
-    /// ½ºÅ³ Ä«µåÀÇ ÀÌ¸§, ¼³¸í, ÀÌ¹ÌÁö, ÄğÅ¸ÀÓ µî UI¸¦ Á¦¾îÇÕ´Ï´Ù.
-    /// Ä«µå°¡ µå·¡±× °¡´ÉÇÑ »óÅÂÀÎÁö ¿©ºÎµµ Á¦¾îÇÕ´Ï´Ù.
+    /// ìŠ¤í‚¬ ì¹´ë“œì˜ ì´ë¦„, ì„¤ëª…, ì´ë¯¸ì§€, ì¿¨íƒ€ì„ ë“± UIë¥¼ ì œì–´í•©ë‹ˆë‹¤.
+    /// ì¹´ë“œê°€ ë“œë˜ê·¸ ê°€ëŠ¥í•œ ìƒíƒœì¸ì§€ ì—¬ë¶€ë„ ì œì–´í•©ë‹ˆë‹¤.
     /// </summary>
     public class SkillCardUI : MonoBehaviour, ISkillCardUI
     {
         #region UI Components
 
-        [Header("Ä«µå Á¤º¸ UI")]
+        [Header("ì¹´ë“œ ì •ë³´ UI")]
         [SerializeField] private TextMeshProUGUI cardNameText;
         [SerializeField] private TextMeshProUGUI damageText;
         [SerializeField] private TextMeshProUGUI descriptionText;
         [SerializeField] private Image cardArtImage;
 
-        [Header("ÄğÅ¸ÀÓ UI")]
+        [Header("ì¿¨íƒ€ì„ UI")]
         [SerializeField] private GameObject coolTimeOverlay;
         [SerializeField] private TextMeshProUGUI coolTimeText;
         [SerializeField] private CanvasGroup canvasGroup;
@@ -32,16 +32,16 @@ namespace Game.SkillCardSystem.UI
         #region Public Methods
 
         /// <summary>
-        /// ½ºÅ³ Ä«µå µ¥ÀÌÅÍ¸¦ ¼³Á¤ÇÏ°í UI¸¦ ÃÊ±âÈ­ÇÕ´Ï´Ù.
+        /// ìŠ¤í‚¬ ì¹´ë“œ ë°ì´í„°ë¥¼ ì„¤ì •í•˜ê³  UIë¥¼ ì´ˆê¸°í™”í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="newCard">¿¬°áÇÒ Ä«µå ÀÎ½ºÅÏ½º</param>
+        /// <param name="newCard">ì—°ê²°í•  ì¹´ë“œ ì¸ìŠ¤í„´ìŠ¤</param>
         public void SetCard(ISkillCard newCard)
         {
             card = newCard;
 
             if (card == null)
             {
-                Debug.LogWarning("[SkillCardUI] ¼³Á¤ÇÒ Ä«µå°¡ nullÀÔ´Ï´Ù.");
+                Debug.LogWarning("[SkillCardUI] ì„¤ì •í•  ì¹´ë“œê°€ nullì…ë‹ˆë‹¤.");
                 return;
             }
 
@@ -55,7 +55,7 @@ namespace Game.SkillCardSystem.UI
         }
 
         /// <summary>
-        /// ÇöÀç Ä«µåÀÇ ÄğÅ¸ÀÓ Á¤º¸¸¦ ¹ÙÅÁÀ¸·Î UI¸¦ °»½ÅÇÕ´Ï´Ù.
+        /// í˜„ì¬ ì¹´ë“œì˜ ì¿¨íƒ€ì„ ì •ë³´ë¥¼ ë°”íƒ•ìœ¼ë¡œ UIë¥¼ ê°±ì‹ í•©ë‹ˆë‹¤.
         /// </summary>
         public void UpdateCoolTimeDisplay()
         {
@@ -72,7 +72,7 @@ namespace Game.SkillCardSystem.UI
 
             if (cardArtImage != null)
             {
-                // È¸»ö À½¿µ Ã³¸®: ÄğÅ¸ÀÓ ÁßÀÌ¸é È¸»ö, ¾Æ´Ï¸é ¿ø·¡ »ö
+                // íšŒìƒ‰ ìŒì˜ ì²˜ë¦¬: ì¿¨íƒ€ì„ ì¤‘ì´ë©´ íšŒìƒ‰, ì•„ë‹ˆë©´ ì›ë˜ ìƒ‰
                 cardArtImage.color = isCooling ? new Color(0.3f, 0.3f, 0.3f, 1f) : Color.white;
             }
 
@@ -89,14 +89,14 @@ namespace Game.SkillCardSystem.UI
         }
 
         /// <summary>
-        /// ÇöÀç UI¿¡ ¼³Á¤µÈ Ä«µå¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
+        /// í˜„ì¬ UIì— ì„¤ì •ëœ ì¹´ë“œë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         public ISkillCard GetCard() => card;
 
         /// <summary>
-        /// Ä«µåÀÇ »óÈ£ÀÛ¿ë °¡´É ¿©ºÎ¸¦ ¼³Á¤ÇÕ´Ï´Ù (Åõ¸íµµ Á¶Àı).
+        /// ì¹´ë“œì˜ ìƒí˜¸ì‘ìš© ê°€ëŠ¥ ì—¬ë¶€ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤ (íˆ¬ëª…ë„ ì¡°ì ˆ).
         /// </summary>
-        /// <param name="value">true ½Ã Á¤»ó Ç¥½Ã, false ½Ã Åõ¸íµµ ³·Ãã</param>
+        /// <param name="value">true ì‹œ ì •ìƒ í‘œì‹œ, false ì‹œ íˆ¬ëª…ë„ ë‚®ì¶¤</param>
         public void SetInteractable(bool value)
         {
             if (canvasGroup != null)
@@ -104,9 +104,9 @@ namespace Game.SkillCardSystem.UI
         }
 
         /// <summary>
-        /// Ä«µåÀÇ µå·¡±× °¡´É ¿©ºÎ¸¦ ¼³Á¤ÇÕ´Ï´Ù.
+        /// ì¹´ë“œì˜ ë“œë˜ê·¸ ê°€ëŠ¥ ì—¬ë¶€ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="isEnabled">true ½Ã µå·¡±× °¡´É</param>
+        /// <param name="isEnabled">true ì‹œ ë“œë˜ê·¸ ê°€ëŠ¥</param>
         public void SetDraggable(bool isEnabled)
         {
             if (!card?.IsFromPlayer() ?? true) return;
@@ -116,10 +116,10 @@ namespace Game.SkillCardSystem.UI
         }
 
         /// <summary>
-        /// ¿ÜºÎ¿¡¼­ °­Á¦·Î ÄğÅ¸ÀÓ UI¸¦ °»½ÅÇÕ´Ï´Ù. (µğ¹ö±ë ¶Ç´Â Å×½ºÆ®¿ë)
+        /// ì™¸ë¶€ì—ì„œ ê°•ì œë¡œ ì¿¨íƒ€ì„ UIë¥¼ ê°±ì‹ í•©ë‹ˆë‹¤. (ë””ë²„ê¹… ë˜ëŠ” í…ŒìŠ¤íŠ¸ìš©)
         /// </summary>
-        /// <param name="coolTime">Ç¥½ÃÇÒ ÄğÅ¸ÀÓ</param>
-        /// <param name="show">ÄğÅ¸ÀÓ UI Ç¥½Ã ¿©ºÎ</param>
+        /// <param name="coolTime">í‘œì‹œí•  ì¿¨íƒ€ì„</param>
+        /// <param name="show">ì¿¨íƒ€ì„ UI í‘œì‹œ ì—¬ë¶€</param>
         public void ShowCoolTime(int coolTime, bool show)
         {
             if (coolTimeOverlay != null)

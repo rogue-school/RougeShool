@@ -27,7 +27,7 @@ namespace Game.CombatSystem.Animation
         }
 
         /// <summary>
-        /// ±×¸²ÀÚ°¡ ¸ÕÀú µµÂøÇÏ°í, Ä³¸¯ÅÍ°¡ ±× ÈÄ µû¶ó¿À´Â ¼øÂ÷Àû µîÀå ¾Ö´Ï¸ŞÀÌ¼Ç
+        /// ê·¸ë¦¼ìê°€ ë¨¼ì € ë„ì°©í•˜ê³ , ìºë¦­í„°ê°€ ê·¸ í›„ ë”°ë¼ì˜¤ëŠ” ìˆœì°¨ì  ë“±ì¥ ì• ë‹ˆë©”ì´ì…˜
         /// </summary>
         public void PlaySpawnAnimation(float verticalOffset, System.Action<Vector3> onComplete = null)
         {
@@ -35,13 +35,13 @@ namespace Game.CombatSystem.Animation
             float shadowDuration = totalDuration * 0.5f;
             float characterDuration = totalDuration * 0.5f;
 
-            // ±âº» À§Ä¡ °è»ê
+            // ê¸°ë³¸ ìœ„ì¹˜ ê³„ì‚°
             Vector2 targetPos = rectTransform.anchoredPosition;
             Vector2 startPos = targetPos + new Vector2(0, verticalOffset);
             rectTransform.anchoredPosition = startPos;
             canvasGroup.alpha = 0f;
 
-            // ±×¸²ÀÚ ¼³Á¤
+            // ê·¸ë¦¼ì ì„¤ì •
             if (shadowTransform != null)
             {
                 Vector2 shadowStart = startPos + new Vector2(0, shadowOffsetY);
@@ -56,7 +56,7 @@ namespace Game.CombatSystem.Animation
                     audioSource.PlayOneShot(spawnSound);
             });
 
-            // 1´Ü°è: ±×¸²ÀÚ ¸ÕÀú ÂøÁö
+            // 1ë‹¨ê³„: ê·¸ë¦¼ì ë¨¼ì € ì°©ì§€
             if (shadowTransform != null)
             {
                 sequence.Append(
@@ -66,17 +66,17 @@ namespace Game.CombatSystem.Animation
             }
             else
             {
-                sequence.AppendInterval(shadowDuration); // ±×¸²ÀÚ°¡ ¾ø´Ù¸é ´ë±â
+                sequence.AppendInterval(shadowDuration); // ê·¸ë¦¼ìê°€ ì—†ë‹¤ë©´ ëŒ€ê¸°
             }
 
-            // 2´Ü°è: Ä³¸¯ÅÍ ³»·Á¿À±â + ÆäÀÌµå ÀÎ
+            // 2ë‹¨ê³„: ìºë¦­í„° ë‚´ë ¤ì˜¤ê¸° + í˜ì´ë“œ ì¸
             sequence.Append(
                 rectTransform.DOAnchorPos(targetPos, characterDuration)
                     .SetEase(Ease.OutBack)
             );
             sequence.Join(canvasGroup.DOFade(1f, characterDuration * 0.8f));
 
-            // Á¾·á ÈÄ ÀÌÆåÆ® Àç»ı + Äİ¹é
+            // ì¢…ë£Œ í›„ ì´í™íŠ¸ ì¬ìƒ + ì½œë°±
             sequence.OnComplete(() =>
             {
                 Vector3 worldPos = rectTransform.position;

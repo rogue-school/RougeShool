@@ -11,15 +11,15 @@ using Game.CombatSystem.UI;
 namespace Game.CharacterSystem.Core
 {
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î Ä³¸¯ÅÍÀÇ ±¸Ã¼ Å¬·¡½ºÀÔ´Ï´Ù.
-    /// UI, Ä«µå ÇÚµé¸µ, ÇÃ·¹ÀÌ¾î µ¥ÀÌÅÍ ¿¬µ¿ µîÀÇ ±â´ÉÀ» ´ã´çÇÕ´Ï´Ù.
+    /// í”Œë ˆì´ì–´ ìºë¦­í„°ì˜ êµ¬ì²´ í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
+    /// UI, ì¹´ë“œ í•¸ë“¤ë§, í”Œë ˆì´ì–´ ë°ì´í„° ì—°ë™ ë“±ì˜ ê¸°ëŠ¥ì„ ë‹´ë‹¹í•©ë‹ˆë‹¤.
     /// </summary>
     public class PlayerCharacter : CharacterBase, IPlayerCharacter
     {
         #region Serialized Fields
 
         /// <summary>
-        /// ÇÃ·¹ÀÌ¾î µ¥ÀÌÅÍ ½ºÅ©¸³ÅÍºí ¿ÀºêÁ§Æ®
+        /// í”Œë ˆì´ì–´ ë°ì´í„° ìŠ¤í¬ë¦½í„°ë¸” ì˜¤ë¸Œì íŠ¸
         /// </summary>
         [field: SerializeField]
         public PlayerCharacterData Data { get; private set; }
@@ -47,7 +47,7 @@ namespace Game.CharacterSystem.Core
         #region Unity Lifecycle
 
         /// <summary>
-        /// ¿¡µğÅÍ¿¡¼­ ¼³Á¤µÈ µ¥ÀÌÅÍ·Î ÃÊ±âÈ­ÇÕ´Ï´Ù.
+        /// ì—ë””í„°ì—ì„œ ì„¤ì •ëœ ë°ì´í„°ë¡œ ì´ˆê¸°í™”í•©ë‹ˆë‹¤.
         /// </summary>
         private void Awake()
         {
@@ -60,9 +60,9 @@ namespace Game.CharacterSystem.Core
         #region Initialization
 
         /// <summary>
-        /// ¿ÜºÎ¿¡¼­ Ä³¸¯ÅÍ µ¥ÀÌÅÍ¸¦ ¼³Á¤ÇÏ°í ÃÊ±âÈ­ÇÕ´Ï´Ù.
+        /// ì™¸ë¶€ì—ì„œ ìºë¦­í„° ë°ì´í„°ë¥¼ ì„¤ì •í•˜ê³  ì´ˆê¸°í™”í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="data">ÇÃ·¹ÀÌ¾î Ä³¸¯ÅÍ µ¥ÀÌÅÍ</param>
+        /// <param name="data">í”Œë ˆì´ì–´ ìºë¦­í„° ë°ì´í„°</param>
         public void SetCharacterData(PlayerCharacterData data)
         {
             Data = data;
@@ -70,9 +70,9 @@ namespace Game.CharacterSystem.Core
         }
 
         /// <summary>
-        /// Ã¼·Â ÃÊ±âÈ­ ¹× UI °»½Å
+        /// ì²´ë ¥ ì´ˆê¸°í™” ë° UI ê°±ì‹ 
         /// </summary>
-        /// <param name="data">ÇÃ·¹ÀÌ¾î µ¥ÀÌÅÍ</param>
+        /// <param name="data">í”Œë ˆì´ì–´ ë°ì´í„°</param>
         private void InitializeCharacter(PlayerCharacterData data)
         {
             SetMaxHP(data.MaxHP);
@@ -84,7 +84,7 @@ namespace Game.CharacterSystem.Core
         #region UI Handling
 
         /// <summary>
-        /// ÀÌ¸§, Ã¼·Â, ÃÊ»óÈ­ µî UI °»½Å
+        /// ì´ë¦„, ì²´ë ¥, ì´ˆìƒí™” ë“± UI ê°±ì‹ 
         /// </summary>
         private void UpdateUI()
         {
@@ -93,23 +93,23 @@ namespace Game.CharacterSystem.Core
             nameText.text = Data.DisplayName;
             portraitImage.sprite = Data.Portrait;
 
-            // Ã¼·Â ¼ıÀÚ ¹× »ö»ó ¼³Á¤
+            // ì²´ë ¥ ìˆ«ì ë° ìƒ‰ìƒ ì„¤ì •
             if (currentHP >= Data.MaxHP)
             {
-                hpText.text = Data.MaxHP.ToString(); // ÃÖ´ë Ã¼·Â Ç¥½Ã
-                hpText.color = Color.white;          // È¸»ö ¶Ç´Â Èò»öÀ¸·Î º¸ÀÓ
+                hpText.text = Data.MaxHP.ToString(); // ìµœëŒ€ ì²´ë ¥ í‘œì‹œ
+                hpText.color = Color.white;          // íšŒìƒ‰ ë˜ëŠ” í°ìƒ‰ìœ¼ë¡œ ë³´ì„
             }
             else
             {
-                hpText.text = currentHP.ToString();  // ÇöÀç Ã¼·Â¸¸ Ç¥½Ã
-                hpText.color = Color.red;            // ºÓÀº»öÀ¸·Î Ç¥½Ã
+                hpText.text = currentHP.ToString();  // í˜„ì¬ ì²´ë ¥ë§Œ í‘œì‹œ
+                hpText.color = Color.red;            // ë¶‰ì€ìƒ‰ìœ¼ë¡œ í‘œì‹œ
             }
         }
 
         /// <summary>
-        /// µ¥¹ÌÁö Ã³¸® ÈÄ UI °»½Å
+        /// ë°ë¯¸ì§€ ì²˜ë¦¬ í›„ UI ê°±ì‹ 
         /// </summary>
-        /// <param name="amount">ÇÇÇØ·®</param>
+        /// <param name="amount">í”¼í•´ëŸ‰</param>
         public override void TakeDamage(int amount)
         {
             base.TakeDamage(amount);
@@ -126,9 +126,9 @@ namespace Game.CharacterSystem.Core
         }
 
         /// <summary>
-        /// È¸º¹ Ã³¸® ÈÄ UI °»½Å
+        /// íšŒë³µ ì²˜ë¦¬ í›„ UI ê°±ì‹ 
         /// </summary>
-        /// <param name="amount">È¸º¹·®</param>
+        /// <param name="amount">íšŒë³µëŸ‰</param>
         public override void Heal(int amount)
         {
             base.Heal(amount);
@@ -149,42 +149,42 @@ namespace Game.CharacterSystem.Core
         #region Card & Hand
 
         /// <summary>
-        /// ÇÚµå ¸Å´ÏÀú ÀÇÁ¸¼º ÁÖÀÔ
+        /// í•¸ë“œ ë§¤ë‹ˆì € ì˜ì¡´ì„± ì£¼ì…
         /// </summary>
-        /// <param name="manager">ÇÚµå ¸Å´ÏÀú ÀÎ½ºÅÏ½º</param>
+        /// <param name="manager">í•¸ë“œ ë§¤ë‹ˆì € ì¸ìŠ¤í„´ìŠ¤</param>
         public void InjectHandManager(IPlayerHandManager manager) => handManager = manager;
 
         /// <summary>
-        /// ÁöÁ¤ ½½·Ô À§Ä¡ÀÇ ½ºÅ³ Ä«µå ¹İÈ¯
+        /// ì§€ì • ìŠ¬ë¡¯ ìœ„ì¹˜ì˜ ìŠ¤í‚¬ ì¹´ë“œ ë°˜í™˜
         /// </summary>
-        /// <param name="pos">½½·Ô À§Ä¡</param>
+        /// <param name="pos">ìŠ¬ë¡¯ ìœ„ì¹˜</param>
         public ISkillCard GetCardInHandSlot(SkillCardSlotPosition pos) => handManager?.GetCardInSlot(pos);
 
         /// <summary>
-        /// ÁöÁ¤ ½½·Ô À§Ä¡ÀÇ Ä«µå UI ¹İÈ¯
+        /// ì§€ì • ìŠ¬ë¡¯ ìœ„ì¹˜ì˜ ì¹´ë“œ UI ë°˜í™˜
         /// </summary>
-        /// <param name="pos">½½·Ô À§Ä¡</param>
+        /// <param name="pos">ìŠ¬ë¡¯ ìœ„ì¹˜</param>
         public ISkillCardUI GetCardUIInHandSlot(SkillCardSlotPosition pos) => handManager?.GetCardUIInSlot(pos);
 
         /// <summary>
-        /// ¸¶Áö¸· »ç¿ëÇÑ Ä«µå ¼³Á¤
+        /// ë§ˆì§€ë§‰ ì‚¬ìš©í•œ ì¹´ë“œ ì„¤ì •
         /// </summary>
-        /// <param name="card">½ºÅ³ Ä«µå</param>
+        /// <param name="card">ìŠ¤í‚¬ ì¹´ë“œ</param>
         public void SetLastUsedCard(ISkillCard card) => lastUsedCard = card;
 
         /// <summary>
-        /// ¸¶Áö¸· »ç¿ëÇÑ Ä«µå ¹İÈ¯
+        /// ë§ˆì§€ë§‰ ì‚¬ìš©í•œ ì¹´ë“œ ë°˜í™˜
         /// </summary>
         public ISkillCard GetLastUsedCard() => lastUsedCard;
 
         /// <summary>
-        /// ÁöÁ¤µÈ Ä«µå¸¦ ÇÚµå·Î º¹¿ø (±â´ÉÀº ¿ÜºÎ ±¸Çö ¿¹Á¤)
+        /// ì§€ì •ëœ ì¹´ë“œë¥¼ í•¸ë“œë¡œ ë³µì› (ê¸°ëŠ¥ì€ ì™¸ë¶€ êµ¬í˜„ ì˜ˆì •)
         /// </summary>
-        /// <param name="card">º¹¿øÇÒ Ä«µå</param>
+        /// <param name="card">ë³µì›í•  ì¹´ë“œ</param>
         public void RestoreCardToHand(ISkillCard card)
         {
-            Debug.Log($"[PlayerCharacter] Ä«µå º¹±Í: {card?.CardData?.Name}");
-            // ½ÇÁ¦ ÇÚµå º¹¿ø ·ÎÁ÷Àº handManager ³»ºÎ¿¡ ±¸ÇöµÇ¾î¾ß ÇÔ
+            Debug.Log($"[PlayerCharacter] ì¹´ë“œ ë³µê·€: {card?.CardData?.Name}");
+            // ì‹¤ì œ í•¸ë“œ ë³µì› ë¡œì§ì€ handManager ë‚´ë¶€ì— êµ¬í˜„ë˜ì–´ì•¼ í•¨
         }
 
         #endregion
@@ -192,17 +192,17 @@ namespace Game.CharacterSystem.Core
         #region Overrides
 
         /// <summary>
-        /// ÇÃ·¹ÀÌ¾î Ä³¸¯ÅÍÀÓÀ» ³ªÅ¸³À´Ï´Ù.
+        /// í”Œë ˆì´ì–´ ìºë¦­í„°ì„ì„ ë‚˜íƒ€ëƒ…ë‹ˆë‹¤.
         /// </summary>
         public override bool IsPlayerControlled() => true;
 
         /// <summary>
-        /// Ä³¸¯ÅÍ ÀÌ¸§ ¹İÈ¯
+        /// ìºë¦­í„° ì´ë¦„ ë°˜í™˜
         /// </summary>
         public override string GetCharacterName() => Data?.DisplayName ?? "Unnamed Player";
 
         /// <summary>
-        /// »ıÁ¸ ¿©ºÎ ¹İÈ¯ (¸í½ÃÀû override)
+        /// ìƒì¡´ ì—¬ë¶€ ë°˜í™˜ (ëª…ì‹œì  override)
         /// </summary>
         public override bool IsAlive() => base.IsAlive();
 

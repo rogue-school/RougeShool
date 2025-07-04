@@ -10,22 +10,22 @@ using Game.SkillCardSystem.Executor;
 namespace Game.CombatSystem.Service
 {
     /// <summary>
-    /// Ä«µå ½ÇÇà ÄÁÅØ½ºÆ®¸¦ Á¦°øÇÏ´Â ¼­ºñ½ºÀÔ´Ï´Ù.
-    /// Ä«µåÀÇ ¼ÒÀ¯ÀÚ¿¡ µû¶ó ½ÇÇà¿¡ ÇÊ¿äÇÑ ¼Ò½º/Å¸°Ù Á¤º¸¸¦ ¼³Á¤ÇÕ´Ï´Ù.
+    /// ì¹´ë“œ ì‹¤í–‰ ì»¨í…ìŠ¤íŠ¸ë¥¼ ì œê³µí•˜ëŠ” ì„œë¹„ìŠ¤ì…ë‹ˆë‹¤.
+    /// ì¹´ë“œì˜ ì†Œìœ ìì— ë”°ë¼ ì‹¤í–‰ì— í•„ìš”í•œ ì†ŒìŠ¤/íƒ€ê²Ÿ ì •ë³´ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤.
     /// </summary>
     public class CardExecutionContextProvider : ICardExecutionContextProvider
     {
-        #region ÇÊµå
+        #region í•„ë“œ
 
         private readonly IPlayerManager playerManager;
         private readonly IEnemyManager enemyManager;
 
         #endregion
 
-        #region »ı¼ºÀÚ
+        #region ìƒì„±ì
 
         /// <summary>
-        /// »ı¼ºÀÚ¿¡¼­ ÀÇÁ¸¼º ÁÖÀÔÀ» ÅëÇØ ¸Å´ÏÀú¸¦ ÃÊ±âÈ­ÇÕ´Ï´Ù.
+        /// ìƒì„±ìì—ì„œ ì˜ì¡´ì„± ì£¼ì…ì„ í†µí•´ ë§¤ë‹ˆì €ë¥¼ ì´ˆê¸°í™”í•©ë‹ˆë‹¤.
         /// </summary>
         public CardExecutionContextProvider(IPlayerManager playerManager, IEnemyManager enemyManager)
         {
@@ -35,18 +35,18 @@ namespace Game.CombatSystem.Service
 
         #endregion
 
-        #region ÄÁÅØ½ºÆ® »ı¼º
+        #region ì»¨í…ìŠ¤íŠ¸ ìƒì„±
 
         /// <summary>
-        /// Ä«µå Á¤º¸¸¦ ¹ÙÅÁÀ¸·Î ½ÇÇà ÄÁÅØ½ºÆ®¸¦ »ı¼ºÇÕ´Ï´Ù.
+        /// ì¹´ë“œ ì •ë³´ë¥¼ ë°”íƒ•ìœ¼ë¡œ ì‹¤í–‰ ì»¨í…ìŠ¤íŠ¸ë¥¼ ìƒì„±í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="card">½ÇÇàÇÒ ½ºÅ³ Ä«µå</param>
-        /// <returns>ÄÁÅØ½ºÆ® Á¤º¸</returns>
+        /// <param name="card">ì‹¤í–‰í•  ìŠ¤í‚¬ ì¹´ë“œ</param>
+        /// <returns>ì»¨í…ìŠ¤íŠ¸ ì •ë³´</returns>
         public ICardExecutionContext CreateContext(ISkillCard card)
         {
             if (card == null)
             {
-                Debug.LogError("[ContextProvider] Ä«µå°¡ nullÀÔ´Ï´Ù.");
+                Debug.LogError("[ContextProvider] ì¹´ë“œê°€ nullì…ë‹ˆë‹¤.");
                 return null;
             }
 
@@ -65,7 +65,7 @@ namespace Game.CombatSystem.Service
                     break;
 
                 default:
-                    Debug.LogError("[ContextProvider] ¾Ë ¼ö ¾ø´Â ¼ÒÀ¯ÀÚ");
+                    Debug.LogError("[ContextProvider] ì•Œ ìˆ˜ ì—†ëŠ” ì†Œìœ ì");
                     return null;
             }
 

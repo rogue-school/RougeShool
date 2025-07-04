@@ -12,9 +12,9 @@ using Game.CombatSystem.Interface;
 namespace Game.SkillCardSystem.Runtime
 {
     /// <summary>
-    /// ·±Å¸ÀÓ¿¡¼­ ½ÇÇàµÇ´Â Àû Àü¿ë ½ºÅ³ Ä«µå Å¬·¡½ºÀÔ´Ï´Ù.
-    /// Ä«µå µ¥ÀÌÅÍ, ÀÌÆåÆ® ¸ñ·Ï, ÄğÅ¸ÀÓ ¹× ½½·Ô Á¤º¸¸¦ Æ÷ÇÔÇÏ¸ç,
-    /// Ä«µå ½ÇÇà ½Ã ICardExecutionContext¸¦ ÅëÇØ µ¿ÀÛÇÕ´Ï´Ù.
+    /// ëŸ°íƒ€ì„ì—ì„œ ì‹¤í–‰ë˜ëŠ” ì  ì „ìš© ìŠ¤í‚¬ ì¹´ë“œ í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
+    /// ì¹´ë“œ ë°ì´í„°, ì´í™íŠ¸ ëª©ë¡, ì¿¨íƒ€ì„ ë° ìŠ¬ë¡¯ ì •ë³´ë¥¼ í¬í•¨í•˜ë©°,
+    /// ì¹´ë“œ ì‹¤í–‰ ì‹œ ICardExecutionContextë¥¼ í†µí•´ ë™ì‘í•©ë‹ˆë‹¤.
     /// </summary>
     public class EnemySkillCardRuntime : ISkillCard
     {
@@ -30,7 +30,7 @@ namespace Game.SkillCardSystem.Runtime
         private int currentCoolTime = 0;
 
         /// <summary>
-        /// »ı¼ºÀÚ: Ä«µå µ¥ÀÌÅÍ¿Í ÀÌÆåÆ® ¸®½ºÆ®¸¦ ÁÖÀÔ¹Ş¾Æ ÃÊ±âÈ­ÇÕ´Ï´Ù.
+        /// ìƒì„±ì: ì¹´ë“œ ë°ì´í„°ì™€ ì´í™íŠ¸ ë¦¬ìŠ¤íŠ¸ë¥¼ ì£¼ì…ë°›ì•„ ì´ˆê¸°í™”í•©ë‹ˆë‹¤.
         /// </summary>
         public EnemySkillCardRuntime(SkillCardData cardData, List<SkillCardEffectSO> effects)
         {
@@ -38,7 +38,7 @@ namespace Game.SkillCardSystem.Runtime
             this.effects = effects ?? new List<SkillCardEffectSO>();
         }
 
-        #region ¸ŞÅ¸ Á¤º¸
+        #region ë©”íƒ€ ì •ë³´
 
         public string GetCardName() => CardData?.Name ?? "[Unnamed Enemy Card]";
         public string GetDescription() => CardData?.Description ?? "[No Description]";
@@ -52,7 +52,7 @@ namespace Game.SkillCardSystem.Runtime
 
         #endregion
 
-        #region ½½·Ô Á¤º¸
+        #region ìŠ¬ë¡¯ ì •ë³´
 
         public void SetHandSlot(SkillCardSlotPosition slot) => handSlot = slot;
         public SkillCardSlotPosition? GetHandSlot() => handSlot;
@@ -62,7 +62,7 @@ namespace Game.SkillCardSystem.Runtime
 
         #endregion
 
-        #region ÄğÅ¸ÀÓ °ü¸®
+        #region ì¿¨íƒ€ì„ ê´€ë¦¬
 
         public int GetMaxCoolTime() => CardData?.CoolTime ?? 0;
         public int GetCurrentCoolTime() => currentCoolTime;
@@ -70,18 +70,18 @@ namespace Game.SkillCardSystem.Runtime
 
         #endregion
 
-        #region ½ÇÇà ¸Ş¼­µå
+        #region ì‹¤í–‰ ë©”ì„œë“œ
 
         /// <summary>
-        /// source/targetÀ» ÁöÁ¤ÇÏÁö ¾ÊÀ¸¸é ¿¹¿Ü¸¦ ¹ß»ı½ÃÅµ´Ï´Ù.
+        /// source/targetì„ ì§€ì •í•˜ì§€ ì•Šìœ¼ë©´ ì˜ˆì™¸ë¥¼ ë°œìƒì‹œí‚µë‹ˆë‹¤.
         /// </summary>
         public void ExecuteSkill()
         {
-            throw new System.InvalidOperationException("[EnemySkillCardRuntime] source/targetÀÌ ÇÊ¿äÇÕ´Ï´Ù.");
+            throw new System.InvalidOperationException("[EnemySkillCardRuntime] source/targetì´ í•„ìš”í•©ë‹ˆë‹¤.");
         }
 
         /// <summary>
-        /// ÁöÁ¤µÈ source/target°ú ÇÔ²² Ä«µå ½ÇÇà ÄÁÅØ½ºÆ®¸¦ ±¸¼ºÇÏ°í ½ÇÇàÇÕ´Ï´Ù.
+        /// ì§€ì •ëœ source/targetê³¼ í•¨ê»˜ ì¹´ë“œ ì‹¤í–‰ ì»¨í…ìŠ¤íŠ¸ë¥¼ êµ¬ì„±í•˜ê³  ì‹¤í–‰í•©ë‹ˆë‹¤.
         /// </summary>
         public void ExecuteSkill(ICharacter source, ICharacter target)
         {
@@ -90,14 +90,14 @@ namespace Game.SkillCardSystem.Runtime
         }
 
         /// <summary>
-        /// Ä«µåÀÇ È¿°ú¸¦ ÀÚµ¿À¸·Î ½ÇÇàÇÕ´Ï´Ù.
+        /// ì¹´ë“œì˜ íš¨ê³¼ë¥¼ ìë™ìœ¼ë¡œ ì‹¤í–‰í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="context">Ä«µå ½ÇÇà ÄÁÅØ½ºÆ®</param>
+        /// <param name="context">ì¹´ë“œ ì‹¤í–‰ ì»¨í…ìŠ¤íŠ¸</param>
         public void ExecuteCardAutomatically(ICardExecutionContext context)
         {
             if (context == null)
             {
-                Debug.LogError("[EnemySkillCardRuntime] context°¡ nullÀÔ´Ï´Ù.");
+                Debug.LogError("[EnemySkillCardRuntime] contextê°€ nullì…ë‹ˆë‹¤.");
                 return;
             }
 
@@ -109,20 +109,20 @@ namespace Game.SkillCardSystem.Runtime
                 if (command != null)
                 {
                     command.Execute(context, null);
-                    Debug.Log($"[EnemySkillCardRuntime] {GetCardName()} ¡æ {effect.GetType().Name}, power: {power}");
+                    Debug.Log($"[EnemySkillCardRuntime] {GetCardName()} â†’ {effect.GetType().Name}, power: {power}");
                 }
                 else
                 {
-                    Debug.LogWarning($"[EnemySkillCardRuntime] {GetCardName()} - È¿°ú ¸í·É »ı¼º ½ÇÆĞ: {effect?.name}");
+                    Debug.LogWarning($"[EnemySkillCardRuntime] {GetCardName()} - íš¨ê³¼ ëª…ë ¹ ìƒì„± ì‹¤íŒ¨: {effect?.name}");
                 }
             }
 
-            SetCurrentCoolTime(GetMaxCoolTime()); // ÄğÅ¸ÀÓ ¸®¼Â
+            SetCurrentCoolTime(GetMaxCoolTime()); // ì¿¨íƒ€ì„ ë¦¬ì…‹
         }
 
         #endregion
 
-        #region ´ë»ó ÃßÃâ
+        #region ëŒ€ìƒ ì¶”ì¶œ
 
         public ICharacter GetOwner(ICardExecutionContext context) => context?.GetEnemy();
         public ICharacter GetTarget(ICardExecutionContext context) => context?.GetPlayer();

@@ -9,34 +9,34 @@ using Zenject;
 namespace Game.CharacterSystem.Core
 {
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î°¡ »ç¿ëÇÒ Ä³¸¯ÅÍ¸¦ ¼±ÅÃÇÏ´Â ¼±ÅÃÀÚ Å¬·¡½ºÀÔ´Ï´Ù.
-    /// ¼±ÅÃµÈ Ä³¸¯ÅÍ´Â Á¤ÀûÀ¸·Î º¸°üµÇ¸ç, ÀÌÈÄ ¾À¿¡¼­µµ ÂüÁ¶ÇÒ ¼ö ÀÖ½À´Ï´Ù.
+    /// í”Œë ˆì´ì–´ê°€ ì‚¬ìš©í•  ìºë¦­í„°ë¥¼ ì„ íƒí•˜ëŠ” ì„ íƒì í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
+    /// ì„ íƒëœ ìºë¦­í„°ëŠ” ì •ì ìœ¼ë¡œ ë³´ê´€ë˜ë©°, ì´í›„ ì”¬ì—ì„œë„ ì°¸ì¡°í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
     /// </summary>
     public class PlayerCharacterSelector : MonoBehaviour, IPlayerCharacterSelector
     {
         #region Static
 
         /// <summary>
-        /// ¼±ÅÃµÈ Ä³¸¯ÅÍ´Â Á¤Àû ÇÊµå¿¡ ÀúÀåµÇ¾î ¾À °£ À¯ÁöµË´Ï´Ù.
+        /// ì„ íƒëœ ìºë¦­í„°ëŠ” ì •ì  í•„ë“œì— ì €ì¥ë˜ì–´ ì”¬ ê°„ ìœ ì§€ë©ë‹ˆë‹¤.
         /// </summary>
         public static PlayerCharacterData SelectedCharacter { get; private set; }
 
         /// <summary>
-        /// °­Á¦·Î ¼±ÅÃµÈ Ä³¸¯ÅÍ¸¦ ¼³Á¤ÇÕ´Ï´Ù. (µğ¹ö±ë/Å×½ºÆ®¿ë)
+        /// ê°•ì œë¡œ ì„ íƒëœ ìºë¦­í„°ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤. (ë””ë²„ê¹…/í…ŒìŠ¤íŠ¸ìš©)
         /// </summary>
-        /// <param name="data">¼±ÅÃÇÒ Ä³¸¯ÅÍ µ¥ÀÌÅÍ</param>
+        /// <param name="data">ì„ íƒí•  ìºë¦­í„° ë°ì´í„°</param>
         public static void ForceSetSelectedCharacter(PlayerCharacterData data)
         {
             SelectedCharacter = data;
-            Debug.Log($"[Selector] °­Á¦ Ä³¸¯ÅÍ ¼³Á¤µÊ: {data.DisplayName}");
+            Debug.Log($"[Selector] ê°•ì œ ìºë¦­í„° ì„¤ì •ë¨: {data.DisplayName}");
         }
 
         #endregion
 
         #region Serialized Fields
 
-        [Header("µî·ÏµÈ Ä³¸¯ÅÍ ¸ñ·Ï")]
-        [Tooltip("°ÔÀÓ¿¡¼­ ¼±ÅÃ °¡´ÉÇÑ ÇÃ·¹ÀÌ¾î Ä³¸¯ÅÍ µ¥ÀÌÅÍ ¸®½ºÆ®")]
+        [Header("ë“±ë¡ëœ ìºë¦­í„° ëª©ë¡")]
+        [Tooltip("ê²Œì„ì—ì„œ ì„ íƒ ê°€ëŠ¥í•œ í”Œë ˆì´ì–´ ìºë¦­í„° ë°ì´í„° ë¦¬ìŠ¤íŠ¸")]
         [SerializeField] private List<PlayerCharacterData> characterCandidates;
 
         #endregion
@@ -44,14 +44,14 @@ namespace Game.CharacterSystem.Core
         #region Dependencies
 
         /// <summary>
-        /// ¾À ÀüÈ¯À» ´ã´çÇÏ´Â ·Î´õ
+        /// ì”¬ ì „í™˜ì„ ë‹´ë‹¹í•˜ëŠ” ë¡œë”
         /// </summary>
         private ISceneLoader sceneLoader;
 
         /// <summary>
-        /// Zenject¸¦ ÅëÇÑ ÀÇÁ¸¼º ÁÖÀÔ
+        /// Zenjectë¥¼ í†µí•œ ì˜ì¡´ì„± ì£¼ì…
         /// </summary>
-        /// <param name="loader">¾À ·Î´õ</param>
+        /// <param name="loader">ì”¬ ë¡œë”</param>
         [Inject]
         public void Construct(ISceneLoader loader)
         {
@@ -63,25 +63,25 @@ namespace Game.CharacterSystem.Core
         #region Public API
 
         /// <summary>
-        /// ÀÎµ¦½º¸¦ ±â¹İÀ¸·Î Ä³¸¯ÅÍ¸¦ ¼±ÅÃÇÏ°í ÀüÅõ ¾ÀÀ¸·Î ÀüÈ¯ÇÕ´Ï´Ù.
+        /// ì¸ë±ìŠ¤ë¥¼ ê¸°ë°˜ìœ¼ë¡œ ìºë¦­í„°ë¥¼ ì„ íƒí•˜ê³  ì „íˆ¬ ì”¬ìœ¼ë¡œ ì „í™˜í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="index">Ä³¸¯ÅÍ ÈÄº¸ ¸ñ·ÏÀÇ ÀÎµ¦½º</param>
+        /// <param name="index">ìºë¦­í„° í›„ë³´ ëª©ë¡ì˜ ì¸ë±ìŠ¤</param>
         public void SelectCharacter(int index)
         {
             if (index < 0 || index >= characterCandidates.Count)
             {
-                Debug.LogError($"[Selector] Àß¸øµÈ ÀÎµ¦½º: {index}");
+                Debug.LogError($"[Selector] ì˜ëª»ëœ ì¸ë±ìŠ¤: {index}");
                 return;
             }
 
             SelectedCharacter = characterCandidates[index];
-            Debug.Log($"[Selector] Ä³¸¯ÅÍ ¼±ÅÃµÊ: {SelectedCharacter.DisplayName}");
+            Debug.Log($"[Selector] ìºë¦­í„° ì„ íƒë¨: {SelectedCharacter.DisplayName}");
 
             sceneLoader.LoadScene("Combat");
         }
 
         /// <summary>
-        /// ÇöÀç ¼±ÅÃµÈ Ä³¸¯ÅÍ µ¥ÀÌÅÍ¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
+        /// í˜„ì¬ ì„ íƒëœ ìºë¦­í„° ë°ì´í„°ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         public PlayerCharacterData GetSelectedCharacter()
         {

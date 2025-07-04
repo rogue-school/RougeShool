@@ -5,7 +5,7 @@ using Game.SkillCardSystem.Interface;
 namespace Game.SkillCardSystem.Effect
 {
     /// <summary>
-    /// ´ë»ó¿¡°Ô ÀÏÁ¤ ÅÏ µ¿¾È Ã¼·Â Àç»ı È¿°ú¸¦ ºÎ¿©ÇÏ´Â Ä¿¸Çµå Å¬·¡½ºÀÔ´Ï´Ù.
+    /// ëŒ€ìƒì—ê²Œ ì¼ì • í„´ ë™ì•ˆ ì²´ë ¥ ì¬ìƒ íš¨ê³¼ë¥¼ ë¶€ì—¬í•˜ëŠ” ì»¤ë§¨ë“œ í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
     /// </summary>
     public class RegenEffectCommand : ICardEffectCommand
     {
@@ -13,10 +13,10 @@ namespace Game.SkillCardSystem.Effect
         private readonly int _duration;
 
         /// <summary>
-        /// Àç»ı Ä¿¸Çµå¸¦ ÃÊ±âÈ­ÇÕ´Ï´Ù.
+        /// ì¬ìƒ ì»¤ë§¨ë“œë¥¼ ì´ˆê¸°í™”í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="healAmount">ÅÏ¸¶´Ù È¸º¹ÇÒ Ã¼·Â·®</param>
-        /// <param name="duration">Áö¼Ó ÅÏ ¼ö</param>
+        /// <param name="healAmount">í„´ë§ˆë‹¤ íšŒë³µí•  ì²´ë ¥ëŸ‰</param>
+        /// <param name="duration">ì§€ì† í„´ ìˆ˜</param>
         public RegenEffectCommand(int healAmount, int duration)
         {
             _healAmount = healAmount;
@@ -24,22 +24,22 @@ namespace Game.SkillCardSystem.Effect
         }
 
         /// <summary>
-        /// Ä«µå È¿°ú¸¦ ½ÇÇàÇÏ¿© ´ë»ó¿¡°Ô Àç»ı È¿°ú¸¦ ºÎ¿©ÇÕ´Ï´Ù.
+        /// ì¹´ë“œ íš¨ê³¼ë¥¼ ì‹¤í–‰í•˜ì—¬ ëŒ€ìƒì—ê²Œ ì¬ìƒ íš¨ê³¼ë¥¼ ë¶€ì—¬í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="context">Ä«µå ½ÇÇà ÄÁÅØ½ºÆ® (½ÃÀüÀÚ, ´ë»ó µî Æ÷ÇÔ)</param>
-        /// <param name="turnManager">ÀüÅõ ÅÏ ¸Å´ÏÀú (ÇÊ¿ä ½Ã »ç¿ë)</param>
+        /// <param name="context">ì¹´ë“œ ì‹¤í–‰ ì»¨í…ìŠ¤íŠ¸ (ì‹œì „ì, ëŒ€ìƒ ë“± í¬í•¨)</param>
+        /// <param name="turnManager">ì „íˆ¬ í„´ ë§¤ë‹ˆì € (í•„ìš” ì‹œ ì‚¬ìš©)</param>
         public void Execute(ICardExecutionContext context, ICombatTurnManager turnManager)
         {
             if (context.Target == null)
             {
-                Debug.LogWarning("[RegenEffectCommand] ´ë»óÀÌ nullÀÔ´Ï´Ù.");
+                Debug.LogWarning("[RegenEffectCommand] ëŒ€ìƒì´ nullì…ë‹ˆë‹¤.");
                 return;
             }
 
             var effect = new RegenEffect(_healAmount, _duration);
             context.Target.RegisterPerTurnEffect(effect);
 
-            Debug.Log($"[RegenEffectCommand] {context.Target.GetCharacterName()}¿¡°Ô Àç»ı È¿°ú Àû¿ë: {_healAmount} È¸º¹ / {_duration}ÅÏ Áö¼Ó");
+            Debug.Log($"[RegenEffectCommand] {context.Target.GetCharacterName()}ì—ê²Œ ì¬ìƒ íš¨ê³¼ ì ìš©: {_healAmount} íšŒë³µ / {_duration}í„´ ì§€ì†");
         }
     }
 }

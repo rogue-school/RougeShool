@@ -12,8 +12,8 @@ using Game.CombatSystem.Context;
 namespace Game.SkillCardSystem.Runtime
 {
     /// <summary>
-    /// ·±Å¸ÀÓ¿¡¼­ »ç¿ëµÇ´Â ½ÇÁ¦ ÇÃ·¹ÀÌ¾î ½ºÅ³ Ä«µå ÀÎ½ºÅÏ½ºÀÔ´Ï´Ù.
-    /// Ä«µå µ¥ÀÌÅÍ¿Í ÀÌÆåÆ®¸¦ Æ÷ÇÔÇÏ¸ç, ÄğÅ¸ÀÓ ¹× ½½·Ô »óÅÂ¸¦ °ü¸®ÇÏ°í ½ÇÁ¦ È¿°ú¸¦ ½ÇÇàÇÕ´Ï´Ù.
+    /// ëŸ°íƒ€ì„ì—ì„œ ì‚¬ìš©ë˜ëŠ” ì‹¤ì œ í”Œë ˆì´ì–´ ìŠ¤í‚¬ ì¹´ë“œ ì¸ìŠ¤í„´ìŠ¤ì…ë‹ˆë‹¤.
+    /// ì¹´ë“œ ë°ì´í„°ì™€ ì´í™íŠ¸ë¥¼ í¬í•¨í•˜ë©°, ì¿¨íƒ€ì„ ë° ìŠ¬ë¡¯ ìƒíƒœë¥¼ ê´€ë¦¬í•˜ê³  ì‹¤ì œ íš¨ê³¼ë¥¼ ì‹¤í–‰í•©ë‹ˆë‹¤.
     /// </summary>
     public class PlayerSkillCardInstance : ISkillCard
     {
@@ -29,7 +29,7 @@ namespace Game.SkillCardSystem.Runtime
         private int currentCoolTime = 0;
 
         /// <summary>
-        /// Ä«µå µ¥ÀÌÅÍ, È¿°ú ¸ñ·Ï, ¼ÒÀ¯ÀÚ¸¦ ÁöÁ¤ÇØ ÀÎ½ºÅÏ½º¸¦ »ı¼ºÇÕ´Ï´Ù.
+        /// ì¹´ë“œ ë°ì´í„°, íš¨ê³¼ ëª©ë¡, ì†Œìœ ìë¥¼ ì§€ì •í•´ ì¸ìŠ¤í„´ìŠ¤ë¥¼ ìƒì„±í•©ë‹ˆë‹¤.
         /// </summary>
         public PlayerSkillCardInstance(SkillCardData cardData, List<SkillCardEffectSO> effects, SlotOwner owner)
         {
@@ -38,7 +38,7 @@ namespace Game.SkillCardSystem.Runtime
             this.owner = owner;
         }
 
-        #region ¸ŞÅ¸ Á¤º¸
+        #region ë©”íƒ€ ì •ë³´
 
         public string GetCardName() => CardData?.Name ?? "Unnamed";
         public string GetDescription() => CardData?.Description ?? "";
@@ -57,7 +57,7 @@ namespace Game.SkillCardSystem.Runtime
 
         #endregion
 
-        #region ½½·Ô Á¤º¸
+        #region ìŠ¬ë¡¯ ì •ë³´
 
         public void SetHandSlot(SkillCardSlotPosition slot) => handSlot = slot;
         public SkillCardSlotPosition? GetHandSlot() => handSlot;
@@ -67,24 +67,24 @@ namespace Game.SkillCardSystem.Runtime
 
         #endregion
 
-        #region ¼ÒÀ¯ÀÚ Á¤º¸
+        #region ì†Œìœ ì ì •ë³´
 
         public SlotOwner GetOwner() => owner;
         public bool IsFromPlayer() => owner == SlotOwner.PLAYER;
 
         #endregion
 
-        #region ½ÇÇà °ü·Ã
+        #region ì‹¤í–‰ ê´€ë ¨
 
         /// <summary>
-        /// Ä«µå ½ÇÇà ÄÁÅØ½ºÆ®¸¦ ±â¹İÀ¸·Î Ä«µå È¿°úµéÀ» ½ÇÇàÇÕ´Ï´Ù.
+        /// ì¹´ë“œ ì‹¤í–‰ ì»¨í…ìŠ¤íŠ¸ë¥¼ ê¸°ë°˜ìœ¼ë¡œ ì¹´ë“œ íš¨ê³¼ë“¤ì„ ì‹¤í–‰í•©ë‹ˆë‹¤.
         /// </summary>
         public void ExecuteCardAutomatically(ICardExecutionContext context)
         {
             var source = context?.Source;
             var target = context?.Target;
 
-            Debug.Log($"[PlayerSkillCardInstance] ½ÇÇà: {GetCardName()} ({source?.GetCharacterName()} -> {target?.GetCharacterName()})");
+            Debug.Log($"[PlayerSkillCardInstance] ì‹¤í–‰: {GetCardName()} ({source?.GetCharacterName()} -> {target?.GetCharacterName()})");
 
             foreach (var effect in effects)
             {
@@ -96,15 +96,15 @@ namespace Game.SkillCardSystem.Runtime
         }
 
         /// <summary>
-        /// ½ÇÇà ºÒ°¡´ÉÇÑ »óÈ²¿¡¼­ È£Ãâ ½Ã °æ°í ·Î±×¸¦ Ãâ·ÂÇÕ´Ï´Ù.
+        /// ì‹¤í–‰ ë¶ˆê°€ëŠ¥í•œ ìƒí™©ì—ì„œ í˜¸ì¶œ ì‹œ ê²½ê³  ë¡œê·¸ë¥¼ ì¶œë ¥í•©ë‹ˆë‹¤.
         /// </summary>
         public void ExecuteSkill()
         {
-            Debug.LogWarning("[PlayerSkillCardInstance] ExecuteSkill() È£ÃâµÊ - context ¾øÀ½");
+            Debug.LogWarning("[PlayerSkillCardInstance] ExecuteSkill() í˜¸ì¶œë¨ - context ì—†ìŒ");
         }
 
         /// <summary>
-        /// ÁöÁ¤µÈ ½ÃÀüÀÚ ¹× ´ë»ó Ä³¸¯ÅÍ¸¦ ÀÌ¿ëÇØ Ä«µå ½ÇÇà ÄÁÅØ½ºÆ®¸¦ ±¸¼ºÇÏ°í ½ÇÇàÇÕ´Ï´Ù.
+        /// ì§€ì •ëœ ì‹œì „ì ë° ëŒ€ìƒ ìºë¦­í„°ë¥¼ ì´ìš©í•´ ì¹´ë“œ ì‹¤í–‰ ì»¨í…ìŠ¤íŠ¸ë¥¼ êµ¬ì„±í•˜ê³  ì‹¤í–‰í•©ë‹ˆë‹¤.
         /// </summary>
         public void ExecuteSkill(ICharacter source, ICharacter target)
         {
@@ -114,7 +114,7 @@ namespace Game.SkillCardSystem.Runtime
 
         #endregion
 
-        #region ´ë»ó Á¤º¸
+        #region ëŒ€ìƒ ì •ë³´
 
         public ICharacter GetOwner(ICardExecutionContext context) => context?.Source;
         public ICharacter GetTarget(ICardExecutionContext context) => context?.Target;

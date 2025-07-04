@@ -3,56 +3,56 @@ using UnityEngine;
 namespace Game.SkillCardSystem.Data
 {
     /// <summary>
-    /// ½ºÅ³ Ä«µåÀÇ Á¤Àû Á¤º¸¸¦ ´ã´Â µ¥ÀÌÅÍ Å¬·¡½ºÀÔ´Ï´Ù.
-    /// ÀÌ¸§, ¼³¸í, ÀÌ¹ÌÁö, ÄğÅ¸ÀÓ, µ¥¹ÌÁö µî ±âº» Á¤º¸¸¦ Æ÷ÇÔÇÕ´Ï´Ù.
+    /// ìŠ¤í‚¬ ì¹´ë“œì˜ ì •ì  ì •ë³´ë¥¼ ë‹´ëŠ” ë°ì´í„° í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
+    /// ì´ë¦„, ì„¤ëª…, ì´ë¯¸ì§€, ì¿¨íƒ€ì„, ë°ë¯¸ì§€ ë“± ê¸°ë³¸ ì •ë³´ë¥¼ í¬í•¨í•©ë‹ˆë‹¤.
     /// </summary>
     [System.Serializable]
     public class SkillCardData
     {
-        [Header("»ç¿îµå")]
+        [Header("ì‚¬ìš´ë“œ")]
         public AudioClip SfxClip;
 
-        [Header("ºñÁÖ¾ó ÀÌÆåÆ®")]
-        [Tooltip("Ä«µå ½ÇÇà ½Ã Àç»ıÇÒ ºñÁÖ¾ó ÀÌÆåÆ® ÇÁ¸®ÆÕ")]
+        [Header("ë¹„ì£¼ì–¼ ì´í™íŠ¸")]
+        [Tooltip("ì¹´ë“œ ì‹¤í–‰ ì‹œ ì¬ìƒí•  ë¹„ì£¼ì–¼ ì´í™íŠ¸ í”„ë¦¬íŒ¹")]
         public GameObject VisualEffectPrefab;
 
-        [Tooltip("ÀÌÆåÆ® Áö¼Ó ½Ã°£ (ÃÊ)")]
+        [Tooltip("ì´í™íŠ¸ ì§€ì† ì‹œê°„ (ì´ˆ)")]
         public float EffectDuration = 2f;
 
         /// <summary>
-        /// Ä«µå ÀÌ¸§
+        /// ì¹´ë“œ ì´ë¦„
         /// </summary>
         public string Name;
 
         /// <summary>
-        /// Ä«µå ¼³¸í (ÅøÆÁ µî¿¡¼­ »ç¿ë)
+        /// ì¹´ë“œ ì„¤ëª… (íˆ´íŒ ë“±ì—ì„œ ì‚¬ìš©)
         /// </summary>
         public string Description;
 
         /// <summary>
-        /// Ä«µå ¾ÆÆ®¿öÅ© ÀÌ¹ÌÁö
+        /// ì¹´ë“œ ì•„íŠ¸ì›Œí¬ ì´ë¯¸ì§€
         /// </summary>
         public Sprite Artwork;
 
         /// <summary>
-        /// Ä«µåÀÇ ÄğÅ¸ÀÓ (ÅÏ ´ÜÀ§)
+        /// ì¹´ë“œì˜ ì¿¨íƒ€ì„ (í„´ ë‹¨ìœ„)
         /// </summary>
         public int CoolTime;
 
         /// <summary>
-        /// Ä«µå°¡ ÁÖ´Â µ¥¹ÌÁö ¼öÄ¡
+        /// ì¹´ë“œê°€ ì£¼ëŠ” ë°ë¯¸ì§€ ìˆ˜ì¹˜
         /// </summary>
         public int Damage;
 
         /// <summary>
-        /// Ä«µå Á¤º¸¸¦ ÃÊ±âÈ­ÇÏ´Â »ı¼ºÀÚÀÔ´Ï´Ù.
-        /// ÄÚµå»ó¿¡¼­ Á÷Á¢ SkillCardData¸¦ »ı¼ºÇÒ °æ¿ì »ç¿ëµË´Ï´Ù.
+        /// ì¹´ë“œ ì •ë³´ë¥¼ ì´ˆê¸°í™”í•˜ëŠ” ìƒì„±ìì…ë‹ˆë‹¤.
+        /// ì½”ë“œìƒì—ì„œ ì§ì ‘ SkillCardDataë¥¼ ìƒì„±í•  ê²½ìš° ì‚¬ìš©ë©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="name">Ä«µå ÀÌ¸§</param>
-        /// <param name="description">¼³¸í</param>
-        /// <param name="artwork">ÀÌ¹ÌÁö</param>
-        /// <param name="coolTime">ÄğÅ¸ÀÓ</param>
-        /// <param name="damage">µ¥¹ÌÁö</param>
+        /// <param name="name">ì¹´ë“œ ì´ë¦„</param>
+        /// <param name="description">ì„¤ëª…</param>
+        /// <param name="artwork">ì´ë¯¸ì§€</param>
+        /// <param name="coolTime">ì¿¨íƒ€ì„</param>
+        /// <param name="damage">ë°ë¯¸ì§€</param>
         public SkillCardData(string name, string description, Sprite artwork, int coolTime, int damage)
         {
             Name = name;

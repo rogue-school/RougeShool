@@ -5,38 +5,38 @@ using Game.CombatSystem.Utility;
 namespace Game.CombatSystem.Interface
 {
     /// <summary>
-    /// ÀüÅõ Ä«µå ½½·ÔµéÀ» µî·ÏÇÏ°í Á¶È¸ÇÒ ¼ö ÀÖ´Â ½½·Ô ·¹Áö½ºÆ®¸® ÀÎÅÍÆäÀÌ½ºÀÔ´Ï´Ù.
-    /// ½½·Ô Æ÷Áö¼Ç(Position ¶Ç´Â FieldPosition)¿¡ µû¶ó ½½·Ô Á¤º¸¸¦ Á¦°øÇÕ´Ï´Ù.
+    /// ì „íˆ¬ ì¹´ë“œ ìŠ¬ë¡¯ë“¤ì„ ë“±ë¡í•˜ê³  ì¡°íšŒí•  ìˆ˜ ìžˆëŠ” ìŠ¬ë¡¯ ë ˆì§€ìŠ¤íŠ¸ë¦¬ ì¸í„°íŽ˜ì´ìŠ¤ìž…ë‹ˆë‹¤.
+    /// ìŠ¬ë¡¯ í¬ì§€ì…˜(Position ë˜ëŠ” FieldPosition)ì— ë”°ë¼ ìŠ¬ë¡¯ ì •ë³´ë¥¼ ì œê³µí•©ë‹ˆë‹¤.
     /// </summary>
     public interface ICombatSlotRegistry
     {
         /// <summary>
-        /// ÀüÅõ Ä«µå ½½·ÔµéÀ» µî·ÏÇÕ´Ï´Ù.
-        /// ÀÏ¹ÝÀûÀ¸·Î ÀüÅõ ½ÃÀÛ ½Ã ½½·ÔÀ» ÇÑ ¹ø µî·ÏÇÕ´Ï´Ù.
+        /// ì „íˆ¬ ì¹´ë“œ ìŠ¬ë¡¯ë“¤ì„ ë“±ë¡í•©ë‹ˆë‹¤.
+        /// ì¼ë°˜ì ìœ¼ë¡œ ì „íˆ¬ ì‹œìž‘ ì‹œ ìŠ¬ë¡¯ì„ í•œ ë²ˆ ë“±ë¡í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="slots">µî·ÏÇÒ ½½·Ô ¸ñ·Ï</param>
+        /// <param name="slots">ë“±ë¡í•  ìŠ¬ë¡¯ ëª©ë¡</param>
         void RegisterCombatSlots(IEnumerable<ICombatCardSlot> slots);
 
         /// <summary>
-        /// CombatSlotPosition ±â¹ÝÀ¸·Î ½½·ÔÀ» Á¶È¸ÇÕ´Ï´Ù.
-        /// ¿¹: ¼±°ø ½½·Ô, ÈÄ°ø ½½·Ô µî ´ÜÀÏ ¿ªÇÒ ±â¹Ý ½½·Ô
+        /// CombatSlotPosition ê¸°ë°˜ìœ¼ë¡œ ìŠ¬ë¡¯ì„ ì¡°íšŒí•©ë‹ˆë‹¤.
+        /// ì˜ˆ: ì„ ê³µ ìŠ¬ë¡¯, í›„ê³µ ìŠ¬ë¡¯ ë“± ë‹¨ì¼ ì—­í•  ê¸°ë°˜ ìŠ¬ë¡¯
         /// </summary>
-        /// <param name="position">Á¶È¸ÇÒ ½½·Ô Æ÷Áö¼Ç</param>
-        /// <returns>½½·Ô °´Ã¼</returns>
+        /// <param name="position">ì¡°íšŒí•  ìŠ¬ë¡¯ í¬ì§€ì…˜</param>
+        /// <returns>ìŠ¬ë¡¯ ê°ì²´</returns>
         ICombatCardSlot GetCombatSlot(CombatSlotPosition position);
 
         /// <summary>
-        /// CombatFieldSlotPosition ±â¹ÝÀ¸·Î ½½·ÔÀ» Á¶È¸ÇÕ´Ï´Ù.
-        /// ¿¹: ÇÃ·¹ÀÌ¾î/Àû + ¼±°ø/ÈÄ°ø µîÀÇ º¹ÇÕ À§Ä¡
+        /// CombatFieldSlotPosition ê¸°ë°˜ìœ¼ë¡œ ìŠ¬ë¡¯ì„ ì¡°íšŒí•©ë‹ˆë‹¤.
+        /// ì˜ˆ: í”Œë ˆì´ì–´/ì  + ì„ ê³µ/í›„ê³µ ë“±ì˜ ë³µí•© ìœ„ì¹˜
         /// </summary>
-        /// <param name="fieldPosition">Á¶È¸ÇÒ ÇÊµå ½½·Ô Æ÷Áö¼Ç</param>
-        /// <returns>½½·Ô °´Ã¼</returns>
+        /// <param name="fieldPosition">ì¡°íšŒí•  í•„ë“œ ìŠ¬ë¡¯ í¬ì§€ì…˜</param>
+        /// <returns>ìŠ¬ë¡¯ ê°ì²´</returns>
         ICombatCardSlot GetCombatSlot(CombatFieldSlotPosition fieldPosition);
 
         /// <summary>
-        /// µî·ÏµÈ ¸ðµç ½½·ÔµéÀ» ¹ÝÈ¯ÇÕ´Ï´Ù.
+        /// ë“±ë¡ëœ ëª¨ë“  ìŠ¬ë¡¯ë“¤ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <returns>½½·Ô ¸ñ·Ï</returns>
+        /// <returns>ìŠ¬ë¡¯ ëª©ë¡</returns>
         IEnumerable<ICombatCardSlot> GetAllCombatSlots();
     }
 }

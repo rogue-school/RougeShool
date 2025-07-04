@@ -8,12 +8,12 @@ using Game.CombatSystem.Utility;
 namespace Game.CombatSystem.Executor
 {
     /// <summary>
-    /// ÀüÅõ ½ÇÇà ¼­ºñ½º.
-    /// ½½·Ô¿¡ ¹èÄ¡µÈ Ä«µå¸¦ ¼øÂ÷ÀûÀ¸·Î ½ÇÇàÇÏ°í °á°ú¸¦ Ã³¸®ÇÕ´Ï´Ù.
+    /// ì „íˆ¬ ì‹¤í–‰ ì„œë¹„ìŠ¤.
+    /// ìŠ¬ë¡¯ì— ë°°ì¹˜ëœ ì¹´ë“œë¥¼ ìˆœì°¨ì ìœ¼ë¡œ ì‹¤í–‰í•˜ê³  ê²°ê³¼ë¥¼ ì²˜ë¦¬í•©ë‹ˆë‹¤.
     /// </summary>
     public class CombatExecutorService : ICombatExecutorService, ICombatExecutor
     {
-        #region ÇÊµå ¹× »ı¼ºÀÚ
+        #region í•„ë“œ ë° ìƒì„±ì
 
         private readonly ICombatSlotRegistry combatSlotRegistry;
         private ICardExecutionContextProvider contextProvider;
@@ -22,7 +22,7 @@ namespace Game.CombatSystem.Executor
         private ICombatTurnManager turnManager;
 
         /// <summary>
-        /// »ı¼ºÀÚ - ÀüÅõ ½½·Ô, ÄÁÅØ½ºÆ® Á¦°øÀÚ, Ä«µå ½ÇÇà±â, Àû ÇÚµå ¸Å´ÏÀú¸¦ ÁÖÀÔ¹Ş½À´Ï´Ù.
+        /// ìƒì„±ì - ì „íˆ¬ ìŠ¬ë¡¯, ì»¨í…ìŠ¤íŠ¸ ì œê³µì, ì¹´ë“œ ì‹¤í–‰ê¸°, ì  í•¸ë“œ ë§¤ë‹ˆì €ë¥¼ ì£¼ì…ë°›ìŠµë‹ˆë‹¤.
         /// </summary>
         public CombatExecutorService(
             ICombatSlotRegistry combatSlotRegistry,
@@ -38,10 +38,10 @@ namespace Game.CombatSystem.Executor
 
         #endregion
 
-        #region ÀüÅõ ½ÇÇà
+        #region ì „íˆ¬ ì‹¤í–‰
 
         /// <summary>
-        /// ÀüÃ¼ ÀüÅõ ÆäÀÌÁî¸¦ ½ÇÇàÇÕ´Ï´Ù. (¼±°ø ¡æ ÈÄ°ø)
+        /// ì „ì²´ ì „íˆ¬ í˜ì´ì¦ˆë¥¼ ì‹¤í–‰í•©ë‹ˆë‹¤. (ì„ ê³µ â†’ í›„ê³µ)
         /// </summary>
         public IEnumerator ExecuteCombatPhase()
         {
@@ -50,9 +50,9 @@ namespace Game.CombatSystem.Executor
         }
 
         /// <summary>
-        /// ÁöÁ¤ÇÑ ½½·Ô À§Ä¡¿¡ ÀÖ´Â Ä«µåÀÇ È¿°ú¸¦ ½ÇÇàÇÕ´Ï´Ù.
+        /// ì§€ì •í•œ ìŠ¬ë¡¯ ìœ„ì¹˜ì— ìˆëŠ” ì¹´ë“œì˜ íš¨ê³¼ë¥¼ ì‹¤í–‰í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="slotPosition">½ÇÇàÇÒ ½½·Ô À§Ä¡ (FIRST ¶Ç´Â SECOND)</param>
+        /// <param name="slotPosition">ì‹¤í–‰í•  ìŠ¬ë¡¯ ìœ„ì¹˜ (FIRST ë˜ëŠ” SECOND)</param>
         public IEnumerator PerformAttack(CombatSlotPosition slotPosition)
         {
             var fieldSlot = SlotPositionUtil.ToFieldSlot(slotPosition);
@@ -60,18 +60,18 @@ namespace Game.CombatSystem.Executor
 
             if (slot == null || slot.IsEmpty())
             {
-                Debug.LogWarning($"[Executor] ½½·Ô {slotPosition}¿¡ Ä«µå°¡ ¾ø½À´Ï´Ù.");
+                Debug.LogWarning($"[Executor] ìŠ¬ë¡¯ {slotPosition}ì— ì¹´ë“œê°€ ì—†ìŠµë‹ˆë‹¤.");
                 yield break;
             }
 
             var card = slot.GetCard();
             if (card == null)
             {
-                Debug.LogWarning($"[Executor] ½½·Ô {slotPosition}¿¡ µî·ÏµÈ Ä«µå°¡ nullÀÔ´Ï´Ù.");
+                Debug.LogWarning($"[Executor] ìŠ¬ë¡¯ {slotPosition}ì— ë“±ë¡ëœ ì¹´ë“œê°€ nullì…ë‹ˆë‹¤.");
                 yield break;
             }
 
-            Debug.Log($"[Executor] Ä«µå ½ÇÇà ½ÃÀÛ: {card.GetCardName()}");
+            Debug.Log($"[Executor] ì¹´ë“œ ì‹¤í–‰ ì‹œì‘: {card.GetCardName()}");
 
             var context = contextProvider.CreateContext(card);
             cardExecutor.Execute(card, context, turnManager);
@@ -79,15 +79,15 @@ namespace Game.CombatSystem.Executor
             yield return new WaitForSeconds(0.5f);
 
             slot.ClearAll();
-            Debug.Log($"[Executor] ½½·Ô {slotPosition} Å¬¸®¾î ¿Ï·á");
+            Debug.Log($"[Executor] ìŠ¬ë¡¯ {slotPosition} í´ë¦¬ì–´ ì™„ë£Œ");
         }
 
         #endregion
 
-        #region Á¾¼Ó¼º ÁÖÀÔ
+        #region ì¢…ì†ì„± ì£¼ì…
 
         /// <summary>
-        /// ½ÇÇà °ü·Ã Á¾¼Ó °´Ã¼(ICardExecutionContextProvider, ICardExecutor)¸¦ µ¿ÀûÀ¸·Î ÁÖÀÔÇÕ´Ï´Ù.
+        /// ì‹¤í–‰ ê´€ë ¨ ì¢…ì† ê°ì²´(ICardExecutionContextProvider, ICardExecutor)ë¥¼ ë™ì ìœ¼ë¡œ ì£¼ì…í•©ë‹ˆë‹¤.
         /// </summary>
         public void InjectExecutionDependencies(ICardExecutionContextProvider provider, ICardExecutor executor)
         {
@@ -96,7 +96,7 @@ namespace Game.CombatSystem.Executor
         }
 
         /// <summary>
-        /// ÀüÅõ ÅÏ ¸Å´ÏÀú¸¦ ÁÖÀÔÇÕ´Ï´Ù.
+        /// ì „íˆ¬ í„´ ë§¤ë‹ˆì €ë¥¼ ì£¼ì…í•©ë‹ˆë‹¤.
         /// </summary>
         public void SetTurnManager(ICombatTurnManager manager)
         {

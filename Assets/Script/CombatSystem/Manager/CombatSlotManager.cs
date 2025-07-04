@@ -9,17 +9,17 @@ using Game.CombatSystem.Utility;
 namespace Game.CombatSystem.Manager
 {
     /// <summary>
-    /// ÀüÅõ ½½·ÔÀ» ÀÚµ¿À¸·Î ¹ÙÀÎµùÇÏ°í ½½·ÔÀÇ »óÅÂ¸¦ °ü¸®ÇÏ´Â Å¬·¡½ºÀÔ´Ï´Ù.
+    /// ì „íˆ¬ ìŠ¬ë¡¯ì„ ìë™ìœ¼ë¡œ ë°”ì¸ë”©í•˜ê³  ìŠ¬ë¡¯ì˜ ìƒíƒœë¥¼ ê´€ë¦¬í•˜ëŠ” í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
     /// </summary>
     public class CombatSlotManager : MonoBehaviour, ICombatSlotManager
     {
-        #region ½½·Ô µ¥ÀÌÅÍ ÀúÀå¼Ò
+        #region ìŠ¬ë¡¯ ë°ì´í„° ì €ì¥ì†Œ
 
         private Dictionary<CombatSlotPosition, ICombatCardSlot> combatSlots = new();
 
         #endregion
 
-        #region ÃÊ±âÈ­
+        #region ì´ˆê¸°í™”
 
         private void Awake()
         {
@@ -27,8 +27,8 @@ namespace Game.CombatSystem.Manager
         }
 
         /// <summary>
-        /// ÀÚ½Ä ¿ÀºêÁ§Æ®ÀÇ ½½·Ô UI¸¦ ÀÚµ¿À¸·Î Å½»öÇÏ¿© ½½·Ô Á¤º¸¸¦ µî·ÏÇÕ´Ï´Ù.
-        /// Áßº¹ ½½·ÔÀº °æ°í ·Î±×¸¦ Ãâ·ÂÇÕ´Ï´Ù.
+        /// ìì‹ ì˜¤ë¸Œì íŠ¸ì˜ ìŠ¬ë¡¯ UIë¥¼ ìë™ìœ¼ë¡œ íƒìƒ‰í•˜ì—¬ ìŠ¬ë¡¯ ì •ë³´ë¥¼ ë“±ë¡í•©ë‹ˆë‹¤.
+        /// ì¤‘ë³µ ìŠ¬ë¡¯ì€ ê²½ê³  ë¡œê·¸ë¥¼ ì¶œë ¥í•©ë‹ˆë‹¤.
         /// </summary>
         private void AutoBindSlots()
         {
@@ -43,22 +43,22 @@ namespace Game.CombatSystem.Manager
                 if (!combatSlots.ContainsKey(execPos))
                 {
                     combatSlots[execPos] = slotUI;
-                    Debug.Log($"[CombatSlotManager] ½½·Ô µî·Ï ¿Ï·á: {execPos}");
+                    Debug.Log($"[CombatSlotManager] ìŠ¬ë¡¯ ë“±ë¡ ì™„ë£Œ: {execPos}");
                 }
                 else
                 {
-                    Debug.LogWarning($"[CombatSlotManager] Áßº¹ ½½·Ô ¹ß°ß: {execPos}");
+                    Debug.LogWarning($"[CombatSlotManager] ì¤‘ë³µ ìŠ¬ë¡¯ ë°œê²¬: {execPos}");
                 }
             }
         }
 
         #endregion
 
-        #region ½½·Ô Á¢±Ù
+        #region ìŠ¬ë¡¯ ì ‘ê·¼
 
         /// <summary>
-        /// ½ÇÇà ½½·Ô À§Ä¡¸¦ ±âÁØÀ¸·Î ½½·ÔÀ» ¹İÈ¯ÇÕ´Ï´Ù.
-        /// ½½·ÔÀÌ Á¸ÀçÇÏÁö ¾ÊÀ¸¸é nullÀ» ¹İÈ¯ÇÕ´Ï´Ù.
+        /// ì‹¤í–‰ ìŠ¬ë¡¯ ìœ„ì¹˜ë¥¼ ê¸°ì¤€ìœ¼ë¡œ ìŠ¬ë¡¯ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
+        /// ìŠ¬ë¡¯ì´ ì¡´ì¬í•˜ì§€ ì•Šìœ¼ë©´ nullì„ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         /// <param name="position">CombatSlotPosition</param>
         public ICombatCardSlot GetSlot(CombatSlotPosition position)
@@ -68,7 +68,7 @@ namespace Game.CombatSystem.Manager
         }
 
         /// <summary>
-        /// ÇÊµå ½½·Ô À§Ä¡¸¦ ½ÇÇà ½½·Ô À§Ä¡·Î º¯È¯ÇÑ ÈÄ ÇØ´ç ½½·ÔÀ» ¹İÈ¯ÇÕ´Ï´Ù.
+        /// í•„ë“œ ìŠ¬ë¡¯ ìœ„ì¹˜ë¥¼ ì‹¤í–‰ ìŠ¬ë¡¯ ìœ„ì¹˜ë¡œ ë³€í™˜í•œ í›„ í•´ë‹¹ ìŠ¬ë¡¯ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         /// <param name="fieldPosition">CombatFieldSlotPosition</param>
         public ICombatCardSlot GetSlot(CombatFieldSlotPosition fieldPosition)
@@ -79,10 +79,10 @@ namespace Game.CombatSystem.Manager
 
         #endregion
 
-        #region ½½·Ô ÃÊ±âÈ­
+        #region ìŠ¬ë¡¯ ì´ˆê¸°í™”
 
         /// <summary>
-        /// ¸ğµç ½½·Ô¿¡¼­ Ä«µå ¹× UI¸¦ Á¦°ÅÇÕ´Ï´Ù.
+        /// ëª¨ë“  ìŠ¬ë¡¯ì—ì„œ ì¹´ë“œ ë° UIë¥¼ ì œê±°í•©ë‹ˆë‹¤.
         /// </summary>
         public void ClearAllSlots()
         {
@@ -94,10 +94,10 @@ namespace Game.CombatSystem.Manager
 
         #endregion
 
-        #region ½½·Ô »óÅÂ È®ÀÎ
+        #region ìŠ¬ë¡¯ ìƒíƒœ í™•ì¸
 
         /// <summary>
-        /// ÁöÁ¤ÇÑ ½ÇÇà ½½·ÔÀÌ Á¸ÀçÇÏÁö ¾Ê°Å³ª ºñ¾î ÀÖ´ÂÁö È®ÀÎÇÕ´Ï´Ù.
+        /// ì§€ì •í•œ ì‹¤í–‰ ìŠ¬ë¡¯ì´ ì¡´ì¬í•˜ì§€ ì•Šê±°ë‚˜ ë¹„ì–´ ìˆëŠ”ì§€ í™•ì¸í•©ë‹ˆë‹¤.
         /// </summary>
         /// <param name="position">CombatSlotPosition</param>
         public bool IsSlotEmpty(CombatSlotPosition position)
@@ -106,7 +106,7 @@ namespace Game.CombatSystem.Manager
         }
 
         /// <summary>
-        /// ÁöÁ¤ÇÑ ÇÊµå ½½·ÔÀÌ ºñ¾î ÀÖ´ÂÁö È®ÀÎÇÕ´Ï´Ù.
+        /// ì§€ì •í•œ í•„ë“œ ìŠ¬ë¡¯ì´ ë¹„ì–´ ìˆëŠ”ì§€ í™•ì¸í•©ë‹ˆë‹¤.
         /// </summary>
         /// <param name="fieldPosition">CombatFieldSlotPosition</param>
         public bool IsSlotEmpty(CombatFieldSlotPosition fieldPosition)

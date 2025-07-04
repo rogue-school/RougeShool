@@ -62,26 +62,26 @@ namespace Game.CombatSystem.UI
 
             if (currentCardUI != null)
             {
-                // Á¤È®ÇÑ ºÎ¸ğ·Î °­Á¦ ºÎÂø
+                // ì •í™•í•œ ë¶€ëª¨ë¡œ ê°•ì œ ë¶€ì°©
                 CardSlotHelper.AttachCardToSlot(currentCardUI, this);
 
-                // »ı¼º ¾Ö´Ï¸ŞÀÌ¼Ç ½ÇÇà (Á¸Àç ½Ã)
+                // ìƒì„± ì• ë‹ˆë©”ì´ì…˜ ì‹¤í–‰ (ì¡´ì¬ ì‹œ)
                 currentCardUI.GetComponent<SkillCardSpawnAnimator>()?.PlaySpawnAnimation();
 
-                // º¹±Í ±âÁØ À§Ä¡ ¸í½Ã
+                // ë³µê·€ ê¸°ì¤€ ìœ„ì¹˜ ëª…ì‹œ
                 var dragHandler = currentCardUI.GetComponent<CardDragHandler>();
                 if (dragHandler != null)
                 {
                     dragHandler.OriginalParent = this.transform;
                     dragHandler.OriginalWorldPosition = this.transform.position;
-                    Debug.Log($"[SetCardInternal] °­Á¦ ÀúÀåµÈ OriginalParent: {dragHandler.OriginalParent.name}");
+                    Debug.Log($"[SetCardInternal] ê°•ì œ ì €ì¥ëœ OriginalParent: {dragHandler.OriginalParent.name}");
                 }
 
-                Debug.Log($"[PlayerHandCardSlotUI] Ä«µå UI »ı¼º ¿Ï·á: {currentCardUI.name}");
+                Debug.Log($"[PlayerHandCardSlotUI] ì¹´ë“œ UI ìƒì„± ì™„ë£Œ: {currentCardUI.name}");
             }
             else
             {
-                Debug.LogError("[PlayerHandCardSlotUI] Ä«µå UI »ı¼º ½ÇÆĞ");
+                Debug.LogError("[PlayerHandCardSlotUI] ì¹´ë“œ UI ìƒì„± ì‹¤íŒ¨");
             }
         }
 

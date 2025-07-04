@@ -8,36 +8,36 @@ using Game.IManager;
 namespace Game.CombatSystem.Slot
 {
     /// <summary>
-    /// ¾À ³» ¸ğµç ½½·Ô ÄÄÆ÷³ÍÆ®¸¦ ÀÚµ¿À¸·Î Å½»öÇÏ°í ½½·Ô ·¹Áö½ºÆ®¸®¿¡ ¹ÙÀÎµùÇÏ´Â ÃÊ±âÈ­ Å¬·¡½ºÀÔ´Ï´Ù.
+    /// ì”¬ ë‚´ ëª¨ë“  ìŠ¬ë¡¯ ì»´í¬ë„ŒíŠ¸ë¥¼ ìë™ìœ¼ë¡œ íƒìƒ‰í•˜ê³  ìŠ¬ë¡¯ ë ˆì§€ìŠ¤íŠ¸ë¦¬ì— ë°”ì¸ë”©í•˜ëŠ” ì´ˆê¸°í™” í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
     /// </summary>
     public class SlotInitializer : MonoBehaviour, ISlotInitializer
     {
-        #region ÀÇÁ¸¼º ÁÖÀÔ
+        #region ì˜ì¡´ì„± ì£¼ì…
 
         [Inject] private ISlotRegistry _slotRegistry;
 
         #endregion
 
-        #region ½½·Ô ÀÚµ¿ ¹ÙÀÎµù
+        #region ìŠ¬ë¡¯ ìë™ ë°”ì¸ë”©
 
         /// <summary>
-        /// ¾À ³» ¸ğµç ÇÚµå ½½·Ô, ÀüÅõ ½½·Ô, Ä³¸¯ÅÍ ½½·ÔÀ» ÀÚµ¿ Å½»öÇÏ¿© ½½·Ô ·¹Áö½ºÆ®¸®¿¡ µî·ÏÇÕ´Ï´Ù.
+        /// ì”¬ ë‚´ ëª¨ë“  í•¸ë“œ ìŠ¬ë¡¯, ì „íˆ¬ ìŠ¬ë¡¯, ìºë¦­í„° ìŠ¬ë¡¯ì„ ìë™ íƒìƒ‰í•˜ì—¬ ìŠ¬ë¡¯ ë ˆì§€ìŠ¤íŠ¸ë¦¬ì— ë“±ë¡í•©ë‹ˆë‹¤.
         /// </summary>
         public void AutoBindAllSlots()
         {
             if (_slotRegistry == null)
             {
-                Debug.LogError("[SlotInitializer] SlotRegistry°¡ ÁÖÀÔµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+                Debug.LogError("[SlotInitializer] SlotRegistryê°€ ì£¼ì…ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
                 return;
             }
 
-            Debug.Log("[SlotInitializer] === ½½·Ô ÀÚµ¿ ¹ÙÀÎµù ½ÃÀÛ ===");
+            Debug.Log("[SlotInitializer] === ìŠ¬ë¡¯ ìë™ ë°”ì¸ë”© ì‹œì‘ ===");
 
             var handSlots = FindAll<IHandCardSlot>();
             var combatSlots = FindAll<ICombatCardSlot>();
             var characterSlots = FindAll<ICharacterSlot>();
 
-            Debug.Log($"[SlotInitializer] Å½»öµÈ ½½·Ô ¼ö - ÇÚµå: {handSlots.Length}, ÀüÅõ: {combatSlots.Length}, Ä³¸¯ÅÍ: {characterSlots.Length}");
+            Debug.Log($"[SlotInitializer] íƒìƒ‰ëœ ìŠ¬ë¡¯ ìˆ˜ - í•¸ë“œ: {handSlots.Length}, ì „íˆ¬: {combatSlots.Length}, ìºë¦­í„°: {characterSlots.Length}");
 
             _slotRegistry.GetHandSlotRegistry()?.RegisterHandSlots(handSlots);
             _slotRegistry.GetCombatSlotRegistry()?.RegisterCombatSlots(combatSlots);
@@ -46,20 +46,20 @@ namespace Game.CombatSystem.Slot
             if (handSlots.Length > 0 || combatSlots.Length > 0 || characterSlots.Length > 0)
             {
                 _slotRegistry.MarkInitialized();
-                Debug.Log("[SlotInitializer] === ½½·Ô ÀÚµ¿ ¹ÙÀÎµù ¿Ï·á ===");
+                Debug.Log("[SlotInitializer] === ìŠ¬ë¡¯ ìë™ ë°”ì¸ë”© ì™„ë£Œ ===");
             }
             else
             {
-                Debug.LogWarning("[SlotInitializer] ½½·ÔÀÌ ÇÏ³ªµµ Å½»öµÇÁö ¾Ê¾Ò½À´Ï´Ù. ÃÊ±âÈ­¸¦ ¿Ï·áÇÏÁö ¾Ê½À´Ï´Ù.");
+                Debug.LogWarning("[SlotInitializer] ìŠ¬ë¡¯ì´ í•˜ë‚˜ë„ íƒìƒ‰ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤. ì´ˆê¸°í™”ë¥¼ ì™„ë£Œí•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.");
             }
         }
 
         #endregion
 
-        #region ½½·Ô Å½»ö À¯Æ¿¸®Æ¼
+        #region ìŠ¬ë¡¯ íƒìƒ‰ ìœ í‹¸ë¦¬í‹°
 
         /// <summary>
-        /// ÇöÀç ¾À¿¡¼­ ºñÈ°¼º ¿ÀºêÁ§Æ® Æ÷ÇÔÇÏ¿© ÁÖ¾îÁø Å¸ÀÔÀÇ ÄÄÆ÷³ÍÆ®¸¦ ¸ğµÎ Å½»öÇÕ´Ï´Ù.
+        /// í˜„ì¬ ì”¬ì—ì„œ ë¹„í™œì„± ì˜¤ë¸Œì íŠ¸ í¬í•¨í•˜ì—¬ ì£¼ì–´ì§„ íƒ€ì…ì˜ ì»´í¬ë„ŒíŠ¸ë¥¼ ëª¨ë‘ íƒìƒ‰í•©ë‹ˆë‹¤.
         /// </summary>
         private T[] FindAll<T>() where T : class
         {

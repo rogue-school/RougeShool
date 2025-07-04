@@ -13,14 +13,14 @@ namespace Game.CombatSystem.Utility
         {
             if (cardUI == null)
             {
-                Debug.LogWarning("[CardSlotHelper] cardUI°¡ nullÀÔ´Ï´Ù.");
+                Debug.LogWarning("[CardSlotHelper] cardUIê°€ nullì…ë‹ˆë‹¤.");
                 return;
             }
 
             var dragHandler = cardUI.GetComponent<CardDragHandler>();
             if (dragHandler == null || dragHandler.OriginalParent == null)
             {
-                Debug.LogWarning($"[CardSlotHelper] º¹±Í ½ÇÆĞ: dragHandler ¶Ç´Â ¿ø·¡ ºÎ¸ğ°¡ null - {cardUI.name}");
+                Debug.LogWarning($"[CardSlotHelper] ë³µê·€ ì‹¤íŒ¨: dragHandler ë˜ëŠ” ì›ë˜ ë¶€ëª¨ê°€ null - {cardUI.name}");
                 return;
             }
 
@@ -39,21 +39,21 @@ namespace Game.CombatSystem.Utility
                 cardUI.transform.localScale = Vector3.one;
             }
 
-            Debug.Log($"[CardSlotHelper] Ä«µå º¹±Í ¿Ï·á: {cardUI.name}");
+            Debug.Log($"[CardSlotHelper] ì¹´ë“œ ë³µê·€ ì™„ë£Œ: {cardUI.name}");
         }
 
         public static void AttachCardToSlot(SkillCardUI cardUI, MonoBehaviour slotTransform)
         {
             if (cardUI == null || slotTransform == null)
             {
-                Debug.LogWarning("[CardSlotHelper] Ä«µå UI ¶Ç´Â ½½·ÔÀÌ nullÀÔ´Ï´Ù.");
+                Debug.LogWarning("[CardSlotHelper] ì¹´ë“œ UI ë˜ëŠ” ìŠ¬ë¡¯ì´ nullì…ë‹ˆë‹¤.");
                 return;
             }
 
             var rect = cardUI.GetComponent<RectTransform>();
             if (rect == null)
             {
-                Debug.LogWarning($"[CardSlotHelper] RectTransformÀÌ ¾ø½À´Ï´Ù - {cardUI.name}");
+                Debug.LogWarning($"[CardSlotHelper] RectTransformì´ ì—†ìŠµë‹ˆë‹¤ - {cardUI.name}");
                 return;
             }
 
@@ -62,7 +62,7 @@ namespace Game.CombatSystem.Utility
             rect.localRotation = Quaternion.identity;
             rect.localScale = Vector3.one;
 
-            Debug.Log($"[CardSlotHelper] Ä«µå ¹èÄ¡ ¿Ï·á: {cardUI.name} ¡æ {slotTransform.name}");
+            Debug.Log($"[CardSlotHelper] ì¹´ë“œ ë°°ì¹˜ ì™„ë£Œ: {cardUI.name} â†’ {slotTransform.name}");
         }
         public static void AttachCardToHandSlot(SkillCardUI cardUI, SkillCardSlotPosition slotPos)
         {
@@ -74,11 +74,11 @@ namespace Game.CombatSystem.Utility
                 cardUI.transform.SetParent(targetSlot.transform, false);
                 cardUI.transform.position = targetSlot.transform.position;
 
-                Debug.Log($"[CardSlotHelper] Ä«µå ÇÚµå ½½·Ô À§Ä¡ º¹±Í: {cardUI.name} ¡æ {slotPos}");
+                Debug.Log($"[CardSlotHelper] ì¹´ë“œ í•¸ë“œ ìŠ¬ë¡¯ ìœ„ì¹˜ ë³µê·€: {cardUI.name} â†’ {slotPos}");
             }
             else
             {
-                Debug.LogWarning($"[CardSlotHelper] ÇØ´ç ÇÚµå ½½·ÔÀ» Ã£À» ¼ö ¾ø½À´Ï´Ù: {slotPos}");
+                Debug.LogWarning($"[CardSlotHelper] í•´ë‹¹ í•¸ë“œ ìŠ¬ë¡¯ì„ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤: {slotPos}");
             }
         }
     }

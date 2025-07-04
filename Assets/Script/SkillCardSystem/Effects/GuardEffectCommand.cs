@@ -5,26 +5,26 @@ using Game.SkillCardSystem.Interface;
 namespace Game.SkillCardSystem.Effect
 {
     /// <summary>
-    /// ´ë»ó Ä³¸¯ÅÍ¿¡°Ô °¡µå »óÅÂ¸¦ Àû¿ëÇÏ´Â Ä¿¸Çµå Å¬·¡½ºÀÔ´Ï´Ù.
-    /// Ä«µå È¿°ú ½ÇÇà ½Ã »ç¿ëµË´Ï´Ù.
+    /// ëŒ€ìƒ ìºë¦­í„°ì—ê²Œ ê°€ë“œ ìƒíƒœë¥¼ ì ìš©í•˜ëŠ” ì»¤ë§¨ë“œ í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
+    /// ì¹´ë“œ íš¨ê³¼ ì‹¤í–‰ ì‹œ ì‚¬ìš©ë©ë‹ˆë‹¤.
     /// </summary>
     public class GuardEffectCommand : ICardEffectCommand
     {
         /// <summary>
-        /// Ä¿¸Çµå¸¦ ½ÇÇàÇÏ¿© ´ë»ó Ä³¸¯ÅÍ¿¡°Ô °¡µå »óÅÂ¸¦ ºÎ¿©ÇÕ´Ï´Ù.
+        /// ì»¤ë§¨ë“œë¥¼ ì‹¤í–‰í•˜ì—¬ ëŒ€ìƒ ìºë¦­í„°ì—ê²Œ ê°€ë“œ ìƒíƒœë¥¼ ë¶€ì—¬í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="context">Ä«µå ½ÇÇà ÄÁÅØ½ºÆ® (´ë»ó Æ÷ÇÔ)</param>
-        /// <param name="turnManager">ÀüÅõ ÅÏ ¸Å´ÏÀú (»ç¿ëµÇÁö ¾ÊÀ½)</param>
+        /// <param name="context">ì¹´ë“œ ì‹¤í–‰ ì»¨í…ìŠ¤íŠ¸ (ëŒ€ìƒ í¬í•¨)</param>
+        /// <param name="turnManager">ì „íˆ¬ í„´ ë§¤ë‹ˆì € (ì‚¬ìš©ë˜ì§€ ì•ŠìŒ)</param>
         public void Execute(ICardExecutionContext context, ICombatTurnManager turnManager)
         {
             if (context?.Target == null)
             {
-                Debug.LogWarning("[GuardEffectCommand] À¯È¿ÇÏÁö ¾ÊÀº ´ë»ó (null)");
+                Debug.LogWarning("[GuardEffectCommand] ìœ íš¨í•˜ì§€ ì•Šì€ ëŒ€ìƒ (null)");
                 return;
             }
 
             context.Target.SetGuarded(true);
-            Debug.Log($"[GuardEffectCommand] {context.Target.GetCharacterName()}¿¡°Ô °¡µå »óÅÂ Àû¿ëµÊ");
+            Debug.Log($"[GuardEffectCommand] {context.Target.GetCharacterName()}ì—ê²Œ ê°€ë“œ ìƒíƒœ ì ìš©ë¨");
         }
     }
 }

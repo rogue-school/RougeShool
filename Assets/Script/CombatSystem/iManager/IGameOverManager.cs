@@ -1,20 +1,20 @@
 namespace Game.IManager
 {
     /// <summary>
-    /// °ÔÀÓ ¿À¹ö »óÈ²¿¡¼­ °ü·Ã UI Ã³¸® ¹× ÀüÈ¯ ·ÎÁ÷À» ´ã´çÇÏ´Â ¸Å´ÏÀú ÀÎÅÍÆäÀÌ½ºÀÔ´Ï´Ù.
+    /// ê²Œìž„ ì˜¤ë²„ ìƒí™©ì—ì„œ ê´€ë ¨ UI ì²˜ë¦¬ ë° ì „í™˜ ë¡œì§ì„ ë‹´ë‹¹í•˜ëŠ” ë§¤ë‹ˆì € ì¸í„°íŽ˜ì´ìŠ¤ìž…ë‹ˆë‹¤.
     /// </summary>
     public interface IGameOverManager
     {
         /// <summary>
-        /// °ÔÀÓ ¿À¹ö UI¸¦ È­¸é¿¡ Ç¥½ÃÇÕ´Ï´Ù.
-        /// ¿¹: »ç¸Á ¸Þ½ÃÁö, Àç½ÃÀÛ ¹öÆ°, ¸ÞÀÎ ¸Þ´º ÀÌµ¿ µî
+        /// ê²Œìž„ ì˜¤ë²„ UIë¥¼ í™”ë©´ì— í‘œì‹œí•©ë‹ˆë‹¤.
+        /// ì˜ˆ: ì‚¬ë§ ë©”ì‹œì§€, ìž¬ì‹œìž‘ ë²„íŠ¼, ë©”ì¸ ë©”ë‰´ ì´ë™ ë“±
         /// </summary>
         void ShowGameOverUI();
 
         /// <summary>
-        /// °ÔÀÓ ¿À¹ö Ã³¸®¸¦ ¼öÇàÇÕ´Ï´Ù.
-        /// º¸Åë ÇÃ·¹ÀÌ¾î »ç¸Á µîÀÇ Á¶°Ç ÃæÁ· ½Ã È£ÃâµÇ¸ç,
-        /// UI Ãâ·Â°ú °ÔÀÓ Èå¸§ Á¤Áö¸¦ Æ÷ÇÔÇÕ´Ï´Ù.
+        /// ê²Œìž„ ì˜¤ë²„ ì²˜ë¦¬ë¥¼ ìˆ˜í–‰í•©ë‹ˆë‹¤.
+        /// ë³´í†µ í”Œë ˆì´ì–´ ì‚¬ë§ ë“±ì˜ ì¡°ê±´ ì¶©ì¡± ì‹œ í˜¸ì¶œë˜ë©°,
+        /// UI ì¶œë ¥ê³¼ ê²Œìž„ íë¦„ ì •ì§€ë¥¼ í¬í•¨í•©ë‹ˆë‹¤.
         /// </summary>
         void TriggerGameOver();
     }

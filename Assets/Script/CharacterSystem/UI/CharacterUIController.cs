@@ -7,42 +7,42 @@ using Game.CharacterSystem.Core;
 namespace Game.CharacterSystem.UI
 {
     /// <summary>
-    /// Ä³¸¯ÅÍ ÀÌ¸§, Ã¼·Â, ÃÊ»óÈ­ µî UI ¿ä¼Ò¸¦ °ü¸®ÇÏ´Â Å¬·¡½ºÀÔ´Ï´Ù.
-    /// ICharacter ÀÎÅÍÆäÀÌ½º¿Í ¿¬µ¿µÇ¾î ½Ã°¢Àû Á¤º¸¸¦ Ç¥½ÃÇÕ´Ï´Ù.
+    /// ìºë¦­í„° ì´ë¦„, ì²´ë ¥, ì´ˆìƒí™” ë“± UI ìš”ì†Œë¥¼ ê´€ë¦¬í•˜ëŠ” í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
+    /// ICharacter ì¸í„°í˜ì´ìŠ¤ì™€ ì—°ë™ë˜ì–´ ì‹œê°ì  ì •ë³´ë¥¼ í‘œì‹œí•©ë‹ˆë‹¤.
     /// </summary>
     public class CharacterUIController : MonoBehaviour
     {
-        [Header("UI ÂüÁ¶")]
-        [Tooltip("Ä³¸¯ÅÍ ÀÌ¸§ Ç¥½Ã¿ë ÅØ½ºÆ®")]
+        [Header("UI ì°¸ì¡°")]
+        [Tooltip("ìºë¦­í„° ì´ë¦„ í‘œì‹œìš© í…ìŠ¤íŠ¸")]
         [SerializeField] private TextMeshProUGUI nameText;
 
-        [Tooltip("Ã¼·Â Ç¥½Ã¿ë ÅØ½ºÆ®")]
+        [Tooltip("ì²´ë ¥ í‘œì‹œìš© í…ìŠ¤íŠ¸")]
         [SerializeField] private TextMeshProUGUI hpText;
 
-        [Tooltip("ÃÊ»óÈ­ ÀÌ¹ÌÁö")]
+        [Tooltip("ì´ˆìƒí™” ì´ë¯¸ì§€")]
         [SerializeField] private Image portraitImage;
 
         private ICharacter character;
 
-        #region ÃÊ±âÈ­
+        #region ì´ˆê¸°í™”
 
         /// <summary>
-        /// ÁöÁ¤µÈ Ä³¸¯ÅÍÀÇ Á¤º¸¸¦ ±â¹İÀ¸·Î UI¸¦ ÃÊ±âÈ­ÇÕ´Ï´Ù.
+        /// ì§€ì •ëœ ìºë¦­í„°ì˜ ì •ë³´ë¥¼ ê¸°ë°˜ìœ¼ë¡œ UIë¥¼ ì´ˆê¸°í™”í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="character">UI¿¡ ¿¬°áÇÒ Ä³¸¯ÅÍ</param>
+        /// <param name="character">UIì— ì—°ê²°í•  ìºë¦­í„°</param>
         public void Initialize(ICharacter character)
         {
             this.character = character;
 
             if (character == null)
             {
-                Debug.LogWarning("[CharacterUIController] Initialize() - character°¡ nullÀÔ´Ï´Ù.");
+                Debug.LogWarning("[CharacterUIController] Initialize() - characterê°€ nullì…ë‹ˆë‹¤.");
                 return;
             }
 
             SetName(character.GetCharacterName());
 
-            // Ãß°¡ Á¤º¸´Â CharacterBase¸¦ ÅëÇØ Á¢±Ù
+            // ì¶”ê°€ ì •ë³´ëŠ” CharacterBaseë¥¼ í†µí•´ ì ‘ê·¼
             if (character is CharacterBase baseChar)
             {
                 SetHP(baseChar.GetCurrentHP(), baseChar.GetMaxHP());
@@ -52,12 +52,12 @@ namespace Game.CharacterSystem.UI
 
         #endregion
 
-        #region UI ¼³Á¤
+        #region UI ì„¤ì •
 
         /// <summary>
-        /// ÀÌ¸§ ÅØ½ºÆ®¸¦ ¼³Á¤ÇÕ´Ï´Ù.
+        /// ì´ë¦„ í…ìŠ¤íŠ¸ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="name">Ä³¸¯ÅÍ ÀÌ¸§</param>
+        /// <param name="name">ìºë¦­í„° ì´ë¦„</param>
         private void SetName(string name)
         {
             if (nameText != null)
@@ -65,25 +65,25 @@ namespace Game.CharacterSystem.UI
         }
 
         /// <summary>
-        /// Ã¼·Â Á¤º¸¸¦ UI¿¡ °»½ÅÇÕ´Ï´Ù.
+        /// ì²´ë ¥ ì •ë³´ë¥¼ UIì— ê°±ì‹ í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="current">ÇöÀç Ã¼·Â</param>
-        /// <param name="max">ÃÖ´ë Ã¼·Â</param>
+        /// <param name="current">í˜„ì¬ ì²´ë ¥</param>
+        /// <param name="max">ìµœëŒ€ ì²´ë ¥</param>
         public void SetHP(int current, int max)
         {
             if (hpText == null) return;
 
-            // ÇöÀç Ã¼·Â¸¸ Ç¥½Ã
+            // í˜„ì¬ ì²´ë ¥ë§Œ í‘œì‹œ
             hpText.text = current.ToString();
 
-            // »ö»ó: ÃÖ´ë Ã¼·ÂÀÌ¸é Èò»ö, ¾Æ´Ï¸é ºÓÀº»ö
+            // ìƒ‰ìƒ: ìµœëŒ€ ì²´ë ¥ì´ë©´ í°ìƒ‰, ì•„ë‹ˆë©´ ë¶‰ì€ìƒ‰
             hpText.color = (current < max) ? Color.red : Color.white;
         }
 
         /// <summary>
-        /// ÃÊ»óÈ­ ÀÌ¹ÌÁö¸¦ ¼³Á¤ÇÕ´Ï´Ù.
+        /// ì´ˆìƒí™” ì´ë¯¸ì§€ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="sprite">¼³Á¤ÇÒ ½ºÇÁ¶óÀÌÆ®</param>
+        /// <param name="sprite">ì„¤ì •í•  ìŠ¤í”„ë¼ì´íŠ¸</param>
         public void SetPortrait(Sprite sprite)
         {
             if (portraitImage != null && sprite != null)
@@ -92,10 +92,10 @@ namespace Game.CharacterSystem.UI
 
         #endregion
 
-        #region ÃÊ±âÈ­/Á¦°Å
+        #region ì´ˆê¸°í™”/ì œê±°
 
         /// <summary>
-        /// ¸ğµç UI ¿ä¼Ò¸¦ ÃÊ±â »óÅÂ·Î ÃÊ±âÈ­ÇÕ´Ï´Ù.
+        /// ëª¨ë“  UI ìš”ì†Œë¥¼ ì´ˆê¸° ìƒíƒœë¡œ ì´ˆê¸°í™”í•©ë‹ˆë‹¤.
         /// </summary>
         public void Clear()
         {

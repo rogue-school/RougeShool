@@ -8,219 +8,219 @@ using Game.SkillCardSystem.UI;
 namespace Game.CombatSystem.Interface
 {
     /// <summary>
-    /// ÀüÅõ Èå¸§ÀÇ ÀüÃ¼ °úÁ¤À» Á¶À²ÇÏ´Â ÀÎÅÍÆäÀÌ½ºÀÔ´Ï´Ù.
-    /// Ä«µå µî·Ï, °ø°Ý Ã³¸®, »óÅÂ ÀüÀÌ, UI Á¦¾î µî ÀüÅõÀÇ ¸ÞÀÎ ÄÁÆ®·Ñ ¿ªÇÒÀ» ¼öÇàÇÕ´Ï´Ù.
+    /// ì „íˆ¬ íë¦„ì˜ ì „ì²´ ê³¼ì •ì„ ì¡°ìœ¨í•˜ëŠ” ì¸í„°íŽ˜ì´ìŠ¤ìž…ë‹ˆë‹¤.
+    /// ì¹´ë“œ ë“±ë¡, ê³µê²© ì²˜ë¦¬, ìƒíƒœ ì „ì´, UI ì œì–´ ë“± ì „íˆ¬ì˜ ë©”ì¸ ì»¨íŠ¸ë¡¤ ì—­í• ì„ ìˆ˜í–‰í•©ë‹ˆë‹¤.
     /// </summary>
     public interface ICombatFlowCoordinator
     {
-        #region ÃÊ±âÈ­ ¹× ÁØºñ
+        #region ì´ˆê¸°í™” ë° ì¤€ë¹„
         void RegisterCardToTurnRegistry(CombatSlotPosition pos, ISkillCard card, ISkillCardUI ui);
         IEnumerator RegisterCardToCombatSlotCoroutine(CombatSlotPosition pos, ISkillCard card, ISkillCardUI ui);
 
         /// <summary>
-        /// ½½·Ô ÃÊ±âÈ­, Ä³¸¯ÅÍ ¹èÄ¡ µî ÀüÅõ ÁØºñ ÀýÂ÷¸¦ ¼öÇàÇÕ´Ï´Ù.
+        /// ìŠ¬ë¡¯ ì´ˆê¸°í™”, ìºë¦­í„° ë°°ì¹˜ ë“± ì „íˆ¬ ì¤€ë¹„ ì ˆì°¨ë¥¼ ìˆ˜í–‰í•©ë‹ˆë‹¤.
         /// </summary>
         IEnumerator PerformCombatPreparation();
 
         /// <summary>
-        /// ÀüÅõ ÁØºñ ¿Ï·á ÈÄ ÄÝ¹éÀ» ½ÇÇàÇÏ´Â ºñµ¿±â ÃÊ±âÈ­ ¸Þ¼­µåÀÔ´Ï´Ù.
+        /// ì „íˆ¬ ì¤€ë¹„ ì™„ë£Œ í›„ ì½œë°±ì„ ì‹¤í–‰í•˜ëŠ” ë¹„ë™ê¸° ì´ˆê¸°í™” ë©”ì„œë“œìž…ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="onComplete">ÀüÅõ ÁØºñ ¿Ï·á ½Ã È£ÃâµÉ ÄÝ¹é</param>
+        /// <param name="onComplete">ì „íˆ¬ ì¤€ë¹„ ì™„ë£Œ ì‹œ í˜¸ì¶œë  ì½œë°±</param>
         IEnumerator PerformCombatPreparation(Action<bool> onComplete);
 
         /// <summary>
-        /// ÀüÅõ Èå¸§À» ½ÃÀÛÇÕ´Ï´Ù. (»óÅÂ ÃÊ±âÈ­ Æ÷ÇÔ)
+        /// ì „íˆ¬ íë¦„ì„ ì‹œìž‘í•©ë‹ˆë‹¤. (ìƒíƒœ ì´ˆê¸°í™” í¬í•¨)
         /// </summary>
         void StartCombatFlow();
 
         /// <summary>
-        /// ºñµ¿±â ¹æ½ÄÀ¸·Î ÀüÅõ ÁØºñ¸¦ ¿äÃ»ÇÕ´Ï´Ù.
+        /// ë¹„ë™ê¸° ë°©ì‹ìœ¼ë¡œ ì „íˆ¬ ì¤€ë¹„ë¥¼ ìš”ì²­í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="onComplete">ÁØºñ ¿Ï·á ÈÄ È£ÃâµÉ ÄÝ¹é</param>
+        /// <param name="onComplete">ì¤€ë¹„ ì™„ë£Œ í›„ í˜¸ì¶œë  ì½œë°±</param>
         void RequestCombatPreparation(Action<bool> onComplete);
 
         /// <summary>
-        /// ÅÏ »óÅÂ ¸Å´ÏÀú¿Í »óÅÂ ÆÑÅä¸®¸¦ ÁÖÀÔÇÕ´Ï´Ù.
+        /// í„´ ìƒíƒœ ë§¤ë‹ˆì €ì™€ ìƒíƒœ íŒ©í† ë¦¬ë¥¼ ì£¼ìž…í•©ë‹ˆë‹¤.
         /// </summary>
         void InjectTurnStateDependencies(ICombatTurnManager turnManager, ICombatStateFactory stateFactory);
 
         #endregion
 
-        #region ÀüÅõ Èå¸§
+        #region ì „íˆ¬ íë¦„
 
         /// <summary>
-        /// ¼±°ø Ä³¸¯ÅÍÀÇ Ä«µå ½ÇÇà ÀýÂ÷¸¦ ¼öÇàÇÕ´Ï´Ù.
+        /// ì„ ê³µ ìºë¦­í„°ì˜ ì¹´ë“œ ì‹¤í–‰ ì ˆì°¨ë¥¼ ìˆ˜í–‰í•©ë‹ˆë‹¤.
         /// </summary>
         IEnumerator PerformFirstAttack();
 
         /// <summary>
-        /// ÈÄ°ø Ä³¸¯ÅÍÀÇ Ä«µå ½ÇÇà ÀýÂ÷¸¦ ¼öÇàÇÕ´Ï´Ù.
+        /// í›„ê³µ ìºë¦­í„°ì˜ ì¹´ë“œ ì‹¤í–‰ ì ˆì°¨ë¥¼ ìˆ˜í–‰í•©ë‹ˆë‹¤.
         /// </summary>
         IEnumerator PerformSecondAttack();
 
         /// <summary>
-        /// °ø°Ý ÈÄ °á°ú¸¦ Ã³¸®ÇÕ´Ï´Ù. (Ã¼·Â °¨¼Ò, »ç¸Á Ã³¸® µî)
+        /// ê³µê²© í›„ ê²°ê³¼ë¥¼ ì²˜ë¦¬í•©ë‹ˆë‹¤. (ì²´ë ¥ ê°ì†Œ, ì‚¬ë§ ì²˜ë¦¬ ë“±)
         /// </summary>
         IEnumerator PerformResultPhase();
 
         /// <summary>
-        /// ÀüÅõ ½Â¸® ½Ã ÈÄ¼Ó Ã³¸® ÀýÂ÷¸¦ ¼öÇàÇÕ´Ï´Ù.
+        /// ì „íˆ¬ ìŠ¹ë¦¬ ì‹œ í›„ì† ì²˜ë¦¬ ì ˆì°¨ë¥¼ ìˆ˜í–‰í•©ë‹ˆë‹¤.
         /// </summary>
         IEnumerator PerformVictoryPhase();
 
         /// <summary>
-        /// °ÔÀÓ ¿À¹ö ½Ã Ã³¸® ÀýÂ÷¸¦ ¼öÇàÇÕ´Ï´Ù.
+        /// ê²Œìž„ ì˜¤ë²„ ì‹œ ì²˜ë¦¬ ì ˆì°¨ë¥¼ ìˆ˜í–‰í•©ë‹ˆë‹¤.
         /// </summary>
         IEnumerator PerformGameOverPhase();
 
         /// <summary>
-        /// ¼±°ø °ø°ÝÀ» ºñµ¿±â ¿äÃ» ¹æ½ÄÀ¸·Î ½ÇÇàÇÕ´Ï´Ù.
+        /// ì„ ê³µ ê³µê²©ì„ ë¹„ë™ê¸° ìš”ì²­ ë°©ì‹ìœ¼ë¡œ ì‹¤í–‰í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="onComplete">¿Ï·á ÈÄ È£ÃâµÉ ÄÝ¹é</param>
+        /// <param name="onComplete">ì™„ë£Œ í›„ í˜¸ì¶œë  ì½œë°±</param>
         void RequestFirstAttack(Action onComplete = null);
 
         #endregion
 
-        #region ÀÔ·Â Á¦¾î
+        #region ìž…ë ¥ ì œì–´
 
         /// <summary>
-        /// ÇÃ·¹ÀÌ¾îÀÇ Ä«µå ÀÔ·ÂÀ» È°¼ºÈ­ÇÕ´Ï´Ù.
+        /// í”Œë ˆì´ì–´ì˜ ì¹´ë“œ ìž…ë ¥ì„ í™œì„±í™”í•©ë‹ˆë‹¤.
         /// </summary>
         void EnablePlayerInput();
 
         /// <summary>
-        /// ÇÃ·¹ÀÌ¾îÀÇ Ä«µå ÀÔ·ÂÀ» ºñÈ°¼ºÈ­ÇÕ´Ï´Ù.
+        /// í”Œë ˆì´ì–´ì˜ ì¹´ë“œ ìž…ë ¥ì„ ë¹„í™œì„±í™”í•©ë‹ˆë‹¤.
         /// </summary>
         void DisablePlayerInput();
 
         /// <summary>
-        /// ÇöÀç ÇÃ·¹ÀÌ¾î°¡ ÀÔ·Â °¡´ÉÇÑ »óÅÂÀÎÁö ¹ÝÈ¯ÇÕ´Ï´Ù.
+        /// í˜„ìž¬ í”Œë ˆì´ì–´ê°€ ìž…ë ¥ ê°€ëŠ¥í•œ ìƒíƒœì¸ì§€ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <returns>ÀÔ·Â °¡´É ¿©ºÎ</returns>
+        /// <returns>ìž…ë ¥ ê°€ëŠ¥ ì—¬ë¶€</returns>
         bool IsPlayerInputEnabled();
 
         #endregion
 
-        #region Àû °ü¸®
+        #region ì  ê´€ë¦¬
 
         /// <summary>
-        /// ´ÙÀ½ ÀûÀ» »ý¼º ¹× ¹èÄ¡ÇÕ´Ï´Ù.
+        /// ë‹¤ìŒ ì ì„ ìƒì„± ë° ë°°ì¹˜í•©ë‹ˆë‹¤.
         /// </summary>
         void SpawnNextEnemy();
 
         /// <summary>
-        /// ÇöÀç Àû Ä³¸¯ÅÍ¸¦ ÀüÀå¿¡¼­ Á¦°ÅÇÕ´Ï´Ù.
+        /// í˜„ìž¬ ì  ìºë¦­í„°ë¥¼ ì „ìž¥ì—ì„œ ì œê±°í•©ë‹ˆë‹¤.
         /// </summary>
         void RemoveEnemyCharacter();
 
         /// <summary>
-        /// ÀûÀÇ ÇÚµå ½½·ÔÀ» ÃÊ±âÈ­ÇÕ´Ï´Ù.
+        /// ì ì˜ í•¸ë“œ ìŠ¬ë¡¯ì„ ì´ˆê¸°í™”í•©ë‹ˆë‹¤.
         /// </summary>
         void ClearEnemyHand();
 
         /// <summary>
-        /// Àû ÀüÅõ ½½·Ô¿¡ µî·ÏµÈ Ä«µå¸¸ Á¦°ÅÇÕ´Ï´Ù.
+        /// ì  ì „íˆ¬ ìŠ¬ë¡¯ì— ë“±ë¡ëœ ì¹´ë“œë§Œ ì œê±°í•©ë‹ˆë‹¤.
         /// </summary>
         void ClearEnemyCombatSlots();
 
         /// <summary>
-        /// ÇöÀç ÀüÅõ ÁßÀÎ Àû Ä³¸¯ÅÍ¸¦ ¹ÝÈ¯ÇÕ´Ï´Ù.
+        /// í˜„ìž¬ ì „íˆ¬ ì¤‘ì¸ ì  ìºë¦­í„°ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         IEnemyCharacter GetEnemy();
 
         /// <summary>
-        /// ÇöÀç Àû Ä³¸¯ÅÍ°¡ Á¸ÀçÇÏ´ÂÁö ¿©ºÎ¸¦ ¹ÝÈ¯ÇÕ´Ï´Ù.
+        /// í˜„ìž¬ ì  ìºë¦­í„°ê°€ ì¡´ìž¬í•˜ëŠ”ì§€ ì—¬ë¶€ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         bool HasEnemy();
 
         /// <summary>
-        /// ÇöÀç Àû Ä³¸¯ÅÍ°¡ »ç¸ÁÇß´ÂÁö ¿©ºÎ¸¦ ¹ÝÈ¯ÇÕ´Ï´Ù.
+        /// í˜„ìž¬ ì  ìºë¦­í„°ê°€ ì‚¬ë§í–ˆëŠ”ì§€ ì—¬ë¶€ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         bool IsEnemyDead();
 
         /// <summary>
-        /// ´ÙÀ½ ÀüÅõ¿¡ Âü¿©ÇÒ ÀûÀÌ Á¸ÀçÇÏ´ÂÁö È®ÀÎÇÕ´Ï´Ù.
+        /// ë‹¤ìŒ ì „íˆ¬ì— ì°¸ì—¬í•  ì ì´ ì¡´ìž¬í•˜ëŠ”ì§€ í™•ì¸í•©ë‹ˆë‹¤.
         /// </summary>
         bool CheckHasNextEnemy();
 
         /// <summary>
-        /// ÇöÀç ÅÏÀÌ Àû ¼±°øÀÎÁö ¿©ºÎ¸¦ ¹ÝÈ¯ÇÕ´Ï´Ù.
+        /// í˜„ìž¬ í„´ì´ ì  ì„ ê³µì¸ì§€ ì—¬ë¶€ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         bool IsEnemyFirst { get; set; }
 
 
         #endregion
 
-        #region ÇÃ·¹ÀÌ¾î »óÅÂ
+        #region í”Œë ˆì´ì–´ ìƒíƒœ
 
         /// <summary>
-        /// ÇÃ·¹ÀÌ¾î Ä³¸¯ÅÍ°¡ »ç¸ÁÇß´ÂÁö ¿©ºÎ¸¦ ¹ÝÈ¯ÇÕ´Ï´Ù.
+        /// í”Œë ˆì´ì–´ ìºë¦­í„°ê°€ ì‚¬ë§í–ˆëŠ”ì§€ ì—¬ë¶€ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         bool IsPlayerDead();
 
         #endregion
 
-        #region Ä«µå °ü¸®
+        #region ì¹´ë“œ ê´€ë¦¬
 
         /// <summary>
-        /// Ä«µå¿Í UI¸¦ Æ¯Á¤ ÀüÅõ ½½·Ô¿¡ µî·ÏÇÕ´Ï´Ù.
+        /// ì¹´ë“œì™€ UIë¥¼ íŠ¹ì • ì „íˆ¬ ìŠ¬ë¡¯ì— ë“±ë¡í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="pos">½½·Ô À§Ä¡</param>
-        /// <param name="card">Ä«µå µ¥ÀÌÅÍ</param>
-        /// <param name="ui">Ä«µå UI</param>
+        /// <param name="pos">ìŠ¬ë¡¯ ìœ„ì¹˜</param>
+        /// <param name="card">ì¹´ë“œ ë°ì´í„°</param>
+        /// <param name="ui">ì¹´ë“œ UI</param>
         void RegisterCardToCombatSlot(CombatSlotPosition pos, ISkillCard card, SkillCardUI ui);
 
         /// <summary>
-        /// ½½·Ô¿¡ µî·ÏµÈ Ä«µå µ¥ÀÌÅÍ¸¦ ¹ÝÈ¯ÇÕ´Ï´Ù.
+        /// ìŠ¬ë¡¯ì— ë“±ë¡ëœ ì¹´ë“œ ë°ì´í„°ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="pos">½½·Ô À§Ä¡</param>
+        /// <param name="pos">ìŠ¬ë¡¯ ìœ„ì¹˜</param>
         ISkillCard GetCardInSlot(CombatSlotPosition pos);
 
         /// <summary>
-        /// ÅÏº° Ä«µå µî·Ï Á¤º¸¸¦ °ü¸®ÇÏ´Â ·¹Áö½ºÆ®¸® °´Ã¼¸¦ ¹ÝÈ¯ÇÕ´Ï´Ù.
+        /// í„´ë³„ ì¹´ë“œ ë“±ë¡ ì •ë³´ë¥¼ ê´€ë¦¬í•˜ëŠ” ë ˆì§€ìŠ¤íŠ¸ë¦¬ ê°ì²´ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         ITurnCardRegistry GetTurnCardRegistry();
 
         #endregion
 
-        #region UI Á¦¾î
+        #region UI ì œì–´
 
         /// <summary>
-        /// ÇÃ·¹ÀÌ¾î Ä«µå ¼±ÅÃ UI¸¦ Ç¥½ÃÇÕ´Ï´Ù.
+        /// í”Œë ˆì´ì–´ ì¹´ë“œ ì„ íƒ UIë¥¼ í‘œì‹œí•©ë‹ˆë‹¤.
         /// </summary>
         void ShowPlayerCardSelectionUI();
 
         /// <summary>
-        /// ÇÃ·¹ÀÌ¾î Ä«µå ¼±ÅÃ UI¸¦ ¼û±é´Ï´Ù.
+        /// í”Œë ˆì´ì–´ ì¹´ë“œ ì„ íƒ UIë¥¼ ìˆ¨ê¹ë‹ˆë‹¤.
         /// </summary>
         void HidePlayerCardSelectionUI();
 
         /// <summary>
-        /// ÅÏ ½ÃÀÛ ¹öÆ°À» È°¼ºÈ­ÇÕ´Ï´Ù.
+        /// í„´ ì‹œìž‘ ë²„íŠ¼ì„ í™œì„±í™”í•©ë‹ˆë‹¤.
         /// </summary>
         void EnableStartButton();
 
         /// <summary>
-        /// ÅÏ ½ÃÀÛ ¹öÆ°À» ºñÈ°¼ºÈ­ÇÕ´Ï´Ù.
+        /// í„´ ì‹œìž‘ ë²„íŠ¼ì„ ë¹„í™œì„±í™”í•©ë‹ˆë‹¤.
         /// </summary>
         void DisableStartButton();
 
         /// <summary>
-        /// ÅÏ ½ÃÀÛ ¹öÆ° Å¬¸¯ ½Ã ½ÇÇàµÉ ÄÝ¹éÀ» µî·ÏÇÕ´Ï´Ù.
+        /// í„´ ì‹œìž‘ ë²„íŠ¼ í´ë¦­ ì‹œ ì‹¤í–‰ë  ì½œë°±ì„ ë“±ë¡í•©ë‹ˆë‹¤.
         /// </summary>
         void RegisterStartButton(Action onClick);
 
         /// <summary>
-        /// µî·ÏµÈ ÅÏ ½ÃÀÛ ¹öÆ° ÄÝ¹éÀ» ÇØÁ¦ÇÕ´Ï´Ù.
+        /// ë“±ë¡ëœ í„´ ì‹œìž‘ ë²„íŠ¼ ì½œë°±ì„ í•´ì œí•©ë‹ˆë‹¤.
         /// </summary>
         void UnregisterStartButton();
 
         #endregion
 
-        #region Å¬¸°¾÷
+        #region í´ë¦°ì—…
 
         /// <summary>
-        /// ÀüÅõ ½Â¸® ÈÄ »óÅÂ Á¤¸® ÀÛ¾÷À» ¼öÇàÇÕ´Ï´Ù.
+        /// ì „íˆ¬ ìŠ¹ë¦¬ í›„ ìƒíƒœ ì •ë¦¬ ìž‘ì—…ì„ ìˆ˜í–‰í•©ë‹ˆë‹¤.
         /// </summary>
         void CleanupAfterVictory();
 

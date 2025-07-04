@@ -9,7 +9,7 @@ using Game.CombatSystem.Animation;
 namespace Game.CombatSystem.UI
 {
     /// <summary>
-    /// �� �ڵ忡 �ִ� ī�� ���� UI�Դϴ�.
+    /// 적 핸드에 배치되는 카드 슬롯 UI입니다.
     /// </summary>
     public class EnemyHandCardSlotUI : MonoBehaviour, IHandCardSlot
     {
@@ -39,18 +39,18 @@ namespace Game.CombatSystem.UI
                 var shiftAnimator = uiMb.GetComponent<SkillCardShiftAnimator>();
                 var thisSlotRect = GetComponent<RectTransform>();
 
-                // 임시 부모 변경 (월드 위치 유지)
+                // 부모 변경 (전역 위치 유지)
                 uiMb.transform.SetParent(thisSlotRect.parent, true);
 
                 // 1. 이동 애니메이션 (이동이 필요한 경우에만)
                 if (shiftAnimator != null)
                     await shiftAnimator.PlayMoveAnimationAsync(thisSlotRect);
 
-                // 2. 애니메이션 후 슬롯에 정착
+                // 2. 부모 재설정
                 uiMb.transform.SetParent(thisSlotRect, false);
                 uiMb.transform.localPosition = Vector3.zero;
 
-                // 생성 애니메이션 실행 부분 제거!
+                // 애니메이션 완료 후 정위치!
             }
         }
 
@@ -63,14 +63,14 @@ namespace Game.CombatSystem.UI
         public SkillCardUI AttachCard(ISkillCard card)
         {
             SetCard(card);
-            return null; // ���� ī�� UI�� �������� ����
+            return null; // 적 핸드에서는 카드 UI를 생성하지 않음
         }
 
         public SkillCardUI AttachCard(ISkillCard card, SkillCardUI prefab)
         {
-            // IHandCardSlot �������̽� ������ ���� ���� �ʿ�
+            // IHandCardSlot 인터페이스 규약상 구현만 제공
             SetCard(card);
-            return null; // ���� ī�� UI�� �������� ����
+            return null; // 적 핸드에서는 카드 UI를 생성하지 않음
         }
 
         public void DetachCard()

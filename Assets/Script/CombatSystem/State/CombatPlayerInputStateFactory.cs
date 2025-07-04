@@ -3,22 +3,22 @@ using Zenject;
 namespace Game.CombatSystem.State
 {
     /// <summary>
-    /// CombatPlayerInputStateÀÇ ÀÎ½ºÅÏ½º¸¦ »ı¼ºÇÏ´Â Zenject ÆÑÅä¸®ÀÔ´Ï´Ù.
+    /// CombatPlayerInputStateì˜ ì¸ìŠ¤í„´ìŠ¤ë¥¼ ìƒì„±í•˜ëŠ” Zenject íŒ©í† ë¦¬ì…ë‹ˆë‹¤.
     /// </summary>
     public class CombatPlayerInputStateFactory : IFactory<CombatPlayerInputState>
     {
-        #region ÇÊµå
+        #region í•„ë“œ
 
         private readonly DiContainer container;
 
         #endregion
 
-        #region »ı¼ºÀÚ
+        #region ìƒì„±ì
 
         /// <summary>
-        /// ÆÑÅä¸® »ı¼ºÀÚ. DiContainer¸¦ ÁÖÀÔ¹Ş½À´Ï´Ù.
+        /// íŒ©í† ë¦¬ ìƒì„±ì. DiContainerë¥¼ ì£¼ì…ë°›ìŠµë‹ˆë‹¤.
         /// </summary>
-        /// <param name="container">Zenject ÀÇÁ¸¼º ÁÖÀÔ ÄÁÅ×ÀÌ³Ê</param>
+        /// <param name="container">Zenject ì˜ì¡´ì„± ì£¼ì… ì»¨í…Œì´ë„ˆ</param>
         public CombatPlayerInputStateFactory(DiContainer container)
         {
             this.container = container;
@@ -26,10 +26,10 @@ namespace Game.CombatSystem.State
 
         #endregion
 
-        #region ¸Ş¼­µå
+        #region ë©”ì„œë“œ
 
         /// <summary>
-        /// CombatPlayerInputState ÀÎ½ºÅÏ½º¸¦ »ı¼ºÇÕ´Ï´Ù.
+        /// CombatPlayerInputState ì¸ìŠ¤í„´ìŠ¤ë¥¼ ìƒì„±í•©ë‹ˆë‹¤.
         /// </summary>
         public CombatPlayerInputState Create()
         {

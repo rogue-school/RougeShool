@@ -9,34 +9,34 @@ using Game.SkillCardSystem.UI;
 namespace Game.CombatSystem.Service
 {
     /// <summary>
-    /// ÇÑ ÅÏ µ¿¾È ÇÃ·¹ÀÌ¾î¿Í ÀûÀÇ ÀüÅõ ½½·Ô¿¡ µî·ÏµÈ Ä«µå¸¦ °ü¸®ÇÏ´Â ·¹Áö½ºÆ®¸®ÀÔ´Ï´Ù.
+    /// í•œ í„´ ë™ì•ˆ í”Œë ˆì´ì–´ì™€ ì ì˜ ì „íˆ¬ ìŠ¬ë¡¯ì— ë“±ë¡ëœ ì¹´ë“œë¥¼ ê´€ë¦¬í•˜ëŠ” ë ˆì§€ìŠ¤íŠ¸ë¦¬ì…ë‹ˆë‹¤.
     /// </summary>
     public class TurnCardRegistry : ITurnCardRegistry
     {
-        #region ÇÊµå
+        #region í•„ë“œ
 
         private readonly Dictionary<CombatSlotPosition, ISkillCard> _cards = new();
         private CombatSlotPosition? _reservedEnemySlot;
 
         #endregion
 
-        #region ÀÌº¥Æ®
+        #region ì´ë²¤íŠ¸
 
         /// <summary>
-        /// Ä«µå »óÅÂ°¡ º¯°æµÉ ¶§ ¹ß»ıÇÏ´Â ÀÌº¥Æ®
+        /// ì¹´ë“œ ìƒíƒœê°€ ë³€ê²½ë  ë•Œ ë°œìƒí•˜ëŠ” ì´ë²¤íŠ¸
         /// </summary>
         public event Action OnCardStateChanged;
 
         #endregion
 
-        #region Ä«µå µî·Ï ¹× Á¶È¸
+        #region ì¹´ë“œ ë“±ë¡ ë° ì¡°íšŒ
 
         /// <inheritdoc />
         public void RegisterCard(CombatSlotPosition position, ISkillCard card, SkillCardUI ui, SlotOwner owner)
         {
             if (card == null)
             {
-                Debug.LogError($"[TurnCardRegistry] Ä«µå µî·Ï ½ÇÆĞ - null (½½·Ô: {position})");
+                Debug.LogError($"[TurnCardRegistry] ì¹´ë“œ ë“±ë¡ ì‹¤íŒ¨ - null (ìŠ¬ë¡¯: {position})");
                 return;
             }
 
@@ -57,7 +57,7 @@ namespace Game.CombatSystem.Service
 
         #endregion
 
-        #region Å¬¸®¾î ¹× ¸®¼Â
+        #region í´ë¦¬ì–´ ë° ë¦¬ì…‹
 
         /// <inheritdoc />
         public void ClearSlot(CombatSlotPosition slot)
@@ -78,7 +78,7 @@ namespace Game.CombatSystem.Service
         }
 
         /// <summary>
-        /// Àû Ä«µå¸¸ Á¦°ÅÇÏ°í ÇÃ·¹ÀÌ¾î Ä«µå º¸Á¸
+        /// ì  ì¹´ë“œë§Œ ì œê±°í•˜ê³  í”Œë ˆì´ì–´ ì¹´ë“œ ë³´ì¡´
         /// </summary>
         public void ClearEnemyCardsOnly()
         {
@@ -99,7 +99,7 @@ namespace Game.CombatSystem.Service
 
         #endregion
 
-        #region »óÅÂ È®ÀÎ
+        #region ìƒíƒœ í™•ì¸
 
         /// <inheritdoc />
         public bool HasPlayerCard()
@@ -121,7 +121,7 @@ namespace Game.CombatSystem.Service
 
         #endregion
 
-        #region Àû ½½·Ô ¿¹¾à °ü¸®
+        #region ì  ìŠ¬ë¡¯ ì˜ˆì•½ ê´€ë¦¬
 
         /// <inheritdoc />
         public CombatSlotPosition? GetReservedEnemySlot() => _reservedEnemySlot;

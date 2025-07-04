@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using Game.CombatSystem.Stage;
 using Game.IManager;
 using Game.CharacterSystem.Data;

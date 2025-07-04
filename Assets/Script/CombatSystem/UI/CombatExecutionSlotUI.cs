@@ -61,7 +61,7 @@ namespace Game.CombatSystem.UI
         {
             currentCard = null;
             ClearCardUI();
-            Debug.Log($"[CombatExecutionSlotUI] ÀüÃ¼ Å¬¸®¾î ¿Ï·á: {gameObject.name}");
+            Debug.Log($"[CombatExecutionSlotUI] ì „ì²´ í´ë¦¬ì–´ ì™„ë£Œ: {gameObject.name}");
         }
 
         public void ClearCardUI()
@@ -72,7 +72,7 @@ namespace Game.CombatSystem.UI
             }
 
             currentCardUI = null;
-            Debug.Log($"[CombatExecutionSlotUI] Ä«µå UI¸¸ Á¦°Å ¿Ï·á: {gameObject.name}");
+            Debug.Log($"[CombatExecutionSlotUI] ì¹´ë“œ UIë§Œ ì œê±° ì™„ë£Œ: {gameObject.name}");
         }
 
         public bool HasCard() => currentCard != null;
@@ -83,13 +83,13 @@ namespace Game.CombatSystem.UI
         {
             if (currentCard == null)
             {
-                Debug.LogWarning("[CombatExecutionSlotUI] ½ÇÇà ºÒ°¡: Ä«µå ¾øÀ½");
+                Debug.LogWarning("[CombatExecutionSlotUI] ì‹¤í–‰ ë¶ˆê°€: ì¹´ë“œ ì—†ìŒ");
                 return;
             }
 
             if (context == null)
             {
-                Debug.LogError("[CombatExecutionSlotUI] ½ÇÇà ºÒ°¡: ÄÁÅØ½ºÆ® ¹ÌÁöÁ¤");
+                Debug.LogError("[CombatExecutionSlotUI] ì‹¤í–‰ ë¶ˆê°€: ì»¨í…ìŠ¤íŠ¸ ë¯¸ì§€ì •");
                 return;
             }
 
@@ -100,7 +100,7 @@ namespace Game.CombatSystem.UI
         {
             if (currentCard == null)
             {
-                Debug.LogWarning("[CombatExecutionSlotUI] ½ÇÇà ºÒ°¡: Ä«µå ¾øÀ½");
+                Debug.LogWarning("[CombatExecutionSlotUI] ì‹¤í–‰ ë¶ˆê°€: ì¹´ë“œ ì—†ìŒ");
                 return;
             }
 

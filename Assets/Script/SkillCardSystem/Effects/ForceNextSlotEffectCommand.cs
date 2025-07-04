@@ -6,44 +6,44 @@ using Game.SkillCardSystem.Interface;
 namespace Game.SkillCardSystem.Effect
 {
     /// <summary>
-    /// Àû Ä«µåÀÇ ´ÙÀ½ ½½·Ô À§Ä¡¸¦ °­Á¦·Î ÁöÁ¤ÇÏ´Â Ä¿¸ÇµåÀÔ´Ï´Ù.
-    /// ÇÃ·¹ÀÌ¾î Ä«µå¿¡´Â Àû¿ëµÇÁö ¾Ê½À´Ï´Ù.
+    /// ì  ì¹´ë“œì˜ ë‹¤ìŒ ìŠ¬ë¡¯ ìœ„ì¹˜ë¥¼ ê°•ì œë¡œ ì§€ì •í•˜ëŠ” ì»¤ë§¨ë“œì…ë‹ˆë‹¤.
+    /// í”Œë ˆì´ì–´ ì¹´ë“œì—ëŠ” ì ìš©ë˜ì§€ ì•ŠìŠµë‹ˆë‹¤.
     /// </summary>
     public class ForceNextSlotEffectCommand : ICardEffectCommand
     {
         private readonly CombatSlotPosition forcedSlot;
 
         /// <summary>
-        /// °­Á¦·Î ÁöÁ¤ÇÒ ½½·ÔÀ» ¼³Á¤ÇÕ´Ï´Ù.
+        /// ê°•ì œë¡œ ì§€ì •í•  ìŠ¬ë¡¯ì„ ì„¤ì •í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="forcedSlot">ÁöÁ¤ÇÒ ½½·Ô À§Ä¡</param>
+        /// <param name="forcedSlot">ì§€ì •í•  ìŠ¬ë¡¯ ìœ„ì¹˜</param>
         public ForceNextSlotEffectCommand(CombatSlotPosition forcedSlot)
         {
             this.forcedSlot = forcedSlot;
         }
 
         /// <summary>
-        /// ½½·Ô º¯°æ È¿°ú¸¦ ½ÇÇàÇÕ´Ï´Ù.
-        /// Àû Ä«µåÀÏ ¶§¸¸ ÀÛµ¿ÇÏ¸ç, ´ÙÀ½ ½½·Ô À§Ä¡¸¦ °­Á¦·Î ÁöÁ¤ÇÕ´Ï´Ù.
+        /// ìŠ¬ë¡¯ ë³€ê²½ íš¨ê³¼ë¥¼ ì‹¤í–‰í•©ë‹ˆë‹¤.
+        /// ì  ì¹´ë“œì¼ ë•Œë§Œ ì‘ë™í•˜ë©°, ë‹¤ìŒ ìŠ¬ë¡¯ ìœ„ì¹˜ë¥¼ ê°•ì œë¡œ ì§€ì •í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="context">Ä«µå ½ÇÇà ÄÁÅØ½ºÆ®</param>
-        /// <param name="turnManager">ÀüÅõ ÅÏ °ü¸®ÀÚ</param>
+        /// <param name="context">ì¹´ë“œ ì‹¤í–‰ ì»¨í…ìŠ¤íŠ¸</param>
+        /// <param name="turnManager">ì „íˆ¬ í„´ ê´€ë¦¬ì</param>
         public void Execute(ICardExecutionContext context, ICombatTurnManager turnManager)
         {
             if (context?.Card == null || context.Target == null)
             {
-                Debug.LogWarning("[ForceNextSlotEffectCommand] Ä«µå ¶Ç´Â ´ë»ó Á¤º¸°¡ ´©¶ôµÇ¾ú½À´Ï´Ù.");
+                Debug.LogWarning("[ForceNextSlotEffectCommand] ì¹´ë“œ ë˜ëŠ” ëŒ€ìƒ ì •ë³´ê°€ ëˆ„ë½ë˜ì—ˆìŠµë‹ˆë‹¤.");
                 return;
             }
 
             if (context.Card.IsFromPlayer())
             {
-                Debug.LogWarning("[ForceNextSlotEffectCommand] ÇÃ·¹ÀÌ¾î Ä«µå¿¡´Â ½½·Ô ÁöÁ¤ È¿°ú¸¦ »ç¿ëÇÒ ¼ö ¾ø½À´Ï´Ù.");
+                Debug.LogWarning("[ForceNextSlotEffectCommand] í”Œë ˆì´ì–´ ì¹´ë“œì—ëŠ” ìŠ¬ë¡¯ ì§€ì • íš¨ê³¼ë¥¼ ì‚¬ìš©í•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤.");
                 return;
             }
 
             turnManager.ReserveNextEnemySlot(forcedSlot);
-            Debug.Log($"[ForceNextSlotEffectCommand] ´ÙÀ½ Àû Ä«µå ½½·Ô °­Á¦ ¼³Á¤µÊ ¡æ {forcedSlot}");
+            Debug.Log($"[ForceNextSlotEffectCommand] ë‹¤ìŒ ì  ì¹´ë“œ ìŠ¬ë¡¯ ê°•ì œ ì„¤ì •ë¨ â†’ {forcedSlot}");
         }
     }
 }

@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Unity ¸ŞÀÎ ½º·¹µå¿¡¼­ ÀÛ¾÷À» ½ÇÇàÇÏ±â À§ÇÑ Dispatcher.
-/// ºñµ¿±â Èå¸§¿¡¼­ UI ¶Ç´Â Unity API¿¡ Á¢±ÙÇÒ ¶§ ¾ÈÀüÇÏ°Ô »ç¿ëÇÕ´Ï´Ù.
+/// Unity ë©”ì¸ ìŠ¤ë ˆë“œì—ì„œ ì‘ì—…ì„ ì‹¤í–‰í•˜ê¸° ìœ„í•œ Dispatcher.
+/// ë¹„ë™ê¸° íë¦„ì—ì„œ UI ë˜ëŠ” Unity APIì— ì ‘ê·¼í•  ë•Œ ì•ˆì „í•˜ê²Œ ì‚¬ìš©í•©ë‹ˆë‹¤.
 /// </summary>
 public class UnityMainThreadDispatcher : MonoBehaviour
 {

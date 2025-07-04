@@ -4,26 +4,26 @@ using Game.CombatSystem.Stage;
 public interface IStageManager
 {
     /// <summary>
-    /// ´ÙÀ½ ÀûÀÌ Á¸ÀçÇÏ´ÂÁö È®ÀÎÇÕ´Ï´Ù.
+    /// ë‹¤ìŒ ì ì´ ì¡´ìž¬í•˜ëŠ”ì§€ í™•ì¸í•©ë‹ˆë‹¤.
     /// </summary>
-    /// <returns>´ÙÀ½ ÀûÀÌ Á¸ÀçÇÏ¸é true, ¾øÀ¸¸é false</returns>
+    /// <returns>ë‹¤ìŒ ì ì´ ì¡´ìž¬í•˜ë©´ true, ì—†ìœ¼ë©´ false</returns>
     bool HasNextEnemy();
 
     /// <summary>
-    /// ´ÙÀ½ ÀûÀ» ½ºÆùÇÕ´Ï´Ù.
-    /// ½ºÆùÀÌ ºÒ°¡´ÉÇÒ °æ¿ì ³»ºÎÀûÀ¸·Î Ã³¸®ÇÏ°Å³ª ¹«½ÃÇÒ ¼ö ÀÖ½À´Ï´Ù.
+    /// ë‹¤ìŒ ì ì„ ìŠ¤í°í•©ë‹ˆë‹¤.
+    /// ìŠ¤í°ì´ ë¶ˆê°€ëŠ¥í•  ê²½ìš° ë‚´ë¶€ì ìœ¼ë¡œ ì²˜ë¦¬í•˜ê±°ë‚˜ ë¬´ì‹œí•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
     /// </summary>
     void SpawnNextEnemy();
 
     /// <summary>
-    /// ÇöÀç ÁøÇà ÁßÀÎ ½ºÅ×ÀÌÁö µ¥ÀÌÅÍ¸¦ ¹ÝÈ¯ÇÕ´Ï´Ù.
+    /// í˜„ìž¬ ì§„í–‰ ì¤‘ì¸ ìŠ¤í…Œì´ì§€ ë°ì´í„°ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
     /// </summary>
-    /// <returns>ÇöÀç ½ºÅ×ÀÌÁö µ¥ÀÌÅÍ</returns>
+    /// <returns>í˜„ìž¬ ìŠ¤í…Œì´ì§€ ë°ì´í„°</returns>
     StageData GetCurrentStage();
 
     /// <summary>
-    /// ´ÙÀ½¿¡ µîÀåÇÒ ÀûÀÇ µ¥ÀÌÅÍ¸¦ ¹ÝÈ¯ÇÕ´Ï´Ù. (¹Ì¸®º¸±â ¿ëµµ)
+    /// ë‹¤ìŒì— ë“±ìž¥í•  ì ì˜ ë°ì´í„°ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤. (ë¯¸ë¦¬ë³´ê¸° ìš©ë„)
     /// </summary>
-    /// <returns>´ÙÀ½ Àû Ä³¸¯ÅÍ µ¥ÀÌÅÍ</returns>
+    /// <returns>ë‹¤ìŒ ì  ìºë¦­í„° ë°ì´í„°</returns>
     EnemyCharacterData PeekNextEnemyData();
 }

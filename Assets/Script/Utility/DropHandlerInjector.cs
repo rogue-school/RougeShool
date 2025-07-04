@@ -14,7 +14,7 @@ namespace Game.Utility
         {
             if (slotRegistry == null || dropService == null || flowCoordinator == null)
             {
-                Debug.LogError("[DropHandlerInjector] ÇÊ¼ö ÀÎ¼ö Áß ÇÏ³ª ÀÌ»óÀÌ nullÀÔ´Ï´Ù.");
+                Debug.LogError("[DropHandlerInjector] í•„ìˆ˜ ì¸ìˆ˜ ì¤‘ í•˜ë‚˜ ì´ìƒì´ nullì…ë‹ˆë‹¤.");
                 return;
             }
 
@@ -26,16 +26,16 @@ namespace Game.Utility
                     if (dropHandler != null)
                     {
                         dropHandler.Construct(dropService, flowCoordinator);
-                        Debug.Log($"[DropHandlerInjector] µå·Ó ÇÚµé·¯ ÁÖÀÔ ¿Ï·á: {slot.GetCombatPosition()}");
+                        Debug.Log($"[DropHandlerInjector] ë“œë¡­ í•¸ë“¤ëŸ¬ ì£¼ì… ì™„ë£Œ: {slot.GetCombatPosition()}");
                     }
                     else
                     {
-                        Debug.LogWarning($"[DropHandlerInjector] {slot.GetCombatPosition()} ½½·Ô¿¡ µå·Ó ÇÚµé·¯ ¾øÀ½");
+                        Debug.LogWarning($"[DropHandlerInjector] {slot.GetCombatPosition()} ìŠ¬ë¡¯ì— ë“œë¡­ í•¸ë“¤ëŸ¬ ì—†ìŒ");
                     }
                 }
                 else
                 {
-                    Debug.LogWarning($"[DropHandlerInjector] ½½·ÔÀÌ MonoBehaviour°¡ ¾Æ´Õ´Ï´Ù: {slot.GetCombatPosition()}");
+                    Debug.LogWarning($"[DropHandlerInjector] ìŠ¬ë¡¯ì´ MonoBehaviourê°€ ì•„ë‹™ë‹ˆë‹¤: {slot.GetCombatPosition()}");
                 }
             }
         }

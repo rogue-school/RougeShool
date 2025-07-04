@@ -18,7 +18,7 @@ namespace Game.CombatSystem.DragDrop
 
             CardSlotHelper.AttachCardToSlot(ui, (MonoBehaviour)slot);
 
-            Debug.Log($"[Registrar] Ä«µå µî·Ï ¿Ï·á: {card.CardData.Name} ¡æ {execSlot}");
+            Debug.Log($"[Registrar] ì¹´ë“œ ë“±ë¡ ì™„ë£Œ: {card.CardData.Name} â†’ {execSlot}");
         }
     }
 }

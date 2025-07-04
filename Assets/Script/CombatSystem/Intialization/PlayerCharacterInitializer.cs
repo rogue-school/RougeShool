@@ -12,45 +12,45 @@ using Game.SkillCardSystem.Core;
 namespace Game.CombatSystem.Initialization
 {
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î Ä³¸¯ÅÍ¸¦ »ı¼ºÇÏ°í ½½·Ô¿¡ ¹èÄ¡ÇÏ´Â ÃÊ±âÈ­ ÄÄÆ÷³ÍÆ®ÀÔ´Ï´Ù.
-    /// ÀüÅõ ½ÃÀÛ ½Ã ½ÇÇàµÇ¸ç, ICombatInitializerStepÀ» ÅëÇØ ¼øÂ÷ÀûÀ¸·Î ½ÇÇàµË´Ï´Ù.
+    /// í”Œë ˆì´ì–´ ìºë¦­í„°ë¥¼ ìƒì„±í•˜ê³  ìŠ¬ë¡¯ì— ë°°ì¹˜í•˜ëŠ” ì´ˆê¸°í™” ì»´í¬ë„ŒíŠ¸ì…ë‹ˆë‹¤.
+    /// ì „íˆ¬ ì‹œì‘ ì‹œ ì‹¤í–‰ë˜ë©°, ICombatInitializerStepì„ í†µí•´ ìˆœì°¨ì ìœ¼ë¡œ ì‹¤í–‰ë©ë‹ˆë‹¤.
     /// </summary>
     public class PlayerCharacterInitializer : MonoBehaviour, IPlayerCharacterInitializer, ICombatInitializerStep
     {
-        [Header("ÇÃ·¹ÀÌ¾î Ä³¸¯ÅÍ ÇÁ¸®ÆÕ ¹× ±âº» µ¥ÀÌÅÍ")]
+        [Header("í”Œë ˆì´ì–´ ìºë¦­í„° í”„ë¦¬íŒ¹ ë° ê¸°ë³¸ ë°ì´í„°")]
         [SerializeField] private PlayerCharacter playerPrefab;
         [SerializeField] private PlayerCharacterData defaultData;
 
-        [Header("ÃÊ±âÈ­ ¼ø¼­ (³·À»¼ö·Ï ¸ÕÀú ½ÇÇàµÊ)")]
+        [Header("ì´ˆê¸°í™” ìˆœì„œ (ë‚®ì„ìˆ˜ë¡ ë¨¼ì € ì‹¤í–‰ë¨)")]
         [SerializeField] private int order = 10;
         public int Order => order;
 
         private IPlayerManager playerManager;
         private ISlotRegistry slotRegistry;
 
-        #region ÀÇÁ¸¼º ÁÖÀÔ
+        #region ì˜ì¡´ì„± ì£¼ì…
 
         /// <summary>
-        /// ÀÇÁ¸¼º ÁÖÀÔ ¸Ş¼­µåÀÔ´Ï´Ù.
+        /// ì˜ì¡´ì„± ì£¼ì… ë©”ì„œë“œì…ë‹ˆë‹¤.
         /// </summary>
         [Inject]
         public void Inject(IPlayerManager playerManager, ISlotRegistry slotRegistry)
         {
             this.playerManager = playerManager;
             this.slotRegistry = slotRegistry;
-            Debug.Log("[PlayerCharacterInitializer] IPlayerManager, ISlotRegistry ÁÖÀÔ ¿Ï·á");
+            Debug.Log("[PlayerCharacterInitializer] IPlayerManager, ISlotRegistry ì£¼ì… ì™„ë£Œ");
         }
 
         #endregion
 
-        #region ICombatInitializerStep ±¸Çö
+        #region ICombatInitializerStep êµ¬í˜„
 
         /// <summary>
-        /// ½½·Ô ½Ã½ºÅÛ ÃÊ±âÈ­ ¿Ï·á ÈÄ ½ÇÇàµË´Ï´Ù.
+        /// ìŠ¬ë¡¯ ì‹œìŠ¤í…œ ì´ˆê¸°í™” ì™„ë£Œ í›„ ì‹¤í–‰ë©ë‹ˆë‹¤.
         /// </summary>
         public IEnumerator Initialize()
         {
-            Debug.Log("[PlayerCharacterInitializer] Initialize() ½ÃÀÛ");
+            Debug.Log("[PlayerCharacterInitializer] Initialize() ì‹œì‘");
 
             yield return new WaitUntil(() =>
                 slotRegistry is SlotRegistry concrete && concrete.IsInitialized);
@@ -60,18 +60,18 @@ namespace Game.CombatSystem.Initialization
 
         #endregion
 
-        #region Ä³¸¯ÅÍ ¹èÄ¡ ¹× ¼³Á¤
+        #region ìºë¦­í„° ë°°ì¹˜ ë° ì„¤ì •
 
         /// <summary>
-        /// ÇÃ·¹ÀÌ¾î Ä³¸¯ÅÍ¸¦ »ı¼ºÇÏ°í ½½·Ô¿¡ ¹èÄ¡ÇÕ´Ï´Ù.
+        /// í”Œë ˆì´ì–´ ìºë¦­í„°ë¥¼ ìƒì„±í•˜ê³  ìŠ¬ë¡¯ì— ë°°ì¹˜í•©ë‹ˆë‹¤.
         /// </summary>
         public void Setup()
         {
-            Debug.Log("[PlayerCharacterInitializer] Setup() È£ÃâµÊ");
+            Debug.Log("[PlayerCharacterInitializer] Setup() í˜¸ì¶œë¨");
 
             if (!ValidateData())
             {
-                Debug.LogError("[PlayerCharacterInitializer] À¯È¿ÇÏÁö ¾ÊÀº ÃÊ±âÈ­ µ¥ÀÌÅÍÀÔ´Ï´Ù.");
+                Debug.LogError("[PlayerCharacterInitializer] ìœ íš¨í•˜ì§€ ì•Šì€ ì´ˆê¸°í™” ë°ì´í„°ì…ë‹ˆë‹¤.");
                 return;
             }
 
@@ -80,16 +80,16 @@ namespace Game.CombatSystem.Initialization
 
             Transform slotTransform = ((MonoBehaviour)slot).transform;
 
-            // ±âÁ¸ ÀÚ½Ä Á¦°Å
+            // ê¸°ì¡´ ìì‹ ì œê±°
             foreach (Transform child in slotTransform)
                 Destroy(child.gameObject);
 
-            // Ä³¸¯ÅÍ »ı¼º ¹× ºÎ¸ğ ¼³Á¤
+            // ìºë¦­í„° ìƒì„± ë° ë¶€ëª¨ ì„¤ì •
             var player = Instantiate(playerPrefab);
             player.name = "PlayerCharacter";
             player.transform.SetParent(slotTransform, false);
 
-            // RectTransform Á¤·Ä
+            // RectTransform ì •ë ¬
             if (player.TryGetComponent(out RectTransform rt))
             {
                 rt.anchorMin = new Vector2(0.5f, 0.5f);
@@ -101,19 +101,19 @@ namespace Game.CombatSystem.Initialization
                 rt.localScale = Vector3.one;
             }
 
-            // PlayerCharacter ÄÄÆ÷³ÍÆ® È®ÀÎ
+            // PlayerCharacter ì»´í¬ë„ŒíŠ¸ í™•ì¸
             if (!player.TryGetComponent(out PlayerCharacter character))
             {
-                Debug.LogError("[PlayerCharacterInitializer] PlayerCharacter ÄÄÆ÷³ÍÆ®¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù.");
+                Debug.LogError("[PlayerCharacterInitializer] PlayerCharacter ì»´í¬ë„ŒíŠ¸ë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.");
                 Destroy(player.gameObject);
                 return;
             }
 
-            // µ¥ÀÌÅÍ ¼³Á¤
+            // ë°ì´í„° ì„¤ì •
             var data = ResolvePlayerData();
             if (data == null)
             {
-                Debug.LogError("[PlayerCharacterInitializer] Ä³¸¯ÅÍ µ¥ÀÌÅÍ°¡ ¾ø½À´Ï´Ù.");
+                Debug.LogError("[PlayerCharacterInitializer] ìºë¦­í„° ë°ì´í„°ê°€ ì—†ìŠµë‹ˆë‹¤.");
                 return;
             }
 
@@ -121,23 +121,23 @@ namespace Game.CombatSystem.Initialization
             slot.SetCharacter(character);
             playerManager?.SetPlayer(character);
 
-            // Ä«µå Á¤º¸ Ãâ·Â
+            // ì¹´ë“œ ì •ë³´ ì¶œë ¥
             var cards = data.SkillDeck?.GetCards();
-            Debug.Log($"[PlayerCharacterInitializer] Ä«µå ¼ö: {cards?.Count}");
+            Debug.Log($"[PlayerCharacterInitializer] ì¹´ë“œ ìˆ˜: {cards?.Count}");
 
             if (cards != null)
             {
                 foreach (var entry in cards)
-                    Debug.Log($" ¡æ Ä«µå: {entry.GetCardName()}, È¿°ú ¼ö: {entry.CreateEffects()?.Count ?? 0}");
+                    Debug.Log($" â†’ ì¹´ë“œ: {entry.GetCardName()}, íš¨ê³¼ ìˆ˜: {entry.CreateEffects()?.Count ?? 0}");
             }
         }
 
         #endregion
 
-        #region ³»ºÎ À¯Æ¿¸®Æ¼
+        #region ë‚´ë¶€ ìœ í‹¸ë¦¬í‹°
 
         /// <summary>
-        /// ÇÃ·¹ÀÌ¾î ÇÁ¸®ÆÕ°ú ½½·Ô ·¹Áö½ºÆ®¸®ÀÇ À¯È¿¼ºÀ» °Ë»çÇÕ´Ï´Ù.
+        /// í”Œë ˆì´ì–´ í”„ë¦¬íŒ¹ê³¼ ìŠ¬ë¡¯ ë ˆì§€ìŠ¤íŠ¸ë¦¬ì˜ ìœ íš¨ì„±ì„ ê²€ì‚¬í•©ë‹ˆë‹¤.
         /// </summary>
         private bool ValidateData()
         {
@@ -145,27 +145,27 @@ namespace Game.CombatSystem.Initialization
         }
 
         /// <summary>
-        /// ÇÃ·¹ÀÌ¾î Ä³¸¯ÅÍ¸¦ ¹èÄ¡ÇÒ ½½·ÔÀ» Á¶È¸ÇÕ´Ï´Ù.
+        /// í”Œë ˆì´ì–´ ìºë¦­í„°ë¥¼ ë°°ì¹˜í•  ìŠ¬ë¡¯ì„ ì¡°íšŒí•©ë‹ˆë‹¤.
         /// </summary>
         private ICharacterSlot GetPlayerSlot()
         {
             var registry = slotRegistry?.GetCharacterSlotRegistry();
             if (registry == null)
             {
-                Debug.LogError("[PlayerCharacterInitializer] CharacterSlotRegistry°¡ nullÀÔ´Ï´Ù.");
+                Debug.LogError("[PlayerCharacterInitializer] CharacterSlotRegistryê°€ nullì…ë‹ˆë‹¤.");
                 return null;
             }
 
             var slot = registry.GetCharacterSlot(SlotOwner.PLAYER);
             if (slot == null)
-                Debug.LogError("[PlayerCharacterInitializer] SlotOwner.PLAYER¿¡ ÇØ´çÇÏ´Â Ä³¸¯ÅÍ ½½·ÔÀÌ ¾ø½À´Ï´Ù.");
+                Debug.LogError("[PlayerCharacterInitializer] SlotOwner.PLAYERì— í•´ë‹¹í•˜ëŠ” ìºë¦­í„° ìŠ¬ë¡¯ì´ ì—†ìŠµë‹ˆë‹¤.");
 
             return slot;
         }
 
         /// <summary>
-        /// ÇÃ·¹ÀÌ¾î Ä³¸¯ÅÍ µ¥ÀÌÅÍ ¼±ÅÃ ·ÎÁ÷ÀÔ´Ï´Ù.
-        /// ¼±ÅÃµÈ Ä³¸¯ÅÍ°¡ ÀÖÀ¸¸é ±×°ÍÀ» »ç¿ëÇÏ°í, ¾øÀ¸¸é ±âº» µ¥ÀÌÅÍ¸¦ »ç¿ëÇÕ´Ï´Ù.
+        /// í”Œë ˆì´ì–´ ìºë¦­í„° ë°ì´í„° ì„ íƒ ë¡œì§ì…ë‹ˆë‹¤.
+        /// ì„ íƒëœ ìºë¦­í„°ê°€ ìˆìœ¼ë©´ ê·¸ê²ƒì„ ì‚¬ìš©í•˜ê³ , ì—†ìœ¼ë©´ ê¸°ë³¸ ë°ì´í„°ë¥¼ ì‚¬ìš©í•©ë‹ˆë‹¤.
         /// </summary>
         private PlayerCharacterData ResolvePlayerData()
         {

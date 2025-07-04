@@ -4,35 +4,35 @@ using Game.IManager;
 namespace Game.CombatSystem.Manager
 {
     /// <summary>
-    /// °ÔÀÓ ¿À¹ö »óÈ²¿¡¼­ UI¸¦ Á¦¾îÇÏ°í Ã³¸®¸¦ ´ã´çÇÏ´Â ¸Å´ÏÀúÀÔ´Ï´Ù.
+    /// ê²Œì„ ì˜¤ë²„ ìƒí™©ì—ì„œ UIë¥¼ ì œì–´í•˜ê³  ì²˜ë¦¬ë¥¼ ë‹´ë‹¹í•˜ëŠ” ë§¤ë‹ˆì €ì…ë‹ˆë‹¤.
     /// </summary>
     public class GameOverManager : MonoBehaviour, IGameOverManager
     {
-        #region ÀÎ½ºÆåÅÍ ¼³Á¤
+        #region ì¸ìŠ¤í™í„° ì„¤ì •
 
         [SerializeField]
         private GameObject gameOverUI;
 
         #endregion
 
-        #region °ÔÀÓ ¿À¹ö Ã³¸®
+        #region ê²Œì„ ì˜¤ë²„ ì²˜ë¦¬
 
         /// <summary>
-        /// °ÔÀÓ ¿À¹ö UI¸¦ È­¸é¿¡ Ç¥½ÃÇÕ´Ï´Ù.
+        /// ê²Œì„ ì˜¤ë²„ UIë¥¼ í™”ë©´ì— í‘œì‹œí•©ë‹ˆë‹¤.
         /// </summary>
         public void ShowGameOverUI()
         {
-            Debug.Log("[GameOverManager] °ÔÀÓ ¿À¹ö UI È£ÃâµÊ");
+            Debug.Log("[GameOverManager] ê²Œì„ ì˜¤ë²„ UI í˜¸ì¶œë¨");
             if (gameOverUI != null)
                 gameOverUI.SetActive(true);
         }
 
         /// <summary>
-        /// °ÔÀÓ ¿À¹ö Ã³¸®¸¦ ½ÃÀÛÇÕ´Ï´Ù.
+        /// ê²Œì„ ì˜¤ë²„ ì²˜ë¦¬ë¥¼ ì‹œì‘í•©ë‹ˆë‹¤.
         /// </summary>
         public void TriggerGameOver()
         {
-            Debug.Log("[GameOverManager] °ÔÀÓ ¿À¹ö Ã³¸® ½ÃÀÛ");
+            Debug.Log("[GameOverManager] ê²Œì„ ì˜¤ë²„ ì²˜ë¦¬ ì‹œì‘");
             ShowGameOverUI();
         }
 

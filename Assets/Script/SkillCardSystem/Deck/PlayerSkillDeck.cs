@@ -4,32 +4,32 @@ using System.Collections.Generic;
 namespace Game.SkillCardSystem.Deck
 {
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾îÀÇ ½ºÅ³ Ä«µå µ¦À» Á¤ÀÇÇÏ´Â ScriptableObjectÀÔ´Ï´Ù.
-    /// °¢ Ä«µå¿Í ÇØ´ç Ä«µåÀÇ ½½·Ô À§Ä¡ Á¤º¸¸¦ Æ÷ÇÔÇÕ´Ï´Ù.
+    /// í”Œë ˆì´ì–´ì˜ ìŠ¤í‚¬ ì¹´ë“œ ë±ì„ ì •ì˜í•˜ëŠ” ScriptableObjectì…ë‹ˆë‹¤.
+    /// ê° ì¹´ë“œì™€ í•´ë‹¹ ì¹´ë“œì˜ ìŠ¬ë¡¯ ìœ„ì¹˜ ì •ë³´ë¥¼ í¬í•¨í•©ë‹ˆë‹¤.
     /// </summary>
     [CreateAssetMenu(menuName = "Game/Decks/Player Skill Deck")]
     public class PlayerSkillDeck : ScriptableObject
     {
-        [Header("ÇÃ·¹ÀÌ¾î Ä«µå µ¦ (¼ø¼­ °íÁ¤ ¹× ½½·Ô ÁöÁ¤)")]
-        [Tooltip("°¢ Ä«µå¿Í ÇØ´ç Ä«µå°¡ ¹èÄ¡µÉ ½½·Ô Á¤º¸¸¦ Æ÷ÇÔÇÕ´Ï´Ù.")]
+        [Header("í”Œë ˆì´ì–´ ì¹´ë“œ ë± (ìˆœì„œ ê³ ì • ë° ìŠ¬ë¡¯ ì§€ì •)")]
+        [Tooltip("ê° ì¹´ë“œì™€ í•´ë‹¹ ì¹´ë“œê°€ ë°°ì¹˜ë  ìŠ¬ë¡¯ ì •ë³´ë¥¼ í¬í•¨í•©ë‹ˆë‹¤.")]
         [SerializeField] private List<PlayerSkillCardEntry> cards = new();
 
         /// <summary>
-        /// Ä«µå µ¦ÀÇ º¹»çº»À» ¹İÈ¯ÇÕ´Ï´Ù.
-        /// ¿ÜºÎ¿¡¼­ ¸®½ºÆ®¸¦ ¼öÁ¤ÇÒ ¼ö ¾ø½À´Ï´Ù.
+        /// ì¹´ë“œ ë±ì˜ ë³µì‚¬ë³¸ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
+        /// ì™¸ë¶€ì—ì„œ ë¦¬ìŠ¤íŠ¸ë¥¼ ìˆ˜ì •í•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤.
         /// </summary>
         public List<PlayerSkillCardEntry> Cards => new(cards);
 
         /// <summary>
-        /// Ä«µå µ¦ÀÇ ÀüÃ¼ °³¼ö¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
+        /// ì¹´ë“œ ë±ì˜ ì „ì²´ ê°œìˆ˜ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         public int Count => cards?.Count ?? 0;
 
         /// <summary>
-        /// ÁöÁ¤ÇÑ ÀÎµ¦½º¿¡ À§Ä¡ÇÑ Ä«µå ¿£Æ®¸®¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
+        /// ì§€ì •í•œ ì¸ë±ìŠ¤ì— ìœ„ì¹˜í•œ ì¹´ë“œ ì—”íŠ¸ë¦¬ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="index">Ä«µå ÀÎµ¦½º</param>
-        /// <returns>¿£Æ®¸® °´Ã¼ ¶Ç´Â ¹üÀ§ ¿À·ù ½Ã null</returns>
+        /// <param name="index">ì¹´ë“œ ì¸ë±ìŠ¤</param>
+        /// <returns>ì—”íŠ¸ë¦¬ ê°ì²´ ë˜ëŠ” ë²”ìœ„ ì˜¤ë¥˜ ì‹œ null</returns>
         public PlayerSkillCardEntry GetEntryAt(int index)
         {
             if (index < 0 || index >= Count)
@@ -39,9 +39,9 @@ namespace Game.SkillCardSystem.Deck
         }
 
         /// <summary>
-        /// Ä«µå µ¦ ÀüÃ¼¸¦ º¹»çÇÏ¿© ¹İÈ¯ÇÕ´Ï´Ù.
+        /// ì¹´ë“œ ë± ì „ì²´ë¥¼ ë³µì‚¬í•˜ì—¬ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <returns>Ä«µå ¿£Æ®¸® ¸®½ºÆ®</returns>
+        /// <returns>ì¹´ë“œ ì—”íŠ¸ë¦¬ ë¦¬ìŠ¤íŠ¸</returns>
         public List<PlayerSkillCardEntry> GetCards()
         {
             return Cards;

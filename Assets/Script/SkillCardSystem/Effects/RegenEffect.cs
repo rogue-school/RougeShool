@@ -6,7 +6,7 @@ using Game.SkillCardSystem.Interface;
 namespace Game.SkillCardSystem.Effect
 {
     /// <summary>
-    /// ÀÏÁ¤ ÅÏ µ¿¾È ´ë»ó¿¡°Ô Ã¼·Â È¸º¹ È¿°ú¸¦ ºÎ¿©ÇÏ´Â Áö¼Ó È¿°úÀÔ´Ï´Ù.
+    /// ì¼ì • í„´ ë™ì•ˆ ëŒ€ìƒì—ê²Œ ì²´ë ¥ íšŒë³µ íš¨ê³¼ë¥¼ ë¶€ì—¬í•˜ëŠ” ì§€ì† íš¨ê³¼ì…ë‹ˆë‹¤.
     /// </summary>
     public class RegenEffect : IPerTurnEffect
     {
@@ -14,10 +14,10 @@ namespace Game.SkillCardSystem.Effect
         private int remainingTurns;
 
         /// <summary>
-        /// È¸º¹ È¿°ú¸¦ ÃÊ±âÈ­ÇÕ´Ï´Ù.
+        /// íšŒë³µ íš¨ê³¼ë¥¼ ì´ˆê¸°í™”í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="healAmount">ÅÏ¸¶´Ù È¸º¹ÇÒ Ã¼·Â·®</param>
-        /// <param name="duration">Áö¼Ó ÅÏ ¼ö</param>
+        /// <param name="healAmount">í„´ë§ˆë‹¤ íšŒë³µí•  ì²´ë ¥ëŸ‰</param>
+        /// <param name="duration">ì§€ì† í„´ ìˆ˜</param>
         public RegenEffect(int healAmount, int duration)
         {
             this.healAmount = healAmount;
@@ -25,26 +25,26 @@ namespace Game.SkillCardSystem.Effect
         }
 
         /// <summary>
-        /// È¿°ú°¡ ¸¸·áµÇ¾ú´ÂÁö ¿©ºÎ¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
+        /// íš¨ê³¼ê°€ ë§Œë£Œë˜ì—ˆëŠ”ì§€ ì—¬ë¶€ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         public bool IsExpired => remainingTurns <= 0;
 
         /// <summary>
-        /// ÅÏ ½ÃÀÛ ½Ã È¸º¹ È¿°ú¸¦ Àû¿ëÇÕ´Ï´Ù.
+        /// í„´ ì‹œì‘ ì‹œ íšŒë³µ íš¨ê³¼ë¥¼ ì ìš©í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="target">È¸º¹ È¿°ú¸¦ Àû¿ëÇÒ Ä³¸¯ÅÍ</param>
+        /// <param name="target">íšŒë³µ íš¨ê³¼ë¥¼ ì ìš©í•  ìºë¦­í„°</param>
         public void OnTurnStart(ICharacter target)
         {
             if (target == null)
             {
-                Debug.LogWarning("[RegenEffect] ´ë»ó Ä³¸¯ÅÍ°¡ nullÀÔ´Ï´Ù.");
+                Debug.LogWarning("[RegenEffect] ëŒ€ìƒ ìºë¦­í„°ê°€ nullì…ë‹ˆë‹¤.");
                 return;
             }
 
             target.Heal(healAmount);
             remainingTurns--;
 
-            Debug.Log($"[RegenEffect] {target.GetCharacterName()} Ã¼·Â {healAmount} È¸º¹µÊ (³²Àº ÅÏ: {remainingTurns})");
+            Debug.Log($"[RegenEffect] {target.GetCharacterName()} ì²´ë ¥ {healAmount} íšŒë³µë¨ (ë‚¨ì€ í„´: {remainingTurns})");
         }
     }
 }

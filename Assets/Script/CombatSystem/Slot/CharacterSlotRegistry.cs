@@ -7,22 +7,22 @@ using Game.CharacterSystem.Interface;
 namespace Game.CombatSystem.Slot
 {
     /// <summary>
-    /// ÀüÅõ Ä³¸¯ÅÍ ½½·ÔÀ» µî·ÏÇÏ°í Á¶È¸ÇÏ´Â ·¹Áö½ºÆ®¸®ÀÔ´Ï´Ù.
+    /// ì „íˆ¬ ìºë¦­í„° ìŠ¬ë¡¯ì„ ë“±ë¡í•˜ê³  ì¡°íšŒí•˜ëŠ” ë ˆì§€ìŠ¤íŠ¸ë¦¬ì…ë‹ˆë‹¤.
     /// </summary>
     public class CharacterSlotRegistry : MonoBehaviour, ICharacterSlotRegistry
     {
-        #region ÇÊµå
+        #region í•„ë“œ
 
         private List<ICharacterSlot> characterSlots = new();
 
         #endregion
 
-        #region ½½·Ô µî·Ï ¹× ÃÊ±âÈ­
+        #region ìŠ¬ë¡¯ ë“±ë¡ ë° ì´ˆê¸°í™”
 
         /// <summary>
-        /// ¿ÜºÎ¿¡¼­ Àü´ŞµÈ Ä³¸¯ÅÍ ½½·Ô ¸®½ºÆ®¸¦ µî·ÏÇÕ´Ï´Ù.
+        /// ì™¸ë¶€ì—ì„œ ì „ë‹¬ëœ ìºë¦­í„° ìŠ¬ë¡¯ ë¦¬ìŠ¤íŠ¸ë¥¼ ë“±ë¡í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="slots">µî·ÏÇÒ Ä³¸¯ÅÍ ½½·Ô ¸ñ·Ï</param>
+        /// <param name="slots">ë“±ë¡í•  ìºë¦­í„° ìŠ¬ë¡¯ ëª©ë¡</param>
         public void RegisterCharacterSlots(IEnumerable<ICharacterSlot> slots)
         {
             characterSlots = slots.ToList();
@@ -30,10 +30,10 @@ namespace Game.CombatSystem.Slot
 
         #endregion
 
-        #region ½½·Ô Á¶È¸
+        #region ìŠ¬ë¡¯ ì¡°íšŒ
 
         /// <summary>
-        /// ¸ğµç Ä³¸¯ÅÍ ½½·ÔÀ» ¹İÈ¯ÇÕ´Ï´Ù.
+        /// ëª¨ë“  ìºë¦­í„° ìŠ¬ë¡¯ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         public IEnumerable<ICharacterSlot> GetAllCharacterSlots()
         {
@@ -41,7 +41,7 @@ namespace Game.CombatSystem.Slot
         }
 
         /// <summary>
-        /// ¼ÒÀ¯ÀÚ(SlotOwner)¿¡ ÇØ´çÇÏ´Â Ä³¸¯ÅÍ ½½·ÔÀ» ¹İÈ¯ÇÕ´Ï´Ù.
+        /// ì†Œìœ ì(SlotOwner)ì— í•´ë‹¹í•˜ëŠ” ìºë¦­í„° ìŠ¬ë¡¯ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         public ICharacterSlot GetCharacterSlot(SlotOwner owner)
         {
@@ -50,10 +50,10 @@ namespace Game.CombatSystem.Slot
 
         #endregion
 
-        #region Å¬¸®¾î
+        #region í´ë¦¬ì–´
 
         /// <summary>
-        /// ¸ğµç ½½·Ô Á¤º¸¸¦ ÃÊ±âÈ­ÇÕ´Ï´Ù.
+        /// ëª¨ë“  ìŠ¬ë¡¯ ì •ë³´ë¥¼ ì´ˆê¸°í™”í•©ë‹ˆë‹¤.
         /// </summary>
         public void Clear()
         {

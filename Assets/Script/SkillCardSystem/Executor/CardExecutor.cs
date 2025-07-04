@@ -10,8 +10,8 @@ using Game.CharacterSystem.Core;
 namespace Game.SkillCardSystem.Executor
 {
     /// <summary>
-    /// ½ºÅ³ Ä«µåÀÇ ÀÌÆåÆ®¸¦ ½ÇÁ¦·Î ½ÇÇàÇÏ´Â Å¬·¡½ºÀÔ´Ï´Ù.
-    /// À¯È¿¼º °Ë»ç ÈÄ Ä¿¸Çµå ÆĞÅÏ ±â¹İÀ¸·Î ÀÌÆåÆ®¸¦ Ã³¸®ÇÕ´Ï´Ù.
+    /// ìŠ¤í‚¬ ì¹´ë“œì˜ ì´í™íŠ¸ë¥¼ ì‹¤ì œë¡œ ì‹¤í–‰í•˜ëŠ” í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
+    /// ìœ íš¨ì„± ê²€ì‚¬ í›„ ì»¤ë§¨ë“œ íŒ¨í„´ ê¸°ë°˜ìœ¼ë¡œ ì´í™íŠ¸ë¥¼ ì²˜ë¦¬í•©ë‹ˆë‹¤.
     /// </summary>
     public class CardExecutor : ICardExecutor
     {
@@ -19,10 +19,10 @@ namespace Game.SkillCardSystem.Executor
         private readonly ICardExecutionValidator validator;
 
         /// <summary>
-        /// CardExecutor »ı¼ºÀÚ.
+        /// CardExecutor ìƒì„±ì.
         /// </summary>
-        /// <param name="commandFactory">Ä«µå ÀÌÆåÆ® Ä¿¸Çµå »ı¼º ÆÑÅä¸®</param>
-        /// <param name="validator">Ä«µå ½ÇÇà À¯È¿¼º °Ë»ç±â</param>
+        /// <param name="commandFactory">ì¹´ë“œ ì´í™íŠ¸ ì»¤ë§¨ë“œ ìƒì„± íŒ©í† ë¦¬</param>
+        /// <param name="validator">ì¹´ë“œ ì‹¤í–‰ ìœ íš¨ì„± ê²€ì‚¬ê¸°</param>
         public CardExecutor(
             ICardEffectCommandFactory commandFactory,
             ICardExecutionValidator validator)
@@ -32,23 +32,23 @@ namespace Game.SkillCardSystem.Executor
         }
 
         /// <summary>
-        /// ÁÖ¾îÁø Ä«µå¿Í ÄÁÅØ½ºÆ®¸¦ ±â¹İÀ¸·Î ÀÌÆåÆ®¸¦ ½ÇÇàÇÕ´Ï´Ù.
+        /// ì£¼ì–´ì§„ ì¹´ë“œì™€ ì»¨í…ìŠ¤íŠ¸ë¥¼ ê¸°ë°˜ìœ¼ë¡œ ì´í™íŠ¸ë¥¼ ì‹¤í–‰í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="card">½ÇÇàÇÒ ½ºÅ³ Ä«µå</param>
-        /// <param name="context">½ÇÇà ÄÁÅØ½ºÆ® (½ÃÀüÀÚ/´ë»ó µî)</param>
-        /// <param name="turnManager">ÀüÅõ ÅÏ ¸Å´ÏÀú (ÀÌÆåÆ®°¡ ÅÏ¿¡ ¿µÇâÀ» ¹ÌÄ¥ °æ¿ì »ç¿ë)</param>
+        /// <param name="card">ì‹¤í–‰í•  ìŠ¤í‚¬ ì¹´ë“œ</param>
+        /// <param name="context">ì‹¤í–‰ ì»¨í…ìŠ¤íŠ¸ (ì‹œì „ì/ëŒ€ìƒ ë“±)</param>
+        /// <param name="turnManager">ì „íˆ¬ í„´ ë§¤ë‹ˆì € (ì´í™íŠ¸ê°€ í„´ì— ì˜í–¥ì„ ë¯¸ì¹  ê²½ìš° ì‚¬ìš©)</param>
         public void Execute(ISkillCard card, ICardExecutionContext context, ICombatTurnManager turnManager)
         {
             if (!validator.CanExecute(card, context))
             {
-                Debug.LogWarning($"[CardExecutor] ½ÇÇà Á¶°Ç ºÒÃæÁ·: {card?.GetCardName() ?? "¾Ë ¼ö ¾øÀ½"}");
+                Debug.LogWarning($"[CardExecutor] ì‹¤í–‰ ì¡°ê±´ ë¶ˆì¶©ì¡±: {card?.GetCardName() ?? "ì•Œ ìˆ˜ ì—†ìŒ"}");
                 return;
             }
 
             var effects = card.CreateEffects();
             if (effects == null || effects.Count == 0)
             {
-                Debug.LogWarning($"[CardExecutor] '{card.GetCardName()}'¿¡ µî·ÏµÈ ÀÌÆåÆ®°¡ ¾ø½À´Ï´Ù.");
+                Debug.LogWarning($"[CardExecutor] '{card.GetCardName()}'ì— ë“±ë¡ëœ ì´í™íŠ¸ê°€ ì—†ìŠµë‹ˆë‹¤.");
                 return;
             }
 
@@ -60,18 +60,18 @@ namespace Game.SkillCardSystem.Executor
                 var command = commandFactory.Create(effect, power);
                 command?.Execute(context, turnManager);
 
-                Debug.Log($"[CardExecutor] {card.GetCardName()} ¡æ {effect.GetEffectName()}, power: {power}");
+                Debug.Log($"[CardExecutor] {card.GetCardName()} â†’ {effect.GetEffectName()}, power: {power}");
             }
 
-            // È¿°ú ÈÄ Ä«µå »ç¿îµå Àç»ı
+            // íš¨ê³¼ í›„ ì¹´ë“œ ì‚¬ìš´ë“œ ì¬ìƒ
             var clip = card.CardData?.SfxClip;
             if (clip != null)
             {
-                Debug.Log($"[CardExecutor] SFX Àç»ı ½Ãµµ: {clip.name}");
+                Debug.Log($"[CardExecutor] SFX ì¬ìƒ ì‹œë„: {clip.name}");
                 AudioManager.Instance?.PlaySFX(clip);
             }
 
-            // Ä«µå ºñÁÖ¾ó ÀÌÆåÆ® Àç»ı
+            // ì¹´ë“œ ë¹„ì£¼ì–¼ ì´í™íŠ¸ ì¬ìƒ
             var vfx = card.CardData?.VisualEffectPrefab;
             if (vfx != null)
             {

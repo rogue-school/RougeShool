@@ -4,21 +4,21 @@ using Game.SkillCardSystem.Interface;
 namespace Game.SkillCardSystem.Factory
 {
     /// <summary>
-    /// ½ºÅ³ Ä«µå ÀÌÆåÆ® SO¿¡¼­ Ä¿¸Çµå¸¦ »ı¼ºÇÏ´Â ÆÑÅä¸® Å¬·¡½ºÀÔ´Ï´Ù.
+    /// ìŠ¤í‚¬ ì¹´ë“œ ì´í™íŠ¸ SOì—ì„œ ì»¤ë§¨ë“œë¥¼ ìƒì„±í•˜ëŠ” íŒ©í† ë¦¬ í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
     /// </summary>
     public class CardEffectCommandFactory : ICardEffectCommandFactory
     {
         /// <summary>
-        /// ÁÖ¾îÁø ÀÌÆåÆ® SO¿Í ÆÄ¿ö °ªÀ» ±â¹İÀ¸·Î ÀÌÆåÆ® Ä¿¸Çµå¸¦ »ı¼ºÇÕ´Ï´Ù.
+        /// ì£¼ì–´ì§„ ì´í™íŠ¸ SOì™€ íŒŒì›Œ ê°’ì„ ê¸°ë°˜ìœ¼ë¡œ ì´í™íŠ¸ ì»¤ë§¨ë“œë¥¼ ìƒì„±í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="effect">½ÇÇàÇÒ ÀÌÆåÆ® ScriptableObject</param>
-        /// <param name="power">ÀÌÆåÆ®¿¡ Àü´ŞµÉ ÆÄ¿ö °ª</param>
-        /// <returns>»ı¼ºµÈ Ä«µå ÀÌÆåÆ® Ä¿¸Çµå</returns>
+        /// <param name="effect">ì‹¤í–‰í•  ì´í™íŠ¸ ScriptableObject</param>
+        /// <param name="power">ì´í™íŠ¸ì— ì „ë‹¬ë  íŒŒì›Œ ê°’</param>
+        /// <returns>ìƒì„±ëœ ì¹´ë“œ ì´í™íŠ¸ ì»¤ë§¨ë“œ</returns>
         public ICardEffectCommand Create(SkillCardEffectSO effect, int power)
         {
             if (effect == null)
             {
-                UnityEngine.Debug.LogWarning("[CardEffectCommandFactory] È¿°ú°¡ nullÀÔ´Ï´Ù.");
+                UnityEngine.Debug.LogWarning("[CardEffectCommandFactory] íš¨ê³¼ê°€ nullì…ë‹ˆë‹¤.");
                 return null;
             }
 

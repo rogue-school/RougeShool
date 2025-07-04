@@ -3,18 +3,18 @@ using Game.SkillCardSystem.Interface;
 namespace Game.CombatSystem.Interface
 {
     /// <summary>
-    /// ½ºÅ³ Ä«µå ½ÇÇà ·ÎÁ÷À» ´ã´çÇÏ´Â ¼­ºñ½º ÀÎÅÍÆäÀÌ½ºÀÔ´Ï´Ù.
-    /// Ä«µå ¹× ½ÇÇà ÄÁÅØ½ºÆ®¸¦ ±â¹ÝÀ¸·Î ½ºÅ³ È¿°ú¸¦ Àû¿ëÇÕ´Ï´Ù.
+    /// ìŠ¤í‚¬ ì¹´ë“œ ì‹¤í–‰ ë¡œì§ì„ ë‹´ë‹¹í•˜ëŠ” ì„œë¹„ìŠ¤ ì¸í„°íŽ˜ì´ìŠ¤ìž…ë‹ˆë‹¤.
+    /// ì¹´ë“œ ë° ì‹¤í–‰ ì»¨í…ìŠ¤íŠ¸ë¥¼ ê¸°ë°˜ìœ¼ë¡œ ìŠ¤í‚¬ íš¨ê³¼ë¥¼ ì ìš©í•©ë‹ˆë‹¤.
     /// </summary>
     public interface ICardExecutionService
     {
         /// <summary>
-        /// ÁöÁ¤µÈ ½ºÅ³ Ä«µå¿Í ½ÇÇà ÄÁÅØ½ºÆ®¸¦ »ç¿ëÇÏ¿© Ä«µåÀÇ È¿°ú¸¦ ½ÇÇàÇÕ´Ï´Ù.
+        /// ì§€ì •ëœ ìŠ¤í‚¬ ì¹´ë“œì™€ ì‹¤í–‰ ì»¨í…ìŠ¤íŠ¸ë¥¼ ì‚¬ìš©í•˜ì—¬ ì¹´ë“œì˜ íš¨ê³¼ë¥¼ ì‹¤í–‰í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="card">½ÇÇàÇÒ <see cref="ISkillCard"/> °´Ã¼ÀÔ´Ï´Ù.</param>
+        /// <param name="card">ì‹¤í–‰í•  <see cref="ISkillCard"/> ê°ì²´ìž…ë‹ˆë‹¤.</param>
         /// <param name="context">
-        /// Ä«µå ½ÇÇà¿¡ ÇÊ¿äÇÑ Á¤º¸¸¦ Æ÷ÇÔÇÏ´Â <see cref="ICardExecutionContext"/> °´Ã¼ÀÔ´Ï´Ù.
-        /// ¿¹: ½ÃÀüÀÚ, ´ë»óÀÚ, Ä«µå µ¥ÀÌÅÍ µî
+        /// ì¹´ë“œ ì‹¤í–‰ì— í•„ìš”í•œ ì •ë³´ë¥¼ í¬í•¨í•˜ëŠ” <see cref="ICardExecutionContext"/> ê°ì²´ìž…ë‹ˆë‹¤.
+        /// ì˜ˆ: ì‹œì „ìž, ëŒ€ìƒìž, ì¹´ë“œ ë°ì´í„° ë“±
         /// </param>
         void Execute(ISkillCard card, ICardExecutionContext context);
     }

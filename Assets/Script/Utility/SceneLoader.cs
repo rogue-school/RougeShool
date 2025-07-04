@@ -16,7 +16,7 @@ public class SceneLoader : MonoBehaviour, ISceneLoader
         }
         else
         {
-            Debug.LogWarning("SceneLoader: targetButtonÀÌ ¼³Á¤µÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+            Debug.LogWarning("SceneLoader: targetButtonì´ ì„¤ì •ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
         }
     }
 
@@ -28,13 +28,13 @@ public class SceneLoader : MonoBehaviour, ISceneLoader
         }
         else
         {
-            Debug.LogWarning("ÀÌµ¿ÇÒ ¾À ÀÌ¸§ÀÌ ¼³Á¤µÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+            Debug.LogWarning("ì´ë™í•  ì”¬ ì´ë¦„ì´ ì„¤ì •ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
         }
     }
 
     public void LoadScene(string sceneName)
     {
-        Debug.Log($"[SceneLoader] ¾À ÀÌµ¿ Áß: {sceneName}");
+        Debug.Log($"[SceneLoader] ì”¬ ì´ë™ ì¤‘: {sceneName}");
         SceneManager.LoadScene(sceneName);
     }
 }

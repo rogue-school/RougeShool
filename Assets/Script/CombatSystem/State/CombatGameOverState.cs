@@ -10,11 +10,11 @@ using Game.IManager;
 namespace Game.CombatSystem.State
 {
     /// <summary>
-    /// ÀüÅõ Á¾·á »óÅÂ. °ÔÀÓ ¿À¹ö ·çÆ¾À» ½ÇÇàÇÏ°í UI¸¦ Ç¥½ÃÇÕ´Ï´Ù.
+    /// ì „íˆ¬ ì¢…ë£Œ ìƒíƒœ. ê²Œì„ ì˜¤ë²„ ë£¨í‹´ì„ ì‹¤í–‰í•˜ê³  UIë¥¼ í‘œì‹œí•©ë‹ˆë‹¤.
     /// </summary>
     public class CombatGameOverState : ICombatTurnState
     {
-        #region ÇÊµå
+        #region í•„ë“œ
 
         private readonly ICombatTurnManager turnManager;
         private readonly ICombatFlowCoordinator flowCoordinator;
@@ -25,10 +25,10 @@ namespace Game.CombatSystem.State
 
         #endregion
 
-        #region »ı¼ºÀÚ
+        #region ìƒì„±ì
 
         /// <summary>
-        /// CombatGameOverState »ı¼ºÀÚ
+        /// CombatGameOverState ìƒì„±ì
         /// </summary>
         public CombatGameOverState(
             ICombatTurnManager turnManager,
@@ -49,33 +49,33 @@ namespace Game.CombatSystem.State
 
         #endregion
 
-        #region »óÅÂ ¸Ş¼­µå
+        #region ìƒíƒœ ë©”ì„œë“œ
 
         /// <summary>
-        /// »óÅÂ ÁøÀÔ ½Ã °ÔÀÓ ¿À¹ö ·çÆ¾ ½ÇÇà
+        /// ìƒíƒœ ì§„ì… ì‹œ ê²Œì„ ì˜¤ë²„ ë£¨í‹´ ì‹¤í–‰
         /// </summary>
         public void EnterState()
         {
-            Debug.Log("[CombatGameOverState] »óÅÂ ÁøÀÔ - °ÔÀÓ ¿À¹ö Ã³¸® ½ÃÀÛ");
+            Debug.Log("[CombatGameOverState] ìƒíƒœ ì§„ì… - ê²Œì„ ì˜¤ë²„ ì²˜ë¦¬ ì‹œì‘");
             coroutineRunner.RunCoroutine(GameOverRoutine());
         }
 
         /// <summary>
-        /// »óÅÂ ½ÇÇà Áß Æ¯º°ÇÑ ÀÛ¾÷ ¾øÀ½
+        /// ìƒíƒœ ì‹¤í–‰ ì¤‘ íŠ¹ë³„í•œ ì‘ì—… ì—†ìŒ
         /// </summary>
         public void ExecuteState() { }
 
         /// <summary>
-        /// »óÅÂ Á¾·á ½Ã Æ¯º°ÇÑ ÀÛ¾÷ ¾øÀ½
+        /// ìƒíƒœ ì¢…ë£Œ ì‹œ íŠ¹ë³„í•œ ì‘ì—… ì—†ìŒ
         /// </summary>
         public void ExitState() { }
 
         #endregion
 
-        #region ³»ºÎ ·çÆ¾
+        #region ë‚´ë¶€ ë£¨í‹´
 
         /// <summary>
-        /// °ÔÀÓ ¿À¹ö ¿¬Ãâ°ú UI¸¦ ½ÇÇàÇÏ´Â ·çÆ¾
+        /// ê²Œì„ ì˜¤ë²„ ì—°ì¶œê³¼ UIë¥¼ ì‹¤í–‰í•˜ëŠ” ë£¨í‹´
         /// </summary>
         private IEnumerator GameOverRoutine()
         {
@@ -84,14 +84,14 @@ namespace Game.CombatSystem.State
             if (CheckPlayerDeath())
             {
                 deathUIManager.ShowDeathUI();
-                Debug.Log("[CombatGameOverState] ÇÃ·¹ÀÌ¾î ÆĞ¹è - °ÔÀÓ ¿À¹ö UI Ç¥½Ã");
+                Debug.Log("[CombatGameOverState] í”Œë ˆì´ì–´ íŒ¨ë°° - ê²Œì„ ì˜¤ë²„ UI í‘œì‹œ");
             }
 
-            Debug.Log("[CombatGameOverState] °ÔÀÓ ¿À¹ö Ã³¸® ¿Ï·á");
+            Debug.Log("[CombatGameOverState] ê²Œì„ ì˜¤ë²„ ì²˜ë¦¬ ì™„ë£Œ");
         }
 
         /// <summary>
-        /// ÇÃ·¹ÀÌ¾î°¡ »ç¸ÁÇß´ÂÁö È®ÀÎ
+        /// í”Œë ˆì´ì–´ê°€ ì‚¬ë§í–ˆëŠ”ì§€ í™•ì¸
         /// </summary>
         private bool CheckPlayerDeath()
         {

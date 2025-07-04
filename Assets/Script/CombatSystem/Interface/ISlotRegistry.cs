@@ -3,47 +3,47 @@ using Game.CombatSystem.Slot;
 namespace Game.CombatSystem.Interface
 {
     /// <summary>
-    /// ÀüÅõ¿¡ »ç¿ëµÇ´Â ½½·Ô ½Ã½ºÅÛÀÇ ·¹Áö½ºÆ®¸®¸¦ ÅëÇÕÀûÀ¸·Î °ü¸®ÇÏ´Â ÀÎÅÍÆäÀÌ½ºÀÔ´Ï´Ù.
-    /// ÇÚµå ½½·Ô, ÀüÅõ ½½·Ô, Ä³¸¯ÅÍ ½½·Ô¿¡ ´ëÇÑ Á¢±ÙÀ» Á¦°øÇÕ´Ï´Ù.
+    /// ì „íˆ¬ì— ì‚¬ìš©ë˜ëŠ” ìŠ¬ë¡¯ ì‹œìŠ¤í…œì˜ ë ˆì§€ìŠ¤íŠ¸ë¦¬ë¥¼ í†µí•©ì ìœ¼ë¡œ ê´€ë¦¬í•˜ëŠ” ì¸í„°íŽ˜ì´ìŠ¤ìž…ë‹ˆë‹¤.
+    /// í•¸ë“œ ìŠ¬ë¡¯, ì „íˆ¬ ìŠ¬ë¡¯, ìºë¦­í„° ìŠ¬ë¡¯ì— ëŒ€í•œ ì ‘ê·¼ì„ ì œê³µí•©ë‹ˆë‹¤.
     /// </summary>
     public interface ISlotRegistry
     {
         /// <summary>
-        /// ÇÚµå ½½·Ô ·¹Áö½ºÆ®¸®¸¦ ¹ÝÈ¯ÇÕ´Ï´Ù.
+        /// í•¸ë“œ ìŠ¬ë¡¯ ë ˆì§€ìŠ¤íŠ¸ë¦¬ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         IHandSlotRegistry GetHandSlotRegistry();
 
         /// <summary>
-        /// ÀüÅõ ½½·Ô ·¹Áö½ºÆ®¸®¸¦ ¹ÝÈ¯ÇÕ´Ï´Ù.
+        /// ì „íˆ¬ ìŠ¬ë¡¯ ë ˆì§€ìŠ¤íŠ¸ë¦¬ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         ICombatSlotRegistry GetCombatSlotRegistry();
 
         /// <summary>
-        /// Ä³¸¯ÅÍ ½½·Ô ·¹Áö½ºÆ®¸®¸¦ ¹ÝÈ¯ÇÕ´Ï´Ù.
+        /// ìºë¦­í„° ìŠ¬ë¡¯ ë ˆì§€ìŠ¤íŠ¸ë¦¬ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         ICharacterSlotRegistry GetCharacterSlotRegistry();
 
         /// <summary>
-        /// ÀüÅõ ½½·Ô À§Ä¡(³í¸® À§Ä¡ ±âÁØ)¿¡ ÇØ´çÇÏ´Â ½½·ÔÀ» ¹ÝÈ¯ÇÕ´Ï´Ù.
+        /// ì „íˆ¬ ìŠ¬ë¡¯ ìœ„ì¹˜(ë…¼ë¦¬ ìœ„ì¹˜ ê¸°ì¤€)ì— í•´ë‹¹í•˜ëŠ” ìŠ¬ë¡¯ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="position">ÀüÅõ ½½·Ô À§Ä¡</param>
-        /// <returns>ÇØ´ç ½½·Ô</returns>
+        /// <param name="position">ì „íˆ¬ ìŠ¬ë¡¯ ìœ„ì¹˜</param>
+        /// <returns>í•´ë‹¹ ìŠ¬ë¡¯</returns>
         ICombatCardSlot GetCombatSlot(CombatSlotPosition position);
 
         /// <summary>
-        /// ÀüÅõ ÇÊµå À§Ä¡(ÇÊµå ±âÁØ)¿¡ ÇØ´çÇÏ´Â ½½·ÔÀ» ¹ÝÈ¯ÇÕ´Ï´Ù.
+        /// ì „íˆ¬ í•„ë“œ ìœ„ì¹˜(í•„ë“œ ê¸°ì¤€)ì— í•´ë‹¹í•˜ëŠ” ìŠ¬ë¡¯ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="fieldPosition">ÀüÅõ ÇÊµå ½½·Ô À§Ä¡</param>
-        /// <returns>ÇØ´ç ½½·Ô</returns>
+        /// <param name="fieldPosition">ì „íˆ¬ í•„ë“œ ìŠ¬ë¡¯ ìœ„ì¹˜</param>
+        /// <returns>í•´ë‹¹ ìŠ¬ë¡¯</returns>
         ICombatCardSlot GetCombatSlot(CombatFieldSlotPosition fieldPosition);
 
         /// <summary>
-        /// ½½·Ô ·¹Áö½ºÆ®¸®°¡ ¸ðµÎ ÃÊ±âÈ­µÇ¾úÀ½À» ¸í½ÃÇÕ´Ï´Ù.
+        /// ìŠ¬ë¡¯ ë ˆì§€ìŠ¤íŠ¸ë¦¬ê°€ ëª¨ë‘ ì´ˆê¸°í™”ë˜ì—ˆìŒì„ ëª…ì‹œí•©ë‹ˆë‹¤.
         /// </summary>
         void MarkInitialized();
 
         /// <summary>
-        /// ÇöÀç ½½·Ô ·¹Áö½ºÆ®¸®°¡ ÃÊ±âÈ­ »óÅÂÀÎÁö ¿©ºÎ¸¦ ¹ÝÈ¯ÇÕ´Ï´Ù.
+        /// í˜„ìž¬ ìŠ¬ë¡¯ ë ˆì§€ìŠ¤íŠ¸ë¦¬ê°€ ì´ˆê¸°í™” ìƒíƒœì¸ì§€ ì—¬ë¶€ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         bool IsInitialized { get; }
     }

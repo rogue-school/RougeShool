@@ -5,12 +5,12 @@ using Game.CombatSystem.Interface;
 namespace Game.CombatSystem.Core
 {
     /// <summary>
-    /// ÀüÅõ ½ÃÀÛ ¹öÆ°À» °ü¸®ÇÏ´Â ÄÄÆ÷³ÍÆ®ÀÔ´Ï´Ù.
-    /// Á¶°Ç¿¡ µû¶ó ¹öÆ°ÀÇ È°¼ºÈ­¸¦ Á¦¾îÇÏ°í, Å¬¸¯ ½Ã ÅÏ »óÅÂ¸¦ ÀüÀÌÇÕ´Ï´Ù.
+    /// ì „íˆ¬ ì‹œì‘ ë²„íŠ¼ì„ ê´€ë¦¬í•˜ëŠ” ì»´í¬ë„ŒíŠ¸ì…ë‹ˆë‹¤.
+    /// ì¡°ê±´ì— ë”°ë¼ ë²„íŠ¼ì˜ í™œì„±í™”ë¥¼ ì œì–´í•˜ê³ , í´ë¦­ ì‹œ í„´ ìƒíƒœë¥¼ ì „ì´í•©ë‹ˆë‹¤.
     /// </summary>
     public class TurnStartButtonHandler : MonoBehaviour
     {
-        [Header("ÀüÅõ ½ÃÀÛ ¹öÆ°")]
+        [Header("ì „íˆ¬ ì‹œì‘ ë²„íŠ¼")]
         [SerializeField] private Button startButton;
 
         private ITurnStartConditionChecker conditionChecker;
@@ -21,7 +21,7 @@ namespace Game.CombatSystem.Core
         private bool isInjected = false;
 
         /// <summary>
-        /// Zenject ÀÇÁ¸¼º ÁÖÀÔ ¸Ş¼­µå
+        /// Zenject ì˜ì¡´ì„± ì£¼ì… ë©”ì„œë“œ
         /// </summary>
         public void Inject(
             ITurnStartConditionChecker conditionChecker,
@@ -40,18 +40,18 @@ namespace Game.CombatSystem.Core
             isInjected = true;
         }
 
-        #region À¯´ÏÆ¼ »ı¸íÁÖ±â ¸Ş¼­µå
+        #region ìœ ë‹ˆí‹° ìƒëª…ì£¼ê¸° ë©”ì„œë“œ
 
         private void Awake()
         {
             if (startButton == null)
             {
-                Debug.LogWarning("[TurnStartButtonHandler] startButtonÀÌ ÇÒ´çµÇÁö ¾Ê¾Ò½À´Ï´Ù!");
+                Debug.LogWarning("[TurnStartButtonHandler] startButtonì´ í• ë‹¹ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤!");
                 return;
             }
 
             startButton.onClick.AddListener(OnStartButtonClicked);
-            startButton.interactable = false; // ÃÊ±â¿¡´Â ºñÈ°¼ºÈ­
+            startButton.interactable = false; // ì´ˆê¸°ì—ëŠ” ë¹„í™œì„±í™”
         }
 
         private void OnDestroy()
@@ -65,10 +65,10 @@ namespace Game.CombatSystem.Core
 
         #endregion
 
-        #region ³»ºÎ ·ÎÁ÷
+        #region ë‚´ë¶€ ë¡œì§
 
         /// <summary>
-        /// Ä«µå »óÅÂ°¡ º¯°æµÇ¾úÀ» ¶§ ¹öÆ° È°¼ºÈ­ ¿©ºÎ¸¦ Æò°¡ÇÕ´Ï´Ù.
+        /// ì¹´ë“œ ìƒíƒœê°€ ë³€ê²½ë˜ì—ˆì„ ë•Œ ë²„íŠ¼ í™œì„±í™” ì—¬ë¶€ë¥¼ í‰ê°€í•©ë‹ˆë‹¤.
         /// </summary>
         private void EvaluateButtonInteractable()
         {
@@ -78,17 +78,17 @@ namespace Game.CombatSystem.Core
             bool canStart = conditionChecker.CanStartTurn();
             startButton.interactable = canStart;
 
-            Debug.Log($"[TurnStartButtonHandler] ¹öÆ° {(canStart ? "È°¼ºÈ­µÊ" : "ºñÈ°¼ºÈ­µÊ")}");
+            Debug.Log($"[TurnStartButtonHandler] ë²„íŠ¼ {(canStart ? "í™œì„±í™”ë¨" : "ë¹„í™œì„±í™”ë¨")}");
         }
 
         /// <summary>
-        /// ¹öÆ° Å¬¸¯ ½Ã »óÅÂ ÀüÀÌ¸¦ ¿äÃ»ÇÕ´Ï´Ù.
+        /// ë²„íŠ¼ í´ë¦­ ì‹œ ìƒíƒœ ì „ì´ë¥¼ ìš”ì²­í•©ë‹ˆë‹¤.
         /// </summary>
         private void OnStartButtonClicked()
         {
             if (!isInjected || conditionChecker == null || !conditionChecker.CanStartTurn())
             {
-                Debug.LogWarning("[TurnStartButtonHandler] ¹öÆ° Å¬¸¯ Á¶°Ç ºÒÃæÁ·");
+                Debug.LogWarning("[TurnStartButtonHandler] ë²„íŠ¼ í´ë¦­ ì¡°ê±´ ë¶ˆì¶©ì¡±");
                 return;
             }
 
@@ -96,20 +96,20 @@ namespace Game.CombatSystem.Core
             if (nextState != null)
             {
                 turnManager?.RequestStateChange(nextState);
-                Debug.Log("[TurnStartButtonHandler] »óÅÂ ÀüÀÌ ¿äÃ»µÊ");
+                Debug.Log("[TurnStartButtonHandler] ìƒíƒœ ì „ì´ ìš”ì²­ë¨");
             }
             else
             {
-                Debug.LogError("[TurnStartButtonHandler] nextState »ı¼º ½ÇÆĞ");
+                Debug.LogError("[TurnStartButtonHandler] nextState ìƒì„± ì‹¤íŒ¨");
             }
         }
 
         #endregion
 
-        #region ¿ÜºÎ API
+        #region ì™¸ë¶€ API
 
         /// <summary>
-        /// ¿ÜºÎ¿¡¼­ ¼öµ¿À¸·Î ¹öÆ° È°¼ºÈ­ Á¶°ÇÀ» Æò°¡ÇÕ´Ï´Ù.
+        /// ì™¸ë¶€ì—ì„œ ìˆ˜ë™ìœ¼ë¡œ ë²„íŠ¼ í™œì„±í™” ì¡°ê±´ì„ í‰ê°€í•©ë‹ˆë‹¤.
         /// </summary>
         public void ForceEvaluate()
         {
@@ -117,14 +117,14 @@ namespace Game.CombatSystem.Core
         }
 
         /// <summary>
-        /// ¿ÜºÎ¿¡¼­ ¹öÆ°ÀÇ È°¼ºÈ­ »óÅÂ¸¦ °­Á¦·Î ¼³Á¤ÇÕ´Ï´Ù.
+        /// ì™¸ë¶€ì—ì„œ ë²„íŠ¼ì˜ í™œì„±í™” ìƒíƒœë¥¼ ê°•ì œë¡œ ì„¤ì •í•©ë‹ˆë‹¤.
         /// </summary>
         public void SetInteractable(bool isEnabled)
         {
             if (startButton != null)
             {
                 startButton.interactable = isEnabled;
-                Debug.Log($"[TurnStartButtonHandler] ¹öÆ° {(isEnabled ? "°­Á¦ È°¼ºÈ­µÊ" : "°­Á¦ ºñÈ°¼ºÈ­µÊ")}");
+                Debug.Log($"[TurnStartButtonHandler] ë²„íŠ¼ {(isEnabled ? "ê°•ì œ í™œì„±í™”ë¨" : "ê°•ì œ ë¹„í™œì„±í™”ë¨")}");
             }
         }
 

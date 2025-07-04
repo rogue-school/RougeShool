@@ -4,29 +4,29 @@ using UnityEngine;
 namespace Game.SkillCardSystem.Runtime
 {
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î ÇÚµå¿¡ Á¸ÀçÇÏ´Â ¸ğµç ½ºÅ³ Ä«µåÀÇ ÄğÅ¸ÀÓÀ» ÅÏ ½ÃÀÛ ½Ã °¨¼Ò½ÃÅ°´Â ½Ã½ºÅÛÀÔ´Ï´Ù.
-    /// UI ¿¬µ¿ ¹× µğ¹ö±× ·Î±×µµ ÇÔ²² ¼öÇàÇÕ´Ï´Ù.
+    /// í”Œë ˆì´ì–´ í•¸ë“œì— ì¡´ì¬í•˜ëŠ” ëª¨ë“  ìŠ¤í‚¬ ì¹´ë“œì˜ ì¿¨íƒ€ì„ì„ í„´ ì‹œì‘ ì‹œ ê°ì†Œì‹œí‚¤ëŠ” ì‹œìŠ¤í…œì…ë‹ˆë‹¤.
+    /// UI ì—°ë™ ë° ë””ë²„ê·¸ ë¡œê·¸ë„ í•¨ê»˜ ìˆ˜í–‰í•©ë‹ˆë‹¤.
     /// </summary>
     public class SkillCardCooldownSystem
     {
         private readonly IPlayerHandManager handManager;
 
         /// <summary>
-        /// ÄğÅ¸ÀÓ ½Ã½ºÅÛ »ı¼ºÀÚ
+        /// ì¿¨íƒ€ì„ ì‹œìŠ¤í…œ ìƒì„±ì
         /// </summary>
-        /// <param name="handManager">ÇÃ·¹ÀÌ¾î ÇÚµå ¸Å´ÏÀú</param>
+        /// <param name="handManager">í”Œë ˆì´ì–´ í•¸ë“œ ë§¤ë‹ˆì €</param>
         public SkillCardCooldownSystem(IPlayerHandManager handManager)
         {
             this.handManager = handManager;
         }
 
         /// <summary>
-        /// ¸ğµç ÇÚµå Ä«µåÀÇ ÄğÅ¸ÀÓÀ» 1 °¨¼Ò½ÃÅ°°í, UI¸¦ °»½ÅÇÕ´Ï´Ù.
-        /// ÄğÅ¸ÀÓÀÌ ÀÌ¹Ì 0ÀÎ Ä«µå´Â ¿µÇâÀ» ¹ŞÁö ¾Ê½À´Ï´Ù.
+        /// ëª¨ë“  í•¸ë“œ ì¹´ë“œì˜ ì¿¨íƒ€ì„ì„ 1 ê°ì†Œì‹œí‚¤ê³ , UIë¥¼ ê°±ì‹ í•©ë‹ˆë‹¤.
+        /// ì¿¨íƒ€ì„ì´ ì´ë¯¸ 0ì¸ ì¹´ë“œëŠ” ì˜í–¥ì„ ë°›ì§€ ì•ŠìŠµë‹ˆë‹¤.
         /// </summary>
         public void ReduceAllCooldowns()
         {
-            Debug.Log("<color=lime>[CooldownSystem] ReduceAllCooldowns È£ÃâµÊ</color>");
+            Debug.Log("<color=lime>[CooldownSystem] ReduceAllCooldowns í˜¸ì¶œë¨</color>");
 
             int totalCards = 0;
             int reducedCards = 0;
@@ -35,7 +35,7 @@ namespace Game.SkillCardSystem.Runtime
             {
                 if (card == null)
                 {
-                    Debug.LogWarning("[CooldownSystem] null Ä«µå°¡ ¹ß°ßµÇ¾î °Ç³Ê¶İ´Ï´Ù.");
+                    Debug.LogWarning("[CooldownSystem] null ì¹´ë“œê°€ ë°œê²¬ë˜ì–´ ê±´ë„ˆëœë‹ˆë‹¤.");
                     continue;
                 }
 
@@ -44,32 +44,32 @@ namespace Game.SkillCardSystem.Runtime
                 int cur = card.GetCurrentCoolTime();
                 int max = card.GetMaxCoolTime();
 
-                Debug.Log($"[CooldownSystem] Ä«µå: {card.GetCardName()}, ÇöÀç ÄğÅ¸ÀÓ: {cur}, ÃÖ´ë ÄğÅ¸ÀÓ: {max}");
+                Debug.Log($"[CooldownSystem] ì¹´ë“œ: {card.GetCardName()}, í˜„ì¬ ì¿¨íƒ€ì„: {cur}, ìµœëŒ€ ì¿¨íƒ€ì„: {max}");
 
                 if (cur > 0)
                 {
                     card.SetCurrentCoolTime(cur - 1);
                     reducedCards++;
 
-                    Debug.Log($"<color=yellow>[CooldownSystem] {card.GetCardName()} ¡æ ÄğÅ¸ÀÓ °¨¼Ò: {cur} ¡æ {cur - 1}</color>");
+                    Debug.Log($"<color=yellow>[CooldownSystem] {card.GetCardName()} â†’ ì¿¨íƒ€ì„ ê°ì†Œ: {cur} â†’ {cur - 1}</color>");
                 }
                 else
                 {
-                    Debug.Log($"[CooldownSystem] {card.GetCardName()}´Â ÀÌ¹Ì ÄğÅ¸ÀÓÀÌ 0ÀÔ´Ï´Ù.");
+                    Debug.Log($"[CooldownSystem] {card.GetCardName()}ëŠ” ì´ë¯¸ ì¿¨íƒ€ì„ì´ 0ì…ë‹ˆë‹¤.");
                 }
 
-                // UI °»½Å
+                // UI ê°±ì‹ 
                 if (ui != null)
                 {
                     ui.UpdateCoolTimeDisplay();
                 }
                 else
                 {
-                    Debug.LogWarning($"[CooldownSystem] {card.GetCardName()}ÀÇ UI ÂüÁ¶°¡ nullÀÔ´Ï´Ù.");
+                    Debug.LogWarning($"[CooldownSystem] {card.GetCardName()}ì˜ UI ì°¸ì¡°ê°€ nullì…ë‹ˆë‹¤.");
                 }
             }
 
-            Debug.Log($"<color=cyan>[CooldownSystem] ÃÑ Ä«µå: {totalCards}, ÄğÅ¸ÀÓ °¨¼ÒµÈ Ä«µå ¼ö: {reducedCards}</color>");
+            Debug.Log($"<color=cyan>[CooldownSystem] ì´ ì¹´ë“œ: {totalCards}, ì¿¨íƒ€ì„ ê°ì†Œëœ ì¹´ë“œ ìˆ˜: {reducedCards}</color>");
         }
     }
 }

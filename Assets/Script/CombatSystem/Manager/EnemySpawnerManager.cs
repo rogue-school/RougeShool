@@ -11,38 +11,38 @@ using Game.CombatSystem.Utility;
 namespace Game.CombatSystem.Manager
 {
     /// <summary>
-    /// Àû Ä³¸¯ÅÍ ÇÁ¸®ÆÕÀ» ½ºÆùÇÏ¿© ½½·Ô¿¡ ¹èÄ¡ÇÏ´Â ¸Å´ÏÀúÀÔ´Ï´Ù.
-    /// ½ÇÁ¦ ÀüÅõ ¼³Á¤Àº StageManager¿Í HandManager¿¡¼­ ¼öÇàµË´Ï´Ù.
+    /// ì  ìºë¦­í„° í”„ë¦¬íŒ¹ì„ ìŠ¤í°í•˜ì—¬ ìŠ¬ë¡¯ì— ë°°ì¹˜í•˜ëŠ” ë§¤ë‹ˆì €ì…ë‹ˆë‹¤.
+    /// ì‹¤ì œ ì „íˆ¬ ì„¤ì •ì€ StageManagerì™€ HandManagerì—ì„œ ìˆ˜í–‰ë©ë‹ˆë‹¤.
     /// </summary>
     public class EnemySpawnerManager : MonoBehaviour, IEnemySpawnerManager
     {
-        #region ÀÎ½ºÆåÅÍ ¼³Á¤
+        #region ì¸ìŠ¤í™í„° ì„¤ì •
 
-        [Header("±âº» Àû ÇÁ¸®ÆÕ")]
+        [Header("ê¸°ë³¸ ì  í”„ë¦¬íŒ¹")]
         [SerializeField] private GameObject defaultEnemyPrefab;
 
         #endregion
 
-        #region ÀÇÁ¸¼º
+        #region ì˜ì¡´ì„±
 
         [Inject] private ISlotRegistry slotRegistry;
         [Inject] private IEnemyManager enemyManager;
 
         #endregion
 
-        #region ³»ºÎ »óÅÂ
+        #region ë‚´ë¶€ ìƒíƒœ
 
         private readonly List<EnemyCharacter> spawnedEnemies = new();
 
         #endregion
 
-        #region Àû ½ºÆù ¸Ş¼­µå
+        #region ì  ìŠ¤í° ë©”ì„œë“œ
 
         /// <summary>
-        /// ÁöÁ¤µÈ µ¥ÀÌÅÍ ±â¹İÀ¸·Î ÀûÀ» ½ºÆùÇÏ°í ½½·Ô¿¡ ¹èÄ¡ÇÕ´Ï´Ù.
+        /// ì§€ì •ëœ ë°ì´í„° ê¸°ë°˜ìœ¼ë¡œ ì ì„ ìŠ¤í°í•˜ê³  ìŠ¬ë¡¯ì— ë°°ì¹˜í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="data">Àû Ä³¸¯ÅÍ µ¥ÀÌÅÍ</param>
-        /// <returns>Àû ½ºÆù °á°ú</returns>
+        /// <param name="data">ì  ìºë¦­í„° ë°ì´í„°</param>
+        /// <returns>ì  ìŠ¤í° ê²°ê³¼</returns>
         public EnemySpawnResult SpawnEnemy(EnemyCharacterData data)
         {
             if (data == null || slotRegistry == null)
@@ -51,11 +51,11 @@ namespace Game.CombatSystem.Manager
             var slot = slotRegistry.GetCharacterSlotRegistry()?.GetCharacterSlot(SlotOwner.ENEMY);
             if (slot == null)
             {
-                Debug.LogError("[EnemySpawnerManager] Àû Ä³¸¯ÅÍ ½½·ÔÀ» Ã£À» ¼ö ¾ø½À´Ï´Ù.");
+                Debug.LogError("[EnemySpawnerManager] ì  ìºë¦­í„° ìŠ¬ë¡¯ì„ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.");
                 return null;
             }
 
-            // ±âÁ¸ Àû Á¦°Å
+            // ê¸°ì¡´ ì  ì œê±°
             var existing = slot.GetCharacter() as EnemyCharacter;
             if (existing != null && !existing.IsDead())
                 return new EnemySpawnResult(existing, false);
@@ -66,7 +66,7 @@ namespace Game.CombatSystem.Manager
             var prefab = data.Prefab ?? defaultEnemyPrefab;
             if (prefab == null)
             {
-                Debug.LogError("[EnemySpawnerManager] ÇÁ¸®ÆÕÀÌ ¼³Á¤µÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+                Debug.LogError("[EnemySpawnerManager] í”„ë¦¬íŒ¹ì´ ì„¤ì •ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
                 return null;
             }
 
@@ -76,7 +76,7 @@ namespace Game.CombatSystem.Manager
 
             if (!instance.TryGetComponent(out EnemyCharacter enemy))
             {
-                Debug.LogError("[EnemySpawnerManager] EnemyCharacter ÄÄÆ÷³ÍÆ® ´©¶ô");
+                Debug.LogError("[EnemySpawnerManager] EnemyCharacter ì»´í¬ë„ŒíŠ¸ ëˆ„ë½");
                 Destroy(instance);
                 return null;
             }
@@ -91,19 +91,19 @@ namespace Game.CombatSystem.Manager
         }
 
         /// <summary>
-        /// ´õ ÀÌ»ó »ç¿ëµÇÁö ¾Ê´Â ÃÊ±â Àû ½ºÆù ¸Ş¼­µåÀÔ´Ï´Ù.
+        /// ë” ì´ìƒ ì‚¬ìš©ë˜ì§€ ì•ŠëŠ” ì´ˆê¸° ì  ìŠ¤í° ë©”ì„œë“œì…ë‹ˆë‹¤.
         /// </summary>
         public void SpawnInitialEnemy()
         {
-            Debug.LogWarning("[EnemySpawnerManager] StageManager¸¦ ÅëÇØ ÀûÀ» »ı¼ºÇÏ¼¼¿ä. ÀÌ ¸Ş¼­µå´Â ´õ ÀÌ»ó »ç¿ëµÇÁö ¾Ê½À´Ï´Ù.");
+            Debug.LogWarning("[EnemySpawnerManager] StageManagerë¥¼ í†µí•´ ì ì„ ìƒì„±í•˜ì„¸ìš”. ì´ ë©”ì„œë“œëŠ” ë” ì´ìƒ ì‚¬ìš©ë˜ì§€ ì•ŠìŠµë‹ˆë‹¤.");
         }
 
         #endregion
 
-        #region ±âÅ¸ À¯Æ¿¸®Æ¼
+        #region ê¸°íƒ€ ìœ í‹¸ë¦¬í‹°
 
         /// <summary>
-        /// ÇöÀç±îÁö ½ºÆùµÈ ¸ğµç Àû Ä³¸¯ÅÍ ¸®½ºÆ®¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
+        /// í˜„ì¬ê¹Œì§€ ìŠ¤í°ëœ ëª¨ë“  ì  ìºë¦­í„° ë¦¬ìŠ¤íŠ¸ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         public List<EnemyCharacter> GetAllEnemies() => spawnedEnemies;
 

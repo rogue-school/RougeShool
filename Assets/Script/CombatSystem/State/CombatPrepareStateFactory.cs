@@ -3,7 +3,7 @@ using Zenject;
 namespace Game.CombatSystem.State
 {
     /// <summary>
-    /// CombatPrepareState¸¦ Zenject ÄÁÅ×ÀÌ³Ê¸¦ ÅëÇØ »ı¼ºÇÏ´Â ÆÑÅä¸® Å¬·¡½ºÀÔ´Ï´Ù.
+    /// CombatPrepareStateë¥¼ Zenject ì»¨í…Œì´ë„ˆë¥¼ í†µí•´ ìƒì„±í•˜ëŠ” íŒ©í† ë¦¬ í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
     /// </summary>
     public class CombatPrepareStateFactory : IFactory<CombatPrepareState>
     {
@@ -16,9 +16,9 @@ namespace Game.CombatSystem.State
         #region Constructor
 
         /// <summary>
-        /// CombatPrepareStateFactory »ı¼ºÀÚ
+        /// CombatPrepareStateFactory ìƒì„±ì
         /// </summary>
-        /// <param name="container">ÀÇÁ¸¼º ÁÖÀÔ ÄÁÅ×ÀÌ³Ê</param>
+        /// <param name="container">ì˜ì¡´ì„± ì£¼ì… ì»¨í…Œì´ë„ˆ</param>
         public CombatPrepareStateFactory(DiContainer container)
         {
             this.container = container;
@@ -29,7 +29,7 @@ namespace Game.CombatSystem.State
         #region Factory Method
 
         /// <summary>
-        /// CombatPrepareState ÀÎ½ºÅÏ½º¸¦ »ı¼ºÇÕ´Ï´Ù.
+        /// CombatPrepareState ì¸ìŠ¤í„´ìŠ¤ë¥¼ ìƒì„±í•©ë‹ˆë‹¤.
         /// </summary>
         public CombatPrepareState Create()
         {

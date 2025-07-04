@@ -3,21 +3,21 @@ using Game.CharacterSystem.Data;
 namespace Game.CharacterSystem.Interface
 {
     /// <summary>
-    /// Àû Ä³¸¯ÅÍ Àü¿ë ±â´É ÀÎÅÍÆäÀÌ½ºÀÔ´Ï´Ù.
-    /// ICharacter¸¦ »ó¼ÓÇÏ¸ç, Àû Àü¿ë µ¥ÀÌÅÍ Á¢±Ù ¹× ÀÌ¸§ ¹ÝÈ¯ ±â´ÉÀ» Æ÷ÇÔÇÕ´Ï´Ù.
+    /// ì  ìºë¦­í„° ì „ìš© ê¸°ëŠ¥ ì¸í„°íŽ˜ì´ìŠ¤ìž…ë‹ˆë‹¤.
+    /// ICharacterë¥¼ ìƒì†í•˜ë©°, ì  ì „ìš© ë°ì´í„° ì ‘ê·¼ ë° ì´ë¦„ ë°˜í™˜ ê¸°ëŠ¥ì„ í¬í•¨í•©ë‹ˆë‹¤.
     /// </summary>
     public interface IEnemyCharacter : ICharacter
     {
         /// <summary>
-        /// Àû Ä³¸¯ÅÍÀÇ µ¥ÀÌÅÍ ½ºÅ©¸³ÅÍºí °´Ã¼¸¦ ¹ÝÈ¯ÇÕ´Ï´Ù.
+        /// ì  ìºë¦­í„°ì˜ ë°ì´í„° ìŠ¤í¬ë¦½í„°ë¸” ê°ì²´ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         EnemyCharacterData Data { get; }
 
         /// <summary>
-        /// Àû Ä³¸¯ÅÍÀÇ ÀÌ¸§À» ¹ÝÈ¯ÇÕ´Ï´Ù.
-        /// UI ¶Ç´Â ·Î±×¿¡¼­ »ç¿ëµÇ´Â Ç¥±â Àü¿ë ÀÌ¸§ÀÔ´Ï´Ù.
+        /// ì  ìºë¦­í„°ì˜ ì´ë¦„ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
+        /// UI ë˜ëŠ” ë¡œê·¸ì—ì„œ ì‚¬ìš©ë˜ëŠ” í‘œê¸° ì „ìš© ì´ë¦„ìž…ë‹ˆë‹¤.
         /// </summary>
-        /// <returns>Àû Ä³¸¯ÅÍÀÇ ÀÌ¸§</returns>
+        /// <returns>ì  ìºë¦­í„°ì˜ ì´ë¦„</returns>
         string GetName();
     }
 }

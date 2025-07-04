@@ -17,7 +17,7 @@ namespace Game.CombatSystem.DragDrop
 
         public void OnDrop(PointerEventData eventData)
         {
-            Debug.Log("[CardDropToHandHandler] µå·Ó °¨ÁöµÊ");
+            Debug.Log("[CardDropToHandHandler] ë“œë¡­ ê°ì§€ë¨");
 
             var cardUI = eventData.pointerDrag?.GetComponent<SkillCardUI>();
             var dragHandler = eventData.pointerDrag?.GetComponent<CardDragHandler>();
@@ -40,7 +40,7 @@ namespace Game.CombatSystem.DragDrop
             dragHandler.OriginalParent = this.transform;
             dragHandler.OriginalWorldPosition = this.transform.position;
 
-            Debug.Log($"[CardDropToHandHandler] Ä«µå ÇÚµå º¹±Í ¿Ï·á: {card.CardData.Name}");
+            Debug.Log($"[CardDropToHandHandler] ì¹´ë“œ í•¸ë“œ ë³µê·€ ì™„ë£Œ: {card.CardData.Name}");
         }
     }
 }

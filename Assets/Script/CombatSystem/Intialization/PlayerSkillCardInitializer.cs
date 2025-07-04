@@ -8,21 +8,21 @@ using Game.SkillCardSystem.Interface;
 namespace Game.CombatSystem.Initialization
 {
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î Ä³¸¯ÅÍÀÇ ½ºÅ³Ä«µå¸¦ ÃÊ±âÈ­ÇÏ°í ÇÚµå ½½·Ô¿¡ ¹èÄ¡ÇÕ´Ï´Ù.
+    /// í”Œë ˆì´ì–´ ìºë¦­í„°ì˜ ìŠ¤í‚¬ì¹´ë“œë¥¼ ì´ˆê¸°í™”í•˜ê³  í•¸ë“œ ìŠ¬ë¡¯ì— ë°°ì¹˜í•©ë‹ˆë‹¤.
     /// </summary>
     public class PlayerSkillCardInitializer : MonoBehaviour, ICombatInitializerStep
     {
         [SerializeField] private int order = 20;
         public int Order => order;
 
-        #region ÀÇÁ¸¼º ÇÊµå
+        #region ì˜ì¡´ì„± í•„ë“œ
 
         private IPlayerManager playerManager;
         private IPlayerHandManager handManager;
 
         #endregion
 
-        #region ÀÇÁ¸¼º ÁÖÀÔ
+        #region ì˜ì¡´ì„± ì£¼ì…
 
         [Inject]
         public void Construct(IPlayerManager playerManager, IPlayerHandManager handManager)
@@ -33,25 +33,25 @@ namespace Game.CombatSystem.Initialization
 
         #endregion
 
-        #region ÃÊ±âÈ­ ·ÎÁ÷
+        #region ì´ˆê¸°í™” ë¡œì§
 
         public IEnumerator Initialize()
         {
-            Debug.Log("[PlayerSkillCardInitializer] ÇÃ·¹ÀÌ¾î ½ºÅ³Ä«µå ÃÊ±âÈ­ ½ÃÀÛ");
+            Debug.Log("[PlayerSkillCardInitializer] í”Œë ˆì´ì–´ ìŠ¤í‚¬ì¹´ë“œ ì´ˆê¸°í™” ì‹œì‘");
 
             var player = playerManager.GetPlayer();
             if (player == null)
             {
-                Debug.LogError("[PlayerSkillCardInitializer] ÇÃ·¹ÀÌ¾î°¡ Á¸ÀçÇÏÁö ¾Ê½À´Ï´Ù.");
+                Debug.LogError("[PlayerSkillCardInitializer] í”Œë ˆì´ì–´ê°€ ì¡´ì¬í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.");
                 yield break;
             }
 
-            handManager.SetPlayer(player);          // owner¸¦ runtime¿¡ ¸í½ÃÀû ¼³Á¤
+            handManager.SetPlayer(player);          // ownerë¥¼ runtimeì— ëª…ì‹œì  ì„¤ì •
             handManager.GenerateInitialHand();
             handManager.LogPlayerHandSlotStates();
-            player.InjectHandManager(handManager);  // ¿¬°á
+            player.InjectHandManager(handManager);  // ì—°ê²°
 
-            Debug.Log("[PlayerSkillCardInitializer] ÇÃ·¹ÀÌ¾î ÇÚµå ÃÊ±âÈ­ ¿Ï·á");
+            Debug.Log("[PlayerSkillCardInitializer] í”Œë ˆì´ì–´ í•¸ë“œ ì´ˆê¸°í™” ì™„ë£Œ");
             yield return null;
         }
 

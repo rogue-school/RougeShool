@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using Zenject;
 using Game.CharacterSystem.Interface;
 using Game.IManager;

@@ -5,24 +5,24 @@ using System;
 namespace Game.CombatSystem.Service
 {
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î ÀÔ·ÂÀ» Á¦¾îÇÏ´Â ÄÁÆ®·Ñ·¯ÀÔ´Ï´Ù.
-    /// ÇÚµå Ä«µå µå·¡±× ÀÔ·ÂÀ» È°¼ºÈ­ ¶Ç´Â ºñÈ°¼ºÈ­ÇÕ´Ï´Ù.
+    /// í”Œë ˆì´ì–´ ì…ë ¥ì„ ì œì–´í•˜ëŠ” ì»¨íŠ¸ë¡¤ëŸ¬ì…ë‹ˆë‹¤.
+    /// í•¸ë“œ ì¹´ë“œ ë“œë˜ê·¸ ì…ë ¥ì„ í™œì„±í™” ë˜ëŠ” ë¹„í™œì„±í™”í•©ë‹ˆë‹¤.
     /// </summary>
     public class PlayerInputController : IPlayerInputController
     {
-        #region ÇÊµå
+        #region í•„ë“œ
 
         private readonly IPlayerHandManager playerHandManager;
 
         #endregion
 
-        #region »ı¼ºÀÚ
+        #region ìƒì„±ì
 
         /// <summary>
-        /// PlayerInputController¸¦ ÃÊ±âÈ­ÇÕ´Ï´Ù.
+        /// PlayerInputControllerë¥¼ ì´ˆê¸°í™”í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="playerHandManager">ÇÃ·¹ÀÌ¾î ÇÚµå ¸Å´ÏÀú</param>
-        /// <exception cref="ArgumentNullException">playerHandManager°¡ nullÀÏ °æ¿ì</exception>
+        /// <param name="playerHandManager">í”Œë ˆì´ì–´ í•¸ë“œ ë§¤ë‹ˆì €</param>
+        /// <exception cref="ArgumentNullException">playerHandManagerê°€ nullì¼ ê²½ìš°</exception>
         public PlayerInputController(IPlayerHandManager playerHandManager)
         {
             this.playerHandManager = playerHandManager ?? throw new ArgumentNullException(nameof(playerHandManager));
@@ -30,10 +30,10 @@ namespace Game.CombatSystem.Service
 
         #endregion
 
-        #region ÀÔ·Â Á¦¾î
+        #region ì…ë ¥ ì œì–´
 
         /// <summary>
-        /// ÇÃ·¹ÀÌ¾î ÀÔ·ÂÀ» È°¼ºÈ­ÇÕ´Ï´Ù.
+        /// í”Œë ˆì´ì–´ ì…ë ¥ì„ í™œì„±í™”í•©ë‹ˆë‹¤.
         /// </summary>
         public void EnablePlayerInput()
         {
@@ -41,7 +41,7 @@ namespace Game.CombatSystem.Service
         }
 
         /// <summary>
-        /// ÇÃ·¹ÀÌ¾î ÀÔ·ÂÀ» ºñÈ°¼ºÈ­ÇÕ´Ï´Ù.
+        /// í”Œë ˆì´ì–´ ì…ë ¥ì„ ë¹„í™œì„±í™”í•©ë‹ˆë‹¤.
         /// </summary>
         public void DisablePlayerInput()
         {

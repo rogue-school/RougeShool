@@ -1,24 +1,24 @@
 namespace Game.CombatSystem.Slot
 {
     /// <summary>
-    /// ÀüÅõ ½½·Ô À§Ä¡¸¦ ³ªÅ¸³À´Ï´Ù.
+    /// ì „íˆ¬ ìŠ¬ë¡¯ ìœ„ì¹˜ë¥¼ ë‚˜íƒ€ëƒ…ë‹ˆë‹¤.
     /// </summary>
     public enum CombatSlotPosition
     {
-        #region ½½·Ô À§Ä¡
+        #region ìŠ¬ë¡¯ ìœ„ì¹˜
 
         /// <summary>
-        /// Ã¹ ¹øÂ° ½½·Ô (¼±°ø)
+        /// ì²« ë²ˆì§¸ ìŠ¬ë¡¯ (ì„ ê³µ)
         /// </summary>
         FIRST,
 
         /// <summary>
-        /// µÎ ¹øÂ° ½½·Ô (ÈÄ°ø)
+        /// ë‘ ë²ˆì§¸ ìŠ¬ë¡¯ (í›„ê³µ)
         /// </summary>
         SECOND,
 
         /// <summary>
-        /// ½½·Ô ¾øÀ½ (±âº»°ª ¶Ç´Â ºñÈ°¼º »óÅÂ)
+        /// ìŠ¬ë¡¯ ì—†ìŒ (ê¸°ë³¸ê°’ ë˜ëŠ” ë¹„í™œì„± ìƒíƒœ)
         /// </summary>
         NONE
 

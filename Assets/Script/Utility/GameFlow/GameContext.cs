@@ -3,20 +3,20 @@ using Game.CharacterSystem.Data;
 namespace Game.Utility.GameFlow
 {
     /// <summary>
-    /// °ÔÀÓ ½ÇÇà Áß °øÀ¯µÇ´Â ÄÁÅØ½ºÆ®¸¦ ÀúÀåÇÕ´Ï´Ù.
-    /// ÇöÀç ¼±ÅÃµÈ ÇÃ·¹ÀÌ¾î Ä³¸¯ÅÍ Á¤º¸¸¦ °ü¸®ÇÕ´Ï´Ù.
+    /// ê²Œì„ ì‹¤í–‰ ì¤‘ ê³µìœ ë˜ëŠ” ì»¨í…ìŠ¤íŠ¸ë¥¼ ì €ì¥í•©ë‹ˆë‹¤.
+    /// í˜„ì¬ ì„ íƒëœ í”Œë ˆì´ì–´ ìºë¦­í„° ì •ë³´ë¥¼ ê´€ë¦¬í•©ë‹ˆë‹¤.
     /// </summary>
     public class GameContext : IGameContext
     {
         /// <summary>
-        /// ÇöÀç ¼±ÅÃµÈ ÇÃ·¹ÀÌ¾î Ä³¸¯ÅÍ µ¥ÀÌÅÍÀÔ´Ï´Ù.
+        /// í˜„ì¬ ì„ íƒëœ í”Œë ˆì´ì–´ ìºë¦­í„° ë°ì´í„°ì…ë‹ˆë‹¤.
         /// </summary>
         public PlayerCharacterData SelectedCharacter { get; private set; }
 
         /// <summary>
-        /// ¼±ÅÃµÈ ÇÃ·¹ÀÌ¾î Ä³¸¯ÅÍ¸¦ ¼³Á¤ÇÕ´Ï´Ù.
+        /// ì„ íƒëœ í”Œë ˆì´ì–´ ìºë¦­í„°ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="data">¼±ÅÃµÈ Ä³¸¯ÅÍ µ¥ÀÌÅÍ</param>
+        /// <param name="data">ì„ íƒëœ ìºë¦­í„° ë°ì´í„°</param>
         public void SetSelectedCharacter(PlayerCharacterData data)
         {
             SelectedCharacter = data;

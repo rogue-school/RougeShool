@@ -11,124 +11,124 @@ using Game.CombatSystem.Context;
 namespace Game.SkillCardSystem.Interface
 {
     /// <summary>
-    /// ��ų ī���� �������̽��Դϴ�.
-    /// ī�� ������, ���� ����, ����, ��Ÿ�� ���� �����մϴ�.
+    /// 스킬 카드의 인터페이스입니다.
+    /// 카드 데이터, 슬롯 정보, 실행, 쿨타임 등을 포함합니다.
     /// </summary>
     public interface ISkillCard
     {
-        #region ī�� ������
+        #region 카드 데이터
 
         /// <summary>
-        /// ī�忡 ����� ������ ��ü�Դϴ�.
+        /// 카드에 연결된 데이터 객체입니다.
         /// </summary>
         SkillCardData CardData { get; }
 
         /// <summary>
-        /// ī�� �̸��� ��ȯ�մϴ�.
+        /// 카드 이름을 반환합니다.
         /// </summary>
         string GetCardName();
 
         /// <summary>
-        /// ī�� ������ ��ȯ�մϴ�.
+        /// 카드 설명을 반환합니다.
         /// </summary>
         string GetDescription();
 
         /// <summary>
-        /// ī���� ��Ʈ��ũ �̹����� ��ȯ�մϴ�.
+        /// 카드의 아트워크 이미지를 반환합니다.
         /// </summary>
         Sprite GetArtwork();
 
         /// <summary>
-        /// Ư�� ����Ʈ�� �Ŀ�(���� ��ġ)�� ��ȯ�մϴ�.
+        /// 특정 이펙트의 파워(적용 수치)를 반환합니다.
         /// </summary>
-        /// <param name="effect">��� ����Ʈ</param>
+        /// <param name="effect">대상 이펙트</param>
         int GetEffectPower(SkillCardEffectSO effect);
 
         /// <summary>
-        /// ī�忡 ���Ե� ����Ʈ�� �����մϴ�.
+        /// 카드에 포함된 이펙트를 생성합니다.
         /// </summary>
         List<SkillCardEffectSO> CreateEffects();
 
         #endregion
 
-        #region ���� �� ������ ����
+        #region 슬롯 및 소유자 정보
 
         /// <summary>
-        /// �ڵ� ���� ��ġ�� �����մϴ�.
+        /// 핸드 슬롯 위치를 설정합니다.
         /// </summary>
         void SetHandSlot(SkillCardSlotPosition slot);
 
         /// <summary>
-        /// �ڵ� ���� ��ġ�� ��ȯ�մϴ�.
+        /// 핸드 슬롯 위치를 반환합니다.
         /// </summary>
         SkillCardSlotPosition? GetHandSlot();
 
         /// <summary>
-        /// ���� ���� ��ġ�� �����մϴ�.
+        /// 전투 슬롯 위치를 설정합니다.
         /// </summary>
         void SetCombatSlot(CombatSlotPosition slot);
 
         /// <summary>
-        /// ���� ���� ��ġ�� ��ȯ�մϴ�.
+        /// 전투 슬롯 위치를 반환합니다.
         /// </summary>
         CombatSlotPosition? GetCombatSlot();
 
         /// <summary>
-        /// �� ī�带 ������ ��(�÷��̾�/��)�� ��ȯ�մϴ�.
+        /// 이 카드를 소유한 쪽(플레이어/적)을 반환합니다.
         /// </summary>
         SlotOwner GetOwner();
 
         /// <summary>
-        /// �� ī�尡 �÷��̾� �������� ���θ� ��ȯ�մϴ�.
+        /// 이 카드가 플레이어 소유인지 여부를 반환합니다.
         /// </summary>
         bool IsFromPlayer();
 
         #endregion
 
-        #region ī�� ����
+        #region 카드 실행
 
         /// <summary>
-        /// �ڵ� ���� �� ī�� ȿ���� ó���մϴ�.
+        /// 자동 실행 시 카드 효과를 처리합니다.
         /// </summary>
-        /// <param name="context">���� ���ؽ�Ʈ</param>
+        /// <param name="context">실행 컨텍스트</param>
         void ExecuteCardAutomatically(ICardExecutionContext context);
 
         /// <summary>
-        /// �ҽ��� Ÿ���� ������ ������ ���¿��� ī�� ����.
+        /// 소스와 타겟이 사전에 정해진 상태에서 카드 실행.
         /// </summary>
         void ExecuteSkill();
 
         /// <summary>
-        /// ���� �ҽ��� Ÿ���� �����Ͽ� ī�� ����.
+        /// 직접 소스와 타겟을 지정하여 카드 실행.
         /// </summary>
         void ExecuteSkill(ICharacter source, ICharacter target);
 
         /// <summary>
-        /// ���ؽ�Ʈ�� ������� ī���� �����ڸ� ��ȯ�մϴ�.
+        /// 컨텍스트를 기반으로 카드의 시전자를 반환합니다.
         /// </summary>
         ICharacter GetOwner(ICardExecutionContext context);
 
         /// <summary>
-        /// ���ؽ�Ʈ�� ������� ī���� ����� ��ȯ�մϴ�.
+        /// 컨텍스트를 기반으로 카드의 대상을 반환합니다.
         /// </summary>
         ICharacter GetTarget(ICardExecutionContext context);
 
         #endregion
 
-        #region ��Ÿ��
+        #region 쿨타임
 
         /// <summary>
-        /// ī���� �ִ� ��Ÿ���� ��ȯ�մϴ�.
+        /// 카드의 최대 쿨타임을 반환합니다.
         /// </summary>
         int GetMaxCoolTime();
 
         /// <summary>
-        /// ī���� ���� ��Ÿ���� ��ȯ�մϴ�.
+        /// 카드의 현재 쿨타임을 반환합니다.
         /// </summary>
         int GetCurrentCoolTime();
 
         /// <summary>
-        /// ���� ��Ÿ�� ���� �����մϴ�.
+        /// 현재 쿨타임 값을 설정합니다.
         /// </summary>
         void SetCurrentCoolTime(int value);
 

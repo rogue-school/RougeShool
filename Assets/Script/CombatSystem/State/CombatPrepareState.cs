@@ -10,11 +10,11 @@ using Game.CombatSystem.Context;
 namespace Game.CombatSystem.State
 {
     /// <summary>
-    /// ÀüÅõ ÁØºñ »óÅÂ. ½½·Ô ÃÊ±âÈ­, Àû ¼ÒÈ¯, Àû Ä«µå ÁØºñ µîÀ» Ã³¸®ÇÕ´Ï´Ù.
+    /// ì „íˆ¬ ì¤€ë¹„ ìƒíƒœ. ìŠ¬ë¡¯ ì´ˆê¸°í™”, ì  ì†Œí™˜, ì  ì¹´ë“œ ì¤€ë¹„ ë“±ì„ ì²˜ë¦¬í•©ë‹ˆë‹¤.
     /// </summary>
     public class CombatPrepareState : ICombatTurnState
     {
-        #region ÇÊµå
+        #region í•„ë“œ
 
         private readonly ICombatTurnManager turnManager;
         private readonly ICombatFlowCoordinator flowCoordinator;
@@ -26,10 +26,10 @@ namespace Game.CombatSystem.State
 
         #endregion
 
-        #region »ı¼ºÀÚ
+        #region ìƒì„±ì
 
         /// <summary>
-        /// ÀüÅõ ÁØºñ »óÅÂ »ı¼ºÀÚ
+        /// ì „íˆ¬ ì¤€ë¹„ ìƒíƒœ ìƒì„±ì
         /// </summary>
         public CombatPrepareState(
             ICombatTurnManager turnManager,
@@ -51,43 +51,43 @@ namespace Game.CombatSystem.State
 
         #endregion
 
-        #region »óÅÂ ÁøÀÔ
+        #region ìƒíƒœ ì§„ì…
 
         /// <summary>
-        /// »óÅÂ ÁøÀÔ ½Ã È£ÃâµÊ. ÁØºñ ÄÚ·çÆ¾ ½ÃÀÛ.
+        /// ìƒíƒœ ì§„ì… ì‹œ í˜¸ì¶œë¨. ì¤€ë¹„ ì½”ë£¨í‹´ ì‹œì‘.
         /// </summary>
         public void EnterState()
         {
-            Debug.Log("<color=cyan>[CombatPrepareState] »óÅÂ ÁøÀÔ</color>");
+            Debug.Log("<color=cyan>[CombatPrepareState] ìƒíƒœ ì§„ì…</color>");
             turnContext.Reset();
             coroutineRunner.RunCoroutine(PrepareRoutine());
         }
 
         #endregion
 
-        #region ÁØºñ ·çÆ¾
+        #region ì¤€ë¹„ ë£¨í‹´
 
         /// <summary>
-        /// ÀüÅõ ÁØºñ ·çÆ¾. ½½·Ô È®ÀÎ, Àû »ı¼º ¹× Ä«µå µî·ÏÀ» Ã³¸®.
+        /// ì „íˆ¬ ì¤€ë¹„ ë£¨í‹´. ìŠ¬ë¡¯ í™•ì¸, ì  ìƒì„± ë° ì¹´ë“œ ë“±ë¡ì„ ì²˜ë¦¬.
         /// </summary>
         private IEnumerator PrepareRoutine()
         {
-            // ½½·Ô ÃÊ±âÈ­ ´ë±â
+            // ìŠ¬ë¡¯ ì´ˆê¸°í™” ëŒ€ê¸°
             yield return new WaitUntil(() => slotRegistry.IsInitialized);
 
-            // ¼±°ø/ÈÄ°ø ¹«ÀÛÀ§ °áÁ¤ (¸Å ÀüÅõ¸¶´Ù)
+            // ì„ ê³µ/í›„ê³µ ë¬´ì‘ìœ„ ê²°ì • (ë§¤ ì „íˆ¬ë§ˆë‹¤)
             flowCoordinator.IsEnemyFirst = UnityEngine.Random.value < 0.5f;
-            Debug.Log($"[CombatPrepareState] IsEnemyFirst °áÁ¤µÊ ¡æ {(flowCoordinator.IsEnemyFirst ? "Àû ¼±°ø" : "ÇÃ·¹ÀÌ¾î ¼±°ø")}");
+            Debug.Log($"[CombatPrepareState] IsEnemyFirst ê²°ì •ë¨ â†’ {(flowCoordinator.IsEnemyFirst ? "ì  ì„ ê³µ" : "í”Œë ˆì´ì–´ ì„ ê³µ")}");
 
-            // ÀûÀÌ ¾øÀ¸¸é »ı¼º
+            // ì ì´ ì—†ìœ¼ë©´ ìƒì„±
             if (!flowCoordinator.HasEnemy())
             {
-                Debug.Log("[CombatPrepareState] ÀûÀÌ ¾ø¾î »õ Àû »ı¼º ½ÃÀÛ");
+                Debug.Log("[CombatPrepareState] ì ì´ ì—†ì–´ ìƒˆ ì  ìƒì„± ì‹œì‘");
                 flowCoordinator.SpawnNextEnemy();
                 yield return new WaitUntil(() => flowCoordinator.GetEnemy() != null);
             }
 
-            // Àû ÃÊ±âÈ­
+            // ì  ì´ˆê¸°í™”
             var enemy = flowCoordinator.GetEnemy();
             if (!enemyHandManager.HasInitializedEnemy(enemy))
             {
@@ -95,30 +95,30 @@ namespace Game.CombatSystem.State
                 yield return new WaitForEndOfFrame();
             }
 
-            // Àû ÇÚµå ½½·Ô Ã¤¿ì±â
+            // ì  í•¸ë“œ ìŠ¬ë¡¯ ì±„ìš°ê¸°
             yield return enemyHandManager.StepwiseFillSlotsFromBack(0.3f);
 
-            // ENEMY_SLOT_1¿¡ Ä«µå ÁØºñµÉ ¶§±îÁö ´ë±â
+            // ENEMY_SLOT_1ì— ì¹´ë“œ ì¤€ë¹„ë  ë•Œê¹Œì§€ ëŒ€ê¸°
             yield return WaitForEnemyCardReady();
 
-            // Ä«µå µî·Ï (¾Ö´Ï¸ŞÀÌ¼Ç Æ÷ÇÔ)
+            // ì¹´ë“œ ë“±ë¡ (ì• ë‹ˆë©”ì´ì…˜ í¬í•¨)
             yield return enemyHandManager.PopCardAndRegisterToCombatSlotCoroutine(flowCoordinator);
 
-            // ºó ½½·Ô ´Ù½Ã Ã¤¿ì±â
+            // ë¹ˆ ìŠ¬ë¡¯ ë‹¤ì‹œ ì±„ìš°ê¸°
             yield return enemyHandManager.StepwiseFillSlotsFromBack(0.3f);
 
-            // ´ÙÀ½ »óÅÂ·Î ÀüÈ¯ (ÇÃ·¹ÀÌ¾î ÀÔ·Â)
+            // ë‹¤ìŒ ìƒíƒœë¡œ ì „í™˜ (í”Œë ˆì´ì–´ ì…ë ¥)
             var next = turnManager.GetStateFactory().CreatePlayerInputState();
             turnManager.RequestStateChange(next);
         }
 
 
         /// <summary>
-        /// Àû Ä«µå ½½·ÔÀÌ ÁØºñµÉ ¶§±îÁö ´ë±âÇÕ´Ï´Ù.
+        /// ì  ì¹´ë“œ ìŠ¬ë¡¯ì´ ì¤€ë¹„ë  ë•Œê¹Œì§€ ëŒ€ê¸°í•©ë‹ˆë‹¤.
         /// </summary>
         private IEnumerator WaitForEnemyCardReady()
         {
-            Debug.Log("[CombatPrepareState] Àû Ä«µå µî·Ï ÁØºñ ´ë±â Áß...");
+            Debug.Log("[CombatPrepareState] ì  ì¹´ë“œ ë“±ë¡ ì¤€ë¹„ ëŒ€ê¸° ì¤‘...");
             while (true)
             {
                 var (card, ui) = enemyHandManager.PeekCardInSlot(SkillCardSlotPosition.ENEMY_SLOT_1);
@@ -127,18 +127,18 @@ namespace Game.CombatSystem.State
 
                 yield return null;
             }
-            Debug.Log("[CombatPrepareState] Àû Ä«µå µî·Ï ÁØºñ ¿Ï·á");
+            Debug.Log("[CombatPrepareState] ì  ì¹´ë“œ ë“±ë¡ ì¤€ë¹„ ì™„ë£Œ");
         }
 
         #endregion
 
-        #region »óÅÂ ½ÇÇà ¹× Á¾·á
+        #region ìƒíƒœ ì‹¤í–‰ ë° ì¢…ë£Œ
 
         public void ExecuteState() { }
 
         public void ExitState()
         {
-            Debug.Log("<color=grey>[CombatPrepareState] »óÅÂ Á¾·á</color>");
+            Debug.Log("<color=grey>[CombatPrepareState] ìƒíƒœ ì¢…ë£Œ</color>");
         }
 
         #endregion

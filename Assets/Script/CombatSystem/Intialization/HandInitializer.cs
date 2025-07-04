@@ -6,8 +6,8 @@ using UnityEngine;
 namespace Game.CombatSystem.Initializer
 {
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î¿Í ÀûÀÇ ÇÚµå¸¦ ÃÊ±âÈ­ÇÏ´Â Å¬·¡½ºÀÔ´Ï´Ù.
-    /// ÀüÅõ ½ÃÀÛ ½Ã ÇÚµå Å¬¸®¾î ¹× Àû Ä«µå »ı¼º µîÀÇ ÃÊ±â ¼¼ÆÃÀ» ¼öÇàÇÕ´Ï´Ù.
+    /// í”Œë ˆì´ì–´ì™€ ì ì˜ í•¸ë“œë¥¼ ì´ˆê¸°í™”í•˜ëŠ” í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
+    /// ì „íˆ¬ ì‹œì‘ ì‹œ í•¸ë“œ í´ë¦¬ì–´ ë° ì  ì¹´ë“œ ìƒì„± ë“±ì˜ ì´ˆê¸° ì„¸íŒ…ì„ ìˆ˜í–‰í•©ë‹ˆë‹¤.
     /// </summary>
     public class HandInitializer : IHandInitializer
     {
@@ -15,10 +15,10 @@ namespace Game.CombatSystem.Initializer
         private readonly IEnemyHandManager enemyHand;
 
         /// <summary>
-        /// ÇÚµå ÃÊ±âÈ­±â »ı¼ºÀÚÀÔ´Ï´Ù.
+        /// í•¸ë“œ ì´ˆê¸°í™”ê¸° ìƒì„±ìì…ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="playerHand">ÇÃ·¹ÀÌ¾î ÇÚµå ¸Å´ÏÀú</param>
-        /// <param name="enemyHand">Àû ÇÚµå ¸Å´ÏÀú</param>
+        /// <param name="playerHand">í”Œë ˆì´ì–´ í•¸ë“œ ë§¤ë‹ˆì €</param>
+        /// <param name="enemyHand">ì  í•¸ë“œ ë§¤ë‹ˆì €</param>
         public HandInitializer(IPlayerHandManager playerHand, IEnemyHandManager enemyHand)
         {
             this.playerHand = playerHand;
@@ -26,13 +26,13 @@ namespace Game.CombatSystem.Initializer
         }
 
         /// <summary>
-        /// ÇÃ·¹ÀÌ¾î ÇÚµå¸¦ Å¬¸®¾îÇÏ°í, Àû ÇÚµå¸¦ »ı¼ºÇÕ´Ï´Ù.
+        /// í”Œë ˆì´ì–´ í•¸ë“œë¥¼ í´ë¦¬ì–´í•˜ê³ , ì  í•¸ë“œë¥¼ ìƒì„±í•©ë‹ˆë‹¤.
         /// </summary>
         public void SetupHands()
         {
             playerHand.ClearAll();
             enemyHand.GenerateInitialHand();
-            Debug.Log("[HandInitializer] ÇÚµå ÃÊ±âÈ­ ¿Ï·á");
+            Debug.Log("[HandInitializer] í•¸ë“œ ì´ˆê¸°í™” ì™„ë£Œ");
         }
     }
 }

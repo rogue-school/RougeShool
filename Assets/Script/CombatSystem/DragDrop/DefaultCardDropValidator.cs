@@ -4,45 +4,45 @@ using Game.CombatSystem.Interface;
 namespace Game.CombatSystem.DragDrop
 {
     /// <summary>
-    /// ±âº» Ä«µå µå·Ó À¯È¿¼º °Ë»ç±âÀÔ´Ï´Ù.
-    /// ÇÃ·¹ÀÌ¾î Ä«µå¸¸ µå·Ó °¡´ÉÇÏ¸ç, Àû Ä«µå°¡ ÀÌ¹Ì ÀÖ´Â ½½·Ô¿¡´Â µå·ÓÇÒ ¼ö ¾ø½À´Ï´Ù.
+    /// ê¸°ë³¸ ì¹´ë“œ ë“œë¡­ ìœ íš¨ì„± ê²€ì‚¬ê¸°ì…ë‹ˆë‹¤.
+    /// í”Œë ˆì´ì–´ ì¹´ë“œë§Œ ë“œë¡­ ê°€ëŠ¥í•˜ë©°, ì  ì¹´ë“œê°€ ì´ë¯¸ ìˆëŠ” ìŠ¬ë¡¯ì—ëŠ” ë“œë¡­í•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤.
     /// </summary>
     public class DefaultCardDropValidator : ICardDropValidator
     {
         /// <summary>
-        /// ÁöÁ¤µÈ Ä«µå¿Í ½½·ÔÀÇ Á¶ÇÕÀÌ À¯È¿ÇÑ µå·Ó Á¶°ÇÀ» ¸¸Á·ÇÏ´ÂÁö °Ë»çÇÕ´Ï´Ù.
+        /// ì§€ì •ëœ ì¹´ë“œì™€ ìŠ¬ë¡¯ì˜ ì¡°í•©ì´ ìœ íš¨í•œ ë“œë¡­ ì¡°ê±´ì„ ë§Œì¡±í•˜ëŠ”ì§€ ê²€ì‚¬í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="card">µå·Ó ½Ãµµ ÁßÀÎ Ä«µå</param>
-        /// <param name="slot">µå·Ó ´ë»ó ½½·Ô</param>
-        /// <param name="reason">½ÇÆĞ »çÀ¯ ¸Ş½ÃÁö (nullÀÌ¸é ¼º°ø)</param>
-        /// <returns>À¯È¿ÇÏ¸é true, ±×·¸Áö ¾ÊÀ¸¸é false</returns>
+        /// <param name="card">ë“œë¡­ ì‹œë„ ì¤‘ì¸ ì¹´ë“œ</param>
+        /// <param name="slot">ë“œë¡­ ëŒ€ìƒ ìŠ¬ë¡¯</param>
+        /// <param name="reason">ì‹¤íŒ¨ ì‚¬ìœ  ë©”ì‹œì§€ (nullì´ë©´ ì„±ê³µ)</param>
+        /// <returns>ìœ íš¨í•˜ë©´ true, ê·¸ë ‡ì§€ ì•Šìœ¼ë©´ false</returns>
         public bool IsValidDrop(ISkillCard card, ICombatCardSlot slot, out string reason)
         {
             reason = null;
 
-            // 1. Null °Ë»ç
+            // 1. Null ê²€ì‚¬
             if (card == null || slot == null)
             {
-                reason = "Ä«µå ¶Ç´Â ½½·ÔÀÌ nullÀÔ´Ï´Ù.";
+                reason = "ì¹´ë“œ ë˜ëŠ” ìŠ¬ë¡¯ì´ nullì…ë‹ˆë‹¤.";
                 return false;
             }
 
-            // 2. ÇÃ·¹ÀÌ¾î Ä«µå ¿©ºÎ È®ÀÎ
+            // 2. í”Œë ˆì´ì–´ ì¹´ë“œ ì—¬ë¶€ í™•ì¸
             if (!card.IsFromPlayer())
             {
-                reason = "ÇÃ·¹ÀÌ¾î Ä«µå¸¸ µå·ÓÇÒ ¼ö ÀÖ½À´Ï´Ù.";
+                reason = "í”Œë ˆì´ì–´ ì¹´ë“œë§Œ ë“œë¡­í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.";
                 return false;
             }
 
-            // 3. ½½·Ô¿¡ Àû Ä«µå°¡ ÀÌ¹Ì Á¸ÀçÇÏ´Â °æ¿ì
+            // 3. ìŠ¬ë¡¯ì— ì  ì¹´ë“œê°€ ì´ë¯¸ ì¡´ì¬í•˜ëŠ” ê²½ìš°
             var existing = slot.GetCard();
             if (existing != null && !existing.IsFromPlayer())
             {
-                reason = "½½·Ô¿¡ Àû Ä«µå°¡ ÀÖ¾î µå·ÓÇÒ ¼ö ¾ø½À´Ï´Ù.";
+                reason = "ìŠ¬ë¡¯ì— ì  ì¹´ë“œê°€ ìˆì–´ ë“œë¡­í•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤.";
                 return false;
             }
 
-            // 4. ±âÅ¸ Á¶°Ç Åë°ú
+            // 4. ê¸°íƒ€ ì¡°ê±´ í†µê³¼
             return true;
         }
     }

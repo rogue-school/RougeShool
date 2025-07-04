@@ -5,34 +5,34 @@ using Game.SkillCardSystem.Slot;
 namespace Game.CombatSystem.Slot
 {
     /// <summary>
-    /// ¾À ³» ½½·Ô ¿ÀºêÁ§Æ®ÀÇ ¼ÒÀ¯ÀÚ¿Í ¿ªÇÒ, À§Ä¡ Á¤º¸¸¦ ´ã´Â Å¬·¡½ºÀÔ´Ï´Ù.
-    /// ÀüÅõ, Ä³¸¯ÅÍ, ½ºÅ³ Ä«µå ½½·Ô À§Ä¡¸¦ ¸í½ÃÀûÀ¸·Î ¼³Á¤ÇÕ´Ï´Ù.
+    /// ì”¬ ë‚´ ìŠ¬ë¡¯ ì˜¤ë¸Œì íŠ¸ì˜ ì†Œìœ ìì™€ ì—­í• , ìœ„ì¹˜ ì •ë³´ë¥¼ ë‹´ëŠ” í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
+    /// ì „íˆ¬, ìºë¦­í„°, ìŠ¤í‚¬ ì¹´ë“œ ìŠ¬ë¡¯ ìœ„ì¹˜ë¥¼ ëª…ì‹œì ìœ¼ë¡œ ì„¤ì •í•©ë‹ˆë‹¤.
     /// </summary>
     public class SlotAnchor : MonoBehaviour
     {
-        #region ÀÎ½ºÆåÅÍ ÇÊµå
+        #region ì¸ìŠ¤í™í„° í•„ë“œ
 
-        [Header("½½·Ô ¼ÒÀ¯ÀÚ")]
-        [Tooltip("PLAYER ¶Ç´Â ENEMY")]
+        [Header("ìŠ¬ë¡¯ ì†Œìœ ì")]
+        [Tooltip("PLAYER ë˜ëŠ” ENEMY")]
         public SlotOwner owner;
 
-        [Header("½½·ÔÀÇ ¿ëµµ")]
-        [Tooltip("½½·ÔÀÌ ÀüÅõ¿ëÀÎÁö, Ä³¸¯ÅÍ¿ëÀÎÁö, ¼ÕÆĞ¿ëÀÎÁö µî ¿ªÇÒ Á¤ÀÇ")]
+        [Header("ìŠ¬ë¡¯ì˜ ìš©ë„")]
+        [Tooltip("ìŠ¬ë¡¯ì´ ì „íˆ¬ìš©ì¸ì§€, ìºë¦­í„°ìš©ì¸ì§€, ì†íŒ¨ìš©ì¸ì§€ ë“± ì—­í•  ì •ì˜")]
         public SlotRole role;
 
-        [Header("ÀüÅõ ÅÏ ½½·Ô À§Ä¡ (¼±°ø/ÈÄ°ø)")]
+        [Header("ì „íˆ¬ í„´ ìŠ¬ë¡¯ ìœ„ì¹˜ (ì„ ê³µ/í›„ê³µ)")]
         public CombatSlotPosition battleSlotPosition;
 
-        [Header("Ä³¸¯ÅÍ ¹èÄ¡ ½½·Ô À§Ä¡ (ÇÃ·¹ÀÌ¾î/Àû)")]
+        [Header("ìºë¦­í„° ë°°ì¹˜ ìŠ¬ë¡¯ ìœ„ì¹˜ (í”Œë ˆì´ì–´/ì )")]
         public CharacterSlotPosition characterSlotPosition;
 
-        [Header("½ºÅ³ Ä«µå ½½·Ô À§Ä¡ (¼Õ ÆĞ ½½·Ô)")]
+        [Header("ìŠ¤í‚¬ ì¹´ë“œ ìŠ¬ë¡¯ ìœ„ì¹˜ (ì† íŒ¨ ìŠ¬ë¡¯)")]
         public SkillCardSlotPosition skillCardSlotPosition;
 
         #endregion
 
 #if UNITY_EDITOR
-        #region µğ¹ö±× ½Ã°¢È­ (Gizmos)
+        #region ë””ë²„ê·¸ ì‹œê°í™” (Gizmos)
 
         private void OnDrawGizmos()
         {

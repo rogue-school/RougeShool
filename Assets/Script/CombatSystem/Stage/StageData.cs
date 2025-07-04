@@ -7,7 +7,7 @@ namespace Game.CombatSystem.Stage
     [CreateAssetMenu(menuName = "Game/Stage/Stage Data")]
     public class StageData : ScriptableObject
     {
-        [Header("ÀÌ ½ºÅ×ÀÌÁö¿¡ µîÀåÇÒ Àû ¸ñ·Ï")]
+        [Header("ì´ ìŠ¤í…Œì´ì§€ì— ë“±ì¥í•  ì  ëª©ë¡")]
         public List<EnemyCharacterData> enemies;
     }
 }

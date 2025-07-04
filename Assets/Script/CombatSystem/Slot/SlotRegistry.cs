@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
 

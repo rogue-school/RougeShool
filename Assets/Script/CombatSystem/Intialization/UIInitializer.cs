@@ -7,12 +7,12 @@ using Game.CombatSystem.Interface;
 namespace Game.CombatSystem.Intialization
 {
     /// <summary>
-    /// Ä³¸¯ÅÍ UI ½½·Ô¿¡ ÇÃ·¹ÀÌ¾î¿Í Àû Ä³¸¯ÅÍ¸¦ ¹èÄ¡ÇÏ´Â ÃÊ±âÈ­ ½ºÅ©¸³Æ®ÀÔ´Ï´Ù.
-    /// ÀüÅõ UI¿¡ µîÀå Ä³¸¯ÅÍ¸¦ Á¤È®È÷ Ç¥½ÃÇÏ±â À§ÇØ »ç¿ëµË´Ï´Ù.
+    /// ìºë¦­í„° UI ìŠ¬ë¡¯ì— í”Œë ˆì´ì–´ì™€ ì  ìºë¦­í„°ë¥¼ ë°°ì¹˜í•˜ëŠ” ì´ˆê¸°í™” ìŠ¤í¬ë¦½íŠ¸ì…ë‹ˆë‹¤.
+    /// ì „íˆ¬ UIì— ë“±ì¥ ìºë¦­í„°ë¥¼ ì •í™•íˆ í‘œì‹œí•˜ê¸° ìœ„í•´ ì‚¬ìš©ë©ë‹ˆë‹¤.
     /// </summary>
     public class UIInitializer : MonoBehaviour
     {
-        #region ÇÊµå
+        #region í•„ë“œ
 
         private IPlayerManager playerManager;
         private IEnemyManager enemyManager;
@@ -20,14 +20,14 @@ namespace Game.CombatSystem.Intialization
 
         #endregion
 
-        #region ÃÊ±âÈ­
+        #region ì´ˆê¸°í™”
 
         /// <summary>
-        /// ¸Å´ÏÀú ¹× ·¹Áö½ºÆ®¸®¸¦ ÁÖÀÔÇÕ´Ï´Ù.
+        /// ë§¤ë‹ˆì € ë° ë ˆì§€ìŠ¤íŠ¸ë¦¬ë¥¼ ì£¼ì…í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="playerManager">ÇÃ·¹ÀÌ¾î ¸Å´ÏÀú</param>
-        /// <param name="enemyManager">Àû ¸Å´ÏÀú</param>
-        /// <param name="characterSlotRegistry">Ä³¸¯ÅÍ ½½·Ô ·¹Áö½ºÆ®¸®</param>
+        /// <param name="playerManager">í”Œë ˆì´ì–´ ë§¤ë‹ˆì €</param>
+        /// <param name="enemyManager">ì  ë§¤ë‹ˆì €</param>
+        /// <param name="characterSlotRegistry">ìºë¦­í„° ìŠ¬ë¡¯ ë ˆì§€ìŠ¤íŠ¸ë¦¬</param>
         public void Initialize(IPlayerManager playerManager, IEnemyManager enemyManager, ICharacterSlotRegistry characterSlotRegistry)
         {
             this.playerManager = playerManager;
@@ -37,10 +37,10 @@ namespace Game.CombatSystem.Intialization
 
         #endregion
 
-        #region UI ¹èÄ¡ Ã³¸®
+        #region UI ë°°ì¹˜ ì²˜ë¦¬
 
         /// <summary>
-        /// °¢ Ä³¸¯ÅÍ ½½·Ô¿¡ ÇØ´ç Ä³¸¯ÅÍ¸¦ ¹èÄ¡ÇÕ´Ï´Ù.
+        /// ê° ìºë¦­í„° ìŠ¬ë¡¯ì— í•´ë‹¹ ìºë¦­í„°ë¥¼ ë°°ì¹˜í•©ë‹ˆë‹¤.
         /// </summary>
         public void SetupCharacterUI()
         {
@@ -58,7 +58,7 @@ namespace Game.CombatSystem.Intialization
                 }
             }
 
-            Debug.Log("[UIInitializer] Ä³¸¯ÅÍ UI ½½·Ô ÃÊ±âÈ­ ¿Ï·á (DI ±â¹İ)");
+            Debug.Log("[UIInitializer] ìºë¦­í„° UI ìŠ¬ë¡¯ ì´ˆê¸°í™” ì™„ë£Œ (DI ê¸°ë°˜)");
         }
 
         #endregion

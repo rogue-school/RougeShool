@@ -11,12 +11,12 @@ using Game.CombatSystem.Interface;
 namespace Game.SkillCardSystem.Core
 {
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾îÀÇ ¼ÕÆĞ¸¦ °ü¸®ÇÏ´Â ¸Å´ÏÀú Å¬·¡½ºÀÔ´Ï´Ù.
-    /// Ä«µå »ı¼º, Á¦°Å, º¹±¸ ¹× µå·¡±× °¡´É ¿©ºÎ ¼³Á¤ µîÀÇ ±â´ÉÀ» ´ã´çÇÕ´Ï´Ù.
+    /// í”Œë ˆì´ì–´ì˜ ì†íŒ¨ë¥¼ ê´€ë¦¬í•˜ëŠ” ë§¤ë‹ˆì € í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
+    /// ì¹´ë“œ ìƒì„±, ì œê±°, ë³µêµ¬ ë° ë“œë˜ê·¸ ê°€ëŠ¥ ì—¬ë¶€ ì„¤ì • ë“±ì˜ ê¸°ëŠ¥ì„ ë‹´ë‹¹í•©ë‹ˆë‹¤.
     /// </summary>
     public class PlayerHandManager : MonoBehaviour, IPlayerHandManager
     {
-        #region ÇÊµå
+        #region í•„ë“œ
 
         private IPlayerCharacter owner;
         private IHandSlotRegistry slotRegistry;
@@ -28,7 +28,7 @@ namespace Game.SkillCardSystem.Core
 
         #endregion
 
-        #region ÀÇÁ¸¼º ÁÖÀÔ ¹× ÃÊ±âÈ­
+        #region ì˜ì¡´ì„± ì£¼ì… ë° ì´ˆê¸°í™”
 
         [Inject]
         public void Construct(
@@ -45,7 +45,7 @@ namespace Game.SkillCardSystem.Core
         }
 
         /// <summary>
-        /// ÇÚµå ¼ÒÀ¯ÀÚ¸¦ ¼³Á¤ÇÕ´Ï´Ù.
+        /// í•¸ë“œ ì†Œìœ ìë¥¼ ì„¤ì •í•©ë‹ˆë‹¤.
         /// </summary>
         public void SetPlayer(IPlayerCharacter player)
         {
@@ -54,17 +54,17 @@ namespace Game.SkillCardSystem.Core
 
         #endregion
 
-        #region ÃÊ±â ÇÚµå ±¸¼º
+        #region ì´ˆê¸° í•¸ë“œ êµ¬ì„±
 
         /// <summary>
-        /// ÇÃ·¹ÀÌ¾î µ¦À» ±â¹İÀ¸·Î ÃÊ±â ÇÚµå¸¦ »ı¼ºÇÕ´Ï´Ù.
+        /// í”Œë ˆì´ì–´ ë±ì„ ê¸°ë°˜ìœ¼ë¡œ ì´ˆê¸° í•¸ë“œë¥¼ ìƒì„±í•©ë‹ˆë‹¤.
         /// </summary>
         public void GenerateInitialHand()
         {
             var deck = owner?.Data?.SkillDeck;
             if (deck == null)
             {
-                Debug.LogError("[PlayerHandManager] ÇÃ·¹ÀÌ¾î µ¦ÀÌ ºñ¾î ÀÖÀ½");
+                Debug.LogError("[PlayerHandManager] í”Œë ˆì´ì–´ ë±ì´ ë¹„ì–´ ìˆìŒ");
                 return;
             }
 
@@ -86,7 +86,7 @@ namespace Game.SkillCardSystem.Core
 
         #endregion
 
-        #region Ä«µå Á¶È¸
+        #region ì¹´ë“œ ì¡°íšŒ
 
         /// <inheritdoc/>
         public ISkillCard GetCardInSlot(SkillCardSlotPosition pos) =>
@@ -98,10 +98,10 @@ namespace Game.SkillCardSystem.Core
 
         #endregion
 
-        #region Ä«µå º¹±¸
+        #region ì¹´ë“œ ë³µêµ¬
 
         /// <summary>
-        /// »ç¿ë °¡´ÉÇÑ ºó ½½·Ô¿¡ Ä«µå¸¦ º¹±Í½ÃÅµ´Ï´Ù.
+        /// ì‚¬ìš© ê°€ëŠ¥í•œ ë¹ˆ ìŠ¬ë¡¯ì— ì¹´ë“œë¥¼ ë³µê·€ì‹œí‚µë‹ˆë‹¤.
         /// </summary>
         public void RestoreCardToHand(ISkillCard card)
         {
@@ -120,11 +120,11 @@ namespace Game.SkillCardSystem.Core
                 }
             }
 
-            Debug.LogWarning("[PlayerHandManager] ºó ½½·ÔÀ» Ã£À» ¼ö ¾ø¾î Ä«µå º¹±Í ½ÇÆĞ");
+            Debug.LogWarning("[PlayerHandManager] ë¹ˆ ìŠ¬ë¡¯ì„ ì°¾ì„ ìˆ˜ ì—†ì–´ ì¹´ë“œ ë³µê·€ ì‹¤íŒ¨");
         }
 
         /// <summary>
-        /// Æ¯Á¤ ½½·Ô¿¡ Ä«µå¸¦ º¹±Í½ÃÅµ´Ï´Ù.
+        /// íŠ¹ì • ìŠ¬ë¡¯ì— ì¹´ë“œë¥¼ ë³µê·€ì‹œí‚µë‹ˆë‹¤.
         /// </summary>
         public void RestoreCardToHand(ISkillCard card, SkillCardSlotPosition slot)
         {
@@ -139,16 +139,16 @@ namespace Game.SkillCardSystem.Core
             }
             else
             {
-                Debug.LogWarning($"[PlayerHandManager] ÁöÁ¤µÈ ½½·ÔÀÌ Á¸ÀçÇÏÁö ¾Ê½À´Ï´Ù: {slot}");
+                Debug.LogWarning($"[PlayerHandManager] ì§€ì •ëœ ìŠ¬ë¡¯ì´ ì¡´ì¬í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤: {slot}");
             }
         }
 
         #endregion
 
-        #region Ä«µå Á¦°Å
+        #region ì¹´ë“œ ì œê±°
 
         /// <summary>
-        /// ¼ÕÆĞ¿¡¼­ Æ¯Á¤ Ä«µå¸¦ Á¦°ÅÇÕ´Ï´Ù.
+        /// ì†íŒ¨ì—ì„œ íŠ¹ì • ì¹´ë“œë¥¼ ì œê±°í•©ë‹ˆë‹¤.
         /// </summary>
         public void RemoveCard(ISkillCard card)
         {
@@ -162,32 +162,32 @@ namespace Game.SkillCardSystem.Core
                     cards[kvp.Key] = null;
                     cardUIs.Remove(kvp.Key);
 
-                    Debug.Log($"[PlayerHandManager] Ä«µå Á¦°Å ¿Ï·á: {card.GetCardName()}");
+                    Debug.Log($"[PlayerHandManager] ì¹´ë“œ ì œê±° ì™„ë£Œ: {card.GetCardName()}");
                     return;
                 }
             }
 
-            Debug.LogWarning("[PlayerHandManager] ÇØ´ç Ä«µå¸¦ Ã£À» ¼ö ¾ø¾î Á¦°Å ½ÇÆĞ");
+            Debug.LogWarning("[PlayerHandManager] í•´ë‹¹ ì¹´ë“œë¥¼ ì°¾ì„ ìˆ˜ ì—†ì–´ ì œê±° ì‹¤íŒ¨");
         }
 
         #endregion
 
-        #region À¯Æ¿¸®Æ¼
+        #region ìœ í‹¸ë¦¬í‹°
 
         /// <summary>
-        /// °¢ ¼ÕÆĞ ½½·ÔÀÇ »óÅÂ¸¦ ·Î±×·Î Ãâ·ÂÇÕ´Ï´Ù.
+        /// ê° ì†íŒ¨ ìŠ¬ë¡¯ì˜ ìƒíƒœë¥¼ ë¡œê·¸ë¡œ ì¶œë ¥í•©ë‹ˆë‹¤.
         /// </summary>
         public void LogPlayerHandSlotStates()
         {
             foreach (SkillCardSlotPosition pos in System.Enum.GetValues(typeof(SkillCardSlotPosition)))
             {
                 var card = GetCardInSlot(pos);
-                Debug.Log($"½½·Ô {pos}: {(card != null ? card.CardData.Name : "ºñ¾î ÀÖÀ½")}");
+                Debug.Log($"ìŠ¬ë¡¯ {pos}: {(card != null ? card.CardData.Name : "ë¹„ì–´ ìˆìŒ")}");
             }
         }
 
         /// <summary>
-        /// ¼ÕÆĞ Ä«µåµéÀÇ µå·¡±× °¡´É ¿©ºÎ¸¦ ¼³Á¤ÇÕ´Ï´Ù.
+        /// ì†íŒ¨ ì¹´ë“œë“¤ì˜ ë“œë˜ê·¸ ê°€ëŠ¥ ì—¬ë¶€ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤.
         /// </summary>
         public void EnableInput(bool enable)
         {
@@ -196,7 +196,7 @@ namespace Game.SkillCardSystem.Core
         }
 
         /// <summary>
-        /// ¸ğµç ½½·ÔÀÇ Ä«µå¸¦ Á¦°ÅÇÏ°í ÃÊ±âÈ­ÇÕ´Ï´Ù.
+        /// ëª¨ë“  ìŠ¬ë¡¯ì˜ ì¹´ë“œë¥¼ ì œê±°í•˜ê³  ì´ˆê¸°í™”í•©ë‹ˆë‹¤.
         /// </summary>
         public void ClearAll()
         {
@@ -208,7 +208,7 @@ namespace Game.SkillCardSystem.Core
         }
 
         /// <summary>
-        /// ÇöÀç ¼ÕÆĞÀÇ ¸ğµç Ä«µå¿Í UI¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
+        /// í˜„ì¬ ì†íŒ¨ì˜ ëª¨ë“  ì¹´ë“œì™€ UIë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         public IEnumerable<(ISkillCard card, ISkillCardUI ui)> GetAllHandCards()
         {

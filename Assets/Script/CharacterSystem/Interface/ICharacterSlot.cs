@@ -5,54 +5,54 @@ using Game.CombatSystem.Slot;
 namespace Game.CharacterSystem.Interface
 {
     /// <summary>
-    /// дЁ╦╞ем ╫╫╥т юнемфДюл╫╨.
-    /// ╫╫╥т©║ дЁ╦╞ем╦╕ ╪Ёа╓го╟еЁ╙ а╕╟его╟М, ╫╫╥т ю╖д║ ╧в ╪рю╞юз а╓╨╦╦╕ а╕╟Ьгу╢о╢ы.
+    /// Л╨░К╕╜М└╟ Л┼╛К║╞ Л²╦М└╟М▌≤Л²╢Л┼╓.
+    /// Л┼╛К║╞Л≈░ Л╨░К╕╜М└╟К╔╪ Л└╓Л═∙М∙≤Й╠╟К┌≤ Л═°Й╠╟М∙≤ЙЁ═, Л┼╛К║╞ Л°└Л╧≤ К╟▐ Л├▄Л°═Л·░ Л═∙КЁ╢К╔╪ Л═°ЙЁ╣М∙╘К▀┬К▀╓.
     /// </summary>
     public interface ICharacterSlot
     {
-        #region ╫╫╥т а╕╬Н
+        #region Л┼╛К║╞ Л═°Л√╢
 
         /// <summary>
-        /// ╫╫╥т©║ дЁ╦╞ем╦╕ ╪Ёа╓гу╢о╢ы.
+        /// Л┼╛К║╞Л≈░ Л╨░К╕╜М└╟К╔╪ Л└╓Л═∙М∙╘К▀┬К▀╓.
         /// </summary>
-        /// <param name="character">╫╫╥т©║ ╧Хд║гр дЁ╦╞ем</param>
+        /// <param name="character">Л┼╛К║╞Л≈░ К╟╟Л╧≤М∙═ Л╨░К╕╜М└╟</param>
         void SetCharacter(ICharacter character);
 
         /// <summary>
-        /// ╫╫╥т©║╪╜ дЁ╦╞ем╦╕ а╕╟егу╢о╢ы.
+        /// Л┼╛К║╞Л≈░Л└° Л╨░К╕╜М└╟К╔╪ Л═°Й╠╟М∙╘К▀┬К▀╓.
         /// </summary>
         void Clear();
 
         #endregion
 
-        #region ╫╫╥т ╩Себ а╤х╦
+        #region Л┼╛К║╞ Л┐│М┐° Л║╟М ▄
 
         /// <summary>
-        /// гЖюГ ╫╫╥т©║ ╪Ёа╓╣х дЁ╦╞ем╦╕ ╧щх╞гу╢о╢ы.
+        /// М≤└Л·╛ Л┼╛К║╞Л≈░ Л└╓Л═∙К░° Л╨░К╕╜М└╟К╔╪ К╟≤М≥≤М∙╘К▀┬К▀╓.
         /// </summary>
-        /// <returns>дЁ╦╞ем ╟╢ц╪. ╬Ью╦╦И null</returns>
+        /// <returns>Л╨░К╕╜М└╟ Й╟²Л╡╢. Л≈├Л°╪К╘╢ null</returns>
         ICharacter GetCharacter();
 
         /// <summary>
-        /// ╫╫╥тюг Transformю╩ ╧щх╞гу╢о╢ы.
+        /// Л┼╛К║╞Л²≤ TransformЛ²└ К╟≤М≥≤М∙╘К▀┬К▀╓.
         /// </summary>
-        /// <returns>Unity Transform ╟╢ц╪</returns>
+        /// <returns>Unity Transform Й╟²Л╡╢</returns>
         Transform GetTransform();
 
         #endregion
 
-        #region ╫╫╥т ╦че╦ а╓╨╦
+        #region Л┼╛К║╞ К╘■М┐─ Л═∙КЁ╢
 
         /// <summary>
-        /// ╫╫╥тюг ю╖д║ а╓╨╦╦╕ ╧щх╞гу╢о╢ы.
+        /// Л┼╛К║╞Л²≤ Л°└Л╧≤ Л═∙КЁ╢К╔╪ К╟≤М≥≤М∙╘К▀┬К▀╓.
         /// </summary>
-        /// <returns>CharacterSlotPosition ©╜╟егЭ</returns>
+        /// <returns>CharacterSlotPosition Л≈╢Й╠╟М≤∙</returns>
         CharacterSlotPosition GetSlotPosition();
 
         /// <summary>
-        /// ╫╫╥тюг ╪рю╞юз а╓╨╦╦╕ ╧щх╞гу╢о╢ы.
+        /// Л┼╛К║╞Л²≤ Л├▄Л°═Л·░ Л═∙КЁ╢К╔╪ К╟≤М≥≤М∙╘К▀┬К▀╓.
         /// </summary>
-        /// <returns>SlotOwner ©╜╟егЭ</returns>
+        /// <returns>SlotOwner Л≈╢Й╠╟М≤∙</returns>
         SlotOwner GetOwner();
 
         #endregion

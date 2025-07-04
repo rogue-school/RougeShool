@@ -4,38 +4,38 @@ using Game.IManager;
 using UnityEngine;
 
 /// <summary>
-/// ÀüÅõ Áß µîÀåÇÑ Àû Ä³¸¯ÅÍ¿Í ÇÚµå ¸Å´ÏÀú¸¦ °ü¸®ÇÏ´Â ¸Å´ÏÀú Å¬·¡½ºÀÔ´Ï´Ù.
-/// ÇöÀç Àû Ä³¸¯ÅÍ¿Í °ü·ÃµÈ »óÅÂ¸¦ º¸°üÇÏ°Å³ª ÃÊ±âÈ­ÇÕ´Ï´Ù.
+/// ì „íˆ¬ ì¤‘ ë“±ì¥í•œ ì  ìºë¦­í„°ì™€ í•¸ë“œ ë§¤ë‹ˆì €ë¥¼ ê´€ë¦¬í•˜ëŠ” ë§¤ë‹ˆì € í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
+/// í˜„ì¬ ì  ìºë¦­í„°ì™€ ê´€ë ¨ëœ ìƒíƒœë¥¼ ë³´ê´€í•˜ê±°ë‚˜ ì´ˆê¸°í™”í•©ë‹ˆë‹¤.
 /// </summary>
 public class EnemyManager : MonoBehaviour, IEnemyManager
 {
     private IEnemyCharacter currentEnemy;
     private IEnemyHandManager enemyHandManager;
 
-    #region µî·Ï / ¼³Á¤
+    #region ë“±ë¡ / ì„¤ì •
 
     /// <summary>
-    /// Àû Ä³¸¯ÅÍ¸¦ µî·ÏÇÕ´Ï´Ù.
+    /// ì  ìºë¦­í„°ë¥¼ ë“±ë¡í•©ë‹ˆë‹¤.
     /// </summary>
-    /// <param name="enemy">µî·ÏÇÒ Àû Ä³¸¯ÅÍ</param>
+    /// <param name="enemy">ë“±ë¡í•  ì  ìºë¦­í„°</param>
     public void RegisterEnemy(IEnemyCharacter enemy)
     {
         currentEnemy = enemy;
     }
 
     /// <summary>
-    /// Àû Ä³¸¯ÅÍ µî·ÏÀ» ÇØÁ¦ÇÕ´Ï´Ù.
+    /// ì  ìºë¦­í„° ë“±ë¡ì„ í•´ì œí•©ë‹ˆë‹¤.
     /// </summary>
     public void UnregisterEnemy()
     {
         currentEnemy = null;
-        Debug.Log("[EnemyManager] Àû µî·Ï ÇØÁ¦");
+        Debug.Log("[EnemyManager] ì  ë“±ë¡ í•´ì œ");
     }
 
     /// <summary>
-    /// Àû ÇÚµå ¸Å´ÏÀú¸¦ ¼³Á¤ÇÕ´Ï´Ù.
+    /// ì  í•¸ë“œ ë§¤ë‹ˆì €ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤.
     /// </summary>
-    /// <param name="handManager">Àû ÇÚµå ¸Å´ÏÀú</param>
+    /// <param name="handManager">ì  í•¸ë“œ ë§¤ë‹ˆì €</param>
     public void SetEnemyHandManager(IEnemyHandManager handManager)
     {
         enemyHandManager = handManager;
@@ -43,34 +43,34 @@ public class EnemyManager : MonoBehaviour, IEnemyManager
 
     #endregion
 
-    #region Á¶È¸
+    #region ì¡°íšŒ
 
     /// <summary>
-    /// ÇöÀç µî·ÏµÈ Àû Ä³¸¯ÅÍ¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
+    /// í˜„ì¬ ë“±ë¡ëœ ì  ìºë¦­í„°ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
     /// </summary>
     public IEnemyCharacter GetEnemy() => currentEnemy;
 
     /// <summary>
-    /// ÇöÀç µî·ÏµÈ Àû Ä³¸¯ÅÍ¸¦ ¹İÈ¯ÇÕ´Ï´Ù. (¸í½ÃÀû ÀÌ¸§)
+    /// í˜„ì¬ ë“±ë¡ëœ ì  ìºë¦­í„°ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤. (ëª…ì‹œì  ì´ë¦„)
     /// </summary>
     public IEnemyCharacter GetCurrentEnemy() => currentEnemy;
 
     /// <summary>
-    /// ÇöÀç µî·ÏµÈ Àû ÇÚµå ¸Å´ÏÀú¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
+    /// í˜„ì¬ ë“±ë¡ëœ ì  í•¸ë“œ ë§¤ë‹ˆì €ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
     /// </summary>
     public IEnemyHandManager GetEnemyHandManager() => enemyHandManager;
 
     /// <summary>
-    /// Àû Ä³¸¯ÅÍ°¡ µî·ÏµÇ¾î ÀÖ´ÂÁö ¿©ºÎ¸¦ È®ÀÎÇÕ´Ï´Ù.
+    /// ì  ìºë¦­í„°ê°€ ë“±ë¡ë˜ì–´ ìˆëŠ”ì§€ ì—¬ë¶€ë¥¼ í™•ì¸í•©ë‹ˆë‹¤.
     /// </summary>
     public bool HasEnemy() => currentEnemy != null;
 
     #endregion
 
-    #region ÃÊ±âÈ­
+    #region ì´ˆê¸°í™”
 
     /// <summary>
-    /// µî·ÏµÈ Àû Ä³¸¯ÅÍ ¹× ÇÚµå ¸Å´ÏÀú¸¦ ¸ğµÎ ÃÊ±âÈ­ÇÕ´Ï´Ù.
+    /// ë“±ë¡ëœ ì  ìºë¦­í„° ë° í•¸ë“œ ë§¤ë‹ˆì €ë¥¼ ëª¨ë‘ ì´ˆê¸°í™”í•©ë‹ˆë‹¤.
     /// </summary>
     public void ClearEnemy()
     {
@@ -79,7 +79,7 @@ public class EnemyManager : MonoBehaviour, IEnemyManager
     }
 
     /// <summary>
-    /// ¸Å´ÏÀú »óÅÂ¸¦ ÃÊ±âÈ­ÇÕ´Ï´Ù. (ÇöÀç´Â µğ¹ö±× ·Î±×¸¸ Ãâ·Â)
+    /// ë§¤ë‹ˆì € ìƒíƒœë¥¼ ì´ˆê¸°í™”í•©ë‹ˆë‹¤. (í˜„ì¬ëŠ” ë””ë²„ê·¸ ë¡œê·¸ë§Œ ì¶œë ¥)
     /// </summary>
     public void Reset()
     {

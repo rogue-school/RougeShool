@@ -19,7 +19,7 @@ namespace Game.CombatSystem.Utility
             slot.SetCard(null);
             slot.SetCardUI(null);
 
-            Debug.Log($"[CardRegistrar] ½½·Ô Å¬¸®¾î ¿Ï·á: {slot.GetCombatPosition()}");
+            Debug.Log($"[CardRegistrar] ìŠ¬ë¡¯ í´ë¦¬ì–´ ì™„ë£Œ: {slot.GetCombatPosition()}");
         }
 
         public static void RegisterCard(ICombatCardSlot slot, ISkillCard card, SkillCardUI ui)
@@ -32,7 +32,7 @@ namespace Game.CombatSystem.Utility
 
             CardSlotHelper.AttachCardToSlot(ui, (MonoBehaviour)slot);
 
-            Debug.Log($"[CardRegistrar] Ä«µå µî·Ï ¿Ï·á: {card.CardData.Name} ¡æ {execSlot}");
+            Debug.Log($"[CardRegistrar] ì¹´ë“œ ë“±ë¡ ì™„ë£Œ: {card.CardData.Name} â†’ {execSlot}");
         }
     }
 }

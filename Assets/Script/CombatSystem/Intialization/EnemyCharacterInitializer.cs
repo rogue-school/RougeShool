@@ -7,13 +7,13 @@ using Game.CombatSystem.Interface;
 namespace Game.CombatSystem.Initialization
 {
     /// <summary>
-    /// ÀüÅõ ½ÃÀÛ ½Ã Àû Ä³¸¯ÅÍ¸¦ ÃÊ±âÈ­ÇÏ´Â ½ºÅÜ Å¬·¡½ºÀÔ´Ï´Ù.
-    /// ½ºÅ×ÀÌÁö ¸Å´ÏÀú¸¦ ÅëÇØ ÀûÀ» »ı¼ºÇÏ¸ç, ÃÊ±âÈ­ ¼ø¼­¸¦ ¼³Á¤ÇÒ ¼ö ÀÖ½À´Ï´Ù.
+    /// ì „íˆ¬ ì‹œì‘ ì‹œ ì  ìºë¦­í„°ë¥¼ ì´ˆê¸°í™”í•˜ëŠ” ìŠ¤í… í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
+    /// ìŠ¤í…Œì´ì§€ ë§¤ë‹ˆì €ë¥¼ í†µí•´ ì ì„ ìƒì„±í•˜ë©°, ì´ˆê¸°í™” ìˆœì„œë¥¼ ì„¤ì •í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
     /// </summary>
     public class EnemyCharacterInitializer : MonoBehaviour, ICombatInitializerStep
     {
         [SerializeField]
-        [Tooltip("ÃÊ±âÈ­ ¼ø¼­ (³·À»¼ö·Ï ¸ÕÀú ½ÇÇàµÊ)")]
+        [Tooltip("ì´ˆê¸°í™” ìˆœì„œ (ë‚®ì„ìˆ˜ë¡ ë¨¼ì € ì‹¤í–‰ë¨)")]
         private int order = 30;
 
         /// <inheritdoc />
@@ -22,9 +22,9 @@ namespace Game.CombatSystem.Initialization
         private IStageManager _stageManager;
 
         /// <summary>
-        /// ½ºÅ×ÀÌÁö ¸Å´ÏÀú¸¦ ÁÖÀÔ¹Ş¾Æ Àû »ı¼º ±â´ÉÀ» »ç¿ëÇÕ´Ï´Ù.
+        /// ìŠ¤í…Œì´ì§€ ë§¤ë‹ˆì €ë¥¼ ì£¼ì…ë°›ì•„ ì  ìƒì„± ê¸°ëŠ¥ì„ ì‚¬ìš©í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="stageManager">½ºÅ×ÀÌÁö °ü¸® ¸Å´ÏÀú</param>
+        /// <param name="stageManager">ìŠ¤í…Œì´ì§€ ê´€ë¦¬ ë§¤ë‹ˆì €</param>
         [Inject]
         public void Construct(IStageManager stageManager)
         {
@@ -32,15 +32,15 @@ namespace Game.CombatSystem.Initialization
         }
 
         /// <summary>
-        /// Àû Ä³¸¯ÅÍ¸¦ ½ºÆùÇÏ¿© ÀüÅõ¿¡ ¹èÄ¡ÇÕ´Ï´Ù.
+        /// ì  ìºë¦­í„°ë¥¼ ìŠ¤í°í•˜ì—¬ ì „íˆ¬ì— ë°°ì¹˜í•©ë‹ˆë‹¤.
         /// </summary>
         public IEnumerator Initialize()
         {
-            Debug.Log("[EnemyCharacterInitializer] Àû Ä³¸¯ÅÍ ÃÊ±âÈ­ ½ÃÀÛ");
+            Debug.Log("[EnemyCharacterInitializer] ì  ìºë¦­í„° ì´ˆê¸°í™” ì‹œì‘");
 
             _stageManager.SpawnNextEnemy();
 
-            Debug.Log("[EnemyCharacterInitializer] Àû Ä³¸¯ÅÍ »ı¼º ¿Ï·á");
+            Debug.Log("[EnemyCharacterInitializer] ì  ìºë¦­í„° ìƒì„± ì™„ë£Œ");
             yield return null;
         }
     }

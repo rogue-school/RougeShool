@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Effects;
 using Game.SkillCardSystem.Effect;

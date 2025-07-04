@@ -6,22 +6,22 @@ using Game.CombatSystem.Slot;
 namespace Game.CombatSystem.Utility
 {
     /// <summary>
-    /// ÀûÀÌ ÀÌ¹Ì Ä«µå¸¦ ¿Ã·ÁµĞ ÀüÅõ ½½·ÔÀ» ±âÁØÀ¸·Î, ³²Àº ½½·ÔÀ» ÇÃ·¹ÀÌ¾î¿¡°Ô ÇÒ´çÇÕ´Ï´Ù.
+    /// ì ì´ ì´ë¯¸ ì¹´ë“œë¥¼ ì˜¬ë ¤ë‘” ì „íˆ¬ ìŠ¬ë¡¯ì„ ê¸°ì¤€ìœ¼ë¡œ, ë‚¨ì€ ìŠ¬ë¡¯ì„ í”Œë ˆì´ì–´ì—ê²Œ í• ë‹¹í•©ë‹ˆë‹¤.
     /// </summary>
     public class SlotSelector : ISlotSelector
     {
-        #region ÇÊµå
+        #region í•„ë“œ
 
         private readonly ICombatSlotRegistry combatSlotRegistry;
 
         #endregion
 
-        #region »ı¼ºÀÚ
+        #region ìƒì„±ì
 
         /// <summary>
-        /// ½½·Ô ¼¿·ºÅÍ¸¦ »ı¼ºÇÕ´Ï´Ù.
+        /// ìŠ¬ë¡¯ ì…€ë ‰í„°ë¥¼ ìƒì„±í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="combatSlotRegistry">ÀüÅõ ½½·Ô ·¹Áö½ºÆ®¸®</param>
+        /// <param name="combatSlotRegistry">ì „íˆ¬ ìŠ¬ë¡¯ ë ˆì§€ìŠ¤íŠ¸ë¦¬</param>
         public SlotSelector(ICombatSlotRegistry combatSlotRegistry)
         {
             this.combatSlotRegistry = combatSlotRegistry;
@@ -29,12 +29,12 @@ namespace Game.CombatSystem.Utility
 
         #endregion
 
-        #region ½½·Ô ¼±ÅÃ ·ÎÁ÷
+        #region ìŠ¬ë¡¯ ì„ íƒ ë¡œì§
 
         /// <summary>
-        /// ÀüÅõ ½½·Ô Áß ÀûÀÌ Á¡À¯ÇÑ ½½·ÔÀ» Ã£°í, ³ª¸ÓÁö¸¦ ÇÃ·¹ÀÌ¾î ½½·ÔÀ¸·Î ÁöÁ¤ÇÕ´Ï´Ù.
+        /// ì „íˆ¬ ìŠ¬ë¡¯ ì¤‘ ì ì´ ì ìœ í•œ ìŠ¬ë¡¯ì„ ì°¾ê³ , ë‚˜ë¨¸ì§€ë¥¼ í”Œë ˆì´ì–´ ìŠ¬ë¡¯ìœ¼ë¡œ ì§€ì •í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <returns>ÇÃ·¹ÀÌ¾î ½½·Ô, Àû ½½·Ô Æ©ÇÃ</returns>
+        /// <returns>í”Œë ˆì´ì–´ ìŠ¬ë¡¯, ì  ìŠ¬ë¡¯ íŠœí”Œ</returns>
         public (CombatSlotPosition playerSlot, CombatSlotPosition enemySlot) SelectSlots()
         {
             var allSlots = combatSlotRegistry.GetAllCombatSlots().ToList();
@@ -44,7 +44,7 @@ namespace Game.CombatSystem.Utility
 
             if (enemySlot == null || playerSlot == null)
             {
-                Debug.LogWarning("[SlotSelector] ½½·Ô ÀÚµ¿ ¼±ÅÃ ½ÇÆĞ: ½½·ÔÀÌ ºÎÁ·ÇÏ°Å³ª »óÅÂ°¡ ºÒ¿ÏÀüÇÕ´Ï´Ù.");
+                Debug.LogWarning("[SlotSelector] ìŠ¬ë¡¯ ìë™ ì„ íƒ ì‹¤íŒ¨: ìŠ¬ë¡¯ì´ ë¶€ì¡±í•˜ê±°ë‚˜ ìƒíƒœê°€ ë¶ˆì™„ì „í•©ë‹ˆë‹¤.");
                 return (CombatSlotPosition.NONE, CombatSlotPosition.NONE);
             }
 

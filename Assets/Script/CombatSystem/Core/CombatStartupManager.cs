@@ -8,9 +8,9 @@ using Zenject;
 namespace Game.CombatSystem.Core
 {
     /// <summary>
-    /// ÀüÅõ ÃÊ±âÈ­ ¼ø¼­¸¦ Á¦¾îÇÏ´Â °ü¸®ÀÚ Å¬·¡½ºÀÔ´Ï´Ù.
-    /// ¾À ³» ¸ğµç ICombatInitializerStep ±¸ÇöÃ¼¸¦ Ã£¾Æ ¼ø¼­´ë·Î ÃÊ±âÈ­ÇÏ°í,
-    /// ÃÊ±âÈ­°¡ ¿Ï·áµÇ¸é ÇÃ·¹ÀÌ¾î ÀÔ·Â »óÅÂ·Î ÀüÀÌÇÕ´Ï´Ù.
+    /// ì „íˆ¬ ì´ˆê¸°í™” ìˆœì„œë¥¼ ì œì–´í•˜ëŠ” ê´€ë¦¬ì í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
+    /// ì”¬ ë‚´ ëª¨ë“  ICombatInitializerStep êµ¬í˜„ì²´ë¥¼ ì°¾ì•„ ìˆœì„œëŒ€ë¡œ ì´ˆê¸°í™”í•˜ê³ ,
+    /// ì´ˆê¸°í™”ê°€ ì™„ë£Œë˜ë©´ í”Œë ˆì´ì–´ ì…ë ¥ ìƒíƒœë¡œ ì „ì´í•©ë‹ˆë‹¤.
     /// </summary>
     public class CombatStartupManager : MonoBehaviour
     {
@@ -22,7 +22,7 @@ namespace Game.CombatSystem.Core
         #region Unity Methods
 
         /// <summary>
-        /// ÃÊ±âÈ­ ½ºÅÜÀ» ¼öÁıÇÏ¿© Á¤·ÄÇÕ´Ï´Ù.
+        /// ì´ˆê¸°í™” ìŠ¤í…ì„ ìˆ˜ì§‘í•˜ì—¬ ì •ë ¬í•©ë‹ˆë‹¤.
         /// </summary>
         private void Awake()
         {
@@ -30,16 +30,16 @@ namespace Game.CombatSystem.Core
 
             if (steps.Count == 0)
             {
-                Debug.LogWarning("[CombatStartupManager] ÃÊ±âÈ­ ½ºÅÜÀÌ ÇÏ³ªµµ Á¸ÀçÇÏÁö ¾Ê½À´Ï´Ù.");
+                Debug.LogWarning("[CombatStartupManager] ì´ˆê¸°í™” ìŠ¤í…ì´ í•˜ë‚˜ë„ ì¡´ì¬í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.");
             }
             else
             {
-                Debug.Log($"[CombatStartupManager] {steps.Count}°³ ÃÊ±âÈ­ ½ºÅÜ ¼öÁı ¿Ï·á (Order ±âÁØ Á¤·Ä)");
+                Debug.Log($"[CombatStartupManager] {steps.Count}ê°œ ì´ˆê¸°í™” ìŠ¤í… ìˆ˜ì§‘ ì™„ë£Œ (Order ê¸°ì¤€ ì •ë ¬)");
             }
         }
 
         /// <summary>
-        /// ÃÊ±âÈ­ ·çÆ¾À» ÄÚ·çÆ¾À¸·Î ½ÃÀÛÇÕ´Ï´Ù.
+        /// ì´ˆê¸°í™” ë£¨í‹´ì„ ì½”ë£¨í‹´ìœ¼ë¡œ ì‹œì‘í•©ë‹ˆë‹¤.
         /// </summary>
         private void Start()
         {
@@ -51,7 +51,7 @@ namespace Game.CombatSystem.Core
         #region Initialization Step Finder
 
         /// <summary>
-        /// ¾À ³» ¸ğµç ICombatInitializerStep ±¸ÇöÃ¼¸¦ Ã£¾Æ ¼ø¼­´ë·Î Á¤·ÄÇÕ´Ï´Ù.
+        /// ì”¬ ë‚´ ëª¨ë“  ICombatInitializerStep êµ¬í˜„ì²´ë¥¼ ì°¾ì•„ ìˆœì„œëŒ€ë¡œ ì •ë ¬í•©ë‹ˆë‹¤.
         /// </summary>
         private List<ICombatInitializerStep> FindInitializerSteps()
         {
@@ -68,14 +68,14 @@ namespace Game.CombatSystem.Core
         #region Startup Routine
 
         /// <summary>
-        /// ¼ø¼­´ë·Î ÃÊ±âÈ­ ½ºÅÜÀ» ½ÇÇàÇÏ¸ç, ¿¹¿Ü Ã³¸® ¹× ·Î±×¸¦ Æ÷ÇÔÇÕ´Ï´Ù.
-        /// ¿Ï·á ÈÄ ÇÃ·¹ÀÌ¾î ÀÔ·Â »óÅÂ·Î ÀüÀÌÇÕ´Ï´Ù.
+        /// ìˆœì„œëŒ€ë¡œ ì´ˆê¸°í™” ìŠ¤í…ì„ ì‹¤í–‰í•˜ë©°, ì˜ˆì™¸ ì²˜ë¦¬ ë° ë¡œê·¸ë¥¼ í¬í•¨í•©ë‹ˆë‹¤.
+        /// ì™„ë£Œ í›„ í”Œë ˆì´ì–´ ì…ë ¥ ìƒíƒœë¡œ ì „ì´í•©ë‹ˆë‹¤.
         /// </summary>
         private IEnumerator StartupRoutine()
         {
             foreach (var step in steps)
             {
-                Debug.Log($"[CombatStartupManager] ÃÊ±âÈ­ ½ÃÀÛ: {step.GetType().Name} (Order: {step.Order})");
+                Debug.Log($"[CombatStartupManager] ì´ˆê¸°í™” ì‹œì‘: {step.GetType().Name} (Order: {step.Order})");
 
                 IEnumerator routine = null;
                 try
@@ -84,17 +84,17 @@ namespace Game.CombatSystem.Core
                 }
                 catch (System.Exception ex)
                 {
-                    Debug.LogError($"[CombatStartupManager] {step.GetType().Name} ÃÊ±âÈ­ Áß ¿¹¿Ü ¹ß»ı: {ex.Message}");
+                    Debug.LogError($"[CombatStartupManager] {step.GetType().Name} ì´ˆê¸°í™” ì¤‘ ì˜ˆì™¸ ë°œìƒ: {ex.Message}");
                     continue;
                 }
 
                 if (routine != null)
                     yield return routine;
 
-                Debug.Log($"[CombatStartupManager] ÃÊ±âÈ­ ¿Ï·á: {step.GetType().Name}");
+                Debug.Log($"[CombatStartupManager] ì´ˆê¸°í™” ì™„ë£Œ: {step.GetType().Name}");
             }
 
-            Debug.Log("<color=lime>[CombatStartupManager] ¸ğµç ÃÊ±âÈ­ ´Ü°è ¿Ï·á</color>");
+            Debug.Log("<color=lime>[CombatStartupManager] ëª¨ë“  ì´ˆê¸°í™” ë‹¨ê³„ ì™„ë£Œ</color>");
 
             var playerInputState = stateFactory.CreatePlayerInputState();
             turnManager.RequestStateChange(playerInputState);

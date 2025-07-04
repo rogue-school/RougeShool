@@ -5,12 +5,12 @@ using Game.SkillCardSystem.Runtime;
 namespace Game.CombatSystem.State
 {
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾îÀÇ ÀÔ·ÂÀ» Ã³¸®ÇÏ´Â ÀüÅõ »óÅÂÀÔ´Ï´Ù.
-    /// ÄğÅ¸ÀÓ °¨¼Ò, Ä«µå ¼±ÅÃ UI È°¼ºÈ­, ½ÃÀÛ ¹öÆ° µî·Ï µîÀ» ¼öÇàÇÕ´Ï´Ù.
+    /// í”Œë ˆì´ì–´ì˜ ì…ë ¥ì„ ì²˜ë¦¬í•˜ëŠ” ì „íˆ¬ ìƒíƒœì…ë‹ˆë‹¤.
+    /// ì¿¨íƒ€ì„ ê°ì†Œ, ì¹´ë“œ ì„ íƒ UI í™œì„±í™”, ì‹œì‘ ë²„íŠ¼ ë“±ë¡ ë“±ì„ ìˆ˜í–‰í•©ë‹ˆë‹¤.
     /// </summary>
     public class CombatPlayerInputState : ICombatTurnState
     {
-        #region ÇÊµå
+        #region í•„ë“œ
 
         private readonly ICombatFlowCoordinator flowCoordinator;
         private readonly ITurnCardRegistry cardRegistry;
@@ -21,10 +21,10 @@ namespace Game.CombatSystem.State
 
         #endregion
 
-        #region »ı¼ºÀÚ
+        #region ìƒì„±ì
 
         /// <summary>
-        /// CombatPlayerInputStateÀÇ »ı¼ºÀÚÀÔ´Ï´Ù.
+        /// CombatPlayerInputStateì˜ ìƒì„±ìì…ë‹ˆë‹¤.
         /// </summary>
         public CombatPlayerInputState(
             ICombatFlowCoordinator flowCoordinator,
@@ -40,14 +40,14 @@ namespace Game.CombatSystem.State
 
         #endregion
 
-        #region »óÅÂ ÀÎÅÍÆäÀÌ½º ±¸Çö
+        #region ìƒíƒœ ì¸í„°í˜ì´ìŠ¤ êµ¬í˜„
 
         /// <summary>
-        /// »óÅÂ ÁøÀÔ ½Ã È£ÃâµË´Ï´Ù. ÄğÅ¸ÀÓÀ» °¨¼Ò½ÃÅ°°í UI ¹× ÀÔ·ÂÀ» È°¼ºÈ­ÇÕ´Ï´Ù.
+        /// ìƒíƒœ ì§„ì… ì‹œ í˜¸ì¶œë©ë‹ˆë‹¤. ì¿¨íƒ€ì„ì„ ê°ì†Œì‹œí‚¤ê³  UI ë° ì…ë ¥ì„ í™œì„±í™”í•©ë‹ˆë‹¤.
         /// </summary>
         public void EnterState()
         {
-            Debug.Log("<color=cyan>[CombatPlayerInputState] »óÅÂ ÁøÀÔ</color>");
+            Debug.Log("<color=cyan>[CombatPlayerInputState] ìƒíƒœ ì§„ì…</color>");
             hasStarted = false;
 
             cooldownSystem.ReduceAllCooldowns();
@@ -60,19 +60,19 @@ namespace Game.CombatSystem.State
         }
 
         /// <summary>
-        /// »óÅÂ ¹İº¹ ½ÇÇà Áß È£ÃâµË´Ï´Ù. ÇöÀç´Â ±¸ÇöµÇ¾î ÀÖÁö ¾ÊÀ½.
+        /// ìƒíƒœ ë°˜ë³µ ì‹¤í–‰ ì¤‘ í˜¸ì¶œë©ë‹ˆë‹¤. í˜„ì¬ëŠ” êµ¬í˜„ë˜ì–´ ìˆì§€ ì•ŠìŒ.
         /// </summary>
         public void ExecuteState()
         {
-            // ÀÔ·Â ´ë±â »óÅÂ¿¡¼­ ¹İº¹ µ¿ÀÛÀÌ ÇÊ¿äÇÑ °æ¿ì È®Àå °¡´É
+            // ì…ë ¥ ëŒ€ê¸° ìƒíƒœì—ì„œ ë°˜ë³µ ë™ì‘ì´ í•„ìš”í•œ ê²½ìš° í™•ì¥ ê°€ëŠ¥
         }
 
         /// <summary>
-        /// »óÅÂ Á¾·á ½Ã È£ÃâµË´Ï´Ù. UI ¹× ÀÔ·ÂÀ» Á¤¸®ÇÕ´Ï´Ù.
+        /// ìƒíƒœ ì¢…ë£Œ ì‹œ í˜¸ì¶œë©ë‹ˆë‹¤. UI ë° ì…ë ¥ì„ ì •ë¦¬í•©ë‹ˆë‹¤.
         /// </summary>
         public void ExitState()
         {
-            Debug.Log("<color=grey>[CombatPlayerInputState] »óÅÂ Á¾·á</color>");
+            Debug.Log("<color=grey>[CombatPlayerInputState] ìƒíƒœ ì¢…ë£Œ</color>");
 
             flowCoordinator.DisablePlayerInput();
             flowCoordinator.HidePlayerCardSelectionUI();
@@ -82,23 +82,23 @@ namespace Game.CombatSystem.State
 
         #endregion
 
-        #region ³»ºÎ ·ÎÁ÷
+        #region ë‚´ë¶€ ë¡œì§
 
         /// <summary>
-        /// ½ÃÀÛ ¹öÆ°ÀÌ ´­·ÈÀ» ¶§ È£ÃâµÇ´Â Äİ¹éÀÔ´Ï´Ù.
-        /// »óÅÂ ÀüÀÌ¸¦ ¿äÃ»ÇÕ´Ï´Ù.
+        /// ì‹œì‘ ë²„íŠ¼ì´ ëˆŒë ¸ì„ ë•Œ í˜¸ì¶œë˜ëŠ” ì½œë°±ì…ë‹ˆë‹¤.
+        /// ìƒíƒœ ì „ì´ë¥¼ ìš”ì²­í•©ë‹ˆë‹¤.
         /// </summary>
         private void OnStartButtonPressed()
         {
             if (hasStarted)
             {
-                Debug.LogWarning("[CombatPlayerInputState] ÀÌ¹Ì ½ÃÀÛ ¹öÆ°ÀÌ ´­·È½À´Ï´Ù.");
+                Debug.LogWarning("[CombatPlayerInputState] ì´ë¯¸ ì‹œì‘ ë²„íŠ¼ì´ ëˆŒë ¸ìŠµë‹ˆë‹¤.");
                 return;
             }
 
             hasStarted = true;
 
-            Debug.Log("[CombatPlayerInputState] ÇÃ·¹ÀÌ¾î ÀÔ·Â ¿Ï·á ¡æ ÀüÅõ ½ÃÀÛ");
+            Debug.Log("[CombatPlayerInputState] í”Œë ˆì´ì–´ ì…ë ¥ ì™„ë£Œ â†’ ì „íˆ¬ ì‹œì‘");
 
             flowCoordinator.DisableStartButton();
             flowCoordinator.DisablePlayerInput();

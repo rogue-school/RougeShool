@@ -4,38 +4,38 @@ using Game.SkillCardSystem.Deck;
 namespace Game.CharacterSystem.Data
 {
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î Ä³¸¯ÅÍÀÇ ¼³Á¤ Á¤º¸¸¦ ´ã´Â ScriptableObjectÀÔ´Ï´Ù.
-    /// ÀÌ¸§, ÃÊ»óÈ­, ÃÖ´ë Ã¼·Â, ½ºÅ³ µ¦ µîÀ» Æ÷ÇÔÇÕ´Ï´Ù.
+    /// í”Œë ˆì´ì–´ ìºë¦­í„°ì˜ ì„¤ì • ì •ë³´ë¥¼ ë‹´ëŠ” ScriptableObjectì…ë‹ˆë‹¤.
+    /// ì´ë¦„, ì´ˆìƒí™”, ìµœëŒ€ ì²´ë ¥, ìŠ¤í‚¬ ë± ë“±ì„ í¬í•¨í•©ë‹ˆë‹¤.
     /// </summary>
     [CreateAssetMenu(menuName = "Game/Character/PlayerCharacterData")]
     public class PlayerCharacterData : ScriptableObject
     {
-        #region ±âº» Á¤º¸
+        #region ê¸°ë³¸ ì •ë³´
 
         /// <summary>
-        /// UI µî¿¡¼­ Ç¥½ÃÇÒ Ä³¸¯ÅÍ ÀÌ¸§ÀÔ´Ï´Ù.
+        /// UI ë“±ì—ì„œ í‘œì‹œí•  ìºë¦­í„° ì´ë¦„ì…ë‹ˆë‹¤.
         /// </summary>
         [field: SerializeField]
         public string DisplayName { get; private set; }
 
         /// <summary>
-        /// Ä³¸¯ÅÍÀÇ ÃÖ´ë Ã¼·ÂÀÔ´Ï´Ù.
+        /// ìºë¦­í„°ì˜ ìµœëŒ€ ì²´ë ¥ì…ë‹ˆë‹¤.
         /// </summary>
         [field: SerializeField]
         public int MaxHP { get; private set; }
 
         /// <summary>
-        /// Ä³¸¯ÅÍÀÇ ÃÊ»óÈ­ ÀÌ¹ÌÁöÀÔ´Ï´Ù.
+        /// ìºë¦­í„°ì˜ ì´ˆìƒí™” ì´ë¯¸ì§€ì…ë‹ˆë‹¤.
         /// </summary>
         [field: SerializeField]
         public Sprite Portrait { get; private set; }
 
         #endregion
 
-        #region ½ºÅ³ µ¦
+        #region ìŠ¤í‚¬ ë±
 
         /// <summary>
-        /// Ä³¸¯ÅÍ°¡ »ç¿ëÇÏ´Â ½ºÅ³ Ä«µå µ¦ÀÔ´Ï´Ù.
+        /// ìºë¦­í„°ê°€ ì‚¬ìš©í•˜ëŠ” ìŠ¤í‚¬ ì¹´ë“œ ë±ì…ë‹ˆë‹¤.
         /// </summary>
         [field: SerializeField]
         public PlayerSkillDeck SkillDeck { get; private set; }

@@ -6,43 +6,43 @@ using Game.CombatSystem.Interface;
 namespace Game.SkillCardSystem.UI
 {
     /// <summary>
-    /// ½ºÅ³ Ä«µå UI ÇÁ¸®ÆÕÀ» ÀÎ½ºÅÏ½ºÈ­ÇÏ°í ÃÊ±âÈ­ÇÏ´Â Á¤Àû ÆÑÅä¸® Å¬·¡½ºÀÔ´Ï´Ù.
+    /// ìŠ¤í‚¬ ì¹´ë“œ UI í”„ë¦¬íŒ¹ì„ ì¸ìŠ¤í„´ìŠ¤í™”í•˜ê³  ì´ˆê¸°í™”í•˜ëŠ” ì •ì  íŒ©í† ë¦¬ í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
     /// </summary>
     public static class SkillCardUIFactory
     {
         /// <summary>
-        /// SkillCardUI ÇÁ¸®ÆÕÀ» »ı¼ºÇÏ°í Ä«µå µ¥ÀÌÅÍ ¹× µå·¡±× ÇÚµé·¯¸¦ ¼³Á¤ÇÕ´Ï´Ù.
+        /// SkillCardUI í”„ë¦¬íŒ¹ì„ ìƒì„±í•˜ê³  ì¹´ë“œ ë°ì´í„° ë° ë“œë˜ê·¸ í•¸ë“¤ëŸ¬ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="prefab">½ºÅ³ Ä«µå UI ÇÁ¸®ÆÕ</param>
-        /// <param name="parent">UI¸¦ ¹èÄ¡ÇÒ ºÎ¸ğ Æ®·£½ºÆû</param>
-        /// <param name="card">¿¬°áÇÒ Ä«µå µ¥ÀÌÅÍ</param>
-        /// <param name="flowCoordinator">Ä«µå ½ÇÇàÀ» Á¶Á¤ÇÏ´Â Èå¸§ Á¦¾îÀÚ</param>
-        /// <returns>ÃÊ±âÈ­µÈ SkillCardUI ÀÎ½ºÅÏ½º</returns>
+        /// <param name="prefab">ìŠ¤í‚¬ ì¹´ë“œ UI í”„ë¦¬íŒ¹</param>
+        /// <param name="parent">UIë¥¼ ë°°ì¹˜í•  ë¶€ëª¨ íŠ¸ëœìŠ¤í¼</param>
+        /// <param name="card">ì—°ê²°í•  ì¹´ë“œ ë°ì´í„°</param>
+        /// <param name="flowCoordinator">ì¹´ë“œ ì‹¤í–‰ì„ ì¡°ì •í•˜ëŠ” íë¦„ ì œì–´ì</param>
+        /// <returns>ì´ˆê¸°í™”ëœ SkillCardUI ì¸ìŠ¤í„´ìŠ¤</returns>
         public static SkillCardUI CreateUI(
             SkillCardUI prefab,
             Transform parent,
             ISkillCard card,
             ICombatFlowCoordinator flowCoordinator)
         {
-            // === À¯È¿¼º °Ë»ç ===
+            // === ìœ íš¨ì„± ê²€ì‚¬ ===
             if (prefab == null || parent == null || card == null)
             {
-                Debug.LogError("[SkillCardUIFactory] Ä«µå UI »ı¼º ½ÇÆĞ - null ÀÎÀÚ Á¸Àç");
+                Debug.LogError("[SkillCardUIFactory] ì¹´ë“œ UI ìƒì„± ì‹¤íŒ¨ - null ì¸ì ì¡´ì¬");
                 return null;
             }
 
-            // === ÇÁ¸®ÆÕ ÀÎ½ºÅÏ½º »ı¼º ===
+            // === í”„ë¦¬íŒ¹ ì¸ìŠ¤í„´ìŠ¤ ìƒì„± ===
             var instance = Object.Instantiate(prefab, parent, false);
             if (instance == null)
             {
-                Debug.LogError("[SkillCardUIFactory] ÇÁ¸®ÆÕ ÀÎ½ºÅÏ½ºÈ­ ½ÇÆĞ");
+                Debug.LogError("[SkillCardUIFactory] í”„ë¦¬íŒ¹ ì¸ìŠ¤í„´ìŠ¤í™” ì‹¤íŒ¨");
                 return null;
             }
 
-            // === Ä«µå µ¥ÀÌÅÍ ¼³Á¤ ===
+            // === ì¹´ë“œ ë°ì´í„° ì„¤ì • ===
             instance.SetCard(card);
 
-            // === ±âº» Transform ÃÊ±âÈ­ ===
+            // === ê¸°ë³¸ Transform ì´ˆê¸°í™” ===
             if (instance.TryGetComponent(out RectTransform rect))
             {
                 rect.anchoredPosition = Vector2.zero;
@@ -50,7 +50,7 @@ namespace Game.SkillCardSystem.UI
                 rect.localScale = Vector3.one;
             }
 
-            // === µå·¡±× ÇÚµé·¯ ¿¬°á ===
+            // === ë“œë˜ê·¸ í•¸ë“¤ëŸ¬ ì—°ê²° ===
             if (instance.TryGetComponent(out CardDragHandler dragHandler))
             {
                 if (flowCoordinator != null)
@@ -59,7 +59,7 @@ namespace Game.SkillCardSystem.UI
                 }
                 else
                 {
-                    Debug.LogWarning("[SkillCardUIFactory] flowCoordinator°¡ nullÀÔ´Ï´Ù.");
+                    Debug.LogWarning("[SkillCardUIFactory] flowCoordinatorê°€ nullì…ë‹ˆë‹¤.");
                 }
             }
 

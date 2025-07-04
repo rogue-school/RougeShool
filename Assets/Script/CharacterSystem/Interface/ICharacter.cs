@@ -1,4 +1,4 @@
-﻿using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.Interface;
 using UnityEngine;
 
 namespace Game.CharacterSystem.Interface

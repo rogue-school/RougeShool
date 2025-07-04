@@ -6,28 +6,28 @@ using Game.CombatSystem.Utility;
 namespace Game.IManager
 {
     /// <summary>
-    /// Àû Ä³¸¯ÅÍÀÇ »ý¼º ¹× °ü¸® ±â´ÉÀ» Á¦°øÇÏ´Â ½ºÆù ¸Å´ÏÀú ÀÎÅÍÆäÀÌ½ºÀÔ´Ï´Ù.
-    /// ÃÊ±â Àû »ý¼º, Æ¯Á¤ µ¥ÀÌÅÍ ±â¹Ý »ý¼º, ÀüÃ¼ Àû ¸®½ºÆ® Á¶È¸ ±â´ÉÀ» Æ÷ÇÔÇÕ´Ï´Ù.
+    /// ì  ìºë¦­í„°ì˜ ìƒì„± ë° ê´€ë¦¬ ê¸°ëŠ¥ì„ ì œê³µí•˜ëŠ” ìŠ¤í° ë§¤ë‹ˆì € ì¸í„°íŽ˜ì´ìŠ¤ìž…ë‹ˆë‹¤.
+    /// ì´ˆê¸° ì  ìƒì„±, íŠ¹ì • ë°ì´í„° ê¸°ë°˜ ìƒì„±, ì „ì²´ ì  ë¦¬ìŠ¤íŠ¸ ì¡°íšŒ ê¸°ëŠ¥ì„ í¬í•¨í•©ë‹ˆë‹¤.
     /// </summary>
     public interface IEnemySpawnerManager
     {
         /// <summary>
-        /// ÀüÅõ ½ÃÀÛ ½Ã ÃÊ±â ÀûÀ» ½ºÆùÇÕ´Ï´Ù.
-        /// º¸Åë ÇöÀç ½ºÅ×ÀÌÁöÀÇ ±âº» Àû µ¥ÀÌÅÍ¸¦ »ç¿ëÇÕ´Ï´Ù.
+        /// ì „íˆ¬ ì‹œìž‘ ì‹œ ì´ˆê¸° ì ì„ ìŠ¤í°í•©ë‹ˆë‹¤.
+        /// ë³´í†µ í˜„ìž¬ ìŠ¤í…Œì´ì§€ì˜ ê¸°ë³¸ ì  ë°ì´í„°ë¥¼ ì‚¬ìš©í•©ë‹ˆë‹¤.
         /// </summary>
         void SpawnInitialEnemy();
 
         /// <summary>
-        /// Æ¯Á¤ Àû Ä³¸¯ÅÍ µ¥ÀÌÅÍ¸¦ ±â¹ÝÀ¸·Î ÀûÀ» ½ºÆùÇÕ´Ï´Ù.
+        /// íŠ¹ì • ì  ìºë¦­í„° ë°ì´í„°ë¥¼ ê¸°ë°˜ìœ¼ë¡œ ì ì„ ìŠ¤í°í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="data">Àû Ä³¸¯ÅÍ µ¥ÀÌÅÍ</param>
-        /// <returns>½ºÆù °á°ú (¼º°ø ¿©ºÎ ¹× ÂüÁ¶ Á¤º¸ Æ÷ÇÔ)</returns>
+        /// <param name="data">ì  ìºë¦­í„° ë°ì´í„°</param>
+        /// <returns>ìŠ¤í° ê²°ê³¼ (ì„±ê³µ ì—¬ë¶€ ë° ì°¸ì¡° ì •ë³´ í¬í•¨)</returns>
         EnemySpawnResult SpawnEnemy(EnemyCharacterData data);
 
         /// <summary>
-        /// ÇöÀç ½ºÆùµÈ ¸ðµç Àû Ä³¸¯ÅÍ ¸ñ·ÏÀ» ¹ÝÈ¯ÇÕ´Ï´Ù.
+        /// í˜„ìž¬ ìŠ¤í°ëœ ëª¨ë“  ì  ìºë¦­í„° ëª©ë¡ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <returns>Àû Ä³¸¯ÅÍ ¸®½ºÆ®</returns>
+        /// <returns>ì  ìºë¦­í„° ë¦¬ìŠ¤íŠ¸</returns>
         List<EnemyCharacter> GetAllEnemies();
     }
 }

@@ -4,7 +4,7 @@ using TMPro;
 namespace Game.CombatSystem.UI
 {
     /// <summary>
-    /// ÀüÅõ Áß µ¥¹ÌÁö/È¸º¹ µî ¼öÄ¡¸¦ ¶°¿À¸£°Ô Ç¥½ÃÇÏ´Â UI
+    /// ì „íˆ¬ ì¤‘ ë°ë¯¸ì§€/íšŒë³µ ë“± ìˆ˜ì¹˜ë¥¼ ë– ì˜¤ë¥´ê²Œ í‘œì‹œí•˜ëŠ” UI
     /// </summary>
     public class DamageTextUI : MonoBehaviour
     {
@@ -20,11 +20,11 @@ namespace Game.CombatSystem.UI
         }
 
         /// <summary>
-        /// µ¥¹ÌÁö ¶Ç´Â È¸º¹ ¼öÄ¡¸¦ Ç¥½ÃÇÕ´Ï´Ù.
+        /// ë°ë¯¸ì§€ ë˜ëŠ” íšŒë³µ ìˆ˜ì¹˜ë¥¼ í‘œì‹œí•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="amount">Ç¥½ÃÇÒ ¼öÄ¡</param>
-        /// <param name="color">ÅØ½ºÆ® »ö»ó</param>
-        /// <param name="prefix">Á¢µÎ»ç (+ ¶Ç´Â -)</param>
+        /// <param name="amount">í‘œì‹œí•  ìˆ˜ì¹˜</param>
+        /// <param name="color">í…ìŠ¤íŠ¸ ìƒ‰ìƒ</param>
+        /// <param name="prefix">ì ‘ë‘ì‚¬ (+ ë˜ëŠ” -)</param>
         public void Show(int amount, Color color, string prefix = "")
         {
             if (damageText != null)
@@ -39,7 +39,7 @@ namespace Game.CombatSystem.UI
         }
 
         /// <summary>
-        /// À§·Î ¶°¿À¸£¸é¼­ ¾ËÆÄ°ªÀÌ Á¡Á¡ ÁÙ¾îµì´Ï´Ù.
+        /// ìœ„ë¡œ ë– ì˜¤ë¥´ë©´ì„œ ì•ŒíŒŒê°’ì´ ì ì  ì¤„ì–´ë“­ë‹ˆë‹¤.
         /// </summary>
         private System.Collections.IEnumerator FloatAndFade(Color startColor)
         {
@@ -51,10 +51,10 @@ namespace Game.CombatSystem.UI
                 float delta = Time.deltaTime;
                 elapsed += delta;
 
-                // »ó½Â
+                // ìƒìŠ¹
                 rectTransform.anchoredPosition = startPos + Vector2.up * floatSpeed * (elapsed / duration);
 
-                // Á¡Á¡ Åõ¸íÇÏ°Ô
+                // ì ì  íˆ¬ëª…í•˜ê²Œ
                 if (damageText != null)
                 {
                     Color color = startColor;

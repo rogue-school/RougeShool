@@ -1,14 +1,14 @@
 namespace Game.CombatSystem.Interface
 {
     /// <summary>
-    /// ÇÚµå ÃÊ±âÈ­ Ã³¸®¸¦ À§ÇÑ ÀÎÅÍÆäÀÌ½ºÀÔ´Ï´Ù.
-    /// ÀüÅõ ½ÃÀÛ ½Ã ÇÚµå ½½·ÔÀ» ±¸¼ºÇÏ°Å³ª Ä«µå¸¦ ¹èÄ¡ÇÒ ¶§ »ç¿ëµË´Ï´Ù.
+    /// í•¸ë“œ ì´ˆê¸°í™” ì²˜ë¦¬ë¥¼ ìœ„í•œ ì¸í„°íŽ˜ì´ìŠ¤ìž…ë‹ˆë‹¤.
+    /// ì „íˆ¬ ì‹œìž‘ ì‹œ í•¸ë“œ ìŠ¬ë¡¯ì„ êµ¬ì„±í•˜ê±°ë‚˜ ì¹´ë“œë¥¼ ë°°ì¹˜í•  ë•Œ ì‚¬ìš©ë©ë‹ˆë‹¤.
     /// </summary>
     public interface IHandInitializer
     {
         /// <summary>
-        /// ÇÃ·¹ÀÌ¾î ¹× ÀûÀÇ ÇÚµå ½½·ÔÀ» ÃÊ±âÈ­ÇÕ´Ï´Ù.
-        /// ½½·Ô »ý¼º, Á¤·Ä, ÃÊ±â Ä«µå ¹èÄ¡ µîÀÇ ÀÛ¾÷À» Æ÷ÇÔÇÒ ¼ö ÀÖ½À´Ï´Ù.
+        /// í”Œë ˆì´ì–´ ë° ì ì˜ í•¸ë“œ ìŠ¬ë¡¯ì„ ì´ˆê¸°í™”í•©ë‹ˆë‹¤.
+        /// ìŠ¬ë¡¯ ìƒì„±, ì •ë ¬, ì´ˆê¸° ì¹´ë“œ ë°°ì¹˜ ë“±ì˜ ìž‘ì—…ì„ í¬í•¨í•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
         /// </summary>
         void SetupHands();
     }

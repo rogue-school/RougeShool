@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 

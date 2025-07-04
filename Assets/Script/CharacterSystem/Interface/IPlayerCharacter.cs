@@ -6,78 +6,78 @@ using Game.SkillCardSystem.Slot;
 namespace Game.CharacterSystem.Interface
 {
     /// <summary>
-    /// �÷��̾� ĳ���� ���� �������̽��Դϴ�.
-    /// ICharacter�� ����ϸ�, ī�� �ڵ鸵 �� �÷��̾� ���� �����Ϳ� ���� ����� �����մϴ�.
+    /// 플레이어 캐릭터 전용 인터페이스입니다.
+    /// ICharacter를 상속하며, 카드 핸들링 및 플레이어 전용 데이터에 대한 기능을 포함합니다.
     /// </summary>
     public interface IPlayerCharacter : ICharacter
     {
-        #region ������ ���� �� ����
+        #region 데이터 접근 및 설정
 
         /// <summary>
-        /// �÷��̾� ĳ������ ������ ��ũ���ͺ� ��ü�� ��ȯ�մϴ�.
+        /// 플레이어 캐릭터의 데이터 스크립터블 객체를 반환합니다.
         /// </summary>
         PlayerCharacterData Data { get; }
 
         /// <summary>
-        /// �÷��̾� ĳ���� �����͸� �����մϴ�.
+        /// 플레이어 캐릭터 데이터를 설정합니다.
         /// </summary>
-        /// <param name="data">������ ������</param>
+        /// <param name="data">설정할 데이터</param>
         void SetCharacterData(PlayerCharacterData data);
 
         #endregion
 
-        #region ī�� �ڵ鸵
+        #region 카드 핸들링
 
         /// <summary>
-        /// ���������� ����� ��ų ī�带 �����մϴ�.
+        /// 마지막으로 사용한 스킬 카드를 설정합니다.
         /// </summary>
-        /// <param name="card">����� ��ų ī��</param>
+        /// <param name="card">사용한 스킬 카드</param>
         void SetLastUsedCard(ISkillCard card);
 
         /// <summary>
-        /// ���������� ����� ��ų ī�带 ��ȯ�մϴ�.
+        /// 마지막으로 사용한 스킬 카드를 반환합니다.
         /// </summary>
-        /// <returns>�ֱ� ����� ��ų ī��</returns>
+        /// <returns>최근 사용한 스킬 카드</returns>
         ISkillCard GetLastUsedCard();
 
         /// <summary>
-        /// ������ ī�带 �ڵ�� �����մϴ�.
+        /// 지정된 카드를 핸드로 복원합니다.
         /// </summary>
-        /// <param name="card">������ ī��</param>
+        /// <param name="card">복원할 카드</param>
         void RestoreCardToHand(ISkillCard card);
 
         /// <summary>
-        /// ������ �ڵ� ���� ��ġ�� ī�带 ��ȯ�մϴ�.
+        /// 지정한 핸드 슬롯 위치의 카드를 반환합니다.
         /// </summary>
-        /// <param name="pos">���� ��ġ</param>
-        /// <returns>���Կ� �ִ� ��ų ī��</returns>
+        /// <param name="pos">슬롯 위치</param>
+        /// <returns>슬롯에 있는 스킬 카드</returns>
         ISkillCard GetCardInHandSlot(SkillCardSlotPosition pos);
 
         /// <summary>
-        /// ������ �ڵ� ���� ��ġ�� ī�� UI�� ��ȯ�մϴ�.
+        /// 지정한 핸드 슬롯 위치의 카드 UI를 반환합니다.
         /// </summary>
-        /// <param name="pos">���� ��ġ</param>
-        /// <returns>���Կ� �ִ� ��ų ī�� UI</returns>
+        /// <param name="pos">슬롯 위치</param>
+        /// <returns>슬롯에 있는 스킬 카드 UI</returns>
         ISkillCardUI GetCardUIInHandSlot(SkillCardSlotPosition pos);
 
         #endregion
 
-        #region �ڵ� �Ŵ��� ����
+        #region 핸드 매니저 주입
 
         /// <summary>
-        /// �ڵ� �Ŵ����� ������ �����մϴ�.
+        /// 핸드 매니저를 의존성 주입합니다.
         /// </summary>
-        /// <param name="manager">�ڵ� �Ŵ���</param>
+        /// <param name="manager">핸드 매니저</param>
         void InjectHandManager(IPlayerHandManager manager);
 
         #endregion
 
-        #region ���� Ȯ��
+        #region 상태 확인
 
         /// <summary>
-        /// ĳ���Ͱ� ���� �������� Ȯ���մϴ�.
+        /// 캐릭터가 생존 상태인지 확인합니다.
         /// </summary>
-        /// <returns>���� ���̸� true</returns>
+        /// <returns>생존 중이면 true</returns>
         bool IsAlive();
 
         #endregion

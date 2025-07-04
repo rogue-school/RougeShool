@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.EventSystems;
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Interface;

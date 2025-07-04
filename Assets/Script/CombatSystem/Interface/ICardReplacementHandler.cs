@@ -4,23 +4,23 @@ namespace Game.CombatSystem.Interface
     using Game.SkillCardSystem.UI;
 
     /// <summary>
-    /// ÀüÅõ ½½·Ô¿¡ ¹èÄ¡µÈ ±âÁ¸ Ä«µå¸¦ »õ·Î¿î Ä«µå·Î ±³Ã¼ÇÏ´Â Ã¥ÀÓÀ» °®´Â ÀÎÅÍÆäÀÌ½ºÀÔ´Ï´Ù.
-    /// ±³Ã¼ ½Ã ±âÁ¸ Ä«µå ¹× UI Á¦°Å, »õ·Î¿î Ä«µå¿Í UI µî·Ï Ã³¸®¸¦ ¼öÇàÇÕ´Ï´Ù.
+    /// ì „íˆ¬ ìŠ¬ë¡¯ì— ë°°ì¹˜ëœ ê¸°ì¡´ ì¹´ë“œë¥¼ ìƒˆë¡œìš´ ì¹´ë“œë¡œ êµì²´í•˜ëŠ” ì±…ìž„ì„ ê°–ëŠ” ì¸í„°íŽ˜ì´ìŠ¤ìž…ë‹ˆë‹¤.
+    /// êµì²´ ì‹œ ê¸°ì¡´ ì¹´ë“œ ë° UI ì œê±°, ìƒˆë¡œìš´ ì¹´ë“œì™€ UI ë“±ë¡ ì²˜ë¦¬ë¥¼ ìˆ˜í–‰í•©ë‹ˆë‹¤.
     /// </summary>
     public interface ICardReplacementHandler
     {
         /// <summary>
-        /// ÁöÁ¤µÈ ÀüÅõ ½½·Ô¿¡¼­ ±âÁ¸ Ä«µå¸¦ Á¦°ÅÇÏ°í »õ·Î¿î Ä«µå¿Í UI·Î ±³Ã¼ÇÕ´Ï´Ù.
-        /// UI »óÀÇ À§Ä¡³ª µå·¡±× °¡´ÉÇÑ »óÅÂ, ·¹Áö½ºÆ®¸® ¿¬µ¿ µîÀ» ÇÔ²² Ã³¸®ÇØ¾ß ÇÕ´Ï´Ù.
+        /// ì§€ì •ëœ ì „íˆ¬ ìŠ¬ë¡¯ì—ì„œ ê¸°ì¡´ ì¹´ë“œë¥¼ ì œê±°í•˜ê³  ìƒˆë¡œìš´ ì¹´ë“œì™€ UIë¡œ êµì²´í•©ë‹ˆë‹¤.
+        /// UI ìƒì˜ ìœ„ì¹˜ë‚˜ ë“œëž˜ê·¸ ê°€ëŠ¥í•œ ìƒíƒœ, ë ˆì§€ìŠ¤íŠ¸ë¦¬ ì—°ë™ ë“±ì„ í•¨ê»˜ ì²˜ë¦¬í•´ì•¼ í•©ë‹ˆë‹¤.
         /// </summary>
         /// <param name="slot">
-        /// ±³Ã¼ ´ë»óÀÌ µÇ´Â ÀüÅõ ½½·Ô. ±âÁ¸ Ä«µå°¡ ÀÌ ½½·Ô¿¡ ¹èÄ¡µÇ¾î ÀÖ¾î¾ß ÇÕ´Ï´Ù.
+        /// êµì²´ ëŒ€ìƒì´ ë˜ëŠ” ì „íˆ¬ ìŠ¬ë¡¯. ê¸°ì¡´ ì¹´ë“œê°€ ì´ ìŠ¬ë¡¯ì— ë°°ì¹˜ë˜ì–´ ìžˆì–´ì•¼ í•©ë‹ˆë‹¤.
         /// </param>
         /// <param name="newCard">
-        /// »õ·Î µî·ÏÇÒ ½ºÅ³ Ä«µå ÀÎ½ºÅÏ½ºÀÔ´Ï´Ù. <see cref="ISkillCard"/> ÂüÁ¶.
+        /// ìƒˆë¡œ ë“±ë¡í•  ìŠ¤í‚¬ ì¹´ë“œ ì¸ìŠ¤í„´ìŠ¤ìž…ë‹ˆë‹¤. <see cref="ISkillCard"/> ì°¸ì¡°.
         /// </param>
         /// <param name="newCardUI">
-        /// »õ Ä«µå¿¡ ¿¬°áÇÒ UI ¿ÀºêÁ§Æ®ÀÔ´Ï´Ù. <see cref="SkillCardUI"/> ÂüÁ¶.
+        /// ìƒˆ ì¹´ë“œì— ì—°ê²°í•  UI ì˜¤ë¸Œì íŠ¸ìž…ë‹ˆë‹¤. <see cref="SkillCardUI"/> ì°¸ì¡°.
         /// </param>
         void ReplaceSlotCard(ICombatCardSlot slot, ISkillCard newCard, SkillCardUI newCardUI);
     }

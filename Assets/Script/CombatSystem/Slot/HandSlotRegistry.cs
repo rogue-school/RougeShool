@@ -7,22 +7,22 @@ using Game.SkillCardSystem.Slot;
 namespace Game.CombatSystem.Slot
 {
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î ¹× ÀûÀÇ ÇÚµå ½½·ÔÀ» µî·ÏÇÏ°í °ü¸®ÇÏ´Â ·¹Áö½ºÆ®¸® Å¬·¡½ºÀÔ´Ï´Ù.
+    /// í”Œë ˆì´ì–´ ë° ì ì˜ í•¸ë“œ ìŠ¬ë¡¯ì„ ë“±ë¡í•˜ê³  ê´€ë¦¬í•˜ëŠ” ë ˆì§€ìŠ¤íŠ¸ë¦¬ í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
     /// </summary>
     public class HandSlotRegistry : MonoBehaviour, IHandSlotRegistry
     {
-        #region ÇÊµå
+        #region í•„ë“œ
 
         private List<IHandCardSlot> handSlots = new();
 
         #endregion
 
-        #region ½½·Ô µî·Ï
+        #region ìŠ¬ë¡¯ ë“±ë¡
 
         /// <summary>
-        /// ÇÚµå ½½·ÔµéÀ» µî·ÏÇÕ´Ï´Ù.
+        /// í•¸ë“œ ìŠ¬ë¡¯ë“¤ì„ ë“±ë¡í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="slots">µî·ÏÇÒ ÇÚµå ½½·Ô ¸ñ·Ï</param>
+        /// <param name="slots">ë“±ë¡í•  í•¸ë“œ ìŠ¬ë¡¯ ëª©ë¡</param>
         public void RegisterHandSlots(IEnumerable<IHandCardSlot> slots)
         {
             handSlots = slots.ToList();
@@ -30,20 +30,20 @@ namespace Game.CombatSystem.Slot
 
         #endregion
 
-        #region ½½·Ô Á¶È¸
+        #region ìŠ¬ë¡¯ ì¡°íšŒ
 
         /// <summary>
-        /// ½½·Ô À§Ä¡¸¦ ±âÁØÀ¸·Î ÇÚµå ½½·ÔÀ» ¹İÈ¯ÇÕ´Ï´Ù.
+        /// ìŠ¬ë¡¯ ìœ„ì¹˜ë¥¼ ê¸°ì¤€ìœ¼ë¡œ í•¸ë“œ ìŠ¬ë¡¯ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="position">Á¶È¸ÇÒ ½½·Ô À§Ä¡</param>
-        /// <returns>ÇØ´ç À§Ä¡ÀÇ ÇÚµå ½½·Ô ¶Ç´Â null</returns>
+        /// <param name="position">ì¡°íšŒí•  ìŠ¬ë¡¯ ìœ„ì¹˜</param>
+        /// <returns>í•´ë‹¹ ìœ„ì¹˜ì˜ í•¸ë“œ ìŠ¬ë¡¯ ë˜ëŠ” null</returns>
         public IHandCardSlot GetHandSlot(SkillCardSlotPosition position)
         {
             return handSlots.FirstOrDefault(slot => slot.GetSlotPosition() == position);
         }
 
         /// <summary>
-        /// ¸ğµç ÇÚµå ½½·ÔÀ» ¹İÈ¯ÇÕ´Ï´Ù.
+        /// ëª¨ë“  í•¸ë“œ ìŠ¬ë¡¯ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         public IEnumerable<IHandCardSlot> GetAllHandSlots()
         {
@@ -51,9 +51,9 @@ namespace Game.CombatSystem.Slot
         }
 
         /// <summary>
-        /// ½½·Ô ¼ÒÀ¯ÀÚ ±âÁØÀ¸·Î ÇÚµå ½½·ÔÀ» ÇÊÅÍ¸µÇÏ¿© ¹İÈ¯ÇÕ´Ï´Ù.
+        /// ìŠ¬ë¡¯ ì†Œìœ ì ê¸°ì¤€ìœ¼ë¡œ í•¸ë“œ ìŠ¬ë¡¯ì„ í•„í„°ë§í•˜ì—¬ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="owner">½½·Ô ¼ÒÀ¯ÀÚ (PLAYER ¶Ç´Â ENEMY)</param>
+        /// <param name="owner">ìŠ¬ë¡¯ ì†Œìœ ì (PLAYER ë˜ëŠ” ENEMY)</param>
         public IEnumerable<IHandCardSlot> GetHandSlots(SlotOwner owner)
         {
             return handSlots.Where(slot => slot.GetOwner() == owner);

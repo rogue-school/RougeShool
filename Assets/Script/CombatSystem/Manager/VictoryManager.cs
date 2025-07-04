@@ -4,34 +4,34 @@ using Game.IManager;
 namespace Game.CombatSystem.Manager
 {
     /// <summary>
-    /// ÀüÅõ ½Â¸® ½Ã UI¸¦ Ç¥½ÃÇÏ°í °ü·Ã Ã³¸®¸¦ ¼öÇàÇÏ´Â ¸Å´ÏÀúÀÔ´Ï´Ù.
+    /// ì „íˆ¬ ìŠ¹ë¦¬ ì‹œ UIë¥¼ í‘œì‹œí•˜ê³  ê´€ë ¨ ì²˜ë¦¬ë¥¼ ìˆ˜í–‰í•˜ëŠ” ë§¤ë‹ˆì €ì…ë‹ˆë‹¤.
     /// </summary>
     public class VictoryManager : MonoBehaviour, IVictoryManager
     {
-        #region ÀÎ½ºÆåÅÍ ÇÊµå
+        #region ì¸ìŠ¤í™í„° í•„ë“œ
 
         [SerializeField] private GameObject victoryUI;
 
         #endregion
 
-        #region UI Ã³¸®
+        #region UI ì²˜ë¦¬
 
         /// <summary>
-        /// ½Â¸® UI¸¦ È­¸é¿¡ Ç¥½ÃÇÕ´Ï´Ù.
+        /// ìŠ¹ë¦¬ UIë¥¼ í™”ë©´ì— í‘œì‹œí•©ë‹ˆë‹¤.
         /// </summary>
         public void ShowVictoryUI()
         {
-            Debug.Log("[VictoryManager] ÀüÅõ ½Â¸® UI È£ÃâµÊ");
+            Debug.Log("[VictoryManager] ì „íˆ¬ ìŠ¹ë¦¬ UI í˜¸ì¶œë¨");
             if (victoryUI != null)
                 victoryUI.SetActive(true);
         }
 
         /// <summary>
-        /// ½Â¸® ½Ã Ã³¸® ·ÎÁ÷À» ½ÇÇàÇÕ´Ï´Ù.
+        /// ìŠ¹ë¦¬ ì‹œ ì²˜ë¦¬ ë¡œì§ì„ ì‹¤í–‰í•©ë‹ˆë‹¤.
         /// </summary>
         public void ProcessVictory()
         {
-            Debug.Log("[VictoryManager] ½Â¸® Ã³¸® ½ÃÀÛ");
+            Debug.Log("[VictoryManager] ìŠ¹ë¦¬ ì²˜ë¦¬ ì‹œì‘");
             ShowVictoryUI();
         }
 

@@ -8,29 +8,29 @@ using Game.SkillCardSystem.Runtime;
 namespace Game.SkillCardSystem.Factory
 {
     /// <summary>
-    /// ½ºÅ³ Ä«µå ·±Å¸ÀÓ ÀÎ½ºÅÏ½º¸¦ »ı¼ºÇÏ´Â ÆÑÅä¸® Å¬·¡½ºÀÔ´Ï´Ù.
-    /// <para>SRP: Ä«µå ÀÎ½ºÅÏ½º »ı¼º¸¸ ´ã´ç</para>
-    /// <para>DIP: SkillCardData¿Í Effect µ¥ÀÌÅÍ¿¡ ÀÇÁ¸</para>
+    /// ìŠ¤í‚¬ ì¹´ë“œ ëŸ°íƒ€ì„ ì¸ìŠ¤í„´ìŠ¤ë¥¼ ìƒì„±í•˜ëŠ” íŒ©í† ë¦¬ í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
+    /// <para>SRP: ì¹´ë“œ ì¸ìŠ¤í„´ìŠ¤ ìƒì„±ë§Œ ë‹´ë‹¹</para>
+    /// <para>DIP: SkillCardDataì™€ Effect ë°ì´í„°ì— ì˜ì¡´</para>
     /// </summary>
     public class SkillCardFactory : ISkillCardFactory
     {
         /// <summary>
-        /// Àû Ä³¸¯ÅÍ¿ë ½ºÅ³ Ä«µå ·±Å¸ÀÓ ÀÎ½ºÅÏ½º¸¦ »ı¼ºÇÕ´Ï´Ù.
+        /// ì  ìºë¦­í„°ìš© ìŠ¤í‚¬ ì¹´ë“œ ëŸ°íƒ€ì„ ì¸ìŠ¤í„´ìŠ¤ë¥¼ ìƒì„±í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="data">Ä«µå µ¥ÀÌÅÍ</param>
-        /// <param name="effects">Ä«µå È¿°ú ¸®½ºÆ®</param>
-        /// <returns>»ı¼ºµÈ Àû Ä«µå ·±Å¸ÀÓ ÀÎ½ºÅÏ½º</returns>
+        /// <param name="data">ì¹´ë“œ ë°ì´í„°</param>
+        /// <param name="effects">ì¹´ë“œ íš¨ê³¼ ë¦¬ìŠ¤íŠ¸</param>
+        /// <returns>ìƒì„±ëœ ì  ì¹´ë“œ ëŸ°íƒ€ì„ ì¸ìŠ¤í„´ìŠ¤</returns>
         public ISkillCard CreateEnemyCard(SkillCardData data, List<SkillCardEffectSO> effects)
         {
             if (data == null)
             {
-                Debug.LogError("[SkillCardFactory] Enemy SkillCardData°¡ nullÀÔ´Ï´Ù.");
+                Debug.LogError("[SkillCardFactory] Enemy SkillCardDataê°€ nullì…ë‹ˆë‹¤.");
                 return null;
             }
 
             if (effects == null)
             {
-                Debug.LogWarning("[SkillCardFactory] EnemyCard È¿°ú ¸®½ºÆ®°¡ nullÀÔ´Ï´Ù. ºó ¸®½ºÆ®·Î ´ëÃ¼ÇÕ´Ï´Ù.");
+                Debug.LogWarning("[SkillCardFactory] EnemyCard íš¨ê³¼ ë¦¬ìŠ¤íŠ¸ê°€ nullì…ë‹ˆë‹¤. ë¹ˆ ë¦¬ìŠ¤íŠ¸ë¡œ ëŒ€ì²´í•©ë‹ˆë‹¤.");
                 effects = new List<SkillCardEffectSO>();
             }
 
@@ -38,22 +38,22 @@ namespace Game.SkillCardSystem.Factory
         }
 
         /// <summary>
-        /// ÇÃ·¹ÀÌ¾î¿ë ½ºÅ³ Ä«µå ·±Å¸ÀÓ ÀÎ½ºÅÏ½º¸¦ »ı¼ºÇÕ´Ï´Ù.
+        /// í”Œë ˆì´ì–´ìš© ìŠ¤í‚¬ ì¹´ë“œ ëŸ°íƒ€ì„ ì¸ìŠ¤í„´ìŠ¤ë¥¼ ìƒì„±í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="data">Ä«µå µ¥ÀÌÅÍ</param>
-        /// <param name="effects">Ä«µå È¿°ú ¸®½ºÆ®</param>
-        /// <returns>»ı¼ºµÈ ÇÃ·¹ÀÌ¾î Ä«µå ·±Å¸ÀÓ ÀÎ½ºÅÏ½º</returns>
+        /// <param name="data">ì¹´ë“œ ë°ì´í„°</param>
+        /// <param name="effects">ì¹´ë“œ íš¨ê³¼ ë¦¬ìŠ¤íŠ¸</param>
+        /// <returns>ìƒì„±ëœ í”Œë ˆì´ì–´ ì¹´ë“œ ëŸ°íƒ€ì„ ì¸ìŠ¤í„´ìŠ¤</returns>
         public ISkillCard CreatePlayerCard(SkillCardData data, List<SkillCardEffectSO> effects)
         {
             if (data == null)
             {
-                Debug.LogError("[SkillCardFactory] Player SkillCardData°¡ nullÀÔ´Ï´Ù.");
+                Debug.LogError("[SkillCardFactory] Player SkillCardDataê°€ nullì…ë‹ˆë‹¤.");
                 return null;
             }
 
             if (effects == null)
             {
-                Debug.LogWarning("[SkillCardFactory] PlayerCard È¿°ú ¸®½ºÆ®°¡ nullÀÔ´Ï´Ù. ºó ¸®½ºÆ®·Î ´ëÃ¼ÇÕ´Ï´Ù.");
+                Debug.LogWarning("[SkillCardFactory] PlayerCard íš¨ê³¼ ë¦¬ìŠ¤íŠ¸ê°€ nullì…ë‹ˆë‹¤. ë¹ˆ ë¦¬ìŠ¤íŠ¸ë¡œ ëŒ€ì²´í•©ë‹ˆë‹¤.");
                 effects = new List<SkillCardEffectSO>();
             }
 
@@ -61,10 +61,10 @@ namespace Game.SkillCardSystem.Factory
         }
 
         /// <summary>
-        /// È¿°ú ¸®½ºÆ®¸¦ º¹Á¦ÇÕ´Ï´Ù. ÇöÀç´Â ¾èÀº º¹»çÀÌ¸ç, ÇÊ¿ä ½Ã ±íÀº º¹»ç·Î È®Àå °¡´ÉÇÕ´Ï´Ù.
+        /// íš¨ê³¼ ë¦¬ìŠ¤íŠ¸ë¥¼ ë³µì œí•©ë‹ˆë‹¤. í˜„ì¬ëŠ” ì–•ì€ ë³µì‚¬ì´ë©°, í•„ìš” ì‹œ ê¹Šì€ ë³µì‚¬ë¡œ í™•ì¥ ê°€ëŠ¥í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="original">¿øº» È¿°ú ¸®½ºÆ®</param>
-        /// <returns>º¹Á¦µÈ È¿°ú ¸®½ºÆ®</returns>
+        /// <param name="original">ì›ë³¸ íš¨ê³¼ ë¦¬ìŠ¤íŠ¸</param>
+        /// <returns>ë³µì œëœ íš¨ê³¼ ë¦¬ìŠ¤íŠ¸</returns>
         private List<SkillCardEffectSO> CloneEffects(List<SkillCardEffectSO> original)
         {
             return new List<SkillCardEffectSO>(original);

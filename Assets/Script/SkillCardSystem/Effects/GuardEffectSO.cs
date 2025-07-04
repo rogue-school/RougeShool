@@ -7,38 +7,38 @@ using Game.SkillCardSystem.Effects;
 namespace Game.SkillCardSystem.Effect
 {
     /// <summary>
-    /// °¡µå È¿°ú¸¦ Àû¿ëÇÏ´Â ½ºÅ³ Ä«µå È¿°ú ScriptableObjectÀÔ´Ï´Ù.
-    /// ´ë»ó¿¡°Ô °¡µå ¼öÄ¡¸¦ ºÎ¿©ÇÏ°Å³ª GuardEffectCommand¸¦ »ı¼ºÇÕ´Ï´Ù.
+    /// ê°€ë“œ íš¨ê³¼ë¥¼ ì ìš©í•˜ëŠ” ìŠ¤í‚¬ ì¹´ë“œ íš¨ê³¼ ScriptableObjectì…ë‹ˆë‹¤.
+    /// ëŒ€ìƒì—ê²Œ ê°€ë“œ ìˆ˜ì¹˜ë¥¼ ë¶€ì—¬í•˜ê±°ë‚˜ GuardEffectCommandë¥¼ ìƒì„±í•©ë‹ˆë‹¤.
     /// </summary>
     [CreateAssetMenu(fileName = "GuardEffect", menuName = "SkillEffects/GuardEffect")]
     public class GuardEffectSO : SkillCardEffectSO
     {
         /// <summary>
-        /// ÀÌÆåÆ® ½ÇÇà Ä¿¸Çµå¸¦ »ı¼ºÇÕ´Ï´Ù. 
-        /// ´Ü¼øÇÑ °¡µå »óÅÂ ºÎ¿© Ä¿¸Çµå¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
+        /// ì´í™íŠ¸ ì‹¤í–‰ ì»¤ë§¨ë“œë¥¼ ìƒì„±í•©ë‹ˆë‹¤. 
+        /// ë‹¨ìˆœí•œ ê°€ë“œ ìƒíƒœ ë¶€ì—¬ ì»¤ë§¨ë“œë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="power">Ä¿¸Çµå¿¡ »ç¿ëµÉ ¼öÄ¡ (¹«½ÃµÊ)</param>
+        /// <param name="power">ì»¤ë§¨ë“œì— ì‚¬ìš©ë  ìˆ˜ì¹˜ (ë¬´ì‹œë¨)</param>
         public override ICardEffectCommand CreateEffectCommand(int power)
         {
             return new GuardEffectCommand();
         }
 
         /// <summary>
-        /// È¿°ú¸¦ Áï½Ã Àû¿ëÇÕ´Ï´Ù. ´ë»ó¿¡°Ô °¡µå ¼öÄ¡¸¦ ºÎ¿©ÇÕ´Ï´Ù.
+        /// íš¨ê³¼ë¥¼ ì¦‰ì‹œ ì ìš©í•©ë‹ˆë‹¤. ëŒ€ìƒì—ê²Œ ê°€ë“œ ìˆ˜ì¹˜ë¥¼ ë¶€ì—¬í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="context">Ä«µå ½ÇÇà ÄÁÅØ½ºÆ®</param>
-        /// <param name="value">°¡µå ¼öÄ¡</param>
-        /// <param name="turnManager">ÀüÅõ ÅÏ ¸Å´ÏÀú (»ç¿ëµÇÁö ¾ÊÀ½)</param>
+        /// <param name="context">ì¹´ë“œ ì‹¤í–‰ ì»¨í…ìŠ¤íŠ¸</param>
+        /// <param name="value">ê°€ë“œ ìˆ˜ì¹˜</param>
+        /// <param name="turnManager">ì „íˆ¬ í„´ ë§¤ë‹ˆì € (ì‚¬ìš©ë˜ì§€ ì•ŠìŒ)</param>
         public override void ApplyEffect(ICardExecutionContext context, int value, ICombatTurnManager turnManager = null)
         {
             if (context?.Target == null)
             {
-                Debug.LogWarning("[GuardEffectSO] À¯È¿ÇÏÁö ¾ÊÀº ´ë»óÀÔ´Ï´Ù.");
+                Debug.LogWarning("[GuardEffectSO] ìœ íš¨í•˜ì§€ ì•Šì€ ëŒ€ìƒì…ë‹ˆë‹¤.");
                 return;
             }
 
             context.Target.GainGuard(value);
-            Debug.Log($"[GuardEffectSO] {context.Target.GetCharacterName()}¿¡°Ô °¡µå {value} Àû¿ë");
+            Debug.Log($"[GuardEffectSO] {context.Target.GetCharacterName()}ì—ê²Œ ê°€ë“œ {value} ì ìš©");
         }
     }
 }

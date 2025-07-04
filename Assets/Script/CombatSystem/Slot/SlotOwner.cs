@@ -1,17 +1,17 @@
 namespace Game.CombatSystem.Slot
 {
     /// <summary>
-    /// ½½·ÔÀÇ ¼ÒÀ¯ÀÚ¸¦ ³ªÅ¸³À´Ï´Ù.
+    /// ìŠ¬ë¡¯ì˜ ì†Œìœ ìžë¥¼ ë‚˜íƒ€ëƒ…ë‹ˆë‹¤.
     /// </summary>
     public enum SlotOwner
     {
         /// <summary>
-        /// ÇÃ·¹ÀÌ¾î ¼ÒÀ¯
+        /// í”Œë ˆì´ì–´ ì†Œìœ 
         /// </summary>
         PLAYER,
 
         /// <summary>
-        /// Àû ¼ÒÀ¯
+        /// ì  ì†Œìœ 
         /// </summary>
         ENEMY
     }

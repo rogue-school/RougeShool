@@ -3,21 +3,21 @@ using UnityEngine;
 namespace Game.CombatSystem.Slot
 {
     /// <summary>
-    /// ÀüÅõ ½½·ÔÀÇ À§Ä¡ Á¤º¸¸¦ º¸°üÇÏ´Â ÄÄÆ÷³ÍÆ®ÀÔ´Ï´Ù.
-    /// ÀüÅõ ½ÇÇà À§Ä¡(¼±°ø/ÈÄ°ø)¿Í ½ÇÁ¦ ÇÊµå À§Ä¡(ÁÂ/¿ì)¸¦ ¼³Á¤ÇÕ´Ï´Ù.
+    /// ì „íˆ¬ ìŠ¬ë¡¯ì˜ ìœ„ì¹˜ ì •ë³´ë¥¼ ë³´ê´€í•˜ëŠ” ì»´í¬ë„ŒíŠ¸ì…ë‹ˆë‹¤.
+    /// ì „íˆ¬ ì‹¤í–‰ ìœ„ì¹˜(ì„ ê³µ/í›„ê³µ)ì™€ ì‹¤ì œ í•„ë“œ ìœ„ì¹˜(ì¢Œ/ìš°)ë¥¼ ì„¤ì •í•©ë‹ˆë‹¤.
     /// </summary>
     public class CombatSlotPositionHolder : MonoBehaviour
     {
-        #region ½½·Ô À§Ä¡ ÇÊµå
+        #region ìŠ¬ë¡¯ ìœ„ì¹˜ í•„ë“œ
 
         /// <summary>
-        /// ÀüÅõ ½ÇÇà ½½·Ô À§Ä¡ (¼±°ø/ÈÄ°ø)
+        /// ì „íˆ¬ ì‹¤í–‰ ìŠ¬ë¡¯ ìœ„ì¹˜ (ì„ ê³µ/í›„ê³µ)
         /// </summary>
         [field: SerializeField]
         public CombatSlotPosition SlotPosition { get; private set; }
 
         /// <summary>
-        /// ½ÇÁ¦ ÇÊµå»ó À§Ä¡ (¿ŞÂÊ/¿À¸¥ÂÊ)
+        /// ì‹¤ì œ í•„ë“œìƒ ìœ„ì¹˜ (ì™¼ìª½/ì˜¤ë¥¸ìª½)
         /// </summary>
         [field: SerializeField]
         public CombatFieldSlotPosition FieldSlotPosition { get; private set; }

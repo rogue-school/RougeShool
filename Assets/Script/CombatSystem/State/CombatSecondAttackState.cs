@@ -28,18 +28,18 @@ namespace Game.CombatSystem.State
 
         public void EnterState()
         {
-            Debug.Log("[CombatSecondAttackState] »óÅÂ ÁøÀÔ");
+            Debug.Log("[CombatSecondAttackState] ìƒíƒœ ì§„ì…");
 
             flowCoordinator.DisablePlayerInput();
 
             if (turnContext.WasEnemyDefeated || flowCoordinator.IsPlayerDead())
             {
-                Debug.Log("[CombatSecondAttackState] Àû ¶Ç´Â ÇÃ·¹ÀÌ¾î°¡ Á×¾úÀ¸¹Ç·Î °ø°İ »ı·«");
+                Debug.Log("[CombatSecondAttackState] ì  ë˜ëŠ” í”Œë ˆì´ì–´ê°€ ì£½ì—ˆìœ¼ë¯€ë¡œ ê³µê²© ìƒëµ");
 
                 var next = turnManager.GetStateFactory().CreateResultState();
                 turnManager.RequestStateChange(next);
 
-                // Áï½Ã »óÅÂ ÀüÀÌ¸¦ ½ÇÇà
+                // ì¦‰ì‹œ ìƒíƒœ ì „ì´ë¥¼ ì‹¤í–‰
                 ((CombatTurnManager)turnManager).ApplyPendingState();
                 return;
             }
@@ -59,7 +59,7 @@ namespace Game.CombatSystem.State
 
         public void ExitState()
         {
-            Debug.Log("[CombatSecondAttackState] »óÅÂ Á¾·á");
+            Debug.Log("[CombatSecondAttackState] ìƒíƒœ ì¢…ë£Œ");
         }
     }
 }

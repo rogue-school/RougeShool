@@ -5,50 +5,50 @@ using Game.SkillCardSystem.Slot;
 namespace Game.IManager
 {
     /// <summary>
-    /// �÷��̾� ĳ���� �� �ڵ� ������ ����ϴ� �Ŵ��� �������̽��Դϴ�.
-    /// �÷��̾� �ʱ�ȭ, ī�� ����, �ڵ� ���� ���� ����� �����մϴ�.
+    /// 플레이어 캐릭터 및 핸드 관리를 담당하는 매니저 인터페이스입니다.
+    /// 플레이어 초기화, 카드 접근, 핸드 접근 등의 기능을 제공합니다.
     /// </summary>
     public interface IPlayerManager
     {
         /// <summary>
-        /// �÷��̾� ĳ���͸� �����մϴ�.
+        /// 플레이어 캐릭터를 설정합니다.
         /// </summary>
-        /// <param name="player">�÷��̾� ĳ���� �ν��Ͻ�</param>
+        /// <param name="player">플레이어 캐릭터 인스턴스</param>
         void SetPlayer(IPlayerCharacter player);
 
         /// <summary>
-        /// ���� �÷��̾� ĳ���͸� ��ȯ�մϴ�.
+        /// 현재 플레이어 캐릭터를 반환합니다.
         /// </summary>
-        /// <returns>�÷��̾� ĳ����</returns>
+        /// <returns>플레이어 캐릭터</returns>
         IPlayerCharacter GetPlayer();
 
         /// <summary>
-        /// �÷��̾��� �ڵ� �Ŵ����� ��ȯ�մϴ�.
+        /// 플레이어의 핸드 매니저를 반환합니다.
         /// </summary>
-        /// <returns>�ڵ� �Ŵ��� �ν��Ͻ�</returns>
+        /// <returns>핸드 매니저 인스턴스</returns>
         IPlayerHandManager GetPlayerHandManager();
 
         /// <summary>
-        /// �÷��̾� ĳ���͸� �����ϰ� �ý��ۿ� ����մϴ�.
+        /// 플레이어 캐릭터를 생성하고 시스템에 등록합니다.
         /// </summary>
         void CreateAndRegisterPlayer();
 
         /// <summary>
-        /// ������ ���� ��ġ�� �ִ� ī�带 ��ȯ�մϴ�.
+        /// 지정된 슬롯 위치에 있는 카드를 반환합니다.
         /// </summary>
-        /// <param name="pos">ī�� ���� ��ġ</param>
-        /// <returns>�ش� ��ġ�� ī��</returns>
+        /// <param name="pos">카드 슬롯 위치</param>
+        /// <returns>해당 위치의 카드</returns>
         ISkillCard GetCardInSlot(SkillCardSlotPosition pos);
 
         /// <summary>
-        /// ������ ���� ��ġ�� �ִ� ī�� UI�� ��ȯ�մϴ�.
+        /// 지정된 슬롯 위치에 있는 카드 UI를 반환합니다.
         /// </summary>
-        /// <param name="pos">ī�� ���� ��ġ</param>
-        /// <returns>�ش� ��ġ�� ī�� UI</returns>
+        /// <param name="pos">카드 슬롯 위치</param>
+        /// <returns>해당 위치의 카드 UI</returns>
         ISkillCardUI GetCardUIInSlot(SkillCardSlotPosition pos);
 
         /// <summary>
-        /// �÷��̾� ���� �� ���¸� �ʱ�ȭ�մϴ�.
+        /// 플레이어 정보 및 상태를 초기화합니다.
         /// </summary>
         void Reset();
     }

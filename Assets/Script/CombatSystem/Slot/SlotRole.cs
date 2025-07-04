@@ -1,23 +1,23 @@
 namespace Game.CombatSystem.Slot
 {
     /// <summary>
-    /// ½½·ÔÀÇ ¿ëµµ¸¦ Á¤ÀÇÇÕ´Ï´Ù.
-    /// °¢ ½½·ÔÀº ÀüÅõ¿¡¼­ÀÇ ¿ªÇÒ ¶Ç´Â UI¿ëµµ·Î ±¸ºÐµË´Ï´Ù.
+    /// ìŠ¬ë¡¯ì˜ ìš©ë„ë¥¼ ì •ì˜í•©ë‹ˆë‹¤.
+    /// ê° ìŠ¬ë¡¯ì€ ì „íˆ¬ì—ì„œì˜ ì—­í•  ë˜ëŠ” UIìš©ë„ë¡œ êµ¬ë¶„ë©ë‹ˆë‹¤.
     /// </summary>
     public enum SlotRole
     {
         /// <summary>
-        /// Ä³¸¯ÅÍ°¡ ¹èÄ¡µÇ´Â ½½·ÔÀÔ´Ï´Ù.
+        /// ìºë¦­í„°ê°€ ë°°ì¹˜ë˜ëŠ” ìŠ¬ë¡¯ìž…ë‹ˆë‹¤.
         /// </summary>
         CharacterSpawn,
 
         /// <summary>
-        /// ÀüÅõ Áß Ä«µå°¡ µå·ÓµÇ¾î ½ÇÇàµÇ´Â ½½·ÔÀÔ´Ï´Ù.
+        /// ì „íˆ¬ ì¤‘ ì¹´ë“œê°€ ë“œë¡­ë˜ì–´ ì‹¤í–‰ë˜ëŠ” ìŠ¬ë¡¯ìž…ë‹ˆë‹¤.
         /// </summary>
         CardDrop,
 
         /// <summary>
-        /// UI Àü¿ë ½½·ÔÀ¸·Î, Ä«µå µå·¡±×³ª ½ÇÇà°ú´Â ¹«°üÇÕ´Ï´Ù.
+        /// UI ì „ìš© ìŠ¬ë¡¯ìœ¼ë¡œ, ì¹´ë“œ ë“œëž˜ê·¸ë‚˜ ì‹¤í–‰ê³¼ëŠ” ë¬´ê´€í•©ë‹ˆë‹¤.
         /// </summary>
         UIOnly
     }

@@ -3,23 +3,23 @@ using UnityEngine;
 namespace Game.SkillCardSystem.Factory
 {
     /// <summary>
-    /// Ä³¸¯ÅÍ°¡ º¸À¯ÇÑ ½ºÅ³ Ä«µå ¹× ÇØ´ç Ä«µåÀÇ ±âº» µ¥¹ÌÁö¸¦ Á¤ÀÇÇÏ´Â ±¸Á¶ÀÔ´Ï´Ù.
-    /// Ä«µå °´Ã¼´Â PlayerSkillCard ¶Ç´Â EnemySkillCard ScriptableObject¸¦ ÂüÁ¶ÇÕ´Ï´Ù.
+    /// ìºë¦­í„°ê°€ ë³´ìœ í•œ ìŠ¤í‚¬ ì¹´ë“œ ë° í•´ë‹¹ ì¹´ë“œì˜ ê¸°ë³¸ ë°ë¯¸ì§€ë¥¼ ì •ì˜í•˜ëŠ” êµ¬ì¡°ì…ë‹ˆë‹¤.
+    /// ì¹´ë“œ ê°ì²´ëŠ” PlayerSkillCard ë˜ëŠ” EnemySkillCard ScriptableObjectë¥¼ ì°¸ì¡°í•©ë‹ˆë‹¤.
     /// </summary>
     [System.Serializable]
     public class SkillCardEntry
     {
         /// <summary>
-        /// ÂüÁ¶ÇÒ Ä«µå ScriptableObjectÀÔ´Ï´Ù.
-        /// PlayerSkillCard ¶Ç´Â EnemySkillCard Áß ÇÏ³ªÀÔ´Ï´Ù.
+        /// ì°¸ì¡°í•  ì¹´ë“œ ScriptableObjectì…ë‹ˆë‹¤.
+        /// PlayerSkillCard ë˜ëŠ” EnemySkillCard ì¤‘ í•˜ë‚˜ì…ë‹ˆë‹¤.
         /// </summary>
-        [Tooltip("PlayerSkillCard ¶Ç´Â EnemySkillCard¸¦ ÂüÁ¶")]
+        [Tooltip("PlayerSkillCard ë˜ëŠ” EnemySkillCardë¥¼ ì°¸ì¡°")]
         public ScriptableObject card;
 
         /// <summary>
-        /// ÀÌ Ä«µå°¡ ±âº»ÀûÀ¸·Î °¡Áú µ¥¹ÌÁö ¼öÄ¡ÀÔ´Ï´Ù.
+        /// ì´ ì¹´ë“œê°€ ê¸°ë³¸ì ìœ¼ë¡œ ê°€ì§ˆ ë°ë¯¸ì§€ ìˆ˜ì¹˜ì…ë‹ˆë‹¤.
         /// </summary>
-        [Tooltip("Ä«µå ±âº» µ¥¹ÌÁö")]
+        [Tooltip("ì¹´ë“œ ê¸°ë³¸ ë°ë¯¸ì§€")]
         public int damage;
     }
 }

@@ -6,8 +6,8 @@ using Game.SkillCardSystem.Effects;
 namespace Game.SkillCardSystem.Effect
 {
     /// <summary>
-    /// ÃâÇ÷ È¿°ú¸¦ Ä³¸¯ÅÍ¿¡ Àû¿ëÇÏ´Â Ä¿¸Çµå Å¬·¡½ºÀÔ´Ï´Ù.
-    /// ÁöÁ¤µÈ ¼öÄ¡¿Í Áö¼Ó ½Ã°£À¸·Î <see cref="BleedEffect"/>¸¦ »ı¼ºÇÏ¿© Å¸°Ù¿¡ µî·ÏÇÕ´Ï´Ù.
+    /// ì¶œí˜ˆ íš¨ê³¼ë¥¼ ìºë¦­í„°ì— ì ìš©í•˜ëŠ” ì»¤ë§¨ë“œ í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
+    /// ì§€ì •ëœ ìˆ˜ì¹˜ì™€ ì§€ì† ì‹œê°„ìœ¼ë¡œ <see cref="BleedEffect"/>ë¥¼ ìƒì„±í•˜ì—¬ íƒ€ê²Ÿì— ë“±ë¡í•©ë‹ˆë‹¤.
     /// </summary>
     public class BleedEffectCommand : ICardEffectCommand
     {
@@ -15,10 +15,10 @@ namespace Game.SkillCardSystem.Effect
         private readonly int duration;
 
         /// <summary>
-        /// ÃâÇ÷ Ä¿¸Çµå¸¦ ÃÊ±âÈ­ÇÕ´Ï´Ù.
+        /// ì¶œí˜ˆ ì»¤ë§¨ë“œë¥¼ ì´ˆê¸°í™”í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="amount">¸Å ÅÏ ÀÔÈú ÇÇÇØ·®</param>
-        /// <param name="duration">Áö¼Ó ÅÏ ¼ö</param>
+        /// <param name="amount">ë§¤ í„´ ì…í í”¼í•´ëŸ‰</param>
+        /// <param name="duration">ì§€ì† í„´ ìˆ˜</param>
         public BleedEffectCommand(int amount, int duration)
         {
             this.amount = amount;
@@ -26,22 +26,22 @@ namespace Game.SkillCardSystem.Effect
         }
 
         /// <summary>
-        /// ÃâÇ÷ È¿°ú¸¦ ´ë»ó Ä³¸¯ÅÍ¿¡ Àû¿ëÇÕ´Ï´Ù.
+        /// ì¶œí˜ˆ íš¨ê³¼ë¥¼ ëŒ€ìƒ ìºë¦­í„°ì— ì ìš©í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="context">Ä«µå ½ÇÇà ÄÁÅØ½ºÆ® (½ÃÀüÀÚ, ´ë»ó µî Æ÷ÇÔ)</param>
-        /// <param name="turnManager">ÀüÅõ ÅÏ °ü¸®ÀÚ (¿É¼Ç)</param>
+        /// <param name="context">ì¹´ë“œ ì‹¤í–‰ ì»¨í…ìŠ¤íŠ¸ (ì‹œì „ì, ëŒ€ìƒ ë“± í¬í•¨)</param>
+        /// <param name="turnManager">ì „íˆ¬ í„´ ê´€ë¦¬ì (ì˜µì…˜)</param>
         public void Execute(ICardExecutionContext context, ICombatTurnManager turnManager)
         {
             if (context?.Target == null)
             {
-                Debug.LogWarning("[BleedEffectCommand] ´ë»óÀÌ nullÀÌ¹Ç·Î ÃâÇ÷ È¿°ú¸¦ Àû¿ëÇÒ ¼ö ¾ø½À´Ï´Ù.");
+                Debug.LogWarning("[BleedEffectCommand] ëŒ€ìƒì´ nullì´ë¯€ë¡œ ì¶œí˜ˆ íš¨ê³¼ë¥¼ ì ìš©í•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤.");
                 return;
             }
 
             var bleedEffect = new BleedEffect(amount, duration);
             context.Target.RegisterPerTurnEffect(bleedEffect);
 
-            Debug.Log($"[BleedEffectCommand] {context.Target.GetCharacterName()}¿¡°Ô ÃâÇ÷ {amount} Àû¿ë (Áö¼Ó {duration}ÅÏ)");
+            Debug.Log($"[BleedEffectCommand] {context.Target.GetCharacterName()}ì—ê²Œ ì¶œí˜ˆ {amount} ì ìš© (ì§€ì† {duration}í„´)");
         }
     }
 }

@@ -4,16 +4,16 @@ using System.Collections;
 namespace Game.CombatSystem.Interface
 {
     /// <summary>
-    /// ÀüÅõ ½ÃÀÛ Àü ÁØºñ °úÁ¤À» ¼öÇàÇÏ´Â ¼­ºñ½º ÀÎÅÍÆäÀÌ½ºÀÔ´Ï´Ù.
-    /// Ä³¸¯ÅÍ ¹èÄ¡, ½½·Ô ÃÊ±âÈ­, UI ¼³Á¤ µî ¸ðµç ÁØºñ ´Ü°è¸¦ Æ÷ÇÔÇÕ´Ï´Ù.
+    /// ì „íˆ¬ ì‹œìž‘ ì „ ì¤€ë¹„ ê³¼ì •ì„ ìˆ˜í–‰í•˜ëŠ” ì„œë¹„ìŠ¤ ì¸í„°íŽ˜ì´ìŠ¤ìž…ë‹ˆë‹¤.
+    /// ìºë¦­í„° ë°°ì¹˜, ìŠ¬ë¡¯ ì´ˆê¸°í™”, UI ì„¤ì • ë“± ëª¨ë“  ì¤€ë¹„ ë‹¨ê³„ë¥¼ í¬í•¨í•©ë‹ˆë‹¤.
     /// </summary>
     public interface ICombatPreparationService
     {
         /// <summary>
-        /// ÀüÅõ ÁØºñ ÄÚ·çÆ¾À» ½ÇÇàÇÕ´Ï´Ù.
-        /// ¿Ï·áµÇ¸é onComplete ÄÝ¹éÀ» ÅëÇØ ¼º°ø ¿©ºÎ¸¦ ¹ÝÈ¯ÇÕ´Ï´Ù.
+        /// ì „íˆ¬ ì¤€ë¹„ ì½”ë£¨í‹´ì„ ì‹¤í–‰í•©ë‹ˆë‹¤.
+        /// ì™„ë£Œë˜ë©´ onComplete ì½œë°±ì„ í†µí•´ ì„±ê³µ ì—¬ë¶€ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="onComplete">ÀüÅõ ÁØºñ ¿Ï·á ½Ã È£ÃâµÉ ÄÝ¹é (true = ¼º°ø, false = ½ÇÆÐ)</param>
+        /// <param name="onComplete">ì „íˆ¬ ì¤€ë¹„ ì™„ë£Œ ì‹œ í˜¸ì¶œë  ì½œë°± (true = ì„±ê³µ, false = ì‹¤íŒ¨)</param>
         IEnumerator PrepareCombat(Action<bool> onComplete);
     }
 }

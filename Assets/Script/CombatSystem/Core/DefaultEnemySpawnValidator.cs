@@ -5,8 +5,8 @@ using Game.IManager;
 namespace Game.CombatSystem.Core
 {
     /// <summary>
-    /// Àû ½ºÆùÀÌ °¡´ÉÇÑÁö ¿©ºÎ¸¦ ÆÇ´ÜÇÏ´Â ±âº» ±¸ÇöÃ¼ÀÔ´Ï´Ù.
-    /// ÇöÀç ÇÊµå¿¡ ÀûÀÌ ¾ø°Å³ª »ç¸ÁÇÑ °æ¿ì¿¡¸¸ »õ·Î¿î Àû ½ºÆùÀÌ °¡´ÉÇÕ´Ï´Ù.
+    /// ì  ìŠ¤í°ì´ ê°€ëŠ¥í•œì§€ ì—¬ë¶€ë¥¼ íŒë‹¨í•˜ëŠ” ê¸°ë³¸ êµ¬í˜„ì²´ì…ë‹ˆë‹¤.
+    /// í˜„ì¬ í•„ë“œì— ì ì´ ì—†ê±°ë‚˜ ì‚¬ë§í•œ ê²½ìš°ì—ë§Œ ìƒˆë¡œìš´ ì  ìŠ¤í°ì´ ê°€ëŠ¥í•©ë‹ˆë‹¤.
     /// </summary>
     public class DefaultEnemySpawnValidator : IEnemySpawnValidator
     {
@@ -19,9 +19,9 @@ namespace Game.CombatSystem.Core
         #region Constructor
 
         /// <summary>
-        /// ±âº» Àû ½ºÆù °ËÁõÀÚ¸¦ »ı¼ºÇÕ´Ï´Ù.
+        /// ê¸°ë³¸ ì  ìŠ¤í° ê²€ì¦ìë¥¼ ìƒì„±í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="enemyManager">Àû ¸Å´ÏÀú</param>
+        /// <param name="enemyManager">ì  ë§¤ë‹ˆì €</param>
         public DefaultEnemySpawnValidator(IEnemyManager enemyManager)
         {
             this.enemyManager = enemyManager;
@@ -32,9 +32,9 @@ namespace Game.CombatSystem.Core
         #region IEnemySpawnValidator Implementation
 
         /// <summary>
-        /// ÇöÀç ÀûÀÌ ¾ø°Å³ª »ç¸Á »óÅÂÀÌ¸é »õ·Î¿î ÀûÀ» ½ºÆùÇÒ ¼ö ÀÖ½À´Ï´Ù.
+        /// í˜„ì¬ ì ì´ ì—†ê±°ë‚˜ ì‚¬ë§ ìƒíƒœì´ë©´ ìƒˆë¡œìš´ ì ì„ ìŠ¤í°í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
         /// </summary>
-        /// <returns>Àû ½ºÆù °¡´É ¿©ºÎ</returns>
+        /// <returns>ì  ìŠ¤í° ê°€ëŠ¥ ì—¬ë¶€</returns>
         public bool CanSpawnEnemy()
         {
             var enemy = enemyManager?.GetEnemy();

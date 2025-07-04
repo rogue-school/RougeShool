@@ -3,22 +3,22 @@ using Game.CharacterSystem.Interface;
 namespace Game.SkillCardSystem.Interface
 {
     /// <summary>
-    /// Ä³¸¯ÅÍ¿¡°Ô ¸Å ÅÏ¸¶´Ù Àû¿ëµÇ´Â Áö¼Ó È¿°úÀÇ ÀÎÅÍÆäÀÌ½ºÀÔ´Ï´Ù.
-    /// ¿¹: ÃâÇ÷, Áßµ¶, È¸º¹, ¹æ¾î·Â Áõ°¡ µî.
+    /// ìºë¦­í„°ì—ê²Œ ë§¤ í„´ë§ˆë‹¤ ì ìš©ë˜ëŠ” ì§€ì† íš¨ê³¼ì˜ ì¸í„°íŽ˜ì´ìŠ¤ìž…ë‹ˆë‹¤.
+    /// ì˜ˆ: ì¶œí˜ˆ, ì¤‘ë…, íšŒë³µ, ë°©ì–´ë ¥ ì¦ê°€ ë“±.
     /// </summary>
     public interface IPerTurnEffect
     {
         /// <summary>
-        /// ÇØ´ç È¿°ú°¡ ¸¸·áµÇ¾î Á¦°ÅµÇ¾î¾ß ÇÏ´ÂÁö ¿©ºÎ¸¦ ¹ÝÈ¯ÇÕ´Ï´Ù.
-        /// trueÀÎ °æ¿ì, ´ÙÀ½ ÅÏ Ã³¸® ½Ã ¸®½ºÆ®¿¡¼­ Á¦°ÅµË´Ï´Ù.
+        /// í•´ë‹¹ íš¨ê³¼ê°€ ë§Œë£Œë˜ì–´ ì œê±°ë˜ì–´ì•¼ í•˜ëŠ”ì§€ ì—¬ë¶€ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
+        /// trueì¸ ê²½ìš°, ë‹¤ìŒ í„´ ì²˜ë¦¬ ì‹œ ë¦¬ìŠ¤íŠ¸ì—ì„œ ì œê±°ë©ë‹ˆë‹¤.
         /// </summary>
         bool IsExpired { get; }
 
         /// <summary>
-        /// ÅÏ ½ÃÀÛ ½Ã È¿°ú¸¦ Àû¿ëÇÕ´Ï´Ù.
-        /// ¿¹: Ã¼·Â °¨¼Ò, ¹öÇÁ Áö¼Ó ½Ã°£ °¨¼Ò µî.
+        /// í„´ ì‹œìž‘ ì‹œ íš¨ê³¼ë¥¼ ì ìš©í•©ë‹ˆë‹¤.
+        /// ì˜ˆ: ì²´ë ¥ ê°ì†Œ, ë²„í”„ ì§€ì† ì‹œê°„ ê°ì†Œ ë“±.
         /// </summary>
-        /// <param name="target">ÀÌ È¿°ú°¡ Àû¿ëµÉ Ä³¸¯ÅÍ</param>
+        /// <param name="target">ì´ íš¨ê³¼ê°€ ì ìš©ë  ìºë¦­í„°</param>
         void OnTurnStart(ICharacter target);
     }
 }

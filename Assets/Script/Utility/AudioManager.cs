@@ -19,7 +19,7 @@ namespace Game.Audio
             if (clip == null || sfxSource == null) return;
 
             sfxSource.PlayOneShot(clip);
-            Debug.Log($"[AudioManager] »ç¿îµå Àç»ıµÊ: {clip.name}");
+            Debug.Log($"[AudioManager] ì‚¬ìš´ë“œ ì¬ìƒë¨: {clip.name}");
         }
     }
 }

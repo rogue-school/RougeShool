@@ -5,30 +5,30 @@ using System.Collections.Generic;
 namespace Game.SkillCardSystem.Data
 {
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î°¡ »ç¿ëÇÏ´Â ½ºÅ³ Ä«µåÀÇ µ¥ÀÌÅÍ¸¦ º¸°üÇÏ´Â ScriptableObjectÀÔ´Ï´Ù.
-    /// ±âº» Á¤º¸¿Í Ä«µå È¿°ú¸¦ Æ÷ÇÔÇÕ´Ï´Ù.
+    /// í”Œë ˆì´ì–´ê°€ ì‚¬ìš©í•˜ëŠ” ìŠ¤í‚¬ ì¹´ë“œì˜ ë°ì´í„°ë¥¼ ë³´ê´€í•˜ëŠ” ScriptableObjectì…ë‹ˆë‹¤.
+    /// ê¸°ë³¸ ì •ë³´ì™€ ì¹´ë“œ íš¨ê³¼ë¥¼ í¬í•¨í•©ë‹ˆë‹¤.
     /// </summary>
     [CreateAssetMenu(menuName = "Game/SkillCard/Player Skill Card")]
     public class PlayerSkillCard : ScriptableObject
     {
-        [field: Header("Ä«µå µ¥ÀÌÅÍ")]
+        [field: Header("ì¹´ë“œ ë°ì´í„°")]
         /// <summary>
-        /// Ä«µåÀÇ ±âº» Á¤º¸ (ÀÌ¸§, ÄğÅ¸ÀÓ µî)
+        /// ì¹´ë“œì˜ ê¸°ë³¸ ì •ë³´ (ì´ë¦„, ì¿¨íƒ€ì„ ë“±)
         /// </summary>
         [field: SerializeField]
         public SkillCardData CardData { get; private set; }
 
-        [Header("Ä«µå È¿°ú ¸ñ·Ï")]
+        [Header("ì¹´ë“œ íš¨ê³¼ ëª©ë¡")]
         [SerializeField]
         private List<SkillCardEffectSO> effects = new();
 
         /// <summary>
-        /// Ä«µåÀÇ ÄğÅ¸ÀÓÀ» ¹İÈ¯ÇÕ´Ï´Ù.
+        /// ì¹´ë“œì˜ ì¿¨íƒ€ì„ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         public int GetCoolTime() => CardData?.CoolTime ?? 0;
 
         /// <summary>
-        /// Ä«µå ½ÇÇà ½Ã »ç¿ëÇÒ È¿°ú ¸®½ºÆ®¸¦ »ı¼ºÇÕ´Ï´Ù.
+        /// ì¹´ë“œ ì‹¤í–‰ ì‹œ ì‚¬ìš©í•  íš¨ê³¼ ë¦¬ìŠ¤íŠ¸ë¥¼ ìƒì„±í•©ë‹ˆë‹¤.
         /// </summary>
         public List<SkillCardEffectSO> CreateEffects() => effects;
     }

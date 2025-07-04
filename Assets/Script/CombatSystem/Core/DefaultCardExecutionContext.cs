@@ -5,25 +5,25 @@ using Game.CombatSystem.Interface;
 namespace Game.CombatSystem.Context
 {
     /// <summary>
-    /// Ä«µå ½ÇÇà ½Ã »ç¿ëµÇ´Â ±âº» ½ÇÇà ÄÁÅØ½ºÆ®ÀÔ´Ï´Ù.
-    /// Ä«µå, ½ÃÀüÀÚ(Source), ´ë»óÀÚ(Target)¿¡ ´ëÇÑ Á¤º¸¸¦ Æ÷ÇÔÇÕ´Ï´Ù.
+    /// ì¹´ë“œ ì‹¤í–‰ ì‹œ ì‚¬ìš©ë˜ëŠ” ê¸°ë³¸ ì‹¤í–‰ ì»¨í…ìŠ¤íŠ¸ì…ë‹ˆë‹¤.
+    /// ì¹´ë“œ, ì‹œì „ì(Source), ëŒ€ìƒì(Target)ì— ëŒ€í•œ ì •ë³´ë¥¼ í¬í•¨í•©ë‹ˆë‹¤.
     /// </summary>
     public class DefaultCardExecutionContext : ICardExecutionContext
     {
         #region Properties
 
         /// <summary>
-        /// ½ÇÇàµÉ Ä«µå
+        /// ì‹¤í–‰ë  ì¹´ë“œ
         /// </summary>
         public ISkillCard Card { get; }
 
         /// <summary>
-        /// Ä«µåÀÇ ½ÃÀüÀÚ (ÇÃ·¹ÀÌ¾î ¶Ç´Â Àû)
+        /// ì¹´ë“œì˜ ì‹œì „ì (í”Œë ˆì´ì–´ ë˜ëŠ” ì )
         /// </summary>
         public ICharacter Source { get; }
 
         /// <summary>
-        /// Ä«µåÀÇ ´ë»óÀÚ (ÇÃ·¹ÀÌ¾î ¶Ç´Â Àû)
+        /// ì¹´ë“œì˜ ëŒ€ìƒì (í”Œë ˆì´ì–´ ë˜ëŠ” ì )
         /// </summary>
         public ICharacter Target { get; }
 
@@ -32,11 +32,11 @@ namespace Game.CombatSystem.Context
         #region Constructor
 
         /// <summary>
-        /// ±âº» Ä«µå ½ÇÇà ÄÁÅØ½ºÆ® »ı¼ºÀÚ.
+        /// ê¸°ë³¸ ì¹´ë“œ ì‹¤í–‰ ì»¨í…ìŠ¤íŠ¸ ìƒì„±ì.
         /// </summary>
-        /// <param name="card">½ÇÇàÇÒ Ä«µå</param>
-        /// <param name="source">½ÃÀüÀÚ</param>
-        /// <param name="target">´ë»óÀÚ</param>
+        /// <param name="card">ì‹¤í–‰í•  ì¹´ë“œ</param>
+        /// <param name="source">ì‹œì „ì</param>
+        /// <param name="target">ëŒ€ìƒì</param>
         public DefaultCardExecutionContext(ISkillCard card, ICharacter source, ICharacter target)
         {
             Card = card;
@@ -49,10 +49,10 @@ namespace Game.CombatSystem.Context
         #region Role Resolution
 
         /// <summary>
-        /// ÇÃ·¹ÀÌ¾î Ä³¸¯ÅÍ¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
-        /// Source ¶Ç´Â Target Áß ÇÏ³ª°¡ ÇÃ·¹ÀÌ¾î¿©¾ß ÇÕ´Ï´Ù.
+        /// í”Œë ˆì´ì–´ ìºë¦­í„°ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
+        /// Source ë˜ëŠ” Target ì¤‘ í•˜ë‚˜ê°€ í”Œë ˆì´ì–´ì—¬ì•¼ í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <returns>ÇÃ·¹ÀÌ¾î Ä³¸¯ÅÍ ¶Ç´Â null</returns>
+        /// <returns>í”Œë ˆì´ì–´ ìºë¦­í„° ë˜ëŠ” null</returns>
         public IPlayerCharacter GetPlayer()
         {
             return Source is IPlayerCharacter player ? player :
@@ -60,10 +60,10 @@ namespace Game.CombatSystem.Context
         }
 
         /// <summary>
-        /// Àû Ä³¸¯ÅÍ¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
-        /// Source ¶Ç´Â Target Áß ÇÏ³ª°¡ ÀûÀÌ¾î¾ß ÇÕ´Ï´Ù.
+        /// ì  ìºë¦­í„°ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
+        /// Source ë˜ëŠ” Target ì¤‘ í•˜ë‚˜ê°€ ì ì´ì–´ì•¼ í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <returns>Àû Ä³¸¯ÅÍ ¶Ç´Â null</returns>
+        /// <returns>ì  ìºë¦­í„° ë˜ëŠ” null</returns>
         public IEnemyCharacter GetEnemy()
         {
             return Source is IEnemyCharacter enemy ? enemy :

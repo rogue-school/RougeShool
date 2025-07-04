@@ -28,7 +28,7 @@ namespace Game.CombatSystem.CoolTime
                 {
                     card.SetCurrentCoolTime(current - 1);
 
-                    Debug.Log($"[CoolTimeHandler] {card.GetCardName()} ÄðÅ¸ÀÓ °¨¼Ò: {current} ¡æ {current - 1}");
+                    Debug.Log($"[CoolTimeHandler] {card.GetCardName()} ì¿¨íƒ€ìž„ ê°ì†Œ: {current} â†’ {current - 1}");
 
                     if (ui is SkillCardUI cardUI)
                         cardUI.ShowCoolTime(card.GetCurrentCoolTime(), card.GetCurrentCoolTime() > 0);

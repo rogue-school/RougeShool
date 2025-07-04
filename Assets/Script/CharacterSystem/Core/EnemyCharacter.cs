@@ -10,213 +10,216 @@ using UnityEngine.UI;
 using TMPro;
 using UnityEngine;
 
-/// <summary>
-/// Àû Ä³¸¯ÅÍÀÇ ±¸Ã¼ ±¸Çö Å¬·¡½ºÀÔ´Ï´Ù.
-/// Ã¼·Â, UI, ½ºÅ³ µ¦, ÆĞ½Ãºê È¿°ú, »ç¸Á Ã³¸® µî Àû Àü¿ë ·ÎÁ÷À» Æ÷ÇÔÇÕ´Ï´Ù.
-/// </summary>
-public class EnemyCharacter : CharacterBase, IEnemyCharacter
+namespace Game.CharacterSystem.Core
 {
-    [Header("Character Data")]
-    [SerializeField] private EnemyCharacterData characterData;
-
-    [Header("UI Components")]
-    [SerializeField] private TextMeshProUGUI nameText;
-    [SerializeField] private TextMeshProUGUI hpText;
-    [SerializeField] private Image portraitImage;
-
-    [Header("Damage Text UI")]
-    [SerializeField] private Transform hpTextAnchor; // µ¥¹ÌÁö ÅØ½ºÆ® À§Ä¡
-    [SerializeField] private GameObject damageTextPrefab; // µ¥¹ÌÁö ÅØ½ºÆ® ÇÁ¸®ÆÕ
-
-    private EnemySkillDeck skillDeck;
-    private ICharacterDeathListener deathListener;
-    private bool isDead = false;
-
     /// <summary>
-    /// Àû Ä³¸¯ÅÍÀÇ µ¥ÀÌÅÍ (½ºÅ©¸³ÅÍºí ¿ÀºêÁ§Æ®)
+    /// ì  ìºë¦­í„°ì˜ êµ¬ì²´ êµ¬í˜„ í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
+    /// ì²´ë ¥, UI, ìŠ¤í‚¬ ë±, íŒ¨ì‹œë¸Œ íš¨ê³¼, ì‚¬ë§ ì²˜ë¦¬ ë“± ì  ì „ìš© ë¡œì§ì„ í¬í•¨í•©ë‹ˆë‹¤.
     /// </summary>
-    public EnemyCharacterData Data => characterData;
-
-    /// <summary>
-    /// ÇÃ·¹ÀÌ¾î Á¶ÀÛ ¿©ºÎ ¡æ ÀûÀÌ¹Ç·Î Ç×»ó false
-    /// </summary>
-    public override bool IsPlayerControlled() => false;
-
-    /// <summary>
-    /// Ä³¸¯ÅÍ ÀÌ¸§ ¹İÈ¯ (Ç¥½Ã¿ë ÀÌ¸§)
-    /// </summary>
-    public override string GetCharacterName()
+    public class EnemyCharacter : CharacterBase, IEnemyCharacter
     {
-        return characterData?.DisplayName ?? "Unnamed Enemy";
-    }
+        [Header("Character Data")]
+        [SerializeField] private EnemyCharacterData characterData;
 
-    /// <summary>
-    /// Ä³¸¯ÅÍ ÀÌ¸§ ¹İÈ¯ (IEnemyCharacter ÀÎÅÍÆäÀÌ½º ±¸Çö)
-    /// </summary>
-    public string GetName() => GetCharacterName();
+        [Header("UI Components")]
+        [SerializeField] private TextMeshProUGUI nameText;
+        [SerializeField] private TextMeshProUGUI hpText;
+        [SerializeField] private Image portraitImage;
 
-    /// <summary>
-    /// ÇöÀç »ç¸Á »óÅÂÀÎÁö ¿©ºÎ
-    /// </summary>
-    public bool IsMarkedDead => isDead;
+        [Header("Damage Text UI")]
+        [SerializeField] private Transform hpTextAnchor; // ë°ë¯¸ì§€ í…ìŠ¤íŠ¸ ìœ„ì¹˜
+        [SerializeField] private GameObject damageTextPrefab; // ë°ë¯¸ì§€ í…ìŠ¤íŠ¸ í”„ë¦¬íŒ¹
 
-    /// <summary>
-    /// Àû Ä³¸¯ÅÍ ÃÊ±âÈ­
-    /// </summary>
-    /// <param name="data">Àû Ä³¸¯ÅÍ µ¥ÀÌÅÍ</param>
-    public void Initialize(EnemyCharacterData data)
-    {
-        if (data == null)
+        private EnemySkillDeck skillDeck;
+        private ICharacterDeathListener deathListener;
+        private bool isDead = false;
+
+        /// <summary>
+        /// ì  ìºë¦­í„°ì˜ ë°ì´í„° (ìŠ¤í¬ë¦½í„°ë¸” ì˜¤ë¸Œì íŠ¸)
+        /// </summary>
+        public EnemyCharacterData Data => characterData;
+
+        /// <summary>
+        /// í”Œë ˆì´ì–´ ì¡°ì‘ ì—¬ë¶€ â†’ ì ì´ë¯€ë¡œ í•­ìƒ false
+        /// </summary>
+        public override bool IsPlayerControlled() => false;
+
+        /// <summary>
+        /// ìºë¦­í„° ì´ë¦„ ë°˜í™˜ (í‘œì‹œìš© ì´ë¦„)
+        /// </summary>
+        public override string GetCharacterName()
         {
-            Debug.LogWarning("[EnemyCharacter] ÃÊ±âÈ­ ½ÇÆĞ - null µ¥ÀÌÅÍ");
-            return;
+            return characterData?.DisplayName ?? "Unnamed Enemy";
         }
 
-        characterData = data;
-        skillDeck = data.EnemyDeck;
+        /// <summary>
+        /// ìºë¦­í„° ì´ë¦„ ë°˜í™˜ (IEnemyCharacter ì¸í„°í˜ì´ìŠ¤ êµ¬í˜„)
+        /// </summary>
+        public string GetName() => GetCharacterName();
 
-        SetMaxHP(data.MaxHP);
-        ApplyPassiveEffects();
-        RefreshUI();
+        /// <summary>
+        /// í˜„ì¬ ì‚¬ë§ ìƒíƒœì¸ì§€ ì—¬ë¶€
+        /// </summary>
+        public bool IsMarkedDead => isDead;
 
-        Debug.Log($"[EnemyCharacter] '{characterData.DisplayName}' ÃÊ±âÈ­ ¿Ï·á");
-    }
-
-    /// <summary>
-    /// »ç¸Á ½Ã ¿ÜºÎ ÀÌº¥Æ® ¼ö½ÅÀÚ¸¦ ¼³Á¤ÇÕ´Ï´Ù.
-    /// </summary>
-    /// <param name="listener">¸®½º³Ê</param>
-    public void SetDeathListener(ICharacterDeathListener listener)
-    {
-        deathListener = listener;
-    }
-
-    /// <summary>
-    /// ÇÇÇØ Ã³¸® ÈÄ UI °»½Å ¹× »ç¸Á ¿©ºÎ ÆÇ´Ü
-    /// </summary>
-    /// <param name="amount">ÇÇÇØ·®</param>
-    public override void TakeDamage(int amount)
-    {
-        base.TakeDamage(amount);
-        RefreshUI();
-
-        // µ¥¹ÌÁö ÅØ½ºÆ® Ç¥½Ã
-        if (damageTextPrefab != null && hpTextAnchor != null)
+        /// <summary>
+        /// ì  ìºë¦­í„° ì´ˆê¸°í™”
+        /// </summary>
+        /// <param name="data">ì  ìºë¦­í„° ë°ì´í„°</param>
+        public void Initialize(EnemyCharacterData data)
         {
-            var instance = Instantiate(damageTextPrefab);
-            instance.transform.SetParent(hpTextAnchor, false);
+            if (data == null)
+            {
+                Debug.LogWarning("[EnemyCharacter] ì´ˆê¸°í™” ì‹¤íŒ¨ - null ë°ì´í„°");
+                return;
+            }
 
-            var damageUI = instance.GetComponent<DamageTextUI>();
-            damageUI?.Show(amount, Color.red, "-");
+            characterData = data;
+            skillDeck = data.EnemyDeck;
+
+            SetMaxHP(data.MaxHP);
+            ApplyPassiveEffects();
+            RefreshUI();
+
+            Debug.Log($"[EnemyCharacter] '{characterData.DisplayName}' ì´ˆê¸°í™” ì™„ë£Œ");
         }
 
-        if (IsDead() && !isDead)
+        /// <summary>
+        /// ì‚¬ë§ ì‹œ ì™¸ë¶€ ì´ë²¤íŠ¸ ìˆ˜ì‹ ìë¥¼ ì„¤ì •í•©ë‹ˆë‹¤.
+        /// </summary>
+        /// <param name="listener">ë¦¬ìŠ¤ë„ˆ</param>
+        public void SetDeathListener(ICharacterDeathListener listener)
+        {
+            deathListener = listener;
+        }
+
+        /// <summary>
+        /// í”¼í•´ ì²˜ë¦¬ í›„ UI ê°±ì‹  ë° ì‚¬ë§ ì—¬ë¶€ íŒë‹¨
+        /// </summary>
+        /// <param name="amount">í”¼í•´ëŸ‰</param>
+        public override void TakeDamage(int amount)
+        {
+            base.TakeDamage(amount);
+            RefreshUI();
+
+            // ë°ë¯¸ì§€ í…ìŠ¤íŠ¸ í‘œì‹œ
+            if (damageTextPrefab != null && hpTextAnchor != null)
+            {
+                var instance = Instantiate(damageTextPrefab);
+                instance.transform.SetParent(hpTextAnchor, false);
+
+                var damageUI = instance.GetComponent<DamageTextUI>();
+                damageUI?.Show(amount, Color.red, "-");
+            }
+
+            if (IsDead() && !isDead)
+            {
+                MarkAsDead();
+            }
+        }
+
+        /// <summary>
+        /// íšŒë³µ ì²˜ë¦¬ í›„ UI ê°±ì‹ 
+        /// </summary>
+        /// <param name="amount">íšŒë³µëŸ‰</param>
+        public override void Heal(int amount)
+        {
+            base.Heal(amount);
+            RefreshUI();
+
+            if (damageTextPrefab != null && hpTextAnchor != null)
+            {
+                var instance = Instantiate(damageTextPrefab);
+                instance.transform.SetParent(hpTextAnchor, false);
+
+                var damageUI = instance.GetComponent<DamageTextUI>();
+                damageUI?.Show(amount, Color.green, "+");
+            }
+        }
+
+        /// <summary>
+        /// UI í…ìŠ¤íŠ¸ ë° ì´ˆìƒí™” ê°±ì‹ 
+        /// </summary>
+        private void RefreshUI()
+        {
+            if (characterData == null) return;
+
+            nameText.text = GetCharacterName();
+            hpText.text = currentHP.ToString(); // í˜„ì¬ ì²´ë ¥ë§Œ í‘œì‹œ
+            portraitImage.sprite = characterData.Portrait;
+
+            // ì²´ë ¥ ìƒ‰ìƒ ì„¤ì •: ìµœëŒ€ ì²´ë ¥ì´ë©´ í°ìƒ‰, ì•„ë‹ˆë©´ ë¶‰ì€ìƒ‰
+            if (currentHP >= GetMaxHP())
+            {
+                hpText.color = Color.white;
+            }
+            else
+            {
+                hpText.color = Color.red;
+            }
+        }
+
+        /// <summary>
+        /// ìºë¦­í„°ì— ì„¤ì •ëœ íŒ¨ì‹œë¸Œ íš¨ê³¼ë¥¼ ì¦‰ì‹œ ì ìš©í•©ë‹ˆë‹¤.
+        /// </summary>
+        private void ApplyPassiveEffects()
+        {
+            if (characterData?.PassiveEffects == null) return;
+
+            foreach (var effect in characterData.PassiveEffects)
+            {
+                if (effect is ICardEffect cardEffect)
+                {
+                    var context = new DefaultCardExecutionContext(null, this, this);
+                    cardEffect.ApplyEffect(context, 0);
+                }
+            }
+        }
+
+        /// <summary>
+        /// ì  ìŠ¤í‚¬ ë±ì—ì„œ ë¬´ì‘ìœ„ ì¹´ë“œ ì—”íŠ¸ë¦¬ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
+        /// </summary>
+        /// <returns>ë¬´ì‘ìœ„ ì¹´ë“œ ì—”íŠ¸ë¦¬</returns>
+        public EnemySkillDeck.CardEntry GetRandomCardEntry()
+        {
+            if (skillDeck == null)
+            {
+                Debug.LogError("[EnemyCharacter] ìŠ¤í‚¬ ë±ì´ nullì…ë‹ˆë‹¤.");
+                return null;
+            }
+
+            var entry = skillDeck.GetRandomEntry();
+
+            if (entry?.card == null)
+            {
+                Debug.LogError("[EnemyCharacter] ì¹´ë“œ ì„ íƒ ì‹¤íŒ¨: entry ë˜ëŠ” cardê°€ nullì…ë‹ˆë‹¤.");
+            }
+            else
+            {
+                Debug.Log($"[EnemyCharacter] ì¹´ë“œ ì„ íƒ ì™„ë£Œ: {entry.card.name} (í™•ë¥ : {entry.probability})");
+            }
+
+            return entry;
+        }
+
+        /// <summary>
+        /// ì™¸ë¶€ì—ì„œ ì‚¬ë§ ì²˜ë¦¬ë¥¼ ëª…ì‹œì ìœ¼ë¡œ í˜¸ì¶œí•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
+        /// </summary>
+        public void MarkAsDead()
+        {
+            if (isDead) return;
+
+            isDead = true;
+            Debug.Log($"[EnemyCharacter] '{GetCharacterName()}' ì‚¬ë§ ì²˜ë¦¬ (MarkAsDead í˜¸ì¶œ)");
+            deathListener?.OnCharacterDied(this);
+        }
+
+        /// <summary>
+        /// ê¸°ë³¸ Die ë¡œì§ì€ MarkAsDeadë¡œ ëŒ€ì²´ë˜ë©°, ë³„ë„ ì²˜ë¦¬ëŠ” ì—†ìŠµë‹ˆë‹¤.
+        /// </summary>
+        public override void Die()
         {
             MarkAsDead();
         }
-    }
-
-    /// <summary>
-    /// È¸º¹ Ã³¸® ÈÄ UI °»½Å
-    /// </summary>
-    /// <param name="amount">È¸º¹·®</param>
-    public override void Heal(int amount)
-    {
-        base.Heal(amount);
-        RefreshUI();
-
-        if (damageTextPrefab != null && hpTextAnchor != null)
-        {
-            var instance = Instantiate(damageTextPrefab);
-            instance.transform.SetParent(hpTextAnchor, false);
-
-            var damageUI = instance.GetComponent<DamageTextUI>();
-            damageUI?.Show(amount, Color.green, "+");
-        }
-    }
-
-    /// <summary>
-    /// UI ÅØ½ºÆ® ¹× ÃÊ»óÈ­ °»½Å
-    /// </summary>
-    private void RefreshUI()
-    {
-        if (characterData == null) return;
-
-        nameText.text = GetCharacterName();
-        hpText.text = currentHP.ToString(); // ÇöÀç Ã¼·Â¸¸ Ç¥½Ã
-        portraitImage.sprite = characterData.Portrait;
-
-        // Ã¼·Â »ö»ó ¼³Á¤: ÃÖ´ë Ã¼·ÂÀÌ¸é Èò»ö, ¾Æ´Ï¸é ºÓÀº»ö
-        if (currentHP >= GetMaxHP())
-        {
-            hpText.color = Color.white;
-        }
-        else
-        {
-            hpText.color = Color.red;
-        }
-    }
-
-    /// <summary>
-    /// Ä³¸¯ÅÍ¿¡ ¼³Á¤µÈ ÆĞ½Ãºê È¿°ú¸¦ Áï½Ã Àû¿ëÇÕ´Ï´Ù.
-    /// </summary>
-    private void ApplyPassiveEffects()
-    {
-        if (characterData?.PassiveEffects == null) return;
-
-        foreach (var effect in characterData.PassiveEffects)
-        {
-            if (effect is ICardEffect cardEffect)
-            {
-                var context = new DefaultCardExecutionContext(null, this, this);
-                cardEffect.ApplyEffect(context, 0);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Àû ½ºÅ³ µ¦¿¡¼­ ¹«ÀÛÀ§ Ä«µå ¿£Æ®¸®¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
-    /// </summary>
-    /// <returns>¹«ÀÛÀ§ Ä«µå ¿£Æ®¸®</returns>
-    public EnemySkillDeck.CardEntry GetRandomCardEntry()
-    {
-        if (skillDeck == null)
-        {
-            Debug.LogError("[EnemyCharacter] ½ºÅ³ µ¦ÀÌ nullÀÔ´Ï´Ù.");
-            return null;
-        }
-
-        var entry = skillDeck.GetRandomEntry();
-
-        if (entry?.card == null)
-        {
-            Debug.LogError("[EnemyCharacter] Ä«µå ¼±ÅÃ ½ÇÆĞ: entry ¶Ç´Â card°¡ nullÀÔ´Ï´Ù.");
-        }
-        else
-        {
-            Debug.Log($"[EnemyCharacter] Ä«µå ¼±ÅÃ ¿Ï·á: {entry.card.name} (È®·ü: {entry.probability})");
-        }
-
-        return entry;
-    }
-
-    /// <summary>
-    /// ¿ÜºÎ¿¡¼­ »ç¸Á Ã³¸®¸¦ ¸í½ÃÀûÀ¸·Î È£ÃâÇÒ ¼ö ÀÖ½À´Ï´Ù.
-    /// </summary>
-    public void MarkAsDead()
-    {
-        if (isDead) return;
-
-        isDead = true;
-        Debug.Log($"[EnemyCharacter] '{GetCharacterName()}' »ç¸Á Ã³¸® (MarkAsDead È£Ãâ)");
-        deathListener?.OnCharacterDied(this);
-    }
-
-    /// <summary>
-    /// ±âº» Die ·ÎÁ÷Àº MarkAsDead·Î ´ëÃ¼µÇ¸ç, º°µµ Ã³¸®´Â ¾ø½À´Ï´Ù.
-    /// </summary>
-    public override void Die()
-    {
-        MarkAsDead();
     }
 }

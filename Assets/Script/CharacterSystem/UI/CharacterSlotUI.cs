@@ -7,33 +7,33 @@ using Game.CharacterSystem.Core;
 namespace Game.CharacterSystem.UI
 {
     /// <summary>
-    /// ÀüÅõ È­¸é¿¡¼­ Ä³¸¯ÅÍ¸¦ ¹èÄ¡ÇÏ´Â ½½·Ô UI Å¬·¡½ºÀÔ´Ï´Ù.
-    /// Ä³¸¯ÅÍ¸¦ ½½·Ô¿¡ ¼³Á¤ÇÏ°í, UI ÄÁÆ®·Ñ·¯µµ ¿¬µ¿ÇÕ´Ï´Ù.
+    /// ì „íˆ¬ í™”ë©´ì—ì„œ ìºë¦­í„°ë¥¼ ë°°ì¹˜í•˜ëŠ” ìŠ¬ë¡¯ UI í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
+    /// ìºë¦­í„°ë¥¼ ìŠ¬ë¡¯ì— ì„¤ì •í•˜ê³ , UI ì»¨íŠ¸ë¡¤ëŸ¬ë„ ì—°ë™í•©ë‹ˆë‹¤.
     /// </summary>
     public class CharacterSlotUI : MonoBehaviour, ICharacterSlot
     {
-        [Header("½½·Ô ¼³Á¤")]
-        [Tooltip("ÀÌ ½½·ÔÀÇ À§Ä¡ (ÇÃ·¹ÀÌ¾î / Àû)")]
+        [Header("ìŠ¬ë¡¯ ì„¤ì •")]
+        [Tooltip("ì´ ìŠ¬ë¡¯ì˜ ìœ„ì¹˜ (í”Œë ˆì´ì–´ / ì )")]
         [SerializeField] private CharacterSlotPosition slotPosition;
 
-        [Tooltip("ÀÌ ½½·ÔÀÇ ¼ÒÀ¯ÀÚ (ÇÃ·¹ÀÌ¾î / Àû)")]
+        [Tooltip("ì´ ìŠ¬ë¡¯ì˜ ì†Œìœ ì (í”Œë ˆì´ì–´ / ì )")]
         [SerializeField] private SlotOwner owner;
 
         private ICharacter character;
 
-        #region ½½·Ô Á¦¾î
+        #region ìŠ¬ë¡¯ ì œì–´
 
         /// <summary>
-        /// ½½·Ô¿¡ Ä³¸¯ÅÍ¸¦ ¼³Á¤ÇÏ°í UI ¹× TransformÀ» ÃÊ±âÈ­ÇÕ´Ï´Ù.
+        /// ìŠ¬ë¡¯ì— ìºë¦­í„°ë¥¼ ì„¤ì •í•˜ê³  UI ë° Transformì„ ì´ˆê¸°í™”í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="character">½½·Ô¿¡ ¹èÄ¡ÇÒ Ä³¸¯ÅÍ</param>
+        /// <param name="character">ìŠ¬ë¡¯ì— ë°°ì¹˜í•  ìºë¦­í„°</param>
         public void SetCharacter(ICharacter character)
         {
             this.character = character;
 
             if (character == null)
             {
-                Debug.LogWarning($"[CharacterSlotUI] null Ä³¸¯ÅÍ°¡ ½½·Ô¿¡ ¼³Á¤µÊ. À§Ä¡: {slotPosition}");
+                Debug.LogWarning($"[CharacterSlotUI] null ìºë¦­í„°ê°€ ìŠ¬ë¡¯ì— ì„¤ì •ë¨. ìœ„ì¹˜: {slotPosition}");
                 return;
             }
 
@@ -42,20 +42,20 @@ namespace Game.CharacterSystem.UI
         }
 
         /// <summary>
-        /// ½½·Ô¿¡¼­ Ä³¸¯ÅÍ¸¦ Á¦°ÅÇÕ´Ï´Ù.
+        /// ìŠ¬ë¡¯ì—ì„œ ìºë¦­í„°ë¥¼ ì œê±°í•©ë‹ˆë‹¤.
         /// </summary>
         public void Clear()
         {
             character = null;
-            // ÇÊ¿ä ½Ã: ½½·Ô ÇÏÀ§¿¡¼­ ±âÁ¸ Ä³¸¯ÅÍ ¿ÀºêÁ§Æ® Á¦°Å °¡´É
+            // í•„ìš” ì‹œ: ìŠ¬ë¡¯ í•˜ìœ„ì—ì„œ ê¸°ì¡´ ìºë¦­í„° ì˜¤ë¸Œì íŠ¸ ì œê±° ê°€ëŠ¥
         }
 
         #endregion
 
-        #region ½½·Ô ³»ºÎ Ã³¸®
+        #region ìŠ¬ë¡¯ ë‚´ë¶€ ì²˜ë¦¬
 
         /// <summary>
-        /// Ä³¸¯ÅÍ UI ÄÁÆ®·Ñ·¯¸¦ ¿¬°áÇÕ´Ï´Ù.
+        /// ìºë¦­í„° UI ì»¨íŠ¸ë¡¤ëŸ¬ë¥¼ ì—°ê²°í•©ë‹ˆë‹¤.
         /// </summary>
         private void SetupCharacterUI(ICharacter character)
         {
@@ -70,7 +70,7 @@ namespace Game.CharacterSystem.UI
         }
 
         /// <summary>
-        /// Ä³¸¯ÅÍÀÇ TransformÀ» ½½·Ô¿¡ ¿¬°á ¹× Á¤·ÄÇÕ´Ï´Ù.
+        /// ìºë¦­í„°ì˜ Transformì„ ìŠ¬ë¡¯ì— ì—°ê²° ë° ì •ë ¬í•©ë‹ˆë‹¤.
         /// </summary>
         private void AttachCharacterTransform(ICharacter character)
         {
@@ -81,7 +81,7 @@ namespace Game.CharacterSystem.UI
 
                 if (trans is RectTransform rt)
                 {
-                    // UI ±â¹İ ¹èÄ¡
+                    // UI ê¸°ë°˜ ë°°ì¹˜
                     rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
                     rt.anchoredPosition = Vector2.zero;
                     rt.localRotation = Quaternion.identity;
@@ -89,7 +89,7 @@ namespace Game.CharacterSystem.UI
                 }
                 else
                 {
-                    // ÀÏ¹İ Transform ¹èÄ¡
+                    // ì¼ë°˜ Transform ë°°ì¹˜
                     trans.localPosition = Vector3.zero;
                     trans.localRotation = Quaternion.identity;
                     trans.localScale = Vector3.one;
@@ -99,25 +99,25 @@ namespace Game.CharacterSystem.UI
 
         #endregion
 
-        #region ½½·Ô Á¶È¸
+        #region ìŠ¬ë¡¯ ì¡°íšŒ
 
         /// <summary>
-        /// ÇöÀç ½½·Ô¿¡ ¹èÄ¡µÈ Ä³¸¯ÅÍ¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
+        /// í˜„ì¬ ìŠ¬ë¡¯ì— ë°°ì¹˜ëœ ìºë¦­í„°ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         public ICharacter GetCharacter() => character;
 
         /// <summary>
-        /// ½½·ÔÀÇ À§Ä¡ Á¤º¸¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
+        /// ìŠ¬ë¡¯ì˜ ìœ„ì¹˜ ì •ë³´ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         public CharacterSlotPosition GetSlotPosition() => slotPosition;
 
         /// <summary>
-        /// ½½·ÔÀÇ ¼ÒÀ¯ÀÚ Á¤º¸¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
+        /// ìŠ¬ë¡¯ì˜ ì†Œìœ ì ì •ë³´ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         public SlotOwner GetOwner() => owner;
 
         /// <summary>
-        /// ½½·ÔÀÇ TransformÀ» ¹İÈ¯ÇÕ´Ï´Ù.
+        /// ìŠ¬ë¡¯ì˜ Transformì„ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         public Transform GetTransform() => transform;
 

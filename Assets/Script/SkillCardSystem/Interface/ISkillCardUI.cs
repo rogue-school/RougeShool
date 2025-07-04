@@ -1,26 +1,26 @@
 namespace Game.SkillCardSystem.Interface
 {
     /// <summary>
-    /// ½ºÅ³ Ä«µå UI¸¦ Á¦¾îÇÏ´Â ÀÎÅÍÆäÀÌ½ºÀÔ´Ï´Ù.
-    /// Ä«µå¿Í ¿¬°áÇÏ°í, ÄðÅ¸ÀÓ µî ½Ã°¢Àû Á¤º¸¸¦ °»½ÅÇÕ´Ï´Ù.
+    /// ìŠ¤í‚¬ ì¹´ë“œ UIë¥¼ ì œì–´í•˜ëŠ” ì¸í„°íŽ˜ì´ìŠ¤ìž…ë‹ˆë‹¤.
+    /// ì¹´ë“œì™€ ì—°ê²°í•˜ê³ , ì¿¨íƒ€ìž„ ë“± ì‹œê°ì  ì •ë³´ë¥¼ ê°±ì‹ í•©ë‹ˆë‹¤.
     /// </summary>
     public interface ISkillCardUI
     {
         /// <summary>
-        /// ÀÌ UI¿¡ Ç¥½ÃÇÒ ½ºÅ³ Ä«µå¸¦ ¼³Á¤ÇÕ´Ï´Ù.
+        /// ì´ UIì— í‘œì‹œí•  ìŠ¤í‚¬ ì¹´ë“œë¥¼ ì„¤ì •í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="card">¿¬°áÇÒ Ä«µå</param>
+        /// <param name="card">ì—°ê²°í•  ì¹´ë“œ</param>
         void SetCard(ISkillCard card);
 
         /// <summary>
-        /// ÇöÀç UI¿¡ ¼³Á¤µÈ Ä«µå¸¦ ¹ÝÈ¯ÇÕ´Ï´Ù.
+        /// í˜„ìž¬ UIì— ì„¤ì •ëœ ì¹´ë“œë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <returns>¿¬°áµÈ Ä«µå °´Ã¼</returns>
+        /// <returns>ì—°ê²°ëœ ì¹´ë“œ ê°ì²´</returns>
         ISkillCard GetCard();
 
         /// <summary>
-        /// Ä«µåÀÇ ÇöÀç ÄðÅ¸ÀÓ »óÅÂ¸¦ ±â¹ÝÀ¸·Î UI¸¦ °»½ÅÇÕ´Ï´Ù.
-        /// ¿¹: ÅØ½ºÆ®, ÀÌ¹ÌÁö, µå·¡±× °¡´É ¿©ºÎ µî ½Ã°¢Àû ¿ä¼Ò ¹Ý¿µ.
+        /// ì¹´ë“œì˜ í˜„ìž¬ ì¿¨íƒ€ìž„ ìƒíƒœë¥¼ ê¸°ë°˜ìœ¼ë¡œ UIë¥¼ ê°±ì‹ í•©ë‹ˆë‹¤.
+        /// ì˜ˆ: í…ìŠ¤íŠ¸, ì´ë¯¸ì§€, ë“œëž˜ê·¸ ê°€ëŠ¥ ì—¬ë¶€ ë“± ì‹œê°ì  ìš”ì†Œ ë°˜ì˜.
         /// </summary>
         void UpdateCoolTimeDisplay();
     }

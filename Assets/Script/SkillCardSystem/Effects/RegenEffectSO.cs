@@ -6,46 +6,46 @@ using Game.CombatSystem.Interface;
 namespace Game.SkillCardSystem.Effects
 {
     /// <summary>
-    /// ÅÏ¸¶´Ù Ã¼·ÂÀ» È¸º¹½ÃÅ°´Â Àç»ı È¿°ú¸¦ Á¤ÀÇÇÏ´Â ScriptableObjectÀÔ´Ï´Ù.
+    /// í„´ë§ˆë‹¤ ì²´ë ¥ì„ íšŒë³µì‹œí‚¤ëŠ” ì¬ìƒ íš¨ê³¼ë¥¼ ì •ì˜í•˜ëŠ” ScriptableObjectì…ë‹ˆë‹¤.
     /// </summary>
     [CreateAssetMenu(fileName = "RegenEffect", menuName = "SkillEffects/RegenEffect")]
     public class RegenEffectSO : SkillCardEffectSO
     {
-        [Header("Àç»ı ¼³Á¤")]
-        [Tooltip("ÅÏ¸¶´Ù È¸º¹ÇÒ Ã¼·Â·®")]
+        [Header("ì¬ìƒ ì„¤ì •")]
+        [Tooltip("í„´ë§ˆë‹¤ íšŒë³µí•  ì²´ë ¥ëŸ‰")]
         [SerializeField] private int healPerTurn;
 
-        [Tooltip("Áö¼Ó ÅÏ ¼ö")]
+        [Tooltip("ì§€ì† í„´ ìˆ˜")]
         [SerializeField] private int duration;
 
         /// <summary>
-        /// ÇØ´ç È¿°ú¿¡ ´ëÇÑ ½ÇÇà Ä¿¸Çµå¸¦ »ı¼ºÇÕ´Ï´Ù.
+        /// í•´ë‹¹ íš¨ê³¼ì— ëŒ€í•œ ì‹¤í–‰ ì»¤ë§¨ë“œë¥¼ ìƒì„±í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="power">¿ÜºÎ¿¡¼­ Ãß°¡µÈ È¿°ú ¼öÄ¡</param>
-        /// <returns>Àç»ı È¿°ú Ä¿¸Çµå</returns>
+        /// <param name="power">ì™¸ë¶€ì—ì„œ ì¶”ê°€ëœ íš¨ê³¼ ìˆ˜ì¹˜</param>
+        /// <returns>ì¬ìƒ íš¨ê³¼ ì»¤ë§¨ë“œ</returns>
         public override ICardEffectCommand CreateEffectCommand(int power)
         {
             return new RegenEffectCommand(healPerTurn + power, duration);
         }
 
         /// <summary>
-        /// Àç»ı È¿°ú¸¦ Á÷Á¢ ½ÇÇàÇÏ¿© ´ë»ó¿¡°Ô Àû¿ëÇÕ´Ï´Ù.
+        /// ì¬ìƒ íš¨ê³¼ë¥¼ ì§ì ‘ ì‹¤í–‰í•˜ì—¬ ëŒ€ìƒì—ê²Œ ì ìš©í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="context">Ä«µå ½ÇÇà ÄÁÅØ½ºÆ®</param>
-        /// <param name="value">½ÇÁ¦ È¸º¹·®</param>
-        /// <param name="turnManager">ÀüÅõ ÅÏ ¸Å´ÏÀú (ÇÊ¿ä ½Ã)</param>
+        /// <param name="context">ì¹´ë“œ ì‹¤í–‰ ì»¨í…ìŠ¤íŠ¸</param>
+        /// <param name="value">ì‹¤ì œ íšŒë³µëŸ‰</param>
+        /// <param name="turnManager">ì „íˆ¬ í„´ ë§¤ë‹ˆì € (í•„ìš” ì‹œ)</param>
         public override void ApplyEffect(ICardExecutionContext context, int value, ICombatTurnManager turnManager = null)
         {
             if (context.Target == null)
             {
-                Debug.LogWarning("[RegenEffectSO] ´ë»óÀÌ nullÀÔ´Ï´Ù. È¿°ú¸¦ Àû¿ëÇÒ ¼ö ¾ø½À´Ï´Ù.");
+                Debug.LogWarning("[RegenEffectSO] ëŒ€ìƒì´ nullì…ë‹ˆë‹¤. íš¨ê³¼ë¥¼ ì ìš©í•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤.");
                 return;
             }
 
             var regen = new RegenEffect(value, duration);
             context.Target.RegisterPerTurnEffect(regen);
 
-            Debug.Log($"[RegenEffectSO] {context.Target.GetCharacterName()}¿¡°Ô Àç»ı {value} Àû¿ë (Áö¼Ó {duration}ÅÏ)");
+            Debug.Log($"[RegenEffectSO] {context.Target.GetCharacterName()}ì—ê²Œ ì¬ìƒ {value} ì ìš© (ì§€ì† {duration}í„´)");
         }
     }
 }

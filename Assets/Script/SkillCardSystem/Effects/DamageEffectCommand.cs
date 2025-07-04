@@ -5,37 +5,37 @@ using Game.CombatSystem.Interface;
 namespace Game.SkillCardSystem.Effect
 {
     /// <summary>
-    /// ´ë»ó¿¡°Ô °íÁ¤ ÇÇÇØ¸¦ ÁÖ´Â ½ºÅ³ Ä«µå È¿°ú Ä¿¸ÇµåÀÔ´Ï´Ù.
+    /// ëŒ€ìƒì—ê²Œ ê³ ì • í”¼í•´ë¥¼ ì£¼ëŠ” ìŠ¤í‚¬ ì¹´ë“œ íš¨ê³¼ ì»¤ë§¨ë“œì…ë‹ˆë‹¤.
     /// </summary>
     public class DamageEffectCommand : ICardEffectCommand
     {
         private readonly int damage;
 
         /// <summary>
-        /// ÇÇÇØ·®À» ÁöÁ¤ÇÏ¿© Ä¿¸Çµå¸¦ »ı¼ºÇÕ´Ï´Ù.
+        /// í”¼í•´ëŸ‰ì„ ì§€ì •í•˜ì—¬ ì»¤ë§¨ë“œë¥¼ ìƒì„±í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="damage">Àû¿ëÇÒ ÇÇÇØ·®</param>
+        /// <param name="damage">ì ìš©í•  í”¼í•´ëŸ‰</param>
         public DamageEffectCommand(int damage)
         {
             this.damage = damage;
         }
 
         /// <summary>
-        /// ÁöÁ¤µÈ ´ë»ó¿¡°Ô ÇÇÇØ¸¦ Àû¿ëÇÕ´Ï´Ù.
+        /// ì§€ì •ëœ ëŒ€ìƒì—ê²Œ í”¼í•´ë¥¼ ì ìš©í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="context">Ä«µå ½ÇÇà ÄÁÅØ½ºÆ® (´ë»ó Æ÷ÇÔ)</param>
-        /// <param name="turnManager">ÀüÅõ ÅÏ ¸Å´ÏÀú (¿É¼Ç)</param>
+        /// <param name="context">ì¹´ë“œ ì‹¤í–‰ ì»¨í…ìŠ¤íŠ¸ (ëŒ€ìƒ í¬í•¨)</param>
+        /// <param name="turnManager">ì „íˆ¬ í„´ ë§¤ë‹ˆì € (ì˜µì…˜)</param>
         public void Execute(ICardExecutionContext context, ICombatTurnManager turnManager)
         {
             if (context?.Target == null)
             {
-                Debug.LogWarning("[DamageEffectCommand] ´ë»óÀÌ nullÀÔ´Ï´Ù. ÇÇÇØ¸¦ Àû¿ëÇÒ ¼ö ¾ø½À´Ï´Ù.");
+                Debug.LogWarning("[DamageEffectCommand] ëŒ€ìƒì´ nullì…ë‹ˆë‹¤. í”¼í•´ë¥¼ ì ìš©í•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤.");
                 return;
             }
 
             context.Target.TakeDamage(damage);
 
-            Debug.Log($"[DamageEffectCommand] {context.Source?.GetCharacterName()} ¡æ {context.Target.GetCharacterName()} ÇÇÇØ: {damage}");
+            Debug.Log($"[DamageEffectCommand] {context.Source?.GetCharacterName()} â†’ {context.Target.GetCharacterName()} í”¼í•´: {damage}");
         }
     }
 }

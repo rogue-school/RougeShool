@@ -1,44 +1,44 @@
 namespace Game.CombatSystem.Interface
 {
     /// <summary>
-    /// юЭеУ ╩Себ(FSM)╦╕ ╩Щ╪╨го╢б фяеД╦╝ юнемфДюл╫╨ют╢о╢ы.
-    /// ╟╒ юЭеУ ╢э╟Х(аь╨Я, ют╥б, ╟Ь╟щ, ╟А╟З ╣Н)©║ гь╢Гго╢б ╩Себ ╟╢ц╪╦╕ ╩Щ╪╨гу╢о╢ы.
-    /// ╩Себ юЭюл╢б CombatTurnManager ╤г╢б CombatFlowCoordinator©║╪╜ а╕╬Нгу╢о╢ы.
+    /// Л═└М┬╛ Л┐│М┐°(FSM)К╔╪ Л┐²Л└╠М∙≤К┼■ М▄╘М├═К╕╛ Л²╦М└╟М▌≤Л²╢Л┼╓Л·┘К▀┬К▀╓.
+    /// Й╟│ Л═└М┬╛ К▀╗ЙЁ└(Л╓─К╧└, Л·┘К═╔, ЙЁ╣Й╡╘, Й╡╟ЙЁ╪ К⌠╠)Л≈░ М∙╢К▀╧М∙≤К┼■ Л┐│М┐° Й╟²Л╡╢К╔╪ Л┐²Л└╠М∙╘К▀┬К▀╓.
+    /// Л┐│М┐° Л═└Л²╢К┼■ CombatTurnManager К≤░К┼■ CombatFlowCoordinatorЛ≈░Л└° Л═°Л√╢М∙╘К▀┬К▀╓.
     /// </summary>
     public interface ICombatStateFactory
     {
         /// <summary>
-        /// юЭеУ аь╨Я ╩Себ╦╕ ╩Щ╪╨гу╢о╢ы.
+        /// Л═└М┬╛ Л╓─К╧└ Л┐│М┐°К╔╪ Л┐²Л└╠М∙╘К▀┬К▀╓.
         /// </summary>
         ICombatTurnState CreatePrepareState();
 
         /// <summary>
-        /// гц╥╧юл╬Н ют╥б ╩Себ╦╕ ╩Щ╪╨гу╢о╢ы.
+        /// М■▄К═┬Л²╢Л√╢ Л·┘К═╔ Л┐│М┐°К╔╪ Л┐²Л└╠М∙╘К▀┬К▀╓.
         /// </summary>
         ICombatTurnState CreatePlayerInputState();
 
         /// <summary>
-        /// ╪╠╟Ь дЁ╦╞емюг ╟Ь╟щ ╩Себ╦╕ ╩Щ╪╨гу╢о╢ы.
+        /// Л└═ЙЁ╣ Л╨░К╕╜М└╟Л²≤ ЙЁ╣Й╡╘ Л┐│М┐°К╔╪ Л┐²Л└╠М∙╘К▀┬К▀╓.
         /// </summary>
         ICombatTurnState CreateFirstAttackState();
 
         /// <summary>
-        /// хд╟Ь дЁ╦╞емюг ╟Ь╟щ ╩Себ╦╕ ╩Щ╪╨гу╢о╢ы.
+        /// М⌡└ЙЁ╣ Л╨░К╕╜М└╟Л²≤ ЙЁ╣Й╡╘ Л┐│М┐°К╔╪ Л┐²Л└╠М∙╘К▀┬К▀╓.
         /// </summary>
         ICombatTurnState CreateSecondAttackState();
 
         /// <summary>
-        /// ╟Ь╟щ ╟А╟З а╓╦╝ ╩Себ╦╕ ╩Щ╪╨гу╢о╢ы.
+        /// ЙЁ╣Й╡╘ Й╡╟ЙЁ╪ Л═∙К╕╛ Л┐│М┐°К╔╪ Л┐²Л└╠М∙╘К▀┬К▀╓.
         /// </summary>
         ICombatTurnState CreateResultState();
 
         /// <summary>
-        /// юЭеУ ╫б╦╝ ╩Себ╦╕ ╩Щ╪╨гу╢о╢ы.
+        /// Л═└М┬╛ Л┼╧К╕╛ Л┐│М┐°К╔╪ Л┐²Л└╠М∙╘К▀┬К▀╓.
         /// </summary>
         ICombatTurnState CreateVictoryState();
 
         /// <summary>
-        /// ╟тюс ©ю╧Ж ╩Себ╦╕ ╩Щ╪╨гу╢о╢ы.
+        /// Й╡▄Л·└ Л≤╓К╡└ Л┐│М┐°К╔╪ Л┐²Л└╠М∙╘К▀┬К▀╓.
         /// </summary>
         ICombatTurnState CreateGameOverState();
     }

@@ -1,19 +1,19 @@
 namespace Game.IManager
 {
     /// <summary>
-    /// ÀüÅõ ½Â¸® ½Ã UI Ç¥½Ã ¹× ÈÄ¼Ó °ÔÀÓ Èå¸§À» Ã³¸®ÇÏ´Â ¸Å´ÏÀúÀÔ´Ï´Ù.
+    /// ì „íˆ¬ ìŠ¹ë¦¬ ì‹œ UI í‘œì‹œ ë° í›„ì† ê²Œìž„ íë¦„ì„ ì²˜ë¦¬í•˜ëŠ” ë§¤ë‹ˆì €ìž…ë‹ˆë‹¤.
     /// </summary>
     public interface IVictoryManager
     {
         /// <summary>
-        /// ½Â¸® È­¸é(UI)À» Ç¥½ÃÇÕ´Ï´Ù.
-        /// °ÔÀÓÀÇ Èå¸§Àº Á¤ÁöµÇ°Å³ª ½Â¸® ÀÎÅÍ·¢¼ÇÀÌ È°¼ºÈ­µË´Ï´Ù.
+        /// ìŠ¹ë¦¬ í™”ë©´(UI)ì„ í‘œì‹œí•©ë‹ˆë‹¤.
+        /// ê²Œìž„ì˜ íë¦„ì€ ì •ì§€ë˜ê±°ë‚˜ ìŠ¹ë¦¬ ì¸í„°ëž™ì…˜ì´ í™œì„±í™”ë©ë‹ˆë‹¤.
         /// </summary>
         void ShowVictoryUI();
 
         /// <summary>
-        /// ÀüÅõ ½Â¸® ½Ã ÈÄ¼Ó Ã³¸®¸¦ ¼öÇàÇÕ´Ï´Ù.
-        /// ¿¹: º¸»ó Áö±Þ, ´ÙÀ½ ½ºÅ×ÀÌÁö·Î ÀÌµ¿, ÀúÀå µî.
+        /// ì „íˆ¬ ìŠ¹ë¦¬ ì‹œ í›„ì† ì²˜ë¦¬ë¥¼ ìˆ˜í–‰í•©ë‹ˆë‹¤.
+        /// ì˜ˆ: ë³´ìƒ ì§€ê¸‰, ë‹¤ìŒ ìŠ¤í…Œì´ì§€ë¡œ ì´ë™, ì €ìž¥ ë“±.
         /// </summary>
         void ProcessVictory();
     }

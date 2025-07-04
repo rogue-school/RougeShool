@@ -6,8 +6,8 @@ using Game.CharacterSystem.Interface;
 namespace Game.CombatSystem.Context
 {
     /// <summary>
-    /// ±âº» Ä«µå ½ÇÇà ÄÁÅØ½ºÆ® Á¦°øÀÚÀÔ´Ï´Ù.
-    /// ÇÃ·¹ÀÌ¾î¿Í ´ÜÀÏ Àû Ä³¸¯ÅÍ¸¦ ±âÁØÀ¸·Î ÄÁÅØ½ºÆ®¸¦ »ı¼ºÇÕ´Ï´Ù.
+    /// ê¸°ë³¸ ì¹´ë“œ ì‹¤í–‰ ì»¨í…ìŠ¤íŠ¸ ì œê³µìì…ë‹ˆë‹¤.
+    /// í”Œë ˆì´ì–´ì™€ ë‹¨ì¼ ì  ìºë¦­í„°ë¥¼ ê¸°ì¤€ìœ¼ë¡œ ì»¨í…ìŠ¤íŠ¸ë¥¼ ìƒì„±í•©ë‹ˆë‹¤.
     /// </summary>
     public class DefaultCardExecutionContextProvider : ICardExecutionContextProvider
     {
@@ -15,10 +15,10 @@ namespace Game.CombatSystem.Context
         private readonly IEnemyManager enemyManager;
 
         /// <summary>
-        /// »ı¼ºÀÚ¿¡¼­ ÇÃ·¹ÀÌ¾î ¹× Àû ¸Å´ÏÀú¸¦ ÁÖÀÔ¹Ş½À´Ï´Ù.
+        /// ìƒì„±ìì—ì„œ í”Œë ˆì´ì–´ ë° ì  ë§¤ë‹ˆì €ë¥¼ ì£¼ì…ë°›ìŠµë‹ˆë‹¤.
         /// </summary>
-        /// <param name="playerManager">ÇÃ·¹ÀÌ¾î ¸Å´ÏÀú</param>
-        /// <param name="enemyManager">Àû ¸Å´ÏÀú</param>
+        /// <param name="playerManager">í”Œë ˆì´ì–´ ë§¤ë‹ˆì €</param>
+        /// <param name="enemyManager">ì  ë§¤ë‹ˆì €</param>
         public DefaultCardExecutionContextProvider(IPlayerManager playerManager, IEnemyManager enemyManager)
         {
             this.playerManager = playerManager;
@@ -26,18 +26,18 @@ namespace Game.CombatSystem.Context
         }
 
         /// <summary>
-        /// Ä«µå ½ÇÇà¿¡ ÇÊ¿äÇÑ ½ÃÀüÀÚ¿Í ´ë»ó Á¤º¸¸¦ Æ÷ÇÔÇÑ ÄÁÅØ½ºÆ®¸¦ »ı¼ºÇÕ´Ï´Ù.
+        /// ì¹´ë“œ ì‹¤í–‰ì— í•„ìš”í•œ ì‹œì „ìì™€ ëŒ€ìƒ ì •ë³´ë¥¼ í¬í•¨í•œ ì»¨í…ìŠ¤íŠ¸ë¥¼ ìƒì„±í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="card">½ÇÇàÇÒ ½ºÅ³ Ä«µå</param>
-        /// <returns>Ä«µå ½ÇÇà ÄÁÅØ½ºÆ® °´Ã¼</returns>
+        /// <param name="card">ì‹¤í–‰í•  ìŠ¤í‚¬ ì¹´ë“œ</param>
+        /// <returns>ì¹´ë“œ ì‹¤í–‰ ì»¨í…ìŠ¤íŠ¸ ê°ì²´</returns>
         public ICardExecutionContext CreateContext(ISkillCard card)
         {
-            var source = playerManager?.GetPlayer();     // ½ÃÀüÀÚ (ÇÃ·¹ÀÌ¾î)
-            var target = enemyManager?.GetEnemy();       // ´ë»óÀÚ (Àû, ´ÜÀÏ ´ë»ó)
+            var source = playerManager?.GetPlayer();     // ì‹œì „ì (í”Œë ˆì´ì–´)
+            var target = enemyManager?.GetEnemy();       // ëŒ€ìƒì (ì , ë‹¨ì¼ ëŒ€ìƒ)
 
             if (source == null || target == null)
             {
-                UnityEngine.Debug.LogWarning("[DefaultCardExecutionContextProvider] ½ÃÀüÀÚ ¶Ç´Â ´ë»óÀÚ Á¤º¸°¡ ´©¶ôµÇ¾ú½À´Ï´Ù.");
+                UnityEngine.Debug.LogWarning("[DefaultCardExecutionContextProvider] ì‹œì „ì ë˜ëŠ” ëŒ€ìƒì ì •ë³´ê°€ ëˆ„ë½ë˜ì—ˆìŠµë‹ˆë‹¤.");
             }
 
             return new DefaultCardExecutionContext(card, source, target);

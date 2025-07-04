@@ -8,25 +8,25 @@ using Game.CombatSystem.Slot;
 namespace Game.CombatSystem.Service
 {
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î ÀüÅõ ½½·ÔÀÇ Ä«µå¸¦ ±³Ã¼ÇÒ ¶§,
-    /// ±âÁ¸ Ä«µå¸¦ ÇÚµå·Î º¹±Í½ÃÅ°°í »õ·Î¿î Ä«µå¸¦ ½½·Ô¿¡ ¹èÄ¡ÇÏ´Â ÇÚµé·¯ÀÔ´Ï´Ù.
+    /// í”Œë ˆì´ì–´ ì „íˆ¬ ìŠ¬ë¡¯ì˜ ì¹´ë“œë¥¼ êµì²´í•  ë•Œ,
+    /// ê¸°ì¡´ ì¹´ë“œë¥¼ í•¸ë“œë¡œ ë³µê·€ì‹œí‚¤ê³  ìƒˆë¡œìš´ ì¹´ë“œë¥¼ ìŠ¬ë¡¯ì— ë°°ì¹˜í•˜ëŠ” í•¸ë“¤ëŸ¬ì…ë‹ˆë‹¤.
     /// </summary>
     public class PlayerCardReplacementHandler : ICardReplacementHandler
     {
-        #region ÇÊµå
+        #region í•„ë“œ
 
         private readonly IPlayerHandManager handManager;
         private readonly ITurnCardRegistry cardRegistry;
 
         #endregion
 
-        #region »ı¼ºÀÚ
+        #region ìƒì„±ì
 
         /// <summary>
-        /// ±³Ã¼ Ã³¸® ÇÚµé·¯ »ı¼ºÀÚ.
+        /// êµì²´ ì²˜ë¦¬ í•¸ë“¤ëŸ¬ ìƒì„±ì.
         /// </summary>
-        /// <param name="handManager">ÇÃ·¹ÀÌ¾î ÇÚµå ¸Å´ÏÀú</param>
-        /// <param name="cardRegistry">ÅÏ Ä«µå ·¹Áö½ºÆ®¸®</param>
+        /// <param name="handManager">í”Œë ˆì´ì–´ í•¸ë“œ ë§¤ë‹ˆì €</param>
+        /// <param name="cardRegistry">í„´ ì¹´ë“œ ë ˆì§€ìŠ¤íŠ¸ë¦¬</param>
         public PlayerCardReplacementHandler(IPlayerHandManager handManager, ITurnCardRegistry cardRegistry)
         {
             this.handManager = handManager;
@@ -35,14 +35,14 @@ namespace Game.CombatSystem.Service
 
         #endregion
 
-        #region Ä«µå ±³Ã¼ Ã³¸®
+        #region ì¹´ë“œ êµì²´ ì²˜ë¦¬
 
         /// <summary>
-        /// ½½·ÔÀÇ ±âÁ¸ Ä«µå¸¦ ÇÚµå·Î º¹±Í½ÃÅ°°í »õ·Î¿î Ä«µå¸¦ ½½·Ô¿¡ ¹èÄ¡ÇÕ´Ï´Ù.
+        /// ìŠ¬ë¡¯ì˜ ê¸°ì¡´ ì¹´ë“œë¥¼ í•¸ë“œë¡œ ë³µê·€ì‹œí‚¤ê³  ìƒˆë¡œìš´ ì¹´ë“œë¥¼ ìŠ¬ë¡¯ì— ë°°ì¹˜í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="slot">´ë»ó ½½·Ô</param>
-        /// <param name="newCard">»õ·Î µî·ÏÇÒ Ä«µå</param>
-        /// <param name="newCardUI">»õ Ä«µå UI</param>
+        /// <param name="slot">ëŒ€ìƒ ìŠ¬ë¡¯</param>
+        /// <param name="newCard">ìƒˆë¡œ ë“±ë¡í•  ì¹´ë“œ</param>
+        /// <param name="newCardUI">ìƒˆ ì¹´ë“œ UI</param>
         public void ReplaceSlotCard(ICombatCardSlot slot, ISkillCard newCard, SkillCardUI newCardUI)
         {
             var oldCard = slot.GetCard();
@@ -50,17 +50,17 @@ namespace Game.CombatSystem.Service
 
             if (oldCard != null && oldUI != null)
             {
-                // ±âÁ¸ Ä«µå ½½·Ô¿¡¼­ Á¦°Å
+                // ê¸°ì¡´ ì¹´ë“œ ìŠ¬ë¡¯ì—ì„œ ì œê±°
                 CardRegistrar.ClearSlot(slot);
 
-                // ±âÁ¸ Ä«µåÀÇ ÀüÅõ ½½·Ô Á¤º¸ Á¦°Å
+                // ê¸°ì¡´ ì¹´ë“œì˜ ì „íˆ¬ ìŠ¬ë¡¯ ì •ë³´ ì œê±°
                 var oldCombatSlot = oldCard.GetCombatSlot();
                 if (oldCombatSlot.HasValue)
                 {
                     cardRegistry.ClearSlot(oldCombatSlot.Value);
                 }
 
-                // ±âÁ¸ Ä«µå ÇÚµå·Î º¹±Í
+                // ê¸°ì¡´ ì¹´ë“œ í•¸ë“œë¡œ ë³µê·€
                 var oldHandSlot = oldCard.GetHandSlot();
                 if (oldHandSlot.HasValue)
                 {
@@ -69,25 +69,25 @@ namespace Game.CombatSystem.Service
                 }
                 else
                 {
-                    Debug.LogWarning("[PlayerCardReplacementHandler] ÇÚµå ½½·Ô Á¤º¸ ¾øÀ½ ¡æ ÀÚµ¿ º¹±Í");
+                    Debug.LogWarning("[PlayerCardReplacementHandler] í•¸ë“œ ìŠ¬ë¡¯ ì •ë³´ ì—†ìŒ â†’ ìë™ ë³µê·€");
                     handManager.RestoreCardToHand(oldCard);
                     CardSlotHelper.ResetCardToOriginal(oldUI);
                 }
             }
 
-            // »õ Ä«µå µî·Ï
+            // ìƒˆ ì¹´ë“œ ë“±ë¡
             slot.SetCard(newCard);
             slot.SetCardUI(newCardUI);
             var execSlot = SlotPositionUtil.ToExecutionSlot(slot.GetCombatPosition());
             newCard.SetCombatSlot(execSlot);
 
-            // Ä«µå UI Á¤·Ä ¹× ½½·Ô ºÎÂø
+            // ì¹´ë“œ UI ì •ë ¬ ë° ìŠ¬ë¡¯ ë¶€ì°©
             CardSlotHelper.AttachCardToSlot(newCardUI, (MonoBehaviour)slot);
 
-            // ÀüÅõ Ä«µå ·¹Áö½ºÆ®¸®¿¡ µî·Ï
+            // ì „íˆ¬ ì¹´ë“œ ë ˆì§€ìŠ¤íŠ¸ë¦¬ì— ë“±ë¡
             cardRegistry.RegisterCard(execSlot, newCard, newCardUI, SlotOwner.PLAYER);
 
-            Debug.Log($"[PlayerCardReplacementHandler] Ä«µå ±³Ã¼ ¿Ï·á ¡æ ½½·Ô: {execSlot}, Ä«µå: {newCard.CardData?.Name}");
+            Debug.Log($"[PlayerCardReplacementHandler] ì¹´ë“œ êµì²´ ì™„ë£Œ â†’ ìŠ¬ë¡¯: {execSlot}, ì¹´ë“œ: {newCard.CardData?.Name}");
         }
 
         #endregion

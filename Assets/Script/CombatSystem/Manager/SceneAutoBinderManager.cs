@@ -5,12 +5,12 @@ using Game.SkillCardSystem.Core;
 namespace Game.Utility
 {
     /// <summary>
-    /// ¾À ³»¿¡¼­ ÁÖ¿ä ¸Å´ÏÀú ¿ÀºêÁ§Æ®¸¦ ÀÚµ¿À¸·Î °Ë»öÇÏ¿© ¿¬°áÇÏ´Â À¯Æ¿¸®Æ¼ Å¬·¡½ºÀÔ´Ï´Ù.
-    /// Unity 6000.0 ÀÌ»ó ¹öÀü¿¡¼­´Â <c>FindFirstObjectByType</c>À» »ç¿ëÇÕ´Ï´Ù.
+    /// ì”¬ ë‚´ì—ì„œ ì£¼ìš” ë§¤ë‹ˆì € ì˜¤ë¸Œì íŠ¸ë¥¼ ìë™ìœ¼ë¡œ ê²€ìƒ‰í•˜ì—¬ ì—°ê²°í•˜ëŠ” ìœ í‹¸ë¦¬í‹° í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
+    /// Unity 6000.0 ì´ìƒ ë²„ì „ì—ì„œëŠ” <c>FindFirstObjectByType</c>ì„ ì‚¬ìš©í•©ë‹ˆë‹¤.
     /// </summary>
     public class SceneAutoBinderManager : MonoBehaviour
     {
-        #region ÇÊµå
+        #region í•„ë“œ
 
         [SerializeField] private CombatSlotManager battleSlotManager;
         [SerializeField] private PlayerHandManager playerHandManager;
@@ -18,30 +18,30 @@ namespace Game.Utility
 
         #endregion
 
-        #region Unity ¶óÀÌÇÁ»çÀÌÅ¬
+        #region Unity ë¼ì´í”„ì‚¬ì´í´
 
         private void Awake()
         {
             AutoBindReferences();
 
             if (battleSlotManager == null)
-                Debug.LogWarning("[SceneAutoBinderManager] CombatSlotManager¸¦ Ã£Áö ¸øÇß½À´Ï´Ù.");
+                Debug.LogWarning("[SceneAutoBinderManager] CombatSlotManagerë¥¼ ì°¾ì§€ ëª»í–ˆìŠµë‹ˆë‹¤.");
 
             if (playerHandManager == null)
-                Debug.LogWarning("[SceneAutoBinderManager] PlayerHandManager¸¦ Ã£Áö ¸øÇß½À´Ï´Ù.");
+                Debug.LogWarning("[SceneAutoBinderManager] PlayerHandManagerë¥¼ ì°¾ì§€ ëª»í–ˆìŠµë‹ˆë‹¤.");
 
             if (enemyHandManager == null)
-                Debug.LogWarning("[SceneAutoBinderManager] EnemyHandManager¸¦ Ã£Áö ¸øÇß½À´Ï´Ù.");
+                Debug.LogWarning("[SceneAutoBinderManager] EnemyHandManagerë¥¼ ì°¾ì§€ ëª»í–ˆìŠµë‹ˆë‹¤.");
 
-            Debug.Log("[SceneAutoBinderManager] ÀÚµ¿ ¹ÙÀÎµù ¿Ï·á");
+            Debug.Log("[SceneAutoBinderManager] ìë™ ë°”ì¸ë”© ì™„ë£Œ");
         }
 
         #endregion
 
-        #region ¹ÙÀÎµù ¸Ş¼­µå
+        #region ë°”ì¸ë”© ë©”ì„œë“œ
 
         /// <summary>
-        /// ÇÊ¿äÇÑ ¸Å´ÏÀúµéÀ» FindFirstObjectByTypeÀ» ÅëÇØ ÀÚµ¿À¸·Î ¹ÙÀÎµùÇÕ´Ï´Ù.
+        /// í•„ìš”í•œ ë§¤ë‹ˆì €ë“¤ì„ FindFirstObjectByTypeì„ í†µí•´ ìë™ìœ¼ë¡œ ë°”ì¸ë”©í•©ë‹ˆë‹¤.
         /// </summary>
         private void AutoBindReferences()
         {
@@ -51,12 +51,12 @@ namespace Game.Utility
         }
 
         /// <summary>
-        /// ¿ÜºÎ¿¡¼­ ¼öµ¿À¸·Î ¹ÙÀÎµùÀ» ¿äÃ»ÇÒ ¼ö ÀÖ´Â ¸Ş¼­µåÀÔ´Ï´Ù.
+        /// ì™¸ë¶€ì—ì„œ ìˆ˜ë™ìœ¼ë¡œ ë°”ì¸ë”©ì„ ìš”ì²­í•  ìˆ˜ ìˆëŠ” ë©”ì„œë“œì…ë‹ˆë‹¤.
         /// </summary>
         public void Initialize()
         {
             AutoBindReferences();
-            Debug.Log("[SceneAutoBinderManager] ¼öµ¿ ¹ÙÀÎµù ¿Ï·á");
+            Debug.Log("[SceneAutoBinderManager] ìˆ˜ë™ ë°”ì¸ë”© ì™„ë£Œ");
         }
 
         #endregion

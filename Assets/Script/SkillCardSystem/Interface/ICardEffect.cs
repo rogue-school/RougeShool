@@ -3,28 +3,28 @@ using Game.CombatSystem.Interface;
 namespace Game.SkillCardSystem.Interface
 {
     /// <summary>
-    /// Ä«µå È¿°ú¸¦ Á¤ÀÇÇÏ´Â ÀÎÅÍÆäÀÌ½ºÀÔ´Ï´Ù.
+    /// ì¹´ë“œ íš¨ê³¼ë¥¼ ì •ì˜í•˜ëŠ” ì¸í„°íŽ˜ì´ìŠ¤ìž…ë‹ˆë‹¤.
     /// </summary>
     public interface ICardEffect
     {
         /// <summary>
-        /// Ä«µå È¿°ú¸¦ ½ÇÇàÇÕ´Ï´Ù.
+        /// ì¹´ë“œ íš¨ê³¼ë¥¼ ì‹¤í–‰í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="context">Ä«µå ½ÇÇà ÄÁÅØ½ºÆ®. ½ÃÀüÀÚ, ´ë»ó µîÀÇ Á¤º¸¸¦ Æ÷ÇÔÇÕ´Ï´Ù.</param>
-        /// <param name="value">ÀÌÆåÆ® ¼öÄ¡ (¿¹: ÇÇÇØ·®, È¸º¹·® µî).</param>
-        /// <param name="turnManager">ÇÊ¿äÇÑ °æ¿ì ÀüÅõ ÅÏ °ü¸®ÀÚ. (¿¹: °¡µå Ã³¸® µî, ¼±ÅÃÀû)</param>
+        /// <param name="context">ì¹´ë“œ ì‹¤í–‰ ì»¨í…ìŠ¤íŠ¸. ì‹œì „ìž, ëŒ€ìƒ ë“±ì˜ ì •ë³´ë¥¼ í¬í•¨í•©ë‹ˆë‹¤.</param>
+        /// <param name="value">ì´íŽ™íŠ¸ ìˆ˜ì¹˜ (ì˜ˆ: í”¼í•´ëŸ‰, íšŒë³µëŸ‰ ë“±).</param>
+        /// <param name="turnManager">í•„ìš”í•œ ê²½ìš° ì „íˆ¬ í„´ ê´€ë¦¬ìž. (ì˜ˆ: ê°€ë“œ ì²˜ë¦¬ ë“±, ì„ íƒì )</param>
         void ApplyEffect(ICardExecutionContext context, int value, ICombatTurnManager turnManager = null);
 
         /// <summary>
-        /// ÀÌÆåÆ®ÀÇ ÀÌ¸§À» ¹ÝÈ¯ÇÕ´Ï´Ù.
+        /// ì´íŽ™íŠ¸ì˜ ì´ë¦„ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <returns>ÀÌÆåÆ® ÀÌ¸§.</returns>
+        /// <returns>ì´íŽ™íŠ¸ ì´ë¦„.</returns>
         string GetEffectName();
 
         /// <summary>
-        /// ÀÌÆåÆ®ÀÇ ¼³¸íÀ» ¹ÝÈ¯ÇÕ´Ï´Ù.
+        /// ì´íŽ™íŠ¸ì˜ ì„¤ëª…ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <returns>ÀÌÆåÆ® ¼³¸í ¹®ÀÚ¿­.</returns>
+        /// <returns>ì´íŽ™íŠ¸ ì„¤ëª… ë¬¸ìžì—´.</returns>
         string GetDescription();
     }
 }

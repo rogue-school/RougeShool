@@ -5,8 +5,8 @@ namespace Game.CombatSystem.Core
 {
     /// <summary>
     /// [DefaultCombatState]
-    /// ±âº» ÀüÅõ ÅÏ »óÅÂ·Î, ¾Æ¹«·± °ÔÀÓ ·ÎÁ÷µµ ½ÇÇàµÇÁö ¾Ê´Â »óÅÂÀÔ´Ï´Ù.
-    /// ÁÖ·Î ÃÊ±â »óÅÂ³ª µğ¹ö±ë, »óÅÂ ÀüÀÌ Èå¸§ È®ÀÎÀ» À§ÇØ »ç¿ëµË´Ï´Ù.
+    /// ê¸°ë³¸ ì „íˆ¬ í„´ ìƒíƒœë¡œ, ì•„ë¬´ëŸ° ê²Œì„ ë¡œì§ë„ ì‹¤í–‰ë˜ì§€ ì•ŠëŠ” ìƒíƒœì…ë‹ˆë‹¤.
+    /// ì£¼ë¡œ ì´ˆê¸° ìƒíƒœë‚˜ ë””ë²„ê¹…, ìƒíƒœ ì „ì´ íë¦„ í™•ì¸ì„ ìœ„í•´ ì‚¬ìš©ë©ë‹ˆë‹¤.
     /// </summary>
     public class DefaultCombatState : ICombatTurnState
     {
@@ -19,9 +19,9 @@ namespace Game.CombatSystem.Core
         #region Constructor
 
         /// <summary>
-        /// ±âº» ÀüÅõ »óÅÂ¸¦ ÃÊ±âÈ­ÇÕ´Ï´Ù.
+        /// ê¸°ë³¸ ì „íˆ¬ ìƒíƒœë¥¼ ì´ˆê¸°í™”í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="manager">ÅÏ ¸Å´ÏÀú ÀÎ½ºÅÏ½º</param>
+        /// <param name="manager">í„´ ë§¤ë‹ˆì € ì¸ìŠ¤í„´ìŠ¤</param>
         public DefaultCombatState(ICombatTurnManager manager)
         {
             turnManager = manager;
@@ -32,29 +32,29 @@ namespace Game.CombatSystem.Core
         #region ICombatTurnState Implementation
 
         /// <summary>
-        /// »óÅÂ¿¡ ÁøÀÔÇÒ ¶§ È£ÃâµË´Ï´Ù.
+        /// ìƒíƒœì— ì§„ì…í•  ë•Œ í˜¸ì¶œë©ë‹ˆë‹¤.
         /// </summary>
         public void EnterState()
         {
-            Debug.Log("[DefaultCombatState] »óÅÂ ÁøÀÔ");
+            Debug.Log("[DefaultCombatState] ìƒíƒœ ì§„ì…");
         }
 
         /// <summary>
-        /// »óÅÂ ½ÇÇà ½Ã È£ÃâµË´Ï´Ù. ½ÇÁ¦ °ÔÀÓ ·ÎÁ÷Àº ¾ø½À´Ï´Ù.
+        /// ìƒíƒœ ì‹¤í–‰ ì‹œ í˜¸ì¶œë©ë‹ˆë‹¤. ì‹¤ì œ ê²Œì„ ë¡œì§ì€ ì—†ìŠµë‹ˆë‹¤.
         /// </summary>
         public void ExecuteState()
         {
-            Debug.Log("[DefaultCombatState] »óÅÂ ½ÇÇà Áß (±âº» »óÅÂ)");
-            // ÇÊ¿ä ½Ã ÀÚµ¿ »óÅÂ ÀüÀÌ °¡´É
-            // ¿¹: turnManager.RequestStateChange(...);
+            Debug.Log("[DefaultCombatState] ìƒíƒœ ì‹¤í–‰ ì¤‘ (ê¸°ë³¸ ìƒíƒœ)");
+            // í•„ìš” ì‹œ ìë™ ìƒíƒœ ì „ì´ ê°€ëŠ¥
+            // ì˜ˆ: turnManager.RequestStateChange(...);
         }
 
         /// <summary>
-        /// »óÅÂ¿¡¼­ ³ª°¥ ¶§ È£ÃâµË´Ï´Ù.
+        /// ìƒíƒœì—ì„œ ë‚˜ê°ˆ ë•Œ í˜¸ì¶œë©ë‹ˆë‹¤.
         /// </summary>
         public void ExitState()
         {
-            Debug.Log("[DefaultCombatState] »óÅÂ Á¾·á");
+            Debug.Log("[DefaultCombatState] ìƒíƒœ ì¢…ë£Œ");
         }
 
         #endregion

@@ -5,44 +5,44 @@ using Game.CombatSystem.Interface;
 namespace Game.SkillCardSystem.Effects
 {
     /// <summary>
-    /// ½ºÅ³ Ä«µåÀÇ ÀÌÆåÆ®¸¦ Á¤ÀÇÇÏ´Â ScriptableObject ±â¹İÀÇ Ãß»ó Å¬·¡½ºÀÔ´Ï´Ù.
-    /// ¸ğµç ±¸Ã¼ ÀÌÆåÆ®´Â ÀÌ Å¬·¡½º¸¦ »ó¼ÓÇÏ¿© ±¸ÇöµË´Ï´Ù.
+    /// ìŠ¤í‚¬ ì¹´ë“œì˜ ì´í™íŠ¸ë¥¼ ì •ì˜í•˜ëŠ” ScriptableObject ê¸°ë°˜ì˜ ì¶”ìƒ í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
+    /// ëª¨ë“  êµ¬ì²´ ì´í™íŠ¸ëŠ” ì´ í´ë˜ìŠ¤ë¥¼ ìƒì†í•˜ì—¬ êµ¬í˜„ë©ë‹ˆë‹¤.
     /// </summary>
     [System.Serializable]
     public abstract class SkillCardEffectSO : ScriptableObject, ICardEffect
     {
-        [Header("±âº» Á¤º¸")]
-        [Tooltip("ÀÌÆåÆ® ÀÌ¸§ (UI, ·Î±× µî¿¡¼­ »ç¿ë)")]
+        [Header("ê¸°ë³¸ ì •ë³´")]
+        [Tooltip("ì´í™íŠ¸ ì´ë¦„ (UI, ë¡œê·¸ ë“±ì—ì„œ ì‚¬ìš©)")]
         [SerializeField] private string effectName;
 
-        [Tooltip("ÀÌÆåÆ® ¼³¸í (ÅøÆÁ ¶Ç´Â »ó¼¼ Á¤º¸¿¡ »ç¿ë)")]
+        [Tooltip("ì´í™íŠ¸ ì„¤ëª… (íˆ´íŒ ë˜ëŠ” ìƒì„¸ ì •ë³´ì— ì‚¬ìš©)")]
         [TextArea]
         [SerializeField] private string description;
 
         /// <summary>
-        /// ÀÌÆåÆ®ÀÇ ÀÌ¸§À» ¹İÈ¯ÇÕ´Ï´Ù.
+        /// ì´í™íŠ¸ì˜ ì´ë¦„ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         public string GetEffectName() => effectName;
 
         /// <summary>
-        /// ÀÌÆåÆ®ÀÇ ¼³¸íÀ» ¹İÈ¯ÇÕ´Ï´Ù.
+        /// ì´í™íŠ¸ì˜ ì„¤ëª…ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         public string GetDescription() => description;
 
         /// <summary>
-        /// ½ÇÇà °¡´ÉÇÑ Ä¿¸Çµå °´Ã¼¸¦ »ı¼ºÇÕ´Ï´Ù.
+        /// ì‹¤í–‰ ê°€ëŠ¥í•œ ì»¤ë§¨ë“œ ê°ì²´ë¥¼ ìƒì„±í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="power">È¿°úÀÇ Ãß°¡ ÆÄ¿ö (¿¹: Ä«µå ½ºÅÈ µîÀ¸·Î °è»êµÊ)</param>
-        /// <returns>ICardEffectCommand ÀÎ½ºÅÏ½º</returns>
+        /// <param name="power">íš¨ê³¼ì˜ ì¶”ê°€ íŒŒì›Œ (ì˜ˆ: ì¹´ë“œ ìŠ¤íƒ¯ ë“±ìœ¼ë¡œ ê³„ì‚°ë¨)</param>
+        /// <returns>ICardEffectCommand ì¸ìŠ¤í„´ìŠ¤</returns>
         public abstract ICardEffectCommand CreateEffectCommand(int power);
 
         /// <summary>
-        /// ½ÇÁ¦ ÀÌÆåÆ®¸¦ ½ÇÇàÇÕ´Ï´Ù.
-        /// ÁÖ·Î Å×½ºÆ® ¶Ç´Â ·±Å¸ÀÓ ¿¹¿Ü Ã³¸® ¸ñÀûÀÔ´Ï´Ù.
+        /// ì‹¤ì œ ì´í™íŠ¸ë¥¼ ì‹¤í–‰í•©ë‹ˆë‹¤.
+        /// ì£¼ë¡œ í…ŒìŠ¤íŠ¸ ë˜ëŠ” ëŸ°íƒ€ì„ ì˜ˆì™¸ ì²˜ë¦¬ ëª©ì ì…ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="context">½ÇÇà ÄÁÅØ½ºÆ® (½ÃÀüÀÚ, ´ë»ó µî)</param>
-        /// <param name="value">½ÇÁ¦ È¿°ú ¼öÄ¡</param>
-        /// <param name="controller">ÀüÅõ ÅÏ ¸Å´ÏÀú (¼±ÅÃÀû)</param>
+        /// <param name="context">ì‹¤í–‰ ì»¨í…ìŠ¤íŠ¸ (ì‹œì „ì, ëŒ€ìƒ ë“±)</param>
+        /// <param name="value">ì‹¤ì œ íš¨ê³¼ ìˆ˜ì¹˜</param>
+        /// <param name="controller">ì „íˆ¬ í„´ ë§¤ë‹ˆì € (ì„ íƒì )</param>
         public abstract void ApplyEffect(ICardExecutionContext context, int value, ICombatTurnManager controller = null);
     }
 }

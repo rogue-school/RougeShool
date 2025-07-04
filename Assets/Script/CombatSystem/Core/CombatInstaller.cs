@@ -28,15 +28,15 @@ using Game.CombatSystem.CoolTime;
 using Game.SkillCardSystem.Runtime;
 
 /// <summary>
-/// ÀüÅõ ¾À¿¡¼­ »ç¿ëÇÏ´Â Zenject ¼³Ä¡ÀÚÀÔ´Ï´Ù.
-/// ÇÊ¿äÇÑ ¼­ºñ½º, ¸Å´ÏÀú, »óÅÂ¸Ó½Å, ½½·Ô, UI µîÀ» ¹ÙÀÎµùÇÕ´Ï´Ù.
+/// ì „íˆ¬ ì”¬ì—ì„œ ì‚¬ìš©í•˜ëŠ” Zenject ì„¤ì¹˜ìì…ë‹ˆë‹¤.
+/// í•„ìš”í•œ ì„œë¹„ìŠ¤, ë§¤ë‹ˆì €, ìƒíƒœë¨¸ì‹ , ìŠ¬ë¡¯, UI ë“±ì„ ë°”ì¸ë”©í•©ë‹ˆë‹¤.
 /// </summary>
 public class CombatInstaller : MonoInstaller
 {
-    [Header("Ä«µå UI ÇÁ¸®ÆÕ")]
+    [Header("ì¹´ë“œ UI í”„ë¦¬íŒ¹")]
     [SerializeField] private SkillCardUI cardUIPrefab;
 
-    [Header("ÅÏ ½ÃÀÛ ¹öÆ° ÇÚµé·¯")]
+    [Header("í„´ ì‹œì‘ ë²„íŠ¼ í•¸ë“¤ëŸ¬")]
     [SerializeField] private TurnStartButtonHandler startButtonHandler;
 
     public override void InstallBindings()
@@ -57,10 +57,10 @@ public class CombatInstaller : MonoInstaller
         BindDeathUI();
     }
 
-    #region »óÅÂ¸Ó½Å
+    #region ìƒíƒœë¨¸ì‹ 
 
     /// <summary>
-    /// ÀüÅõ »óÅÂº° StateFactory ¹ÙÀÎµù
+    /// ì „íˆ¬ ìƒíƒœë³„ StateFactory ë°”ì¸ë”©
     /// </summary>
     private void BindStateFactories()
     {
@@ -76,10 +76,10 @@ public class CombatInstaller : MonoInstaller
 
     #endregion
 
-    #region MonoBehaviour ¹× ÀÎÅÍÆäÀÌ½º ¹ÙÀÎµù
+    #region MonoBehaviour ë° ì¸í„°í˜ì´ìŠ¤ ë°”ì¸ë”©
 
     /// <summary>
-    /// ¾À ³» ÄÄÆ÷³ÍÆ®¿¡¼­ ÀÎÅÍÆäÀÌ½º ÀÚµ¿ ¹ÙÀÎµù
+    /// ì”¬ ë‚´ ì»´í¬ë„ŒíŠ¸ì—ì„œ ì¸í„°í˜ì´ìŠ¤ ìë™ ë°”ì¸ë”©
     /// </summary>
     private void BindMonoBehaviours()
     {
@@ -101,10 +101,10 @@ public class CombatInstaller : MonoInstaller
 
     #endregion
 
-    #region ¼­ºñ½º ¹ÙÀÎµù
+    #region ì„œë¹„ìŠ¤ ë°”ì¸ë”©
 
     /// <summary>
-    /// ÁÖ¿ä ¼­ºñ½º Å¬·¡½º ¹ÙÀÎµù
+    /// ì£¼ìš” ì„œë¹„ìŠ¤ í´ë˜ìŠ¤ ë°”ì¸ë”©
     /// </summary>
     private void BindServices()
     {
@@ -130,10 +130,10 @@ public class CombatInstaller : MonoInstaller
 
     #endregion
 
-    #region ÄÁÅØ½ºÆ®
+    #region ì»¨í…ìŠ¤íŠ¸
 
     /// <summary>
-    /// (ÁÖÀÇ) ½ÇÇà ÄÁÅØ½ºÆ®¸¦ ÃÊ±âÈ­µÈ null °ªÀ¸·Î ¹ÙÀÎµù
+    /// (ì£¼ì˜) ì‹¤í–‰ ì»¨í…ìŠ¤íŠ¸ë¥¼ ì´ˆê¸°í™”ëœ null ê°’ìœ¼ë¡œ ë°”ì¸ë”©
     /// </summary>
     private void BindExecutionContext()
     {
@@ -143,17 +143,17 @@ public class CombatInstaller : MonoInstaller
 
     #endregion
 
-    #region ½½·Ô ½Ã½ºÅÛ
+    #region ìŠ¬ë¡¯ ì‹œìŠ¤í…œ
 
     /// <summary>
-    /// ½½·Ô ·¹Áö½ºÆ®¸®¿Í °ü·Ã ½Ã½ºÅÛ ¹ÙÀÎµù
+    /// ìŠ¬ë¡¯ ë ˆì§€ìŠ¤íŠ¸ë¦¬ì™€ ê´€ë ¨ ì‹œìŠ¤í…œ ë°”ì¸ë”©
     /// </summary>
     private void BindSlotSystem()
     {
         var slotRegistry = Object.FindFirstObjectByType<SlotRegistry>();
         if (slotRegistry == null)
         {
-            Debug.LogError("[CombatInstaller] SlotRegistry¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù.");
+            Debug.LogError("[CombatInstaller] SlotRegistryë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.");
             return;
         }
 
@@ -168,10 +168,10 @@ public class CombatInstaller : MonoInstaller
 
     #endregion
 
-    #region ÃÊ±âÈ­ ´Ü°è
+    #region ì´ˆê¸°í™” ë‹¨ê³„
 
     /// <summary>
-    /// ÀüÅõ ÁØºñ ´Ü°è ÃÊ±âÈ­ ¿ä¼Ò ¹ÙÀÎµù
+    /// ì „íˆ¬ ì¤€ë¹„ ë‹¨ê³„ ì´ˆê¸°í™” ìš”ì†Œ ë°”ì¸ë”©
     /// </summary>
     private void BindInitializerSteps()
     {
@@ -187,14 +187,14 @@ public class CombatInstaller : MonoInstaller
 
     #endregion
 
-    #region ¾À ·Î´õ
+    #region ì”¬ ë¡œë”
 
     private void BindSceneLoader()
     {
         var loader = Object.FindFirstObjectByType<SceneLoader>();
         if (loader == null)
         {
-            Debug.LogError("[CombatInstaller] SceneLoader°¡ ¾ø½À´Ï´Ù.");
+            Debug.LogError("[CombatInstaller] SceneLoaderê°€ ì—†ìŠµë‹ˆë‹¤.");
             return;
         }
 
@@ -203,16 +203,16 @@ public class CombatInstaller : MonoInstaller
 
     #endregion
 
-    #region UI ¹ÙÀÎµù
+    #region UI ë°”ì¸ë”©
 
     /// <summary>
-    /// Ä«µå UI ÇÁ¸®ÆÕ ¹ÙÀÎµù
+    /// ì¹´ë“œ UI í”„ë¦¬íŒ¹ ë°”ì¸ë”©
     /// </summary>
     private void BindUIPrefabs()
     {
         if (cardUIPrefab == null)
         {
-            Debug.LogWarning("[CombatInstaller] cardUIPrefabÀÌ ÇÒ´çµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+            Debug.LogWarning("[CombatInstaller] cardUIPrefabì´ í• ë‹¹ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
             return;
         }
 
@@ -220,13 +220,13 @@ public class CombatInstaller : MonoInstaller
     }
 
     /// <summary>
-    /// UI ÇÚµé·¯ (¹öÆ° µî) ¹ÙÀÎµù
+    /// UI í•¸ë“¤ëŸ¬ (ë²„íŠ¼ ë“±) ë°”ì¸ë”©
     /// </summary>
     private void BindUIHandlers()
     {
         if (startButtonHandler == null)
         {
-            Debug.LogError("[CombatInstaller] startButtonHandler°¡ ÀÎ½ºÆåÅÍ¿¡ ÇÒ´çµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+            Debug.LogError("[CombatInstaller] startButtonHandlerê°€ ì¸ìŠ¤í™í„°ì— í• ë‹¹ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
             return;
         }
 
@@ -235,7 +235,7 @@ public class CombatInstaller : MonoInstaller
 
     #endregion
 
-    #region ÄğÅ¸ÀÓ ½Ã½ºÅÛ
+    #region ì¿¨íƒ€ì„ ì‹œìŠ¤í…œ
 
     private void BindCooldownSystem()
     {
@@ -244,14 +244,14 @@ public class CombatInstaller : MonoInstaller
 
     #endregion
 
-    #region »ç¸Á UI
+    #region ì‚¬ë§ UI
 
     private void BindDeathUI()
     {
         var deathUI = Object.FindFirstObjectByType<DeathUIManager>();
         if (deathUI == null)
         {
-            Debug.LogError("[CombatInstaller] DeathUIManager¸¦ ¾À¿¡¼­ Ã£Áö ¸øÇß½À´Ï´Ù.");
+            Debug.LogError("[CombatInstaller] DeathUIManagerë¥¼ ì”¬ì—ì„œ ì°¾ì§€ ëª»í–ˆìŠµë‹ˆë‹¤.");
             return;
         }
 
@@ -260,10 +260,10 @@ public class CombatInstaller : MonoInstaller
 
     #endregion
 
-    #region À¯Æ¿ ¹ÙÀÎµù ¸Ş¼­µå
+    #region ìœ í‹¸ ë°”ì¸ë”© ë©”ì„œë“œ
 
     /// <summary>
-    /// Æ¯Á¤ ÀÎÅÍÆäÀÌ½º¿¡ ´ëÇÑ MonoBehaviour ¹ÙÀÎµù
+    /// íŠ¹ì • ì¸í„°í˜ì´ìŠ¤ì— ëŒ€í•œ MonoBehaviour ë°”ì¸ë”©
     /// </summary>
     private void BindMono<TInterface, TImpl>() where TImpl : Component, TInterface
     {
@@ -271,7 +271,7 @@ public class CombatInstaller : MonoInstaller
     }
 
     /// <summary>
-    /// MonoBehaviourÀÇ ¸ğµç ÀÎÅÍÆäÀÌ½º ¹× ÀÚ±â ÀÚ½Å ¹ÙÀÎµù
+    /// MonoBehaviourì˜ ëª¨ë“  ì¸í„°í˜ì´ìŠ¤ ë° ìê¸° ìì‹  ë°”ì¸ë”©
     /// </summary>
     private void BindMonoInterfaces<T>() where T : Component
     {

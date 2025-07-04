@@ -6,7 +6,7 @@ using Game.SkillCardSystem.Interface;
 namespace Game.SkillCardSystem.Effects
 {
     /// <summary>
-    /// ÀÏÁ¤ ÅÏ µ¿¾È ´ë»ó¿¡°Ô ¸Å ÅÏ ÇÇÇØ¸¦ ÀÔÈ÷´Â ÃâÇ÷ È¿°úÀÔ´Ï´Ù.
+    /// ì¼ì • í„´ ë™ì•ˆ ëŒ€ìƒì—ê²Œ ë§¤ í„´ í”¼í•´ë¥¼ ì…íˆëŠ” ì¶œí˜ˆ íš¨ê³¼ì…ë‹ˆë‹¤.
     /// </summary>
     public class BleedEffect : IPerTurnEffect
     {
@@ -14,10 +14,10 @@ namespace Game.SkillCardSystem.Effects
         private int remainingTurns;
 
         /// <summary>
-        /// ÃâÇ÷ È¿°ú »ı¼ºÀÚ
+        /// ì¶œí˜ˆ íš¨ê³¼ ìƒì„±ì
         /// </summary>
-        /// <param name="amount">¸Å ÅÏ ÀÔÈú ÇÇÇØ·®</param>
-        /// <param name="duration">Áö¼Ó ÅÏ ¼ö</param>
+        /// <param name="amount">ë§¤ í„´ ì…í í”¼í•´ëŸ‰</param>
+        /// <param name="duration">ì§€ì† í„´ ìˆ˜</param>
         public BleedEffect(int amount, int duration)
         {
             this.amount = amount;
@@ -25,26 +25,26 @@ namespace Game.SkillCardSystem.Effects
         }
 
         /// <summary>
-        /// ÃâÇ÷ È¿°ú°¡ ¸¸·áµÇ¾ú´ÂÁö ¿©ºÎ¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
+        /// ì¶œí˜ˆ íš¨ê³¼ê°€ ë§Œë£Œë˜ì—ˆëŠ”ì§€ ì—¬ë¶€ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         public bool IsExpired => remainingTurns <= 0;
 
         /// <summary>
-        /// ÅÏ ½ÃÀÛ ½Ã ´ë»ó¿¡°Ô ÇÇÇØ¸¦ ÀÔÈ÷°í ³²Àº ÅÏÀ» °¨¼Ò½ÃÅµ´Ï´Ù.
+        /// í„´ ì‹œì‘ ì‹œ ëŒ€ìƒì—ê²Œ í”¼í•´ë¥¼ ì…íˆê³  ë‚¨ì€ í„´ì„ ê°ì†Œì‹œí‚µë‹ˆë‹¤.
         /// </summary>
-        /// <param name="target">ÃâÇ÷ ÇÇÇØ¸¦ ¹ŞÀ» ´ë»ó Ä³¸¯ÅÍ</param>
+        /// <param name="target">ì¶œí˜ˆ í”¼í•´ë¥¼ ë°›ì„ ëŒ€ìƒ ìºë¦­í„°</param>
         public void OnTurnStart(ICharacter target)
         {
             if (target == null)
             {
-                Debug.LogWarning("[BleedEffect] ´ë»óÀÌ nullÀÔ´Ï´Ù. ÃâÇ÷ È¿°ú ¹«½ÃµÊ.");
+                Debug.LogWarning("[BleedEffect] ëŒ€ìƒì´ nullì…ë‹ˆë‹¤. ì¶œí˜ˆ íš¨ê³¼ ë¬´ì‹œë¨.");
                 return;
             }
 
             target.TakeDamage(amount);
             remainingTurns--;
 
-            Debug.Log($"[BleedEffect] {target.GetCharacterName()} ÃâÇ÷ ÇÇÇØ: {amount} (³²Àº ÅÏ: {remainingTurns})");
+            Debug.Log($"[BleedEffect] {target.GetCharacterName()} ì¶œí˜ˆ í”¼í•´: {amount} (ë‚¨ì€ í„´: {remainingTurns})");
         }
     }
 }

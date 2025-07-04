@@ -9,45 +9,45 @@ using Game.SkillCardSystem.Slot;
 namespace Game.SkillCardSystem.Deck
 {
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾îÀÇ ½ºÅ³ Ä«µå¿Í ÇØ´ç Ä«µå°¡ À§Ä¡ÇÒ ½½·Ô Á¤º¸¸¦ ´ã´Â Å¬·¡½ºÀÔ´Ï´Ù.
-    /// ·±Å¸ÀÓ ½Ã ½ÇÇà °¡´ÉÇÑ ÀÎ½ºÅÏ½º·Î º¯È¯µÉ ¼ö ÀÖ½À´Ï´Ù.
+    /// í”Œë ˆì´ì–´ì˜ ìŠ¤í‚¬ ì¹´ë“œì™€ í•´ë‹¹ ì¹´ë“œê°€ ìœ„ì¹˜í•  ìŠ¬ë¡¯ ì •ë³´ë¥¼ ë‹´ëŠ” í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
+    /// ëŸ°íƒ€ì„ ì‹œ ì‹¤í–‰ ê°€ëŠ¥í•œ ì¸ìŠ¤í„´ìŠ¤ë¡œ ë³€í™˜ë  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
     /// </summary>
     [System.Serializable]
     public class PlayerSkillCardEntry
     {
         /// <summary>
-        /// ÀÌ Ä«µå°¡ À§Ä¡ÇÒ ÇÚµå ½½·Ô À§Ä¡ÀÔ´Ï´Ù.
+        /// ì´ ì¹´ë“œê°€ ìœ„ì¹˜í•  í•¸ë“œ ìŠ¬ë¡¯ ìœ„ì¹˜ì…ë‹ˆë‹¤.
         /// </summary>
         [field: SerializeField]
         public SkillCardSlotPosition Slot { get; private set; }
 
         /// <summary>
-        /// ÇÃ·¹ÀÌ¾î¿ë ½ºÅ³ Ä«µå ScriptableObjectÀÔ´Ï´Ù.
+        /// í”Œë ˆì´ì–´ìš© ìŠ¤í‚¬ ì¹´ë“œ ScriptableObjectì…ë‹ˆë‹¤.
         /// </summary>
         [field: SerializeField]
         public PlayerSkillCard Card { get; private set; }
 
         /// <summary>
-        /// Ä«µå ÀÌ¸§À» ¹İÈ¯ÇÕ´Ï´Ù.
+        /// ì¹´ë“œ ì´ë¦„ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <returns>Ä«µå°¡ nullÀÌ¸é "Unknown" ¹İÈ¯</returns>
+        /// <returns>ì¹´ë“œê°€ nullì´ë©´ "Unknown" ë°˜í™˜</returns>
         public string GetCardName() => Card != null ? Card.name : "Unknown";
 
         /// <summary>
-        /// Ä«µå¿¡ µî·ÏµÈ È¿°ú ¸ñ·ÏÀ» »ı¼ºÇÕ´Ï´Ù.
+        /// ì¹´ë“œì— ë“±ë¡ëœ íš¨ê³¼ ëª©ë¡ì„ ìƒì„±í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <returns>SkillCardEffectSO ¸®½ºÆ® (¾øÀ¸¸é null ¶Ç´Â ºó ¸®½ºÆ®)</returns>
+        /// <returns>SkillCardEffectSO ë¦¬ìŠ¤íŠ¸ (ì—†ìœ¼ë©´ null ë˜ëŠ” ë¹ˆ ë¦¬ìŠ¤íŠ¸)</returns>
         public List<SkillCardEffectSO> CreateEffects() => Card?.CreateEffects();
 
         /// <summary>
-        /// ÀÌ Ä«µå ¿£Æ®¸®¸¦ ½ÇÇà °¡´ÉÇÑ ·±Å¸ÀÓ ÀÎ½ºÅÏ½º·Î º¯È¯ÇÕ´Ï´Ù.
+        /// ì´ ì¹´ë“œ ì—”íŠ¸ë¦¬ë¥¼ ì‹¤í–‰ ê°€ëŠ¥í•œ ëŸ°íƒ€ì„ ì¸ìŠ¤í„´ìŠ¤ë¡œ ë³€í™˜í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <returns>PlayerSkillCardInstance °´Ã¼</returns>
+        /// <returns>PlayerSkillCardInstance ê°ì²´</returns>
         public PlayerSkillCardInstance ToRuntimeInstance()
         {
             if (Card == null || Card.CardData == null)
             {
-                Debug.LogWarning($"[PlayerSkillCardEntry] ·±Å¸ÀÓ º¯È¯ ½ÇÆĞ: Card ¶Ç´Â CardData°¡ nullÀÔ´Ï´Ù. Slot: {Slot}");
+                Debug.LogWarning($"[PlayerSkillCardEntry] ëŸ°íƒ€ì„ ë³€í™˜ ì‹¤íŒ¨: Card ë˜ëŠ” CardDataê°€ nullì…ë‹ˆë‹¤. Slot: {Slot}");
                 return null;
             }
 

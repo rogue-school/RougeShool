@@ -3,18 +3,18 @@ using Game.CombatSystem.Slot;
 namespace Game.CombatSystem.Interface
 {
     /// <summary>
-    /// ÀüÅõ ½ÃÀÛ ½Ã Àû°ú ÇÃ·¹ÀÌ¾îÀÇ ÀüÅõ ½½·ÔÀ» ¹èÁ¤ÇÏ´Â ÀÎÅÍÆäÀÌ½ºÀÔ´Ï´Ù.
-    /// ÀûÀº ¸ÕÀú ½½·ÔÀ» ¼±ÅÃÇÏ°í, ÇÃ·¹ÀÌ¾î´Â ³²Àº ½½·ÔÀ» ÀÚµ¿À¸·Î ÇÒ´ç¹Þ½À´Ï´Ù.
+    /// ì „íˆ¬ ì‹œìž‘ ì‹œ ì ê³¼ í”Œë ˆì´ì–´ì˜ ì „íˆ¬ ìŠ¬ë¡¯ì„ ë°°ì •í•˜ëŠ” ì¸í„°íŽ˜ì´ìŠ¤ìž…ë‹ˆë‹¤.
+    /// ì ì€ ë¨¼ì € ìŠ¬ë¡¯ì„ ì„ íƒí•˜ê³ , í”Œë ˆì´ì–´ëŠ” ë‚¨ì€ ìŠ¬ë¡¯ì„ ìžë™ìœ¼ë¡œ í• ë‹¹ë°›ìŠµë‹ˆë‹¤.
     /// </summary>
     public interface ISlotSelector
     {
         /// <summary>
-        /// ÀüÅõ ½½·ÔÀ» ¹èÁ¤ÇÕ´Ï´Ù.
-        /// ÀûÀº ¿ì¼±ÀûÀ¸·Î ½½·ÔÀ» ¼±ÅÃÇÏ°í, ÇÃ·¹ÀÌ¾î´Â ³²Àº ½½·ÔÀ» ÀÚµ¿À¸·Î ÇÒ´ç¹Þ½À´Ï´Ù.
+        /// ì „íˆ¬ ìŠ¬ë¡¯ì„ ë°°ì •í•©ë‹ˆë‹¤.
+        /// ì ì€ ìš°ì„ ì ìœ¼ë¡œ ìŠ¬ë¡¯ì„ ì„ íƒí•˜ê³ , í”Œë ˆì´ì–´ëŠ” ë‚¨ì€ ìŠ¬ë¡¯ì„ ìžë™ìœ¼ë¡œ í• ë‹¹ë°›ìŠµë‹ˆë‹¤.
         /// </summary>
         /// <returns>
-        /// ÇÃ·¹ÀÌ¾î¿Í ÀûÀÇ ÀüÅõ ½½·Ô À§Ä¡¸¦ ½ÖÀ¸·Î ¹ÝÈ¯ÇÕ´Ï´Ù.
-        /// (playerSlot: ÇÃ·¹ÀÌ¾î ½½·Ô À§Ä¡, enemySlot: Àû ½½·Ô À§Ä¡)
+        /// í”Œë ˆì´ì–´ì™€ ì ì˜ ì „íˆ¬ ìŠ¬ë¡¯ ìœ„ì¹˜ë¥¼ ìŒìœ¼ë¡œ ë°˜í™˜í•©ë‹ˆë‹¤.
+        /// (playerSlot: í”Œë ˆì´ì–´ ìŠ¬ë¡¯ ìœ„ì¹˜, enemySlot: ì  ìŠ¬ë¡¯ ìœ„ì¹˜)
         /// </returns>
         (CombatSlotPosition playerSlot, CombatSlotPosition enemySlot) SelectSlots();
     }

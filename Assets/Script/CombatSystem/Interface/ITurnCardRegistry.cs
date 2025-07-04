@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.UI;

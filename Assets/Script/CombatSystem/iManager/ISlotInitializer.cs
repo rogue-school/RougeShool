@@ -1,14 +1,14 @@
 namespace Game.IManager
 {
     /// <summary>
-    /// ½½·Ô ÀÚµ¿ ¹ÙÀÎµùÀ» ¼öÇàÇÏ´Â ÃÊ±âÈ­ ÀÎÅÍÆäÀÌ½ºÀÔ´Ï´Ù.
+    /// ìŠ¬ë¡¯ ìžë™ ë°”ì¸ë”©ì„ ìˆ˜í–‰í•˜ëŠ” ì´ˆê¸°í™” ì¸í„°íŽ˜ì´ìŠ¤ìž…ë‹ˆë‹¤.
     /// </summary>
     public interface ISlotInitializer
     {
         /// <summary>
-        /// ¸ðµç ½½·Ô¿¡ ´ëÇØ ÀÚµ¿ ¹ÙÀÎµùÀ» ¼öÇàÇÕ´Ï´Ù.
-        /// ½½·Ô UI¿Í ½½·Ô ·¹Áö½ºÆ®¸®¸¦ ¿¬°áÇÏ°Å³ª,
-        /// Ä«µå µå·¡±×/µå·Ó ±â´É°ú »óÈ£ÀÛ¿ëÀ» ÁØºñÇÕ´Ï´Ù.
+        /// ëª¨ë“  ìŠ¬ë¡¯ì— ëŒ€í•´ ìžë™ ë°”ì¸ë”©ì„ ìˆ˜í–‰í•©ë‹ˆë‹¤.
+        /// ìŠ¬ë¡¯ UIì™€ ìŠ¬ë¡¯ ë ˆì§€ìŠ¤íŠ¸ë¦¬ë¥¼ ì—°ê²°í•˜ê±°ë‚˜,
+        /// ì¹´ë“œ ë“œëž˜ê·¸/ë“œë¡­ ê¸°ëŠ¥ê³¼ ìƒí˜¸ìž‘ìš©ì„ ì¤€ë¹„í•©ë‹ˆë‹¤.
         /// </summary>
         void AutoBindAllSlots();
     }

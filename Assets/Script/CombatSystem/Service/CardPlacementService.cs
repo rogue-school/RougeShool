@@ -6,31 +6,31 @@ using Game.SkillCardSystem.UI;
 namespace Game.CombatSystem.Service
 {
     /// <summary>
-    /// ÀüÅõ ½½·Ô¿¡ ½ºÅ³ Ä«µå¸¦ ¹èÄ¡ÇÏ´Â ¼­ºñ½º¸¦ Á¦°øÇÕ´Ï´Ù.
+    /// ì „íˆ¬ ìŠ¬ë¡¯ì— ìŠ¤í‚¬ ì¹´ë“œë¥¼ ë°°ì¹˜í•˜ëŠ” ì„œë¹„ìŠ¤ë¥¼ ì œê³µí•©ë‹ˆë‹¤.
     /// </summary>
     public class CardPlacementService : ICardPlacementService
     {
-        #region Ä«µå ¹èÄ¡
+        #region ì¹´ë“œ ë°°ì¹˜
 
         /// <summary>
-        /// ÁöÁ¤µÈ ½½·Ô¿¡ Ä«µå¿Í UI¸¦ ¹èÄ¡ÇÕ´Ï´Ù.
+        /// ì§€ì •ëœ ìŠ¬ë¡¯ì— ì¹´ë“œì™€ UIë¥¼ ë°°ì¹˜í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="card">¹èÄ¡ÇÒ ½ºÅ³ Ä«µå</param>
-        /// <param name="ui">ÇØ´ç Ä«µåÀÇ UI</param>
-        /// <param name="slot">Ä«µå¸¦ ¹èÄ¡ÇÒ ÀüÅõ ½½·Ô</param>
+        /// <param name="card">ë°°ì¹˜í•  ìŠ¤í‚¬ ì¹´ë“œ</param>
+        /// <param name="ui">í•´ë‹¹ ì¹´ë“œì˜ UI</param>
+        /// <param name="slot">ì¹´ë“œë¥¼ ë°°ì¹˜í•  ì „íˆ¬ ìŠ¬ë¡¯</param>
         public void PlaceCardInSlot(ISkillCard card, ISkillCardUI ui, ICombatCardSlot slot)
         {
             if (card == null || ui == null || slot == null)
             {
-                Debug.LogError("[CardPlacementService] Ä«µå, UI, ½½·Ô Áß ÇÏ³ª ÀÌ»óÀÌ nullÀÔ´Ï´Ù.");
+                Debug.LogError("[CardPlacementService] ì¹´ë“œ, UI, ìŠ¬ë¡¯ ì¤‘ í•˜ë‚˜ ì´ìƒì´ nullì…ë‹ˆë‹¤.");
                 return;
             }
 
-            // Ä«µå ¼³Á¤
+            // ì¹´ë“œ ì„¤ì •
             slot.SetCard(card);
             slot.SetCardUI(ui);
 
-            // UI ¿ÀºêÁ§Æ® À§Ä¡ Á¤·Ä
+            // UI ì˜¤ë¸Œì íŠ¸ ìœ„ì¹˜ ì •ë ¬
             if (ui is MonoBehaviour uiMb)
             {
                 uiMb.transform.SetParent(((MonoBehaviour)slot).transform);
@@ -39,10 +39,10 @@ namespace Game.CombatSystem.Service
             }
             else
             {
-                Debug.LogWarning("[CardPlacementService] Ä«µå UI°¡ MonoBehaviour°¡ ¾Æ´Õ´Ï´Ù. Transform ¼³Á¤À» °Ç³Ê¶İ´Ï´Ù.");
+                Debug.LogWarning("[CardPlacementService] ì¹´ë“œ UIê°€ MonoBehaviourê°€ ì•„ë‹™ë‹ˆë‹¤. Transform ì„¤ì •ì„ ê±´ë„ˆëœë‹ˆë‹¤.");
             }
 
-            Debug.Log($"[CardPlacementService] Ä«µå '{card.GetCardName()}' ½½·Ô {slot.GetCombatPosition()}¿¡ ¹èÄ¡ ¿Ï·á");
+            Debug.Log($"[CardPlacementService] ì¹´ë“œ '{card.GetCardName()}' ìŠ¬ë¡¯ {slot.GetCombatPosition()}ì— ë°°ì¹˜ ì™„ë£Œ");
         }
 
         #endregion

@@ -8,50 +8,50 @@ using Game.SkillCardSystem.Effects;
 namespace Game.SkillCardSystem.Effect
 {
     /// <summary>
-    /// ´ÙÀ½ Àû Ä«µåÀÇ ½½·Ô À§Ä¡¸¦ °­Á¦·Î ÁöÁ¤ÇÏ´Â ½ºÅ³ È¿°ú ScriptableObjectÀÔ´Ï´Ù.
-    /// Àû Ä«µå¿¡¸¸ Àû¿ëµÇ¸ç, ÁöÁ¤µÈ ½½·Ô¿¡ Ä«µå°¡ ¹èÄ¡µÇµµ·Ï À¯µµÇÕ´Ï´Ù.
+    /// ë‹¤ìŒ ì  ì¹´ë“œì˜ ìŠ¬ë¡¯ ìœ„ì¹˜ë¥¼ ê°•ì œë¡œ ì§€ì •í•˜ëŠ” ìŠ¤í‚¬ íš¨ê³¼ ScriptableObjectì…ë‹ˆë‹¤.
+    /// ì  ì¹´ë“œì—ë§Œ ì ìš©ë˜ë©°, ì§€ì •ëœ ìŠ¬ë¡¯ì— ì¹´ë“œê°€ ë°°ì¹˜ë˜ë„ë¡ ìœ ë„í•©ë‹ˆë‹¤.
     /// </summary>
     [CreateAssetMenu(fileName = "ForceNextSlotEffect", menuName = "SkillEffects/ForceNextSlotEffect")]
     public class ForceNextSlotEffectSO : SkillCardEffectSO
     {
-        [Header("°­Á¦ ½½·Ô ¼³Á¤")]
-        [Tooltip("´ÙÀ½ Àû Ä«µå°¡ ¹èÄ¡µÉ °­Á¦ ½½·Ô À§Ä¡")]
+        [Header("ê°•ì œ ìŠ¬ë¡¯ ì„¤ì •")]
+        [Tooltip("ë‹¤ìŒ ì  ì¹´ë“œê°€ ë°°ì¹˜ë  ê°•ì œ ìŠ¬ë¡¯ ìœ„ì¹˜")]
         [SerializeField] private CombatSlotPosition forcedSlot = CombatSlotPosition.FIRST;
 
         /// <summary>
-        /// ÇØ´ç È¿°ú¸¦ À§ÇÑ Ä¿¸Çµå °´Ã¼¸¦ »ı¼ºÇÕ´Ï´Ù.
+        /// í•´ë‹¹ íš¨ê³¼ë¥¼ ìœ„í•œ ì»¤ë§¨ë“œ ê°ì²´ë¥¼ ìƒì„±í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="power">ÀÌÆåÆ® ÆÄ¿ö °ª (¹Ì»ç¿ë)</param>
-        /// <returns>½½·Ô ÁöÁ¤ Ä¿¸Çµå</returns>
+        /// <param name="power">ì´í™íŠ¸ íŒŒì›Œ ê°’ (ë¯¸ì‚¬ìš©)</param>
+        /// <returns>ìŠ¬ë¡¯ ì§€ì • ì»¤ë§¨ë“œ</returns>
         public override ICardEffectCommand CreateEffectCommand(int power)
         {
             return new ForceNextSlotEffectCommand(forcedSlot);
         }
 
         /// <summary>
-        /// ÅÏ ¸Å´ÏÀú¸¦ ÅëÇØ ´ÙÀ½ Àû ½½·ÔÀ» °­Á¦ ÁöÁ¤ÇÕ´Ï´Ù.
+        /// í„´ ë§¤ë‹ˆì €ë¥¼ í†µí•´ ë‹¤ìŒ ì  ìŠ¬ë¡¯ì„ ê°•ì œ ì§€ì •í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="context">Ä«µå ½ÇÇà ÄÁÅØ½ºÆ®</param>
-        /// <param name="value">°­Á¦ÇÒ ½½·ÔÀÇ enum ÀÎµ¦½º °ª</param>
-        /// <param name="turnManager">ÀüÅõ ÅÏ °ü¸®ÀÚ</param>
+        /// <param name="context">ì¹´ë“œ ì‹¤í–‰ ì»¨í…ìŠ¤íŠ¸</param>
+        /// <param name="value">ê°•ì œí•  ìŠ¬ë¡¯ì˜ enum ì¸ë±ìŠ¤ ê°’</param>
+        /// <param name="turnManager">ì „íˆ¬ í„´ ê´€ë¦¬ì</param>
         public override void ApplyEffect(ICardExecutionContext context, int value, ICombatTurnManager turnManager = null)
         {
             if (turnManager == null)
             {
-                Debug.LogWarning("[ForceNextSlotEffectSO] CombatTurnManager°¡ nullÀÔ´Ï´Ù.");
+                Debug.LogWarning("[ForceNextSlotEffectSO] CombatTurnManagerê°€ nullì…ë‹ˆë‹¤.");
                 return;
             }
 
             CombatSlotPosition slot = forcedSlot;
 
-            // value·Î µ¤¾î¾º¿ì°í ½ÍÀ» ¶§¸¸ »ç¿ë
+            // valueë¡œ ë®ì–´ì”Œìš°ê³  ì‹¶ì„ ë•Œë§Œ ì‚¬ìš©
             if (System.Enum.IsDefined(typeof(CombatSlotPosition), value))
             {
                 slot = (CombatSlotPosition)value;
             }
 
             turnManager.ReserveNextEnemySlot(slot);
-            Debug.Log($"[ForceNextSlotEffectSO] ´ÙÀ½ Àû Çàµ¿ ½½·Ô °­Á¦ ¼³Á¤µÊ: {slot}");
+            Debug.Log($"[ForceNextSlotEffectSO] ë‹¤ìŒ ì  í–‰ë™ ìŠ¬ë¡¯ ê°•ì œ ì„¤ì •ë¨: {slot}");
         }
     }
 }

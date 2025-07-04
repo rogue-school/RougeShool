@@ -1,20 +1,20 @@
 namespace Game.CombatSystem.Interface
 {
     /// <summary>
-    /// ÀüÅõ ÆäÀÌÁî¸¦ ½ÇÇàÇÏ´Â ¼­ºñ½º ÀÎÅÍÆäÀÌ½ºÀÔ´Ï´Ù.
-    /// ¼±°ø/ÈÄ°ø Ä«µå ½ÇÇà, È¿°ú Àû¿ë, »ç¸Á Ã³¸® µîÀ» Æ÷ÇÔÇÑ ÀüÅõ Èå¸§ ÀüÃ¼¸¦ °ü¸®ÇÕ´Ï´Ù.
+    /// ì „íˆ¬ íŽ˜ì´ì¦ˆë¥¼ ì‹¤í–‰í•˜ëŠ” ì„œë¹„ìŠ¤ ì¸í„°íŽ˜ì´ìŠ¤ìž…ë‹ˆë‹¤.
+    /// ì„ ê³µ/í›„ê³µ ì¹´ë“œ ì‹¤í–‰, íš¨ê³¼ ì ìš©, ì‚¬ë§ ì²˜ë¦¬ ë“±ì„ í¬í•¨í•œ ì „íˆ¬ íë¦„ ì „ì²´ë¥¼ ê´€ë¦¬í•©ë‹ˆë‹¤.
     /// </summary>
     public interface ICombatExecutorService
     {
         /// <summary>
-        /// ÇöÀç ÅÏ¿¡ µî·ÏµÈ ÇÃ·¹ÀÌ¾î¿Í ÀûÀÇ Ä«µå¸¦ ±â¹ÝÀ¸·Î ÀüÅõ ÆäÀÌÁî¸¦ ½ÇÇàÇÕ´Ï´Ù.
-        /// ¼±°ø ¡æ ÈÄ°ø ¼øÀ¸·Î °¢ ½½·ÔÀÇ Ä«µå¸¦ ½ÇÇàÇÏ¸ç, Ä«µå È¿°ú Àû¿ë, ÀÌÆåÆ®, 
-        /// »ç¸Á ÆÇÁ¤, »óÅÂ ÀüÀÌ µîÀ» Ã³¸®ÇÕ´Ï´Ù.
+        /// í˜„ìž¬ í„´ì— ë“±ë¡ëœ í”Œë ˆì´ì–´ì™€ ì ì˜ ì¹´ë“œë¥¼ ê¸°ë°˜ìœ¼ë¡œ ì „íˆ¬ íŽ˜ì´ì¦ˆë¥¼ ì‹¤í–‰í•©ë‹ˆë‹¤.
+        /// ì„ ê³µ â†’ í›„ê³µ ìˆœìœ¼ë¡œ ê° ìŠ¬ë¡¯ì˜ ì¹´ë“œë¥¼ ì‹¤í–‰í•˜ë©°, ì¹´ë“œ íš¨ê³¼ ì ìš©, ì´íŽ™íŠ¸, 
+        /// ì‚¬ë§ íŒì •, ìƒíƒœ ì „ì´ ë“±ì„ ì²˜ë¦¬í•©ë‹ˆë‹¤.
         /// </summary>
         /// <remarks>
-        /// ÀÌ ¸Þ¼­µå´Â ÀÏ¹ÝÀûÀ¸·Î ÄÚ·çÆ¾À¸·Î È£ÃâµÇ¾î ºñµ¿±âÀûÀ¸·Î ¿¬Ãâ ¹× È¿°ú Ã³¸®¸¦ ÁøÇàÇÕ´Ï´Ù.
+        /// ì´ ë©”ì„œë“œëŠ” ì¼ë°˜ì ìœ¼ë¡œ ì½”ë£¨í‹´ìœ¼ë¡œ í˜¸ì¶œë˜ì–´ ë¹„ë™ê¸°ì ìœ¼ë¡œ ì—°ì¶œ ë° íš¨ê³¼ ì²˜ë¦¬ë¥¼ ì§„í–‰í•©ë‹ˆë‹¤.
         /// </remarks>
-        /// <returns>ÀüÅõ ½ÇÇà Èå¸§À» Ã³¸®ÇÏ´Â ÄÚ·çÆ¾</returns>
+        /// <returns>ì „íˆ¬ ì‹¤í–‰ íë¦„ì„ ì²˜ë¦¬í•˜ëŠ” ì½”ë£¨í‹´</returns>
         System.Collections.IEnumerator ExecuteCombatPhase();
     }
 }

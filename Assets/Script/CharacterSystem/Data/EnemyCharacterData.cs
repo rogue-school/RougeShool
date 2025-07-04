@@ -5,67 +5,67 @@ using Game.SkillCardSystem.Deck;
 namespace Game.CharacterSystem.Data
 {
     /// <summary>
-    /// Àû Ä³¸¯ÅÍÀÇ ¼³Á¤ µ¥ÀÌÅÍ¸¦ º¸°üÇÏ´Â ScriptableObjectÀÔ´Ï´Ù.
-    /// ÀüÅõ ½Ã ´É·ÂÄ¡, ÀÌ¹ÌÁö, µ¦, ÆĞ½Ãºê È¿°ú µîÀ» Á¦°øÇÕ´Ï´Ù.
+    /// ì  ìºë¦­í„°ì˜ ì„¤ì • ë°ì´í„°ë¥¼ ë³´ê´€í•˜ëŠ” ScriptableObjectì…ë‹ˆë‹¤.
+    /// ì „íˆ¬ ì‹œ ëŠ¥ë ¥ì¹˜, ì´ë¯¸ì§€, ë±, íŒ¨ì‹œë¸Œ íš¨ê³¼ ë“±ì„ ì œê³µí•©ë‹ˆë‹¤.
     /// </summary>
     [CreateAssetMenu(menuName = "Game/Character/Enemy Character Data")]
     public class EnemyCharacterData : ScriptableObject
     {
-        #region ±âº» Á¤º¸
+        #region ê¸°ë³¸ ì •ë³´
 
-        [field: Header("±âº» Á¤º¸")]
+        [field: Header("ê¸°ë³¸ ì •ë³´")]
 
         /// <summary>
-        /// °ÔÀÓ ³»¿¡¼­ Ç¥½ÃµÉ Àû Ä³¸¯ÅÍ ÀÌ¸§ÀÔ´Ï´Ù.
+        /// ê²Œì„ ë‚´ì—ì„œ í‘œì‹œë  ì  ìºë¦­í„° ì´ë¦„ì…ë‹ˆë‹¤.
         /// </summary>
         [field: SerializeField]
         public string DisplayName { get; private set; }
 
         /// <summary>
-        /// Àû Ä³¸¯ÅÍÀÇ ÃÖ´ë Ã¼·ÂÀÔ´Ï´Ù.
+        /// ì  ìºë¦­í„°ì˜ ìµœëŒ€ ì²´ë ¥ì…ë‹ˆë‹¤.
         /// </summary>
         [field: SerializeField]
         public int MaxHP { get; private set; }
 
         /// <summary>
-        /// UI¿¡ Ç¥½ÃµÉ Ä³¸¯ÅÍ ÃÊ»óÈ­ ÀÌ¹ÌÁöÀÔ´Ï´Ù.
+        /// UIì— í‘œì‹œë  ìºë¦­í„° ì´ˆìƒí™” ì´ë¯¸ì§€ì…ë‹ˆë‹¤.
         /// </summary>
         [field: SerializeField]
         public Sprite Portrait { get; private set; }
 
         #endregion
 
-        #region ÇÁ¸®ÆÕ ÂüÁ¶
+        #region í”„ë¦¬íŒ¹ ì°¸ì¡°
 
-        [field: Header("ÇÁ¸®ÆÕ ÂüÁ¶")]
+        [field: Header("í”„ë¦¬íŒ¹ ì°¸ì¡°")]
 
         /// <summary>
-        /// ÀÌ Ä³¸¯ÅÍ¿¡ ÇØ´çÇÏ´Â ÇÁ¸®ÆÕ (¾À¿¡ ¹èÄ¡µÉ ¿ÀºêÁ§Æ®)
+        /// ì´ ìºë¦­í„°ì— í•´ë‹¹í•˜ëŠ” í”„ë¦¬íŒ¹ (ì”¬ì— ë°°ì¹˜ë  ì˜¤ë¸Œì íŠ¸)
         /// </summary>
         [field: SerializeField]
         public GameObject Prefab { get; private set; }
 
         #endregion
 
-        #region ½ºÅ³ µ¦
+        #region ìŠ¤í‚¬ ë±
 
-        [field: Header("½ºÅ³ µ¦ (È®·ü ±â¹İ)")]
+        [field: Header("ìŠ¤í‚¬ ë± (í™•ë¥  ê¸°ë°˜)")]
 
         /// <summary>
-        /// Àû Ä³¸¯ÅÍ°¡ »ç¿ëÇÒ ½ºÅ³ Ä«µå µ¦ÀÔ´Ï´Ù. (È®·ü ±â¹İÀ¸·Î Ä«µå ¼±ÅÃ)
+        /// ì  ìºë¦­í„°ê°€ ì‚¬ìš©í•  ìŠ¤í‚¬ ì¹´ë“œ ë±ì…ë‹ˆë‹¤. (í™•ë¥  ê¸°ë°˜ìœ¼ë¡œ ì¹´ë“œ ì„ íƒ)
         /// </summary>
         [field: SerializeField]
         public EnemySkillDeck EnemyDeck { get; private set; }
 
         #endregion
 
-        #region ÆĞ½Ãºê ÀÌÆåÆ®
+        #region íŒ¨ì‹œë¸Œ ì´í™íŠ¸
 
-        [field: Header("ÆĞ½Ãºê ÀÌÆåÆ®")]
+        [field: Header("íŒ¨ì‹œë¸Œ ì´í™íŠ¸")]
 
         /// <summary>
-        /// ÀüÅõ ½ÃÀÛ ½Ã Àû¿ëµÇ´Â ÆĞ½Ãºê È¿°ú ¸®½ºÆ®ÀÔ´Ï´Ù.
-        /// °¢ ÀÌÆåÆ®´Â ScriptableObject ÇüÅÂÀÌ¸ç, ICardEffect µîÀ¸·Î Ä³½ºÆÃÇÏ¿© »ç¿ëµË´Ï´Ù.
+        /// ì „íˆ¬ ì‹œì‘ ì‹œ ì ìš©ë˜ëŠ” íŒ¨ì‹œë¸Œ íš¨ê³¼ ë¦¬ìŠ¤íŠ¸ì…ë‹ˆë‹¤.
+        /// ê° ì´í™íŠ¸ëŠ” ScriptableObject í˜•íƒœì´ë©°, ICardEffect ë“±ìœ¼ë¡œ ìºìŠ¤íŒ…í•˜ì—¬ ì‚¬ìš©ë©ë‹ˆë‹¤.
         /// </summary>
         [field: SerializeField]
         public List<ScriptableObject> PassiveEffects { get; private set; }

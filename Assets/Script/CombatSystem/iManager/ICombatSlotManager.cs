@@ -4,17 +4,17 @@ using Game.CombatSystem.Slot;
 namespace Game.IManager
 {
     /// <summary>
-    /// ÀüÅõ ½½·Ô(¼±°ø/ÈÄ°ø ½½·Ô)À» °ü¸®ÇÏ´Â ¸Å´ÏÀú ÀÎÅÍÆäÀÌ½ºÀÔ´Ï´Ù.
-    /// ½½·Ô UI Á¢±Ù, Ä«µå ¹èÄ¡, ½ÇÇà, Å¬¸®¾î µîÀÇ ±â´ÉÀ» ´ã´çÇÕ´Ï´Ù.
+    /// ì „íˆ¬ ìŠ¬ë¡¯(ì„ ê³µ/í›„ê³µ ìŠ¬ë¡¯)ì„ ê´€ë¦¬í•˜ëŠ” ë§¤ë‹ˆì € ì¸í„°íŽ˜ì´ìŠ¤ìž…ë‹ˆë‹¤.
+    /// ìŠ¬ë¡¯ UI ì ‘ê·¼, ì¹´ë“œ ë°°ì¹˜, ì‹¤í–‰, í´ë¦¬ì–´ ë“±ì˜ ê¸°ëŠ¥ì„ ë‹´ë‹¹í•©ë‹ˆë‹¤.
     /// </summary>
     public interface ICombatSlotManager
     {
         /// <summary>
-        /// ÁÖ¾îÁø À§Ä¡ÀÇ ÀüÅõ ½½·Ô UI¸¦ ¹ÝÈ¯ÇÕ´Ï´Ù.
-        /// ½½·Ô À§Ä¡´Â ¼±°ø ¶Ç´Â ÈÄ°øÀ» ³ªÅ¸³À´Ï´Ù.
+        /// ì£¼ì–´ì§„ ìœ„ì¹˜ì˜ ì „íˆ¬ ìŠ¬ë¡¯ UIë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
+        /// ìŠ¬ë¡¯ ìœ„ì¹˜ëŠ” ì„ ê³µ ë˜ëŠ” í›„ê³µì„ ë‚˜íƒ€ëƒ…ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="position">½½·Ô À§Ä¡ (¼±°ø ¶Ç´Â ÈÄ°ø)</param>
-        /// <returns>ÀüÅõ Ä«µå ½½·Ô UI ÄÄÆ÷³ÍÆ®</returns>
+        /// <param name="position">ìŠ¬ë¡¯ ìœ„ì¹˜ (ì„ ê³µ ë˜ëŠ” í›„ê³µ)</param>
+        /// <returns>ì „íˆ¬ ì¹´ë“œ ìŠ¬ë¡¯ UI ì»´í¬ë„ŒíŠ¸</returns>
         ICombatCardSlot GetSlot(CombatSlotPosition position);
     }
 }

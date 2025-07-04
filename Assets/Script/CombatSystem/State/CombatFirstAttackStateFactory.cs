@@ -4,23 +4,23 @@ using Zenject;
 namespace Game.CombatSystem.Factory
 {
     /// <summary>
-    /// CombatFirstAttackState ÀÎ½ºÅÏ½º¸¦ »ı¼ºÇÏ´Â ÆÑÅä¸® Å¬·¡½ºÀÔ´Ï´Ù.
-    /// Zenject¸¦ ÀÌ¿ëÇÏ¿© ÀÇÁ¸¼ºÀ» ÁÖÀÔÇÕ´Ï´Ù.
+    /// CombatFirstAttackState ì¸ìŠ¤í„´ìŠ¤ë¥¼ ìƒì„±í•˜ëŠ” íŒ©í† ë¦¬ í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
+    /// Zenjectë¥¼ ì´ìš©í•˜ì—¬ ì˜ì¡´ì„±ì„ ì£¼ì…í•©ë‹ˆë‹¤.
     /// </summary>
     public class CombatFirstAttackStateFactory : IFactory<CombatFirstAttackState>
     {
-        #region ÇÊµå
+        #region í•„ë“œ
 
         private readonly DiContainer container;
 
         #endregion
 
-        #region »ı¼ºÀÚ
+        #region ìƒì„±ì
 
         /// <summary>
-        /// DI ÄÁÅ×ÀÌ³Ê¸¦ ÅëÇØ ÆÑÅä¸®¸¦ ÃÊ±âÈ­ÇÕ´Ï´Ù.
+        /// DI ì»¨í…Œì´ë„ˆë¥¼ í†µí•´ íŒ©í† ë¦¬ë¥¼ ì´ˆê¸°í™”í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="container">Zenject DI ÄÁÅ×ÀÌ³Ê</param>
+        /// <param name="container">Zenject DI ì»¨í…Œì´ë„ˆ</param>
         public CombatFirstAttackStateFactory(DiContainer container)
         {
             this.container = container;
@@ -28,12 +28,12 @@ namespace Game.CombatSystem.Factory
 
         #endregion
 
-        #region ÆÑÅä¸® ¸Ş¼­µå
+        #region íŒ©í† ë¦¬ ë©”ì„œë“œ
 
         /// <summary>
-        /// CombatFirstAttackState ÀÎ½ºÅÏ½º¸¦ »ı¼ºÇÕ´Ï´Ù.
+        /// CombatFirstAttackState ì¸ìŠ¤í„´ìŠ¤ë¥¼ ìƒì„±í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <returns>»õ·Î¿î CombatFirstAttackState ÀÎ½ºÅÏ½º</returns>
+        /// <returns>ìƒˆë¡œìš´ CombatFirstAttackState ì¸ìŠ¤í„´ìŠ¤</returns>
         public CombatFirstAttackState Create()
         {
             return container.Instantiate<CombatFirstAttackState>();

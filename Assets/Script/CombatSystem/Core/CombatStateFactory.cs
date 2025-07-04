@@ -5,8 +5,8 @@ using Zenject;
 namespace Game.CombatSystem.Factory
 {
     /// <summary>
-    /// юЭеУ ео ╩Себ ╟╢ц╪╣Ию╩ ╩Щ╪╨го╢б фяеД╦╝ют╢о╢ы.
-    /// Zenjectюг IFactory╦╕ х╟©Кго©╘ юга╦╪╨ ажют ╠Б╧щ ╩Себ ╩Щ╪╨ю╩ а╕╟Ьгу╢о╢ы.
+    /// Л═└М┬╛ М└╢ Л┐│М┐° Й╟²Л╡╢К⌠╓Л²└ Л┐²Л└╠М∙≤К┼■ М▄╘М├═К╕╛Л·┘К▀┬К▀╓.
+    /// ZenjectЛ²≤ IFactoryК╔╪ М≥°Л ╘М∙≤Л≈╛ Л²≤Л║╢Л└╠ Лё╪Л·┘ Й╦╟К╟≤ Л┐│М┐° Л┐²Л└╠Л²└ Л═°ЙЁ╣М∙╘К▀┬К▀╓.
     /// </summary>
     public class CombatStateFactory : ICombatStateFactory
     {
@@ -25,37 +25,37 @@ namespace Game.CombatSystem.Factory
         #region State Creation Methods
 
         /// <summary>
-        /// аь╨Я ╩Себ ╩Щ╪╨
+        /// Л╓─К╧└ Л┐│М┐° Л┐²Л└╠
         /// </summary>
         public ICombatTurnState CreatePrepareState() => prepareFactory.Create();
 
         /// <summary>
-        /// гц╥╧юл╬Н ют╥б ╩Себ ╩Щ╪╨
+        /// М■▄К═┬Л²╢Л√╢ Л·┘К═╔ Л┐│М┐° Л┐²Л└╠
         /// </summary>
         public ICombatTurnState CreatePlayerInputState() => inputFactory.Create();
 
         /// <summary>
-        /// ╪╠╟Ь ео ╩Себ ╩Щ╪╨
+        /// Л└═ЙЁ╣ М└╢ Л┐│М┐° Л┐²Л└╠
         /// </summary>
         public ICombatTurnState CreateFirstAttackState() => firstAttackFactory.Create();
 
         /// <summary>
-        /// хд╟Ь ео ╩Себ ╩Щ╪╨
+        /// М⌡└ЙЁ╣ М└╢ Л┐│М┐° Л┐²Л└╠
         /// </summary>
         public ICombatTurnState CreateSecondAttackState() => secondAttackFactory.Create();
 
         /// <summary>
-        /// ╟А╟З ╟Х╩Й ╩Себ ╩Щ╪╨
+        /// Й╡╟ЙЁ╪ ЙЁ└Л┌╟ Л┐│М┐° Л┐²Л└╠
         /// </summary>
         public ICombatTurnState CreateResultState() => resultFactory.Create();
 
         /// <summary>
-        /// ╫б╦╝ ╩Себ ╩Щ╪╨
+        /// Л┼╧К╕╛ Л┐│М┐° Л┐²Л└╠
         /// </summary>
         public ICombatTurnState CreateVictoryState() => victoryFactory.Create();
 
         /// <summary>
-        /// ╟тюс ©ю╧Ж ╩Себ ╩Щ╪╨
+        /// Й╡▄Л·└ Л≤╓К╡└ Л┐│М┐° Л┐²Л└╠
         /// </summary>
         public ICombatTurnState CreateGameOverState() => gameOverFactory.Create();
 

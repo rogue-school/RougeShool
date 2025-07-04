@@ -8,13 +8,13 @@ using Game.SkillCardSystem.Interface;
 namespace Game.CombatSystem.Initialization
 {
     /// <summary>
-    /// ÀüÅõ ½ÃÀÛ ½Ã Àû ÇÚµå ½½·ÔÀ» ÃÊ±âÈ­ÇÏ´Â ½ºÅÜ Å¬·¡½ºÀÔ´Ï´Ù.
-    /// ½½·Ô 3¹øºÎÅÍ ¿ª¼øÀ¸·Î Ä«µå¸¦ »ı¼ºÇÏ°í ÇÑ Ä­¾¿ ÀÌµ¿½ÃÄÑ Ã¤¿ö ³Ö½À´Ï´Ù.
+    /// ì „íˆ¬ ì‹œì‘ ì‹œ ì  í•¸ë“œ ìŠ¬ë¡¯ì„ ì´ˆê¸°í™”í•˜ëŠ” ìŠ¤í… í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
+    /// ìŠ¬ë¡¯ 3ë²ˆë¶€í„° ì—­ìˆœìœ¼ë¡œ ì¹´ë“œë¥¼ ìƒì„±í•˜ê³  í•œ ì¹¸ì”© ì´ë™ì‹œì¼œ ì±„ì›Œ ë„£ìŠµë‹ˆë‹¤.
     /// </summary>
     public class EnemyHandInitializer : MonoBehaviour, ICombatInitializerStep
     {
         [SerializeField]
-        [Tooltip("ÃÊ±âÈ­ ¼ø¼­ (³·À»¼ö·Ï ¸ÕÀú ½ÇÇàµÊ)")]
+        [Tooltip("ì´ˆê¸°í™” ìˆœì„œ (ë‚®ì„ìˆ˜ë¡ ë¨¼ì € ì‹¤í–‰ë¨)")]
         private int order = 40;
 
         /// <inheritdoc />
@@ -24,10 +24,10 @@ namespace Game.CombatSystem.Initialization
         private IEnemyHandManager _handManager;
 
         /// <summary>
-        /// ÃÊ±âÈ­¿¡ ÇÊ¿äÇÑ ¸Å´ÏÀúµéÀ» ÁÖÀÔÇÕ´Ï´Ù.
+        /// ì´ˆê¸°í™”ì— í•„ìš”í•œ ë§¤ë‹ˆì €ë“¤ì„ ì£¼ì…í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="enemyManager">Àû Ä³¸¯ÅÍ ¸Å´ÏÀú</param>
-        /// <param name="handManager">Àû ÇÚµå ¸Å´ÏÀú</param>
+        /// <param name="enemyManager">ì  ìºë¦­í„° ë§¤ë‹ˆì €</param>
+        /// <param name="handManager">ì  í•¸ë“œ ë§¤ë‹ˆì €</param>
         [Inject]
         public void Construct(IEnemyManager enemyManager, IEnemyHandManager handManager)
         {
@@ -36,26 +36,26 @@ namespace Game.CombatSystem.Initialization
         }
 
         /// <summary>
-        /// Àû ÇÚµå¸¦ ÃÊ±âÈ­ÇÏ°í ½½·Ô 3 ¡æ 2 ¡æ 1 ¼ø¼­·Î Ã¤¿ó´Ï´Ù.
+        /// ì  í•¸ë“œë¥¼ ì´ˆê¸°í™”í•˜ê³  ìŠ¬ë¡¯ 3 â†’ 2 â†’ 1 ìˆœì„œë¡œ ì±„ì›ë‹ˆë‹¤.
         /// </summary>
         public IEnumerator Initialize()
         {
-            Debug.Log("[EnemyHandInitializer] Àû ÇÚµå ÃÊ±âÈ­ ½ÃÀÛ");
+            Debug.Log("[EnemyHandInitializer] ì  í•¸ë“œ ì´ˆê¸°í™” ì‹œì‘");
 
             var enemy = _enemyManager.GetEnemy();
             if (enemy == null)
             {
-                Debug.LogError("[EnemyHandInitializer] ÀûÀÌ Á¸ÀçÇÏÁö ¾Ê½À´Ï´Ù.");
+                Debug.LogError("[EnemyHandInitializer] ì ì´ ì¡´ì¬í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.");
                 yield break;
             }
 
-            // Àû ÇÚµå ½½·Ô°ú »óÅÂ ÃÊ±âÈ­
+            // ì  í•¸ë“œ ìŠ¬ë¡¯ê³¼ ìƒíƒœ ì´ˆê¸°í™”
             _handManager.Initialize(enemy);
 
-            // ½½·Ô 3 ¡æ 2 ¡æ 1 ¼ø¼­·Î »ı¼º ¹× ÀÌµ¿ÇÏ¸ç Ä«µå Ã¤¿ì±â
+            // ìŠ¬ë¡¯ 3 â†’ 2 â†’ 1 ìˆœì„œë¡œ ìƒì„± ë° ì´ë™í•˜ë©° ì¹´ë“œ ì±„ìš°ê¸°
             yield return _handManager.StepwiseFillSlotsFromBack(0.3f);
 
-            Debug.Log("[EnemyHandInitializer] Àû ÇÚµå ÃÊ±âÈ­ ¿Ï·á");
+            Debug.Log("[EnemyHandInitializer] ì  í•¸ë“œ ì´ˆê¸°í™” ì™„ë£Œ");
         }
     }
 }

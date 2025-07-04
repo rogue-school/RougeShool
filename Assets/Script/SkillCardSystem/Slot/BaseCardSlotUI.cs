@@ -5,39 +5,39 @@ using Game.SkillCardSystem.Interface;
 namespace Game.SkillCardSystem.Slot
 {
     /// <summary>
-    /// ¸ðµç ½ºÅ³ Ä«µå ½½·Ô UIÀÇ ±âº» Å¬·¡½ºÀÔ´Ï´Ù.
-    /// Ä³¸¯ÅÍ Á¤º¸¿Í ½½·Ô »óÈ£ÀÛ¿ëÀ» °ü¸®ÇÏ¸ç, ½ÇÁ¦ ½ÇÇà ·ÎÁ÷Àº ÆÄ»ý Å¬·¡½º¿¡ À§ÀÓµË´Ï´Ù.
+    /// ëª¨ë“  ìŠ¤í‚¬ ì¹´ë“œ ìŠ¬ë¡¯ UIì˜ ê¸°ë³¸ í´ëž˜ìŠ¤ìž…ë‹ˆë‹¤.
+    /// ìºë¦­í„° ì •ë³´ì™€ ìŠ¬ë¡¯ ìƒí˜¸ìž‘ìš©ì„ ê´€ë¦¬í•˜ë©°, ì‹¤ì œ ì‹¤í–‰ ë¡œì§ì€ íŒŒìƒ í´ëž˜ìŠ¤ì— ìœ„ìž„ë©ë‹ˆë‹¤.
     /// </summary>
     public abstract class BaseCardSlotUI : MonoBehaviour
     {
-        [Header("ÀÌ ½½·Ô¿¡¼­ Ä«µå¸¦ ½ÇÇàÇÒ ÁÖÃ¼ (Ä³½ºÅÍ)")]
-        [Tooltip("½½·Ô¿¡¼­ Ä«µå¸¦ ½ÇÇàÇÒ Ä³¸¯ÅÍ")]
+        [Header("ì´ ìŠ¬ë¡¯ì—ì„œ ì¹´ë“œë¥¼ ì‹¤í–‰í•  ì£¼ì²´ (ìºìŠ¤í„°)")]
+        [Tooltip("ìŠ¬ë¡¯ì—ì„œ ì¹´ë“œë¥¼ ì‹¤í–‰í•  ìºë¦­í„°")]
         protected ICharacter caster;
 
-        [Header("ÀÌ ½½·ÔÀÇ ´ë»ó (Å¸°Ù)")]
-        [Tooltip("Ä«µå ½ÇÇà ½Ã È¿°ú¸¦ ¹ÞÀ» ´ë»ó Ä³¸¯ÅÍ")]
+        [Header("ì´ ìŠ¬ë¡¯ì˜ ëŒ€ìƒ (íƒ€ê²Ÿ)")]
+        [Tooltip("ì¹´ë“œ ì‹¤í–‰ ì‹œ íš¨ê³¼ë¥¼ ë°›ì„ ëŒ€ìƒ ìºë¦­í„°")]
         protected ICharacter target;
 
         /// <summary>
-        /// ½½·Ô À§Ä¡¸¦ ±âÁØÀ¸·Î ÀÚµ¿À¸·Î Ä³½ºÅÍ/Å¸°Ù µîÀ» ¹ÙÀÎµùÇÕ´Ï´Ù.
-        /// ÆÄ»ý Å¬·¡½º¿¡¼­ ½½·Ô À§Ä¡ ¶Ç´Â ¼ÒÀ¯ÀÚ Á¤º¸¸¦ ±â¹ÝÀ¸·Î ±¸ÇöÇØ¾ß ÇÕ´Ï´Ù.
-        /// ¿¹: ÇÃ·¹ÀÌ¾î ½½·Ô ¡æ caster = ÇÃ·¹ÀÌ¾î, target = Àû
+        /// ìŠ¬ë¡¯ ìœ„ì¹˜ë¥¼ ê¸°ì¤€ìœ¼ë¡œ ìžë™ìœ¼ë¡œ ìºìŠ¤í„°/íƒ€ê²Ÿ ë“±ì„ ë°”ì¸ë”©í•©ë‹ˆë‹¤.
+        /// íŒŒìƒ í´ëž˜ìŠ¤ì—ì„œ ìŠ¬ë¡¯ ìœ„ì¹˜ ë˜ëŠ” ì†Œìœ ìž ì •ë³´ë¥¼ ê¸°ë°˜ìœ¼ë¡œ êµ¬í˜„í•´ì•¼ í•©ë‹ˆë‹¤.
+        /// ì˜ˆ: í”Œë ˆì´ì–´ ìŠ¬ë¡¯ â†’ caster = í”Œë ˆì´ì–´, target = ì 
         /// </summary>
         public virtual void AutoBind()
         {
-            // ¿¹½Ã: ÆÄ»ý Å¬·¡½º¿¡¼­ Ä³¸¯ÅÍ ½½·Ô À§Ä¡ ±â¹ÝÀ¸·Î ÀÚµ¿ ¿¬°á ±¸Çö
+            // ì˜ˆì‹œ: íŒŒìƒ í´ëž˜ìŠ¤ì—ì„œ ìºë¦­í„° ìŠ¬ë¡¯ ìœ„ì¹˜ ê¸°ë°˜ìœ¼ë¡œ ìžë™ ì—°ê²° êµ¬í˜„
         }
 
         /// <summary>
-        /// ½½·Ô¿¡ Á¸ÀçÇÏ´Â µå·ÓµÈ ½ºÅ³ Ä«µå¸¦ ¹ÝÈ¯ÇÕ´Ï´Ù.
-        /// ½ÇÁ¦ ±¸ÇöÀº ÆÄ»ý Å¬·¡½º¿¡¼­ Á¤ÀÇµÇ¾î¾ß ÇÏ¸ç, µå·Ó ±¸Á¶¿¡ µû¶ó ´Ù¸¦ ¼ö ÀÖ½À´Ï´Ù.
+        /// ìŠ¬ë¡¯ì— ì¡´ìž¬í•˜ëŠ” ë“œë¡­ëœ ìŠ¤í‚¬ ì¹´ë“œë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
+        /// ì‹¤ì œ êµ¬í˜„ì€ íŒŒìƒ í´ëž˜ìŠ¤ì—ì„œ ì •ì˜ë˜ì–´ì•¼ í•˜ë©°, ë“œë¡­ êµ¬ì¡°ì— ë”°ë¼ ë‹¤ë¥¼ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
         /// </summary>
-        /// <returns>½½·Ô¿¡ Á¸ÀçÇÏ´Â ½ºÅ³ Ä«µå ÀÎ½ºÅÏ½º</returns>
+        /// <returns>ìŠ¬ë¡¯ì— ì¡´ìž¬í•˜ëŠ” ìŠ¤í‚¬ ì¹´ë“œ ì¸ìŠ¤í„´ìŠ¤</returns>
         public abstract ISkillCard GetCard();
 
         /// <summary>
-        /// ½½·Ô¿¡ ÀÖ´Â Ä«µå¸¦ Áï½Ã ½ÇÇàÇÕ´Ï´Ù.
-        /// ½ÇÁ¦ ½ÇÇà ·ÎÁ÷Àº ÆÄ»ý Å¬·¡½º¿¡¼­ Á¤ÀÇµÇ¾î¾ß ÇÕ´Ï´Ù.
+        /// ìŠ¬ë¡¯ì— ìžˆëŠ” ì¹´ë“œë¥¼ ì¦‰ì‹œ ì‹¤í–‰í•©ë‹ˆë‹¤.
+        /// ì‹¤ì œ ì‹¤í–‰ ë¡œì§ì€ íŒŒìƒ í´ëž˜ìŠ¤ì—ì„œ ì •ì˜ë˜ì–´ì•¼ í•©ë‹ˆë‹¤.
         /// </summary>
         public abstract void ExecuteCardAutomatically();
     }

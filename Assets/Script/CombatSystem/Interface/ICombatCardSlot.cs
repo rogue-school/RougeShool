@@ -5,86 +5,86 @@ using Game.CombatSystem.Slot;
 namespace Game.CombatSystem.Interface
 {
     /// <summary>
-    /// ÀüÅõ ½½·Ô¿¡¼­ Ä«µå ¹× UI¸¦ °ü¸®ÇÏ´Â ÀÎÅÍÆäÀÌ½ºÀÔ´Ï´Ù.
-    /// Ä«µå µî·Ï, Á¦°Å, ½ÇÇà µî ½½·ÔÀÇ ÇÙ½É ±â´ÉÀ» Á¦°øÇÕ´Ï´Ù.
+    /// ì „íˆ¬ ìŠ¬ë¡¯ì—ì„œ ì¹´ë“œ ë° UIë¥¼ ê´€ë¦¬í•˜ëŠ” ì¸í„°íŽ˜ì´ìŠ¤ìž…ë‹ˆë‹¤.
+    /// ì¹´ë“œ ë“±ë¡, ì œê±°, ì‹¤í–‰ ë“± ìŠ¬ë¡¯ì˜ í•µì‹¬ ê¸°ëŠ¥ì„ ì œê³µí•©ë‹ˆë‹¤.
     /// </summary>
     public interface ICombatCardSlot
     {
         /// <summary>
-        /// ÀÌ ½½·ÔÀÇ ÀüÅõ À§Ä¡(¿¹: ¼±°ø 1¹ø, ÈÄ°ø 2¹ø µî)¸¦ ³ªÅ¸³À´Ï´Ù.
-        /// ÇÃ·¹ÀÌ¾î¿Í ÀûÀÌ °ø¿ëÀ¸·Î »ç¿ëÇÏ´Â À§Ä¡ÀÔ´Ï´Ù.
+        /// ì´ ìŠ¬ë¡¯ì˜ ì „íˆ¬ ìœ„ì¹˜(ì˜ˆ: ì„ ê³µ 1ë²ˆ, í›„ê³µ 2ë²ˆ ë“±)ë¥¼ ë‚˜íƒ€ëƒ…ë‹ˆë‹¤.
+        /// í”Œë ˆì´ì–´ì™€ ì ì´ ê³µìš©ìœ¼ë¡œ ì‚¬ìš©í•˜ëŠ” ìœ„ì¹˜ìž…ë‹ˆë‹¤.
         /// </summary>
         CombatSlotPosition Position { get; }
 
         /// <summary>
-        /// ½½·ÔÀÇ ÀüÃ¼ ÇÊµå Æ÷Áö¼Ç Á¤º¸¸¦ ¹ÝÈ¯ÇÕ´Ï´Ù.
-        /// ¿¹: ½ÃÀüÀÚ/´ë»ó ¿©ºÎ, ¼±°ø/ÈÄ°ø µîÀÌ Æ÷ÇÔµÉ ¼ö ÀÖ½À´Ï´Ù.
+        /// ìŠ¬ë¡¯ì˜ ì „ì²´ í•„ë“œ í¬ì§€ì…˜ ì •ë³´ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
+        /// ì˜ˆ: ì‹œì „ìž/ëŒ€ìƒ ì—¬ë¶€, ì„ ê³µ/í›„ê³µ ë“±ì´ í¬í•¨ë  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.
         /// </summary>
-        /// <returns>ÀüÀå À§Ä¡ Á¤º¸</returns>
+        /// <returns>ì „ìž¥ ìœ„ì¹˜ ì •ë³´</returns>
         CombatFieldSlotPosition GetCombatPosition();
 
         /// <summary>
-        /// ½½·Ô¿¡ ÇöÀç µî·ÏµÈ ½ºÅ³ Ä«µå µ¥ÀÌÅÍ¸¦ ¹ÝÈ¯ÇÕ´Ï´Ù.
+        /// ìŠ¬ë¡¯ì— í˜„ìž¬ ë“±ë¡ëœ ìŠ¤í‚¬ ì¹´ë“œ ë°ì´í„°ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <returns>µî·ÏµÈ Ä«µå °´Ã¼ ¶Ç´Â null</returns>
+        /// <returns>ë“±ë¡ëœ ì¹´ë“œ ê°ì²´ ë˜ëŠ” null</returns>
         ISkillCard GetCard();
 
         /// <summary>
-        /// ½½·Ô¿¡ ½ºÅ³ Ä«µå µ¥ÀÌÅÍ¸¦ µî·ÏÇÕ´Ï´Ù.
+        /// ìŠ¬ë¡¯ì— ìŠ¤í‚¬ ì¹´ë“œ ë°ì´í„°ë¥¼ ë“±ë¡í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="card">µî·ÏÇÒ Ä«µå °´Ã¼</param>
+        /// <param name="card">ë“±ë¡í•  ì¹´ë“œ ê°ì²´</param>
         void SetCard(ISkillCard card);
 
         /// <summary>
-        /// ½½·Ô¿¡ µî·ÏµÈ Ä«µå UI °´Ã¼¸¦ ¹ÝÈ¯ÇÕ´Ï´Ù.
+        /// ìŠ¬ë¡¯ì— ë“±ë¡ëœ ì¹´ë“œ UI ê°ì²´ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <returns>Ä«µå UI ¶Ç´Â null</returns>
+        /// <returns>ì¹´ë“œ UI ë˜ëŠ” null</returns>
         ISkillCardUI GetCardUI();
 
         /// <summary>
-        /// Ä«µå UI¸¦ ½½·Ô¿¡ µî·ÏÇÕ´Ï´Ù.
+        /// ì¹´ë“œ UIë¥¼ ìŠ¬ë¡¯ì— ë“±ë¡í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="cardUI">µî·ÏÇÒ Ä«µå UI °´Ã¼</param>
+        /// <param name="cardUI">ë“±ë¡í•  ì¹´ë“œ UI ê°ì²´</param>
         void SetCardUI(ISkillCardUI cardUI);
 
         /// <summary>
-        /// Ä«µå µ¥ÀÌÅÍ¿Í Ä«µå UI ¸ðµÎ¸¦ Á¦°ÅÇÕ´Ï´Ù.
+        /// ì¹´ë“œ ë°ì´í„°ì™€ ì¹´ë“œ UI ëª¨ë‘ë¥¼ ì œê±°í•©ë‹ˆë‹¤.
         /// </summary>
         void ClearAll();
 
         /// <summary>
-        /// Ä«µå UI¸¸ Á¦°ÅÇÕ´Ï´Ù. Ä«µå µ¥ÀÌÅÍ´Â À¯ÁöµË´Ï´Ù.
+        /// ì¹´ë“œ UIë§Œ ì œê±°í•©ë‹ˆë‹¤. ì¹´ë“œ ë°ì´í„°ëŠ” ìœ ì§€ë©ë‹ˆë‹¤.
         /// </summary>
         void ClearCardUI();
 
         /// <summary>
-        /// ½½·Ô¿¡ Ä«µå µ¥ÀÌÅÍ°¡ Á¸ÀçÇÏ´ÂÁö ¿©ºÎ¸¦ ¹ÝÈ¯ÇÕ´Ï´Ù.
+        /// ìŠ¬ë¡¯ì— ì¹´ë“œ ë°ì´í„°ê°€ ì¡´ìž¬í•˜ëŠ”ì§€ ì—¬ë¶€ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <returns>Ä«µå°¡ ÀÖÀ¸¸é true</returns>
+        /// <returns>ì¹´ë“œê°€ ìžˆìœ¼ë©´ true</returns>
         bool HasCard();
 
         /// <summary>
-        /// ½½·ÔÀÌ ¿ÏÀüÈ÷ ºñ¾î ÀÖ´ÂÁö È®ÀÎÇÕ´Ï´Ù (Ä«µå + UI ¸ðµÎ ¾øÀ½).
+        /// ìŠ¬ë¡¯ì´ ì™„ì „ížˆ ë¹„ì–´ ìžˆëŠ”ì§€ í™•ì¸í•©ë‹ˆë‹¤ (ì¹´ë“œ + UI ëª¨ë‘ ì—†ìŒ).
         /// </summary>
-        /// <returns>¿ÏÀüÈ÷ ºñ¾î ÀÖ´Ù¸é true</returns>
+        /// <returns>ì™„ì „ížˆ ë¹„ì–´ ìžˆë‹¤ë©´ true</returns>
         bool IsEmpty();
 
         /// <summary>
-        /// ½½·Ô¿¡ µî·ÏµÈ Ä«µåÀÇ È¿°ú¸¦ ÀÚµ¿ ½ÇÇàÇÕ´Ï´Ù.
-        /// ±âº» ÄÁÅØ½ºÆ®¸¦ »ç¿ëÇÏ°Å³ª ³»ºÎ »óÅÂ¿¡ µû¶ó Ã³¸®µË´Ï´Ù.
+        /// ìŠ¬ë¡¯ì— ë“±ë¡ëœ ì¹´ë“œì˜ íš¨ê³¼ë¥¼ ìžë™ ì‹¤í–‰í•©ë‹ˆë‹¤.
+        /// ê¸°ë³¸ ì»¨í…ìŠ¤íŠ¸ë¥¼ ì‚¬ìš©í•˜ê±°ë‚˜ ë‚´ë¶€ ìƒíƒœì— ë”°ë¼ ì²˜ë¦¬ë©ë‹ˆë‹¤.
         /// </summary>
         void ExecuteCardAutomatically();
 
         /// <summary>
-        /// ÁÖ¾îÁø ÄÁÅØ½ºÆ®¸¦ »ç¿ëÇÏ¿© Ä«µå È¿°ú¸¦ ½ÇÇàÇÕ´Ï´Ù.
+        /// ì£¼ì–´ì§„ ì»¨í…ìŠ¤íŠ¸ë¥¼ ì‚¬ìš©í•˜ì—¬ ì¹´ë“œ íš¨ê³¼ë¥¼ ì‹¤í–‰í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="ctx">Ä«µå ½ÇÇà ÄÁÅØ½ºÆ®</param>
+        /// <param name="ctx">ì¹´ë“œ ì‹¤í–‰ ì»¨í…ìŠ¤íŠ¸</param>
         void ExecuteCardAutomatically(ICardExecutionContext ctx);
 
         /// <summary>
-        /// Ä«µå UI°¡ ¹èÄ¡µÉ ½½·ÔÀÇ Æ®·£½ºÆûÀ» ¹ÝÈ¯ÇÕ´Ï´Ù.
+        /// ì¹´ë“œ UIê°€ ë°°ì¹˜ë  ìŠ¬ë¡¯ì˜ íŠ¸ëžœìŠ¤í¼ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <returns>UI ¹èÄ¡ ±âÁØÀÌ µÇ´Â Transform</returns>
+        /// <returns>UI ë°°ì¹˜ ê¸°ì¤€ì´ ë˜ëŠ” Transform</returns>
         Transform GetTransform();
     }
 }

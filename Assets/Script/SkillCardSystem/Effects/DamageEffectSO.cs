@@ -6,41 +6,41 @@ using Game.SkillCardSystem.Effects;
 namespace Game.SkillCardSystem.Effect
 {
     /// <summary>
-    /// ´ë»ó¿¡°Ô °íÁ¤ ÇÇÇØ¸¦ ÁÖ´Â ½ºÅ³ Ä«µå È¿°ú ScriptableObjectÀÔ´Ï´Ù.
+    /// ëŒ€ìƒì—ê²Œ ê³ ì • í”¼í•´ë¥¼ ì£¼ëŠ” ìŠ¤í‚¬ ì¹´ë“œ íš¨ê³¼ ScriptableObjectì…ë‹ˆë‹¤.
     /// </summary>
     [CreateAssetMenu(fileName = "DamageEffect", menuName = "SkillEffects/DamageEffect")]
     public class DamageEffectSO : SkillCardEffectSO
     {
-        [Header("±âº» ÇÇÇØ·®")]
+        [Header("ê¸°ë³¸ í”¼í•´ëŸ‰")]
         [SerializeField] private int damageAmount;
 
         /// <summary>
-        /// Ä¿¸Çµå ¹æ½Ä ½ÇÇàÀ» À§ÇÑ ÀÌÆåÆ® Ä¿¸Çµå¸¦ »ı¼ºÇÕ´Ï´Ù.
+        /// ì»¤ë§¨ë“œ ë°©ì‹ ì‹¤í–‰ì„ ìœ„í•œ ì´í™íŠ¸ ì»¤ë§¨ë“œë¥¼ ìƒì„±í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="power">Ãß°¡ ÆÄ¿ö ¼öÄ¡</param>
-        /// <returns>ÇÇÇØ Ä¿¸Çµå</returns>
+        /// <param name="power">ì¶”ê°€ íŒŒì›Œ ìˆ˜ì¹˜</param>
+        /// <returns>í”¼í•´ ì»¤ë§¨ë“œ</returns>
         public override ICardEffectCommand CreateEffectCommand(int power)
         {
             return new DamageEffectCommand(damageAmount + power);
         }
 
         /// <summary>
-        /// ´ë»ó¿¡°Ô ÇÇÇØ¸¦ Á÷Á¢ Àû¿ëÇÏ´Â ·ÎÁ÷ÀÔ´Ï´Ù.
+        /// ëŒ€ìƒì—ê²Œ í”¼í•´ë¥¼ ì§ì ‘ ì ìš©í•˜ëŠ” ë¡œì§ì…ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="context">Ä«µå ½ÇÇà ÄÁÅØ½ºÆ®</param>
-        /// <param name="value">Àû¿ëÇÒ ÇÇÇØ·®</param>
-        /// <param name="turnManager">ÅÏ ¸Å´ÏÀú (¿É¼Ç)</param>
+        /// <param name="context">ì¹´ë“œ ì‹¤í–‰ ì»¨í…ìŠ¤íŠ¸</param>
+        /// <param name="value">ì ìš©í•  í”¼í•´ëŸ‰</param>
+        /// <param name="turnManager">í„´ ë§¤ë‹ˆì € (ì˜µì…˜)</param>
         public override void ApplyEffect(ICardExecutionContext context, int value, ICombatTurnManager turnManager = null)
         {
             if (context?.Target == null)
             {
-                Debug.LogWarning("[DamageEffectSO] ´ë»óÀÌ nullÀÔ´Ï´Ù. ÇÇÇØ Àû¿ë ½ÇÆĞ.");
+                Debug.LogWarning("[DamageEffectSO] ëŒ€ìƒì´ nullì…ë‹ˆë‹¤. í”¼í•´ ì ìš© ì‹¤íŒ¨.");
                 return;
             }
 
             context.Target.TakeDamage(value);
 
-            Debug.Log($"[DamageEffectSO] {context.Source?.GetCharacterName()} ¡æ {context.Target.GetCharacterName()} ÇÇÇØ: {value}");
+            Debug.Log($"[DamageEffectSO] {context.Source?.GetCharacterName()} â†’ {context.Target.GetCharacterName()} í”¼í•´: {value}");
         }
     }
 }

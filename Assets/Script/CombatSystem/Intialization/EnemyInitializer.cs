@@ -9,51 +9,51 @@ using Game.CombatSystem.Interface;
 namespace Game.CombatSystem.Initialization
 {
     /// <summary>
-    /// Àû Ä³¸¯ÅÍ¸¦ »ı¼ºÇÏ°í ½½·Ô¿¡ ¹èÄ¡ÇÏ´Â ÃÊ±âÈ­ Å¬·¡½ºÀÔ´Ï´Ù.
+    /// ì  ìºë¦­í„°ë¥¼ ìƒì„±í•˜ê³  ìŠ¬ë¡¯ì— ë°°ì¹˜í•˜ëŠ” ì´ˆê¸°í™” í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
     /// </summary>
     public class EnemyInitializer : MonoBehaviour, IEnemyInitializer
     {
-        [Header("±âº» Àû ÇÁ¸®ÆÕ ¹× µ¥ÀÌÅÍ")]
+        [Header("ê¸°ë³¸ ì  í”„ë¦¬íŒ¹ ë° ë°ì´í„°")]
         [SerializeField] private GameObject defaultEnemyPrefab;
         [SerializeField] private EnemyCharacterData defaultEnemyData;
 
         private IEnemyCharacter spawnedEnemy;
         private ISlotRegistry slotRegistry;
 
-        #region ÀÇÁ¸¼º ÁÖÀÔ
+        #region ì˜ì¡´ì„± ì£¼ì…
 
         /// <summary>
-        /// ½½·Ô ·¹Áö½ºÆ®¸®¸¦ ÁÖÀÔÇÕ´Ï´Ù.
+        /// ìŠ¬ë¡¯ ë ˆì§€ìŠ¤íŠ¸ë¦¬ë¥¼ ì£¼ì…í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="slotRegistry">Ä³¸¯ÅÍ ½½·Ô ·¹Áö½ºÆ®¸®</param>
+        /// <param name="slotRegistry">ìºë¦­í„° ìŠ¬ë¡¯ ë ˆì§€ìŠ¤íŠ¸ë¦¬</param>
         public void Inject(ISlotRegistry slotRegistry)
         {
             this.slotRegistry = slotRegistry;
-            Debug.Log("[EnemyInitializer] ISlotRegistry ÁÖÀÔ ¿Ï·á");
+            Debug.Log("[EnemyInitializer] ISlotRegistry ì£¼ì… ì™„ë£Œ");
         }
 
         #endregion
 
-        #region Ä³¸¯ÅÍ ÃÊ±âÈ­ ¹× ¹èÄ¡
+        #region ìºë¦­í„° ì´ˆê¸°í™” ë° ë°°ì¹˜
 
         /// <summary>
-        /// ÁÖ¾îÁø µ¥ÀÌÅÍ·Î Àû Ä³¸¯ÅÍ¸¦ »ı¼ºÇÏ°í ½½·Ô¿¡ ¹èÄ¡ÇÕ´Ï´Ù.
+        /// ì£¼ì–´ì§„ ë°ì´í„°ë¡œ ì  ìºë¦­í„°ë¥¼ ìƒì„±í•˜ê³  ìŠ¬ë¡¯ì— ë°°ì¹˜í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="data">Àû Ä³¸¯ÅÍ µ¥ÀÌÅÍ</param>
+        /// <param name="data">ì  ìºë¦­í„° ë°ì´í„°</param>
         public void SetupWithData(EnemyCharacterData data)
         {
-            Debug.Log("[EnemyInitializer] SetupWithData() È£ÃâµÊ");
+            Debug.Log("[EnemyInitializer] SetupWithData() í˜¸ì¶œë¨");
 
             if (data == null)
             {
-                Debug.LogError("[EnemyInitializer] EnemyCharacterData°¡ nullÀÔ´Ï´Ù.");
+                Debug.LogError("[EnemyInitializer] EnemyCharacterDataê°€ nullì…ë‹ˆë‹¤.");
                 return;
             }
 
             var slot = GetEnemySlot();
             if (slot == null)
             {
-                Debug.LogError("[EnemyInitializer] Àû ½½·ÔÀ» Ã£Áö ¸øÇß½À´Ï´Ù. ÃÊ±âÈ­ Áß´Ü");
+                Debug.LogError("[EnemyInitializer] ì  ìŠ¬ë¡¯ì„ ì°¾ì§€ ëª»í–ˆìŠµë‹ˆë‹¤. ì´ˆê¸°í™” ì¤‘ë‹¨");
                 return;
             }
 
@@ -62,7 +62,7 @@ namespace Game.CombatSystem.Initialization
             var enemy = InstantiateAndConfigureEnemy(data, slot);
             if (enemy == null)
             {
-                Debug.LogError("[EnemyInitializer] Àû ÀÎ½ºÅÏ½º »ı¼º ½ÇÆĞ");
+                Debug.LogError("[EnemyInitializer] ì  ì¸ìŠ¤í„´ìŠ¤ ìƒì„± ì‹¤íŒ¨");
                 return;
             }
 
@@ -71,64 +71,64 @@ namespace Game.CombatSystem.Initialization
         }
 
         /// <summary>
-        /// »ı¼ºµÈ Àû Ä³¸¯ÅÍ¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
+        /// ìƒì„±ëœ ì  ìºë¦­í„°ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         public IEnemyCharacter GetSpawnedEnemy()
         {
-            Debug.Log("[EnemyInitializer] GetSpawnedEnemy() È£ÃâµÊ");
+            Debug.Log("[EnemyInitializer] GetSpawnedEnemy() í˜¸ì¶œë¨");
             return spawnedEnemy;
         }
 
         #endregion
 
-        #region ³»ºÎ À¯Æ¿¸®Æ¼ ¸Ş¼­µå
+        #region ë‚´ë¶€ ìœ í‹¸ë¦¬í‹° ë©”ì„œë“œ
 
         /// <summary>
-        /// Àû¿ë °¡´ÉÇÑ Àû Ä³¸¯ÅÍ ½½·ÔÀ» ¹İÈ¯ÇÕ´Ï´Ù.
+        /// ì ìš© ê°€ëŠ¥í•œ ì  ìºë¦­í„° ìŠ¬ë¡¯ì„ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         private ICharacterSlot GetEnemySlot()
         {
             if (slotRegistry == null)
             {
-                Debug.LogError("[EnemyInitializer] ISlotRegistry°¡ ÁÖÀÔµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+                Debug.LogError("[EnemyInitializer] ISlotRegistryê°€ ì£¼ì…ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
                 return null;
             }
 
             var slot = slotRegistry.GetCharacterSlotRegistry().GetCharacterSlot(SlotOwner.ENEMY);
 
             if (slot == null)
-                Debug.LogError("[EnemyInitializer] ENEMY¿ë Ä³¸¯ÅÍ ½½·ÔÀ» Ã£Áö ¸øÇß½À´Ï´Ù.");
+                Debug.LogError("[EnemyInitializer] ENEMYìš© ìºë¦­í„° ìŠ¬ë¡¯ì„ ì°¾ì§€ ëª»í–ˆìŠµë‹ˆë‹¤.");
             else
-                Debug.Log($"[EnemyInitializer] ½½·Ô ÀÌ¸§: {((MonoBehaviour)slot).name}");
+                Debug.Log($"[EnemyInitializer] ìŠ¬ë¡¯ ì´ë¦„: {((MonoBehaviour)slot).name}");
 
             return slot;
         }
 
         /// <summary>
-        /// ½½·Ô¿¡ Á¸ÀçÇÏ´Â ¸ğµç ÀÚ½Ä ¿ÀºêÁ§Æ®¸¦ Á¦°ÅÇÕ´Ï´Ù.
+        /// ìŠ¬ë¡¯ì— ì¡´ì¬í•˜ëŠ” ëª¨ë“  ìì‹ ì˜¤ë¸Œì íŠ¸ë¥¼ ì œê±°í•©ë‹ˆë‹¤.
         /// </summary>
         private void ClearSlotChildren(ICharacterSlot slot)
         {
-            Debug.Log("[EnemyInitializer] ½½·Ô ÀÚ½Ä Á¦°Å ½ÃÀÛ");
+            Debug.Log("[EnemyInitializer] ìŠ¬ë¡¯ ìì‹ ì œê±° ì‹œì‘");
 
             foreach (Transform child in ((MonoBehaviour)slot).transform)
             {
-                Debug.Log($" ¡æ Á¦°Å ´ë»ó: {child.name}");
+                Debug.Log($" â†’ ì œê±° ëŒ€ìƒ: {child.name}");
                 Destroy(child.gameObject);
             }
         }
 
         /// <summary>
-        /// Àû Ä³¸¯ÅÍ ÇÁ¸®ÆÕÀ» ½½·Ô¿¡ ÀÎ½ºÅÏ½ºÈ­ÇÏ°í EnemyCharacter ÄÄÆ÷³ÍÆ®¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
+        /// ì  ìºë¦­í„° í”„ë¦¬íŒ¹ì„ ìŠ¬ë¡¯ì— ì¸ìŠ¤í„´ìŠ¤í™”í•˜ê³  EnemyCharacter ì»´í¬ë„ŒíŠ¸ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         private EnemyCharacter InstantiateAndConfigureEnemy(EnemyCharacterData data, ICharacterSlot slot)
         {
-            Debug.Log("[EnemyInitializer] Àû ÇÁ¸®ÆÕ ÀÎ½ºÅÏ½ºÈ­ ½Ãµµ");
+            Debug.Log("[EnemyInitializer] ì  í”„ë¦¬íŒ¹ ì¸ìŠ¤í„´ìŠ¤í™” ì‹œë„");
 
             var prefab = data.Prefab ?? defaultEnemyPrefab;
             if (prefab == null)
             {
-                Debug.LogError("[EnemyInitializer] »ç¿ëÇÒ Àû ÇÁ¸®ÆÕÀÌ ¾ø½À´Ï´Ù.");
+                Debug.LogError("[EnemyInitializer] ì‚¬ìš©í•  ì  í”„ë¦¬íŒ¹ì´ ì—†ìŠµë‹ˆë‹¤.");
                 return null;
             }
 
@@ -137,33 +137,33 @@ namespace Game.CombatSystem.Initialization
 
             if (!instance.TryGetComponent(out EnemyCharacter enemy))
             {
-                Debug.LogError("[EnemyInitializer] EnemyCharacter ÄÄÆ÷³ÍÆ®¸¦ Ã£Áö ¸øÇß½À´Ï´Ù.");
+                Debug.LogError("[EnemyInitializer] EnemyCharacter ì»´í¬ë„ŒíŠ¸ë¥¼ ì°¾ì§€ ëª»í–ˆìŠµë‹ˆë‹¤.");
                 Destroy(instance);
                 return null;
             }
 
-            Debug.Log("[EnemyInitializer] Àû ÀÎ½ºÅÏ½º »ı¼º ¹× ÄÄÆ÷³ÍÆ® È®ÀÎ ¿Ï·á");
+            Debug.Log("[EnemyInitializer] ì  ì¸ìŠ¤í„´ìŠ¤ ìƒì„± ë° ì»´í¬ë„ŒíŠ¸ í™•ì¸ ì™„ë£Œ");
             return enemy;
         }
 
         /// <summary>
-        /// »ı¼ºµÈ Àû Ä³¸¯ÅÍ¿¡ µ¥ÀÌÅÍ¸¦ Àû¿ëÇÕ´Ï´Ù.
+        /// ìƒì„±ëœ ì  ìºë¦­í„°ì— ë°ì´í„°ë¥¼ ì ìš©í•©ë‹ˆë‹¤.
         /// </summary>
         private void ApplyCharacterData(EnemyCharacter enemy, EnemyCharacterData data)
         {
-            Debug.Log("[EnemyInitializer] Ä³¸¯ÅÍ µ¥ÀÌÅÍ Àû¿ë ½ÃÀÛ");
+            Debug.Log("[EnemyInitializer] ìºë¦­í„° ë°ì´í„° ì ìš© ì‹œì‘");
             enemy.Initialize(data);
         }
 
         /// <summary>
-        /// ½½·Ô¿¡ Àû Ä³¸¯ÅÍ¸¦ µî·ÏÇÏ°í ³»ºÎ ÂüÁ¶¸¦ °»½ÅÇÕ´Ï´Ù.
+        /// ìŠ¬ë¡¯ì— ì  ìºë¦­í„°ë¥¼ ë“±ë¡í•˜ê³  ë‚´ë¶€ ì°¸ì¡°ë¥¼ ê°±ì‹ í•©ë‹ˆë‹¤.
         /// </summary>
         private void RegisterToSlot(ICharacterSlot slot, EnemyCharacter enemy)
         {
-            Debug.Log("[EnemyInitializer] ½½·Ô¿¡ Àû Ä³¸¯ÅÍ µî·Ï ½ÃÀÛ");
+            Debug.Log("[EnemyInitializer] ìŠ¬ë¡¯ì— ì  ìºë¦­í„° ë“±ë¡ ì‹œì‘");
             slot.SetCharacter(enemy);
             spawnedEnemy = enemy;
-            Debug.Log("[EnemyInitializer] Àû Ä³¸¯ÅÍ ½½·Ô µî·Ï ¹× ³»ºÎ ÂüÁ¶ ¿Ï·á");
+            Debug.Log("[EnemyInitializer] ì  ìºë¦­í„° ìŠ¬ë¡¯ ë“±ë¡ ë° ë‚´ë¶€ ì°¸ì¡° ì™„ë£Œ");
         }
 
         #endregion

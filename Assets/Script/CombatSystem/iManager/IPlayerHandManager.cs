@@ -6,75 +6,75 @@ using System.Collections.Generic;
 namespace Game.SkillCardSystem.Interface
 {
     /// <summary>
-    /// �÷��̾��� �ڵ�(����) ���� �������̽��Դϴ�.
-    /// ī���� ���, ����, UI ����, �Է� ���� ���� ����� �����մϴ�.
+    /// 플레이어의 핸드(손패) 관리 인터페이스입니다.
+    /// 카드의 등록, 제거, UI 연동, 입력 제어 등의 기능을 제공합니다.
     /// </summary>
     public interface IPlayerHandManager
     {
         /// <summary>
-        /// ���� �÷��̾� ĳ���͸� �����մϴ�.
+        /// 현재 플레이어 캐릭터를 설정합니다.
         /// </summary>
-        /// <param name="player">�÷��̾� ĳ����</param>
+        /// <param name="player">플레이어 캐릭터</param>
         void SetPlayer(IPlayerCharacter player);
 
         /// <summary>
-        /// ���� ���� �� �ʱ� ���и� �����մϴ�.
+        /// 게임 시작 시 초기 손패를 생성합니다.
         /// </summary>
         void GenerateInitialHand();
 
         /// <summary>
-        /// ������ ���� ��ġ�� �ִ� ī�带 ��ȯ�մϴ�.
+        /// 지정한 슬롯 위치에 있는 카드를 반환합니다.
         /// </summary>
-        /// <param name="pos">���� ��ġ</param>
-        /// <returns>�ش� ������ ī��</returns>
+        /// <param name="pos">슬롯 위치</param>
+        /// <returns>해당 슬롯의 카드</returns>
         ISkillCard GetCardInSlot(SkillCardSlotPosition pos);
 
         /// <summary>
-        /// ������ ���� ��ġ�� �ִ� ī�� UI�� ��ȯ�մϴ�.
+        /// 지정한 슬롯 위치에 있는 카드 UI를 반환합니다.
         /// </summary>
-        /// <param name="pos">���� ��ġ</param>
-        /// <returns>�ش� ������ ī�� UI</returns>
+        /// <param name="pos">슬롯 위치</param>
+        /// <returns>해당 슬롯의 카드 UI</returns>
         ISkillCardUI GetCardUIInSlot(SkillCardSlotPosition pos);
 
         /// <summary>
-        /// ������ ī�带 �ڵ忡 �����մϴ�. ���� �ڵ� ����.
+        /// 지정한 카드를 핸드에 복원합니다. 슬롯 자동 지정.
         /// </summary>
-        /// <param name="card">������ ī��</param>
+        /// <param name="card">복원할 카드</param>
         void RestoreCardToHand(ISkillCard card);
 
         /// <summary>
-        /// ������ ���� ��ġ�� ī�带 �ڵ忡 �����մϴ�.
+        /// 지정한 슬롯 위치에 카드를 핸드에 복원합니다.
         /// </summary>
-        /// <param name="card">������ ī��</param>
-        /// <param name="slot">������ ���� ��ġ</param>
+        /// <param name="card">복원할 카드</param>
+        /// <param name="slot">복원할 슬롯 위치</param>
         void RestoreCardToHand(ISkillCard card, SkillCardSlotPosition slot);
 
         /// <summary>
-        /// ���� �ڵ� ���� ���¸� ����� �α׷� ����մϴ�.
+        /// 현재 핸드 슬롯 상태를 디버깅 로그로 출력합니다.
         /// </summary>
         void LogPlayerHandSlotStates();
 
         /// <summary>
-        /// ī�� �巡�� �� �Է��� Ȱ��/��Ȱ��ȭ�մϴ�.
+        /// 카드 드래그 등 입력을 활성/비활성화합니다.
         /// </summary>
-        /// <param name="enable">Ȱ��ȭ ����</param>
+        /// <param name="enable">활성화 여부</param>
         void EnableInput(bool enable);
 
         /// <summary>
-        /// ��� �ڵ� ���԰� ī�� UI�� �����մϴ�.
+        /// 모든 핸드 슬롯과 카드 UI를 제거합니다.
         /// </summary>
         void ClearAll();
 
         /// <summary>
-        /// �ڵ忡�� Ư�� ī�带 �����մϴ�.
+        /// 핸드에서 특정 카드를 제거합니다.
         /// </summary>
-        /// <param name="card">������ ī��</param>
+        /// <param name="card">제거할 카드</param>
         void RemoveCard(ISkillCard card);
 
         /// <summary>
-        /// ���� �ڵ忡 �����ϴ� ��� ī��� UI�� Ʃ�÷� ��ȯ�մϴ�.
+        /// 현재 핸드에 존재하는 모든 카드와 UI를 튜플로 반환합니다.
         /// </summary>
-        /// <returns>(ī��, ī�� UI) �� ���</returns>
+        /// <returns>(카드, 카드 UI) 쌍 목록</returns>
         IEnumerable<(ISkillCard card, ISkillCardUI ui)> GetAllHandCards();
     }
 }

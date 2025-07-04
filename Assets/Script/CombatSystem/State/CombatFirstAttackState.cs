@@ -4,11 +4,11 @@ using UnityEngine;
 namespace Game.CombatSystem.State
 {
     /// <summary>
-    /// ¼±°ø »óÅÂ¸¦ ³ªÅ¸³»¸ç, ¼±°ø Ã³¸® ÈÄ ÈÄ°ø »óÅÂ·Î ÀüÈ¯ÇÕ´Ï´Ù.
+    /// ì„ ê³µ ìƒíƒœë¥¼ ë‚˜íƒ€ë‚´ë©°, ì„ ê³µ ì²˜ë¦¬ í›„ í›„ê³µ ìƒíƒœë¡œ ì „í™˜í•©ë‹ˆë‹¤.
     /// </summary>
     public class CombatFirstAttackState : ICombatTurnState
     {
-        #region ÇÊµå
+        #region í•„ë“œ
 
         private readonly ICombatTurnManager turnManager;
         private readonly ICombatFlowCoordinator flowCoordinator;
@@ -16,10 +16,10 @@ namespace Game.CombatSystem.State
 
         #endregion
 
-        #region »ı¼ºÀÚ
+        #region ìƒì„±ì
 
         /// <summary>
-        /// ¼±°ø »óÅÂ¸¦ ÃÊ±âÈ­ÇÕ´Ï´Ù.
+        /// ì„ ê³µ ìƒíƒœë¥¼ ì´ˆê¸°í™”í•©ë‹ˆë‹¤.
         /// </summary>
         public CombatFirstAttackState(
             ICombatTurnManager turnManager,
@@ -33,14 +33,14 @@ namespace Game.CombatSystem.State
 
         #endregion
 
-        #region »óÅÂ ¸Ş¼­µå
+        #region ìƒíƒœ ë©”ì„œë“œ
 
         /// <summary>
-        /// ¼±°ø »óÅÂ ÁøÀÔ ½Ã È£ÃâµÇ¸ç, ¼±°ø Ã³¸®¸¦ ¼öÇàÇÑ ÈÄ ÈÄ°ø »óÅÂ·Î ÀüÀÌÇÕ´Ï´Ù.
+        /// ì„ ê³µ ìƒíƒœ ì§„ì… ì‹œ í˜¸ì¶œë˜ë©°, ì„ ê³µ ì²˜ë¦¬ë¥¼ ìˆ˜í–‰í•œ í›„ í›„ê³µ ìƒíƒœë¡œ ì „ì´í•©ë‹ˆë‹¤.
         /// </summary>
         public void EnterState()
         {
-            Debug.Log("[CombatFirstAttackState] »óÅÂ ÁøÀÔ");
+            Debug.Log("[CombatFirstAttackState] ìƒíƒœ ì§„ì…");
 
             flowCoordinator.RequestFirstAttack(() =>
             {
@@ -50,12 +50,12 @@ namespace Game.CombatSystem.State
         }
 
         /// <summary>
-        /// ¼±°ø »óÅÂ ½ÇÇà Áß ¹İº¹ÀûÀ¸·Î È£ÃâµË´Ï´Ù. (ÇöÀç´Â ºñ¾î ÀÖÀ½)
+        /// ì„ ê³µ ìƒíƒœ ì‹¤í–‰ ì¤‘ ë°˜ë³µì ìœ¼ë¡œ í˜¸ì¶œë©ë‹ˆë‹¤. (í˜„ì¬ëŠ” ë¹„ì–´ ìˆìŒ)
         /// </summary>
         public void ExecuteState() { }
 
         /// <summary>
-        /// »óÅÂ Á¾·á ½Ã È£ÃâµË´Ï´Ù. (ÇöÀç´Â ºñ¾î ÀÖÀ½)
+        /// ìƒíƒœ ì¢…ë£Œ ì‹œ í˜¸ì¶œë©ë‹ˆë‹¤. (í˜„ì¬ëŠ” ë¹„ì–´ ìˆìŒ)
         /// </summary>
         public void ExitState() { }
 

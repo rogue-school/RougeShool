@@ -13,8 +13,8 @@ using Game.CombatSystem.Context;
 namespace Game.SkillCardSystem.Runtime
 {
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î¿Í Àû °ø¿ë ½ºÅ³ Ä«µå ·±Å¸ÀÓ ±¸ÇöÀÔ´Ï´Ù.
-    /// È¿°ú ½ÇÇà, ½½·Ô/ÄğÅ¸ÀÓ Á¤º¸, ½ÇÇà ÄÁÅØ½ºÆ®¸¦ °ü¸®ÇÕ´Ï´Ù.
+    /// í”Œë ˆì´ì–´ì™€ ì  ê³µìš© ìŠ¤í‚¬ ì¹´ë“œ ëŸ°íƒ€ì„ êµ¬í˜„ì…ë‹ˆë‹¤.
+    /// íš¨ê³¼ ì‹¤í–‰, ìŠ¬ë¡¯/ì¿¨íƒ€ì„ ì •ë³´, ì‹¤í–‰ ì»¨í…ìŠ¤íŠ¸ë¥¼ ê´€ë¦¬í•©ë‹ˆë‹¤.
     /// </summary>
     public class RuntimeSkillCard : ISkillCard
     {
@@ -34,7 +34,7 @@ namespace Game.SkillCardSystem.Runtime
             this.owner = owner;
         }
 
-        #region === Ä«µå ¸ŞÅ¸ Á¤º¸ ===
+        #region === ì¹´ë“œ ë©”íƒ€ ì •ë³´ ===
 
         public string GetCardName() => CardData?.Name ?? "[Unnamed Card]";
         public string GetDescription() => CardData?.Description ?? "[No Description]";
@@ -47,13 +47,13 @@ namespace Game.SkillCardSystem.Runtime
         public int GetEffectPower(SkillCardEffectSO effect) => CardData?.Damage ?? 0;
 
         /// <summary>
-        /// µî·ÏµÈ ÀÌÆåÆ® ¸®½ºÆ®¸¦ º¹»çÇÏ¿© ¹İÈ¯ÇÕ´Ï´Ù.
+        /// ë“±ë¡ëœ ì´í™íŠ¸ ë¦¬ìŠ¤íŠ¸ë¥¼ ë³µì‚¬í•˜ì—¬ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         public List<SkillCardEffectSO> CreateEffects() => new(effects);
 
         #endregion
 
-        #region === ½½·Ô °ü·Ã ===
+        #region === ìŠ¬ë¡¯ ê´€ë ¨ ===
 
         public void SetHandSlot(SkillCardSlotPosition slot) => handSlot = slot;
         public SkillCardSlotPosition? GetHandSlot() => handSlot;
@@ -63,23 +63,23 @@ namespace Game.SkillCardSystem.Runtime
 
         #endregion
 
-        #region === ¼ÒÀ¯ÀÚ Á¤º¸ ===
+        #region === ì†Œìœ ì ì •ë³´ ===
 
         public SlotOwner GetOwner() => owner;
         public bool IsFromPlayer() => owner == SlotOwner.PLAYER;
 
         #endregion
 
-        #region === ½ÇÇà °ü·Ã ===
+        #region === ì‹¤í–‰ ê´€ë ¨ ===
 
         /// <summary>
-        /// source/target ¾øÀÌ È£Ãâ ½Ã °æ°í Ãâ·Â
+        /// source/target ì—†ì´ í˜¸ì¶œ ì‹œ ê²½ê³  ì¶œë ¥
         /// </summary>
         public void ExecuteSkill() =>
-            Debug.LogWarning("[RuntimeSkillCard] ExecuteSkill() È£Ãâ - source/targetÀ» Á÷Á¢ ÁöÁ¤ÇØ¾ß ÇÕ´Ï´Ù.");
+            Debug.LogWarning("[RuntimeSkillCard] ExecuteSkill() í˜¸ì¶œ - source/targetì„ ì§ì ‘ ì§€ì •í•´ì•¼ í•©ë‹ˆë‹¤.");
 
         /// <summary>
-        /// source/targetÀ» ÁöÁ¤ÇÏ¿© ½ºÅ³À» ½ÇÇàÇÕ´Ï´Ù.
+        /// source/targetì„ ì§€ì •í•˜ì—¬ ìŠ¤í‚¬ì„ ì‹¤í–‰í•©ë‹ˆë‹¤.
         /// </summary>
         public void ExecuteSkill(ICharacter source, ICharacter target)
         {
@@ -88,19 +88,19 @@ namespace Game.SkillCardSystem.Runtime
         }
 
         /// <summary>
-        /// ÀÚµ¿ ½ÇÇà: µî·ÏµÈ ÀÌÆåÆ®¸¦ ¼øÂ÷ Àû¿ëÇÏ¸ç, ÄğÅ¸ÀÓÀ» ½ÃÀÛÇÕ´Ï´Ù.
+        /// ìë™ ì‹¤í–‰: ë“±ë¡ëœ ì´í™íŠ¸ë¥¼ ìˆœì°¨ ì ìš©í•˜ë©°, ì¿¨íƒ€ì„ì„ ì‹œì‘í•©ë‹ˆë‹¤.
         /// </summary>
         public void ExecuteCardAutomatically(ICardExecutionContext context)
         {
             if (context?.Source is not CharacterBase || context.Target is not CharacterBase targetChar)
             {
-                Debug.LogWarning("[RuntimeSkillCard] context ¶Ç´Â ´ë»ó Å¸ÀÔ ¿À·ù");
+                Debug.LogWarning("[RuntimeSkillCard] context ë˜ëŠ” ëŒ€ìƒ íƒ€ì… ì˜¤ë¥˜");
                 return;
             }
 
             if (targetChar.IsDead())
             {
-                Debug.LogWarning("[RuntimeSkillCard] ´ë»óÀÚ°¡ ÀÌ¹Ì »ç¸ÁÇß½À´Ï´Ù.");
+                Debug.LogWarning("[RuntimeSkillCard] ëŒ€ìƒìê°€ ì´ë¯¸ ì‚¬ë§í–ˆìŠµë‹ˆë‹¤.");
                 return;
             }
 
@@ -116,16 +116,16 @@ namespace Game.SkillCardSystem.Runtime
 
         #endregion
 
-        #region === ´ë»ó Á¤º¸ ===
+        #region === ëŒ€ìƒ ì •ë³´ ===
 
         /// <summary>
-        /// context¿¡ µû¶ó ÇöÀç Ä«µåÀÇ ¼ÒÀ¯ Ä³¸¯ÅÍ¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
+        /// contextì— ë”°ë¼ í˜„ì¬ ì¹´ë“œì˜ ì†Œìœ  ìºë¦­í„°ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         public ICharacter GetOwner(ICardExecutionContext context) =>
             owner == SlotOwner.PLAYER ? context.GetPlayer() : context.GetEnemy();
 
         /// <summary>
-        /// context¿¡ µû¶ó ÇöÀç Ä«µåÀÇ ´ë»ó Ä³¸¯ÅÍ¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
+        /// contextì— ë”°ë¼ í˜„ì¬ ì¹´ë“œì˜ ëŒ€ìƒ ìºë¦­í„°ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         public ICharacter GetTarget(ICardExecutionContext context) =>
             owner == SlotOwner.PLAYER ? context.GetEnemy() : context.GetPlayer();

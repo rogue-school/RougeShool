@@ -6,38 +6,38 @@ using Game.SkillCardSystem.Core;
 namespace Game.SkillCardSystem.Deck
 {
     /// <summary>
-    /// ÀûÀÌ »ç¿ëÇÒ ½ºÅ³ Ä«µå µ¦À» Á¤ÀÇÇÏ´Â ScriptableObjectÀÔ´Ï´Ù.
-    /// Ä«µåº° µîÀå È®·üÀ» ¼³Á¤ÇÒ ¼ö ÀÖ½À´Ï´Ù.
+    /// ì ì´ ì‚¬ìš©í•  ìŠ¤í‚¬ ì¹´ë“œ ë±ì„ ì •ì˜í•˜ëŠ” ScriptableObjectì…ë‹ˆë‹¤.
+    /// ì¹´ë“œë³„ ë“±ì¥ í™•ë¥ ì„ ì„¤ì •í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
     /// </summary>
     [CreateAssetMenu(menuName = "Game/Decks/Enemy Skill Deck")]
     public class EnemySkillDeck : ScriptableObject
     {
         /// <summary>
-        /// È®·ü ±â¹İ ½ºÅ³ Ä«µå ¿£Æ®¸® Å¬·¡½ºÀÔ´Ï´Ù.
+        /// í™•ë¥  ê¸°ë°˜ ìŠ¤í‚¬ ì¹´ë“œ ì—”íŠ¸ë¦¬ í´ë˜ìŠ¤ì…ë‹ˆë‹¤.
         /// </summary>
         [Serializable]
         public class CardEntry
         {
             /// <summary>
-            /// ½ºÅ³ Ä«µå °´Ã¼
+            /// ìŠ¤í‚¬ ì¹´ë“œ ê°ì²´
             /// </summary>
             public EnemySkillCard card;
 
             /// <summary>
-            /// ÀÌ Ä«µå°¡ ¼±ÅÃµÉ È®·ü (0~1)
+            /// ì´ ì¹´ë“œê°€ ì„ íƒë  í™•ë¥  (0~1)
             /// </summary>
             [Range(0f, 1f)]
             public float probability;
         }
 
-        [Header("Àû¿ëµÉ Ä«µå ¸ñ·Ï (È®·ü ±â¹İ)")]
-        [Tooltip("°¢ Ä«µå¿Í ÇØ´ç Ä«µåÀÇ µîÀå È®·üÀ» ¼³Á¤ÇÕ´Ï´Ù.")]
+        [Header("ì ìš©ë  ì¹´ë“œ ëª©ë¡ (í™•ë¥  ê¸°ë°˜)")]
+        [Tooltip("ê° ì¹´ë“œì™€ í•´ë‹¹ ì¹´ë“œì˜ ë“±ì¥ í™•ë¥ ì„ ì„¤ì •í•©ë‹ˆë‹¤.")]
         [SerializeField] private List<CardEntry> cards = new();
 
         /// <summary>
-        /// È®·üÀ» ±â¹İÀ¸·Î ¹«ÀÛÀ§ Ä«µå ¿£Æ®¸®¸¦ ¼±ÅÃÇÕ´Ï´Ù.
+        /// í™•ë¥ ì„ ê¸°ë°˜ìœ¼ë¡œ ë¬´ì‘ìœ„ ì¹´ë“œ ì—”íŠ¸ë¦¬ë¥¼ ì„ íƒí•©ë‹ˆë‹¤.
         /// </summary>
-        /// <returns>¼±ÅÃµÈ Ä«µå ¿£Æ®¸® (¾øÀ» °æ¿ì null)</returns>
+        /// <returns>ì„ íƒëœ ì¹´ë“œ ì—”íŠ¸ë¦¬ (ì—†ì„ ê²½ìš° null)</returns>
         public CardEntry GetRandomEntry()
         {
             if (cards == null || cards.Count == 0)
@@ -53,12 +53,12 @@ namespace Game.SkillCardSystem.Deck
                     return entry;
             }
 
-            // È®·ü ÃÑÇÕÀÌ 1.0º¸´Ù ÀÛÀ» °æ¿ì ¸¶Áö¸· Ä«µå ¹İÈ¯ (º¸Á¤)
+            // í™•ë¥  ì´í•©ì´ 1.0ë³´ë‹¤ ì‘ì„ ê²½ìš° ë§ˆì§€ë§‰ ì¹´ë“œ ë°˜í™˜ (ë³´ì •)
             return cards[^1];
         }
 
         /// <summary>
-        /// µ¦¿¡ Æ÷ÇÔµÈ ¸ğµç Ä«µå ¿£Æ®¸®¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
+        /// ë±ì— í¬í•¨ëœ ëª¨ë“  ì¹´ë“œ ì—”íŠ¸ë¦¬ë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
         /// </summary>
         public List<CardEntry> GetAllCards() => cards;
     }

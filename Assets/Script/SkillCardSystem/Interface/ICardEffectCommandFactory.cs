@@ -3,16 +3,16 @@ using Game.SkillCardSystem.Effects;
 namespace Game.SkillCardSystem.Interface
 {
     /// <summary>
-    /// SkillCardEffectSO¸¦ ±â¹İÀ¸·Î ICardEffectCommand ÀÎ½ºÅÏ½º¸¦ »ı¼ºÇÏ´Â ÆÑÅä¸® ÀÎÅÍÆäÀÌ½ºÀÔ´Ï´Ù.
+    /// SkillCardEffectSOë¥¼ ê¸°ë°˜ìœ¼ë¡œ ICardEffectCommand ì¸ìŠ¤í„´ìŠ¤ë¥¼ ìƒì„±í•˜ëŠ” íŒ©í† ë¦¬ ì¸í„°í˜ì´ìŠ¤ì…ë‹ˆë‹¤.
     /// </summary>
     public interface ICardEffectCommandFactory
     {
         /// <summary>
-        /// ÁöÁ¤µÈ ÀÌÆåÆ® ½ºÅ©¸³ÅÍºí ¿ÀºêÁ§Æ®¿Í ÆÄ¿ö °ªÀ» ±â¹İÀ¸·Î Ä¿¸Çµå¸¦ »ı¼ºÇÕ´Ï´Ù.
+        /// ì§€ì •ëœ ì´í™íŠ¸ ìŠ¤í¬ë¦½í„°ë¸” ì˜¤ë¸Œì íŠ¸ì™€ íŒŒì›Œ ê°’ì„ ê¸°ë°˜ìœ¼ë¡œ ì»¤ë§¨ë“œë¥¼ ìƒì„±í•©ë‹ˆë‹¤.
         /// </summary>
-        /// <param name="effect">Àû¿ëÇÒ Ä«µå ÀÌÆåÆ® µ¥ÀÌÅÍ (SkillCardEffectSO).</param>
-        /// <param name="power">ÀÌÆåÆ®ÀÇ Àû¿ë ¼öÄ¡ ¶Ç´Â °­µµ.</param>
-        /// <returns>»ı¼ºµÈ ÀÌÆåÆ® Ä¿¸Çµå. ½ÇÆĞ ½Ã null ¹İÈ¯ °¡´É.</returns>
+        /// <param name="effect">ì ìš©í•  ì¹´ë“œ ì´í™íŠ¸ ë°ì´í„° (SkillCardEffectSO).</param>
+        /// <param name="power">ì´í™íŠ¸ì˜ ì ìš© ìˆ˜ì¹˜ ë˜ëŠ” ê°•ë„.</param>
+        /// <returns>ìƒì„±ëœ ì´í™íŠ¸ ì»¤ë§¨ë“œ. ì‹¤íŒ¨ ì‹œ null ë°˜í™˜ ê°€ëŠ¥.</returns>
         ICardEffectCommand Create(SkillCardEffectSO effect, int power);
     }
 }

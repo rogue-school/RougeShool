@@ -8,11 +8,11 @@ using Game.CombatSystem.Slot;
 namespace Game.CombatSystem.Initialization
 {
     /// <summary>
-    /// ÀüÅõ ½ÃÀÛ ½Ã ½½·Ô Á¤º¸¸¦ ÀÚµ¿À¸·Î ¹ÙÀÎµùÇÏ°í ·¹Áö½ºÆ®¸®¿¡ µî·ÏÇÏ´Â ÃÊ±âÈ­ ½ºÅÜÀÔ´Ï´Ù.
+    /// ì „íˆ¬ ì‹œì‘ ì‹œ ìŠ¬ë¡¯ ì •ë³´ë¥¼ ìë™ìœ¼ë¡œ ë°”ì¸ë”©í•˜ê³  ë ˆì§€ìŠ¤íŠ¸ë¦¬ì— ë“±ë¡í•˜ëŠ” ì´ˆê¸°í™” ìŠ¤í…ì…ë‹ˆë‹¤.
     /// </summary>
     public class SlotInitializationStep : MonoBehaviour, ICombatInitializerStep
     {
-        #region ÇÊµå ¹× ÁÖÀÔ
+        #region í•„ë“œ ë° ì£¼ì…
 
         [Inject] private ISlotRegistry slotRegistry;
         [Inject] private SlotInitializer slotInitializer;
@@ -21,21 +21,21 @@ namespace Game.CombatSystem.Initialization
 
         #endregion
 
-        #region ÃÊ±âÈ­ ¸Ş¼­µå
+        #region ì´ˆê¸°í™” ë©”ì„œë“œ
 
         public IEnumerator Initialize()
         {
-            Debug.Log("[SlotInitializationStep] ½½·Ô ÃÊ±âÈ­ ½ÃÀÛ");
+            Debug.Log("[SlotInitializationStep] ìŠ¬ë¡¯ ì´ˆê¸°í™” ì‹œì‘");
 
             slotInitializer.AutoBindAllSlots();
 
             yield return new WaitUntil(() => slotRegistry != null && slotRegistry.IsInitialized);
 
-            Debug.Log($"[SlotInitializationStep] ÇÚµå ½½·Ô ¼ö: {slotRegistry.GetHandSlotRegistry()?.GetAllHandSlots()?.Count() ?? 0}");
-            Debug.Log($"[SlotInitializationStep] ÀüÅõ ½½·Ô ¼ö: {slotRegistry.GetCombatSlotRegistry()?.GetAllCombatSlots()?.Count() ?? 0}");
-            Debug.Log($"[SlotInitializationStep] Ä³¸¯ÅÍ ½½·Ô ¼ö: {slotRegistry.GetCharacterSlotRegistry()?.GetAllCharacterSlots()?.Count() ?? 0}");
+            Debug.Log($"[SlotInitializationStep] í•¸ë“œ ìŠ¬ë¡¯ ìˆ˜: {slotRegistry.GetHandSlotRegistry()?.GetAllHandSlots()?.Count() ?? 0}");
+            Debug.Log($"[SlotInitializationStep] ì „íˆ¬ ìŠ¬ë¡¯ ìˆ˜: {slotRegistry.GetCombatSlotRegistry()?.GetAllCombatSlots()?.Count() ?? 0}");
+            Debug.Log($"[SlotInitializationStep] ìºë¦­í„° ìŠ¬ë¡¯ ìˆ˜: {slotRegistry.GetCharacterSlotRegistry()?.GetAllCharacterSlots()?.Count() ?? 0}");
 
-            Debug.Log("[SlotInitializationStep] ½½·Ô ÃÊ±âÈ­ ¿Ï·á");
+            Debug.Log("[SlotInitializationStep] ìŠ¬ë¡¯ ì´ˆê¸°í™” ì™„ë£Œ");
         }
 
         #endregion

@@ -14,7 +14,7 @@ namespace Game.CombatSystem.Turn
 
         public void Execute(ISkillCard card, ICardExecutionContext context)
         {
-            // controller´Â ÇöÀç »ç¿ëÇÏÁö ¾ÊÀ¸¹Ç·Î null Àü´Þ
+            // controllerëŠ” í˜„ìž¬ ì‚¬ìš©í•˜ì§€ ì•Šìœ¼ë¯€ë¡œ null ì „ë‹¬
             executor.Execute(card, context, null);
         }
     }
