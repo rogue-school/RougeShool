@@ -1,0 +1,186 @@
+using UnityEngine;
+using DG.Tweening;
+
+namespace AnimationSystem.Animator
+{
+    /// <summary>
+    /// 스킬 카드가 생성될 때 재생되는 애니메이션과 그림자 효과를 처리합니다.
+    /// 그림자는 카드의 위치에 맞춰 생성되며, 카드가 떨어지면서 자연스럽게 변합니다.
+    /// </summary>
+    [RequireComponent(typeof(RectTransform), typeof(CanvasGroup))]
+    public class SkillCardSpawnAnimator : MonoBehaviour, AnimationSystem.Interface.IAnimationScript
+    {
+        [Header("Audio")]
+        [SerializeField] private AudioSource audioSource;
+        [SerializeField] private AudioClip spawnSound;
+
+        // 스킬 카드 전용 파라미터
+        private float cardStartOffsetY = 10f;
+        private float initialShadowAlpha = 0.5f;
+        private float finalShadowAlpha = 0.8f;
+
+        [Header("Visual Effect")]
+        [SerializeField] private GameObject spawnEffectPrefab;
+
+        [Header("Animation Settings")]
+        [SerializeField] private float spawnDuration = 0.6f;
+        [SerializeField] private float scaleDuration = 0.4f;
+        [SerializeField] private Ease spawnEase = Ease.OutBack;
+        [SerializeField] private Ease scaleEase = Ease.OutBack;
+
+        private RectTransform rectTransform;
+        private CanvasGroup canvasGroup;
+
+        private void Awake()
+        {
+            rectTransform = GetComponent<RectTransform>();
+            canvasGroup = GetComponent<CanvasGroup>();
+        }
+
+        /// <summary>
+        /// IAnimationScript 인터페이스 구현
+        /// </summary>
+        public void PlayAnimation(GameObject target, string animationType)
+        {
+            switch (animationType.ToLower())
+            {
+                case "cast":
+                    PlayCastAnimation();
+                    break;
+                case "use":
+                    PlayUseAnimation();
+                    break;
+                case "hover":
+                    PlayHoverAnimation();
+                    break;
+                default:
+                    Debug.LogWarning($"지원하지 않는 애니메이션 타입: {animationType}");
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// 카드 생성 애니메이션
+        /// </summary>
+        public void PlayCastAnimation(System.Action onComplete = null)
+        {
+            if (rectTransform == null || canvasGroup == null) return;
+
+            // 초기 상태 설정
+            rectTransform.localScale = Vector3.zero;
+            canvasGroup.alpha = 0f;
+
+            Sequence sequence = DOTween.Sequence();
+
+            // 사운드 재생
+            sequence.OnStart(() =>
+            {
+                if (audioSource != null && spawnSound != null)
+                    audioSource.PlayOneShot(spawnSound);
+            });
+
+            // 스케일 애니메이션
+            sequence.Append(
+                rectTransform.DOScale(Vector3.one, scaleDuration)
+                    .SetEase(scaleEase)
+            );
+
+            // 페이드 인
+            sequence.Join(
+                canvasGroup.DOFade(1f, spawnDuration)
+                    .SetEase(spawnEase)
+            );
+
+            // 완료 콜백
+            sequence.OnComplete(() =>
+            {
+                if (spawnEffectPrefab != null)
+                {
+                    GameObject fx = Instantiate(spawnEffectPrefab, rectTransform.position, Quaternion.identity);
+                    Destroy(fx, 1.5f);
+                }
+                onComplete?.Invoke();
+            });
+        }
+
+        /// <summary>
+        /// 카드 사용 애니메이션
+        /// </summary>
+        public void PlayUseAnimation(System.Action onComplete = null)
+        {
+            if (rectTransform == null) return;
+
+            Vector3 originalScale = rectTransform.localScale;
+
+            Sequence sequence = DOTween.Sequence();
+
+            // 스케일 업
+            sequence.Append(
+                rectTransform.DOScale(originalScale * 1.1f, 0.1f)
+                    .SetEase(Ease.OutQuad)
+            );
+
+            // 스케일 다운
+            sequence.Append(
+                rectTransform.DOScale(originalScale, 0.1f)
+                    .SetEase(Ease.InQuad)
+            );
+
+            // 완료 콜백
+            sequence.OnComplete(() => onComplete?.Invoke());
+        }
+
+        /// <summary>
+        /// 카드 호버 애니메이션
+        /// </summary>
+        public void PlayHoverAnimation(System.Action onComplete = null)
+        {
+            if (rectTransform == null) return;
+
+            Vector3 originalScale = rectTransform.localScale;
+
+            Sequence sequence = DOTween.Sequence();
+
+            // 스케일 업
+            sequence.Append(
+                rectTransform.DOScale(originalScale * 1.05f, 0.2f)
+                    .SetEase(Ease.OutQuad)
+            );
+
+            // 완료 콜백
+            sequence.OnComplete(() => onComplete?.Invoke());
+        }
+        
+        /// <summary>
+        /// 카드 생성 애니메이션 (기본 메서드)
+        /// </summary>
+        public void PlaySpawnAnimation()
+        {
+            PlayCastAnimation();
+        }
+        
+        /// <summary>
+        /// 카드 생성 애니메이션 (비동기)
+        /// </summary>
+        public async System.Threading.Tasks.Task PlaySpawnAnimationAsync()
+        {
+            var tcs = new System.Threading.Tasks.TaskCompletionSource<bool>();
+            PlayCastAnimation(() => tcs.SetResult(true));
+            await tcs.Task;
+        }
+        
+        /// <summary>
+        /// 카드 생성 애니메이션 (코루틴)
+        /// </summary>
+        public System.Collections.IEnumerator PlaySpawnAnimationCoroutine()
+        {
+            var tcs = new System.Threading.Tasks.TaskCompletionSource<bool>();
+            PlayCastAnimation(() => tcs.SetResult(true));
+            
+            while (!tcs.Task.IsCompleted)
+            {
+                yield return null;
+            }
+        }
+    }
+}

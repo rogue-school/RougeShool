@@ -97,7 +97,7 @@ namespace Game.CombatSystem.Initialization
             character.SetCharacterData(data); // ★ 데이터 먼저 주입
 
             // 4. 등장 애니메이션 실행 및 대기
-            var animator = player.GetComponent<Game.CombatSystem.Animation.CharacterSpawnAnimator>();
+                            var animator = player.GetComponent<AnimationSystem.Animator.CharacterSpawnAnimator>();
             bool animDone = false;
             if (animator != null)
             {

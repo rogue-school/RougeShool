@@ -7,7 +7,7 @@ using Game.SkillCardSystem.Slot;
 using Game.SkillCardSystem.UI;
 using Game.CombatSystem.Utility;
 using Game.CombatSystem.DragDrop;
-using Game.CombatSystem.Animation;
+using AnimationSystem.Animator;
 
 namespace Game.CombatSystem.UI
 {

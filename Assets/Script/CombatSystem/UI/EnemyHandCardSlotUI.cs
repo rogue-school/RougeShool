@@ -4,7 +4,7 @@ using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Slot;
 using Game.SkillCardSystem.UI;
-using Game.CombatSystem.Animation;
+using AnimationSystem.Animator;
 
 namespace Game.CombatSystem.UI
 {

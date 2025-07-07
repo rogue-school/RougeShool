@@ -105,7 +105,7 @@ namespace Game.CombatSystem.Manager
             enemy.Initialize(data); // ★ 데이터 먼저 주입
 
             // 2. 등장 애니메이션 실행 및 대기
-            var animator = instance.GetComponent<Game.CombatSystem.Animation.CharacterSpawnAnimator>();
+                            var animator = instance.GetComponent<AnimationSystem.Animator.CharacterSpawnAnimator>();
             bool animDone = false;
             if (animator != null)
             {

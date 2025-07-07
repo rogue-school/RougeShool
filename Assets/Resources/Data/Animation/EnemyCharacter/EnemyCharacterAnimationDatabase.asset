@@ -1,0 +1,99 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3106ea1c6114ee941847103100f94344, type: 3}
+  m_Name: EnemyCharacterAnimationDatabase
+  m_EditorClassIdentifier: 
+  characterAnimations:
+  - enemyCharacterData: {fileID: 11400000, guid: 108def2387b83ed419893e2db0906a67, type: 2}
+    spawnAnimation:
+      animationScriptType: 
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+    deathAnimation:
+      animationScriptType: 
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+  - enemyCharacterData: {fileID: 11400000, guid: 8cadc1d0ca0290d459798eeaf8d20958, type: 2}
+    spawnAnimation:
+      animationScriptType: AnimationSystem.Animator.CharacterSpawnAnimator
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+    deathAnimation:
+      animationScriptType: 
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+  - enemyCharacterData: {fileID: 11400000, guid: d76e0333b79eae7489a84708f63dbc40, type: 2}
+    spawnAnimation:
+      animationScriptType: AnimationSystem.Animator.CharacterSpawnAnimator
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+    deathAnimation:
+      animationScriptType: 
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+  - enemyCharacterData: {fileID: 11400000, guid: b06fb8f06d11b0344808358d1ef5b616, type: 2}
+    spawnAnimation:
+      animationScriptType: AnimationSystem.Animator.CharacterSpawnAnimator
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+    deathAnimation:
+      animationScriptType: 
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0

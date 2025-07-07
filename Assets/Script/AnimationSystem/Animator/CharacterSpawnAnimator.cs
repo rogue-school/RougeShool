@@ -1,10 +1,10 @@
 using UnityEngine;
 using DG.Tweening;
 
-namespace Game.CombatSystem.Animation
+namespace AnimationSystem.Animator
 {
     [RequireComponent(typeof(RectTransform), typeof(CanvasGroup))]
-    public class CharacterSpawnAnimator : MonoBehaviour
+    public class CharacterSpawnAnimator : MonoBehaviour, AnimationSystem.Interface.IAnimationScript
     {
         [Header("Audio")]
         [SerializeField] private AudioSource audioSource;
@@ -27,9 +27,20 @@ namespace Game.CombatSystem.Animation
         }
 
         /// <summary>
+        /// IAnimationScript 인터페이스 구현
+        /// </summary>
+        public void PlayAnimation(GameObject target, string animationType)
+        {
+            if (animationType.ToLower() == "spawn")
+            {
+                PlaySpawnAnimation();
+            }
+        }
+
+        /// <summary>
         /// 등장 방향(오프셋)과 속도를 지정할 수 있는 등장 애니메이션
         /// </summary>
-        public void PlaySpawnAnimation(float verticalOffset, float duration = 0.8f, System.Action<Vector3> onComplete = null)
+        public void PlaySpawnAnimation(float verticalOffset = 100f, float duration = 0.8f, System.Action<Vector3> onComplete = null)
         {
             float totalDuration = duration;
             float shadowDuration = totalDuration * 0.5f;

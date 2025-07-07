@@ -11,7 +11,7 @@ using Game.SkillCardSystem.Deck;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
 using Game.CombatSystem.Utility;
-using Game.CombatSystem.Animation;
+using AnimationSystem.Animator;
 using System.Threading.Tasks;
 
 namespace Game.CombatSystem.Manager

@@ -15,7 +15,7 @@ using Game.CharacterSystem.Core;
 using Game.SkillCardSystem.Effect;
 using Game.Utility;
 using Game.CombatSystem.State;
-using Game.CombatSystem.Animation;
+using AnimationSystem.Animator;
 using System.Threading.Tasks;
 
 namespace Game.CombatSystem.Core
@@ -226,7 +226,7 @@ namespace Game.CombatSystem.Core
 
                 // 이동 애니메이션
                 if (shiftAnimator != null)
-                    await shiftAnimator.PlayMoveAnimationAsync(slotRectTransform, true); // 그림자도 카드와 함께 이동
+                    await shiftAnimator.PlayMoveAnimationAsync(slotRectTransform); // 그림자도 카드와 함께 이동
 
                 // 슬롯에 부착
                 uiMb.transform.SetParent(slotRectTransform, false);
@@ -285,7 +285,7 @@ namespace Game.CombatSystem.Core
                 }
 
                 if (shiftAnimator != null)
-                    yield return shiftAnimator.PlayMoveAnimationCoroutine(slotRect, true); // 그림자도 카드와 함께 이동
+                    yield return shiftAnimator.PlayMoveAnimationCoroutine(slotRect); // 그림자도 카드와 함께 이동
 
                 uiMb.transform.SetParent(slotRect, false);
                 uiMb.transform.localPosition = Vector3.zero;
