@@ -6,6 +6,7 @@ using Game.Utility;
 using Game.CharacterSystem.Interface;
 using Game.Manager;
 using Game.IManager;
+using Game.CombatSystem;
 
 namespace Game.CombatSystem.State
 {
@@ -57,6 +58,8 @@ namespace Game.CombatSystem.State
         public void EnterState()
         {
             Debug.Log("[CombatGameOverState] 상태 진입 - 게임 오버 처리 시작");
+            CombatEvents.RaiseDefeat();
+            CombatEvents.RaiseGameOver();
             coroutineRunner.RunCoroutine(GameOverRoutine());
         }
 

@@ -59,6 +59,11 @@ namespace Game.Utility
             Debug.Log("[SceneAutoBinderManager] 수동 바인딩 완료");
         }
 
+        private void OnSceneCharacterSpawned(string characterId, GameObject characterObject)
+        {
+            AnimationSystem.Manager.AnimationFacade.Instance.PlayCharacterAnimation(characterId, "spawn", characterObject);
+        }
+
         #endregion
     }
 }

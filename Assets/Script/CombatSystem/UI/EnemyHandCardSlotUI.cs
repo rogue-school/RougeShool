@@ -4,7 +4,6 @@ using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Slot;
 using Game.SkillCardSystem.UI;
-using AnimationSystem.Animator;
 
 namespace Game.CombatSystem.UI
 {
@@ -30,28 +29,10 @@ namespace Game.CombatSystem.UI
             currentCard?.SetHandSlot(position);
         }
 
-        public async void SetCardUI(ISkillCardUI ui)
+        public void SetCardUI(ISkillCardUI ui)
         {
             currentCardUI = ui;
-
-            if (ui is MonoBehaviour uiMb)
-            {
-                var shiftAnimator = uiMb.GetComponent<SkillCardShiftAnimator>();
-                var thisSlotRect = GetComponent<RectTransform>();
-
-                // 부모 변경 (전역 위치 유지)
-                uiMb.transform.SetParent(thisSlotRect.parent, true);
-
-                // 1. 이동 애니메이션 (이동이 필요한 경우에만)
-                if (shiftAnimator != null)
-                    await shiftAnimator.PlayMoveAnimationAsync(thisSlotRect);
-
-                // 2. 부모 재설정
-                uiMb.transform.SetParent(thisSlotRect, false);
-                uiMb.transform.localPosition = Vector3.zero;
-
-                // 애니메이션 완료 후 정위치!
-            }
+            // 위치/부모/애니메이션 제어는 EnemyHandManager에서만 담당
         }
 
         public void Clear()

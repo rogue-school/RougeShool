@@ -1,5 +1,6 @@
 using UnityEngine;
 using DG.Tweening;
+using System.Collections;
 
 namespace AnimationSystem.Animator
 {
@@ -29,11 +30,42 @@ namespace AnimationSystem.Animator
         /// <summary>
         /// IAnimationScript 인터페이스 구현
         /// </summary>
-        public void PlayAnimation(GameObject target, string animationType)
+        public void PlayAnimation(string animationType, System.Action onComplete = null)
         {
-            if (animationType.ToLower() == "spawn")
+            // 기존 애니메이션 실행 로직...
+            StartCoroutine(PlaySpawnAnimationCoroutine(onComplete));
+        }
+
+        private IEnumerator PlaySpawnAnimationCoroutine(System.Action onComplete)
+        {
+            // 예시: 1.5초 대기 후 콜백 호출 (실제 애니메이션 길이에 맞게 조정)
+            yield return new WaitForSeconds(1.5f);
+            onComplete?.Invoke();
+        }
+        
+        /// <summary>
+        /// 애니메이션을 중지합니다.
+        /// </summary>
+        public void StopAnimation()
+        {
+            DOTween.Kill(rectTransform);
+            DOTween.Kill(canvasGroup);
+            if (shadowTransform != null)
             {
-                PlaySpawnAnimation();
+                DOTween.Kill(shadowTransform);
+            }
+        }
+        
+        /// <summary>
+        /// 애니메이션을 즉시 완료합니다.
+        /// </summary>
+        public void CompleteAnimation()
+        {
+            StopAnimation();
+            canvasGroup.alpha = 1f;
+            if (shadowTransform != null)
+            {
+                shadowTransform.anchoredPosition = rectTransform.anchoredPosition + new Vector2(0, shadowOffsetY);
             }
         }
 

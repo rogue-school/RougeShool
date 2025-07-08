@@ -22,20 +22,34 @@ namespace AnimationSystem.Animator
         /// <summary>
         /// IAnimationScript 인터페이스 구현
         /// </summary>
-        public void PlayAnimation(GameObject target, string animationType)
+        public void PlayAnimation(string animationType, System.Action onComplete = null)
         {
-            switch (animationType.ToLower())
-            {
-                case "slotmove":
-                    PlaySlotMoveAnimation();
-                    break;
-                case "battleslotplace":
-                    PlayBattleSlotPlaceAnimation();
-                    break;
-                default:
-                    Debug.LogWarning($"지원하지 않는 애니메이션 타입: {animationType}");
-                    break;
-            }
+            StartCoroutine(PlayShiftAnimationCoroutine(onComplete));
+        }
+
+        private System.Collections.IEnumerator PlayShiftAnimationCoroutine(System.Action onComplete)
+        {
+            yield return new UnityEngine.WaitForSeconds(0.5f); // 카드 이동 연출 시간에 맞게 조정
+            onComplete?.Invoke();
+        }
+        
+        /// <summary>
+        /// 애니메이션을 중지합니다.
+        /// </summary>
+        public void StopAnimation()
+        {
+            DOTween.Kill(rectTransform);
+        }
+        
+        /// <summary>
+        /// 애니메이션을 즉시 완료합니다.
+        /// </summary>
+        public void CompleteAnimation()
+        {
+            StopAnimation();
+            // 기본 위치로 즉시 이동
+            rectTransform.anchoredPosition = new Vector2(0, 0);
+            rectTransform.localScale = Vector3.one;
         }
 
         /// <summary>
@@ -126,8 +140,13 @@ namespace AnimationSystem.Animator
         /// </summary>
         public System.Collections.IEnumerator PlayMoveAnimationCoroutine(RectTransform targetRect)
         {
+            float startTime = Time.time;
+
             var tcs = new System.Threading.Tasks.TaskCompletionSource<bool>();
-            PlaySlotMoveAnimation(targetRect.anchoredPosition, () => tcs.SetResult(true));
+            PlaySlotMoveAnimation(targetRect.anchoredPosition, () => {
+                Debug.Log($"SkillCardShift animation completed for target: {targetRect?.name ?? "null"}");
+                tcs.SetResult(true);
+            });
             
             while (!tcs.Task.IsCompleted)
             {

@@ -99,4 +99,6 @@ public interface IEnemyHandManager
     /// 카드 하나를 꺼내 전투 슬롯에 등록하고, 슬롯 위치까지 함께 반환합니다.
     /// </summary>
     (ISkillCard card, SkillCardUI ui, CombatSlotPosition pos) PopCardAndRegisterToCombatSlot(ICombatFlowCoordinator coordinator);
+
+    IEnumerator SafeClearHandAfterAllAnimations();
 }

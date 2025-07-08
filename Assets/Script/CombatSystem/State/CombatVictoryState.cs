@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using Game.CombatSystem.Interface;
 using Game.Utility;
+using Game.CombatSystem;
 
 namespace Game.CombatSystem.State
 {
@@ -24,6 +25,7 @@ namespace Game.CombatSystem.State
         public void EnterState()
         {
             Debug.Log("<color=magenta>[CombatVictoryState] 승리 상태 진입</color>");
+            CombatEvents.RaiseVictory();
             coroutineRunner.RunCoroutine(HandleVictory());
         }
 
@@ -31,7 +33,7 @@ namespace Game.CombatSystem.State
         {
             yield return flowCoordinator.PerformVictoryPhase();
 
-            flowCoordinator.CleanupAfterVictory();
+            yield return flowCoordinator.CleanupAfterVictory();
 
             if (flowCoordinator.CheckHasNextEnemy())
             {

@@ -116,5 +116,20 @@ namespace Game.CombatSystem.Manager
         }
 
         #endregion
+
+        private void OnSlotCharacterSpawned(string characterId, GameObject characterObject)
+        {
+            AnimationSystem.Manager.AnimationFacade.Instance.PlayCharacterAnimation(characterId, "spawn", characterObject);
+        }
+
+        private void OnSlotCharacterDeath(string characterId, GameObject characterObject)
+        {
+            AnimationSystem.Manager.AnimationFacade.Instance.PlayCharacterDeathAnimation(characterId, characterObject);
+        }
+
+        private void OnSlotSkillCardUsed(string cardId, GameObject cardObject)
+        {
+            AnimationSystem.Manager.AnimationFacade.Instance.PlaySkillCardAnimation(cardId, "use", cardObject);
+        }
     }
 }

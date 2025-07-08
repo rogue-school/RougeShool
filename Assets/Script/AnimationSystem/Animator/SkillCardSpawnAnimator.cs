@@ -15,9 +15,6 @@ namespace AnimationSystem.Animator
         [SerializeField] private AudioClip spawnSound;
 
         // 스킬 카드 전용 파라미터
-        private float cardStartOffsetY = 10f;
-        private float initialShadowAlpha = 0.5f;
-        private float finalShadowAlpha = 0.8f;
 
         [Header("Visual Effect")]
         [SerializeField] private GameObject spawnEffectPrefab;
@@ -40,23 +37,28 @@ namespace AnimationSystem.Animator
         /// <summary>
         /// IAnimationScript 인터페이스 구현
         /// </summary>
-        public void PlayAnimation(GameObject target, string animationType)
+        public void PlayAnimation(string animationType, System.Action onComplete = null)
         {
-            switch (animationType.ToLower())
-            {
-                case "cast":
-                    PlayCastAnimation();
-                    break;
-                case "use":
-                    PlayUseAnimation();
-                    break;
-                case "hover":
-                    PlayHoverAnimation();
-                    break;
-                default:
-                    Debug.LogWarning($"지원하지 않는 애니메이션 타입: {animationType}");
-                    break;
-            }
+            StartCoroutine(PlaySpawnAnimationCoroutine(onComplete));
+        }
+        
+        /// <summary>
+        /// 애니메이션을 중지합니다.
+        /// </summary>
+        public void StopAnimation()
+        {
+            DOTween.Kill(rectTransform);
+            DOTween.Kill(canvasGroup);
+        }
+        
+        /// <summary>
+        /// 애니메이션을 즉시 완료합니다.
+        /// </summary>
+        public void CompleteAnimation()
+        {
+            StopAnimation();
+            rectTransform.localScale = Vector3.one;
+            canvasGroup.alpha = 1f;
         }
 
         /// <summary>
@@ -172,15 +174,22 @@ namespace AnimationSystem.Animator
         /// <summary>
         /// 카드 생성 애니메이션 (코루틴)
         /// </summary>
-        public System.Collections.IEnumerator PlaySpawnAnimationCoroutine()
+        public System.Collections.IEnumerator PlaySpawnAnimationCoroutine(System.Action onComplete)
         {
+            Debug.Log("SkillCardSpawn");
+            float startTime = Time.time;
+
             var tcs = new System.Threading.Tasks.TaskCompletionSource<bool>();
-            PlayCastAnimation(() => tcs.SetResult(true));
+            PlayCastAnimation(() => {
+                Debug.Log("SkillCardSpawn");
+                tcs.SetResult(true);
+            });
             
             while (!tcs.Task.IsCompleted)
             {
                 yield return null;
             }
+            onComplete?.Invoke();
         }
     }
 }

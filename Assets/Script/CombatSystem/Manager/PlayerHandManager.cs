@@ -7,6 +7,8 @@ using Game.SkillCardSystem.UI;
 using Game.CharacterSystem.Interface;
 using Game.SkillCardSystem.Factory;
 using Game.CombatSystem.Interface;
+using Game.CombatSystem;
+using AnimationSystem.Manager;
 
 namespace Game.SkillCardSystem.Core
 {
@@ -80,6 +82,8 @@ namespace Game.SkillCardSystem.Core
                 {
                     var ui = slot.AttachCard(card, cardUIPrefab);
                     if (ui != null) cardUIs[pos] = ui;
+                    // 카드 생성 이벤트 발행
+                    CombatEvents.RaisePlayerCardSpawn(card.CardData.Name, ui?.gameObject);
                 }
             }
         }
@@ -158,6 +162,10 @@ namespace Game.SkillCardSystem.Core
                 {
                     var slot = slotRegistry.GetPlayerHandSlot(kvp.Key);
                     slot?.DetachCard();
+
+                    // 카드 제거 이벤트 발행 (카드가 사라질 때 애니메이션)
+                    if (cardUIs.TryGetValue(kvp.Key, out var ui))
+                        CombatEvents.RaisePlayerCardUse(card.CardData.Name, ui?.gameObject);
 
                     cards[kvp.Key] = null;
                     cardUIs.Remove(kvp.Key);

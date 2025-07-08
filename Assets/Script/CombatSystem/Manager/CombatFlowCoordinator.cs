@@ -16,7 +16,9 @@ using Game.SkillCardSystem.Effect;
 using Game.Utility;
 using Game.CombatSystem.State;
 using AnimationSystem.Animator;
+using AnimationSystem.Manager;
 using System.Threading.Tasks;
+using Game.CombatSystem;
 
 namespace Game.CombatSystem.Core
 {
@@ -137,13 +139,10 @@ namespace Game.CombatSystem.Core
             {
                 // UI 애니메이션 완료까지 대기
                 bool animationComplete = false;
-                UnityMainThreadDispatcher.Enqueue(async () =>
-                {
-                    await RegisterCardToCombatSlotAsync(slotToRegister, cardToRegister, uiToRegister);
-                    // 애니메이션이 끝난 후에만 슬롯 등록
-                    turnCardRegistry.RegisterCard(slotToRegister, cardToRegister, uiToRegister, SlotOwner.ENEMY);
-                    animationComplete = true;
-                });
+                yield return StartCoroutine(RegisterCardToCombatSlotAsync(slotToRegister, cardToRegister, uiToRegister));
+                // 애니메이션이 끝난 후에만 슬롯 등록
+                turnCardRegistry.RegisterCard(slotToRegister, cardToRegister, uiToRegister, SlotOwner.ENEMY);
+                animationComplete = true;
 
                 yield return new WaitUntil(() => animationComplete);
             }
@@ -188,21 +187,52 @@ namespace Game.CombatSystem.Core
         /// <summary>
         /// 카드와 UI를 지정된 전투 슬롯에 애니메이션을 포함하여 등록합니다.
         /// </summary>
-        public async Task RegisterCardToCombatSlotAsync(CombatSlotPosition pos, ISkillCard card, SkillCardUI ui)
+        public IEnumerator RegisterCardToCombatSlotAsync(CombatSlotPosition pos, ISkillCard card, SkillCardUI ui)
         {
             var slot = slotRegistry.GetCombatSlot(pos);
             if (slot is not ICombatCardSlot combatSlot)
             {
                 Debug.LogError($"[CombatFlowCoordinator] 전투 슬롯 {pos}이 null이거나 ICombatCardSlot이 아님.");
-                return; // 모든 경로가 Task 종료되도록 명시
+                yield break;
             }
 
             var slotRectTransform = combatSlot.GetTransform() as RectTransform;
             if (slotRectTransform == null)
             {
                 Debug.LogError($"[CombatFlowCoordinator] 슬롯 {pos}의 Transform이 RectTransform이 아닙니다.");
-                return;
+                yield break;
             }
+
+            bool animationDone = false;
+            string description = $"전투 슬롯 등록: {pos}";
+
+            Debug.Log($"[CombatFlowCoordinator] 애니메이션 큐에 등록: {description}");
+
+            // AnimationQueueManager.Instance.Enqueue( // TODO: 코루틴 기반 AnimationFacade 직접 실행으로 리팩토링
+            yield return StartCoroutine(InternalRegisterCardToCombatSlotAsync(pos, card, ui, slotRectTransform, () => {
+                Debug.Log($"[CombatFlowCoordinator] 애니메이션 완료 콜백 호출: {description}");
+                animationDone = true;
+            }));
+
+            // 애니메이션 완료까지 대기
+            float waitStartTime = Time.time;
+            while (!animationDone)
+            {
+                if (Time.time - waitStartTime > 35f) // 35초 타임아웃
+                {
+                    Debug.LogError($"[CombatFlowCoordinator] 애니메이션 대기 타임아웃: {description}");
+                    break;
+                }
+                yield return null; // Task.Yield() 대신 yield return null 사용
+            }
+
+            Debug.Log($"[CombatFlowCoordinator] 애니메이션 대기 완료: {description} (대기 시간: {Time.time - waitStartTime:F2}초)");
+        }
+
+        private IEnumerator InternalRegisterCardToCombatSlotAsync(CombatSlotPosition pos, ISkillCard card, SkillCardUI ui, RectTransform slotRectTransform, System.Action onComplete)
+        {
+            Debug.Log($"[CombatFlowCoordinator] 전투 슬롯 등록 시작: {pos}");
+            float startTime = Time.time;
 
             if (ui is MonoBehaviour uiMb)
             {
@@ -212,45 +242,68 @@ namespace Game.CombatSystem.Core
                 var rect = uiMb.GetComponent<RectTransform>();
                 if (rect != null)
                 {
-                    Debug.Log($"[Before SetParent] parent={rect.parent?.name}, anchored={rect.anchoredPosition}, world={rect.position}");
+                    Debug.Log($"[CombatFlowCoordinator] 카드 위치 설정: {pos} - 원본 위치: {rect.position}");
                     Vector3 worldPos = rect.position;
                     uiMb.transform.SetParent(slotRectTransform.parent, true);
-                    Debug.Log($"[After SetParent] parent={rect.parent?.name}, anchored={rect.anchoredPosition}, world={rect.position}");
-                    // 월드 위치 강제 세팅
                     rect.position = worldPos;
-                    Debug.Log($"[After position fix] parent={rect.parent?.name}, anchored={rect.anchoredPosition}, world={rect.position}");
+                    Debug.Log($"[CombatFlowCoordinator] 카드 위치 설정 완료: {pos} - 새 위치: {rect.position}");
                 }
-
-                // 부모를 임시로 월드 유지용으로 설정
-                // uiMb.transform.SetParent(slotRectTransform.parent, true);
 
                 // 이동 애니메이션
                 if (shiftAnimator != null)
-                    await shiftAnimator.PlayMoveAnimationAsync(slotRectTransform); // 그림자도 카드와 함께 이동
+                {
+                    Debug.Log($"[CombatFlowCoordinator] 이동 애니메이션 시작: {pos}");
+                    yield return shiftAnimator.PlayMoveAnimationCoroutine(slotRectTransform);
+                    Debug.Log($"[CombatFlowCoordinator] 이동 애니메이션 완료: {pos}");
+                }
+                else
+                {
+                    Debug.LogWarning($"[CombatFlowCoordinator] SkillCardShiftAnimator가 없음: {pos}");
+                }
 
                 // 슬롯에 부착
+                Debug.Log($"[CombatFlowCoordinator] 슬롯에 부착: {pos}");
                 uiMb.transform.SetParent(slotRectTransform, false);
                 uiMb.transform.localPosition = Vector3.zero;
                 uiMb.transform.localScale = Vector3.one;
+                Debug.Log($"[CombatFlowCoordinator] 슬롯 부착 완료: {pos} - 로컬 위치: {uiMb.transform.localPosition}");
 
                 // 등장 애니메이션
                 if (spawnAnimator != null)
-                    await spawnAnimator.PlaySpawnAnimationAsync();
+                {
+                    Debug.Log($"[CombatFlowCoordinator] 등장 애니메이션 시작: {pos}");
+                    yield return spawnAnimator.PlaySpawnAnimationCoroutine(null);
+                    Debug.Log($"[CombatFlowCoordinator] 등장 애니메이션 완료: {pos}");
+                }
+                else
+                {
+                    Debug.LogWarning($"[CombatFlowCoordinator] SkillCardSpawnAnimator가 없음: {pos}");
+                }
             }
             else
             {
+                Debug.LogWarning($"[CombatFlowCoordinator] UI가 MonoBehaviour가 아님: {pos}");
                 // 애니메이션 없는 기본 처리
                 ui.transform.SetParent(slotRectTransform);
                 ui.transform.localPosition = Vector3.zero;
                 ui.transform.localScale = Vector3.one;
             }
 
-            // 슬롯에 카드 등록
-            combatSlot.SetCard(card);
-            combatSlot.SetCardUI(ui);
+            // 슬롯에 카드 등록 (애니메이션 완료 후)
+            var combatSlot = slotRegistry.GetCombatSlot(pos) as ICombatCardSlot;
+            if (combatSlot != null)
+            {
+                combatSlot.SetCard(card);
+                combatSlot.SetCardUI(ui);
+                Debug.Log($"[CombatFlowCoordinator] 전투 슬롯 등록 완료: {pos} (소요 시간: {Time.time - startTime:F2}초)");
+            }
+            else
+            {
+                Debug.LogError($"[CombatFlowCoordinator] 전투 슬롯을 찾을 수 없음: {pos}");
+            }
 
-            // 모든 경로가 Task를 완료해야 하므로 명시적으로 종료
-            await Task.CompletedTask;
+            Debug.Log($"[CombatFlowCoordinator] onComplete 콜백 호출: {pos}");
+            onComplete?.Invoke();
         }
         public IEnumerator RegisterCardToCombatSlotCoroutine(CombatSlotPosition pos, ISkillCard card, SkillCardUI ui)
         {
@@ -292,7 +345,7 @@ namespace Game.CombatSystem.Core
                 uiMb.transform.localScale = Vector3.one;
 
                 if (spawnAnimator != null)
-                    yield return spawnAnimator.PlaySpawnAnimationCoroutine();
+                    yield return spawnAnimator.PlaySpawnAnimationCoroutine(null);
             }
             else
             {
@@ -334,6 +387,7 @@ namespace Game.CombatSystem.Core
 
         private IEnumerator PerformFirstAttackInternal(Action onComplete = null)
         {
+            CombatEvents.RaiseFirstAttackStarted();
             var firstCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.FIRST);
             if (firstCard != null)
             {
@@ -347,6 +401,7 @@ namespace Game.CombatSystem.Core
 
         public IEnumerator PerformSecondAttack()
         {
+            CombatEvents.RaiseSecondAttackStarted();
             var secondCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.SECOND);
             var firstCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.FIRST);
 
@@ -388,6 +443,8 @@ namespace Game.CombatSystem.Core
 
             card.SetCurrentCoolTime(card.GetMaxCoolTime());
             slotRegistry.GetCombatSlot(card.GetCombatSlot().Value)?.ClearCardUI();
+
+            CombatEvents.RaiseAttackResultProcessed();
 
             if (IsPlayerDead())
             {
@@ -457,8 +514,11 @@ namespace Game.CombatSystem.Core
             }
         }
 
-        public void ClearEnemyHand() => enemyHandManager.ClearHand();
-        public void CleanupAfterVictory() => enemyHandManager.ClearHand();
+        // 모든 애니메이션이 끝난 후에만 적 핸드 초기화
+        public IEnumerator ClearEnemyHandSafely()
+        {
+            yield return enemyHandManager.SafeClearHandAfterAllAnimations();
+        }
 
         #endregion
 
@@ -487,16 +547,32 @@ namespace Game.CombatSystem.Core
             return enemy is EnemyCharacter e && e.IsMarkedDead && e.GetCurrentHP() <= 0;
         }
 
-        public void EnablePlayerInput() => playerInputEnabled = true;
-        public void DisablePlayerInput() => playerInputEnabled = false;
+        public void EnablePlayerInput() 
+        { 
+            playerInputEnabled = true;
+            CombatEvents.RaisePlayerInputEnabled();
+        }
+        public void DisablePlayerInput() 
+        { 
+            playerInputEnabled = false;
+            CombatEvents.RaisePlayerInputDisabled();
+        }
         public bool IsPlayerInputEnabled() => playerInputEnabled;
 
         #endregion
 
         #region UI 및 버튼
 
-        public void EnableStartButton() => startButtonHandler?.SetInteractable(true);
-        public void DisableStartButton() => startButtonHandler?.SetInteractable(false);
+        public void EnableStartButton() 
+        { 
+            startButtonHandler?.SetInteractable(true);
+            CombatEvents.RaiseStartButtonEnabled();
+        }
+        public void DisableStartButton() 
+        { 
+            startButtonHandler?.SetInteractable(false);
+            CombatEvents.RaiseStartButtonDisabled();
+        }
         public void RegisterStartButton(Action callback) => onStartButtonPressed = callback;
         public void UnregisterStartButton() => onStartButtonPressed = null;
         public void OnStartButtonClickedExternally() => onStartButtonPressed?.Invoke();
@@ -511,5 +587,36 @@ namespace Game.CombatSystem.Core
         public void SpawnNextEnemy() => stageManager.SpawnNextEnemy();
 
         #endregion
+
+        private void OnPlayerCharacterSpawned(string characterId, GameObject characterObject)
+        {
+            AnimationSystem.Manager.AnimationFacade.Instance.PlayCharacterAnimation(characterId, "spawn", characterObject);
+        }
+        private void OnEnemyCharacterSpawned(string enemyId, GameObject enemyObject)
+        {
+            AnimationSystem.Manager.AnimationFacade.Instance.PlayCharacterAnimation(enemyId, "spawn", enemyObject, null, true);
+        }
+        private void OnPlayerSkillCardUsed(string cardId, GameObject cardObject)
+        {
+            AnimationSystem.Manager.AnimationFacade.Instance.PlaySkillCardAnimation(cardId, "use", cardObject);
+        }
+        private void OnEnemySkillCardUsed(string cardId, GameObject cardObject)
+        {
+            AnimationSystem.Manager.AnimationFacade.Instance.PlaySkillCardAnimation(cardId, "use", cardObject);
+        }
+        private void OnPlayerCharacterDeath(string characterId, GameObject characterObject)
+        {
+            AnimationSystem.Manager.AnimationFacade.Instance.PlayCharacterDeathAnimation(characterId, characterObject);
+        }
+        private void OnEnemyCharacterDeath(string enemyId, GameObject enemyObject)
+        {
+            AnimationSystem.Manager.AnimationFacade.Instance.PlayCharacterDeathAnimation(enemyId, enemyObject, null, true);
+        }
+
+        // ICombatFlowCoordinator 인터페이스 구현: 전투 승리 후 상태 정리
+        public IEnumerator CleanupAfterVictory()
+        {
+            yield return ClearEnemyHandSafely();
+        }
     }
 }

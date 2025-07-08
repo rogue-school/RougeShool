@@ -4,6 +4,7 @@ using Game.CombatSystem.Interface;
 using Game.Utility;
 using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
+using Game.CombatSystem;
 
 namespace Game.CombatSystem.State
 {
@@ -50,9 +51,10 @@ namespace Game.CombatSystem.State
             if (flowCoordinator.IsEnemyDead())
             {
                 Debug.Log("[CombatResultState] 적 사망 판정 완료");
+                CombatEvents.RaiseCombatEnded(true); // 승리
 
                 flowCoordinator.RemoveEnemyCharacter();
-                flowCoordinator.ClearEnemyHand();
+                yield return flowCoordinator.ClearEnemyHandSafely();
                 yield return new WaitForSeconds(0.2f);
 
                 if (!flowCoordinator.CheckHasNextEnemy())
@@ -69,6 +71,7 @@ namespace Game.CombatSystem.State
             else if (flowCoordinator.IsPlayerDead())
             {
                 Debug.Log("[CombatResultState] 플레이어 사망 판정 완료 → GameOverState로 전이");
+                CombatEvents.RaiseCombatEnded(false); // 패배
                 yield return new WaitForSeconds(0.1f);
 
                 turnManager.RequestStateChange(turnManager.GetStateFactory().CreateGameOverState());

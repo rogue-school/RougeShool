@@ -4,6 +4,7 @@ using Zenject;
 using Game.IManager;
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Interface;
+using AnimationSystem.Manager;
 
 namespace Game.CombatSystem.Initialization
 {
@@ -46,12 +47,28 @@ namespace Game.CombatSystem.Initialization
                 yield break;
             }
 
-            handManager.SetPlayer(player);          // owner를 runtime에 명시적 설정
+            handManager.SetPlayer(player);          // owner를 runtime에 명시적으로 설정
             handManager.GenerateInitialHand();
             handManager.LogPlayerHandSlotStates();
             player.InjectHandManager(handManager);  // 연결
 
-            Debug.Log("[PlayerSkillCardInitializer] 플레이어 핸드 초기화 완료");
+            // 카드 등장 애니메이션 병렬 실행 및 대기
+            var allCards = handManager.GetAllHandCards();
+            int animCount = 0;
+            int total = 0;
+            foreach (var (card, ui) in allCards)
+            {
+                if (ui != null)
+                {
+                    total++;
+                    var uiObj = ui as Game.SkillCardSystem.UI.SkillCardUI;
+                    if (uiObj != null)
+                        AnimationFacade.Instance.PlaySkillCardAnimation(card, "spawn", uiObj.gameObject, () => animCount++);
+                }
+            }
+            yield return new WaitUntil(() => animCount >= total);
+
+            Debug.Log("[PlayerSkillCardInitializer] 플레이어 핸드 카드 등장 애니메이션 완료");
             yield return null;
         }
 

@@ -5,6 +5,7 @@ using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.UI;
 using Zenject;
+using Game.CombatSystem;
 
 namespace Game.CombatSystem.Manager
 {
@@ -96,10 +97,18 @@ namespace Game.CombatSystem.Manager
             currentState?.ExitState();
             Debug.Log($"[CombatTurnManager] 상태 종료 → {currentState?.GetType().Name}");
 
+            // 턴 종료 이벤트 발행
+            if (currentState != null)
+                CombatEvents.RaiseTurnEnded();
+
             currentState = newState;
 
             Debug.Log($"[CombatTurnManager] 상태 진입 → {currentState?.GetType().Name}");
             currentState?.EnterState();
+
+            // 턴 시작 이벤트 발행
+            if (currentState != null)
+                CombatEvents.RaiseTurnStarted();
         }
 
         #endregion
@@ -199,5 +208,25 @@ namespace Game.CombatSystem.Manager
         }
 
         #endregion
+
+        private void OnTurnStart(string characterId, GameObject characterObject)
+        {
+            AnimationSystem.Manager.AnimationFacade.Instance.PlayCharacterAnimation(characterId, "turnStart", characterObject);
+        }
+
+        private void OnTurnEnd(string characterId, GameObject characterObject)
+        {
+            AnimationSystem.Manager.AnimationFacade.Instance.PlayCharacterAnimation(characterId, "turnEnd", characterObject);
+        }
+
+        private void OnSkillCardUsed(string cardId, GameObject cardObject)
+        {
+            AnimationSystem.Manager.AnimationFacade.Instance.PlaySkillCardAnimation(cardId, "use", cardObject);
+        }
+
+        private void OnCharacterDeath(string characterId, GameObject characterObject)
+        {
+            AnimationSystem.Manager.AnimationFacade.Instance.PlayCharacterDeathAnimation(characterId, characterObject);
+        }
     }
 }

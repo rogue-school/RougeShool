@@ -13,17 +13,17 @@ MonoBehaviour:
   m_Name: PlayerSkillCardAnimationDatabase
   m_EditorClassIdentifier: 
   skillCardAnimations:
-  - skillCardData: {fileID: 11400000, guid: f86aa2d251285f245a1a4d7635098de8, type: 2}
-    castAnimation:
-      animationScriptType: 
+  - playerSkillCard: {fileID: 11400000, guid: f86aa2d251285f245a1a4d7635098de8, type: 2}
+    spawnAnimation:
+      animationScriptType: AnimationSystem.Animator.SkillCardSpawnAnimator
       duration: 0
       useEasing: 0
       customCurve:
         serializedVersion: 2
         m_Curve: []
-        m_PreInfinity: 0
-        m_PostInfinity: 0
-        m_RotationOrder: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     useAnimation:
@@ -38,16 +38,28 @@ MonoBehaviour:
         m_RotationOrder: 0
       offset: {x: 0, y: 0, z: 0}
       scale: 0
-    hoverAnimation:
-      animationScriptType: 
+    dragAnimation:
+      animationScriptType: AnimationSystem.Animator.SkillCardShiftAnimator
       duration: 0
       useEasing: 0
       customCurve:
         serializedVersion: 2
         m_Curve: []
-        m_PreInfinity: 0
-        m_PostInfinity: 0
-        m_RotationOrder: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+    dropAnimation:
+      animationScriptType: AnimationSystem.Animator.CharacterSpawnAnimator
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     vanishAnimation:
@@ -80,17 +92,17 @@ MonoBehaviour:
         m_RotationOrder: 4
       offset: {x: 0, y: 0, z: 0}
       scale: 1
-  - skillCardData: {fileID: 11400000, guid: aa9df417b0200254bb1725355e2c0f0c, type: 2}
-    castAnimation:
-      animationScriptType: 
+  - playerSkillCard: {fileID: 11400000, guid: aa9df417b0200254bb1725355e2c0f0c, type: 2}
+    spawnAnimation:
+      animationScriptType: AnimationSystem.Animator.SkillCardSpawnAnimator
       duration: 0
       useEasing: 0
       customCurve:
         serializedVersion: 2
         m_Curve: []
-        m_PreInfinity: 0
-        m_PostInfinity: 0
-        m_RotationOrder: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     useAnimation:
@@ -105,16 +117,28 @@ MonoBehaviour:
         m_RotationOrder: 0
       offset: {x: 0, y: 0, z: 0}
       scale: 0
-    hoverAnimation:
-      animationScriptType: 
+    dragAnimation:
+      animationScriptType: AnimationSystem.Animator.SkillCardShiftAnimator
       duration: 0
       useEasing: 0
       customCurve:
         serializedVersion: 2
         m_Curve: []
-        m_PreInfinity: 0
-        m_PostInfinity: 0
-        m_RotationOrder: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+    dropAnimation:
+      animationScriptType: AnimationSystem.Animator.CharacterSpawnAnimator
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     vanishAnimation:
@@ -147,17 +171,17 @@ MonoBehaviour:
         m_RotationOrder: 4
       offset: {x: 0, y: 0, z: 0}
       scale: 1
-  - skillCardData: {fileID: 11400000, guid: d6d762dee5159c142b1c74c00e231cee, type: 2}
-    castAnimation:
-      animationScriptType: 
+  - playerSkillCard: {fileID: 11400000, guid: d6d762dee5159c142b1c74c00e231cee, type: 2}
+    spawnAnimation:
+      animationScriptType: AnimationSystem.Animator.SkillCardSpawnAnimator
       duration: 0
       useEasing: 0
       customCurve:
         serializedVersion: 2
         m_Curve: []
-        m_PreInfinity: 0
-        m_PostInfinity: 0
-        m_RotationOrder: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     useAnimation:
@@ -172,16 +196,28 @@ MonoBehaviour:
         m_RotationOrder: 0
       offset: {x: 0, y: 0, z: 0}
       scale: 0
-    hoverAnimation:
-      animationScriptType: 
+    dragAnimation:
+      animationScriptType: AnimationSystem.Animator.SkillCardShiftAnimator
       duration: 0
       useEasing: 0
       customCurve:
         serializedVersion: 2
         m_Curve: []
-        m_PreInfinity: 0
-        m_PostInfinity: 0
-        m_RotationOrder: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+    dropAnimation:
+      animationScriptType: AnimationSystem.Animator.CharacterSpawnAnimator
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     vanishAnimation:

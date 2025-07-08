@@ -8,6 +8,7 @@ using Game.CharacterSystem.Interface;
 using Game.IManager;
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Core;
+using AnimationSystem.Manager;
 
 namespace Game.CombatSystem.Initialization
 {
@@ -96,14 +97,11 @@ namespace Game.CombatSystem.Initialization
 
             character.SetCharacterData(data); // ★ 데이터 먼저 주입
 
-            // 4. 등장 애니메이션 실행 및 대기
-                            var animator = player.GetComponent<AnimationSystem.Animator.CharacterSpawnAnimator>();
+            // 4. 등장 애니메이션 실행 및 대기 (데이터베이스 기반)
             bool animDone = false;
-            if (animator != null)
-            {
-                animator.PlaySpawnAnimation(-400f, 1.5f, _ => animDone = true);
-                yield return new WaitUntil(() => animDone);
-            }
+            string characterId = data.name; // ScriptableObject의 name
+            AnimationSystem.Manager.AnimationFacade.Instance.PlayPlayerCharacterAnimation(characterId, "spawn", player.gameObject, () => animDone = true);
+            yield return new WaitUntil(() => animDone);
 
             // 5. 슬롯/매니저에 등록
             slot.SetCharacter(character);
@@ -114,8 +112,8 @@ namespace Game.CombatSystem.Initialization
             Debug.Log($"[PlayerCharacterInitializer] 카드 수: {cards?.Count}");
             if (cards != null)
             {
-                foreach (var entry in cards)
-                    Debug.Log($" → 카드: {entry.GetCardName()}, 효과 수: {entry.CreateEffects()?.Count ?? 0}");
+                foreach (var cardEntry in cards)
+                    Debug.Log($" → 카드: {cardEntry.GetCardName()}, 효과 수: {cardEntry.CreateEffects()?.Count ?? 0}");
             }
         }
 
@@ -188,8 +186,8 @@ namespace Game.CombatSystem.Initialization
 
             if (cards != null)
             {
-                foreach (var entry in cards)
-                    Debug.Log($" → 카드: {entry.GetCardName()}, 효과 수: {entry.CreateEffects()?.Count ?? 0}");
+                foreach (var cardEntry in cards)
+                    Debug.Log($" → 카드: {cardEntry.GetCardName()}, 효과 수: {cardEntry.CreateEffects()?.Count ?? 0}");
             }
         }
 

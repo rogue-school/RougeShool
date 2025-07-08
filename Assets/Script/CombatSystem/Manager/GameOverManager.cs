@@ -36,6 +36,11 @@ namespace Game.CombatSystem.Manager
             ShowGameOverUI();
         }
 
+        private void OnGameOverCharacterAnimation(string characterId, GameObject characterObject)
+        {
+            AnimationSystem.Manager.AnimationFacade.Instance.PlayCharacterAnimation(characterId, "gameover", characterObject);
+        }
+
         #endregion
     }
 }

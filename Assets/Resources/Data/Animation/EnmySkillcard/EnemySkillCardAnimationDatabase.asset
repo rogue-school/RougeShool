@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: EnemySkillCardAnimationDatabase
   m_EditorClassIdentifier: 
   skillCardAnimations:
-  - skillCardData: {fileID: 11400000, guid: e8b59f5ad5046374384af2a6d1a94ffa, type: 2}
-    castAnimation:
+  - enemySkillCard: {fileID: 11400000, guid: e8b59f5ad5046374384af2a6d1a94ffa, type: 2}
+    spawnAnimation:
       animationScriptType: AnimationSystem.Animator.SkillCardSpawnAnimator
       duration: 0
       useEasing: 0
@@ -26,7 +26,7 @@ MonoBehaviour:
         m_RotationOrder: 0
       offset: {x: 0, y: 0, z: 0}
       scale: 0
-    slotMoveAnimation:
+    moveAnimation:
       animationScriptType: AnimationSystem.Animator.SkillCardShiftAnimator
       duration: 0
       useEasing: 0
@@ -38,87 +38,8 @@ MonoBehaviour:
         m_RotationOrder: 0
       offset: {x: 0, y: 0, z: 0}
       scale: 0
-    battleSlotPlaceAnimation:
+    moveToCombatSlotAnimation:
       animationScriptType: AnimationSystem.Animator.SkillCardShiftAnimator
-      duration: 0
-      useEasing: 0
-      customCurve:
-        serializedVersion: 2
-        m_Curve: []
-        m_PreInfinity: 0
-        m_PostInfinity: 0
-        m_RotationOrder: 0
-      offset: {x: 0, y: 0, z: 0}
-      scale: 0
-    useAnimation:
-      animationScriptType: AnimationSystem.Animator.SkillCardSpawnAnimator
-      duration: 0
-      useEasing: 0
-      customCurve:
-        serializedVersion: 2
-        m_Curve: []
-        m_PreInfinity: 0
-        m_PostInfinity: 0
-        m_RotationOrder: 0
-      offset: {x: 0, y: 0, z: 0}
-      scale: 0
-    vanishAnimation:
-      animationScriptType: 
-      duration: 1
-      useEasing: 1
-      customCurve:
-        serializedVersion: 2
-        m_Curve:
-        - serializedVersion: 3
-          time: 0
-          value: 0
-          inSlope: 0
-          outSlope: 0
-          tangentMode: 0
-          weightedMode: 0
-          inWeight: 0
-          outWeight: 0
-        - serializedVersion: 3
-          time: 1
-          value: 1
-          inSlope: 0
-          outSlope: 0
-          tangentMode: 0
-          weightedMode: 0
-          inWeight: 0
-          outWeight: 0
-        m_PreInfinity: 2
-        m_PostInfinity: 2
-        m_RotationOrder: 4
-      offset: {x: 0, y: 0, z: 0}
-      scale: 1
-  - skillCardData: {fileID: 0}
-    castAnimation:
-      animationScriptType: 
-      duration: 0
-      useEasing: 0
-      customCurve:
-        serializedVersion: 2
-        m_Curve: []
-        m_PreInfinity: 0
-        m_PostInfinity: 0
-        m_RotationOrder: 0
-      offset: {x: 0, y: 0, z: 0}
-      scale: 0
-    slotMoveAnimation:
-      animationScriptType: 
-      duration: 0
-      useEasing: 0
-      customCurve:
-        serializedVersion: 2
-        m_Curve: []
-        m_PreInfinity: 0
-        m_PostInfinity: 0
-        m_RotationOrder: 0
-      offset: {x: 0, y: 0, z: 0}
-      scale: 0
-    battleSlotPlaceAnimation:
-      animationScriptType: 
       duration: 0
       useEasing: 0
       customCurve:
@@ -143,31 +64,379 @@ MonoBehaviour:
       scale: 0
     vanishAnimation:
       animationScriptType: 
-      duration: 1
-      useEasing: 1
+      duration: 0
+      useEasing: 0
       customCurve:
         serializedVersion: 2
-        m_Curve:
-        - serializedVersion: 3
-          time: 0
-          value: 0
-          inSlope: 0
-          outSlope: 0
-          tangentMode: 0
-          weightedMode: 0
-          inWeight: 0
-          outWeight: 0
-        - serializedVersion: 3
-          time: 1
-          value: 1
-          inSlope: 0
-          outSlope: 0
-          tangentMode: 0
-          weightedMode: 0
-          inWeight: 0
-          outWeight: 0
-        m_PreInfinity: 2
-        m_PostInfinity: 2
-        m_RotationOrder: 4
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
       offset: {x: 0, y: 0, z: 0}
-      scale: 1
+      scale: 0
+  - enemySkillCard: {fileID: 11400000, guid: e0a26135de8a5cc4fb8584333a13f940, type: 2}
+    spawnAnimation:
+      animationScriptType: AnimationSystem.Animator.SkillCardSpawnAnimator
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+    moveAnimation:
+      animationScriptType: AnimationSystem.Animator.SkillCardShiftAnimator
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+    moveToCombatSlotAnimation:
+      animationScriptType: AnimationSystem.Animator.SkillCardShiftAnimator
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+    useAnimation:
+      animationScriptType: 
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+    vanishAnimation:
+      animationScriptType: 
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+  - enemySkillCard: {fileID: 11400000, guid: dadf093733361954cb83506b04576d43, type: 2}
+    spawnAnimation:
+      animationScriptType: AnimationSystem.Animator.SkillCardSpawnAnimator
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+    moveAnimation:
+      animationScriptType: AnimationSystem.Animator.SkillCardShiftAnimator
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+    moveToCombatSlotAnimation:
+      animationScriptType: AnimationSystem.Animator.SkillCardShiftAnimator
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+    useAnimation:
+      animationScriptType: 
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+    vanishAnimation:
+      animationScriptType: 
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+  - enemySkillCard: {fileID: 11400000, guid: 5cf0d6ffb75cb434aa7d9df52268eab0, type: 2}
+    spawnAnimation:
+      animationScriptType: AnimationSystem.Animator.SkillCardSpawnAnimator
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+    moveAnimation:
+      animationScriptType: AnimationSystem.Animator.SkillCardShiftAnimator
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+    moveToCombatSlotAnimation:
+      animationScriptType: AnimationSystem.Animator.SkillCardShiftAnimator
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+    useAnimation:
+      animationScriptType: 
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+    vanishAnimation:
+      animationScriptType: 
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+  - enemySkillCard: {fileID: 11400000, guid: b67fd3a64c8a99b4d944e17f196ae955, type: 2}
+    spawnAnimation:
+      animationScriptType: AnimationSystem.Animator.SkillCardSpawnAnimator
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+    moveAnimation:
+      animationScriptType: AnimationSystem.Animator.SkillCardShiftAnimator
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+    moveToCombatSlotAnimation:
+      animationScriptType: AnimationSystem.Animator.SkillCardShiftAnimator
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+    useAnimation:
+      animationScriptType: 
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+    vanishAnimation:
+      animationScriptType: 
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+  - enemySkillCard: {fileID: 11400000, guid: 888eefdbb32105c49b9f56bbd105ed63, type: 2}
+    spawnAnimation:
+      animationScriptType: AnimationSystem.Animator.SkillCardSpawnAnimator
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+    moveAnimation:
+      animationScriptType: AnimationSystem.Animator.SkillCardShiftAnimator
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+    moveToCombatSlotAnimation:
+      animationScriptType: AnimationSystem.Animator.SkillCardShiftAnimator
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+    useAnimation:
+      animationScriptType: 
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+    vanishAnimation:
+      animationScriptType: 
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+  - enemySkillCard: {fileID: 11400000, guid: 17272803ffb06ae46967e3b6904a3cc8, type: 2}
+    spawnAnimation:
+      animationScriptType: AnimationSystem.Animator.SkillCardSpawnAnimator
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+    moveAnimation:
+      animationScriptType: AnimationSystem.Animator.SkillCardShiftAnimator
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+    moveToCombatSlotAnimation:
+      animationScriptType: AnimationSystem.Animator.SkillCardShiftAnimator
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+    useAnimation:
+      animationScriptType: 
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0
+    vanishAnimation:
+      animationScriptType: 
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+      offset: {x: 0, y: 0, z: 0}
+      scale: 0

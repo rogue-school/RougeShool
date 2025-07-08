@@ -7,6 +7,7 @@ using Game.CharacterSystem.Interface;
 using Game.SkillCardSystem.Slot;
 using Game.IManager;
 using Game.CombatSystem.UI;
+using Game.CombatSystem;
 
 namespace Game.CharacterSystem.Core
 {
@@ -205,6 +206,15 @@ namespace Game.CharacterSystem.Core
         /// 생존 여부 반환 (명시적 override)
         /// </summary>
         public override bool IsAlive() => base.IsAlive();
+
+        /// <summary>
+        /// 사망 처리 (이벤트 발행)
+        /// </summary>
+        public override void Die()
+        {
+            base.Die();
+            CombatEvents.RaisePlayerCharacterDeath(Data, this.gameObject);
+        }
 
         #endregion
     }

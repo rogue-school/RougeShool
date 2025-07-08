@@ -3,16 +3,22 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
-using Game.CharacterSystem.Interface;
-using Game.SkillCardSystem.Interface;
-using Game.SkillCardSystem.Slot;
-using Game.SkillCardSystem.UI;
-using Game.SkillCardSystem.Deck;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
+using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.Core;
+using Game.SkillCardSystem.UI;
+using Game.SkillCardSystem.Data;
+using Game.SkillCardSystem.Slot;
+using Game.SkillCardSystem.Deck;
+using Game.CharacterSystem.Interface;
+using Game.CharacterSystem.Core;
+using Game.IManager;
 using Game.CombatSystem.Utility;
-using AnimationSystem.Animator;
 using System.Threading.Tasks;
+using Game.CombatSystem;
+using Game.CombatSystem.Manager;
+using AnimationSystem.Manager;
 
 namespace Game.CombatSystem.Manager
 {
@@ -40,8 +46,6 @@ namespace Game.CombatSystem.Manager
         private ISlotRegistry slotRegistry;
         private ISkillCardFactory cardFactory;
         private ITurnCardRegistry cardRegistry;
-
-        private bool hasRegisteredThisTurn = false;
 
         #endregion
 
@@ -96,45 +100,31 @@ namespace Game.CombatSystem.Manager
             {
                 bool didSomething = false;
 
-                // 1. 3번 슬롯이 비었으면 새 카드 생성
+                // 3번 슬롯이 비어 있으면 새 카드 생성
                 if (IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_3))
                 {
                     yield return CreateCardInSlotWithAnimation(SkillCardSlotPosition.ENEMY_SLOT_3);
                     yield return new WaitForSeconds(delay);
                     didSomething = true;
                 }
-
-                // 2. 2번 슬롯이 비었고 3번에 카드가 있으면 3→2 이동
-                if (IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_2) &&
-                    !IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_3))
+                // 2번 슬롯이 비어 있으면 3→2 이동
+                else if (IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_2))
                 {
                     yield return ShiftSlotWithAnimation(SkillCardSlotPosition.ENEMY_SLOT_3, SkillCardSlotPosition.ENEMY_SLOT_2);
                     yield return new WaitForSeconds(delay);
                     didSomething = true;
                 }
-
-                // 3. 3번 슬롯이 비었으면 다시 새 카드 생성
-                if (IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_3))
-                {
-                    yield return CreateCardInSlotWithAnimation(SkillCardSlotPosition.ENEMY_SLOT_3);
-                    yield return new WaitForSeconds(delay);
-                    didSomething = true;
-                }
-
-                // 4. 1번 슬롯이 비었고 2번에 카드가 있으면 2→1 이동
-                if (IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_1) &&
-                    !IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_2))
+                // 1번 슬롯이 비어 있으면 2→1 이동
+                else if (IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_1))
                 {
                     yield return ShiftSlotWithAnimation(SkillCardSlotPosition.ENEMY_SLOT_2, SkillCardSlotPosition.ENEMY_SLOT_1);
                     yield return new WaitForSeconds(delay);
                     didSomething = true;
                 }
 
-                // 더 이상 할 일이 없으면 종료
+                // 더 이상 할 일이 없으면 루프 종료
                 if (!didSomething)
-                    yield break;
-
-                yield return null;
+                    break;
             }
         }
 
@@ -170,87 +160,71 @@ namespace Game.CombatSystem.Manager
 
         public ISkillCard GetCardForCombat() => GetSlotCard(SkillCardSlotPosition.ENEMY_SLOT_1);
         public ISkillCard GetSlotCard(SkillCardSlotPosition pos) => handSlots.TryGetValue(pos, out var slot) ? slot.GetCard() : null;
+        
         public ISkillCardUI GetCardUI(int index)
         {
-            var pos = (SkillCardSlotPosition)(index + (int)SkillCardSlotPosition.ENEMY_SLOT_1);
+            var pos = (SkillCardSlotPosition)index;
             return cardUIs.TryGetValue(pos, out var ui) ? ui : null;
         }
 
         public void RegisterCardToSlot(SkillCardSlotPosition pos, ISkillCard card, SkillCardUI ui)
         {
-            if (!handSlots.TryGetValue(pos, out var slot)) return;
-
-            slot.SetCard(card);
-            cardUIs[pos] = ui;
-            _cardsInSlots[pos] = (card, ui);
-
-            if (slot is Game.CombatSystem.UI.EnemyHandCardSlotUI uiSlot)
-                uiSlot.SetCardUI(ui);
+            if (handSlots.TryGetValue(pos, out var slot))
+            {
+                slot.SetCard(card);
+                cardUIs[pos] = ui;
+                _cardsInSlots[pos] = (card, ui);
+                Debug.Log($"[EnemyHandManager] 카드 등록: {card.GetCardName()} → {pos}");
+            }
         }
 
         public (ISkillCard, ISkillCardUI) PeekCardInSlot(SkillCardSlotPosition position)
         {
-            if (_cardsInSlots.TryGetValue(position, out var value))
-                return value;
+            if (_cardsInSlots.TryGetValue(position, out var tuple))
+            {
+                return (tuple.Item1, tuple.Item2);
+            }
             return (null, null);
         }
 
         public (ISkillCard card, SkillCardUI ui) PopFirstAvailableCard()
         {
-            foreach (SkillCardSlotPosition pos in Enum.GetValues(typeof(SkillCardSlotPosition)))
+            for (int i = 1; i <= 3; i++)
             {
-                var (card, ui) = PeekCardInSlot(pos);
-                if (card != null)
-                    return PopCardFromSlot(pos);
+                var pos = (SkillCardSlotPosition)i;
+                var (card, ui) = PopCardFromSlot(pos);
+                if (card != null && ui != null)
+                    return (card, ui);
             }
-
             return (null, null);
         }
 
         public (ISkillCard card, SkillCardUI ui) PopCardFromSlot(SkillCardSlotPosition pos)
         {
-            if (!handSlots.TryGetValue(pos, out var slot)) return (null, null);
-
-            var card = slot.GetCard();
-            var ui = cardUIs.TryGetValue(pos, out var foundUI) ? foundUI : null;
-
-            slot.Clear();
-            if (slot is Game.CombatSystem.UI.EnemyHandCardSlotUI uiSlot)
-                uiSlot.SetCardUI(null);
-
-            if (ui != null)
+            var (card, ui) = PeekCardInSlot(pos);
+            if (card != null && ui != null)
             {
-                var canvas = GameObject.FindFirstObjectByType<Canvas>();
-                if (canvas != null)
-                    ui.transform.SetParent(canvas.transform, true); // 월드 위치 유지!
-                else
-                    ui.transform.SetParent(null); // 예외적으로 캔버스가 없으면 기존대로
-                cardUIs.Remove(pos);
+                RemoveCardFromSlot(pos);
+                return (card, ui as SkillCardUI);
             }
-
-            _cardsInSlots.Remove(pos);
-            return (card, ui);
+            return (null, null);
         }
 
-        /// <inheritdoc/>
         public ISkillCard PickCardForSlot(SkillCardSlotPosition pos) => GetSlotCard(pos);
 
-        /// <inheritdoc/>
         public SkillCardUI RemoveCardFromSlot(SkillCardSlotPosition pos)
         {
-            if (!handSlots.TryGetValue(pos, out var slot)) return null;
-
-            slot.Clear();
-
-            if (cardUIs.TryGetValue(pos, out var ui))
+            if (handSlots.TryGetValue(pos, out var slot))
             {
-                Destroy(ui.gameObject);
-                cardUIs.Remove(pos);
-                _cardsInSlots.Remove(pos);
-                return ui;
+                slot.Clear();
+                if (cardUIs.TryGetValue(pos, out var ui))
+                {
+                    cardUIs.Remove(pos);
+                    _cardsInSlots.Remove(pos);
+                    Debug.Log($"[EnemyHandManager] 카드 제거: {pos}");
+                    return ui;
+                }
             }
-
-            _cardsInSlots.Remove(pos);
             return null;
         }
 
@@ -271,11 +245,20 @@ namespace Game.CombatSystem.Manager
         }
 
         public void ClearAllCards() => ClearHand();
-        public void ResetTurnRegistrationFlag() => hasRegisteredThisTurn = false;
+        public void ResetTurnRegistrationFlag()
+        {
+            // hasRegisteredThisTurn = false; // 사용하지 않는 필드이므로 삭제
+        }
         public void LogHandSlotStates()
         {
-            foreach (var kvp in handSlots)
-                Debug.Log($"[Slot {kvp.Key}] 카드 있음: {kvp.Value?.GetCard() != null}");
+            foreach (var pos in Enum.GetValues(typeof(SkillCardSlotPosition)))
+            {
+                var slot = handSlots.TryGetValue((SkillCardSlotPosition)pos, out var s) ? s : null;
+                var card = slot?.GetCard();
+                var ui = cardUIs.ContainsKey((SkillCardSlotPosition)pos) ? cardUIs[(SkillCardSlotPosition)pos] : null;
+                var dict = _cardsInSlots.ContainsKey((SkillCardSlotPosition)pos) ? _cardsInSlots[(SkillCardSlotPosition)pos].Item1 : null;
+                Debug.Log($"[LogHandSlotStates] {pos}: card={(card != null ? card.GetCardName() : "null")}, ui={(ui != null ? "O" : "X")}, dict={(dict != null ? dict.GetCardName() : "null")}");
+            }
         }
 
         public bool HasInitializedEnemy(IEnemyCharacter enemy) => currentEnemy == enemy;
@@ -286,7 +269,12 @@ namespace Game.CombatSystem.Manager
 
         private bool IsSlotEmpty(SkillCardSlotPosition pos)
         {
-            return handSlots.TryGetValue(pos, out var slot) && slot.GetCard() == null;
+            // 슬롯, 카드UI, 내부 딕셔너리 모두 null이어야 비어있음으로 간주
+            bool slotEmpty = !handSlots.TryGetValue(pos, out var slot) || slot.GetCard() == null;
+            bool uiEmpty = !cardUIs.ContainsKey(pos) || cardUIs[pos] == null;
+            bool dictEmpty = !_cardsInSlots.ContainsKey(pos) || _cardsInSlots[pos].Item1 == null;
+            bool result = slotEmpty && uiEmpty && dictEmpty;
+            return result;
         }
 
         private void CreateCardInSlot(SkillCardSlotPosition pos)
@@ -315,6 +303,8 @@ namespace Game.CombatSystem.Manager
 
             var cardUI = Instantiate(cardUIPrefab, ((MonoBehaviour)slot).transform);
             cardUI.SetCard(runtimeCard);
+            // 부모/위치/스케일을 명확히 지정
+            cardUI.transform.SetParent(((MonoBehaviour)slot).transform, false);
             cardUI.transform.localPosition = Vector3.zero;
             cardUI.transform.localScale = Vector3.one;
 
@@ -331,9 +321,23 @@ namespace Game.CombatSystem.Manager
         // 카드 생성 + 생성 애니메이션 대기용 코루틴 (슬롯 할당은 애니메이션 후에)
         private IEnumerator CreateCardInSlotWithAnimation(SkillCardSlotPosition pos)
         {
+            CreateCardInSlot(pos);
+            var (card, ui) = PeekCardInSlot(pos);
+            if (card != null && ui != null)
+            {
+                var uiObj = ui as SkillCardUI;
+                if (uiObj != null)
+                    AnimationFacade.Instance.PlaySkillCardAnimation(card, "spawn", uiObj.gameObject);
+                yield return new WaitForSeconds(0.3f); // 애니메이션 대기(실제 완료 콜백 패턴으로 확장 가능)
+            }
+        }
+
+        private IEnumerator InternalCreateCardInSlotWithAnimation(SkillCardSlotPosition pos, System.Action onComplete)
+        {
             if (enemyDeck == null)
             {
                 Debug.LogError("[EnemyHandManager] EnemyDeck이 null입니다.");
+                onComplete?.Invoke();
                 yield break;
             }
 
@@ -341,73 +345,155 @@ namespace Game.CombatSystem.Manager
             if (entry?.card == null)
             {
                 Debug.LogWarning("[EnemyHandManager] 생성할 카드 엔트리가 유효하지 않음");
+                onComplete?.Invoke();
                 yield break;
             }
 
             var runtimeCard = cardFactory.CreateEnemyCard(entry.card.GetCardData(), entry.card.CreateEffects());
-            var slot = handSlots[pos];
-            var cardUI = Instantiate(cardUIPrefab, (slot as MonoBehaviour)?.transform);
+            if (runtimeCard == null)
+            {
+                Debug.LogError("[EnemyHandManager] 카드 생성 실패");
+                onComplete?.Invoke();
+                yield break;
+            }
+
+            var cardUI = Instantiate(cardUIPrefab, ((MonoBehaviour)handSlots[pos]).transform);
+            if (cardUI == null)
+            {
+                Debug.LogError("[EnemyHandManager] 카드UI 생성 실패");
+                onComplete?.Invoke();
+                yield break;
+            }
+
+            // 카드UI 설정
             cardUI.SetCard(runtimeCard);
             cardUI.transform.localPosition = Vector3.zero;
             cardUI.transform.localScale = Vector3.one;
 
-            // 생성 애니메이션 실행 (슬롯에는 아직 카드 할당 X)
-            if (cardUI.TryGetComponent<SkillCardSpawnAnimator>(out var spawnAnimator))
-                yield return spawnAnimator.PlaySpawnAnimationCoroutine();
+            // 슬롯에 카드/카드UI 할당 (애니메이션 실행 전)
+            if (handSlots.TryGetValue(pos, out var slot))
+            {
+                slot.SetCard(runtimeCard);
+                cardUIs[pos] = cardUI;
+                _cardsInSlots[pos] = (runtimeCard, cardUI);
+                
+                Debug.Log($"[EnemyHandManager] 카드 생성 완료: {runtimeCard.GetCardName()} → {pos}");
+                
+                // 애니메이션 이벤트 발행
+                CombatEvents.RaiseEnemyCardSpawn(runtimeCard.GetCardName(), cardUI.gameObject);
+                
+                // 애니메이션 완료까지 대기
+                yield return new WaitForSeconds(0.5f);
+            }
             else
-                yield return new WaitForSeconds(0.1f);
-
-            // 애니메이션이 끝난 후 슬롯에 카드/카드UI 할당
-            slot.SetCard(runtimeCard);
-            if (slot is Game.CombatSystem.UI.EnemyHandCardSlotUI uiSlot)
-                uiSlot.SetCardUI(cardUI);
-
-            cardUIs[pos] = cardUI;
-            _cardsInSlots[pos] = (runtimeCard, cardUI);
-
-            Debug.Log($"[EnemyHandManager] 카드 생성 완료: {runtimeCard.GetCardName()} → {pos}");
+            {
+                Debug.LogError($"[EnemyHandManager] 슬롯 {pos}를 찾을 수 없습니다.");
+            }
+            
+            // 카드 생성 후 데이터 기반 애니메이션 실행
+            if (cardUI != null && runtimeCard != null)
+            {
+                AnimationFacade.Instance.PlaySkillCardAnimation(runtimeCard, "spawn", cardUI.gameObject);
+            }
+            
+            onComplete?.Invoke();
         }
 
         private IEnumerator ShiftSlotWithAnimation(SkillCardSlotPosition from, SkillCardSlotPosition to)
         {
+            if (_cardsInSlots.TryGetValue(from, out var tuple))
+            {
+                var uiObj = tuple.Item2 as Game.SkillCardSystem.UI.SkillCardUI;
+                if (uiObj != null && uiObj.gameObject != null)
+                {
+                    bool animDone = false;
+                    AnimationFacade.Instance.PlaySkillCardAnimation(tuple.Item1, "move", uiObj.gameObject, () => animDone = true);
+                    yield return new WaitUntil(() => animDone);
+
+                    // 부모/위치/스케일 재설정
+                    var slotObj = handSlots[to] as MonoBehaviour;
+                    if (slotObj != null)
+                    {
+                        uiObj.transform.SetParent(slotObj.transform, false);
+                        uiObj.transform.localPosition = Vector3.zero;
+                        uiObj.transform.localScale = Vector3.one;
+                    }
+
+                    // 슬롯/카드UI/딕셔너리 모두 동기화
+                    if (handSlots.TryGetValue(from, out var fromSlot))
+                        fromSlot.Clear();
+                    if (handSlots.TryGetValue(to, out var toSlot))
+                        toSlot.SetCard(tuple.Item1);
+                    cardUIs.Remove(from);
+                    cardUIs[to] = uiObj;
+                    _cardsInSlots.Remove(from);
+                    _cardsInSlots[to] = tuple;
+                }
+                else
+                {
+                    Debug.LogWarning($"[EnemyHandManager] 이동 애니메이션 실행 실패: UI 오브젝트가 null이거나 파괴됨 (from: {from}, to: {to})");
+                    if (handSlots.TryGetValue(from, out var fromSlot))
+                        fromSlot.Clear();
+                    cardUIs.Remove(from);
+                    _cardsInSlots.Remove(from); // 참조 꼬임 방지
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"[EnemyHandManager] 이동 애니메이션 실행 실패: from 슬롯({from})에 카드가 없음");
+            }
+        }
+
+        private IEnumerator InternalShiftSlotWithAnimation(SkillCardSlotPosition from, SkillCardSlotPosition to, System.Action onComplete)
+        {
             if (!handSlots.TryGetValue(from, out var fromSlot) || !handSlots.TryGetValue(to, out var toSlot))
+            {
+                Debug.LogError($"[EnemyHandManager] 슬롯을 찾을 수 없습니다: from={from}, to={to}");
+                onComplete?.Invoke();
                 yield break;
+            }
 
             var card = fromSlot.GetCard();
-            if (card == null || toSlot.GetCard() != null)
-                yield break;
-
-            var ui = cardUIs.TryGetValue(from, out var oldUI) ? oldUI : null;
-
-            if (ui != null && ui.TryGetComponent<SkillCardShiftAnimator>(out var animator))
+            var cardUI = cardUIs.ContainsKey(from) ? cardUIs[from] : null;
+            
+            if (card == null || cardUI == null)
             {
-                var toSlotRect = ((MonoBehaviour)toSlot).GetComponent<RectTransform>();
-                ui.transform.SetParent(toSlotRect.parent, true);
-
-                // 애니메이션이 끝날 때까지 기다림
-                yield return animator.PlayMoveAnimationCoroutine(toSlotRect);
-
-                // 애니메이션 후 위치/부모 갱신
-                ui.transform.SetParent(((MonoBehaviour)toSlot).transform, false);
-                ui.transform.localPosition = Vector3.zero;
-                ui.transform.localScale = Vector3.one;
+                Debug.LogWarning($"[EnemyHandManager] 이동할 카드가 없습니다: from={from}");
+                onComplete?.Invoke();
+                yield break;
             }
 
-            // 슬롯 및 카드 데이터 갱신
+            Debug.Log($"[EnemyHandManager] 카드 이동 시작: {card.GetCardName()} {from} → {to}");
+
+            // AnimationFacade를 통한 이동 애니메이션 실행 및 완료 대기
+            bool animDone = false;
+            global::AnimationSystem.Manager.AnimationFacade.Instance.PlaySkillCardAnimation(card, "move", cardUI.gameObject, () => animDone = true);
+            yield return new WaitUntil(() => animDone);
+
+            // 슬롯 상태 갱신 (애니메이션 완료 후)
             fromSlot.Clear();
             toSlot.SetCard(card);
-            card.SetHandSlot(to);
+            
+            cardUIs.Remove(from);
+            cardUIs[to] = cardUI;
+            
+            _cardsInSlots.Remove(from);
+            _cardsInSlots[to] = (card, cardUI);
 
-            if (ui != null)
+            // 이동 애니메이션 후, 부모를 새 슬롯으로 변경
+            if (cardUI != null && toSlot is MonoBehaviour toSlotMb)
             {
-                cardUIs[to] = ui;
-                cardUIs.Remove(from);
+                cardUI.transform.SetParent(toSlotMb.transform, false);
+                cardUI.transform.localPosition = Vector3.zero;
+                cardUI.transform.localScale = Vector3.one;
             }
 
-            _cardsInSlots[to] = (card, ui);
-            _cardsInSlots.Remove(from);
+            // 이동 이벤트 발행
+            CombatEvents.RaiseEnemyCardMoved(card.GetCardName(), cardUI.gameObject, Game.CombatSystem.Slot.CombatSlotPosition.FIRST);
 
-            Debug.Log($"[EnemyHandManager] 카드 이동: {from} → {to}");
+            Debug.Log($"[EnemyHandManager] 카드 이동 완료: {card.GetCardName()} {from} → {to}");
+
+            onComplete?.Invoke();
         }
         public IEnumerator PopCardAndRegisterToCombatSlotCoroutine(ICombatFlowCoordinator flowCoordinator)
         {
@@ -425,5 +511,23 @@ namespace Game.CombatSystem.Manager
             yield return flowCoordinator.RegisterCardToCombatSlotCoroutine(slotPos, card, ui);
         }
         #endregion
+
+        // 모든 카드 애니메이션이 끝난 후에만 ClearHand를 호출하는 안전 메서드
+        public IEnumerator SafeClearHandAfterAllAnimations()
+        {
+            yield return new WaitUntil(() => !IsAnyCardAnimating());
+            ClearHand();
+        }
+
+        // 현재 핸드 내 모든 카드가 애니메이션 중인지 체크 (임시: 실제 구현 필요)
+        private bool IsAnyCardAnimating()
+        {
+            foreach (var tuple in _cardsInSlots.Values)
+            {
+                if (tuple.Item2 is Game.SkillCardSystem.UI.SkillCardUI uiObj && uiObj.IsAnimating)
+                    return true;
+            }
+            return false;
+        }
     }
 }

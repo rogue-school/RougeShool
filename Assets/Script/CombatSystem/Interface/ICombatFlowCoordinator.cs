@@ -116,7 +116,7 @@ namespace Game.CombatSystem.Interface
         /// <summary>
         /// 적의 핸드 슬롯을 초기화합니다.
         /// </summary>
-        void ClearEnemyHand();
+        IEnumerator ClearEnemyHandSafely();
 
         /// <summary>
         /// 적 전투 슬롯에 등록된 카드만 제거합니다.
@@ -222,7 +222,7 @@ namespace Game.CombatSystem.Interface
         /// <summary>
         /// 전투 승리 후 상태 정리 작업을 수행합니다.
         /// </summary>
-        void CleanupAfterVictory();
+        IEnumerator CleanupAfterVictory();
 
         #endregion
     }

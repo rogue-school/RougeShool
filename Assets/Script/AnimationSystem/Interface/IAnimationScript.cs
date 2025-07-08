@@ -10,8 +10,17 @@ namespace AnimationSystem.Interface
         /// <summary>
         /// 애니메이션을 재생합니다.
         /// </summary>
-        /// <param name="target">애니메이션을 적용할 타겟 오브젝트</param>
         /// <param name="animationType">애니메이션 타입</param>
-        void PlayAnimation(GameObject target, string animationType);
+        void PlayAnimation(string animationType, System.Action onComplete = null);
+        
+        /// <summary>
+        /// 애니메이션을 중지합니다.
+        /// </summary>
+        void StopAnimation();
+        
+        /// <summary>
+        /// 애니메이션을 즉시 완료합니다.
+        /// </summary>
+        void CompleteAnimation();
     }
 } 

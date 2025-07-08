@@ -6,6 +6,7 @@ using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Slot;
 using Game.Utility;
 using Game.CombatSystem.Context;
+using Game.CombatSystem;
 
 namespace Game.CombatSystem.State
 {
@@ -59,6 +60,7 @@ namespace Game.CombatSystem.State
         public void EnterState()
         {
             Debug.Log("<color=cyan>[CombatPrepareState] 상태 진입</color>");
+            CombatEvents.RaiseCombatStarted();
             turnContext.Reset();
             coroutineRunner.RunCoroutine(PrepareRoutine());
         }

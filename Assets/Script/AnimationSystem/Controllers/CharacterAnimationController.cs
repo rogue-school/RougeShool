@@ -373,7 +373,7 @@ namespace AnimationSystem.Controllers
         private void PlaySound(AudioClip clip, float volume)
         {
             // AudioSource를 찾거나 생성하여 사운드 재생
-            var audioSource = Object.FindObjectOfType<AudioSource>();
+            var audioSource = Object.FindFirstObjectByType<AudioSource>();
             if (audioSource == null)
             {
                 var go = new GameObject("AnimationAudioSource");

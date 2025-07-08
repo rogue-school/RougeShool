@@ -1,4 +1,5 @@
 using UnityEngine;
+using AnimationSystem.Interface;
 
 namespace AnimationSystem.Data
 {
@@ -6,7 +7,7 @@ namespace AnimationSystem.Data
     /// 스킬 카드 애니메이션 설정을 위한 구조체
     /// </summary>
     [System.Serializable]
-    public struct SkillCardAnimationSettings
+    public class SkillCardAnimationSettings
     {
         [Header("애니메이션 스크립트 타입")]
         [SerializeField] private string animationScriptType;
@@ -90,16 +91,19 @@ namespace AnimationSystem.Data
         /// </summary>
         /// <param name="target">타겟 오브젝트</param>
         /// <param name="animationType">애니메이션 타입</param>
-        public void PlayAnimation(GameObject target, string animationType)
+        public void PlayAnimation(GameObject target, string animationType, System.Action onComplete = null)
         {
             if (IsEmpty() || target == null)
+            {
+                onComplete?.Invoke();
                 return;
+            }
 
-            // animationScriptType이 예: "AnimationSystem.Animator.SkillCardSpawnAnimator"
             var type = System.Type.GetType(animationScriptType);
             if (type == null)
             {
-                Debug.LogError($"[SkillCardAnimationSettings] 애니메이션 타입을 찾을 수 없습니다: {animationScriptType}");
+                Debug.LogError($"애니메이션 타입을 찾을 수 없습니다: {animationScriptType}");
+                onComplete?.Invoke();
                 return;
             }
 
@@ -110,11 +114,12 @@ namespace AnimationSystem.Data
             }
             if (animScript != null)
             {
-                animScript.PlayAnimation(target, animationType);
+                animScript.PlayAnimation(animationType, onComplete);
             }
             else
             {
-                Debug.LogError($"[SkillCardAnimationSettings] 애니메이션 스크립트 인스턴스화 실패: {animationScriptType}");
+                Debug.LogError($"애니메이션 스크립트 인스턴스화 실패: {animationScriptType}");
+                onComplete?.Invoke();
             }
         }
         

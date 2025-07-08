@@ -36,5 +36,10 @@ namespace Game.CombatSystem.Manager
         }
 
         #endregion
+
+        private void OnVictoryCharacterAnimation(string characterId, GameObject characterObject)
+        {
+            AnimationSystem.Manager.AnimationFacade.Instance.PlayCharacterAnimation(characterId, "victory", characterObject);
+        }
     }
 }

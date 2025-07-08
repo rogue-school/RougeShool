@@ -4,6 +4,7 @@ using Game.CharacterSystem.Interface;
 using Game.CombatSystem.UI;
 using Game.CombatSystem.Context;
 using Game.CombatSystem.Interface;
+using Game.CombatSystem;
 using Game.SkillCardSystem.Deck;
 using Game.SkillCardSystem.Interface;
 using UnityEngine.UI;
@@ -211,6 +212,7 @@ namespace Game.CharacterSystem.Core
 
             isDead = true;
             Debug.Log($"[EnemyCharacter] '{GetCharacterName()}' 사망 처리 (MarkAsDead 호출)");
+            CombatEvents.RaiseEnemyCharacterDeath(characterData, this.gameObject);
             deathListener?.OnCharacterDied(this);
         }
 

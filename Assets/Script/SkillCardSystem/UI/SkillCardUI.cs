@@ -29,6 +29,15 @@ namespace Game.SkillCardSystem.UI
 
         private ISkillCard card;
 
+        // 카드 애니메이션 상태 플래그
+        public bool IsAnimating { get; private set; }
+
+        // 예시: 애니메이션 시작/종료 시점에 호출할 수 있는 메서드
+        public void SetAnimating(bool value)
+        {
+            IsAnimating = value;
+        }
+
         #region Public Methods
 
         /// <summary>

@@ -7,6 +7,7 @@ using Game.IManager;
 using Game.CombatSystem.Interface;
 using Zenject;
 using Game.CombatSystem.Utility;
+using Game.CombatSystem;
 
 namespace Game.CombatSystem.Manager
 {
@@ -117,6 +118,9 @@ namespace Game.CombatSystem.Manager
             slot.SetCharacter(enemy);
             enemyManager?.RegisterEnemy(enemy);
             spawnedEnemies.Add(enemy);
+
+            // 다음 적 스폰 이벤트 발행
+            CombatEvents.RaiseNextEnemySpawned(data);
 
             onComplete?.Invoke(new EnemySpawnResult(enemy, true));
         }

@@ -72,8 +72,7 @@ namespace Game.CombatSystem.Manager
 
             isSpawning = true;
             EnemySpawnResult result = null;
-            bool done = false;
-            yield return spawnerManager.SpawnEnemyWithAnimation(data, r => { result = r; done = true; });
+            yield return spawnerManager.SpawnEnemyWithAnimation(data, r => { result = r; });
             if (result?.Enemy == null)
             {
                 Debug.LogError("[StageManager] 적 생성 실패");

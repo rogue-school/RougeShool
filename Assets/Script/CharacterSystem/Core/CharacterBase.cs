@@ -4,6 +4,7 @@ using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.UI;
 using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Interface;
+using Game.CombatSystem;
 
 namespace Game.CharacterSystem.Core
 {
@@ -80,6 +81,12 @@ namespace Game.CharacterSystem.Core
         {
             currentGuard += amount;
             Debug.Log($"[{GetCharacterName()}] 가드 +{amount} → 현재 가드: {currentGuard}");
+
+            // 가드 이벤트 발행
+            if (this is PlayerCharacter playerChar)
+                CombatEvents.RaisePlayerCharacterGuarded(playerChar.Data, this.gameObject, amount);
+            else if (this is EnemyCharacter enemyChar)
+                CombatEvents.RaiseEnemyCharacterGuarded(enemyChar.Data, this.gameObject, amount);
         }
 
         /// <summary>체력을 회복시킵니다</summary>
@@ -96,6 +103,12 @@ namespace Game.CharacterSystem.Core
             characterCardUI?.SetHP(currentHP, maxHP);
 
             Debug.Log($"[{GetCharacterName()}] 회복: {amount}, 현재 체력: {currentHP}");
+
+            // 회복 이벤트 발행
+            if (this is PlayerCharacter playerChar)
+                CombatEvents.RaisePlayerCharacterHealed(playerChar.Data, this.gameObject, amount);
+            else if (this is EnemyCharacter enemyChar)
+                CombatEvents.RaiseEnemyCharacterHealed(enemyChar.Data, this.gameObject, amount);
         }
 
         /// <summary>피해를 받아 체력을 감소시킵니다</summary>
@@ -112,6 +125,12 @@ namespace Game.CharacterSystem.Core
             characterCardUI?.SetHP(currentHP, maxHP);
 
             Debug.Log($"[{GetCharacterName()}] 피해: {amount}, 남은 체력: {currentHP}");
+
+            // 피해 이벤트 발행
+            if (this is PlayerCharacter playerChar)
+                CombatEvents.RaisePlayerCharacterDamaged(playerChar.Data, this.gameObject, amount);
+            else if (this is EnemyCharacter enemyChar)
+                CombatEvents.RaiseEnemyCharacterDamaged(enemyChar.Data, this.gameObject, amount);
 
             if (IsDead())
                 Die();

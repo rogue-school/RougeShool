@@ -13,28 +13,7 @@ MonoBehaviour:
   m_Name: EnemyCharacterAnimationDatabase
   m_EditorClassIdentifier: 
   characterAnimations:
-  - enemyCharacterData: {fileID: 11400000, guid: 108def2387b83ed419893e2db0906a67, type: 2}
-    spawnAnimation:
-      animationScriptType: 
-      duration: 0
-      useEasing: 0
-      customCurve:
-        serializedVersion: 2
-        m_Curve: []
-        m_PreInfinity: 0
-        m_PostInfinity: 0
-        m_RotationOrder: 0
-    deathAnimation:
-      animationScriptType: 
-      duration: 0
-      useEasing: 0
-      customCurve:
-        serializedVersion: 2
-        m_Curve: []
-        m_PreInfinity: 0
-        m_PostInfinity: 0
-        m_RotationOrder: 0
-  - enemyCharacterData: {fileID: 11400000, guid: 8cadc1d0ca0290d459798eeaf8d20958, type: 2}
+  - enemyCharacter: {fileID: 11400000, guid: 108def2387b83ed419893e2db0906a67, type: 2}
     spawnAnimation:
       animationScriptType: AnimationSystem.Animator.CharacterSpawnAnimator
       duration: 0
@@ -46,7 +25,7 @@ MonoBehaviour:
         m_PostInfinity: 0
         m_RotationOrder: 0
     deathAnimation:
-      animationScriptType: 
+      animationScriptType: AnimationSystem.Animator.CharacterBurnDeathAnimator
       duration: 0
       useEasing: 0
       customCurve:
@@ -55,7 +34,7 @@ MonoBehaviour:
         m_PreInfinity: 0
         m_PostInfinity: 0
         m_RotationOrder: 0
-  - enemyCharacterData: {fileID: 11400000, guid: d76e0333b79eae7489a84708f63dbc40, type: 2}
+  - enemyCharacter: {fileID: 11400000, guid: 8cadc1d0ca0290d459798eeaf8d20958, type: 2}
     spawnAnimation:
       animationScriptType: AnimationSystem.Animator.CharacterSpawnAnimator
       duration: 0
@@ -67,7 +46,7 @@ MonoBehaviour:
         m_PostInfinity: 0
         m_RotationOrder: 0
     deathAnimation:
-      animationScriptType: 
+      animationScriptType: AnimationSystem.Animator.CharacterBurnDeathAnimator
       duration: 0
       useEasing: 0
       customCurve:
@@ -76,7 +55,7 @@ MonoBehaviour:
         m_PreInfinity: 0
         m_PostInfinity: 0
         m_RotationOrder: 0
-  - enemyCharacterData: {fileID: 11400000, guid: b06fb8f06d11b0344808358d1ef5b616, type: 2}
+  - enemyCharacter: {fileID: 11400000, guid: d76e0333b79eae7489a84708f63dbc40, type: 2}
     spawnAnimation:
       animationScriptType: AnimationSystem.Animator.CharacterSpawnAnimator
       duration: 0
@@ -88,7 +67,28 @@ MonoBehaviour:
         m_PostInfinity: 0
         m_RotationOrder: 0
     deathAnimation:
-      animationScriptType: 
+      animationScriptType: AnimationSystem.Animator.CharacterBurnDeathAnimator
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+  - enemyCharacter: {fileID: 11400000, guid: b06fb8f06d11b0344808358d1ef5b616, type: 2}
+    spawnAnimation:
+      animationScriptType: AnimationSystem.Animator.CharacterSpawnAnimator
+      duration: 0
+      useEasing: 0
+      customCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 0
+    deathAnimation:
+      animationScriptType: AnimationSystem.Animator.CharacterBurnDeathAnimator
       duration: 0
       useEasing: 0
       customCurve:

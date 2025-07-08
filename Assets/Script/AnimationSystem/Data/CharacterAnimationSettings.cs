@@ -1,4 +1,5 @@
 using UnityEngine;
+using AnimationSystem.Interface;
 
 namespace AnimationSystem.Data
 {
@@ -6,7 +7,7 @@ namespace AnimationSystem.Data
     /// 캐릭터 애니메이션 설정을 위한 구조체
     /// </summary>
     [System.Serializable]
-    public struct CharacterAnimationSettings
+    public class CharacterAnimationSettings
     {
         [Header("애니메이션 스크립트 타입")]
         [SerializeField] private string animationScriptType;
@@ -70,14 +71,36 @@ namespace AnimationSystem.Data
         /// </summary>
         /// <param name="target">타겟 오브젝트</param>
         /// <param name="animationType">애니메이션 타입</param>
-        public void PlayAnimation(GameObject target, string animationType)
+        public void PlayAnimation(GameObject target, string animationType, System.Action onComplete = null)
         {
             if (IsEmpty() || target == null)
+            {
+                onComplete?.Invoke();
                 return;
-                
-            // 여기서 실제 애니메이션 로직을 구현합니다.
-            // 현재는 기본 구현만 제공합니다.
-            Debug.Log($"Playing {animationType} animation on {target.name} with script type: {animationScriptType}");
+            }
+
+            var type = System.Type.GetType(animationScriptType);
+            if (type == null)
+            {
+                Debug.LogError($"[CharacterAnimationSettings] 애니메이션 타입을 찾을 수 없습니다: {animationScriptType}");
+                onComplete?.Invoke();
+                return;
+            }
+
+            var animScript = target.GetComponent(type) as AnimationSystem.Interface.IAnimationScript;
+            if (animScript == null)
+            {
+                animScript = target.AddComponent(type) as AnimationSystem.Interface.IAnimationScript;
+            }
+            if (animScript != null)
+            {
+                animScript.PlayAnimation(animationType, onComplete);
+            }
+            else
+            {
+                Debug.LogError($"[CharacterAnimationSettings] 애니메이션 스크립트 인스턴스화 실패: {animationScriptType}");
+                onComplete?.Invoke();
+            }
         }
         
         /// <summary>
