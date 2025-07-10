@@ -74,10 +74,7 @@ namespace Game.CombatSystem.UI
                 {
                     dragHandler.OriginalParent = this.transform;
                     dragHandler.OriginalWorldPosition = this.transform.position;
-                    Debug.Log($"[SetCardInternal] 강제 저장된 OriginalParent: {dragHandler.OriginalParent.name}");
                 }
-
-                Debug.Log($"[PlayerHandCardSlotUI] 카드 UI 생성 완료: {currentCardUI.name}");
             }
             else
             {

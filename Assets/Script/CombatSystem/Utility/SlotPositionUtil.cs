@@ -28,14 +28,8 @@ namespace Game.CombatSystem.Utility
             {
                 CombatFieldSlotPosition.FIELD_LEFT => SkillCardSlotPosition.ENEMY_SLOT_1,
                 CombatFieldSlotPosition.FIELD_RIGHT => SkillCardSlotPosition.ENEMY_SLOT_2,
-                _ => FallbackWithWarning()
+                _ => SkillCardSlotPosition.ENEMY_SLOT_1
             };
-
-            SkillCardSlotPosition FallbackWithWarning()
-            {
-                Debug.LogWarning("[SlotPositionUtil] 알 수 없는 필드 위치입니다. 기본값 ENEMY_SLOT_1 반환");
-                return SkillCardSlotPosition.ENEMY_SLOT_1;
-            }
         }
         public static CombatSlotPosition ToCombatSlot(SkillCardSlotPosition slot)
         {

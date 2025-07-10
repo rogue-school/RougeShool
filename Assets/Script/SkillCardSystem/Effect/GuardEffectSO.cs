@@ -1,10 +1,9 @@
 using UnityEngine;
 using Game.SkillCardSystem.Interface;
-using Game.SkillCardSystem.Effect;
 using Game.CombatSystem.Interface;
-using Game.SkillCardSystem.Effects;
+using Game.SkillCardSystem.Effect;
 
-namespace Game.SkillCardSystem.Effect
+namespace Game.SkillCardSystem.Effects
 {
     /// <summary>
     /// 가드 효과를 적용하는 스킬 카드 효과 ScriptableObject입니다.

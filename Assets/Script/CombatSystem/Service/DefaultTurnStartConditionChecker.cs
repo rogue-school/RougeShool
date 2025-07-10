@@ -38,7 +38,6 @@ namespace Game.CombatSystem.Service
         public bool CanStartTurn()
         {
             bool result = cardRegistry.HasPlayerCard() && cardRegistry.HasEnemyCard();
-            Debug.Log($"[ConditionChecker] CanStartTurn() => {result}");
             return result;
         }
 

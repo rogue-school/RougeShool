@@ -212,8 +212,18 @@ namespace Game.CharacterSystem.Core
 
             isDead = true;
             Debug.Log($"[EnemyCharacter] '{GetCharacterName()}' 사망 처리 (MarkAsDead 호출)");
-            CombatEvents.RaiseEnemyCharacterDeath(characterData, this.gameObject);
-            deathListener?.OnCharacterDied(this);
+
+            // 1. AnimationFacade를 통한 사망 애니메이션 호출
+            bool animDone = false;
+            AnimationSystem.Manager.AnimationFacade.Instance.PlayEnemyCharacterDeathAnimation(
+                characterData.name, // ScriptableObject의 name
+                this.gameObject,
+                () => {
+                    // 2. 애니메이션 종료 후 이벤트 및 후처리
+                    Game.CombatSystem.CombatEvents.RaiseEnemyCharacterDeath(characterData, this.gameObject);
+                    deathListener?.OnCharacterDied(this);
+                }
+            );
         }
 
         /// <summary>

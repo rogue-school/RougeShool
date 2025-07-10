@@ -8,6 +8,7 @@ using Game.CombatSystem.Interface;
 using Zenject;
 using Game.CombatSystem.Utility;
 using Game.CombatSystem;
+using AnimationSystem.Manager;
 
 namespace Game.CombatSystem.Manager
 {
@@ -105,14 +106,16 @@ namespace Game.CombatSystem.Manager
             }
             enemy.Initialize(data); // ★ 데이터 먼저 주입
 
-            // 2. 등장 애니메이션 실행 및 대기
-                            var animator = instance.GetComponent<AnimationSystem.Animator.CharacterSpawnAnimator>();
+            // 2. 등장 애니메이션 실행 및 대기 (파사드 패턴 적용)
             bool animDone = false;
-            if (animator != null)
-            {
-                animator.PlaySpawnAnimation(400f, 1.5f, _ => animDone = true); // 위에서 아래로, 1.5초
-                yield return new WaitUntil(() => animDone);
-            }
+            Debug.Log($"[애니메이션 호출] PlayEnemyCharacterAnimation: {data.name}, spawn, {instance.name}");
+            AnimationFacade.Instance.PlayEnemyCharacterAnimation(
+                data.name, // 캐릭터 ID (ScriptableObject의 name)
+                "spawn",
+                instance,
+                () => animDone = true
+            );
+            yield return new WaitUntil(() => animDone);
 
             // 3. 슬롯/매니저 등록
             slot.SetCharacter(enemy);

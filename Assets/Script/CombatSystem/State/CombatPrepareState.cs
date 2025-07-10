@@ -59,7 +59,7 @@ namespace Game.CombatSystem.State
         /// </summary>
         public void EnterState()
         {
-            Debug.Log("<color=cyan>[CombatPrepareState] 상태 진입</color>");
+            Debug.Log("[CombatPrepareState] EnterState");
             CombatEvents.RaiseCombatStarted();
             turnContext.Reset();
             coroutineRunner.RunCoroutine(PrepareRoutine());
@@ -74,17 +74,16 @@ namespace Game.CombatSystem.State
         /// </summary>
         private IEnumerator PrepareRoutine()
         {
+            Debug.Log("[CombatPrepareState] PrepareRoutine 시작");
             // 슬롯 초기화 대기
             yield return new WaitUntil(() => slotRegistry.IsInitialized);
 
             // 선공/후공 무작위 결정 (매 전투마다)
             flowCoordinator.IsEnemyFirst = UnityEngine.Random.value < 0.5f;
-            Debug.Log($"[CombatPrepareState] IsEnemyFirst 결정됨 → {(flowCoordinator.IsEnemyFirst ? "적 선공" : "플레이어 선공")}");
 
             // 적이 없으면 생성
             if (!flowCoordinator.HasEnemy())
             {
-                Debug.Log("[CombatPrepareState] 적이 없어 새 적 생성 시작");
                 flowCoordinator.SpawnNextEnemy();
                 yield return new WaitUntil(() => flowCoordinator.GetEnemy() != null);
             }
@@ -111,6 +110,7 @@ namespace Game.CombatSystem.State
 
             // 다음 상태로 전환 (플레이어 입력)
             var next = turnManager.GetStateFactory().CreatePlayerInputState();
+            Debug.Log("[CombatPrepareState] 상태 전이: PlayerInputState");
             turnManager.RequestStateChange(next);
         }
 
@@ -120,7 +120,6 @@ namespace Game.CombatSystem.State
         /// </summary>
         private IEnumerator WaitForEnemyCardReady()
         {
-            Debug.Log("[CombatPrepareState] 적 카드 등록 준비 대기 중...");
             while (true)
             {
                 var (card, ui) = enemyHandManager.PeekCardInSlot(SkillCardSlotPosition.ENEMY_SLOT_1);
@@ -129,7 +128,6 @@ namespace Game.CombatSystem.State
 
                 yield return null;
             }
-            Debug.Log("[CombatPrepareState] 적 카드 등록 준비 완료");
         }
 
         #endregion
@@ -140,7 +138,7 @@ namespace Game.CombatSystem.State
 
         public void ExitState()
         {
-            Debug.Log("<color=grey>[CombatPrepareState] 상태 종료</color>");
+            Debug.Log("[CombatPrepareState] ExitState");
         }
 
         #endregion

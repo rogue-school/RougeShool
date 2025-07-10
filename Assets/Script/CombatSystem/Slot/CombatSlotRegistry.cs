@@ -74,7 +74,6 @@ namespace Game.CombatSystem.Slot
             }
 
             _isInitialized = true;
-            Debug.Log($"[CombatSlotRegistry] 슬롯 등록 완료 - 총 등록 수: {registeredCount}");
         }
 
         #endregion

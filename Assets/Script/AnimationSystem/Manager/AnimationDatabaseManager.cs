@@ -326,18 +326,19 @@ namespace AnimationSystem.Manager
                 var settings = GetCharacterAnimationSettings(entry, animationType);
                 if (!settings.IsEmpty())
                 {
+                    Debug.Log($"[애니메이션 DB] ScriptType 조회 성공: {characterId}, {animationType}, {settings.AnimationScriptType}, {target?.name}");
                     settings.PlayAnimation(target, animationType, onComplete);
                     OnCharacterAnimationPlayed?.Invoke(characterId);
                 }
                 else
                 {
-                    Debug.LogWarning($"플레이어 캐릭터 '{characterId}'의 '{animationType}' 애니메이션이 설정되지 않았습니다.");
+                    Debug.LogWarning($"[애니메이션 DB] ScriptType 조회 실패: {characterId}, {animationType}, {target?.name}");
                     onComplete?.Invoke();
                 }
             }
             else
             {
-                Debug.LogWarning($"플레이어 캐릭터 '{characterId}'를 찾을 수 없습니다.");
+                Debug.LogWarning($"[애니메이션 DB] 캐릭터 엔트리 없음: {characterId}, {animationType}, {target?.name}");
                 onComplete?.Invoke();
             }
         }
@@ -353,15 +354,18 @@ namespace AnimationSystem.Manager
                 var settings = GetCharacterAnimationSettings(entry, animationType);
                 if (!settings.IsEmpty())
                 {
+                    Debug.Log($"[애니메이션 DB] ScriptType 조회 성공: {characterId}, {animationType}, {settings.AnimationScriptType}, {target?.name}");
                     settings.PlayAnimation(target, animationType, onComplete);
                 }
                 else
                 {
+                    Debug.LogWarning($"[애니메이션 DB] ScriptType 조회 실패: {characterId}, {animationType}, {target?.name}");
                     onComplete?.Invoke();
                 }
             }
             else
             {
+                Debug.LogWarning($"[애니메이션 DB] 캐릭터 엔트리 없음: {characterId}, {animationType}, {target?.name}");
                 onComplete?.Invoke();
             }
         }
@@ -554,7 +558,7 @@ namespace AnimationSystem.Manager
         {
             if (card == null)
             {
-                Debug.LogWarning("[AnimationDatabaseManager] card가 null입니다.");
+                Debug.LogError("[AnimationDatabaseManager] card가 null입니다.");
                 onComplete?.Invoke();
                 return;
             }

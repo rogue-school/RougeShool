@@ -30,8 +30,16 @@ namespace AnimationSystem.Animator
         /// <summary>
         /// IAnimationScript 인터페이스 구현
         /// </summary>
-        public void PlayAnimation(string animationType, System.Action onComplete = null)
+        public void PlayAnimation(string animationType, System.Action onComplete)
         {
+            var canvasGroup = GetComponent<CanvasGroup>();
+            if (canvasGroup == null)
+            {
+                Debug.LogWarning($"[애니메이션] CanvasGroup 없음: {gameObject.name}");
+                onComplete?.Invoke();
+                return;
+            }
+            Debug.Log($"[애니메이션] CharacterSpawnAnimator 실행: {gameObject.name}");
             // 기존 애니메이션 실행 로직...
             StartCoroutine(PlaySpawnAnimationCoroutine(onComplete));
         }

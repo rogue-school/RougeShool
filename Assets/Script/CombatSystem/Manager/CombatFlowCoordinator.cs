@@ -16,7 +16,7 @@ using Game.SkillCardSystem.Effect;
 using Game.Utility;
 using Game.CombatSystem.State;
 using AnimationSystem.Animator;
-using AnimationSystem.Manager;
+using Game.SkillCardSystem.Effects;
 using System.Threading.Tasks;
 using Game.CombatSystem;
 
@@ -154,7 +154,6 @@ namespace Game.CombatSystem.Core
             }
 
             yield return enemyHandManager.StepwiseFillSlotsFromBack(0.3f);
-            Debug.Log("[CombatFlowCoordinator] 전투 준비 완료");
             onComplete?.Invoke(true);
         }
 
@@ -204,13 +203,8 @@ namespace Game.CombatSystem.Core
             }
 
             bool animationDone = false;
-            string description = $"전투 슬롯 등록: {pos}";
 
-            Debug.Log($"[CombatFlowCoordinator] 애니메이션 큐에 등록: {description}");
-
-            // AnimationQueueManager.Instance.Enqueue( // TODO: 코루틴 기반 AnimationFacade 직접 실행으로 리팩토링
             yield return StartCoroutine(InternalRegisterCardToCombatSlotAsync(pos, card, ui, slotRectTransform, () => {
-                Debug.Log($"[CombatFlowCoordinator] 애니메이션 완료 콜백 호출: {description}");
                 animationDone = true;
             }));
 
@@ -220,18 +214,15 @@ namespace Game.CombatSystem.Core
             {
                 if (Time.time - waitStartTime > 35f) // 35초 타임아웃
                 {
-                    Debug.LogError($"[CombatFlowCoordinator] 애니메이션 대기 타임아웃: {description}");
+                    Debug.LogError($"[CombatFlowCoordinator] 애니메이션 대기 타임아웃: {pos}");
                     break;
                 }
                 yield return null; // Task.Yield() 대신 yield return null 사용
             }
-
-            Debug.Log($"[CombatFlowCoordinator] 애니메이션 대기 완료: {description} (대기 시간: {Time.time - waitStartTime:F2}초)");
         }
 
         private IEnumerator InternalRegisterCardToCombatSlotAsync(CombatSlotPosition pos, ISkillCard card, SkillCardUI ui, RectTransform slotRectTransform, System.Action onComplete)
         {
-            Debug.Log($"[CombatFlowCoordinator] 전투 슬롯 등록 시작: {pos}");
             float startTime = Time.time;
 
             if (ui is MonoBehaviour uiMb)
@@ -242,19 +233,15 @@ namespace Game.CombatSystem.Core
                 var rect = uiMb.GetComponent<RectTransform>();
                 if (rect != null)
                 {
-                    Debug.Log($"[CombatFlowCoordinator] 카드 위치 설정: {pos} - 원본 위치: {rect.position}");
                     Vector3 worldPos = rect.position;
                     uiMb.transform.SetParent(slotRectTransform.parent, true);
                     rect.position = worldPos;
-                    Debug.Log($"[CombatFlowCoordinator] 카드 위치 설정 완료: {pos} - 새 위치: {rect.position}");
                 }
 
                 // 이동 애니메이션
                 if (shiftAnimator != null)
                 {
-                    Debug.Log($"[CombatFlowCoordinator] 이동 애니메이션 시작: {pos}");
                     yield return shiftAnimator.PlayMoveAnimationCoroutine(slotRectTransform);
-                    Debug.Log($"[CombatFlowCoordinator] 이동 애니메이션 완료: {pos}");
                 }
                 else
                 {
@@ -262,18 +249,14 @@ namespace Game.CombatSystem.Core
                 }
 
                 // 슬롯에 부착
-                Debug.Log($"[CombatFlowCoordinator] 슬롯에 부착: {pos}");
                 uiMb.transform.SetParent(slotRectTransform, false);
                 uiMb.transform.localPosition = Vector3.zero;
                 uiMb.transform.localScale = Vector3.one;
-                Debug.Log($"[CombatFlowCoordinator] 슬롯 부착 완료: {pos} - 로컬 위치: {uiMb.transform.localPosition}");
 
                 // 등장 애니메이션
                 if (spawnAnimator != null)
                 {
-                    Debug.Log($"[CombatFlowCoordinator] 등장 애니메이션 시작: {pos}");
                     yield return spawnAnimator.PlaySpawnAnimationCoroutine(null);
-                    Debug.Log($"[CombatFlowCoordinator] 등장 애니메이션 완료: {pos}");
                 }
                 else
                 {
@@ -295,14 +278,12 @@ namespace Game.CombatSystem.Core
             {
                 combatSlot.SetCard(card);
                 combatSlot.SetCardUI(ui);
-                Debug.Log($"[CombatFlowCoordinator] 전투 슬롯 등록 완료: {pos} (소요 시간: {Time.time - startTime:F2}초)");
             }
             else
             {
                 Debug.LogError($"[CombatFlowCoordinator] 전투 슬롯을 찾을 수 없음: {pos}");
             }
 
-            Debug.Log($"[CombatFlowCoordinator] onComplete 콜백 호출: {pos}");
             onComplete?.Invoke();
         }
         public IEnumerator RegisterCardToCombatSlotCoroutine(CombatSlotPosition pos, ISkillCard card, SkillCardUI ui)
@@ -329,12 +310,9 @@ namespace Game.CombatSystem.Core
                 var rect = uiMb.GetComponent<RectTransform>();
                 if (rect != null)
                 {
-                    Debug.Log($"[Before SetParent] parent={rect.parent?.name}, anchored={rect.anchoredPosition}, world={rect.position}");
                     Vector3 worldPos = rect.position;
                     uiMb.transform.SetParent(slotRect.parent, true);
-                    Debug.Log($"[After SetParent] parent={rect.parent?.name}, anchored={rect.anchoredPosition}, world={rect.position}");
                     rect.position = worldPos;
-                    Debug.Log($"[After position fix] parent={rect.parent?.name}, anchored={rect.anchoredPosition}, world={rect.position}");
                 }
 
                 if (shiftAnimator != null)
@@ -392,7 +370,6 @@ namespace Game.CombatSystem.Core
             if (firstCard != null)
             {
                 ExecuteCard(firstCard);
-                Debug.Log($"[CombatFlowCoordinator] 선공 카드 실행 완료: {firstCard.GetCardName()}");
             }
 
             yield return new WaitForSeconds(1f);
@@ -411,7 +388,6 @@ namespace Game.CombatSystem.Core
                 {
                     if (effect is GuardEffectSO)
                     {
-                        Debug.Log("<color=orange>[CombatFlowCoordinator] 가드 스킬 → 후공 무효화</color>");
                         if (secondCard != null && !secondCard.IsFromPlayer())
                         {
                             slotRegistry.GetCombatSlot(CombatSlotPosition.SECOND)?.ClearAll();
@@ -424,7 +400,6 @@ namespace Game.CombatSystem.Core
             if (secondCard != null)
             {
                 ExecuteCard(secondCard);
-                Debug.Log($"[CombatFlowCoordinator] 후공 카드 실행 완료: {secondCard.GetCardName()}");
             }
 
             yield return new WaitForSeconds(1f);

@@ -38,8 +38,6 @@ namespace Game.CombatSystem.Utility
                 cardUI.transform.localRotation = Quaternion.identity;
                 cardUI.transform.localScale = Vector3.one;
             }
-
-            Debug.Log($"[CardSlotHelper] 카드 복귀 완료: {cardUI.name}");
         }
 
         public static void AttachCardToSlot(SkillCardUI cardUI, MonoBehaviour slotTransform)
@@ -61,8 +59,6 @@ namespace Game.CombatSystem.Utility
             rect.localPosition = Vector3.zero;
             rect.localRotation = Quaternion.identity;
             rect.localScale = Vector3.one;
-
-            Debug.Log($"[CardSlotHelper] 카드 배치 완료: {cardUI.name} → {slotTransform.name}");
         }
         public static void AttachCardToHandSlot(SkillCardUI cardUI, SkillCardSlotPosition slotPos)
         {
@@ -73,8 +69,6 @@ namespace Game.CombatSystem.Utility
             {
                 cardUI.transform.SetParent(targetSlot.transform, false);
                 cardUI.transform.position = targetSlot.transform.position;
-
-                Debug.Log($"[CardSlotHelper] 카드 핸드 슬롯 위치 복귀: {cardUI.name} → {slotPos}");
             }
             else
             {

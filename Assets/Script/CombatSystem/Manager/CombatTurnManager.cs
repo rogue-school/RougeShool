@@ -6,6 +6,7 @@ using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.UI;
 using Zenject;
 using Game.CombatSystem;
+using AnimationSystem.Manager;
 
 namespace Game.CombatSystem.Manager
 {
@@ -42,7 +43,6 @@ namespace Game.CombatSystem.Manager
         /// </summary>
         public void Initialize()
         {
-            Debug.Log("[CombatTurnManager] 초기화 완료 (초기 상태 전이 없음)");
             currentState = null;
             pendingNextState = null;
             reservedEnemySlot = null;
@@ -72,7 +72,6 @@ namespace Game.CombatSystem.Manager
         /// <param name="nextState">전이할 상태</param>
         public void RequestStateChange(ICombatTurnState nextState)
         {
-            Debug.Log($"[CombatTurnManager] 상태 전이 요청됨 → {nextState.GetType().Name}");
             pendingNextState = nextState;
         }
 
@@ -83,7 +82,6 @@ namespace Game.CombatSystem.Manager
         {
             if (pendingNextState == null) return;
 
-            Debug.Log($"[CombatTurnManager] 상태 전이 실행 → {pendingNextState.GetType().Name}");
             ChangeState(pendingNextState);
             pendingNextState = null;
         }
@@ -95,7 +93,6 @@ namespace Game.CombatSystem.Manager
         public void ChangeState(ICombatTurnState newState)
         {
             currentState?.ExitState();
-            Debug.Log($"[CombatTurnManager] 상태 종료 → {currentState?.GetType().Name}");
 
             // 턴 종료 이벤트 발행
             if (currentState != null)
@@ -103,7 +100,6 @@ namespace Game.CombatSystem.Manager
 
             currentState = newState;
 
-            Debug.Log($"[CombatTurnManager] 상태 진입 → {currentState?.GetType().Name}");
             currentState?.EnterState();
 
             // 턴 시작 이벤트 발행
@@ -134,7 +130,6 @@ namespace Game.CombatSystem.Manager
         /// </summary>
         public void Reset()
         {
-            Debug.Log("[CombatTurnManager] 상태 초기화");
             currentState = null;
             pendingNextState = null;
             reservedEnemySlot = null;
@@ -153,7 +148,6 @@ namespace Game.CombatSystem.Manager
             if (isTurnReady != ready)
             {
                 isTurnReady = ready;
-                Debug.Log($"[CombatTurnManager] 턴 시작 가능 상태 변경 → {(ready ? "가능" : "불가능")}");
                 OnTurnReadyChanged?.Invoke(isTurnReady);
             }
         }
@@ -172,7 +166,6 @@ namespace Game.CombatSystem.Manager
         public void RegisterCard(CombatSlotPosition slot, ISkillCard card, SkillCardUI ui, SlotOwner owner)
         {
             cardRegistry.RegisterCard(slot, card, ui, owner);
-            Debug.Log($"[CombatTurnManager] 카드 등록 완료 → {card.GetCardName()} → 슬롯: {slot}");
             UpdateTurnReady();
         }
 
@@ -211,22 +204,22 @@ namespace Game.CombatSystem.Manager
 
         private void OnTurnStart(string characterId, GameObject characterObject)
         {
-            AnimationSystem.Manager.AnimationFacade.Instance.PlayCharacterAnimation(characterId, "turnStart", characterObject);
+            AnimationFacade.Instance.PlayCharacterAnimation(characterId, "turnStart", characterObject);
         }
 
         private void OnTurnEnd(string characterId, GameObject characterObject)
         {
-            AnimationSystem.Manager.AnimationFacade.Instance.PlayCharacterAnimation(characterId, "turnEnd", characterObject);
+            AnimationFacade.Instance.PlayCharacterAnimation(characterId, "turnEnd", characterObject);
         }
 
         private void OnSkillCardUsed(string cardId, GameObject cardObject)
         {
-            AnimationSystem.Manager.AnimationFacade.Instance.PlaySkillCardAnimation(cardId, "use", cardObject);
+            AnimationFacade.Instance.PlaySkillCardAnimation(cardId, "use", cardObject);
         }
 
         private void OnCharacterDeath(string characterId, GameObject characterObject)
         {
-            AnimationSystem.Manager.AnimationFacade.Instance.PlayCharacterDeathAnimation(characterId, characterObject);
+            AnimationFacade.Instance.PlayCharacterDeathAnimation(characterId, characterObject);
         }
     }
 }

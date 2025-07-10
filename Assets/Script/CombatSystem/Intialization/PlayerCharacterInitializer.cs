@@ -39,7 +39,6 @@ namespace Game.CombatSystem.Initialization
         {
             this.playerManager = playerManager;
             this.slotRegistry = slotRegistry;
-            Debug.Log("[PlayerCharacterInitializer] IPlayerManager, ISlotRegistry 주입 완료");
         }
 
         #endregion
@@ -51,8 +50,6 @@ namespace Game.CombatSystem.Initialization
         /// </summary>
         public IEnumerator Initialize()
         {
-            Debug.Log("[PlayerCharacterInitializer] Initialize() 시작");
-
             // 1. 슬롯 초기화 대기
             yield return new WaitUntil(() =>
                 slotRegistry is SlotRegistry concrete && concrete.IsInitialized);
@@ -100,21 +97,13 @@ namespace Game.CombatSystem.Initialization
             // 4. 등장 애니메이션 실행 및 대기 (데이터베이스 기반)
             bool animDone = false;
             string characterId = data.name; // ScriptableObject의 name
-            AnimationSystem.Manager.AnimationFacade.Instance.PlayPlayerCharacterAnimation(characterId, "spawn", player.gameObject, () => animDone = true);
+            Debug.Log($"[애니메이션 호출] PlayCharacterAnimation: {characterId}, spawn, {player.gameObject.name}");
+            AnimationFacade.Instance.PlayCharacterAnimation(characterId, "spawn", player.gameObject, () => animDone = true, false);
             yield return new WaitUntil(() => animDone);
 
             // 5. 슬롯/매니저에 등록
             slot.SetCharacter(character);
             playerManager?.SetPlayer(character);
-
-            // 카드 정보 출력(디버그)
-            var cards = data.SkillDeck?.GetCards();
-            Debug.Log($"[PlayerCharacterInitializer] 카드 수: {cards?.Count}");
-            if (cards != null)
-            {
-                foreach (var cardEntry in cards)
-                    Debug.Log($" → 카드: {cardEntry.GetCardName()}, 효과 수: {cardEntry.CreateEffects()?.Count ?? 0}");
-            }
         }
 
         #endregion
@@ -126,8 +115,6 @@ namespace Game.CombatSystem.Initialization
         /// </summary>
         public void Setup()
         {
-            Debug.Log("[PlayerCharacterInitializer] Setup() 호출됨");
-
             if (!ValidateData())
             {
                 Debug.LogError("[PlayerCharacterInitializer] 유효하지 않은 초기화 데이터입니다.");
@@ -179,16 +166,6 @@ namespace Game.CombatSystem.Initialization
             character.SetCharacterData(data);
             slot.SetCharacter(character);
             playerManager?.SetPlayer(character);
-
-            // 카드 정보 출력
-            var cards = data.SkillDeck?.GetCards();
-            Debug.Log($"[PlayerCharacterInitializer] 카드 수: {cards?.Count}");
-
-            if (cards != null)
-            {
-                foreach (var cardEntry in cards)
-                    Debug.Log($" → 카드: {cardEntry.GetCardName()}, 효과 수: {cardEntry.CreateEffects()?.Count ?? 0}");
-            }
         }
 
         #endregion

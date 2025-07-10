@@ -73,7 +73,8 @@ namespace AnimationSystem.Manager
         
         #region Utility Methods
         // LogMessage, LogError 등 디버그 시스템 잔재 메서드와 관련 주석, 호출부 모두 삭제
-        // Debug.Log/Debug.LogError만 남김
+        // Debug.Log/Debug.LogError만 남김 (주석)
+        // 실제 치명적 에러 상황만 로그로 남기고, 나머지는 제거
         // AnimationDatabaseManager를 통한 통합 API만 제공
         public void PrintStatus() => AnimationDatabaseManager.Instance.DebugDatabaseStatus();
         #endregion

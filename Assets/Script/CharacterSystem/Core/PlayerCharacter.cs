@@ -8,6 +8,7 @@ using Game.SkillCardSystem.Slot;
 using Game.IManager;
 using Game.CombatSystem.UI;
 using Game.CombatSystem;
+using AnimationSystem.Manager;
 
 namespace Game.CharacterSystem.Core
 {
@@ -212,8 +213,16 @@ namespace Game.CharacterSystem.Core
         /// </summary>
         public override void Die()
         {
-            base.Die();
-            CombatEvents.RaisePlayerCharacterDeath(Data, this.gameObject);
+            // 사망 애니메이션 실행 (파사드 패턴)
+            AnimationFacade.Instance.PlayCharacterDeathAnimation(
+                Data.name,
+                this.gameObject,
+                () => {
+                    base.Die();
+                    CombatEvents.RaisePlayerCharacterDeath(Data, this.gameObject);
+                },
+                false // isEnemy: false (플레이어)
+            );
         }
 
         #endregion

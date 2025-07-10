@@ -24,7 +24,6 @@ namespace Game.CombatSystem.State
 
         public void EnterState()
         {
-            Debug.Log("<color=magenta>[CombatVictoryState] 승리 상태 진입</color>");
             CombatEvents.RaiseVictory();
             coroutineRunner.RunCoroutine(HandleVictory());
         }
@@ -51,7 +50,6 @@ namespace Game.CombatSystem.State
 
         public void ExitState()
         {
-            Debug.Log("[CombatVictoryState] 상태 종료");
         }
     }
 }

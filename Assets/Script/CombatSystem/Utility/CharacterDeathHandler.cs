@@ -19,12 +19,10 @@ namespace Game.CombatSystem.Utility
         {
             if (character is EnemyCharacter)
             {
-                Debug.Log("[CharacterDeathHandler] 적 사망 감지 (CombatFlow에서 후처리)");
                 turnContext.MarkEnemyDefeated();
             }
             else if (character.IsPlayerControlled())
             {
-                Debug.Log("[CharacterDeathHandler] 플레이어 사망 → 게임 오버 처리");
                 gameOverManager.TriggerGameOver();
             }
         }

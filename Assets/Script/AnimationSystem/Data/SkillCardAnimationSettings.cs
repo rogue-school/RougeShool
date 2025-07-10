@@ -1,5 +1,6 @@
 using UnityEngine;
 using AnimationSystem.Interface;
+using DG.Tweening;
 
 namespace AnimationSystem.Data
 {
@@ -93,34 +94,54 @@ namespace AnimationSystem.Data
         /// <param name="animationType">애니메이션 타입</param>
         public void PlayAnimation(GameObject target, string animationType, System.Action onComplete = null)
         {
-            if (IsEmpty() || target == null)
-            {
-                onComplete?.Invoke();
-                return;
-            }
+            var scriptType = GetScriptTypeForAnimation(animationType);
 
-            var type = System.Type.GetType(animationScriptType);
-            if (type == null)
+            if (scriptType != null)
             {
-                Debug.LogError($"애니메이션 타입을 찾을 수 없습니다: {animationScriptType}");
-                onComplete?.Invoke();
-                return;
-            }
+                var animScript = target.GetComponent(scriptType) as AnimationSystem.Interface.IAnimationScript;
+                if (animScript == null)
+                    animScript = target.AddComponent(scriptType) as AnimationSystem.Interface.IAnimationScript;
 
-            var animScript = target.GetComponent(type) as AnimationSystem.Interface.IAnimationScript;
-            if (animScript == null)
-            {
-                animScript = target.AddComponent(type) as AnimationSystem.Interface.IAnimationScript;
-            }
-            if (animScript != null)
-            {
-                animScript.PlayAnimation(animationType, onComplete);
+                animScript?.PlayAnimation(animationType, onComplete);
             }
             else
             {
-                Debug.LogError($"애니메이션 스크립트 인스턴스화 실패: {animationScriptType}");
+                // Fallback: 기본 애니메이션(페이드아웃/페이드인 등) 실행
+                PlayFallbackAnimation(target, animationType, onComplete);
+            }
+        }
+
+        private void PlayFallbackAnimation(GameObject target, string animationType, System.Action onComplete)
+        {
+            var canvasGroup = target.GetComponent<UnityEngine.CanvasGroup>();
+            if (canvasGroup == null)
+                canvasGroup = target.AddComponent<UnityEngine.CanvasGroup>();
+
+            if (animationType == "death")
+            {
+                canvasGroup.DOFade(0f, 0.5f).OnComplete(() => onComplete?.Invoke());
+            }
+            else if (animationType == "spawn")
+            {
+                canvasGroup.alpha = 0f;
+                canvasGroup.DOFade(1f, 0.5f).OnComplete(() => onComplete?.Invoke());
+            }
+            else
+            {
                 onComplete?.Invoke();
             }
+        }
+        
+        private System.Type GetScriptTypeForAnimation(string animationType)
+        {
+            if (string.IsNullOrEmpty(animationScriptType))
+                return null;
+            var type = System.Type.GetType(animationScriptType);
+            if (type == null)
+            {
+                Debug.LogError($"[SkillCardAnimationSettings] 애니메이션 타입을 찾을 수 없습니다: {animationScriptType}");
+            }
+            return type;
         }
         
         /// <summary>

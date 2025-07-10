@@ -57,7 +57,6 @@ namespace Game.CombatSystem.State
         /// </summary>
         public void EnterState()
         {
-            Debug.Log("[CombatGameOverState] 상태 진입 - 게임 오버 처리 시작");
             CombatEvents.RaiseDefeat();
             CombatEvents.RaiseGameOver();
             coroutineRunner.RunCoroutine(GameOverRoutine());
@@ -87,10 +86,7 @@ namespace Game.CombatSystem.State
             if (CheckPlayerDeath())
             {
                 deathUIManager.ShowDeathUI();
-                Debug.Log("[CombatGameOverState] 플레이어 패배 - 게임 오버 UI 표시");
             }
-
-            Debug.Log("[CombatGameOverState] 게임 오버 처리 완료");
         }
 
         /// <summary>

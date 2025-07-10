@@ -28,8 +28,6 @@ namespace Game.CombatSystem.CoolTime
                 {
                     card.SetCurrentCoolTime(current - 1);
 
-                    Debug.Log($"[CoolTimeHandler] {card.GetCardName()} 쿨타임 감소: {current} → {current - 1}");
-
                     if (ui is SkillCardUI cardUI)
                         cardUI.ShowCoolTime(card.GetCurrentCoolTime(), card.GetCurrentCoolTime() > 0);
                 }

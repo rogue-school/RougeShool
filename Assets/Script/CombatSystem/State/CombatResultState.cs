@@ -32,7 +32,6 @@ namespace Game.CombatSystem.State
 
         public void EnterState()
         {
-            Debug.Log("<color=orange>[CombatResultState] 상태 진입</color>");
             flowCoordinator.DisablePlayerInput();
             coroutineRunner.RunCoroutine(ExecuteResultPhase());
         }
@@ -50,7 +49,6 @@ namespace Game.CombatSystem.State
             // 3. 사망 판정
             if (flowCoordinator.IsEnemyDead())
             {
-                Debug.Log("[CombatResultState] 적 사망 판정 완료");
                 CombatEvents.RaiseCombatEnded(true); // 승리
 
                 flowCoordinator.RemoveEnemyCharacter();
@@ -59,18 +57,14 @@ namespace Game.CombatSystem.State
 
                 if (!flowCoordinator.CheckHasNextEnemy())
                 {
-                    Debug.Log("[CombatResultState] 마지막 적 → VictoryState로 전이");
                     yield return new WaitForEndOfFrame();
 
                     turnManager.RequestStateChange(turnManager.GetStateFactory().CreateVictoryState());
                     yield break;
                 }
-
-                Debug.Log("[CombatResultState] 다음 적 있음 → PrepareState로 전이");
             }
             else if (flowCoordinator.IsPlayerDead())
             {
-                Debug.Log("[CombatResultState] 플레이어 사망 판정 완료 → GameOverState로 전이");
                 CombatEvents.RaiseCombatEnded(false); // 패배
                 yield return new WaitForSeconds(0.1f);
 
@@ -95,8 +89,6 @@ namespace Game.CombatSystem.State
 
                     var slot = slotRegistry.GetCombatSlot(pos);
                     slot?.ClearAll();
-
-                    Debug.Log($"[CombatResultState] 플레이어 카드 복귀: {card.GetCardName()}");
                 }
             }
         }
@@ -105,7 +97,6 @@ namespace Game.CombatSystem.State
 
         public void ExitState()
         {
-            Debug.Log("<color=grey>[CombatResultState] 상태 종료</color>");
         }
     }
 }

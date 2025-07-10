@@ -41,8 +41,6 @@ namespace Game.CombatSystem.Service
             {
                 Debug.LogWarning("[CardPlacementService] 카드 UI가 MonoBehaviour가 아닙니다. Transform 설정을 건너뜁니다.");
             }
-
-            Debug.Log($"[CardPlacementService] 카드 '{card.GetCardName()}' 슬롯 {slot.GetCombatPosition()}에 배치 완료");
         }
 
         #endregion

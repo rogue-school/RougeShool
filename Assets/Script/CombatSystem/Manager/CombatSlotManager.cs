@@ -5,6 +5,7 @@ using Game.CombatSystem.Slot;
 using Game.CombatSystem.UI;
 using Game.IManager;
 using Game.CombatSystem.Utility;
+using AnimationSystem.Manager;
 
 namespace Game.CombatSystem.Manager
 {
@@ -43,7 +44,6 @@ namespace Game.CombatSystem.Manager
                 if (!combatSlots.ContainsKey(execPos))
                 {
                     combatSlots[execPos] = slotUI;
-                    Debug.Log($"[CombatSlotManager] 슬롯 등록 완료: {execPos}");
                 }
                 else
                 {
@@ -119,17 +119,17 @@ namespace Game.CombatSystem.Manager
 
         private void OnSlotCharacterSpawned(string characterId, GameObject characterObject)
         {
-            AnimationSystem.Manager.AnimationFacade.Instance.PlayCharacterAnimation(characterId, "spawn", characterObject);
+            AnimationFacade.Instance.PlayCharacterAnimation(characterId, "spawn", characterObject);
         }
 
         private void OnSlotCharacterDeath(string characterId, GameObject characterObject)
         {
-            AnimationSystem.Manager.AnimationFacade.Instance.PlayCharacterDeathAnimation(characterId, characterObject);
+            AnimationFacade.Instance.PlayCharacterDeathAnimation(characterId, characterObject);
         }
 
         private void OnSlotSkillCardUsed(string cardId, GameObject cardObject)
         {
-            AnimationSystem.Manager.AnimationFacade.Instance.PlaySkillCardAnimation(cardId, "use", cardObject);
+            AnimationFacade.Instance.PlaySkillCardAnimation(cardId, "use", cardObject);
         }
     }
 }

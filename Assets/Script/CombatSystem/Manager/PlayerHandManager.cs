@@ -165,12 +165,15 @@ namespace Game.SkillCardSystem.Core
 
                     // 카드 제거 이벤트 발행 (카드가 사라질 때 애니메이션)
                     if (cardUIs.TryGetValue(kvp.Key, out var ui))
-                        CombatEvents.RaisePlayerCardUse(card.CardData.Name, ui?.gameObject);
+                    {
+                        // 이미 파괴된 오브젝트 접근 방지
+                        if (ui != null && ui.gameObject != null)
+                            CombatEvents.RaisePlayerCardUse(card.CardData.Name, ui.gameObject);
+                    }
 
                     cards[kvp.Key] = null;
                     cardUIs.Remove(kvp.Key);
 
-                    Debug.Log($"[PlayerHandManager] 카드 제거 완료: {card.GetCardName()}");
                     return;
                 }
             }
@@ -187,11 +190,12 @@ namespace Game.SkillCardSystem.Core
         /// </summary>
         public void LogPlayerHandSlotStates()
         {
-            foreach (SkillCardSlotPosition pos in System.Enum.GetValues(typeof(SkillCardSlotPosition)))
-            {
-                var card = GetCardInSlot(pos);
-                Debug.Log($"슬롯 {pos}: {(card != null ? card.CardData.Name : "비어 있음")}");
-            }
+            // 디버깅용 로그 제거 - 필요시 개발자가 임시로 활성화
+            // foreach (SkillCardSlotPosition pos in System.Enum.GetValues(typeof(SkillCardSlotPosition)))
+            // {
+            //     var card = GetCardInSlot(pos);
+            //     Debug.Log($"슬롯 {pos}: {(card != null ? card.CardData.Name : "비어 있음")}");
+            // }
         }
 
         /// <summary>

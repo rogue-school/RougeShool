@@ -82,7 +82,6 @@ namespace Game.CombatSystem.Manager
             RegisterEnemy(result.Enemy);
             currentEnemyIndex++;
             isSpawning = false;
-            Debug.Log("[StageManager] 적 생성 완료");
         }
 
         /// <summary>

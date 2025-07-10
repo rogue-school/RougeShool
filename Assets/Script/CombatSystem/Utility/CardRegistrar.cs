@@ -18,8 +18,6 @@ namespace Game.CombatSystem.Utility
 
             slot.SetCard(null);
             slot.SetCardUI(null);
-
-            Debug.Log($"[CardRegistrar] 슬롯 클리어 완료: {slot.GetCombatPosition()}");
         }
 
         public static void RegisterCard(ICombatCardSlot slot, ISkillCard card, SkillCardUI ui)
@@ -31,8 +29,6 @@ namespace Game.CombatSystem.Utility
             slot.SetCardUI(ui);
 
             CardSlotHelper.AttachCardToSlot(ui, (MonoBehaviour)slot);
-
-            Debug.Log($"[CardRegistrar] 카드 등록 완료: {card.CardData.Name} → {execSlot}");
         }
     }
 }

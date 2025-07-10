@@ -86,8 +86,6 @@ namespace Game.CombatSystem.Service
 
             // 전투 카드 레지스트리에 등록
             cardRegistry.RegisterCard(execSlot, newCard, newCardUI, SlotOwner.PLAYER);
-
-            Debug.Log($"[PlayerCardReplacementHandler] 카드 교체 완료 → 슬롯: {execSlot}, 카드: {newCard.CardData?.Name}");
         }
 
         #endregion

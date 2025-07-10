@@ -29,7 +29,6 @@ namespace Game.CombatSystem.Initialization
         public void Inject(ISlotRegistry slotRegistry)
         {
             this.slotRegistry = slotRegistry;
-            Debug.Log("[EnemyInitializer] ISlotRegistry 주입 완료");
         }
 
         #endregion
@@ -42,8 +41,6 @@ namespace Game.CombatSystem.Initialization
         /// <param name="data">적 캐릭터 데이터</param>
         public void SetupWithData(EnemyCharacterData data)
         {
-            Debug.Log("[EnemyInitializer] SetupWithData() 호출됨");
-
             if (data == null)
             {
                 Debug.LogError("[EnemyInitializer] EnemyCharacterData가 null입니다.");
@@ -75,7 +72,6 @@ namespace Game.CombatSystem.Initialization
         /// </summary>
         public IEnemyCharacter GetSpawnedEnemy()
         {
-            Debug.Log("[EnemyInitializer] GetSpawnedEnemy() 호출됨");
             return spawnedEnemy;
         }
 
@@ -98,8 +94,6 @@ namespace Game.CombatSystem.Initialization
 
             if (slot == null)
                 Debug.LogError("[EnemyInitializer] ENEMY용 캐릭터 슬롯을 찾지 못했습니다.");
-            else
-                Debug.Log($"[EnemyInitializer] 슬롯 이름: {((MonoBehaviour)slot).name}");
 
             return slot;
         }
@@ -109,11 +103,8 @@ namespace Game.CombatSystem.Initialization
         /// </summary>
         private void ClearSlotChildren(ICharacterSlot slot)
         {
-            Debug.Log("[EnemyInitializer] 슬롯 자식 제거 시작");
-
             foreach (Transform child in ((MonoBehaviour)slot).transform)
             {
-                Debug.Log($" → 제거 대상: {child.name}");
                 Destroy(child.gameObject);
             }
         }
@@ -123,8 +114,6 @@ namespace Game.CombatSystem.Initialization
         /// </summary>
         private EnemyCharacter InstantiateAndConfigureEnemy(EnemyCharacterData data, ICharacterSlot slot)
         {
-            Debug.Log("[EnemyInitializer] 적 프리팹 인스턴스화 시도");
-
             var prefab = data.Prefab ?? defaultEnemyPrefab;
             if (prefab == null)
             {
@@ -142,7 +131,6 @@ namespace Game.CombatSystem.Initialization
                 return null;
             }
 
-            Debug.Log("[EnemyInitializer] 적 인스턴스 생성 및 컴포넌트 확인 완료");
             return enemy;
         }
 
@@ -151,7 +139,6 @@ namespace Game.CombatSystem.Initialization
         /// </summary>
         private void ApplyCharacterData(EnemyCharacter enemy, EnemyCharacterData data)
         {
-            Debug.Log("[EnemyInitializer] 캐릭터 데이터 적용 시작");
             enemy.Initialize(data);
         }
 
@@ -160,10 +147,8 @@ namespace Game.CombatSystem.Initialization
         /// </summary>
         private void RegisterToSlot(ICharacterSlot slot, EnemyCharacter enemy)
         {
-            Debug.Log("[EnemyInitializer] 슬롯에 적 캐릭터 등록 시작");
             slot.SetCharacter(enemy);
             spawnedEnemy = enemy;
-            Debug.Log("[EnemyInitializer] 적 캐릭터 슬롯 등록 및 내부 참조 완료");
         }
 
         #endregion

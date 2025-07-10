@@ -28,14 +28,10 @@ namespace Game.CombatSystem.State
 
         public void EnterState()
         {
-            Debug.Log("[CombatSecondAttackState] 상태 진입");
-
             flowCoordinator.DisablePlayerInput();
 
             if (turnContext.WasEnemyDefeated || flowCoordinator.IsPlayerDead())
             {
-                Debug.Log("[CombatSecondAttackState] 적 또는 플레이어가 죽었으므로 공격 생략");
-
                 var next = turnManager.GetStateFactory().CreateResultState();
                 turnManager.RequestStateChange(next);
 
@@ -59,7 +55,6 @@ namespace Game.CombatSystem.State
 
         public void ExitState()
         {
-            Debug.Log("[CombatSecondAttackState] 상태 종료");
         }
     }
 }

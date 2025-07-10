@@ -71,15 +71,12 @@ namespace Game.CombatSystem.Executor
                 yield break;
             }
 
-            Debug.Log($"[Executor] 카드 실행 시작: {card.GetCardName()}");
-
             var context = contextProvider.CreateContext(card);
             cardExecutor.Execute(card, context, turnManager);
 
             yield return new WaitForSeconds(0.5f);
 
             slot.ClearAll();
-            Debug.Log($"[Executor] 슬롯 {slotPosition} 클리어 완료");
         }
 
         #endregion
