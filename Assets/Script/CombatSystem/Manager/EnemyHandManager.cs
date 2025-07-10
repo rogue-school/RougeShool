@@ -18,7 +18,10 @@ using Game.CombatSystem.Utility;
 using System.Threading.Tasks;
 using Game.CombatSystem;
 using Game.CombatSystem.Manager;
+using AnimationSystem.Animator;
 using AnimationSystem.Manager;
+using Game.CombatSystem.Core;
+using AnimationSystem.Helper;
 
 namespace Game.CombatSystem.Manager
 {
@@ -338,7 +341,7 @@ namespace Game.CombatSystem.Manager
                 if (uiObj != null)
                 {
                     bool animDone = false;
-                    AnimationFacade.Instance.PlaySkillCardAnimation(card, "spawn", uiObj.gameObject, () => animDone = true);
+                    AnimationSystem.Manager.AnimationFacade.Instance.PlaySkillCardAnimation(card, "spawn", uiObj.gameObject, () => animDone = true);
                     yield return new WaitUntil(() => animDone);
                 }
             }
@@ -404,7 +407,7 @@ namespace Game.CombatSystem.Manager
             if (cardUI != null && runtimeCard != null)
             {
                 bool animDone = false;
-                AnimationFacade.Instance.PlaySkillCardAnimation(runtimeCard, "spawn", cardUI.gameObject, () => animDone = true);
+                AnimationSystem.Manager.AnimationFacade.Instance.PlaySkillCardAnimation(runtimeCard, "spawn", cardUI.gameObject, () => animDone = true);
                 yield return new WaitUntil(() => animDone);
             }
             
@@ -416,42 +419,38 @@ namespace Game.CombatSystem.Manager
             if (_cardsInSlots.TryGetValue(from, out var tuple))
             {
                 var uiObj = tuple.Item2 as Game.SkillCardSystem.UI.SkillCardUI;
-                if (uiObj != null && uiObj.gameObject != null)
+                if (uiObj == null)
                 {
-                    // 애니메이션 시작 전에 미리 부모를 변경하여 위치 조정
-                    var slotObj = handSlots[to] as MonoBehaviour;
-                    if (slotObj != null)
-                    {
-                        uiObj.transform.SetParent(slotObj.transform, false);
-                        uiObj.transform.localPosition = Vector3.zero;
-                        uiObj.transform.localScale = Vector3.one;
-                    }
-
-                    // 슬롯/카드UI/딕셔너리 모두 동기화
-                    if (handSlots.TryGetValue(from, out var fromSlot))
-                        fromSlot.Clear();
-                    if (handSlots.TryGetValue(to, out var toSlot))
-                        toSlot.SetCard(tuple.Item1);
-                    cardUIs.Remove(from);
-                    cardUIs[to] = uiObj;
-                    _cardsInSlots.Remove(from);
-                    _cardsInSlots[to] = tuple;
-
-                    // 애니메이션은 시각적 효과만 담당
-                    bool animDone = false;
-                    AnimationFacade.Instance.PlaySkillCardAnimation(tuple.Item1, "move", uiObj.gameObject, () => {
-                        animDone = true;
-                    });
-                    yield return new WaitUntil(() => animDone);
+                    Debug.LogError($"[EnemyHandManager] uiObj가 null입니다. from: {from}, to: {to}");
+                    yield break;
                 }
-                else
+                var slotObj = handSlots[to] as MonoBehaviour;
+                if (slotObj == null)
                 {
-                    Debug.LogWarning($"[EnemyHandManager] 이동 애니메이션 실행 실패: UI 오브젝트가 null이거나 파괴됨 (from: {from}, to: {to})");
-                    if (handSlots.TryGetValue(from, out var fromSlot))
-                        fromSlot.Clear();
-                    cardUIs.Remove(from);
-                    _cardsInSlots.Remove(from); // 참조 꼬임 방지
+                    Debug.LogError($"[EnemyHandManager] slotObj가 null입니다. to: {to}");
+                    yield break;
                 }
+                var targetSlotRect = slotObj.GetComponent<RectTransform>();
+                if (targetSlotRect == null)
+                {
+                    Debug.LogError($"[EnemyHandManager] targetSlotRect가 null입니다. to: {to}, slotObj: {slotObj.name}");
+                    yield break;
+                }
+                // SkillCardShiftAnimator를 안전하게 가져오거나 자동 부착
+                var animator = AnimationHelper.GetOrAddAnimator<SkillCardShiftAnimator>(uiObj.gameObject);
+                bool animDone = false;
+                animator.PlayAnimation(targetSlotRect, () => { animDone = true; });
+                yield return new WaitUntil(() => animDone);
+
+                // 슬롯/카드UI/딕셔너리 모두 동기화
+                if (handSlots.TryGetValue(from, out var fromSlot))
+                    fromSlot.Clear();
+                if (handSlots.TryGetValue(to, out var toSlot))
+                    toSlot.SetCard(tuple.Item1);
+                cardUIs.Remove(from);
+                cardUIs[to] = uiObj;
+                _cardsInSlots.Remove(from);
+                _cardsInSlots[to] = tuple;
             }
             else
             {
@@ -470,36 +469,27 @@ namespace Game.CombatSystem.Manager
 
             var card = fromSlot.GetCard();
             var cardUI = cardUIs.ContainsKey(from) ? cardUIs[from] : null;
-            
-            if (card == null || cardUI == null)
+            var targetSlotRect = (toSlot as MonoBehaviour)?.GetComponent<RectTransform>();
+            if (card == null || cardUI == null || targetSlotRect == null)
             {
-                Debug.LogWarning($"[EnemyHandManager] 이동할 카드가 없습니다: from={from}");
+                Debug.LogWarning($"[EnemyHandManager] 이동할 카드 또는 목표 슬롯 RectTransform이 없습니다: from={from}, to={to}");
                 onComplete?.Invoke();
                 yield break;
             }
 
-            // AnimationFacade를 통한 이동 애니메이션 실행 및 완료 대기
+            // 애니메이션 실행
+            var animator = AnimationHelper.GetOrAddAnimator<SkillCardShiftAnimator>(cardUI.gameObject);
             bool animDone = false;
-            global::AnimationSystem.Manager.AnimationFacade.Instance.PlaySkillCardAnimation(card, "move", cardUI.gameObject, () => animDone = true);
+            animator.PlayAnimation(targetSlotRect, () => { animDone = true; });
             yield return new WaitUntil(() => animDone);
 
             // 슬롯 상태 갱신 (애니메이션 완료 후)
             fromSlot.Clear();
             toSlot.SetCard(card);
-            
             cardUIs.Remove(from);
             cardUIs[to] = cardUI;
-            
             _cardsInSlots.Remove(from);
             _cardsInSlots[to] = (card, cardUI);
-
-            // 이동 애니메이션 후, 부모를 새 슬롯으로 변경
-            if (cardUI != null && toSlot is MonoBehaviour toSlotMb)
-            {
-                cardUI.transform.SetParent(toSlotMb.transform, false);
-                cardUI.transform.localPosition = Vector3.zero;
-                cardUI.transform.localScale = Vector3.one;
-            }
 
             // 이동 이벤트 발행
             CombatEvents.RaiseEnemyCardMoved(card.GetCardName(), cardUI.gameObject, Game.CombatSystem.Slot.CombatSlotPosition.FIRST);

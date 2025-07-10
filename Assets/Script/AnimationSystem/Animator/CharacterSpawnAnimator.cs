@@ -25,6 +25,7 @@ namespace AnimationSystem.Animator
         {
             rectTransform = GetComponent<RectTransform>();
             canvasGroup = GetComponent<CanvasGroup>();
+            Debug.Log($"[CharacterSpawnAnimator][Awake] rectTransform: {rectTransform}, canvasGroup: {canvasGroup}, parent: {transform.parent?.name}");
         }
 
         /// <summary>
@@ -39,15 +40,28 @@ namespace AnimationSystem.Animator
                 onComplete?.Invoke();
                 return;
             }
-            Debug.Log($"[애니메이션] CharacterSpawnAnimator 실행: {gameObject.name}");
+            Debug.Log($"[CharacterSpawnAnimator][PlayAnimation] 호출됨: {gameObject.name}, anchoredPosition: {rectTransform.anchoredPosition}");
             // 기존 애니메이션 실행 로직...
             StartCoroutine(PlaySpawnAnimationCoroutine(onComplete));
         }
 
         private IEnumerator PlaySpawnAnimationCoroutine(System.Action onComplete)
         {
-            // 예시: 1.5초 대기 후 콜백 호출 (실제 애니메이션 길이에 맞게 조정)
-            yield return new WaitForSeconds(1.5f);
+            Debug.Log($"[CharacterSpawnAnimator][Coroutine Start] anchoredPosition: {rectTransform.anchoredPosition}");
+            // 플레이어/적에 따라 verticalOffset 방향 자동 설정
+            float verticalOffset = 100f;
+            if (gameObject.name.Contains("Player")) // 이름에 'Player'가 포함되면 플레이어로 간주
+                verticalOffset = -verticalOffset; // 아래에서 등장
+            // 적이면 기본값(위에서 등장)
+            Vector2 targetPos = rectTransform.anchoredPosition;
+            Vector2 startPos = targetPos + new Vector2(0, verticalOffset);
+            rectTransform.anchoredPosition = startPos;
+
+            rectTransform.DOAnchorPos(targetPos, 0.8f).SetEase(Ease.OutBack).OnComplete(() => {
+                Debug.Log($"[CharacterSpawnAnimator][DOTween Complete] anchoredPosition: {rectTransform.anchoredPosition}");
+            });
+            yield return new WaitForSeconds(0.8f);
+            Debug.Log($"[CharacterSpawnAnimator][Coroutine End] anchoredPosition: {rectTransform.anchoredPosition}");
             onComplete?.Invoke();
         }
         
