@@ -44,6 +44,7 @@ namespace AnimationSystem.Animator
         /// <param name="animationType">애니메이션 타입 (사용하지 않음)</param>
         public void PlayAnimation(string animationType, System.Action onComplete = null)
         {
+            StartCrackDeathAnimation(); // 실제 연출 함수 호출 추가
             StartCoroutine(PlayCrackDeathAnimationCoroutine(onComplete));
         }
 

@@ -39,7 +39,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     moveToCombatSlotAnimation:
-      animationScriptType: AnimationSystem.Animator.SkillCardShiftAnimator
+      animationScriptType: AnimationSystem.Animator.CombatSlotRegisterAnimator
       duration: 0
       useEasing: 0
       customCurve:
@@ -100,7 +100,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     moveToCombatSlotAnimation:
-      animationScriptType: AnimationSystem.Animator.SkillCardShiftAnimator
+      animationScriptType: AnimationSystem.Animator.CombatSlotRegisterAnimator
       duration: 0
       useEasing: 0
       customCurve:
@@ -161,7 +161,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     moveToCombatSlotAnimation:
-      animationScriptType: AnimationSystem.Animator.SkillCardShiftAnimator
+      animationScriptType: AnimationSystem.Animator.CombatSlotRegisterAnimator
       duration: 0
       useEasing: 0
       customCurve:
@@ -222,7 +222,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     moveToCombatSlotAnimation:
-      animationScriptType: AnimationSystem.Animator.SkillCardShiftAnimator
+      animationScriptType: AnimationSystem.Animator.CombatSlotRegisterAnimator
       duration: 0
       useEasing: 0
       customCurve:
@@ -283,7 +283,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     moveToCombatSlotAnimation:
-      animationScriptType: AnimationSystem.Animator.SkillCardShiftAnimator
+      animationScriptType: AnimationSystem.Animator.CombatSlotRegisterAnimator
       duration: 0
       useEasing: 0
       customCurve:
@@ -344,7 +344,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     moveToCombatSlotAnimation:
-      animationScriptType: AnimationSystem.Animator.SkillCardShiftAnimator
+      animationScriptType: AnimationSystem.Animator.CombatSlotRegisterAnimator
       duration: 0
       useEasing: 0
       customCurve:
@@ -405,7 +405,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     moveToCombatSlotAnimation:
-      animationScriptType: AnimationSystem.Animator.SkillCardShiftAnimator
+      animationScriptType: AnimationSystem.Animator.CombatSlotRegisterAnimator
       duration: 0
       useEasing: 0
       customCurve:

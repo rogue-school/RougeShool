@@ -414,6 +414,15 @@ namespace Game.CombatSystem.Core
             ICharacter target = card.IsFromPlayer() ? enemyManager.GetEnemy() : playerManager.GetPlayer();
 
             var context = new DefaultCardExecutionContext(card, source, target);
+
+            // ★ 카드 소유 캐릭터 생존 체크 추가
+            var owner = card.GetOwner(context);
+            if (owner == null || owner.IsDead())
+            {
+                Debug.LogWarning($"[ExecuteCard] 카드 소유 캐릭터가 이미 사망했습니다. 실행 스킵. 카드: {card.GetCardName()}");
+                return;
+            }
+
             cardExecutor.Execute(card, context, turnManager);
 
             card.SetCurrentCoolTime(card.GetMaxCoolTime());
