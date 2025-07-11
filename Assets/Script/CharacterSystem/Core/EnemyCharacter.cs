@@ -214,7 +214,6 @@ namespace Game.CharacterSystem.Core
             Debug.Log($"[EnemyCharacter] '{GetCharacterName()}' 사망 처리 (MarkAsDead 호출)");
 
             // 1. AnimationFacade를 통한 사망 애니메이션 호출
-            bool animDone = false;
             AnimationSystem.Manager.AnimationFacade.Instance.PlayEnemyCharacterDeathAnimation(
                 characterData.name, // ScriptableObject의 name
                 this.gameObject,

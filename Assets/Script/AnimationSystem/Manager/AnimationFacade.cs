@@ -256,7 +256,7 @@ namespace AnimationSystem.Manager
             var skillCards = new List<GameObject>();
             
             // 플레이어/적 스킬카드 슬롯들에서 해당 캐릭터의 카드들을 찾기
-            var cardSlots = FindObjectsOfType<Game.SkillCardSystem.UI.SkillCardUI>();
+            var cardSlots = FindObjectsByType<Game.SkillCardSystem.UI.SkillCardUI>(FindObjectsSortMode.None);
             
             foreach (var cardSlot in cardSlots)
             {

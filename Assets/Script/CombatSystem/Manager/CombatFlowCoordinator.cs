@@ -688,7 +688,7 @@ namespace Game.CombatSystem.Core
             var skillCards = new List<GameObject>();
             
             // 적 스킬카드 슬롯들에서 카드들을 찾기
-            var cardSlots = FindObjectsOfType<Game.SkillCardSystem.UI.SkillCardUI>();
+            var cardSlots = FindObjectsByType<Game.SkillCardSystem.UI.SkillCardUI>(FindObjectsSortMode.None);
             
             foreach (var cardSlot in cardSlots)
             {
