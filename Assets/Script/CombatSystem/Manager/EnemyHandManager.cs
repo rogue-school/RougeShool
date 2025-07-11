@@ -22,6 +22,7 @@ using AnimationSystem.Animator;
 using AnimationSystem.Manager;
 using Game.CombatSystem.Core;
 using AnimationSystem.Helper;
+using AnimationSystem.Animator.SkillCardAnimation.MoveAnimation;
 
 namespace Game.CombatSystem.Manager
 {
@@ -436,8 +437,8 @@ namespace Game.CombatSystem.Manager
                     Debug.LogError($"[EnemyHandManager] targetSlotRect가 null입니다. to: {to}, slotObj: {slotObj.name}");
                     yield break;
                 }
-                // SkillCardShiftAnimator를 안전하게 가져오거나 자동 부착
-                var animator = AnimationHelper.GetOrAddAnimator<SkillCardShiftAnimator>(uiObj.gameObject);
+                // DefaultSkillCardMoveAnimation을 안전하게 가져오거나 자동 부착
+                var animator = AnimationHelper.GetOrAddAnimator<DefaultSkillCardMoveAnimation>(uiObj.gameObject);
                 bool animDone = false;
                 animator.PlayAnimation(targetSlotRect, () => { animDone = true; });
                 yield return new WaitUntil(() => animDone);
@@ -478,7 +479,7 @@ namespace Game.CombatSystem.Manager
             }
 
             // 애니메이션 실행
-            var animator = AnimationHelper.GetOrAddAnimator<SkillCardShiftAnimator>(cardUI.gameObject);
+            var animator = AnimationHelper.GetOrAddAnimator<DefaultSkillCardMoveAnimation>(cardUI.gameObject);
             bool animDone = false;
             animator.PlayAnimation(targetSlotRect, () => { animDone = true; });
             yield return new WaitUntil(() => animDone);

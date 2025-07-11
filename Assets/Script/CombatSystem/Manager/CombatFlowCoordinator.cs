@@ -19,6 +19,8 @@ using AnimationSystem.Animator;
 using Game.SkillCardSystem.Effects;
 using System.Threading.Tasks;
 using Game.CombatSystem;
+using AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation;
+using AnimationSystem.Animator.SkillCardAnimation.MoveAnimation;
 
 namespace Game.CombatSystem.Core
 {
@@ -227,8 +229,8 @@ namespace Game.CombatSystem.Core
 
             if (ui is MonoBehaviour uiMb)
             {
-                var shiftAnimator = uiMb.GetComponent<SkillCardShiftAnimator>();
-                var spawnAnimator = uiMb.GetComponent<SkillCardSpawnAnimator>();
+                var shiftAnimator = uiMb.GetComponent<DefaultSkillCardMoveAnimation>();
+                var spawnAnimator = uiMb.GetComponent<DefaultSkillCardSpawnAnimation>();
 
                 var rect = uiMb.GetComponent<RectTransform>();
                 if (rect != null)
@@ -245,7 +247,7 @@ namespace Game.CombatSystem.Core
                 }
                 else
                 {
-                    Debug.LogWarning($"[CombatFlowCoordinator] SkillCardShiftAnimator가 없음: {pos}");
+                    Debug.LogWarning($"[CombatFlowCoordinator] DefaultSkillCardMoveAnimation이 없음: {pos}");
                 }
 
                 // 슬롯에 부착
@@ -260,7 +262,7 @@ namespace Game.CombatSystem.Core
                 }
                 else
                 {
-                    Debug.LogWarning($"[CombatFlowCoordinator] SkillCardSpawnAnimator가 없음: {pos}");
+                    Debug.LogWarning($"[CombatFlowCoordinator] DefaultSkillCardSpawnAnimation이 없음: {pos}");
                 }
             }
             else
@@ -304,8 +306,8 @@ namespace Game.CombatSystem.Core
 
             if (ui is MonoBehaviour uiMb)
             {
-                var shiftAnimator = uiMb.GetComponent<SkillCardShiftAnimator>();
-                var spawnAnimator = uiMb.GetComponent<SkillCardSpawnAnimator>();
+                var shiftAnimator = uiMb.GetComponent<DefaultSkillCardMoveAnimation>();
+                var spawnAnimator = uiMb.GetComponent<DefaultSkillCardSpawnAnimation>();
 
                 var rect = uiMb.GetComponent<RectTransform>();
                 if (rect != null)

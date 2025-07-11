@@ -1,16 +1,17 @@
 using UnityEngine;
 using DG.Tweening;
+using AnimationSystem.Interface;
 
-namespace AnimationSystem.Animator
+namespace AnimationSystem.Animator.SkillCardAnimation.MoveToCombatSlotAnimation
 {
     [RequireComponent(typeof(RectTransform))]
-    public class SkillCardShiftAnimator : MonoBehaviour, AnimationSystem.Interface.IAnimationScript
+    public class DefaultSkillCardMoveToCombatSlotAnimation : MonoBehaviour, ISkillCardCombatSlotMoveAnimationScript
     {
         [Header("Animation Settings")]
-        [SerializeField] private float moveDuration = 0.07f; // 0.15f보다 더 빠르게
-        [SerializeField] private Ease moveEase = Ease.OutQuad; // 더 빠른 느낌의 이징
-        [SerializeField] private float scaleDuration = 0.07f; // 0.15f보다 더 빠르게
-        [SerializeField] private Ease scaleEase = Ease.OutQuad; // 더 빠른 느낌의 이징
+        [SerializeField] private float moveDuration = 0.3f;
+        [SerializeField] private Ease moveEase = Ease.OutCubic;
+        [SerializeField] private float scaleDuration = 0.2f;
+        [SerializeField] private Ease scaleEase = Ease.OutBack;
 
         private RectTransform rectTransform;
 
@@ -30,12 +31,12 @@ namespace AnimationSystem.Animator
         // 기존 PlayAnimation 오버로드(타입 기반)는 사용 금지(호환성 위해 남겨두지만 내부적으로 경고)
         public void PlayAnimation(string animationType, RectTransform targetSlot, System.Action onComplete = null)
         {
-            Debug.LogWarning("[SkillCardShiftAnimator] 애니메이션 타입은 무시됩니다. PlayAnimation(RectTransform, Action)만 사용하세요.");
+            Debug.LogWarning("[DefaultSkillCardMoveToCombatSlotAnimation] 애니메이션 타입은 무시됩니다. PlayAnimation(RectTransform, Action)만 사용하세요.");
             PlayAnimation(targetSlot, onComplete);
         }
         public void PlayAnimation(string animationType, System.Action onComplete = null)
         {
-            Debug.LogWarning("[SkillCardShiftAnimator] 애니메이션 타입은 무시됩니다. PlayAnimation(RectTransform, Action)만 사용하세요.");
+            Debug.LogWarning("[DefaultSkillCardMoveToCombatSlotAnimation] 애니메이션 타입은 무시됩니다. PlayAnimation(RectTransform, Action)만 사용하세요.");
             onComplete?.Invoke();
         }
 
@@ -210,4 +211,4 @@ namespace AnimationSystem.Animator
             MoveCardToSlot(targetSlot, duration, onComplete);
         }
     }
-}
+} 

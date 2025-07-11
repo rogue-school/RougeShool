@@ -3,12 +3,12 @@ using DG.Tweening;
 using AnimationSystem.Data;
 using AnimationSystem.Interface;
 
-namespace AnimationSystem.Animator
+namespace AnimationSystem.Animator.CharacterAnimation.DeathAnimation
 {
     /// <summary>
     /// 캐릭터가 불타면서 사라지는 사망 애니메이션
     /// </summary>
-    public class CharacterBurnDeathAnimator : MonoBehaviour, IAnimationScript
+    public class DefaultCharacterDeathAnimation : MonoBehaviour, ICharacterDeathAnimationScript
     {
         [Header("불타는 효과 설정")]
         [SerializeField] private float burnDuration = 2.0f;

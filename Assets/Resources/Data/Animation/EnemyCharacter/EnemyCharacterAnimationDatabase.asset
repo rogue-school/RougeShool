@@ -15,7 +15,7 @@ MonoBehaviour:
   characterAnimations:
   - enemyCharacter: {fileID: 11400000, guid: 108def2387b83ed419893e2db0906a67, type: 2}
     spawnAnimation:
-      animationScriptType: AnimationSystem.Animator.CharacterSpawnAnimator
+      animationScriptType: AnimationSystem.Animator.CharacterDeathAnimation001
       duration: 0
       useEasing: 0
       customCurve:

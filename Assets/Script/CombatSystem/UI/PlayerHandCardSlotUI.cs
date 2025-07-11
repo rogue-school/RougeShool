@@ -8,6 +8,7 @@ using Game.SkillCardSystem.UI;
 using Game.CombatSystem.Utility;
 using Game.CombatSystem.DragDrop;
 using AnimationSystem.Animator;
+using AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation;
 
 namespace Game.CombatSystem.UI
 {
@@ -66,7 +67,7 @@ namespace Game.CombatSystem.UI
                 CardSlotHelper.AttachCardToSlot(currentCardUI, this);
 
                 // 생성 애니메이션 실행 (존재 시)
-                currentCardUI.GetComponent<SkillCardSpawnAnimator>()?.PlaySpawnAnimation();
+                currentCardUI.GetComponent<DefaultSkillCardSpawnAnimation>()?.PlaySpawnAnimation();
 
                 // 복귀 기준 위치 명시
                 var dragHandler = currentCardUI.GetComponent<CardDragHandler>();

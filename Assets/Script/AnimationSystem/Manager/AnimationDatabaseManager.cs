@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using DG.Tweening;
 using AnimationSystem.Data;
 
-using AnimationSystem.Interface;
 using Game.SkillCardSystem.Core;
 using Game.CharacterSystem.Data;
 using Game.SkillCardSystem.Data;

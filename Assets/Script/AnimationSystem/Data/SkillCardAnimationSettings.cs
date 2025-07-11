@@ -1,5 +1,4 @@
 using UnityEngine;
-using AnimationSystem.Interface;
 using DG.Tweening;
 
 namespace AnimationSystem.Data
@@ -98,11 +97,13 @@ namespace AnimationSystem.Data
 
             if (scriptType != null)
             {
-                var animScript = target.GetComponent(scriptType) as AnimationSystem.Interface.IAnimationScript;
-                if (animScript == null)
-                    animScript = target.AddComponent(scriptType) as AnimationSystem.Interface.IAnimationScript;
+                // var animScript = target.GetComponent(scriptType) as AnimationSystem.Interface.IAnimationScript; // 주석 처리
+                // if (animScript == null) // 주석 처리
+                //     animScript = target.AddComponent(scriptType) as AnimationSystem.Interface.IAnimationScript; // 주석 처리
 
-                animScript?.PlayAnimation(animationType, onComplete);
+                // animScript?.PlayAnimation(animationType, onComplete); // 주석 처리
+                Debug.LogWarning($"[SkillCardAnimationSettings] 동적 애니메이션 스크립트를 실행합니다. 타입: {scriptType.Name}"); // 주석 처리
+                onComplete?.Invoke(); // 주석 처리
             }
             else
             {

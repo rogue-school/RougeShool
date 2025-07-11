@@ -3,12 +3,12 @@ using DG.Tweening;
 using AnimationSystem.Data;
 using AnimationSystem.Interface;
 
-namespace AnimationSystem.Animator
+namespace AnimationSystem.Animator.CharacterAnimation.DeathAnimation
 {
     /// <summary>
     /// 캐릭터가 금이 가면서 깨지는 사망 애니메이션
     /// </summary>
-    public class CharacterCrackDeathAnimator : MonoBehaviour, IAnimationScript
+    public class CharacterDeathAnimation001 : MonoBehaviour, ICharacterDeathAnimationScript
     {
         [Header("깨지는 효과 설정")]
         [SerializeField] private float crackDuration = 1.5f;

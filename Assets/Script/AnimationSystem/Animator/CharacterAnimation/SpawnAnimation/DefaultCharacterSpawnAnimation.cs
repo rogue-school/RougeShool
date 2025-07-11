@@ -1,11 +1,12 @@
 using UnityEngine;
 using DG.Tweening;
 using System.Collections;
+using AnimationSystem.Interface;
 
-namespace AnimationSystem.Animator
+namespace AnimationSystem.Animator.CharacterAnimation.SpawnAnimation
 {
     [RequireComponent(typeof(RectTransform), typeof(CanvasGroup))]
-    public class CharacterSpawnAnimator : MonoBehaviour, AnimationSystem.Interface.IAnimationScript
+    public class DefaultCharacterSpawnAnimation : MonoBehaviour, ICharacterSpawnAnimationScript
     {
         [Header("Audio")]
         [SerializeField] private AudioSource audioSource;
@@ -25,7 +26,7 @@ namespace AnimationSystem.Animator
         {
             rectTransform = GetComponent<RectTransform>();
             canvasGroup = GetComponent<CanvasGroup>();
-            Debug.Log($"[CharacterSpawnAnimator][Awake] rectTransform: {rectTransform}, canvasGroup: {canvasGroup}, parent: {transform.parent?.name}");
+            Debug.Log($"[DefaultCharacterSpawnAnimation][Awake] rectTransform: {rectTransform}, canvasGroup: {canvasGroup}, parent: {transform.parent?.name}");
         }
 
         /// <summary>
@@ -40,14 +41,14 @@ namespace AnimationSystem.Animator
                 onComplete?.Invoke();
                 return;
             }
-            Debug.Log($"[CharacterSpawnAnimator][PlayAnimation] 호출됨: {gameObject.name}, anchoredPosition: {rectTransform.anchoredPosition}");
+            Debug.Log($"[DefaultCharacterSpawnAnimation][PlayAnimation] 호출됨: {gameObject.name}, anchoredPosition: {rectTransform.anchoredPosition}");
             // 기존 애니메이션 실행 로직...
             StartCoroutine(PlaySpawnAnimationCoroutine(onComplete));
         }
 
         private IEnumerator PlaySpawnAnimationCoroutine(System.Action onComplete)
         {
-            Debug.Log($"[CharacterSpawnAnimator][Coroutine Start] anchoredPosition: {rectTransform.anchoredPosition}");
+            Debug.Log($"[DefaultCharacterSpawnAnimation][Coroutine Start] anchoredPosition: {rectTransform.anchoredPosition}");
             // 플레이어/적에 따라 verticalOffset 방향 자동 설정
             float verticalOffset = 100f;
             if (gameObject.name.Contains("Player")) // 이름에 'Player'가 포함되면 플레이어로 간주
@@ -58,10 +59,10 @@ namespace AnimationSystem.Animator
             rectTransform.anchoredPosition = startPos;
 
             rectTransform.DOAnchorPos(targetPos, 0.8f).SetEase(Ease.OutBack).OnComplete(() => {
-                Debug.Log($"[CharacterSpawnAnimator][DOTween Complete] anchoredPosition: {rectTransform.anchoredPosition}");
+                Debug.Log($"[DefaultCharacterSpawnAnimation][DOTween Complete] anchoredPosition: {rectTransform.anchoredPosition}");
             });
             yield return new WaitForSeconds(0.8f);
-            Debug.Log($"[CharacterSpawnAnimator][Coroutine End] anchoredPosition: {rectTransform.anchoredPosition}");
+            Debug.Log($"[DefaultCharacterSpawnAnimation][Coroutine End] anchoredPosition: {rectTransform.anchoredPosition}");
             onComplete?.Invoke();
         }
         

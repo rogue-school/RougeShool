@@ -1,14 +1,15 @@
 using UnityEngine;
 using DG.Tweening;
+using AnimationSystem.Interface;
 
-namespace AnimationSystem.Animator
+namespace AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation
 {
     /// <summary>
     /// 스킬 카드가 생성될 때 재생되는 애니메이션과 그림자 효과를 처리합니다.
     /// 그림자는 카드의 위치에 맞춰 생성되며, 카드가 떨어지면서 자연스럽게 변합니다.
     /// </summary>
     [RequireComponent(typeof(RectTransform), typeof(CanvasGroup))]
-    public class SkillCardSpawnAnimator : MonoBehaviour, AnimationSystem.Interface.IAnimationScript
+    public class DefaultSkillCardSpawnAnimation : MonoBehaviour, ISkillCardSpawnAnimationScript
     {
         [Header("Audio")]
         [SerializeField] private AudioSource audioSource;
@@ -20,8 +21,8 @@ namespace AnimationSystem.Animator
         [SerializeField] private GameObject spawnEffectPrefab;
 
         [Header("Animation Settings")]
-        [SerializeField] private float spawnDuration = 0.6f;
-        [SerializeField] private float scaleDuration = 0.4f;
+        [SerializeField] private float spawnDuration = 0.3f;
+        [SerializeField] private float scaleDuration = 0.3f;
         [SerializeField] private Ease spawnEase = Ease.OutBack;
         [SerializeField] private Ease scaleEase = Ease.OutBack;
 
