@@ -17,6 +17,8 @@ namespace Game.CombatSystem.Utility
 
         public void OnCharacterDied(ICharacter character)
         {
+            Debug.Log($"[CharacterDeathHandler] 캐릭터 사망 처리: {character.GetCharacterName()}");
+            
             if (character is EnemyCharacter)
             {
                 turnContext.MarkEnemyDefeated();

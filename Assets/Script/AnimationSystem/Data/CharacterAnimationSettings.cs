@@ -77,14 +77,27 @@ namespace AnimationSystem.Data
 
             if (scriptType != null)
             {
-                // var animScript = target.GetComponent(scriptType) as AnimationSystem.Interface.IAnimationScript; // 주석 처리
-                // if (animScript == null) // 주석 처리
-                //     animScript = target.AddComponent(scriptType) as AnimationSystem.Interface.IAnimationScript; // 주석 처리
-
-                // animScript?.PlayAnimation(animationType, onComplete); // 주석 처리
+                Debug.Log($"[CharacterAnimationSettings] 타입 조회 성공: {animationScriptType}, 타입: {scriptType.FullName}");
+                var script = target.GetComponent(scriptType) ?? target.AddComponent(scriptType);
+                if (script == null)
+                {
+                    Debug.LogError($"[CharacterAnimationSettings] AddComponent 실패: {scriptType.FullName}");
+                    onComplete?.Invoke();
+                    return;
+                }
+                var animScript = script as AnimationSystem.Interface.IAnimationScript;
+                if (animScript == null)
+                {
+                    Debug.LogError($"[CharacterAnimationSettings] IAnimationScript 캐스팅 실패: {scriptType.FullName}");
+                    onComplete?.Invoke();
+                    return;
+                }
+                Debug.Log($"[CharacterAnimationSettings] PlayAnimation 실행: {scriptType.FullName}, animationType: {animationType}");
+                animScript.PlayAnimation(animationType, onComplete);
             }
             else
             {
+                Debug.LogError($"[CharacterAnimationSettings] 타입 조회 실패: {animationScriptType}");
                 // Fallback: 기본 애니메이션(페이드아웃/페이드인 등) 실행
                 PlayFallbackAnimation(target, animationType, onComplete);
             }

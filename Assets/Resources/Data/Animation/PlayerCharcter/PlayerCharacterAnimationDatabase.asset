@@ -15,22 +15,60 @@ MonoBehaviour:
   characterAnimations:
   - playerCharacter: {fileID: 11400000, guid: 09c242a71ef51f7479baa0e5ae122d6c, type: 2}
     spawnAnimation:
-      animationScriptType: AnimationSystem.Animator.CharacterSpawnAnimator
-      duration: 0
-      useEasing: 0
+      animationScriptType: AnimationSystem.Animator.CharacterAnimation.SpawnAnimation.DefaultCharacterSpawnAnimation,
+        Assembly-CSharp
+      duration: 1
+      useEasing: 1
       customCurve:
         serializedVersion: 2
-        m_Curve: []
-        m_PreInfinity: 0
-        m_PostInfinity: 0
-        m_RotationOrder: 0
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 0
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        - serializedVersion: 3
+          time: 1
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
     deathAnimation:
-      animationScriptType: 
-      duration: 0
-      useEasing: 0
+      animationScriptType: AnimationSystem.Animator.CharacterAnimation.DeathAnimation.DefaultCharacterDeathAnimation,
+        Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      duration: 1
+      useEasing: 1
       customCurve:
         serializedVersion: 2
-        m_Curve: []
-        m_PreInfinity: 0
-        m_PostInfinity: 0
-        m_RotationOrder: 0
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 0
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        - serializedVersion: 3
+          time: 1
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4

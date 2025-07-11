@@ -12,15 +12,12 @@ using Game.SkillCardSystem.Executor;
 using Game.CombatSystem.Context;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Core;
-using Game.SkillCardSystem.Effect;
 using Game.Utility;
 using Game.CombatSystem.State;
-using AnimationSystem.Animator;
-using Game.SkillCardSystem.Effects;
 using System.Threading.Tasks;
 using Game.CombatSystem;
-using AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation;
-using AnimationSystem.Animator.SkillCardAnimation.MoveAnimation;
+
+using System.Collections.Generic;
 
 namespace Game.CombatSystem.Core
 {
@@ -74,6 +71,24 @@ namespace Game.CombatSystem.Core
         public void StartCombatFlow()
         {
             DisableStartButton();
+        }
+
+        #endregion
+
+        #region 이벤트 구독 및 해제
+
+        private void OnEnable()
+        {
+            // 적 캐릭터 사망 이벤트 구독
+            Game.CombatSystem.CombatEvents.OnEnemyCharacterDeath += OnEnemyCharacterDeath;
+            Debug.Log("[CombatFlowCoordinator] 적 캐릭터 사망 이벤트 구독 완료");
+        }
+
+        private void OnDisable()
+        {
+            // 적 캐릭터 사망 이벤트 구독 해제
+            Game.CombatSystem.CombatEvents.OnEnemyCharacterDeath -= OnEnemyCharacterDeath;
+            Debug.Log("[CombatFlowCoordinator] 적 캐릭터 사망 이벤트 구독 해제 완료");
         }
 
         #endregion
@@ -229,8 +244,8 @@ namespace Game.CombatSystem.Core
 
             if (ui is MonoBehaviour uiMb)
             {
-                var shiftAnimator = uiMb.GetComponent<DefaultSkillCardMoveAnimation>();
-                var spawnAnimator = uiMb.GetComponent<DefaultSkillCardSpawnAnimation>();
+                // var shiftAnimator = uiMb.GetComponent<DefaultSkillCardMoveAnimation>();
+                // var spawnAnimator = uiMb.GetComponent<DefaultSkillCardSpawnAnimation>();
 
                 var rect = uiMb.GetComponent<RectTransform>();
                 if (rect != null)
@@ -241,14 +256,14 @@ namespace Game.CombatSystem.Core
                 }
 
                 // 이동 애니메이션
-                if (shiftAnimator != null)
-                {
-                    yield return shiftAnimator.PlayMoveAnimationCoroutine(slotRectTransform);
-                }
-                else
-                {
-                    Debug.LogWarning($"[CombatFlowCoordinator] DefaultSkillCardMoveAnimation이 없음: {pos}");
-                }
+                // if (shiftAnimator != null)
+                // {
+                //     yield return shiftAnimator.PlayMoveAnimationCoroutine(slotRectTransform);
+                // }
+                // else
+                // {
+                //     Debug.LogWarning($"[CombatFlowCoordinator] DefaultSkillCardMoveAnimation이 없음: {pos}");
+                // }
 
                 // 슬롯에 부착
                 uiMb.transform.SetParent(slotRectTransform, false);
@@ -256,14 +271,23 @@ namespace Game.CombatSystem.Core
                 uiMb.transform.localScale = Vector3.one;
 
                 // 등장 애니메이션
-                if (spawnAnimator != null)
-                {
-                    yield return spawnAnimator.PlaySpawnAnimationCoroutine(null);
-                }
-                else
-                {
-                    Debug.LogWarning($"[CombatFlowCoordinator] DefaultSkillCardSpawnAnimation이 없음: {pos}");
-                }
+                // if (spawnAnimator != null)
+                // {
+                //     yield return spawnAnimator.PlaySpawnAnimationCoroutine(null);
+                // }
+                // else
+                // {
+                //     // 애니메이션 컴포넌트가 없으면 동적으로 추가
+                //     spawnAnimator = uiMb.gameObject.AddComponent<DefaultSkillCardSpawnAnimation>();
+                //     if (spawnAnimator != null)
+                //     {
+                //         yield return spawnAnimator.PlaySpawnAnimationCoroutine(null);
+                //     }
+                //     else
+                //     {
+                //         Debug.LogWarning($"[CombatFlowCoordinator] DefaultSkillCardSpawnAnimation 추가 실패: {pos} 위치의 카드 - {card?.GetCardName() ?? "Unknown"}");
+                //     }
+                // }
             }
             else
             {
@@ -287,6 +311,7 @@ namespace Game.CombatSystem.Core
             }
 
             onComplete?.Invoke();
+            yield break;
         }
         public IEnumerator RegisterCardToCombatSlotCoroutine(CombatSlotPosition pos, ISkillCard card, SkillCardUI ui)
         {
@@ -306,8 +331,8 @@ namespace Game.CombatSystem.Core
 
             if (ui is MonoBehaviour uiMb)
             {
-                var shiftAnimator = uiMb.GetComponent<DefaultSkillCardMoveAnimation>();
-                var spawnAnimator = uiMb.GetComponent<DefaultSkillCardSpawnAnimation>();
+                // var shiftAnimator = uiMb.GetComponent<DefaultSkillCardMoveAnimation>();
+                // var spawnAnimator = uiMb.GetComponent<DefaultSkillCardSpawnAnimation>();
 
                 var rect = uiMb.GetComponent<RectTransform>();
                 if (rect != null)
@@ -317,15 +342,15 @@ namespace Game.CombatSystem.Core
                     rect.position = worldPos;
                 }
 
-                if (shiftAnimator != null)
-                    yield return shiftAnimator.PlayMoveAnimationCoroutine(slotRect); // 그림자도 카드와 함께 이동
+                // if (shiftAnimator != null)
+                //     yield return shiftAnimator.PlayMoveAnimationCoroutine(slotRect); // 그림자도 카드와 함께 이동
 
                 uiMb.transform.SetParent(slotRect, false);
                 uiMb.transform.localPosition = Vector3.zero;
                 uiMb.transform.localScale = Vector3.one;
 
-                if (spawnAnimator != null)
-                    yield return spawnAnimator.PlaySpawnAnimationCoroutine(null);
+                // if (spawnAnimator != null)
+                //     yield return spawnAnimator.PlaySpawnAnimationCoroutine(null);
             }
             else
             {
@@ -388,14 +413,15 @@ namespace Game.CombatSystem.Core
             {
                 foreach (var effect in firstCard.CreateEffects())
                 {
-                    if (effect is GuardEffectSO)
-                    {
-                        if (secondCard != null && !secondCard.IsFromPlayer())
-                        {
-                            slotRegistry.GetCombatSlot(CombatSlotPosition.SECOND)?.ClearAll();
-                            yield break;
-                        }
-                    }
+                    // GuardEffectSO 관련 로직은 일시적으로 주석 처리
+                    // if (effect is GuardEffectSO)
+                    // {
+                    //     if (secondCard != null && !secondCard.IsFromPlayer())
+                    //     {
+                    //         slotRegistry.GetCombatSlot(CombatSlotPosition.SECOND)?.ClearAll();
+                    //         yield break;
+                    //     }
+                    // }
                 }
             }
 
@@ -594,9 +620,88 @@ namespace Game.CombatSystem.Core
         {
             AnimationSystem.Manager.AnimationFacade.Instance.PlayCharacterDeathAnimation(characterId, characterObject);
         }
-        private void OnEnemyCharacterDeath(string enemyId, GameObject enemyObject)
+        private void OnEnemyCharacterDeath(Game.CharacterSystem.Data.EnemyCharacterData enemyData, GameObject enemyObject)
         {
-            AnimationSystem.Manager.AnimationFacade.Instance.PlayCharacterDeathAnimation(enemyId, enemyObject, null, true);
+            Debug.Log($"[CombatFlowCoordinator] 적 캐릭터 사망: {enemyData?.name ?? "Unknown"}");
+            
+            // 적 캐릭터 사망 시 해당 캐릭터의 스킬카드들을 소멸시킴
+            VanishEnemySkillCardsOnDeath(enemyData?.name ?? "Unknown");
+            
+            // 기존 사망 애니메이션 실행
+            AnimationSystem.Manager.AnimationFacade.Instance.PlayCharacterDeathAnimation(enemyData?.name ?? "Unknown", enemyObject, null, true);
+        }
+        
+        /// <summary>
+        /// 적 캐릭터 사망 시 해당 캐릭터의 스킬카드들을 소멸시킵니다.
+        /// </summary>
+        /// <param name="enemyId">사망한 적 캐릭터 ID</param>
+        private void VanishEnemySkillCardsOnDeath(string enemyId)
+        {
+            Debug.Log($"[CombatFlowCoordinator] 적 캐릭터 스킬카드 소멸 시작: {enemyId}");
+            
+            // 적 핸드의 모든 스킬카드들을 찾아서 소멸 애니메이션 적용
+            var enemyCards = FindEnemySkillCards();
+            
+            if (enemyCards.Count == 0)
+            {
+                Debug.Log($"[CombatFlowCoordinator] 소멸할 적 스킬카드가 없습니다: {enemyId}");
+                return;
+            }
+            
+            Debug.Log($"[CombatFlowCoordinator] 소멸할 적 스킬카드 수: {enemyCards.Count}");
+            
+            // 모든 스킬카드에 소멸 애니메이션 적용
+            int completedCount = 0;
+            int totalCount = enemyCards.Count;
+            
+            foreach (var skillCard in enemyCards)
+            {
+                if (skillCard == null) continue;
+                
+                // 스킬카드에 VanishAnimation 컴포넌트 추가
+                var vanishAnim = skillCard.GetComponent<AnimationSystem.Animator.SkillCardAnimation.VanishAnimation.DefaultSkillCardVanishAnimation>();
+                if (vanishAnim == null)
+                {
+                    vanishAnim = skillCard.AddComponent<AnimationSystem.Animator.SkillCardAnimation.VanishAnimation.DefaultSkillCardVanishAnimation>();
+                }
+                
+                // 소멸 애니메이션 실행
+                vanishAnim.PlayAnimation("vanish", () => {
+                    completedCount++;
+                    Debug.Log($"[CombatFlowCoordinator] 적 스킬카드 소멸 완료: {completedCount}/{totalCount}");
+                    
+                    // 모든 스킬카드 소멸 완료 시
+                    if (completedCount >= totalCount)
+                    {
+                        Debug.Log($"[CombatFlowCoordinator] 모든 적 스킬카드 소멸 완료: {enemyId}");
+                    }
+                });
+            }
+        }
+        
+        /// <summary>
+        /// 적 스킬카드들을 찾습니다.
+        /// </summary>
+        /// <returns>적 스킬카드 GameObject 리스트</returns>
+        private List<GameObject> FindEnemySkillCards()
+        {
+            var skillCards = new List<GameObject>();
+            
+            // 적 스킬카드 슬롯들에서 카드들을 찾기
+            var cardSlots = FindObjectsOfType<Game.SkillCardSystem.UI.SkillCardUI>();
+            
+            foreach (var cardSlot in cardSlots)
+            {
+                if (cardSlot == null || cardSlot.GetCard() == null) continue;
+                
+                // 적 스킬카드인지 확인 (플레이어가 아닌 카드)
+                if (!cardSlot.GetCard().IsFromPlayer())
+                {
+                    skillCards.Add(cardSlot.gameObject);
+                }
+            }
+            
+            return skillCards;
         }
 
         // ICombatFlowCoordinator 인터페이스 구현: 전투 승리 후 상태 정리

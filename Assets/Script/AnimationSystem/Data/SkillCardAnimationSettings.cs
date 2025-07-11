@@ -97,13 +97,26 @@ namespace AnimationSystem.Data
 
             if (scriptType != null)
             {
-                // var animScript = target.GetComponent(scriptType) as AnimationSystem.Interface.IAnimationScript; // 주석 처리
-                // if (animScript == null) // 주석 처리
-                //     animScript = target.AddComponent(scriptType) as AnimationSystem.Interface.IAnimationScript; // 주석 처리
+                // 기존 컴포넌트 확인
+                var animScript = target.GetComponent(scriptType) as AnimationSystem.Interface.IAnimationScript;
+                
+                // 컴포넌트가 없으면 동적으로 추가
+                if (animScript == null)
+                {
+                    animScript = target.AddComponent(scriptType) as AnimationSystem.Interface.IAnimationScript;
+                    Debug.Log($"[SkillCardAnimationSettings] 동적 컴포넌트 추가: {scriptType.Name} -> {target.name}");
+                }
 
-                // animScript?.PlayAnimation(animationType, onComplete); // 주석 처리
-                Debug.LogWarning($"[SkillCardAnimationSettings] 동적 애니메이션 스크립트를 실행합니다. 타입: {scriptType.Name}"); // 주석 처리
-                onComplete?.Invoke(); // 주석 처리
+                // 인터페이스 캐스팅 확인
+                if (animScript == null)
+                {
+                    Debug.LogError($"[SkillCardAnimationSettings] 인터페이스 캐스팅 실패: {scriptType.Name}이 IAnimationScript를 구현하지 않음");
+                    onComplete?.Invoke();
+                    return;
+                }
+
+                Debug.Log($"[SkillCardAnimationSettings] 애니메이션 실행: {scriptType.Name}, 타입: {animationType}, 타겟: {target.name}");
+                animScript.PlayAnimation(animationType, onComplete);
             }
             else
             {
