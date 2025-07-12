@@ -8,7 +8,6 @@ using Game.SkillCardSystem.Slot;
 using Game.IManager;
 using Game.CombatSystem.UI;
 using Game.CombatSystem;
-using AnimationSystem.Manager;
 
 namespace Game.CharacterSystem.Core
 {
@@ -51,8 +50,9 @@ namespace Game.CharacterSystem.Core
         /// <summary>
         /// 에디터에서 설정된 데이터로 초기화합니다.
         /// </summary>
-        private void Awake()
+        protected override void Awake()
         {
+            base.Awake(); // 부모 클래스의 Awake 호출
             if (Data != null)
                 InitializeCharacter(Data);
         }
@@ -213,16 +213,9 @@ namespace Game.CharacterSystem.Core
         /// </summary>
         public override void Die()
         {
-            // 사망 애니메이션 실행 (파사드 패턴)
-            AnimationFacade.Instance.PlayCharacterDeathAnimation(
-                Data.name,
-                this.gameObject,
-                () => {
-                    base.Die();
-                    CombatEvents.RaisePlayerCharacterDeath(Data, this.gameObject);
-                },
-                false // isEnemy: false (플레이어)
-            );
+            // 기본 사망 처리
+            base.Die();
+            Debug.Log($"[PlayerCharacter] '{GetCharacterName()}' 사망");
         }
 
         #endregion

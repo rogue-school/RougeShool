@@ -123,7 +123,7 @@ namespace Game.CombatSystem.Manager
             spawnedEnemies.Add(enemy);
 
             // 다음 적 스폰 이벤트 발행
-            CombatEvents.RaiseNextEnemySpawned(data);
+            CombatEvents.Result.RaiseNextEnemySpawned(data);
 
             onComplete?.Invoke(new EnemySpawnResult(enemy, true));
         }

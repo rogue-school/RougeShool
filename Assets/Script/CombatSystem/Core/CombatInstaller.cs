@@ -2,7 +2,6 @@ using UnityEngine;
 using Zenject;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Core;
-using Game.CombatSystem.Service;
 using Game.CombatSystem.Slot;
 using Game.CombatSystem.Context;
 using Game.CombatSystem.Initialization;
@@ -26,6 +25,7 @@ using Game.Utility;
 using Game.CombatSystem.DragDrop;
 using Game.CombatSystem.CoolTime;
 using Game.SkillCardSystem.Runtime;
+using Game.CombatSystem.Service;
 
 /// <summary>
 /// 전투 씬에서 사용하는 Zenject 설치자입니다.
@@ -125,6 +125,9 @@ public class CombatInstaller : MonoInstaller
         Container.Bind<CardDropService>().AsSingle();
         Container.Bind<ITurnStartConditionChecker>().To<DefaultTurnStartConditionChecker>().AsSingle();
         Container.Bind<ICoolTimeHandler>().To<CoolTimeHandler>().AsSingle();
+        
+        // 새로운 서비스들 (주석 처리 - 나중에 구현 완료 후 활성화)
+        // Container.Bind<IGuardStateService>().To<GuardStateService>().AsSingle();
     }
 
     #endregion

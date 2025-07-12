@@ -8,9 +8,9 @@ namespace AnimationSystem.Animator.SkillCardAnimation.MoveToCombatSlotAnimation
     public class DefaultSkillCardMoveToCombatSlotAnimation : MonoBehaviour, ISkillCardCombatSlotMoveAnimationScript
     {
         [Header("Animation Settings")]
-        [SerializeField] private float moveDuration = 0.3f;
+        [SerializeField] private float moveDuration = 0.2f; // 다른 애니메이션과 속도 통일
         [SerializeField] private Ease moveEase = Ease.OutCubic;
-        [SerializeField] private float scaleDuration = 0.2f;
+        [SerializeField] private float scaleDuration = 0.2f; // 다른 애니메이션과 속도 통일
         [SerializeField] private Ease scaleEase = Ease.OutBack;
 
         private RectTransform rectTransform;
@@ -84,7 +84,7 @@ namespace AnimationSystem.Animator.SkillCardAnimation.MoveToCombatSlotAnimation
                 rectTransform.anchoredPosition = targetPos;
                 rectTransform.localScale = originalScale;
                 rectTransform.localEulerAngles = originalRotation;
-                onComplete?.Invoke();
+            onComplete?.Invoke();
             });
         }
 

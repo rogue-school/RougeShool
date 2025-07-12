@@ -71,15 +71,5 @@ namespace Game.CharacterSystem.Interface
         void InjectHandManager(IPlayerHandManager manager);
 
         #endregion
-
-        #region 상태 확인
-
-        /// <summary>
-        /// 캐릭터가 생존 상태인지 확인합니다.
-        /// </summary>
-        /// <returns>생존 중이면 true</returns>
-        bool IsAlive();
-
-        #endregion
     }
 }

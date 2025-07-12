@@ -59,6 +59,12 @@ namespace Game.CharacterSystem.Interface
         /// <returns>사망 상태면 true</returns>
         bool IsDead();
 
+        /// <summary>
+        /// 캐릭터가 살아있는지 확인합니다.
+        /// </summary>
+        /// <returns>살아있으면 true</returns>
+        bool IsAlive();
+
         #endregion
 
         #region 가드 관련

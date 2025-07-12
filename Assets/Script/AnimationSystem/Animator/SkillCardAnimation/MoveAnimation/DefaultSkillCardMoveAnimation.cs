@@ -8,9 +8,9 @@ namespace AnimationSystem.Animator.SkillCardAnimation.MoveAnimation
     public class DefaultSkillCardMoveAnimation : MonoBehaviour, ISkillCardMoveAnimationScript
     {
         [Header("Animation Settings")]
-        [SerializeField] private float moveDuration = 0.07f; // 0.15f보다 더 빠르게
+        [SerializeField] private float moveDuration = 0.12f; // 더 빠른 속도로 조정
         [SerializeField] private Ease moveEase = Ease.OutQuad; // 더 빠른 느낌의 이징
-        [SerializeField] private float scaleDuration = 0.07f; // 0.15f보다 더 빠르게
+        [SerializeField] private float scaleDuration = 0.12f; // 더 빠른 속도로 조정
         [SerializeField] private Ease scaleEase = Ease.OutQuad; // 더 빠른 느낌의 이징
 
         private RectTransform rectTransform;
@@ -66,11 +66,17 @@ namespace AnimationSystem.Animator.SkillCardAnimation.MoveAnimation
         {
             if (rectTransform == null) return;
 
+            // 컴포넌트가 이미 초기화되었는지 확인
+            bool isAlreadyInitialized = rectTransform.anchoredPosition != startPosition;
+            
             rectTransform.anchoredPosition = startPosition; // 시작 위치로 이동
 
             Sequence sequence = DOTween.Sequence();
+            
+            // 이미 초기화된 경우 약간 더 긴 지속시간
+            float adjustedMoveDuration = isAlreadyInitialized ? moveDuration * 1.2f : moveDuration;
             sequence.Append(
-                rectTransform.DOAnchorPos(targetPosition, moveDuration)
+                rectTransform.DOAnchorPos(targetPosition, adjustedMoveDuration)
                     .SetEase(moveEase)
             );
             sequence.OnComplete(() => {
@@ -186,7 +192,7 @@ namespace AnimationSystem.Animator.SkillCardAnimation.MoveAnimation
         /// <summary>
         /// 슬롯 간 이동(부모 변경 포함) 시 월드 좌표 변환을 적용한 자연스러운 이동
         /// </summary>
-        public void MoveCardToSlot(RectTransform targetSlot, float duration = 0.3f, System.Action onComplete = null)
+        public void MoveCardToSlot(RectTransform targetSlot, float duration = 0.15f, System.Action onComplete = null)
         {
             if (rectTransform == null || targetSlot == null) return;
 
@@ -206,7 +212,7 @@ namespace AnimationSystem.Animator.SkillCardAnimation.MoveAnimation
         /// <summary>
         /// move 타입도 절대 좌표 기반으로 이동하도록 오버로드 추가
         /// </summary>
-        public void PlayMoveAnimationToSlot(RectTransform targetSlot, float duration = 0.3f, System.Action onComplete = null)
+        public void PlayMoveAnimationToSlot(RectTransform targetSlot, float duration = 0.15f, System.Action onComplete = null)
         {
             MoveCardToSlot(targetSlot, duration, onComplete);
         }

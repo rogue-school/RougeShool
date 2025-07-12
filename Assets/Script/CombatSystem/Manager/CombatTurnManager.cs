@@ -96,7 +96,7 @@ namespace Game.CombatSystem.Manager
 
             // 턴 종료 이벤트 발행
             if (currentState != null)
-                CombatEvents.RaiseTurnEnded();
+                CombatEvents.Combat.RaiseTurnEnded();
 
             currentState = newState;
 
@@ -104,7 +104,7 @@ namespace Game.CombatSystem.Manager
 
             // 턴 시작 이벤트 발행
             if (currentState != null)
-                CombatEvents.RaiseTurnStarted();
+                CombatEvents.Combat.RaiseTurnStarted();
         }
 
         #endregion

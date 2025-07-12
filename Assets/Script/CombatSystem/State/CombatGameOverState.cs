@@ -57,8 +57,8 @@ namespace Game.CombatSystem.State
         /// </summary>
         public void EnterState()
         {
-            CombatEvents.RaiseDefeat();
-            CombatEvents.RaiseGameOver();
+            CombatEvents.Result.RaiseDefeat();
+            CombatEvents.Result.RaiseGameOver();
             coroutineRunner.RunCoroutine(GameOverRoutine());
         }
 

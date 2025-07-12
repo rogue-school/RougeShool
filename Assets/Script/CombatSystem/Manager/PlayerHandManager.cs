@@ -83,7 +83,7 @@ namespace Game.SkillCardSystem.Core
                     var ui = slot.AttachCard(card, cardUIPrefab);
                     if (ui != null) cardUIs[pos] = ui;
                     // 카드 생성 이벤트 발행
-                    CombatEvents.RaisePlayerCardSpawn(card.CardData.Name, ui?.gameObject);
+                    CombatEvents.Card.RaisePlayerCardSpawn(card.CardData.Name, ui?.gameObject);
                 }
             }
         }
@@ -168,7 +168,7 @@ namespace Game.SkillCardSystem.Core
                     {
                         // 이미 파괴된 오브젝트 접근 방지
                         if (ui != null && ui.gameObject != null)
-                            CombatEvents.RaisePlayerCardUse(card.CardData.Name, ui.gameObject);
+                            CombatEvents.Card.RaisePlayerCardUse(card.CardData.Name, ui.gameObject);
                     }
 
                     cards[kvp.Key] = null;

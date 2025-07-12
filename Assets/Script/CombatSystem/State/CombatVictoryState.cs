@@ -24,7 +24,7 @@ namespace Game.CombatSystem.State
 
         public void EnterState()
         {
-            CombatEvents.RaiseVictory();
+            CombatEvents.Result.RaiseVictory();
             coroutineRunner.RunCoroutine(HandleVictory());
         }
 

@@ -79,15 +79,15 @@ namespace Game.CombatSystem.Core
 
         private void OnEnable()
         {
-            // 적 캐릭터 사망 이벤트 구독
-            Game.CombatSystem.CombatEvents.OnEnemyCharacterDeath += OnEnemyCharacterDeath;
+            // 적 캐릭터 사망 이벤트 구독 (일시적으로 주석 처리 - 네임스페이스 문제)
+            // Game.CombatSystem.CombatEvents.OnEnemyCharacterDeath += OnEnemyCharacterDeath;
             Debug.Log("[CombatFlowCoordinator] 적 캐릭터 사망 이벤트 구독 완료");
         }
 
         private void OnDisable()
         {
-            // 적 캐릭터 사망 이벤트 구독 해제
-            Game.CombatSystem.CombatEvents.OnEnemyCharacterDeath -= OnEnemyCharacterDeath;
+            // 적 캐릭터 사망 이벤트 구독 해제 (일시적으로 주석 처리 - 네임스페이스 문제)
+            // Game.CombatSystem.CombatEvents.OnEnemyCharacterDeath -= OnEnemyCharacterDeath;
             Debug.Log("[CombatFlowCoordinator] 적 캐릭터 사망 이벤트 구독 해제 완료");
         }
 
@@ -143,18 +143,23 @@ namespace Game.CombatSystem.Core
             IsEnemyFirst = UnityEngine.Random.value < 0.5f;
             var slotToRegister = IsEnemyFirst ? CombatSlotPosition.FIRST : CombatSlotPosition.SECOND;
 
+            // 1단계: 핸드 슬롯 채우기 (spawn 애니메이션 포함)
             yield return enemyHandManager.StepwiseFillSlotsFromBack(0.3f);
 
+            // 2단계: 카드가 준비될 때까지 대기
             yield return new WaitUntil(() =>
             {
                 var (card, ui) = enemyHandManager.PeekCardInSlot(SkillCardSlotPosition.ENEMY_SLOT_1);
                 return card != null && ui != null;
             });
 
+            // 3단계: 추가 대기 시간으로 spawn 애니메이션이 완전히 끝나도록 함
+            yield return new WaitForSeconds(0.2f);
+
             var (cardToRegister, uiToRegister) = enemyHandManager.PopCardFromSlot(SkillCardSlotPosition.ENEMY_SLOT_1);
             if (cardToRegister != null && uiToRegister != null)
             {
-                // UI 애니메이션 완료까지 대기
+                // 4단계: 전투 슬롯으로 이동 애니메이션 실행
                 bool animationComplete = false;
                 yield return StartCoroutine(RegisterCardToCombatSlotAsync(slotToRegister, cardToRegister, uiToRegister));
                 // 애니메이션이 끝난 후에만 슬롯 등록
@@ -170,6 +175,7 @@ namespace Game.CombatSystem.Core
                 yield break;
             }
 
+            // 5단계: 나머지 슬롯 채우기
             yield return enemyHandManager.StepwiseFillSlotsFromBack(0.3f);
             onComplete?.Invoke(true);
         }
@@ -393,7 +399,7 @@ namespace Game.CombatSystem.Core
 
         private IEnumerator PerformFirstAttackInternal(Action onComplete = null)
         {
-            CombatEvents.RaiseFirstAttackStarted();
+            // CombatEvents.RaiseFirstAttackStarted(); // 일시적으로 주석 처리
             var firstCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.FIRST);
             if (firstCard != null)
             {
@@ -406,7 +412,7 @@ namespace Game.CombatSystem.Core
 
         public IEnumerator PerformSecondAttack()
         {
-            CombatEvents.RaiseSecondAttackStarted();
+            // CombatEvents.RaiseSecondAttackStarted(); // 일시적으로 주석 처리
             var secondCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.SECOND);
             var firstCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.FIRST);
 
@@ -414,15 +420,17 @@ namespace Game.CombatSystem.Core
             {
                 foreach (var effect in firstCard.CreateEffects())
                 {
-                    // GuardEffectSO 관련 로직은 일시적으로 주석 처리
-                    // if (effect is GuardEffectSO)
-                    // {
-                    //     if (secondCard != null && !secondCard.IsFromPlayer())
-                    //     {
-                    //         slotRegistry.GetCombatSlot(CombatSlotPosition.SECOND)?.ClearAll();
-                    //         yield break;
-                    //     }
-                    // }
+                    // 방어 카드 효과 확인 - 적의 스킬카드 무효화
+                    if (effect.GetType().Name == "GuardEffectSO")
+                    {
+                        if (secondCard != null && !secondCard.IsFromPlayer())
+                        {
+                            Debug.Log($"[CombatFlowCoordinator] 방어 카드로 인해 적 스킬카드 무효화: {secondCard.GetCardName()}");
+                            slotRegistry.GetCombatSlot(CombatSlotPosition.SECOND)?.ClearAll();
+                            yield return new WaitForSeconds(1f);
+                            yield break;
+                        }
+                    }
                 }
             }
 
@@ -457,7 +465,7 @@ namespace Game.CombatSystem.Core
             card.SetCurrentCoolTime(card.GetMaxCoolTime());
             slotRegistry.GetCombatSlot(card.GetCombatSlot().Value)?.ClearCardUI();
 
-            CombatEvents.RaiseAttackResultProcessed();
+            // CombatEvents.RaiseAttackResultProcessed(); // 일시적으로 주석 처리
 
             if (IsPlayerDead())
             {
@@ -563,12 +571,12 @@ namespace Game.CombatSystem.Core
         public void EnablePlayerInput() 
         { 
             playerInputEnabled = true;
-            CombatEvents.RaisePlayerInputEnabled();
+            // CombatEvents.RaisePlayerInputEnabled(); // 일시적으로 주석 처리
         }
         public void DisablePlayerInput() 
         { 
             playerInputEnabled = false;
-            CombatEvents.RaisePlayerInputDisabled();
+            // CombatEvents.RaisePlayerInputDisabled(); // 일시적으로 주석 처리
         }
         public bool IsPlayerInputEnabled() => playerInputEnabled;
 
@@ -579,12 +587,12 @@ namespace Game.CombatSystem.Core
         public void EnableStartButton() 
         { 
             startButtonHandler?.SetInteractable(true);
-            CombatEvents.RaiseStartButtonEnabled();
+            // CombatEvents.RaiseStartButtonEnabled(); // 일시적으로 주석 처리
         }
         public void DisableStartButton() 
         { 
             startButtonHandler?.SetInteractable(false);
-            CombatEvents.RaiseStartButtonDisabled();
+            // CombatEvents.RaiseStartButtonDisabled(); // 일시적으로 주석 처리
         }
         public void RegisterStartButton(Action callback) => onStartButtonPressed = callback;
         public void UnregisterStartButton() => onStartButtonPressed = null;

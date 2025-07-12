@@ -5,6 +5,7 @@ using Game.CharacterSystem.UI;
 using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem;
+using Game.CharacterSystem.Core;
 
 namespace Game.CharacterSystem.Core
 {
@@ -33,7 +34,26 @@ namespace Game.CharacterSystem.Core
 
         /// <summary>UI와 연동되는 캐릭터 카드 컨트롤러</summary>
         protected CharacterUIController characterCardUI;
+
+        /// <summary>상태 관리자</summary>
+        protected CharacterStateManager stateManager;
+
+        /// <summary>명령 관리자</summary>
+        protected CharacterCommandManager commandManager;
+
+        /// <summary>이벤트 주제</summary>
+        protected CharacterSubject characterSubject;
+
         public virtual Transform Transform => transform;
+
+        #endregion
+
+        #region Unity Lifecycle
+
+        protected virtual void Awake()
+        {
+            InitializeComponents();
+        }
 
         #endregion
 
@@ -82,11 +102,8 @@ namespace Game.CharacterSystem.Core
             currentGuard += amount;
             Debug.Log($"[{GetCharacterName()}] 가드 +{amount} → 현재 가드: {currentGuard}");
 
-            // 가드 이벤트 발행
-            if (this is PlayerCharacter playerChar)
-                CombatEvents.RaisePlayerCharacterGuarded(playerChar.Data, this.gameObject, amount);
-            else if (this is EnemyCharacter enemyChar)
-                CombatEvents.RaiseEnemyCharacterGuarded(enemyChar.Data, this.gameObject, amount);
+            // Observer Pattern을 사용한 이벤트 알림
+            characterSubject?.NotifyGuarded(amount);
         }
 
         /// <summary>체력을 회복시킵니다</summary>
@@ -104,11 +121,8 @@ namespace Game.CharacterSystem.Core
 
             Debug.Log($"[{GetCharacterName()}] 회복: {amount}, 현재 체력: {currentHP}");
 
-            // 회복 이벤트 발행
-            if (this is PlayerCharacter playerChar)
-                CombatEvents.RaisePlayerCharacterHealed(playerChar.Data, this.gameObject, amount);
-            else if (this is EnemyCharacter enemyChar)
-                CombatEvents.RaiseEnemyCharacterHealed(enemyChar.Data, this.gameObject, amount);
+            // Observer Pattern을 사용한 이벤트 알림
+            characterSubject?.NotifyHealed(amount);
         }
 
         /// <summary>피해를 받아 체력을 감소시킵니다</summary>
@@ -121,16 +135,21 @@ namespace Game.CharacterSystem.Core
                 return;
             }
 
+            // 가드 상태 확인 및 피해 차단
+            if (isGuarded)
+            {
+                Debug.Log($"[{GetCharacterName()}] 가드 상태로 인해 피해 차단됨: {amount}");
+                SetGuarded(false); // 가드 상태 해제 (한 번만 사용)
+                return;
+            }
+
             currentHP = Mathf.Max(currentHP - amount, 0);
             characterCardUI?.SetHP(currentHP, maxHP);
 
             Debug.Log($"[{GetCharacterName()}] 피해: {amount}, 남은 체력: {currentHP}");
 
-            // 피해 이벤트 발행
-            if (this is PlayerCharacter playerChar)
-                CombatEvents.RaisePlayerCharacterDamaged(playerChar.Data, this.gameObject, amount);
-            else if (this is EnemyCharacter enemyChar)
-                CombatEvents.RaiseEnemyCharacterDamaged(enemyChar.Data, this.gameObject, amount);
+            // Observer Pattern을 사용한 이벤트 알림
+            characterSubject?.NotifyDamaged(amount);
 
             if (IsDead())
                 Die();
@@ -185,6 +204,9 @@ namespace Game.CharacterSystem.Core
         public virtual void Die()
         {
             Debug.Log($"[{GetCharacterName()}] 사망 처리됨.");
+            
+            // Observer Pattern을 사용한 사망 이벤트 알림
+            characterSubject?.NotifyDied();
         }
 
         /// <summary>
@@ -192,6 +214,37 @@ namespace Game.CharacterSystem.Core
         /// 반드시 자식 클래스에서 구현되어야 합니다.
         /// </summary>
         public abstract bool IsPlayerControlled();
+
+        #region 컴포넌트 초기화
+
+        /// <summary>
+        /// 캐릭터 컴포넌트들을 초기화합니다.
+        /// </summary>
+        protected virtual void InitializeComponents()
+        {
+            // 상태 관리자 초기화
+            stateManager = GetComponent<CharacterStateManager>();
+            if (stateManager == null)
+            {
+                stateManager = gameObject.AddComponent<CharacterStateManager>();
+            }
+
+            // 명령 관리자 초기화
+            commandManager = GetComponent<CharacterCommandManager>();
+            if (commandManager == null)
+            {
+                commandManager = gameObject.AddComponent<CharacterCommandManager>();
+            }
+
+            // 이벤트 주제 초기화
+            characterSubject = GetComponent<CharacterSubject>();
+            if (characterSubject == null)
+            {
+                characterSubject = gameObject.AddComponent<CharacterSubject>();
+            }
+        }
+
+        #endregion
 
         #endregion
     }

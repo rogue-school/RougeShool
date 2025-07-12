@@ -16,14 +16,12 @@ using Game.CharacterSystem.Core;
 using Game.IManager;
 using Game.CombatSystem.Utility;
 using System.Threading.Tasks;
-using Game.CombatSystem;
 using Game.CombatSystem.Manager;
 using AnimationSystem.Animator;
 using AnimationSystem.Manager;
 using Game.CombatSystem.Core;
 using AnimationSystem.Helper;
 using AnimationSystem.Animator.SkillCardAnimation.MoveAnimation;
-using Game.CombatSystem;
 
 namespace Game.CombatSystem.Manager
 {
@@ -344,7 +342,18 @@ namespace Game.CombatSystem.Manager
                 {
                     bool animDone = false;
                     AnimationSystem.Manager.AnimationFacade.Instance.PlaySkillCardAnimation(card, "spawn", uiObj.gameObject, () => animDone = true);
-                    yield return new WaitUntil(() => animDone);
+                    
+                    // 애니메이션 완료까지 대기 (타임아웃 추가)
+                    float waitStartTime = Time.time;
+                    while (!animDone)
+                    {
+                        if (Time.time - waitStartTime > 2f) // 2초 타임아웃
+                        {
+                            Debug.LogWarning($"[EnemyHandManager] Spawn 애니메이션 타임아웃: {pos}");
+                            break;
+                        }
+                        yield return null;
+                    }
                 }
             }
         }
@@ -395,7 +404,7 @@ namespace Game.CombatSystem.Manager
                 _cardsInSlots[pos] = (runtimeCard, cardUI);
                 
                 // 애니메이션 이벤트 발행
-                CombatEvents.RaiseEnemyCardSpawn(runtimeCard.GetCardName(), cardUI.gameObject);
+                CombatEvents.Card.RaiseEnemyCardSpawn(runtimeCard.GetCardName(), cardUI.gameObject);
                 
                 // 애니메이션 완료까지 대기
                 yield return new WaitForSeconds(0.5f);
@@ -442,7 +451,18 @@ namespace Game.CombatSystem.Manager
                 var animator = AnimationHelper.GetOrAddAnimator<DefaultSkillCardMoveAnimation>(uiObj.gameObject);
                 bool animDone = false;
                 animator.PlayAnimation(targetSlotRect, () => { animDone = true; });
-                yield return new WaitUntil(() => animDone);
+                
+                // 애니메이션 완료까지 대기 (타임아웃 추가)
+                float waitStartTime = Time.time;
+                while (!animDone)
+                {
+                    if (Time.time - waitStartTime > 2f) // 2초 타임아웃
+                    {
+                        Debug.LogWarning($"[EnemyHandManager] Move 애니메이션 타임아웃: {from} -> {to}");
+                        break;
+                    }
+                    yield return null;
+                }
 
                 // 슬롯/카드UI/딕셔너리 모두 동기화
                 if (handSlots.TryGetValue(from, out var fromSlot))
@@ -494,7 +514,7 @@ namespace Game.CombatSystem.Manager
             _cardsInSlots[to] = (card, cardUI);
 
             // 이동 이벤트 발행
-            CombatEvents.RaiseEnemyCardMoved(card.GetCardName(), cardUI.gameObject, Game.CombatSystem.Slot.CombatSlotPosition.FIRST);
+            CombatEvents.Card.RaiseEnemyCardMoved(card.GetCardName(), cardUI.gameObject, Game.CombatSystem.Slot.CombatSlotPosition.FIRST);
 
             onComplete?.Invoke();
         }

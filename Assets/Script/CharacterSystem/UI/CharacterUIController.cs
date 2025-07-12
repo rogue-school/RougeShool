@@ -92,6 +92,59 @@ namespace Game.CharacterSystem.UI
 
         #endregion
 
+        #region 이벤트 기반 UI 업데이트
+
+        /// <summary>
+        /// 피해 표시를 업데이트합니다.
+        /// </summary>
+        /// <param name="damage">피해량</param>
+        public void UpdateDamageDisplay(int damage)
+        {
+            // 피해 표시 로직 (예: 피해 텍스트 애니메이션)
+            Debug.Log($"[CharacterUIController] 피해 표시: {damage}");
+        }
+
+        /// <summary>
+        /// 회복 표시를 업데이트합니다.
+        /// </summary>
+        /// <param name="heal">회복량</param>
+        public void UpdateHealDisplay(int heal)
+        {
+            // 회복 표시 로직 (예: 회복 텍스트 애니메이션)
+            Debug.Log($"[CharacterUIController] 회복 표시: {heal}");
+        }
+
+        /// <summary>
+        /// 가드 표시를 업데이트합니다.
+        /// </summary>
+        /// <param name="guard">가드량</param>
+        public void UpdateGuardDisplay(int guard)
+        {
+            // 가드 표시 로직 (예: 가드 텍스트 애니메이션)
+            Debug.Log($"[CharacterUIController] 가드 표시: {guard}");
+        }
+
+        /// <summary>
+        /// 사망 효과를 표시합니다.
+        /// </summary>
+        public void ShowDeathEffect()
+        {
+            // 사망 효과 표시 로직 (예: 회색 처리, 사망 텍스트)
+            Debug.Log("[CharacterUIController] 사망 효과 표시");
+        }
+
+        /// <summary>
+        /// 상태 표시를 업데이트합니다.
+        /// </summary>
+        /// <param name="stateName">상태 이름</param>
+        public void UpdateStateDisplay(string stateName)
+        {
+            // 상태 표시 로직 (예: 상태 아이콘 변경)
+            Debug.Log($"[CharacterUIController] 상태 표시: {stateName}");
+        }
+
+        #endregion
+
         #region 초기화/제거
 
         /// <summary>

@@ -59,6 +59,25 @@ namespace Game.CombatSystem.Factory
         /// </summary>
         public ICombatTurnState CreateGameOverState() => gameOverFactory.Create();
 
+        public T CreateState<T>() where T : ICombatTurnState
+        {
+            if (typeof(T) == typeof(CombatPrepareState))
+                return (T)(object)CreatePrepareState();
+            if (typeof(T) == typeof(CombatPlayerInputState))
+                return (T)(object)CreatePlayerInputState();
+            if (typeof(T) == typeof(CombatFirstAttackState))
+                return (T)(object)CreateFirstAttackState();
+            if (typeof(T) == typeof(CombatSecondAttackState))
+                return (T)(object)CreateSecondAttackState();
+            if (typeof(T) == typeof(CombatResultState))
+                return (T)(object)CreateResultState();
+            if (typeof(T) == typeof(CombatVictoryState))
+                return (T)(object)CreateVictoryState();
+            if (typeof(T) == typeof(CombatGameOverState))
+                return (T)(object)CreateGameOverState();
+            return default;
+        }
+
         #endregion
     }
 }

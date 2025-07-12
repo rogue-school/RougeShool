@@ -19,5 +19,11 @@ namespace Game.CharacterSystem.Interface
         /// </summary>
         /// <returns>적 캐릭터의 이름</returns>
         string GetName();
+
+        /// <summary>
+        /// 적 캐릭터 데이터를 설정합니다.
+        /// </summary>
+        /// <param name="data">설정할 적 캐릭터 데이터</param>
+        void SetCharacterData(EnemyCharacterData data);
     }
 }

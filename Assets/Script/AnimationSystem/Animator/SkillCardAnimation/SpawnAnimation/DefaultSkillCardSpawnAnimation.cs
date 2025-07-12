@@ -21,8 +21,8 @@ namespace AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation
         [SerializeField] private GameObject spawnEffectPrefab;
 
         [Header("Animation Settings")]
-        [SerializeField] private float spawnDuration = 0.3f;
-        [SerializeField] private float scaleDuration = 0.3f;
+        [SerializeField] private float spawnDuration = 0.2f; // 다른 애니메이션과 속도 통일
+        [SerializeField] private float scaleDuration = 0.2f; // 다른 애니메이션과 속도 통일
         [SerializeField] private Ease spawnEase = Ease.OutBack;
         [SerializeField] private Ease scaleEase = Ease.OutBack;
 
@@ -79,6 +79,9 @@ namespace AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation
                 return;
             }
 
+            // 컴포넌트가 이미 초기화되었는지 확인
+            bool isAlreadyInitialized = rectTransform.localScale != Vector3.zero || canvasGroup.alpha > 0f;
+            
             // 초기 상태 설정
             rectTransform.localScale = Vector3.zero;
             canvasGroup.alpha = 0f;
@@ -93,15 +96,17 @@ namespace AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation
                     audioSource.PlayOneShot(spawnSound);
             });
 
-            // 스케일 애니메이션
+            // 스케일 애니메이션 (이미 초기화된 경우 약간 더 긴 지속시간)
+            float adjustedScaleDuration = isAlreadyInitialized ? scaleDuration * 1.2f : scaleDuration;
             sequence.Append(
-                rectTransform.DOScale(Vector3.one, scaleDuration)
+                rectTransform.DOScale(Vector3.one, adjustedScaleDuration)
                     .SetEase(scaleEase)
             );
 
-            // 페이드 인
+            // 페이드 인 (이미 초기화된 경우 약간 더 긴 지속시간)
+            float adjustedSpawnDuration = isAlreadyInitialized ? spawnDuration * 1.2f : spawnDuration;
             sequence.Join(
-                canvasGroup.DOFade(1f, spawnDuration)
+                canvasGroup.DOFade(1f, adjustedSpawnDuration)
                     .SetEase(spawnEase)
             );
 

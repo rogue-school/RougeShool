@@ -10,6 +10,7 @@ using Game.SkillCardSystem.Interface;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine;
+using DG.Tweening;
 
 namespace Game.CharacterSystem.Core
 {
@@ -83,6 +84,15 @@ namespace Game.CharacterSystem.Core
             RefreshUI();
 
             Debug.Log($"[EnemyCharacter] '{characterData.DisplayName}' 초기화 완료");
+        }
+
+        /// <summary>
+        /// 캐릭터 데이터를 설정합니다.
+        /// </summary>
+        /// <param name="data">설정할 캐릭터 데이터</param>
+        public void SetCharacterData(EnemyCharacterData data)
+        {
+            Initialize(data);
         }
 
         /// <summary>
@@ -208,21 +218,118 @@ namespace Game.CharacterSystem.Core
         /// </summary>
         public void MarkAsDead()
         {
-            if (isDead) return;
+            if (isDead) 
+            {
+                Debug.Log($"[EnemyCharacter] '{GetCharacterName()}' 이미 사망 상태입니다.");
+                return;
+            }
 
             isDead = true;
             Debug.Log($"[EnemyCharacter] '{GetCharacterName()}' 사망 처리 (MarkAsDead 호출)");
 
-            // 1. AnimationFacade를 통한 사망 애니메이션 호출
-            AnimationSystem.Manager.AnimationFacade.Instance.PlayEnemyCharacterDeathAnimation(
-                characterData.name, // ScriptableObject의 name
-                this.gameObject,
-                () => {
-                    // 2. 애니메이션 종료 후 이벤트 및 후처리
-                    Game.CombatSystem.CombatEvents.RaiseEnemyCharacterDeath(characterData, this.gameObject);
-                    deathListener?.OnCharacterDied(this);
+            // 스킬카드 소멸 애니메이션 실행
+            Debug.Log($"[EnemyCharacter] '{GetCharacterName()}' 스킬카드 소멸 애니메이션 시작");
+            StartCoroutine(VanishEnemySkillCardsOnDeath());
+            
+            // 사망 리스너 호출
+            Debug.Log($"[EnemyCharacter] '{GetCharacterName()}' 사망 리스너 호출");
+            deathListener?.OnCharacterDied(this);
+        }
+
+        /// <summary>
+        /// 적 캐릭터 사망 시 해당 캐릭터의 스킬카드들을 소멸시킵니다.
+        /// </summary>
+        private System.Collections.IEnumerator VanishEnemySkillCardsOnDeath()
+        {
+            Debug.Log($"[EnemyCharacter] '{GetCharacterName()}' 스킬카드 소멸 시작");
+            
+            // 적 핸드의 모든 스킬카드들을 찾아서 소멸 애니메이션 적용
+            var enemyCards = FindEnemySkillCards();
+            
+            if (enemyCards.Count == 0)
+            {
+                Debug.Log($"[EnemyCharacter] '{GetCharacterName()}' 소멸할 스킬카드가 없습니다.");
+                yield break;
+            }
+            
+            Debug.Log($"[EnemyCharacter] '{GetCharacterName()}' 소멸할 스킬카드 수: {enemyCards.Count}");
+            
+            // 모든 스킬카드에 소멸 애니메이션 적용
+            int completedCount = 0;
+            int totalCount = enemyCards.Count;
+            
+            foreach (var skillCard in enemyCards)
+            {
+                if (skillCard == null) continue;
+                
+                Debug.Log($"[EnemyCharacter] '{GetCharacterName()}' 스킬카드 소멸 애니메이션 적용: {skillCard.name}");
+                
+                // 간단한 페이드 아웃 효과 적용
+                var canvasGroup = skillCard.GetComponent<UnityEngine.CanvasGroup>();
+                if (canvasGroup == null)
+                    canvasGroup = skillCard.AddComponent<UnityEngine.CanvasGroup>();
+                
+                // 간단한 페이드 아웃 애니메이션
+                canvasGroup.DOFade(0f, 0.5f).OnComplete(() => {
+                    completedCount++;
+                    Debug.Log($"[EnemyCharacter] '{GetCharacterName()}' 스킬카드 소멸 완료: {completedCount}/{totalCount} - {skillCard.name}");
+                });
+            }
+            
+            // 모든 애니메이션이 완료될 때까지 대기
+            yield return new WaitUntil(() => completedCount >= totalCount);
+            Debug.Log($"[EnemyCharacter] '{GetCharacterName()}' 모든 스킬카드 소멸 완료");
+        }
+        
+        /// <summary>
+        /// 적 스킬카드들을 찾습니다.
+        /// </summary>
+        /// <returns>적 스킬카드 GameObject 리스트</returns>
+        private System.Collections.Generic.List<GameObject> FindEnemySkillCards()
+        {
+            var enemyCards = new System.Collections.Generic.List<GameObject>();
+            
+            Debug.Log($"[EnemyCharacter] '{GetCharacterName()}' 적 스킬카드 검색 시작");
+            
+            // EnemyHandCardSlotUI 컴포넌트를 가진 슬롯들을 찾기
+            var enemyHandSlots = GameObject.FindObjectsByType<Game.CombatSystem.UI.EnemyHandCardSlotUI>(FindObjectsSortMode.None);
+            Debug.Log($"[EnemyCharacter] '{GetCharacterName()}' 적 핸드 슬롯 수: {enemyHandSlots.Length}");
+            
+            foreach (var slot in enemyHandSlots)
+            {
+                Debug.Log($"[EnemyCharacter] '{GetCharacterName()}' 적 슬롯 발견: {slot.name}");
+                
+                // 슬롯에 카드가 있는지 확인
+                if (slot.HasCard())
+                {
+                    var cardUI = slot.GetCardUI();
+                    if (cardUI != null)
+                    {
+                        // ISkillCardUI를 SkillCardUI로 캐스팅하여 gameObject에 접근
+                        var skillCardUI = cardUI as Game.SkillCardSystem.UI.SkillCardUI;
+                        if (skillCardUI != null && skillCardUI.gameObject != null)
+                        {
+                            enemyCards.Add(skillCardUI.gameObject);
+                            Debug.Log($"[EnemyCharacter] '{GetCharacterName()}' 적 스킬카드 추가: {skillCardUI.gameObject.name}");
+                        }
+                        else
+                        {
+                            Debug.Log($"[EnemyCharacter] '{GetCharacterName()}' SkillCardUI 캐스팅 실패 또는 gameObject가 null: {slot.name}");
+                        }
+                    }
+                    else
+                    {
+                        Debug.Log($"[EnemyCharacter] '{GetCharacterName()}' 슬롯에 카드가 있지만 UI가 null: {slot.name}");
+                    }
                 }
-            );
+                else
+                {
+                    Debug.Log($"[EnemyCharacter] '{GetCharacterName()}' 슬롯에 카드 없음: {slot.name}");
+                }
+            }
+            
+            Debug.Log($"[EnemyCharacter] '{GetCharacterName()}' 찾은 적 스킬카드 수: {enemyCards.Count}");
+            return enemyCards;
         }
 
         /// <summary>

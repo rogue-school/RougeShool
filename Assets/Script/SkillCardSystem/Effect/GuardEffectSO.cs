@@ -23,21 +23,22 @@ namespace Game.SkillCardSystem.Effects
         }
 
         /// <summary>
-        /// 효과를 즉시 적용합니다. 대상에게 가드 수치를 부여합니다.
+        /// 효과를 즉시 적용합니다. 카드를 사용한 플레이어 자신에게 가드 상태를 부여합니다.
         /// </summary>
         /// <param name="context">카드 실행 컨텍스트</param>
         /// <param name="value">가드 수치</param>
         /// <param name="turnManager">전투 턴 매니저 (사용되지 않음)</param>
         public override void ApplyEffect(ICardExecutionContext context, int value, ICombatTurnManager turnManager = null)
         {
-            if (context?.Target == null)
+            if (context?.Source == null)
             {
-                Debug.LogWarning("[GuardEffectSO] 유효하지 않은 대상입니다.");
+                Debug.LogWarning("[GuardEffectSO] 유효하지 않은 소스(카드 사용자)입니다.");
                 return;
             }
 
-            context.Target.GainGuard(value);
-            Debug.Log($"[GuardEffectSO] {context.Target.GetCharacterName()}에게 가드 {value} 적용");
+            // 방어 카드는 카드를 사용한 플레이어 자신에게 가드 상태를 부여
+            context.Source.SetGuarded(true);
+            Debug.Log($"[GuardEffectSO] {context.Source.GetCharacterName()}에게 가드 상태 적용");
         }
     }
 }

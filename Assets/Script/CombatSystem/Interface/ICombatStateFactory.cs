@@ -41,5 +41,7 @@ namespace Game.CombatSystem.Interface
         /// 게임 오버 상태를 생성합니다.
         /// </summary>
         ICombatTurnState CreateGameOverState();
+
+        T CreateState<T>() where T : ICombatTurnState;
     }
 }
