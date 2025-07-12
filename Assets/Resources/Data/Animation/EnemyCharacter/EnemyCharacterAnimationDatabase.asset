@@ -190,7 +190,7 @@ MonoBehaviour:
         m_PreInfinity: 2
         m_PostInfinity: 2
         m_RotationOrder: 4
-  - enemyCharacter: {fileID: 11400000, guid: d76e0333b79eae7489a84708f63dbc40, type: 2}
+  - enemyCharacter: {fileID: 11400000, guid: b06fb8f06d11b0344808358d1ef5b616, type: 2}
     spawnAnimation:
       animationScriptType: AnimationSystem.Animator.CharacterAnimation.SpawnAnimation.DefaultCharacterSpawnAnimation,
         Assembly-CSharp

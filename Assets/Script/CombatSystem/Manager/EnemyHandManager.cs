@@ -23,6 +23,7 @@ using AnimationSystem.Manager;
 using Game.CombatSystem.Core;
 using AnimationSystem.Helper;
 using AnimationSystem.Animator.SkillCardAnimation.MoveAnimation;
+using Game.CombatSystem;
 
 namespace Game.CombatSystem.Manager
 {
@@ -510,7 +511,8 @@ namespace Game.CombatSystem.Manager
 
             flowCoordinator.RegisterCardToTurnRegistry(slotPos, card, ui);
 
-            yield return flowCoordinator.RegisterCardToCombatSlotCoroutine(slotPos, card, ui);
+            // 애니메이션이 있는 버전으로 변경
+            yield return flowCoordinator.RegisterCardToCombatSlotAsync(slotPos, card, ui);
         }
         #endregion
 

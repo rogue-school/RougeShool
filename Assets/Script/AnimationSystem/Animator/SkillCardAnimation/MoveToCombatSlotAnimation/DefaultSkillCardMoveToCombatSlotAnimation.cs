@@ -31,13 +31,61 @@ namespace AnimationSystem.Animator.SkillCardAnimation.MoveToCombatSlotAnimation
         // 기존 PlayAnimation 오버로드(타입 기반)는 사용 금지(호환성 위해 남겨두지만 내부적으로 경고)
         public void PlayAnimation(string animationType, RectTransform targetSlot, System.Action onComplete = null)
         {
-            Debug.LogWarning("[DefaultSkillCardMoveToCombatSlotAnimation] 애니메이션 타입은 무시됩니다. PlayAnimation(RectTransform, Action)만 사용하세요.");
-            PlayAnimation(targetSlot, onComplete);
+            if (targetSlot == null)
+            {
+                Debug.LogError("[DefaultSkillCardMoveToCombatSlotAnimation] targetSlot이 null입니다.");
+                onComplete?.Invoke();
+                return;
+            }
+
+            Debug.Log($"[DefaultSkillCardMoveToCombatSlotAnimation] 전투 슬롯 이동 애니메이션 시작: {animationType}");
+            MoveCardToSlot(targetSlot, moveDuration, onComplete);
         }
+        
         public void PlayAnimation(string animationType, System.Action onComplete = null)
         {
-            Debug.LogWarning("[DefaultSkillCardMoveToCombatSlotAnimation] 애니메이션 타입은 무시됩니다. PlayAnimation(RectTransform, Action)만 사용하세요.");
-            onComplete?.Invoke();
+            Debug.Log($"[DefaultSkillCardMoveToCombatSlotAnimation] 전투 슬롯 이동 애니메이션 시작: {animationType}");
+            
+            // 더 명확한 이동 애니메이션을 위해 스케일과 회전 효과 추가
+            Vector3 originalScale = rectTransform.localScale;
+            Vector3 originalRotation = rectTransform.localEulerAngles;
+            Vector2 startPos = rectTransform.anchoredPosition;
+            Vector2 targetPos = Vector2.zero; // 목표는 슬롯의 중앙
+            
+            Debug.Log($"[DefaultSkillCardMoveToCombatSlotAnimation] 이동: {startPos} -> {targetPos}");
+            
+            Sequence sequence = DOTween.Sequence();
+            
+            // 1단계: 확대 + 약간 회전
+            sequence.Append(
+                rectTransform.DOScale(originalScale * 1.2f, moveDuration * 0.4f)
+                    .SetEase(scaleEase)
+            );
+            sequence.Join(
+                rectTransform.DOLocalRotate(originalRotation + new Vector3(0, 0, 15f), moveDuration * 0.4f)
+                    .SetEase(Ease.OutQuad)
+            );
+            
+            // 2단계: 이동하면서 원래 크기와 회전으로
+            sequence.Append(
+                rectTransform.DOAnchorPos(targetPos, moveDuration * 0.6f)
+                    .SetEase(moveEase)
+            );
+            sequence.Join(
+                rectTransform.DOScale(originalScale, moveDuration * 0.6f)
+                    .SetEase(scaleEase)
+            );
+            sequence.Join(
+                rectTransform.DOLocalRotate(originalRotation, moveDuration * 0.6f)
+                    .SetEase(Ease.InOutQuad)
+            );
+            
+            sequence.OnComplete(() => {
+                rectTransform.anchoredPosition = targetPos;
+                rectTransform.localScale = originalScale;
+                rectTransform.localEulerAngles = originalRotation;
+                onComplete?.Invoke();
+            });
         }
 
         /// <summary>

@@ -7,7 +7,7 @@ using AnimationSystem.Data;
 
 public class AnimationDatabaseAssetFixer : EditorWindow
 {
-    [MenuItem("Tools/AnimationSystem/애니메이션 타입명 자동 정정 (SkillCard/캐릭터 전체)")]
+    [MenuItem("Tools/AnimationSystem/애니메이션 타입명 자동 정정 (SkillCard/데이터 전체)")]
     public static void FixAllAnimationScriptTypes()
     {
         int fixCount = 0;
@@ -78,9 +78,12 @@ public class AnimationDatabaseAssetFixer : EditorWindow
             // PlayerSkillCardAnimationEntry인 경우
             if (entry is PlayerSkillCardAnimationEntry playerEntry)
             {
+                Debug.Log($"[AssetFixer] PlayerSkillCard Entry 처리 중: {playerEntry.PlayerSkillCard?.CardData?.Name}");
+
                 // SpawnAnimation 처리
                 if (playerEntry.SpawnAnimation != null)
                 {
+                    Debug.Log($"[AssetFixer] PlayerSkillCard SpawnAnimation 현재 값: '{playerEntry.SpawnAnimation.AnimationScriptType}'");
                     string fixedName = GetFixedTypeName(playerEntry.SpawnAnimation.AnimationScriptType);
                     if (!string.IsNullOrEmpty(fixedName) && playerEntry.SpawnAnimation.AnimationScriptType != fixedName)
                     {
@@ -88,11 +91,15 @@ public class AnimationDatabaseAssetFixer : EditorWindow
                         count++;
                         Debug.Log($"[AssetFixer] PlayerSkillCard SpawnAnimation 타입 수정: {playerEntry.SpawnAnimation.AnimationScriptType}");
                     }
+                    else
+                    {
+                        Debug.Log($"[AssetFixer] PlayerSkillCard SpawnAnimation 이미 올바른 값: {playerEntry.SpawnAnimation.AnimationScriptType}");
+                    }
                 }
-                
                 // UseAnimation 처리
                 if (playerEntry.UseAnimation != null)
                 {
+                    Debug.Log($"[AssetFixer] PlayerSkillCard UseAnimation 현재 값: '{playerEntry.UseAnimation.AnimationScriptType}'");
                     string fixedName = GetFixedTypeName(playerEntry.UseAnimation.AnimationScriptType);
                     if (!string.IsNullOrEmpty(fixedName) && playerEntry.UseAnimation.AnimationScriptType != fixedName)
                     {
@@ -100,11 +107,15 @@ public class AnimationDatabaseAssetFixer : EditorWindow
                         count++;
                         Debug.Log($"[AssetFixer] PlayerSkillCard UseAnimation 타입 수정: {playerEntry.UseAnimation.AnimationScriptType}");
                     }
+                    else
+                    {
+                        Debug.Log($"[AssetFixer] PlayerSkillCard UseAnimation 이미 올바른 값: {playerEntry.UseAnimation.AnimationScriptType}");
+                    }
                 }
-                
                 // DragAnimation 처리
                 if (playerEntry.DragAnimation != null)
                 {
+                    Debug.Log($"[AssetFixer] PlayerSkillCard DragAnimation 현재 값: '{playerEntry.DragAnimation.AnimationScriptType}'");
                     string fixedName = GetFixedTypeName(playerEntry.DragAnimation.AnimationScriptType);
                     if (!string.IsNullOrEmpty(fixedName) && playerEntry.DragAnimation.AnimationScriptType != fixedName)
                     {
@@ -112,11 +123,15 @@ public class AnimationDatabaseAssetFixer : EditorWindow
                         count++;
                         Debug.Log($"[AssetFixer] PlayerSkillCard DragAnimation 타입 수정: {playerEntry.DragAnimation.AnimationScriptType}");
                     }
+                    else
+                    {
+                        Debug.Log($"[AssetFixer] PlayerSkillCard DragAnimation 이미 올바른 값: {playerEntry.DragAnimation.AnimationScriptType}");
+                    }
                 }
-                
                 // DropAnimation 처리
                 if (playerEntry.DropAnimation != null)
                 {
+                    Debug.Log($"[AssetFixer] PlayerSkillCard DropAnimation 현재 값: '{playerEntry.DropAnimation.AnimationScriptType}'");
                     string fixedName = GetFixedTypeName(playerEntry.DropAnimation.AnimationScriptType);
                     if (!string.IsNullOrEmpty(fixedName) && playerEntry.DropAnimation.AnimationScriptType != fixedName)
                     {
@@ -124,11 +139,15 @@ public class AnimationDatabaseAssetFixer : EditorWindow
                         count++;
                         Debug.Log($"[AssetFixer] PlayerSkillCard DropAnimation 타입 수정: {playerEntry.DropAnimation.AnimationScriptType}");
                     }
+                    else
+                    {
+                        Debug.Log($"[AssetFixer] PlayerSkillCard DropAnimation 이미 올바른 값: {playerEntry.DropAnimation.AnimationScriptType}");
+                    }
                 }
-                
                 // VanishAnimation 처리
                 if (playerEntry.VanishAnimation != null)
                 {
+                    Debug.Log($"[AssetFixer] PlayerSkillCard VanishAnimation 현재 값: '{playerEntry.VanishAnimation.AnimationScriptType}'");
                     string fixedName = GetFixedTypeName(playerEntry.VanishAnimation.AnimationScriptType);
                     if (!string.IsNullOrEmpty(fixedName) && playerEntry.VanishAnimation.AnimationScriptType != fixedName)
                     {
@@ -136,14 +155,21 @@ public class AnimationDatabaseAssetFixer : EditorWindow
                         count++;
                         Debug.Log($"[AssetFixer] PlayerSkillCard VanishAnimation 타입 수정: {playerEntry.VanishAnimation.AnimationScriptType}");
                     }
+                    else
+                    {
+                        Debug.Log($"[AssetFixer] PlayerSkillCard VanishAnimation 이미 올바른 값: {playerEntry.VanishAnimation.AnimationScriptType}");
+                    }
                 }
             }
             // EnemySkillCardAnimationEntry인 경우
             else if (entry is EnemySkillCardAnimationEntry enemyEntry)
             {
+                Debug.Log($"[AssetFixer] EnemySkillCard Entry 처리 중: {enemyEntry.EnemySkillCard?.CardData?.Name}");
+
                 // SpawnAnimation 처리
                 if (enemyEntry.SpawnAnimation != null)
                 {
+                    Debug.Log($"[AssetFixer] EnemySkillCard SpawnAnimation 현재 값: '{enemyEntry.SpawnAnimation.AnimationScriptType}'");
                     string fixedName = GetFixedTypeName(enemyEntry.SpawnAnimation.AnimationScriptType);
                     if (!string.IsNullOrEmpty(fixedName) && enemyEntry.SpawnAnimation.AnimationScriptType != fixedName)
                     {
@@ -151,11 +177,15 @@ public class AnimationDatabaseAssetFixer : EditorWindow
                         count++;
                         Debug.Log($"[AssetFixer] EnemySkillCard SpawnAnimation 타입 수정: {enemyEntry.SpawnAnimation.AnimationScriptType}");
                     }
+                    else
+                    {
+                        Debug.Log($"[AssetFixer] EnemySkillCard SpawnAnimation 이미 올바른 값: {enemyEntry.SpawnAnimation.AnimationScriptType}");
+                    }
                 }
-                
                 // MoveAnimation 처리
                 if (enemyEntry.MoveAnimation != null)
                 {
+                    Debug.Log($"[AssetFixer] EnemySkillCard MoveAnimation 현재 값: '{enemyEntry.MoveAnimation.AnimationScriptType}'");
                     string fixedName = GetFixedTypeName(enemyEntry.MoveAnimation.AnimationScriptType);
                     if (!string.IsNullOrEmpty(fixedName) && enemyEntry.MoveAnimation.AnimationScriptType != fixedName)
                     {
@@ -163,11 +193,15 @@ public class AnimationDatabaseAssetFixer : EditorWindow
                         count++;
                         Debug.Log($"[AssetFixer] EnemySkillCard MoveAnimation 타입 수정: {enemyEntry.MoveAnimation.AnimationScriptType}");
                     }
+                    else
+                    {
+                        Debug.Log($"[AssetFixer] EnemySkillCard MoveAnimation 이미 올바른 값: {enemyEntry.MoveAnimation.AnimationScriptType}");
+                    }
                 }
-                
                 // MoveToCombatSlotAnimation 처리
                 if (enemyEntry.MoveToCombatSlotAnimation != null)
                 {
+                    Debug.Log($"[AssetFixer] EnemySkillCard MoveToCombatSlotAnimation 현재 값: '{enemyEntry.MoveToCombatSlotAnimation.AnimationScriptType}'");
                     string fixedName = GetFixedTypeName(enemyEntry.MoveToCombatSlotAnimation.AnimationScriptType);
                     if (!string.IsNullOrEmpty(fixedName) && enemyEntry.MoveToCombatSlotAnimation.AnimationScriptType != fixedName)
                     {
@@ -175,11 +209,15 @@ public class AnimationDatabaseAssetFixer : EditorWindow
                         count++;
                         Debug.Log($"[AssetFixer] EnemySkillCard MoveToCombatSlotAnimation 타입 수정: {enemyEntry.MoveToCombatSlotAnimation.AnimationScriptType}");
                     }
+                    else
+                    {
+                        Debug.Log($"[AssetFixer] EnemySkillCard MoveToCombatSlotAnimation 이미 올바른 값: {enemyEntry.MoveToCombatSlotAnimation.AnimationScriptType}");
+                    }
                 }
-                
                 // UseAnimation 처리
                 if (enemyEntry.UseAnimation != null)
                 {
+                    Debug.Log($"[AssetFixer] EnemySkillCard UseAnimation 현재 값: '{enemyEntry.UseAnimation.AnimationScriptType}'");
                     string fixedName = GetFixedTypeName(enemyEntry.UseAnimation.AnimationScriptType);
                     if (!string.IsNullOrEmpty(fixedName) && enemyEntry.UseAnimation.AnimationScriptType != fixedName)
                     {
@@ -187,17 +225,25 @@ public class AnimationDatabaseAssetFixer : EditorWindow
                         count++;
                         Debug.Log($"[AssetFixer] EnemySkillCard UseAnimation 타입 수정: {enemyEntry.UseAnimation.AnimationScriptType}");
                     }
+                    else
+                    {
+                        Debug.Log($"[AssetFixer] EnemySkillCard UseAnimation 이미 올바른 값: {enemyEntry.UseAnimation.AnimationScriptType}");
+                    }
                 }
-                
                 // VanishAnimation 처리
                 if (enemyEntry.VanishAnimation != null)
                 {
+                    Debug.Log($"[AssetFixer] EnemySkillCard VanishAnimation 현재 값: '{enemyEntry.VanishAnimation.AnimationScriptType}'");
                     string fixedName = GetFixedTypeName(enemyEntry.VanishAnimation.AnimationScriptType);
                     if (!string.IsNullOrEmpty(fixedName) && enemyEntry.VanishAnimation.AnimationScriptType != fixedName)
                     {
                         enemyEntry.VanishAnimation.AnimationScriptType = fixedName;
                         count++;
                         Debug.Log($"[AssetFixer] EnemySkillCard VanishAnimation 타입 수정: {enemyEntry.VanishAnimation.AnimationScriptType}");
+                    }
+                    else
+                    {
+                        Debug.Log($"[AssetFixer] EnemySkillCard VanishAnimation 이미 올바른 값: {enemyEntry.VanishAnimation.AnimationScriptType}");
                     }
                 }
             }

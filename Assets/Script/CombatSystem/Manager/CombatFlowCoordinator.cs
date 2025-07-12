@@ -244,50 +244,51 @@ namespace Game.CombatSystem.Core
 
             if (ui is MonoBehaviour uiMb)
             {
-                // var shiftAnimator = uiMb.GetComponent<DefaultSkillCardMoveAnimation>();
-                // var spawnAnimator = uiMb.GetComponent<DefaultSkillCardSpawnAnimation>();
-
                 var rect = uiMb.GetComponent<RectTransform>();
                 if (rect != null)
                 {
                     Vector3 worldPos = rect.position;
-                    uiMb.transform.SetParent(slotRectTransform.parent, true);
+                    // 1. 부모를 슬롯(CombatCardSlot_1, 2)로 먼저 변경
+                    uiMb.transform.SetParent(slotRectTransform, false);
                     rect.position = worldPos;
+                    Debug.Log($"[CombatFlowCoordinator] 카드를 슬롯({slotRectTransform.name})으로 부모 변경");
                 }
 
-                // 이동 애니메이션
-                // if (shiftAnimator != null)
-                // {
-                //     yield return shiftAnimator.PlayMoveAnimationCoroutine(slotRectTransform);
-                // }
-                // else
-                // {
-                //     Debug.LogWarning($"[CombatFlowCoordinator] DefaultSkillCardMoveAnimation이 없음: {pos}");
-                // }
+                // 2. 이동 애니메이션 실행 (이제 (0,0)은 슬롯의 중심)
+                bool animationComplete = false;
+                var moveAnimator = uiMb.GetComponent<AnimationSystem.Animator.SkillCardAnimation.MoveToCombatSlotAnimation.DefaultSkillCardMoveToCombatSlotAnimation>();
+                if (moveAnimator == null)
+                {
+                    moveAnimator = uiMb.gameObject.AddComponent<AnimationSystem.Animator.SkillCardAnimation.MoveToCombatSlotAnimation.DefaultSkillCardMoveToCombatSlotAnimation>();
+                }
+                if (moveAnimator != null)
+                {
+                    moveAnimator.PlayAnimation("moveToCombatSlot", () => {
+                        animationComplete = true;
+                    });
+                }
+                else
+                {
+                    Debug.LogWarning("[CombatFlowCoordinator] 이동 애니메이션 컴포넌트를 추가할 수 없습니다.");
+                    animationComplete = true;
+                }
+                
+                // 애니메이션 완료까지 대기
+                float waitStartTime = Time.time;
+                while (!animationComplete)
+                {
+                    if (Time.time - waitStartTime > 5f) // 5초 타임아웃
+                    {
+                        Debug.LogWarning($"[CombatFlowCoordinator] 이동 애니메이션 타임아웃: {pos}");
+                        break;
+                    }
+                    yield return null;
+                }
 
                 // 슬롯에 부착
                 uiMb.transform.SetParent(slotRectTransform, false);
                 uiMb.transform.localPosition = Vector3.zero;
                 uiMb.transform.localScale = Vector3.one;
-
-                // 등장 애니메이션
-                // if (spawnAnimator != null)
-                // {
-                //     yield return spawnAnimator.PlaySpawnAnimationCoroutine(null);
-                // }
-                // else
-                // {
-                //     // 애니메이션 컴포넌트가 없으면 동적으로 추가
-                //     spawnAnimator = uiMb.gameObject.AddComponent<DefaultSkillCardSpawnAnimation>();
-                //     if (spawnAnimator != null)
-                //     {
-                //         yield return spawnAnimator.PlaySpawnAnimationCoroutine(null);
-                //     }
-                //     else
-                //     {
-                //         Debug.LogWarning($"[CombatFlowCoordinator] DefaultSkillCardSpawnAnimation 추가 실패: {pos} 위치의 카드 - {card?.GetCardName() ?? "Unknown"}");
-                //     }
-                // }
             }
             else
             {

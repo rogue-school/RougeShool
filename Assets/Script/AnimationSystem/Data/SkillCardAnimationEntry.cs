@@ -39,7 +39,9 @@ namespace AnimationSystem.Data
 
         public SkillCardAnimationSettings GetSettingsByType(string type)
         {
-            switch(type)
+            // 대소문자 구분 없이 처리
+            string lowerType = type?.ToLower();
+            switch(lowerType)
             {
                 case "spawn": return SpawnAnimation;
                 case "use": return UseAnimation;
@@ -86,11 +88,13 @@ namespace AnimationSystem.Data
 
         public SkillCardAnimationSettings GetSettingsByType(string type)
         {
-            switch(type)
+            // 대소문자 구분 없이 처리
+            string lowerType = type?.ToLower();
+            switch(lowerType)
             {
                 case "spawn": return SpawnAnimation;
                 case "move": return MoveAnimation;
-                case "moveToCombatSlot": return MoveToCombatSlotAnimation;
+                case "movetocombatslot": return MoveToCombatSlotAnimation;
                 case "use": return UseAnimation;
                 case "vanish": return VanishAnimation;
                 default: return null;
