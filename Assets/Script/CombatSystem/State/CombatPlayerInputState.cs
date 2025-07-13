@@ -47,7 +47,7 @@ namespace Game.CombatSystem.State
         /// </summary>
         public void EnterState()
         {
-            Debug.Log("[CombatPlayerInputState] EnterState");
+            Debug.Log("<color=cyan>[STATE] CombatPlayerInputState 진입</color>");
             hasStarted = false;
 
             cooldownSystem.ReduceAllCooldowns();
@@ -72,7 +72,7 @@ namespace Game.CombatSystem.State
         /// </summary>
         public void ExitState()
         {
-            Debug.Log("[CombatPlayerInputState] ExitState");
+            Debug.Log("<color=cyan>[STATE] CombatPlayerInputState 종료</color>");
             flowCoordinator.DisablePlayerInput();
             flowCoordinator.HidePlayerCardSelectionUI();
             flowCoordinator.UnregisterStartButton();
@@ -96,7 +96,7 @@ namespace Game.CombatSystem.State
             }
 
             hasStarted = true;
-            Debug.Log("[CombatPlayerInputState] 상태 전이: FirstAttackState");
+            Debug.Log("<color=cyan>[STATE] CombatPlayerInputState → CombatFirstAttackState 전이</color>");
 
             flowCoordinator.DisableStartButton();
             flowCoordinator.DisablePlayerInput();

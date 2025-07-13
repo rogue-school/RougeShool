@@ -59,7 +59,7 @@ namespace Game.CombatSystem.State
         /// </summary>
         public void EnterState()
         {
-            Debug.Log("[CombatPrepareState] EnterState");
+            Debug.Log("<color=cyan>[STATE] CombatPrepareState 진입</color>");
             CombatEvents.RaiseCombatStarted();
             turnContext.Reset();
             coroutineRunner.RunCoroutine(PrepareRoutine());
@@ -109,6 +109,7 @@ namespace Game.CombatSystem.State
             yield return enemyHandManager.StepwiseFillSlotsFromBack(0.3f);
 
             // 다음 상태로 전환 (플레이어 입력)
+            Debug.Log("<color=cyan>[STATE] CombatPrepareState → CombatPlayerInputState 전이</color>");
             var next = turnManager.GetStateFactory().CreatePlayerInputState();
             Debug.Log("[CombatPrepareState] 상태 전이: PlayerInputState");
             turnManager.RequestStateChange(next);
@@ -138,7 +139,7 @@ namespace Game.CombatSystem.State
 
         public void ExitState()
         {
-            Debug.Log("[CombatPrepareState] ExitState");
+            Debug.Log("<color=cyan>[STATE] CombatPrepareState 종료</color>");
         }
 
         #endregion

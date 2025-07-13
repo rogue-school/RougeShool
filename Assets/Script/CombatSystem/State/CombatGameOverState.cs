@@ -6,7 +6,6 @@ using Game.Utility;
 using Game.CharacterSystem.Interface;
 using Game.Manager;
 using Game.IManager;
-using Game.CombatSystem;
 
 namespace Game.CombatSystem.State
 {
@@ -57,8 +56,7 @@ namespace Game.CombatSystem.State
         /// </summary>
         public void EnterState()
         {
-            CombatEvents.RaiseDefeat();
-            CombatEvents.RaiseGameOver();
+            Debug.Log("<color=cyan>[STATE] CombatGameOverState 진입</color>");
             coroutineRunner.RunCoroutine(GameOverRoutine());
         }
 
@@ -70,7 +68,10 @@ namespace Game.CombatSystem.State
         /// <summary>
         /// 상태 종료 시 특별한 작업 없음
         /// </summary>
-        public void ExitState() { }
+        public void ExitState() 
+        { 
+            Debug.Log("<color=cyan>[STATE] CombatGameOverState 종료</color>"); 
+        }
 
         #endregion
 

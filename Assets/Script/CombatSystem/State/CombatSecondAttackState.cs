@@ -28,10 +28,12 @@ namespace Game.CombatSystem.State
 
         public void EnterState()
         {
+            Debug.Log("<color=cyan>[STATE] CombatSecondAttackState 진입</color>");
             flowCoordinator.DisablePlayerInput();
 
             if (turnContext.WasEnemyDefeated || flowCoordinator.IsPlayerDead())
             {
+                Debug.Log("<color=cyan>[STATE] CombatSecondAttackState → CombatResultState 전이 (적 사망 또는 플레이어 사망)</color>");
                 var next = turnManager.GetStateFactory().CreateResultState();
                 turnManager.RequestStateChange(next);
 
@@ -47,6 +49,7 @@ namespace Game.CombatSystem.State
         {
             yield return flowCoordinator.PerformSecondAttack();
 
+            Debug.Log("<color=cyan>[STATE] CombatSecondAttackState → CombatResultState 전이</color>");
             var next = turnManager.GetStateFactory().CreateResultState();
             turnManager.RequestStateChange(next);
         }
@@ -55,6 +58,7 @@ namespace Game.CombatSystem.State
 
         public void ExitState()
         {
+            Debug.Log("<color=cyan>[STATE] CombatSecondAttackState 종료</color>");
         }
     }
 }

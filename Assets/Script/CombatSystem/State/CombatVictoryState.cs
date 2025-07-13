@@ -24,6 +24,7 @@ namespace Game.CombatSystem.State
 
         public void EnterState()
         {
+            Debug.Log("<color=cyan>[STATE] CombatVictoryState 진입</color>");
             CombatEvents.RaiseVictory();
             coroutineRunner.RunCoroutine(HandleVictory());
         }
@@ -36,11 +37,13 @@ namespace Game.CombatSystem.State
 
             if (flowCoordinator.CheckHasNextEnemy())
             {
+                Debug.Log("<color=cyan>[STATE] CombatVictoryState → CombatPrepareState 전이 (다음 적 존재)</color>");
                 var next = turnManager.GetStateFactory().CreatePrepareState();
                 turnManager.RequestStateChange(next);
             }
             else
             {
+                Debug.Log("<color=cyan>[STATE] CombatVictoryState → CombatGameOverState 전이 (모든 적 처치 완료)</color>");
                 var next = turnManager.GetStateFactory().CreateGameOverState();
                 turnManager.RequestStateChange(next);
             }
@@ -50,6 +53,7 @@ namespace Game.CombatSystem.State
 
         public void ExitState()
         {
+            Debug.Log("<color=cyan>[STATE] CombatVictoryState 종료</color>");
         }
     }
 }

@@ -40,10 +40,10 @@ namespace Game.CombatSystem.State
         /// </summary>
         public void EnterState()
         {
-            Debug.Log("[CombatFirstAttackState] EnterState");
+            Debug.Log("<color=cyan>[STATE] CombatFirstAttackState 진입</color>");
             flowCoordinator.RequestFirstAttack(() =>
             {
-                Debug.Log("[CombatFirstAttackState] 상태 전이: SecondAttackState");
+                Debug.Log("<color=cyan>[STATE] CombatFirstAttackState → CombatSecondAttackState 전이</color>");
                 var next = turnManager.GetStateFactory().CreateSecondAttackState();
                 turnManager.RequestStateChange(next);
             });
@@ -57,7 +57,10 @@ namespace Game.CombatSystem.State
         /// <summary>
         /// 상태 종료 시 호출됩니다. (현재는 비어 있음)
         /// </summary>
-        public void ExitState() { Debug.Log("[CombatFirstAttackState] ExitState"); }
+        public void ExitState() 
+        { 
+            Debug.Log("<color=cyan>[STATE] CombatFirstAttackState 종료</color>"); 
+        }
 
         #endregion
     }

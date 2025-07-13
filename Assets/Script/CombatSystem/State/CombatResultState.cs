@@ -4,7 +4,6 @@ using Game.CombatSystem.Interface;
 using Game.Utility;
 using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
-using Game.CombatSystem;
 
 namespace Game.CombatSystem.State
 {
@@ -32,6 +31,7 @@ namespace Game.CombatSystem.State
 
         public void EnterState()
         {
+            Debug.Log("<color=cyan>[STATE] CombatResultState 진입</color>");
             flowCoordinator.DisablePlayerInput();
             coroutineRunner.RunCoroutine(ExecuteResultPhase());
         }
@@ -49,7 +49,8 @@ namespace Game.CombatSystem.State
             // 3. 사망 판정
             if (flowCoordinator.IsEnemyDead())
             {
-                CombatEvents.RaiseCombatEnded(true); // 승리
+                Debug.Log("<color=cyan>[STATE] CombatResultState → CombatVictoryState 전이 (적 사망)</color>");
+                // 승리 이벤트는 VictoryState에서 처리
 
                 flowCoordinator.RemoveEnemyCharacter();
                 yield return flowCoordinator.ClearEnemyHandSafely();
@@ -65,7 +66,8 @@ namespace Game.CombatSystem.State
             }
             else if (flowCoordinator.IsPlayerDead())
             {
-                CombatEvents.RaiseCombatEnded(false); // 패배
+                Debug.Log("<color=cyan>[STATE] CombatResultState → CombatGameOverState 전이 (플레이어 사망)</color>");
+                // 패배 이벤트는 GameOverState에서 처리
                 yield return new WaitForSeconds(0.1f);
 
                 turnManager.RequestStateChange(turnManager.GetStateFactory().CreateGameOverState());
@@ -73,6 +75,7 @@ namespace Game.CombatSystem.State
             }
 
             // 4. 전투 지속 → 다음 준비 상태로 전이
+            Debug.Log("<color=cyan>[STATE] CombatResultState → CombatPrepareState 전이 (전투 지속)</color>");
             yield return new WaitForSeconds(0.1f);
             turnManager.RequestStateChange(turnManager.GetStateFactory().CreatePrepareState());
         }
@@ -97,6 +100,7 @@ namespace Game.CombatSystem.State
 
         public void ExitState()
         {
+            Debug.Log("<color=cyan>[STATE] CombatResultState 종료</color>");
         }
     }
 }
