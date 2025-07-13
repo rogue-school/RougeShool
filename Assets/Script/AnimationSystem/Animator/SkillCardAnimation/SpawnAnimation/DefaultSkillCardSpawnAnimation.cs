@@ -33,8 +33,6 @@ namespace AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation
         {
             rectTransform = GetComponent<RectTransform>();
             canvasGroup = GetComponent<CanvasGroup>();
-            
-            Debug.Log($"[DefaultSkillCardSpawnAnimation][Awake] 초기화 완료: {gameObject.name}, rectTransform: {rectTransform != null}, canvasGroup: {canvasGroup != null}");
         }
 
         /// <summary>
@@ -42,7 +40,6 @@ namespace AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation
         /// </summary>
         public void PlayAnimation(string animationType, System.Action onComplete = null)
         {
-            Debug.Log($"[DefaultSkillCardSpawnAnimation][PlayAnimation] 호출됨: {gameObject.name}, 타입: {animationType}");
             StartCoroutine(PlaySpawnAnimationCoroutine(onComplete));
         }
         
@@ -70,11 +67,8 @@ namespace AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation
         /// </summary>
         public void PlayCastAnimation(System.Action onComplete = null)
         {
-            Debug.Log($"[DefaultSkillCardSpawnAnimation][PlayCastAnimation] 시작: {gameObject.name}");
-            
             if (rectTransform == null || canvasGroup == null) 
             {
-                Debug.LogError($"[DefaultSkillCardSpawnAnimation][PlayCastAnimation] 필수 컴포넌트 없음: {gameObject.name}");
                 onComplete?.Invoke();
                 return;
             }
@@ -88,7 +82,6 @@ namespace AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation
             // 사운드 재생
             sequence.OnStart(() =>
             {
-                Debug.Log($"[DefaultSkillCardSpawnAnimation][DOTween Start] 애니메이션 시작: {gameObject.name}");
                 if (audioSource != null && spawnSound != null)
                     audioSource.PlayOneShot(spawnSound);
             });
@@ -108,7 +101,6 @@ namespace AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation
             // 완료 콜백
             sequence.OnComplete(() =>
             {
-                Debug.Log($"[DefaultSkillCardSpawnAnimation][DOTween Complete] 애니메이션 완료: {gameObject.name}");
                 if (spawnEffectPrefab != null)
                 {
                     GameObject fx = Instantiate(spawnEffectPrefab, rectTransform.position, Quaternion.identity);
@@ -189,12 +181,8 @@ namespace AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation
         /// </summary>
         public System.Collections.IEnumerator PlaySpawnAnimationCoroutine(System.Action onComplete)
         {
-            Debug.Log($"[DefaultSkillCardSpawnAnimation][Coroutine Start] 시작: {gameObject.name}");
-            float startTime = Time.time;
-
             var tcs = new System.Threading.Tasks.TaskCompletionSource<bool>();
             PlayCastAnimation(() => {
-                Debug.Log($"[DefaultSkillCardSpawnAnimation][CastAnimation Complete] 완료: {gameObject.name}");
                 tcs.SetResult(true);
             });
             
@@ -203,7 +191,6 @@ namespace AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation
                 yield return null;
             }
             
-            Debug.Log($"[DefaultSkillCardSpawnAnimation][Coroutine End] 완료: {gameObject.name}");
             onComplete?.Invoke();
         }
     }

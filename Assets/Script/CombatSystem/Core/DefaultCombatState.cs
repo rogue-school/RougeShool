@@ -36,7 +36,7 @@ namespace Game.CombatSystem.Core
         /// </summary>
         public void EnterState()
         {
-            Debug.Log("[DefaultCombatState] 상태 진입");
+            Debug.Log("<color=cyan>[DefaultCombatState] 상태 진입</color>");
         }
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace Game.CombatSystem.Core
         /// </summary>
         public void ExecuteState()
         {
-            Debug.Log("[DefaultCombatState] 상태 실행 중 (기본 상태)");
+            Debug.Log("<color=cyan>[DefaultCombatState] 상태 실행 중 (기본 상태)</color>");
             // 필요 시 자동 상태 전이 가능
             // 예: turnManager.RequestStateChange(...);
         }
@@ -54,7 +54,7 @@ namespace Game.CombatSystem.Core
         /// </summary>
         public void ExitState()
         {
-            Debug.Log("[DefaultCombatState] 상태 종료");
+            Debug.Log("<color=cyan>[DefaultCombatState] 상태 종료</color>");
         }
 
         #endregion

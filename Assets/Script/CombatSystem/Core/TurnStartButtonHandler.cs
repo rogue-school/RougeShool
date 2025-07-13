@@ -77,8 +77,6 @@ namespace Game.CombatSystem.Core
 
             bool canStart = conditionChecker.CanStartTurn();
             startButton.interactable = canStart;
-
-            Debug.Log($"[TurnStartButtonHandler] 버튼 {(canStart ? "활성화됨" : "비활성화됨")}");
         }
 
         /// <summary>
@@ -96,7 +94,7 @@ namespace Game.CombatSystem.Core
             if (nextState != null)
             {
                 turnManager?.RequestStateChange(nextState);
-                Debug.Log("[TurnStartButtonHandler] 상태 전이 요청됨");
+                Debug.Log("<color=cyan>[TurnStartButtonHandler] 상태 전이 요청</color>");
             }
             else
             {
@@ -124,7 +122,6 @@ namespace Game.CombatSystem.Core
             if (startButton != null)
             {
                 startButton.interactable = isEnabled;
-                Debug.Log($"[TurnStartButtonHandler] 버튼 {(isEnabled ? "강제 활성화됨" : "강제 비활성화됨")}");
             }
         }
 

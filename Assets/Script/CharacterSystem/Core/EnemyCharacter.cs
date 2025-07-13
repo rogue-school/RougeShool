@@ -81,8 +81,6 @@ namespace Game.CharacterSystem.Core
             SetMaxHP(data.MaxHP);
             ApplyPassiveEffects();
             RefreshUI();
-
-            Debug.Log($"[EnemyCharacter] '{characterData.DisplayName}' 초기화 완료");
         }
 
         /// <summary>

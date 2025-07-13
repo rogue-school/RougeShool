@@ -33,7 +33,7 @@ namespace Game.CombatSystem.Initialization
         /// </summary>
         public IEnumerator Initialize()
         {
-            Debug.Log("[FlowCoordinatorInitializationStep] 전투 준비 흐름 초기화 시작");
+            Debug.Log("<color=cyan>[FlowCoordinatorInitializationStep] 전투 준비 흐름 초기화 시작</color>");
 
             // 턴 시작 버튼 핸들러에 의존성 주입
             buttonHandler.Inject(conditionChecker, turnManager, stateFactory, cardRegistry);
@@ -45,7 +45,7 @@ namespace Game.CombatSystem.Initialization
             // 전투 준비 수행
             yield return flowCoordinator.PerformCombatPreparation();
 
-            Debug.Log("[FlowCoordinatorInitializationStep] 전투 준비 성공");
+            Debug.Log("<color=cyan>[FlowCoordinatorInitializationStep] 전투 준비 성공</color>");
 
             // 전투 흐름 시작
             flowCoordinator.StartCombatFlow();

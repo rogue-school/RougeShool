@@ -32,7 +32,7 @@ namespace Game.CombatSystem.Initializer
         {
             playerHand.ClearAll();
             enemyHand.GenerateInitialHand();
-            Debug.Log("[HandInitializer] 핸드 초기화 완료");
+            Debug.Log("<color=cyan>[HandInitializer] 핸드 초기화 완료</color>");
         }
     }
 }

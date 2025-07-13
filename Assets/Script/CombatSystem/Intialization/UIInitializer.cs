@@ -58,7 +58,7 @@ namespace Game.CombatSystem.Intialization
                 }
             }
 
-            Debug.Log("[UIInitializer] 캐릭터 UI 슬롯 초기화 완료 (DI 기반)");
+            Debug.Log("<color=cyan>[UIInitializer] 캐릭터 UI 슬롯 초기화 완료 (DI 기반)");
         }
 
         #endregion

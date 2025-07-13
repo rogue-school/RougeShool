@@ -108,7 +108,6 @@ namespace Game.CombatSystem.Manager
 
             // 2. 등장 애니메이션 실행 및 대기 (파사드 패턴 적용)
             bool animDone = false;
-            Debug.Log($"[애니메이션 호출] PlayEnemyCharacterAnimation: {data.name}, spawn, {instance.name}");
             AnimationFacade.Instance.PlayEnemyCharacterAnimation(
                 data.name, // 캐릭터 ID (ScriptableObject의 name)
                 "spawn",

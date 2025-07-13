@@ -40,6 +40,8 @@ namespace Game.CombatSystem.Initialization
         /// </summary>
         public IEnumerator Initialize()
         {
+            Debug.Log("<color=cyan>[EnemyHandInitializer] 적 핸드 초기화 시작</color>");
+            
             var enemy = _enemyManager.GetEnemy();
             if (enemy == null)
             {
@@ -52,6 +54,8 @@ namespace Game.CombatSystem.Initialization
 
             // 슬롯 3 → 2 → 1 순서로 생성 및 이동하며 카드 채우기
             yield return _handManager.StepwiseFillSlotsFromBack(0.3f);
+            
+            Debug.Log("<color=cyan>[EnemyHandInitializer] 적 핸드 초기화 완료</color>");
         }
     }
 }

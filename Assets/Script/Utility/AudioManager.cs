@@ -19,7 +19,6 @@ namespace Game.Audio
             if (clip == null || sfxSource == null) return;
 
             sfxSource.PlayOneShot(clip);
-            Debug.Log($"[AudioManager] 사운드 재생됨: {clip.name}");
         }
     }
 }

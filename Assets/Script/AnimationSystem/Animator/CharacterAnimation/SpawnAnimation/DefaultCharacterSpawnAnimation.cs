@@ -26,7 +26,6 @@ namespace AnimationSystem.Animator.CharacterAnimation.SpawnAnimation
         {
             rectTransform = GetComponent<RectTransform>();
             canvasGroup = GetComponent<CanvasGroup>();
-            Debug.Log($"[DefaultCharacterSpawnAnimation][Awake] rectTransform: {rectTransform}, canvasGroup: {canvasGroup}, parent: {transform.parent?.name}");
         }
 
         /// <summary>
@@ -37,18 +36,15 @@ namespace AnimationSystem.Animator.CharacterAnimation.SpawnAnimation
             var canvasGroup = GetComponent<CanvasGroup>();
             if (canvasGroup == null)
             {
-                Debug.LogWarning($"[애니메이션] CanvasGroup 없음: {gameObject.name}");
                 onComplete?.Invoke();
                 return;
             }
-            Debug.Log($"[DefaultCharacterSpawnAnimation][PlayAnimation] 호출됨: {gameObject.name}, anchoredPosition: {rectTransform.anchoredPosition}");
             // 기존 애니메이션 실행 로직...
             StartCoroutine(PlaySpawnAnimationCoroutine(onComplete));
         }
 
         private IEnumerator PlaySpawnAnimationCoroutine(System.Action onComplete)
         {
-            Debug.Log($"[DefaultCharacterSpawnAnimation][Coroutine Start] anchoredPosition: {rectTransform.anchoredPosition}");
             // 플레이어/적에 따라 verticalOffset 방향 자동 설정
             float verticalOffset = 100f;
             if (gameObject.name.Contains("Player")) // 이름에 'Player'가 포함되면 플레이어로 간주
@@ -58,11 +54,8 @@ namespace AnimationSystem.Animator.CharacterAnimation.SpawnAnimation
             Vector2 startPos = targetPos + new Vector2(0, verticalOffset);
             rectTransform.anchoredPosition = startPos;
 
-            rectTransform.DOAnchorPos(targetPos, 0.8f).SetEase(Ease.OutBack).OnComplete(() => {
-                Debug.Log($"[DefaultCharacterSpawnAnimation][DOTween Complete] anchoredPosition: {rectTransform.anchoredPosition}");
-            });
+            rectTransform.DOAnchorPos(targetPos, 0.8f).SetEase(Ease.OutBack);
             yield return new WaitForSeconds(0.8f);
-            Debug.Log($"[DefaultCharacterSpawnAnimation][Coroutine End] anchoredPosition: {rectTransform.anchoredPosition}");
             onComplete?.Invoke();
         }
         

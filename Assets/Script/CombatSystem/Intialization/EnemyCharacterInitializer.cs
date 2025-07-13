@@ -36,7 +36,7 @@ namespace Game.CombatSystem.Initialization
         /// </summary>
         public IEnumerator Initialize()
         {
-            Debug.Log("[EnemyCharacterInitializer] 적 캐릭터 초기화 시작");
+            Debug.Log("<color=cyan>[EnemyCharacterInitializer] 적 캐릭터 초기화 시작</color>");
 
             // 코루틴 기반 적 스폰
             if (_stageManager is Game.CombatSystem.Manager.StageManager concrete)
@@ -44,7 +44,7 @@ namespace Game.CombatSystem.Initialization
             else
                 _stageManager.SpawnNextEnemy();
 
-            Debug.Log("[EnemyCharacterInitializer] 적 캐릭터 생성 완료");
+            Debug.Log("<color=cyan>[EnemyCharacterInitializer] 적 캐릭터 생성 완료</color>");
             yield return null;
         }
     }

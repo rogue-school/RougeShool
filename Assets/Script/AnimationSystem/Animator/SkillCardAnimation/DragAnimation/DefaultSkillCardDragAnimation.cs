@@ -69,7 +69,6 @@ namespace AnimationSystem.Animator.SkillCardAnimation.DragAnimation
                     PlayDragEndAnimation(onComplete);
                     break;
                 default:
-                    Debug.LogWarning($"[DefaultSkillCardDragAnimation] 알 수 없는 애니메이션 타입: {animationType}");
                     onComplete?.Invoke();
                     break;
             }
@@ -80,7 +79,6 @@ namespace AnimationSystem.Animator.SkillCardAnimation.DragAnimation
         /// </summary>
         public void PlayAnimation(RectTransform targetSlot, System.Action onComplete = null)
         {
-            Debug.LogWarning("[DefaultSkillCardDragAnimation] PlayAnimation(RectTransform, Action)는 사용하지 않습니다. PlayAnimation(string, Action)을 사용하세요.");
             onComplete?.Invoke();
         }
 
@@ -117,8 +115,6 @@ namespace AnimationSystem.Animator.SkillCardAnimation.DragAnimation
         public void PlayDragStartAnimation(System.Action onComplete = null)
         {
             if (rectTransform == null) return;
-
-            Debug.Log("[DefaultSkillCardDragAnimation] 드래그 시작 애니메이션 실행");
 
             Sequence sequence = DOTween.Sequence();
 
@@ -160,7 +156,6 @@ namespace AnimationSystem.Animator.SkillCardAnimation.DragAnimation
             }
 
             sequence.OnComplete(() => {
-                Debug.Log("[DefaultSkillCardDragAnimation] 드래그 시작 애니메이션 완료");
                 onComplete?.Invoke();
             });
         }
@@ -171,8 +166,6 @@ namespace AnimationSystem.Animator.SkillCardAnimation.DragAnimation
         public void PlayDragEndAnimation(System.Action onComplete = null)
         {
             if (rectTransform == null) return;
-
-            Debug.Log("[DefaultSkillCardDragAnimation] 드래그 종료 애니메이션 실행");
 
             Sequence sequence = DOTween.Sequence();
 
@@ -209,7 +202,6 @@ namespace AnimationSystem.Animator.SkillCardAnimation.DragAnimation
             }
 
             sequence.OnComplete(() => {
-                Debug.Log("[DefaultSkillCardDragAnimation] 드래그 종료 애니메이션 완료");
                 onComplete?.Invoke();
             });
         }

@@ -38,7 +38,7 @@ namespace Game.CombatSystem.Initialization
 
         public IEnumerator Initialize()
         {
-            Debug.Log("[PlayerSkillCardInitializer] 플레이어 스킬카드 초기화 시작");
+            Debug.Log("<color=cyan>[PlayerSkillCardInitializer] 플레이어 스킬카드 초기화 시작</color>");
 
             var player = playerManager.GetPlayer();
             if (player == null)
@@ -68,7 +68,7 @@ namespace Game.CombatSystem.Initialization
             }
             yield return new WaitUntil(() => animCount >= total);
 
-            Debug.Log("[PlayerSkillCardInitializer] 플레이어 핸드 카드 등장 애니메이션 완료");
+            Debug.Log("<color=cyan>[PlayerSkillCardInitializer] 플레이어 핸드 카드 등장 애니메이션 완료</color>");
             yield return null;
         }
 

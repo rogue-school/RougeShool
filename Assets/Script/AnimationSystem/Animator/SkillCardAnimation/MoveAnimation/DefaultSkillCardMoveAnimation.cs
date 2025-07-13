@@ -31,12 +31,10 @@ namespace AnimationSystem.Animator.SkillCardAnimation.MoveAnimation
         // 기존 PlayAnimation 오버로드(타입 기반)는 사용 금지(호환성 위해 남겨두지만 내부적으로 경고)
         public void PlayAnimation(string animationType, RectTransform targetSlot, System.Action onComplete = null)
         {
-            Debug.LogWarning("[DefaultSkillCardMoveAnimation] 애니메이션 타입은 무시됩니다. PlayAnimation(RectTransform, Action)만 사용하세요.");
             PlayAnimation(targetSlot, onComplete);
         }
         public void PlayAnimation(string animationType, System.Action onComplete = null)
         {
-            Debug.LogWarning("[DefaultSkillCardMoveAnimation] 애니메이션 타입은 무시됩니다. PlayAnimation(RectTransform, Action)만 사용하세요.");
             onComplete?.Invoke();
         }
 

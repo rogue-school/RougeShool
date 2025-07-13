@@ -22,8 +22,6 @@ namespace Game.CombatSystem.DragDrop
 
         public void OnDrop(PointerEventData eventData)
         {
-            Debug.Log("[DropHandler] OnDrop 호출됨");
-
             var cardUI = eventData.pointerDrag?.GetComponent<SkillCardUI>();
             var card = cardUI?.GetCard();
             var dragHandler = eventData.pointerDrag?.GetComponent<CardDragHandler>();
@@ -58,7 +56,7 @@ namespace Game.CombatSystem.DragDrop
                     dragHandler.OriginalWorldPosition = slotMb.transform.position;
                 }
 
-                Debug.Log($"[DropHandler] 드롭 성공: {card.CardData.Name}");
+                // 드롭 성공
             }
             else
             {

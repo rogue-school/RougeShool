@@ -34,7 +34,7 @@ namespace Game.CombatSystem.Core
             }
             else
             {
-                Debug.Log($"[CombatStartupManager] {steps.Count}개 초기화 스텝 수집 완료 (Order 기준 정렬)");
+                Debug.Log("<color=cyan>[CombatStartupManager] " + steps.Count + "개 초기화 스텝 수집 완료 (Order 기준 정렬)</color>");
             }
         }
 
@@ -75,7 +75,7 @@ namespace Game.CombatSystem.Core
         {
             foreach (var step in steps)
             {
-                Debug.Log($"[CombatStartupManager] 초기화 시작: {step.GetType().Name} (Order: {step.Order})");
+                Debug.Log($"<color=cyan>[CombatStartupManager] 초기화 시작: {step.GetType().Name} (Order: {step.Order})</color>");
 
                 IEnumerator routine = null;
                 try
@@ -91,7 +91,7 @@ namespace Game.CombatSystem.Core
                 if (routine != null)
                     yield return routine;
 
-                Debug.Log($"[CombatStartupManager] 초기화 완료: {step.GetType().Name}");
+                Debug.Log($"<color=cyan>[CombatStartupManager] 초기화 완료: {step.GetType().Name}</color>");
             }
 
             Debug.Log("<color=lime>[CombatStartupManager] 모든 초기화 단계 완료</color>");

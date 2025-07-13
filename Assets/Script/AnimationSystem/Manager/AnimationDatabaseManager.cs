@@ -135,36 +135,20 @@ namespace AnimationSystem.Manager
             {
                 Debug.LogWarning("플레이어 스킬카드 애니메이션 데이터베이스를 찾을 수 없습니다.");
             }
-            else
-            {
-                Debug.Log($"플레이어 스킬카드 데이터베이스 로드됨 - 카드 수: {playerSkillCardDatabase.SkillCardAnimations?.Count ?? 0}");
-            }
             
             if (enemySkillCardDatabase == null)
             {
                 Debug.LogWarning("적용 스킬카드 애니메이션 데이터베이스를 찾을 수 없습니다.");
-            }
-            else
-            {
-                Debug.Log($"적 스킬카드 데이터베이스 로드됨 - 카드 수: {enemySkillCardDatabase.SkillCardAnimations?.Count ?? 0}");
             }
             
             if (playerCharacterDatabase == null)
             {
                 Debug.LogWarning("플레이어 캐릭터 애니메이션 데이터베이스를 찾을 수 없습니다.");
             }
-            else
-            {
-                Debug.Log($"플레이어 캐릭터 데이터베이스 로드됨 - 캐릭터 수: {playerCharacterDatabase.CharacterAnimations?.Count ?? 0}");
-            }
             
             if (enemyCharacterDatabase == null)
             {
                 Debug.LogWarning("적용 캐릭터 애니메이션 데이터베이스를 찾을 수 없습니다.");
-            }
-            else
-            {
-                Debug.Log($"적 캐릭터 데이터베이스 로드됨 - 캐릭터 수: {enemyCharacterDatabase.CharacterAnimations?.Count ?? 0}");
             }
         }
         
@@ -196,15 +180,12 @@ namespace AnimationSystem.Manager
         /// </summary>
         public void PlayPlayerSkillCardAnimation(string skillCardId, GameObject target, string animationType, System.Action onComplete)
         {
-            Debug.Log($"플레이어 스킬카드 애니메이션 시도 - 카드: {skillCardId}, 타입: {animationType}, 타겟: {target?.name}");
             var entry = GetPlayerSkillCardAnimationEntry(skillCardId);
             if (entry != null)
             {
-                Debug.Log($"플레이어 스킬카드 엔트리 찾음 - 카드: {skillCardId}");
                 var settings = GetSkillCardAnimationSettings(entry, animationType);
                 if (!settings.IsEmpty())
                 {
-                    Debug.Log($"플레이어 스킬카드 애니메이션 설정 찾음 - 카드: {skillCardId}, 타입: {animationType}");
                     settings.PlayAnimation(target, animationType, onComplete);
                     OnSkillCardAnimationPlayed?.Invoke(skillCardId);
                 }
@@ -226,8 +207,6 @@ namespace AnimationSystem.Manager
         /// </summary>
         public void PlayEnemySkillCardAnimation(string skillCardId, GameObject target, string animationType = "cast", System.Action onComplete = null)
         {
-            Debug.Log($"적 스킬카드 애니메이션 시도 - 카드: {skillCardId}, 타입: {animationType}, 타겟: {target?.name}");
-
             // 타겟 오브젝트 유효성 검사
             if (target == null)
             {
@@ -239,16 +218,12 @@ namespace AnimationSystem.Manager
             var entry = GetEnemySkillCardAnimationEntry(skillCardId);
             if (entry != null)
             {
-                Debug.Log($"적 스킬카드 엔트리 찾음 - 카드: {skillCardId}");
                 var settings = GetSkillCardAnimationSettings(entry, animationType);
                 if (!settings.IsEmpty())
                 {
-                    Debug.Log($"적 스킬카드 애니메이션 설정 찾음 - 카드: {skillCardId}, 타입: {animationType}");
-                    
                     try
                     {
                         settings.PlayAnimation(target, animationType, () => {
-                            Debug.Log($"적 스킬카드 애니메이션 완료 - 카드: {skillCardId}, 타입: {animationType}");
                             onComplete?.Invoke();
                         });
                         OnSkillCardAnimationPlayed?.Invoke(skillCardId);
@@ -325,7 +300,6 @@ namespace AnimationSystem.Manager
                 var settings = GetCharacterAnimationSettings(entry, animationType);
                 if (!settings.IsEmpty())
                 {
-                    Debug.Log($"[애니메이션 DB] ScriptType 조회 성공: {characterId}, {animationType}, {settings.AnimationScriptType}, {target?.name}");
                     settings.PlayAnimation(target, animationType, onComplete);
                     OnCharacterAnimationPlayed?.Invoke(characterId);
                 }
@@ -353,7 +327,6 @@ namespace AnimationSystem.Manager
                 var settings = GetCharacterAnimationSettings(entry, animationType);
                 if (!settings.IsEmpty())
                 {
-                    Debug.Log($"[애니메이션 DB] ScriptType 조회 성공: {characterId}, {animationType}, {settings.AnimationScriptType}, {target?.name}");
                     settings.PlayAnimation(target, animationType, onComplete);
                 }
                 else

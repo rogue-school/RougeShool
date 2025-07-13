@@ -77,7 +77,6 @@ namespace AnimationSystem.Data
 
             if (scriptType != null)
             {
-                Debug.Log($"[CharacterAnimationSettings] 타입 조회 성공: {animationScriptType}, 타입: {scriptType.FullName}");
                 var script = target.GetComponent(scriptType) ?? target.AddComponent(scriptType);
                 if (script == null)
                 {
@@ -92,7 +91,6 @@ namespace AnimationSystem.Data
                     onComplete?.Invoke();
                     return;
                 }
-                Debug.Log($"[CharacterAnimationSettings] PlayAnimation 실행: {scriptType.FullName}, animationType: {animationType}");
                 animScript.PlayAnimation(animationType, onComplete);
             }
             else

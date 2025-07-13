@@ -104,7 +104,6 @@ namespace AnimationSystem.Data
                 if (animScript == null)
                 {
                     animScript = target.AddComponent(scriptType) as AnimationSystem.Interface.IAnimationScript;
-                    Debug.Log($"[SkillCardAnimationSettings] 동적 컴포넌트 추가: {scriptType.Name} -> {target.name}");
                 }
 
                 // 인터페이스 캐스팅 확인
@@ -115,7 +114,6 @@ namespace AnimationSystem.Data
                     return;
                 }
 
-                Debug.Log($"[SkillCardAnimationSettings] 애니메이션 실행: {scriptType.Name}, 타입: {animationType}, 타겟: {target.name}");
                 animScript.PlayAnimation(animationType, onComplete);
             }
             else

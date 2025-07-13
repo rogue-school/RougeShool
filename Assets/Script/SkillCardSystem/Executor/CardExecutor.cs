@@ -67,7 +67,6 @@ namespace Game.SkillCardSystem.Executor
             var clip = card.CardData?.SfxClip;
             if (clip != null)
             {
-                Debug.Log($"[CardExecutor] SFX 재생 시도: {clip.name}");
                 AudioManager.Instance?.PlaySFX(clip);
             }
 

@@ -32,18 +32,15 @@ namespace AnimationSystem.Animator.SkillCardAnimation.VanishAnimation
             if (useGlow)
                 CreateGlowObject();
                 
-            Debug.Log($"[DefaultSkillCardVanishAnimation][Awake] 초기화 완료: {gameObject.name}, rectTransform: {rectTransform != null}, canvasGroup: {canvasGroup != null}, useGlow: {useGlow}");
         }
 
         public void PlayAnimation(string animationType, System.Action onComplete = null)
         {
-            Debug.Log($"[DefaultSkillCardVanishAnimation][PlayAnimation] 호출됨: {gameObject.name}, 타입: {animationType}");
             PlayVanishAnimation(onComplete);
         }
 
         public void PlayAnimation(RectTransform targetSlot, System.Action onComplete = null)
         {
-            Debug.Log($"[DefaultSkillCardVanishAnimation][PlayAnimation] 호출됨: {gameObject.name}, 타겟슬롯: {targetSlot?.name}");
             PlayVanishAnimation(onComplete);
         }
 
@@ -66,17 +63,12 @@ namespace AnimationSystem.Animator.SkillCardAnimation.VanishAnimation
 
         public void PlayVanishAnimation(System.Action onComplete = null)
         {
-            Debug.Log($"[DefaultSkillCardVanishAnimation][PlayVanishAnimation] 시작: {gameObject.name}");
-            
-            if (rectTransform == null || canvasGroup == null) 
+            if (rectTransform == null || canvasGroup == null)
             {
-                Debug.LogError($"[DefaultSkillCardVanishAnimation][PlayVanishAnimation] 필수 컴포넌트 없음: {gameObject.name}");
                 onComplete?.Invoke();
                 return;
             }
 
-            Debug.Log($"[DefaultSkillCardVanishAnimation][PlayVanishAnimation] 애니메이션 시작: {gameObject.name}, 원본 스케일: {originalScale}");
-            
             Sequence seq = DOTween.Sequence();
             
             // 1. 스케일 다운
@@ -88,7 +80,6 @@ namespace AnimationSystem.Animator.SkillCardAnimation.VanishAnimation
             // 3. 글로우 효과
             if (useGlow && glowImage != null)
             {
-                Debug.Log($"[DefaultSkillCardVanishAnimation][PlayVanishAnimation] 글로우 효과 적용: {gameObject.name}");
                 glowObject.SetActive(true);
                 glowImage.color = new Color(glowColor.r, glowColor.g, glowColor.b, 0);
                 seq.Join(glowImage.DOFade(glowColor.a, glowFadeIn));
@@ -96,7 +87,6 @@ namespace AnimationSystem.Animator.SkillCardAnimation.VanishAnimation
             }
             
             seq.OnComplete(() => {
-                Debug.Log($"[DefaultSkillCardVanishAnimation][PlayVanishAnimation] 애니메이션 완료: {gameObject.name}");
                 onComplete?.Invoke();
             });
         }

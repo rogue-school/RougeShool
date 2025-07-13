@@ -98,8 +98,6 @@ namespace Game.CombatSystem.DragDrop
                 return;
             }
 
-            Debug.Log("[CardDragHandler] OnEndDrag 호출됨");
-
             bool validDropTargetFound = false;
             var raycastResults = new System.Collections.Generic.List<RaycastResult>();
             EventSystem.current.RaycastAll(eventData, raycastResults);

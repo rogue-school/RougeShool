@@ -50,6 +50,8 @@ namespace Game.CombatSystem.Initialization
         /// </summary>
         public IEnumerator Initialize()
         {
+            Debug.Log("<color=cyan>[PlayerCharacterInitializer] 플레이어 캐릭터 초기화 시작</color>");
+            
             // 1. 슬롯 초기화 대기
             yield return new WaitUntil(() =>
                 slotRegistry is SlotRegistry concrete && concrete.IsInitialized);
@@ -97,13 +99,14 @@ namespace Game.CombatSystem.Initialization
             // 4. 등장 애니메이션 실행 및 대기 (데이터베이스 기반)
             bool animDone = false;
             string characterId = data.name; // ScriptableObject의 name
-            Debug.Log($"[애니메이션 호출] PlayCharacterAnimation: {characterId}, spawn, {player.gameObject.name}");
             AnimationFacade.Instance.PlayCharacterAnimation(characterId, "spawn", player.gameObject, () => animDone = true, false);
             yield return new WaitUntil(() => animDone);
 
             // 5. 슬롯/매니저에 등록
             slot.SetCharacter(character);
             playerManager?.SetPlayer(character);
+            
+            Debug.Log("<color=cyan>[PlayerCharacterInitializer] 플레이어 캐릭터 초기화 완료</color>");
         }
 
         #endregion

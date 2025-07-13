@@ -25,7 +25,7 @@ namespace AnimationSystem.Animator.SkillCardAnimation.MoveToCombatSlotAnimation
         /// </summary>
         public void PlayAnimation(RectTransform targetSlot, System.Action onComplete = null)
         {
-            PlayMoveAnimationToSlot(targetSlot, moveDuration, onComplete);
+            MoveCardToSlot(targetSlot, moveDuration, onComplete);
         }
 
         // 기존 PlayAnimation 오버로드(타입 기반)는 사용 금지(호환성 위해 남겨두지만 내부적으로 경고)
@@ -44,15 +44,11 @@ namespace AnimationSystem.Animator.SkillCardAnimation.MoveToCombatSlotAnimation
         
         public void PlayAnimation(string animationType, System.Action onComplete = null)
         {
-            Debug.Log($"[DefaultSkillCardMoveToCombatSlotAnimation] 전투 슬롯 이동 애니메이션 시작: {animationType}");
-            
             // 더 명확한 이동 애니메이션을 위해 스케일과 회전 효과 추가
             Vector3 originalScale = rectTransform.localScale;
             Vector3 originalRotation = rectTransform.localEulerAngles;
             Vector2 startPos = rectTransform.anchoredPosition;
             Vector2 targetPos = Vector2.zero; // 목표는 슬롯의 중앙
-            
-            Debug.Log($"[DefaultSkillCardMoveToCombatSlotAnimation] 이동: {startPos} -> {targetPos}");
             
             Sequence sequence = DOTween.Sequence();
             

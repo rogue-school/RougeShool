@@ -26,8 +26,6 @@ namespace Game.SkillCardSystem.Runtime
         /// </summary>
         public void ReduceAllCooldowns()
         {
-            Debug.Log("<color=lime>[CooldownSystem] ReduceAllCooldowns 호출됨</color>");
-
             int totalCards = 0;
             int reducedCards = 0;
 
@@ -44,18 +42,10 @@ namespace Game.SkillCardSystem.Runtime
                 int cur = card.GetCurrentCoolTime();
                 int max = card.GetMaxCoolTime();
 
-                Debug.Log($"[CooldownSystem] 카드: {card.GetCardName()}, 현재 쿨타임: {cur}, 최대 쿨타임: {max}");
-
                 if (cur > 0)
                 {
                     card.SetCurrentCoolTime(cur - 1);
                     reducedCards++;
-
-                    Debug.Log($"<color=yellow>[CooldownSystem] {card.GetCardName()} → 쿨타임 감소: {cur} → {cur - 1}</color>");
-                }
-                else
-                {
-                    Debug.Log($"[CooldownSystem] {card.GetCardName()}는 이미 쿨타임이 0입니다.");
                 }
 
                 // UI 갱신
@@ -68,8 +58,6 @@ namespace Game.SkillCardSystem.Runtime
                     Debug.LogWarning($"[CooldownSystem] {card.GetCardName()}의 UI 참조가 null입니다.");
                 }
             }
-
-            Debug.Log($"<color=cyan>[CooldownSystem] 총 카드: {totalCards}, 쿨타임 감소된 카드 수: {reducedCards}</color>");
         }
     }
 }

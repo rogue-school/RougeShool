@@ -87,7 +87,6 @@ namespace Game.CombatSystem.Service
             var execSlot = SlotPositionUtil.ToExecutionSlot(slot.GetCombatPosition());
             turnManager.RegisterCard(execSlot, card, ui, SlotOwner.PLAYER);
 
-            Debug.Log($"[CardDropService] 카드 드롭 처리 완료: {card.GetCardName()}");
             return true;
         }
     }

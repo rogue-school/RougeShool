@@ -25,7 +25,7 @@ namespace Game.CombatSystem.Initialization
 
         public IEnumerator Initialize()
         {
-            Debug.Log("[SlotInitializationStep] 슬롯 초기화 시작");
+            Debug.Log("<color=cyan>[SlotInitializationStep] 슬롯 초기화 시작</color>");
 
             slotInitializer.AutoBindAllSlots();
 
@@ -35,7 +35,7 @@ namespace Game.CombatSystem.Initialization
             Debug.Log($"[SlotInitializationStep] 전투 슬롯 수: {slotRegistry.GetCombatSlotRegistry()?.GetAllCombatSlots()?.Count() ?? 0}");
             Debug.Log($"[SlotInitializationStep] 캐릭터 슬롯 수: {slotRegistry.GetCharacterSlotRegistry()?.GetAllCharacterSlots()?.Count() ?? 0}");
 
-            Debug.Log("[SlotInitializationStep] 슬롯 초기화 완료");
+            Debug.Log("<color=cyan>[SlotInitializationStep] 슬롯 초기화 완료</color>");
         }
 
         #endregion
