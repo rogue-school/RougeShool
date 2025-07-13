@@ -8,7 +8,7 @@ using Game.SkillCardSystem.UI;
 using Game.CombatSystem.Interface;
 using Game.CharacterSystem.Data;
 
-namespace Game.Manager
+namespace Game.CharacterSystem.Manager
 {
     /// <summary>
     /// 플레이어 캐릭터 및 핸드 매니저를 관리하는 클래스입니다.

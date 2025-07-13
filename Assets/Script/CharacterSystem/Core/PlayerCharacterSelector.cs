@@ -3,7 +3,9 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using Game.CharacterSystem.Data;
 
-public class PlayerCharacterSelector : MonoBehaviour
+namespace Game.CharacterSystem.Core
+{
+    public class PlayerCharacterSelector : MonoBehaviour
 {
     [Header("등록된 캐릭터 목록 (데이터와 버튼 순서 1:1 매칭)")]
     [SerializeField] private List<PlayerCharacterData> characterCandidates;
@@ -29,4 +31,5 @@ public class PlayerCharacterSelector : MonoBehaviour
         if (GameManager.Instance != null)
             GameManager.Instance.StartBattle();
     }
+}
 }

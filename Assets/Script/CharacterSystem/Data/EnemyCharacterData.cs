@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Game.SkillCardSystem.Deck;
+using Game.CharacterSystem.Interface;
 
 namespace Game.CharacterSystem.Data
 {
@@ -9,7 +10,7 @@ namespace Game.CharacterSystem.Data
     /// 전투 시 능력치, 이미지, 덱, 패시브 효과 등을 제공합니다.
     /// </summary>
     [CreateAssetMenu(menuName = "Game/Character/Enemy Character Data")]
-    public class EnemyCharacterData : ScriptableObject
+    public class EnemyCharacterData : ScriptableObject, ICharacterData
     {
         #region 기본 정보
 

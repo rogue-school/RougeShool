@@ -1,5 +1,6 @@
 using UnityEngine;
 using Game.SkillCardSystem.Deck;
+using Game.CharacterSystem.Interface;
 
 namespace Game.CharacterSystem.Data
 {
@@ -8,7 +9,7 @@ namespace Game.CharacterSystem.Data
     /// 이름, 초상화, 최대 체력, 스킬 덱 등을 포함합니다.
     /// </summary>
     [CreateAssetMenu(menuName = "Game/Character/PlayerCharacterData")]
-    public class PlayerCharacterData : ScriptableObject
+    public class PlayerCharacterData : ScriptableObject, ICharacterData
     {
         #region 기본 정보
 

@@ -16,7 +16,7 @@ namespace Game.CharacterSystem.Interface
         /// <summary>
         /// 플레이어 캐릭터의 데이터 스크립터블 객체를 반환합니다.
         /// </summary>
-        PlayerCharacterData Data { get; }
+        PlayerCharacterData CharacterData { get; }
 
         /// <summary>
         /// 플레이어 캐릭터 데이터를 설정합니다.

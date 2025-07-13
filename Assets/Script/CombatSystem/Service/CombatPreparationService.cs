@@ -76,7 +76,7 @@ namespace Game.CombatSystem.Service
 
             // 2. 플레이어 카드 등록
             var player = playerManager.GetPlayer();
-            var deck = player?.Data?.SkillDeck;
+            var deck = player?.CharacterData?.SkillDeck;
 
             if (deck != null)
             {

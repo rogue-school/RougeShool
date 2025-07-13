@@ -63,7 +63,7 @@ namespace Game.SkillCardSystem.Core
         /// </summary>
         public void GenerateInitialHand()
         {
-            var deck = owner?.Data?.SkillDeck;
+            var deck = owner?.CharacterData?.SkillDeck;
             if (deck == null)
             {
                 Debug.LogError("[PlayerHandManager] 플레이어 덱이 비어 있음");

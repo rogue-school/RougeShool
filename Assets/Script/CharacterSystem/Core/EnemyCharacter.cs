@@ -20,7 +20,8 @@ namespace Game.CharacterSystem.Core
     public class EnemyCharacter : CharacterBase, IEnemyCharacter
     {
         [Header("Character Data")]
-        [SerializeField] private EnemyCharacterData characterData;
+        [field: SerializeField]
+        public EnemyCharacterData CharacterData { get; private set; }
 
         [Header("UI Components")]
         [SerializeField] private TextMeshProUGUI nameText;
@@ -38,19 +39,39 @@ namespace Game.CharacterSystem.Core
         /// <summary>
         /// 적 캐릭터의 데이터 (스크립터블 오브젝트)
         /// </summary>
-        public EnemyCharacterData Data => characterData;
+        public EnemyCharacterData Data => CharacterData;
 
         /// <summary>
         /// 플레이어 조작 여부 → 적이므로 항상 false
         /// </summary>
         public override bool IsPlayerControlled() => false;
 
+        private void Awake()
+        {
+            if (CharacterData != null)
+                this.gameObject.name = CharacterData.name;
+        }
+
+        #if UNITY_EDITOR
+        private void OnValidate()
+        {
+            if (CharacterData != null)
+                this.gameObject.name = CharacterData.name;
+        }
+#endif
+
         /// <summary>
         /// 캐릭터 이름 반환 (표시용 이름)
         /// </summary>
         public override string GetCharacterName()
         {
-            return characterData?.DisplayName ?? "Unnamed Enemy";
+            return CharacterData?.DisplayName ?? "Unnamed Enemy";
+        }
+
+        // CharacterBase에서 사용할 이름 반환
+        protected override string GetCharacterDataName()
+        {
+            return CharacterData?.name ?? "Unknown";
         }
 
         /// <summary>
@@ -75,7 +96,7 @@ namespace Game.CharacterSystem.Core
                 return;
             }
 
-            characterData = data;
+            CharacterData = data;
             skillDeck = data.EnemyDeck;
 
             SetMaxHP(data.MaxHP);
@@ -141,11 +162,11 @@ namespace Game.CharacterSystem.Core
         /// </summary>
         private void RefreshUI()
         {
-            if (characterData == null) return;
+            if (CharacterData == null) return;
 
             nameText.text = GetCharacterName();
             hpText.text = currentHP.ToString(); // 현재 체력만 표시
-            portraitImage.sprite = characterData.Portrait;
+            portraitImage.sprite = CharacterData.Portrait;
 
             // 체력 색상 설정: 최대 체력이면 흰색, 아니면 붉은색
             if (currentHP >= GetMaxHP())
@@ -163,9 +184,9 @@ namespace Game.CharacterSystem.Core
         /// </summary>
         private void ApplyPassiveEffects()
         {
-            if (characterData?.PassiveEffects == null) return;
+            if (CharacterData?.PassiveEffects == null) return;
 
-            foreach (var effect in characterData.PassiveEffects)
+            foreach (var effect in CharacterData.PassiveEffects)
             {
                 if (effect is ICardEffect cardEffect)
                 {
@@ -213,11 +234,11 @@ namespace Game.CharacterSystem.Core
 
             // 1. AnimationFacade를 통한 사망 애니메이션 호출
             AnimationSystem.Manager.AnimationFacade.Instance.PlayEnemyCharacterDeathAnimation(
-                characterData.name, // ScriptableObject의 name
+                CharacterData.name, // ScriptableObject의 name
                 this.gameObject,
                 () => {
                     // 2. 애니메이션 종료 후 이벤트 및 후처리
-                    Game.CombatSystem.CombatEvents.RaiseEnemyCharacterDeath(characterData, this.gameObject);
+                    Game.CombatSystem.CombatEvents.RaiseEnemyCharacterDeath(CharacterData, this.gameObject);
                     deathListener?.OnCharacterDied(this);
                 }
             );
@@ -230,5 +251,35 @@ namespace Game.CharacterSystem.Core
         {
             MarkAsDead();
         }
+
+        public void SetCharacterData(EnemyCharacterData data)
+        {
+            CharacterData = data;
+            if (CharacterData != null)
+                this.gameObject.name = CharacterData.name;
+            Initialize(data);
+        }
+
+        #region 이벤트 처리 오버라이드
+
+        /// <summary>가드 획득 시 이벤트 발행</summary>
+        protected override void OnGuarded(int amount)
+        {
+            CombatEvents.RaiseEnemyCharacterGuarded(CharacterData, this.gameObject, amount);
+        }
+
+        /// <summary>회복 시 이벤트 발행</summary>
+        protected override void OnHealed(int amount)
+        {
+            CombatEvents.RaiseEnemyCharacterHealed(CharacterData, this.gameObject, amount);
+        }
+
+        /// <summary>피해 시 이벤트 발행</summary>
+        protected override void OnDamaged(int amount)
+        {
+            CombatEvents.RaiseEnemyCharacterDamaged(CharacterData, this.gameObject, amount);
+        }
+
+        #endregion
     }
 }

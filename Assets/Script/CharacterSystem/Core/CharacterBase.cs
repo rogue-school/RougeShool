@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using Game.CharacterSystem.Interface;
+using Game.CharacterSystem.Data;
 using Game.CharacterSystem.UI;
 using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Interface;
@@ -42,6 +43,9 @@ namespace Game.CharacterSystem.Core
         /// <summary>캐릭터 이름 반환</summary>
         public virtual string GetCharacterName() => gameObject.name;
 
+        /// <summary>데이터 기반 캐릭터 이름 반환 (자식에서 override)</summary>
+        protected virtual string GetCharacterDataName() => "Unknown";
+
         /// <summary>현재 체력 반환</summary>
         public virtual int GetHP() => currentHP;
 
@@ -65,6 +69,22 @@ namespace Game.CharacterSystem.Core
 
         #endregion
 
+        #region 이벤트 처리 메서드 (자식 클래스에서 오버라이드)
+
+        /// <summary>가드 획득 시 호출되는 메서드</summary>
+        /// <param name="amount">가드 획득량</param>
+        protected virtual void OnGuarded(int amount) { }
+
+        /// <summary>회복 시 호출되는 메서드</summary>
+        /// <param name="amount">회복량</param>
+        protected virtual void OnHealed(int amount) { }
+
+        /// <summary>피해 시 호출되는 메서드</summary>
+        /// <param name="amount">피해량</param>
+        protected virtual void OnDamaged(int amount) { }
+
+        #endregion
+
         #region 상태 설정 메서드
 
         /// <summary>가드 상태 설정</summary>
@@ -82,11 +102,8 @@ namespace Game.CharacterSystem.Core
             currentGuard += amount;
             Debug.Log($"[{GetCharacterName()}] 가드 +{amount} → 현재 가드: {currentGuard}");
 
-            // 가드 이벤트 발행
-            if (this is PlayerCharacter playerChar)
-                CombatEvents.RaisePlayerCharacterGuarded(playerChar.Data, this.gameObject, amount);
-            else if (this is EnemyCharacter enemyChar)
-                CombatEvents.RaiseEnemyCharacterGuarded(enemyChar.Data, this.gameObject, amount);
+            // 가드 이벤트 발행은 자식 클래스에서 처리
+            OnGuarded(amount);
         }
 
         /// <summary>체력을 회복시킵니다</summary>
@@ -104,11 +121,8 @@ namespace Game.CharacterSystem.Core
 
             Debug.Log($"[{GetCharacterName()}] 회복: {amount}, 현재 체력: {currentHP}");
 
-            // 회복 이벤트 발행
-            if (this is PlayerCharacter playerChar)
-                CombatEvents.RaisePlayerCharacterHealed(playerChar.Data, this.gameObject, amount);
-            else if (this is EnemyCharacter enemyChar)
-                CombatEvents.RaiseEnemyCharacterHealed(enemyChar.Data, this.gameObject, amount);
+            // 회복 이벤트 발행은 자식 클래스에서 처리
+            OnHealed(amount);
         }
 
         /// <summary>피해를 받아 체력을 감소시킵니다</summary>
@@ -117,20 +131,17 @@ namespace Game.CharacterSystem.Core
         {
             if (amount <= 0)
             {
-                Debug.LogWarning($"[{GetCharacterName()}] 잘못된 피해량 무시됨: {amount}");
+                Debug.LogWarning($"[{GetCharacterDataName()}] 잘못된 피해량 무시됨: {amount}");
                 return;
             }
 
             currentHP = Mathf.Max(currentHP - amount, 0);
             characterCardUI?.SetHP(currentHP, maxHP);
 
-            Debug.Log($"[{GetCharacterName()}] 피해: {amount}, 남은 체력: {currentHP}");
+            Debug.Log($"[{GetCharacterDataName()}] 피해: {amount}, 남은 체력: {currentHP}");
 
-            // 피해 이벤트 발행
-            if (this is PlayerCharacter playerChar)
-                CombatEvents.RaisePlayerCharacterDamaged(playerChar.Data, this.gameObject, amount);
-            else if (this is EnemyCharacter enemyChar)
-                CombatEvents.RaiseEnemyCharacterDamaged(enemyChar.Data, this.gameObject, amount);
+            // 피해 이벤트 발행은 자식 클래스에서 처리
+            OnDamaged(amount);
 
             if (IsDead())
                 Die();

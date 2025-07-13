@@ -3,11 +3,13 @@ using Game.CombatSystem.Interface;
 using Game.IManager;
 using UnityEngine;
 
-/// <summary>
-/// 전투 중 등장한 적 캐릭터와 핸드 매니저를 관리하는 매니저 클래스입니다.
-/// 현재 적 캐릭터와 관련된 상태를 보관하거나 초기화합니다.
-/// </summary>
-public class EnemyManager : MonoBehaviour, IEnemyManager
+namespace Game.CharacterSystem.Manager
+{
+    /// <summary>
+    /// 전투 중 등장한 적 캐릭터와 핸드 매니저를 관리하는 매니저 클래스입니다.
+    /// 현재 적 캐릭터와 관련된 상태를 보관하거나 초기화합니다.
+    /// </summary>
+    public class EnemyManager : MonoBehaviour, IEnemyManager
 {
     private IEnemyCharacter currentEnemy;
     private IEnemyHandManager enemyHandManager;
@@ -87,4 +89,5 @@ public class EnemyManager : MonoBehaviour, IEnemyManager
     }
 
     #endregion
+}
 }

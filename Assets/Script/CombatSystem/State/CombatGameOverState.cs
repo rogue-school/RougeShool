@@ -4,7 +4,7 @@ using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
 using Game.Utility;
 using Game.CharacterSystem.Interface;
-using Game.Manager;
+using Game.CharacterSystem.Manager;
 using Game.IManager;
 
 namespace Game.CombatSystem.State

@@ -24,7 +24,7 @@ namespace Game.CharacterSystem.Core
         /// 플레이어 데이터 스크립터블 오브젝트
         /// </summary>
         [field: SerializeField]
-        public PlayerCharacterData Data { get; private set; }
+        public PlayerCharacterData CharacterData { get; private set; }
 
         [Header("UI Components")]
         [SerializeField] private TextMeshProUGUI nameText;
@@ -53,9 +53,18 @@ namespace Game.CharacterSystem.Core
         /// </summary>
         private void Awake()
         {
-            if (Data != null)
-                InitializeCharacter(Data);
+            if (CharacterData != null)
+                this.gameObject.name = CharacterData.name;
+            InitializeCharacter(CharacterData);
         }
+
+        #if UNITY_EDITOR
+        private void OnValidate()
+        {
+            if (CharacterData != null)
+                this.gameObject.name = CharacterData.name;
+        }
+#endif
 
         #endregion
 
@@ -67,7 +76,9 @@ namespace Game.CharacterSystem.Core
         /// <param name="data">플레이어 캐릭터 데이터</param>
         public void SetCharacterData(PlayerCharacterData data)
         {
-            Data = data;
+            CharacterData = data;
+            if (CharacterData != null)
+                this.gameObject.name = CharacterData.name;
             InitializeCharacter(data);
         }
 
@@ -90,15 +101,15 @@ namespace Game.CharacterSystem.Core
         /// </summary>
         private void UpdateUI()
         {
-            if (Data == null) return;
+            if (CharacterData == null) return;
 
-            nameText.text = Data.DisplayName;
-            portraitImage.sprite = Data.Portrait;
+            nameText.text = CharacterData.DisplayName;
+            portraitImage.sprite = CharacterData.Portrait;
 
             // 체력 숫자 및 색상 설정
-            if (currentHP >= Data.MaxHP)
+            if (currentHP >= CharacterData.MaxHP)
             {
-                hpText.text = Data.MaxHP.ToString(); // 최대 체력 표시
+                hpText.text = CharacterData.MaxHP.ToString(); // 최대 체력 표시
                 hpText.color = Color.white;          // 회색 또는 흰색으로 보임
             }
             else
@@ -201,7 +212,7 @@ namespace Game.CharacterSystem.Core
         /// <summary>
         /// 캐릭터 이름 반환
         /// </summary>
-        public override string GetCharacterName() => Data?.DisplayName ?? "Unnamed Player";
+        public override string GetCharacterName() => CharacterData?.DisplayName ?? "Unnamed Player";
 
         /// <summary>
         /// 생존 여부 반환 (명시적 override)
@@ -215,14 +226,42 @@ namespace Game.CharacterSystem.Core
         {
             // 사망 애니메이션 실행 (파사드 패턴)
             AnimationFacade.Instance.PlayCharacterDeathAnimation(
-                Data.name,
+                CharacterData.name,
                 this.gameObject,
                 () => {
                     base.Die();
-                    CombatEvents.RaisePlayerCharacterDeath(Data, this.gameObject);
+                    CombatEvents.RaisePlayerCharacterDeath(CharacterData, this.gameObject);
                 },
                 false // isEnemy: false (플레이어)
             );
+        }
+
+        // CharacterBase에서 사용할 이름 반환
+        protected override string GetCharacterDataName()
+        {
+            return CharacterData?.name ?? "Unknown";
+        }
+
+        #endregion
+
+        #region 이벤트 처리 오버라이드
+
+        /// <summary>가드 획득 시 이벤트 발행</summary>
+        protected override void OnGuarded(int amount)
+        {
+            CombatEvents.RaisePlayerCharacterGuarded(CharacterData, this.gameObject, amount);
+        }
+
+        /// <summary>회복 시 이벤트 발행</summary>
+        protected override void OnHealed(int amount)
+        {
+            CombatEvents.RaisePlayerCharacterHealed(CharacterData, this.gameObject, amount);
+        }
+
+        /// <summary>피해 시 이벤트 발행</summary>
+        protected override void OnDamaged(int amount)
+        {
+            CombatEvents.RaisePlayerCharacterDamaged(CharacterData, this.gameObject, amount);
         }
 
         #endregion
