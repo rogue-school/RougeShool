@@ -254,24 +254,11 @@ namespace Game.CombatSystem.Core
                     Debug.Log($"[CombatFlowCoordinator] 카드를 슬롯({slotRectTransform.name})으로 부모 변경");
                 }
 
-                // 2. 이동 애니메이션 실행 (이제 (0,0)은 슬롯의 중심)
+                // 2. 이동 애니메이션 실행 (AnimationFacade 사용)
                 bool animationComplete = false;
-                var moveAnimator = uiMb.GetComponent<AnimationSystem.Animator.SkillCardAnimation.MoveToCombatSlotAnimation.DefaultSkillCardMoveToCombatSlotAnimation>();
-                if (moveAnimator == null)
-                {
-                    moveAnimator = uiMb.gameObject.AddComponent<AnimationSystem.Animator.SkillCardAnimation.MoveToCombatSlotAnimation.DefaultSkillCardMoveToCombatSlotAnimation>();
-                }
-                if (moveAnimator != null)
-                {
-                    moveAnimator.PlayAnimation("moveToCombatSlot", () => {
-                        animationComplete = true;
-                    });
-                }
-                else
-                {
-                    Debug.LogWarning("[CombatFlowCoordinator] 이동 애니메이션 컴포넌트를 추가할 수 없습니다.");
+                AnimationSystem.Manager.AnimationFacade.Instance.PlaySkillCardAnimation(card, "moveToCombatSlot", uiMb.gameObject, () => {
                     animationComplete = true;
-                }
+                });
                 
                 // 애니메이션 완료까지 대기
                 float waitStartTime = Time.time;
@@ -640,44 +627,8 @@ namespace Game.CombatSystem.Core
         {
             Debug.Log($"[CombatFlowCoordinator] 적 캐릭터 스킬카드 소멸 시작: {enemyId}");
             
-            // 적 핸드의 모든 스킬카드들을 찾아서 소멸 애니메이션 적용
-            var enemyCards = FindEnemySkillCards();
-            
-            if (enemyCards.Count == 0)
-            {
-                Debug.Log($"[CombatFlowCoordinator] 소멸할 적 스킬카드가 없습니다: {enemyId}");
-                return;
-            }
-            
-            Debug.Log($"[CombatFlowCoordinator] 소멸할 적 스킬카드 수: {enemyCards.Count}");
-            
-            // 모든 스킬카드에 소멸 애니메이션 적용
-            int completedCount = 0;
-            int totalCount = enemyCards.Count;
-            
-            foreach (var skillCard in enemyCards)
-            {
-                if (skillCard == null) continue;
-                
-                // 스킬카드에 VanishAnimation 컴포넌트 추가
-                var vanishAnim = skillCard.GetComponent<AnimationSystem.Animator.SkillCardAnimation.VanishAnimation.DefaultSkillCardVanishAnimation>();
-                if (vanishAnim == null)
-                {
-                    vanishAnim = skillCard.AddComponent<AnimationSystem.Animator.SkillCardAnimation.VanishAnimation.DefaultSkillCardVanishAnimation>();
-                }
-                
-                // 소멸 애니메이션 실행
-                vanishAnim.PlayAnimation("vanish", () => {
-                    completedCount++;
-                    Debug.Log($"[CombatFlowCoordinator] 적 스킬카드 소멸 완료: {completedCount}/{totalCount}");
-                    
-                    // 모든 스킬카드 소멸 완료 시
-                    if (completedCount >= totalCount)
-                    {
-                        Debug.Log($"[CombatFlowCoordinator] 모든 적 스킬카드 소멸 완료: {enemyId}");
-                    }
-                });
-            }
+            // AnimationFacade를 통한 일괄 소멸 애니메이션 실행
+            AnimationSystem.Manager.AnimationFacade.Instance.VanishCharacterSkillCards(enemyId, false);
         }
         
         /// <summary>
