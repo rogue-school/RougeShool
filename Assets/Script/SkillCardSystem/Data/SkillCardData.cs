@@ -45,6 +45,11 @@ namespace Game.SkillCardSystem.Data
         public int Damage;
 
         /// <summary>
+        /// 카드 소유 캐릭터 이름(식별자)
+        /// </summary>
+        public string OwnerCharacterName;
+
+        /// <summary>
         /// 카드 정보를 초기화하는 생성자입니다.
         /// 코드상에서 직접 SkillCardData를 생성할 경우 사용됩니다.
         /// </summary>

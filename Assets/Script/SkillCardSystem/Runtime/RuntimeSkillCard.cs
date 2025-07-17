@@ -32,6 +32,8 @@ namespace Game.SkillCardSystem.Runtime
             CardData = cardData;
             this.effects = effects ?? new();
             this.owner = owner;
+            // 카드 소유자 이름 할당 (예시: 플레이어/적 이름, 실제 생성부에서 전달 필요)
+            // 예: CardData.OwnerCharacterName = "캐릭터이름";
         }
 
         #region === 카드 메타 정보 ===

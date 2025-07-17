@@ -1,6 +1,7 @@
 using UnityEngine;
 using Game.SkillCardSystem.Interface;
-using Game.CombatSystem.Slot;
+using Game.CombatSystem.Slot; // SlotOwner
+using Game.SkillCardSystem.Runtime; // RuntimeSkillCard
 using System.Collections.Generic; // Added for List
 
 namespace AnimationSystem.Manager
@@ -15,6 +16,19 @@ namespace AnimationSystem.Manager
             {
                 Instance = this;
                 DontDestroyOnLoad(gameObject);
+
+                // 기존 구독
+                Game.CombatSystem.CombatEvents.OnHandSkillCardsVanishOnCharacterDeath += HandleHandSkillCardsVanishOnCharacterDeath;
+
+                // 캐릭터 생성/사망
+                Game.CombatSystem.CombatEvents.OnPlayerCharacterDeath += HandlePlayerCharacterDeath;
+                Game.CombatSystem.CombatEvents.OnEnemyCharacterDeath += HandleEnemyCharacterDeath;
+                // 스킬카드 생성
+                Game.CombatSystem.CombatEvents.OnPlayerCardSpawn += HandlePlayerCardSpawn;
+                Game.CombatSystem.CombatEvents.OnEnemyCardSpawn += HandleEnemyCardSpawn;
+                // 스킬카드 이동/전투슬롯 등록
+                Game.CombatSystem.CombatEvents.OnPlayerCardMoved += HandlePlayerCardMoved;
+                Game.CombatSystem.CombatEvents.OnEnemyCardMoved += HandleEnemyCardMoved;
             }
             else
             {
@@ -22,20 +36,69 @@ namespace AnimationSystem.Manager
             }
         }
 
+        // 캐릭터 사망 애니메이션
+        private void HandlePlayerCharacterDeath(Game.CharacterSystem.Data.PlayerCharacterData data, GameObject obj)
+        {
+            PlayPlayerCharacterDeathAnimation(data.name, obj);
+        }
+        private void HandleEnemyCharacterDeath(Game.CharacterSystem.Data.EnemyCharacterData data, GameObject obj)
+        {
+            PlayEnemyCharacterDeathAnimation(data.name, obj);
+        }
+        // 스킬카드 생성 애니메이션
+        private void HandlePlayerCardSpawn(string cardId, GameObject obj)
+        {
+            PlaySkillCardAnimation(cardId, "spawn", obj);
+        }
+        private void HandleEnemyCardSpawn(string cardId, GameObject obj)
+        {
+            PlaySkillCardAnimation(cardId, "spawn", obj);
+        }
+        // 스킬카드 이동/전투슬롯 등록 애니메이션
+        private void HandlePlayerCardMoved(string cardId, GameObject obj, Game.CombatSystem.Slot.CombatSlotPosition pos)
+        {
+            string animType = IsCombatSlot(pos) ? "register" : "move";
+            PlaySkillCardAnimation(cardId, animType, obj);
+        }
+        private void HandleEnemyCardMoved(string cardId, GameObject obj, Game.CombatSystem.Slot.CombatSlotPosition pos)
+        {
+            string animType = IsCombatSlot(pos) ? "register" : "move";
+            PlaySkillCardAnimation(cardId, animType, obj);
+        }
+        // 전투슬롯 판별 (임시)
+        private bool IsCombatSlot(Game.CombatSystem.Slot.CombatSlotPosition pos)
+        {
+            // 실제 전투슬롯 판별 로직 필요
+            return true; // 임시로 항상 true
+        }
+
+        // 핸드 슬롯 스킬카드 소멸 애니메이션 이벤트 핸들러
+        private void HandleHandSkillCardsVanishOnCharacterDeath(bool isPlayer)
+        {
+            VanishAllHandCardsOnCharacterDeath(isPlayer);
+        }
+
         // 데이터 로드
         public void LoadAllData() => AnimationDatabaseManager.Instance.ReloadDatabases();
 
         // 플레이어 캐릭터 애니메이션 실행
         public void PlayPlayerCharacterAnimation(string characterId, string animationType, GameObject target, System.Action onComplete = null)
-            => AnimationDatabaseManager.Instance.PlayPlayerCharacterAnimation(characterId, target, animationType, onComplete);
+        {
+            Debug.Log($"[AnimationFacade] PlayPlayerCharacterAnimation 호출: characterId={characterId}, animationType={animationType}, target={target?.name}");
+            AnimationDatabaseManager.Instance.PlayPlayerCharacterAnimation(characterId, target, animationType, onComplete);
+        }
 
         // 적 캐릭터 애니메이션 실행
         public void PlayEnemyCharacterAnimation(string characterId, string animationType, GameObject target, System.Action onComplete = null)
-            => AnimationDatabaseManager.Instance.PlayEnemyCharacterAnimation(characterId, target, animationType, onComplete);
+        {
+            Debug.Log($"[AnimationFacade] PlayEnemyCharacterAnimation 호출: characterId={characterId}, animationType={animationType}, target={target?.name}");
+            AnimationDatabaseManager.Instance.PlayEnemyCharacterAnimation(characterId, target, animationType, onComplete);
+        }
 
         // 캐릭터 사망 애니메이션 실행 (플레이어)
         public void PlayPlayerCharacterDeathAnimation(string characterId, GameObject target)
         {
+            Debug.Log($"[AnimationFacade] PlayPlayerCharacterDeathAnimation 호출: characterId={characterId}, target={target?.name}");
             var entry = AnimationDatabaseManager.Instance.GetPlayerCharacterAnimationEntry(characterId);
             if (entry == null || entry.DeathAnimation.IsEmpty())
             {
@@ -48,6 +111,7 @@ namespace AnimationSystem.Manager
         // 캐릭터 사망 애니메이션 실행 (적)
         public void PlayEnemyCharacterDeathAnimation(string characterId, GameObject target, System.Action onComplete = null)
         {
+            Debug.Log($"[AnimationFacade] PlayEnemyCharacterDeathAnimation 호출: characterId={characterId}, target={target?.name}");
             var entry = AnimationDatabaseManager.Instance.GetEnemyCharacterAnimationEntry(characterId);
             if (entry == null || entry.DeathAnimation.IsEmpty())
             {
@@ -61,6 +125,7 @@ namespace AnimationSystem.Manager
         // PlayCharacterAnimation, PlayCharacterDeathAnimation 파사드 메서드 추가
         public void PlayCharacterAnimation(string characterId, string animationType, GameObject target, System.Action onComplete = null, bool isEnemy = false)
         {
+            Debug.Log($"[AnimationFacade] PlayCharacterAnimation 호출: characterId={characterId}, animationType={animationType}, target={target?.name}, isEnemy={isEnemy}");
             if (isEnemy)
                 PlayEnemyCharacterAnimation(characterId, animationType, target, onComplete);
             else
@@ -68,6 +133,7 @@ namespace AnimationSystem.Manager
         }
         public void PlayCharacterDeathAnimation(string characterId, GameObject target, System.Action onComplete = null, bool isEnemy = false)
         {
+            Debug.Log($"[AnimationFacade] PlayCharacterDeathAnimation 호출: characterId={characterId}, target={target?.name}, isEnemy={isEnemy}");
             if (isEnemy)
                 PlayEnemyCharacterDeathAnimation(characterId, target, onComplete);
             else
@@ -76,13 +142,20 @@ namespace AnimationSystem.Manager
 
         // 스킬카드 애니메이션 실행
         public void PlaySkillCardAnimation(string cardId, string animationType, GameObject target)
-            => AnimationDatabaseManager.Instance.PlayPlayerSkillCardAnimation(cardId, target, animationType);
+        {
+            Debug.Log($"[AnimationFacade] PlaySkillCardAnimation 호출: cardId={cardId}, animationType={animationType}, target={target?.name}");
+            AnimationDatabaseManager.Instance.PlayPlayerSkillCardAnimation(cardId, target, animationType);
+        }
         public void PlaySkillCardAnimation(string cardId, string animationType, GameObject target, System.Action onComplete)
-            => AnimationDatabaseManager.Instance.PlayPlayerSkillCardAnimation(cardId, target, animationType, onComplete);
+        {
+            Debug.Log($"[AnimationFacade] PlaySkillCardAnimation(WithCallback) 호출: cardId={cardId}, animationType={animationType}, target={target?.name}");
+            AnimationDatabaseManager.Instance.PlayPlayerSkillCardAnimation(cardId, target, animationType, onComplete);
+        }
 
         // ISkillCard 기반 오버로드 추가
         public void PlaySkillCardAnimation(ISkillCard card, string animationType, GameObject target, System.Action onComplete = null)
         {
+            Debug.Log($"[AnimationFacade] PlaySkillCardAnimation(ISkillCard) 호출: card={card?.GetCardName()}, animationType={animationType}, target={target?.name}");
             if (card == null)
             {
                 Debug.LogWarning("[AnimationFacade] card가 null입니다.");
@@ -194,53 +267,43 @@ namespace AnimationSystem.Manager
         public void PrintStatus() => AnimationDatabaseManager.Instance.DebugDatabaseStatus();
 
         /// <summary>
-        /// 캐릭터 사망 시 해당 캐릭터의 스킬카드들을 소멸시킵니다.
+        /// 캐릭터 사망 시 해당 캐릭터의 핸드 슬롯에 남아있는 모든 카드를 소멸 애니메이션으로 처리한다.
         /// </summary>
-        /// <param name="characterName">사망한 캐릭터 이름</param>
         /// <param name="isPlayerCharacter">플레이어 캐릭터 여부</param>
-        /// <param name="onComplete">완료 콜백</param>
-        public void VanishCharacterSkillCards(string characterName, bool isPlayerCharacter, System.Action onComplete = null)
+        /// <param name="onComplete">애니메이션 종료 콜백</param>
+        public void VanishAllHandCardsOnCharacterDeath(bool isPlayerCharacter, System.Action onComplete = null)
         {
-            Debug.Log($"[AnimationFacade] 캐릭터 사망으로 인한 스킬카드 소멸 시작: {characterName}, 플레이어: {isPlayerCharacter}");
-            
-            // 해당 캐릭터의 스킬카드들을 찾아서 소멸 애니메이션 적용
-            var skillCards = FindCharacterSkillCards(characterName, isPlayerCharacter);
-            
+            Debug.Log($"[AnimationFacade] VanishAllHandCardsOnCharacterDeath 호출: isPlayerCharacter={isPlayerCharacter}");
+            Debug.Log($"[AnimationFacade] (사망) 핸드 슬롯 전체 소멸 시작: 플레이어={isPlayerCharacter}");
+            var handSlotRegistry = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.Slot.HandSlotRegistry>();
+            var ownerType = isPlayerCharacter ? Game.CombatSystem.Slot.SlotOwner.PLAYER : Game.CombatSystem.Slot.SlotOwner.ENEMY;
+            var handSlots = handSlotRegistry?.GetHandSlots(ownerType);
+            var skillCards = new List<GameObject>();
+            if (handSlots != null)
+            {
+                foreach (var slot in handSlots)
+                {
+                    var cardUI = slot.GetCardUI();
+                    var slotPos = slot.GetSlotPosition();
+                    Debug.Log($"[디버그] 핸드 슬롯: {slotPos}, 카드UI: {(cardUI != null ? cardUI.ToString() : "없음")}");
+                    if (cardUI is UnityEngine.MonoBehaviour mb)
+                        skillCards.Add(mb.gameObject);
+                }
+            }
             if (skillCards.Count == 0)
             {
-                Debug.Log($"[AnimationFacade] 소멸할 스킬카드가 없습니다: {characterName}");
+                Debug.Log($"[AnimationFacade] 소멸할 스킬카드가 없습니다 (isPlayer={isPlayerCharacter})");
                 onComplete?.Invoke();
                 return;
             }
-            
-            Debug.Log($"[AnimationFacade] 소멸할 스킬카드 수: {skillCards.Count}");
-            
-            // 모든 스킬카드에 소멸 애니메이션 적용
-            int completedCount = 0;
-            int totalCount = skillCards.Count;
-            
-            foreach (var skillCard in skillCards)
+            int finished = 0;
+            foreach (var cardObj in skillCards)
             {
-                if (skillCard == null) continue;
-                
-                // 스킬카드에 VanishAnimation 컴포넌트 추가
-                var vanishAnim = skillCard.GetComponent<AnimationSystem.Animator.SkillCardAnimation.VanishAnimation.DefaultSkillCardVanishAnimation>();
-                if (vanishAnim == null)
-                {
-                    vanishAnim = skillCard.AddComponent<AnimationSystem.Animator.SkillCardAnimation.VanishAnimation.DefaultSkillCardVanishAnimation>();
-                }
-                
-                // 소멸 애니메이션 실행
-                vanishAnim.PlayAnimation("vanish", () => {
-                    completedCount++;
-                    Debug.Log($"[AnimationFacade] 스킬카드 소멸 완료: {completedCount}/{totalCount}");
-                    
-                    // 모든 스킬카드 소멸 완료 시
-                    if (completedCount >= totalCount)
-                    {
-                        Debug.Log($"[AnimationFacade] 모든 스킬카드 소멸 완료: {characterName}");
+                var vanishAnim = cardObj.GetComponent<AnimationSystem.Animator.SkillCardAnimation.VanishAnimation.DefaultSkillCardVanishAnimation>() ?? cardObj.AddComponent<AnimationSystem.Animator.SkillCardAnimation.VanishAnimation.DefaultSkillCardVanishAnimation>();
+                vanishAnim.PlayVanishAnimation(() => {
+                    finished++;
+                    if (finished == skillCards.Count)
                         onComplete?.Invoke();
-                    }
                 });
             }
         }

@@ -39,7 +39,7 @@ namespace Game.CombatSystem.Manager
 
         private void OnVictoryCharacterAnimation(string characterId, GameObject characterObject)
         {
-            AnimationSystem.Manager.AnimationFacade.Instance.PlayCharacterAnimation(characterId, "victory", characterObject);
+            // AnimationFacade.Instance.PlayCharacterAnimation(characterId, "victory", characterObject); // 제거
         }
     }
 }

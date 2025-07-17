@@ -204,22 +204,22 @@ namespace Game.CombatSystem.Manager
 
         private void OnTurnStart(string characterId, GameObject characterObject)
         {
-            AnimationFacade.Instance.PlayCharacterAnimation(characterId, "turnStart", characterObject);
+            // AnimationFacade.Instance.PlayCharacterAnimation(characterId, "turnStart", characterObject); // 제거
         }
 
         private void OnTurnEnd(string characterId, GameObject characterObject)
         {
-            AnimationFacade.Instance.PlayCharacterAnimation(characterId, "turnEnd", characterObject);
+            // AnimationFacade.Instance.PlayCharacterAnimation(characterId, "turnEnd", characterObject); // 제거
         }
 
         private void OnSkillCardUsed(string cardId, GameObject cardObject)
         {
-            AnimationFacade.Instance.PlaySkillCardAnimation(cardId, "use", cardObject);
+            // AnimationFacade.Instance.PlaySkillCardAnimation(cardId, "use", cardObject); // 제거
         }
 
         private void OnCharacterDeath(string characterId, GameObject characterObject)
         {
-            AnimationFacade.Instance.PlayCharacterDeathAnimation(characterId, characterObject);
+            // AnimationFacade.Instance.PlayCharacterDeathAnimation(characterId, characterObject); // 제거
         }
     }
 }

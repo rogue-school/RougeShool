@@ -16,7 +16,7 @@ namespace Game.SkillCardSystem.Interface
         /// <param name="data">카드의 기본 데이터 (이름, 설명, 아트워크 등)</param>
         /// <param name="effects">카드에 포함될 효과 목록</param>
         /// <returns>적 소유의 스킬 카드 인스턴스</returns>
-        ISkillCard CreateEnemyCard(SkillCardData data, List<SkillCardEffectSO> effects);
+        ISkillCard CreateEnemyCard(SkillCardData data, List<SkillCardEffectSO> effects, string ownerCharacterName);
 
         /// <summary>
         /// 플레이어 전용 스킬 카드를 생성합니다.
@@ -24,6 +24,6 @@ namespace Game.SkillCardSystem.Interface
         /// <param name="data">카드의 기본 데이터 (이름, 설명, 아트워크 등)</param>
         /// <param name="effects">카드에 포함될 효과 목록</param>
         /// <returns>플레이어 소유의 스킬 카드 인스턴스</returns>
-        ISkillCard CreatePlayerCard(SkillCardData data, List<SkillCardEffectSO> effects);
+        ISkillCard CreatePlayerCard(SkillCardData data, List<SkillCardEffectSO> effects, string ownerCharacterName);
     }
 }

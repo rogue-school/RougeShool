@@ -50,6 +50,8 @@ namespace Game.CombatSystem.State
             if (flowCoordinator.IsEnemyDead())
             {
                 Debug.Log("<color=cyan>[STATE] CombatResultState → CombatVictoryState 전이 (적 사망)</color>");
+                // 핸드카드 소멸 애니메이션 트리거 (적)
+                Game.CombatSystem.CombatEvents.RaiseHandSkillCardsVanishOnCharacterDeath(false);
                 // 승리 이벤트는 VictoryState에서 처리
 
                 flowCoordinator.RemoveEnemyCharacter();
@@ -67,6 +69,8 @@ namespace Game.CombatSystem.State
             else if (flowCoordinator.IsPlayerDead())
             {
                 Debug.Log("<color=cyan>[STATE] CombatResultState → CombatGameOverState 전이 (플레이어 사망)</color>");
+                // 핸드카드 소멸 애니메이션 트리거 (플레이어)
+                Game.CombatSystem.CombatEvents.RaiseHandSkillCardsVanishOnCharacterDeath(true);
                 // 패배 이벤트는 GameOverState에서 처리
                 yield return new WaitForSeconds(0.1f);
 

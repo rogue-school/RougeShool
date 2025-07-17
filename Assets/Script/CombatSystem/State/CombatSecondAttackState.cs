@@ -31,7 +31,20 @@ namespace Game.CombatSystem.State
             Debug.Log("<color=cyan>[STATE] CombatSecondAttackState 진입</color>");
             flowCoordinator.DisablePlayerInput();
 
-            if (turnContext.WasEnemyDefeated || flowCoordinator.IsPlayerDead())
+            bool enemyDead = turnContext.WasEnemyDefeated;
+            bool playerDead = flowCoordinator.IsPlayerDead();
+            if (enemyDead)
+            {
+                // 적 핸드카드 소멸 애니메이션 (사망 판정 직후 즉시)
+                AnimationSystem.Manager.AnimationFacade.Instance.VanishAllHandCardsOnCharacterDeath(false);
+            }
+            if (playerDead)
+            {
+                // 플레이어 핸드카드 소멸 애니메이션 (사망 판정 직후 즉시)
+                AnimationSystem.Manager.AnimationFacade.Instance.VanishAllHandCardsOnCharacterDeath(true);
+            }
+
+            if (enemyDead || playerDead)
             {
                 Debug.Log("<color=cyan>[STATE] CombatSecondAttackState → CombatResultState 전이 (적 사망 또는 플레이어 사망)</color>");
                 var next = turnManager.GetStateFactory().CreateResultState();

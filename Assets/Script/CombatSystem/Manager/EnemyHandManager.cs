@@ -16,14 +16,12 @@ using Game.CharacterSystem.Core;
 using Game.IManager;
 using Game.CombatSystem.Utility;
 using System.Threading.Tasks;
-using Game.CombatSystem;
 using Game.CombatSystem.Manager;
 using AnimationSystem.Animator;
 using AnimationSystem.Manager;
 using Game.CombatSystem.Core;
 using AnimationSystem.Helper;
 using AnimationSystem.Animator.SkillCardAnimation.MoveAnimation;
-using Game.CombatSystem;
 
 namespace Game.CombatSystem.Manager
 {
@@ -314,7 +312,7 @@ namespace Game.CombatSystem.Manager
                 return;
             }
 
-            var runtimeCard = cardFactory.CreateEnemyCard(entry.card.GetCardData(), entry.card.CreateEffects());
+            var runtimeCard = cardFactory.CreateEnemyCard(entry.card.GetCardData(), entry.card.CreateEffects(), currentEnemy?.Data?.name);
             runtimeCard.SetHandSlot(pos);
 
             var cardUI = Instantiate(cardUIPrefab, ((MonoBehaviour)slot).transform);
@@ -366,7 +364,7 @@ namespace Game.CombatSystem.Manager
                 yield break;
             }
 
-            var runtimeCard = cardFactory.CreateEnemyCard(entry.card.GetCardData(), entry.card.CreateEffects());
+            var runtimeCard = cardFactory.CreateEnemyCard(entry.card.GetCardData(), entry.card.CreateEffects(), currentEnemy?.Data?.name);
             if (runtimeCard == null)
             {
                 Debug.LogError("[EnemyHandManager] 카드 생성 실패");
@@ -406,12 +404,12 @@ namespace Game.CombatSystem.Manager
             }
             
             // 카드 생성 후 데이터 기반 애니메이션 실행
-            if (cardUI != null && runtimeCard != null)
-            {
-                bool animDone = false;
-                AnimationSystem.Manager.AnimationFacade.Instance.PlaySkillCardAnimation(runtimeCard, "spawn", cardUI.gameObject, () => animDone = true);
-                yield return new WaitUntil(() => animDone);
-            }
+            // if (cardUI != null && runtimeCard != null)
+            // {
+            //     bool animDone = false;
+            //     AnimationFacade.Instance.PlaySkillCardAnimation(runtimeCard, "spawn", cardUI.gameObject, () => animDone = true);
+            //     yield return new WaitUntil(() => animDone);
+            // }
             
             onComplete?.Invoke();
         }

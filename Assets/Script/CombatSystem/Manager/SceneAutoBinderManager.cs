@@ -61,7 +61,7 @@ namespace Game.Utility
 
         private void OnSceneCharacterSpawned(string characterId, GameObject characterObject)
         {
-            AnimationSystem.Manager.AnimationFacade.Instance.PlayCharacterAnimation(characterId, "spawn", characterObject);
+            // AnimationFacade.Instance.PlayCharacterAnimation(characterId, "spawn", characterObject); // 제거
         }
 
         #endregion

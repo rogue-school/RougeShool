@@ -20,44 +20,44 @@ namespace Game.SkillCardSystem.Factory
         /// <param name="data">카드 데이터</param>
         /// <param name="effects">카드 효과 리스트</param>
         /// <returns>생성된 적 카드 런타임 인스턴스</returns>
-        public ISkillCard CreateEnemyCard(SkillCardData data, List<SkillCardEffectSO> effects)
+        public ISkillCard CreateEnemyCard(SkillCardData data, List<SkillCardEffectSO> effects, string ownerCharacterName)
         {
             if (data == null)
             {
                 Debug.LogError("[SkillCardFactory] Enemy SkillCardData가 null입니다.");
                 return null;
             }
-
             if (effects == null)
             {
                 Debug.LogWarning("[SkillCardFactory] EnemyCard 효과 리스트가 null입니다. 빈 리스트로 대체합니다.");
                 effects = new List<SkillCardEffectSO>();
             }
-
+            data.OwnerCharacterName = ownerCharacterName;
             return new EnemySkillCardRuntime(data, CloneEffects(effects));
         }
-
-        /// <summary>
-        /// 플레이어용 스킬 카드 런타임 인스턴스를 생성합니다.
-        /// </summary>
-        /// <param name="data">카드 데이터</param>
-        /// <param name="effects">카드 효과 리스트</param>
-        /// <returns>생성된 플레이어 카드 런타임 인스턴스</returns>
-        public ISkillCard CreatePlayerCard(SkillCardData data, List<SkillCardEffectSO> effects)
+        public ISkillCard CreatePlayerCard(SkillCardData data, List<SkillCardEffectSO> effects, string ownerCharacterName)
         {
             if (data == null)
             {
                 Debug.LogError("[SkillCardFactory] Player SkillCardData가 null입니다.");
                 return null;
             }
-
             if (effects == null)
             {
                 Debug.LogWarning("[SkillCardFactory] PlayerCard 효과 리스트가 null입니다. 빈 리스트로 대체합니다.");
                 effects = new List<SkillCardEffectSO>();
             }
-
+            data.OwnerCharacterName = ownerCharacterName;
             return new PlayerSkillCardRuntime(data, CloneEffects(effects));
+        }
+        // 기존 시그니처도 유지 (ownerCharacterName 없이)
+        public ISkillCard CreateEnemyCard(SkillCardData data, List<SkillCardEffectSO> effects)
+        {
+            return CreateEnemyCard(data, effects, null);
+        }
+        public ISkillCard CreatePlayerCard(SkillCardData data, List<SkillCardEffectSO> effects)
+        {
+            return CreatePlayerCard(data, effects, null);
         }
 
         /// <summary>

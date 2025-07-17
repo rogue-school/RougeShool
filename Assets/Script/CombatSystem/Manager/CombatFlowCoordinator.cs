@@ -598,25 +598,23 @@ namespace Game.CombatSystem.Core
         }
         private void OnPlayerSkillCardUsed(string cardId, GameObject cardObject)
         {
-            AnimationSystem.Manager.AnimationFacade.Instance.PlaySkillCardAnimation(cardId, "use", cardObject);
+            // AnimationFacade.Instance.PlaySkillCardAnimation(cardId, "use", cardObject); // 제거
         }
         private void OnEnemySkillCardUsed(string cardId, GameObject cardObject)
         {
-            AnimationSystem.Manager.AnimationFacade.Instance.PlaySkillCardAnimation(cardId, "use", cardObject);
+            // AnimationFacade.Instance.PlaySkillCardAnimation(cardId, "use", cardObject); // 제거
         }
         private void OnPlayerCharacterDeath(string characterId, GameObject characterObject)
         {
-            AnimationSystem.Manager.AnimationFacade.Instance.PlayCharacterDeathAnimation(characterId, characterObject);
+            // AnimationFacade.Instance.PlayCharacterDeathAnimation(characterId, characterObject); // 제거
         }
         private void OnEnemyCharacterDeath(Game.CharacterSystem.Data.EnemyCharacterData enemyData, GameObject enemyObject)
         {
             Debug.Log($"[CombatFlowCoordinator] 적 캐릭터 사망: {enemyData?.name ?? "Unknown"}");
-            
-            // 적 캐릭터 사망 시 해당 캐릭터의 스킬카드들을 소멸시킴
-            VanishEnemySkillCardsOnDeath(enemyData?.name ?? "Unknown");
-            
+            // 핸드카드 소멸 애니메이션 트리거는 상태 패턴에서만 실행
+            // VanishEnemySkillCardsOnDeath(enemyData?.name ?? "Unknown"); // 제거
             // 기존 사망 애니메이션 실행
-            AnimationSystem.Manager.AnimationFacade.Instance.PlayCharacterDeathAnimation(enemyData?.name ?? "Unknown", enemyObject, null, true);
+            // AnimationFacade.Instance.PlayCharacterDeathAnimation(enemyData?.name ?? "Unknown", enemyObject, null, true); // 제거
         }
         
         /// <summary>
@@ -626,9 +624,8 @@ namespace Game.CombatSystem.Core
         private void VanishEnemySkillCardsOnDeath(string enemyId)
         {
             Debug.Log($"[CombatFlowCoordinator] 적 캐릭터 스킬카드 소멸 시작: {enemyId}");
-            
             // AnimationFacade를 통한 일괄 소멸 애니메이션 실행
-            AnimationSystem.Manager.AnimationFacade.Instance.VanishCharacterSkillCards(enemyId, false);
+            // AnimationFacade.Instance.VanishAllHandCardsOnCharacterDeath(false); // 제거
         }
         
         /// <summary>

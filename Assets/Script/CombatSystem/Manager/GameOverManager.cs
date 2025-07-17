@@ -38,7 +38,7 @@ namespace Game.CombatSystem.Manager
 
         private void OnGameOverCharacterAnimation(string characterId, GameObject characterObject)
         {
-            AnimationSystem.Manager.AnimationFacade.Instance.PlayCharacterAnimation(characterId, "gameover", characterObject);
+            // AnimationFacade.Instance.PlayCharacterAnimation(characterId, "gameover", characterObject); // 제거
         }
 
         #endregion

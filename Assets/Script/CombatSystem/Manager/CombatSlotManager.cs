@@ -119,17 +119,17 @@ namespace Game.CombatSystem.Manager
 
         private void OnSlotCharacterSpawned(string characterId, GameObject characterObject)
         {
-            AnimationFacade.Instance.PlayCharacterAnimation(characterId, "spawn", characterObject);
+            // AnimationFacade.Instance.PlayCharacterAnimation(characterId, "spawn", characterObject); // 제거
         }
 
         private void OnSlotCharacterDeath(string characterId, GameObject characterObject)
         {
-            AnimationFacade.Instance.PlayCharacterDeathAnimation(characterId, characterObject);
+            // AnimationFacade.Instance.PlayCharacterDeathAnimation(characterId, characterObject); // 제거
         }
 
         private void OnSlotSkillCardUsed(string cardId, GameObject cardObject)
         {
-            AnimationFacade.Instance.PlaySkillCardAnimation(cardId, "use", cardObject);
+            // AnimationFacade.Instance.PlaySkillCardAnimation(cardId, "use", cardObject); // 제거
         }
     }
 }

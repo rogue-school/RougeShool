@@ -44,6 +44,8 @@ namespace Game.CombatSystem
         public static event Action<string, GameObject, CombatSlotPosition> OnPlayerCardMoved;
         // 적 카드 이동
         public static event Action<string, GameObject, CombatSlotPosition> OnEnemyCardMoved;
+        // 핸드 슬롯 스킬카드 소멸 애니메이션 트리거
+        public static event Action<bool> OnHandSkillCardsVanishOnCharacterDeath; // bool: true=플레이어, false=적
         #endregion
 
         #region 전투 상태 관련 이벤트
@@ -105,6 +107,9 @@ namespace Game.CombatSystem
         public static void RaiseEnemyCardDestroy(string cardId, GameObject obj) => OnEnemyCardDestroy?.Invoke(cardId, obj);
         public static void RaisePlayerCardMoved(string cardId, GameObject obj, CombatSlotPosition position) => OnPlayerCardMoved?.Invoke(cardId, obj, position);
         public static void RaiseEnemyCardMoved(string cardId, GameObject obj, CombatSlotPosition position) => OnEnemyCardMoved?.Invoke(cardId, obj, position);
+
+        // 핸드 슬롯 스킬카드 소멸 애니메이션 트리거
+        public static void RaiseHandSkillCardsVanishOnCharacterDeath(bool isPlayer) => OnHandSkillCardsVanishOnCharacterDeath?.Invoke(isPlayer);
 
         // 전투 상태 관련
         public static void RaiseCombatStarted() => OnCombatStarted?.Invoke();
