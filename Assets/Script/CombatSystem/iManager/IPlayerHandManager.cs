@@ -76,5 +76,8 @@ namespace Game.SkillCardSystem.Interface
         /// </summary>
         /// <returns>(카드, 카드 UI) 쌍 목록</returns>
         IEnumerable<(ISkillCard card, ISkillCardUI ui)> GetAllHandCards();
+
+        // IPlayerCharacter 반환하는 GetPlayer() 메서드 추가
+        IPlayerCharacter GetPlayer();
     }
 }

@@ -63,10 +63,8 @@ namespace AnimationSystem.Animator.SkillCardAnimation.VanishAnimation
 
         public void PlayVanishAnimation(System.Action onComplete = null)
         {
-            Debug.Log($"[DefaultSkillCardVanishAnimation] 소멸 애니메이션 실행 시작: {gameObject.name}, vanishDuration={vanishDuration}, vanishScale={vanishScale}, fadeDuration={fadeDuration}, useGlow={useGlow}");
             if (rectTransform == null || canvasGroup == null)
             {
-                Debug.LogWarning($"[DefaultSkillCardVanishAnimation] rectTransform 또는 canvasGroup이 null입니다. 애니메이션 실행 불가: {gameObject.name}");
                 onComplete?.Invoke();
                 return;
             }
@@ -74,33 +72,24 @@ namespace AnimationSystem.Animator.SkillCardAnimation.VanishAnimation
             Sequence seq = DOTween.Sequence();
             
             // 1. 스케일 다운
-            seq.Append(rectTransform.DOScale(originalScale * vanishScale, vanishDuration).SetEase(Ease.InBack)
-                .OnStart(() => Debug.Log($"[DefaultSkillCardVanishAnimation] 스케일 다운 시작: {gameObject.name}"))
-                .OnComplete(() => Debug.Log($"[DefaultSkillCardVanishAnimation] 스케일 다운 완료: {gameObject.name}")));
+            seq.Append(rectTransform.DOScale(originalScale * vanishScale, vanishDuration).SetEase(Ease.InBack));
             
             // 2. 페이드 아웃
-            seq.Join(canvasGroup.DOFade(0, fadeDuration)
-                .OnStart(() => Debug.Log($"[DefaultSkillCardVanishAnimation] 페이드 아웃 시작: {gameObject.name}"))
-                .OnComplete(() => Debug.Log($"[DefaultSkillCardVanishAnimation] 페이드 아웃 완료: {gameObject.name}")));
+            seq.Join(canvasGroup.DOFade(0, fadeDuration));
             
             // 3. 글로우 효과
             if (useGlow && glowImage != null)
             {
                 glowObject.SetActive(true);
                 glowImage.color = new Color(glowColor.r, glowColor.g, glowColor.b, 0);
-                seq.Join(glowImage.DOFade(glowColor.a, glowFadeIn)
-                    .OnStart(() => Debug.Log($"[DefaultSkillCardVanishAnimation] 글로우 페이드인 시작: {gameObject.name}"))
-                    .OnComplete(() => Debug.Log($"[DefaultSkillCardVanishAnimation] 글로우 페이드인 완료: {gameObject.name}")));
+                seq.Join(glowImage.DOFade(glowColor.a, glowFadeIn));
                 seq.Append(glowImage.DOFade(0, glowFadeOut).SetEase(Ease.InQuad)
-                    .OnStart(() => Debug.Log($"[DefaultSkillCardVanishAnimation] 글로우 페이드아웃 시작: {gameObject.name}"))
                     .OnComplete(() => {
-                        Debug.Log($"[DefaultSkillCardVanishAnimation] 글로우 페이드아웃 완료 및 비활성화: {gameObject.name}");
                         glowObject.SetActive(false);
                     }));
             }
             
             seq.OnComplete(() => {
-                Debug.Log($"[DefaultSkillCardVanishAnimation] 소멸 애니메이션 전체 완료: {gameObject.name}");
                 onComplete?.Invoke();
             });
         }

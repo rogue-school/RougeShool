@@ -104,6 +104,7 @@ namespace Game.CombatSystem.State
 
             // 카드 등록 (애니메이션 포함)
             yield return enemyHandManager.PopCardAndRegisterToCombatSlotCoroutine(flowCoordinator);
+            enemyHandManager.RemoveCardFromSlot(SkillCardSlotPosition.ENEMY_SLOT_1);
 
             // 빈 슬롯 다시 채우기
             yield return enemyHandManager.StepwiseFillSlotsFromBack(0.3f);

@@ -13,6 +13,9 @@ namespace Game.CharacterSystem.Interface
         /// </summary>
         EnemyCharacterData Data { get; }
 
+        // CharacterData 프로퍼티 타입을 ICharacterData로 변경
+        ICharacterData CharacterData { get; }
+
         /// <summary>
         /// 적 캐릭터의 이름을 반환합니다.
         /// UI 또는 로그에서 사용되는 표기 전용 이름입니다.

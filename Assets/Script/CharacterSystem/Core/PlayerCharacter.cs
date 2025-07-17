@@ -224,18 +224,11 @@ namespace Game.CharacterSystem.Core
         /// </summary>
         public override void Die()
         {
-            // 1. 사망 애니메이션 실행 (상태 패턴에서만 트리거)
-            // AnimationFacade.Instance.PlayCharacterDeathAnimation(
-            //     CharacterData.name,
-            //     this.gameObject,
-            //     () => {
-            //         base.Die();
-            //         CombatEvents.RaisePlayerCharacterDeath(CharacterData, this.gameObject);
-            //     },
-            //     false // isEnemy: false (플레이어)
-            // );
+            // 1. 소멸 애니메이션 이벤트 즉시 발행 (플레이어)
+            Game.CombatSystem.CombatEvents.RaiseHandSkillCardsVanishOnCharacterDeath(true);
+
             base.Die();
-            CombatEvents.RaisePlayerCharacterDeath(CharacterData, this.gameObject);
+            Game.CombatSystem.CombatEvents.RaisePlayerCharacterDeath(CharacterData, this.gameObject);
         }
 
         // CharacterBase에서 사용할 이름 반환

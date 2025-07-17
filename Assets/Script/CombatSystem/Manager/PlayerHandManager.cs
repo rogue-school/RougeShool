@@ -233,6 +233,12 @@ namespace Game.SkillCardSystem.Core
             }
         }
 
+        // IPlayerHandManager.GetPlayer() 구현
+        public IPlayerCharacter GetPlayer()
+        {
+            return owner;
+        }
+
         #endregion
     }
 }

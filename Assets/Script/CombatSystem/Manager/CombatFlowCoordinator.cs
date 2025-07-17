@@ -152,6 +152,7 @@ namespace Game.CombatSystem.Core
             });
 
             var (cardToRegister, uiToRegister) = enemyHandManager.PopCardFromSlot(SkillCardSlotPosition.ENEMY_SLOT_1);
+            enemyHandManager.RemoveCardFromSlot(SkillCardSlotPosition.ENEMY_SLOT_1);
             if (cardToRegister != null && uiToRegister != null)
             {
                 // UI 애니메이션 완료까지 대기
@@ -160,7 +161,6 @@ namespace Game.CombatSystem.Core
                 // 애니메이션이 끝난 후에만 슬롯 등록
                 turnCardRegistry.RegisterCard(slotToRegister, cardToRegister, uiToRegister, SlotOwner.ENEMY);
                 animationComplete = true;
-
                 yield return new WaitUntil(() => animationComplete);
             }
             else
@@ -169,6 +169,13 @@ namespace Game.CombatSystem.Core
                 onComplete?.Invoke(false);
                 yield break;
             }
+
+            // [전문가적 진단] 전투 슬롯 등록 후 적 핸드 상태 로그
+            var slot1 = enemyHandManager.PeekCardInSlot(SkillCardSlotPosition.ENEMY_SLOT_1);
+            var slot2 = enemyHandManager.PeekCardInSlot(SkillCardSlotPosition.ENEMY_SLOT_2);
+            var slot3 = enemyHandManager.PeekCardInSlot(SkillCardSlotPosition.ENEMY_SLOT_3);
+            Debug.Log($"[CombatFlowCoordinator] 전투 슬롯 등록 후 핸드 상태: 3={(slot3.Item1 != null ? "O" : "X")}, 2={(slot2.Item1 != null ? "O" : "X")}, 1={(slot1.Item1 != null ? "O" : "X")}");
+            Debug.Log($"[CombatFlowCoordinator] ENEMY_SLOT_1 카드={(slot1.Item1 != null ? slot1.Item1.GetCardName() : "null")}, UI={(slot1.Item2 != null ? "O" : "X")}");
 
             yield return enemyHandManager.StepwiseFillSlotsFromBack(0.3f);
             onComplete?.Invoke(true);

@@ -46,13 +46,20 @@ namespace Game.CombatSystem.State
             yield return flowCoordinator.PerformResultPhase();
             yield return new WaitForEndOfFrame();
 
-            // 3. 사망 판정
+            // 3. 사망 판정 및 연출 타이밍 제어
             if (flowCoordinator.IsEnemyDead())
             {
                 Debug.Log("<color=cyan>[STATE] CombatResultState → CombatVictoryState 전이 (적 사망)</color>");
-                // 핸드카드 소멸 애니메이션 트리거 (적)
+
+                // 1) 적 사망 애니메이션 트리거
+                var enemy = flowCoordinator.GetEnemy();
+                var enemyData = enemy?.CharacterData as Game.CharacterSystem.Data.EnemyCharacterData;
+                var enemyObject = (enemy as UnityEngine.MonoBehaviour)?.gameObject;
+                Game.CombatSystem.CombatEvents.RaiseEnemyCharacterDeath(enemyData, enemyObject);
+
+                // 2) 사망 애니메이션이 끝난 후(딜레이/콜백) 카드 소멸 애니메이션 트리거
+                yield return new WaitForSeconds(0.8f); // 사망 애니메이션 길이에 맞게 조정
                 Game.CombatSystem.CombatEvents.RaiseHandSkillCardsVanishOnCharacterDeath(false);
-                // 승리 이벤트는 VictoryState에서 처리
 
                 flowCoordinator.RemoveEnemyCharacter();
                 yield return flowCoordinator.ClearEnemyHandSafely();
@@ -61,7 +68,6 @@ namespace Game.CombatSystem.State
                 if (!flowCoordinator.CheckHasNextEnemy())
                 {
                     yield return new WaitForEndOfFrame();
-
                     turnManager.RequestStateChange(turnManager.GetStateFactory().CreateVictoryState());
                     yield break;
                 }
@@ -69,11 +75,18 @@ namespace Game.CombatSystem.State
             else if (flowCoordinator.IsPlayerDead())
             {
                 Debug.Log("<color=cyan>[STATE] CombatResultState → CombatGameOverState 전이 (플레이어 사망)</color>");
-                // 핸드카드 소멸 애니메이션 트리거 (플레이어)
-                Game.CombatSystem.CombatEvents.RaiseHandSkillCardsVanishOnCharacterDeath(true);
-                // 패배 이벤트는 GameOverState에서 처리
-                yield return new WaitForSeconds(0.1f);
 
+                // 1) 플레이어 사망 애니메이션 트리거
+                var player = playerHandManager.GetPlayer();
+                var playerData = player?.CharacterData;
+                var playerObject = (player as UnityEngine.MonoBehaviour)?.gameObject;
+                Game.CombatSystem.CombatEvents.RaisePlayerCharacterDeath(playerData, playerObject);
+
+                // 2) 사망 애니메이션이 끝난 후(딜레이/콜백) 카드 소멸 애니메이션 트리거
+                yield return new WaitForSeconds(0.8f); // 사망 애니메이션 길이에 맞게 조정
+                Game.CombatSystem.CombatEvents.RaiseHandSkillCardsVanishOnCharacterDeath(true);
+
+                yield return new WaitForSeconds(0.1f);
                 turnManager.RequestStateChange(turnManager.GetStateFactory().CreateGameOverState());
                 yield break;
             }

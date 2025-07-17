@@ -23,6 +23,9 @@ namespace Game.CharacterSystem.Core
         [field: SerializeField]
         public EnemyCharacterData CharacterData { get; private set; }
 
+        // IEnemyCharacter.CharacterData 명시적 구현
+        Game.CharacterSystem.Interface.ICharacterData Game.CharacterSystem.Interface.IEnemyCharacter.CharacterData => CharacterData;
+
         [Header("UI Components")]
         [SerializeField] private TextMeshProUGUI nameText;
         [SerializeField] private TextMeshProUGUI hpText;
@@ -232,18 +235,9 @@ namespace Game.CharacterSystem.Core
             isDead = true;
             Debug.Log($"[EnemyCharacter] '{GetCharacterName()}' 사망 처리 (MarkAsDead 호출)");
 
-            // 1. AnimationFacade를 통한 사망 애니메이션 호출 제거
-            // AnimationFacade.Instance.PlayEnemyCharacterDeathAnimation(
-            //     CharacterData.name, // ScriptableObject의 name
-            //     this.gameObject,
-            //     () => {
-            //         // 2. 애니메이션 종료 후 이벤트 및 후처리
-            //         CombatEvents.RaiseEnemyCharacterDeath(CharacterData, this.gameObject);
-            //         deathListener?.OnCharacterDied(this);
-            //     }
-            // );
-            // 2. 바로 이벤트 및 후처리
-            CombatEvents.RaiseEnemyCharacterDeath(CharacterData, this.gameObject);
+            // 사망 애니메이션/이벤트 발행 코드 제거
+            // Game.CombatSystem.CombatEvents.RaiseHandSkillCardsVanishOnCharacterDeath(false);
+            // Game.CombatSystem.CombatEvents.RaiseEnemyCharacterDeath(CharacterData, this.gameObject);
             deathListener?.OnCharacterDied(this);
         }
 
