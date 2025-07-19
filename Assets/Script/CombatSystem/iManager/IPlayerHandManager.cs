@@ -77,6 +77,11 @@ namespace Game.SkillCardSystem.Interface
         /// <returns>(카드, 카드 UI) 쌍 목록</returns>
         IEnumerable<(ISkillCard card, ISkillCardUI ui)> GetAllHandCards();
 
+        /// <summary>
+        /// 카드UI가 슬롯에서 분리(부모 변경)될 때 동기화 보장용 함수
+        /// </summary>
+        void OnCardUIDetachedFromSlot(Game.SkillCardSystem.Slot.SkillCardSlotPosition pos);
+
         // IPlayerCharacter 반환하는 GetPlayer() 메서드 추가
         IPlayerCharacter GetPlayer();
     }

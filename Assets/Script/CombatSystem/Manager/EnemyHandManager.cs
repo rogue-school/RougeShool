@@ -184,6 +184,7 @@ namespace Game.CombatSystem.Manager
                 cardUIs[pos] = ui;
                 _cardsInSlots[pos] = (card, ui);
             }
+            LogHandSlotSyncState();
         }
 
         public (ISkillCard, ISkillCardUI) PeekCardInSlot(SkillCardSlotPosition position)
@@ -220,17 +221,23 @@ namespace Game.CombatSystem.Manager
 
         public ISkillCard PickCardForSlot(SkillCardSlotPosition pos) => GetSlotCard(pos);
 
+        /// <summary>
+        /// 반드시 AnimationFacade 소멸 애니메이션 콜백에서만 호출되어야 함! 직접 호출 금지.
+        /// </summary>
         public SkillCardUI RemoveCardFromSlot(SkillCardSlotPosition pos)
         {
+            Debug.LogWarning("[EnemyHandManager] RemoveCardFromSlot은 반드시 AnimationFacade 소멸 애니메이션 콜백에서만 호출되어야 합니다. 직접 호출 금지!");
             if (handSlots.TryGetValue(pos, out var slot))
             {
                 slot.Clear();
                 if (cardUIs.TryGetValue(pos, out var ui))
                 {
                     // 참조 해제/파괴는 소멸 애니메이션 OnComplete에서만!
+                    LogHandSlotSyncState();
                     return ui;
                 }
             }
+            LogHandSlotSyncState();
             return null;
         }
 
@@ -238,18 +245,22 @@ namespace Game.CombatSystem.Manager
 
         #region  정리 및 상태
 
+        /// <summary>
+        /// ClearHand/ClearAllCards는 반드시 SafeClearHandAfterAllAnimations에서만 호출되어야 함.
+        /// 소멸 애니메이션 콜백 이외에는 카드UI/데이터를 파괴하지 말 것!
+        /// </summary>
         public void ClearHand()
         {
+            Debug.LogWarning("[EnemyHandManager] ClearHand는 반드시 SafeClearHandAfterAllAnimations에서만 호출되어야 합니다. 직접 호출 금지!");
             foreach (var slot in handSlots.Values)
                 slot?.Clear();
 
             foreach (var ui in cardUIs.Values)
-                if (ui != null) Destroy(ui.gameObject);
-
+                if (ui != null && ui.gameObject != null)
+                    Destroy(ui.gameObject);
             cardUIs.Clear();
             _cardsInSlots.Clear();
         }
-
         public void ClearAllCards() => ClearHand();
         public void ResetTurnRegistrationFlag()
         {
@@ -320,6 +331,7 @@ namespace Game.CombatSystem.Manager
 
             cardUIs[pos] = cardUI;
             _cardsInSlots[pos] = (runtimeCard, cardUI);
+            LogHandSlotSyncState();
         }
 
         // 카드 생성 + 생성 애니메이션 대기용 코루틴 (슬롯 할당은 애니메이션 후에)
@@ -414,6 +426,9 @@ namespace Game.CombatSystem.Manager
                 if (uiObj == null)
                 {
                     Debug.LogError($"[EnemyHandManager] uiObj가 null입니다. from: {from}, to: {to}");
+                    // 딕셔너리 dangling reference 정리
+                    cardUIs.Remove(from);
+                    _cardsInSlots.Remove(from);
                     yield break;
                 }
                 var slotObj = handSlots[to] as MonoBehaviour;
@@ -439,8 +454,8 @@ namespace Game.CombatSystem.Manager
                     fromSlot.Clear();
                     toSlot.SetCard(tuple.Item1);
                     cardUIs.Remove(from);
-                    cardUIs[to] = uiObj;
                     _cardsInSlots.Remove(from);
+                    cardUIs[to] = uiObj;
                     _cardsInSlots[to] = tuple;
                 }
                 else
@@ -451,6 +466,9 @@ namespace Game.CombatSystem.Manager
             else
             {
                 Debug.LogWarning($"[EnemyHandManager] 이동 애니메이션 실행 실패: from 슬롯({from})에 카드가 없음");
+                // 딕셔너리 dangling reference 정리
+                cardUIs.Remove(from);
+                _cardsInSlots.Remove(from);
             }
         }
 
@@ -510,7 +528,9 @@ namespace Game.CombatSystem.Manager
         }
         #endregion
 
-        // 모든 카드 애니메이션이 끝난 후에만 ClearHand를 호출하는 안전 메서드
+        /// <summary>
+        /// 모든 카드 애니메이션이 끝난 후에만 호출되어야 함. 직접 호출 금지!
+        /// </summary>
         public IEnumerator SafeClearHandAfterAllAnimations()
         {
             yield return new WaitUntil(() => !IsAnyCardAnimating());
@@ -528,16 +548,58 @@ namespace Game.CombatSystem.Manager
             return false;
         }
 
-        // 소멸 애니메이션 OnComplete에서만 호출할 것
+        /// <summary>
+        /// 반드시 AnimationFacade 소멸 애니메이션 콜백에서만 호출되어야 함! 직접 호출 금지.
+        /// </summary>
         public void RemoveCardUIAndReferences(SkillCardSlotPosition pos)
         {
+            Debug.LogWarning("[EnemyHandManager] RemoveCardUIAndReferences는 반드시 AnimationFacade 소멸 애니메이션 콜백에서만 호출되어야 합니다. 직접 호출 금지!");
+            var slot = handSlots.TryGetValue(pos, out var s) ? s : null;
+            slot?.Clear();
             if (cardUIs.TryGetValue(pos, out var ui))
             {
-                if (ui != null)
-                    UnityEngine.Object.Destroy(ui.gameObject);
+                if (ui != null && ui.gameObject != null)
+                    Destroy(ui.gameObject);
                 cardUIs.Remove(pos);
             }
-            _cardsInSlots.Remove(pos);
+            if (_cardsInSlots.ContainsKey(pos))
+                _cardsInSlots.Remove(pos);
+            LogHandSlotSyncState();
+        }
+
+        /// <summary>
+        /// 카드UI가 슬롯에서 분리(부모 변경)될 때 동기화 보장용 함수
+        /// </summary>
+        public void OnCardUIDetachedFromSlot(SkillCardSlotPosition pos)
+        {
+            if (cardUIs.ContainsKey(pos)) cardUIs[pos] = null;
+            if (_cardsInSlots.ContainsKey(pos)) _cardsInSlots[pos] = (null, null);
+            LogHandSlotSyncState();
+        }
+
+        public void LogHandSlotSyncState()
+        {
+            foreach (SkillCardSlotPosition pos in System.Enum.GetValues(typeof(SkillCardSlotPosition)))
+            {
+                var card = _cardsInSlots.ContainsKey(pos) ? _cardsInSlots[pos].Item1 : null;
+                var ui = _cardsInSlots.ContainsKey(pos) ? _cardsInSlots[pos].Item2 : null;
+                string cardName = card != null ? card.GetCardName() : "null";
+                string uiName = "null";
+                if (ui != null)
+                {
+                    if (ui is UnityEngine.MonoBehaviour mb && mb != null)
+                        uiName = mb.name;
+                    else
+                        uiName = ui.GetType().Name;
+                }
+                string sync = (card != null && ui != null) ? "정상"
+                            : (card != null && ui == null) ? "⚠️ 카드만 존재"
+                            : (card == null && ui != null) ? "⚠️ UI만 존재"
+                            : "비어있음";
+                Debug.Log($"[HandSync] 슬롯: {pos}, 카드: {cardName}, 카드UI: {uiName}, 상태: {sync}");
+                if (sync != "정상" && sync != "비어있음")
+                    Debug.LogWarning($"[HandSync][경고] 슬롯 {pos} 동기화 깨짐: {sync}");
+            }
         }
     }
 }

@@ -104,12 +104,15 @@ namespace Game.CombatSystem.State
                 var card = flowCoordinator.GetCardInSlot(pos);
                 if (card != null && card.IsFromPlayer())
                 {
-                    playerHandManager.RemoveCard(card);
                     playerHandManager.RestoreCardToHand(card);
-
                     var slot = slotRegistry.GetCombatSlot(pos);
                     slot?.ClearAll();
                 }
+            }
+            // 카드 데이터와 UI 동기화 보장
+            if (playerHandManager is Game.SkillCardSystem.Core.PlayerHandManager concreteHandManager)
+            {
+                concreteHandManager.SyncHandSlotUI();
             }
         }
 

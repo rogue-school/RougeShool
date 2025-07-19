@@ -29,29 +29,50 @@ namespace Game.CombatSystem.State
         public void EnterState()
         {
             Debug.Log("<color=cyan>[STATE] CombatSecondAttackState 진입</color>");
+            // 애니메이션 락이 걸려 있으면 대기 또는 return
+            if (AnimationSystem.Manager.AnimationFacade.Instance.IsHandVanishAnimationPlaying)
+            {
+                Debug.Log("[SecondAttackState] 핸드 소멸 애니메이션 진행 중이므로 상태 전이 대기");
+                return;
+            }
             flowCoordinator.DisablePlayerInput();
 
             bool enemyDead = turnContext.WasEnemyDefeated;
             bool playerDead = flowCoordinator.IsPlayerDead();
+
+            // 1. 이미 소멸 애니메이션이 실행된 경우 바로 상태 전이
+            if (turnContext.WasHandCardsVanishedThisTurn)
+            {
+                Debug.Log("<color=cyan>[STATE] CombatSecondAttackState → CombatResultState 전이 (이미 소멸 애니메이션 실행됨)");
+                var next = turnManager.GetStateFactory().CreateResultState();
+                turnManager.RequestStateChange(next);
+                ((CombatTurnManager)turnManager).ApplyPendingState();
+                return;
+            }
+
+            // 2. 사망 시 소멸 애니메이션 먼저 실행
             if (enemyDead)
             {
-                // 적 핸드카드 소멸 애니메이션 (사망 판정 직후 즉시)
-                AnimationSystem.Manager.AnimationFacade.Instance.VanishAllHandCardsOnCharacterDeath(false);
+                AnimationSystem.Manager.AnimationFacade.Instance.VanishAllHandCardsOnCharacterDeath(false, () =>
+                {
+                    turnContext.MarkHandCardsVanished();
+                    Debug.Log("<color=cyan>[STATE] CombatSecondAttackState → CombatResultState 전이 (적 사망 후 소멸 애니메이션 완료)");
+                    var next = turnManager.GetStateFactory().CreateResultState();
+                    turnManager.RequestStateChange(next);
+                    ((CombatTurnManager)turnManager).ApplyPendingState();
+                });
+                return;
             }
             if (playerDead)
             {
-                // 플레이어 핸드카드 소멸 애니메이션 (사망 판정 직후 즉시)
-                AnimationSystem.Manager.AnimationFacade.Instance.VanishAllHandCardsOnCharacterDeath(true);
-            }
-
-            if (enemyDead || playerDead)
-            {
-                Debug.Log("<color=cyan>[STATE] CombatSecondAttackState → CombatResultState 전이 (적 사망 또는 플레이어 사망)</color>");
-                var next = turnManager.GetStateFactory().CreateResultState();
-                turnManager.RequestStateChange(next);
-
-                // 즉시 상태 전이를 실행
-                ((CombatTurnManager)turnManager).ApplyPendingState();
+                AnimationSystem.Manager.AnimationFacade.Instance.VanishAllHandCardsOnCharacterDeath(true, () =>
+                {
+                    turnContext.MarkHandCardsVanished();
+                    Debug.Log("<color=cyan>[STATE] CombatSecondAttackState → CombatResultState 전이 (플레이어 사망 후 소멸 애니메이션 완료)");
+                    var next = turnManager.GetStateFactory().CreateResultState();
+                    turnManager.RequestStateChange(next);
+                    ((CombatTurnManager)turnManager).ApplyPendingState();
+                });
                 return;
             }
 

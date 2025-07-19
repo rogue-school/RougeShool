@@ -48,9 +48,16 @@ namespace Game.SkillCardSystem.Runtime
                     reducedCards++;
                 }
 
-                // UI 갱신
+                // UI 갱신 및 Destroy 체크
                 if (ui != null)
                 {
+                    var mono = ui as UnityEngine.MonoBehaviour;
+                    if (mono == null || mono.gameObject == null)
+                    {
+                        // handManager에서 해당 카드/카드UI를 Remove하도록 요청
+                        handManager.OnCardUIDetachedFromSlot(card.GetHandSlot().GetValueOrDefault());
+                        continue;
+                    }
                     ui.UpdateCoolTimeDisplay();
                 }
                 else

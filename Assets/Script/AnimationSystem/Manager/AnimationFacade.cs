@@ -3,6 +3,8 @@ using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Slot; // SlotOwner
 using Game.SkillCardSystem.Runtime; // RuntimeSkillCard
 using System.Collections.Generic; // Added for List
+using Game.SkillCardSystem.Slot;
+using Game.SkillCardSystem.Core;
 
 namespace AnimationSystem.Manager
 {
@@ -266,6 +268,8 @@ namespace AnimationSystem.Manager
         // 상태 출력
         public void PrintStatus() => AnimationDatabaseManager.Instance.DebugDatabaseStatus();
 
+        public bool IsHandVanishAnimationPlaying { get; private set; } = false;
+
         /// <summary>
         /// 캐릭터 사망 시 해당 캐릭터의 핸드 슬롯에 남아있는 모든 카드를 소멸 애니메이션으로 처리한다.
         /// </summary>
@@ -273,37 +277,61 @@ namespace AnimationSystem.Manager
         /// <param name="onComplete">애니메이션 종료 콜백</param>
         public void VanishAllHandCardsOnCharacterDeath(bool isPlayerCharacter, System.Action onComplete = null)
         {
+            IsHandVanishAnimationPlaying = true;
             Debug.Log($"[AnimationFacade] VanishAllHandCardsOnCharacterDeath 호출: isPlayerCharacter={isPlayerCharacter}");
             Debug.Log($"[AnimationFacade] (사망) 핸드 슬롯 전체 소멸 시작: 플레이어={isPlayerCharacter}");
             var handSlotRegistry = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.Slot.HandSlotRegistry>();
             var ownerType = isPlayerCharacter ? Game.CombatSystem.Slot.SlotOwner.PLAYER : Game.CombatSystem.Slot.SlotOwner.ENEMY;
             var handSlots = handSlotRegistry?.GetHandSlots(ownerType);
             var skillCards = new List<GameObject>();
+            var slotPositions = new List<Game.SkillCardSystem.Slot.SkillCardSlotPosition>();
             if (handSlots != null)
             {
                 foreach (var slot in handSlots)
                 {
                     var cardUI = slot.GetCardUI();
                     var slotPos = slot.GetSlotPosition();
-                    Debug.Log($"[디버그] 핸드 슬롯: {slotPos}, 카드UI: {(cardUI != null ? cardUI.ToString() : "없음")}");
-                    if (cardUI is UnityEngine.MonoBehaviour mb)
+                    var card = slot.GetCard();
+                    string cardUIName = (cardUI is UnityEngine.MonoBehaviour mb2 && mb2) ? mb2.name : (cardUI != null ? cardUI.GetType().Name : "null");
+                    string cardName = card != null ? card.GetCardName() : "null";
+                    Debug.Log($"[VanishDebug] 슬롯: {slotPos}, 카드: {cardName}, 카드UI: {cardUIName}");
+                    if (cardUI is UnityEngine.MonoBehaviour mb && mb)
+                    {
                         skillCards.Add(mb.gameObject);
+                        slotPositions.Add(slotPos);
+                    }
                 }
             }
             if (skillCards.Count == 0)
             {
                 Debug.Log($"[AnimationFacade] 소멸할 스킬카드가 없습니다 (isPlayer={isPlayerCharacter})");
+                IsHandVanishAnimationPlaying = false;
                 onComplete?.Invoke();
                 return;
             }
             int finished = 0;
-            foreach (var cardObj in skillCards)
+            for (int i = 0; i < skillCards.Count; i++)
             {
+                var cardObj = skillCards[i];
+                var slotPos = slotPositions[i];
                 var vanishAnim = cardObj.GetComponent<AnimationSystem.Animator.SkillCardAnimation.VanishAnimation.DefaultSkillCardVanishAnimation>() ?? cardObj.AddComponent<AnimationSystem.Animator.SkillCardAnimation.VanishAnimation.DefaultSkillCardVanishAnimation>();
                 vanishAnim.PlayVanishAnimation(() => {
+                    if (isPlayerCharacter)
+                    {
+                        var playerHandManager = UnityEngine.Object.FindFirstObjectByType<Game.SkillCardSystem.Core.PlayerHandManager>();
+                        playerHandManager?.RemoveCardUIAndReferences(slotPos);
+                    }
+                    else
+                    {
+                        var enemyHandManager = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.Manager.EnemyHandManager>();
+                        enemyHandManager?.RemoveCardUIAndReferences(slotPos);
+                    }
                     finished++;
                     if (finished == skillCards.Count)
+                    {
+                        IsHandVanishAnimationPlaying = false;
                         onComplete?.Invoke();
+                    }
                 });
             }
         }

@@ -18,8 +18,21 @@ namespace Game.CombatSystem.Context
         public void MarkEnemyDefeated() => WasEnemyDefeated = true;
 
         /// <summary>
+        /// 이번 턴에 핸드카드 소멸 애니메이션이 실행되었는지 여부를 나타냅니다.
+        /// </summary>
+        public bool WasHandCardsVanishedThisTurn { get; private set; }
+
+        /// <summary>
+        /// 이번 턴에 핸드카드 소멸 애니메이션이 실행되었음을 표시합니다.
+        /// </summary>
+        public void MarkHandCardsVanished() => WasHandCardsVanishedThisTurn = true;
+
+        /// <summary>
         /// 새로운 턴을 시작하기 전에 호출하여 상태를 초기화합니다.
         /// </summary>
-        public void Reset() => WasEnemyDefeated = false;
+        public void Reset() {
+            WasEnemyDefeated = false;
+            WasHandCardsVanishedThisTurn = false;
+        }
     }
 }
