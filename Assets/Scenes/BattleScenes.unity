@@ -408,6 +408,8 @@ GameObject:
   - component: {fileID: 66124729}
   - component: {fileID: 66124731}
   - component: {fileID: 66124730}
+  - component: {fileID: 66124732}
+  - component: {fileID: 66124733}
   m_Layer: 5
   m_Name: Text (Legacy)
   m_TagString: Untagged
@@ -476,6 +478,38 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 66124728}
   m_CullTransparentMesh: 1
+--- !u!114 &66124732
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 66124728}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c304eaaf09b09fa4ebbc8332663b2f17, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  switchButton: {fileID: 268461265}
+  targetSceneName: MainScenes
+--- !u!114 &66124733
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 66124728}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dea945bd73735444d942a6ff7ec88a01, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  registerButton: {fileID: 0}
+  saveButton: {fileID: 268461265}
+  loadButton: {fileID: 0}
+  toSceneBButton: {fileID: 0}
+  backToSceneAButton: {fileID: 0}
+  enemyInfoText: {fileID: 0}
 --- !u!1 &84107499
 GameObject:
   m_ObjectHideFlags: 0
