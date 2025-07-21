@@ -19,9 +19,6 @@ namespace AnimationSystem.Manager
                 Instance = this;
                 DontDestroyOnLoad(gameObject);
 
-                // 기존 구독
-                Game.CombatSystem.CombatEvents.OnHandSkillCardsVanishOnCharacterDeath += HandleHandSkillCardsVanishOnCharacterDeath;
-
                 // 캐릭터 생성/사망
                 Game.CombatSystem.CombatEvents.OnPlayerCharacterDeath += HandlePlayerCharacterDeath;
                 Game.CombatSystem.CombatEvents.OnEnemyCharacterDeath += HandleEnemyCharacterDeath;
@@ -42,10 +39,12 @@ namespace AnimationSystem.Manager
         private void HandlePlayerCharacterDeath(Game.CharacterSystem.Data.PlayerCharacterData data, GameObject obj)
         {
             PlayPlayerCharacterDeathAnimation(data.name, obj);
+            VanishAllHandCardsOnCharacterDeath(true); // 플레이어 사망 시 핸드 카드 소멸 애니메이션 호출
         }
         private void HandleEnemyCharacterDeath(Game.CharacterSystem.Data.EnemyCharacterData data, GameObject obj)
         {
             PlayEnemyCharacterDeathAnimation(data.name, obj);
+            VanishAllHandCardsOnCharacterDeath(false); // 적 사망 시 핸드 카드 소멸 애니메이션 호출
         }
         // 스킬카드 생성 애니메이션
         private void HandlePlayerCardSpawn(string cardId, GameObject obj)
@@ -279,6 +278,28 @@ namespace AnimationSystem.Manager
         {
             IsHandVanishAnimationPlaying = true;
             Debug.Log($"[AnimationFacade] VanishAllHandCardsOnCharacterDeath 호출: isPlayerCharacter={isPlayerCharacter}");
+
+            // [수정] 적 캐릭터의 경우, EnemyHandManager를 통해 직접 소멸을 요청합니다.
+            if (!isPlayerCharacter)
+            {
+                var enemyHandManager = FindFirstObjectByType<Game.CombatSystem.Manager.EnemyHandManager>();
+                if (enemyHandManager != null)
+                {
+                    Debug.Log($"[AnimationFacade] EnemyHandManager를 통해 모든 적 핸드 카드 소멸 시작");
+                    enemyHandManager.VanishAllCardsForDeathAnimation(() => {
+                        IsHandVanishAnimationPlaying = false;
+                        onComplete?.Invoke();
+                    });
+                }
+                else
+                {
+                    Debug.LogWarning("[AnimationFacade] EnemyHandManager를 찾을 수 없어 소멸 애니메이션을 실행할 수 없습니다.");
+                    IsHandVanishAnimationPlaying = false;
+                    onComplete?.Invoke();
+                }
+                return; // 새로운 로직 실행 후 반드시 종료
+            }
+
             Debug.Log($"[AnimationFacade] (사망) 핸드 슬롯 전체 소멸 시작: 플레이어={isPlayerCharacter}");
             var handSlotRegistry = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.Slot.HandSlotRegistry>();
             var ownerType = isPlayerCharacter ? Game.CombatSystem.Slot.SlotOwner.PLAYER : Game.CombatSystem.Slot.SlotOwner.ENEMY;
@@ -323,8 +344,7 @@ namespace AnimationSystem.Manager
                     }
                     else
                     {
-                        var enemyHandManager = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.Manager.EnemyHandManager>();
-                        enemyHandManager?.RemoveCardUIAndReferences(slotPos);
+                        // 이 경로는 더 이상 사용되지 않습니다.
                     }
                     finished++;
                     if (finished == skillCards.Count)

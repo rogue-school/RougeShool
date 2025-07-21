@@ -22,6 +22,8 @@ using AnimationSystem.Manager;
 using Game.CombatSystem.Core;
 using AnimationSystem.Helper;
 using AnimationSystem.Animator.SkillCardAnimation.MoveAnimation;
+using AnimationSystem.Animator.SkillCardAnimation.VanishAnimation;
+using System.Linq;
 
 namespace Game.CombatSystem.Manager
 {
@@ -546,6 +548,51 @@ namespace Game.CombatSystem.Manager
                     return true;
             }
             return false;
+        }
+
+        /// <summary>
+        /// 캐릭터 사망 연출을 위해 현재 Manager가 관리하는 모든 카드를 소멸시킵니다.
+        /// </summary>
+        public void VanishAllCardsForDeathAnimation(System.Action onComplete)
+        {
+            var cardsToVanish = new List<SkillCardUI>(_cardsInSlots.Values.Select(tuple => tuple.Item2 as SkillCardUI).Where(ui => ui != null));
+            
+            if (cardsToVanish.Count == 0)
+            {
+                onComplete?.Invoke();
+                return;
+            }
+
+            int vanishedCount = 0;
+            foreach (var cardUI in cardsToVanish)
+            {
+                var vanishAnim = cardUI.GetComponent<DefaultSkillCardVanishAnimation>() ?? cardUI.gameObject.AddComponent<DefaultSkillCardVanishAnimation>();
+                vanishAnim.PlayVanishAnimation(() => {
+                    vanishedCount++;
+                    if (cardUI != null && cardUI.gameObject != null)
+                    {
+                        Destroy(cardUI.gameObject);
+                    }
+                    if (vanishedCount == cardsToVanish.Count)
+                    {
+                        // 모든 애니메이션이 끝나면 핸드를 완전히 정리
+                        ClearHandInternal();
+                        onComplete?.Invoke();
+                    }
+                });
+            }
+        }
+
+        /// <summary>
+        /// 내부 전용: 핸드의 모든 슬롯과 참조를 정리합니다.
+        /// </summary>
+        private void ClearHandInternal()
+        {
+            foreach (var slot in handSlots.Values)
+                slot?.Clear();
+
+            cardUIs.Clear();
+            _cardsInSlots.Clear();
         }
 
         /// <summary>
