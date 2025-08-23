@@ -1,38 +1,46 @@
 using System.IO;
 using UnityEngine;
 
-public static class SaveSystem
+namespace Game.Save
 {
-    private static string savePath = Application.persistentDataPath + "/save.json";
-
-    // 저장
-    public static void Save(SaveData data)
+    /// <summary>
+    /// JSON 저장/불러오기 유틸
+    /// </summary>
+    public static class SaveSystem
     {
-        string json = JsonUtility.ToJson(data, true);
-        File.WriteAllText(savePath, json);
-        Debug.Log("저장 완료: " + savePath);
-    }
+        private static readonly string SavePath =
+            Path.Combine(Application.persistentDataPath, "battle_save.json");
 
-    // 불러오기
-    public static SaveData Load()
-    {
-        if (File.Exists(savePath))
+        public static void Save(BattleSaveData data)
         {
-            string json = File.ReadAllText(savePath);
-            SaveData data = JsonUtility.FromJson<SaveData>(json);
-            Debug.Log("불러오기 완료");
+            var json = JsonUtility.ToJson(data, prettyPrint: true);
+            File.WriteAllText(SavePath, json);
+            Debug.Log($"[SaveSystem] 저장 완료: {SavePath}");
+        }
+
+        public static BattleSaveData Load()
+        {
+            if (!File.Exists(SavePath))
+            {
+                Debug.LogWarning("[SaveSystem] 저장 파일이 없습니다.");
+                return null;
+            }
+
+            var json = File.ReadAllText(SavePath);
+            var data = JsonUtility.FromJson<BattleSaveData>(json);
+            Debug.Log($"[SaveSystem] 불러오기 완료: {SavePath}");
             return data;
         }
-        else
-        {
-            Debug.LogWarning("세이브 파일 없음");
-            return null;
-        }
-    }
 
-    // 저장 파일이 있는지 확인
-    public static bool SaveFileExists()
-    {
-        return File.Exists(savePath);
+        public static bool Exists() => File.Exists(SavePath);
+
+        public static void Delete()
+        {
+            if (File.Exists(SavePath))
+            {
+                File.Delete(SavePath);
+                Debug.Log("[SaveSystem] 저장 파일 삭제");
+            }
+        }
     }
 }
