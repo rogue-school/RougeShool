@@ -1,56 +1,33 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 public class InventoryManager : MonoBehaviour
 {
-    [System.Serializable]
-    public class InventoryItem
-    {
-        public string id;
-        public Sprite icon;
-        public int quantity;
-    }
-
-    public List<InventorySlot> slots;
-    public string potionId = "Potion";
-
-    private Dictionary<string, InventoryItem> inventoryItems = new Dictionary<string, InventoryItem>();
+    public InventorySlot[] slots;
 
     public void OnItemClicked(string itemId, Sprite itemSprite)
     {
-        // 이미 등록된 아이템인지 확인
-        foreach (InventorySlot slot in slots)
+        // 포션은 항상 Slot1에 들어가게
+        if (itemId == "potion")
         {
-            if (slot.HasSameItem(itemId))
-            {
-                slot.AddItem();
-                inventoryItems[itemId].quantity++;
-                return;
-            }
+            slots[0].AddItem(itemId, itemSprite);
+            return;
         }
 
-        // 포션이면 0번 슬롯에
-        if (itemId == potionId)
+        // 다른 아이템은 빈 슬롯에 들어가게
+        foreach (var slot in slots)
         {
-            InventorySlot topSlot = slots[0];
-            if (topSlot.IsEmpty() || topSlot.HasSameItem(itemId))
-            {
-                topSlot.SetItem(itemId, itemSprite);
-                if (!inventoryItems.ContainsKey(itemId))
-                {
-                    inventoryItems[itemId] = new InventoryItem { id = itemId, icon = itemSprite, quantity = 1 };
-                }
-                return;
-            }
+            if (!slot.HasSameItem(itemId))
+                continue;
+
+            slot.AddItem(itemId, itemSprite);
+            return;
         }
 
-        // 새 슬롯에 추가
-        foreach (InventorySlot slot in slots)
+        foreach (var slot in slots)
         {
-            if (slot.IsEmpty())
+            if (slot.icon.sprite == null) // 빈 슬롯
             {
-                slot.SetItem(itemId, itemSprite);
-                inventoryItems[itemId] = new InventoryItem { id = itemId, icon = itemSprite, quantity = 1 };
+                slot.AddItem(itemId, itemSprite);
                 return;
             }
         }

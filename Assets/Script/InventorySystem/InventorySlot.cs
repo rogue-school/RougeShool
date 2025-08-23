@@ -1,45 +1,44 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using TMPro;  // 👉 이거 추가!
+using TMPro;
 
 public class InventorySlot : MonoBehaviour
 {
-    public Image icon;
-    public TextMeshProUGUI countText;  // 👉 TMP 타입으로 변경
+    public Image icon;                 // 아이템 아이콘
+    public TextMeshProUGUI countText;  // 수량 표시
+    public TextMeshProUGUI nameText;   // 아이템 이름 표시 (새로 추가)
 
     private string itemId;
     private int count;
 
-    public void SetItem(string id, Sprite sprite)
+    void Start()
     {
-        itemId = id;
-        icon.sprite = sprite;
-        icon.enabled = true;
-        count = 1;
-        UpdateUI();
+        if (icon != null)
+            icon.enabled = false;
+
+        if (countText != null)
+            countText.text = "";
+
+        if (nameText != null)
+            nameText.text = "";  // 시작 시 이름 숨김
     }
 
-    public void AddItem()
+    public void AddItem(string id, Sprite sprite, int amount = 1, string displayName = "")
     {
-        count++;
-        UpdateUI();
+        itemId = id;
+        count += amount;
+
+        icon.sprite = sprite;
+        icon.enabled = true;
+
+        countText.text = count.ToString();
+
+        if (!string.IsNullOrEmpty(displayName))
+            nameText.text = displayName;
     }
 
     public bool HasSameItem(string id)
     {
         return itemId == id;
-    }
-
-    public bool IsEmpty()
-    {
-        return string.IsNullOrEmpty(itemId);
-    }
-
-    private void UpdateUI()
-    {
-        if (countText != null)
-        {
-            countText.text = count.ToString();
-        }
     }
 }
