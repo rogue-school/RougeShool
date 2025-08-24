@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/AmplifyShaderEditor.meta
 guid: b573829afdfdad64f8e9f87780c49736
+========
+guid: 62f5af5f6337dcb47a41b9baa7114ab0
+>>>>>>>> wonjun123:Assets/Script/Save/New Folder.meta
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}
