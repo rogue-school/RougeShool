@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 584c6f6845ff0ae4ebfcba95d1bfdcf0
+guid: ff558628538750945a428d29cd812a64
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -5702538616881127145
-    second: "POTION_001\uD68C\uBCF5 \uBB3C\uC57D_0"
+      213: -994291799679494405
+    second: cardv2_2_180270_dark_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: "POTION_001\uD68C\uBCF5 \uBB3C\uC57D_0"
+      name: cardv2_2_180270_dark_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 28
-        height: 39
+        width: 180
+        height: 270
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 7116ade57538cd0b0800000000000000
-      internalID: -5702538616881127145
+      spriteID: bf6150d40e09332f0800000000000000
+      internalID: -994291799679494405
       vertices: []
       indices: 
       edges: []
