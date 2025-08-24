@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      "RELIC_009\uC720\uBB3C(\uAC11\uC637)_0": -4873556098337640773
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
