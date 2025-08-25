@@ -22,10 +22,20 @@ public class InventoryRandomizer : MonoBehaviour
     [Header("아이템 설명 지정")]
     public string[] itemDescriptions; // 각 스프라이트에 대응하는 설명
 
+    [Header("랜덤 다시 뽑기 버튼들 (여러 개 가능)")]
+    public Button[] rerollButtons;
 
     void Start()
     {
+        // 시작할 때 한번 채움
         FillRandomItems();
+
+        // 버튼 클릭 시 랜덤 배치
+        foreach (Button btn in rerollButtons)
+        {
+            if (btn != null)
+                btn.onClick.AddListener(FillRandomItems);
+        }
     }
 
     void FillRandomItems()
