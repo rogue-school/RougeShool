@@ -110,7 +110,7 @@ public static class ReplaceTMPFonts
         int changed = 0;
 
         // TMP_Text (UGUI & 3D)
-        var texts = UnityEngine.Object.FindObjectsOfType<TMP_Text>(true);
+        var texts = UnityEngine.Object.FindObjectsByType<TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         foreach (var t in texts)
         {
             if (t != null && t.font != targetFont)
@@ -122,7 +122,7 @@ public static class ReplaceTMPFonts
         }
 
         // TMP_InputField
-        var inputs = UnityEngine.Object.FindObjectsOfType<TMP_InputField>(true);
+        var inputs = UnityEngine.Object.FindObjectsByType<TMP_InputField>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         foreach (var input in inputs)
         {
             if (input != null && input.textComponent != null && input.textComponent.font != targetFont)
@@ -140,7 +140,7 @@ public static class ReplaceTMPFonts
         }
 
         // TMP_Dropdown
-        var dropdowns = UnityEngine.Object.FindObjectsOfType<TMP_Dropdown>(true);
+        var dropdowns = UnityEngine.Object.FindObjectsByType<TMP_Dropdown>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         foreach (var dd in dropdowns)
         {
             if (dd != null && dd.captionText != null && dd.captionText.font != targetFont)
