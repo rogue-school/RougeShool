@@ -79,6 +79,15 @@ alwaysApply: true
 - Update() 메서드에서 불필요한 계산 제거
 - 오브젝트 풀링 패턴 활용
 
+## 🚀 Unity 6000.0.42f1 최신 API 사용
+- Unity 6000.0.42f1 버전의 최신 API와 기능을 우선 사용
+- 새로운 Unity 6의 성능 개선 사항을 적극 활용
+- 최신 Unity 패키지와 에셋 스토어 리소스 활용
+- Unity 6의 새로운 렌더링 파이프라인과 그래픽스 기능 사용
+- 최신 Unity Input System과 UI Toolkit 활용
+- Unity 6의 개선된 메모리 관리와 가비지 컬렉션 최적화
+- 새로운 Unity Analytics와 Cloud Build 기능 활용
+
 ## 📁 파일 구조
 ```
 Script/
