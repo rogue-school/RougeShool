@@ -5,8 +5,9 @@ using Game.SkillCardSystem.Runtime; // RuntimeSkillCard
 using System.Collections.Generic; // Added for List
 using Game.SkillCardSystem.Slot;
 using Game.SkillCardSystem.Core;
+using Game.CoreSystem.Animation;
 
-namespace AnimationSystem.Manager
+namespace Game.AnimationSystem.Manager
 {
     public class AnimationFacade : MonoBehaviour
     {

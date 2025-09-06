@@ -1,8 +1,8 @@
 using UnityEngine;
 using DG.Tweening;
-using AnimationSystem.Interface;
+using Game.AnimationSystem.Interface;
 
-namespace AnimationSystem.Animator.SkillCardAnimation.VanishAnimation
+namespace Game.AnimationSystem.Animator.SkillCardAnimation.VanishAnimation
 {
     [RequireComponent(typeof(RectTransform))]
     public class DefaultSkillCardVanishAnimation : MonoBehaviour, ISkillCardDeathAnimationScript

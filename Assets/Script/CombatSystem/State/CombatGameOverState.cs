@@ -3,6 +3,7 @@ using System.Collections;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
 using Game.Utility;
+using Game.CoreSystem.Utility;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Manager;
 using Game.IManager;

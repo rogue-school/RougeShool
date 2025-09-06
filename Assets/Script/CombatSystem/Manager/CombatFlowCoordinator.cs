@@ -13,6 +13,7 @@ using Game.CombatSystem.Context;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Core;
 using Game.Utility;
+using Game.CoreSystem.Utility;
 using Game.CombatSystem.State;
 using System.Threading.Tasks;
 using Game.CombatSystem;

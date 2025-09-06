@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using Game.CombatSystem.Interface;
 using Game.Utility;
+using Game.CoreSystem.Utility;
 using Game.CombatSystem.Context;
 using Game.CombatSystem.Manager;
 

@@ -1,7 +1,7 @@
 using UnityEngine;
 using DG.Tweening;
 
-namespace AnimationSystem.Data
+namespace Game.AnimationSystem.Data
 {
     /// <summary>
     /// 캐릭터 애니메이션 설정을 위한 구조체

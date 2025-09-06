@@ -2,7 +2,7 @@ using UnityEngine;
 using DG.Tweening;
 using Game.CharacterSystem.Data;
 
-namespace AnimationSystem.Controllers
+namespace Game.AnimationSystem.Controllers
 {
     /// <summary>
     /// 캐릭터 애니메이션을 스크립트로 제어하는 컨트롤러

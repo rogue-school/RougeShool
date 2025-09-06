@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace AnimationSystem.Interface
+namespace Game.AnimationSystem.Interface
 {
     /// <summary>
     /// 모든 애니메이션 스크립트의 기본 인터페이스

@@ -18,11 +18,13 @@ using Game.SkillCardSystem.Factory;
 using Game.SkillCardSystem.Validator;
 using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Interface;
-using Game.Utility.GameFlow;
+using Game.CoreSystem.Manager;
+using Game.UtilitySystem.GameFlow;
 using Game.SkillCardSystem.UI;
 using Game.CombatSystem.State;
 using Game.CombatSystem.Factory;
 using Game.Utility;
+using Game.CoreSystem.Utility;
 using Game.CombatSystem.DragDrop;
 using Game.CombatSystem.CoolTime;
 using Game.SkillCardSystem.Runtime;
@@ -192,14 +194,14 @@ public class CombatInstaller : MonoInstaller
 
     private void BindSceneLoader()
     {
-        var loader = Object.FindFirstObjectByType<SceneLoader>();
-        if (loader == null)
+        var transitionManager = SceneTransitionManager.Instance;
+        if (transitionManager == null)
         {
-            Debug.LogError("[CombatInstaller] SceneLoader가 없습니다.");
+            Debug.LogError("[CombatInstaller] SceneTransitionManager가 없습니다.");
             return;
         }
 
-        Container.Bind<ISceneLoader>().FromInstance(loader).AsSingle();
+        Container.Bind<ISceneLoader>().FromInstance(transitionManager).AsSingle();
     }
 
     #endregion

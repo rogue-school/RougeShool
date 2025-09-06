@@ -1,9 +1,9 @@
 using UnityEngine;
 using DG.Tweening;
 using System.Collections;
-using AnimationSystem.Interface;
+using Game.AnimationSystem.Interface;
 
-namespace AnimationSystem.Animator.CharacterAnimation.SpawnAnimation
+namespace Game.AnimationSystem.Animator.CharacterAnimation.SpawnAnimation
 {
     [RequireComponent(typeof(RectTransform), typeof(CanvasGroup))]
     public class DefaultCharacterSpawnAnimation : MonoBehaviour, ICharacterSpawnAnimationScript

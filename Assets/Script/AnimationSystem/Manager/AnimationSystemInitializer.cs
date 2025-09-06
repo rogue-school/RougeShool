@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace AnimationSystem.Manager
+namespace Game.AnimationSystem.Manager
 {
     /// <summary>
     /// 애니메이션 시스템의 자동 초기화를 담당하는 클래스

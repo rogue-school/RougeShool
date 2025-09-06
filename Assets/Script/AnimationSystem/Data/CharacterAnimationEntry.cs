@@ -1,7 +1,7 @@
 using UnityEngine;
 using Game.CharacterSystem.Data;
 
-namespace AnimationSystem.Data
+namespace Game.AnimationSystem.Data
 {
     [System.Serializable]
     public class PlayerCharacterAnimationEntry

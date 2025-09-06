@@ -1,6 +1,6 @@
 using Game.CharacterSystem.Data;
 
-namespace Game.Utility.GameFlow
+namespace Game.UtilitySystem.GameFlow
 {
     /// <summary>
     /// 게임 실행 중 공유되는 컨텍스트를 저장합니다.

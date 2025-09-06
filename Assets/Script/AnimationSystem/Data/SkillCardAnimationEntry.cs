@@ -2,7 +2,7 @@ using UnityEngine;
 using Game.SkillCardSystem.Data;
 using Game.SkillCardSystem.Core;
 
-namespace AnimationSystem.Data
+namespace Game.AnimationSystem.Data
 {
     [System.Serializable]
     public class PlayerSkillCardAnimationEntry

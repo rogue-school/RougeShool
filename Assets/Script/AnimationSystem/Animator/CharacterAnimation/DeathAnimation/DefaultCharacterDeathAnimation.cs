@@ -1,9 +1,9 @@
 using UnityEngine;
 using DG.Tweening;
-using AnimationSystem.Data;
-using AnimationSystem.Interface;
+using Game.AnimationSystem.Data;
+using Game.AnimationSystem.Interface;
 
-namespace AnimationSystem.Animator.CharacterAnimation.DeathAnimation
+namespace Game.AnimationSystem.Animator.CharacterAnimation.DeathAnimation
 {
     /// <summary>
     /// 캐릭터가 불타면서 사라지는 사망 애니메이션

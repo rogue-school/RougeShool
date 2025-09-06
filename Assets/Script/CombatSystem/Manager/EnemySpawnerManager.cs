@@ -8,7 +8,7 @@ using Game.CombatSystem.Interface;
 using Zenject;
 using Game.CombatSystem.Utility;
 using Game.CombatSystem;
-using AnimationSystem.Manager;
+using Game.AnimationSystem.Manager;
 
 namespace Game.CombatSystem.Manager
 {

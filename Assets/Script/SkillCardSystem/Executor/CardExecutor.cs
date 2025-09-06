@@ -3,7 +3,7 @@ using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Factory;
 using Game.SkillCardSystem.Validator;
-using Game.Audio;
+using Game.CoreSystem.Audio;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Core;
 

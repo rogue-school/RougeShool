@@ -4,7 +4,7 @@ using Zenject;
 using Game.IManager;
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Interface;
-using AnimationSystem.Manager;
+using Game.AnimationSystem.Manager;
 
 namespace Game.CombatSystem.Initialization
 {

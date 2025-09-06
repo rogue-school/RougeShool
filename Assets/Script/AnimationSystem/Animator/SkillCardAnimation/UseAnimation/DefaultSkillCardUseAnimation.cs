@@ -1,8 +1,8 @@
 using UnityEngine;
 using DG.Tweening;
-using AnimationSystem.Interface;
+using Game.AnimationSystem.Interface;
 
-namespace AnimationSystem.Animator.SkillCardAnimation.UseAnimation
+namespace Game.AnimationSystem.Animator.SkillCardAnimation.UseAnimation
 {
     [RequireComponent(typeof(RectTransform))]
     public class DefaultSkillCardUseAnimation : MonoBehaviour, ISkillCardUseAnimationScript

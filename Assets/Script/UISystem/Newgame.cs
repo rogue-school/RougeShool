@@ -3,18 +3,18 @@ using UnityEngine.SceneManagement;
 
 public class Playbutton : MonoBehaviour
 {
-    public string sceneToLoad; // Inspector¿¡¼­ ÁöÁ¤ °¡´É
+    public string sceneToLoad; // Inspectorï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
     public void OnButtonClicked()
     {
         if (!string.IsNullOrEmpty(sceneToLoad))
         {
-            Debug.Log("¹öÆ°À» Å¬¸¯Çß½À´Ï´Ù. ¾À ÀÌµ¿ Áß: " + sceneToLoad);
+            Debug.Log("ï¿½ï¿½Æ°ï¿½ï¿½ Å¬ï¿½ï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½. ï¿½ï¿½ ï¿½Ìµï¿½ ï¿½ï¿½: " + sceneToLoad);
             SceneManager.LoadScene(sceneToLoad);
         }
         else
         {
-            Debug.Log("¹öÆ°À» Å¬¸¯Çß½À´Ï´Ù. ÀÌµ¿ÇÒ ¾À ÀÌ¸§ÀÌ ¼³Á¤µÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+            Debug.Log("ï¿½ï¿½Æ°ï¿½ï¿½ Å¬ï¿½ï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½. ï¿½Ìµï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ì¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê¾Ò½ï¿½ï¿½Ï´ï¿½.");
         }
     }
 }

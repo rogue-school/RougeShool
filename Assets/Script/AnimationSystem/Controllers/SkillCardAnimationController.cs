@@ -3,7 +3,7 @@ using DG.Tweening;
 using Game.SkillCardSystem.Data;
 using Game.SkillCardSystem.Core;
 
-namespace AnimationSystem.Controllers
+namespace Game.AnimationSystem.Controllers
 {
     /// <summary>
     /// 스킬카드 애니메이션을 스크립트로 제어하는 컨트롤러

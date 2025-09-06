@@ -1,10 +1,10 @@
 using UnityEditor;
 using UnityEngine;
-using AnimationSystem.Data;
+using Game.AnimationSystem.Data;
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using AnimationSystem.Interface;
+using Game.AnimationSystem.Interface;
 
 [CustomEditor(typeof(PlayerCharacterAnimationDatabase))]
 public class PlayerCharacterAnimationDatabaseEditor : Editor

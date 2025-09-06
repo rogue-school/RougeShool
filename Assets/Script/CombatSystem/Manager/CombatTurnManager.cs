@@ -6,7 +6,7 @@ using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.UI;
 using Zenject;
 using Game.CombatSystem;
-using AnimationSystem.Manager;
+using Game.AnimationSystem.Manager;
 
 namespace Game.CombatSystem.Manager
 {

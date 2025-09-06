@@ -8,7 +8,7 @@ using Game.CharacterSystem.Interface;
 using Game.IManager;
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Core;
-using AnimationSystem.Manager;
+using Game.AnimationSystem.Manager;
 
 namespace Game.CombatSystem.Initialization
 {

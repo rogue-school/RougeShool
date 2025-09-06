@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace AnimationSystem.Helper
+namespace Game.AnimationSystem.Helper
 {
     /// <summary>
     /// 애니메이션 관련 컴포넌트를 런타임에 안전하게 부착/획득하는 헬퍼 클래스

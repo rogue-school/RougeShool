@@ -1,8 +1,8 @@
 using UnityEngine;
 using DG.Tweening;
-using AnimationSystem.Interface;
+using Game.AnimationSystem.Interface;
 
-namespace AnimationSystem.Animator.SkillCardAnimation.MoveToCombatSlotAnimation
+namespace Game.AnimationSystem.Animator.SkillCardAnimation.MoveToCombatSlotAnimation
 {
     [RequireComponent(typeof(RectTransform))]
     public class DefaultSkillCardMoveToCombatSlotAnimation : MonoBehaviour, ISkillCardCombatSlotMoveAnimationScript

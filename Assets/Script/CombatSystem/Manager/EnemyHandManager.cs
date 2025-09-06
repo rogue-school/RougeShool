@@ -17,12 +17,12 @@ using Game.IManager;
 using Game.CombatSystem.Utility;
 using System.Threading.Tasks;
 using Game.CombatSystem.Manager;
-using AnimationSystem.Animator;
-using AnimationSystem.Manager;
+using Game.AnimationSystem.Animator;
+using Game.AnimationSystem.Manager;
 using Game.CombatSystem.Core;
-using AnimationSystem.Helper;
-using AnimationSystem.Animator.SkillCardAnimation.MoveAnimation;
-using AnimationSystem.Animator.SkillCardAnimation.VanishAnimation;
+using Game.AnimationSystem.Helper;
+using Game.AnimationSystem.Animator.SkillCardAnimation.MoveAnimation;
+using Game.AnimationSystem.Animator.SkillCardAnimation.VanishAnimation;
 using System.Linq;
 
 namespace Game.CombatSystem.Manager

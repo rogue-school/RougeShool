@@ -22,14 +22,13 @@ namespace Game.CharacterSystem.Core
         }
     }
 
-    private void OnSelectCharacter(int index)
+    private async void OnSelectCharacter(int index)
     {
-        if (GameManager.Instance != null)
-            GameManager.Instance.selectedCharacter = characterCandidates[index];
+        // 캐릭터 선택 로직 (GameManager 대신 새로운 시스템 사용)
         Debug.Log($"선택된 캐릭터: {characterCandidates[index].DisplayName}");
-
-        if (GameManager.Instance != null)
-            GameManager.Instance.StartBattle();
+        
+        // 새로운 씬 전환 시스템 사용
+        await Game.CoreSystem.Manager.SceneTransitionManager.Instance.TransitionToBattleScene();
     }
 }
 }

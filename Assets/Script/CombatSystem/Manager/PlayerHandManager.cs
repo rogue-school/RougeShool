@@ -8,7 +8,7 @@ using Game.CharacterSystem.Interface;
 using Game.SkillCardSystem.Factory;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem;
-using AnimationSystem.Manager;
+using Game.AnimationSystem.Manager;
 using System.Linq;
 
 namespace Game.SkillCardSystem.Core

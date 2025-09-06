@@ -1,8 +1,8 @@
 using UnityEngine;
 using DG.Tweening;
-using AnimationSystem.Interface;
+using Game.AnimationSystem.Interface;
 
-namespace AnimationSystem.Animator.SkillCardAnimation.DropAnimation
+namespace Game.AnimationSystem.Animator.SkillCardAnimation.DropAnimation
 {
     [RequireComponent(typeof(RectTransform))]
     public class DefaultSkillCardDropAnimation : MonoBehaviour, ISkillCardDropAnimationScript

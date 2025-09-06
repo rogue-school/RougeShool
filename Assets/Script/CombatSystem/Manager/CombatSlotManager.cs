@@ -5,7 +5,7 @@ using Game.CombatSystem.Slot;
 using Game.CombatSystem.UI;
 using Game.IManager;
 using Game.CombatSystem.Utility;
-using AnimationSystem.Manager;
+using Game.AnimationSystem.Manager;
 
 namespace Game.CombatSystem.Manager
 {

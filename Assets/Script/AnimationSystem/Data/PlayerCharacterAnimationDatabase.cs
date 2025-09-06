@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Game.CharacterSystem.Data;
 
 
-namespace AnimationSystem.Data
+namespace Game.AnimationSystem.Data
 {
     /// <summary>
     /// 플레이어 캐릭터 애니메이션 데이터베이스

@@ -1,8 +1,8 @@
 using UnityEngine;
 using DG.Tweening;
-using AnimationSystem.Interface;
+using Game.AnimationSystem.Interface;
 
-namespace AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation
+namespace Game.AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation
 {
     /// <summary>
     /// 스킬 카드가 생성될 때 재생되는 애니메이션과 그림자 효과를 처리합니다.

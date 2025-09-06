@@ -3,7 +3,7 @@ using Game.CombatSystem.Interface;
 using Game.CombatSystem.Service;
 using Game.CombatSystem.DragDrop;
 
-namespace Game.Utility
+namespace Game.UtilitySystem
 {
     public static class DropHandlerInjector
     {

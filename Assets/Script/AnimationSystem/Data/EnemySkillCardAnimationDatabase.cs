@@ -4,7 +4,7 @@ using Game.SkillCardSystem.Data;
 using Game.SkillCardSystem.Core;
 
 
-namespace AnimationSystem.Data
+namespace Game.AnimationSystem.Data
 {
     /// <summary>
     /// 적용(적) 스킬카드 애니메이션 데이터베이스

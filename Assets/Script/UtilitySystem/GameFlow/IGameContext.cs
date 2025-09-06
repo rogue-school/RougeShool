@@ -1,6 +1,6 @@
 using Game.CharacterSystem.Data;
 
-namespace Game.Utility.GameFlow
+namespace Game.UtilitySystem.GameFlow
 {
     public interface IGameContext
     {

@@ -3,7 +3,7 @@ using UnityEngine;
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using AnimationSystem.Data;
+using Game.AnimationSystem.Data;
 
 public class AnimationDatabaseAssetFixer : EditorWindow
 {

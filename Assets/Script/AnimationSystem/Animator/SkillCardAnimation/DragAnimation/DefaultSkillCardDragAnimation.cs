@@ -1,8 +1,8 @@
 using UnityEngine;
 using DG.Tweening;
-using AnimationSystem.Interface;
+using Game.AnimationSystem.Interface;
 
-namespace AnimationSystem.Animator.SkillCardAnimation.DragAnimation
+namespace Game.AnimationSystem.Animator.SkillCardAnimation.DragAnimation
 {
     [RequireComponent(typeof(RectTransform))]
     public class DefaultSkillCardDragAnimation : MonoBehaviour, ISkillCardDragAnimationScript
