@@ -127,7 +127,7 @@ namespace Game.AnimationSystem.Manager
         // PlayCharacterAnimation, PlayCharacterDeathAnimation 파사드 메서드 추가
         public void PlayCharacterAnimation(string characterId, string animationType, GameObject target, System.Action onComplete = null, bool isEnemy = false)
         {
-            Debug.Log($"[AnimationFacade] PlayCharacterAnimation 호출: characterId={characterId}, animationType={animationType}, target={target?.name}, isEnemy={isEnemy}");
+            // Debug.Log($"[AnimationFacade] PlayCharacterAnimation 호출: characterId={characterId}, animationType={animationType}, target={target?.name}, isEnemy={isEnemy}");
             if (isEnemy)
                 PlayEnemyCharacterAnimation(characterId, animationType, target, onComplete);
             else
@@ -145,19 +145,19 @@ namespace Game.AnimationSystem.Manager
         // 스킬카드 애니메이션 실행
         public void PlaySkillCardAnimation(string cardId, string animationType, GameObject target)
         {
-            Debug.Log($"[AnimationFacade] PlaySkillCardAnimation 호출: cardId={cardId}, animationType={animationType}, target={target?.name}");
+            // Debug.Log($"[AnimationFacade] PlaySkillCardAnimation 호출: cardId={cardId}, animationType={animationType}, target={target?.name}");
             AnimationDatabaseManager.Instance.PlayPlayerSkillCardAnimation(cardId, target, animationType);
         }
         public void PlaySkillCardAnimation(string cardId, string animationType, GameObject target, System.Action onComplete)
         {
-            Debug.Log($"[AnimationFacade] PlaySkillCardAnimation(WithCallback) 호출: cardId={cardId}, animationType={animationType}, target={target?.name}");
+            // Debug.Log($"[AnimationFacade] PlaySkillCardAnimation(WithCallback) 호출: cardId={cardId}, animationType={animationType}, target={target?.name}");
             AnimationDatabaseManager.Instance.PlayPlayerSkillCardAnimation(cardId, target, animationType, onComplete);
         }
 
         // ISkillCard 기반 오버로드 추가
         public void PlaySkillCardAnimation(ISkillCard card, string animationType, GameObject target, System.Action onComplete = null)
         {
-            Debug.Log($"[AnimationFacade] PlaySkillCardAnimation(ISkillCard) 호출: card={card?.GetCardName()}, animationType={animationType}, target={target?.name}");
+            // Debug.Log($"[AnimationFacade] PlaySkillCardAnimation(ISkillCard) 호출: card={card?.GetCardName()}, animationType={animationType}, target={target?.name}");
             if (card == null)
             {
                 Debug.LogWarning("[AnimationFacade] card가 null입니다.");

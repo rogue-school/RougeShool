@@ -54,8 +54,14 @@ namespace Game.CharacterSystem.Core
         private void Awake()
         {
             if (CharacterData != null)
+            {
                 this.gameObject.name = CharacterData.name;
-            InitializeCharacter(CharacterData);
+                InitializeCharacter(CharacterData);
+            }
+            else
+            {
+                Debug.LogWarning($"[PlayerCharacter] {gameObject.name}의 CharacterData가 설정되지 않았습니다. 런타임에 초기화됩니다.");
+            }
         }
 
         #if UNITY_EDITOR
@@ -103,7 +109,10 @@ namespace Game.CharacterSystem.Core
         {
             if (CharacterData == null) return;
 
-            nameText.text = CharacterData.DisplayName;
+            // 캐릭터 이름 숨기기
+            if (nameText != null)
+                nameText.text = ""; // 빈 문자열로 설정하여 이름 숨김
+            
             portraitImage.sprite = CharacterData.Portrait;
 
             // 체력 숫자 및 색상 설정

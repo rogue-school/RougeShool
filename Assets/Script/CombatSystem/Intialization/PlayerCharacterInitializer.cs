@@ -9,6 +9,7 @@ using Game.IManager;
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Core;
 using Game.AnimationSystem.Manager;
+using Game.CoreSystem.Manager;
 
 namespace Game.CombatSystem.Initialization
 {
@@ -99,8 +100,19 @@ namespace Game.CombatSystem.Initialization
             // 4. 등장 애니메이션 실행 및 대기 (데이터베이스 기반)
             bool animDone = false;
             string characterId = data.name; // ScriptableObject의 name
-            AnimationFacade.Instance.PlayCharacterAnimation(characterId, "spawn", player.gameObject, () => animDone = true, false);
-            yield return new WaitUntil(() => animDone);
+            
+            // AnimationFacade가 사용 가능한지 확인
+            if (AnimationFacade.Instance != null)
+            {
+                AnimationFacade.Instance.PlayCharacterAnimation(characterId, "spawn", player.gameObject, () => animDone = true, false);
+                yield return new WaitUntil(() => animDone);
+            }
+            else
+            {
+                Debug.LogWarning("[PlayerCharacterInitializer] AnimationFacade가 사용 불가능합니다. 애니메이션을 건너뜁니다.");
+                // 애니메이션 없이 바로 완료 처리
+                animDone = true;
+            }
 
             // 5. 슬롯/매니저에 등록
             slot.SetCharacter(character);
@@ -208,14 +220,36 @@ namespace Game.CombatSystem.Initialization
         /// </summary>
         private PlayerCharacterData ResolvePlayerData()
         {
-            // GameManager의 선택 데이터 우선 사용
+            // 새로운 캐릭터 선택 매니저에서 선택된 캐릭터 우선 사용
+            if (PlayerCharacterSelectionManager.Instance != null && PlayerCharacterSelectionManager.Instance.HasSelectedCharacter())
+            {
+                var selectedCharacter = PlayerCharacterSelectionManager.Instance.GetSelectedCharacter();
+                if (selectedCharacter != null && !string.IsNullOrEmpty(selectedCharacter.DisplayName))
+                {
+                    Debug.Log($"[PlayerCharacterInitializer] 선택된 캐릭터 사용: {selectedCharacter.DisplayName}");
+                    return selectedCharacter;
+                }
+                else
+                {
+                    Debug.LogError("[PlayerCharacterInitializer] 선택된 캐릭터가 null이거나 DisplayName이 설정되지 않았습니다.");
+                }
+            }
+            
+            // GameManager의 선택 데이터 사용 (하위 호환성)
             if (GameManager.Instance != null && GameManager.Instance.selectedCharacter != null)
+            {
+                Debug.Log($"[PlayerCharacterInitializer] GameManager에서 캐릭터 사용: {GameManager.Instance.selectedCharacter.DisplayName}");
                 return GameManager.Instance.selectedCharacter;
+            }
 
+            // 기본 데이터 사용
             if (defaultData != null)
+            {
+                Debug.Log($"[PlayerCharacterInitializer] 기본 캐릭터 데이터 사용: {defaultData.DisplayName}");
                 return defaultData;
+            }
 
-            Debug.LogError("[PlayerCharacterInitializer] 캐릭터 데이터가 없습니다. (selectedCharacter, defaultData 모두 null)");
+            Debug.LogError("[PlayerCharacterInitializer] 캐릭터 데이터가 없습니다. (선택된 캐릭터, GameManager, 기본 데이터 모두 null)");
             return null;
         }
 

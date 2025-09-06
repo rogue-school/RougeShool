@@ -291,7 +291,6 @@ namespace Game.CoreSystem.UI
             if (Instance == null)
             {
                 Instance = this;
-                DontDestroyOnLoad(gameObject);
                 
                 if (enableDebugLogging)
                 {

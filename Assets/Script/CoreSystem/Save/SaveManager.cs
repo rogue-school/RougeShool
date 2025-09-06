@@ -27,7 +27,6 @@ namespace Game.CoreSystem.Save
             if (Instance == null)
             {
                 Instance = this;
-                DontDestroyOnLoad(gameObject);
                 Debug.Log("[SaveManager] 초기화 완료");
             }
             else

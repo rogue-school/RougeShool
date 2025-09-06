@@ -61,7 +61,7 @@ namespace Game.CharacterSystem.UI
         private void SetName(string name)
         {
             if (nameText != null)
-                nameText.text = name ?? "";
+                nameText.text = ""; // 캐릭터 이름 숨기기
         }
 
         /// <summary>

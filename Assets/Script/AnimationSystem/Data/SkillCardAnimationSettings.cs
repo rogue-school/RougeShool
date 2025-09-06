@@ -146,9 +146,63 @@ namespace Game.AnimationSystem.Data
         
         private System.Type GetScriptTypeForAnimation(string animationType)
         {
+            if (string.IsNullOrEmpty(animationType))
+                return null;
+                
+            // 애니메이션 타입에 따른 클래스명 매핑
+            string className = animationType switch
+            {
+                "spawn" => "Game.AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation.DefaultSkillCardSpawnAnimation",
+                "move" => "Game.AnimationSystem.Animator.SkillCardAnimation.MoveAnimation.DefaultSkillCardMoveAnimation",
+                "moveToCombatSlot" => "Game.AnimationSystem.Animator.SkillCardAnimation.MoveToCombatSlotAnimation.DefaultSkillCardMoveToCombatSlotAnimation",
+                "drop" => "Game.AnimationSystem.Animator.SkillCardAnimation.DropAnimation.DefaultSkillCardDropAnimation",
+                "drag" => "Game.AnimationSystem.Animator.SkillCardAnimation.DragAnimation.DefaultSkillCardDragAnimation",
+                _ => animationType // 기본값으로 원본 사용
+            };
+                
+            // 먼저 전체 타입명으로 시도
+            var type = System.Type.GetType(className);
+            if (type == null)
+            {
+                // 현재 어셈블리에서 타입 찾기 시도
+                var assemblies = System.AppDomain.CurrentDomain.GetAssemblies();
+                foreach (var assembly in assemblies)
+                {
+                    type = assembly.GetType(className);
+                    if (type != null)
+                        break;
+                }
+            }
+            
+            if (type == null)
+            {
+                Debug.LogError($"[SkillCardAnimationSettings] 애니메이션 타입을 찾을 수 없습니다: {animationType} -> {className}");
+            }
+            return type;
+        }
+        
+        /// <summary>
+        /// 현재 설정된 애니메이션 스크립트 타입을 반환합니다.
+        /// </summary>
+        public System.Type GetScriptType()
+        {
             if (string.IsNullOrEmpty(animationScriptType))
                 return null;
+                
+            // 먼저 전체 타입명으로 시도
             var type = System.Type.GetType(animationScriptType);
+            if (type == null)
+            {
+                // 현재 어셈블리에서 타입 찾기 시도
+                var assemblies = System.AppDomain.CurrentDomain.GetAssemblies();
+                foreach (var assembly in assemblies)
+                {
+                    type = assembly.GetType(animationScriptType);
+                    if (type != null)
+                        break;
+                }
+            }
+            
             if (type == null)
             {
                 Debug.LogError($"[SkillCardAnimationSettings] 애니메이션 타입을 찾을 수 없습니다: {animationScriptType}");

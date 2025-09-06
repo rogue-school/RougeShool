@@ -21,7 +21,7 @@ namespace Game.CoreSystem.Manager
         [SerializeField] private string battleSceneName = "BattleScene";
         
         [Header("전환 설정")]
-        [SerializeField] private float transitionDuration = 1f;
+        [SerializeField] private float transitionDuration = 0.1f; // 0.1초로 더 단축
         [SerializeField] private AnimationCurve transitionCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
         
         [Header("UI 참조")]
@@ -30,6 +30,7 @@ namespace Game.CoreSystem.Manager
         
         // 초기화 상태
         public bool IsInitialized { get; private set; } = false;
+        public bool IsTransitioning { get; private set; } = false; // 전환 상태 추가
         [SerializeField] private UnityEngine.UI.Text loadingText;
         
         // 이벤트
@@ -41,13 +42,18 @@ namespace Game.CoreSystem.Manager
             if (Instance == null)
             {
                 Instance = this;
-                DontDestroyOnLoad(gameObject);
                 InitializeTransition();
             }
             else
             {
                 Destroy(gameObject);
             }
+        }
+        
+        private void Start()
+        {
+            // 씬 전환 상태 초기화 (씬 로드 후 상태 리셋)
+            IsTransitioning = false;
         }
         
         /// <summary>
@@ -99,26 +105,35 @@ namespace Game.CoreSystem.Manager
         }
         
         /// <summary>
-        /// 씬 전환 실행
+        /// 씬 전환 실행 (페이드 효과 비활성화)
         /// </summary>
         public async Task TransitionToScene(string sceneName, TransitionType transitionType = TransitionType.Fade)
         {
+            // 중복 호출 방지
+            if (IsTransitioning)
+            {
+                Debug.LogWarning($"[SceneTransitionManager] 이미 씬 전환이 진행 중입니다. 요청 무시: {sceneName}");
+                return;
+            }
+            
             Debug.Log($"[SceneTransitionManager] 씬 전환 시작: {sceneName}");
             
+            IsTransitioning = true; // 전환 시작
             OnSceneTransitionStart?.Invoke(sceneName);
             
-            // 전환 시작
-            await StartTransition(transitionType);
-            
-            // 씬 로딩
-            await LoadSceneAsync(sceneName);
-            
-            // 전환 종료
-            await EndTransition(transitionType);
-            
-            OnSceneTransitionEnd?.Invoke(sceneName);
-            
-            Debug.Log($"[SceneTransitionManager] 씬 전환 완료: {sceneName}");
+            try
+            {
+                // 페이드 효과 비활성화 - 바로 씬 로딩
+                await LoadSceneAsync(sceneName);
+                
+                OnSceneTransitionEnd?.Invoke(sceneName);
+            }
+            finally
+            {
+                // 전환 상태를 반드시 리셋
+                IsTransitioning = false;
+                Debug.Log($"[SceneTransitionManager] 씬 전환 완료: {sceneName}");
+            }
         }
         
         /// <summary>
@@ -160,58 +175,66 @@ namespace Game.CoreSystem.Manager
         }
         
         /// <summary>
-        /// 전환 시작
+        /// 전환 시작 (페이드 아웃 - 화면을 어둡게)
         /// </summary>
         private async Task StartTransition(TransitionType transitionType)
         {
             if (transitionCanvas != null)
             {
-                transitionCanvas.gameObject.SetActive(true);
+                // 캔버스가 비활성화되어 있다면 활성화
+                if (!transitionCanvas.gameObject.activeInHierarchy)
+                {
+                    transitionCanvas.gameObject.SetActive(true);
+                }
                 transitionCanvas.blocksRaycasts = true;
+                transitionCanvas.interactable = true;
             }
             
             switch (transitionType)
             {
                 case TransitionType.Fade:
-                    await FadeTransition(true);
+                    await FadeTransition(false); // false = 페이드 아웃 (화면을 어둡게)
                     break;
                 case TransitionType.Slide:
-                    await SlideTransition(true);
+                    await SlideTransition(false); // false = 슬라이드 아웃
                     break;
             }
         }
         
         /// <summary>
-        /// 전환 종료
+        /// 전환 종료 (페이드 인 - 화면을 밝게)
         /// </summary>
         private async Task EndTransition(TransitionType transitionType)
         {
             switch (transitionType)
             {
                 case TransitionType.Fade:
-                    await FadeTransition(false);
+                    await FadeTransition(true); // true = 페이드 인 (화면을 밝게)
                     break;
                 case TransitionType.Slide:
-                    await SlideTransition(false);
+                    await SlideTransition(true); // true = 슬라이드 인
                     break;
             }
             
             if (transitionCanvas != null)
             {
-                transitionCanvas.gameObject.SetActive(false);
+                // 캔버스를 비활성화하지 말고 알파값만 0으로 설정
+                transitionCanvas.alpha = 0f;
                 transitionCanvas.blocksRaycasts = false;
+                transitionCanvas.interactable = false;
             }
         }
         
         /// <summary>
         /// 페이드 전환
         /// </summary>
+        /// <param name="fadeIn">true: 페이드 인 (화면을 밝게), false: 페이드 아웃 (화면을 어둡게)</param>
         private async Task FadeTransition(bool fadeIn)
         {
             if (transitionCanvas == null) return;
             
-            float startAlpha = fadeIn ? 0f : 1f;
-            float endAlpha = fadeIn ? 1f : 0f;
+            float startAlpha = fadeIn ? 0f : 1f; // fadeIn이면 투명에서 시작, 아니면 불투명에서 시작
+            float endAlpha = fadeIn ? 1f : 0f;   // fadeIn이면 불투명으로 끝, 아니면 투명으로 끝
             
             transitionCanvas.alpha = startAlpha;
             

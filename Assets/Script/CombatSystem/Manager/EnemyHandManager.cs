@@ -128,13 +128,13 @@ namespace Game.CombatSystem.Manager
                 yield return new WaitForEndOfFrame();
                 yield return new WaitForEndOfFrame();
 
-                // 4. 각 슬롯 상태 로그
-                Debug.Log($"[EnemyHandManager] 상태: 3={(IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_3) ? "비어있음" : "채워짐")}, 2={(IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_2) ? "비어있음" : "채워짐")}, 1={(IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_1) ? "비어있음" : "채워짐")}");
+                // 4. 각 슬롯 상태 로그 (디버그 모드에서만 활성화)
+                // Debug.Log($"[EnemyHandManager] 상태: 3={(IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_3) ? "비어있음" : "채워짐")}, 2={(IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_2) ? "비어있음" : "채워짐")}, 1={(IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_1) ? "비어있음" : "채워짐")}");
 
                 // 5. 반복 전 종료 조건: 3,2,1번 슬롯이 모두 차 있으면 break
                 if (!IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_3) && !IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_2) && !IsSlotEmpty(SkillCardSlotPosition.ENEMY_SLOT_1))
                 {
-                    Debug.Log($"[EnemyHandManager] step {step}: 모든 슬롯이 가득 참");
+                    // Debug.Log($"[EnemyHandManager] step {step}: 모든 슬롯이 가득 참");
                     break;
                 }
             }
@@ -643,7 +643,8 @@ namespace Game.CombatSystem.Manager
                             : (card != null && ui == null) ? "⚠️ 카드만 존재"
                             : (card == null && ui != null) ? "⚠️ UI만 존재"
                             : "비어있음";
-                Debug.Log($"[HandSync] 슬롯: {pos}, 카드: {cardName}, 카드UI: {uiName}, 상태: {sync}");
+                // 디버그 로그 제거 - 필요시에만 활성화
+                // Debug.Log($"[HandSync] 슬롯: {pos}, 카드: {cardName}, 카드UI: {uiName}, 상태: {sync}");
                 if (sync != "정상" && sync != "비어있음")
                     Debug.LogWarning($"[HandSync][경고] 슬롯 {pos} 동기화 깨짐: {sync}");
             }

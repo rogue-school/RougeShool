@@ -83,8 +83,9 @@ namespace Game.SkillCardSystem.Core
                 {
                     var ui = slot.AttachCard(card, cardUIPrefab);
                     if (ui != null) cardUIs[pos] = ui;
-                    // 카드 생성 이벤트 발행
-                    CombatEvents.RaisePlayerCardSpawn(card.CardData.Name, ui?.gameObject);
+                    
+                    // 초기 핸드 생성 시에는 애니메이션 이벤트를 발생시키지 않음
+                    // (PlayerSkillCardInitializer에서 일괄 처리)
                 }
             }
         }

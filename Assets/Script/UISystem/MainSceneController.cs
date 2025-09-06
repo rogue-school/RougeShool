@@ -72,12 +72,12 @@ namespace Game.UISystem
         /// <summary>
         /// 게임 시작 버튼 클릭
         /// </summary>
-        private async void OnStartButtonClicked()
+        private void OnStartButtonClicked()
         {
             Debug.Log("[MainSceneController] 게임 시작");
             
-            // 전투 씬으로 전환
-            await Game.CoreSystem.Manager.SceneTransitionManager.Instance.TransitionToBattleScene();
+            // 캐릭터 선택 UI 활성화 (씬 전환은 캐릭터 선택 후에만 발생)
+            // TODO: 캐릭터 선택 UI 활성화 로직 추가
         }
         
         /// <summary>

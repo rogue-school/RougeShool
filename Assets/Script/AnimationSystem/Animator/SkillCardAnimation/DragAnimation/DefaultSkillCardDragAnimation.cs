@@ -8,20 +8,12 @@ namespace Game.AnimationSystem.Animator.SkillCardAnimation.DragAnimation
     public class DefaultSkillCardDragAnimation : MonoBehaviour, ISkillCardDragAnimationScript
     {
         [Header("드래그 애니메이션 설정")]
-        [SerializeField] private float dragScaleMultiplier = 1.1f;
-        [SerializeField] private float dragScaleDuration = 0.15f;
-        [SerializeField] private Ease dragScaleEase = Ease.OutBack;
+        [SerializeField] private float dragScaleMultiplier = 1.05f;
+        [SerializeField] private float dragScaleDuration = 0.2f;
         
         [Header("드래그 중 효과")]
-        [SerializeField] private float dragRotationAngle = 5f;
-        [SerializeField] private float dragRotationDuration = 0.1f;
-        [SerializeField] private Ease dragRotationEase = Ease.OutQuad;
+        [SerializeField] private float dragRotationAngle = 0f; // 각도 효과 비활성화
         
-        [Header("그림자 효과")]
-        [SerializeField] private bool useShadowEffect = true;
-        [SerializeField] private float shadowOffset = 5f;
-        [SerializeField] private Color shadowColor = new Color(0, 0, 0, 0.3f);
-        [SerializeField] private float shadowDuration = 0.15f;
         
         [Header("글로우 효과")]
         [SerializeField] private bool useGlowEffect = true;
@@ -32,8 +24,6 @@ namespace Game.AnimationSystem.Animator.SkillCardAnimation.DragAnimation
         private RectTransform rectTransform;
         private Vector3 originalScale;
         private Vector3 originalRotation;
-        private GameObject shadowObject;
-        private UnityEngine.UI.Image shadowImage;
         private UnityEngine.UI.Image glowImage;
 
         private void Awake()
@@ -41,12 +31,6 @@ namespace Game.AnimationSystem.Animator.SkillCardAnimation.DragAnimation
             rectTransform = GetComponent<RectTransform>();
             originalScale = rectTransform.localScale;
             originalRotation = rectTransform.localEulerAngles;
-            
-            // 그림자 오브젝트 생성
-            if (useShadowEffect)
-            {
-                CreateShadowObject();
-            }
             
             // 글로우 오브젝트 생성
             if (useGlowEffect)
@@ -88,8 +72,6 @@ namespace Game.AnimationSystem.Animator.SkillCardAnimation.DragAnimation
         public void StopAnimation()
         {
             DOTween.Kill(rectTransform);
-            if (shadowObject != null)
-                DOTween.Kill(shadowObject);
             if (glowImage != null)
                 DOTween.Kill(glowImage);
         }
@@ -103,14 +85,12 @@ namespace Game.AnimationSystem.Animator.SkillCardAnimation.DragAnimation
             rectTransform.localScale = originalScale;
             rectTransform.localEulerAngles = originalRotation;
             
-            if (shadowObject != null)
-                shadowObject.SetActive(false);
             if (glowImage != null)
                 glowImage.gameObject.SetActive(false);
         }
 
         /// <summary>
-        /// 드래그 시작 애니메이션
+        /// 드래그 시작 애니메이션 (스케일 업 + 글로우 효과)
         /// </summary>
         public void PlayDragStartAnimation(System.Action onComplete = null)
         {
@@ -118,32 +98,13 @@ namespace Game.AnimationSystem.Animator.SkillCardAnimation.DragAnimation
 
             Sequence sequence = DOTween.Sequence();
 
-            // 1. 스케일 업 애니메이션
+            // 1. 부드러운 스케일 업 (선택된 느낌)
             sequence.Append(
                 rectTransform.DOScale(originalScale * dragScaleMultiplier, dragScaleDuration)
-                    .SetEase(dragScaleEase)
+                    .SetEase(Ease.OutCubic) // 더 부드러운 이징
             );
 
-            // 2. 회전 애니메이션
-            sequence.Join(
-                rectTransform.DOLocalRotate(new Vector3(0, 0, dragRotationAngle), dragRotationDuration)
-                    .SetEase(dragRotationEase)
-            );
-
-            // 3. 그림자 효과
-            if (useShadowEffect && shadowObject != null)
-            {
-                shadowObject.SetActive(true);
-                shadowObject.transform.localScale = Vector3.one;
-                shadowImage.color = new Color(shadowColor.r, shadowColor.g, shadowColor.b, 0);
-                
-                sequence.Join(
-                    shadowImage.DOFade(shadowColor.a, shadowDuration)
-                        .SetEase(Ease.OutQuad)
-                );
-            }
-
-            // 4. 글로우 효과
+            // 2. 글로우 효과 (선택된 느낌)
             if (useGlowEffect && glowImage != null)
             {
                 glowImage.gameObject.SetActive(true);
@@ -161,7 +122,7 @@ namespace Game.AnimationSystem.Animator.SkillCardAnimation.DragAnimation
         }
 
         /// <summary>
-        /// 드래그 종료 애니메이션
+        /// 드래그 종료 애니메이션 (스케일 다운 + 글로우 제거)
         /// </summary>
         public void PlayDragEndAnimation(System.Action onComplete = null)
         {
@@ -169,29 +130,13 @@ namespace Game.AnimationSystem.Animator.SkillCardAnimation.DragAnimation
 
             Sequence sequence = DOTween.Sequence();
 
-            // 1. 스케일 다운 애니메이션
+            // 1. 부드러운 스케일 다운 (착지 효과)
             sequence.Append(
                 rectTransform.DOScale(originalScale, dragScaleDuration)
-                    .SetEase(dragScaleEase)
+                    .SetEase(Ease.InCubic) // 부드러운 착지
             );
 
-            // 2. 회전 복원 애니메이션
-            sequence.Join(
-                rectTransform.DOLocalRotate(originalRotation, dragRotationDuration)
-                    .SetEase(dragRotationEase)
-            );
-
-            // 3. 그림자 효과 제거
-            if (useShadowEffect && shadowObject != null && shadowObject.activeSelf)
-            {
-                sequence.Join(
-                    shadowImage.DOFade(0, shadowDuration)
-                        .SetEase(Ease.InQuad)
-                        .OnComplete(() => shadowObject.SetActive(false))
-                );
-            }
-
-            // 4. 글로우 효과 제거
+            // 2. 글로우 효과 제거
             if (useGlowEffect && glowImage != null && glowImage.gameObject.activeSelf)
             {
                 sequence.Join(
@@ -206,35 +151,6 @@ namespace Game.AnimationSystem.Animator.SkillCardAnimation.DragAnimation
             });
         }
 
-        /// <summary>
-        /// 그림자 오브젝트 생성
-        /// </summary>
-        private void CreateShadowObject()
-        {
-            shadowObject = new GameObject("DragShadow");
-            shadowObject.transform.SetParent(transform);
-            shadowObject.transform.localPosition = new Vector3(shadowOffset, -shadowOffset, 0);
-            shadowObject.transform.localScale = Vector3.one;
-            shadowObject.transform.SetSiblingIndex(0); // 맨 뒤로
-
-            // 그림자 이미지 컴포넌트 추가
-            shadowImage = shadowObject.AddComponent<UnityEngine.UI.Image>();
-            shadowImage.sprite = GetComponent<UnityEngine.UI.Image>()?.sprite;
-            shadowImage.color = shadowColor;
-            shadowImage.raycastTarget = false;
-            
-            // RectTransform 설정
-            var shadowRect = shadowObject.GetComponent<RectTransform>();
-            if (shadowRect != null)
-            {
-                shadowRect.anchorMin = Vector2.zero;
-                shadowRect.anchorMax = Vector2.one;
-                shadowRect.offsetMin = Vector2.zero;
-                shadowRect.offsetMax = Vector2.zero;
-            }
-
-            shadowObject.SetActive(false);
-        }
 
         /// <summary>
         /// 글로우 오브젝트 생성
@@ -276,16 +192,6 @@ namespace Game.AnimationSystem.Animator.SkillCardAnimation.DragAnimation
             // 드래그 방향에 따른 미세한 회전
             float rotationZ = Mathf.Clamp(dragDelta.x * 0.5f, -dragRotationAngle, dragRotationAngle);
             rectTransform.localEulerAngles = new Vector3(0, 0, rotationZ);
-
-            // 그림자 위치 업데이트
-            if (useShadowEffect && shadowObject != null && shadowObject.activeSelf)
-            {
-                shadowObject.transform.localPosition = new Vector3(
-                    shadowOffset + dragDelta.x * 0.1f,
-                    -shadowOffset + dragDelta.y * 0.1f,
-                    0
-                );
-            }
         }
 
         /// <summary>
@@ -297,10 +203,44 @@ namespace Game.AnimationSystem.Animator.SkillCardAnimation.DragAnimation
             rectTransform.localScale = originalScale;
             rectTransform.localEulerAngles = originalRotation;
             
-            if (shadowObject != null)
-                shadowObject.SetActive(false);
             if (glowImage != null)
                 glowImage.gameObject.SetActive(false);
+        }
+
+        /// <summary>
+        /// 드롭 실패 시 원래 자리로 돌아가는 애니메이션 (빠르고 부드러운 착지)
+        /// </summary>
+        public void PlayDropFailAnimation(Vector3 originalPosition, System.Action onComplete = null)
+        {
+            if (rectTransform == null) return;
+
+            Sequence sequence = DOTween.Sequence();
+
+            // 1. 빠른 이동 (원래 자리로)
+            sequence.Append(
+                rectTransform.DOMove(originalPosition, 0.3f)
+                    .SetEase(Ease.OutCubic) // 부드러운 이동
+            );
+
+            // 2. 착지 효과 (스케일 다운)
+            sequence.Join(
+                rectTransform.DOScale(originalScale, 0.2f)
+                    .SetEase(Ease.OutBack) // 살짝 튀는 착지 효과
+            );
+
+            // 3. 글로우 효과 제거
+            if (useGlowEffect && glowImage != null && glowImage.gameObject.activeSelf)
+            {
+                sequence.Join(
+                    glowImage.DOFade(0, 0.2f)
+                        .SetEase(Ease.InQuad)
+                        .OnComplete(() => glowImage.gameObject.SetActive(false))
+                );
+            }
+
+            sequence.OnComplete(() => {
+                onComplete?.Invoke();
+            });
         }
 
         private void OnDestroy()

@@ -22,7 +22,6 @@ namespace Game.CoreSystem.Animation
             if (Instance == null)
             {
                 Instance = this;
-                DontDestroyOnLoad(gameObject);
                 // InitializeManager(); // 데이터 로드 및 컨트롤러 생성은 AnimationDatabaseManager에서 처리
             }
             else

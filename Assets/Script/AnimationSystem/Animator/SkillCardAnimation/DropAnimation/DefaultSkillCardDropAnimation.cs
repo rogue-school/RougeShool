@@ -8,17 +8,16 @@ namespace Game.AnimationSystem.Animator.SkillCardAnimation.DropAnimation
     public class DefaultSkillCardDropAnimation : MonoBehaviour, ISkillCardDropAnimationScript
     {
         [Header("드롭 애니메이션 설정")]
-        [SerializeField] private float dropScaleUp = 1.15f;
-        [SerializeField] private float dropScaleDuration = 0.12f;
-        [SerializeField] private float dropScaleDownDuration = 0.10f;
-        [SerializeField] private float shakeStrength = 10f;
-        [SerializeField] private int shakeVibrato = 10;
-        [SerializeField] private float shakeDuration = 0.18f;
-        [SerializeField] private Ease scaleEase = Ease.OutBack;
+        [SerializeField] private float dropScaleUp = 1.2f; // 더 큰 스케일 업
+        [SerializeField] private float dropScaleDuration = 0.15f; // 조금 더 긴 시간
+        [SerializeField] private float dropScaleDownDuration = 0.12f;
+        [SerializeField] private float shakeStrength = 8f; // 진동 강도 줄임
+        [SerializeField] private int shakeVibrato = 8; // 진동 횟수 줄임
+        [SerializeField] private float shakeDuration = 0.2f; // 진동 시간 증가
         [SerializeField] private bool useGlow = true;
-        [SerializeField] private Color glowColor = Color.yellow;
-        [SerializeField] private float glowFadeIn = 0.08f;
-        [SerializeField] private float glowFadeOut = 0.18f;
+        [SerializeField] private Color glowColor = Color.green; // 성공 색상으로 변경
+        [SerializeField] private float glowFadeIn = 0.1f;
+        [SerializeField] private float glowFadeOut = 0.2f;
 
         private RectTransform rectTransform;
         private Vector3 originalScale;
@@ -64,20 +63,42 @@ namespace Game.AnimationSystem.Animator.SkillCardAnimation.DropAnimation
             if (rectTransform == null) return;
             Sequence seq = DOTween.Sequence();
 
-            // 1. 스케일 업
-            seq.Append(rectTransform.DOScale(originalScale * dropScaleUp, dropScaleDuration).SetEase(scaleEase));
-            // 2. 스케일 다운
-            seq.Append(rectTransform.DOScale(originalScale, dropScaleDownDuration).SetEase(Ease.InQuad));
-            // 3. 진동(Shake)
-            seq.Join(rectTransform.DOShakeAnchorPos(shakeDuration, shakeStrength, shakeVibrato));
+            // 1. 스케일 업 (성공적인 드롭 강조)
+            seq.Append(
+                rectTransform.DOScale(originalScale * dropScaleUp, dropScaleDuration)
+                    .SetEase(Ease.OutBack) // 더 부드러운 튀는 효과
+            );
+            
+            // 2. 스케일 다운 (착지 효과)
+            seq.Append(
+                rectTransform.DOScale(originalScale, dropScaleDownDuration)
+                    .SetEase(Ease.InCubic) // 부드러운 착지
+            );
+            
+            // 3. 진동(Shake) - 성공적인 배치를 나타내는 미세한 진동
+            seq.Join(
+                rectTransform.DOShakeAnchorPos(shakeDuration, shakeStrength, shakeVibrato)
+                    .SetEase(Ease.OutQuad) // 부드러운 진동
+            );
 
-            // 4. 글로우 효과
+            // 4. 글로우 효과 (성공 색상)
             if (useGlow && glowImage != null)
             {
                 glowObject.SetActive(true);
                 glowImage.color = new Color(glowColor.r, glowColor.g, glowColor.b, 0);
-                seq.Join(glowImage.DOFade(glowColor.a, glowFadeIn));
-                seq.Append(glowImage.DOFade(0, glowFadeOut).SetEase(Ease.InQuad).OnComplete(() => glowObject.SetActive(false)));
+                
+                // 글로우 페이드 인
+                seq.Join(
+                    glowImage.DOFade(glowColor.a, glowFadeIn)
+                        .SetEase(Ease.OutQuad)
+                );
+                
+                // 글로우 페이드 아웃
+                seq.Append(
+                    glowImage.DOFade(0, glowFadeOut)
+                        .SetEase(Ease.InQuad)
+                        .OnComplete(() => glowObject.SetActive(false))
+                );
             }
 
             seq.OnComplete(() => {

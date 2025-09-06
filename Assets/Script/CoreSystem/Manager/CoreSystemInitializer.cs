@@ -25,7 +25,6 @@ namespace Game.CoreSystem.Manager
             if (Instance == null)
             {
                 Instance = this;
-                DontDestroyOnLoad(gameObject);
                 
                 // 디버그 로깅 설정
                 if (enableDebugLogging)
@@ -52,6 +51,7 @@ namespace Game.CoreSystem.Manager
             "CoroutineRunner", 
             "GameStateManager",
             "SceneTransitionManager",
+            "PlayerCharacterSelectionManager",
             "AudioManager",
             "SaveManager",
             "AnimationDatabaseManager",
@@ -139,6 +139,9 @@ namespace Game.CoreSystem.Manager
             // SceneTransitionManager 초기화
             yield return StartCoroutine(InitializeSystem<SceneTransitionManager>("SceneTransitionManager"));
             
+            // PlayerCharacterSelectionManager 초기화
+            yield return StartCoroutine(InitializeSystem<PlayerCharacterSelectionManager>("PlayerCharacterSelectionManager"));
+            
             // AudioManager 초기화
             yield return StartCoroutine(InitializeSystem<AudioManager>("AudioManager"));
             
@@ -166,8 +169,8 @@ namespace Game.CoreSystem.Manager
             // LoadingScreenController 초기화
             yield return StartCoroutine(InitializeSystem<LoadingScreenController>("LoadingScreenController"));
             
-            // TransitionEffectController 초기화
-            yield return StartCoroutine(InitializeSystem<TransitionEffectController>("TransitionEffectController"));
+            // TransitionEffectController 제거 (SceneTransitionManager와 중복 기능)
+            // yield return StartCoroutine(InitializeSystem<TransitionEffectController>("TransitionEffectController"));
             
             yield return null;
         }
@@ -309,12 +312,12 @@ namespace Game.CoreSystem.Manager
                 BindLoadingScreenController(loadingController);
             }
             
-            // TransitionEffectController 바인딩
-            TransitionEffectController transitionController = GetSystem<TransitionEffectController>("TransitionEffectController");
-            if (transitionController != null)
-            {
-                BindTransitionEffectController(transitionController);
-            }
+            // TransitionEffectController 바인딩 제거 (SceneTransitionManager와 중복 기능)
+            // TransitionEffectController transitionController = GetSystem<TransitionEffectController>("TransitionEffectController");
+            // if (transitionController != null)
+            // {
+            //     BindTransitionEffectController(transitionController);
+            // }
             
             yield return null;
         }
@@ -376,24 +379,25 @@ namespace Game.CoreSystem.Manager
             }
         }
         
-        private void BindTransitionEffectController(TransitionEffectController controller)
-        {
-            // TransitionPanel 찾기
-            GameObject transitionPanel = FindUIElement("TransitionPanel");
-            if (transitionPanel != null)
-            {
-                CanvasGroup fadeCanvas = transitionPanel.GetComponent<CanvasGroup>();
-                UnityEngine.UI.Image fadeImage = transitionPanel.GetComponentInChildren<UnityEngine.UI.Image>();
-                
-                if (fadeCanvas != null) SetPrivateField(controller, "fadeCanvas", fadeCanvas);
-                if (fadeImage != null) SetPrivateField(controller, "fadeImage", fadeImage);
-                
-                if (enableDebugLogging)
-                {
-                    GameLogger.LogInfo("TransitionEffectController 바인딩 완료", GameLogger.LogCategory.UI);
-                }
-            }
-        }
+        // TransitionEffectController 바인딩 메서드 제거 (SceneTransitionManager와 중복 기능)
+        // private void BindTransitionEffectController(TransitionEffectController controller)
+        // {
+        //     // TransitionPanel 찾기
+        //     GameObject transitionPanel = FindUIElement("TransitionPanel");
+        //     if (transitionPanel != null)
+        //     {
+        //         CanvasGroup fadeCanvas = transitionPanel.GetComponent<CanvasGroup>();
+        //         UnityEngine.UI.Image fadeImage = transitionPanel.GetComponentInChildren<UnityEngine.UI.Image>();
+        //         
+        //         if (fadeCanvas != null) SetPrivateField(controller, "fadeCanvas", fadeCanvas);
+        //         if (fadeImage != null) SetPrivateField(controller, "fadeImage", fadeImage);
+        //         
+        //         if (enableDebugLogging)
+        //         {
+        //             GameLogger.LogInfo("TransitionEffectController 바인딩 완료", GameLogger.LogCategory.UI);
+        //         }
+        //     }
+        // }
         
         private AudioSource FindAudioSource(string sourceName)
         {

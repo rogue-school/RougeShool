@@ -28,6 +28,7 @@ using Game.CoreSystem.Utility;
 using Game.CombatSystem.DragDrop;
 using Game.CombatSystem.CoolTime;
 using Game.SkillCardSystem.Runtime;
+using Game.CoreSystem.Interface;
 
 /// <summary>
 /// 전투 씬에서 사용하는 Zenject 설치자입니다.
@@ -95,7 +96,29 @@ public class CombatInstaller : MonoInstaller
         BindMono<IEnemySpawnerManager, EnemySpawnerManager>();
         BindMono<IStageManager, StageManager>();
         BindMono<ICharacterDeathListener, CharacterDeathHandler>();
-        BindMono<ICoroutineRunner, CoroutineRunner>();
+        
+        // CoroutineRunner 바인딩 - CoreScene에서 찾거나 새로 생성
+        var coroutineRunner = FindFirstObjectByType<CoroutineRunner>();
+        if (coroutineRunner == null)
+        {
+            Debug.LogWarning("[CombatInstaller] CoroutineRunner를 찾을 수 없습니다. 새로 생성합니다.");
+            var runnerObj = new GameObject("CoroutineRunner");
+            coroutineRunner = runnerObj.AddComponent<CoroutineRunner>();
+            DontDestroyOnLoad(runnerObj);
+        }
+        Container.Bind<ICoroutineRunner>().FromInstance(coroutineRunner).AsSingle();
+        
+        // PlayerCharacterSelectionManager 바인딩
+        var characterSelectionManager = FindFirstObjectByType<PlayerCharacterSelectionManager>();
+        if (characterSelectionManager == null)
+        {
+            Debug.LogWarning("[CombatInstaller] PlayerCharacterSelectionManager를 찾을 수 없습니다. 새로 생성합니다.");
+            var managerObj = new GameObject("PlayerCharacterSelectionManager");
+            characterSelectionManager = managerObj.AddComponent<PlayerCharacterSelectionManager>();
+            DontDestroyOnLoad(managerObj);
+        }
+        Container.Bind<IPlayerCharacterSelectionManager>().FromInstance(characterSelectionManager).AsSingle();
+        
         BindMonoInterfaces<CombatTurnManager>();
     }
 
@@ -163,10 +186,8 @@ public class CombatInstaller : MonoInstaller
         Container.Bind<IHandSlotRegistry>().FromInstance(slotRegistry.GetHandSlotRegistry()).AsSingle();
         Container.Bind<ICharacterSlotRegistry>().FromInstance(slotRegistry.GetCharacterSlotRegistry()).AsSingle();
 
-        // SlotInitializer를 직접 생성하여 바인딩
-        var slotInitializer = new GameObject("SlotInitializer").AddComponent<SlotInitializer>();
-        Container.Inject(slotInitializer); // 수동으로 의존성 주입
-        Container.BindInterfacesAndSelfTo<SlotInitializer>().FromInstance(slotInitializer).AsSingle();
+        // SlotInitializer 바인딩 (씬에서 자동으로 찾아서 바인딩)
+        Container.BindInterfacesAndSelfTo<SlotInitializer>().FromComponentInHierarchy().AsSingle();
     }
 
     #endregion
@@ -197,7 +218,19 @@ public class CombatInstaller : MonoInstaller
         var transitionManager = SceneTransitionManager.Instance;
         if (transitionManager == null)
         {
-            Debug.LogError("[CombatInstaller] SceneTransitionManager가 없습니다.");
+            Debug.LogWarning("[CombatInstaller] SceneTransitionManager가 없습니다. CoreScene에서 초기화되지 않았을 수 있습니다.");
+            
+            // CoreScene에서 SceneTransitionManager를 찾아서 바인딩 시도
+            var coreSceneTransitionManager = FindFirstObjectByType<SceneTransitionManager>();
+            if (coreSceneTransitionManager != null)
+            {
+                Debug.Log("[CombatInstaller] CoreScene의 SceneTransitionManager를 찾았습니다.");
+                Container.Bind<ISceneLoader>().FromInstance(coreSceneTransitionManager).AsSingle();
+            }
+            else
+            {
+                Debug.LogError("[CombatInstaller] SceneTransitionManager를 전혀 찾을 수 없습니다.");
+            }
             return;
         }
 

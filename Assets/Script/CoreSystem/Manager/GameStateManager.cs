@@ -28,7 +28,6 @@ namespace Game.CoreSystem.Manager
             if (Instance == null)
             {
                 Instance = this;
-                DontDestroyOnLoad(gameObject);
                 GameLogger.LogInfo("GameStateManager 싱글톤 초기화 완료", GameLogger.LogCategory.UI);
             }
             else

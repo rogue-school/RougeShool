@@ -52,19 +52,31 @@ namespace Game.CombatSystem.Initialization
             handManager.LogPlayerHandSlotStates();
             player.InjectHandManager(handManager);  // 연결
 
-            // 카드 등장 애니메이션 병렬 실행 및 대기 (이벤트 기반 구조에서는 직접 호출/대기 불필요)
+            // 카드 등장 애니메이션 병렬 실행 및 대기
             var allCards = handManager.GetAllHandCards();
-            // foreach (var (card, ui) in allCards)
-            // {
-            //     if (ui != null)
-            //     {
-            //         total++;
-            //         var uiObj = ui as Game.SkillCardSystem.UI.SkillCardUI;
-            //         if (uiObj != null)
-            //             ; // AnimationFacade.Instance.PlaySkillCardAnimation(card, "spawn", uiObj.gameObject, () => animCount++); // 제거
-            //     }
-            // }
-            // yield return new WaitUntil(() => animCount >= total); // 제거
+            int total = 0;
+            int animCount = 0;
+            
+            foreach (var (card, ui) in allCards)
+            {
+                if (ui != null)
+                {
+                    total++;
+                    var uiObj = ui as Game.SkillCardSystem.UI.SkillCardUI;
+                    if (uiObj != null)
+                    {
+                        // AnimationFacade를 통해 애니메이션 실행
+                        if (AnimationFacade.Instance != null)
+                        {
+                            AnimationFacade.Instance.PlaySkillCardAnimation(card.CardData.Name, "spawn", uiObj.gameObject);
+                        }
+                        animCount++; // 애니메이션 호출 완료
+                    }
+                }
+            }
+            
+            // 애니메이션 완료 대기 (간단한 지연)
+            yield return new WaitForSeconds(0.5f);
 
             Debug.Log("<color=cyan>[PlayerSkillCardInitializer] 플레이어 핸드 카드 등장 애니메이션 완료</color>");
             yield return null;

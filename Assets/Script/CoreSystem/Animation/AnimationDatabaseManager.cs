@@ -75,7 +75,6 @@ namespace Game.CoreSystem.Animation
             if (instance == null)
             {
                 instance = this;
-                DontDestroyOnLoad(gameObject);
                 InitializeManager();
                 // AnimationEventListener 자동 추가
                 // if (GetComponent<AnimationEventListener>() == null)
@@ -536,8 +535,8 @@ namespace Game.CoreSystem.Animation
                 return;
             }
 
-            // 타입 찾기
-            var type = System.Type.GetType(settings.AnimationScriptType);
+            // 타입 찾기 (SkillCardAnimationSettings의 매핑 로직 사용)
+            var type = settings.GetScriptType();
             if (type == null)
             {
                 Debug.LogWarning($"[AnimationDatabaseManager] 타입을 찾을 수 없습니다: {settings.AnimationScriptType}");
@@ -549,7 +548,7 @@ namespace Game.CoreSystem.Animation
             var script = target.GetComponent(type) ?? target.AddComponent(type);
 
             // IAnimationScript 인터페이스 강제 캐스팅
-            var animScript = script as AnimationSystem.Interface.IAnimationScript;
+            var animScript = script as Game.AnimationSystem.Interface.IAnimationScript;
             if (animScript == null)
             {
                 Debug.LogWarning($"[AnimationDatabaseManager] IAnimationScript를 구현하지 않은 타입: {type.FullName}");

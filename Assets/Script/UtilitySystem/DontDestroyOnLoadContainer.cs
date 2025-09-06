@@ -22,10 +22,21 @@ namespace Game.UtilitySystem
             // 컨테이너 자체에 DontDestroyOnLoad 적용
             if (applyToSelf && persistAcrossScenes)
             {
-                DontDestroyOnLoad(gameObject);
-                if (enableDebugLogging)
+                // 루트 오브젝트인지 확인 후 DontDestroyOnLoad 적용
+                if (transform.parent == null)
                 {
-                    Debug.Log($"[DontDestroyOnLoadContainer] {gameObject.name} 컨테이너에 DontDestroyOnLoad 적용");
+                    DontDestroyOnLoad(gameObject);
+                    if (enableDebugLogging)
+                    {
+                        Debug.Log($"[DontDestroyOnLoadContainer] {gameObject.name} 컨테이너에 DontDestroyOnLoad 적용");
+                    }
+                }
+                else
+                {
+                    if (enableDebugLogging)
+                    {
+                        Debug.LogWarning($"[DontDestroyOnLoadContainer] {gameObject.name}은 루트 오브젝트가 아니므로 DontDestroyOnLoad를 적용할 수 없습니다.");
+                    }
                 }
             }
             
@@ -38,16 +49,25 @@ namespace Game.UtilitySystem
         
         /// <summary>
         /// 모든 하위 오브젝트에 DontDestroyOnLoad 적용
+        /// 주의: DontDestroyOnLoad는 루트 오브젝트에만 적용 가능하므로 자식 오브젝트는 부모와 함께 유지됨
         /// </summary>
         private void ApplyDontDestroyOnLoadToChildren()
         {
-            foreach (Transform child in transform)
+            // 현재 오브젝트가 루트가 아니면 자식들에게 DontDestroyOnLoad를 적용하지 않음
+            if (transform.parent != null)
             {
-                DontDestroyOnLoad(child.gameObject);
                 if (enableDebugLogging)
                 {
-                    Debug.Log($"[DontDestroyOnLoadContainer] {child.name}에 DontDestroyOnLoad 적용");
+                    Debug.LogWarning($"[DontDestroyOnLoadContainer] {gameObject.name}이 루트 오브젝트가 아니므로 자식들에게 DontDestroyOnLoad를 적용하지 않습니다.");
                 }
+                return;
+            }
+            
+            // DontDestroyOnLoad는 루트 오브젝트에만 적용 가능
+            // 자식 오브젝트들은 부모가 DontDestroyOnLoad되면 자동으로 함께 유지됨
+            if (enableDebugLogging)
+            {
+                Debug.Log($"[DontDestroyOnLoadContainer] {gameObject.name}의 자식 오브젝트들은 부모와 함께 유지됩니다. (자식 수: {transform.childCount})");
             }
         }
         
@@ -60,13 +80,17 @@ namespace Game.UtilitySystem
             {
                 newObject.transform.SetParent(transform);
                 
-                if (applyToNewChildren)
+                if (applyToNewChildren && transform.parent == null)
                 {
                     DontDestroyOnLoad(newObject);
                     if (enableDebugLogging)
                     {
                         Debug.Log($"[DontDestroyOnLoadContainer] {newObject.name} 추가 및 DontDestroyOnLoad 적용");
                     }
+                }
+                else if (enableDebugLogging)
+                {
+                    Debug.LogWarning($"[DontDestroyOnLoadContainer] {gameObject.name}이 루트 오브젝트가 아니므로 {newObject.name}에 DontDestroyOnLoad를 적용하지 않습니다.");
                 }
             }
         }

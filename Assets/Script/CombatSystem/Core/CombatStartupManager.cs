@@ -40,9 +40,43 @@ namespace Game.CombatSystem.Core
 
         /// <summary>
         /// 초기화 루틴을 코루틴으로 시작합니다.
+        /// 씬 전환이 완료된 후에 시작하도록 지연시킵니다.
         /// </summary>
         private void Start()
         {
+            // 씬 전환 완료를 기다린 후 초기화 시작
+            StartCoroutine(WaitForSceneTransitionAndStartup());
+        }
+        
+        /// <summary>
+        /// 씬 전환 완료를 기다린 후 초기화를 시작합니다.
+        /// </summary>
+        private IEnumerator WaitForSceneTransitionAndStartup()
+        {
+            // 씬 전환이 완료될 때까지 대기 (0.05초로 단축)
+            yield return new WaitForSeconds(0.05f);
+            
+            // SceneTransitionManager가 완료되었는지 확인
+            int maxWaitTime = 20; // 최대 1초 대기 (0.05초 * 20)
+            int waitCount = 0;
+            
+            while (Game.CoreSystem.Manager.SceneTransitionManager.Instance != null && 
+                   Game.CoreSystem.Manager.SceneTransitionManager.Instance.IsTransitioning &&
+                   waitCount < maxWaitTime)
+            {
+                yield return new WaitForSeconds(0.05f);
+                waitCount++;
+            }
+            
+            if (waitCount >= maxWaitTime)
+            {
+                Debug.LogWarning("<color=yellow>[CombatStartupManager] 씬 전환 대기 시간 초과. 강제로 초기화를 시작합니다.</color>");
+            }
+            else
+            {
+                Debug.Log("<color=cyan>[CombatStartupManager] 씬 전환 완료 확인 후 초기화 시작</color>");
+            }
+            
             StartCoroutine(StartupRoutine());
         }
 

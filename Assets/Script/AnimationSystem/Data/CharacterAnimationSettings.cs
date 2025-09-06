@@ -124,12 +124,35 @@ namespace Game.AnimationSystem.Data
         
         private System.Type GetScriptTypeForAnimation(string animationType)
         {
-            if (string.IsNullOrEmpty(animationScriptType))
+            if (string.IsNullOrEmpty(animationType))
                 return null;
-            var type = System.Type.GetType(animationScriptType);
+                
+            // 애니메이션 타입에 따른 클래스명 매핑
+            string className = animationType switch
+            {
+                "spawn" => "Game.AnimationSystem.Animator.CharacterAnimation.SpawnAnimation.DefaultCharacterSpawnAnimation",
+                "death" => "Game.AnimationSystem.Animator.CharacterAnimation.DeathAnimation.DefaultCharacterDeathAnimation",
+                "attack" => "Game.AnimationSystem.Animator.CharacterAnimation.AttackAnimation.DefaultCharacterAttackAnimation",
+                _ => animationType // 기본값으로 원본 사용
+            };
+                
+            // 먼저 전체 타입명으로 시도
+            var type = System.Type.GetType(className);
             if (type == null)
             {
-                Debug.LogError($"[CharacterAnimationSettings] 애니메이션 타입을 찾을 수 없습니다: {animationScriptType}");
+                // 현재 어셈블리에서 타입 찾기 시도
+                var assemblies = System.AppDomain.CurrentDomain.GetAssemblies();
+                foreach (var assembly in assemblies)
+                {
+                    type = assembly.GetType(className);
+                    if (type != null)
+                        break;
+                }
+            }
+            
+            if (type == null)
+            {
+                Debug.LogError($"[CharacterAnimationSettings] 애니메이션 타입을 찾을 수 없습니다: {animationType} -> {className}");
             }
             return type;
         }
