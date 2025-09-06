@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      background ui_classroom 3_0: 5707983643413279082
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

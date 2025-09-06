@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      BOSS_002_Professor_Turngun_2_0: -5074879787779018107
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

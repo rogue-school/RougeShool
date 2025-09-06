@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      ENEMY_006_Student_Bow_boy_0: 7041462494398662761
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

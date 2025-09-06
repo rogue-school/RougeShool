@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      ENEMY_004_Student_Sword_boy_0: 6618370058726200361
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

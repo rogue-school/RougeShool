@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      ENEMY_005_Student_Magic_girl_0: -4690801618817906914
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

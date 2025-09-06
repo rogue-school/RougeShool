@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      ELITE_001_Assistant_Vione_2_0: 2986029281764057734
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
