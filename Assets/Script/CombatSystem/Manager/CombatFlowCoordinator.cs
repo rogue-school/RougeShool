@@ -39,7 +39,6 @@ namespace Game.CombatSystem.Core
         [Inject] private ISlotRegistry slotRegistry;
         [Inject] private ICardExecutor cardExecutor;
         [Inject] private ICoroutineRunner coroutineRunner;
-        [Inject] private DeathUIManager deathUIManager;
 
         #endregion
 
@@ -458,7 +457,7 @@ namespace Game.CombatSystem.Core
                 var gameOverState = new CombatGameOverState(
                     turnManager, this,
                     slotRegistry as ICombatSlotRegistry,
-                    coroutineRunner, deathUIManager, playerManager
+                    coroutineRunner, playerManager
                 );
                 turnManager.RequestStateChange(gameOverState);
             }

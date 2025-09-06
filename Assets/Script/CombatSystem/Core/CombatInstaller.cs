@@ -54,7 +54,6 @@ public class CombatInstaller : MonoInstaller
         BindUIPrefabs();
         BindUIHandlers();
         BindCooldownSystem();
-        BindDeathUI();
     }
 
     #region 상태머신
@@ -162,7 +161,10 @@ public class CombatInstaller : MonoInstaller
         Container.Bind<IHandSlotRegistry>().FromInstance(slotRegistry.GetHandSlotRegistry()).AsSingle();
         Container.Bind<ICharacterSlotRegistry>().FromInstance(slotRegistry.GetCharacterSlotRegistry()).AsSingle();
 
-        Container.BindInterfacesAndSelfTo<SlotInitializer>().FromComponentInHierarchy().AsSingle();
+        // SlotInitializer를 직접 생성하여 바인딩
+        var slotInitializer = new GameObject("SlotInitializer").AddComponent<SlotInitializer>();
+        Container.Inject(slotInitializer); // 수동으로 의존성 주입
+        Container.BindInterfacesAndSelfTo<SlotInitializer>().FromInstance(slotInitializer).AsSingle();
     }
 
     #endregion
@@ -243,21 +245,6 @@ public class CombatInstaller : MonoInstaller
 
     #endregion
 
-    #region 사망 UI
-
-    private void BindDeathUI()
-    {
-        var deathUI = Object.FindFirstObjectByType<DeathUIManager>();
-        if (deathUI == null)
-        {
-            Debug.LogError("[CombatInstaller] DeathUIManager를 씬에서 찾지 못했습니다.");
-            return;
-        }
-
-        Container.Bind<DeathUIManager>().FromInstance(deathUI).AsSingle();
-    }
-
-    #endregion
 
     #region 유틸 바인딩 메서드
 

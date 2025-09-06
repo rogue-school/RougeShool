@@ -20,7 +20,6 @@ namespace Game.CombatSystem.State
         private readonly ICombatFlowCoordinator flowCoordinator;
         private readonly ICombatSlotRegistry slotRegistry;
         private readonly ICoroutineRunner coroutineRunner;
-        private readonly DeathUIManager deathUIManager;
         private readonly IPlayerManager playerManager;
 
         #endregion
@@ -35,7 +34,6 @@ namespace Game.CombatSystem.State
             ICombatFlowCoordinator flowCoordinator,
             ICombatSlotRegistry slotRegistry,
             ICoroutineRunner coroutineRunner,
-            DeathUIManager deathUIManager,
             IPlayerManager playerManager
         )
         {
@@ -43,7 +41,6 @@ namespace Game.CombatSystem.State
             this.flowCoordinator = flowCoordinator;
             this.slotRegistry = slotRegistry;
             this.coroutineRunner = coroutineRunner;
-            this.deathUIManager = deathUIManager;
             this.playerManager = playerManager;
         }
 
@@ -86,7 +83,8 @@ namespace Game.CombatSystem.State
 
             if (CheckPlayerDeath())
             {
-                deathUIManager.ShowDeathUI();
+                // TODO: 설정 창으로 메인 화면 복귀 로직 구현 예정
+                Debug.Log("[CombatGameOverState] 플레이어 사망 - 설정 창으로 메인 화면 복귀 예정");
             }
         }
 
