@@ -16,10 +16,14 @@ MonoBehaviour:
     SfxClip: {fileID: 8300000, guid: 4253dec50304f5049a8bf709dcd3f393, type: 3}
     VisualEffectPrefab: {fileID: 4294010189161640749, guid: 52b97149ba487c94bb0fba4d467003d0, type: 3}
     EffectDuration: 2
+    CardId: 
     Name: "\uBCA0\uAE30"
     Description: "\uD53C\uD574\uB97C 1 \uC785\uD799\uB2C8\uB2E4"
     Artwork: {fileID: -8255787894389226003, guid: b5ce5f5447383b348a798e6d691b9bcb, type: 3}
-    CoolTime: 2
+    CoolTime: 0
+    Cost: 0
     Damage: 1
+    CardType: 
+    OwnerCharacterName: Akein_Sword_Character
   effects:
   - {fileID: 11400000, guid: ce18b924503840146a6d33dfb483c54c, type: 2}

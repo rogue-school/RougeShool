@@ -120,6 +120,8 @@ namespace Game.SkillCardSystem.Manager
         {
             foreach (SkillCardSlotPosition pos in System.Enum.GetValues(typeof(SkillCardSlotPosition)))
             {
+                // 플레이어 전용 슬롯만 대상으로 복귀
+                if (!IsPlayerHandSlot(pos)) continue;
                 if (!cards.ContainsKey(pos) || cards[pos] == null)
                 {
                     cards[pos] = card;
@@ -146,6 +148,16 @@ namespace Game.SkillCardSystem.Manager
             }
             Debug.LogWarning("[PlayerHandManager] 빈 슬롯을 찾을 수 없어 카드 복귀 실패");
             LogHandSlotSyncState();
+        }
+
+        /// <summary>
+        /// 지정된 슬롯이 플레이어 핸드 슬롯인지 확인합니다.
+        /// </summary>
+        private static bool IsPlayerHandSlot(SkillCardSlotPosition pos)
+        {
+            return pos == SkillCardSlotPosition.PLAYER_SLOT_1
+                || pos == SkillCardSlotPosition.PLAYER_SLOT_2
+                || pos == SkillCardSlotPosition.PLAYER_SLOT_3;
         }
 
         /// <summary>
