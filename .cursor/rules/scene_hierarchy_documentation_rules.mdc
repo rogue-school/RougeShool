@@ -1,3 +1,14 @@
+---
+description: "Unity 씬 하이라키 문서 작성/검증 규칙. CoreScene/BattleScene 제작 및 검증 기준."
+auto_attach:
+  - Assets/Scenes/Docs/CoreScene_씬구조문서.md
+  - Assets/Scenes/Docs/BattleScene_씬구조문서.md
+  - Assets/Scenes/**/*.unity
+  - Assets/Script/**/*.cs
+rule_id: scene_hierarchy_rules
+version: 1.1.0
+---
+
 ## 🎮 씬 제작/문서화 통합 룰 (Scenes 전용)
 
 본 룰은 `Assets/Scenes/`의 씬을 실제로 제작(구성/바인딩/검증)하고, 그 결과를 일관된 형식으로 문서화하기 위한 표준이다. 작성 언어는 한국어로 통일한다.
@@ -38,6 +49,12 @@
 - 간단 주석: `// 한국어 설명 1줄`
 - 앵커/링크: 섹션/오브젝트에 소제목 앵커 사용, 내부 링크 허용
 - 심각도 태그: `[BLOCKER]`, `[HIGH]`, `[MEDIUM]`, `[LOW]` (검증/이슈 표기 시)
+
+심각도 기준(불일치/누락 판단용)
+- BLOCKER: 플레이 불가, 크래시, 핵심 참조/UnityEvent/DI 누락, 필수 슬롯 파라미터 미설정
+- HIGH: 필수 권장값 미준수(해상도/카메라/레이어 등)로 UX/기능 저하 유발
+- MEDIUM: 네이밍/정렬/배지 규칙 위반(동작엔 영향 없으나 혼동 유발)
+- LOW: 가독성, 주석, 배지 위치 등 사소한 일관성 문제
 
 -#### 4-α) 노드 라벨 포맷(언더스코어 표기)
 - 요구 포맷: `이름_GameObject 생성 메뉴 카테고리_주요표시(⭐)_컴포넌트목록`
@@ -82,6 +99,14 @@ CoreContainer (컨테이너) 📦
 | AudioManager | AudioManager | bgmSource | BGMSource (AudioSource) | 필수 |
 | SceneTransitionManager | SceneTransitionManager | transitionImage | FadeImage (Image) | 필수 |
 
+- DI 매핑 표(권장)
+
+| 인터페이스 | 구현체 | 범위(Scope) | 비고 |
+|---|---|---|---|
+| IPlayerHandManager | PlayerHandManager | Scene | |
+| IEnemyHandManager | EnemyHandManager | Scene | |
+| ITurnBasedCardManager | TurnBasedCardManager | Scene | |
+
 - 핵심 설정값 표
 
 | 항목 | 값 | 비고 |
@@ -125,6 +150,11 @@ CoreContainer (컨테이너) 📦
    └─ TransitionEffectController (TransitionEffectController)
 ```
 핵심 설정 체크: CanvasScaler(1920x1080 권장), AudioManager 참조, Transition 커브/Duration, Initializer 순서 배열, Loading 참조
+
+PR 체크리스트(CoreScene)
+- [ ] AudioManager.bgmSource/sfxSource 참조 연결
+- [ ] Transition(Canvas/Image/Text) 참조 연결
+- [ ] Initializer 초기화 순서 최신화 및 로그 확인
 
 제작 절차(요약)
 1) 루트 생성: Main Camera, Canvas(Scaler 1920x1080 권장), EventSystem
@@ -179,6 +209,12 @@ Main Camera / UICamera(필요 시)
 6) DI/프리팹: CombatInstaller에서 카드 UI 프리팹(SkillCardUI) 바인딩(또는 인스펙터 필드 연결) 확인. `PlayerHandCardSlotUI`는 DI로 프리팹을 주입받음
 7) 재생 전 검증: 모의 전투 시작 시 핸드 슬롯 등록, 전투 슬롯 등록, 상태 전이(준비→입력/선공 등) 로그 확인
 
+PR 체크리스트(BattleScene)
+- [ ] UICanvas.camera → UICamera 연결
+- [ ] SceneContext.MonoInstallers에 CombatInstaller 등록
+- [ ] 카드 UI Prefab/StartButton 핸들러 참조 연결
+- [ ] Hand/Combat/Character 슬롯 포지션/owner 중복 없음
+
 ### 8) 인스펙터 연결 표 규칙
 - 표 컬럼: `오브젝트 | 컴포넌트 | 필드 | 값/참조 | [필수]`
 - 값은 구체적으로: 오브젝트명/리소스 경로/Enum/수치(기본값/허용범위 병기 가능)
@@ -201,6 +237,29 @@ Main Camera / UICamera(필요 시)
 - [ ] 모든 참조/UnityEvent 연결 누락 없음(표 기준)
 - [ ] DI 바인딩 최신 코드와 동기화(필수 인터페이스 매핑)
 - [ ] 플레이/전환 시 경고/에러 없음(로그 레벨 확인)
+
+### 13) 머신 검증용 스키마(선택)
+아래 블록은 자동 검사기를 위한 최소 스키마 예시이다(필드명은 Unity YAML 기준).
+
+```json
+{
+  "CoreScene": {
+    "CanvasScaler.ReferenceResolution": "1920x1080 (recommended)",
+    "AudioManager": ["bgmSource", "sfxSource"],
+    "SceneTransitionManager": ["transitionCanvas", "transitionImage", "loadingText"]
+  },
+  "BattleScene": {
+    "UICanvas.Camera": "UICamera",
+    "SceneContext._monoInstallers": ["CombatInstaller"],
+    "CombatInstaller": ["cardUIPrefab", "startButtonHandler"],
+    "Slots": {
+      "PlayerHand": [0,1,2],
+      "EnemyHand": [3,4,5],
+      "Field": [0,1]
+    }
+  }
+}
+```
 
 ### 12) 유지보수 원칙(전문가용)
 - 문서는 “읽는 시간”을 최적화: 트리(전역 구조) → 표(연결/설정) → 설명(맥락) 순

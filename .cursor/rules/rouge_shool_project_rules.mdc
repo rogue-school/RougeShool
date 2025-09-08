@@ -2,6 +2,8 @@
 description: Unity 6000.0.42f1 2D Built-in Render Pipeline 최적화 개발 규칙
 globs: ["**/*.cs", "**/*.unity", "**/*.prefab"]
 alwaysApply: true
+rule_id: rouge_shool_project_rules
+version: 1.1.0
 ---
 
 # RougeShool Unity 2D 게임 개발 룰
