@@ -23,6 +23,11 @@ namespace Game.CharacterSystem.Data
         public string DisplayName { get; private set; }
 
         /// <summary>
+        /// 캐릭터 이름 (별칭)
+        /// </summary>
+        public string CharacterName => DisplayName;
+
+        /// <summary>
         /// 적 캐릭터의 최대 체력입니다.
         /// </summary>
         [field: SerializeField]

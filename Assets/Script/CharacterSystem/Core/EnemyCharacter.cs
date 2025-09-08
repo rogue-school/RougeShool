@@ -26,6 +26,9 @@ namespace Game.CharacterSystem.Core
         // IEnemyCharacter.CharacterData 명시적 구현
         Game.CharacterSystem.Interface.ICharacterData Game.CharacterSystem.Interface.IEnemyCharacter.CharacterData => CharacterData;
 
+        // IEnemyCharacter.CharacterName 구현
+        public string CharacterName => CharacterData?.CharacterName ?? "Unknown Enemy";
+
         [Header("UI Components")]
         [SerializeField] private TextMeshProUGUI nameText;
         [SerializeField] private TextMeshProUGUI hpText;

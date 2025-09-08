@@ -3,7 +3,7 @@ using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Effect;
 
-namespace Game.SkillCardSystem.Effects
+namespace Game.SkillCardSystem.Effect
 {
     /// <summary>
     /// 가드 효과를 적용하는 스킬 카드 효과 ScriptableObject입니다.

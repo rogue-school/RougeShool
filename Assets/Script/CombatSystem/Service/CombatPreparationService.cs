@@ -2,12 +2,14 @@ using System;
 using System.Collections;
 using System.Linq;
 using Game.CombatSystem.Interface;
+using Game.CombatSystem.Data;
 using Game.CombatSystem.Slot;
 using Game.CombatSystem.Utility;
 using Game.IManager;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Runtime;
 using Game.SkillCardSystem.UI;
+using Game.CharacterSystem.Interface;
 using UnityEngine;
 
 namespace Game.CombatSystem.Service

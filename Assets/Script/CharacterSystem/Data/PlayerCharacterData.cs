@@ -20,6 +20,12 @@ namespace Game.CharacterSystem.Data
         public string DisplayName { get; private set; }
 
         /// <summary>
+        /// 캐릭터의 타입입니다. (Sword/Bow/Staff)
+        /// </summary>
+        [field: SerializeField]
+        public PlayerCharacterType CharacterType { get; private set; }
+
+        /// <summary>
         /// 캐릭터의 최대 체력입니다.
         /// </summary>
         [field: SerializeField]
@@ -30,6 +36,22 @@ namespace Game.CharacterSystem.Data
         /// </summary>
         [field: SerializeField]
         public Sprite Portrait { get; private set; }
+
+        #endregion
+
+        #region 리소스 시스템
+
+        /// <summary>
+        /// 캐릭터의 최대 리소스입니다. (Bow: 화살, Staff: 마나, Sword: 0)
+        /// </summary>
+        [field: SerializeField]
+        public int MaxResource { get; private set; }
+
+        /// <summary>
+        /// 리소스 이름입니다. (예: "화살", "마나")
+        /// </summary>
+        [field: SerializeField]
+        public string ResourceName { get; private set; }
 
         #endregion
 

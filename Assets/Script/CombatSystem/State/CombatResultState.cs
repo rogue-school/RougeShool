@@ -111,7 +111,7 @@ namespace Game.CombatSystem.State
                 }
             }
             // 카드 데이터와 UI 동기화 보장
-            if (playerHandManager is Game.SkillCardSystem.Core.PlayerHandManager concreteHandManager)
+            if (playerHandManager is Game.SkillCardSystem.Manager.PlayerHandManager concreteHandManager)
             {
                 concreteHandManager.SyncHandSlotUI();
             }

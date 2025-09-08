@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using Game.CombatSystem.Interface;
+using Game.CombatSystem.Data;
 using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.UI;
@@ -28,6 +29,7 @@ namespace Game.CombatSystem.Manager
         private ICombatTurnState pendingNextState;
         private CombatSlotPosition? reservedEnemySlot;
         private bool isTurnReady;
+        private int currentTurn = 1;
 
         /// <summary>
         /// 턴 시작 가능 상태가 변경될 때 발생하는 이벤트입니다.
@@ -198,6 +200,29 @@ namespace Game.CombatSystem.Manager
         public CombatSlotPosition? GetReservedEnemySlot()
         {
             return reservedEnemySlot;
+        }
+
+        #endregion
+
+        #region 저장 시스템용 메서드
+
+        /// <summary>
+        /// 현재 턴을 설정합니다. (저장 시스템용)
+        /// </summary>
+        /// <param name="turn">설정할 턴</param>
+        public void SetCurrentTurn(int turn)
+        {
+            currentTurn = turn;
+            Debug.Log($"[CombatTurnManager] 현재 턴 설정: {currentTurn}");
+        }
+
+        /// <summary>
+        /// 현재 턴을 반환합니다. (저장 시스템용)
+        /// </summary>
+        /// <returns>현재 턴 번호</returns>
+        public int GetCurrentTurn()
+        {
+            return currentTurn;
         }
 
         #endregion

@@ -1,6 +1,7 @@
 using Game.CharacterSystem.Interface;
 using Game.CombatSystem.Interface;
 using Game.IManager;
+using Game.SkillCardSystem.Interface;
 using UnityEngine;
 
 namespace Game.CharacterSystem.Manager

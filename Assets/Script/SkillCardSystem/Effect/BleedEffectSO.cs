@@ -1,10 +1,9 @@
 using UnityEngine;
 using Game.SkillCardSystem.Interface;
-using Game.SkillCardSystem.Effects;
 using Game.SkillCardSystem.Effect;
 using Game.CombatSystem.Interface;
 
-namespace Game.SkillCardSystem.Effects
+namespace Game.SkillCardSystem.Effect
 {
     /// <summary>
     /// 출혈 효과를 정의하는 스킬 카드 이펙트 ScriptableObject입니다.

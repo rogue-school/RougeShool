@@ -1,8 +1,9 @@
 using UnityEngine;
-using Game.SkillCardSystem.Effects;
+using Game.SkillCardSystem.Effect;
+using Game.SkillCardSystem.Data;
 using System.Collections.Generic;
 
-namespace Game.SkillCardSystem.Data
+namespace Game.SkillCardSystem.Core
 {
     /// <summary>
     /// 플레이어가 사용하는 스킬 카드의 데이터를 보관하는 ScriptableObject입니다.

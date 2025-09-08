@@ -5,7 +5,7 @@ using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Utility;
 
-namespace Game.CombatSystem.Executor
+namespace Game.CombatSystem.Service
 {
     /// <summary>
     /// 전투 실행 서비스.

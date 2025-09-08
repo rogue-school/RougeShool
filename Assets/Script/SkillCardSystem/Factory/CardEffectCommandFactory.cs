@@ -1,4 +1,4 @@
-using Game.SkillCardSystem.Effects;
+using Game.SkillCardSystem.Effect;
 using Game.SkillCardSystem.Interface;
 
 namespace Game.SkillCardSystem.Factory

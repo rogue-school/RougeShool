@@ -20,9 +20,19 @@ namespace Game.SkillCardSystem.Data
         public float EffectDuration = 2f;
 
         /// <summary>
+        /// 카드 고유 ID
+        /// </summary>
+        public string CardId;
+
+        /// <summary>
         /// 카드 이름
         /// </summary>
         public string Name;
+
+        /// <summary>
+        /// 카드 이름 (별칭)
+        /// </summary>
+        public string CardName => Name;
 
         /// <summary>
         /// 카드 설명 (툴팁 등에서 사용)
@@ -40,9 +50,19 @@ namespace Game.SkillCardSystem.Data
         public int CoolTime;
 
         /// <summary>
+        /// 카드 사용 비용
+        /// </summary>
+        public int Cost;
+
+        /// <summary>
         /// 카드가 주는 데미지 수치
         /// </summary>
         public int Damage;
+
+        /// <summary>
+        /// 카드 타입
+        /// </summary>
+        public string CardType;
 
         /// <summary>
         /// 카드 소유 캐릭터 이름(식별자)

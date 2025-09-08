@@ -7,6 +7,7 @@ using Game.SkillCardSystem.Core;
 using Game.CharacterSystem.Data;
 using Game.SkillCardSystem.Data;
 using Game.SkillCardSystem.Interface;
+using Game.CombatSystem.Data;
 using Game.CombatSystem.Slot;
 
 namespace Game.CoreSystem.Animation

@@ -2,7 +2,7 @@ using UnityEngine;
 using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Interface;
 
-namespace Game.SkillCardSystem.Effects
+namespace Game.SkillCardSystem.Effect
 {
     /// <summary>
     /// 스킬 카드의 이펙트를 정의하는 ScriptableObject 기반의 추상 클래스입니다.

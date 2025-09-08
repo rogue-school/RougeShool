@@ -216,6 +216,12 @@ namespace Game.CombatSystem.Interface
         /// </summary>
         void UnregisterStartButton();
 
+        /// <summary>
+        /// 적이 선공인지 설정합니다. (저장 시스템용)
+        /// </summary>
+        /// <param name="isEnemyFirst">적이 선공인지 여부</param>
+        void SetEnemyFirst(bool isEnemyFirst);
+
         #endregion
 
         #region 클린업

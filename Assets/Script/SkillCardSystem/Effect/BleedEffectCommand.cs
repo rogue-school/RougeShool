@@ -1,7 +1,7 @@
 using UnityEngine;
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Interface;
-using Game.SkillCardSystem.Effects;
+using Game.SkillCardSystem.Effect;
 
 namespace Game.SkillCardSystem.Effect
 {

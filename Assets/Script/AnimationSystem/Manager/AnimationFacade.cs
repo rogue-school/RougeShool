@@ -1,5 +1,6 @@
 using UnityEngine;
 using Game.SkillCardSystem.Interface;
+using Game.CombatSystem.Data; // SlotOwner
 using Game.CombatSystem.Slot; // SlotOwner
 using Game.SkillCardSystem.Runtime; // RuntimeSkillCard
 using System.Collections.Generic; // Added for List
@@ -303,7 +304,7 @@ namespace Game.AnimationSystem.Manager
 
             Debug.Log($"[AnimationFacade] (사망) 핸드 슬롯 전체 소멸 시작: 플레이어={isPlayerCharacter}");
             var handSlotRegistry = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.Slot.HandSlotRegistry>();
-            var ownerType = isPlayerCharacter ? Game.CombatSystem.Slot.SlotOwner.PLAYER : Game.CombatSystem.Slot.SlotOwner.ENEMY;
+            var ownerType = isPlayerCharacter ? SlotOwner.PLAYER : SlotOwner.ENEMY;
             var handSlots = handSlotRegistry?.GetHandSlots(ownerType);
             var skillCards = new List<GameObject>();
             var slotPositions = new List<Game.SkillCardSystem.Slot.SkillCardSlotPosition>();
@@ -314,10 +315,10 @@ namespace Game.AnimationSystem.Manager
                     var cardUI = slot.GetCardUI();
                     var slotPos = slot.GetSlotPosition();
                     var card = slot.GetCard();
-                    string cardUIName = (cardUI is UnityEngine.MonoBehaviour mb2 && mb2) ? mb2.name : (cardUI != null ? cardUI.GetType().Name : "null");
+                    string cardUIName = (cardUI is UnityEngine.MonoBehaviour mb2 && mb2 != null) ? mb2.name : (cardUI != null ? cardUI.GetType().Name : "null");
                     string cardName = card != null ? card.GetCardName() : "null";
                     Debug.Log($"[VanishDebug] 슬롯: {slotPos}, 카드: {cardName}, 카드UI: {cardUIName}");
-                    if (cardUI is UnityEngine.MonoBehaviour mb && mb)
+                    if (cardUI is UnityEngine.MonoBehaviour mb && mb != null)
                     {
                         skillCards.Add(mb.gameObject);
                         slotPositions.Add(slotPos);
@@ -340,7 +341,7 @@ namespace Game.AnimationSystem.Manager
                 vanishAnim.PlayVanishAnimation(() => {
                     if (isPlayerCharacter)
                     {
-                        var playerHandManager = UnityEngine.Object.FindFirstObjectByType<Game.SkillCardSystem.Core.PlayerHandManager>();
+                        var playerHandManager = UnityEngine.Object.FindFirstObjectByType<Game.SkillCardSystem.Manager.PlayerHandManager>();
                         playerHandManager?.RemoveCardUIAndReferences(slotPos);
                     }
                     else

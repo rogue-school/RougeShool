@@ -1,6 +1,7 @@
 using UnityEngine;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Slot;
+using Game.CombatSystem.Data;
 using Game.CombatSystem.Slot;
 using Game.CharacterSystem.Core;
 

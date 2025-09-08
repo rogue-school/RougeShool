@@ -1,5 +1,5 @@
 using Game.SkillCardSystem.Data;
-using Game.SkillCardSystem.Effects;
+using Game.SkillCardSystem.Effect;
 using System.Collections.Generic;
 
 namespace Game.SkillCardSystem.Interface

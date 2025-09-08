@@ -3,7 +3,6 @@ using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Effect;
 using Game.CombatSystem.Interface;
-using Game.SkillCardSystem.Effects;
 
 namespace Game.SkillCardSystem.Effect
 {

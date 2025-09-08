@@ -1,0 +1,131 @@
+using System.Collections.Generic;
+using UnityEngine;
+using Zenject;
+using Game.SkillCardSystem.Interface;
+
+namespace Game.SkillCardSystem.Manager
+{
+    /// <summary>
+    /// 턴 기반 카드 관리 구현체입니다.
+    /// 카드 순환 시스템과 연동하여 턴별 카드 관리를 담당합니다.
+    /// </summary>
+    public class TurnBasedCardManager : MonoBehaviour, ITurnBasedCardManager
+    {
+        #region 필드
+
+        private ICardCirculationSystem circulationSystem;
+        private List<ISkillCard> currentTurnCards = new();
+        private bool isTurnStarted = false;
+
+        #endregion
+
+        #region 프로퍼티
+
+        public bool IsTurnStarted => isTurnStarted;
+        public int AvailableCardsCount => currentTurnCards.Count;
+
+        #endregion
+
+        #region 의존성 주입
+
+        [Inject]
+        public void Construct(ICardCirculationSystem circulationSystem)
+        {
+            this.circulationSystem = circulationSystem;
+        }
+
+        #endregion
+
+        #region 턴 관리
+
+        public void StartTurn()
+        {
+            if (isTurnStarted)
+            {
+                Debug.LogWarning("[TurnBasedCardManager] 턴이 이미 시작되었습니다.");
+                return;
+            }
+
+            // 카드 순환 시스템에서 카드 드로우
+            currentTurnCards = circulationSystem.DrawCardsForTurn();
+            isTurnStarted = true;
+
+            Debug.Log($"[TurnBasedCardManager] 턴 시작: {currentTurnCards.Count}장 드로우");
+        }
+
+        public void EndTurn()
+        {
+            if (!isTurnStarted)
+            {
+                Debug.LogWarning("[TurnBasedCardManager] 턴이 시작되지 않았습니다.");
+                return;
+            }
+
+            // 사용하지 않은 카드들을 Used Storage로 이동
+            if (currentTurnCards.Count > 0)
+            {
+                circulationSystem.MoveCardsToUsedStorage(new List<ISkillCard>(currentTurnCards));
+                currentTurnCards.Clear();
+            }
+
+            isTurnStarted = false;
+            Debug.Log("[TurnBasedCardManager] 턴 종료: 사용하지 않은 카드들을 Used Storage로 이동");
+        }
+
+        #endregion
+
+        #region 카드 관리
+
+        public List<ISkillCard> GetCurrentTurnCards()
+        {
+            return new List<ISkillCard>(currentTurnCards);
+        }
+
+        public void UseCard(ISkillCard card)
+        {
+            if (card == null)
+            {
+                Debug.LogWarning("[TurnBasedCardManager] null 카드를 사용할 수 없습니다.");
+                return;
+            }
+
+            if (!currentTurnCards.Contains(card))
+            {
+                Debug.LogWarning("[TurnBasedCardManager] 현재 턴의 카드가 아닙니다.");
+                return;
+            }
+
+            // 카드를 Used Storage로 이동
+            circulationSystem.MoveCardToUsedStorage(card);
+            currentTurnCards.Remove(card);
+
+            Debug.Log($"[TurnBasedCardManager] 카드 사용: {card.CardData?.CardName ?? "Unknown"} (남은 카드: {currentTurnCards.Count})");
+        }
+
+        #endregion
+
+        #region 유틸리티
+
+        /// <summary>
+        /// 턴 기반 카드 매니저를 초기화합니다.
+        /// </summary>
+        public void Initialize()
+        {
+            currentTurnCards.Clear();
+            isTurnStarted = false;
+            Debug.Log("[TurnBasedCardManager] 초기화 완료");
+        }
+
+        /// <summary>
+        /// 턴 기반 카드 매니저를 리셋합니다.
+        /// </summary>
+        public void Reset()
+        {
+            currentTurnCards.Clear();
+            isTurnStarted = false;
+            Debug.Log("[TurnBasedCardManager] 리셋 완료");
+        }
+
+        #endregion
+    }
+}

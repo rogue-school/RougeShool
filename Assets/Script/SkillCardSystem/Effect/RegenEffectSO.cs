@@ -3,7 +3,7 @@ using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Effect;
 using Game.CombatSystem.Interface;
 
-namespace Game.SkillCardSystem.Effects
+namespace Game.SkillCardSystem.Effect
 {
     /// <summary>
     /// 턴마다 체력을 회복시키는 재생 효과를 정의하는 ScriptableObject입니다.

@@ -1,3 +1,4 @@
+using Game.CombatSystem.Data;
 using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.UI;
@@ -71,5 +72,17 @@ namespace Game.CombatSystem.Interface
         /// <param name="ui">카드 UI</param>
         /// <param name="owner">카드 소유자 (플레이어 또는 적)</param>
         void RegisterCard(CombatSlotPosition slot, ISkillCard card, SkillCardUI ui, SlotOwner owner);
+
+        /// <summary>
+        /// 현재 턴을 설정합니다. (저장 시스템용)
+        /// </summary>
+        /// <param name="turn">설정할 턴</param>
+        void SetCurrentTurn(int turn);
+
+        /// <summary>
+        /// 현재 턴을 반환합니다. (저장 시스템용)
+        /// </summary>
+        /// <returns>현재 턴 번호</returns>
+        int GetCurrentTurn();
     }
 }

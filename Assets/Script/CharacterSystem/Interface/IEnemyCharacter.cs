@@ -22,5 +22,10 @@ namespace Game.CharacterSystem.Interface
         /// </summary>
         /// <returns>적 캐릭터의 이름</returns>
         string GetName();
+
+        /// <summary>
+        /// 적 캐릭터의 이름 프로퍼티입니다.
+        /// </summary>
+        string CharacterName { get; }
     }
 }

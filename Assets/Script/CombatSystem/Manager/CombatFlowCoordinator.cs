@@ -3,6 +3,7 @@ using System.Collections;
 using UnityEngine;
 using Zenject;
 using Game.CombatSystem.Interface;
+using Game.CombatSystem.Data;
 using Game.CombatSystem.Slot;
 using Game.IManager;
 using Game.SkillCardSystem.Interface;
@@ -12,6 +13,7 @@ using Game.SkillCardSystem.Executor;
 using Game.CombatSystem.Context;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Core;
+using Game.StageSystem.Interface;
 using Game.Utility;
 using Game.CoreSystem.Utility;
 using Game.CombatSystem.State;
@@ -20,7 +22,7 @@ using Game.CombatSystem;
 
 using System.Collections.Generic;
 
-namespace Game.CombatSystem.Core
+namespace Game.CombatSystem.Manager
 {
     /// <summary>
     /// 전투의 전체 흐름을 조율하는 핵심 클래스.
@@ -47,7 +49,7 @@ namespace Game.CombatSystem.Core
 
         private ICombatTurnManager turnManager;
         private ICombatStateFactory stateFactory;
-        private TurnStartButtonHandler startButtonHandler;
+        // private TurnStartButtonHandler startButtonHandler; // Disabled 폴더로 이동됨
         private bool playerInputEnabled = false;
         public bool IsEnemyFirst { get; set; }
         private Action onStartButtonPressed;
@@ -57,10 +59,10 @@ namespace Game.CombatSystem.Core
         #region 초기화 및 구성
 
         [Inject]
-        public void Construct(TurnStartButtonHandler startButtonHandler)
-        {
-            this.startButtonHandler = startButtonHandler;
-        }
+        // public void Construct(TurnStartButtonHandler startButtonHandler) // Disabled 폴더로 이동됨
+        // {
+        //     this.startButtonHandler = startButtonHandler;
+        // }
 
         public void InjectTurnStateDependencies(ICombatTurnManager turnManager, ICombatStateFactory stateFactory)
         {
@@ -535,6 +537,35 @@ namespace Game.CombatSystem.Core
         public ISkillCard GetCardInSlot(CombatSlotPosition pos) => turnCardRegistry.GetCardInSlot(pos);
         public IEnemyCharacter GetEnemy() => enemyManager.GetEnemy();
 
+        /// <summary>
+        /// 특정 슬롯에 카드를 설정합니다. (저장 시스템용)
+        /// </summary>
+        /// <param name="pos">슬롯 위치</param>
+        /// <param name="card">설정할 카드</param>
+        public void SetCardInSlot(CombatSlotPosition pos, ISkillCard card)
+        {
+            if (turnCardRegistry == null)
+            {
+                Debug.LogError("[CombatFlowCoordinator] TurnCardRegistry가 null입니다.");
+                return;
+            }
+
+            // 기존 카드가 있다면 제거
+            var existingCard = turnCardRegistry.GetCardInSlot(pos);
+            if (existingCard != null)
+            {
+                turnCardRegistry.RemoveCardFromSlot(pos);
+            }
+
+            // 새 카드 설정
+            if (card != null)
+            {
+                turnCardRegistry.RegisterCardToSlot(pos, card, null, SlotOwner.PLAYER);
+            }
+
+            Debug.Log($"[CombatFlowCoordinator] 슬롯 {pos}에 카드 설정: {card?.CardData?.CardName ?? "null"}");
+        }
+
         #endregion
 
         #region 상태 및 플래그
@@ -572,12 +603,12 @@ namespace Game.CombatSystem.Core
 
         public void EnableStartButton() 
         { 
-            startButtonHandler?.SetInteractable(true);
+            // startButtonHandler?.SetInteractable(true); // Disabled 폴더로 이동됨
             CombatEvents.RaiseStartButtonEnabled();
         }
         public void DisableStartButton() 
         { 
-            startButtonHandler?.SetInteractable(false);
+            // startButtonHandler?.SetInteractable(false); // Disabled 폴더로 이동됨
             CombatEvents.RaiseStartButtonDisabled();
         }
         public void RegisterStartButton(Action callback) => onStartButtonPressed = callback;
@@ -664,6 +695,16 @@ namespace Game.CombatSystem.Core
         public IEnumerator CleanupAfterVictory()
         {
             yield return ClearEnemyHandSafely();
+        }
+
+        /// <summary>
+        /// 적이 선공인지 설정합니다. (저장 시스템용)
+        /// </summary>
+        /// <param name="isEnemyFirst">적이 선공인지 여부</param>
+        public void SetEnemyFirst(bool isEnemyFirst)
+        {
+            IsEnemyFirst = isEnemyFirst;
+            Debug.Log($"[CombatFlowCoordinator] 적 선공 설정: {IsEnemyFirst}");
         }
     }
 }

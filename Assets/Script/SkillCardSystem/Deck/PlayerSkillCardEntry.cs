@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Game.SkillCardSystem.Data;
-using Game.SkillCardSystem.Effects;
+using Game.SkillCardSystem.Effect;
+using Game.SkillCardSystem.Core;
+using Game.CombatSystem.Data;
 using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Runtime;
 using Game.SkillCardSystem.Slot;

@@ -3,7 +3,7 @@ using Game.CombatSystem.Interface;
 using Game.CharacterSystem.Interface;
 using Game.SkillCardSystem.Interface;
 
-namespace Game.SkillCardSystem.Effects
+namespace Game.SkillCardSystem.Effect
 {
     /// <summary>
     /// 일정 턴 동안 대상에게 매 턴 피해를 입히는 출혈 효과입니다.

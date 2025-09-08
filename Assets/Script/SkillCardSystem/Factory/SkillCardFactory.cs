@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using Game.SkillCardSystem.Data;
-using Game.SkillCardSystem.Effects;
+using Game.SkillCardSystem.Effect;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Runtime;
 
