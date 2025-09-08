@@ -25,6 +25,11 @@ namespace Game.CoreSystem.UI
         
         private void Start()
         {
+            // 저장된 오디오 설정을 먼저 로드하여 반영
+            var (bgm, sfx) = SaveManager.Instance.LoadAudioSettings(AudioManager.Instance.BGMVolume, AudioManager.Instance.SFXVolume);
+            AudioManager.Instance.SetBGMVolume(bgm);
+            AudioManager.Instance.SetSFXVolume(sfx);
+            
             InitializeUI();
         }
         
@@ -75,11 +80,13 @@ namespace Game.CoreSystem.UI
         private void OnBGMVolumeChanged(float volume)
         {
             AudioManager.Instance.SetBGMVolume(volume);
+            SaveManager.Instance.SaveAudioSettings(AudioManager.Instance.BGMVolume, AudioManager.Instance.SFXVolume);
         }
         
         private void OnSFXVolumeChanged(float volume)
         {
             AudioManager.Instance.SetSFXVolume(volume);
+            SaveManager.Instance.SaveAudioSettings(AudioManager.Instance.BGMVolume, AudioManager.Instance.SFXVolume);
         }
         
         private async void OnResetProgressClicked()

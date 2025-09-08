@@ -48,7 +48,6 @@ namespace Game.CombatSystem.Manager
         #region 내부 상태
 
         private ICombatTurnManager turnManager;
-        private ICombatStateFactory stateFactory;
         // private TurnStartButtonHandler startButtonHandler; // Disabled 폴더로 이동됨
         private bool playerInputEnabled = false;
         public bool IsEnemyFirst { get; set; }
@@ -59,15 +58,26 @@ namespace Game.CombatSystem.Manager
         #region 초기화 및 구성
 
         [Inject]
+        public void Construct(ICombatTurnManager injectedTurnManager)
+        {
+            turnManager = injectedTurnManager;
+        }
+
+        [Inject]
         // public void Construct(TurnStartButtonHandler startButtonHandler) // Disabled 폴더로 이동됨
         // {
         //     this.startButtonHandler = startButtonHandler;
         // }
 
-        public void InjectTurnStateDependencies(ICombatTurnManager turnManager, ICombatStateFactory stateFactory)
+        public void InjectTurnStateDependencies(ICombatTurnManager turnManager)
         {
             this.turnManager = turnManager;
-            this.stateFactory = stateFactory;
+        }
+
+        // 인터페이스 호환성을 위한 오버로드(상태팩토리는 TurnManager 내부에서 관리)
+        public void InjectTurnStateDependencies(ICombatTurnManager turnManager, ICombatStateFactory _)
+        {
+            this.turnManager = turnManager;
         }
 
         public void StartCombatFlow()

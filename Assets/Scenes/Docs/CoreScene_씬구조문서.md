@@ -1,111 +1,94 @@
-# CoreScene 씬 구조 문서
+# CoreScene 씬 제작 가이드
 
-## 목차
-- [Quick-Scan 요약](#quick-scan-요약)
-- [하이라키 트리](#하이라키-트리)
-- [컨테이너/정렬 규칙](#컨테이너정렬-규칙)
-- [필수 오브젝트](#필수-오브젝트)
-- [핵심 설정값 표](#핵심-설정값-표)
-- [인스펙터 연결 표](#인스펙터-연결-표)
-- [시스템 연동 포인트](#시스템-연동-포인트)
-- [변경 가이드](#변경-가이드)
-- [검증 체크리스트](#검증-체크리스트)
-- [변경 기록(Delta)](#변경-기록delta)
+## 🎯 목표
+CoreScene을 전역 시스템 허브로 구축하여 모든 씬에서 공통으로 사용하는 매니저/로더/오디오/UI를 안정적으로 초기화합니다.
 
-## Quick-Scan 요약
-- 루트 순서: Main Camera → Canvas → CoreContainer (컨테이너) 📦 → EventSystem
-- 컨테이너: CoreSystem / AudioSources / CoreUtilities / CoreUI
-- 필수 전역 매니저: GameStateManager, SceneTransitionManager, AudioManager, SaveManager, SettingsManager
-- 전환 필수 연결: Canvas, FadeImage
-- 오디오 소스: BGMSource, SFXSource (AudioManager에 참조 연결)
-- 초기화 순서: CoroutineRunner → GameStateManager → SceneTransitionManager → PlayerCharacterSelectionManager → AudioManager → SaveManager → AnimationDatabaseManager → AnimationManager → SettingsManager → LoadingScreenController
+## 📦 준비물(사전 요구)
+- 전역 매니저: GameStateManager, SceneTransitionManager, AudioManager, SaveManager, SettingsManager
+- 유틸리티: CoroutineRunner, GameLogger
+- 오디오 소스: BGMSource, SFXSource (AudioManager 참조 연결)
+- 로딩 UI: LoadingScreenController(필수 UI 레퍼런스 연결)
+- Canvas/Camera/EventSystem
 
-## 하이라키 트리
+## 🏗️ 제작 절차(Step-by-Step)
+1) 루트 생성
+- Main Camera, Canvas(CanvasScaler 1920×1080 권장), EventSystem 추가
+
+2) CoreContainer 컨테이너 구성
+- 빈 오브젝트 `CoreContainer` 생성 후 하위에 다음 컨테이너 생성: CoreSystem, AudioSources, CoreUtilities, CoreUI
+- CoreSystem 하위에 전역 매니저 배치:
+  - GameStateManager, SceneTransitionManager, AudioManager, SaveManager, AnimationManager, AnimationDatabaseManager, CoreSystemInitializer, PlayerCharacterSelectionManager, SettingsManager
+- AudioSources 하위에 오디오 소스 배치: `BGMSource(AudioSource)`, `SFXSource(AudioSource)`, AudioManager 인스펙터에 참조 연결
+- CoreUtilities 하위에 `CoroutineRunner`
+- CoreUI 하위에 `LoadingScreenController`와 관련 UI 배치(LoadingPanel/ProgressBar/ProgressText/LoadingText)
+
+3) 초기화 순서 확인(CoreSystemInitializer)
+- 초기화 순서 권장: CoroutineRunner → GameStateManager → SceneTransitionManager → PlayerCharacterSelectionManager → AudioManager → SaveManager → AnimationDatabaseManager → AnimationManager → SettingsManager → LoadingScreenController
+
+4) SceneTransitionManager 설정
+- `transitionCanvas` = Canvas 또는 전용 Transition Canvas
+- `transitionImage` = 페이드 이미지(UI Image)
+- CoreScene 로드 후 자동으로 MainScene 전환이 필요하다면 Initializer에서 호출 설정
+
+5) AudioManager 설정
+- `bgmSource` = BGMSource, `sfxSource` = SFXSource 연결
+- 볼륨 기본값(bgm=0.7, sfx=1.0), 페이드 시간 설정
+- SaveSystem 연동 시 시작 시 `SaveManager.LoadAudioSettings()`로 볼륨 반영
+
+## 📁 하이라키 예시
 ```
-Main Camera (Camera, UniversalAdditionalCameraData, AudioListener)
-Canvas (Canvas, CanvasScaler, GraphicRaycaster)
-  LoadingPanel (Image)
-    ProgressBar (Slider)
-      Fill Area
-        Fill (Image)
-      Handle Slide Area
-        Handle (Image)
+Main Camera
+Canvas
+  LoadingPanel
+    ProgressBar
+      Fill (Image)
+      Handle (Image)
   ProgressText (TMP_Text)
   LoadingText (TMP_Text)
-EventSystem (EventSystem, InputSystemUIInputModule)
-CoreContainer (컨테이너) 📦
-├─ CoreSystem (컨테이너) 📦
-│  ├─ GameStateManager (GameStateManager)
-│  ├─ SceneTransitionManager (SceneTransitionManager) ⭐
-│  ├─ AudioManager (AudioManager) ⭐
-│  ├─ SaveManager (SaveManager)
-│  ├─ AnimationManager (AnimationManager)
-│  ├─ AnimationDatabaseManager (AnimationDatabaseManager)
-│  ├─ CoreSystemInitializer (CoreSystemInitializer)
-│  ├─ PlayerCharacterSelectionManager (PlayerCharacterSelectionManager)
-│  └─ SettingsManager (SettingsManager)
-├─ AudioSources (컨테이너) 📦
+EventSystem
+CoreContainer 📦
+├─ CoreSystem 📦
+│  ├─ GameStateManager
+│  ├─ SceneTransitionManager ⭐
+│  ├─ AudioManager ⭐
+│  ├─ SaveManager
+│  ├─ AnimationManager
+│  ├─ AnimationDatabaseManager
+│  ├─ CoreSystemInitializer
+│  ├─ PlayerCharacterSelectionManager
+│  └─ SettingsManager
+├─ AudioSources 📦
 │  ├─ BGMSource (AudioSource)
 │  └─ SFXSource (AudioSource)
-├─ CoreUtilities (컨테이너) 📦
-│  └─ CoroutineRunner (CoroutineRunner)
-└─ CoreUI (컨테이너) 📦
-   └─ LoadingScreenController (LoadingScreenController)
+├─ CoreUtilities 📦
+│  └─ CoroutineRunner
+└─ CoreUI 📦
+   └─ LoadingScreenController
 ```
 
-## 컨테이너/정렬 규칙
-- 루트 정렬(위→아래): Main Camera → Canvas → CoreContainer (컨테이너) 📦 → EventSystem
-- CoreContainer (컨테이너) 📦 내부 정렬: CoreSystem → AudioSources → CoreUtilities → CoreUI
-- 오브젝트명은 역할 중심, 씬 내 유일성 유지.
-
-## 필수 오브젝트
-- Main Camera, Canvas, EventSystem, CoreContainer (컨테이너) 📦(하위 4 컨테이너 포함)
-- 누락 시: 입력/전역 매니저/오디오/씬 전환 기능 동작 불가.
-
-## 핵심 설정값 표
-| 항목 | 값 | 비고 |
-|---|---|---|
-| CanvasScaler.ReferenceResolution | 800×600 | 현재 값(문서 기준). 1920×1080 권장 |
-| CanvasScaler.UiScaleMode | ConstantPixelSize | |
-| AudioSource(BGM/SFX).PlayOnAwake | true | 기본값 유지 |
-| AudioSource(BGM/SFX).Volume | 1.0 | 프로젝트 설정과 동기화 권장 |
-| AudioManager.bgmVolume | 0.7 | |
-| AudioManager.sfxVolume | 1.0 | |
-| AudioManager.fadeTime | 1.0 | |
-| Transition.Duration | 1.0 | 커브 Linear(0→1) |
-| Transition.Scenes | Core/Main/Battle | SceneTransitionManager 필드 |
-| Initializer.DebugLogging | On | 개발 단계 권장 |
-| Initializer.Order | CoroutineRunner → GameStateManager → SceneTransitionManager → PlayerCharacterSelectionManager → AudioManager → SaveManager → AnimationDatabaseManager → AnimationManager → SettingsManager → LoadingScreenController | 코드 기준 |
-
-## 인스펙터 연결 표
+## 🔗 인스펙터 필수 연결 표
 | 오브젝트 | 컴포넌트 | 필드 | 값/참조 | [필수] |
 |---|---|---|---|---|
-| AudioManager | AudioManager | bgmSource | 누락 | 필수(연결 필요) |
-| AudioManager | AudioManager | sfxSource | 누락 | 필수(연결 필요) |
+| AudioManager | AudioManager | bgmSource | BGMSource | 필수 |
+| AudioManager | AudioManager | sfxSource | SFXSource | 필수 |
 | SceneTransitionManager | SceneTransitionManager | transitionCanvas | Canvas | 필수 |
-| SceneTransitionManager | SceneTransitionManager | transitionImage | FadeImage (Image) | 필수 |
+| SceneTransitionManager | SceneTransitionManager | transitionImage | 페이드 대상 Image | 필수 |
 | LoadingScreenController | LoadingScreenController | loadingPanel | LoadingPanel | 필수 |
-| LoadingScreenController | LoadingScreenController | progressBar | ProgressBar (Slider) | 필수 |
-| LoadingScreenController | LoadingScreenController | progressText | ProgressText (Text) | 필수 |
-| LoadingScreenController | LoadingScreenController | loadingText | LoadingText (Text) | 필수 |
+| LoadingScreenController | LoadingScreenController | progressBar | ProgressBar | 필수 |
+| LoadingScreenController | LoadingScreenController | progressText | ProgressText | 필수 |
+| LoadingScreenController | LoadingScreenController | loadingText | LoadingText | 필수 |
 
-## 시스템 연동 포인트
-- 오디오: AudioManager 전역 BGM/SFX 제어(설정 연동 고려)
-- 전환: SceneTransitionManager 씬 로딩/전환 애니메이션 제어
-- 세이브: SaveManager 전역 세이브 파일 관리
-- 애니메이션: AnimationManager/AnimationDatabaseManager 전역 애니메이션 데이터 관리
-
-## 변경 가이드
-- 컨테이너 순서/필수 컴포넌트 변경 금지.
-- 오브젝트명 변경 전 전역 참조(스크립트/UnityEvent/프리팹) 영향도 확인.
-- 전역 시스템 추가 시 CoreSystemInitializer 초기화 순서에 반영.
-
-## 검증 체크리스트
-- [ ] 루트/컨테이너/중요 오브젝트 순서 일치
-- [ ] Canvas/오디오/전환 핵심 설정값 일치
+## ✅ 검증 체크리스트
+- [ ] 루트/컨테이너/중요 오브젝트 순서 일치(Main→Canvas→CoreContainer→EventSystem)
 - [ ] AudioManager/SceneTransition/Loading 참조 연결 완료
-- [ ] Initializer 초기화 순서 최신 상태(코드와 일치)
-- [ ] 플레이 시 경고/에러 없음
+- [ ] 초기화 순서 로그가 코드와 일치
+- [ ] SaveManager/AudioManager 볼륨 연동 작동(시작 시 로드)
+- [ ] 다른 씬 전환 시 페이드/로딩 UI가 정상 동작
 
-## 변경 기록(Delta)
-- 2025-09-08: 문서 규칙 개선 반영(TOC, Quick-Scan, 표 기반 구성) 및 최신 CoreScene 값 동기화
+## 🧩 자주 발생하는 오류와 해결
+- AudioManager 참조 누락 → bgmSource/sfxSource 필드 연결
+- SceneTransitionManager 이미지/캔버스 누락 → transitionCanvas/transitionImage 필수 연결
+- 로딩 UI 참조 미설정 → LoadingScreenController의 4개 필드 모두 연결
+
+## 📝 변경 기록(Delta)
+- 2025-09-08: 씬 제작 가이드 형식으로 전환, 필수 연결 표/체크리스트 보강

@@ -66,13 +66,7 @@ namespace Game.CombatSystem.Service
                 return false;
             }
 
-            // 3. 쿨타임 검사
-            if (card.GetCurrentCoolTime() > 0)
-            {
-                message = $"카드 쿨타임이 남아 있어 드롭 불가: {card.GetCardName()}";
-                Debug.LogWarning($"[CardDropService] {message}");
-                return false;
-            }
+            // 3. 쿨타임 검사는 기획상 사용하지 않음 (항상 통과)
 
             // 4. 드롭 유효성 검사
             if (!validator.IsValidDrop(card, slot, out message))

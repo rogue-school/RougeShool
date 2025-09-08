@@ -50,8 +50,20 @@ namespace Game.SkillCardSystem.UI
                 rect.localScale = Vector3.one;
             }
 
-            // === 드래그 핸들러 연결 ===
-            if (instance.TryGetComponent(out CardDragHandler dragHandler))
+            // === 필수 컴포넌트 보장 및 드래그 핸들러 연결 ===
+            // CanvasGroup이 없으면 추가 (CardDragHandler가 사용)
+            if (!instance.TryGetComponent<UnityEngine.CanvasGroup>(out var cg))
+            {
+                cg = instance.gameObject.AddComponent<UnityEngine.CanvasGroup>();
+            }
+
+            // CardDragHandler가 없으면 추가
+            if (!instance.TryGetComponent<CardDragHandler>(out var dragHandler))
+            {
+                dragHandler = instance.gameObject.AddComponent<CardDragHandler>();
+            }
+
+            if (dragHandler != null)
             {
                 if (flowCoordinator != null)
                 {
@@ -61,6 +73,12 @@ namespace Game.SkillCardSystem.UI
                 {
                     Debug.LogWarning("[SkillCardUIFactory] flowCoordinator가 null입니다.");
                 }
+            }
+
+            // === Raycast 설정: 기본적으로 클릭 가능해야 함 ===
+            foreach (var img in instance.GetComponentsInChildren<UnityEngine.UI.Image>())
+            {
+                img.raycastTarget = true;
             }
 
             return instance;

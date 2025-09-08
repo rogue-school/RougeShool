@@ -32,6 +32,7 @@ using Game.CombatSystem.DragDrop;
 using Game.CombatSystem.CoolTime;
 using Game.SkillCardSystem.Runtime;
 using Game.CoreSystem.Interface;
+ 
 
 /// <summary>
 /// 전투 씬에서 사용하는 Zenject 설치자입니다.
@@ -60,6 +61,7 @@ public class CombatInstaller : MonoInstaller
         BindUIPrefabs();
         BindUIHandlers();
         BindCooldownSystem();
+        BindCardCirculationSystem();
     }
 
     #region 상태머신
@@ -94,8 +96,9 @@ public class CombatInstaller : MonoInstaller
         BindMono<IEnemyHandManager, EnemyHandManager>();
         BindMono<IPlayerHandManager, PlayerHandManager>();
         BindMono<ICombatSlotManager, CombatSlotManager>();
-        BindMono<IVictoryManager, VictoryManager>();
-        BindMono<IGameOverManager, GameOverManager>();
+        // Victory/GameOver UI는 현재 미사용이므로 바인딩 중지
+        // BindMono<IVictoryManager, VictoryManager>();
+        // BindMono<IGameOverManager, GameOverManager>();
         BindMono<IEnemySpawnerManager, EnemySpawnerManager>();
         BindMono<IStageManager, StageManager>();
         BindMono<ICharacterDeathListener, CharacterDeathHandler>();
@@ -189,8 +192,16 @@ public class CombatInstaller : MonoInstaller
         Container.Bind<IHandSlotRegistry>().FromInstance(slotRegistry.GetHandSlotRegistry()).AsSingle();
         Container.Bind<ICharacterSlotRegistry>().FromInstance(slotRegistry.GetCharacterSlotRegistry()).AsSingle();
 
-        // SlotInitializer 바인딩 (씬에서 자동으로 찾아서 바인딩)
-        Container.BindInterfacesAndSelfTo<SlotInitializer>().FromComponentInHierarchy().AsSingle();
+        // SlotInitializer 보장: 없으면 자동 생성 후 인스턴스 바인딩
+        var slotInitializer = FindFirstObjectByType<SlotInitializer>();
+        if (slotInitializer == null)
+        {
+            var go = new GameObject("SlotInitializer");
+            slotInitializer = go.AddComponent<SlotInitializer>();
+        }
+        // 의존성 주입 예약
+        Container.QueueForInject(slotInitializer);
+        Container.Bind<SlotInitializer>().FromInstance(slotInitializer).AsSingle();
     }
 
     #endregion
@@ -202,14 +213,23 @@ public class CombatInstaller : MonoInstaller
     /// </summary>
     private void BindInitializerSteps()
     {
-        BindMonoInterfaces<SlotInitializationStep>();
-        BindMonoInterfaces<FlowCoordinatorInitializationStep>();
-        BindMonoInterfaces<PlayerCharacterInitializer>();
-        BindMonoInterfaces<PlayerSkillCardInitializer>();
-        BindMonoInterfaces<EnemyCharacterInitializer>();
-        BindMonoInterfaces<EnemyHandInitializer>();
+        // 필수 초기화 스텝들 보장: 없으면 자동 생성 후 바인딩
+        EnsureAndBindInitializer<SlotInitializationStep>("SlotInitializationStep");
+        EnsureAndBindInitializer<FlowCoordinatorInitializationStep>("FlowCoordinatorInitializationStep");
+        EnsureAndBindInitializer<PlayerCharacterInitializer>("PlayerCharacterInitializer");
+        EnsureAndBindInitializer<PlayerSkillCardInitializer>("PlayerSkillCardInitializer");
+        EnsureAndBindInitializer<EnemyCharacterInitializer>("EnemyCharacterInitializer");
+        EnsureAndBindInitializer<EnemyHandInitializer>("EnemyHandInitializer");
 
-        Container.Bind<CombatStartupManager>().FromComponentInHierarchy().AsSingle();
+        // CombatStartupManager 보장: 없으면 자동 생성 후 바인딩
+        var startup = FindFirstObjectByType<CombatStartupManager>();
+        if (startup == null)
+        {
+            var go = new GameObject("CombatStartupManager");
+            startup = go.AddComponent<CombatStartupManager>();
+        }
+        Container.QueueForInject(startup);
+        Container.Bind<CombatStartupManager>().FromInstance(startup).AsSingle();
     }
 
     #endregion
@@ -283,6 +303,30 @@ public class CombatInstaller : MonoInstaller
 
     #endregion
 
+    #region 카드 순환 시스템
+
+    private void BindCardCirculationSystem()
+    {
+        // ICardCirculationSystem, ITurnBasedCardManager를 씬 컴포넌트에서 찾거나 새로 생성해 단일 바인딩
+        var circulation = FindFirstObjectByType<CardCirculationSystem>();
+        if (circulation == null)
+        {
+            var go = new GameObject("CardCirculationSystem");
+            circulation = go.AddComponent<CardCirculationSystem>();
+        }
+        Container.Bind<ICardCirculationSystem>().FromInstance(circulation).AsSingle();
+
+        var turnBased = FindFirstObjectByType<TurnBasedCardManager>();
+        if (turnBased == null)
+        {
+            var go = new GameObject("TurnBasedCardManager");
+            turnBased = go.AddComponent<TurnBasedCardManager>();
+        }
+        Container.Bind<ITurnBasedCardManager>().FromInstance(turnBased).AsSingle();
+    }
+
+    #endregion
+
 
     #region 유틸 바인딩 메서드
 
@@ -300,6 +344,22 @@ public class CombatInstaller : MonoInstaller
     private void BindMonoInterfaces<T>() where T : Component
     {
         Container.BindInterfacesAndSelfTo<T>().FromComponentInHierarchy().AsSingle();
+    }
+
+    /// <summary>
+    /// 씬에 존재하지 않으면 새 GameObject를 생성해 컴포넌트를 추가하고, 해당 인스턴스를 단일 바인딩합니다.
+    /// </summary>
+    private void EnsureAndBindInitializer<T>(string gameObjectName) where T : Component
+    {
+        var instance = FindFirstObjectByType<T>();
+        if (instance == null)
+        {
+            var go = new GameObject(gameObjectName);
+            instance = go.AddComponent<T>();
+        }
+        // 의존성 주입 예약
+        Container.QueueForInject(instance);
+        Container.BindInterfacesAndSelfTo<T>().FromInstance(instance).AsSingle();
     }
 
     #endregion

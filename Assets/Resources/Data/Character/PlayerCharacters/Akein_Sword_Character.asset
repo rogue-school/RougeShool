@@ -13,6 +13,9 @@ MonoBehaviour:
   m_Name: Akein_Sword_Character
   m_EditorClassIdentifier: 
   <DisplayName>k__BackingField: 
+  <CharacterType>k__BackingField: 0
   <MaxHP>k__BackingField: 20
-  <Portrait>k__BackingField: {fileID: 1644661385417639134, guid: 3216a4b264ec8524fa79f9b5a1afaefd, type: 3}
+  <Portrait>k__BackingField: {fileID: 1644661385417639134, guid: a34fe26a1ef088142b2b0c5707aa7a31, type: 3}
+  <MaxResource>k__BackingField: 0
+  <ResourceName>k__BackingField: 
   <SkillDeck>k__BackingField: {fileID: 11400000, guid: 01a1f3cd905df2e439aedf79636eaf13, type: 2}

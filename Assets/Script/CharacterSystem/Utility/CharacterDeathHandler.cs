@@ -13,8 +13,8 @@ namespace Game.CombatSystem.Utility
     {
         [Inject] private TurnContext turnContext;
         [Inject] private IStageManager stageManager;
-        [Inject] private IVictoryManager victoryManager;
-        [Inject] private IGameOverManager gameOverManager;
+        [InjectOptional] private IVictoryManager victoryManager;
+        [InjectOptional] private IGameOverManager gameOverManager;
 
         public void OnCharacterDied(ICharacter character)
         {
@@ -26,7 +26,10 @@ namespace Game.CombatSystem.Utility
             }
             else if (character.IsPlayerControlled())
             {
-                gameOverManager.TriggerGameOver();
+                if (gameOverManager != null)
+                {
+                    gameOverManager.TriggerGameOver();
+                }
             }
         }
 

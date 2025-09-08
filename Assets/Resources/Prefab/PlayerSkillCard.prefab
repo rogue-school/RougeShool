@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 7624428577981995439}
   - component: {fileID: 4627134175914890069}
-  - component: {fileID: 8036713322244148843}
   - component: {fileID: 650616450906029805}
   - component: {fileID: 2004588788814569813}
   - component: {fileID: 8920084187647182881}
@@ -63,19 +62,6 @@ MonoBehaviour:
   coolTimeOverlay: {fileID: 0}
   coolTimeText: {fileID: 0}
   canvasGroup: {fileID: 0}
---- !u!114 &8036713322244148843
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 533812852039730097}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4849b92b114c9b34e973eccb11880e72, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  droppedSuccessfully: 1
 --- !u!222 &650616450906029805
 CanvasRenderer:
   m_ObjectHideFlags: 0

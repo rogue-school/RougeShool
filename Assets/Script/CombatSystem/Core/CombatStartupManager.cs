@@ -17,7 +17,6 @@ namespace Game.CombatSystem.Core
         private List<ICombatInitializerStep> steps;
 
         [Inject] private ICombatTurnManager turnManager;
-        [Inject] private ICombatStateFactory stateFactory;
 
         #region Unity Methods
 
@@ -130,7 +129,27 @@ namespace Game.CombatSystem.Core
 
             Debug.Log("<color=lime>[CombatStartupManager] 모든 초기화 단계 완료</color>");
 
-            var playerInputState = stateFactory.CreatePlayerInputState();
+            // 안전 가드: 주입 실패 시 NRE 방지
+            if (turnManager == null)
+            {
+                Debug.LogError("[CombatStartupManager] 필수 의존성이 없습니다. (turnManager가 null)");
+                yield break;
+            }
+
+            var stateFactoryLocal = turnManager.GetStateFactory();
+            if (stateFactoryLocal == null)
+            {
+                Debug.LogError("[CombatStartupManager] 상태 팩토리를 가져올 수 없습니다. (turnManager.GetStateFactory() == null)");
+                yield break;
+            }
+
+            var playerInputState = stateFactoryLocal.CreatePlayerInputState();
+            if (playerInputState == null)
+            {
+                Debug.LogError("[CombatStartupManager] 플레이어 입력 상태 생성 실패");
+                yield break;
+            }
+
             turnManager.RequestStateChange(playerInputState);
         }
 

@@ -66,7 +66,15 @@ namespace Game.CombatSystem.Initialization
             foreach (Transform child in slotTransform)
                 Object.Destroy(child.gameObject);
 
-            var player = Object.Instantiate(playerPrefab);
+            // 프리팹 해결 (null 방어 및 리소스 로드 시도)
+            var prefabToUse = ResolvePlayerPrefab();
+            if (prefabToUse == null)
+            {
+                Debug.LogError("[PlayerCharacterInitializer] playerPrefab이 설정되지 않았고 리소스 로드에도 실패했습니다.");
+                yield break;
+            }
+
+            var player = Object.Instantiate(prefabToUse);
             player.name = "PlayerCharacter";
             player.transform.SetParent(slotTransform, false);
 
@@ -251,6 +259,27 @@ namespace Game.CombatSystem.Initialization
             }
 
             Debug.LogError("[PlayerCharacterInitializer] 캐릭터 데이터가 없습니다. (선택된 캐릭터, GameManager, 기본 데이터 모두 null)");
+            return null;
+        }
+
+        /// <summary>
+        /// 플레이어 캐릭터 프리팹을 해석합니다. (직접 지정 > Resources 로드 > 실패 시 null)
+        /// </summary>
+        private PlayerCharacter ResolvePlayerPrefab()
+        {
+            if (playerPrefab != null)
+                return playerPrefab;
+
+            // 우선 표준 경로 시도
+            var fromResources = Resources.Load<PlayerCharacter>("Prefab/PlayerCharacter");
+            if (fromResources != null)
+                return fromResources;
+
+            // 폴백: 전체에서 첫 번째 프리팹 시도 (비용 적음)
+            var all = Resources.LoadAll<PlayerCharacter>(string.Empty);
+            if (all != null && all.Length > 0)
+                return all[0];
+
             return null;
         }
 

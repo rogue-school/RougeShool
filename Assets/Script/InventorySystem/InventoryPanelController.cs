@@ -1,70 +1,77 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using Game.CoreSystem.Audio;
 
 public class InventoryPanelController : MonoBehaviour
 {
-    public RectTransform panel;      // ÀÎº¥Åä¸® ÆĞ³Î
-    public Button bagButton;         // °¡¹æ ¹öÆ°
-    public Button closeButton;       // ´İ±â ¹öÆ°
-    public float slideDuration = 0.3f;
+	public RectTransform panel;      // ì¸ë²¤í† ë¦¬ íŒ¨ë„
+	public Button bagButton;         // ê°€ë°© ë²„íŠ¼
+	public Button closeButton;       // ë‹«ê¸° ë²„íŠ¼
+	public float slideDuration = 0.3f;
 
-    private Vector2 shownPosition;
-    private Vector2 hiddenPosition;
-    private bool isOpen = false;
+	private Vector2 shownPosition;
+	private Vector2 hiddenPosition;
+	private bool isOpen = false;
 
-    void Start()
-    {
-        float panelWidth = panel.rect.width;
+	void Start()
+	{
+		float panelWidth = panel.rect.width;
 
-        // º¸ÀÌ´Â À§Ä¡ ÀúÀå
-        shownPosition = panel.anchoredPosition;
+		// í‘œì‹œë  ìœ„ì¹˜ ê³„ì‚°
+		shownPosition = panel.anchoredPosition;
 
-        // ¼û°ÜÁø À§Ä¡ (¿À¸¥ÂÊ)
-        hiddenPosition = new Vector2(shownPosition.x + panelWidth + 50f, shownPosition.y);
+		// ìˆ¨ê¹€ ìœ„ì¹˜ (ì˜¤ë¥¸ìª½ ë°”ê¹¥)
+		hiddenPosition = new Vector2(shownPosition.x + panelWidth + 50f, shownPosition.y);
 
-        // ½ÃÀÛ ½Ã ºñÈ°¼ºÈ­
-        panel.gameObject.SetActive(false);
+		// ì‹œì‘ ì‹œ ë¹„í™œì„±í™”
+		panel.gameObject.SetActive(false);
 
-        bagButton.onClick.AddListener(OpenPanel);
-        closeButton.onClick.AddListener(ClosePanel);
-    }
+		bagButton.onClick.AddListener(OpenPanel);
+		closeButton.onClick.AddListener(ClosePanel);
+	}
 
-    public void OpenPanel()
-    {
-        if (isOpen) return;
-        isOpen = true;
+	public void OpenPanel()
+	{
+		if (isOpen) return;
+		isOpen = true;
 
-        // È°¼ºÈ­ ÈÄ À§Ä¡ ÃÊ±âÈ­
-        panel.gameObject.SetActive(true);
-        panel.anchoredPosition = hiddenPosition;
+		// í™œì„±í™” ë° ìœ„ì¹˜ ì´ˆê¸°í™”
+		panel.gameObject.SetActive(true);
+		panel.anchoredPosition = hiddenPosition;
 
-        StopAllCoroutines();
-        StartCoroutine(SlidePanel(hiddenPosition, shownPosition));
-    }
+		StopAllCoroutines();
+		StartCoroutine(SlidePanel(hiddenPosition, shownPosition));
 
-    public void ClosePanel()
-    {
-        if (!isOpen) return;
-        isOpen = false;
+		// ì˜¤ë””ì˜¤: ì¸ë²¤í† ë¦¬ ì—´ê¸° ì‚¬ìš´ë“œ(ê¸°ë³¸ ë²„íŠ¼/ë©”ë‰´ ì˜¤í”ˆìœ¼ë¡œ ëŒ€ì²´)
+		AudioManager.Instance?.PlayMenuOpenSound();
+	}
 
-        StopAllCoroutines();
-        StartCoroutine(SlidePanel(shownPosition, hiddenPosition, () =>
-        {
-            panel.gameObject.SetActive(false);
-        }));
-    }
+	public void ClosePanel()
+	{
+		if (!isOpen) return;
+		isOpen = false;
 
-    private IEnumerator SlidePanel(Vector2 from, Vector2 to, System.Action onComplete = null)
-    {
-        float elapsed = 0f;
-        while (elapsed < slideDuration)
-        {
-            panel.anchoredPosition = Vector2.Lerp(from, to, elapsed / slideDuration);
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
-        panel.anchoredPosition = to;
-        onComplete?.Invoke();
-    }
+		StopAllCoroutines();
+		StartCoroutine(SlidePanel(shownPosition, hiddenPosition, () =>
+		{
+			panel.gameObject.SetActive(false);
+		}));
+
+		// ì˜¤ë””ì˜¤: ì¸ë²¤í† ë¦¬ ë‹«ê¸° ì‚¬ìš´ë“œ(ê¸°ë³¸ ë²„íŠ¼/ë©”ë‰´ í´ë¡œì¦ˆë¡œ ëŒ€ì²´)
+		AudioManager.Instance?.PlayMenuCloseSound();
+	}
+
+	private IEnumerator SlidePanel(Vector2 from, Vector2 to, System.Action onComplete = null)
+	{
+		float elapsed = 0f;
+		while (elapsed < slideDuration)
+		{
+			panel.anchoredPosition = Vector2.Lerp(from, to, elapsed / slideDuration);
+			elapsed += Time.deltaTime;
+			yield return null;
+		}
+		panel.anchoredPosition = to;
+		onComplete?.Invoke();
+	}
 }
