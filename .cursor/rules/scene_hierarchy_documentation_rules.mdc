@@ -1,0 +1,209 @@
+## 🎮 씬 제작/문서화 통합 룰 (Scenes 전용)
+
+본 룰은 `Assets/Scenes/`의 씬을 실제로 제작(구성/바인딩/검증)하고, 그 결과를 일관된 형식으로 문서화하기 위한 표준이다. 작성 언어는 한국어로 통일한다.
+
+### 1) 목적과 범위
+- **목적**: 누구나 씬 구조를 빠르게 이해·수정·검증할 수 있도록 정형화된 문서 제공
+- **대상**: `CoreScene.unity`, `BattleScene.unity` 우선, 필요 시 모든 씬에 확장 적용
+- **가독성 목표**: 10초 내 핵심 파악(Quick-Scan), 1분 내 연결 검증(Inspector Wiring), 5분 내 전체 구조 이해
+
+### 2) 산출물 경로/파일명 규칙
+- 경로: `Assets/Scenes/Docs/`
+- 파일명: `<SceneName>_씬구조문서.md`
+- 문서 상단에 자동 목차(TOC) 포함: `[TOC]` 또는 수동 앵커 링크 목록
+
+### 3) 문서 표준 섹션 (고정 순서)
+1. 제목: `# <SceneName> 씬 구조 문서`
+2. 목차(TOC)
+3. Quick-Scan 요약: 핵심 컨테이너/필수 오브젝트/주요 참조 5~8줄
+4. 하이라키 트리: 전체 구조 트리 표기(규칙 4 준수)
+5. 컨테이너/정렬 규칙: 루트/컨테이너 순서, 네이밍, 고정 불변식
+6. 필수 오브젝트: 누락 시 영향 포함
+7. 컴포넌트·핵심 설정값 요약: 중요 값만(해상도/카메라/오디오/전환/DI 등)
+8. 씬 제작 절차(필수): 단계별로 생성/컴포넌트 부착/값 설정/바인딩 절차를 번호로 명시
+9. 인스펙터 연결 표: 표 형태로 모든 참조/UnityEvent/필수 플래그 명시
+10. 시스템 연동 포인트: CoreSystem/Audio/Save/Transition 등 상호작용
+11. 검증 체크리스트: 열람/플레이 전/플레이 중 점검 항목
+12. 자주 놓치는 연결/오류(FAQ): 누락하기 쉬운 연결 항목과 증상→원인→해결
+13. 변경 기록(Delta): 문서/씬 변경 이력(날짜·작성자·요약)
+
+### 4) 표기 규칙
+- 트리 표기: ASCII 트리 선 사용해 부모/자식 관계를 명확히 표시
+  - 사용 문자: `│`(수직선), `├─`(가지), `└─`(마지막 가지). 루트는 접두어 없이 시작
+- 컨테이너 표기: `이름 (컨테이너) 📦` 형식(배지는 항상 이름 맨 오른쪽)
+- 중요 오브젝트 표기: `이름 (ScriptName) ⭐` 형식(배지는 항상 이름 맨 오른쪽)
+- 기타 배지/아이콘도 모두 이름 맨 오른쪽에 표기(일관성 유지)
+- 스크립트 컴포넌트: 오브젝트명 뒤 `(ScriptName)` 병기, 다수는 `(A, B)`
+- 필수/선택: `[필수]`, `[선택]` 태그
+- 간단 주석: `// 한국어 설명 1줄`
+- 앵커/링크: 섹션/오브젝트에 소제목 앵커 사용, 내부 링크 허용
+- 심각도 태그: `[BLOCKER]`, `[HIGH]`, `[MEDIUM]`, `[LOW]` (검증/이슈 표기 시)
+
+-#### 4-α) 노드 라벨 포맷(언더스코어 표기)
+- 요구 포맷: `이름_GameObject 생성 메뉴 카테고리_주요표시(⭐)_컴포넌트목록`
+  - 예: `TurnStartButton_UI_Image(⭐)_Button, TMP_Text`
+  - 예: `Background_UI_Image_Image` → 단순 이미지의 경우: `Background_UI_Image_Image(Image)` 사용 가능
+- 규칙
+  - 구분자는 언더스코어 `_`
+  - `(⭐)`은 있을 때만 표기하며, 항상 카테고리 뒤/컴포넌트 앞 위치
+  - `GameObject 생성 메뉴 카테고리` 예시: `UI`, `Camera`, `Light`, `Audio`, `2D Object`, `3D Object`, `Effects`, `Volume`, `Rendering`, `Video`, `Zenject`, `Visual Scripting`, `Vendor`
+  - `주요표시` 예시: `컨테이너`, `Empty`, `Image`, `TMP_Text`, `Button`, `Camera`, `Canvas` 등
+  - `컴포넌트목록`은 쉼표로 나열, 괄호 없이 표기 (예: `Button, Image, TMP_Text`)
+  - 컨테이너의 경우 `주요표시`에 `컨테이너`를 포함하고, 끝에 `📦`를 유지: `PlayerHandCard_UI_컨테이너 📦`
+
+노드 표기 예시
+```
+TurnStartButton_UI_Image(⭐)_Button, TMP_Text
+Background_UI_Image_Image
+Installer_System_컨테이너 📦
+AudioManager_System_Manager(⭐)_AudioManager
+NodeRoot_Runtime_Empty
+```
+
+예시
+```
+CoreContainer (컨테이너) 📦
+├─ CoreSystem (컨테이너) 📦
+│  ├─ AudioManager (AudioManager) ⭐
+│  ├─ SaveManager (SaveManager)
+│  └─ SceneTransitionManager (SceneTransitionManager)
+├─ AudioSources (컨테이너) 📦
+│  ├─ BGMSource (AudioSource)
+│  └─ SFXSource (AudioSource)
+└─ CoreUI (컨테이너) 📦
+   └─ LoadingScreenController (LoadingScreenController)
+```
+
+### 4-1) 표(테이블) 표준 템플릿
+- 인스펙터 연결 표
+
+| 오브젝트 | 컴포넌트 | 필드 | 값/참조 | [필수] |
+|---|---|---|---|---|
+| AudioManager | AudioManager | bgmSource | BGMSource (AudioSource) | 필수 |
+| SceneTransitionManager | SceneTransitionManager | transitionImage | FadeImage (Image) | 필수 |
+
+- 핵심 설정값 표
+
+| 항목 | 값 | 비고 |
+|---|---|---|
+| CanvasScaler.ReferenceResolution | 1920×1080 권장 | 현재 값과 차이 표시 |
+| Transition.Duration | 1.0 | 커브 = Linear(0→1) |
+
+### 5) 루트/컨테이너 정렬 불변식
+- 루트 정렬(위→아래):
+  1) `Main Camera`(또는 카메라 루트)
+  2) `UICamera`(사용 시)
+  3) 시스템 컨테이너(예: `📦 CoreContainer` 또는 씬 관리자 루트)
+  4) UI 루트(`Canvas`/`UICanvas`)
+  5) `EventSystem`
+- 컨테이너 내부: 관리자/컨트롤러 → 서비스/헬퍼 → 설치/DI → 기타 순서
+- 오브젝트명: 역할 중심, 씬 내 유일성 유지
+
+### 6) CoreScene 템플릿(권장)
+하이라키
+```
+Main Camera (Camera, UniversalAdditionalCameraData, AudioListener)
+Canvas (Canvas, CanvasScaler, GraphicRaycaster)
+EventSystem (EventSystem, InputSystemUIInputModule)
+CoreContainer (컨테이너) 📦
+├─ CoreSystem (컨테이너) 📦
+│  ├─ GameStateManager (GameStateManager)
+│  ├─ SceneTransitionManager (SceneTransitionManager)
+│  ├─ AudioManager (AudioManager)
+│  ├─ SaveManager (SaveManager)
+│  ├─ AnimationManager (AnimationManager)
+│  ├─ AnimationDatabaseManager (AnimationDatabaseManager)
+│  ├─ CoreSystemInitializer (CoreSystemInitializer)
+│  └─ PlayerCharacterSelectionManager (PlayerCharacterSelectionManager)
+├─ AudioSources (컨테이너) 📦
+│  ├─ BGMSource (AudioSource)
+│  └─ SFXSource (AudioSource)
+├─ CoreUtilities (컨테이너) 📦
+│  └─ CoroutineRunner (CoroutineRunner)
+└─ CoreUI (컨테이너) 📦
+   ├─ LoadingScreenController (LoadingScreenController)
+   └─ TransitionEffectController (TransitionEffectController)
+```
+핵심 설정 체크: CanvasScaler(1920x1080 권장), AudioManager 참조, Transition 커브/Duration, Initializer 순서 배열, Loading 참조
+
+제작 절차(요약)
+1) 루트 생성: Main Camera, Canvas(Scaler 1920x1080 권장), EventSystem
+2) `CoreContainer` 생성 후 하위에 `CoreSystem`/`AudioSources`/`CoreUtilities`/`CoreUI` 4 컨테이너 생성
+3) `CoreSystem` 하위에 매니저 배치: GameStateManager, SceneTransitionManager, AudioManager, SaveManager, AnimationManager, AnimationDatabaseManager, CoreSystemInitializer, PlayerCharacterSelectionManager, SettingsManager
+4) `AudioSources` 하위에 BGMSource/SFXSource 추가, AudioManager의 `bgmSource/sfxSource` 연결
+5) `CoreUI` 하위에 LoadingScreenController 배치, LoadingPanel/Slider/Text 바인딩(현재 Text, 추후 TMP 전환 계획 시 주석)
+6) CoreSystemInitializer의 초기화 순서 배열을 코드 기준으로 확인/동기화
+
+### 7) BattleScene 템플릿(권장)
+하이라키
+```
+CombatManager
+├─ CombatFlowCoordinator (CombatFlowCoordinator)
+├─ CombatStartupManager (CombatStartupManager)
+├─ CombatTurnManager (CombatTurnManager)
+├─ CombatSlotManager (CombatSlotManager)
+├─ PlayerManager (PlayerManager)
+├─ EnemyManager (EnemyManager)
+├─ GameOverManager (GameOverManager)
+├─ Installer (컨테이너) 📦
+│  ├─ SceneContext (SceneContext)
+│  └─ CombatInstaller (CombatInstaller)
+└─ AnimationFacade (AnimationFacade)
+UICanvas (Canvas, CanvasScaler, GraphicRaycaster)
+├─ CombatArena (컨테이너) 📦
+│  ├─ PlayerHandCard (컨테이너) 📦
+│  │  ├─ Background (Image)
+│  │  └─ Slots(1..3)
+│  ├─ EnemyHandCard (컨테이너) 📦
+│  │  ├─ Background (Image)
+│  │  └─ Slots(1..3)
+│  └─ TurnStartButton (Button, Image, TMP_Text)
+├─ CombatCardSlotBackground (컨테이너) 📦 // Slots(1..2)
+├─ EnemyCharacterSlot
+└─ PlayerCharaterSlot
+EventSystem (EventSystem, InputSystemUIInputModule)
+Main Camera / UICamera(필요 시)
+```
+핵심 설정 체크: CanvasScaler(1920x1080 권장), UICanvas.camera→UICamera, 각 Slot의 포지션(enum)과 전투 슬롯 위치 매핑, Installer/DI 확인, Card UI Prefab 바인딩
+
+제작 절차(필수)
+1) 루트 생성: Main Camera, UICamera, CombatManager(Empty), UICanvas(CanvasScaler 1920x1080 권장), EventSystem
+2) `CombatManager` 하위 생성: CombatFlowCoordinator, CombatStartupManager, CombatTurnManager, CombatSlotManager, PlayerManager, EnemyManager, GameOverManager, AnimationFacade
+3) Installer 컨테이너 생성: SceneContext, CombatInstaller 배치 → SceneContext.MonoInstallers에 CombatInstaller 등록
+4) `UICanvas` 구성:
+   - CombatArena/PlayerHandCardBackground 하위에 PlayerHandCardSlot_1..3 생성 후 각 오브젝트에 `PlayerHandCardSlotUI` 부착, `position=PLAYER_SLOT_1..3` 설정
+   - CombatArena/EnemyHandCardBackground 하위에 EnemyHandCardSlot_1..3 생성 후 각 오브젝트에 `EnemyHandCardSlotUI` 부착, `position=ENEMY_SLOT_1..3` 설정
+   - CombatCardSlotBackground 하위의 CombatCardSlot_1..2에 `CombatExecutionSlotUI`와 `CombatSlotPositionHolder` 부착, `Position=FIRST/SECOND`, `FieldPosition=FIELD_LEFT/RIGHT` 설정
+   - (필요 시) EnemyCharacterSlot/PlayerCharacterSlot에 전용 표시/슬롯 컴포넌트 부착
+5) 슬롯 레지스트리 배치: `SlotRegistry`(필드: HandSlotRegistry/CombatSlotRegistry/CharacterSlotRegistry)와 `SlotInitializer`를 씬에 추가하고, 각 레지스트리에 위 슬롯들이 자동 등록되도록 연결
+6) DI/프리팹: CombatInstaller에서 카드 UI 프리팹(SkillCardUI) 바인딩(또는 인스펙터 필드 연결) 확인. `PlayerHandCardSlotUI`는 DI로 프리팹을 주입받음
+7) 재생 전 검증: 모의 전투 시작 시 핸드 슬롯 등록, 전투 슬롯 등록, 상태 전이(준비→입력/선공 등) 로그 확인
+
+### 8) 인스펙터 연결 표 규칙
+- 표 컬럼: `오브젝트 | 컴포넌트 | 필드 | 값/참조 | [필수]`
+- 값은 구체적으로: 오브젝트명/리소스 경로/Enum/수치(기본값/허용범위 병기 가능)
+- UnityEvent: `대상오브젝트.컴포넌트.메서드` 전체 경로 표기(파라미터 유형 메모)
+- 누락/불일치 항목은 표 하단에 `[BLOCKER]/[HIGH]` 등 태그로 요약
+
+### 9) Zenject/DI 표기
+- Installer 트리와 바인딩 핵심 요약(예: `IPlayerHandManager → PlayerHandManager`)
+- 필수 바인딩 누락 시 명시(`[BLOCKER]`)
+
+### 10) 변경 가이드/금지
+- 하이라키 변경 시 문서의 트리/연결 표 **동시 갱신**
+- 컨테이너 순서/필수 컴포넌트 임의 변경 금지
+- 오브젝트명 변경 전 전역 참조 영향도 점검
+- 문서 변경은 “변경 기록(Delta)” 섹션에 요약(날짜/작성자/요약/영향도)
+
+### 11) 검증 체크리스트(PR 전)
+- [ ] 루트/컨테이너/중요 오브젝트 순서 일치
+- [ ] Canvas/카메라/오디오/전환 핵심 설정 일치(값/곡선/해상도)
+- [ ] 모든 참조/UnityEvent 연결 누락 없음(표 기준)
+- [ ] DI 바인딩 최신 코드와 동기화(필수 인터페이스 매핑)
+- [ ] 플레이/전환 시 경고/에러 없음(로그 레벨 확인)
+
+### 12) 유지보수 원칙(전문가용)
+- 문서는 “읽는 시간”을 최적화: 트리(전역 구조) → 표(연결/설정) → 설명(맥락) 순
+- 차이(현재 씬 vs 문서)는 “핵심 설정값 표”에 바로 드러나야 함
+- 대규모 변경 시 별도 “마이그레이션 노트” 링크 허용
+

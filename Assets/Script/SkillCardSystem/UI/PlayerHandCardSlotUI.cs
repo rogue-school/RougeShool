@@ -111,5 +111,16 @@ namespace Game.CombatSystem.UI
         {
             currentCardUI?.ShowCoolTime(coolTime, isOnCooldown);
         }
+
+        private void OnValidate()
+        {
+            // 플레이어 슬롯 전용 유효성 강제: 잘못된 값이 설정되면 PLAYER_SLOT_1로 보정
+            if (position != SkillCardSlotPosition.PLAYER_SLOT_1 &&
+                position != SkillCardSlotPosition.PLAYER_SLOT_2 &&
+                position != SkillCardSlotPosition.PLAYER_SLOT_3)
+            {
+                position = SkillCardSlotPosition.PLAYER_SLOT_1;
+            }
+        }
     }
 }

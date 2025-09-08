@@ -59,5 +59,16 @@ namespace Game.CombatSystem.UI
         {
             Clear();
         }
+
+        private void OnValidate()
+        {
+            // 적 슬롯 전용 유효성 강제: 잘못된 값이 설정되면 ENEMY_SLOT_1로 보정
+            if (position != SkillCardSlotPosition.ENEMY_SLOT_1 &&
+                position != SkillCardSlotPosition.ENEMY_SLOT_2 &&
+                position != SkillCardSlotPosition.ENEMY_SLOT_3)
+            {
+                position = SkillCardSlotPosition.ENEMY_SLOT_1;
+            }
+        }
     }
 }

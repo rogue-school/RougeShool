@@ -7,7 +7,7 @@ CoreSystem은 게임의 핵심 시스템들을 관리하는 중앙 집중식 시
 ```
 CoreSystem/
 ├── Manager/          # 코어 매니저 (4개 파일)
-├── Audio/           # 오디오 관리 (1개 파일)
+├── Audio/           # 오디오 관리 (3개 파일)
 ├── Save/            # 저장 관리 (1개 파일)
 ├── Utility/         # 코어 유틸리티 (3개 파일)
 ├── UI/              # 코어 UI (4개 파일)
@@ -23,11 +23,13 @@ CoreSystem/
 - **GameStateManager.cs**: 게임 상태 관리
 - **SystemManager.cs**: 시스템 통합 관리
 
-### Audio 폴더 (1개 파일)
-- **AudioManager.cs**: 오디오 시스템 관리 (AudioSystem으로 이동 필요)
+### Audio 폴더 (3개 파일)
+- **AudioManager.cs**: 오디오 시스템 관리
+- **AudioPoolManager.cs**: 오디오 풀링 관리
+- **AudioEventTrigger.cs**: 오디오 이벤트 트리거
 
 ### Save 폴더 (1개 파일)
-- **SaveManager.cs**: 저장 시스템 관리 (SaveSystem으로 이동 필요)
+- **SaveManager.cs**: 저장 시스템 관리
 
 ### Utility 폴더 (3개 파일)
 - **CoroutineRunner.cs**: 코루틴 실행 관리
@@ -75,6 +77,18 @@ CoreSystem/
 - **생명주기 관리**: 코루틴의 생성/소멸 관리
 - **에러 처리**: 코루틴 실행 중 에러 처리
 
+### 6. 오디오 시스템 통합
+- **오디오 풀링**: AudioSource 풀링으로 성능 최적화
+- **사운드 중복 방지**: 동일한 사운드의 중복 재생 방지
+- **이벤트 기반**: 게임 이벤트와 자동 연동
+- **전용 사운드**: 카드 사용, 적 처치 등 전용 사운드 메서드
+
+### 7. 저장 시스템 통합
+- **슬레이 더 스파이어 방식**: 턴 기반 자동 저장
+- **완전한 카드 상태**: 플레이어/적 핸드, 전투 슬롯, 카드 순환 상태 저장
+- **자동 저장 조건**: 특정 게임 이벤트 시 자동 저장
+- **상태 복원**: 저장된 상태의 완전한 복원
+
 ## 🔧 사용 방법
 
 ### 기본 사용법
@@ -92,6 +106,15 @@ GameLogger.Error("에러 발생");
 
 // 코루틴 실행
 CoroutineRunner.Instance.StartCoroutine(MyCoroutine());
+
+// 오디오 시스템
+AudioManager.Instance.PlaySFXWithPool("CardUse"); // 풀링 사용
+AudioManager.Instance.PlayCardUseSound(); // 전용 사운드
+AudioEventTrigger.Instance.OnCardUsed(); // 이벤트 기반
+
+// 저장 시스템
+SaveManager.Instance.AutoSave(); // 자동 저장
+SaveManager.Instance.LoadGame(); // 게임 로드
 ```
 
 ### 시스템 초기화
@@ -126,11 +149,117 @@ public class MySystem : MonoBehaviour, ICoreSystemInitializable
 - **CoreSystemInitializer**: 복잡한 초기화 과정을 단순화
 - **SceneTransitionManager**: 씬 전환 과정을 단순화
 
+## 🔧 기술적 구현 세부사항
 
-## 📊 시스템 평가
-- **아키텍처**: 8/10 (잘 구조화된 중앙 집중식 설계)
-- **확장성**: 7/10 (새로운 시스템 추가 가능)
-- **성능**: 7/10 (최적화 여지 있음)
-- **유지보수성**: 8/10 (명확한 책임 분리)
-- **전체 점수**: 7.5/10
+### 성능 최적화
+- **메모리 관리**: 싱글톤 패턴으로 인스턴스 중복 생성 방지
+- **프레임 최적화**: Update() 메서드 최소화, 이벤트 기반 처리
+- **로딩 최적화**: 비동기 씬 로딩, 리소스 캐싱 전략
+- **GC 압박 최소화**: 객체 풀링을 통한 메모리 할당 최소화
+
+### 스레드 안전성
+- **동시성 제어**: 싱글톤 인스턴스 생성 시 락 사용
+- **비동기 처리**: async/await 패턴을 통한 비동기 씬 로딩
+- **이벤트 처리**: 스레드 안전한 이벤트 시스템 구현
+- **데이터 동기화**: 공유 데이터 접근 시 동기화 메커니즘
+
+### 메모리 관리
+- **생명주기 관리**: DontDestroyOnLoad를 통한 전역 객체 관리
+- **리소스 해제**: IDisposable 패턴을 통한 리소스 정리
+- **메모리 누수 방지**: 이벤트 구독 해제, 순환 참조 방지
+- **프로파일링**: Unity Profiler를 통한 메모리 사용량 모니터링
+
+## 🏗️ 시스템 아키텍처
+
+### 의존성 다이어그램
+```mermaid
+graph TD
+    A[CoreSystemInitializer] --> B[GameLogger]
+    A --> C[CoroutineRunner]
+    A --> D[AudioManager]
+    A --> E[SaveManager]
+    A --> F[SceneTransitionManager]
+    
+    B --> G[GameLogger.Info/Warning/Error]
+    C --> H[Coroutine Execution]
+    D --> I[AudioPoolManager]
+    E --> J[CardStateCollector]
+    E --> K[CardStateRestorer]
+    F --> L[LoadingScreenController]
+    
+    style A fill:#ff9999
+    style B fill:#99ccff
+    style C fill:#99ccff
+    style D fill:#99ccff
+    style E fill:#99ccff
+    style F fill:#99ccff
+```
+
+### 클래스 다이어그램
+```mermaid
+classDiagram
+    class ICoreSystemInitializable {
+        <<interface>>
+        +Initialize() void
+    }
+    
+    class CoreSystemInitializer {
+        -static instance: CoreSystemInitializer
+        -systems: List~ICoreSystemInitializable~
+        +Instance: CoreSystemInitializer
+        +InitializeAllSystems() void
+        +RegisterSystem(system) void
+    }
+    
+    class GameLogger {
+        -static instance: GameLogger
+        +Instance: GameLogger
+        +Info(message) void
+        +Warning(message) void
+        +Error(message) void
+    }
+    
+    class AudioManager {
+        -static instance: AudioManager
+        -audioPool: AudioPoolManager
+        +Instance: AudioManager
+        +PlaySFXWithPool(clipName) void
+        +PlayCardUseSound() void
+    }
+    
+    ICoreSystemInitializable <|.. CoreSystemInitializer
+    ICoreSystemInitializable <|.. GameLogger
+    ICoreSystemInitializable <|.. AudioManager
+```
+
+### 시퀀스 다이어그램
+```mermaid
+sequenceDiagram
+    participant Game as Game Start
+    participant CSI as CoreSystemInitializer
+    participant GL as GameLogger
+    participant CR as CoroutineRunner
+    participant AM as AudioManager
+    participant SM as SaveManager
+    
+    Game->>CSI: InitializeAllSystems()
+    CSI->>GL: Initialize()
+    GL-->>CSI: Initialized
+    CSI->>CR: Initialize()
+    CR-->>CSI: Initialized
+    CSI->>AM: Initialize()
+    AM-->>CSI: Initialized
+    CSI->>SM: Initialize()
+    SM-->>CSI: Initialized
+    CSI-->>Game: All Systems Initialized
+```
+
+## 📚 참고 자료
+
+### 관련 문서
+- [Unity MonoBehaviour 생명주기](https://docs.unity3d.com/Manual/ExecutionOrder.html)
+- [Zenject 의존성 주입](https://github.com/modesttree/Zenject)
+- [Unity 씬 관리](https://docs.unity3d.com/Manual/Scenes.html)
+
+
 

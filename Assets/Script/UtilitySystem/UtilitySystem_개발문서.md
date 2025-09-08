@@ -1,26 +1,26 @@
 # UtilitySystem 개발 문서
 
 ## 📋 시스템 개요
-UtilitySystem은 게임의 유틸리티 기능들을 관리하는 시스템입니다. 게임 플로우, DontDestroyOnLoad 관리, 드롭 핸들러 주입, 카메라 해상도 수정 등 다양한 유틸리티 기능을 제공합니다.
+UtilitySystem은 게임의 유틸리티 기능들을 관리하는 시스템입니다. 게임 플로우, DontDestroyOnLoad 관리, 드롭 핸들러 주입 등 다양한 유틸리티 기능을 제공합니다.
 
-## 🏗️ 폴더 구조
+## 🏗️ 폴더 구조 (리팩토링 후)
 ```
 UtilitySystem/
 ├── GameFlow/         # 게임 플로우 (3개 파일)
-└── 루트/             # 루트 유틸리티 (3개 파일)
+└── 루트/             # 루트 유틸리티 (2개 파일) - 간소화됨
 ```
 
-## 📁 주요 컴포넌트
+## 📁 주요 컴포넌트 (리팩토링 후)
 
 ### GameFlow 폴더 (3개 파일)
 - **GameContext.cs**: 게임 컨텍스트 관리
 - **IGameContext.cs**: 게임 컨텍스트 인터페이스
 - **ISceneLoader.cs**: 씬 로더 인터페이스
 
-### 루트 폴더 (3개 파일)
+### 루트 폴더 (2개 파일) - 간소화됨
 - **DontDestroyOnLoadContainer.cs**: DontDestroyOnLoad 오브젝트 관리
 - **DropHandlerInjector.cs**: 드롭 핸들러 주입
-- **CameraResolutionFixer.cs**: 카메라 해상도 수정
+- ~~**CameraResolutionFixer.cs**: 카메라 해상도 수정~~ (제거됨)
 
 ## 🎯 주요 기능
 
@@ -39,14 +39,15 @@ UtilitySystem/
 - **의존성 관리**: 드롭 핸들러 간 의존성 관리
 - **초기화**: 드롭 핸들러의 자동 초기화
 
-### 4. 카메라 해상도 수정
-- **해상도 조정**: 다양한 해상도에 맞춰 카메라 설정 조정
-- **비율 유지**: 화면 비율 유지
-- **자동 적용**: 게임 시작 시 자동 적용
+### 4. 카메라 해상도 수정 (제거됨)
+- ~~**해상도 조정**: 다양한 해상도에 맞춰 카메라 설정 조정~~
+- ~~**비율 유지**: 화면 비율 유지~~
+- ~~**자동 적용**: 게임 시작 시 자동 적용~~
+- **제거 사유**: 불필요한 기능으로 판단되어 제거됨
 
 ## 🔧 사용 방법
 
-### 기본 사용법
+### 기본 사용법 (리팩토링 후)
 ```csharp
 // 게임 컨텍스트 설정
 GameContext.Instance.SetCurrentScene("MainMenu");
@@ -58,8 +59,8 @@ DontDestroyOnLoadContainer.Instance.RegisterObject(gameObject);
 // 드롭 핸들러 주입
 DropHandlerInjector.Instance.InjectHandlers();
 
-// 카메라 해상도 수정
-CameraResolutionFixer.Instance.FixResolution();
+// 카메라 해상도 수정 (제거됨)
+// CameraResolutionFixer.Instance.FixResolution(); // 더 이상 사용하지 않음
 ```
 
 ### 게임 플로우 관리
@@ -96,10 +97,4 @@ if (GameContext.Instance.CurrentState == GameState.Combat)
 - **상태 전환**: 컨텍스트를 통한 상태 전환
 
 
-## 📊 시스템 평가
-- **아키텍처**: 8/10 (잘 구조화된 유틸리티 설계)
-- **확장성**: 7/10 (새로운 유틸리티 추가 가능)
-- **성능**: 7/10 (최적화 여지 있음)
-- **유지보수성**: 8/10 (명확한 책임 분리)
-- **전체 점수**: 7.5/10
 

@@ -10,6 +10,16 @@ namespace Game.CoreSystem.Audio
     /// </summary>
     public class AudioEventTrigger : MonoBehaviour
     {
+        [Header("BGM 참조(선택)")]
+        [Tooltip("메인 메뉴 BGM (선택)")]
+        [SerializeField] private AudioClip mainMenuBGM;
+        [Tooltip("전투 BGM (선택)")]
+        [SerializeField] private AudioClip battleBGM;
+        [Tooltip("상점 BGM (선택)")]
+        [SerializeField] private AudioClip shopBGM;
+        [Tooltip("인벤토리 BGM (선택)")]
+        [SerializeField] private AudioClip inventoryBGM;
+
         #region 의존성 주입
 
         [Inject] private AudioManager audioManager;
@@ -167,7 +177,14 @@ namespace Game.CoreSystem.Audio
         public void OnMainMenuBGM()
         {
             Debug.Log("[AudioEventTrigger] 메인 메뉴 BGM 트리거");
-            audioManager?.PlayMainMenuBGM();
+            if (mainMenuBGM != null)
+            {
+                audioManager?.PlayBGM(mainMenuBGM, true);
+            }
+            else
+            {
+                Debug.LogWarning("[AudioEventTrigger] mainMenuBGM이 설정되지 않았습니다.");
+            }
         }
 
         /// <summary>
@@ -176,7 +193,14 @@ namespace Game.CoreSystem.Audio
         public void OnBattleBGM()
         {
             Debug.Log("[AudioEventTrigger] 전투 BGM 트리거");
-            audioManager?.PlayBattleBGM();
+            if (battleBGM != null)
+            {
+                audioManager?.PlayBGM(battleBGM, true);
+            }
+            else
+            {
+                Debug.LogWarning("[AudioEventTrigger] battleBGM이 설정되지 않았습니다.");
+            }
         }
 
         /// <summary>
@@ -185,7 +209,14 @@ namespace Game.CoreSystem.Audio
         public void OnShopBGM()
         {
             Debug.Log("[AudioEventTrigger] 상점 BGM 트리거");
-            audioManager?.PlayShopBGM();
+            if (shopBGM != null)
+            {
+                audioManager?.PlayBGM(shopBGM, true);
+            }
+            else
+            {
+                Debug.LogWarning("[AudioEventTrigger] shopBGM이 설정되지 않았습니다.");
+            }
         }
 
         /// <summary>
@@ -194,17 +225,37 @@ namespace Game.CoreSystem.Audio
         public void OnInventoryBGM()
         {
             Debug.Log("[AudioEventTrigger] 인벤토리 BGM 트리거");
-            audioManager?.PlayInventoryBGM();
+            if (inventoryBGM != null)
+            {
+                audioManager?.PlayBGM(inventoryBGM, true);
+            }
+            else
+            {
+                Debug.LogWarning("[AudioEventTrigger] inventoryBGM이 설정되지 않았습니다.");
+            }
         }
 
         /// <summary>
         /// 씬별 BGM 트리거
         /// </summary>
         /// <param name="sceneName">씬 이름</param>
-        public void OnSceneBGM(string sceneName)
+        public void OnSceneBGM(string bgmResourcePath)
         {
-            Debug.Log($"[AudioEventTrigger] 씬별 BGM 트리거: {sceneName}");
-            audioManager?.PlaySceneBGM(sceneName);
+            Debug.Log($"[AudioEventTrigger] 리소스 경로 기반 BGM 트리거: {bgmResourcePath}");
+            if (string.IsNullOrEmpty(bgmResourcePath))
+            {
+                Debug.LogWarning("[AudioEventTrigger] 리소스 경로가 비어있습니다.");
+                return;
+            }
+            var clip = Resources.Load<AudioClip>(bgmResourcePath);
+            if (clip != null)
+            {
+                audioManager?.PlayBGM(clip, true);
+            }
+            else
+            {
+                Debug.LogWarning($"[AudioEventTrigger] AudioClip을 찾을 수 없습니다: {bgmResourcePath}");
+            }
         }
 
         #endregion

@@ -1,7 +1,7 @@
 # AudioSystem 개발 문서
 
 ## 📋 시스템 개요
-AudioSystem은 게임의 모든 오디오를 관리하는 시스템입니다. 현재 폴더 구조는 존재하지만 실제 구현은 CoreSystem/Audio에 위치하고 있습니다.
+AudioSystem은 게임의 모든 오디오를 관리하는 시스템입니다. 오디오 풀링과 이벤트 기반 시스템을 제공합니다.
 
 ## 🏗️ 현재 폴더 구조
 ```
@@ -12,7 +12,9 @@ AudioSystem/
 ## 📁 실제 구현 위치
 ```
 CoreSystem/Audio/
-└── AudioManager.cs   # 실제 오디오 매니저 구현
+├── AudioManager.cs           # 오디오 매니저 (확장됨)
+├── AudioPoolManager.cs       # 오디오 풀링 매니저 (신규)
+└── AudioEventTrigger.cs      # 오디오 이벤트 트리거 (신규)
 ```
 
 ## 📊 AudioManager.cs 분석
@@ -23,16 +25,22 @@ CoreSystem/Audio/
 - **볼륨 제어**: 마스터, BGM, SFX 볼륨 개별 제어
 - **오디오 클립 관리**: Resources 폴더에서 오디오 클립 로드
 - **페이드 효과**: BGM 페이드 인/아웃 지원
+- **오디오 풀링**: AudioPoolManager를 통한 사운드 중복 방지
+- **이벤트 기반**: AudioEventTrigger를 통한 게임 이벤트 연동
 
 ### 주요 메서드
 - `PlayBGM(string clipName)`: BGM 재생
 - `PlaySFX(string clipName)`: 효과음 재생
+- `PlaySFXWithPool(string clipName)`: 풀링을 사용한 효과음 재생 (신규)
 - `StopBGM()`: BGM 정지
 - `SetMasterVolume(float volume)`: 마스터 볼륨 설정
 - `SetBGMVolume(float volume)`: BGM 볼륨 설정
 - `SetSFXVolume(float volume)`: SFX 볼륨 설정
 - `FadeInBGM(string clipName, float duration)`: BGM 페이드 인
 - `FadeOutBGM(float duration)`: BGM 페이드 아웃
+- `PlayCardUseSound()`: 카드 사용 사운드 (신규)
+- `PlayEnemyDefeatSound()`: 적 처치 사운드 (신규)
+- `PlayButtonClickSound()`: 버튼 클릭 사운드 (신규)
 
 ## 🎯 시스템 특징
 
@@ -41,12 +49,15 @@ CoreSystem/Audio/
 2. **볼륨 제어**: 세분화된 볼륨 제어 지원
 3. **페이드 효과**: 부드러운 BGM 전환
 4. **Resources 기반**: 런타임에서 오디오 클립 동적 로드
+5. **오디오 풀링**: 사운드 중복 방지 및 성능 최적화 (신규)
+6. **이벤트 기반**: 게임 이벤트와 자동 연동 (신규)
+7. **CoreSystem 통합**: 전역 시스템으로 완전 통합 (신규)
 
-### 단점
-1. **폴더 구조 불일치**: AudioSystem 폴더는 비어있고 CoreSystem에 구현
-2. **제한적인 기능**: 기본적인 재생/정지/볼륨 제어만 지원
-3. **오디오 풀링 없음**: 동시 재생 제한
-4. **설정 저장 없음**: 볼륨 설정이 게임 재시작 시 초기화
+### 개선사항
+1. **폴더 구조 정리**: AudioSystem 폴더는 문서용, 실제 구현은 CoreSystem/Audio
+2. **기능 확장**: 오디오 풀링과 이벤트 기반 시스템 추가
+3. **성능 최적화**: AudioSource 풀링으로 동시 재생 제한 해결
+4. **설정 저장**: 향후 SaveSystem과 연동 예정
 
 ## 🔧 사용 방법
 
@@ -55,8 +66,16 @@ CoreSystem/Audio/
 // BGM 재생
 AudioManager.Instance.PlayBGM("MainTheme");
 
-// 효과음 재생
+// 효과음 재생 (기본)
 AudioManager.Instance.PlaySFX("ButtonClick");
+
+// 효과음 재생 (풀링 사용, 중복 방지)
+AudioManager.Instance.PlaySFXWithPool("CardUse");
+
+// 전용 사운드 메서드
+AudioManager.Instance.PlayCardUseSound();
+AudioManager.Instance.PlayEnemyDefeatSound();
+AudioManager.Instance.PlayButtonClickSound();
 
 // 볼륨 설정
 AudioManager.Instance.SetMasterVolume(0.8f);
@@ -68,11 +87,13 @@ AudioManager.Instance.FadeInBGM("BattleTheme", 2.0f);
 AudioManager.Instance.FadeOutBGM(1.5f);
 ```
 
+### 이벤트 기반 사용법
+```csharp
+// AudioEventTrigger를 통한 자동 사운드 재생
+audioEventTrigger.OnCardUsed();        // 카드 사용 사운드
+audioEventTrigger.OnEnemyDefeated();   // 적 처치 사운드
+audioEventTrigger.OnButtonClicked();   // 버튼 클릭 사운드
+```
 
-## 📊 시스템 평가
-- **아키텍처**: 6/10 (폴더 구조 불일치)
-- **확장성**: 5/10 (제한적인 기능)
-- **성능**: 6/10 (기본적인 구현)
-- **유지보수성**: 7/10 (단순한 구조)
-- **전체 점수**: 6.0/10
+
 

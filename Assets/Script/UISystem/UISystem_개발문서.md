@@ -3,104 +3,103 @@
 ## 📋 시스템 개요
 UISystem은 게임의 사용자 인터페이스를 관리하는 시스템입니다. 다양한 UI 컨트롤러들을 통해 게임의 모든 UI 요소를 통합적으로 관리합니다.
 
-## 🏗️ 폴더 구조
+## 🏗️ 폴더 구조 (현재 상태)
 ```
 UISystem/
-└── 루트/             # UI 컨트롤러들 (8개 파일)
+├── MainSceneController.cs      # 메인 씬 컨트롤러
+├── SettingsUIController.cs     # 설정 UI 컨트롤러
+├── WeaponSelector.cs           # 무기 선택기
+├── PanelManager.cs             # 패널 매니저
+├── UnderlineHoverEffect.cs     # 언더라인 호버 효과
+├── Newgame.cs                 # 새 게임
+├── ExitGame.cs                 # 게임 종료
+├── Xbutton.cs                  # X 버튼
+├── play.cs                     # 플레이 버튼
+└── UISystem_개발문서.md        # 개발 문서
 ```
 
-## 📁 주요 컴포넌트
+## 📁 주요 컴포넌트 (현재 상태)
 
-### 루트 폴더 (8개 파일)
-- **MainMenuUIController.cs**: 메인 메뉴 UI 컨트롤러
-- **CombatUIController.cs**: 전투 UI 컨트롤러
-- **InventoryUIController.cs**: 인벤토리 UI 컨트롤러
-- **CharacterUIController.cs**: 캐릭터 UI 컨트롤러
-- **SkillCardUIController.cs**: 스킬카드 UI 컨트롤러
-- **SettingsUIController.cs**: 설정 UI 컨트롤러
-- **LoadingUIController.cs**: 로딩 UI 컨트롤러
-- **GameOverUIController.cs**: 게임 오버 UI 컨트롤러
+### 현재 구현된 파일들
+- **MainSceneController.cs**: 메인 씬 컨트롤러 (4.1KB, 129줄)
+- **SettingsUIController.cs**: 설정 UI 컨트롤러 (3.1KB, 116줄)
+- **WeaponSelector.cs**: 무기 선택기 (289B, 15줄)
+- **PanelManager.cs**: 패널 매니저 (586B, 23줄)
+- **UnderlineHoverEffect.cs**: 언더라인 호버 효과 (1.5KB, 52줄)
+- **Newgame.cs**: 새 게임 (651B, 20줄)
+- **ExitGame.cs**: 게임 종료 (194B, 10줄)
+- **Xbutton.cs**: X 버튼 (248B, 14줄)
+- **play.cs**: 플레이 버튼 (279B, 15줄)
 
-## 🎯 주요 기능
+## 🎯 주요 기능 (현재 구현 상태)
 
-### 1. 메인 메뉴 UI
-- **게임 시작**: 게임 시작 버튼
-- **설정 접근**: 설정 메뉴 접근
-- **종료**: 게임 종료
-- **애니메이션**: 메뉴 전환 애니메이션
+### 1. 메인 씬 컨트롤러
+- **씬 관리**: 메인 씬의 전체적인 관리
+- **UI 조정**: 메인 씬 내 UI 요소들 조정
+- **이벤트 처리**: 메인 씬 관련 이벤트 처리
 
-### 2. 전투 UI
-- **전투 정보**: 전투 상태 정보 표시
-- **카드 UI**: 스킬카드 UI 관리
-- **캐릭터 UI**: 캐릭터 상태 UI
-- **턴 표시**: 현재 턴 정보
+### 2. 설정 UI
+- **게임 설정**: 게임 관련 설정 관리
+- **UI 설정**: UI 관련 설정 관리
+- **설정 저장**: 설정값 저장 및 로드
 
-### 3. 인벤토리 UI
-- **아이템 표시**: 인벤토리 아이템 표시
-- **드래그 앤 드롭**: 아이템 드래그 앤 드롭
-- **정렬**: 아이템 정렬 기능
-- **필터**: 아이템 필터링
+### 3. 무기 선택기
+- **무기 선택**: 플레이어 캐릭터 무기 선택
+- **무기 정보**: 선택한 무기의 정보 표시
+- **선택 확인**: 무기 선택 확인
 
-### 4. 캐릭터 UI
-- **캐릭터 정보**: 캐릭터 상태 정보
-- **스킬 트리**: 스킬 트리 표시
-- **장비**: 장비 관리
-- **레벨업**: 레벨업 UI
+### 4. 패널 관리
+- **패널 전환**: 다양한 패널 간 전환
+- **패널 상태**: 패널의 표시/숨김 상태 관리
+- **패널 애니메이션**: 패널 전환 애니메이션
 
-### 5. 스킬카드 UI
-- **카드 표시**: 스킬카드 시각적 표현
-- **카드 정보**: 카드 상세 정보
-- **드래그 앤 드롭**: 카드 드래그 앤 드롭
-- **덱 관리**: 덱 구성 관리
+### 5. UI 효과
+- **언더라인 호버**: 텍스트에 언더라인 호버 효과
+- **버튼 효과**: 버튼 클릭 효과
+- **전환 효과**: UI 전환 시 효과
 
-### 6. 설정 UI
-- **오디오 설정**: 볼륨 조절
-- **그래픽 설정**: 그래픽 옵션
-- **키 바인딩**: 키 설정
-- **언어 설정**: 언어 선택
-
-### 7. 로딩 UI
-- **로딩 표시**: 로딩 진행률 표시
-- **로딩 애니메이션**: 로딩 애니메이션
-- **팁 표시**: 로딩 중 팁 표시
-- **취소**: 로딩 취소
-
-### 8. 게임 오버 UI
-- **결과 표시**: 게임 결과 표시
-- **재시작**: 게임 재시작
-- **메인 메뉴**: 메인 메뉴로 돌아가기
-- **통계**: 게임 통계 표시
+### 6. 게임 제어
+- **새 게임**: 새 게임 시작
+- **게임 종료**: 게임 종료 처리
+- **플레이**: 게임 플레이 시작
 
 ## 🔧 사용 방법
 
-### 기본 사용법
+### 기본 사용법 (현재 구현 상태)
 ```csharp
-// 메인 메뉴 UI 활성화
-MainMenuUIController.Instance.Show();
-
-// 전투 UI 업데이트
-CombatUIController.Instance.UpdateCombatInfo(combatData);
-
-// 인벤토리 UI 열기
-InventoryUIController.Instance.OpenInventory();
+// 메인 씬 컨트롤러 사용
+MainSceneController mainController = FindObjectOfType<MainSceneController>();
+mainController.InitializeScene();
 
 // 설정 UI 표시
-SettingsUIController.Instance.ShowSettings();
+SettingsUIController settingsController = FindObjectOfType<SettingsUIController>();
+settingsController.ShowSettings();
+
+// 무기 선택기 사용
+WeaponSelector weaponSelector = FindObjectOfType<WeaponSelector>();
+weaponSelector.SelectWeapon(weaponType);
+
+// 패널 관리
+PanelManager panelManager = FindObjectOfType<PanelManager>();
+panelManager.ShowPanel(panelName);
 ```
 
-### UI 상태 관리
+### UI 효과 사용법
 ```csharp
-// UI 상태 확인
-if (MainMenuUIController.Instance.IsVisible)
+// 언더라인 호버 효과
+UnderlineHoverEffect hoverEffect = GetComponent<UnderlineHoverEffect>();
+hoverEffect.EnableHoverEffect();
+
+// 버튼 클릭 처리
+public void OnPlayButtonClicked()
 {
-    // 메인 메뉴가 보이는 상태
+    // 플레이 버튼 클릭 처리
 }
 
-// UI 숨기기
-CombatUIController.Instance.Hide();
-
-// UI 애니메이션
-LoadingUIController.Instance.PlayLoadingAnimation();
+public void OnExitButtonClicked()
+{
+    // 종료 버튼 클릭 처리
+}
 ```
 
 ## 🏗️ 아키텍처 패턴
@@ -125,10 +124,4 @@ LoadingUIController.Instance.PlayLoadingAnimation();
 - **UI 풀링**: UI 요소 풀링 관리
 
 
-## 📊 시스템 평가
-- **아키텍처**: 7/10 (단순하지만 효과적인 구조)
-- **확장성**: 6/10 (새로운 UI 추가 시 구조 변경 필요)
-- **성능**: 6/10 (최적화 필요)
-- **유지보수성**: 7/10 (명확한 책임 분리)
-- **전체 점수**: 6.5/10
 
