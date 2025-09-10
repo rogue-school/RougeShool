@@ -81,7 +81,15 @@ namespace Game.SkillCardSystem.Manager
             foreach (var entry in deck.Cards)
             {
                 var pos = entry.Slot;
-                var card = cardFactory.CreatePlayerCard(entry.Card.CardData, entry.Card.CreateEffects(), owner?.CharacterData?.name);
+                ISkillCard card = null;
+                if (entry.Definition != null)
+                {
+                    card = entry.CreateFromDefinition(cardFactory, owner?.CharacterData?.name);
+                }
+                else if (entry.Card != null)
+                {
+                    card = cardFactory.CreatePlayerCard(entry.Card.CardData, entry.Card.CreateEffects(), owner?.CharacterData?.name);
+                }
                 card.SetCurrentCoolTime(0);
                 cards[pos] = card;
 

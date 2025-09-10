@@ -22,6 +22,7 @@ namespace Game.SkillCardSystem.Runtime
         public SkillCardData CardData { get; private set; }
 
         private readonly List<SkillCardEffectSO> effects;
+        private readonly Dictionary<SkillCardEffectSO, int> effectPowerMap;
         private readonly SlotOwner owner;
 
         private SkillCardSlotPosition? handSlot;
@@ -33,8 +34,20 @@ namespace Game.SkillCardSystem.Runtime
             CardData = cardData;
             this.effects = effects ?? new();
             this.owner = owner;
+            this.effectPowerMap = null;
             // 카드 소유자 이름 할당 (예시: 플레이어/적 이름, 실제 생성부에서 전달 필요)
             // 예: CardData.OwnerCharacterName = "캐릭터이름";
+        }
+
+        /// <summary>
+        /// 효과별 파워 매핑을 포함하는 생성자(데이터 기반 조합 카드용).
+        /// </summary>
+        public RuntimeSkillCard(SkillCardData cardData, List<SkillCardEffectSO> effects, SlotOwner owner, Dictionary<SkillCardEffectSO, int> effectPowerMap)
+        {
+            CardData = cardData;
+            this.effects = effects ?? new();
+            this.owner = owner;
+            this.effectPowerMap = effectPowerMap ?? new Dictionary<SkillCardEffectSO, int>();
         }
 
         #region === 카드 메타 정보 ===
@@ -47,7 +60,12 @@ namespace Game.SkillCardSystem.Runtime
         public int GetCurrentCoolTime() => currentCoolTime;
         public void SetCurrentCoolTime(int value) => currentCoolTime = Mathf.Max(0, value);
 
-        public int GetEffectPower(SkillCardEffectSO effect) => CardData?.Damage ?? 0;
+        public int GetEffectPower(SkillCardEffectSO effect)
+        {
+            if (effect != null && effectPowerMap != null && effectPowerMap.TryGetValue(effect, out var p))
+                return p;
+            return CardData?.Damage ?? 0;
+        }
 
         /// <summary>
         /// 등록된 이펙트 리스트를 복사하여 반환합니다.

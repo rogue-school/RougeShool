@@ -69,23 +69,31 @@ namespace Game.SkillCardSystem.Manager
         {
             currentTurnCards.Clear();
 
-            // 필요한 카드 수만큼 드로우
-            int cardsToDraw = Mathf.Min(CardsPerTurn, unusedStorage.Count);
-            
-            for (int i = 0; i < cardsToDraw; i++)
+            // 목표 장수만큼 드로우하되, 부족하면 사용 보관함을 순환 후 이어서 드로우
+            int targetCount = CardsPerTurn;
+            while (currentTurnCards.Count < targetCount)
             {
+                // 미사용 보관함이 비어 있으면 순환 시도
+                if (unusedStorage.Count == 0)
+                {
+                    if (usedStorage.Count == 0)
+                    {
+                        // 더 이상 순환할 카드가 없음 → 현재 가능한 만큼만 드로우하고 종료
+                        break;
+                    }
+                    CirculateCardsIfNeeded();
+                }
+
                 if (unusedStorage.Count > 0)
                 {
                     var card = unusedStorage[0];
                     unusedStorage.RemoveAt(0);
                     currentTurnCards.Add(card);
                 }
-            }
-
-            // Unused Storage가 비어있으면 순환
-            if (unusedStorage.Count == 0)
-            {
-                CirculateCardsIfNeeded();
+                else
+                {
+                    break;
+                }
             }
 
             Debug.Log($"[CardCirculationSystem] 턴 드로우: {currentTurnCards.Count}장 (Unused: {unusedStorage.Count}, Used: {usedStorage.Count})");

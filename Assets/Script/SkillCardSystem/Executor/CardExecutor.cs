@@ -52,6 +52,13 @@ namespace Game.SkillCardSystem.Executor
                 return;
             }
 
+            // 카드가 순서 제공을 지원하면 우선 사용
+            if (card is ICardEffectOrderProvider orderProvider)
+            {
+                var ordered = orderProvider.GetOrderedEffects();
+                if (ordered != null && ordered.Count > 0) effects = ordered;
+            }
+
             foreach (var effect in effects)
             {
                 if (effect == null) continue;

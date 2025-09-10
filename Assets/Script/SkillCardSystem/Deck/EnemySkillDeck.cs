@@ -2,6 +2,7 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 using Game.SkillCardSystem.Core;
+using Game.SkillCardSystem.Data;
 
 namespace Game.SkillCardSystem.Deck
 {
@@ -22,6 +23,9 @@ namespace Game.SkillCardSystem.Deck
             /// 스킬 카드 객체
             /// </summary>
             public EnemySkillCard card;
+
+            [Tooltip("(신규) 공용 정의를 직접 참조합니다. 설정 시 card 대신 우선 사용")]
+            public SkillCardDefinition definition;
 
             /// <summary>
             /// 이 카드가 선택될 확률 (0~1)

@@ -386,13 +386,21 @@ namespace Game.CombatSystem.Manager
             }
 
             var entry = enemyDeck.GetRandomEntry();
-            if (entry?.card == null)
+            if (entry == null)
             {
                 Debug.LogWarning("[EnemyHandManager] 생성할 카드 엔트리가 유효하지 않음");
                 return;
             }
 
-            var runtimeCard = cardFactory.CreateEnemyCard(entry.card.GetCardData(), entry.card.CreateEffects(), currentEnemy?.Data?.name);
+            ISkillCard runtimeCard = null;
+            if (entry.definition != null)
+            {
+                runtimeCard = cardFactory.CreateFromDefinition(entry.definition, Game.SkillCardSystem.Data.Owner.Enemy, currentEnemy?.Data?.name);
+            }
+            else if (entry.card != null)
+            {
+                runtimeCard = cardFactory.CreateEnemyCard(entry.card.GetCardData(), entry.card.CreateEffects(), currentEnemy?.Data?.name);
+            }
             runtimeCard.SetHandSlot(pos);
 
             var cardUI = Instantiate(cardUIPrefab, ((MonoBehaviour)slot).transform);
@@ -438,14 +446,22 @@ namespace Game.CombatSystem.Manager
             }
 
             var entry = enemyDeck.GetRandomEntry();
-            if (entry?.card == null)
+            if (entry == null)
             {
                 Debug.LogWarning("[EnemyHandManager] 생성할 카드 엔트리가 유효하지 않음");
                 onComplete?.Invoke();
                 yield break;
             }
 
-            var runtimeCard = cardFactory.CreateEnemyCard(entry.card.GetCardData(), entry.card.CreateEffects(), currentEnemy?.Data?.name);
+            ISkillCard runtimeCard = null;
+            if (entry.definition != null)
+            {
+                runtimeCard = cardFactory.CreateFromDefinition(entry.definition, Game.SkillCardSystem.Data.Owner.Enemy, currentEnemy?.Data?.name);
+            }
+            else if (entry.card != null)
+            {
+                runtimeCard = cardFactory.CreateEnemyCard(entry.card.GetCardData(), entry.card.CreateEffects(), currentEnemy?.Data?.name);
+            }
             if (runtimeCard == null)
             {
                 Debug.LogError("[EnemyHandManager] 카드 생성 실패");

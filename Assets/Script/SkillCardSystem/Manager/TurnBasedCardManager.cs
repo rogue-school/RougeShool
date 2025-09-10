@@ -16,6 +16,7 @@ namespace Game.SkillCardSystem.Manager
         private ICardCirculationSystem circulationSystem;
         private List<ISkillCard> currentTurnCards = new();
         private bool isTurnStarted = false;
+        private bool hasPlayedThisTurn = false;
 
         #endregion
 
@@ -48,6 +49,7 @@ namespace Game.SkillCardSystem.Manager
 
             // 카드 순환 시스템에서 카드 드로우
             currentTurnCards = circulationSystem.DrawCardsForTurn();
+            hasPlayedThisTurn = false;
             isTurnStarted = true;
 
             Debug.Log($"[TurnBasedCardManager] 턴 시작: {currentTurnCards.Count}장 드로우");
@@ -69,6 +71,7 @@ namespace Game.SkillCardSystem.Manager
             }
 
             isTurnStarted = false;
+            hasPlayedThisTurn = false;
             Debug.Log("[TurnBasedCardManager] 턴 종료: 사용하지 않은 카드들을 Used Storage로 이동");
         }
 
@@ -95,9 +98,16 @@ namespace Game.SkillCardSystem.Manager
                 return;
             }
 
+            if (hasPlayedThisTurn)
+            {
+                Debug.LogWarning("[TurnBasedCardManager] 이 턴에는 이미 카드를 사용했습니다. 턴당 1장 제한.");
+                return;
+            }
+
             // 카드를 Used Storage로 이동
             circulationSystem.MoveCardToUsedStorage(card);
             currentTurnCards.Remove(card);
+            hasPlayedThisTurn = true;
 
             Debug.Log($"[TurnBasedCardManager] 카드 사용: {card.CardData?.CardName ?? "Unknown"} (남은 카드: {currentTurnCards.Count})");
         }
