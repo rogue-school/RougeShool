@@ -1,0 +1,218 @@
+---
+description: "SkillCardSystem 개발 가이드 및 규칙 - Unity 2D 스킬카드 통합 관리"
+globs: ["Assets/Script/SkillCardSystem/**/*.cs"]
+rule_id: skillcard_system_rules
+version: 1.2.0
+alwaysApply: true
+---
+
+# SkillCardSystem 개발 규칙
+
+## 📋 시스템 개요
+SkillCardSystem은 게임의 스킬카드 시스템을 관리하는 핵심 시스템입니다. 카드 데이터, 효과, 실행, 검증, UI, 드래그 앤 드롭, 슬롯 관리 등을 통합적으로 관리합니다.
+
+## 🏗️ 폴더 구조 규칙
+```
+SkillCardSystem/
+├── Core/             # 핵심 로직 (2개 파일)
+├── Data/             # 카드 데이터 (3개 파일)
+├── Deck/             # 덱 관리 (3개 파일)
+├── DragDrop/         # 드래그 앤 드롭 (3개 파일)
+├── Effect/           # 효과 구현 (12개 파일)
+├── Executor/         # 실행기 (1개 파일)
+├── Factory/          # 팩토리 패턴 (3개 파일)
+├── Installation/     # DI 설치 (1개 파일) [주의: 폴더명 오타 - Installer이어야 함]
+├── Interface/        # 인터페이스 (26개 파일)
+├── Manager/          # 매니저 클래스 (3개 파일)
+├── Runtime/          # 런타임 로직 (5개 파일)
+├── Service/          # 서비스 클래스 (6개 파일)
+├── Slot/             # 슬롯 시스템 (11개 파일)
+├── UI/               # UI 관련 (5개 파일)
+└── Validator/        # 검증기 (2개 파일)
+```
+
+## 📁 주요 컴포넌트 규칙
+
+### Core 폴더 규칙 (2개 파일)
+- **PlayerSkillCard.cs**: 플레이어 스킬카드 기본 클래스
+- **EnemySkillCard.cs**: 적 스킬카드 기본 클래스
+
+### Data 폴더 규칙 (2개 파일)
+- **SkillCardData.cs**: 스킬카드 데이터 (ScriptableObject)
+- **PlayerSkillCard.cs**: 플레이어 스킬카드 데이터
+
+### Deck 폴더 규칙 (3개 파일)
+- **PlayerSkillDeck.cs**: 플레이어 스킬 덱
+- **EnemySkillDeck.cs**: 적 스킬 덱
+- **PlayerSkillCardEntry.cs**: 플레이어 스킬카드 엔트리
+
+### Effect 폴더 규칙 (4개 파일)
+- **BleedEffectCommand.cs**: 출혈 효과 명령
+- **DamageEffectSO.cs**: 데미지 효과 데이터
+- **GuardEffectSO.cs**: 방어 효과 데이터
+- **SkillCardEffectSO.cs**: 스킬카드 효과 기본 클래스
+
+### Factory 폴더 규칙 (3개 파일)
+- **SkillCardFactory.cs**: 스킬카드 팩토리
+- **CardEffectCommandFactory.cs**: 카드 효과 명령 팩토리
+- **SkillCardEntry.cs**: 스킬카드 엔트리 팩토리
+
+### Interface 폴더 규칙 (8개 파일)
+- **ISkillCard.cs**: 스킬카드 인터페이스
+- **IPerTurnEffect.cs**: 턴별 효과 인터페이스
+- **ISkillCardUI.cs**: 스킬카드 UI 인터페이스
+- **IPlayerHandManager.cs**: 플레이어 핸드 관리 인터페이스
+- **IEnemyHandManager.cs**: 적 핸드 관리 인터페이스
+- **ICardCirculationSystem.cs**: 카드 순환 시스템 인터페이스
+- **ICardDropValidator.cs**: 카드 드롭 검증 인터페이스
+- **ICardExecutionContext.cs**: 카드 실행 컨텍스트 인터페이스
+
+### Manager 폴더 규칙 (3개 파일)
+- **PlayerHandManager.cs**: 플레이어 핸드 관리
+- **EnemyHandManager.cs**: 적 핸드 관리
+- **CardCirculationSystem.cs**: 카드 순환 시스템
+
+### Service 폴더 규칙 (3개 파일)
+- **CardExecutionContextProvider.cs**: 카드 실행 컨텍스트 제공
+- **PlayerCardReplacementHandler.cs**: 플레이어 카드 교체 처리
+- **CardPlacementService.cs**: 카드 배치 서비스
+
+### UI 폴더 규칙 (3개 파일)
+- **SkillCardUI.cs**: 스킬카드 UI
+- **SkillCardUIFactory.cs**: 스킬카드 UI 팩토리
+- **PlayerHandCardSlotUI.cs**: 플레이어 핸드 카드 슬롯 UI
+
+### DragDrop 폴더 규칙 (4개 파일)
+- **CardDragHandler.cs**: 카드 드래그 처리
+- **CardDropService.cs**: 카드 드롭 서비스
+- **CardDropToHandHandler.cs**: 핸드로 카드 드롭 처리
+- **CardDropToSlotHandler.cs**: 슬롯으로 카드 드롭 처리
+
+## 🎯 개발 규칙
+
+### 1. 카드 데이터 관리 규칙
+- **ScriptableObject**: 카드 데이터를 에셋으로 관리
+- **런타임 인스턴스**: 게임 중 동적 생성/수정
+- **데이터 검증**: 카드 데이터의 유효성 검증
+
+### 2. 효과 시스템 규칙
+- **모듈화된 효과**: 각 효과를 독립적인 모듈로 구현
+- **효과 실행**: 효과의 순차적 실행 및 결과 처리
+- **명령 패턴**: 효과를 명령 객체로 캡슐화
+
+### 3. 덱 관리 규칙
+- **덱 구성**: 플레이어/적 덱 구성 및 관리
+- **카드 드로우**: 덱에서 카드 드로우
+- **카드 순환**: 사용된 카드의 순환 시스템
+
+### 4. 핸드 관리 규칙
+- **플레이어 핸드**: 플레이어 카드 핸드 관리
+- **적 핸드**: 적 카드 핸드 관리
+- **핸드 크기 제한**: 최대 핸드 크기 관리
+
+### 5. 드래그 앤 드롭 규칙
+- **카드 드래그**: 카드 드래그 처리
+- **드롭 검증**: 드롭 가능 여부 검증
+- **드롭 서비스**: 드롭 후 처리
+
+## 🔧 사용 방법
+
+### 기본 사용법
+```csharp
+// SkillCardFactory를 통한 카드 생성
+SkillCardFactory factory = new SkillCardFactory();
+ISkillCard playerCard = factory.CreatePlayerCard(cardData, effects, "플레이어");
+ISkillCard enemyCard = factory.CreateEnemyCard(cardData, effects, "적");
+
+// SkillCardDefinition 기반 카드 생성
+SkillCardDefinition definition = Resources.Load<SkillCardDefinition>("SkillCards/Fireball");
+ISkillCard card = factory.CreateFromDefinition(definition, Owner.Player, "마법사");
+
+// CardCirculationSystem을 통한 카드 순환 관리
+CardCirculationSystem circulationSystem = FindObjectOfType<CardCirculationSystem>();
+circulationSystem.Initialize(initialCards);
+List<ISkillCard> drawnCards = circulationSystem.DrawCardsForTurn();
+circulationSystem.MoveCardToUsedStorage(usedCard);
+```
+
+### 주요 클래스 및 메서드
+
+#### SkillCardFactory 클래스
+- **CreatePlayerCard()**: 플레이어 스킬 카드 생성
+- **CreateEnemyCard()**: 적 스킬 카드 생성
+- **CreateFromDefinition()**: SkillCardDefinition 기반 카드 생성
+
+#### SkillCardRegistry 클래스
+- **RegisterCard()**: 스킬 카드 등록
+- **GetCard()**: 등록된 스킬 카드 조회
+- **UnregisterCard()**: 스킬 카드 등록 해제
+
+#### CardCirculationSystem 클래스
+- **Initialize()**: 카드 순환 시스템 초기화
+- **DrawCards()**: 카드 드로우
+- **DiscardCard()**: 카드 버리기
+- **ShuffleDiscardToDeck()**: 버린 카드 덱으로 섞기
+- **MoveCardToHand()**: 카드를 핸드로 이동
+- **MoveCardToDiscard()**: 카드를 버린 카드 더미로 이동
+- **MoveCardToExhaust()**: 카드를 소멸 더미로 이동
+- **PlayerHand**: 플레이어 핸드 (프로퍼티)
+- **EnemyHand**: 적 핸드 (프로퍼티)
+- **PlayerDeck**: 플레이어 덱 (프로퍼티)
+- **EnemyDeck**: 적 덱 (프로퍼티)
+
+## 🏗️ 아키텍처 패턴
+
+### 1. 팩토리 패턴
+- **SkillCardFactory**: 스킬카드 객체 생성
+- **CardEffectCommandFactory**: 효과 명령 객체 생성
+
+### 2. 명령 패턴
+- **EffectCommand**: 효과를 명령 객체로 캡슐화
+- **카드 실행**: 명령 실행 및 관리
+
+### 3. 옵저버 패턴
+- **이벤트 시스템**: 카드 실행 이벤트 발생 및 구독
+- **UI 업데이트**: 카드 상태 변경에 따른 UI 업데이트
+
+### 4. 전략 패턴
+- **효과 전략**: 다양한 효과 전략 구현
+- **실행 전략**: 카드 실행 전략 구현
+
+## 🔧 기술적 구현 세부사항
+
+### 성능 최적화
+- **객체 풀링**: 카드 객체 풀링을 통한 GC 압박 최소화
+- **UI 최적화**: 드래그 앤 드롭 시 UI 업데이트 최적화
+- **메모리 관리**: 불필요한 참조 해제
+
+### 스레드 안전성
+- **핸드 관리**: 핸드 관리 시 동시성 제어
+- **카드 실행**: 카드 실행 시 동기화
+
+### 메모리 관리
+- **생명주기 관리**: 카드 객체의 생성/소멸 관리
+- **리소스 해제**: 카드 사용 후 리소스 정리
+- **메모리 누수 방지**: 이벤트 구독 해제
+
+## 🧪 검증/테스트 지침
+
+### 체크리스트
+- [ ] 카드 생성/소멸 정상 동작 확인
+- [ ] 드래그 앤 드롭 기능 검증
+- [ ] 효과 실행 정확성 확인
+- [ ] 핸드 관리 로직 검증
+- [ ] 카드 순환 시스템 정상 동작 확인
+
+### 재현 절차
+1. 각 카드 타입별 생성/실행 테스트
+2. 드래그 앤 드롭 시나리오 테스트
+3. 효과 실행 시나리오 테스트
+4. 성능 프로파일링
+
+## 📝 변경 기록(Delta)
+- 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
+
+- 2025-01-27 | Maintainer | SkillCardSystem 개발 문서 초기 작성 | 문서
+- 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 Installation 폴더명 오타 주의 표시 | 문서
+- 2025-01-27 | Maintainer | .mdc 규칙 파일로 변환 및 Cursor 규칙 저장 | 문서
+- 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 클래스/메서드/인터페이스 정보 추가 | 문서

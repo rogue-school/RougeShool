@@ -87,18 +87,191 @@ CombatSystem/
 - **전투 준비**: 전투 시작 전 준비
 - **입력 제어**: 플레이어 입력 처리
 
+## 📊 주요 클래스 및 메서드
+
+### CombatFlowCoordinator 클래스
+- **StartCombat()**: 전투 시작
+- **PrepareCombat()**: 전투 준비
+- **ExecuteCombatPhase()**: 전투 페이즈 실행
+- **HandleCombatResult()**: 전투 결과 처리
+- **EnablePlayerInput()**: 플레이어 입력 활성화
+- **DisablePlayerInput()**: 플레이어 입력 비활성화
+- **IsEnemyFirst**: 적 선공 여부 (프로퍼티)
+
+### CombatTurnManager 클래스
+- **Initialize()**: 턴 매니저 초기화
+- **SetState(ICombatTurnState state)**: 상태 설정
+- **CanProceedToNextTurn()**: 다음 턴 진행 가능 여부
+- **ProceedToNextTurn()**: 다음 턴으로 진행
+- **RegisterCard(ISkillCard card, CombatSlotPosition position)**: 카드 등록
+- **ClearRegisteredCards()**: 등록된 카드 초기화
+- **OnTurnReadyChanged**: 턴 준비 상태 변경 이벤트
+
+### CombatExecutorService 클래스
+- **ExecuteCombatPhase()**: 전체 전투 페이즈 실행 (코루틴)
+- **PerformAttack(CombatSlotPosition position)**: 지정 슬롯 공격 실행 (코루틴)
+- **ExecuteCard(ISkillCard card, CombatSlotPosition position)**: 카드 실행
+- **CreateExecutionContext()**: 실행 컨텍스트 생성
+- **ProcessCardExecution()**: 카드 실행 처리
+
+### CombatPreparationService 클래스
+- **PrepareCombat()**: 전투 준비 (코루틴)
+- **SpawnEnemy()**: 적 스폰
+- **SetupPlayerCards()**: 플레이어 카드 설정
+- **InitializeTurnSystem()**: 턴 시스템 초기화
+- **RegisterCombatSlots()**: 전투 슬롯 등록
+
+### CombatStartupManager 클래스
+- **FindInitializerSteps()**: 초기화 스텝 수집
+- **ExecuteInitializationSteps()**: 초기화 스텝 실행 (코루틴)
+- **EnablePlayerInput()**: 플레이어 입력 활성화
+- **OnInitializationComplete()**: 초기화 완료 처리
+
+### ICombatTurnState 인터페이스
+- **ExecuteState()**: 상태 실행
+- **CanTransitionTo(ICombatTurnState nextState)**: 상태 전환 가능 여부
+- **OnEnter()**: 상태 진입 시 호출
+- **OnExit()**: 상태 종료 시 호출
+
+### ICombatFlowCoordinator 인터페이스
+- **StartCombat()**: 전투 시작
+- **PrepareCombat()**: 전투 준비
+- **ExecuteCombatPhase()**: 전투 페이즈 실행
+- **HandleCombatResult()**: 전투 결과 처리
+- **EnablePlayerInput()**: 플레이어 입력 활성화
+- **DisablePlayerInput()**: 플레이어 입력 비활성화
+
+### ICombatTurnManager 인터페이스
+- **SetState(ICombatTurnState state)**: 상태 설정
+- **CanProceedToNextTurn()**: 다음 턴 진행 가능 여부
+- **ProceedToNextTurn()**: 다음 턴으로 진행
+- **RegisterCard(ISkillCard card, CombatSlotPosition position)**: 카드 등록
+- **ClearRegisteredCards()**: 등록된 카드 초기화
+
 ## 🔧 사용 방법
 
 ### 기본 사용법
 ```csharp
 // 전투 시작
-CombatFlowCoordinator.Instance.StartCombat(stageData);
+CombatFlowCoordinator combatCoordinator = FindObjectOfType<CombatFlowCoordinator>();
+combatCoordinator.StartCombat(stageData);
 
-// 턴 진행
-CombatTurnManager.Instance.NextTurn();
+// 턴 매니저를 통한 상태 관리
+CombatTurnManager turnManager = FindObjectOfType<CombatTurnManager>();
+turnManager.Initialize();
+turnManager.SetState(new CombatPrepareState());
+
+// 카드 등록
+turnManager.RegisterCard(skillCard, CombatSlotPosition.FIRST);
+
+// 턴 진행 가능 여부 확인
+if (turnManager.CanProceedToNextTurn())
+{
+    turnManager.ProceedToNextTurn();
+}
+```
+
+### 전투 실행 서비스 사용법
+```csharp
+// CombatExecutorService를 통한 전투 실행
+CombatExecutorService executorService = new CombatExecutorService(
+    combatSlotRegistry, 
+    contextProvider, 
+    cardExecutor, 
+    enemyHandManager
+);
+
+// 전체 전투 페이즈 실행
+StartCoroutine(executorService.ExecuteCombatPhase());
+
+// 특정 슬롯 공격 실행
+StartCoroutine(executorService.PerformAttack(CombatSlotPosition.FIRST));
 
 // 카드 실행
-CombatExecutorService.Instance.ExecuteCard(card, target);
+executorService.ExecuteCard(skillCard, CombatSlotPosition.SECOND);
+```
+
+### 전투 준비 서비스 사용법
+```csharp
+// CombatPreparationService를 통한 전투 준비
+CombatPreparationService preparationService = new CombatPreparationService(
+    playerManager, 
+    enemySpawnerManager, 
+    enemyManager, 
+    enemyHandManager, 
+    turnCardRegistry, 
+    placementService, 
+    turnManager, 
+    slotSelector, 
+    slotRegistry
+);
+
+// 전투 준비 실행
+StartCoroutine(preparationService.PrepareCombat());
+
+// 적 스폰
+preparationService.SpawnEnemy();
+
+// 플레이어 카드 설정
+preparationService.SetupPlayerCards();
+```
+
+### 초기화 시스템 사용법
+```csharp
+// CombatStartupManager를 통한 초기화
+CombatStartupManager startupManager = FindObjectOfType<CombatStartupManager>();
+
+// 초기화 스텝 실행
+StartCoroutine(startupManager.ExecuteInitializationSteps());
+
+// 초기화 완료 후 플레이어 입력 활성화
+startupManager.OnInitializationComplete();
+```
+
+### 상태 패턴 사용법
+```csharp
+// 전투 상태 구현
+public class CustomCombatState : ICombatTurnState
+{
+    public void ExecuteState()
+    {
+        // 상태별 로직 실행
+    }
+    
+    public bool CanTransitionTo(ICombatTurnState nextState)
+    {
+        // 상태 전환 조건 확인
+        return true;
+    }
+    
+    public void OnEnter()
+    {
+        // 상태 진입 시 처리
+    }
+    
+    public void OnExit()
+    {
+        // 상태 종료 시 처리
+    }
+}
+
+// 상태 설정
+turnManager.SetState(new CustomCombatState());
+```
+
+### 의존성 주입 설정
+```csharp
+// CombatInstaller를 통한 DI 설정
+public class CustomCombatInstaller : MonoInstaller
+{
+    public override void InstallBindings()
+    {
+        Container.Bind<ICombatFlowCoordinator>().To<CombatFlowCoordinator>().AsSingle();
+        Container.Bind<ICombatTurnManager>().To<CombatTurnManager>().AsSingle();
+        Container.Bind<ICombatExecutorService>().To<CombatExecutorService>().AsSingle();
+        Container.Bind<ICombatPreparationService>().To<CombatPreparationService>().AsSingle();
+    }
+}
 ```
 
 ## 🏗️ 아키텍처 패턴
@@ -236,5 +409,9 @@ sequenceDiagram
 - [상태 패턴](https://refactoring.guru/design-patterns/state)
 - [Zenject 의존성 주입](https://github.com/modesttree/Zenject)
 
+## 📝 변경 기록(Delta)
+- 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
 
-
+- 2025-01-27 | Maintainer | CombatSystem 개발 문서 초기 작성 | 문서
+- 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 파일 수 정정 | 문서
+- 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 클래스/메서드/서비스 정보 추가 | 문서

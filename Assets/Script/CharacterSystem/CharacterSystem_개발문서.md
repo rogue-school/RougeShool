@@ -10,7 +10,7 @@ CharacterSystem/
 ├── Data/             # 캐릭터 데이터 (4개 파일)
 ├── Interface/        # 캐릭터 인터페이스 (8개 파일)
 ├── Manager/          # 캐릭터 매니저 (3개 파일)
-├── Intialization/    # 캐릭터 초기화 (6개 파일)
+├── Intialization/    # 캐릭터 초기화 (6개 파일) [주의: 폴더명 오타 - Initialization이어야 함]
 ├── Slot/             # 캐릭터 슬롯 (1개 파일)
 ├── UI/               # 캐릭터 UI (2개 파일)
 └── Utility/          # 캐릭터 유틸리티 (4개 파일)
@@ -45,13 +45,13 @@ CharacterSystem/
 - **EnemyManager.cs**: 적 캐릭터 매니저
 - **PlayerResourceManager.cs**: 플레이어 리소스 관리 매니저
 
-### Intialization 폴더 (6개 파일)
-- **PlayerCharacterInitializer.cs**: 플레이어 캐릭터 초기화
+### Intialization 폴더 (6개 파일) [폴더명 오타 주의]
 - **EnemyCharacterInitializer.cs**: 적 캐릭터 초기화
 - **EnemyHandInitializer.cs**: 적 핸드 초기화
-- **HandInitializer.cs**: 핸드 초기화
+- **EnemyInitializer.cs**: 적 초기화 통합 관리
+- **HandInitializer.cs**: 핸드 초기화 기본 클래스
+- **PlayerCharacterInitializer.cs**: 플레이어 캐릭터 초기화
 - **PlayerSkillCardInitializer.cs**: 플레이어 스킬카드 초기화
-- **EnemyInitializer.cs**: 적 초기화
 
 ### UI 폴더 (2개 파일)
 - **CharacterSlotUI.cs**: 캐릭터 슬롯 UI
@@ -66,10 +66,10 @@ CharacterSystem/
 ## 🎯 주요 기능
 
 ### 1. 캐릭터 기본 속성
-- **체력 (Health)**: 캐릭터의 생명력
-- **방어력 (Guard)**: 데미지 감소
-- **공격력 (Attack)**: 기본 공격력
-- **속도 (Speed)**: 행동 순서 결정
+- **체력 (Health)**: 캐릭터의 생명력 (currentHP, maxHP)
+- **가드 (Guard)**: 데미지 감소 방어력 (currentGuard, isGuarded)
+- **리소스 (Resource)**: 캐릭터 타입별 리소스 (Bow: 화살, Staff: 마나, Sword: 0)
+- **턴 효과 (PerTurnEffect)**: 턴마다 적용되는 효과들
 
 ### 2. 플레이어 캐릭터 타입
 - **검 (Sword)**: 근접 전투 특화
@@ -93,15 +93,68 @@ CharacterSystem/
 - **자동 초기화**: 캐릭터 생성 시 자동 설정
 - **스킬카드 초기화**: 캐릭터별 스킬카드 덱 설정
 
+## 📊 주요 클래스 및 메서드
+
+### EnemyManager 클래스
+- **RegisterEnemy(IEnemyCharacter enemy)**: 적 캐릭터 등록
+- **UnregisterEnemy()**: 적 캐릭터 등록 해제
+- **GetCurrentEnemy()**: 현재 적 캐릭터 조회
+- **HasEnemy()**: 적 캐릭터 등록 여부 확인
+- **ClearEnemy()**: 등록된 적 캐릭터 초기화
+- **Reset()**: 매니저 상태 초기화
+
+### PlayerResourceManager 클래스
+- **Initialize(PlayerCharacterData characterData)**: 캐릭터 데이터로 초기화
+- **CanConsumeResource(int amount)**: 리소스 소모 가능 여부 확인
+- **ConsumeResource(int amount)**: 리소스 소모
+- **RestoreResource(int amount)**: 리소스 회복
+- **CurrentResource**: 현재 리소스 양 (프로퍼티)
+- **MaxResource**: 최대 리소스 양 (프로퍼티)
+- **ResourceName**: 리소스 이름 (프로퍼티)
+
+### EnemySpawnerManager 클래스
+- **SpawnEnemy(EnemyCharacterData data)**: 적 데이터로 스폰
+- **SpawnEnemyWithAnimation()**: 애니메이션과 함께 적 스폰 (코루틴)
+- **GetAllEnemies()**: 스폰된 모든 적 캐릭터 조회
+- **SpawnInitialEnemy()**: 초기 적 스폰 (Deprecated)
+
+### ICharacterSlot 인터페이스
+- **SetCharacter(ICharacter character)**: 슬롯에 캐릭터 설정
+- **Clear()**: 슬롯에서 캐릭터 제거
+- **GetCharacter()**: 현재 슬롯의 캐릭터 조회
+- **GetTransform()**: 슬롯의 Transform 반환
+- **GetSlotPosition()**: 슬롯 위치 정보 반환
+- **GetOwner()**: 슬롯 소유자 정보 반환
+
+### ICharacterSlotRegistry 인터페이스
+- **RegisterCharacterSlots(IEnumerable<ICharacterSlot> slots)**: 캐릭터 슬롯들 등록
+- **GetCharacterSlot(SlotOwner owner)**: 소유자별 캐릭터 슬롯 조회
+- **GetAllCharacterSlots()**: 모든 캐릭터 슬롯 조회
+
+### PlayerCharacterData 클래스
+- **DisplayName**: 캐릭터 표시 이름 (프로퍼티)
+- **CharacterType**: 캐릭터 타입 (프로퍼티)
+- **MaxHP**: 최대 체력 (프로퍼티)
+- **Portrait**: 캐릭터 초상화 (프로퍼티)
+- **MaxResource**: 최대 리소스 (프로퍼티)
+- **ResourceName**: 리소스 이름 (프로퍼티)
+
+### EnemyCharacter 클래스
+- **Initialize(EnemyCharacterData data)**: 적 캐릭터 데이터로 초기화
+- **CharacterData**: 적 캐릭터 데이터 (프로퍼티)
+- **CharacterName**: 캐릭터 이름 (프로퍼티)
+- **Data**: 적 캐릭터 데이터 (프로퍼티)
+
 ## 🔧 사용 방법
 
 ### 기본 사용법
 ```csharp
-// 플레이어 캐릭터 생성 (타입 지정)
-PlayerCharacter player = new PlayerCharacter(playerData, PlayerCharacterType.Sword);
+// 캐릭터 생성 및 초기화
+PlayerCharacter player = Instantiate(playerPrefab);
+player.Initialize(playerData);
 
-// 적 캐릭터 생성
-EnemyCharacter enemy = new EnemyCharacter(enemyData);
+EnemyCharacter enemy = Instantiate(enemyPrefab);
+enemy.Initialize(enemyData);
 
 // 캐릭터 상태 확인
 if (player.IsAlive)
@@ -109,10 +162,122 @@ if (player.IsAlive)
     // 공격 실행
     player.Attack(enemy);
 }
+```
 
-// 리소스 관리
-PlayerResourceManager.Instance.ConsumeResource(PlayerCharacterType.Bow, 1); // 화살 소모
-PlayerResourceManager.Instance.ConsumeResource(PlayerCharacterType.Staff, 2); // 마나 소모
+### 매니저를 통한 캐릭터 관리
+```csharp
+// EnemyManager를 통한 적 캐릭터 관리
+EnemyManager enemyManager = FindObjectOfType<EnemyManager>();
+
+// 적 캐릭터 등록
+enemyManager.RegisterEnemy(enemy);
+
+// 현재 적 캐릭터 조회
+IEnemyCharacter currentEnemy = enemyManager.GetCurrentEnemy();
+
+// 적 캐릭터 등록 해제
+enemyManager.UnregisterEnemy();
+
+// 적 캐릭터 초기화
+enemyManager.ClearEnemy();
+```
+
+### 리소스 관리
+```csharp
+// PlayerResourceManager를 통한 리소스 관리
+PlayerResourceManager resourceManager = FindObjectOfType<PlayerResourceManager>();
+
+// 캐릭터 데이터로 초기화
+resourceManager.Initialize(playerData);
+
+// 리소스 소모 가능 여부 확인
+if (resourceManager.CanConsumeResource(5))
+{
+    resourceManager.ConsumeResource(5);
+}
+
+// 리소스 회복
+resourceManager.RestoreResource(3);
+
+// 리소스 상태 조회
+int currentResource = resourceManager.CurrentResource;
+int maxResource = resourceManager.MaxResource;
+string resourceName = resourceManager.ResourceName;
+```
+
+### 적 스폰 관리
+```csharp
+// EnemySpawnerManager를 통한 적 스폰
+EnemySpawnerManager spawnerManager = FindObjectOfType<EnemySpawnerManager>();
+
+// 적 데이터로 스폰
+EnemySpawnResult result = spawnerManager.SpawnEnemy(enemyData);
+
+if (result.IsSuccess)
+{
+    EnemyCharacter spawnedEnemy = result.EnemyCharacter;
+    // 스폰된 적 사용
+}
+
+// 스폰된 모든 적 조회
+List<EnemyCharacter> allEnemies = spawnerManager.GetAllEnemies();
+```
+
+### 캐릭터 슬롯 관리
+```csharp
+// ICharacterSlot을 통한 슬롯 관리
+ICharacterSlot playerSlot = slotRegistry.GetCharacterSlot(SlotOwner.PLAYER);
+ICharacterSlot enemySlot = slotRegistry.GetCharacterSlot(SlotOwner.ENEMY);
+
+// 슬롯에 캐릭터 설정
+playerSlot.SetCharacter(player);
+enemySlot.SetCharacter(enemy);
+
+// 슬롯에서 캐릭터 조회
+ICharacter slotCharacter = playerSlot.GetCharacter();
+
+// 슬롯 초기화
+playerSlot.Clear();
+```
+
+### 캐릭터 타입별 특수 기능
+```csharp
+// 플레이어 캐릭터 타입별 특수 기능
+if (player.CharacterType == PlayerCharacterType.Sword)
+{
+    // 검 캐릭터 특수 기능
+    player.SwordAttack();
+}
+else if (player.CharacterType == PlayerCharacterType.Bow)
+{
+    // 활 캐릭터 특수 기능 (화살 리소스 사용)
+    if (resourceManager.CanConsumeResource(1))
+    {
+        resourceManager.ConsumeResource(1);
+        player.BowAttack();
+    }
+}
+else if (player.CharacterType == PlayerCharacterType.Staff)
+{
+    // 지팡이 캐릭터 특수 기능 (마나 리소스 사용)
+    if (resourceManager.CanConsumeResource(2))
+    {
+        resourceManager.ConsumeResource(2);
+        player.StaffAttack();
+    }
+}
+```
+
+### 초기화 시스템 연동
+```csharp
+// ICombatInitializerStep을 통한 초기화
+PlayerCharacterInitializer playerInitializer = FindObjectOfType<PlayerCharacterInitializer>();
+
+// 초기화 순서 확인
+int order = playerInitializer.Order; // 낮을수록 먼저 실행
+
+// 초기화 실행 (CombatInitializer에서 자동 호출됨)
+playerInitializer.ExecuteInitialization();
 ```
 
 ## 🏗️ 아키텍처 패턴
@@ -253,4 +418,10 @@ sequenceDiagram
 - [ScriptableObject](https://docs.unity3d.com/Manual/class-ScriptableObject.html)
 - [상속 구조](https://docs.microsoft.com/ko-kr/dotnet/csharp/programming-guide/classes-and-structs/inheritance)
 
+## 📝 변경 기록(Delta)
+- 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
 
+- 2025-01-27 | Maintainer | CharacterSystem 개발 문서 초기 작성 | 문서
+- 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 Intialization 폴더명 오타 주의 표시 | 문서
+- 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 클래스/메서드/인터페이스 정보 추가 | 문서
+- 2025-01-27 | Maintainer | 실제 코드 기반 캐릭터 기본 속성 수정 (속도/공격력 제거, 가드/리소스/턴효과 추가) | 문서

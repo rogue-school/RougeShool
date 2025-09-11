@@ -47,54 +47,73 @@ UtilitySystem/
 
 ## 🔧 사용 방법
 
-### 기본 사용법 (리팩토링 후)
+### 기본 사용법
 ```csharp
-// 게임 컨텍스트 설정
-GameContext.Instance.SetCurrentScene("MainMenu");
-GameContext.Instance.SetGameState(GameState.MainMenu);
+// GameContext를 통한 플레이어 캐릭터 관리
+GameContext gameContext = new GameContext();
+PlayerCharacterData characterData = Resources.Load<PlayerCharacterData>("Characters/SwordCharacter");
+gameContext.SetSelectedCharacter(characterData);
 
-// DontDestroyOnLoad 오브젝트 등록
-DontDestroyOnLoadContainer.Instance.RegisterObject(gameObject);
+// DontDestroyOnLoadContainer를 통한 오브젝트 관리
+DontDestroyOnLoadContainer container = FindObjectOfType<DontDestroyOnLoadContainer>();
+container.AddObject(gameObject);
+container.RemoveObject(gameObject);
+int objectCount = container.GetObjectCount();
+bool isEmpty = container.IsEmpty();
 
-// 드롭 핸들러 주입
-DropHandlerInjector.Instance.InjectHandlers();
-
-// 카메라 해상도 수정 (제거됨)
-// CameraResolutionFixer.Instance.FixResolution(); // 더 이상 사용하지 않음
+// DropHandlerInjector를 통한 드롭 핸들러 주입
+ICombatSlotRegistry slotRegistry = FindObjectOfType<CombatSlotRegistry>();
+CardDropService dropService = FindObjectOfType<CardDropService>();
+ICombatFlowCoordinator flowCoordinator = FindObjectOfType<CombatFlowCoordinator>();
+DropHandlerInjector.InjectToAllCombatSlots(slotRegistry, dropService, flowCoordinator);
 ```
 
-### 게임 플로우 관리
-```csharp
-// 씬 로딩
-ISceneLoader sceneLoader = GameContext.Instance.SceneLoader;
-sceneLoader.LoadScene("CombatScene");
+## 📊 주요 클래스 및 메서드
 
-// 게임 상태 확인
-if (GameContext.Instance.CurrentState == GameState.Combat)
-{
-    // 전투 상태 처리
-}
-```
+### GameContext 클래스
+- **SetSelectedCharacter(PlayerCharacterData data)**: 선택된 플레이어 캐릭터 설정
+- **SelectedCharacter**: 현재 선택된 플레이어 캐릭터 데이터 (프로퍼티)
+
+### DontDestroyOnLoadContainer 클래스
+- **AddObject(GameObject newObject)**: 새로운 오브젝트를 컨테이너에 추가
+- **RemoveObject(GameObject objectToRemove)**: 특정 오브젝트를 컨테이너에서 제거
+- **GetAllChildren()**: 컨테이너의 모든 하위 오브젝트 목록 반환
+- **IsEmpty()**: 컨테이너가 비어있는지 확인
+- **GetObjectCount()**: 컨테이너의 오브젝트 개수 반환
+- **applyToSelf**: 컨테이너 자체에 DontDestroyOnLoad 적용 여부 (인스펙터 설정)
+- **applyToChildren**: 모든 하위 오브젝트에 DontDestroyOnLoad 적용 여부 (인스펙터 설정)
+- **applyToNewChildren**: 새로운 오브젝트에 DontDestroyOnLoad 적용 여부 (인스펙터 설정)
+- **persistAcrossScenes**: 씬 전환 시 유지 여부 (인스펙터 설정)
+- **enableDebugLogging**: 디버그 로깅 활성화 여부 (인스펙터 설정)
+
+### DropHandlerInjector 클래스 (정적 클래스)
+- **InjectToAllCombatSlots(ICombatSlotRegistry slotRegistry, CardDropService dropService, ICombatFlowCoordinator flowCoordinator)**: 모든 전투 슬롯에 드롭 핸들러 주입
+
+### 인터페이스
+- **IGameContext**: 게임 컨텍스트 인터페이스 (SelectedCharacter, SetSelectedCharacter)
+- **ISceneLoader**: 씬 로딩 인터페이스 (LoadScene)
 
 ## 🏗️ 아키텍처 패턴
 
-### 1. 싱글톤 패턴 (Singleton Pattern)
-- **GameContext**: 게임 컨텍스트 싱글톤
-- **DontDestroyOnLoadContainer**: DontDestroyOnLoad 관리 싱글톤
-- **DropHandlerInjector**: 드롭 핸들러 주입 싱글톤
-- **CameraResolutionFixer**: 카메라 해상도 수정 싱글톤
+### 1. 컨텍스트 패턴 (Context Pattern)
+- **GameContext**: 플레이어 캐릭터 선택 상태 관리
+- **상태 전환**: 컨텍스트를 통한 캐릭터 상태 전환
 
-### 2. 팩토리 패턴 (Factory Pattern)
-- **씬 로더 생성**: 다양한 씬 로더 구현체 생성
-- **드롭 핸들러 생성**: 다양한 드롭 핸들러 생성
+### 2. 컨테이너 패턴 (Container Pattern)
+- **DontDestroyOnLoadContainer**: 씬 전환 시에도 유지되는 오브젝트 관리
+- **자동 관리**: 오브젝트의 생성/소멸 자동 관리
 
 ### 3. 의존성 주입 패턴 (Dependency Injection)
 - **DropHandlerInjector**: 드롭 핸들러 자동 주입
 - **인터페이스 기반**: 인터페이스를 통한 느슨한 결합
 
-### 4. 컨텍스트 패턴 (Context Pattern)
-- **GameContext**: 게임의 전역 상태 관리
-- **상태 전환**: 컨텍스트를 통한 상태 전환
+### 4. 인터페이스 분리 원칙 (Interface Segregation Principle)
+- **IGameContext**: 게임 컨텍스트 인터페이스
+- **ISceneLoader**: 씬 로딩 인터페이스
 
+## 📝 변경 기록(Delta)
+- 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
 
-
+- 2025-01-27 | Maintainer | UtilitySystem 개발 문서 초기 작성 | 문서
+- 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 파일 수 정정 | 문서
+- 2025-01-27 | Maintainer | 실제 코드 분석 기반 주요 클래스 및 메서드 정보 추가 | 문서

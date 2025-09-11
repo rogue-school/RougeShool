@@ -1,9 +1,17 @@
-# AnimationSystem 개발 문서
+---
+description: "AnimationSystem 개발 가이드 및 규칙 - Unity 2D 애니메이션 통합 관리"
+globs: ["Assets/Script/AnimationSystem/**/*.cs"]
+rule_id: animation_system_rules
+version: 1.2.0
+alwaysApply: true
+---
+
+# AnimationSystem 개발 규칙
 
 ## 📋 시스템 개요
 AnimationSystem은 Unity 2D 게임의 모든 애니메이션을 통합 관리하는 시스템입니다. 캐릭터, 스킬카드, UI 등 다양한 요소의 애니메이션을 중앙화된 방식으로 제어합니다.
 
-## 🏗️ 폴더 구조
+## 🏗️ 폴더 구조 규칙
 ```
 AnimationSystem/
 ├── Manager/           # 애니메이션 매니저 (2개 파일)
@@ -25,13 +33,13 @@ AnimationSystem/
 └── Controllers/      # 애니메이션 컨트롤러 (2개 파일)
 ```
 
-## 📁 주요 컴포넌트
+## 📁 주요 컴포넌트 규칙
 
-### Manager 폴더
-- **AnimationFacade.cs**: 애니메이션 시스템의 통합 인터페이스
-- **AnimationSystemInitializer.cs**: 애니메이션 시스템 초기화
+### Manager 폴더 규칙 (2개 파일)
+- **AnimationFacade.cs**: 애니메이션 시스템의 통합 인터페이스 (싱글톤 패턴)
+- **AnimationSystemInitializer.cs**: 애니메이션 시스템 초기화 (Zenject DI)
 
-### Interface 폴더 (15개 파일)
+### Interface 폴더 규칙 (15개 파일)
 - **IAnimationScript.cs**: 애니메이션 스크립트 기본 인터페이스
 - **ICharacterCombatSlotMoveAnimationScript.cs**: 캐릭터 전투 슬롯 이동 애니메이션
 - **ICharacterDeathAnimationScript.cs**: 캐릭터 사망 애니메이션 인터페이스
@@ -46,7 +54,7 @@ AnimationSystem/
 - **ISkillCardUseAnimationScript.cs**: 스킬카드 사용 애니메이션 인터페이스
 - **ISkillCardVanishAnimationScript.cs**: 스킬카드 소멸 애니메이션 인터페이스
 
-### Data 폴더 (8개 파일)
+### Data 폴더 규칙 (8개 파일)
 - **CharacterAnimationEntry.cs**: 캐릭터 애니메이션 엔트리 데이터
 - **CharacterAnimationSettings.cs**: 캐릭터 애니메이션 설정
 - **EnemyCharacterAnimationDatabase.cs**: 적 캐릭터 애니메이션 데이터베이스
@@ -56,7 +64,7 @@ AnimationSystem/
 - **SkillCardAnimationEntry.cs**: 스킬카드 애니메이션 엔트리 데이터
 - **SkillCardAnimationSettings.cs**: 스킬카드 애니메이션 설정
 
-### Animator 폴더 (20개 파일)
+### Animator 폴더 규칙 (20개 파일)
 
 #### CharacterAnimation 하위 폴더 (8개 파일)
 - **DeathAnimation/**:
@@ -89,38 +97,35 @@ AnimationSystem/
   - **SkillCardVanishAnimation001.cs**: 스킬카드 소멸 애니메이션 구현체
   - **DefaultSkillCardVanishAnimation.cs**: 기본 스킬카드 소멸 애니메이션
 
-### Helper 폴더
+### Helper 폴더 규칙 (1개 파일)
 - **AnimationHelper.cs**: 애니메이션 유틸리티 함수
 
-### Controllers 폴더
+### Controllers 폴더 규칙 (2개 파일)
 - **CharacterAnimationController.cs**: 캐릭터 애니메이션 컨트롤러
 - **SkillCardAnimationController.cs**: 스킬카드 애니메이션 컨트롤러
 
-### Editor 폴더 (5개 파일)
-- **AnimationDatabaseAssetFixer.cs**: 애니메이션 데이터베이스 에셋 수정기
-- **EnemyCharacterAnimationDatabaseEditor.cs**: 적 캐릭터 애니메이션 데이터베이스 에디터
-- **EnemySkillCardAnimationDatabaseEditor.cs**: 적 스킬카드 애니메이션 데이터베이스 에디터
-- **PlayerCharacterAnimationDatabaseEditor.cs**: 플레이어 캐릭터 애니메이션 데이터베이스 에디터
-- **PlayerSkillCardAnimationDatabaseEditor.cs**: 플레이어 스킬카드 애니메이션 데이터베이스 에디터
+## 🎯 개발 규칙
 
-## 🎯 주요 기능
+### 1. 애니메이션 구현 규칙
+- **DOTween 우선 사용**: 모든 애니메이션은 코루틴 대신 DOTween 사용
+- **체인 애니메이션**: `.SetEase()`, `.OnComplete()`, `.SetDelay()` 등 고급 기능 활용
+- **애니메이션 풀링**: `DOTween.SetTweensCapacity()`로 성능 최적화
+- **SafeMode 설정**: 안정성을 위해 DOTween SafeMode 활성화 유지
 
-### 1. 통합 애니메이션 관리
-- 모든 애니메이션을 중앙화된 방식으로 관리
-- Facade 패턴을 통한 단순화된 인터페이스 제공
+### 2. 인터페이스 구현 규칙
+- 모든 애니메이션 스크립트는 해당 인터페이스를 구현해야 함
+- 인터페이스명은 `I[Type][Action]AnimationScript` 형식
+- 예외 처리 및 null 체크 필수
 
-### 2. 데이터 기반 애니메이션
-- ScriptableObject를 활용한 데이터 기반 설계
-- 런타임에서 애니메이션 설정 변경 가능
+### 3. 데이터베이스 규칙
+- ScriptableObject 기반 데이터베이스 사용
+- 플레이어/적 구분하여 별도 데이터베이스 관리
+- 커스텀 에디터를 통한 개발자 친화적 인터페이스 제공
 
-### 3. 타입별 애니메이션 지원
-- 캐릭터 애니메이션 (플레이어/적)
-- 스킬카드 애니메이션 (플레이어/적)
-- UI 애니메이션 (다양한 UI 요소)
-
-### 4. 커스텀 에디터 지원
-- 각 데이터베이스별 전용 에디터 제공
-- 개발자 친화적인 인스펙터 인터페이스
+### 4. 컨트롤러 규칙
+- CharacterAnimationController: 캐릭터 애니메이션 통합 관리
+- SkillCardAnimationController: 스킬카드 애니메이션 통합 관리
+- 이벤트 기반 애니메이션 실행
 
 ## 🔧 사용 방법
 
@@ -160,12 +165,6 @@ AnimationFacade.Instance.PlaySkillCardAnimation(skillCard, "use", target, onComp
 - **PlayMoveAnimation()**: 스킬카드 이동 애니메이션
 - **PlayUseAnimation()**: 스킬카드 사용 애니메이션
 
-#### 데이터 클래스
-- **PlayerCharacterAnimationEntry**: 플레이어 캐릭터 애니메이션 엔트리
-- **EnemyCharacterAnimationEntry**: 적 캐릭터 애니메이션 엔트리
-- **CharacterAnimationSettings**: 캐릭터 애니메이션 설정 (spawn, death, damage, heal)
-- **SkillCardAnimationSettings**: 스킬카드 애니메이션 설정 (spawn, move, use)
-
 ### 애니메이션 설정 구조
 ```csharp
 // CharacterAnimationSettings 주요 속성
@@ -196,14 +195,55 @@ public class AnimationSettings
 }
 ```
 
-### 커스텀 애니메이션 추가
+### 커스텀 애니메이션 추가 절차
 1. 해당 타입의 Animator 클래스 상속
 2. AnimationDatabase에 애니메이션 데이터 등록
 3. AnimationSettings에서 설정 구성
+4. 인터페이스 구현 및 예외 처리 추가
+
+## 🏗️ 아키텍처 패턴
+
+### 1. Facade 패턴
+- **AnimationFacade**: 복잡한 애니메이션 시스템을 단순한 인터페이스로 제공
+- 싱글톤 패턴으로 전역 접근 가능
+
+### 2. Strategy 패턴
+- 다양한 애니메이션 타입을 런타임에 교체 가능
+- 인터페이스 기반 구현으로 확장성 확보
+
+### 3. Factory 패턴
+- 애니메이션 객체 생성 로직 캡슐화
+- 타입별 애니메이션 생성 관리
+
+## 🔧 기술적 구현 세부사항
+
+### 성능 최적화
+- **DOTween 최적화**: 애니메이션 풀링으로 GC 압박 최소화
+- **애니메이션 이벤트**: Update() 대신 DOTween 이벤트 콜백 활용
+- **메모리 관리**: 애니메이션 완료 후 자동 정리
+
+### 스레드 안전성
+- 싱글톤 패턴의 스레드 안전성 보장
+- 이벤트 기반 비동기 처리
+
+## 🧪 검증/테스트 지침
+
+### 체크리스트
+- [ ] DOTween SafeMode 활성화 확인
+- [ ] 애니메이션 풀링 설정 확인
+- [ ] 인터페이스 구현 완전성 확인
+- [ ] 예외 처리 및 null 체크 구현
+- [ ] 성능 프로파일링 통과
+
+### 재현 절차
+1. 각 애니메이션 타입별 테스트 케이스 실행
+2. 메모리 누수 검사
+3. 프레임레이트 영향도 측정
 
 ## 📝 변경 기록(Delta)
 - 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
 
 - 2025-01-27 | Maintainer | AnimationSystem 개발 문서 초기 작성 | 문서
 - 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 파일 수 정정 | 문서
+- 2025-01-27 | Maintainer | .mdc 규칙 파일로 변환 및 Cursor 규칙 저장 | 문서
 - 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 함수/변수/클래스 정보 추가 | 문서

@@ -1,0 +1,143 @@
+---
+description: "RougeShool 시스템 규칙 인덱스 - 모든 시스템 개발 규칙 통합 관리"
+globs: ["Assets/Script/**/*.cs", "Assets/Script/**/*.md"]
+alwaysApply: true
+rule_id: system_rules_index
+version: 1.0.0
+---
+
+# RougeShool 시스템 규칙 인덱스
+
+## 📋 개요
+이 파일은 RougeShool 프로젝트의 모든 시스템별 개발 규칙을 통합 관리하는 인덱스입니다. 각 시스템의 개발 가이드와 규칙을 빠르게 찾을 수 있도록 구성되어 있습니다.
+
+## 🏗️ 전체 규칙 파일 구조
+
+### 🔥 핵심 규칙 (Core Rules)
+- **01_rouge_shool_project_rules.mdc**: 프로젝트 전체 개발 규칙
+- **02_documentation_work_rules.mdc**: 문서 작성 및 관리 규칙
+- **03_refactoring_rules.mdc**: 코드 리팩토링 규칙
+- **04_scene_hierarchy_documentation_rules.mdc**: 씬 구조 문서화 규칙
+
+### 🏗️ 시스템 개발 규칙 (System Development Rules)
+- **05_core_system_rules.mdc**: 코어 시스템 개발 규칙
+- **06_animation_system_rules.mdc**: 애니메이션 시스템 개발 규칙
+- **07_audio_system_rules.mdc**: 오디오 시스템 개발 규칙
+- **08_character_system_rules.mdc**: 캐릭터 시스템 개발 규칙
+- **09_combat_system_rules.mdc**: 전투 시스템 개발 규칙
+- **10_save_system_rules.mdc**: 저장 시스템 개발 규칙
+- **11_skillcard_system_rules.mdc**: 스킬카드 시스템 개발 규칙
+- **12_stage_system_rules.mdc**: 스테이지 시스템 개발 규칙
+- **13_utility_system_rules.mdc**: 유틸리티 시스템 개발 규칙
+
+### 📚 통합 규칙 (Integration Rules)
+- **14_system_rules_index.mdc**: 시스템 규칙 통합 인덱스 (현재 파일)
+
+## 🎯 시스템별 상세 규칙
+
+### CoreSystem 규칙
+- **파일**: `05_core_system_rules.mdc`
+- **범위**: `Assets/Script/CoreSystem/**/*.cs`
+- **설명**: Unity 2D 코어 시스템 통합 관리
+- **주요 기능**: 싱글톤 매니저, 초기화 순서, Zenject DI
+
+### AnimationSystem 규칙
+- **파일**: `06_animation_system_rules.mdc`
+- **범위**: `Assets/Script/AnimationSystem/**/*.cs`
+- **설명**: Unity 2D 애니메이션 통합 관리
+- **주요 기능**: DOTween 기반 애니메이션, Facade 패턴, 데이터 기반 애니메이션
+
+### AudioSystem 규칙
+- **파일**: `07_audio_system_rules.mdc`
+- **범위**: `Assets/Script/AudioSystem/**/*.cs`, `Assets/Script/CoreSystem/Audio/**/*.cs`
+- **설명**: Unity 2D 오디오 시스템 통합 관리
+- **주요 기능**: 싱글톤 매니저, 오디오 풀링, 이벤트 기반 사운드
+
+### CharacterSystem 규칙
+- **파일**: `08_character_system_rules.mdc`
+- **범위**: `Assets/Script/CharacterSystem/**/*.cs`
+- **설명**: Unity 2D 캐릭터 통합 관리
+- **주요 기능**: 캐릭터 타입별 특수 기능, 리소스 관리, 상태 관리
+
+### CombatSystem 규칙
+- **파일**: `09_combat_system_rules.mdc`
+- **범위**: `Assets/Script/CombatSystem/**/*.cs`
+- **설명**: Unity 2D 전투 시스템 통합 관리
+- **주요 기능**: 상태 패턴, 턴 관리, Zenject DI
+
+### SaveSystem 규칙
+- **파일**: `10_save_system_rules.mdc`
+- **범위**: `Assets/Script/SaveSystem/**/*.cs`
+- **설명**: Unity 2D 저장 시스템 통합 관리
+- **주요 기능**: JSON 직렬화, 안전한 저장, 암호화
+
+### SkillCardSystem 규칙
+- **파일**: `11_skillcard_system_rules.mdc`
+- **범위**: `Assets/Script/SkillCardSystem/**/*.cs`
+- **설명**: Unity 2D 스킬카드 통합 관리
+- **주요 기능**: 효과 시스템, 드래그 앤 드롭, 슬롯 관리
+
+### StageSystem 규칙
+- **파일**: `12_stage_system_rules.mdc`
+- **범위**: `Assets/Script/StageSystem/**/*.cs`
+- **설명**: Unity 2D 스테이지 시스템 통합 관리
+- **주요 기능**: 팩토리 패턴, 상태 관리, 보상 시스템
+
+### UtilitySystem 규칙
+- **파일**: `13_utility_system_rules.mdc`
+- **범위**: `Assets/Script/UtilitySystem/**/*.cs`
+- **설명**: Unity 2D 유틸리티 시스템 통합 관리
+- **주요 기능**: 유틸리티 클래스, 게임 플로우 관리, 의존성 주입
+
+## 🎯 규칙 사용 가이드
+
+### 시스템별 개발 시
+1. 해당 시스템의 규칙 파일을 참조
+2. 폴더 구조 규칙 준수
+3. 아키텍처 패턴 적용
+4. 기술적 구현 세부사항 고려
+
+### 코드 리뷰 시
+1. 시스템별 규칙에 따른 구현 확인
+2. 아키텍처 패턴 준수 여부 검증
+3. 성능 최적화 적용 여부 확인
+4. 테스트 지침 준수 여부 검증
+
+### 새 시스템 추가 시
+1. 기존 시스템 규칙 파일 참조
+2. 일관된 구조와 패턴 적용
+3. 새로운 규칙 파일 생성
+4. 인덱스 파일 업데이트
+
+## 🔧 공통 개발 원칙
+
+### 1. 아키텍처 패턴
+- **싱글톤 패턴**: 매니저 클래스에 적용
+- **팩토리 패턴**: 객체 생성 로직 캡슐화
+- **전략 패턴**: 알고리즘 런타임 교체
+- **옵저버 패턴**: 이벤트 기반 통신
+
+### 2. 성능 최적화
+- **DOTween 사용**: 애니메이션은 DOTween 우선
+- **Zenject DI**: 의존성 주입으로 느슨한 결합
+- **이벤트 기반**: Update() 최소화
+- **메모리 관리**: 불필요한 참조 해제
+
+### 3. 코드 품질
+- **예외 처리**: 모든 public 메서드 예외 처리
+- **로깅**: GameLogger를 통한 한국어 로깅
+- **문서화**: XML 문서화 필수
+- **테스트**: 단위 테스트 및 수동 테스트
+
+### 4. 폴더 구조
+- **시스템별 분리**: 각 시스템별 폴더 분리
+- **네임스페이스 일치**: 폴더와 네임스페이스 일치
+- **일관된 구조**: 모든 시스템 동일한 구조 적용
+
+## 📝 변경 기록(Delta)
+- 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
+
+- 2025-01-27 | Maintainer | 시스템 규칙 인덱스 초기 생성 | 문서
+- 2025-01-27 | Maintainer | 9개 시스템 규칙 파일 통합 관리 | 문서
+- 2025-01-27 | Maintainer | 규칙 파일 명명 체계 정리 및 순서화 (01-14) | 문서
+- 2025-01-27 | Maintainer | 전체 규칙 파일 구조 섹션 추가 및 인덱스 업데이트 | 문서

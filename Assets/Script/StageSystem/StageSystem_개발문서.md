@@ -56,38 +56,69 @@ StageSystem/
 
 ### 기본 사용법
 ```csharp
-// 스테이지 시작
-StageManager.Instance.StartStage(stageData);
+// StageManager를 통한 스테이지 관리
+StageManager stageManager = FindObjectOfType<StageManager>();
+stageManager.StartSubBossPhase();
+stageManager.StartBossPhase();
+stageManager.CompleteStage();
 
-// 스테이지 진행 확인
-StageProgressController.Instance.CheckProgress();
+// StageProgressController를 통한 스테이지 진행 관리
+StageProgressController progressController = FindObjectOfType<StageProgressController>();
+progressController.StartStage();
+progressController.OnEnemyDeath(enemyCharacter);
 
-// 스테이지 완료
-StageManager.Instance.CompleteStage();
-
-// 다음 스테이지로 진행
-StageManager.Instance.ProceedToNextStage();
-```
-
-### 스테이지 데이터 생성
-```csharp
 // StageDataFactory를 통한 스테이지 데이터 생성
-var stageData = StageDataFactory.Instance.CreateStageData(
-    stageId: "Stage_001",
-    subBossData: subBossData,
-    bossData: bossData,
-    rewardData: rewardData
-);
+EnemyCharacterData subBoss = Resources.Load<EnemyCharacterData>("Enemies/SubBoss");
+EnemyCharacterData boss = Resources.Load<EnemyCharacterData>("Enemies/Boss");
+StagePhaseData stageData = StageDataFactory.CreateBossRushStage(subBoss, boss, "보스 러시", 1);
+
+// 보상 데이터 생성
+StageRewardData rewardData = StageDataFactory.CreateDefaultRewards(true, true, true);
+stageManager.SetCurrentRewards(rewardData);
+stageManager.GiveSubBossRewards();
+stageManager.GiveBossRewards();
+stageManager.GiveStageCompletionRewards();
 ```
 
-### 스테이지 진행 이벤트
-```csharp
-// 적 처치 시 진행 업데이트
-StageProgressController.Instance.OnEnemyDeath(enemy);
+## 📊 주요 클래스 및 메서드
 
-// 스테이지 완료 이벤트 구독
-StageManager.Instance.OnStageCompleted += OnStageCompletedHandler;
-```
+### StageManager 클래스
+- **StartSubBossPhase()**: 준보스 단계 시작
+- **StartBossPhase()**: 보스 단계 시작
+- **CompleteStage()**: 스테이지 완료
+- **FailStage()**: 스테이지 실패
+- **IsSubBossPhase()**: 준보스 단계 여부 확인
+- **IsBossPhase()**: 보스 단계 여부 확인
+- **IsStageCompleted()**: 스테이지 완료 여부 확인
+- **GetCurrentStageNumber()**: 현재 스테이지 번호 조회
+- **GiveSubBossRewards()**: 준보스 보상 지급
+- **GiveBossRewards()**: 보스 보상 지급
+- **GiveStageCompletionRewards()**: 스테이지 완료 보상 지급
+- **SetCurrentRewards(StageRewardData rewards)**: 현재 보상 데이터 설정
+- **GetCurrentRewards()**: 현재 보상 데이터 조회
+- **CurrentPhase**: 현재 스테이지 단계 (프로퍼티)
+- **ProgressState**: 현재 스테이지 진행 상태 (프로퍼티)
+- **IsSubBossDefeated**: 준보스 처치 여부 (프로퍼티)
+- **IsBossDefeated**: 보스 처치 여부 (프로퍼티)
+
+### StageProgressController 클래스
+- **StartStage()**: 스테이지 시작 (준보스부터 시작)
+- **OnEnemyDeath(IEnemyCharacter enemy)**: 적 사망 시 호출
+
+### StageDataFactory 클래스
+- **CreateBossRushStage(EnemyCharacterData subBoss, EnemyCharacterData boss, string stageName, int stageNumber)**: 준보스/보스 구성 스테이지 생성
+- **CreateDefaultRewards(bool hasSubBossRewards, bool hasBossRewards, bool hasCompletionRewards)**: 기본 보상 데이터 생성
+- **ValidateStageData(StagePhaseData stageData)**: 스테이지 데이터 유효성 검증
+
+### 데이터 클래스
+- **StagePhaseData**: 스테이지 단계별 데이터 (SubBoss, Boss, StageName, StageNumber, StageDescription)
+- **StagePhaseState**: 스테이지 단계 상태 열거형 (None, SubBoss, Boss, Completed)
+- **StageProgressState**: 스테이지 진행 상태 열거형 (NotStarted, SubBossBattle, BossBattle, Completed, Failed)
+- **StageRewardData**: 스테이지 보상 데이터 (RewardItem, RewardCurrency)
+
+### 인터페이스
+- **IStagePhaseManager**: 스테이지 단계별 관리 인터페이스
+- **IStageRewardManager**: 스테이지 보상 관리 인터페이스
 
 ## 🏗️ 아키텍처 패턴
 
@@ -228,3 +259,9 @@ sequenceDiagram
 - [Unity 씬 전환](https://docs.unity3d.com/Manual/SceneManagement.html)
 - [스테이지 설계](https://docs.unity3d.com/Manual/LevelDesign.html)
 
+## 📝 변경 기록(Delta)
+- 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
+
+- 2025-01-27 | Maintainer | StageSystem 개발 문서 초기 작성 | 문서
+- 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 파일 수 정정 | 문서
+- 2025-01-27 | Maintainer | 실제 코드 분석 기반 주요 클래스 및 메서드 정보 추가 | 문서

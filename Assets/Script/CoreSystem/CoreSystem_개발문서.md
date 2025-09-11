@@ -80,6 +80,72 @@ CoreSystem/
 ### 6. 오디오 시스템 통합
 - **오디오 풀링**: AudioSource 풀링으로 성능 최적화
 - **사운드 중복 방지**: 동일한 사운드의 중복 재생 방지
+
+## 📊 주요 클래스 및 메서드
+
+### SceneTransitionManager 클래스
+- **Instance**: 싱글톤 인스턴스 (프로퍼티)
+- **TransitionToCoreScene()**: 코어 씬으로 전환 (async Task)
+- **TransitionToMainScene()**: 메인 씬으로 전환 (async Task)
+- **TransitionToBattleScene()**: 전투 씬으로 전환 (async Task)
+- **TransitionToScene(string sceneName, TransitionType transitionType)**: 일반 씬 전환 (async Task)
+- **InitializeTransition()**: 전환 시스템 초기화
+- **TryPlayBGMForScene(string sceneName)**: 씬별 BGM 재생
+- **IsTransitioning**: 전환 상태 (프로퍼티)
+- **OnSceneTransitionStart**: 씬 전환 시작 이벤트
+- **OnSceneTransitionEnd**: 씬 전환 완료 이벤트
+
+### AudioManager 클래스
+- **Instance**: 싱글톤 인스턴스 (프로퍼티)
+- **PlayBGM(AudioClip bgmClip, bool fadeIn)**: BGM 재생 (페이드 옵션)
+- **PlaySFX(AudioClip sfxClip)**: 효과음 재생 (기본 방식)
+- **PlaySFXWithPool(AudioClip sfxClip, float volume, int priority)**: 풀링을 사용한 효과음 재생
+- **StopBGM()**: BGM 정지
+- **SetBGMVolume(float volume)**: BGM 볼륨 설정
+- **SetSFXVolume(float volume)**: SFX 볼륨 설정
+- **FadeToNewBGM(AudioClip newBGM)**: BGM 페이드 전환 (내부 코루틴)
+- **Initialize()**: ICoreSystemInitializable 구현
+- **OnInitializationFailed()**: 초기화 실패 처리
+- **PrintAudioPoolCooldownStatus()**: 오디오 풀 쿨다운 상태 출력
+
+### SaveManager 클래스
+- **Instance**: 싱글톤 인스턴스 (프로퍼티)
+- **SaveAudioSettings(float bgmVolume, float sfxVolume)**: 오디오 설정 저장
+- **LoadAudioSettings(float defaultBgm, float defaultSfx)**: 오디오 설정 로드
+- **SaveCurrentScene()**: 현재 씬 전체 저장 (async Task)
+- **LoadGameData()**: 게임 데이터 로드
+- **SaveGameData()**: 게임 데이터 저장
+- **Initialize()**: ICoreSystemInitializable 구현
+- **OnInitializationFailed()**: 초기화 실패 처리
+
+### ICoreSystemInitializable 인터페이스
+- **Initialize()**: 시스템 초기화 (IEnumerator)
+- **OnInitializationFailed()**: 초기화 실패 시 호출
+- **IsInitialized**: 초기화 상태 (프로퍼티)
+
+### AudioPoolManager 클래스
+- **PlaySound(AudioClip clip, float volume, int priority)**: 우선순위 지정 사운드 재생
+- **PlaySound(AudioClip clip, float volume)**: 자동 우선순위 사운드 재생
+- **GetAudioSourceFromPool()**: 풀에서 AudioSource 가져오기
+- **ReturnToPoolAfterPlay()**: 재생 완료 후 풀에 반환
+- **IsInCooldown(string clipName)**: 쿨다운 상태 확인
+- **CanPlayWithPriority(string clipName, int priority)**: 우선순위 체크
+- **GetSoundPriority(string clipName)**: 사운드 우선순위 조회
+- **InitializeSoundPriority()**: 사운드 우선순위 초기화
+- **PrintCooldownStatus()**: 쿨다운 상태 출력
+
+### GameLogger 클래스
+- **LogInfo(string message, LogCategory category)**: 정보 로그
+- **LogWarning(string message, LogCategory category)**: 경고 로그
+- **LogError(string message, LogCategory category)**: 에러 로그
+- **LogDebug(string message, LogCategory category)**: 디버그 로그
+- **LogCategory**: 로그 카테고리 열거형 (Audio, UI, Combat, Character, SkillCard, Stage, Utility, Error)
+
+### CoroutineRunner 클래스
+- **StartCoroutine(IEnumerator coroutine)**: 코루틴 시작
+- **StopCoroutine(IEnumerator coroutine)**: 코루틴 정지
+- **StopAllCoroutines()**: 모든 코루틴 정지
+- **IsRunning(IEnumerator coroutine)**: 코루틴 실행 상태 확인
 - **이벤트 기반**: 게임 이벤트와 자동 연동
 - **전용 사운드**: 카드 사용, 적 처치 등 전용 사운드 메서드
 
@@ -93,28 +159,32 @@ CoreSystem/
 
 ### 기본 사용법
 ```csharp
-// 코어 시스템 초기화
-CoreSystemInitializer.Instance.InitializeAllSystems();
-
 // 씬 전환
-SceneTransitionManager.Instance.LoadScene("CombatScene");
-
-// 로깅
-GameLogger.Info("시스템 초기화 완료");
-GameLogger.Warning("경고 메시지");
-GameLogger.Error("에러 발생");
-
-// 코루틴 실행
-CoroutineRunner.Instance.StartCoroutine(MyCoroutine());
+SceneTransitionManager.Instance.TransitionToMainScene();
+SceneTransitionManager.Instance.TransitionToBattleScene();
+SceneTransitionManager.Instance.TransitionToCoreScene();
 
 // 오디오 시스템
-AudioManager.Instance.PlaySFXWithPool("CardUse"); // 풀링 사용
-AudioManager.Instance.PlayCardUseSound(); // 전용 사운드
-AudioEventTrigger.Instance.OnCardUsed(); // 이벤트 기반
+AudioClip bgmClip = Resources.Load<AudioClip>("Sounds/BGM/MainTheme");
+AudioManager.Instance.PlayBGM(bgmClip, true); // 페이드 인 옵션
+
+AudioClip sfxClip = Resources.Load<AudioClip>("Sounds/SFX/ButtonClick");
+AudioManager.Instance.PlaySFX(sfxClip); // 기본 방식
+AudioManager.Instance.PlaySFXWithPool(sfxClip, 1.0f, 5); // 풀링 사용
+
+// 볼륨 설정
+AudioManager.Instance.SetBGMVolume(0.6f);
+AudioManager.Instance.SetSFXVolume(1.0f);
+
+// 로깅
+GameLogger.LogInfo("시스템 초기화 완료", GameLogger.LogCategory.UI);
+GameLogger.LogWarning("경고 메시지", GameLogger.LogCategory.Combat);
+GameLogger.LogError("에러 발생", GameLogger.LogCategory.Error);
 
 // 저장 시스템
-SaveManager.Instance.AutoSave(); // 자동 저장
-SaveManager.Instance.LoadGame(); // 게임 로드
+SaveManager.Instance.SaveAudioSettings(0.6f, 1.0f);
+var (bgm, sfx) = SaveManager.Instance.LoadAudioSettings(0.7f, 1.0f);
+await SaveManager.Instance.SaveCurrentScene();
 ```
 
 ### 시스템 초기화
@@ -122,11 +192,88 @@ SaveManager.Instance.LoadGame(); // 게임 로드
 // ICoreSystemInitializable 구현
 public class MySystem : MonoBehaviour, ICoreSystemInitializable
 {
-    public void Initialize()
+    public bool IsInitialized { get; private set; } = false;
+    
+    public IEnumerator Initialize()
     {
+        GameLogger.LogInfo("MySystem 초기화 시작", GameLogger.LogCategory.UI);
+        
         // 초기화 로직
+        yield return null;
+        
+        IsInitialized = true;
+        GameLogger.LogInfo("MySystem 초기화 완료", GameLogger.LogCategory.UI);
+    }
+    
+    public void OnInitializationFailed()
+    {
+        GameLogger.LogError("MySystem 초기화 실패", GameLogger.LogCategory.Error);
+        IsInitialized = false;
     }
 }
+```
+
+### 오디오 풀링 고급 사용법
+```csharp
+// AudioPoolManager 직접 사용
+AudioPoolManager poolManager = AudioManager.Instance.GetComponent<AudioPoolManager>();
+
+// 우선순위 지정 사운드 재생
+AudioClip enemyDefeat = Resources.Load<AudioClip>("Sounds/SFX/EnemyDefeat");
+poolManager.PlaySound(enemyDefeat, 1.0f, 10); // 높은 우선순위
+
+// 자동 우선순위 사운드 재생
+AudioClip skillActivation = Resources.Load<AudioClip>("Sounds/SFX/SkillActivation");
+poolManager.PlaySound(skillActivation, 0.8f); // 우선순위 자동 설정
+
+// 쿨다운 상태 확인
+if (!poolManager.IsInCooldown("ButtonClick"))
+{
+    poolManager.PlaySound(buttonClickClip, 0.7f);
+}
+```
+
+### 씬 전환 고급 사용법
+```csharp
+// 씬 전환 이벤트 구독
+SceneTransitionManager.Instance.OnSceneTransitionStart += (sceneName) => {
+    GameLogger.LogInfo($"씬 전환 시작: {sceneName}", GameLogger.LogCategory.UI);
+};
+
+SceneTransitionManager.Instance.OnSceneTransitionEnd += (sceneName) => {
+    GameLogger.LogInfo($"씬 전환 완료: {sceneName}", GameLogger.LogCategory.UI);
+};
+
+// 전환 상태 확인
+if (!SceneTransitionManager.Instance.IsTransitioning)
+{
+    await SceneTransitionManager.Instance.TransitionToMainScene();
+}
+
+// 커스텀 씬 전환
+await SceneTransitionManager.Instance.TransitionToScene("CustomScene", TransitionType.Fade);
+```
+
+### 코루틴 관리
+```csharp
+// CoroutineRunner를 통한 코루틴 관리
+CoroutineRunner coroutineRunner = FindObjectOfType<CoroutineRunner>();
+
+// 코루틴 시작
+IEnumerator myCoroutine = MyCoroutine();
+coroutineRunner.StartCoroutine(myCoroutine);
+
+// 코루틴 실행 상태 확인
+if (coroutineRunner.IsRunning(myCoroutine))
+{
+    Debug.Log("코루틴이 실행 중입니다.");
+}
+
+// 코루틴 정지
+coroutineRunner.StopCoroutine(myCoroutine);
+
+// 모든 코루틴 정지
+coroutineRunner.StopAllCoroutines();
 ```
 
 ## 🏗️ 아키텍처 패턴
@@ -261,5 +408,9 @@ sequenceDiagram
 - [Zenject 의존성 주입](https://github.com/modesttree/Zenject)
 - [Unity 씬 관리](https://docs.unity3d.com/Manual/Scenes.html)
 
+## 📝 변경 기록(Delta)
+- 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
 
-
+- 2025-01-27 | Maintainer | CoreSystem 개발 문서 초기 작성 | 문서
+- 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 파일 수 정정 | 문서
+- 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 클래스/메서드/인터페이스 정보 추가 | 문서

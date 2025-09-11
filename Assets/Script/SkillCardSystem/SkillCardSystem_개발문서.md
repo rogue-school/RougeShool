@@ -7,18 +7,20 @@ SkillCardSystem은 게임의 스킬카드 시스템을 관리하는 핵심 시�
 ```
 SkillCardSystem/
 ├── Core/             # 핵심 로직 (2개 파일)
-├── Data/             # 카드 데이터 (2개 파일)
+├── Data/             # 카드 데이터 (3개 파일)
 ├── Deck/             # 덱 관리 (3개 파일)
-├── Effect/           # 효과 구현 (4개 파일)
+├── DragDrop/         # 드래그 앤 드롭 (3개 파일)
+├── Effect/           # 효과 구현 (12개 파일)
+├── Executor/         # 실행기 (1개 파일)
 ├── Factory/          # 팩토리 패턴 (3개 파일)
-├── Interface/        # 인터페이스 (8개 파일)
+├── Installation/     # DI 설치 (1개 파일) [주의: 폴더명 오타 - Installer이어야 함]
+├── Interface/        # 인터페이스 (26개 파일)
 ├── Manager/          # 매니저 클래스 (3개 파일)
 ├── Runtime/          # 런타임 로직 (5개 파일)
-├── Service/          # 서비스 클래스 (3개 파일)
-├── Slot/             # 슬롯 시스템 (8개 파일)
-├── UI/               # UI 관련 (3개 파일)
-├── DragDrop/         # 드래그 앤 드롭 (4개 파일)
-└── Validator/        # 검증기 (1개 파일)
+├── Service/          # 서비스 클래스 (6개 파일)
+├── Slot/             # 슬롯 시스템 (11개 파일)
+├── UI/               # UI 관련 (5개 파일)
+└── Validator/        # 검증기 (2개 파일)
 ```
 
 ## 📁 주요 컴포넌트
@@ -106,18 +108,79 @@ SkillCardSystem/
 
 ### 기본 사용법
 ```csharp
-// 스킬카드 생성
-var card = SkillCardFactory.Instance.CreateSkillCard(cardData);
+// SkillCardFactory를 통한 카드 생성
+SkillCardFactory factory = new SkillCardFactory();
+ISkillCard playerCard = factory.CreatePlayerCard(cardData, effects, "플레이어");
+ISkillCard enemyCard = factory.CreateEnemyCard(cardData, effects, "적");
 
-// 플레이어 핸드에 카드 추가
-PlayerHandManager.Instance.AddCardToHand(card);
+// SkillCardDefinition 기반 카드 생성
+SkillCardDefinition definition = Resources.Load<SkillCardDefinition>("SkillCards/Fireball");
+ISkillCard card = factory.CreateFromDefinition(definition, Owner.Player, "마법사");
 
-// 카드 드래그 시작
-CardDragHandler.Instance.StartDrag(card);
+// CardCirculationSystem을 통한 카드 순환 관리
+CardCirculationSystem circulationSystem = FindObjectOfType<CardCirculationSystem>();
+circulationSystem.Initialize(initialCards);
+List<ISkillCard> drawnCards = circulationSystem.DrawCardsForTurn();
+circulationSystem.MoveCardToUsedStorage(usedCard);
 
-// 카드 드롭
-CardDropService.Instance.DropCard(card, targetSlot);
+// SkillCardRegistry를 통한 카드 정의 관리
+SkillCardRegistry registry = FindObjectOfType<SkillCardRegistry>();
+if (registry.TryGet("fireball", out SkillCardDefinition fireballDef))
+{
+    ISkillCard fireball = factory.CreateFromDefinition(fireballDef, Owner.Player);
+}
+
+// PlayerSkillCardRuntime을 통한 카드 실행
+PlayerSkillCardRuntime playerCard = new PlayerSkillCardRuntime(cardData, effects);
+playerCard.ExecuteSkill(sourceCharacter, targetCharacter);
+playerCard.StartCooldown();
+playerCard.ReduceCooldown();
 ```
+
+## 📊 주요 클래스 및 메서드
+
+### SkillCardFactory 클래스
+- **CreatePlayerCard(SkillCardData data, List<SkillCardEffectSO> effects, string ownerCharacterName)**: 플레이어 카드 생성
+- **CreateEnemyCard(SkillCardData data, List<SkillCardEffectSO> effects, string ownerCharacterName)**: 적 카드 생성
+- **CreateFromDefinition(SkillCardDefinition definition, Owner owner, string ownerCharacterName)**: 정의 기반 카드 생성
+- **CloneEffects(List<SkillCardEffectSO> original)**: 효과 리스트 복제
+
+### CardCirculationSystem 클래스
+- **Initialize(List<ISkillCard> initialCards)**: 초기 카드 리스트로 시스템 초기화
+- **DrawCardsForTurn()**: 턴용 카드 드로우
+- **MoveCardToUsedStorage(ISkillCard card)**: 카드를 사용된 저장소로 이동
+- **MoveCardsToUsedStorage(List<ISkillCard> cards)**: 여러 카드를 사용된 저장소로 이동
+- **CirculateCardsIfNeeded()**: 필요시 카드 순환
+- **ShuffleUnusedStorage()**: 미사용 저장소 카드 섞기
+- **Reset()**: 시스템 리셋
+- **CardsPerTurn**: 턴당 카드 수 (프로퍼티)
+- **UnusedCardCount**: 미사용 카드 수 (프로퍼티)
+- **UsedCardCount**: 사용된 카드 수 (프로퍼티)
+
+### SkillCardRegistry 클래스
+- **BuildIndex()**: 카드 정의 인덱스 구축
+- **TryGet(string id, out SkillCardDefinition definition)**: ID로 카드 정의 조회
+- **Add(SkillCardDefinition definition)**: 카드 정의 추가
+- **Remove(string id)**: 카드 정의 제거
+
+### PlayerSkillCardRuntime 클래스
+- **ExecuteSkill(ICharacter source, ICharacter target)**: 소스와 타겟으로 카드 실행
+- **ExecuteCardAutomatically(ICardExecutionContext context)**: 컨텍스트 기반 자동 실행
+- **StartCooldown()**: 쿨타임 시작
+- **ReduceCooldown()**: 쿨타임 감소
+- **SetHandSlot(SkillCardSlotPosition slot)**: 핸드 슬롯 설정
+- **GetHandSlot()**: 핸드 슬롯 조회
+- **SetCombatSlot(CombatSlotPosition slot)**: 전투 슬롯 설정
+- **GetCombatSlot()**: 전투 슬롯 조회
+- **GetMaxCoolTime()**: 최대 쿨타임 조회
+- **GetCurrentCoolTime()**: 현재 쿨타임 조회
+- **SetCurrentCoolTime(int value)**: 현재 쿨타임 설정
+
+### 데이터 클래스
+- **SkillCardData**: 카드 기본 데이터 (CardId, Name, Description, Artwork, CoolTime, Cost, Damage, CardType, OwnerCharacterName)
+- **SkillCardDefinition**: 카드 정의 ScriptableObject (id, displayNameKO, descriptionKO, icon, ownerPolicy, categories, keywords, drawWeight, actionCost, targetRule, effects, ownerModifiers)
+- **EffectRef**: 효과 참조 (effect, magnitudeOverride, durationOverride, order)
+- **OwnerModifier**: 소유자별 수정자 (owner, magnitudeMultiplier, durationDelta)
 
 ## 🏗️ 아키텍처 패턴
 
@@ -256,5 +319,9 @@ sequenceDiagram
 - [Unity Input System](https://docs.unity3d.com/Packages/com.unity.inputsystem@latest/)
 - [팩토리 패턴](https://refactoring.guru/design-patterns/factory-method)
 
+## 📝 변경 기록(Delta)
+- 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
 
-
+- 2025-01-27 | Maintainer | SkillCardSystem 개발 문서 초기 작성 | 문서
+- 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 Installation 폴더명 오타 주의 표시 | 문서
+- 2025-01-27 | Maintainer | 실제 코드 분석 기반 주요 클래스 및 메서드 정보 추가 | 문서

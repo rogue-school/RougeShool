@@ -44,7 +44,7 @@ SaveSystem/ (새로운 구조)
 - **JSON 기반 저장**: JsonUtility를 활용한 데이터 직렬화
 - **데이터 검증**: 저장된 데이터의 유효성 검증
 
-### 주요 메서드 (리팩토링 후)
+### 주요 메서드 (실제 구현)
 - `SaveGameState()`: 게임 상태 저장 (신규)
 - `LoadGameState()`: 게임 상태 로드 (신규)
 - `AutoSave()`: 자동 저장 (신규)
@@ -54,6 +54,59 @@ SaveSystem/ (새로운 구조)
 - `LoadSceneData(string sceneName)`: 씬 데이터 로드 (유지)
 - `SaveToFile(string fileName, string data)`: 파일로 저장 (유지)
 - `LoadFromFile(string fileName)`: 파일에서 로드 (유지)
+
+## 📊 주요 클래스 및 메서드
+
+### AutoSaveManager 클래스
+- **TriggerAutoSave(string conditionName)**: 특정 조건으로 자동 저장 트리거
+- **SaveGameState(string saveName)**: 수동 게임 상태 저장 (async)
+- **LoadGameState(string filePath)**: 저장된 게임 상태 로드 (async)
+- **AddAutoSaveCondition(string name, AutoSaveTrigger trigger, string description)**: 자동 저장 조건 추가
+- **RemoveAutoSaveCondition(string name)**: 자동 저장 조건 제거
+- **UpdateAutoSaveCondition(string name, bool enabled)**: 자동 저장 조건 업데이트
+- **InitializeAutoSaveConditions()**: 자동 저장 조건 초기화
+- **AddDefaultAutoSaveConditions()**: 기본 자동 저장 조건 추가
+- **IsAutoSaveEnabled**: 자동 저장 활성화 여부 (프로퍼티)
+
+### SaveEventTrigger 클래스
+- **OnEnemyCardPlaced()**: 적 카드 배치 후 저장 트리거
+- **OnTurnStartButtonPressed()**: 턴 시작 버튼 누르기 전 저장 트리거
+- **OnTurnExecution()**: 턴 실행 중 저장 트리거
+- **OnTurnCompleted()**: 턴 완료 후 저장 트리거
+- **OnStageCompleted()**: 스테이지 완료 후 저장 트리거
+- **OnStageFailed()**: 스테이지 실패 후 저장 트리거
+- **OnCombatStart()**: 전투 시작 시 저장 트리거
+- **OnCombatEnd()**: 전투 종료 시 저장 트리거
+
+### CompleteCardStateData 클래스
+- **playerHandSlots**: 플레이어 핸드카드 슬롯 목록 (프로퍼티)
+- **enemyHandSlots**: 적 핸드카드 슬롯 목록 (프로퍼티)
+- **firstSlotCard**: 첫 번째 전투 슬롯 카드 (프로퍼티)
+- **secondSlotCard**: 두 번째 전투 슬롯 카드 (프로퍼티)
+- **unusedStorageCards**: 미사용 카드 저장소 (프로퍼티)
+- **usedStorageCards**: 사용된 카드 저장소 (프로퍼티)
+- **isPlayerFirst**: 플레이어 선공 여부 (프로퍼티)
+- **IsValid()**: 데이터 유효성 검증
+- **GetSaveTime()**: 저장 시간 반환
+- **SetSaveTime()**: 저장 시간 설정
+
+### AutoSaveCondition 클래스
+- **conditionName**: 조건 이름 (프로퍼티)
+- **trigger**: 저장 트리거 타입 (프로퍼티)
+- **isEnabled**: 활성화 여부 (프로퍼티)
+- **description**: 조건 설명 (프로퍼티)
+- **IsValid()**: 조건 유효성 검증
+- **ToString()**: 조건 정보를 문자열로 반환
+
+### AutoSaveTrigger 열거형
+- **Manual**: 수동 저장
+- **TurnComplete**: 턴 완료 시
+- **StageComplete**: 스테이지 완료 시
+- **CombatStart**: 전투 시작 시
+- **CombatEnd**: 전투 종료 시
+- **EnemyCardPlaced**: 적 카드 배치 시
+- **BeforeTurnStart**: 턴 시작 전
+- **DuringTurnExecution**: 턴 실행 중
 
 ### 데이터 구조 (리팩토링 후)
 ```csharp
@@ -125,28 +178,96 @@ public class GameStateData
 
 ## 🔧 사용 방법
 
-### 기본 사용법 (리팩토링 후)
+### 기본 사용법
 ```csharp
-// 게임 상태 저장 (신규)
-SaveManager.Instance.SaveGameState();
+// AutoSaveManager를 통한 자동 저장
+AutoSaveManager autoSaveManager = FindObjectOfType<AutoSaveManager>();
 
-// 게임 상태 로드 (신규)
-SaveManager.Instance.LoadGameState();
+// 특정 조건으로 자동 저장 트리거
+autoSaveManager.TriggerAutoSave("EnemyCardPlaced");
+autoSaveManager.TriggerAutoSave("TurnCompleted");
 
-// 자동 저장 (신규)
-SaveManager.Instance.AutoSave();
+// 수동 저장
+await autoSaveManager.SaveGameState("ManualSave");
 
-// 카드 상태 저장 (신규)
-SaveManager.Instance.SaveCardState();
+// 게임 상태 로드
+autoSaveManager.LoadGameState("ManualSave_20250127_143022.json");
 
-// 카드 상태 복원 (신규)
-SaveManager.Instance.RestoreCardState();
+// 자동 저장 조건 관리
+autoSaveManager.AddAutoSaveCondition("CustomCondition", AutoSaveTrigger.Manual, "커스텀 조건");
+autoSaveManager.RemoveAutoSaveCondition("CustomCondition");
+autoSaveManager.UpdateAutoSaveCondition("TurnCompleted", true);
+```
 
-// 씬 데이터 저장 (유지)
-SaveManager.Instance.SaveSceneData("CombatScene");
+### SaveEventTrigger를 통한 이벤트 기반 저장
+```csharp
+// SaveEventTrigger를 통한 자동 저장 트리거
+SaveEventTrigger saveEventTrigger = FindObjectOfType<SaveEventTrigger>();
 
-// 씬 데이터 로드 (유지)
-SaveManager.Instance.LoadSceneData("CombatScene");
+// 턴 관련 이벤트
+saveEventTrigger.OnEnemyCardPlaced();        // 적 카드 배치 후
+saveEventTrigger.OnTurnStartButtonPressed(); // 턴 시작 버튼 누르기 전
+saveEventTrigger.OnTurnExecution();          // 턴 실행 중
+saveEventTrigger.OnTurnCompleted();          // 턴 완료 후
+
+// 스테이지 관련 이벤트
+saveEventTrigger.OnStageCompleted();         // 스테이지 완료 후
+saveEventTrigger.OnStageFailed();            // 스테이지 실패 후
+
+// 전투 관련 이벤트
+saveEventTrigger.OnCombatStart();            // 전투 시작 시
+saveEventTrigger.OnCombatEnd();              // 전투 종료 시
+```
+
+### 데이터 구조 사용법
+```csharp
+// CompleteCardStateData 생성 및 사용
+CompleteCardStateData cardState = new CompleteCardStateData();
+
+// 플레이어 핸드카드 설정
+cardState.playerHandSlots.Add(new CardSlotData("Card1", true));
+cardState.playerHandSlots.Add(new CardSlotData("Card2", false));
+
+// 적 핸드카드 설정
+cardState.enemyHandSlots.Add(new CardSlotData("EnemyCard1", true));
+cardState.enemyHandSlots.Add(new CardSlotData("EnemyCard2", false));
+
+// 전투 슬롯 카드 설정
+cardState.firstSlotCard = new CardSlotData("CombatCard1", true);
+cardState.secondSlotCard = new CardSlotData("CombatCard2", false);
+
+// 카드 순환 상태 설정
+cardState.unusedStorageCards.Add("UnusedCard1");
+cardState.unusedStorageCards.Add("UnusedCard2");
+cardState.usedStorageCards.Add("UsedCard1");
+
+// 턴 상태 설정
+cardState.isPlayerFirst = true;
+
+// 데이터 유효성 검증
+if (cardState.IsValid())
+{
+    Debug.Log("카드 상태 데이터가 유효합니다.");
+}
+```
+
+### AutoSaveCondition 관리
+```csharp
+// 자동 저장 조건 생성
+AutoSaveCondition condition = new AutoSaveCondition(
+    "TurnCompleted", 
+    AutoSaveTrigger.TurnComplete, 
+    "턴 완료 시 자동 저장"
+);
+
+// 조건 유효성 확인
+if (condition.IsValid())
+{
+    Debug.Log($"조건 '{condition.conditionName}'이 유효합니다.");
+}
+
+// 조건 정보 출력
+Debug.Log(condition.ToString());
 ```
 
 ### 자동 저장 트리거 사용법 (신규)
@@ -286,5 +407,9 @@ sequenceDiagram
 - [파일 I/O](https://docs.microsoft.com/ko-kr/dotnet/api/system.io.file)
 - [슬레이 더 스파이어](https://www.mobygames.com/game/slay-the-spire)
 
+## 📝 변경 기록(Delta)
+- 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
 
-
+- 2025-01-27 | Maintainer | SaveSystem 개발 문서 초기 작성 | 문서
+- 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 파일 수 정정 | 문서
+- 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 클래스/메서드/데이터 구조 정보 추가 | 문서

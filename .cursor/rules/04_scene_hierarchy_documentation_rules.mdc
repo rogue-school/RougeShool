@@ -1,0 +1,204 @@
+---
+description: 씬 하이라키 제작/검증/문서화 표준(CoreScene/BattleScene)
+globs: ["Assets/Scenes/**", "Assets/Scenes/Docs/**"]
+version: 1.2.0
+alwaysApply: true
+rule_id: scene_hierarchy_documentation_rules
+---
+
+# 씬 하이라키 제작/검증/문서화 표준 (Production)
+
+> 목적: 누구나 10초 내 핵심 파악, 1분 내 연결·바인딩 검증, 5분 내 전체 제작 절차를 재현할 수 있도록 씬 "제작 문서"를 표준화한다. CoreScene/BattleScene에 우선 적용한다.
+
+## 1) 산출물 경로/파일명
+- 경로: `Assets/Scenes/Docs/`
+- 파일명: `<SceneName>_씬구조문서.md`
+- 문서 상단에 목차 포함(`[TOC]` 또는 수동 앵커)
+
+## 2) 문서 표준 섹션(고정)
+1. # <SceneName> 씬 제작 문서
+2. TOC
+3. Quick-Scan 요약(5~8줄: 제작 목표/필수 시스템/주요 바인딩)
+4. 준비물 체크리스트(프리팹/스크립트/리소스/DI/레이어/태그)
+5. 제작 워크플로(번호 단계: 생성→구성→바인딩→검증)
+6. 하이라키 트리(최종 산출물, ASCII 규칙)
+7. 컨테이너/정렬 불변식(루트/컨테이너/우선순위)
+8. 인스펙터 연결 표(필수 참조/UnityEvent/권장값 포함)
+9. 시스템 연동 포인트(Core/Audio/Save/Transition/DI)
+10. 검증/품질 게이트(에러/경고 0, 플레이 테스트, 로그 기준)
+11. 성능·메모리 고려사항(권장 설정/측정 포인트)
+12. 트러블슈팅(증상→원인→해결)
+13. 변경 기록(Delta)
+
+## 3) 표기 규칙
+- ASCII 트리: `│`, `├─`, `└─` 사용. 루트는 접두어 없이 시작.
+- 컨테이너: `이름 (컨테이너) 📦`
+- 중요 오브젝트: `이름 (ScriptName) ⭐`
+- 스크립트 다수: `(A, B)`
+- 필수/선택 태그: `[필수]`, `[선택]`
+- 간단 주석: `// 한국어 1줄`
+
+### 3-α) 언더스코어 라벨 포맷(선택)
+`이름_카테고리_주요표시(⭐)_컴포넌트목록`
+
+## 4) 표 템플릿
+
+### 4-1) 인스펙터 연결 표
+| 오브젝트 | 컴포넌트 | 필드 | 값/참조 | [필수] |
+|---|---|---|---|---|
+
+### 4-2) DI 매핑 표(권장)
+| 인터페이스 | 구현체 | 범위(Scope) | 비고 |
+|---|---|---|---|
+
+### 4-3) 핵심 설정값 표
+| 항목 | 값 | 비고 |
+|---|---|---|
+
+## 5) 루트/정렬 불변식
+1) 루트 정렬: Main Camera → UICamera → 시스템 컨테이너 → UI 루트(Canvas) → EventSystem
+2) 컨테이너 내부: 관리자/컨트롤러 → 서비스/헬퍼 → 설치/DI → 기타
+3) 오브젝트명: 역할 중심, 씬 내 유일성 보장
+
+## 6) CoreScene 템플릿(권장)
+```
+Main Camera (Camera, UniversalAdditionalCameraData, AudioListener)
+Canvas (Canvas, CanvasScaler, GraphicRaycaster)
+EventSystem (EventSystem, InputSystemUIInputModule)
+CoreContainer (컨테이너) 📦
+├─ CoreSystem (컨테이너) 📦
+│  ├─ GameStateManager (GameStateManager)
+│  ├─ SceneTransitionManager (SceneTransitionManager)
+│  ├─ AudioManager (AudioManager)
+│  ├─ SaveManager (SaveManager)
+│  ├─ AnimationManager (AnimationManager)
+│  ├─ AnimationDatabaseManager (AnimationDatabaseManager)
+│  ├─ CoreSystemInitializer (CoreSystemInitializer)
+│  └─ PlayerCharacterSelectionManager (PlayerCharacterSelectionManager)
+├─ AudioSources (컨테이너) 📦
+│  ├─ BGMSource (AudioSource)
+│  └─ SFXSource (AudioSource)
+├─ CoreUtilities (컨테이너) 📦
+│  └─ CoroutineRunner (CoroutineRunner)
+└─ CoreUI (컨테이너) 📦
+   ├─ LoadingScreenController (LoadingScreenController)
+   └─ TransitionEffectController (TransitionEffectController)
+```
+
+## 7) BattleScene 템플릿(권장)
+```
+CombatManager
+├─ CombatFlowCoordinator (CombatFlowCoordinator)
+├─ CombatStartupManager (CombatStartupManager)
+├─ CombatTurnManager (CombatTurnManager)
+├─ CombatSlotManager (CombatSlotManager)
+├─ PlayerManager (PlayerManager)
+├─ EnemyManager (EnemyManager)
+├─ GameOverManager (GameOverManager)
+├─ Installer (컨테이너) 📦
+│  ├─ SceneContext (SceneContext)
+│  └─ CombatInstaller (CombatInstaller)
+└─ AnimationFacade (AnimationFacade)
+UICanvas (Canvas, CanvasScaler, GraphicRaycaster)
+├─ CombatArena (컨테이너) 📦
+│  ├─ PlayerHandCard (컨테이너) 📦
+│  │  ├─ Background (Image)
+│  │  └─ Slots(1..3)
+│  ├─ EnemyHandCard (컨테이너) 📦
+│  │  ├─ Background (Image)
+│  │  └─ Slots(1..3)
+│  └─ TurnStartButton (Button, Image, TMP_Text)
+├─ CombatCardSlotBackground (컨테이너) 📦
+├─ EnemyCharacterSlot
+└─ PlayerCharaterSlot
+EventSystem (EventSystem, InputSystemUIInputModule)
+Main Camera / UICamera
+```
+
+## 8) 제작 워크플로(필수)
+1) 루트 생성: Main Camera, UICamera(필요 시), Canvas(CanvasScaler 1920×1080 권장), EventSystem.
+2) 컨테이너 구성: 시스템 컨테이너/오디오/유틸리티/UI 컨테이너 생성 및 정렬 불변식 적용.
+3) 시스템 배치: 매니저/컨트롤러/Installer 배치 및 DI 등록(SceneContext.MonoInstallers 확인).
+4) 바인딩: AudioSource, Transition, 슬롯/프리팹, UI 참조를 인스펙터 연결 표 기준으로 모두 연결.
+5) 검증: 체크리스트 실행(플레이 전/중), 로그 레벨 확인(GameLogger.Info/Warning/Error), 경고/에러 0 보장.
+6) 동기화: 본 문서의 트리/표/값을 실제 씬과 동일하게 갱신하고 Delta 기록.
+
+## 9) 검증 체크리스트(PR 전)
+- [ ] 루트/컨테이너/중요 오브젝트 순서 일치
+- [ ] Canvas/카메라/오디오/전환 핵심 설정 일치
+- [ ] 모든 참조/UnityEvent 누락 없음(표 기준)
+- [ ] DI 바인딩 최신 코드와 동기화
+- [ ] 플레이/전환 시 경고/에러 없음(로그 레벨 확인)
+
+## 9-α) 릴리즈 준비 체크리스트(선택)
+- [ ] CanvasScaler 해상도 권장값 유지(1920×1080)
+- [ ] 오디오 레벨/믹싱 기본값 확인, BGM/SFX 소스 연결
+- [ ] 씬 간 전환 확인(Transition 커브/Duration)
+- [ ] 슬롯/포지션 Enum 매핑 충돌 없음
+- [ ] 빌드 대상 플랫폼에서 경고 0
+
+## 10) Cursor AI 연계(도구/API 기준 절차)
+- 탐색: codebase_search로 씬 관련 스크립트/Installer/DI 경로 파악 → read_file로 필드/속성 확인.
+- 씬 스펙 대조: 인스펙터 연결 표를 최신 코드/프리팹 값과 비교. 누락은 [BLOCKER].
+- 편집: 문서 동기화는 edit_file(소규모) 또는 apply_patch(다중). 변경 후 read_lints로 포맷/링크 점검.
+- 병렬화: 하이라키 트리/인스펙터 표/DI 표 생성을 병렬 수집 후 통합.
+
+## 11) 시스템별 씬 구성 가이드
+
+### 11-1) CoreSystem 씬 구성
+- **CoreSystemInitializer**: 모든 코어 시스템 초기화 순서 관리
+- **SceneTransitionManager**: 씬 전환 및 로딩 화면 관리
+- **AudioManager**: BGM/SFX 통합 관리, AudioPoolManager 연동
+- **SaveManager**: 슬레이 더 스파이어 방식 자동 저장
+- **GameLogger**: 한국어 로깅 시스템 (Info/Warning/Error)
+
+### 11-2) CombatSystem 씬 구성
+- **CombatFlowCoordinator**: 전투 플로우 조정 및 상태 관리
+- **CombatTurnManager**: 턴 기반 전투 진행 관리
+- **CombatSlotManager**: 전투 슬롯 및 카드 배치 관리
+- **CombatInstaller**: Zenject DI 바인딩 설정
+
+### 11-3) CharacterSystem 씬 구성
+- **PlayerManager**: 플레이어 캐릭터 관리 (검/활/지팡이 타입)
+- **EnemyManager**: 적 캐릭터 관리 및 스폰
+- **PlayerResourceManager**: 플레이어 리소스 관리 (화살/마나)
+
+### 11-4) SkillCardSystem 씬 구성
+- **SkillCardFactory**: 스킬카드 생성 및 관리
+- **CardCirculationSystem**: 카드 순환 및 덱 관리
+- **PlayerHandManager**: 플레이어 핸드 카드 관리
+- **EnemyHandManager**: 적 핸드 카드 관리
+
+### 11-5) AnimationSystem 씬 구성
+- **AnimationFacade**: 애니메이션 시스템 통합 인터페이스
+- **CharacterAnimationController**: 캐릭터 애니메이션 관리
+- **SkillCardAnimationController**: 스킬카드 애니메이션 관리
+
+## 12) 성능 최적화 고려사항
+- **DOTween 최적화**: 애니메이션 풀링으로 GC 압박 최소화
+- **Zenject DI**: 객체 생성 비용 절약 및 의존성 관리
+- **UI 업데이트**: 필요한 경우에만 UI 갱신
+- **메모리 관리**: 씬 전환 시 불필요한 참조 해제
+
+## 13) 트러블슈팅 가이드
+
+### 13-1) 자주 발생하는 문제
+- **씬 전환 실패**: SceneTransitionManager 참조 누락
+- **오디오 재생 안됨**: AudioManager.bgmSource/sfxSource 연결 누락
+- **DI 바인딩 실패**: CombatInstaller 등록 누락
+- **애니메이션 오류**: AnimationFacade 초기화 순서 문제
+
+### 13-2) 해결 방법
+- GameLogger를 통한 로그 확인
+- 인스펙터 연결 표와 실제 연결 상태 비교
+- DI 컨테이너 바인딩 상태 확인
+- 초기화 순서 및 의존성 체크
+
+## 14) 변경 기록(Delta)
+- 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
+
+예)
+- 2025-01-27 | Maintainer | 씬 하이라키 규칙 개발 문서 기반 개선 | 문서
+- 2025-01-27 | Maintainer | 시스템별 씬 구성 가이드 추가 | 문서
+- 2025-01-27 | Maintainer | 성능 최적화 및 트러블슈팅 가이드 추가 | 문서
+- 2025-01-27 | Maintainer | Cursor AI 연계 절차 업데이트 | 문서

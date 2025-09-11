@@ -1,5 +1,8 @@
 ---
-description: 프로젝트 전역 문서 작업 규칙(품질 게이트/체크리스트/Delta)
+description: "RougeShool 프로젝트 문서 작성/유지/검증 통합 규칙"
+globs: ["Assets/Scenes/Docs/**/*.md", "Assets/Scenes/**/*.unity", "Assets/Script/**/*.cs"]
+rule_id: documentation_work_rules
+version: 1.2.0
 alwaysApply: true
 ---
 

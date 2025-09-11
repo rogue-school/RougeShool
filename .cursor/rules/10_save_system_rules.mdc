@@ -1,0 +1,217 @@
+---
+description: "SaveSystem 개발 가이드 및 규칙 - Unity 2D 저장 시스템 통합 관리"
+globs: ["Assets/Script/SaveSystem/**/*.cs", "Assets/Script/CoreSystem/Save/**/*.cs"]
+rule_id: save_system_rules
+version: 1.2.0
+alwaysApply: true
+---
+
+# SaveSystem 개발 규칙
+
+## 📋 시스템 개요
+SaveSystem은 게임의 저장/로드 기능을 관리하는 시스템입니다. 슬레이 더 스파이어 방식의 턴 기반 자동 저장 시스템을 제공하며, CoreSystem에 통합되어 전역적으로 관리됩니다.
+
+## 🏗️ 폴더 구조 규칙
+```
+SaveSystem/
+├── Manager/           # 저장 매니저 (3개 파일)
+├── Interface/         # 저장 인터페이스 (2개 파일)
+├── Data/              # 저장 데이터 (3개 파일)
+└── Event/             # 저장 이벤트 (2개 파일)
+
+CoreSystem/Save/       # 실제 구현 위치
+└── SaveManager.cs     # 실제 저장 매니저 구현 (확장됨)
+```
+
+## 📁 주요 컴포넌트 규칙
+
+### Manager 폴더 규칙 (3개 파일)
+- **CardStateCollector.cs**: 카드 상태 수집
+- **CardStateRestorer.cs**: 카드 상태 복원
+- **SaveManager.cs**: 저장 매니저
+
+### Interface 폴더 규칙 (2개 파일)
+- **ISaveManager.cs**: 저장 매니저 인터페이스
+- **ICardStateManager.cs**: 카드 상태 관리 인터페이스
+
+### Data 폴더 규칙 (3개 파일)
+- **CompleteCardStateData.cs**: 완전한 카드 상태 데이터
+- **PlayerHandData.cs**: 플레이어 핸드 데이터
+- **EnemyHandData.cs**: 적 핸드 데이터
+
+### Event 폴더 규칙 (2개 파일)
+- **SaveEventTrigger.cs**: 저장 이벤트 트리거
+- **AutoSaveTrigger.cs**: 자동 저장 트리거
+
+## 🎯 개발 규칙
+
+### 1. 슬레이 더 스파이어 방식 규칙
+- **턴 기반 자동 저장**: 턴 완료 시 자동 저장
+- **완전한 상태 저장**: 플레이어/적 핸드, 전투 슬롯, 카드 순환 상태 저장
+- **상태 복원**: 저장된 상태의 완전한 복원
+
+### 2. 자동 저장 조건 규칙
+- **AutoSaveTrigger**: 특정 게임 이벤트 시 자동 저장
+- **조건 관리**: 자동 저장 조건 추가/제거/업데이트
+- **이벤트 기반**: 게임 이벤트와 자동 연동
+
+### 3. 데이터 구조 규칙
+- **JSON 기반**: JsonUtility를 활용한 데이터 직렬화
+- **타입 안전성**: 강타입 데이터 구조
+- **데이터 검증**: 저장된 데이터의 유효성 검증
+
+### 4. CoreSystem 통합 규칙
+- **전역 시스템**: CoreSystem에 통합된 전역 저장 관리
+- **ICoreSystemInitializable**: CoreSystem 초기화 인터페이스 구현
+
+## 🔧 사용 방법
+
+### 기본 사용법
+```csharp
+// AutoSaveManager를 통한 자동 저장
+AutoSaveManager autoSaveManager = FindObjectOfType<AutoSaveManager>();
+
+// 특정 조건으로 자동 저장 트리거
+autoSaveManager.TriggerAutoSave("EnemyCardPlaced");
+autoSaveManager.TriggerAutoSave("TurnCompleted");
+
+// 수동 저장
+await autoSaveManager.SaveGameState("ManualSave");
+
+// 게임 상태 로드
+autoSaveManager.LoadGameState("ManualSave_20250127_143022.json");
+
+// 자동 저장 조건 관리
+autoSaveManager.AddAutoSaveCondition("CustomCondition", AutoSaveTrigger.Manual, "커스텀 조건");
+autoSaveManager.RemoveAutoSaveCondition("CustomCondition");
+autoSaveManager.UpdateAutoSaveCondition("TurnCompleted", true);
+```
+
+### SaveEventTrigger를 통한 이벤트 기반 저장
+```csharp
+// SaveEventTrigger를 통한 자동 저장 트리거
+SaveEventTrigger saveEventTrigger = FindObjectOfType<SaveEventTrigger>();
+
+// 턴 관련 이벤트
+saveEventTrigger.OnEnemyCardPlaced();        // 적 카드 배치 후
+saveEventTrigger.OnTurnStartButtonPressed(); // 턴 시작 버튼 누르기 전
+saveEventTrigger.OnTurnExecution();          // 턴 실행 중
+saveEventTrigger.OnTurnCompleted();          // 턴 완료 후
+
+// 스테이지 관련 이벤트
+saveEventTrigger.OnStageCompleted();         // 스테이지 완료 후
+saveEventTrigger.OnStageFailed();            // 스테이지 실패 후
+
+// 전투 관련 이벤트
+saveEventTrigger.OnCombatStart();            // 전투 시작 시
+saveEventTrigger.OnCombatEnd();              // 전투 종료 시
+```
+
+### 데이터 구조 사용법
+```csharp
+// CompleteCardStateData 생성 및 사용
+CompleteCardStateData cardState = new CompleteCardStateData();
+
+// 플레이어 핸드카드 설정
+cardState.playerHandSlots.Add(new CardSlotData("Card1", true));
+cardState.playerHandSlots.Add(new CardSlotData("Card2", false));
+
+// 적 핸드카드 설정
+cardState.enemyHandSlots.Add(new CardSlotData("EnemyCard1", true));
+cardState.enemyHandSlots.Add(new CardSlotData("EnemyCard2", false));
+
+// 전투 슬롯 카드 설정
+cardState.firstSlotCard = new CardSlotData("CombatCard1", true);
+cardState.secondSlotCard = new CardSlotData("CombatCard2", false);
+
+// 카드 순환 상태 설정
+cardState.unusedStorageCards.Add("UnusedCard1");
+cardState.unusedStorageCards.Add("UnusedCard2");
+cardState.usedStorageCards.Add("UsedCard1");
+
+// 턴 상태 설정
+cardState.isPlayerFirst = true;
+
+// 데이터 유효성 검증
+if (cardState.IsValid())
+{
+    Debug.Log("카드 상태 데이터가 유효합니다.");
+}
+```
+
+### AutoSaveCondition 관리
+```csharp
+// 자동 저장 조건 생성
+AutoSaveCondition condition = new AutoSaveCondition(
+    "TurnCompleted", 
+    AutoSaveTrigger.TurnComplete, 
+    "턴 완료 시 자동 저장"
+);
+
+// 조건 유효성 확인
+if (condition.IsValid())
+{
+    Debug.Log($"조건 '{condition.conditionName}'이 유효합니다.");
+}
+
+// 조건 정보 출력
+Debug.Log(condition.ToString());
+```
+
+## 🏗️ 아키텍처 패턴
+
+### 1. 매니저 패턴
+- **AutoSaveManager**: 자동 저장 통합 관리
+- **SaveManager**: 저장 시스템 통합 관리
+
+### 2. 이벤트 패턴
+- **SaveEventTrigger**: 이벤트 기반 저장 트리거
+- **AutoSaveTrigger**: 자동 저장 트리거
+
+### 3. 데이터 패턴
+- **CompleteCardStateData**: 완전한 카드 상태 데이터
+- **데이터 검증**: 저장된 데이터의 유효성 검증
+
+### 4. 서비스 패턴
+- **CardStateCollector**: 카드 상태 수집 서비스
+- **CardStateRestorer**: 카드 상태 복원 서비스
+
+## 🔧 기술적 구현 세부사항
+
+### 성능 최적화
+- **비동기 저장/로드**: async/await 패턴으로 프레임 블로킹 방지
+- **메모리 효율성**: 저장 데이터 직렬화 시 메모리 효율성
+- **압축**: 저장 데이터 압축을 통한 용량 최적화
+
+### 스레드 안전성
+- **동시성 제어**: 저장/로드 시 락을 통한 동시성 제어
+- **비동기 처리**: async/await 패턴을 통한 비동기 저장/로드
+- **이벤트 처리**: 스레드 안전한 저장 이벤트 시스템
+
+### 메모리 관리
+- **생명주기 관리**: 저장 데이터 객체의 생성/소멸 관리
+- **리소스 해제**: 저장 완료 후 리소스 정리
+- **메모리 누수 방지**: 이벤트 구독 해제, 데이터 참조 해제
+
+## 🧪 검증/테스트 지침
+
+### 체크리스트
+- [ ] 자동 저장 조건 정상 동작 확인
+- [ ] 데이터 직렬화/역직렬화 검증
+- [ ] 상태 복원 정확성 확인
+- [ ] 이벤트 기반 저장 트리거 확인
+- [ ] CoreSystem 통합 확인
+
+### 재현 절차
+1. 각 저장 조건별 테스트 케이스 실행
+2. 데이터 무결성 검사
+3. 상태 복원 시나리오 테스트
+4. 성능 프로파일링
+
+## 📝 변경 기록(Delta)
+- 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
+
+- 2025-01-27 | Maintainer | SaveSystem 개발 문서 초기 작성 | 문서
+- 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 파일 수 정정 | 문서
+- 2025-01-27 | Maintainer | .mdc 규칙 파일로 변환 및 Cursor 규칙 저장 | 문서
+- 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 클래스/메서드/데이터 구조 정보 추가 | 문서
