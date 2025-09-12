@@ -115,6 +115,9 @@ AudioManager.Instance.SetSFXVolume(1.0f);
 AudioManager.Instance.StopBGM();
 ```
 
+## 🔗 기타 시스템 연동 참고
+- 애니메이션 시스템은 인스펙터로 스크립트 타입을 선택하며, 타입 미지정 시 슬롯별 `*Animation001`이 적용됩니다(전역/폴백 제거). 오디오 시스템과는 독립적으로 동작합니다.
+
 ### AudioPoolManager 직접 사용법
 ```csharp
 // AudioPoolManager를 통한 고급 사운드 제어
@@ -162,4 +165,5 @@ poolManager.PlaySound(ambientClip, 0.3f, 1);
 - 2025-01-27 | Maintainer | AudioSystem 개발 문서 초기 작성 | 문서
 - 2025-01-27 | Maintainer | 실제 구현 위치 명시 및 폴더 구조 정정 | 문서
 - 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 클래스/메서드/우선순위 정보 추가 | 문서
+ - 2025-09-12 | Maintainer | 애니메이션 시스템 연동 참고(001 디폴트/전역·폴백 없음) 추가 | 문서
 

@@ -15,6 +15,7 @@ UtilitySystem은 게임의 유틸리티 기능들을 관리하는 시스템입�
 ```
 UtilitySystem/
 ├── GameFlow/         # 게임 플로우 (3개 파일)
+├── Editor/           # 커스텀 에디터 (2개 파일) - 통합됨
 └── 루트/             # 루트 유틸리티 (2개 파일) - 간소화됨
 ```
 
@@ -24,6 +25,10 @@ UtilitySystem/
 - **GameContext.cs**: 게임 컨텍스트 관리
 - **IGameContext.cs**: 게임 컨텍스트 인터페이스
 - **ISceneLoader.cs**: 씬 로더 인터페이스
+
+### Editor 폴더 규칙 (2개 파일) - 통합됨
+- **AnimationScriptTypeDrawer.cs**: 애니메이션 스크립트 타입 드롭다운 프로퍼티 드로어
+- **AnimationDatabaseProEditor.cs**: 전문적인 애니메이션 데이터베이스 커스텀 에디터
 
 ### 루트 폴더 규칙 (2개 파일) - 간소화됨
 - **DontDestroyOnLoadContainer.cs**: DontDestroyOnLoad 오브젝트 관리
@@ -47,7 +52,12 @@ UtilitySystem/
 - **의존성 관리**: 드롭 핸들러 간 의존성 관리
 - **초기화**: 드롭 핸들러의 자동 초기화
 
-### 4. 카메라 해상도 수정 (제거됨)
+### 4. 커스텀 에디터 통합
+- **AnimationScriptTypeDrawer**: 애니메이션 스크립트 타입 드롭다운 프로퍼티 드로어
+- **AnimationDatabaseProEditor**: 전문적인 애니메이션 데이터베이스 커스텀 에디터
+- **폴더 구조 통합**: 모든 커스텀 에디터를 UtilitySystem/Editor/에 통합
+
+### 5. 카메라 해상도 수정 (제거됨)
 - ~~**해상도 조정**: 다양한 해상도에 맞춰 카메라 설정 조정~~
 - ~~**비율 유지**: 화면 비율 유지~~
 - ~~**자동 적용**: 게임 시작 시 자동 적용~~
@@ -97,6 +107,10 @@ DropHandlerInjector.InjectToAllCombatSlots(slotRegistry, dropService, flowCoordi
 #### DropHandlerInjector 클래스 (정적 클래스)
 - **InjectToAllCombatSlots(ICombatSlotRegistry slotRegistry, CardDropService dropService, ICombatFlowCoordinator flowCoordinator)**: 모든 전투 슬롯에 드롭 핸들러 주입
 
+#### 커스텀 에디터 클래스
+- **AnimationScriptTypeDrawer**: 애니메이션 스크립트 타입 드롭다운 프로퍼티 드로어
+- **AnimationDatabaseProEditor**: 전문적인 애니메이션 데이터베이스 커스텀 에디터
+
 #### 인터페이스
 - **IGameContext**: 게임 컨텍스트 인터페이스 (SelectedCharacter, SetSelectedCharacter)
 - **ISceneLoader**: 씬 로딩 인터페이스 (LoadScene)
@@ -143,6 +157,8 @@ DropHandlerInjector.InjectToAllCombatSlots(slotRegistry, dropService, flowCoordi
 - [ ] DontDestroyOnLoad 기능 검증
 - [ ] 드롭 핸들러 주입 정상 동작 확인
 - [ ] 씬 전환 시 오브젝트 유지 확인
+- [ ] 커스텀 에디터 통합 확인
+- [ ] 애니메이션 데이터베이스 에디터 정상 동작 확인
 
 ### 재현 절차
 1. 각 유틸리티 기능별 테스트
@@ -158,3 +174,4 @@ DropHandlerInjector.InjectToAllCombatSlots(slotRegistry, dropService, flowCoordi
 - 2025-01-27 | Maintainer | .mdc 규칙 파일로 변환 및 Cursor 규칙 저장 | 문서
 - 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 클래스/메서드/인터페이스 정보 추가 | 문서
 - 2025-01-27 | Maintainer | UtilitySystem 개발 문서 기반으로 규칙 파일 업데이트 (리팩토링 반영, 카메라 해상도 수정 제거, 클래스/메서드 업데이트) | 문서
+- 2025-01-27 | Maintainer | 커스텀 에디터 통합 및 애니메이션 데이터베이스 에디터 반영 | 문서

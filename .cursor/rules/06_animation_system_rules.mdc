@@ -64,45 +64,33 @@ AnimationSystem/
 - **SkillCardAnimationEntry.cs**: 스킬카드 애니메이션 엔트리 데이터
 - **SkillCardAnimationSettings.cs**: 스킬카드 애니메이션 설정
 
-### Animator 폴더 규칙 (20개 파일)
+### Animator 폴더 규칙 (9개 파일)
 
-#### CharacterAnimation 하위 폴더 (8개 파일)
+#### CharacterAnimation 하위 폴더 (2개 파일)
 - **DeathAnimation/**: 
   - **CharacterDeathAnimation001.cs**: 캐릭터 사망 애니메이션 구현체
-  - **DefaultCharacterDeathAnimation.cs**: 기본 캐릭터 사망 애니메이션
 - **SpawnAnimation/**: 
   - **CharacterSpawnAnimation001.cs**: 캐릭터 등장 애니메이션 구현체
-  - **DefaultCharacterSpawnAnimation.cs**: 기본 캐릭터 등장 애니메이션
 
-#### SkillCardAnimation 하위 폴더 (12개 파일)
+#### SkillCardAnimation 하위 폴더 (7개 파일)
 - **DragAnimation/**: 
   - **SkillCardDragAnimation001.cs**: 스킬카드 드래그 애니메이션 구현체
-  - **DefaultSkillCardDragAnimation.cs**: 기본 스킬카드 드래그 애니메이션
 - **DropAnimation/**: 
   - **SkillCardDropAnimation001.cs**: 스킬카드 드롭 애니메이션 구현체
-  - **DefaultSkillCardDropAnimation.cs**: 기본 스킬카드 드롭 애니메이션
 - **MoveAnimation/**: 
   - **SkillCardMoveAnimation001.cs**: 스킬카드 이동 애니메이션 구현체
-  - **DefaultSkillCardMoveAnimation.cs**: 기본 스킬카드 이동 애니메이션
 - **MoveToCombatSlotAnimation/**: 
   - **SkillCardCombatSlotMoveAnimation001.cs**: 스킬카드 전투 슬롯 이동 애니메이션 구현체
-  - **DefaultSkillCardCombatSlotMoveAnimation.cs**: 기본 스킬카드 전투 슬롯 이동 애니메이션
 - **SpawnAnimation/**: 
   - **SkillCardSpawnAnimation001.cs**: 스킬카드 등장 애니메이션 구현체
-  - **DefaultSkillCardSpawnAnimation.cs**: 기본 스킬카드 등장 애니메이션
 - **UseAnimation/**: 
   - **SkillCardUseAnimation001.cs**: 스킬카드 사용 애니메이션 구현체
-  - **DefaultSkillCardUseAnimation.cs**: 기본 스킬카드 사용 애니메이션
 - **VanishAnimation/**: 
   - **SkillCardVanishAnimation001.cs**: 스킬카드 소멸 애니메이션 구현체
-  - **DefaultSkillCardVanishAnimation.cs**: 기본 스킬카드 소멸 애니메이션
 
-### Editor 폴더 규칙 (5개 파일)
-- **AnimationDatabaseAssetFixer.cs**: 애니메이션 데이터베이스 에셋 수정기
-- **EnemyCharacterAnimationDatabaseEditor.cs**: 적 캐릭터 애니메이션 데이터베이스 에디터
-- **EnemySkillCardAnimationDatabaseEditor.cs**: 적 스킬카드 애니메이션 데이터베이스 에디터
-- **PlayerCharacterAnimationDatabaseEditor.cs**: 플레이어 캐릭터 애니메이션 데이터베이스 에디터
-- **PlayerSkillCardAnimationDatabaseEditor.cs**: 플레이어 스킬카드 애니메이션 데이터베이스 에디터
+### Editor 폴더 규칙 (2개 파일) - UtilitySystem/Editor/AnimationSystem/로 이동됨
+- **AnimationScriptTypeDrawer.cs**: 애니메이션 스크립트 타입 드롭다운 프로퍼티 드로어
+- **AnimationDatabaseProEditor.cs**: 전문적인 애니메이션 데이터베이스 커스텀 에디터
 
 ### Helper 폴더 규칙 (1개 파일)
 - **AnimationHelper.cs**: 애니메이션 유틸리티 함수
@@ -113,13 +101,13 @@ AnimationSystem/
 
 ## 🎯 주요 기능
 
-1. **통합 애니메이션 관리**: 모든 애니메이션을 중앙화된 방식으로 관리
-2. **데이터 기반 애니메이션**: ScriptableObject를 통한 애니메이션 데이터 관리
-3. **타입별 애니메이션 지원**: 캐릭터, 스킬카드 등 다양한 타입별 애니메이션 지원
-4. **커스텀 에디터**: 개발자 친화적인 애니메이션 데이터베이스 에디터 제공
-5. **DOTween 기반**: 고성능 애니메이션을 위한 DOTween 활용
-6. **인터페이스 기반 설계**: 확장 가능한 애니메이션 시스템 구조
-7. **애니메이션 풀링**: 메모리 효율성을 위한 애니메이션 풀링 시스템
+1. **인스펙터 기반 애니메이션**: 애니메이션 설정을 인스펙터에서 관리
+2. **001 기본값 정책**: 애니메이션 스크립트 미지정 시 자동으로 *Animation001 사용
+3. **전역/폴백 제거**: 전역 기본값 및 폴백 개념 완전 제거
+4. **드래그 시작/종료 매핑**: "start"/"end" 애니메이션 타입을 "drag" 스크립트로 매핑
+5. **전문적 커스텀 에디터**: UtilitySystem/Editor/AnimationSystem/에 위치한 전문적인 에디터
+6. **DOTween 기반**: 고성능 애니메이션을 위한 DOTween 활용
+7. **인터페이스 기반 설계**: 확장 가능한 애니메이션 시스템 구조
 8. **이벤트 기반**: 애니메이션 완료 시 이벤트 콜백 지원
 
 ## 🎯 개발 규칙
@@ -138,12 +126,19 @@ AnimationSystem/
 ### 3. 데이터베이스 규칙
 - ScriptableObject 기반 데이터베이스 사용
 - 플레이어/적 구분하여 별도 데이터베이스 관리
-- 커스텀 에디터를 통한 개발자 친화적 인터페이스 제공
+- 전문적 커스텀 에디터를 통한 개발자 친화적 인터페이스 제공
+- 인스펙터에서 애니메이션 스크립트 타입 선택 가능
 
 ### 4. 컨트롤러 규칙
 - CharacterAnimationController: 캐릭터 애니메이션 통합 관리
 - SkillCardAnimationController: 스킬카드 애니메이션 통합 관리
 - 이벤트 기반 애니메이션 실행
+
+### 5. 인스펙터 기반 규칙
+- 애니메이션 설정은 코드가 아닌 인스펙터에서 관리
+- 애니메이션 스크립트 타입 미지정 시 자동으로 *Animation001 사용
+- 전역/폴백 개념 완전 제거
+- 드래그 시작/종료는 "drag" 스크립트로 매핑
 
 ## 🔧 주요 클래스 및 메서드
 
@@ -224,69 +219,51 @@ AnimationFacade.Instance.PlaySkillCardAnimation(skillCard, "use", target, onComp
 ### 애니메이션 설정 구조
 ```csharp
 // CharacterAnimationSettings 주요 속성
-public class AnimationSettings
+public class CharacterAnimationSettings
 {
-    // 등장 애니메이션
-    public float spawnDuration = 1.0f;
-    public Vector3 spawnStartScale = Vector3.zero;
-    public Vector3 spawnEndScale = Vector3.one;
-    public Ease spawnEase = Ease.OutBack;
-    public bool useSpawnGlow = true;
-    public Color spawnGlowColor = Color.blue;
+    public string spawnAnimationScriptType = "";  // 인스펙터에서 선택
+    public string deathAnimationScriptType = "";  // 인스펙터에서 선택
     
-    // 사망 애니메이션
-    public float deathDuration = 1.5f;
-    public Ease deathEase = Ease.InBack;
-    public bool useDeathFade = true;
-    public Vector3 deathEndScale = Vector3.zero;
-    
-    // 피해 애니메이션
-    public float damageDuration = 0.3f;
-    public bool useDamageShake = true;
-    public float damageShakeStrength = 0.1f;
-    
-    // 치유 애니메이션
-    public float healDuration = 0.8f;
-    public Color healGlowColor = Color.green;
+    // 애니메이션 스크립트 타입 자동 해결
+    public string GetScriptTypeForAnimation(string animationType)
+    {
+        // 미지정 시 자동으로 *Animation001 사용
+        if (string.IsNullOrEmpty(animationScriptType))
+            return $"{animationType}Animation001";
+        return animationScriptType;
+    }
 }
-```
 
-### 애니메이션 설정 구조
-```csharp
-// CharacterAnimationSettings 주요 속성
-public class AnimationSettings
+// SkillCardAnimationSettings 주요 속성
+public class SkillCardAnimationSettings
 {
-    // 등장 애니메이션
-    public float spawnDuration = 1.0f;
-    public Vector3 spawnStartScale = Vector3.zero;
-    public Vector3 spawnEndScale = Vector3.one;
-    public Ease spawnEase = Ease.OutBack;
-    public bool useSpawnGlow = true;
-    public Color spawnGlowColor = Color.blue;
+    public string spawnAnimationScriptType = "";
+    public string dragAnimationScriptType = "";
+    public string dropAnimationScriptType = "";
+    public string moveAnimationScriptType = "";
+    public string useAnimationScriptType = "";
+    public string vanishAnimationScriptType = "";
+    public string combatSlotMoveAnimationScriptType = "";
     
-    // 사망 애니메이션
-    public float deathDuration = 1.5f;
-    public Ease deathEase = Ease.InBack;
-    public bool useDeathFade = true;
-    public Vector3 deathEndScale = Vector3.zero;
-    
-    // 피해 애니메이션
-    public float damageDuration = 0.3f;
-    public bool useDamageShake = true;
-    public float damageShakeStrength = 0.1f;
-    
-    // 치유 애니메이션
-    public float healDuration = 0.8f;
-    public Color healGlowColor = Color.green;
+    // 드래그 시작/종료 매핑
+    public string GetScriptTypeForAnimation(string animationType)
+    {
+        if (animationType == "start" || animationType == "end")
+            animationType = "drag";  // drag 스크립트로 매핑
+            
+        if (string.IsNullOrEmpty(animationScriptType))
+            return $"{animationType}Animation001";
+        return animationScriptType;
+    }
 }
 ```
 
 ### 커스텀 애니메이션 추가 절차
-1. 해당 타입의 Animator 클래스 상속
+1. 해당 타입의 Animator 클래스 상속 (*Animation001 명명 규칙)
 2. AnimationDatabase에 애니메이션 데이터 등록
-3. AnimationSettings에서 설정 구성
+3. 인스펙터에서 애니메이션 스크립트 타입 선택
 4. 인터페이스 구현 및 예외 처리 추가
-5. 커스텀 에디터를 통한 데이터베이스 관리
+5. 전문적 커스텀 에디터를 통한 데이터베이스 관리
 
 ## 🏗️ 아키텍처 패턴
 
@@ -392,7 +369,10 @@ sequenceDiagram
 
 ### 체크리스트
 - [ ] DOTween SafeMode 활성화 확인
-- [ ] 애니메이션 풀링 설정 확인
+- [ ] 인스펙터 기반 애니메이션 설정 확인
+- [ ] 001 기본값 정책 정상 동작 확인
+- [ ] 전역/폴백 개념 완전 제거 확인
+- [ ] 드래그 시작/종료 매핑 정상 동작 확인
 - [ ] 인터페이스 구현 완전성 확인
 - [ ] 예외 처리 및 null 체크 구현
 - [ ] 성능 프로파일링 통과
@@ -428,3 +408,4 @@ sequenceDiagram
 - 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 함수/변수/클래스 정보 추가 | 문서
 - 2025-01-27 | Maintainer | 사용하지 않는 Default 애니메이션 파일들 제거 및 규칙 파일 업데이트 | 코드/문서
 - 2025-01-27 | Maintainer | 개발 문서 기반 규칙 파일 업데이트 (주요 기능, 클래스/메서드, 아키텍처 다이어그램 추가) | 문서
+- 2025-01-27 | Maintainer | 인스펙터 기반 애니메이션, 001 기본값 정책, 전역/폴백 제거 반영 | 문서

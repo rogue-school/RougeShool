@@ -21,7 +21,7 @@ CombatSystem/
 ├── Service/          # 서비스 클래스 (3개 파일)
 ├── Data/             # 데이터 클래스 (1개 파일)
 ├── Event/            # 이벤트 시스템 (1개 파일)
-├── Utility/          # 유틸리티 (2개 파일)
+├── Utility/          # 유틸리티 (4개 파일)
 ├── Context/          # 컨텍스트 (2개 파일)
 └── UI/               # UI 관련 (1개 파일)
 ```
@@ -66,9 +66,11 @@ CombatSystem/
 ### Event 폴더 규칙 (1개 파일)
 - **CombatEventSystem.cs**: 전투 이벤트 시스템
 
-### Utility 폴더 규칙 (2개 파일)
+### Utility 폴더 규칙 (4개 파일)
 - **CardValidator.cs**: 카드 검증기
 - **CharacterDeathHandler.cs**: 캐릭터 사망 핸들러
+- **CardRegistrar.cs**: 카드 등록기
+- **EnemySpawnResult.cs**: 적 스폰 결과
 
 ### Context 폴더 규칙 (2개 파일)
 - **CombatContext.cs**: 전투 컨텍스트
@@ -87,6 +89,7 @@ CombatSystem/
 6. **Zenject DI**: 의존성 주입을 통한 느슨한 결합 구조
 7. **이벤트 시스템**: 전투 이벤트 발생 및 구독 시스템
 8. **검증 시스템**: 카드 및 전투 행동 유효성 검증
+9. **유틸리티 통합**: UtilitySystem에서 CombatSystem/Utility로 이동된 유틸리티 클래스들
 
 ## 🎯 개발 규칙
 
@@ -109,6 +112,12 @@ CombatSystem/
 - **CombatExecutorService**: 전투 실행 서비스
 - **CombatPreparationService**: 전투 준비 서비스
 - **의존성 주입**: 서비스 간 의존성 관리
+
+### 5. 유틸리티 통합 규칙
+- **폴더 구조 통합**: UtilitySystem에서 CombatSystem/Utility로 이동
+- **CardRegistrar**: 카드 등록 기능 통합
+- **EnemySpawnResult**: 적 스폰 결과 관리 통합
+- **Disabled 단계**: 비활성화된 단계별 가이드 제공
 
 ## 🔧 주요 클래스 및 메서드
 
@@ -386,6 +395,8 @@ sequenceDiagram
 - [ ] 턴 관리 로직 검증
 - [ ] 슬롯 시스템 정상 동작 확인
 - [ ] Zenject DI 바인딩 완전성 확인
+- [ ] 유틸리티 클래스 통합 확인
+- [ ] Disabled 단계별 가이드 확인
 
 ### 재현 절차
 1. 전투 시작부터 종료까지 전체 플로우 테스트
@@ -420,3 +431,4 @@ sequenceDiagram
 - 2025-01-27 | Maintainer | .mdc 규칙 파일로 변환 및 Cursor 규칙 저장 | 문서
 - 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 클래스/메서드/서비스 정보 추가 | 문서
 - 2025-01-27 | Maintainer | 개발 문서 기반 규칙 파일 업데이트 (주요 기능, 클래스/메서드, 아키텍처 다이어그램 추가) | 문서
+- 2025-01-27 | Maintainer | 유틸리티 통합 및 Disabled 단계 가이드 반영 | 문서

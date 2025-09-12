@@ -81,6 +81,13 @@ CoreSystem/
 - **오디오 풀링**: AudioSource 풀링으로 성능 최적화
 - **사운드 중복 방지**: 동일한 사운드의 중복 재생 방지
 
+### 7. 애니메이션 데이터베이스 통합
+- **AnimationDatabaseManager**: 애니메이션 데이터베이스 통합 싱글톤
+- **인스펙터 구동**: 카드/캐릭터 애니메이션은 데이터베이스에서 스크립트 타입을 선택
+- **디폴트 정책**: 타입 미지정 시 슬롯별 `*Animation001` 사용(전역/폴백 제거)
+- **에디터 경로**: `Assets/Script/UtilitySystem/Editor/AnimationSystem/AnimationDatabaseProEditor.cs`
+- **주의**: `AnimationDatabaseManager`/`AnimationFacade`는 루트 GameObject에서 `DontDestroyOnLoad`가 적용되어야 함
+
 ## 📊 주요 클래스 및 메서드
 
 ### SceneTransitionManager 클래스
@@ -414,3 +421,4 @@ sequenceDiagram
 - 2025-01-27 | Maintainer | CoreSystem 개발 문서 초기 작성 | 문서
 - 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 파일 수 정정 | 문서
 - 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 클래스/메서드/인터페이스 정보 추가 | 문서
+ - 2025-09-12 | Maintainer | AnimationDatabaseManager 통합/001 디폴트/에디터 경로/루트 DontDestroyOnLoad 주의 추가 | 문서

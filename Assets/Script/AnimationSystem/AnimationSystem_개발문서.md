@@ -60,34 +60,25 @@ AnimationSystem/
 
 #### CharacterAnimation 하위 폴더 (8개 파일)
 - **DeathAnimation/**:
-  - **CharacterDeathAnimation001.cs**: 캐릭터 사망 애니메이션 구현체
-  - **DefaultCharacterDeathAnimation.cs**: 기본 캐릭터 사망 애니메이션
+  - **CharacterDeathAnimation001.cs**: 캐릭터 사망 애니메이션 구현체(디폴트)
 - **SpawnAnimation/**:
-  - **CharacterSpawnAnimation001.cs**: 캐릭터 등장 애니메이션 구현체
-  - **DefaultCharacterSpawnAnimation.cs**: 기본 캐릭터 등장 애니메이션
+  - **CharacterSpawnAnimation001.cs**: 캐릭터 등장 애니메이션 구현체(디폴트)
 
 #### SkillCardAnimation 하위 폴더 (12개 파일)
 - **DragAnimation/**:
-  - **SkillCardDragAnimation001.cs**: 스킬카드 드래그 애니메이션 구현체
-  - **DefaultSkillCardDragAnimation.cs**: 기본 스킬카드 드래그 애니메이션
+  - **SkillCardDragAnimation001.cs**: 스킬카드 드래그 애니메이션 구현체(디폴트)
 - **DropAnimation/**:
-  - **SkillCardDropAnimation001.cs**: 스킬카드 드롭 애니메이션 구현체
-  - **DefaultSkillCardDropAnimation.cs**: 기본 스킬카드 드롭 애니메이션
+  - **SkillCardDropAnimation001.cs**: 스킬카드 드롭 애니메이션 구현체(디폴트)
 - **MoveAnimation/**:
-  - **SkillCardMoveAnimation001.cs**: 스킬카드 이동 애니메이션 구현체
-  - **DefaultSkillCardMoveAnimation.cs**: 기본 스킬카드 이동 애니메이션
+  - **SkillCardMoveAnimation001.cs**: 스킬카드 이동 애니메이션 구현체(디폴트)
 - **MoveToCombatSlotAnimation/**:
-  - **SkillCardCombatSlotMoveAnimation001.cs**: 스킬카드 전투 슬롯 이동 애니메이션 구현체
-  - **DefaultSkillCardCombatSlotMoveAnimation.cs**: 기본 스킬카드 전투 슬롯 이동 애니메이션
+  - **SkillCardCombatSlotMoveAnimation001.cs**: 스킬카드 전투 슬롯 이동 애니메이션 구현체(디폴트)
 - **SpawnAnimation/**:
-  - **SkillCardSpawnAnimation001.cs**: 스킬카드 등장 애니메이션 구현체
-  - **DefaultSkillCardSpawnAnimation.cs**: 기본 스킬카드 등장 애니메이션
+  - **SkillCardSpawnAnimation001.cs**: 스킬카드 등장 애니메이션 구현체(디폴트)
 - **UseAnimation/**:
-  - **SkillCardUseAnimation001.cs**: 스킬카드 사용 애니메이션 구현체
-  - **DefaultSkillCardUseAnimation.cs**: 기본 스킬카드 사용 애니메이션
+  - **SkillCardUseAnimation001.cs**: 스킬카드 사용 애니메이션 구현체(디폴트)
 - **VanishAnimation/**:
-  - **SkillCardVanishAnimation001.cs**: 스킬카드 소멸 애니메이션 구현체
-  - **DefaultSkillCardVanishAnimation.cs**: 기본 스킬카드 소멸 애니메이션
+  - **SkillCardVanishAnimation001.cs**: 스킬카드 소멸 애니메이션 구현체(디폴트)
 
 ### Helper 폴더
 - **AnimationHelper.cs**: 애니메이션 유틸리티 함수
@@ -96,12 +87,9 @@ AnimationSystem/
 - **CharacterAnimationController.cs**: 캐릭터 애니메이션 컨트롤러
 - **SkillCardAnimationController.cs**: 스킬카드 애니메이션 컨트롤러
 
-### Editor 폴더 (5개 파일)
-- **AnimationDatabaseAssetFixer.cs**: 애니메이션 데이터베이스 에셋 수정기
-- **EnemyCharacterAnimationDatabaseEditor.cs**: 적 캐릭터 애니메이션 데이터베이스 에디터
-- **EnemySkillCardAnimationDatabaseEditor.cs**: 적 스킬카드 애니메이션 데이터베이스 에디터
-- **PlayerCharacterAnimationDatabaseEditor.cs**: 플레이어 캐릭터 애니메이션 데이터베이스 에디터
-- **PlayerSkillCardAnimationDatabaseEditor.cs**: 플레이어 스킬카드 애니메이션 데이터베이스 에디터
+### Editor 경로(통합)
+- 커스텀 인스펙터/드로어: `Assets/Script/UtilitySystem/Editor/AnimationSystem/` (전역 통합 위치)
+- **AnimationDatabaseProEditor.cs**: 4종 DB 커스텀 인스펙터(전문 UI, 드롭다운, ReorderableList)
 
 ## 🎯 주요 기능
 
@@ -109,18 +97,20 @@ AnimationSystem/
 - 모든 애니메이션을 중앙화된 방식으로 관리
 - Facade 패턴을 통한 단순화된 인터페이스 제공
 
-### 2. 데이터 기반 애니메이션
-- ScriptableObject를 활용한 데이터 기반 설계
-- 런타임에서 애니메이션 설정 변경 가능
+### 2. 데이터 기반 애니메이션(인스펙터 구동)
+- ScriptableObject 기반 DB: 카드/캐릭터 별 엔트리 보유
+- 각 엔트리의 `AnimationSettings`는 “스크립트 타입 문자열”만 보유(파라미터 제거)
+- 타입 미지정 시 슬롯별 `*Animation001` 고정 사용(전역/폴백 개념 제거)
 
 ### 3. 타입별 애니메이션 지원
 - 캐릭터 애니메이션 (플레이어/적)
 - 스킬카드 애니메이션 (플레이어/적)
 - UI 애니메이션 (다양한 UI 요소)
 
-### 4. 커스텀 에디터 지원
-- 각 데이터베이스별 전용 에디터 제공
-- 개발자 친화적인 인스펙터 인터페이스
+### 4. 커스텀 에디터 지원(전문 UI)
+- 단일 에디터 `AnimationDatabaseProEditor`로 4종 DB 지원
+- 슬롯별 인터페이스 필터링 드롭다운 제공(예: 드래그=ISkillCardDragAnimationScript)
+- 드래그 애니메이션은 `start/end`를 스크립트로 전달하여 내부 분기
 
 ## 🔧 사용 방법
 
@@ -163,37 +153,16 @@ AnimationFacade.Instance.PlaySkillCardAnimation(skillCard, "use", target, onComp
 #### 데이터 클래스
 - **PlayerCharacterAnimationEntry**: 플레이어 캐릭터 애니메이션 엔트리
 - **EnemyCharacterAnimationEntry**: 적 캐릭터 애니메이션 엔트리
-- **CharacterAnimationSettings**: 캐릭터 애니메이션 설정 (spawn, death, damage, heal)
-- **SkillCardAnimationSettings**: 스킬카드 애니메이션 설정 (spawn, move, use)
+- **CharacterAnimationSettings**: 스크립트 타입 문자열만 보유
+- **SkillCardAnimationSettings**: 스크립트 타입 문자열만 보유(드래그 start/end는 내부에서 drag로 매핑)
 
-### 애니메이션 설정 구조
+### 애니메이션 설정 구조(간소화)
 ```csharp
-// CharacterAnimationSettings 주요 속성
-public class AnimationSettings
-{
-    // 등장 애니메이션
-    public float spawnDuration = 1.0f;
-    public Vector3 spawnStartScale = Vector3.zero;
-    public Vector3 spawnEndScale = Vector3.one;
-    public Ease spawnEase = Ease.OutBack;
-    public bool useSpawnGlow = true;
-    public Color spawnGlowColor = Color.blue;
-    
-    // 사망 애니메이션
-    public float deathDuration = 1.5f;
-    public Ease deathEase = Ease.InBack;
-    public bool useDeathFade = true;
-    public Vector3 deathEndScale = Vector3.zero;
-    
-    // 피해 애니메이션
-    public float damageDuration = 0.3f;
-    public bool useDamageShake = true;
-    public float damageShakeStrength = 0.1f;
-    
-    // 치유 애니메이션
-    public float healDuration = 0.8f;
-    public Color healGlowColor = Color.green;
-}
+// SkillCardAnimationSettings / CharacterAnimationSettings
+// 인스펙터에서 선택되는 스크립트 타입 문자열만 직렬화 보유
+[Serializable]
+public class SkillCardAnimationSettings { [SerializeField] string animationScriptType; }
+public class CharacterAnimationSettings { [SerializeField] string animationScriptType; }
 ```
 
 ### 커스텀 애니메이션 추가
@@ -207,3 +176,4 @@ public class AnimationSettings
 - 2025-01-27 | Maintainer | AnimationSystem 개발 문서 초기 작성 | 문서
 - 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 파일 수 정정 | 문서
 - 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 함수/변수/클래스 정보 추가 | 문서
+ - 2025-09-12 | Maintainer | 인스펙터 구동 구조로 문서 전면 개정(전역/폴백 제거, *001 디폴트, 에디터 경로 통합, 드래그 start/end 매핑 명시) | 문서

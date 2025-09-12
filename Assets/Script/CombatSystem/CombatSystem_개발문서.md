@@ -62,6 +62,14 @@ CombatSystem/
 - **CardValidator.cs**: 카드 검증기
 - **CharacterDeathHandler.cs**: 캐릭터 사망 핸들러
 
+### Animation 연동
+- 드래그 시작/종료는 `AnimationDatabaseManager`가 `drag` 설정을 가져오고, 스크립트에는 `start/end` 토큰을 전달하여 내부 분기합니다.
+- 타입이 비어있으면 슬롯별 `*Animation001`로 자동 실행됩니다(전역/폴백 없음).
+
+### Disabled 단계 가이드
+- `Assets/Script/Disabled` 폴더의 초기화 스텝을 사용할 경우, 필요한 씬 오브젝트(`SlotInitializer`, 버튼 핸들러 등)가 존재하도록 하거나 Installer에서 해당 스텝 바인딩을 제외하세요.
+- `SlotInitializationStep` 사용 시 `SlotInitializer` 존재 보장 또는 자동 생성 로직을 활성화해야 합니다.
+
 ### Context 폴더 (2개 파일)
 - **CombatContext.cs**: 전투 컨텍스트
 - **TurnContext.cs**: 턴 컨텍스트
@@ -415,3 +423,4 @@ sequenceDiagram
 - 2025-01-27 | Maintainer | CombatSystem 개발 문서 초기 작성 | 문서
 - 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 파일 수 정정 | 문서
 - 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 클래스/메서드/서비스 정보 추가 | 문서
+ - 2025-09-12 | Maintainer | 애니메이션 연동(001 디폴트/drag start-end), Disabled 단계 가이드 추가 | 문서

@@ -72,7 +72,15 @@ namespace Game.AnimationSystem.Data
         
         private System.Type GetScriptTypeForAnimation(string animationType)
         {
-            // 1) 인스펙터 타입 우선
+            // 1) 드래그 단계 보정: 시작/끝 단계는 드래그 스크립트를 사용
+            //    스크립트 내부에서 animationType("start"/"end")으로 분기 처리함
+            var normalizedType = animationType;
+            if (normalizedType == "start" || normalizedType == "end")
+            {
+                normalizedType = "drag";
+            }
+
+            // 2) 인스펙터 타입 우선
             if (!string.IsNullOrEmpty(animationScriptType))
             {
                 var type = System.Type.GetType(animationScriptType);
@@ -89,8 +97,8 @@ namespace Game.AnimationSystem.Data
                 if (type != null) return type;
             }
 
-            // 2) 비어있으면 슬롯별 디폴트(001) 고정 사용
-            string @default = animationType switch
+            // 3) 비어있으면 슬롯별 디폴트(001) 고정 사용
+            string @default = normalizedType switch
             {
                 "spawn" => "Game.AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation.SkillCardSpawnAnimation001",
                 "move" => "Game.AnimationSystem.Animator.SkillCardAnimation.MoveAnimation.SkillCardMoveAnimation001",

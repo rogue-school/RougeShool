@@ -102,6 +102,10 @@ public void OnExitButtonClicked()
 }
 ```
 
+## 🛠️ 에디터/인스펙터 통합(참조)
+- 애니메이션 데이터베이스 전용 커스텀 인스펙터는 `Assets/Script/UtilitySystem/Editor/AnimationSystem/AnimationDatabaseProEditor.cs`로 통합 관리됩니다.
+- 기본 인스펙터 대신 전문 UI가 표시되며, 슬롯별 드롭다운으로 스크립트 타입을 선택할 수 있습니다.
+
 ## 🏗️ 아키텍처 패턴
 
 ### 1. 싱글톤 패턴 (Singleton Pattern)

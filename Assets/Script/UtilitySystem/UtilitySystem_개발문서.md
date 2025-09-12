@@ -22,6 +22,10 @@ UtilitySystem/
 - **DropHandlerInjector.cs**: 드롭 핸들러 주입
 - ~~**CameraResolutionFixer.cs**: 카메라 해상도 수정~~ (제거됨)
 
+### 에디터 통합 경로(참조)
+- 애니메이션 관련 커스텀 인스펙터/드로어는 본 시스템 하위 `Editor/AnimationSystem/`로 통합 관리
+- 예: `AnimationDatabaseProEditor.cs` (4종 DB 전문 인스펙터)
+
 ## 🎯 주요 기능
 
 ### 1. 게임 플로우 관리

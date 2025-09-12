@@ -55,8 +55,8 @@ CoreSystem/
 - **IPlayerCharacterSelectionManager.cs**: 플레이어 캐릭터 선택 관리 인터페이스
 
 ### Animation 폴더 규칙 (2개 파일)
-- **AnimationDatabaseManager.cs**: 애니메이션 데이터베이스 관리
-- **AnimationManager.cs**: 애니메이션 시스템 관리
+- **AnimationDatabaseManager.cs**: 애니메이션 데이터베이스 관리 (싱글톤)
+- **AnimationManager.cs**: 애니메이션 시스템 관리 (싱글톤)
 
 ## 🎯 주요 기능
 
@@ -95,6 +95,11 @@ CoreSystem/
 - **자동 저장 조건**: 특정 게임 이벤트 시 자동 저장
 - **상태 복원**: 저장된 상태의 완전한 복원
 
+### 8. 애니메이션 시스템 통합
+- **AnimationDatabaseManager**: 애니메이션 데이터베이스 통합 관리
+- **인스펙터 기반**: 애니메이션 설정을 인스펙터에서 관리
+- **001 기본값**: 애니메이션 스크립트 미지정 시 자동으로 *Animation001 사용
+
 ## 🎯 개발 규칙
 
 ### 1. 싱글톤 패턴 규칙
@@ -127,6 +132,12 @@ CoreSystem/
 - **비동기 전환**: async/await 패턴 사용
 - **로딩 화면**: 전환 중 로딩 화면 표시
 - **전환 효과**: 페이드 인/아웃 효과
+
+### 7. 애니메이션 시스템 규칙
+- **AnimationDatabaseManager**: 애니메이션 데이터베이스 통합 관리
+- **인스펙터 기반**: 애니메이션 설정을 인스펙터에서 관리
+- **001 기본값**: 애니메이션 스크립트 미지정 시 자동으로 *Animation001 사용
+- **폴백 제거**: 전역/폴백 개념 완전 제거
 
 ## 📊 주요 클래스 및 메서드
 
@@ -193,6 +204,14 @@ CoreSystem/
 - **StopCoroutine(IEnumerator coroutine)**: 코루틴 정지
 - **StopAllCoroutines()**: 모든 코루틴 정지
 - **IsRunning(IEnumerator coroutine)**: 코루틴 실행 상태 확인
+
+### AnimationDatabaseManager 클래스
+- **Instance**: 싱글톤 인스턴스 (프로퍼티)
+- **PlayCharacterAnimation()**: 캐릭터 애니메이션 실행
+- **PlaySkillCardAnimation()**: 스킬카드 애니메이션 실행
+- **LoadAllData()**: 모든 애니메이션 데이터 로드
+- **Initialize()**: ICoreSystemInitializable 구현
+- **IsInitialized**: 초기화 상태 (프로퍼티)
 
 ## 🔧 사용 방법
 
@@ -311,6 +330,22 @@ coroutineRunner.StopCoroutine(myCoroutine);
 coroutineRunner.StopAllCoroutines();
 ```
 
+### 애니메이션 시스템 사용법
+```csharp
+// AnimationDatabaseManager를 통한 애니메이션 실행
+AnimationDatabaseManager.Instance.PlayCharacterAnimation(characterId, "spawn", target, onComplete, isEnemy);
+AnimationDatabaseManager.Instance.PlaySkillCardAnimation(cardId, "spawn", target, onComplete);
+
+// 애니메이션 데이터 로드
+AnimationDatabaseManager.Instance.LoadAllData();
+
+// 초기화 상태 확인
+if (AnimationDatabaseManager.Instance.IsInitialized)
+{
+    // 애니메이션 시스템 사용 가능
+}
+```
+
 ## 🏗️ 아키텍처 패턴
 
 ### 1. 싱글톤 패턴
@@ -319,6 +354,7 @@ coroutineRunner.StopAllCoroutines();
 - **AudioManager**: 오디오 시스템 싱글톤
 - **SaveManager**: 저장 시스템 싱글톤
 - **GameLogger**: 로깅 시스템 싱글톤
+- **AnimationDatabaseManager**: 애니메이션 데이터베이스 관리 싱글톤
 
 ### 2. 팩토리 패턴
 - **시스템 생성**: 각 시스템의 생성 및 초기화
@@ -448,6 +484,7 @@ sequenceDiagram
 - [ ] 오디오 시스템 정상 동작 확인
 - [ ] 씬 전환 기능 정상 동작 확인
 - [ ] 저장 시스템 정상 동작 확인
+- [ ] 애니메이션 시스템 정상 동작 확인
 
 ### 재현 절차
 1. 코어 시스템 초기화부터 종료까지 전체 플로우 테스트
@@ -470,3 +507,4 @@ sequenceDiagram
 - 2025-01-27 | Maintainer | .mdc 규칙 파일로 변환 및 Cursor 규칙 저장 | 문서
 - 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 클래스/메서드/인터페이스 정보 추가 | 문서
 - 2025-01-27 | Maintainer | 개발 문서 기반 mdc 규칙 업데이트 - 주요 기능, 클래스/메서드, 아키텍처 다이어그램 추가 | 문서
+- 2025-01-27 | Maintainer | 애니메이션 시스템 통합 및 001 기본값 정책 반영 | 문서
