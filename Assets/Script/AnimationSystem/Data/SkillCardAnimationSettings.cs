@@ -146,39 +146,31 @@ namespace Game.AnimationSystem.Data
         
         private System.Type GetScriptTypeForAnimation(string animationType)
         {
-            if (string.IsNullOrEmpty(animationType))
-                return null;
-                
-            // 애니메이션 타입에 따른 클래스명 매핑
-            string className = animationType switch
+            // 인스펙터에서 설정된 타입이 있으면 그 값을 우선 사용
+            if (!string.IsNullOrEmpty(animationScriptType))
             {
-                "spawn" => "Game.AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation.DefaultSkillCardSpawnAnimation",
-                "move" => "Game.AnimationSystem.Animator.SkillCardAnimation.MoveAnimation.DefaultSkillCardMoveAnimation",
-                "moveToCombatSlot" => "Game.AnimationSystem.Animator.SkillCardAnimation.MoveToCombatSlotAnimation.DefaultSkillCardMoveToCombatSlotAnimation",
-                "drop" => "Game.AnimationSystem.Animator.SkillCardAnimation.DropAnimation.DefaultSkillCardDropAnimation",
-                "drag" => "Game.AnimationSystem.Animator.SkillCardAnimation.DragAnimation.DefaultSkillCardDragAnimation",
-                _ => animationType // 기본값으로 원본 사용
-            };
-                
-            // 먼저 전체 타입명으로 시도
-            var type = System.Type.GetType(className);
-            if (type == null)
-            {
-                // 현재 어셈블리에서 타입 찾기 시도
-                var assemblies = System.AppDomain.CurrentDomain.GetAssemblies();
-                foreach (var assembly in assemblies)
+                var type = System.Type.GetType(animationScriptType);
+                if (type == null)
                 {
-                    type = assembly.GetType(className);
-                    if (type != null)
-                        break;
+                    var assemblies = System.AppDomain.CurrentDomain.GetAssemblies();
+                    foreach (var assembly in assemblies)
+                    {
+                        type = assembly.GetType(animationScriptType);
+                        if (type != null)
+                            break;
+                    }
                 }
+
+                if (type == null)
+                {
+                    Debug.LogWarning($"[SkillCardAnimationSettings] 설정된 애니메이션 스크립트 타입을 찾을 수 없습니다. 인스펙터의 AnimationScriptType을 확인하세요. 지정값='{animationScriptType}', 애니메이션='{animationType}'");
+                }
+
+                return type; // null이면 상위에서 폴백 애니메이션 실행
             }
-            
-            if (type == null)
-            {
-                Debug.LogError($"[SkillCardAnimationSettings] 애니메이션 타입을 찾을 수 없습니다: {animationType} -> {className}");
-            }
-            return type;
+
+            // 설정이 비어있으면 전용 스크립트 없이 폴백으로 처리
+            return null;
         }
         
         /// <summary>

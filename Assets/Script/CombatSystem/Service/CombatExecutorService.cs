@@ -3,6 +3,7 @@ using UnityEngine;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.Service;
 using Game.CombatSystem.Utility;
 
 namespace Game.CombatSystem.Service
@@ -20,6 +21,7 @@ namespace Game.CombatSystem.Service
         private ICardExecutor cardExecutor;
         private readonly IEnemyHandManager enemyHandManager;
         private ICombatTurnManager turnManager;
+        private PlayerTurnCardService playerTurnCardService;
 
         /// <summary>
         /// 생성자 - 전투 슬롯, 컨텍스트 제공자, 카드 실행기, 적 핸드 매니저를 주입받습니다.
@@ -47,6 +49,12 @@ namespace Game.CombatSystem.Service
         {
             yield return PerformAttack(CombatSlotPosition.FIRST);
             yield return PerformAttack(CombatSlotPosition.SECOND);
+            
+            // 턴 완료 후 플레이어 핸드 새로고침
+            if (playerTurnCardService != null)
+            {
+                yield return playerTurnCardService.RefreshHandForNextTurn();
+            }
         }
 
         /// <summary>
@@ -98,6 +106,14 @@ namespace Game.CombatSystem.Service
         public void SetTurnManager(ICombatTurnManager manager)
         {
             turnManager = manager;
+        }
+
+        /// <summary>
+        /// 플레이어 턴 카드 서비스를 주입합니다.
+        /// </summary>
+        public void SetPlayerTurnCardService(PlayerTurnCardService service)
+        {
+            playerTurnCardService = service;
         }
 
         #endregion

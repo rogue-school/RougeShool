@@ -595,14 +595,14 @@ namespace Game.CoreSystem.Animation
             }
 
             var settings = GetSkillCardAnimationSettings(entry, "drag");
-            if (settings == null || string.IsNullOrEmpty(settings.AnimationScriptType))
+            if (settings == null)
             {
-                Debug.LogWarning($"[AnimationDatabaseManager] 플레이어 스킬카드 드래그 애니메이션 설정을 찾을 수 없습니다: {skillCardId}");
+                Debug.LogWarning($"[AnimationDatabaseManager] 플레이어 스킬카드 드래그 애니메이션 설정이 없습니다: {skillCardId}");
                 onComplete?.Invoke();
                 return;
             }
 
-            PlayAnimationWithScript(target, settings, "start", onComplete);
+            settings.PlayAnimation(target, "start", onComplete);
         }
 
         /// <summary>
@@ -621,14 +621,14 @@ namespace Game.CoreSystem.Animation
             }
 
             var settings = GetSkillCardAnimationSettings(entry, "drag");
-            if (settings == null || string.IsNullOrEmpty(settings.AnimationScriptType))
+            if (settings == null)
             {
-                Debug.LogWarning($"[AnimationDatabaseManager] 플레이어 스킬카드 드래그 애니메이션 설정을 찾을 수 없습니다: {skillCardId}");
+                Debug.LogWarning($"[AnimationDatabaseManager] 플레이어 스킬카드 드래그 애니메이션 설정이 없습니다: {skillCardId}");
                 onComplete?.Invoke();
                 return;
             }
 
-            PlayAnimationWithScript(target, settings, "end", onComplete);
+            settings.PlayAnimation(target, "end", onComplete);
         }
 
         /// <summary>
@@ -647,14 +647,14 @@ namespace Game.CoreSystem.Animation
             }
 
             var settings = GetSkillCardAnimationSettings(entry, "drag");
-            if (settings == null || string.IsNullOrEmpty(settings.AnimationScriptType))
+            if (settings == null)
             {
-                Debug.LogWarning($"[AnimationDatabaseManager] 적 스킬카드 드래그 애니메이션 설정을 찾을 수 없습니다: {skillCardId}");
+                Debug.LogWarning($"[AnimationDatabaseManager] 적 스킬카드 드래그 애니메이션 설정이 없습니다: {skillCardId}");
                 onComplete?.Invoke();
                 return;
             }
 
-            PlayAnimationWithScript(target, settings, "start", onComplete);
+            settings.PlayAnimation(target, "start", onComplete);
         }
 
         /// <summary>
@@ -673,14 +673,14 @@ namespace Game.CoreSystem.Animation
             }
 
             var settings = GetSkillCardAnimationSettings(entry, "drag");
-            if (settings == null || string.IsNullOrEmpty(settings.AnimationScriptType))
+            if (settings == null)
             {
-                Debug.LogWarning($"[AnimationDatabaseManager] 적 스킬카드 드래그 애니메이션 설정을 찾을 수 없습니다: {skillCardId}");
+                Debug.LogWarning($"[AnimationDatabaseManager] 적 스킬카드 드래그 애니메이션 설정이 없습니다: {skillCardId}");
                 onComplete?.Invoke();
                 return;
             }
 
-            PlayAnimationWithScript(target, settings, "end", onComplete);
+            settings.PlayAnimation(target, "end", onComplete);
         }
 
         /// <summary>
@@ -735,13 +735,13 @@ namespace Game.CoreSystem.Animation
                 return;
             }
             var settings = GetSkillCardAnimationSettings(entry, "drop");
-            if (settings == null || string.IsNullOrEmpty(settings.AnimationScriptType))
+            if (settings == null)
             {
-                Debug.LogWarning($"[AnimationDatabaseManager] 플레이어 스킬카드 드롭 애니메이션 설정을 찾을 수 없습니다: {skillCardId}");
+                Debug.LogWarning($"[AnimationDatabaseManager] 플레이어 스킬카드 드롭 애니메이션 설정이 없습니다: {skillCardId}");
                 onComplete?.Invoke();
                 return;
             }
-            PlayAnimationWithScript(target, settings, "drop", onComplete);
+            settings.PlayAnimation(target, "drop", onComplete);
         }
 
         /// <summary>

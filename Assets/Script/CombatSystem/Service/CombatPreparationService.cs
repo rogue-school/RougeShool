@@ -100,7 +100,8 @@ namespace Game.CombatSystem.Service
                         SlotOwner.PLAYER
                     );
 
-                    var combatSlotPosition = SlotPositionUtil.ToCombatSlot(cardEntry.Slot);
+                    // 슬롯 위치는 순환 시스템에서 자동으로 관리되므로 고정 위치 사용
+                    var combatSlotPosition = CombatSlotPosition.FIRST; // 임시로 첫 번째 슬롯 사용
 
                     if (slot is ICombatCardSlot combatSlot)
                     {

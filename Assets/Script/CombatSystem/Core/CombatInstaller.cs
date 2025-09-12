@@ -32,6 +32,7 @@ using Game.CombatSystem.DragDrop;
 using Game.CombatSystem.CoolTime;
 using Game.SkillCardSystem.Runtime;
 using Game.CoreSystem.Interface;
+using Game.SkillCardSystem.Service;
  
 
 /// <summary>
@@ -60,6 +61,7 @@ public class CombatInstaller : MonoInstaller
         BindSceneLoader();
         BindUIPrefabs();
         BindUIHandlers();
+        BindPlayerTurnCardService();
         BindCooldownSystem();
         BindCardCirculationSystem();
     }
@@ -290,6 +292,25 @@ public class CombatInstaller : MonoInstaller
         }
 
         Container.Bind<TurnStartButtonHandler>().FromInstance(startButtonHandler).AsSingle();
+    }
+
+    #endregion
+
+    #region 턴 카드 서비스
+
+    /// <summary>
+    /// 플레이어 턴 카드 서비스 바인딩
+    /// </summary>
+    private void BindPlayerTurnCardService()
+    {
+        var playerTurnCardService = FindFirstObjectByType<PlayerTurnCardService>();
+        if (playerTurnCardService == null)
+        {
+            var go = new GameObject("PlayerTurnCardService");
+            playerTurnCardService = go.AddComponent<PlayerTurnCardService>();
+        }
+        Container.QueueForInject(playerTurnCardService);
+        Container.Bind<PlayerTurnCardService>().FromInstance(playerTurnCardService).AsSingle();
     }
 
     #endregion

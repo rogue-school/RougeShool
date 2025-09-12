@@ -78,31 +78,9 @@ namespace Game.SkillCardSystem.Manager
                 return;
             }
 
-            foreach (var entry in deck.Cards)
-            {
-                var pos = entry.Slot;
-                ISkillCard card = null;
-                if (entry.Definition != null)
-                {
-                    card = entry.CreateFromDefinition(cardFactory, owner?.CharacterData?.name);
-                }
-                else if (entry.Card != null)
-                {
-                    card = cardFactory.CreatePlayerCard(entry.Card.CardData, entry.Card.CreateEffects(), owner?.CharacterData?.name);
-                }
-                card.SetCurrentCoolTime(0);
-                cards[pos] = card;
-
-                var slot = slotRegistry.GetPlayerHandSlot(pos);
-                if (slot != null)
-                {
-                    var ui = slot.AttachCard(card, cardUIPrefab);
-                    if (ui != null) cardUIs[pos] = ui;
-                    
-                    // 초기 핸드 생성 시에는 애니메이션 이벤트를 발생시키지 않음
-                    // (PlayerSkillCardInitializer에서 일괄 처리)
-                }
-            }
+            // 기존 GenerateInitialHand는 더 이상 사용하지 않음
+            // PlayerSkillCardInitializer에서 순환 시스템을 통해 카드를 관리
+            Debug.Log("[PlayerHandManager] GenerateInitialHand는 더 이상 사용되지 않습니다. 순환 시스템을 사용하세요.");
         }
 
         #endregion

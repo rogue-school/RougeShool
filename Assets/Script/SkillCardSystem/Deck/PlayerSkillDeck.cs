@@ -1,5 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
+using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.Factory;
 
 namespace Game.SkillCardSystem.Deck
 {
@@ -45,6 +47,27 @@ namespace Game.SkillCardSystem.Deck
         public List<PlayerSkillCardEntry> GetCards()
         {
             return Cards;
+        }
+
+        /// <summary>
+        /// 순환 시스템용 카드 리스트를 생성합니다.
+        /// 각 카드 엔트리의 개수만큼 카드를 생성하여 반환합니다.
+        /// </summary>
+        /// <param name="factory">카드 팩토리</param>
+        /// <param name="ownerCharacterName">소유자 캐릭터 이름</param>
+        /// <returns>순환 시스템용 카드 리스트</returns>
+        public List<ISkillCard> CreateCardsForCirculation(ISkillCardFactory factory, string ownerCharacterName)
+        {
+            var allCards = new List<ISkillCard>();
+            
+            foreach (var entry in cards)
+            {
+                var entryCards = entry.CreateCardsForCirculation(factory, ownerCharacterName);
+                allCards.AddRange(entryCards);
+            }
+            
+            Debug.Log($"[PlayerSkillDeck] 순환 시스템용 카드 생성 완료: {allCards.Count}장 (캐릭터: {ownerCharacterName})");
+            return allCards;
         }
     }
 }
