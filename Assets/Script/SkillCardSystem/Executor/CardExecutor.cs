@@ -71,14 +71,14 @@ namespace Game.SkillCardSystem.Executor
             }
 
             // 효과 후 카드 사운드 재생
-            var clip = card.CardData?.SfxClip;
+            var clip = card.CardDefinition?.SfxClip;
             if (clip != null)
             {
                 AudioManager.Instance?.PlaySFX(clip);
             }
 
             // 카드 비주얼 이펙트 재생
-            var vfx = card.CardData?.VisualEffectPrefab;
+            var vfx = card.CardDefinition?.VisualEffectPrefab;
             if (vfx != null)
             {
                 ICharacter target = context.Target;
@@ -86,7 +86,7 @@ namespace Game.SkillCardSystem.Executor
                 {
                     Vector3 spawnPos = target.Transform.position + new Vector3(0, 0, 0);
                     var instance = GameObject.Instantiate(vfx, spawnPos, Quaternion.identity);
-                    GameObject.Destroy(instance, card.CardData.EffectDuration);
+                    GameObject.Destroy(instance, card.CardDefinition.EffectDuration);
                 }
             }
         }

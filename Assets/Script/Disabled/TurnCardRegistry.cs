@@ -158,7 +158,7 @@ namespace Game.CombatSystem.Service
         {
             _cards[position] = card;
             OnCardStateChanged?.Invoke();
-            Debug.Log($"[TurnCardRegistry] 슬롯에 카드 등록: {position}, 카드: {card?.CardData?.CardName ?? "Unknown"}");
+            Debug.Log($"[TurnCardRegistry] 슬롯에 카드 등록: {position}, 카드: {card?.CardDefinition?.CardName ?? "Unknown"}");
         }
 
         #endregion

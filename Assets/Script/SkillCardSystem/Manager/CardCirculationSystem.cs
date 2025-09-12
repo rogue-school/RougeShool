@@ -118,7 +118,7 @@ namespace Game.SkillCardSystem.Manager
             // Used Storage에 추가
             usedStorage.Add(card);
 
-            Debug.Log($"[CardCirculationSystem] 카드 Used Storage 이동: {card.CardData?.CardName ?? "Unknown"} (Used: {usedStorage.Count})");
+            Debug.Log($"[CardCirculationSystem] 카드 Used Storage 이동: {card.CardDefinition?.CardName ?? "Unknown"} (Used: {usedStorage.Count})");
         }
 
         public void MoveCardsToUsedStorage(List<ISkillCard> cards)

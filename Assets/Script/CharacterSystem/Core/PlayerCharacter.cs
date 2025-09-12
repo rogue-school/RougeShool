@@ -205,7 +205,7 @@ namespace Game.CharacterSystem.Core
         /// <param name="card">복원할 카드</param>
         public void RestoreCardToHand(ISkillCard card)
         {
-            Debug.Log($"[PlayerCharacter] 카드 복귀: {card?.CardData?.Name}");
+            Debug.Log($"[PlayerCharacter] 카드 복귀: {card?.CardDefinition?.displayName}");
             // 실제 핸드 복원 로직은 handManager 내부에 구현되어야 함
         }
 

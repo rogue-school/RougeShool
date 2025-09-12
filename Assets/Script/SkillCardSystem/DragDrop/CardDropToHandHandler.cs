@@ -41,7 +41,7 @@ namespace Game.CombatSystem.DragDrop
             dragHandler.OriginalParent = this.transform;
             dragHandler.OriginalWorldPosition = this.transform.position;
 
-            Debug.Log($"[CardDropToHandHandler] 카드 핸드 복귀 완료: {card.CardData.Name}");
+            Debug.Log($"[CardDropToHandHandler] 카드 핸드 복귀 완료: {card.CardDefinition.Name}");
         }
     }
 }

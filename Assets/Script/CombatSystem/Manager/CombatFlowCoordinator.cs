@@ -573,7 +573,7 @@ namespace Game.CombatSystem.Manager
                 turnCardRegistry.RegisterCardToSlot(pos, card, null, SlotOwner.PLAYER);
             }
 
-            Debug.Log($"[CombatFlowCoordinator] 슬롯 {pos}에 카드 설정: {card?.CardData?.CardName ?? "null"}");
+            Debug.Log($"[CombatFlowCoordinator] 슬롯 {pos}에 카드 설정: {card?.CardDefinition?.CardName ?? "null"}");
         }
 
         #endregion

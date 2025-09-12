@@ -167,9 +167,9 @@ namespace Game.AnimationSystem.Manager
             }
             var owner = card.GetOwner();
             if (owner == SlotOwner.ENEMY)
-                AnimationDatabaseManager.Instance.PlayEnemySkillCardAnimation(card.CardData.Name, target, animationType, onComplete);
+                AnimationDatabaseManager.Instance.PlayEnemySkillCardAnimation(card.CardDefinition.displayName, target, animationType, onComplete);
             else
-                AnimationDatabaseManager.Instance.PlayPlayerSkillCardAnimation(card.CardData.Name, target, animationType, onComplete);
+                AnimationDatabaseManager.Instance.PlayPlayerSkillCardAnimation(card.CardDefinition.displayName, target, animationType, onComplete);
         }
 
         #region Drag Animation Methods

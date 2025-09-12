@@ -20,7 +20,7 @@ namespace Game.SkillCardSystem.Runtime
     public class EnemySkillCardRuntime : ISkillCard
     {
         /// <inheritdoc/>
-        public SkillCardData CardData { get; private set; }
+        public SkillCardDefinition CardDefinition { get; private set; }
 
         private readonly List<SkillCardEffectSO> effects;
         private readonly SlotOwner owner = SlotOwner.ENEMY;
@@ -31,21 +31,23 @@ namespace Game.SkillCardSystem.Runtime
         private int currentCoolTime = 0;
 
         /// <summary>
-        /// 생성자: 카드 데이터와 이펙트 리스트를 주입받아 초기화합니다.
+        /// 생성자: 카드 정의를 주입받아 초기화합니다.
         /// </summary>
-        public EnemySkillCardRuntime(SkillCardData cardData, List<SkillCardEffectSO> effects)
+        public EnemySkillCardRuntime(SkillCardDefinition definition)
         {
-            CardData = cardData ?? throw new System.ArgumentNullException(nameof(cardData));
-            this.effects = effects ?? new List<SkillCardEffectSO>();
+            CardDefinition = definition ?? throw new System.ArgumentNullException(nameof(definition));
+            this.effects = definition.configuration.hasEffects ? 
+                definition.configuration.effects.ConvertAll(e => e.effectSO) : 
+                new List<SkillCardEffectSO>();
         }
 
         #region 메타 정보
 
-        public string GetCardName() => CardData?.Name ?? "[Unnamed Enemy Card]";
-        public string GetDescription() => CardData?.Description ?? "[No Description]";
-        public Sprite GetArtwork() => CardData?.Artwork;
-        public int GetCoolTime() => CardData?.CoolTime ?? 0;
-        public int GetEffectPower(SkillCardEffectSO effect) => CardData?.Damage ?? 0;
+        public string GetCardName() => CardDefinition?.displayName ?? "[Unnamed Enemy Card]";
+        public string GetDescription() => CardDefinition?.description ?? "[No Description]";
+        public Sprite GetArtwork() => CardDefinition?.artwork;
+        public int GetCoolTime() => 0; // 쿨타임 제거됨
+        public int GetEffectPower(SkillCardEffectSO effect) => CardDefinition?.configuration.hasDamage == true ? CardDefinition.configuration.damageConfig.baseDamage : 0;
         public List<SkillCardEffectSO> CreateEffects() => new List<SkillCardEffectSO>(effects);
 
         public SlotOwner GetOwner() => owner;
@@ -65,7 +67,7 @@ namespace Game.SkillCardSystem.Runtime
 
         #region 쿨타임 관리
 
-        public int GetMaxCoolTime() => CardData?.CoolTime ?? 0;
+        public int GetMaxCoolTime() => 0; // 쿨타임 제거됨
         public int GetCurrentCoolTime() => currentCoolTime;
         public void SetCurrentCoolTime(int value) => currentCoolTime = Mathf.Max(0, value);
 

@@ -73,7 +73,7 @@ public class CombatInstaller : MonoInstaller
     {
         Container.Bind<IFactory<CombatPrepareState>>().To<CombatPrepareStateFactory>().AsTransient();
         Container.Bind<IFactory<CombatPlayerInputState>>().To<CombatPlayerInputStateFactory>().AsTransient();
-        Container.Bind<IFactory<CombatFirstAttackState>>().To<CombatFirstAttackStateFactory>().AsTransient();
+        Container.Bind<IFactory<CombatAttackState>>().To<CombatAttackStateFactory>().AsTransient();
         Container.Bind<IFactory<CombatSecondAttackState>>().To<CombatSecondAttackStateFactory>().AsTransient();
         Container.Bind<IFactory<CombatResultState>>().To<CombatResultStateFactory>().AsTransient();
         Container.Bind<IFactory<CombatVictoryState>>().To<CombatVictoryStateFactory>().AsTransient();

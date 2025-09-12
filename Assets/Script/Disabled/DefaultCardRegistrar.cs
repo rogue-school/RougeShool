@@ -18,7 +18,7 @@ namespace Game.CombatSystem.DragDrop
 
             CardSlotHelper.AttachCardToSlot(ui, (MonoBehaviour)slot);
 
-            Debug.Log($"[Registrar] 카드 등록 완료: {card.CardData.Name} → {execSlot}");
+            Debug.Log($"[Registrar] 카드 등록 완료: {card.CardDefinition.Name} → {execSlot}");
         }
     }
 }

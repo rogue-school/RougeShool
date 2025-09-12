@@ -336,7 +336,7 @@ namespace Game.CombatSystem.Manager
                 }
             }
 
-            Debug.Log($"[EnemyHandManager] 카드 복원 완료: {card.CardData?.CardName ?? "Unknown"} -> {slotPosition}");
+            Debug.Log($"[EnemyHandManager] 카드 복원 완료: {card.CardDefinition?.CardName ?? "Unknown"} -> {slotPosition}");
         }
 
         public void ResetTurnRegistrationFlag()
@@ -399,7 +399,7 @@ namespace Game.CombatSystem.Manager
             }
             else if (entry.card != null)
             {
-                runtimeCard = cardFactory.CreateEnemyCard(entry.card.GetCardData(), entry.card.CreateEffects(), currentEnemy?.Data?.name);
+                runtimeCard = cardFactory.CreateEnemyCard(entry.card.CardDefinition, currentEnemy?.Data?.name);
             }
             runtimeCard.SetHandSlot(pos);
 
@@ -460,7 +460,7 @@ namespace Game.CombatSystem.Manager
             }
             else if (entry.card != null)
             {
-                runtimeCard = cardFactory.CreateEnemyCard(entry.card.GetCardData(), entry.card.CreateEffects(), currentEnemy?.Data?.name);
+                runtimeCard = cardFactory.CreateEnemyCard(entry.card.CardDefinition, currentEnemy?.Data?.name);
             }
             if (runtimeCard == null)
             {

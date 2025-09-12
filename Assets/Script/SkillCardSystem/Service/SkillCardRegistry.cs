@@ -25,9 +25,9 @@ namespace Game.SkillCardSystem.Service
             idToDefinition.Clear();
             foreach (var def in definitions)
             {
-                if (def == null || string.IsNullOrEmpty(def.id)) continue;
-                if (!idToDefinition.ContainsKey(def.id)) idToDefinition.Add(def.id, def);
-                else Debug.LogWarning($"[SkillCardRegistry] 중복 id 감지: {def.id}");
+                if (def == null || string.IsNullOrEmpty(def.cardId)) continue;
+                if (!idToDefinition.ContainsKey(def.cardId)) idToDefinition.Add(def.cardId, def);
+                else Debug.LogWarning($"[SkillCardRegistry] 중복 id 감지: {def.cardId}");
             }
         }
 
@@ -43,8 +43,8 @@ namespace Game.SkillCardSystem.Service
 
         public void Add(SkillCardDefinition definition)
         {
-            if (definition == null || string.IsNullOrEmpty(definition.id)) return;
-            idToDefinition[definition.id] = definition;
+            if (definition == null || string.IsNullOrEmpty(definition.cardId)) return;
+            idToDefinition[definition.cardId] = definition;
         }
 
         public void Remove(string id)

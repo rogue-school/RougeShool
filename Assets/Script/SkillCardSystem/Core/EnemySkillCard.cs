@@ -14,12 +14,12 @@ namespace Game.SkillCardSystem.Core
     public class EnemySkillCard : ScriptableObject
     {
 
-        [Header("카드 데이터")]
+        [Header("카드 정의")]
         /// <summary>
-        /// 카드의 기본 정보 (이름, 쿨타임, 데미지 등)
+        /// 카드의 정의 정보
         /// </summary>
         [field: SerializeField]
-        public SkillCardData CardData { get; private set; }
+        public SkillCardDefinition CardDefinition { get; private set; }
 
         [Header("카드 실행 시 적용할 효과 목록")]
         [SerializeField]
@@ -32,23 +32,23 @@ namespace Game.SkillCardSystem.Core
         public List<SkillCardEffectSO> CreateEffects() => effects;
 
         /// <summary>
-        /// 카드의 데이터 객체를 반환합니다.
+        /// 카드의 정의 객체를 반환합니다.
         /// </summary>
-        public SkillCardData GetCardData() => CardData;
+        public SkillCardDefinition GetCardDefinition() => CardDefinition;
 
         /// <summary>
         /// 카드의 이름을 반환합니다.
         /// </summary>
-        public string GetCardName() => CardData?.Name ?? "Unnamed Card";
+        public string GetCardName() => CardDefinition?.displayName ?? "Unnamed Card";
 
         /// <summary>
         /// 카드의 데미지 수치를 반환합니다.
         /// </summary>
-        public int GetDamage() => CardData?.Damage ?? 0;
+        public int GetDamage() => CardDefinition?.configuration.hasDamage == true ? CardDefinition.configuration.damageConfig.baseDamage : 0;
 
         /// <summary>
-        /// 카드의 쿨타임 값을 반환합니다.
+        /// 카드의 쿨타임 값을 반환합니다. (새 구조에서는 쿨타임 제거됨)
         /// </summary>
-        public int GetCoolTime() => CardData?.CoolTime ?? 0;
+        public int GetCoolTime() => 0;
     }
 }

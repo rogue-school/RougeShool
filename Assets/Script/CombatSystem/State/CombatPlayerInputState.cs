@@ -96,7 +96,7 @@ namespace Game.CombatSystem.State
             }
 
             hasStarted = true;
-            Debug.Log("<color=cyan>[STATE] CombatPlayerInputState → CombatFirstAttackState 전이</color>");
+            Debug.Log("<color=cyan>[STATE] CombatPlayerInputState → CombatAttackState 전이</color>");
 
             flowCoordinator.DisableStartButton();
             flowCoordinator.DisablePlayerInput();

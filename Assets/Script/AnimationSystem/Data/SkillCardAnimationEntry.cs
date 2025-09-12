@@ -7,10 +7,10 @@ namespace Game.AnimationSystem.Data
     [System.Serializable]
     public class PlayerSkillCardAnimationEntry
     {
-        [Header("플레이어 스킬카드 SO")]
-        [Tooltip("애니메이션을 지정할 플레이어 스킬카드 SO (PlayerSkillCard만 선택)")]
-        [SerializeField] private PlayerSkillCard playerSkillCard;
-        public PlayerSkillCard PlayerSkillCard => playerSkillCard;
+        [Header("스킬카드 정의")]
+        [Tooltip("애니메이션을 지정할 스킬카드 정의")]
+        [SerializeField] private SkillCardDefinition skillCardDefinition;
+        public SkillCardDefinition SkillCardDefinition => skillCardDefinition;
 
         [Header("생성 애니메이션")]
         [Tooltip("스킬카드 생성 시 애니메이션")]

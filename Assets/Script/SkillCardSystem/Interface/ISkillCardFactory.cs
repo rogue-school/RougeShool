@@ -13,18 +13,18 @@ namespace Game.SkillCardSystem.Interface
         /// <summary>
         /// 적 전용 스킬 카드를 생성합니다.
         /// </summary>
-        /// <param name="data">카드의 기본 데이터 (이름, 설명, 아트워크 등)</param>
-        /// <param name="effects">카드에 포함될 효과 목록</param>
+        /// <param name="definition">카드 정의</param>
+        /// <param name="ownerCharacterName">소유 캐릭터 이름</param>
         /// <returns>적 소유의 스킬 카드 인스턴스</returns>
-        ISkillCard CreateEnemyCard(SkillCardData data, List<SkillCardEffectSO> effects, string ownerCharacterName);
+        ISkillCard CreateEnemyCard(SkillCardDefinition definition, string ownerCharacterName = null);
 
         /// <summary>
         /// 플레이어 전용 스킬 카드를 생성합니다.
         /// </summary>
-        /// <param name="data">카드의 기본 데이터 (이름, 설명, 아트워크 등)</param>
-        /// <param name="effects">카드에 포함될 효과 목록</param>
+        /// <param name="definition">카드 정의</param>
+        /// <param name="ownerCharacterName">소유 캐릭터 이름</param>
         /// <returns>플레이어 소유의 스킬 카드 인스턴스</returns>
-        ISkillCard CreatePlayerCard(SkillCardData data, List<SkillCardEffectSO> effects, string ownerCharacterName);
+        ISkillCard CreatePlayerCard(SkillCardDefinition definition, string ownerCharacterName = null);
 
         /// <summary>
         /// 공용 카드 정의(SkillCardDefinition)와 소유자 정보를 기반으로 카드를 생성합니다.

@@ -84,14 +84,19 @@ namespace Game.AnimationSystem.Controllers
 			settings = new AnimationSettings();
 			
 			// 카드 타입에 따른 기본 설정 적용
-			if (cardData is PlayerSkillCard playerCard)
+			if (cardData is SkillCardDefinition skillCardDef)
 			{
-				ApplyPlayerCardDefaults();
+				ApplySkillCardDefaults();
 			}
-			else if (cardData is EnemySkillCard enemyCard)
-			{
-				ApplyEnemyCardDefaults();
-			}
+		}
+		
+		private void ApplySkillCardDefaults()
+		{
+			// 스킬카드 기본 설정
+			settings.spawnDuration = 1.0f;
+			settings.spawnStartScale = Vector3.zero;
+			settings.spawnEndScale = Vector3.one;
+			settings.spawnEase = DG.Tweening.Ease.OutBack;
 		}
 		
 		private void ApplyPlayerCardDefaults()

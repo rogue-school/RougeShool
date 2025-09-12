@@ -256,7 +256,7 @@ namespace Game.CoreSystem.Animation
                 return null;
             if (enableCaching && playerSkillCardCache.ContainsKey(skillCardId))
                 return playerSkillCardCache[skillCardId];
-            var entry = playerSkillCardDatabase.SkillCardAnimations.Find(e => e.PlayerSkillCard != null && e.PlayerSkillCard.CardData != null && e.PlayerSkillCard.CardData.Name == skillCardId);
+            var entry = playerSkillCardDatabase.SkillCardAnimations.Find(e => e.SkillCardDefinition != null && e.SkillCardDefinition.displayName == skillCardId);
             if (enableCaching && entry != null)
             {
                 if (playerSkillCardCache.Count >= maxCacheSize)
@@ -274,7 +274,7 @@ namespace Game.CoreSystem.Animation
                 return null;
             if (enableCaching && enemySkillCardCache.ContainsKey(skillCardId))
                 return enemySkillCardCache[skillCardId];
-            var entry = enemySkillCardDatabase.SkillCardAnimations.Find(e => e.EnemySkillCard != null && e.EnemySkillCard.CardData != null && e.EnemySkillCard.CardData.Name == skillCardId);
+            var entry = enemySkillCardDatabase.SkillCardAnimations.Find(e => e.EnemySkillCard != null && e.EnemySkillCard.CardDefinition != null && e.EnemySkillCard.CardDefinition.displayName == skillCardId);
             if (enableCaching && entry != null)
             {
                 if (enemySkillCardCache.Count >= maxCacheSize)
@@ -472,8 +472,8 @@ namespace Game.CoreSystem.Animation
                 Debug.Log($"플레이어 스킬카드 데이터베이스:");
                 foreach (var entry in playerSkillCardDatabase.SkillCardAnimations)
                 {
-                    if (entry.PlayerSkillCard != null && entry.PlayerSkillCard.CardData != null)
-                        Debug.Log($"  - {entry.PlayerSkillCard.CardData.Name}");
+                    if (entry.SkillCardDefinition != null)
+                        Debug.Log($"  - {entry.SkillCardDefinition.displayName}");
                 }
             }
             
@@ -482,8 +482,8 @@ namespace Game.CoreSystem.Animation
                 Debug.Log($"적 스킬카드 데이터베이스:");
                 foreach (var entry in enemySkillCardDatabase.SkillCardAnimations)
                 {
-                    if (entry.EnemySkillCard != null && entry.EnemySkillCard.CardData != null)
-                        Debug.Log($"  - {entry.EnemySkillCard.CardData.Name}");
+                    if (entry.EnemySkillCard != null && entry.EnemySkillCard.CardDefinition != null)
+                        Debug.Log($"  - {entry.EnemySkillCard.CardDefinition.displayName}");
                 }
             }
             
@@ -573,9 +573,9 @@ namespace Game.CoreSystem.Animation
             }
             var owner = card.GetOwner();
             if (owner == SlotOwner.ENEMY)
-                PlayEnemySkillCardAnimation(card.CardData.Name, target, animationType, onComplete);
+                PlayEnemySkillCardAnimation(card.CardDefinition.displayName, target, animationType, onComplete);
             else
-                PlayPlayerSkillCardAnimation(card.CardData.Name, target, animationType, onComplete);
+                PlayPlayerSkillCardAnimation(card.CardDefinition.displayName, target, animationType, onComplete);
         }
 
         #region Drag Animation Methods
@@ -696,9 +696,9 @@ namespace Game.CoreSystem.Animation
             }
             var owner = card.GetOwner();
             if (owner == SlotOwner.ENEMY)
-                PlayEnemySkillCardDragStartAnimation(card.CardData.Name, target, onComplete);
+                PlayEnemySkillCardDragStartAnimation(card.CardDefinition.displayName, target, onComplete);
             else
-                PlayPlayerSkillCardDragStartAnimation(card.CardData.Name, target, onComplete);
+                PlayPlayerSkillCardDragStartAnimation(card.CardDefinition.displayName, target, onComplete);
         }
 
         /// <summary>
@@ -714,9 +714,9 @@ namespace Game.CoreSystem.Animation
             }
             var owner = card.GetOwner();
             if (owner == SlotOwner.ENEMY)
-                PlayEnemySkillCardDragEndAnimation(card.CardData.Name, target, onComplete);
+                PlayEnemySkillCardDragEndAnimation(card.CardDefinition.displayName, target, onComplete);
             else
-                PlayPlayerSkillCardDragEndAnimation(card.CardData.Name, target, onComplete);
+                PlayPlayerSkillCardDragEndAnimation(card.CardDefinition.displayName, target, onComplete);
         }
         #endregion
 
@@ -780,9 +780,9 @@ namespace Game.CoreSystem.Animation
             }
             var owner = card.GetOwner();
             if (owner == SlotOwner.ENEMY)
-                PlayEnemySkillCardDropAnimation(card.CardData.Name, target, onComplete);
+                PlayEnemySkillCardDropAnimation(card.CardDefinition.displayName, target, onComplete);
             else
-                PlayPlayerSkillCardDropAnimation(card.CardData.Name, target, onComplete);
+                PlayPlayerSkillCardDropAnimation(card.CardDefinition.displayName, target, onComplete);
         }
         #endregion
     }

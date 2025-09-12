@@ -80,15 +80,11 @@ namespace Game.SkillCardSystem.Manager
 
             foreach (var entry in deck.Cards)
             {
-                var pos = entry.Slot;
+                var pos = SkillCardSlotPosition.PLAYER_SLOT_1; // 기본값
                 ISkillCard card = null;
-                if (entry.Definition != null)
+                if (entry != null)
                 {
-                    card = entry.CreateFromDefinition(cardFactory, owner?.CharacterData?.name);
-                }
-                else if (entry.Card != null)
-                {
-                    card = cardFactory.CreatePlayerCard(entry.Card.CardData, entry.Card.CreateEffects(), owner?.CharacterData?.name);
+                    card = cardFactory.CreatePlayerCard(entry, owner?.CharacterData?.name);
                 }
                 card.SetCurrentCoolTime(0);
                 cards[pos] = card;
@@ -215,7 +211,7 @@ namespace Game.SkillCardSystem.Manager
                     if (cardUIs.TryGetValue(kvp.Key, out var ui))
                     {
                         if (ui != null && ui.gameObject != null)
-                            CombatEvents.RaisePlayerCardUse(card.CardData.Name, ui.gameObject);
+                            CombatEvents.RaisePlayerCardUse(card.CardDefinition.displayName, ui.gameObject);
                     }
                     cards[kvp.Key] = null;
                     cardUIs.Remove(kvp.Key);
@@ -240,7 +236,7 @@ namespace Game.SkillCardSystem.Manager
             // foreach (SkillCardSlotPosition pos in System.Enum.GetValues(typeof(SkillCardSlotPosition)))
             // {
             //     var card = GetCardInSlot(pos);
-            //     Debug.Log($"슬롯 {pos}: {(card != null ? card.CardData.Name : "비어 있음")}");
+            //     Debug.Log($"슬롯 {pos}: {(card != null ? card.CardDefinition.displayName : "비어 있음")}");
             // }
         }
 
@@ -337,7 +333,7 @@ namespace Game.SkillCardSystem.Manager
             {
                 var card = cards.ContainsKey(pos) ? cards[pos] : null;
                 var ui = cardUIs.ContainsKey(pos) ? cardUIs[pos] : null;
-                string cardName = card != null ? card.CardData.Name : "null";
+                string cardName = card != null ? card.CardDefinition.displayName : "null";
                 string uiName = ui != null ? ui.name : "null";
                 string sync = (card != null && ui != null) ? "정상"
                             : (card != null && ui == null) ? "⚠️ 카드만 존재"
@@ -509,7 +505,7 @@ namespace Game.SkillCardSystem.Manager
                 }
             }
 
-            Debug.Log($"[PlayerHandManager] 카드 사용: {card.CardData?.CardName ?? "Unknown"}");
+            Debug.Log($"[PlayerHandManager] 카드 사용: {card.CardDefinition?.displayName ?? "Unknown"}");
         }
 
 

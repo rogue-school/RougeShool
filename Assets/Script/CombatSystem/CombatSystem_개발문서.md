@@ -40,7 +40,7 @@ CombatSystem/
 - **ICombatExecutor.cs**: 전투 실행 인터페이스
 
 ### State 폴더 (6개 파일)
-- **CombatFirstAttackState.cs**: 첫 번째 공격 상태
+- **CombatAttackState.cs**: 첫 번째 공격 상태
 - **CombatPlayerInputState.cs**: 플레이어 입력 상태
 - **CombatPrepareState.cs**: 준비 상태
 - **CombatResultState.cs**: 결과 상태
@@ -367,7 +367,7 @@ classDiagram
         +GetCurrentCharacter() ICharacter
     }
     
-    ICombatState <|.. CombatFirstAttackState
+    ICombatState <|.. CombatAttackState
     ICombatState <|.. CombatSecondAttackState
     ICombatState <|.. CombatPlayerInputState
     CombatStateMachine --> ICombatState

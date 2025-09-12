@@ -20,9 +20,9 @@ namespace Game.SkillCardSystem.Interface
         #region 카드 데이터
 
         /// <summary>
-        /// 카드에 연결된 데이터 객체입니다.
+        /// 카드에 연결된 정의 객체입니다.
         /// </summary>
-        SkillCardData CardData { get; }
+        SkillCardDefinition CardDefinition { get; }
 
         /// <summary>
         /// 카드 이름을 반환합니다.

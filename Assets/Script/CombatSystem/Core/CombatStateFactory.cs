@@ -14,7 +14,7 @@ namespace Game.CombatSystem.Factory
 
         [Inject] private IFactory<CombatPrepareState> prepareFactory;
         [Inject] private IFactory<CombatPlayerInputState> inputFactory;
-        [Inject] private IFactory<CombatFirstAttackState> firstAttackFactory;
+        [Inject] private IFactory<CombatAttackState> firstAttackFactory;
         [Inject] private IFactory<CombatSecondAttackState> secondAttackFactory;
         [Inject] private IFactory<CombatResultState> resultFactory;
         [Inject] private IFactory<CombatVictoryState> victoryFactory;

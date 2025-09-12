@@ -8,6 +8,8 @@ using Game.CombatSystem.Utility;
 using Game.IManager;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Runtime;
+using Game.SkillCardSystem.Factory;
+using Game.SkillCardSystem.Data;
 using Game.SkillCardSystem.UI;
 using Game.CharacterSystem.Interface;
 using UnityEngine;
@@ -94,13 +96,14 @@ namespace Game.CombatSystem.Service
                     var slot = handSlots[i];
 
                     // 카드 인스턴스 생성
-                    var skillCard = new PlayerSkillCardInstance(
-                        cardEntry.Card.CardData,
-                        cardEntry.CreateEffects(),
-                        SlotOwner.PLAYER
+                    var factory = new SkillCardFactory();
+                    var skillCard = factory.CreateFromDefinition(
+                        cardEntry.Card,
+                        Owner.Player,
+                        "Player"
                     );
 
-                    var combatSlotPosition = SlotPositionUtil.ToCombatSlot(cardEntry.Slot);
+                    var combatSlotPosition = CombatSlotPosition.FIRST; // 기본값
 
                     if (slot is ICombatCardSlot combatSlot)
                     {

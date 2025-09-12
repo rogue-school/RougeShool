@@ -109,7 +109,7 @@ namespace Game.SkillCardSystem.Manager
             currentTurnCards.Remove(card);
             hasPlayedThisTurn = true;
 
-            Debug.Log($"[TurnBasedCardManager] 카드 사용: {card.CardData?.CardName ?? "Unknown"} (남은 카드: {currentTurnCards.Count})");
+            Debug.Log($"[TurnBasedCardManager] 카드 사용: {card.CardDefinition?.CardName ?? "Unknown"} (남은 카드: {currentTurnCards.Count})");
         }
 
         #endregion

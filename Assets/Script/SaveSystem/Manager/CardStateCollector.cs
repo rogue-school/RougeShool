@@ -271,11 +271,11 @@ namespace Game.SaveSystem.Manager
                 return new CardSlotData(); // 빈 슬롯
             
             return new CardSlotData(
-                card.CardData?.CardId ?? "",
-                card.CardData?.CardName ?? "",
-                card.CardData?.Cost ?? 0,
-                card.CardData?.Description ?? "",
-                card.CardData?.CardType ?? ""
+                card.CardDefinition?.CardId ?? "",
+                card.CardDefinition?.CardName ?? "",
+                card.CardDefinition?.Cost ?? 0,
+                card.CardDefinition?.Description ?? "",
+                card.CardDefinition?.CardType ?? ""
             )
             {
                 slotPosition = (int)slotPos,
@@ -296,11 +296,11 @@ namespace Game.SaveSystem.Manager
                 return new CardSlotData(); // 빈 슬롯
             
             return new CardSlotData(
-                card.CardData?.CardId ?? "",
-                card.CardData?.CardName ?? "",
-                card.CardData?.Cost ?? 0,
-                card.CardData?.Description ?? "",
-                card.CardData?.CardType ?? ""
+                card.CardDefinition?.CardId ?? "",
+                card.CardDefinition?.CardName ?? "",
+                card.CardDefinition?.Cost ?? 0,
+                card.CardDefinition?.Description ?? "",
+                card.CardDefinition?.CardType ?? ""
             )
             {
                 slotPosition = (int)slotPos,
@@ -324,9 +324,9 @@ namespace Game.SaveSystem.Manager
             {
                 foreach (var card in cards)
                 {
-                    if (card?.CardData?.CardId != null)
+                    if (card?.CardDefinition?.CardId != null)
                     {
-                        cardIds.Add(card.CardData.CardId);
+                        cardIds.Add(card.CardDefinition.CardId);
                     }
                 }
             }

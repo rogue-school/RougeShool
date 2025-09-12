@@ -69,7 +69,7 @@ namespace Game.CharacterSystem.Initialization
                         // AnimationFacade를 통해 애니메이션 실행
                         if (AnimationFacade.Instance != null)
                         {
-                            AnimationFacade.Instance.PlaySkillCardAnimation(card.CardData.Name, "spawn", uiObj.gameObject);
+                            AnimationFacade.Instance.PlaySkillCardAnimation(card.CardDefinition.displayName, "spawn", uiObj.gameObject);
                         }
                         animCount++; // 애니메이션 호출 완료
                     }
