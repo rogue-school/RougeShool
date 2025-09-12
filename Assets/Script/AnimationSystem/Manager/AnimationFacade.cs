@@ -337,24 +337,23 @@ namespace Game.AnimationSystem.Manager
             {
                 var cardObj = skillCards[i];
                 var slotPos = slotPositions[i];
-                var vanishAnim = cardObj.GetComponent<AnimationSystem.Animator.SkillCardAnimation.VanishAnimation.DefaultSkillCardVanishAnimation>() ?? cardObj.AddComponent<AnimationSystem.Animator.SkillCardAnimation.VanishAnimation.DefaultSkillCardVanishAnimation>();
-                vanishAnim.PlayVanishAnimation(() => {
-                    if (isPlayerCharacter)
-                    {
-                        var playerHandManager = UnityEngine.Object.FindFirstObjectByType<Game.SkillCardSystem.Manager.PlayerHandManager>();
-                        playerHandManager?.RemoveCardUIAndReferences(slotPos);
-                    }
-                    else
-                    {
-                        // 이 경로는 더 이상 사용되지 않습니다.
-                    }
-                    finished++;
-                    if (finished == skillCards.Count)
-                    {
-                        IsHandVanishAnimationPlaying = false;
-                        onComplete?.Invoke();
-                    }
-                });
+                // VanishAnimation은 현재 구현체가 없으므로 기본 처리
+                // TODO: 실제 VanishAnimation 구현체가 생성되면 교체 필요
+                if (isPlayerCharacter)
+                {
+                    var playerHandManager = UnityEngine.Object.FindFirstObjectByType<Game.SkillCardSystem.Manager.PlayerHandManager>();
+                    playerHandManager?.RemoveCardUIAndReferences(slotPos);
+                }
+                else
+                {
+                    // 이 경로는 더 이상 사용되지 않습니다.
+                }
+                finished++;
+                if (finished == skillCards.Count)
+                {
+                    IsHandVanishAnimationPlaying = false;
+                    onComplete?.Invoke();
+                }
             }
         }
         

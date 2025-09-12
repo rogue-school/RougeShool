@@ -29,6 +29,7 @@ alwaysApply: true
 - 기존 코드/자산 재사용 우선, 중복 금지.
 - 즉시 적용 가능한 변경은 즉시 수행, 대규모는 설계/영향도 제시 후 진행.
 - 변경 시 관련 문서/씬 문서 동기화 및 Delta 기록.
+- **Git 커밋은 사용자가 수동으로 수행**: AI는 코드 수정만 하고 커밋은 실행하지 않음.
 
 ## 4) AI 코드 생성 규칙(Cursor 도구/API 명세 포함)
 - 탐색: codebase_search(광역 의미 탐색) → grep(정확 매칭) → read_file(세부 확인).
@@ -107,6 +108,7 @@ Assets/Script/
 - read_lints / todo_write
 - run_terminal_cmd / web_search / update_memory / edit_notebook
 - multi_tool_use.parallel
+- **주의**: run_terminal_cmd는 Git 커밋 명령어 실행 금지
 
 ## 13) 변경 기록(Delta)
 - 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`

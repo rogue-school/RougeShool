@@ -22,8 +22,6 @@ using Game.AnimationSystem.Animator;
 using Game.AnimationSystem.Manager;
 using Game.CombatSystem.Core;
 using Game.AnimationSystem.Helper;
-using Game.AnimationSystem.Animator.SkillCardAnimation.MoveAnimation;
-using Game.AnimationSystem.Animator.SkillCardAnimation.VanishAnimation;
 using System.Linq;
 
 namespace Game.CombatSystem.Manager
@@ -536,10 +534,14 @@ namespace Game.CombatSystem.Manager
                     Debug.LogError($"[EnemyHandManager] targetSlotRect가 null입니다. to: {to}, slotObj: {slotObj.name}");
                     yield break;
                 }
-                var animator = AnimationHelper.GetOrAddAnimator<DefaultSkillCardMoveAnimation>(uiObj.gameObject);
-                bool animDone = false;
-                animator.PlayAnimation(targetSlotRect, () => { animDone = true; });
-                yield return new WaitUntil(() => animDone);
+                // TODO: 실제 MoveAnimation 구현체가 생성되면 교체 필요
+                // var animator = AnimationHelper.GetOrAddAnimator<DefaultSkillCardMoveAnimation>(uiObj.gameObject);
+                // bool animDone = false;
+                // animator.PlayAnimation(targetSlotRect, () => { animDone = true; });
+                // yield return new WaitUntil(() => animDone);
+                
+                // 애니메이션 없이 즉시 이동
+                uiObj.transform.position = targetSlotRect.position;
 
                 // [전문가적 데이터 동기화] 애니메이션 완료 후 실제 데이터 이동
                 if (handSlots.TryGetValue(from, out var fromSlot) && handSlots.TryGetValue(to, out var toSlot))
@@ -584,11 +586,14 @@ namespace Game.CombatSystem.Manager
                 yield break;
             }
 
-            // 애니메이션 실행
-            var animator = AnimationHelper.GetOrAddAnimator<DefaultSkillCardMoveAnimation>(cardUI.gameObject);
-            bool animDone = false;
-            animator.PlayAnimation(targetSlotRect, () => { animDone = true; });
-            yield return new WaitUntil(() => animDone);
+            // TODO: 실제 MoveAnimation 구현체가 생성되면 교체 필요
+            // var animator = AnimationHelper.GetOrAddAnimator<DefaultSkillCardMoveAnimation>(cardUI.gameObject);
+            // bool animDone = false;
+            // animator.PlayAnimation(targetSlotRect, () => { animDone = true; });
+            // yield return new WaitUntil(() => animDone);
+            
+            // 애니메이션 없이 즉시 이동
+            cardUI.transform.position = targetSlotRect.position;
 
             // 슬롯 상태 갱신 (애니메이션 완료 후)
             fromSlot.Clear();
@@ -657,20 +662,34 @@ namespace Game.CombatSystem.Manager
             int vanishedCount = 0;
             foreach (var cardUI in cardsToVanish)
             {
-                var vanishAnim = cardUI.GetComponent<DefaultSkillCardVanishAnimation>() ?? cardUI.gameObject.AddComponent<DefaultSkillCardVanishAnimation>();
-                vanishAnim.PlayVanishAnimation(() => {
-                    vanishedCount++;
-                    if (cardUI != null && cardUI.gameObject != null)
-                    {
-                        Destroy(cardUI.gameObject);
-                    }
-                    if (vanishedCount == cardsToVanish.Count)
-                    {
-                        // 모든 애니메이션이 끝나면 핸드를 완전히 정리
-                        ClearHandInternal();
-                        onComplete?.Invoke();
-                    }
-                });
+                // TODO: 실제 VanishAnimation 구현체가 생성되면 교체 필요
+                // var vanishAnim = cardUI.GetComponent<DefaultSkillCardVanishAnimation>() ?? cardUI.gameObject.AddComponent<DefaultSkillCardVanishAnimation>();
+                // vanishAnim.PlayVanishAnimation(() => {
+                //     vanishedCount++;
+                //     if (cardUI != null && cardUI.gameObject != null)
+                //     {
+                //         Destroy(cardUI.gameObject);
+                //     }
+                //     if (vanishedCount == cardsToVanish.Count)
+                //     {
+                //         // 모든 애니메이션이 끝나면 핸드를 완전히 정리
+                //         ClearHandInternal();
+                //         onComplete?.Invoke();
+                //     }
+                // });
+                
+                // 애니메이션 없이 즉시 제거
+                vanishedCount++;
+                if (cardUI != null && cardUI.gameObject != null)
+                {
+                    Destroy(cardUI.gameObject);
+                }
+                if (vanishedCount == cardsToVanish.Count)
+                {
+                    // 모든 애니메이션이 끝나면 핸드를 완전히 정리
+                    ClearHandInternal();
+                    onComplete?.Invoke();
+                }
             }
         }
 

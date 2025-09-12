@@ -64,38 +64,29 @@ AnimationSystem/
 - **SkillCardAnimationEntry.cs**: 스킬카드 애니메이션 엔트리 데이터
 - **SkillCardAnimationSettings.cs**: 스킬카드 애니메이션 설정
 
-### Animator 폴더 규칙 (20개 파일)
+### Animator 폴더 규칙 (11개 파일)
 
-#### CharacterAnimation 하위 폴더 (8개 파일)
+#### CharacterAnimation 하위 폴더 (4개 파일)
 - **DeathAnimation/**:
   - **CharacterDeathAnimation001.cs**: 캐릭터 사망 애니메이션 구현체
-  - **DefaultCharacterDeathAnimation.cs**: 기본 캐릭터 사망 애니메이션
 - **SpawnAnimation/**:
   - **CharacterSpawnAnimation001.cs**: 캐릭터 등장 애니메이션 구현체
-  - **DefaultCharacterSpawnAnimation.cs**: 기본 캐릭터 등장 애니메이션
 
-#### SkillCardAnimation 하위 폴더 (12개 파일)
+#### SkillCardAnimation 하위 폴더 (7개 파일)
 - **DragAnimation/**:
   - **SkillCardDragAnimation001.cs**: 스킬카드 드래그 애니메이션 구현체
-  - **DefaultSkillCardDragAnimation.cs**: 기본 스킬카드 드래그 애니메이션
 - **DropAnimation/**:
   - **SkillCardDropAnimation001.cs**: 스킬카드 드롭 애니메이션 구현체
-  - **DefaultSkillCardDropAnimation.cs**: 기본 스킬카드 드롭 애니메이션
 - **MoveAnimation/**:
   - **SkillCardMoveAnimation001.cs**: 스킬카드 이동 애니메이션 구현체
-  - **DefaultSkillCardMoveAnimation.cs**: 기본 스킬카드 이동 애니메이션
 - **MoveToCombatSlotAnimation/**:
   - **SkillCardCombatSlotMoveAnimation001.cs**: 스킬카드 전투 슬롯 이동 애니메이션 구현체
-  - **DefaultSkillCardCombatSlotMoveAnimation.cs**: 기본 스킬카드 전투 슬롯 이동 애니메이션
 - **SpawnAnimation/**:
   - **SkillCardSpawnAnimation001.cs**: 스킬카드 등장 애니메이션 구현체
-  - **DefaultSkillCardSpawnAnimation.cs**: 기본 스킬카드 등장 애니메이션
 - **UseAnimation/**:
   - **SkillCardUseAnimation001.cs**: 스킬카드 사용 애니메이션 구현체
-  - **DefaultSkillCardUseAnimation.cs**: 기본 스킬카드 사용 애니메이션
 - **VanishAnimation/**:
   - **SkillCardVanishAnimation001.cs**: 스킬카드 소멸 애니메이션 구현체
-  - **DefaultSkillCardVanishAnimation.cs**: 기본 스킬카드 소멸 애니메이션
 
 ### Helper 폴더 규칙 (1개 파일)
 - **AnimationHelper.cs**: 애니메이션 유틸리티 함수
@@ -247,3 +238,4 @@ public class AnimationSettings
 - 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 파일 수 정정 | 문서
 - 2025-01-27 | Maintainer | .mdc 규칙 파일로 변환 및 Cursor 규칙 저장 | 문서
 - 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 함수/변수/클래스 정보 추가 | 문서
+- 2025-01-27 | Maintainer | 사용하지 않는 Default 애니메이션 파일들 제거 및 규칙 파일 업데이트 | 코드/문서

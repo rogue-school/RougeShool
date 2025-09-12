@@ -9,7 +9,6 @@ using Game.SkillCardSystem.UI;
 using Game.CombatSystem.Utility;
 using Game.CombatSystem.DragDrop;
 using Game.AnimationSystem.Animator;
-using Game.AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation;
 
 namespace Game.CombatSystem.UI
 {
@@ -68,7 +67,8 @@ namespace Game.CombatSystem.UI
                 CardSlotHelper.AttachCardToSlot(currentCardUI, this);
 
                 // 생성 애니메이션 실행 (존재 시)
-                currentCardUI.GetComponent<DefaultSkillCardSpawnAnimation>()?.PlaySpawnAnimation();
+                // TODO: 실제 SpawnAnimation 구현체가 생성되면 교체 필요
+                // currentCardUI.GetComponent<DefaultSkillCardSpawnAnimation>()?.PlaySpawnAnimation();
 
                 // 복귀 기준 위치 명시
                 var dragHandler = currentCardUI.GetComponent<CardDragHandler>();

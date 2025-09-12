@@ -21,7 +21,7 @@ SkillCardSystem/
 ├── Effect/           # 효과 구현 (12개 파일)
 ├── Executor/         # 실행기 (1개 파일)
 ├── Factory/          # 팩토리 패턴 (3개 파일)
-├── Installation/     # DI 설치 (1개 파일) [주의: 폴더명 오타 - Installer이어야 함]
+├── Installer/        # DI 설치 (1개 파일)
 ├── Interface/        # 인터페이스 (26개 파일)
 ├── Manager/          # 매니저 클래스 (3개 파일)
 ├── Runtime/          # 런타임 로직 (5개 파일)
@@ -213,6 +213,6 @@ circulationSystem.MoveCardToUsedStorage(usedCard);
 - 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
 
 - 2025-01-27 | Maintainer | SkillCardSystem 개발 문서 초기 작성 | 문서
-- 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 Installation 폴더명 오타 주의 표시 | 문서
+- 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 Installer 폴더명 수정 | 문서
 - 2025-01-27 | Maintainer | .mdc 규칙 파일로 변환 및 Cursor 규칙 저장 | 문서
 - 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 클래스/메서드/인터페이스 정보 추가 | 문서

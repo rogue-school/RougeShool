@@ -88,12 +88,13 @@ namespace Game.CombatSystem.DragDrop
                 rectTransform.localPosition = localPoint;
                 
                 // 드래그 애니메이션 업데이트 (그림자 위치 갱신)
-                var dragAnimation = GetComponent<Game.AnimationSystem.Animator.SkillCardAnimation.DragAnimation.DefaultSkillCardDragAnimation>();
-                if (dragAnimation != null)
-                {
-                    // 카드 위치 업데이트 후 즉시 그림자 위치 동기화
-                    dragAnimation.UpdateDragAnimation(eventData.delta);
-                }
+                // TODO: 실제 DragAnimation 구현체가 생성되면 교체 필요
+                // var dragAnimation = GetComponent<DefaultSkillCardDragAnimation>();
+                // if (dragAnimation != null)
+                // {
+                //     // 카드 위치 업데이트 후 즉시 그림자 위치 동기화
+                //     dragAnimation.UpdateDragAnimation(eventData.delta);
+                // }
             }
         }
 
@@ -184,36 +185,17 @@ namespace Game.CombatSystem.DragDrop
                 img.raycastTarget = false;
             
             // 드래그 애니메이션 컴포넌트 찾기
-            var dragAnimation = GetComponent<Game.AnimationSystem.Animator.SkillCardAnimation.DragAnimation.DefaultSkillCardDragAnimation>();
+            // TODO: 실제 DragAnimation 구현체가 생성되면 교체 필요
+            // var dragAnimation = GetComponent<DefaultSkillCardDragAnimation>();
             
-            if (dragAnimation != null)
-            {
-                // 드롭 실패 애니메이션 실행 (원래 위치로 부드럽게 이동)
-                dragAnimation.PlayDropFailAnimation(OriginalWorldPosition, () => {
-                    // 애니메이션 완료 후 실제 위치 리셋
-                    CardSlotHelper.ResetCardToOriginal(cardUI);
-                    
-                    // 드래그 애니메이션 상태 완전 리셋
-                    dragAnimation.CompleteAnimation();
-                    
-                    // 애니메이션 완료 후 UI 상태 완전 복원
-                    canvasGroup.alpha = 1f;
-                    canvasGroup.blocksRaycasts = true;
-                    foreach (var img in GetComponentsInChildren<Image>())
-                        img.raycastTarget = true;
-                });
-            }
-            else
-            {
-                // 드래그 애니메이션 컴포넌트가 없으면 즉시 리셋
-                CardSlotHelper.ResetCardToOriginal(cardUI);
-                
-                // UI 상태 완전 복원
-                canvasGroup.alpha = 1f;
-                canvasGroup.blocksRaycasts = true;
-                foreach (var img in GetComponentsInChildren<Image>())
-                    img.raycastTarget = true;
-            }
+            // 드래그 애니메이션 컴포넌트가 없으면 즉시 리셋
+            CardSlotHelper.ResetCardToOriginal(cardUI);
+            
+            // UI 상태 완전 복원
+            canvasGroup.alpha = 1f;
+            canvasGroup.blocksRaycasts = true;
+            foreach (var img in GetComponentsInChildren<Image>())
+                img.raycastTarget = true;
         }
 
         /// <summary>
