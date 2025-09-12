@@ -15,10 +15,9 @@ MonoBehaviour:
   characterAnimations:
   - enemyCharacter: {fileID: 11400000, guid: 108def2387b83ed419893e2db0906a67, type: 2}
     spawnAnimation:
-      animationScriptType: AnimationSystem.Animator.CharacterAnimation.SpawnAnimation.DefaultCharacterSpawnAnimation,
-        Assembly-CSharp
+      animationScriptType: Game.AnimationSystem.Animator.CharacterAnimation.SpawnAnimation.CharacterSpawnAnimation001
       duration: 1
-      useEasing: 1
+      useEasing: 0
       customCurve:
         serializedVersion: 2
         m_Curve:
@@ -44,8 +43,7 @@ MonoBehaviour:
         m_PostInfinity: 2
         m_RotationOrder: 4
     deathAnimation:
-      animationScriptType: AnimationSystem.Animator.CharacterAnimation.DeathAnimation.DefaultCharacterDeathAnimation,
-        Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      animationScriptType: Game.AnimationSystem.Animator.CharacterAnimation.DeathAnimation.CharacterDeathAnimation001
       duration: 1
       useEasing: 1
       customCurve:
@@ -74,8 +72,7 @@ MonoBehaviour:
         m_RotationOrder: 4
   - enemyCharacter: {fileID: 11400000, guid: 8cadc1d0ca0290d459798eeaf8d20958, type: 2}
     spawnAnimation:
-      animationScriptType: AnimationSystem.Animator.CharacterAnimation.SpawnAnimation.DefaultCharacterSpawnAnimation,
-        Assembly-CSharp
+      animationScriptType: Game.AnimationSystem.Animator.CharacterAnimation.SpawnAnimation.CharacterSpawnAnimation001
       duration: 1
       useEasing: 1
       customCurve:
@@ -103,8 +100,7 @@ MonoBehaviour:
         m_PostInfinity: 2
         m_RotationOrder: 4
     deathAnimation:
-      animationScriptType: AnimationSystem.Animator.CharacterAnimation.DeathAnimation.DefaultCharacterDeathAnimation,
-        Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      animationScriptType: Game.AnimationSystem.Animator.CharacterAnimation.DeathAnimation.CharacterDeathAnimation001
       duration: 1
       useEasing: 1
       customCurve:
@@ -133,8 +129,7 @@ MonoBehaviour:
         m_RotationOrder: 4
   - enemyCharacter: {fileID: 11400000, guid: d76e0333b79eae7489a84708f63dbc40, type: 2}
     spawnAnimation:
-      animationScriptType: AnimationSystem.Animator.CharacterAnimation.SpawnAnimation.DefaultCharacterSpawnAnimation,
-        Assembly-CSharp
+      animationScriptType: 
       duration: 1
       useEasing: 1
       customCurve:
@@ -162,8 +157,7 @@ MonoBehaviour:
         m_PostInfinity: 2
         m_RotationOrder: 4
     deathAnimation:
-      animationScriptType: AnimationSystem.Animator.CharacterAnimation.DeathAnimation.DefaultCharacterDeathAnimation,
-        Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      animationScriptType: 
       duration: 1
       useEasing: 1
       customCurve:
@@ -192,8 +186,7 @@ MonoBehaviour:
         m_RotationOrder: 4
   - enemyCharacter: {fileID: 11400000, guid: b06fb8f06d11b0344808358d1ef5b616, type: 2}
     spawnAnimation:
-      animationScriptType: AnimationSystem.Animator.CharacterAnimation.SpawnAnimation.DefaultCharacterSpawnAnimation,
-        Assembly-CSharp
+      animationScriptType: Game.AnimationSystem.Animator.CharacterAnimation.SpawnAnimation.CharacterSpawnAnimation001
       duration: 1
       useEasing: 1
       customCurve:
@@ -221,8 +214,7 @@ MonoBehaviour:
         m_PostInfinity: 2
         m_RotationOrder: 4
     deathAnimation:
-      animationScriptType: AnimationSystem.Animator.CharacterAnimation.DeathAnimation.CharacterDeathAnimation001,
-        Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      animationScriptType: 
       duration: 1
       useEasing: 1
       customCurve:

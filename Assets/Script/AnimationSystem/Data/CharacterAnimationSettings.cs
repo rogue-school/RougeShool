@@ -12,10 +12,7 @@ namespace Game.AnimationSystem.Data
         [Header("애니메이션 스크립트 타입")]
         [SerializeField] private string animationScriptType;
         
-        [Header("애니메이션 파라미터")]
-        [SerializeField] private float duration;
-        [SerializeField] private bool useEasing;
-        [SerializeField] private AnimationCurve customCurve;
+        // 파라미터 제거: 모든 애니메이션은 스크립트(001 또는 지정)로만 동작
         
         /// <summary>
         /// 애니메이션 스크립트 타입
@@ -26,32 +23,9 @@ namespace Game.AnimationSystem.Data
             set => animationScriptType = value;
         }
         
-        /// <summary>
-        /// 애니메이션 지속 시간
-        /// </summary>
-        public float Duration
-        {
-            get => duration;
-            set => duration = value;
-        }
-        
-        /// <summary>
-        /// 이징 사용 여부
-        /// </summary>
-        public bool UseEasing
-        {
-            get => useEasing;
-            set => useEasing = value;
-        }
-        
-        /// <summary>
-        /// 커스텀 애니메이션 커브
-        /// </summary>
-        public AnimationCurve CustomCurve
-        {
-            get => customCurve;
-            set => customCurve = value;
-        }
+        public float Duration { get => 0f; set { } }
+        public bool UseEasing { get => false; set { } }
+        public AnimationCurve CustomCurve { get => AnimationCurve.Linear(0,0,1,1); set { } }
         
         /// <summary>
         /// 기본값을 반환하는 정적 메서드
@@ -95,36 +69,14 @@ namespace Game.AnimationSystem.Data
             }
             else
             {
-                Debug.LogError($"[CharacterAnimationSettings] 타입 조회 실패: {animationScriptType}");
-                // Fallback: 기본 애니메이션(페이드아웃/페이드인 등) 실행
-                PlayFallbackAnimation(target, animationType, onComplete);
-            }
-        }
-
-        private void PlayFallbackAnimation(GameObject target, string animationType, System.Action onComplete)
-        {
-            var canvasGroup = target.GetComponent<UnityEngine.CanvasGroup>();
-            if (canvasGroup == null)
-                canvasGroup = target.AddComponent<UnityEngine.CanvasGroup>();
-
-            if (animationType == "death")
-            {
-                canvasGroup.DOFade(0f, 0.5f).OnComplete(() => onComplete?.Invoke());
-            }
-            else if (animationType == "spawn")
-            {
-                canvasGroup.alpha = 0f;
-                canvasGroup.DOFade(1f, 0.5f).OnComplete(() => onComplete?.Invoke());
-            }
-            else
-            {
+                Debug.LogError($"[CharacterAnimationSettings] 유효한 애니메이션 스크립트를 찾지 못했습니다. animationType={animationType}");
                 onComplete?.Invoke();
             }
         }
         
         private System.Type GetScriptTypeForAnimation(string animationType)
         {
-            // 인스펙터에서 설정된 타입이 있으면 그 값을 우선 사용
+            // 1) 인스펙터 타입 우선
             if (!string.IsNullOrEmpty(animationScriptType))
             {
                 var type = System.Type.GetType(animationScriptType);
@@ -138,16 +90,31 @@ namespace Game.AnimationSystem.Data
                             break;
                     }
                 }
-
-                if (type == null)
-                {
-                    Debug.LogWarning($"[CharacterAnimationSettings] 설정된 애니메이션 스크립트 타입을 찾을 수 없습니다. 인스펙터의 AnimationScriptType을 확인하세요. 지정값='{animationScriptType}', 애니메이션='{animationType}'");
-                }
-
-                return type; // null이면 상위에서 폴백 애니메이션 실행
+                if (type != null) return type;
             }
 
-            // 설정이 비어있으면 전용 스크립트 없이 폴백으로 처리
+            // 2) 비어있으면 슬롯별 디폴트(001) 고정 사용
+            string @default = animationType switch
+            {
+                "spawn" => "Game.AnimationSystem.Animator.CharacterAnimation.SpawnAnimation.CharacterSpawnAnimation001",
+                "death" => "Game.AnimationSystem.Animator.CharacterAnimation.DeathAnimation.CharacterDeathAnimation001",
+                _ => null
+            };
+            if (!string.IsNullOrEmpty(@default))
+            {
+                var type = System.Type.GetType(@default);
+                if (type == null)
+                {
+                    var assemblies = System.AppDomain.CurrentDomain.GetAssemblies();
+                    foreach (var assembly in assemblies)
+                    {
+                        type = assembly.GetType(@default);
+                        if (type != null) break;
+                    }
+                }
+                return type;
+            }
+
             return null;
         }
         
@@ -160,9 +127,7 @@ namespace Game.AnimationSystem.Data
         public CharacterAnimationSettings(string scriptType, float duration = 1.0f, bool useEasing = true)
         {
             this.animationScriptType = scriptType;
-            this.duration = duration;
-            this.useEasing = useEasing;
-            this.customCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+            // 파라미터 제거
         }
     }
 } 

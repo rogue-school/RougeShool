@@ -15,8 +15,7 @@ MonoBehaviour:
   characterAnimations:
   - playerCharacter: {fileID: 11400000, guid: 09c242a71ef51f7479baa0e5ae122d6c, type: 2}
     spawnAnimation:
-      animationScriptType: AnimationSystem.Animator.CharacterAnimation.SpawnAnimation.DefaultCharacterSpawnAnimation,
-        Assembly-CSharp
+      animationScriptType: Game.AnimationSystem.Animator.CharacterAnimation.SpawnAnimation.CharacterSpawnAnimation001
       duration: 1
       useEasing: 1
       customCurve:
@@ -44,8 +43,7 @@ MonoBehaviour:
         m_PostInfinity: 2
         m_RotationOrder: 4
     deathAnimation:
-      animationScriptType: AnimationSystem.Animator.CharacterAnimation.DeathAnimation.DefaultCharacterDeathAnimation,
-        Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      animationScriptType: Game.AnimationSystem.Animator.CharacterAnimation.DeathAnimation.CharacterDeathAnimation001
       duration: 1
       useEasing: 1
       customCurve:

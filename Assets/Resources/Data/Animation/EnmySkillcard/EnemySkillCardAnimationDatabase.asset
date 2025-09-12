@@ -15,8 +15,7 @@ MonoBehaviour:
   skillCardAnimations:
   - enemySkillCard: {fileID: 11400000, guid: e8b59f5ad5046374384af2a6d1a94ffa, type: 2}
     spawnAnimation:
-      animationScriptType: AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation.DefaultSkillCardSpawnAnimation,
-        Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      animationScriptType: Game.AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation.SkillCardSpawnAnimation001
       duration: 0
       useEasing: 0
       customCurve:
@@ -28,8 +27,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     moveAnimation:
-      animationScriptType: AnimationSystem.Animator.SkillCardAnimation.MoveAnimation.DefaultSkillCardMoveAnimation,
-        Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      animationScriptType: Game.AnimationSystem.Animator.SkillCardAnimation.MoveAnimation.SkillCardMoveAnimation001
       duration: 0
       useEasing: 0
       customCurve:
@@ -41,8 +39,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     moveToCombatSlotAnimation:
-      animationScriptType: AnimationSystem.Animator.SkillCardAnimation.MoveToCombatSlotAnimation.DefaultSkillCardMoveToCombatSlotAnimation,
-        Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      animationScriptType: Game.AnimationSystem.Animator.SkillCardAnimation.MoveToCombatSlotAnimation.SkillCardCombatSlotMoveAnimation001
       duration: 0
       useEasing: 0
       customCurve:
@@ -54,8 +51,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     useAnimation:
-      animationScriptType: AnimationSystem.Animator.CharacterAnimation.SpawnAnimation.DefaultCharacterSpawnAnimation,
-        Assembly-CSharp
+      animationScriptType: Game.AnimationSystem.Animator.SkillCardAnimation.UseAnimation.SkillCardUseAnimation001
       duration: 0
       useEasing: 0
       customCurve:
@@ -67,8 +63,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     vanishAnimation:
-      animationScriptType: AnimationSystem.Animator.CharacterAnimation.SpawnAnimation.DefaultCharacterSpawnAnimation,
-        Assembly-CSharp
+      animationScriptType: Game.AnimationSystem.Animator.SkillCardAnimation.VanishAnimation.SkillCardVanishAnimation001
       duration: 0
       useEasing: 0
       customCurve:
@@ -81,8 +76,7 @@ MonoBehaviour:
       scale: 0
   - enemySkillCard: {fileID: 11400000, guid: e0a26135de8a5cc4fb8584333a13f940, type: 2}
     spawnAnimation:
-      animationScriptType: AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation.DefaultSkillCardSpawnAnimation,
-        Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      animationScriptType: Game.AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation.SkillCardSpawnAnimation001
       duration: 0
       useEasing: 0
       customCurve:
@@ -94,8 +88,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     moveAnimation:
-      animationScriptType: AnimationSystem.Animator.SkillCardAnimation.MoveAnimation.DefaultSkillCardMoveAnimation,
-        Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      animationScriptType: Game.AnimationSystem.Animator.SkillCardAnimation.MoveAnimation.SkillCardMoveAnimation001
       duration: 0
       useEasing: 0
       customCurve:
@@ -107,8 +100,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     moveToCombatSlotAnimation:
-      animationScriptType: AnimationSystem.Animator.SkillCardAnimation.MoveToCombatSlotAnimation.DefaultSkillCardMoveToCombatSlotAnimation,
-        Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      animationScriptType: Game.AnimationSystem.Animator.SkillCardAnimation.MoveToCombatSlotAnimation.SkillCardCombatSlotMoveAnimation001
       duration: 0
       useEasing: 0
       customCurve:
@@ -120,8 +112,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     useAnimation:
-      animationScriptType: AnimationSystem.Animator.CharacterAnimation.SpawnAnimation.DefaultCharacterSpawnAnimation,
-        Assembly-CSharp
+      animationScriptType: Game.AnimationSystem.Animator.SkillCardAnimation.UseAnimation.SkillCardUseAnimation001
       duration: 0
       useEasing: 0
       customCurve:
@@ -133,8 +124,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     vanishAnimation:
-      animationScriptType: AnimationSystem.Animator.CharacterAnimation.SpawnAnimation.DefaultCharacterSpawnAnimation,
-        Assembly-CSharp
+      animationScriptType: Game.AnimationSystem.Animator.SkillCardAnimation.VanishAnimation.SkillCardVanishAnimation001
       duration: 0
       useEasing: 0
       customCurve:
@@ -147,8 +137,7 @@ MonoBehaviour:
       scale: 0
   - enemySkillCard: {fileID: 11400000, guid: dadf093733361954cb83506b04576d43, type: 2}
     spawnAnimation:
-      animationScriptType: AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation.DefaultSkillCardSpawnAnimation,
-        Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      animationScriptType: Game.AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation.SkillCardSpawnAnimation001
       duration: 0
       useEasing: 0
       customCurve:
@@ -160,8 +149,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     moveAnimation:
-      animationScriptType: AnimationSystem.Animator.SkillCardAnimation.MoveAnimation.DefaultSkillCardMoveAnimation,
-        Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      animationScriptType: Game.AnimationSystem.Animator.SkillCardAnimation.MoveAnimation.SkillCardMoveAnimation001
       duration: 0
       useEasing: 0
       customCurve:
@@ -173,8 +161,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     moveToCombatSlotAnimation:
-      animationScriptType: AnimationSystem.Animator.SkillCardAnimation.MoveToCombatSlotAnimation.DefaultSkillCardMoveToCombatSlotAnimation,
-        Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      animationScriptType: Game.AnimationSystem.Animator.SkillCardAnimation.MoveToCombatSlotAnimation.SkillCardCombatSlotMoveAnimation001
       duration: 0
       useEasing: 0
       customCurve:
@@ -186,8 +173,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     useAnimation:
-      animationScriptType: AnimationSystem.Animator.CharacterAnimation.SpawnAnimation.DefaultCharacterSpawnAnimation,
-        Assembly-CSharp
+      animationScriptType: Game.AnimationSystem.Animator.SkillCardAnimation.UseAnimation.SkillCardUseAnimation001
       duration: 0
       useEasing: 0
       customCurve:
@@ -199,8 +185,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     vanishAnimation:
-      animationScriptType: AnimationSystem.Animator.CharacterAnimation.SpawnAnimation.DefaultCharacterSpawnAnimation,
-        Assembly-CSharp
+      animationScriptType: Game.AnimationSystem.Animator.SkillCardAnimation.VanishAnimation.SkillCardVanishAnimation001
       duration: 0
       useEasing: 0
       customCurve:
@@ -213,8 +198,7 @@ MonoBehaviour:
       scale: 0
   - enemySkillCard: {fileID: 11400000, guid: 5cf0d6ffb75cb434aa7d9df52268eab0, type: 2}
     spawnAnimation:
-      animationScriptType: AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation.DefaultSkillCardSpawnAnimation,
-        Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      animationScriptType: 
       duration: 0
       useEasing: 0
       customCurve:
@@ -226,8 +210,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     moveAnimation:
-      animationScriptType: AnimationSystem.Animator.SkillCardAnimation.MoveAnimation.DefaultSkillCardMoveAnimation,
-        Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      animationScriptType: Game.AnimationSystem.Animator.SkillCardAnimation.MoveAnimation.SkillCardMoveAnimation001
       duration: 0
       useEasing: 0
       customCurve:
@@ -239,8 +222,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     moveToCombatSlotAnimation:
-      animationScriptType: AnimationSystem.Animator.SkillCardAnimation.MoveToCombatSlotAnimation.DefaultSkillCardMoveToCombatSlotAnimation,
-        Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      animationScriptType: 
       duration: 0
       useEasing: 0
       customCurve:
@@ -252,8 +234,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     useAnimation:
-      animationScriptType: AnimationSystem.Animator.CharacterAnimation.SpawnAnimation.DefaultCharacterSpawnAnimation,
-        Assembly-CSharp
+      animationScriptType: 
       duration: 0
       useEasing: 0
       customCurve:
@@ -265,8 +246,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     vanishAnimation:
-      animationScriptType: AnimationSystem.Animator.CharacterAnimation.SpawnAnimation.DefaultCharacterSpawnAnimation,
-        Assembly-CSharp
+      animationScriptType: 
       duration: 0
       useEasing: 0
       customCurve:
@@ -279,8 +259,7 @@ MonoBehaviour:
       scale: 0
   - enemySkillCard: {fileID: 11400000, guid: b67fd3a64c8a99b4d944e17f196ae955, type: 2}
     spawnAnimation:
-      animationScriptType: AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation.DefaultSkillCardSpawnAnimation,
-        Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      animationScriptType: 
       duration: 0
       useEasing: 0
       customCurve:
@@ -292,8 +271,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     moveAnimation:
-      animationScriptType: AnimationSystem.Animator.SkillCardAnimation.MoveAnimation.DefaultSkillCardMoveAnimation,
-        Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      animationScriptType: 
       duration: 0
       useEasing: 0
       customCurve:
@@ -305,8 +283,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     moveToCombatSlotAnimation:
-      animationScriptType: AnimationSystem.Animator.SkillCardAnimation.MoveToCombatSlotAnimation.DefaultSkillCardMoveToCombatSlotAnimation,
-        Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      animationScriptType: 
       duration: 0
       useEasing: 0
       customCurve:
@@ -318,8 +295,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     useAnimation:
-      animationScriptType: AnimationSystem.Animator.CharacterAnimation.SpawnAnimation.DefaultCharacterSpawnAnimation,
-        Assembly-CSharp
+      animationScriptType: 
       duration: 0
       useEasing: 0
       customCurve:
@@ -331,8 +307,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     vanishAnimation:
-      animationScriptType: AnimationSystem.Animator.CharacterAnimation.SpawnAnimation.DefaultCharacterSpawnAnimation,
-        Assembly-CSharp
+      animationScriptType: 
       duration: 0
       useEasing: 0
       customCurve:
@@ -345,8 +320,7 @@ MonoBehaviour:
       scale: 0
   - enemySkillCard: {fileID: 11400000, guid: 888eefdbb32105c49b9f56bbd105ed63, type: 2}
     spawnAnimation:
-      animationScriptType: AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation.DefaultSkillCardSpawnAnimation,
-        Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      animationScriptType: 
       duration: 0
       useEasing: 0
       customCurve:
@@ -358,8 +332,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     moveAnimation:
-      animationScriptType: AnimationSystem.Animator.SkillCardAnimation.MoveAnimation.DefaultSkillCardMoveAnimation,
-        Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      animationScriptType: 
       duration: 0
       useEasing: 0
       customCurve:
@@ -371,8 +344,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     moveToCombatSlotAnimation:
-      animationScriptType: AnimationSystem.Animator.SkillCardAnimation.MoveToCombatSlotAnimation.DefaultSkillCardMoveToCombatSlotAnimation,
-        Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      animationScriptType: 
       duration: 0
       useEasing: 0
       customCurve:
@@ -384,8 +356,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     useAnimation:
-      animationScriptType: AnimationSystem.Animator.CharacterAnimation.SpawnAnimation.DefaultCharacterSpawnAnimation,
-        Assembly-CSharp
+      animationScriptType: 
       duration: 0
       useEasing: 0
       customCurve:
@@ -397,8 +368,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     vanishAnimation:
-      animationScriptType: AnimationSystem.Animator.CharacterAnimation.SpawnAnimation.DefaultCharacterSpawnAnimation,
-        Assembly-CSharp
+      animationScriptType: 
       duration: 0
       useEasing: 0
       customCurve:
@@ -411,8 +381,7 @@ MonoBehaviour:
       scale: 0
   - enemySkillCard: {fileID: 11400000, guid: 17272803ffb06ae46967e3b6904a3cc8, type: 2}
     spawnAnimation:
-      animationScriptType: AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation.DefaultSkillCardSpawnAnimation,
-        Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      animationScriptType: 
       duration: 0
       useEasing: 0
       customCurve:
@@ -424,8 +393,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     moveAnimation:
-      animationScriptType: AnimationSystem.Animator.SkillCardAnimation.MoveAnimation.DefaultSkillCardMoveAnimation,
-        Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      animationScriptType: 
       duration: 0
       useEasing: 0
       customCurve:
@@ -437,8 +405,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     moveToCombatSlotAnimation:
-      animationScriptType: AnimationSystem.Animator.SkillCardAnimation.MoveToCombatSlotAnimation.DefaultSkillCardMoveToCombatSlotAnimation,
-        Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      animationScriptType: 
       duration: 0
       useEasing: 0
       customCurve:
@@ -450,8 +417,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     useAnimation:
-      animationScriptType: AnimationSystem.Animator.CharacterAnimation.SpawnAnimation.DefaultCharacterSpawnAnimation,
-        Assembly-CSharp
+      animationScriptType: 
       duration: 0
       useEasing: 0
       customCurve:
@@ -463,8 +429,7 @@ MonoBehaviour:
       offset: {x: 0, y: 0, z: 0}
       scale: 0
     vanishAnimation:
-      animationScriptType: AnimationSystem.Animator.CharacterAnimation.SpawnAnimation.DefaultCharacterSpawnAnimation,
-        Assembly-CSharp
+      animationScriptType: 
       duration: 0
       useEasing: 0
       customCurve:

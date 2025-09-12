@@ -12,12 +12,7 @@ namespace Game.AnimationSystem.Data
         [Header("애니메이션 스크립트 타입")]
         [SerializeField] private string animationScriptType;
         
-        [Header("애니메이션 파라미터")]
-        [SerializeField] private float duration;
-        [SerializeField] private bool useEasing;
-        [SerializeField] private AnimationCurve customCurve;
-        [SerializeField] private Vector3 offset;
-        [SerializeField] private float scale;
+        // 파라미터 제거: 모든 애니메이션은 스크립트(001 또는 지정)로만 동작
         
         /// <summary>
         /// 애니메이션 스크립트 타입
@@ -28,55 +23,7 @@ namespace Game.AnimationSystem.Data
             set => animationScriptType = value;
         }
         
-        /// <summary>
-        /// 애니메이션 지속 시간
-        /// </summary>
-        public float Duration
-        {
-            get => duration;
-            set => duration = value;
-        }
-        
-        /// <summary>
-        /// 이징 사용 여부
-        /// </summary>
-        public bool UseEasing
-        {
-            get => useEasing;
-            set => useEasing = value;
-        }
-        
-        /// <summary>
-        /// 커스텀 애니메이션 커브
-        /// </summary>
-        public AnimationCurve CustomCurve
-        {
-            get => customCurve;
-            set => customCurve = value;
-        }
-        
-        /// <summary>
-        /// 위치 오프셋
-        /// </summary>
-        public Vector3 Offset
-        {
-            get => offset;
-            set => offset = value;
-        }
-        
-        /// <summary>
-        /// 스케일 값
-        /// </summary>
-        public float Scale
-        {
-            get => scale;
-            set => scale = value;
-        }
-        
-        /// <summary>
-        /// 기본값을 반환하는 정적 메서드
-        /// </summary>
-        public static SkillCardAnimationSettings Default => new SkillCardAnimationSettings(string.Empty, 1.0f, true, Vector3.zero, 1.0f);
+        public static SkillCardAnimationSettings Default => new SkillCardAnimationSettings(string.Empty);
         
         /// <summary>
         /// 설정이 비어있는지 확인합니다.
@@ -118,35 +65,14 @@ namespace Game.AnimationSystem.Data
             }
             else
             {
-                // Fallback: 기본 애니메이션(페이드아웃/페이드인 등) 실행
-                PlayFallbackAnimation(target, animationType, onComplete);
-            }
-        }
-
-        private void PlayFallbackAnimation(GameObject target, string animationType, System.Action onComplete)
-        {
-            var canvasGroup = target.GetComponent<UnityEngine.CanvasGroup>();
-            if (canvasGroup == null)
-                canvasGroup = target.AddComponent<UnityEngine.CanvasGroup>();
-
-            if (animationType == "death")
-            {
-                canvasGroup.DOFade(0f, 0.5f).OnComplete(() => onComplete?.Invoke());
-            }
-            else if (animationType == "spawn")
-            {
-                canvasGroup.alpha = 0f;
-                canvasGroup.DOFade(1f, 0.5f).OnComplete(() => onComplete?.Invoke());
-            }
-            else
-            {
+                Debug.LogError($"[SkillCardAnimationSettings] 유효한 애니메이션 스크립트를 찾지 못했습니다. animationType={animationType}");
                 onComplete?.Invoke();
             }
         }
         
         private System.Type GetScriptTypeForAnimation(string animationType)
         {
-            // 인스펙터에서 설정된 타입이 있으면 그 값을 우선 사용
+            // 1) 인스펙터 타입 우선
             if (!string.IsNullOrEmpty(animationScriptType))
             {
                 var type = System.Type.GetType(animationScriptType);
@@ -160,22 +86,39 @@ namespace Game.AnimationSystem.Data
                             break;
                     }
                 }
-
-                if (type == null)
-                {
-                    Debug.LogWarning($"[SkillCardAnimationSettings] 설정된 애니메이션 스크립트 타입을 찾을 수 없습니다. 인스펙터의 AnimationScriptType을 확인하세요. 지정값='{animationScriptType}', 애니메이션='{animationType}'");
-                }
-
-                return type; // null이면 상위에서 폴백 애니메이션 실행
+                if (type != null) return type;
             }
 
-            // 설정이 비어있으면 전용 스크립트 없이 폴백으로 처리
+            // 2) 비어있으면 슬롯별 디폴트(001) 고정 사용
+            string @default = animationType switch
+            {
+                "spawn" => "Game.AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation.SkillCardSpawnAnimation001",
+                "move" => "Game.AnimationSystem.Animator.SkillCardAnimation.MoveAnimation.SkillCardMoveAnimation001",
+                "moveToCombatSlot" => "Game.AnimationSystem.Animator.SkillCardAnimation.MoveToCombatSlotAnimation.SkillCardCombatSlotMoveAnimation001",
+                "drop" => "Game.AnimationSystem.Animator.SkillCardAnimation.DropAnimation.SkillCardDropAnimation001",
+                "drag" => "Game.AnimationSystem.Animator.SkillCardAnimation.DragAnimation.SkillCardDragAnimation001",
+                "use" => "Game.AnimationSystem.Animator.SkillCardAnimation.UseAnimation.SkillCardUseAnimation001",
+                "vanish" => "Game.AnimationSystem.Animator.SkillCardAnimation.VanishAnimation.SkillCardVanishAnimation001",
+                _ => null
+            };
+            if (!string.IsNullOrEmpty(@default))
+            {
+                var type = System.Type.GetType(@default);
+                if (type == null)
+                {
+                    var assemblies = System.AppDomain.CurrentDomain.GetAssemblies();
+                    foreach (var assembly in assemblies)
+                    {
+                        type = assembly.GetType(@default);
+                        if (type != null) break;
+                    }
+                }
+                return type;
+            }
+
             return null;
         }
         
-        /// <summary>
-        /// 현재 설정된 애니메이션 스크립트 타입을 반환합니다.
-        /// </summary>
         public System.Type GetScriptType()
         {
             if (string.IsNullOrEmpty(animationScriptType))
@@ -213,11 +156,7 @@ namespace Game.AnimationSystem.Data
         public SkillCardAnimationSettings(string scriptType, float duration = 1.0f, bool useEasing = true, Vector3 offset = default, float scale = 1.0f)
         {
             this.animationScriptType = scriptType;
-            this.duration = duration;
-            this.useEasing = useEasing;
-            this.customCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
-            this.offset = offset;
-            this.scale = scale;
+            // 파라미터 제거
         }
     }
 } 

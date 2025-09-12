@@ -13,9 +13,12 @@ MonoBehaviour:
   m_Name: Akein_Sword_Deck
   m_EditorClassIdentifier: 
   cards:
-  - <Slot>k__BackingField: 0
+  - <Count>k__BackingField: 6
     <Card>k__BackingField: {fileID: 11400000, guid: f86aa2d251285f245a1a4d7635098de8, type: 2}
-  - <Slot>k__BackingField: 1
+    <Definition>k__BackingField: {fileID: 0}
+  - <Count>k__BackingField: 6
     <Card>k__BackingField: {fileID: 11400000, guid: aa9df417b0200254bb1725355e2c0f0c, type: 2}
-  - <Slot>k__BackingField: 2
+    <Definition>k__BackingField: {fileID: 0}
+  - <Count>k__BackingField: 6
     <Card>k__BackingField: {fileID: 11400000, guid: d6d762dee5159c142b1c74c00e231cee, type: 2}
+    <Definition>k__BackingField: {fileID: 0}
