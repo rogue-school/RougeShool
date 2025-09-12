@@ -77,6 +77,17 @@ CombatSystem/
 ### UI 폴더 규칙 (1개 파일)
 - **CombatUI.cs**: 전투 UI 컨트롤러
 
+## 🎯 주요 기능
+
+1. **전투 상태 관리**: 상태 패턴을 통한 전투 단계별 관리
+2. **턴 기반 전투**: 캐릭터 속도 기반 턴 순서 및 제한 관리
+3. **카드 시스템 연동**: 스킬카드 드래그 앤 드롭 및 슬롯 관리
+4. **전투 플로우 조정**: 전투 시작부터 종료까지 전체 플로우 관리
+5. **서비스 패턴**: 전투 실행, 준비 등 비즈니스 로직 분리
+6. **Zenject DI**: 의존성 주입을 통한 느슨한 결합 구조
+7. **이벤트 시스템**: 전투 이벤트 발생 및 구독 시스템
+8. **검증 시스템**: 카드 및 전투 행동 유효성 검증
+
 ## 🎯 개발 규칙
 
 ### 1. 전투 상태 관리 규칙
@@ -98,6 +109,63 @@ CombatSystem/
 - **CombatExecutorService**: 전투 실행 서비스
 - **CombatPreparationService**: 전투 준비 서비스
 - **의존성 주입**: 서비스 간 의존성 관리
+
+## 🔧 주요 클래스 및 메서드
+
+### CombatFlowCoordinator 클래스
+- **StartCombat()**: 전투 시작
+- **EndCombat()**: 전투 종료
+- **PauseCombat()**: 전투 일시정지
+- **ResumeCombat()**: 전투 재개
+- **IsCombatActive**: 전투 활성 상태 (프로퍼티)
+- **CurrentPhase**: 현재 전투 페이즈 (프로퍼티)
+
+### CombatTurnManager 클래스
+- **Initialize()**: 턴 매니저 초기화
+- **SetState()**: 전투 상태 설정
+- **RegisterCard()**: 카드 등록
+- **CanProceedToNextTurn()**: 다음 턴 진행 가능 여부 확인
+- **ProceedToNextTurn()**: 다음 턴으로 진행
+- **GetCurrentState()**: 현재 상태 조회
+- **IsPlayerTurn**: 플레이어 턴 여부 (프로퍼티)
+
+### CombatExecutorService 클래스
+- **ExecuteCombatPhase()**: 전체 전투 페이즈 실행
+- **PerformAttack()**: 특정 슬롯 공격 실행
+- **ExecuteCard()**: 카드 실행
+- **ValidateExecution()**: 실행 유효성 검증
+- **OnExecutionComplete**: 실행 완료 이벤트
+
+### CombatPreparationService 클래스
+- **PrepareCombat()**: 전투 준비 실행
+- **SpawnEnemy()**: 적 스폰
+- **SetupPlayerCards()**: 플레이어 카드 설정
+- **InitializeSlots()**: 슬롯 초기화
+- **ValidatePreparation()**: 준비 상태 검증
+
+### CombatStartupManager 클래스
+- **InitializeCombat()**: 전투 초기화
+- **LoadCombatData()**: 전투 데이터 로드
+- **SetupUI()**: UI 설정
+- **RegisterEventHandlers()**: 이벤트 핸들러 등록
+
+### ICombatTurnState 인터페이스
+- **ExecuteState()**: 상태 실행
+- **CanTransitionTo()**: 상태 전환 가능 여부 확인
+- **OnEnter()**: 상태 진입 시 처리
+- **OnExit()**: 상태 종료 시 처리
+
+### ICombatFlowCoordinator 인터페이스
+- **StartCombat()**: 전투 시작
+- **EndCombat()**: 전투 종료
+- **PauseCombat()**: 전투 일시정지
+- **ResumeCombat()**: 전투 재개
+
+### ICombatTurnManager 인터페이스
+- **Initialize()**: 초기화
+- **SetState()**: 상태 설정
+- **RegisterCard()**: 카드 등록
+- **ProceedToNextTurn()**: 다음 턴 진행
 
 ## 🔧 사용 방법
 
@@ -228,6 +296,89 @@ turnManager.SetState(new CustomCombatState());
 - **상태 동기화**: 전투 상태 변경 동기화
 - **턴 관리**: 턴 변경 시 동기화
 
+## 🏗️ 시스템 아키텍처
+
+### 의존성 다이어그램
+```mermaid
+graph TD
+    A[CombatFlowCoordinator] --> B[CombatTurnManager]
+    A --> C[CombatSlotManager]
+    B --> D[ICombatTurnState]
+    C --> E[ICombatSlot]
+    F[CombatExecutorService] --> G[CombatPreparationService]
+    F --> H[TurnCardRegistry]
+    I[CombatInstaller] --> J[Zenject Container]
+    K[CombatEventSystem] --> L[Game Events]
+    M[CardValidator] --> N[SkillCardSystem]
+    O[CharacterDeathHandler] --> P[CharacterSystem]
+```
+
+### 클래스 다이어그램
+```mermaid
+classDiagram
+    class CombatFlowCoordinator {
+        +StartCombat()
+        +EndCombat()
+        +PauseCombat()
+        +ResumeCombat()
+        +IsCombatActive: bool
+    }
+    
+    class CombatTurnManager {
+        +Initialize()
+        +SetState()
+        +RegisterCard()
+        +ProceedToNextTurn()
+        +IsPlayerTurn: bool
+    }
+    
+    class CombatExecutorService {
+        +ExecuteCombatPhase()
+        +PerformAttack()
+        +ExecuteCard()
+        +ValidateExecution()
+    }
+    
+    class CombatPreparationService {
+        +PrepareCombat()
+        +SpawnEnemy()
+        +SetupPlayerCards()
+        +InitializeSlots()
+    }
+    
+    class ICombatTurnState {
+        <<interface>>
+        +ExecuteState()
+        +CanTransitionTo()
+        +OnEnter()
+        +OnExit()
+    }
+    
+    CombatFlowCoordinator --> CombatTurnManager
+    CombatFlowCoordinator --> CombatExecutorService
+    CombatTurnManager --> ICombatTurnState
+    CombatExecutorService --> CombatPreparationService
+```
+
+### 시퀀스 다이어그램
+```mermaid
+sequenceDiagram
+    participant Client
+    participant CombatFlowCoordinator
+    participant CombatTurnManager
+    participant CombatExecutorService
+    participant SkillCardSystem
+    
+    Client->>CombatFlowCoordinator: StartCombat()
+    CombatFlowCoordinator->>CombatTurnManager: Initialize()
+    CombatTurnManager->>CombatExecutorService: PrepareCombat()
+    CombatExecutorService->>SkillCardSystem: SetupPlayerCards()
+    SkillCardSystem-->>CombatExecutorService: Cards Ready
+    CombatExecutorService-->>CombatTurnManager: Preparation Complete
+    CombatTurnManager-->>CombatFlowCoordinator: Ready
+    CombatFlowCoordinator-->>Client: Combat Started
+```
+
 ## 🧪 검증/테스트 지침
 
 ### 체크리스트
@@ -242,6 +393,25 @@ turnManager.SetState(new CustomCombatState());
 3. 슬롯 배치 시나리오 테스트
 4. 성능 프로파일링
 
+## 📚 참고 자료
+
+### 관련 문서
+- [CoreSystem 개발 문서](../CoreSystem/CoreSystem_개발문서.md)
+- [CharacterSystem 개발 문서](../CharacterSystem/CharacterSystem_개발문서.md)
+- [SkillCardSystem 개발 문서](../SkillCardSystem/SkillCardSystem_개발문서.md)
+- [AnimationSystem 개발 문서](../AnimationSystem/AnimationSystem_개발문서.md)
+
+### Unity 문서
+- [Zenject Dependency Injection](https://github.com/modesttree/Zenject)
+- [Unity Events](https://docs.unity3d.com/Manual/UnityEvents.html)
+- [Coroutines](https://docs.unity3d.com/Manual/Coroutines.html)
+
+### 디자인 패턴
+- [State Pattern](https://refactoring.guru/design-patterns/state)
+- [Service Pattern](https://refactoring.guru/design-patterns/service-layer)
+- [Observer Pattern](https://refactoring.guru/design-patterns/observer)
+- [Strategy Pattern](https://refactoring.guru/design-patterns/strategy)
+
 ## 📝 변경 기록(Delta)
 - 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
 
@@ -249,3 +419,4 @@ turnManager.SetState(new CustomCombatState());
 - 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 파일 수 정정 | 문서
 - 2025-01-27 | Maintainer | .mdc 규칙 파일로 변환 및 Cursor 규칙 저장 | 문서
 - 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 클래스/메서드/서비스 정보 추가 | 문서
+- 2025-01-27 | Maintainer | 개발 문서 기반 규칙 파일 업데이트 (주요 기능, 클래스/메서드, 아키텍처 다이어그램 추가) | 문서

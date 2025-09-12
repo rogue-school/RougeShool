@@ -43,6 +43,17 @@ CoreSystem/Save/       # 실제 구현 위치
 - **SaveEventTrigger.cs**: 저장 이벤트 트리거
 - **AutoSaveTrigger.cs**: 자동 저장 트리거
 
+## 🎯 주요 기능
+
+1. **슬레이 더 스파이어 방식 자동 저장**: 턴 완료 시 자동 저장으로 게임 진행 보장
+2. **완전한 카드 상태 저장**: 플레이어/적 핸드, 전투 슬롯, 카드 순환 상태 완전 저장
+3. **이벤트 기반 자동 저장**: 게임 이벤트와 자동 연동되는 저장 트리거 시스템
+4. **JSON 기반 직렬화**: JsonUtility를 활용한 안전하고 효율적인 데이터 저장
+5. **데이터 검증 시스템**: 저장된 데이터의 유효성 검증 및 무결성 보장
+6. **CoreSystem 통합**: 전역 저장 시스템으로 통합 관리
+7. **비동기 저장/로드**: async/await 패턴으로 프레임 블로킹 방지
+8. **자동 저장 조건 관리**: 동적 자동 저장 조건 추가/제거/업데이트
+
 ## 🎯 개발 규칙
 
 ### 1. 슬레이 더 스파이어 방식 규칙
@@ -63,6 +74,56 @@ CoreSystem/Save/       # 실제 구현 위치
 ### 4. CoreSystem 통합 규칙
 - **전역 시스템**: CoreSystem에 통합된 전역 저장 관리
 - **ICoreSystemInitializable**: CoreSystem 초기화 인터페이스 구현
+
+## 🔧 주요 클래스 및 메서드
+
+### AutoSaveManager 클래스
+- **TriggerAutoSave()**: 특정 조건으로 자동 저장 트리거
+- **SaveGameState()**: 수동 게임 상태 저장
+- **LoadGameState()**: 게임 상태 로드
+- **AddAutoSaveCondition()**: 자동 저장 조건 추가
+- **RemoveAutoSaveCondition()**: 자동 저장 조건 제거
+- **UpdateAutoSaveCondition()**: 자동 저장 조건 업데이트
+- **IsAutoSaveEnabled**: 자동 저장 활성 상태 (프로퍼티)
+
+### SaveEventTrigger 클래스
+- **OnEnemyCardPlaced()**: 적 카드 배치 후 저장 트리거
+- **OnTurnStartButtonPressed()**: 턴 시작 버튼 누르기 전 저장 트리거
+- **OnTurnExecution()**: 턴 실행 중 저장 트리거
+- **OnTurnCompleted()**: 턴 완료 후 저장 트리거
+- **OnStageCompleted()**: 스테이지 완료 후 저장 트리거
+- **OnStageFailed()**: 스테이지 실패 후 저장 트리거
+- **OnCombatStart()**: 전투 시작 시 저장 트리거
+- **OnCombatEnd()**: 전투 종료 시 저장 트리거
+
+### CompleteCardStateData 클래스
+- **playerHandSlots**: 플레이어 핸드 슬롯 데이터 (프로퍼티)
+- **enemyHandSlots**: 적 핸드 슬롯 데이터 (프로퍼티)
+- **firstSlotCard**: 첫 번째 슬롯 카드 데이터 (프로퍼티)
+- **secondSlotCard**: 두 번째 슬롯 카드 데이터 (프로퍼티)
+- **unusedStorageCards**: 사용하지 않은 저장소 카드 목록 (프로퍼티)
+- **usedStorageCards**: 사용된 저장소 카드 목록 (프로퍼티)
+- **isPlayerFirst**: 플레이어 선공 여부 (프로퍼티)
+- **IsValid()**: 데이터 유효성 검증
+
+### AutoSaveCondition 클래스
+- **conditionName**: 조건 이름 (프로퍼티)
+- **triggerType**: 트리거 타입 (프로퍼티)
+- **description**: 조건 설명 (프로퍼티)
+- **IsValid()**: 조건 유효성 확인
+- **ToString()**: 조건 정보 문자열 반환
+
+### CardStateCollector 클래스
+- **CollectPlayerHandState()**: 플레이어 핸드 상태 수집
+- **CollectEnemyHandState()**: 적 핸드 상태 수집
+- **CollectCombatSlotState()**: 전투 슬롯 상태 수집
+- **CollectCardCirculationState()**: 카드 순환 상태 수집
+
+### CardStateRestorer 클래스
+- **RestorePlayerHandState()**: 플레이어 핸드 상태 복원
+- **RestoreEnemyHandState()**: 적 핸드 상태 복원
+- **RestoreCombatSlotState()**: 전투 슬롯 상태 복원
+- **RestoreCardCirculationState()**: 카드 순환 상태 복원
 
 ## 🔧 사용 방법
 
@@ -193,6 +254,109 @@ Debug.Log(condition.ToString());
 - **리소스 해제**: 저장 완료 후 리소스 정리
 - **메모리 누수 방지**: 이벤트 구독 해제, 데이터 참조 해제
 
+## 🏗️ 시스템 아키텍처
+
+### 의존성 다이어그램
+```mermaid
+graph TD
+    A[AutoSaveManager] --> B[SaveEventTrigger]
+    A --> C[CardStateCollector]
+    A --> D[CardStateRestorer]
+    B --> E[Game Events]
+    C --> F[PlayerHandManager]
+    C --> G[EnemyHandManager]
+    C --> H[CombatSlotManager]
+    D --> I[CardCirculationSystem]
+    J[SaveManager] --> K[CoreSystem]
+    L[CompleteCardStateData] --> M[JSON Serialization]
+    N[AutoSaveCondition] --> O[AutoSaveTrigger]
+```
+
+### 클래스 다이어그램
+```mermaid
+classDiagram
+    class AutoSaveManager {
+        +TriggerAutoSave()
+        +SaveGameState()
+        +LoadGameState()
+        +AddAutoSaveCondition()
+        +RemoveAutoSaveCondition()
+        +UpdateAutoSaveCondition()
+        +IsAutoSaveEnabled: bool
+    }
+    
+    class SaveEventTrigger {
+        +OnEnemyCardPlaced()
+        +OnTurnStartButtonPressed()
+        +OnTurnExecution()
+        +OnTurnCompleted()
+        +OnStageCompleted()
+        +OnStageFailed()
+        +OnCombatStart()
+        +OnCombatEnd()
+    }
+    
+    class CompleteCardStateData {
+        +playerHandSlots: List~CardSlotData~
+        +enemyHandSlots: List~CardSlotData~
+        +firstSlotCard: CardSlotData
+        +secondSlotCard: CardSlotData
+        +unusedStorageCards: List~string~
+        +usedStorageCards: List~string~
+        +isPlayerFirst: bool
+        +IsValid(): bool
+    }
+    
+    class AutoSaveCondition {
+        +conditionName: string
+        +triggerType: AutoSaveTrigger
+        +description: string
+        +IsValid(): bool
+        +ToString(): string
+    }
+    
+    class CardStateCollector {
+        +CollectPlayerHandState()
+        +CollectEnemyHandState()
+        +CollectCombatSlotState()
+        +CollectCardCirculationState()
+    }
+    
+    class CardStateRestorer {
+        +RestorePlayerHandState()
+        +RestoreEnemyHandState()
+        +RestoreCombatSlotState()
+        +RestoreCardCirculationState()
+    }
+    
+    AutoSaveManager --> SaveEventTrigger
+    AutoSaveManager --> CardStateCollector
+    AutoSaveManager --> CardStateRestorer
+    CardStateCollector --> CompleteCardStateData
+    CardStateRestorer --> CompleteCardStateData
+```
+
+### 시퀀스 다이어그램
+```mermaid
+sequenceDiagram
+    participant GameEvent
+    participant SaveEventTrigger
+    participant AutoSaveManager
+    participant CardStateCollector
+    participant CardStateRestorer
+    participant FileSystem
+    
+    GameEvent->>SaveEventTrigger: OnTurnCompleted()
+    SaveEventTrigger->>AutoSaveManager: TriggerAutoSave("TurnCompleted")
+    AutoSaveManager->>CardStateCollector: CollectPlayerHandState()
+    CardStateCollector-->>AutoSaveManager: PlayerHandData
+    AutoSaveManager->>CardStateCollector: CollectEnemyHandState()
+    CardStateCollector-->>AutoSaveManager: EnemyHandData
+    AutoSaveManager->>FileSystem: SaveToFile(data)
+    FileSystem-->>AutoSaveManager: Save Complete
+    AutoSaveManager-->>SaveEventTrigger: AutoSave Complete
+```
+
 ## 🧪 검증/테스트 지침
 
 ### 체크리스트
@@ -208,6 +372,25 @@ Debug.Log(condition.ToString());
 3. 상태 복원 시나리오 테스트
 4. 성능 프로파일링
 
+## 📚 참고 자료
+
+### 관련 문서
+- [CoreSystem 개발 문서](../CoreSystem/CoreSystem_개발문서.md)
+- [CombatSystem 개발 문서](../CombatSystem/CombatSystem_개발문서.md)
+- [SkillCardSystem 개발 문서](../SkillCardSystem/SkillCardSystem_개발문서.md)
+- [CharacterSystem 개발 문서](../CharacterSystem/CharacterSystem_개발문서.md)
+
+### Unity 문서
+- [Unity JSON Serialization](https://docs.unity3d.com/Manual/JSONSerialization.html)
+- [Unity File I/O](https://docs.unity3d.com/Manual/FileIO.html)
+- [Unity Coroutines](https://docs.unity3d.com/Manual/Coroutines.html)
+
+### 디자인 패턴
+- [Manager Pattern](https://refactoring.guru/design-patterns/singleton)
+- [Observer Pattern](https://refactoring.guru/design-patterns/observer)
+- [Service Pattern](https://refactoring.guru/design-patterns/service-layer)
+- [Data Transfer Object](https://refactoring.guru/design-patterns/data-transfer-object)
+
 ## 📝 변경 기록(Delta)
 - 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
 
@@ -215,3 +398,4 @@ Debug.Log(condition.ToString());
 - 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 파일 수 정정 | 문서
 - 2025-01-27 | Maintainer | .mdc 규칙 파일로 변환 및 Cursor 규칙 저장 | 문서
 - 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 클래스/메서드/데이터 구조 정보 추가 | 문서
+- 2025-01-27 | Maintainer | 개발 문서 기반 규칙 파일 업데이트 (주요 기능, 클래스/메서드, 아키텍처 다이어그램 추가) | 문서

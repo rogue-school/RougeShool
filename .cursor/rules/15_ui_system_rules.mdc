@@ -1,0 +1,209 @@
+---
+description: "UISystem 개발 가이드 및 규칙 - Unity 2D UI 시스템 통합 관리"
+globs: ["Assets/Script/UISystem/**/*.cs"]
+rule_id: ui_system_rules
+version: 1.0.0
+alwaysApply: true
+---
+
+# UISystem 개발 규칙
+
+## 📋 시스템 개요
+UISystem은 게임의 사용자 인터페이스를 관리하는 시스템입니다. 다양한 UI 컨트롤러들을 통해 게임의 모든 UI 요소를 통합적으로 관리합니다.
+
+## 🏗️ 폴더 구조 규칙 (현재 상태)
+```
+UISystem/
+├── MainSceneController.cs      # 메인 씬 컨트롤러
+├── SettingsUIController.cs     # 설정 UI 컨트롤러
+├── WeaponSelector.cs           # 무기 선택기
+├── PanelManager.cs             # 패널 매니저
+├── UnderlineHoverEffect.cs     # 언더라인 호버 효과
+├── Newgame.cs                 # 새 게임
+├── ExitGame.cs                 # 게임 종료
+├── Xbutton.cs                  # X 버튼
+├── play.cs                     # 플레이 버튼
+└── UISystem_개발문서.md        # 개발 문서
+```
+
+## 📁 주요 컴포넌트 규칙 (현재 상태)
+
+### 현재 구현된 파일들
+- **MainSceneController.cs**: 메인 씬 컨트롤러 (4.1KB, 129줄)
+- **SettingsUIController.cs**: 설정 UI 컨트롤러 (3.1KB, 116줄)
+- **WeaponSelector.cs**: 무기 선택기 (289B, 15줄)
+- **PanelManager.cs**: 패널 매니저 (586B, 23줄)
+- **UnderlineHoverEffect.cs**: 언더라인 호버 효과 (1.5KB, 52줄)
+- **Newgame.cs**: 새 게임 (651B, 20줄)
+- **ExitGame.cs**: 게임 종료 (194B, 10줄)
+- **Xbutton.cs**: X 버튼 (248B, 14줄)
+- **play.cs**: 플레이 버튼 (279B, 15줄)
+
+## 🎯 주요 기능 (현재 구현 상태)
+
+### 1. 메인 씬 컨트롤러
+- **씬 관리**: 메인 씬의 전체적인 관리
+- **UI 조정**: 메인 씬 내 UI 요소들 조정
+- **이벤트 처리**: 메인 씬 관련 이벤트 처리
+
+### 2. 설정 UI
+- **게임 설정**: 게임 관련 설정 관리
+- **UI 설정**: UI 관련 설정 관리
+- **설정 저장**: 설정값 저장 및 로드
+
+### 3. 무기 선택기
+- **무기 선택**: 플레이어 캐릭터 무기 선택
+- **무기 정보**: 선택한 무기의 정보 표시
+- **선택 확인**: 무기 선택 확인
+
+### 4. 패널 관리
+- **패널 전환**: 다양한 패널 간 전환
+- **패널 상태**: 패널의 표시/숨김 상태 관리
+- **패널 애니메이션**: 패널 전환 애니메이션
+
+### 5. UI 효과
+- **언더라인 호버**: 텍스트에 언더라인 호버 효과
+- **버튼 효과**: 버튼 클릭 효과
+- **전환 효과**: UI 전환 시 효과
+
+### 6. 게임 제어
+- **새 게임**: 새 게임 시작
+- **게임 종료**: 게임 종료 처리
+- **플레이**: 게임 플레이 시작
+
+## 🔧 사용 방법
+
+### 기본 사용법 (현재 구현 상태)
+```csharp
+// 메인 씬 컨트롤러 사용
+MainSceneController mainController = FindObjectOfType<MainSceneController>();
+mainController.InitializeScene();
+
+// 설정 UI 표시
+SettingsUIController settingsController = FindObjectOfType<SettingsUIController>();
+settingsController.ShowSettings();
+
+// 무기 선택기 사용
+WeaponSelector weaponSelector = FindObjectOfType<WeaponSelector>();
+weaponSelector.SelectWeapon(weaponType);
+
+// 패널 관리
+PanelManager panelManager = FindObjectOfType<PanelManager>();
+panelManager.ShowPanel(panelName);
+```
+
+### UI 효과 사용법
+```csharp
+// 언더라인 호버 효과
+UnderlineHoverEffect hoverEffect = GetComponent<UnderlineHoverEffect>();
+hoverEffect.EnableHoverEffect();
+
+// 버튼 클릭 처리
+public void OnPlayButtonClicked()
+{
+    // 플레이 버튼 클릭 처리
+}
+
+public void OnExitButtonClicked()
+{
+    // 종료 버튼 클릭 처리
+}
+```
+
+### 주요 클래스 및 메서드
+
+#### MainSceneController 클래스
+- **InitializeScene()**: 메인 씬 초기화
+- **UpdateUI()**: UI 업데이트
+- **HandleEvents()**: 이벤트 처리
+
+#### SettingsUIController 클래스
+- **ShowSettings()**: 설정 UI 표시
+- **HideSettings()**: 설정 UI 숨김
+- **SaveSettings()**: 설정 저장
+- **LoadSettings()**: 설정 로드
+
+#### WeaponSelector 클래스
+- **SelectWeapon(WeaponType type)**: 무기 선택
+- **GetSelectedWeapon()**: 선택된 무기 조회
+- **ShowWeaponInfo()**: 무기 정보 표시
+
+#### PanelManager 클래스
+- **ShowPanel(string panelName)**: 패널 표시
+- **HidePanel(string panelName)**: 패널 숨김
+- **TogglePanel(string panelName)**: 패널 토글
+- **IsPanelVisible(string panelName)**: 패널 표시 상태 확인
+
+#### UnderlineHoverEffect 클래스
+- **EnableHoverEffect()**: 호버 효과 활성화
+- **DisableHoverEffect()**: 호버 효과 비활성화
+- **OnPointerEnter()**: 마우스 진입 처리
+- **OnPointerExit()**: 마우스 나가기 처리
+
+#### 게임 제어 클래스들
+- **Newgame.cs**: 새 게임 시작
+- **ExitGame.cs**: 게임 종료
+- **play.cs**: 플레이 버튼
+- **Xbutton.cs**: X 버튼 (닫기)
+
+## 🏗️ 아키텍처 패턴
+
+### 1. 싱글톤 패턴 (Singleton Pattern)
+- **각 UI 컨트롤러**: 각 UI 컨트롤러를 싱글톤으로 구현
+- **전역 접근**: 어디서든 UI 컨트롤러에 접근 가능
+- **상태 관리**: UI 상태를 전역에서 관리
+
+### 2. MVC 패턴 (Model-View-Controller)
+- **Model**: UI 데이터 모델
+- **View**: UI 요소 (Unity UI)
+- **Controller**: UI 컨트롤러 로직
+
+### 3. 옵저버 패턴 (Observer Pattern)
+- **이벤트 시스템**: UI 이벤트 발생 및 구독
+- **상태 변경**: UI 상태 변경 알림
+- **업데이트**: 상태 변경에 따른 UI 업데이트
+
+### 4. 팩토리 패턴 (Factory Pattern)
+- **UI 생성**: 동적 UI 요소 생성
+- **UI 풀링**: UI 요소 풀링 관리
+
+## 🔧 기술적 구현 세부사항
+
+### 성능 최적화
+- **UI 풀링**: UI 요소 재사용을 통한 메모리 최적화
+- **업데이트 최적화**: 필요한 경우에만 UI 업데이트
+- **애니메이션 최적화**: DOTween을 활용한 효율적인 UI 애니메이션
+
+### 스레드 안전성
+- **UI 스레드**: UI 업데이트는 메인 스레드에서만 수행
+- **이벤트 처리**: 스레드 안전한 UI 이벤트 시스템
+- **상태 동기화**: UI 상태 변경 시 동기화
+
+### 메모리 관리
+- **생명주기 관리**: UI 객체의 생성/소멸 관리
+- **리소스 해제**: UI 해제 시 리소스 정리
+- **메모리 누수 방지**: 이벤트 구독 해제, UI 참조 해제
+
+## 🧪 검증/테스트 지침
+
+### 체크리스트
+- [ ] UI 컨트롤러 정상 동작 확인
+- [ ] 설정 저장/로드 기능 검증
+- [ ] 무기 선택 기능 확인
+- [ ] 패널 전환 정상 동작 확인
+- [ ] UI 효과 정상 동작 확인
+- [ ] 게임 제어 버튼 정상 동작 확인
+
+### 재현 절차
+1. 각 UI 컨트롤러별 기능 테스트
+2. 설정 변경 및 저장/로드 테스트
+3. 무기 선택 시나리오 테스트
+4. 패널 전환 시나리오 테스트
+5. UI 효과 시나리오 테스트
+6. 성능 프로파일링
+
+## 📝 변경 기록(Delta)
+- 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
+
+- 2025-01-27 | Maintainer | UISystem 개발 문서 기반으로 규칙 파일 신규 생성 | 문서
+- 2025-01-27 | Maintainer | 현재 구현 상태 반영 및 주요 기능/클래스/메서드 정보 추가 | 문서

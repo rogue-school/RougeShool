@@ -42,6 +42,17 @@ CoreSystem/Audio/     # 실제 구현 위치
 - **이벤트 기반**: 게임 이벤트와 자동 연동
 - **전용 사운드**: 카드 사용, 적 처치 등 전용 사운드 메서드
 
+## 🎯 주요 기능
+
+1. **통합 오디오 관리**: BGM과 SFX를 중앙화된 방식으로 관리
+2. **오디오 풀링 시스템**: AudioSource 재사용을 통한 성능 최적화
+3. **우선순위 시스템**: 사운드별 우선순위 설정으로 중요한 사운드 우선 재생
+4. **쿨다운 시스템**: 동일 사운드 중복 재생 방지
+5. **페이드 효과**: BGM 전환 시 부드러운 페이드 인/아웃
+6. **이벤트 기반 사운드**: 게임 이벤트와 자동 연동되는 사운드 시스템
+7. **볼륨 제어**: 마스터, BGM, SFX 볼륨 개별 제어
+8. **CoreSystem 통합**: 전역 오디오 시스템으로 통합 관리
+
 ## 🎯 개발 규칙
 
 ### 1. 오디오 매니저 규칙
@@ -64,6 +75,32 @@ CoreSystem/Audio/     # 실제 구현 위치
 - **전투 사운드**: 우선순위 6-10 (높음)
 - **UI 사운드**: 우선순위 3-5 (중간)
 - **기타 사운드**: 우선순위 1-2 (낮음)
+
+## 🔧 주요 클래스 및 메서드
+
+### AudioManager 클래스
+- **Instance**: 싱글톤 인스턴스 (프로퍼티)
+- **PlayBGM()**: BGM 재생 (페이드 인 옵션 지원)
+- **PlaySFX()**: 효과음 재생 (기본 방식)
+- **PlaySFXWithPool()**: 효과음 재생 (풀링 사용, 우선순위 지정)
+- **StopBGM()**: BGM 정지
+- **SetBGMVolume()**: BGM 볼륨 설정
+- **SetSFXVolume()**: SFX 볼륨 설정
+- **Initialize()**: 오디오 시스템 초기화
+- **IsInitialized**: 초기화 상태 (프로퍼티)
+
+### AudioPoolManager 클래스
+- **PlaySound()**: 사운드 재생 (우선순위 지정 가능)
+- **IsInCooldown()**: 쿨다운 상태 확인
+- **SetCooldown()**: 쿨다운 설정
+- **GetAvailableSource()**: 사용 가능한 AudioSource 조회
+- **ReturnSource()**: AudioSource 풀 반환
+
+### AudioEventTrigger 클래스
+- **OnCardUsed()**: 카드 사용 시 사운드 재생
+- **OnEnemyDefeated()**: 적 처치 시 사운드 재생
+- **OnButtonClicked()**: 버튼 클릭 시 사운드 재생
+- **OnSkillActivated()**: 스킬 활성화 시 사운드 재생
 
 ## 🔧 사용 방법
 
@@ -169,6 +206,81 @@ if (AudioManager.Instance.IsInitialized)
 - **리소스 해제**: 오디오 클립 사용 완료 후 해제
 - **메모리 누수 방지**: 불필요한 참조 해제
 
+## 🏗️ 시스템 아키텍처
+
+### 의존성 다이어그램
+```mermaid
+graph TD
+    A[AudioManager] --> B[AudioPoolManager]
+    A --> C[AudioEventTrigger]
+    A --> D[CoreSystemInitializer]
+    B --> E[AudioSource Pool]
+    C --> F[Game Events]
+    D --> G[ICoreSystemInitializable]
+    E --> H[Sound Playback]
+    F --> I[Card Events]
+    F --> J[UI Events]
+    F --> K[Combat Events]
+```
+
+### 클래스 다이어그램
+```mermaid
+classDiagram
+    class AudioManager {
+        +Instance: AudioManager
+        +PlayBGM()
+        +PlaySFX()
+        +PlaySFXWithPool()
+        +StopBGM()
+        +SetBGMVolume()
+        +SetSFXVolume()
+    }
+    
+    class AudioPoolManager {
+        +PlaySound()
+        +IsInCooldown()
+        +SetCooldown()
+        +GetAvailableSource()
+        +ReturnSource()
+    }
+    
+    class AudioEventTrigger {
+        +OnCardUsed()
+        +OnEnemyDefeated()
+        +OnButtonClicked()
+        +OnSkillActivated()
+    }
+    
+    class ICoreSystemInitializable {
+        <<interface>>
+        +Initialize()
+        +IsInitialized: bool
+    }
+    
+    AudioManager --> AudioPoolManager
+    AudioManager --> AudioEventTrigger
+    AudioManager --> ICoreSystemInitializable
+```
+
+### 시퀀스 다이어그램
+```mermaid
+sequenceDiagram
+    participant Client
+    participant AudioManager
+    participant AudioPoolManager
+    participant AudioSource
+    participant AudioClip
+    
+    Client->>AudioManager: PlaySFXWithPool(clip, volume, priority)
+    AudioManager->>AudioPoolManager: PlaySound(clip, volume, priority)
+    AudioPoolManager->>AudioSource: PlayOneShot(clip, volume)
+    AudioSource->>AudioClip: Play()
+    AudioClip-->>AudioSource: Sound Complete
+    AudioSource-->>AudioPoolManager: OnAudioSourceFinished()
+    AudioPoolManager-->>AudioManager: ReturnSource()
+    AudioManager-->>Client: Sound Playing
+```
+
 ## 🧪 검증/테스트 지침
 
 ### 체크리스트
@@ -186,6 +298,23 @@ if (AudioManager.Instance.IsInitialized)
 3. 페이드 효과 시나리오 테스트
 4. 성능 프로파일링
 
+## 📚 참고 자료
+
+### 관련 문서
+- [CoreSystem 개발 문서](../CoreSystem/CoreSystem_개발문서.md)
+- [AnimationSystem 개발 문서](../AnimationSystem/AnimationSystem_개발문서.md)
+- [CombatSystem 개발 문서](../CombatSystem/CombatSystem_개발문서.md)
+
+### Unity 문서
+- [Unity Audio System](https://docs.unity3d.com/Manual/Audio.html)
+- [AudioSource Component](https://docs.unity3d.com/Manual/class-AudioSource.html)
+- [AudioClip](https://docs.unity3d.com/Manual/class-AudioClip.html)
+
+### 디자인 패턴
+- [Singleton Pattern](https://refactoring.guru/design-patterns/singleton)
+- [Object Pool Pattern](https://refactoring.guru/design-patterns/object-pool)
+- [Observer Pattern](https://refactoring.guru/design-patterns/observer)
+
 ## 📝 변경 기록(Delta)
 - 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
 
@@ -193,3 +322,4 @@ if (AudioManager.Instance.IsInitialized)
 - 2025-01-27 | Maintainer | 실제 구현 위치 명시 및 폴더 구조 정정 | 문서
 - 2025-01-27 | Maintainer | .mdc 규칙 파일로 변환 및 Cursor 규칙 저장 | 문서
 - 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 클래스/메서드/우선순위 정보 추가 | 문서
+- 2025-01-27 | Maintainer | 개발 문서 기반 규칙 파일 업데이트 (주요 기능, 클래스/메서드, 아키텍처 다이어그램 추가) | 문서

@@ -71,6 +71,17 @@ CharacterSystem/
 - **CardValidator.cs**: 카드 검증기
 - **EnemySpawnResult.cs**: 적 스폰 결과
 
+## 🎯 주요 기능
+
+1. **캐릭터 타입별 특수 기능**: 검, 활, 지팡이 캐릭터의 고유한 특성과 능력
+2. **리소스 관리 시스템**: 화살(활), 마나(지팡이) 등 캐릭터별 리소스 관리
+3. **상태 관리**: 생존, 가드, 효과 상태 등 캐릭터 상태 통합 관리
+4. **초기화 시스템**: Zenject DI를 통한 자동 초기화 및 스킬카드 설정
+5. **매니저 패턴**: 플레이어/적 캐릭터 통합 관리
+6. **이벤트 기반 통신**: 캐릭터 사망, 상태 변경 등 이벤트 시스템
+7. **데이터 기반 설계**: ScriptableObject를 통한 캐릭터 데이터 관리
+8. **UI 연동**: 캐릭터 슬롯 UI 및 컨트롤러 지원
+
 ## 🎯 개발 규칙
 
 ### 1. 캐릭터 기본 속성 규칙
@@ -104,6 +115,56 @@ CharacterSystem/
 - **자동 초기화**: 캐릭터 생성 시 자동 설정
 - **스킬카드 초기화**: 캐릭터별 스킬카드 덱 설정
 - **Zenject DI**: 의존성 주입을 통한 초기화
+
+## 🔧 주요 클래스 및 메서드
+
+### EnemyManager 클래스
+- **Instance**: 싱글톤 인스턴스 (프로퍼티)
+- **RegisterEnemy()**: 적 캐릭터 등록
+- **UnregisterEnemy()**: 적 캐릭터 등록 해제
+- **GetCurrentEnemy()**: 현재 적 캐릭터 조회
+- **ClearEnemy()**: 적 캐릭터 초기화
+- **IsEnemyRegistered**: 적 등록 상태 (프로퍼티)
+
+### PlayerResourceManager 클래스
+- **Initialize()**: 리소스 매니저 초기화
+- **CanConsumeResource()**: 리소스 소모 가능 여부 확인
+- **ConsumeResource()**: 리소스 소모
+- **RestoreResource()**: 리소스 회복
+- **CurrentResource**: 현재 리소스 (프로퍼티)
+- **MaxResource**: 최대 리소스 (프로퍼티)
+- **ResourceName**: 리소스 이름 (프로퍼티)
+
+### EnemySpawnerManager 클래스
+- **SpawnEnemy()**: 적 캐릭터 스폰
+- **GetSpawnPosition()**: 스폰 위치 조회
+- **IsSpawnAvailable()**: 스폰 가능 여부 확인
+
+### ICharacterSlot 인터페이스
+- **SetCharacter()**: 캐릭터 설정
+- **GetCharacter()**: 캐릭터 조회
+- **IsEmpty**: 빈 슬롯 여부 (프로퍼티)
+- **ClearSlot()**: 슬롯 초기화
+
+### ICharacterSlotRegistry 인터페이스
+- **RegisterSlot()**: 슬롯 등록
+- **UnregisterSlot()**: 슬롯 등록 해제
+- **GetSlot()**: 슬롯 조회
+- **GetAllSlots()**: 모든 슬롯 조회
+
+### PlayerCharacterData 클래스
+- **CharacterType**: 캐릭터 타입 (프로퍼티)
+- **MaxHealth**: 최대 체력 (프로퍼티)
+- **MaxResource**: 최대 리소스 (프로퍼티)
+- **ResourceType**: 리소스 타입 (프로퍼티)
+- **SkillCards**: 스킬카드 목록 (프로퍼티)
+
+### EnemyCharacter 클래스
+- **Initialize()**: 적 캐릭터 초기화
+- **TakeDamage()**: 데미지 받기
+- **Die()**: 사망 처리
+- **IsAlive**: 생존 상태 (프로퍼티)
+- **CurrentHealth**: 현재 체력 (프로퍼티)
 
 ## 🔧 사용 방법
 
@@ -227,6 +288,91 @@ else if (player.CharacterType == PlayerCharacterType.Staff)
 - **리소스 해제**: 캐릭터 소멸 시 리소스 정리
 - **이벤트 구독 해제**: 메모리 누수 방지
 
+## 🏗️ 시스템 아키텍처
+
+### 의존성 다이어그램
+```mermaid
+graph TD
+    A[PlayerManager] --> B[PlayerCharacter]
+    A --> C[PlayerResourceManager]
+    D[EnemyManager] --> E[EnemyCharacter]
+    D --> F[EnemySpawnerManager]
+    G[CharacterSlotUI] --> H[ICharacterSlot]
+    I[CharacterUIController] --> J[CharacterSlotUI]
+    K[PlayerCharacterInitializer] --> L[PlayerCharacterData]
+    M[EnemyCharacterInitializer] --> N[EnemyCharacterData]
+    O[CardRegistrar] --> P[SkillCardSystem]
+    Q[CardValidator] --> R[CombatSystem]
+```
+
+### 클래스 다이어그램
+```mermaid
+classDiagram
+    class CharacterBase {
+        +Initialize()
+        +TakeDamage()
+        +Die()
+        +IsAlive: bool
+        +CurrentHealth: int
+    }
+    
+    class PlayerCharacter {
+        +CharacterType: PlayerCharacterType
+        +SwordAttack()
+        +BowAttack()
+        +StaffAttack()
+    }
+    
+    class EnemyCharacter {
+        +Initialize()
+        +TakeDamage()
+        +Die()
+    }
+    
+    class PlayerManager {
+        +Instance: PlayerManager
+        +GetPlayerCharacter()
+        +SetPlayerCharacter()
+    }
+    
+    class EnemyManager {
+        +Instance: EnemyManager
+        +RegisterEnemy()
+        +GetCurrentEnemy()
+        +ClearEnemy()
+    }
+    
+    class PlayerResourceManager {
+        +Initialize()
+        +CanConsumeResource()
+        +ConsumeResource()
+        +RestoreResource()
+    }
+    
+    CharacterBase <|-- PlayerCharacter
+    CharacterBase <|-- EnemyCharacter
+    PlayerManager --> PlayerCharacter
+    EnemyManager --> EnemyCharacter
+    PlayerManager --> PlayerResourceManager
+```
+
+### 시퀀스 다이어그램
+```mermaid
+sequenceDiagram
+    participant Client
+    participant PlayerManager
+    participant PlayerCharacter
+    participant PlayerResourceManager
+    participant SkillCardSystem
+    
+    Client->>PlayerManager: SetPlayerCharacter(data)
+    PlayerManager->>PlayerCharacter: Initialize(data)
+    PlayerCharacter->>PlayerResourceManager: Initialize(data)
+    PlayerManager->>SkillCardSystem: RegisterSkillCards()
+    SkillCardSystem-->>PlayerManager: Cards Registered
+    PlayerManager-->>Client: Character Ready
+```
+
 ## 🧪 검증/테스트 지침
 
 ### 체크리스트
@@ -242,6 +388,25 @@ else if (player.CharacterType == PlayerCharacterType.Staff)
 3. 상태 전환 시나리오 테스트
 4. 성능 프로파일링
 
+## 📚 참고 자료
+
+### 관련 문서
+- [CoreSystem 개발 문서](../CoreSystem/CoreSystem_개발문서.md)
+- [CombatSystem 개발 문서](../CombatSystem/CombatSystem_개발문서.md)
+- [SkillCardSystem 개발 문서](../SkillCardSystem/SkillCardSystem_개발문서.md)
+- [AnimationSystem 개발 문서](../AnimationSystem/AnimationSystem_개발문서.md)
+
+### Unity 문서
+- [MonoBehaviour](https://docs.unity3d.com/ScriptReference/MonoBehaviour.html)
+- [ScriptableObject](https://docs.unity3d.com/Manual/class-ScriptableObject.html)
+- [Unity Events](https://docs.unity3d.com/Manual/UnityEvents.html)
+
+### 디자인 패턴
+- [Manager Pattern](https://refactoring.guru/design-patterns/singleton)
+- [Strategy Pattern](https://refactoring.guru/design-patterns/strategy)
+- [Observer Pattern](https://refactoring.guru/design-patterns/observer)
+- [Factory Pattern](https://refactoring.guru/design-patterns/factory-method)
+
 ## 📝 변경 기록(Delta)
 - 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
 
@@ -250,3 +415,4 @@ else if (player.CharacterType == PlayerCharacterType.Staff)
 - 2025-01-27 | Maintainer | .mdc 규칙 파일로 변환 및 Cursor 규칙 저장 | 문서
 - 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 클래스/메서드/인터페이스 정보 추가 | 문서
 - 2025-01-27 | Maintainer | 실제 코드 기반 캐릭터 기본 속성 수정 (속도/공격력 제거, 가드/리소스/턴효과 추가) | 문서
+- 2025-01-27 | Maintainer | 개발 문서 기반 규칙 파일 업데이트 (주요 기능, 클래스/메서드, 아키텍처 다이어그램 추가) | 문서

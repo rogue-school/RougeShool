@@ -64,29 +64,45 @@ AnimationSystem/
 - **SkillCardAnimationEntry.cs**: 스킬카드 애니메이션 엔트리 데이터
 - **SkillCardAnimationSettings.cs**: 스킬카드 애니메이션 설정
 
-### Animator 폴더 규칙 (11개 파일)
+### Animator 폴더 규칙 (20개 파일)
 
-#### CharacterAnimation 하위 폴더 (4개 파일)
-- **DeathAnimation/**:
+#### CharacterAnimation 하위 폴더 (8개 파일)
+- **DeathAnimation/**: 
   - **CharacterDeathAnimation001.cs**: 캐릭터 사망 애니메이션 구현체
-- **SpawnAnimation/**:
+  - **DefaultCharacterDeathAnimation.cs**: 기본 캐릭터 사망 애니메이션
+- **SpawnAnimation/**: 
   - **CharacterSpawnAnimation001.cs**: 캐릭터 등장 애니메이션 구현체
+  - **DefaultCharacterSpawnAnimation.cs**: 기본 캐릭터 등장 애니메이션
 
-#### SkillCardAnimation 하위 폴더 (7개 파일)
-- **DragAnimation/**:
+#### SkillCardAnimation 하위 폴더 (12개 파일)
+- **DragAnimation/**: 
   - **SkillCardDragAnimation001.cs**: 스킬카드 드래그 애니메이션 구현체
-- **DropAnimation/**:
+  - **DefaultSkillCardDragAnimation.cs**: 기본 스킬카드 드래그 애니메이션
+- **DropAnimation/**: 
   - **SkillCardDropAnimation001.cs**: 스킬카드 드롭 애니메이션 구현체
-- **MoveAnimation/**:
+  - **DefaultSkillCardDropAnimation.cs**: 기본 스킬카드 드롭 애니메이션
+- **MoveAnimation/**: 
   - **SkillCardMoveAnimation001.cs**: 스킬카드 이동 애니메이션 구현체
-- **MoveToCombatSlotAnimation/**:
+  - **DefaultSkillCardMoveAnimation.cs**: 기본 스킬카드 이동 애니메이션
+- **MoveToCombatSlotAnimation/**: 
   - **SkillCardCombatSlotMoveAnimation001.cs**: 스킬카드 전투 슬롯 이동 애니메이션 구현체
-- **SpawnAnimation/**:
+  - **DefaultSkillCardCombatSlotMoveAnimation.cs**: 기본 스킬카드 전투 슬롯 이동 애니메이션
+- **SpawnAnimation/**: 
   - **SkillCardSpawnAnimation001.cs**: 스킬카드 등장 애니메이션 구현체
-- **UseAnimation/**:
+  - **DefaultSkillCardSpawnAnimation.cs**: 기본 스킬카드 등장 애니메이션
+- **UseAnimation/**: 
   - **SkillCardUseAnimation001.cs**: 스킬카드 사용 애니메이션 구현체
-- **VanishAnimation/**:
+  - **DefaultSkillCardUseAnimation.cs**: 기본 스킬카드 사용 애니메이션
+- **VanishAnimation/**: 
   - **SkillCardVanishAnimation001.cs**: 스킬카드 소멸 애니메이션 구현체
+  - **DefaultSkillCardVanishAnimation.cs**: 기본 스킬카드 소멸 애니메이션
+
+### Editor 폴더 규칙 (5개 파일)
+- **AnimationDatabaseAssetFixer.cs**: 애니메이션 데이터베이스 에셋 수정기
+- **EnemyCharacterAnimationDatabaseEditor.cs**: 적 캐릭터 애니메이션 데이터베이스 에디터
+- **EnemySkillCardAnimationDatabaseEditor.cs**: 적 스킬카드 애니메이션 데이터베이스 에디터
+- **PlayerCharacterAnimationDatabaseEditor.cs**: 플레이어 캐릭터 애니메이션 데이터베이스 에디터
+- **PlayerSkillCardAnimationDatabaseEditor.cs**: 플레이어 스킬카드 애니메이션 데이터베이스 에디터
 
 ### Helper 폴더 규칙 (1개 파일)
 - **AnimationHelper.cs**: 애니메이션 유틸리티 함수
@@ -94,6 +110,17 @@ AnimationSystem/
 ### Controllers 폴더 규칙 (2개 파일)
 - **CharacterAnimationController.cs**: 캐릭터 애니메이션 컨트롤러
 - **SkillCardAnimationController.cs**: 스킬카드 애니메이션 컨트롤러
+
+## 🎯 주요 기능
+
+1. **통합 애니메이션 관리**: 모든 애니메이션을 중앙화된 방식으로 관리
+2. **데이터 기반 애니메이션**: ScriptableObject를 통한 애니메이션 데이터 관리
+3. **타입별 애니메이션 지원**: 캐릭터, 스킬카드 등 다양한 타입별 애니메이션 지원
+4. **커스텀 에디터**: 개발자 친화적인 애니메이션 데이터베이스 에디터 제공
+5. **DOTween 기반**: 고성능 애니메이션을 위한 DOTween 활용
+6. **인터페이스 기반 설계**: 확장 가능한 애니메이션 시스템 구조
+7. **애니메이션 풀링**: 메모리 효율성을 위한 애니메이션 풀링 시스템
+8. **이벤트 기반**: 애니메이션 완료 시 이벤트 콜백 지원
 
 ## 🎯 개발 규칙
 
@@ -117,6 +144,44 @@ AnimationSystem/
 - CharacterAnimationController: 캐릭터 애니메이션 통합 관리
 - SkillCardAnimationController: 스킬카드 애니메이션 통합 관리
 - 이벤트 기반 애니메이션 실행
+
+## 🔧 주요 클래스 및 메서드
+
+### AnimationFacade 클래스
+- **Instance**: 싱글톤 인스턴스 (프로퍼티)
+- **PlayCharacterAnimation()**: 캐릭터 애니메이션 실행
+- **PlayCharacterDeathAnimation()**: 캐릭터 사망 애니메이션 실행
+- **PlaySkillCardAnimation()**: 스킬카드 애니메이션 실행 (다중 오버로드)
+- **LoadAllData()**: 모든 애니메이션 데이터 로드
+- **Initialize()**: 애니메이션 시스템 초기화
+- **IsInitialized**: 초기화 상태 (프로퍼티)
+
+### CharacterAnimationController 클래스
+- **PlayAnimation()**: 애니메이션 타입별 실행 (spawn, death, damage, heal)
+- **GetSettings()**: 현재 애니메이션 설정 반환
+- **UpdateSettings()**: 애니메이션 설정 업데이트
+- **UpdateSpawnSettings()**: 등장 애니메이션 설정 업데이트
+- **UpdateDeathSettings()**: 사망 애니메이션 설정 업데이트
+- **UpdateDamageSettings()**: 피해 애니메이션 설정 업데이트
+
+### SkillCardAnimationController 클래스
+- **PlaySpawnAnimation()**: 스킬카드 등장 애니메이션
+- **PlayMoveAnimation()**: 스킬카드 이동 애니메이션
+- **PlayUseAnimation()**: 스킬카드 사용 애니메이션
+- **PlayVanishAnimation()**: 스킬카드 소멸 애니메이션
+- **PlayDragAnimation()**: 스킬카드 드래그 애니메이션
+- **PlayDropAnimation()**: 스킬카드 드롭 애니메이션
+
+### IAnimationScript 인터페이스
+- **PlayAnimation()**: 애니메이션 실행
+- **StopAnimation()**: 애니메이션 정지
+- **IsPlaying**: 애니메이션 재생 상태 (프로퍼티)
+- **OnAnimationComplete**: 애니메이션 완료 이벤트
+
+### AnimationHelper 클래스
+- **GetAnimationSettings()**: 애니메이션 설정 조회
+- **CreateAnimationSequence()**: 애니메이션 시퀀스 생성
+- **ValidateAnimationData()**: 애니메이션 데이터 검증
 
 ## 🔧 사용 방법
 
@@ -186,11 +251,42 @@ public class AnimationSettings
 }
 ```
 
+### 애니메이션 설정 구조
+```csharp
+// CharacterAnimationSettings 주요 속성
+public class AnimationSettings
+{
+    // 등장 애니메이션
+    public float spawnDuration = 1.0f;
+    public Vector3 spawnStartScale = Vector3.zero;
+    public Vector3 spawnEndScale = Vector3.one;
+    public Ease spawnEase = Ease.OutBack;
+    public bool useSpawnGlow = true;
+    public Color spawnGlowColor = Color.blue;
+    
+    // 사망 애니메이션
+    public float deathDuration = 1.5f;
+    public Ease deathEase = Ease.InBack;
+    public bool useDeathFade = true;
+    public Vector3 deathEndScale = Vector3.zero;
+    
+    // 피해 애니메이션
+    public float damageDuration = 0.3f;
+    public bool useDamageShake = true;
+    public float damageShakeStrength = 0.1f;
+    
+    // 치유 애니메이션
+    public float healDuration = 0.8f;
+    public Color healGlowColor = Color.green;
+}
+```
+
 ### 커스텀 애니메이션 추가 절차
 1. 해당 타입의 Animator 클래스 상속
 2. AnimationDatabase에 애니메이션 데이터 등록
 3. AnimationSettings에서 설정 구성
 4. 인터페이스 구현 및 예외 처리 추가
+5. 커스텀 에디터를 통한 데이터베이스 관리
 
 ## 🏗️ 아키텍처 패턴
 
@@ -217,6 +313,81 @@ public class AnimationSettings
 - 싱글톤 패턴의 스레드 안전성 보장
 - 이벤트 기반 비동기 처리
 
+## 🏗️ 시스템 아키텍처
+
+### 의존성 다이어그램
+```mermaid
+graph TD
+    A[AnimationFacade] --> B[CharacterAnimationController]
+    A --> C[SkillCardAnimationController]
+    A --> D[AnimationDatabaseManager]
+    B --> E[ICharacterAnimationScript]
+    C --> F[ISkillCardAnimationScript]
+    D --> G[PlayerCharacterAnimationDatabase]
+    D --> H[EnemyCharacterAnimationDatabase]
+    D --> I[PlayerSkillCardAnimationDatabase]
+    D --> J[EnemySkillCardAnimationDatabase]
+    E --> K[CharacterDeathAnimation001]
+    E --> L[CharacterSpawnAnimation001]
+    F --> M[SkillCardDragAnimation001]
+    F --> N[SkillCardUseAnimation001]
+```
+
+### 클래스 다이어그램
+```mermaid
+classDiagram
+    class AnimationFacade {
+        +Instance: AnimationFacade
+        +PlayCharacterAnimation()
+        +PlaySkillCardAnimation()
+        +LoadAllData()
+        +Initialize()
+    }
+    
+    class CharacterAnimationController {
+        +PlayAnimation()
+        +GetSettings()
+        +UpdateSettings()
+    }
+    
+    class SkillCardAnimationController {
+        +PlaySpawnAnimation()
+        +PlayMoveAnimation()
+        +PlayUseAnimation()
+    }
+    
+    class IAnimationScript {
+        <<interface>>
+        +PlayAnimation()
+        +StopAnimation()
+        +IsPlaying: bool
+    }
+    
+    AnimationFacade --> CharacterAnimationController
+    AnimationFacade --> SkillCardAnimationController
+    CharacterAnimationController --> IAnimationScript
+    SkillCardAnimationController --> IAnimationScript
+```
+
+### 시퀀스 다이어그램
+```mermaid
+sequenceDiagram
+    participant Client
+    participant AnimationFacade
+    participant Controller
+    participant AnimationScript
+    participant DOTween
+    
+    Client->>AnimationFacade: PlayCharacterAnimation()
+    AnimationFacade->>Controller: PlayAnimation()
+    Controller->>AnimationScript: PlayAnimation()
+    AnimationScript->>DOTween: CreateTween()
+    DOTween-->>AnimationScript: Tween Complete
+    AnimationScript-->>Controller: OnComplete()
+    Controller-->>AnimationFacade: Animation Finished
+    AnimationFacade-->>Client: Callback
+```
+
 ## 🧪 검증/테스트 지침
 
 ### 체크리스트
@@ -231,6 +402,23 @@ public class AnimationSettings
 2. 메모리 누수 검사
 3. 프레임레이트 영향도 측정
 
+## 📚 참고 자료
+
+### 관련 문서
+- [CoreSystem 개발 문서](../CoreSystem/CoreSystem_개발문서.md)
+- [CharacterSystem 개발 문서](../CharacterSystem/CharacterSystem_개발문서.md)
+- [SkillCardSystem 개발 문서](../SkillCardSystem/SkillCardSystem_개발문서.md)
+
+### Unity 문서
+- [DOTween Documentation](https://dotween.demigiant.com/documentation.php)
+- [Unity Animation System](https://docs.unity3d.com/Manual/AnimationSection.html)
+- [ScriptableObject](https://docs.unity3d.com/Manual/class-ScriptableObject.html)
+
+### 디자인 패턴
+- [Facade Pattern](https://refactoring.guru/design-patterns/facade)
+- [Strategy Pattern](https://refactoring.guru/design-patterns/strategy)
+- [Factory Pattern](https://refactoring.guru/design-patterns/factory-method)
+
 ## 📝 변경 기록(Delta)
 - 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
 
@@ -239,3 +427,4 @@ public class AnimationSettings
 - 2025-01-27 | Maintainer | .mdc 규칙 파일로 변환 및 Cursor 규칙 저장 | 문서
 - 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 함수/변수/클래스 정보 추가 | 문서
 - 2025-01-27 | Maintainer | 사용하지 않는 Default 애니메이션 파일들 제거 및 규칙 파일 업데이트 | 코드/문서
+- 2025-01-27 | Maintainer | 개발 문서 기반 규칙 파일 업데이트 (주요 기능, 클래스/메서드, 아키텍처 다이어그램 추가) | 문서

@@ -2,7 +2,7 @@
 description: "StageSystem 개발 가이드 및 규칙 - Unity 2D 스테이지 시스템 통합 관리"
 globs: ["Assets/Script/StageSystem/**/*.cs"]
 rule_id: stage_system_rules
-version: 1.2.0
+version: 1.3.0
 alwaysApply: true
 ---
 
@@ -38,27 +38,47 @@ StageSystem/
 - **StageData.cs**: 스테이지 데이터 (ScriptableObject)
 - **StageRewardData.cs**: 스테이지 보상 데이터
 
-## 🎯 개발 규칙
+## 🎯 주요 기능
 
-### 1. 스테이지 구성 규칙
+### 1. 스테이지 구성
 - **SubBoss + Boss**: 각 스테이지는 SubBoss와 Boss로 구성
 - **스테이지 진행**: SubBoss → Boss 순서로 진행
 - **스테이지 완료**: Boss 처치 시 스테이지 완료
 
-### 2. 스테이지 관리 규칙
+### 2. 스테이지 관리
 - **현재 스테이지**: 현재 진행 중인 스테이지 추적
 - **스테이지 상태**: 진행 중, 완료, 실패 등 상태 관리
 - **스테이지 전환**: 스테이지 간 전환 처리
 
-### 3. 보상 시스템 규칙
+### 3. 보상 시스템
 - **스테이지 완료 보상**: 스테이지 완료 시 보상 지급
 - **보상 데이터**: ScriptableObject 기반 보상 설정
 - **보상 적용**: 보상 지급 및 적용
 
-### 4. 진행 관리 규칙
+### 4. 진행 관리
 - **적 처치 추적**: 적 처치 시 진행 상황 업데이트
 - **스테이지 완료 조건**: 스테이지 완료 조건 확인
 - **다음 스테이지**: 다음 스테이지로 자동 진행
+
+### 5. 게임 플로우 관리
+- **스테이지 진행 플로우**: 시작 → SubBoss → Boss → 완료 → 보상
+- **스테이지 완료 조건**: SubBoss 처치 + Boss 처치
+- **자동 진행**: 조건 만족 시 자동으로 다음 단계 진행
+
+### 6. 데이터 기반 설계
+- **ScriptableObject**: 스테이지 데이터를 에셋으로 관리
+- **런타임 인스턴스**: 게임 중 동적 생성/수정
+- **데이터 검증**: 스테이지 데이터 유효성 검증
+
+### 7. 이벤트 기반 아키텍처
+- **스테이지 이벤트**: 스테이지 진행 관련 이벤트 발생
+- **보상 이벤트**: 보상 지급 이벤트 발생
+- **상태 변경 이벤트**: 스테이지 상태 변경 시 이벤트 발생
+
+### 8. 팩토리 패턴
+- **StageDataFactory**: 스테이지 데이터 생성 및 관리
+- **보상 데이터 생성**: 기본 보상 데이터 자동 생성
+- **스테이지 검증**: 생성된 스테이지 데이터 유효성 검증
 
 ## 🔧 사용 방법
 
@@ -69,56 +89,96 @@ StageManager stageManager = FindObjectOfType<StageManager>();
 stageManager.StartSubBossPhase();
 stageManager.StartBossPhase();
 stageManager.CompleteStage();
-stageManager.FailStage();
+
+// StageProgressController를 통한 스테이지 진행 관리
+StageProgressController progressController = FindObjectOfType<StageProgressController>();
+progressController.StartStage();
+progressController.OnEnemyDeath(enemyCharacter);
 
 // StageDataFactory를 통한 스테이지 데이터 생성
-StageDataFactory factory = new StageDataFactory();
-StageData newStage = factory.CreateStageData(
-    "Stage_001",
-    new StagePhaseData(EnemyType.Goblin, 3),
-    new StagePhaseData(EnemyType.Orc, 1),
-    new List<RewardData>() { new RewardData(RewardType.Gold, 100) }
-);
+EnemyCharacterData subBoss = Resources.Load<EnemyCharacterData>("Enemies/SubBoss");
+EnemyCharacterData boss = Resources.Load<EnemyCharacterData>("Enemies/Boss");
+StagePhaseData stageData = StageDataFactory.CreateBossRushStage(subBoss, boss, "보스 러시", 1);
+
+// 보상 데이터 생성
+StageRewardData rewardData = StageDataFactory.CreateDefaultRewards(true, true, true);
+stageManager.SetCurrentRewards(rewardData);
+stageManager.GiveSubBossRewards();
+stageManager.GiveBossRewards();
+stageManager.GiveStageCompletionRewards();
 ```
 
 ### 주요 클래스 및 메서드
 
 #### StageManager 클래스
-- **StartSubBossPhase()**: 서브 보스 페이즈 시작
-- **StartBossPhase()**: 보스 페이즈 시작
-- **CompleteStage()**: 스테이지 완료 처리
-- **FailStage()**: 스테이지 실패 처리
-- **ProceedToNextStage()**: 다음 스테이지로 진행
-- **OnStageCompleted**: 스테이지 완료 이벤트
-- **OnStageFailed**: 스테이지 실패 이벤트
-- **CurrentStageData**: 현재 스테이지 데이터 (프로퍼티)
+- **StartSubBossPhase()**: 준보스 단계 시작
+- **StartBossPhase()**: 보스 단계 시작
+- **CompleteStage()**: 스테이지 완료
+- **FailStage()**: 스테이지 실패
+- **IsSubBossPhase()**: 준보스 단계 여부 확인
+- **IsBossPhase()**: 보스 단계 여부 확인
+- **IsStageCompleted()**: 스테이지 완료 여부 확인
+- **GetCurrentStageNumber()**: 현재 스테이지 번호 조회
+- **GiveSubBossRewards()**: 준보스 보상 지급
+- **GiveBossRewards()**: 보스 보상 지급
+- **GiveStageCompletionRewards()**: 스테이지 완료 보상 지급
+- **SetCurrentRewards(StageRewardData rewards)**: 현재 보상 데이터 설정
+- **GetCurrentRewards()**: 현재 보상 데이터 조회
+- **CurrentPhase**: 현재 스테이지 단계 (프로퍼티)
+- **ProgressState**: 현재 스테이지 진행 상태 (프로퍼티)
+- **IsSubBossDefeated**: 준보스 처치 여부 (프로퍼티)
+- **IsBossDefeated**: 보스 처치 여부 (프로퍼티)
+
+#### StageProgressController 클래스
+- **StartStage()**: 스테이지 시작 (준보스부터 시작)
+- **OnEnemyDeath(IEnemyCharacter enemy)**: 적 사망 시 호출
 
 #### StageDataFactory 클래스
-- **CreateStageData()**: 스테이지 데이터 생성
+- **CreateBossRushStage(EnemyCharacterData subBoss, EnemyCharacterData boss, string stageName, int stageNumber)**: 준보스/보스 구성 스테이지 생성
+- **CreateDefaultRewards(bool hasSubBossRewards, bool hasBossRewards, bool hasCompletionRewards)**: 기본 보상 데이터 생성
+- **ValidateStageData(StagePhaseData stageData)**: 스테이지 데이터 유효성 검증
 
-#### StagePhaseData 클래스
-- **EnemyType**: 등장 적 타입 (프로퍼티)
-- **EnemyCount**: 등장 적 수 (프로퍼티)
+#### 데이터 클래스
+- **StagePhaseData**: 스테이지 단계별 데이터 (SubBoss, Boss, StageName, StageNumber, StageDescription)
+- **StagePhaseState**: 스테이지 단계 상태 열거형 (None, SubBoss, Boss, Completed)
+- **StageProgressState**: 스테이지 진행 상태 열거형 (NotStarted, SubBossBattle, BossBattle, Completed, Failed)
+- **StageRewardData**: 스테이지 보상 데이터 (RewardItem, RewardCurrency)
 
-#### IStageRewardManager 인터페이스
-- **GrantRewards()**: 스테이지 보상 지급
+#### 인터페이스
+- **IStagePhaseManager**: 스테이지 단계별 관리 인터페이스
+- **IStageRewardManager**: 스테이지 보상 관리 인터페이스
 
 ## 🏗️ 아키텍처 패턴
 
-### 1. 매니저 패턴
+### 1. 매니저 패턴 (Manager Pattern)
 - **StageManager**: 스테이지 전체 관리
 - **StageProgressController**: 스테이지 진행 관리
 
-### 2. 팩토리 패턴
+### 2. 팩토리 패턴 (Factory Pattern)
 - **StageDataFactory**: 스테이지 데이터 생성 및 관리
 
-### 3. 데이터 기반 설계
+### 3. 데이터 기반 설계 (Data-Driven Design)
 - **ScriptableObject**: 스테이지 데이터를 에셋으로 관리
 - **런타임 인스턴스**: 게임 중 동적 생성/수정
 
-### 4. 이벤트 기반 아키텍처
+### 4. 이벤트 기반 아키텍처 (Event-Driven Architecture)
 - **스테이지 이벤트**: 스테이지 진행 관련 이벤트 발생
 - **보상 이벤트**: 보상 지급 이벤트 발생
+
+## 🎮 게임 플로우
+
+### 스테이지 진행 플로우
+1. **스테이지 시작**: StageManager가 스테이지 시작
+2. **SubBoss 전투**: SubBoss와 전투
+3. **Boss 전투**: Boss와 전투
+4. **스테이지 완료**: Boss 처치 시 스테이지 완료
+5. **보상 지급**: 스테이지 완료 보상 지급
+6. **다음 스테이지**: 다음 스테이지로 진행
+
+### 스테이지 완료 조건
+- **SubBoss 처치**: SubBoss 처치 완료
+- **Boss 처치**: Boss 처치 완료
+- **모든 적 처치**: 스테이지 내 모든 적 처치
 
 ## 🔧 기술적 구현 세부사항
 
@@ -126,16 +186,106 @@ StageData newStage = factory.CreateStageData(
 - **메모리 관리**: 스테이지 데이터 사전 로딩 및 캐싱
 - **프레임 최적화**: 스테이지 전환 시 프레임 블로킹 방지
 - **로딩 최적화**: 비동기 스테이지 로딩
+- **리소스 관리**: 스테이지별 리소스 효율적 관리
 
 ### 스레드 안전성
-- **동시성 제어**: 스테이지 상태 변경 시 동시성 제어
+- **동시성 제어**: 스테이지 상태 변경 시 락을 통한 동시성 제어
 - **비동기 처리**: async/await 패턴을 통한 비동기 스테이지 처리
 - **이벤트 처리**: 스레드 안전한 스테이지 이벤트 시스템
+- **데이터 동기화**: 스테이지 상태 데이터 동기화
 
 ### 메모리 관리
 - **생명주기 관리**: 스테이지 객체의 생성/소멸 관리
 - **리소스 해제**: 스테이지 완료 시 리소스 정리
 - **메모리 누수 방지**: 이벤트 구독 해제, 스테이지 참조 해제
+- **프로파일링**: 스테이지 시스템 메모리 사용량 모니터링
+
+## 🏗️ 시스템 아키텍처
+
+### 의존성 다이어그램
+```mermaid
+graph TD
+    A[StageManager] --> B[StageProgressController]
+    A --> C[StageData]
+    
+    B --> D[SubBossPhase]
+    B --> E[BossPhase]
+    B --> F[RewardPhase]
+    
+    G[StageData] --> H[SubBossData]
+    G --> I[BossData]
+    G --> J[RewardData]
+    
+    style A fill:#ff9999
+    style B fill:#99ccff
+    style G fill:#ccffcc
+```
+
+### 클래스 다이어그램
+```mermaid
+classDiagram
+    class IStageManager {
+        <<interface>>
+        +StartStage(stageData) void
+        +CompleteStage() void
+        +GetCurrentStage() StageData
+    }
+    
+    class StageManager {
+        -currentStage: StageData
+        -stageProgressController: StageProgressController
+        +StartStage(stageData) void
+        +CompleteStage() void
+        +GetCurrentStage() StageData
+    }
+    
+    class StageProgressController {
+        -currentPhase: StagePhase
+        -subBossPhase: SubBossPhase
+        -bossPhase: BossPhase
+        -rewardPhase: RewardPhase
+        +OnEnemyDeath(enemy) void
+        +CheckStageCompletion() bool
+    }
+    
+    class StageData {
+        +stageId: string
+        +subBossData: SubBossData
+        +bossData: BossData
+        +rewardData: RewardData
+    }
+    
+    IStageManager <|.. StageManager
+    StageManager --> StageProgressController
+    StageManager --> StageData
+    StageProgressController --> StageData
+```
+
+### 시퀀스 다이어그램
+```mermaid
+sequenceDiagram
+    participant SM as StageManager
+    participant SPC as StageProgressController
+    participant SubBoss as SubBossPhase
+    participant Boss as BossPhase
+    participant Reward as RewardPhase
+    
+    SM->>SPC: StartStage(stageData)
+    SPC->>SubBoss: StartSubBossPhase()
+    SubBoss-->>SPC: SubBoss defeated
+    SPC->>Boss: StartBossPhase()
+    Boss-->>SPC: Boss defeated
+    SPC->>Reward: StartRewardPhase()
+    Reward-->>SPC: Rewards given
+    SPC-->>SM: Stage completed
+```
+
+## 📚 참고 자료
+
+### 관련 문서
+- [Unity 씬 관리](https://docs.unity3d.com/Manual/Scenes.html)
+- [Unity 씬 전환](https://docs.unity3d.com/Manual/SceneManagement.html)
+- [스테이지 설계](https://docs.unity3d.com/Manual/LevelDesign.html)
 
 ## 🧪 검증/테스트 지침
 
@@ -158,3 +308,4 @@ StageData newStage = factory.CreateStageData(
 - 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 파일 수 정정 | 문서
 - 2025-01-27 | Maintainer | .mdc 규칙 파일로 변환 및 Cursor 규칙 저장 | 문서
 - 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 클래스/메서드/인터페이스 정보 추가 | 문서
+- 2025-01-27 | Maintainer | StageSystem 개발 문서 기반으로 규칙 파일 업데이트 (주요 기능, 클래스/메서드, 게임 플로우, 시스템 아키텍처 추가) | 문서

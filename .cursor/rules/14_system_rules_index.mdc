@@ -29,6 +29,7 @@ version: 1.0.0
 - **11_skillcard_system_rules.mdc**: 스킬카드 시스템 개발 규칙
 - **12_stage_system_rules.mdc**: 스테이지 시스템 개발 규칙
 - **13_utility_system_rules.mdc**: 유틸리티 시스템 개발 규칙
+- **15_ui_system_rules.mdc**: UI 시스템 개발 규칙
 
 ### 📚 통합 규칙 (Integration Rules)
 - **14_system_rules_index.mdc**: 시스템 규칙 통합 인덱스 (현재 파일)
@@ -89,6 +90,12 @@ version: 1.0.0
 - **설명**: Unity 2D 유틸리티 시스템 통합 관리
 - **주요 기능**: 유틸리티 클래스, 게임 플로우 관리, 의존성 주입
 
+### UISystem 규칙
+- **파일**: `15_ui_system_rules.mdc`
+- **범위**: `Assets/Script/UISystem/**/*.cs`
+- **설명**: Unity 2D UI 시스템 통합 관리
+- **주요 기능**: UI 컨트롤러, 설정 관리, 무기 선택, 패널 관리, UI 효과
+
 ## 🎯 규칙 사용 가이드
 
 ### 시스템별 개발 시
@@ -141,3 +148,4 @@ version: 1.0.0
 - 2025-01-27 | Maintainer | 9개 시스템 규칙 파일 통합 관리 | 문서
 - 2025-01-27 | Maintainer | 규칙 파일 명명 체계 정리 및 순서화 (01-14) | 문서
 - 2025-01-27 | Maintainer | 전체 규칙 파일 구조 섹션 추가 및 인덱스 업데이트 | 문서
+- 2025-01-27 | Maintainer | UISystem 규칙 추가 및 전체 인덱스 업데이트 (10개 시스템 규칙 파일 통합 관리) | 문서

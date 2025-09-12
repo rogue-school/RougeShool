@@ -88,6 +88,17 @@ SkillCardSystem/
 - **CardDropToHandHandler.cs**: 핸드로 카드 드롭 처리
 - **CardDropToSlotHandler.cs**: 슬롯으로 카드 드롭 처리
 
+## 🎯 주요 기능
+
+1. **카드 데이터 관리**: ScriptableObject 기반 카드 데이터 및 런타임 인스턴스 관리
+2. **효과 시스템**: 모듈화된 효과 시스템 및 명령 패턴을 통한 효과 실행
+3. **덱 관리**: 플레이어/적 덱 구성, 카드 드로우, 카드 순환 시스템
+4. **핸드 관리**: 플레이어/적 핸드 관리 및 핸드 크기 제한
+5. **드래그 앤 드롭**: 카드 드래그 처리, 드롭 검증, 드롭 서비스
+6. **UI 시스템**: 스킬카드 UI, UI 팩토리, 핸드 카드 슬롯 UI
+7. **검증 시스템**: 카드 드롭 검증, 실행 컨텍스트 검증
+8. **서비스 패턴**: 카드 실행 컨텍스트 제공, 카드 교체 처리, 카드 배치 서비스
+
 ## 🎯 개발 규칙
 
 ### 1. 카드 데이터 관리 규칙
@@ -135,30 +146,78 @@ List<ISkillCard> drawnCards = circulationSystem.DrawCardsForTurn();
 circulationSystem.MoveCardToUsedStorage(usedCard);
 ```
 
-### 주요 클래스 및 메서드
+## 🔧 주요 클래스 및 메서드
 
-#### SkillCardFactory 클래스
+### SkillCardFactory 클래스
 - **CreatePlayerCard()**: 플레이어 스킬 카드 생성
 - **CreateEnemyCard()**: 적 스킬 카드 생성
 - **CreateFromDefinition()**: SkillCardDefinition 기반 카드 생성
+- **CreateEffectCommand()**: 효과 명령 생성
+- **CreateCardEntry()**: 카드 엔트리 생성
 
-#### SkillCardRegistry 클래스
+### SkillCardRegistry 클래스
 - **RegisterCard()**: 스킬 카드 등록
 - **GetCard()**: 등록된 스킬 카드 조회
 - **UnregisterCard()**: 스킬 카드 등록 해제
+- **GetAllCards()**: 모든 등록된 카드 조회
+- **IsCardRegistered()**: 카드 등록 여부 확인
 
-#### CardCirculationSystem 클래스
+### CardCirculationSystem 클래스
 - **Initialize()**: 카드 순환 시스템 초기화
 - **DrawCards()**: 카드 드로우
+- **DrawCardsForTurn()**: 턴용 카드 드로우
 - **DiscardCard()**: 카드 버리기
 - **ShuffleDiscardToDeck()**: 버린 카드 덱으로 섞기
 - **MoveCardToHand()**: 카드를 핸드로 이동
 - **MoveCardToDiscard()**: 카드를 버린 카드 더미로 이동
 - **MoveCardToExhaust()**: 카드를 소멸 더미로 이동
+- **MoveCardToUsedStorage()**: 카드를 사용된 저장소로 이동
 - **PlayerHand**: 플레이어 핸드 (프로퍼티)
 - **EnemyHand**: 적 핸드 (프로퍼티)
 - **PlayerDeck**: 플레이어 덱 (프로퍼티)
 - **EnemyDeck**: 적 덱 (프로퍼티)
+
+### PlayerHandManager 클래스
+- **AddCard()**: 카드 추가
+- **RemoveCard()**: 카드 제거
+- **GetCard()**: 카드 조회
+- **GetAllCards()**: 모든 카드 조회
+- **IsHandFull()**: 핸드 가득 참 여부 확인
+- **MaxHandSize**: 최대 핸드 크기 (프로퍼티)
+
+### EnemyHandManager 클래스
+- **AddCard()**: 카드 추가
+- **RemoveCard()**: 카드 제거
+- **GetCard()**: 카드 조회
+- **GetAllCards()**: 모든 카드 조회
+- **IsHandFull()**: 핸드 가득 참 여부 확인
+- **MaxHandSize**: 최대 핸드 크기 (프로퍼티)
+
+### CardDragHandler 클래스
+- **OnBeginDrag()**: 드래그 시작 처리
+- **OnDrag()**: 드래그 중 처리
+- **OnEndDrag()**: 드래그 종료 처리
+- **CanDrag()**: 드래그 가능 여부 확인
+- **GetDragData()**: 드래그 데이터 조회
+
+### CardDropService 클래스
+- **CanDrop()**: 드롭 가능 여부 확인
+- **OnDrop()**: 드롭 처리
+- **ValidateDrop()**: 드롭 유효성 검증
+- **ProcessDrop()**: 드롭 후 처리
+
+### SkillCardUI 클래스
+- **UpdateCardDisplay()**: 카드 표시 업데이트
+- **ShowCardInfo()**: 카드 정보 표시
+- **HideCardInfo()**: 카드 정보 숨김
+- **SetCardData()**: 카드 데이터 설정
+- **GetCardData()**: 카드 데이터 조회
+
+### PlayerSkillCardRuntime 클래스
+- **Execute()**: 카드 실행
+- **CanExecute()**: 실행 가능 여부 확인
+- **GetExecutionCost()**: 실행 비용 조회
+- **OnExecutionComplete()**: 실행 완료 이벤트
 
 ## 🏗️ 아키텍처 패턴
 
@@ -194,6 +253,125 @@ circulationSystem.MoveCardToUsedStorage(usedCard);
 - **리소스 해제**: 카드 사용 후 리소스 정리
 - **메모리 누수 방지**: 이벤트 구독 해제
 
+## 🏗️ 시스템 아키텍처
+
+### 의존성 다이어그램
+```mermaid
+graph TD
+    A[SkillCardFactory] --> B[PlayerSkillCard]
+    A --> C[EnemySkillCard]
+    D[CardCirculationSystem] --> E[PlayerHandManager]
+    D --> F[EnemyHandManager]
+    G[CardDragHandler] --> H[CardDropService]
+    I[SkillCardUI] --> J[SkillCardUIFactory]
+    K[CardEffectCommandFactory] --> L[EffectCommand]
+    M[CardPlacementService] --> N[CombatSystem]
+    O[CardValidator] --> P[CombatSystem]
+    Q[SkillCardInstaller] --> R[Zenject Container]
+```
+
+### 클래스 다이어그램
+```mermaid
+classDiagram
+    class SkillCardFactory {
+        +CreatePlayerCard()
+        +CreateEnemyCard()
+        +CreateFromDefinition()
+        +CreateEffectCommand()
+        +CreateCardEntry()
+    }
+    
+    class CardCirculationSystem {
+        +Initialize()
+        +DrawCards()
+        +DrawCardsForTurn()
+        +DiscardCard()
+        +ShuffleDiscardToDeck()
+        +MoveCardToHand()
+        +MoveCardToDiscard()
+        +MoveCardToExhaust()
+        +MoveCardToUsedStorage()
+    }
+    
+    class PlayerHandManager {
+        +AddCard()
+        +RemoveCard()
+        +GetCard()
+        +GetAllCards()
+        +IsHandFull()
+        +MaxHandSize: int
+    }
+    
+    class EnemyHandManager {
+        +AddCard()
+        +RemoveCard()
+        +GetCard()
+        +GetAllCards()
+        +IsHandFull()
+        +MaxHandSize: int
+    }
+    
+    class CardDragHandler {
+        +OnBeginDrag()
+        +OnDrag()
+        +OnEndDrag()
+        +CanDrag()
+        +GetDragData()
+    }
+    
+    class CardDropService {
+        +CanDrop()
+        +OnDrop()
+        +ValidateDrop()
+        +ProcessDrop()
+    }
+    
+    class SkillCardUI {
+        +UpdateCardDisplay()
+        +ShowCardInfo()
+        +HideCardInfo()
+        +SetCardData()
+        +GetCardData()
+    }
+    
+    class PlayerSkillCardRuntime {
+        +Execute()
+        +CanExecute()
+        +GetExecutionCost()
+        +OnExecutionComplete()
+    }
+    
+    SkillCardFactory --> PlayerSkillCard
+    SkillCardFactory --> EnemySkillCard
+    CardCirculationSystem --> PlayerHandManager
+    CardCirculationSystem --> EnemyHandManager
+    CardDragHandler --> CardDropService
+    SkillCardUI --> SkillCardUIFactory
+```
+
+### 시퀀스 다이어그램
+```mermaid
+sequenceDiagram
+    participant Player
+    participant CardDragHandler
+    participant CardDropService
+    participant CardCirculationSystem
+    participant PlayerHandManager
+    participant CombatSystem
+    
+    Player->>CardDragHandler: OnBeginDrag()
+    CardDragHandler->>CardDropService: CanDrop()
+    CardDropService-->>CardDragHandler: Can Drop
+    Player->>CardDragHandler: OnEndDrag()
+    CardDragHandler->>CardDropService: OnDrop()
+    CardDropService->>CardCirculationSystem: MoveCardToHand()
+    CardCirculationSystem->>PlayerHandManager: AddCard()
+    PlayerHandManager-->>CardCirculationSystem: Card Added
+    CardCirculationSystem-->>CardDropService: Move Complete
+    CardDropService->>CombatSystem: OnCardPlaced()
+    CombatSystem-->>CardDropService: Card Placed
+```
+
 ## 🧪 검증/테스트 지침
 
 ### 체크리스트
@@ -209,6 +387,25 @@ circulationSystem.MoveCardToUsedStorage(usedCard);
 3. 효과 실행 시나리오 테스트
 4. 성능 프로파일링
 
+## 📚 참고 자료
+
+### 관련 문서
+- [CoreSystem 개발 문서](../CoreSystem/CoreSystem_개발문서.md)
+- [CombatSystem 개발 문서](../CombatSystem/CombatSystem_개발문서.md)
+- [CharacterSystem 개발 문서](../CharacterSystem/CharacterSystem_개발문서.md)
+- [AnimationSystem 개발 문서](../AnimationSystem/AnimationSystem_개발문서.md)
+
+### Unity 문서
+- [Unity UI System](https://docs.unity3d.com/Manual/UISystem.html)
+- [Unity Event System](https://docs.unity3d.com/Manual/EventSystem.html)
+- [Unity Drag and Drop](https://docs.unity3d.com/Manual/script-DragAndDrop.html)
+
+### 디자인 패턴
+- [Factory Pattern](https://refactoring.guru/design-patterns/factory-method)
+- [Command Pattern](https://refactoring.guru/design-patterns/command)
+- [Observer Pattern](https://refactoring.guru/design-patterns/observer)
+- [Strategy Pattern](https://refactoring.guru/design-patterns/strategy)
+
 ## 📝 변경 기록(Delta)
 - 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
 
@@ -216,3 +413,4 @@ circulationSystem.MoveCardToUsedStorage(usedCard);
 - 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 Installer 폴더명 수정 | 문서
 - 2025-01-27 | Maintainer | .mdc 규칙 파일로 변환 및 Cursor 규칙 저장 | 문서
 - 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 클래스/메서드/인터페이스 정보 추가 | 문서
+- 2025-01-27 | Maintainer | 개발 문서 기반 규칙 파일 업데이트 (주요 기능, 클래스/메서드, 아키텍처 다이어그램 추가) | 문서
