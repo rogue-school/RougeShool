@@ -19,27 +19,61 @@ MonoBehaviour:
   artwork: {fileID: 0}
   presentation:
     sfxClip: {fileID: 0}
-    sfxVolume: 1
-    playOnStart: 1
     visualEffectPrefab: {fileID: 0}
-    effectDuration: 2
-    effectOffset: {x: 0, y: 0, z: 0}
-    followTarget: 0
-    cardAnimation: {fileID: 0}
-    targetAnimation: {fileID: 0}
-    animationSpeed: 1
-    timing:
-      sfxDelay: 0
-      visualEffectDelay: 0
-      animationDelay: 0
-      waitForAnimation: 0
   configuration:
-    hasDamage: 0
+    hasDamage: 1
     damageConfig:
       baseDamage: 0
       hits: 1
-      pierceable: 0
-      critChance: 0
-    hasEffects: 0
-    effects: []
+      ignoreGuard: 0
+    hasEffects: 1
+    effects:
+    - effectSO: {fileID: 11400000, guid: e81a4128331244f4b84ccd5f0dbe8c62, type: 2}
+      useCustomSettings: 1
+      customSettings:
+        damageAmount: 0
+        damageHits: 1
+        ignoreGuard: 0
+        bleedAmount: 0
+        bleedDuration: 0
+        healAmount: 0
+        drawCount: 0
+        resourceDelta: 0
+      executionOrder: 0
+    - effectSO: {fileID: 11400000, guid: 48b0f7567f5bd0a41ab6649587e254b2, type: 2}
+      useCustomSettings: 1
+      customSettings:
+        damageAmount: 0
+        damageHits: 1
+        ignoreGuard: 0
+        bleedAmount: 0
+        bleedDuration: 0
+        healAmount: 0
+        drawCount: 0
+        resourceDelta: 0
+      executionOrder: 0
+    - effectSO: {fileID: 11400000, guid: c2a4b772e4e133d4495e0147c4676449, type: 2}
+      useCustomSettings: 1
+      customSettings:
+        damageAmount: 0
+        damageHits: 1
+        ignoreGuard: 0
+        bleedAmount: 0
+        bleedDuration: 0
+        healAmount: 0
+        drawCount: 0
+        resourceDelta: 0
+      executionOrder: 0
+    - effectSO: {fileID: 11400000, guid: e3619fe6c755d5e43a13a140c71b4b55, type: 2}
+      useCustomSettings: 1
+      customSettings:
+        damageAmount: 0
+        damageHits: 1
+        ignoreGuard: 0
+        bleedAmount: 0
+        bleedDuration: 0
+        healAmount: 0
+        drawCount: 0
+        resourceDelta: 0
+      executionOrder: 0
     ownerPolicy: 0

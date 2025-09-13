@@ -147,6 +147,7 @@ CombatSystem/
 - **ProceedToNextTurn()**: 다음 턴으로 진행
 - **RegisterCard(ISkillCard card, CombatSlotPosition position)**: 카드 등록
 - **ClearRegisteredCards()**: 등록된 카드 초기화
+- **ApplyGuardEffect()**: 가드 효과 적용 (다음 슬롯의 적 스킬카드 무효화)
 
 ## 🔧 사용 방법
 
@@ -415,3 +416,4 @@ sequenceDiagram
 - 2025-01-27 | Maintainer | CombatSystem 개발 문서 초기 작성 | 문서
 - 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 파일 수 정정 | 문서
 - 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 클래스/메서드/서비스 정보 추가 | 문서
+- 2025-01-27 | Maintainer | 가드 효과 시스템 통합 - ICombatTurnManager에 ApplyGuardEffect 메서드 추가 | 코드/문서

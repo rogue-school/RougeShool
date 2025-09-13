@@ -132,7 +132,7 @@ ISkillCard enemyCard = factory.CreateFromDefinition(definition, Owner.Enemy, "�
 // 카드 실행
 playerCard.ExecuteSkill(sourceCharacter, targetCharacter);
 
-// 카드 연출 실행
+// 카드 연출 실행 (사운드 + 비주얼 이펙트)
 playerCard.StartPresentation(executionContext);
 
 // CardCirculationSystem을 통한 카드 순환 관리
@@ -196,6 +196,11 @@ playerCard.ReduceCooldown();
 - **Add(SkillCardDefinition definition)**: 카드 정의 추가
 - **Remove(string id)**: 카드 정의 제거
 
+### GuardEffectCommand 클래스
+- **Execute()**: 가드 효과 실행 (다음 슬롯의 적 스킬카드 무효화)
+- **CanExecute()**: 실행 가능 여부 확인
+- **GetCost()**: 효과 비용 반환 (가드 효과는 비용 없음)
+
 ### PlayerSkillCardRuntime 클래스
 - **ExecuteSkill(ICharacter source, ICharacter target)**: 소스와 타겟으로 카드 실행
 - **ExecuteCardAutomatically(ICardExecutionContext context)**: 컨텍스트 기반 자동 실행
@@ -215,7 +220,7 @@ playerCard.ReduceCooldown();
 - **CardConfiguration**: 카드 게임 로직 구성 (hasDamage, damageConfig, hasEffects, effects, ownerPolicy)
 - **DamageConfiguration**: 데미지 설정 (baseDamage, hits, ignoreGuard)
 - **EffectConfiguration**: 효과 구성 (effectSO, useCustomSettings, customSettings, executionOrder)
-- **EffectCustomSettings**: 효과 커스텀 설정 (다양한 효과 타입별 파라미터)
+- **EffectCustomSettings**: 효과 커스텀 설정 (데미지, 출혈, 치유, 드로우, 리소스 효과 파라미터)
 
 ## 🏗️ 아키텍처 패턴
 
@@ -371,3 +376,4 @@ sequenceDiagram
 - 2025-01-27 | Maintainer | 덱 저장/로드 시스템 구현 - 덱 구성 영구 저장 | 코드/문서
 - 2025-01-27 | Maintainer | SkillCardDefinition 리팩토링 - 불필요한 연출 타이밍 필드 제거 | 코드/문서
 - 2025-01-27 | Maintainer | 용어 변경 - 가드 관통을 가드 무시로 변경, 모든 효과 이펙트 한글화 | 코드/문서
+- 2025-01-27 | Maintainer | 가드 효과 리팩토링 - 스킬카드 시스템으로 이동, 불필요한 가드량 제거 | 코드/문서

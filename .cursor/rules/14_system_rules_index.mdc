@@ -143,3 +143,4 @@ version: 1.0.0
 - 2025-01-27 | Maintainer | 전체 규칙 파일 구조 섹션 추가 및 인덱스 업데이트 | 문서
 - 2025-01-27 | Maintainer | AnimationSystem 및 SkillCardSystem 통합 시스템 반영 | 문서
 - 2025-01-27 | Maintainer | 모든 시스템 규칙 파일 최신화 완료 | 문서
+- 2025-01-27 | Maintainer | 가드 효과 리팩토링 및 용어 변경 반영 - 모든 관련 문서 업데이트 | 문서

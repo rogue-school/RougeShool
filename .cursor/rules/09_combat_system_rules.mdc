@@ -249,3 +249,4 @@ turnManager.SetState(new CustomCombatState());
 - 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 파일 수 정정 | 문서
 - 2025-01-27 | Maintainer | .mdc 규칙 파일로 변환 및 Cursor 규칙 저장 | 문서
 - 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 클래스/메서드/서비스 정보 추가 | 문서
+- 2025-01-27 | Maintainer | 가드 효과 시스템 통합 - ICombatTurnManager에 ApplyGuardEffect 메서드 추가 | 코드/문서
