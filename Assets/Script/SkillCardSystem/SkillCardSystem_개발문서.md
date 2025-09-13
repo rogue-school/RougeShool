@@ -13,12 +13,12 @@ SkillCardSystem/
 ├── Executor/         # 실행기 (1개 파일)
 ├── Factory/          # 팩토리 패턴 (3개 파일)
 ├── Installation/     # DI 설치 (1개 파일) [주의: 폴더명 오타 - Installer이어야 함]
-├── Interface/        # 인터페이스 (26개 파일)
-├── Manager/          # 매니저 클래스 (3개 파일)
+├── Interface/        # 인터페이스 (27개 파일)
+├── Manager/          # 매니저 클래스 (5개 파일)
 ├── Runtime/          # 런타임 로직 (1개 파일)
 ├── Service/          # 서비스 클래스 (6개 파일)
 ├── Slot/             # 슬롯 시스템 (11개 파일)
-├── UI/               # UI 관련 (5개 파일)
+├── UI/               # UI 관련 (6개 파일)
 └── Validator/        # 검증기 (2개 파일)
 ```
 
@@ -44,7 +44,7 @@ SkillCardSystem/
 - **CardEffectCommandFactory.cs**: 카드 효과 명령 팩토리
 - **SkillCardEntry.cs**: 스킬카드 엔트리 팩토리
 
-### Interface 폴더 (8개 파일)
+### Interface 폴더 (9개 파일)
 - **ISkillCard.cs**: 스킬카드 인터페이스
 - **IPerTurnEffect.cs**: 턴별 효과 인터페이스
 - **ISkillCardUI.cs**: 스킬카드 UI 인터페이스
@@ -53,24 +53,28 @@ SkillCardSystem/
 - **ICardCirculationSystem.cs**: 카드 순환 시스템 인터페이스
 - **ICardDropValidator.cs**: 카드 드롭 검증 인터페이스
 - **ICardExecutionContext.cs**: 카드 실행 컨텍스트 인터페이스
+- **IPlayerDeckManager.cs**: 플레이어 덱 동적 관리 인터페이스
 
 ### Runtime 폴더 (1개 파일)
 - **SkillCard.cs**: 통합 스킬카드 런타임 인스턴스 (MonoBehaviour, ISkillCard 구현)
 
-### Manager 폴더 (3개 파일)
+### Manager 폴더 (5개 파일)
 - **PlayerHandManager.cs**: 플레이어 핸드 관리
 - **EnemyHandManager.cs**: 적 핸드 관리
 - **CardCirculationSystem.cs**: 카드 순환 시스템
+- **PlayerDeckManager.cs**: 플레이어 덱 동적 관리 (게임 중 덱 수정)
+- **CardRewardManager.cs**: 카드 보상 관리 (스테이지 완료 시 카드 지급)
 
 ### Service 폴더 (3개 파일)
 - **CardExecutionContextProvider.cs**: 카드 실행 컨텍스트 제공
 - **PlayerCardReplacementHandler.cs**: 플레이어 카드 교체 처리
 - **CardPlacementService.cs**: 카드 배치 서비스
 
-### UI 폴더 (3개 파일)
+### UI 폴더 (4개 파일)
 - **SkillCardUI.cs**: 스킬카드 UI
 - **SkillCardUIFactory.cs**: 스킬카드 UI 팩토리
 - **PlayerHandCardSlotUI.cs**: 플레이어 핸드 카드 슬롯 UI
+- **DeckEditorUI.cs**: 덱 편집 UI (게임 중 덱 구성 변경)
 
 ### DragDrop 폴더 (4개 파일)
 - **CardDragHandler.cs**: 카드 드래그 처리
@@ -91,8 +95,10 @@ SkillCardSystem/
 
 ### 3. 덱 관리
 - **수량 기반 덱**: 플레이어 덱에서 카드 수량 관리
+- **동적 덱 관리**: 게임 중 덱 구성 변경 (카드 추가/제거/수량 변경)
 - **덱 구성**: 플레이어/적 덱 구성 및 관리
 - **카드 드로우**: 덱에서 카드 드로우
+- **덱 저장/로드**: 덱 구성 저장 및 불러오기
 
 ### 4. 핸드 관리
 - **플레이어 핸드**: 플레이어 카드 핸드 관리
@@ -103,6 +109,11 @@ SkillCardSystem/
 - **카드 드래그**: 카드 드래그 처리
 - **드롭 검증**: 드롭 가능 여부 검증
 - **드롭 서비스**: 드롭 후 처리
+
+### 6. 보상 시스템
+- **카드 보상**: 스테이지 완료 시 카드 지급
+- **보상 관리**: 준보스/보스/스테이지 완료 보상 분류
+- **덱 연동**: 보상 카드를 자동으로 플레이어 덱에 추가
 
 ## 🔧 사용 방법
 
@@ -129,6 +140,21 @@ CardCirculationSystem circulationSystem = FindObjectOfType<CardCirculationSystem
 circulationSystem.Initialize(initialCards);
 List<ISkillCard> drawnCards = circulationSystem.DrawCardsForTurn();
 circulationSystem.MoveCardToUsedStorage(usedCard);
+
+// PlayerDeckManager를 통한 동적 덱 관리
+IPlayerDeckManager deckManager = FindObjectOfType<PlayerDeckManager>();
+deckManager.AddCardToDeck(cardDefinition, 2); // 카드 2장 추가
+deckManager.RemoveCardFromDeck(cardDefinition, 1); // 카드 1장 제거
+deckManager.SetCardQuantity(cardDefinition, 3); // 카드 수량을 3장으로 설정
+deckManager.SaveDeckConfiguration(); // 덱 구성 저장
+deckManager.LoadDeckConfiguration(); // 덱 구성 로드
+
+// CardRewardManager를 통한 카드 보상 지급
+CardRewardManager rewardManager = FindObjectOfType<CardRewardManager>();
+rewardManager.GiveCardReward(cardDefinition, 1); // 카드 보상 지급
+rewardManager.GiveSubBossCardRewards(stageRewardData); // 준보스 카드 보상
+rewardManager.GiveBossCardRewards(stageRewardData); // 보스 카드 보상
+rewardManager.GiveStageCompletionCardRewards(stageRewardData); // 스테이지 완료 카드 보상
 
 // SkillCardRegistry를 통한 카드 정의 관리
 SkillCardRegistry registry = FindObjectOfType<SkillCardRegistry>();
@@ -184,10 +210,12 @@ playerCard.ReduceCooldown();
 - **SetCurrentCoolTime(int value)**: 현재 쿨타임 설정
 
 ### 데이터 클래스
-- **SkillCardData**: 카드 기본 데이터 (CardId, Name, Description, Artwork, CoolTime, Cost, Damage, CardType, OwnerCharacterName)
-- **SkillCardDefinition**: 카드 정의 ScriptableObject (id, displayNameKO, descriptionKO, icon, ownerPolicy, categories, keywords, drawWeight, actionCost, targetRule, effects, ownerModifiers)
-- **EffectRef**: 효과 참조 (effect, magnitudeOverride, durationOverride, order)
-- **OwnerModifier**: 소유자별 수정자 (owner, magnitudeMultiplier, durationDelta)
+- **SkillCardDefinition**: 통합 카드 정의 ScriptableObject (cardId, displayName, description, artwork, presentation, configuration)
+- **CardPresentation**: 카드 연출 설정 (sfxClip, visualEffectPrefab) - 핵심 연출 요소만 포함
+- **CardConfiguration**: 카드 게임 로직 구성 (hasDamage, damageConfig, hasEffects, effects, ownerPolicy)
+- **DamageConfiguration**: 데미지 설정 (baseDamage, hits, ignoreGuard)
+- **EffectConfiguration**: 효과 구성 (effectSO, useCustomSettings, customSettings, executionOrder)
+- **EffectCustomSettings**: 효과 커스텀 설정 (다양한 효과 타입별 파라미터)
 
 ## 🏗️ 아키텍처 패턴
 
@@ -337,3 +365,9 @@ sequenceDiagram
 - 2025-01-27 | Maintainer | 플레이어/적 스킬카드 통합 관리 시스템 구현 | 코드/문서
 - 2025-01-27 | Maintainer | 수량 기반 덱 시스템 및 커스텀 에디터 구현 | 코드/문서
 - 2025-01-27 | Maintainer | EnemySkillCard.cs 제거 및 통합 런타임 인스턴스 구현 | 코드/문서
+- 2025-01-27 | Maintainer | 동적 덱 관리 시스템 구현 - 게임 중 덱 구성 변경 | 코드/문서
+- 2025-01-27 | Maintainer | 카드 보상 시스템 구현 - 스테이지 완료 시 카드 지급 | 코드/문서
+- 2025-01-27 | Maintainer | 덱 편집 UI 구현 - 게임 중 덱 편집 인터페이스 | 코드/문서
+- 2025-01-27 | Maintainer | 덱 저장/로드 시스템 구현 - 덱 구성 영구 저장 | 코드/문서
+- 2025-01-27 | Maintainer | SkillCardDefinition 리팩토링 - 불필요한 연출 타이밍 필드 제거 | 코드/문서
+- 2025-01-27 | Maintainer | 용어 변경 - 가드 관통을 가드 무시로 변경, 모든 효과 이펙트 한글화 | 코드/문서

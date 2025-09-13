@@ -82,8 +82,6 @@ namespace Game.SkillCardSystem.Editor
             EditorGUILayout.LabelField("사운드", EditorStyles.boldLabel);
             EditorGUI.indentLevel++;
             presentation.sfxClip = (AudioClip)EditorGUILayout.ObjectField("SFX Clip", presentation.sfxClip, typeof(AudioClip), false);
-            presentation.sfxVolume = EditorGUILayout.Slider("SFX Volume", presentation.sfxVolume, 0f, 1f);
-            presentation.playOnStart = EditorGUILayout.Toggle("Play on Start", presentation.playOnStart);
             EditorGUI.indentLevel--;
             
             EditorGUILayout.Space();
@@ -92,31 +90,10 @@ namespace Game.SkillCardSystem.Editor
             EditorGUILayout.LabelField("비주얼 이펙트", EditorStyles.boldLabel);
             EditorGUI.indentLevel++;
             presentation.visualEffectPrefab = (GameObject)EditorGUILayout.ObjectField("Effect Prefab", presentation.visualEffectPrefab, typeof(GameObject), false);
-            presentation.effectDuration = EditorGUILayout.FloatField("Effect Duration", presentation.effectDuration);
-            presentation.effectOffset = EditorGUILayout.Vector3Field("Effect Offset", presentation.effectOffset);
-            presentation.followTarget = EditorGUILayout.Toggle("Follow Target", presentation.followTarget);
             EditorGUI.indentLevel--;
             
             EditorGUILayout.Space();
-            
-            // 애니메이션 섹션
-            EditorGUILayout.LabelField("애니메이션", EditorStyles.boldLabel);
-            EditorGUI.indentLevel++;
-            presentation.cardAnimation = (AnimationClip)EditorGUILayout.ObjectField("Card Animation", presentation.cardAnimation, typeof(AnimationClip), false);
-            presentation.targetAnimation = (AnimationClip)EditorGUILayout.ObjectField("Target Animation", presentation.targetAnimation, typeof(AnimationClip), false);
-            presentation.animationSpeed = EditorGUILayout.FloatField("Animation Speed", presentation.animationSpeed);
-            EditorGUI.indentLevel--;
-            
-            EditorGUILayout.Space();
-            
-            // 연출 타이밍 섹션
-            EditorGUILayout.LabelField("연출 타이밍", EditorStyles.boldLabel);
-            EditorGUI.indentLevel++;
-            presentation.timing.sfxDelay = EditorGUILayout.FloatField("SFX Delay", presentation.timing.sfxDelay);
-            presentation.timing.visualEffectDelay = EditorGUILayout.FloatField("Visual Effect Delay", presentation.timing.visualEffectDelay);
-            presentation.timing.animationDelay = EditorGUILayout.FloatField("Animation Delay", presentation.timing.animationDelay);
-            presentation.timing.waitForAnimation = EditorGUILayout.Toggle("Wait for Animation", presentation.timing.waitForAnimation);
-            EditorGUI.indentLevel--;
+            EditorGUILayout.HelpBox("연출 타이밍은 각 시스템(AudioSystem, AnimationSystem)에서 관리됩니다.", MessageType.Info);
         }
         
         private void DrawConfigurationSection()
@@ -166,10 +143,9 @@ namespace Game.SkillCardSystem.Editor
         {
             EditorGUILayout.LabelField("데미지 설정", EditorStyles.boldLabel);
             EditorGUI.indentLevel++;
-            config.baseDamage = EditorGUILayout.IntField("Base Damage", config.baseDamage);
-            config.hits = EditorGUILayout.IntField("Hits", config.hits);
-            config.pierceable = EditorGUILayout.Toggle("Pierceable", config.pierceable);
-            config.critChance = EditorGUILayout.Slider("Crit Chance", config.critChance, 0f, 1f);
+            config.baseDamage = EditorGUILayout.IntField("기본 데미지", config.baseDamage);
+            config.hits = EditorGUILayout.IntField("공격 횟수", config.hits);
+            config.ignoreGuard = EditorGUILayout.Toggle("가드 무시", config.ignoreGuard);
             EditorGUI.indentLevel--;
         }
         
@@ -218,22 +194,20 @@ namespace Game.SkillCardSystem.Editor
             if (effectSO is DamageEffectSO)
             {
                 EditorGUILayout.LabelField("데미지 효과 설정", EditorStyles.boldLabel);
-                settings.damageAmount = EditorGUILayout.IntField("Damage Amount", settings.damageAmount);
-                settings.damageHits = EditorGUILayout.IntField("Damage Hits", settings.damageHits);
-                settings.pierceable = EditorGUILayout.Toggle("Pierceable", settings.pierceable);
-                settings.critChance = EditorGUILayout.Slider("Crit Chance", settings.critChance, 0f, 1f);
+                settings.damageAmount = EditorGUILayout.IntField("데미지량", settings.damageAmount);
+                settings.damageHits = EditorGUILayout.IntField("공격 횟수", settings.damageHits);
+                settings.ignoreGuard = EditorGUILayout.Toggle("가드 무시", settings.ignoreGuard);
             }
             else if (effectSO is BleedEffectSO)
             {
                 EditorGUILayout.LabelField("출혈 효과 설정", EditorStyles.boldLabel);
-                settings.bleedAmount = EditorGUILayout.IntField("Bleed Amount", settings.bleedAmount);
-                settings.bleedDuration = EditorGUILayout.IntField("Bleed Duration", settings.bleedDuration);
+                settings.bleedAmount = EditorGUILayout.IntField("출혈량", settings.bleedAmount);
+                settings.bleedDuration = EditorGUILayout.IntField("출혈 지속 시간", settings.bleedDuration);
             }
             else if (effectSO is GuardEffectSO)
             {
                 EditorGUILayout.LabelField("가드 효과 설정", EditorStyles.boldLabel);
-                settings.guardAmount = EditorGUILayout.IntField("Guard Amount", settings.guardAmount);
-                settings.overflowToTempHP = EditorGUILayout.Toggle("Overflow to Temp HP", settings.overflowToTempHP);
+                EditorGUILayout.HelpBox("가드 효과는 단순히 가드 상태를 켜고 끄는 기능입니다.", MessageType.Info);
             }
             // TODO: 향후 추가될 EffectSO 타입들을 위한 예약 공간
             // else if (effectSO is HealEffectSO)

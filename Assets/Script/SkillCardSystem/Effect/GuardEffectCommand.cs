@@ -5,26 +5,54 @@ using Game.SkillCardSystem.Interface;
 namespace Game.SkillCardSystem.Effect
 {
     /// <summary>
-    /// 대상 캐릭터에게 가드 상태를 적용하는 커맨드 클래스입니다.
-    /// 카드 효과 실행 시 사용됩니다.
+    /// 가드 효과를 적용하는 커맨드 클래스입니다.
+    /// 다음 슬롯의 적 스킬카드를 무효화시킵니다.
     /// </summary>
     public class GuardEffectCommand : ICardEffectCommand
     {
         /// <summary>
-        /// 커맨드를 실행하여 대상 캐릭터에게 가드 상태를 부여합니다.
+        /// 가드 효과를 실행합니다.
+        /// 다음 슬롯의 적 스킬카드를 무효화시킵니다.
         /// </summary>
-        /// <param name="context">카드 실행 컨텍스트 (대상 포함)</param>
-        /// <param name="turnManager">전투 턴 매니저 (사용되지 않음)</param>
+        /// <param name="context">카드 실행 컨텍스트</param>
+        /// <param name="turnManager">전투 턴 매니저</param>
         public void Execute(ICardExecutionContext context, ICombatTurnManager turnManager)
         {
-            if (context?.Target == null)
+            if (context?.Source == null)
             {
-                Debug.LogWarning("[GuardEffectCommand] 유효하지 않은 대상 (null)");
+                Debug.LogWarning("[GuardEffectCommand] 소스가 null입니다.");
                 return;
             }
 
-            context.Target.SetGuarded(true);
-            Debug.Log($"[GuardEffectCommand] {context.Target.GetCharacterName()}에게 가드 상태 적용됨");
+            // 가드 효과는 턴 매니저를 통해 처리
+            if (turnManager != null)
+            {
+                turnManager.ApplyGuardEffect();
+                Debug.Log($"[GuardEffectCommand] 가드 효과 적용됨 - 다음 슬롯의 적 스킬카드 무효화");
+            }
+            else
+            {
+                Debug.LogWarning("[GuardEffectCommand] TurnManager가 null입니다.");
+            }
+        }
+
+        /// <summary>
+        /// 가드 효과 실행 가능 여부를 확인합니다.
+        /// </summary>
+        /// <param name="context">카드 실행 컨텍스트</param>
+        /// <returns>실행 가능 여부</returns>
+        public bool CanExecute(ICardExecutionContext context)
+        {
+            return context?.Source != null;
+        }
+
+        /// <summary>
+        /// 가드 효과의 비용을 반환합니다.
+        /// </summary>
+        /// <returns>비용 (가드 효과는 비용 없음)</returns>
+        public int GetCost()
+        {
+            return 0;
         }
     }
 }

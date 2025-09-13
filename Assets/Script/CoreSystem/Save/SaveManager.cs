@@ -23,6 +23,9 @@ namespace Game.CoreSystem.Save
 		private const string KEY_BGM_VOLUME = "audio_bgm_volume";
 		private const string KEY_SFX_VOLUME = "audio_sfx_volume";
 		
+		// 덱 구성 저장 키
+		private const string KEY_PLAYER_DECK_CONFIG = "player_deck_configuration";
+		
 		// 초기화 상태
 		public bool IsInitialized { get; private set; } = false;
 		
@@ -270,6 +273,63 @@ namespace Game.CoreSystem.Save
 			catch (System.Exception ex)
 			{
 				GameLogger.LogError($"저장 데이터 초기화 실패: {ex.Message}", GameLogger.LogCategory.Error);
+			}
+		}
+		
+		/// <summary>
+		/// 플레이어 덱 구성을 저장합니다.
+		/// </summary>
+		/// <param name="deckConfigurationJson">덱 구성 JSON 데이터</param>
+		public void SavePlayerDeckConfiguration(string deckConfigurationJson)
+		{
+			try
+			{
+				PlayerPrefs.SetString(KEY_PLAYER_DECK_CONFIG, deckConfigurationJson);
+				PlayerPrefs.Save();
+				GameLogger.LogInfo("플레이어 덱 구성 저장 완료", GameLogger.LogCategory.UI);
+			}
+			catch (System.Exception ex)
+			{
+				GameLogger.LogError($"플레이어 덱 구성 저장 실패: {ex.Message}", GameLogger.LogCategory.Error);
+			}
+		}
+		
+		/// <summary>
+		/// 플레이어 덱 구성을 로드합니다.
+		/// </summary>
+		/// <returns>덱 구성 JSON 데이터 (없으면 빈 문자열)</returns>
+		public string LoadPlayerDeckConfiguration()
+		{
+			try
+			{
+				string deckConfig = PlayerPrefs.GetString(KEY_PLAYER_DECK_CONFIG, "");
+				if (!string.IsNullOrEmpty(deckConfig))
+				{
+					GameLogger.LogInfo("플레이어 덱 구성 로드 완료", GameLogger.LogCategory.UI);
+				}
+				return deckConfig;
+			}
+			catch (System.Exception ex)
+			{
+				GameLogger.LogError($"플레이어 덱 구성 로드 실패: {ex.Message}", GameLogger.LogCategory.Error);
+				return "";
+			}
+		}
+		
+		/// <summary>
+		/// 플레이어 덱 구성을 삭제합니다.
+		/// </summary>
+		public void DeletePlayerDeckConfiguration()
+		{
+			try
+			{
+				PlayerPrefs.DeleteKey(KEY_PLAYER_DECK_CONFIG);
+				PlayerPrefs.Save();
+				GameLogger.LogInfo("플레이어 덱 구성 삭제 완료", GameLogger.LogCategory.UI);
+			}
+			catch (System.Exception ex)
+			{
+				GameLogger.LogError($"플레이어 덱 구성 삭제 실패: {ex.Message}", GameLogger.LogCategory.Error);
 			}
 		}
 		#endregion

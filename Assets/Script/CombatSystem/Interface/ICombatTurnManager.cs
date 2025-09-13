@@ -84,5 +84,11 @@ namespace Game.CombatSystem.Interface
         /// </summary>
         /// <returns>현재 턴 번호</returns>
         int GetCurrentTurn();
+
+        /// <summary>
+        /// 가드 효과를 적용합니다.
+        /// 다음 슬롯의 적 스킬카드를 무효화시킵니다.
+        /// </summary>
+        void ApplyGuardEffect();
     }
 }

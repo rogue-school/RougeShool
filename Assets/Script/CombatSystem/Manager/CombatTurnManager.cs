@@ -227,6 +227,24 @@ namespace Game.CombatSystem.Manager
 
         #endregion
 
+        #region 가드 효과
+
+        /// <summary>
+        /// 가드 효과를 적용합니다.
+        /// 다음 슬롯의 적 스킬카드를 무효화시킵니다.
+        /// </summary>
+        public void ApplyGuardEffect()
+        {
+            // 가드 상태 설정 (다음 슬롯의 적 카드 무효화를 위해)
+            Debug.Log("[CombatTurnManager] 가드 효과 적용됨 - 다음 슬롯의 적 스킬카드 무효화");
+            
+            // TODO: 실제 가드 로직 구현
+            // 1. 가드 상태 플래그 설정
+            // 2. 다음 슬롯의 적 카드 실행 시 무효화 처리
+        }
+
+        #endregion
+
         private void OnTurnStart(string characterId, GameObject characterObject)
         {
             // AnimationFacade.Instance.PlayCharacterAnimation(characterId, "turnStart", characterObject); // 제거

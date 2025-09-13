@@ -94,6 +94,14 @@ namespace Game.SkillCardSystem.Deck
         public List<CardEntry> CardEntries => new(cardEntries);
 
         /// <summary>
+        /// 모든 카드 엔트리를 반환합니다. (동적 덱 관리용)
+        /// </summary>
+        public List<CardEntry> GetAllCardEntries()
+        {
+            return new List<CardEntry>(cardEntries);
+        }
+
+        /// <summary>
         /// 지정한 카드 정의의 수량을 반환합니다.
         /// </summary>
         /// <param name="cardDefinition">찾을 카드 정의</param>

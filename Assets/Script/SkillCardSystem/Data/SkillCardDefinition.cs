@@ -54,7 +54,6 @@ namespace Game.SkillCardSystem.Data
         // 기존 시스템 호환성을 위한 추가 프로퍼티들
         public AudioClip SfxClip => presentation.sfxClip;
         public GameObject VisualEffectPrefab => presentation.visualEffectPrefab;
-        public float EffectDuration => presentation.effectDuration;
         public string Name => displayName;
         public string CardId => cardId;
         public string CardName => displayName;
@@ -65,67 +64,20 @@ namespace Game.SkillCardSystem.Data
 
     /// <summary>
     /// 카드의 연출 관련 설정을 담는 클래스입니다.
+    /// 핵심 연출 요소만 포함하며, 타이밍은 각 시스템에서 관리합니다.
     /// </summary>
     [System.Serializable]
     public class CardPresentation
     {
         [Header("사운드")]
-        [Tooltip("카드 사용 시 재생할 사운드")]
+        [Tooltip("카드 사용 시 재생할 고유 사운드")]
         public AudioClip sfxClip;
         
-        [Tooltip("사운드 볼륨 (0.0 ~ 1.0)")]
-        [Range(0f, 1f)]
-        public float sfxVolume = 1.0f;
-        
-        [Tooltip("카드 사용 시작 시 즉시 재생")]
-        public bool playOnStart = true;
-        
         [Header("비주얼 이펙트")]
-        [Tooltip("카드 사용 시 생성할 비주얼 이펙트 프리팹")]
+        [Tooltip("카드 사용 시 생성할 고유 비주얼 이펙트 프리팹")]
         public GameObject visualEffectPrefab;
-        
-        [Tooltip("이펙트 지속 시간 (초)")]
-        public float effectDuration = 2.0f;
-        
-        [Tooltip("대상 기준 이펙트 오프셋")]
-        public Vector3 effectOffset = Vector3.zero;
-        
-        [Tooltip("대상을 따라 이동")]
-        public bool followTarget = false;
-        
-        [Header("애니메이션")]
-        [Tooltip("카드 애니메이션")]
-        public AnimationClip cardAnimation;
-        
-        [Tooltip("대상 애니메이션")]
-        public AnimationClip targetAnimation;
-        
-        [Tooltip("애니메이션 재생 속도")]
-        public float animationSpeed = 1.0f;
-        
-        [Header("연출 타이밍")]
-        [Tooltip("연출 타이밍 설정")]
-        public PresentationTiming timing = new();
     }
 
-    /// <summary>
-    /// 연출 요소들의 타이밍을 제어하는 클래스입니다.
-    /// </summary>
-    [System.Serializable]
-    public class PresentationTiming
-    {
-        [Tooltip("사운드 재생 지연 시간 (초)")]
-        public float sfxDelay = 0f;
-        
-        [Tooltip("비주얼 이펙트 생성 지연 시간 (초)")]
-        public float visualEffectDelay = 0f;
-        
-        [Tooltip("애니메이션 재생 지연 시간 (초)")]
-        public float animationDelay = 0f;
-        
-        [Tooltip("애니메이션 완료까지 대기")]
-        public bool waitForAnimation = false;
-    }
 
     /// <summary>
     /// 카드의 게임 로직 구성 설정을 담는 클래스입니다.
@@ -165,15 +117,11 @@ namespace Game.SkillCardSystem.Data
         [Tooltip("기본 데미지")]
         public int baseDamage = 0;
         
-        [Tooltip("히트 수")]
+        [Tooltip("공격 횟수")]
         public int hits = 1;
         
-        [Tooltip("가드 관통 여부")]
-        public bool pierceable = false;
-        
-        [Tooltip("크리티컬 확률 (0.0 ~ 1.0)")]
-        [Range(0f, 1f)]
-        public float critChance = 0f;
+        [Tooltip("가드 무시 여부")]
+        public bool ignoreGuard = false;
     }
 
     /// <summary>
@@ -208,22 +156,12 @@ namespace Game.SkillCardSystem.Data
         [Tooltip("데미지량")]
         public int damageAmount = 0;
         
-        [Tooltip("히트 수")]
+        [Tooltip("공격 횟수")]
         public int damageHits = 1;
         
-        [Tooltip("가드 관통")]
-        public bool pierceable = false;
+        [Tooltip("가드 무시")]
+        public bool ignoreGuard = false;
         
-        [Tooltip("크리티컬 확률")]
-        [Range(0f, 1f)]
-        public float critChance = 0f;
-        
-        [Header("가드 효과 설정")]
-        [Tooltip("가드량")]
-        public int guardAmount = 0;
-        
-        [Tooltip("임시 체력으로 오버플로우")]
-        public bool overflowToTempHP = false;
         
         [Header("출혈 효과 설정")]
         [Tooltip("출혈량")]

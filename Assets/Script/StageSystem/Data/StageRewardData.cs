@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using Game.SkillCardSystem.Data;
 
 namespace Game.StageSystem.Data
 {
@@ -28,6 +29,17 @@ namespace Game.StageSystem.Data
             public int amount;
         }
 
+        [System.Serializable]
+        public class RewardCard
+        {
+            [Header("보상 카드")]
+            [Tooltip("보상으로 지급할 스킬카드 정의")]
+            public SkillCardDefinition cardDefinition;
+            [Tooltip("지급할 카드 수량")]
+            [Range(1, 5)]
+            public int quantity = 1;
+        }
+
         #endregion
 
         #region 보상 데이터
@@ -35,14 +47,17 @@ namespace Game.StageSystem.Data
         [Header("준보스 보상")]
         [SerializeField] private List<RewardItem> subBossRewards = new();
         [SerializeField] private List<RewardCurrency> subBossCurrency = new();
+        [SerializeField] private List<RewardCard> subBossCards = new();
 
         [Header("보스 보상")]
         [SerializeField] private List<RewardItem> bossRewards = new();
         [SerializeField] private List<RewardCurrency> bossCurrency = new();
+        [SerializeField] private List<RewardCard> bossCards = new();
 
         [Header("스테이지 완료 보상")]
         [SerializeField] private List<RewardItem> stageCompletionRewards = new();
         [SerializeField] private List<RewardCurrency> stageCompletionCurrency = new();
+        [SerializeField] private List<RewardCard> stageCompletionCards = new();
 
         #endregion
 
@@ -59,6 +74,11 @@ namespace Game.StageSystem.Data
         public List<RewardCurrency> SubBossCurrency => subBossCurrency;
 
         /// <summary>
+        /// 준보스 보상 카드
+        /// </summary>
+        public List<RewardCard> SubBossCards => subBossCards;
+
+        /// <summary>
         /// 보스 보상 아이템
         /// </summary>
         public List<RewardItem> BossRewards => bossRewards;
@@ -67,6 +87,11 @@ namespace Game.StageSystem.Data
         /// 보스 보상 화폐
         /// </summary>
         public List<RewardCurrency> BossCurrency => bossCurrency;
+
+        /// <summary>
+        /// 보스 보상 카드
+        /// </summary>
+        public List<RewardCard> BossCards => bossCards;
 
         /// <summary>
         /// 스테이지 완료 보상 아이템
@@ -78,6 +103,11 @@ namespace Game.StageSystem.Data
         /// </summary>
         public List<RewardCurrency> StageCompletionCurrency => stageCompletionCurrency;
 
+        /// <summary>
+        /// 스테이지 완료 보상 카드
+        /// </summary>
+        public List<RewardCard> StageCompletionCards => stageCompletionCards;
+
         #endregion
 
         #region 보상 확인
@@ -87,7 +117,7 @@ namespace Game.StageSystem.Data
         /// </summary>
         public bool HasSubBossRewards()
         {
-            return subBossRewards.Count > 0 || subBossCurrency.Count > 0;
+            return subBossRewards.Count > 0 || subBossCurrency.Count > 0 || subBossCards.Count > 0;
         }
 
         /// <summary>
@@ -95,7 +125,7 @@ namespace Game.StageSystem.Data
         /// </summary>
         public bool HasBossRewards()
         {
-            return bossRewards.Count > 0 || bossCurrency.Count > 0;
+            return bossRewards.Count > 0 || bossCurrency.Count > 0 || bossCards.Count > 0;
         }
 
         /// <summary>
@@ -103,7 +133,7 @@ namespace Game.StageSystem.Data
         /// </summary>
         public bool HasStageCompletionRewards()
         {
-            return stageCompletionRewards.Count > 0 || stageCompletionCurrency.Count > 0;
+            return stageCompletionRewards.Count > 0 || stageCompletionCurrency.Count > 0 || stageCompletionCards.Count > 0;
         }
 
         #endregion

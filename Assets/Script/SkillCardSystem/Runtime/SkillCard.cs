@@ -60,8 +60,7 @@ namespace Game.SkillCardSystem.Runtime
                 var damageCommand = new DamageEffectCommand(
                     damageConfig.baseDamage,
                     damageConfig.hits,
-                    damageConfig.pierceable,
-                    damageConfig.critChance
+                    damageConfig.ignoreGuard
                 );
                 effectCommands.Add(damageCommand);
             }
@@ -154,7 +153,7 @@ namespace Game.SkillCardSystem.Runtime
         private int GetCustomEffectPower(EffectCustomSettings settings, SkillCardEffectSO effect)
         {
             if (effect is DamageEffectSO) return settings.damageAmount;
-            if (effect is GuardEffectSO) return settings.guardAmount;
+            if (effect is GuardEffectSO) return 0; // 가드 효과는 파워 없음
             if (effect is BleedEffectSO) return settings.bleedAmount;
             // 기타 효과 타입들은 기본값 반환
             
@@ -268,29 +267,21 @@ namespace Game.SkillCardSystem.Runtime
         {
             var presentation = definition.presentation;
             
-            // 사운드 재생
+            // 사운드 재생 (즉시)
             if (presentation.sfxClip != null)
             {
-                StartCoroutine(PlaySFXDelayed(presentation.sfxClip, presentation.timing.sfxDelay));
+                PlaySFX(presentation.sfxClip);
             }
             
-            // 비주얼 이펙트 생성
+            // 비주얼 이펙트 생성 (즉시)
             if (presentation.visualEffectPrefab != null)
             {
-                StartCoroutine(CreateVisualEffectDelayed(context, presentation));
-            }
-            
-            // 애니메이션 재생
-            if (presentation.cardAnimation != null)
-            {
-                StartCoroutine(PlayAnimationDelayed(presentation.cardAnimation, presentation.timing.animationDelay));
+                CreateVisualEffect(context, presentation);
             }
         }
         
-        private IEnumerator PlaySFXDelayed(AudioClip clip, float delay)
+        private void PlaySFX(AudioClip clip)
         {
-            if (delay > 0) yield return new WaitForSeconds(delay);
-            
             // AudioManager를 통한 사운드 재생
             if (AudioManager.Instance != null)
             {
@@ -298,34 +289,17 @@ namespace Game.SkillCardSystem.Runtime
             }
         }
         
-        private IEnumerator CreateVisualEffectDelayed(ICardExecutionContext context, CardPresentation presentation)
+        private void CreateVisualEffect(ICardExecutionContext context, CardPresentation presentation)
         {
-            if (presentation.timing.visualEffectDelay > 0)
-                yield return new WaitForSeconds(presentation.timing.visualEffectDelay);
-            
             var target = context.Target;
             var targetTransform = (target as MonoBehaviour)?.transform;
-            if (targetTransform == null) yield break;
+            if (targetTransform == null) return;
             
-            var effectPosition = targetTransform.position + presentation.effectOffset;
+            // 대상 위치에 이펙트 생성
+            var effectInstance = Instantiate(presentation.visualEffectPrefab, targetTransform.position, Quaternion.identity);
             
-            var effectInstance = Instantiate(presentation.visualEffectPrefab, effectPosition, Quaternion.identity);
-            
-            if (presentation.followTarget)
-            {
-                effectInstance.transform.SetParent(targetTransform);
-            }
-            
-            // 이펙트 지속 시간 후 제거
-            Destroy(effectInstance, presentation.effectDuration);
-        }
-        
-        private IEnumerator PlayAnimationDelayed(AnimationClip clip, float delay)
-        {
-            if (delay > 0) yield return new WaitForSeconds(delay);
-            
-            // 애니메이션 재생 로직
-            // TODO: 애니메이션 시스템과 연동
+            // 이펙트는 기본적으로 자동 제거되도록 설정 (이펙트 프리팹에서 처리)
+            // 필요시 이펙트 프리팹에 자동 제거 컴포넌트 추가
         }
         
         #endregion

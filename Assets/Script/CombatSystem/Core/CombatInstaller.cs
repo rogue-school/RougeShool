@@ -31,6 +31,7 @@ using Game.CombatSystem.DragDrop;
 using Game.CombatSystem.CoolTime;
 using Game.SkillCardSystem.Runtime;
 using Game.CoreSystem.Interface;
+using Game.CoreSystem.Save;
  
 
 /// <summary>
@@ -61,6 +62,7 @@ public class CombatInstaller : MonoInstaller
         BindUIHandlers();
         BindCooldownSystem();
         BindCardCirculationSystem();
+        BindDeckManagementSystem();
     }
 
     #region 상태머신
@@ -326,6 +328,33 @@ public class CombatInstaller : MonoInstaller
 
     #endregion
 
+    #region 덱 관리 시스템
+
+    /// <summary>
+    /// 덱 관리 관련 시스템 바인딩
+    /// </summary>
+    private void BindDeckManagementSystem()
+    {
+        // PlayerDeckManager 바인딩
+        var deckManager = FindFirstObjectByType<PlayerDeckManager>();
+        if (deckManager == null)
+        {
+            var go = new GameObject("PlayerDeckManager");
+            deckManager = go.AddComponent<PlayerDeckManager>();
+        }
+        Container.Bind<IPlayerDeckManager>().FromInstance(deckManager).AsSingle();
+
+        // CardRewardManager 바인딩
+        var rewardManager = FindFirstObjectByType<CardRewardManager>();
+        if (rewardManager == null)
+        {
+            var go = new GameObject("CardRewardManager");
+            rewardManager = go.AddComponent<CardRewardManager>();
+        }
+        Container.Bind<CardRewardManager>().FromInstance(rewardManager).AsSingle();
+    }
+
+    #endregion
 
     #region 유틸 바인딩 메서드
 

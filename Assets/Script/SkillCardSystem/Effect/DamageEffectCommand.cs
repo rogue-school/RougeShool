@@ -2,6 +2,7 @@ using UnityEngine;
 using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Interface;
 using Game.CharacterSystem.Interface;
+using Game.CoreSystem.Audio;
 
 namespace Game.SkillCardSystem.Effect
 {
@@ -13,22 +14,19 @@ namespace Game.SkillCardSystem.Effect
     {
         private int damageAmount;
         private int hits;
-        private bool pierceable;
-        private float critChance;
+        private bool ignoreGuard;
         
         /// <summary>
         /// 데미지 효과 명령을 생성합니다.
         /// </summary>
         /// <param name="damageAmount">데미지량</param>
-        /// <param name="hits">히트 수</param>
-        /// <param name="pierceable">가드 관통 여부</param>
-        /// <param name="critChance">크리티컬 확률</param>
-        public DamageEffectCommand(int damageAmount, int hits = 1, bool pierceable = false, float critChance = 0f)
+        /// <param name="hits">공격 횟수</param>
+        /// <param name="ignoreGuard">가드 무시 여부</param>
+        public DamageEffectCommand(int damageAmount, int hits = 1, bool ignoreGuard = false)
         {
             this.damageAmount = damageAmount;
             this.hits = hits;
-            this.pierceable = pierceable;
-            this.critChance = critChance;
+            this.ignoreGuard = ignoreGuard;
         }
         
         /// <summary>
@@ -48,34 +46,28 @@ namespace Game.SkillCardSystem.Effect
             var source = context.Source;
             var totalDamage = 0;
             
-            // 히트 수만큼 데미지 적용
-            for (int i = 0; i < hits; i++)
+            // 다단 히트 처리 (시간 간격을 두고 공격)
+            if (hits > 1)
             {
-                var damage = damageAmount;
-                
-                // 크리티컬 계산
-                if (critChance > 0f && Random.Range(0f, 1f) < critChance)
+                // 코루틴으로 다단 히트 실행
+                var sourceMono = source as MonoBehaviour;
+                if (sourceMono != null)
                 {
-                    damage = Mathf.RoundToInt(damage * 1.5f);
-                    Debug.Log($"[DamageEffectCommand] 크리티컬! 데미지: {damage}");
-                }
-                
-                // 데미지 적용
-                if (pierceable)
-                {
-                    target.TakeDamage(damage);
-                    Debug.Log($"[DamageEffectCommand] 관통 데미지: {damage}");
+                    sourceMono.StartCoroutine(ExecuteMultiHitDamage(context, hits));
                 }
                 else
                 {
-                    target.TakeDamage(damage);
-                    Debug.Log($"[DamageEffectCommand] 일반 데미지: {damage}");
+                    // MonoBehaviour가 아닌 경우 즉시 실행
+                    ExecuteImmediateDamage(target, hits);
                 }
-                
-                totalDamage += damage;
+            }
+            else
+            {
+                // 단일 히트는 즉시 실행
+                ExecuteImmediateDamage(target, hits);
             }
             
-            Debug.Log($"[DamageEffectCommand] {source?.GetCharacterName()} → {target.GetCharacterName()} 총 데미지: {totalDamage} (히트: {hits})");
+            Debug.Log($"[DamageEffectCommand] {source?.GetCharacterName()} → {target.GetCharacterName()} 총 데미지: {totalDamage} (공격 횟수: {hits})");
         }
         
         /// <summary>
@@ -111,21 +103,105 @@ namespace Game.SkillCardSystem.Effect
         public int GetDamageAmount() => damageAmount;
         
         /// <summary>
-        /// 히트 수를 반환합니다.
+        /// 공격 횟수를 반환합니다.
         /// </summary>
-        /// <returns>히트 수</returns>
+        /// <returns>공격 횟수</returns>
         public int GetHits() => hits;
         
         /// <summary>
-        /// 가드 관통 여부를 반환합니다.
+        /// 가드 무시 여부를 반환합니다.
         /// </summary>
-        /// <returns>가드 관통 여부</returns>
-        public bool IsPierceable() => pierceable;
+        /// <returns>가드 무시 여부</returns>
+        public bool IsIgnoreGuard() => ignoreGuard;
         
         /// <summary>
-        /// 크리티컬 확률을 반환합니다.
+        /// 다단 히트 데미지를 시간 간격을 두고 실행합니다.
         /// </summary>
-        /// <returns>크리티컬 확률</returns>
-        public float GetCritChance() => critChance;
+        /// <param name="context">카드 실행 컨텍스트</param>
+        /// <param name="hitCount">히트 수</param>
+        private System.Collections.IEnumerator ExecuteMultiHitDamage(ICardExecutionContext context, int hitCount)
+        {
+            var target = context.Target;
+            var totalDamage = 0;
+            
+            for (int i = 0; i < hitCount; i++)
+            {
+                // 대상이 사망했으면 중단
+                if (target.IsDead())
+                {
+                    Debug.Log($"[DamageEffectCommand] 대상이 사망하여 다단 히트 중단 (히트: {i}/{hitCount})");
+                    break;
+                }
+                
+                // 데미지 적용
+                ApplyDamage(target);
+                totalDamage += damageAmount;
+                
+                Debug.Log($"[DamageEffectCommand] 다단 히트 {i + 1}/{hitCount}: {damageAmount} 데미지");
+                
+                // 마지막 히트가 아니면 대기
+                if (i < hitCount - 1)
+                {
+                    yield return new WaitForSeconds(0.15f); // 0.15초 간격
+                }
+            }
+            
+            Debug.Log($"[DamageEffectCommand] 다단 히트 완료 - 총 데미지: {totalDamage}");
+        }
+        
+        /// <summary>
+        /// 즉시 데미지를 적용합니다 (단일 히트 또는 MonoBehaviour가 아닌 경우).
+        /// </summary>
+        /// <param name="target">대상</param>
+        /// <param name="hitCount">히트 수</param>
+        private void ExecuteImmediateDamage(ICharacter target, int hitCount)
+        {
+            var totalDamage = 0;
+            
+            for (int i = 0; i < hitCount; i++)
+            {
+                ApplyDamage(target);
+                totalDamage += damageAmount;
+            }
+            
+            Debug.Log($"[DamageEffectCommand] 즉시 데미지 적용 - 총 데미지: {totalDamage}");
+        }
+        
+        /// <summary>
+        /// 데미지를 대상에게 적용합니다.
+        /// </summary>
+        /// <param name="target">대상</param>
+        private void ApplyDamage(ICharacter target)
+        {
+            // 사운드 재생 (다단 히트마다)
+            PlayHitSound();
+            
+            if (ignoreGuard)
+            {
+                target.TakeDamage(damageAmount);
+                Debug.Log($"[DamageEffectCommand] 가드 무시 데미지: {damageAmount}");
+            }
+            else
+            {
+                target.TakeDamage(damageAmount);
+                Debug.Log($"[DamageEffectCommand] 일반 데미지: {damageAmount}");
+            }
+        }
+        
+        /// <summary>
+        /// 히트 사운드를 재생합니다.
+        /// </summary>
+        private void PlayHitSound()
+        {
+            // 기본 히트 사운드 재생 (다단 히트마다)
+            // TODO: 실제 히트 사운드 클립으로 교체
+            if (AudioManager.Instance != null)
+            {
+                // 기본 히트 사운드 재생 (임시)
+                // AudioManager.Instance.PlaySFX(hitSoundClip);
+                Debug.Log($"[DamageEffectCommand] 히트 사운드 재생");
+            }
+        }
+        
     }
 }

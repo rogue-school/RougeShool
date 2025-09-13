@@ -12,4 +12,52 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7da205e651bbf02458f3dfade7cd2f93, type: 3}
   m_Name: UnifiedSkillCardAnimationDatabase
   m_EditorClassIdentifier: 
-  skillCardAnimations: []
+  skillCardAnimations:
+  - skillCardDefinition: {fileID: 11400000, guid: 8f4cc4f7be7afaf4086ead461f38b31d, type: 2}
+    ownerPolicy: 0
+    spawnAnimation:
+      animationScriptType: 1
+    moveAnimation:
+      animationScriptType: 0
+    moveToCombatSlotAnimation:
+      animationScriptType: 0
+    useAnimation:
+      animationScriptType: 4
+    dragAnimation:
+      animationScriptType: 0
+    dropAnimation:
+      animationScriptType: 0
+    vanishAnimation:
+      animationScriptType: 4
+  - skillCardDefinition: {fileID: 0}
+    ownerPolicy: 0
+    spawnAnimation:
+      animationScriptType: 0
+    moveAnimation:
+      animationScriptType: 0
+    moveToCombatSlotAnimation:
+      animationScriptType: 0
+    useAnimation:
+      animationScriptType: 0
+    dragAnimation:
+      animationScriptType: 0
+    dropAnimation:
+      animationScriptType: 0
+    vanishAnimation:
+      animationScriptType: 0
+  - skillCardDefinition: {fileID: 0}
+    ownerPolicy: 0
+    spawnAnimation:
+      animationScriptType: 0
+    moveAnimation:
+      animationScriptType: 0
+    moveToCombatSlotAnimation:
+      animationScriptType: 0
+    useAnimation:
+      animationScriptType: 0
+    dragAnimation:
+      animationScriptType: 0
+    dropAnimation:
+      animationScriptType: 0
+    vanishAnimation:
+      animationScriptType: 0

@@ -86,7 +86,8 @@ namespace Game.SkillCardSystem.Executor
                 {
                     Vector3 spawnPos = target.Transform.position + new Vector3(0, 0, 0);
                     var instance = GameObject.Instantiate(vfx, spawnPos, Quaternion.identity);
-                    GameObject.Destroy(instance, card.CardDefinition.EffectDuration);
+                    // 이펙트는 프리팹 자체에서 자동 제거되도록 설정하거나 기본 지속 시간 사용
+                    GameObject.Destroy(instance, 2.0f); // 기본 2초 지속
                 }
             }
         }
