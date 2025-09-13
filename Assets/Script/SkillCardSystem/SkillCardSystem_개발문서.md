@@ -1,13 +1,12 @@
 # SkillCardSystem 개발 문서
 
 ## 📋 시스템 개요
-SkillCardSystem은 게임의 스킬카드 시스템을 관리하는 핵심 시스템입니다. 카드 데이터, 효과, 실행, 검증, UI, 드래그 앤 드롭, 슬롯 관리 등을 통합적으로 관리합니다.
+SkillCardSystem은 게임의 스킬카드 시스템을 관리하는 핵심 시스템입니다. 카드 데이터, 효과, 실행, 검증, UI, 드래그 앤 드롭, 슬롯 관리 등을 통합적으로 관리합니다. 플레이어와 적 스킬카드를 통합된 데이터 모델로 관리하며, 덱 기반 시스템과 효과 시스템을 제공합니다.
 
 ## 🏗️ 폴더 구조
 ```
 SkillCardSystem/
-├── Core/             # 핵심 로직 (2개 파일)
-├── Data/             # 카드 데이터 (3개 파일)
+├── Data/             # 카드 데이터 (2개 파일)
 ├── Deck/             # 덱 관리 (3개 파일)
 ├── DragDrop/         # 드래그 앤 드롭 (3개 파일)
 ├── Effect/           # 효과 구현 (12개 파일)
@@ -16,7 +15,7 @@ SkillCardSystem/
 ├── Installation/     # DI 설치 (1개 파일) [주의: 폴더명 오타 - Installer이어야 함]
 ├── Interface/        # 인터페이스 (26개 파일)
 ├── Manager/          # 매니저 클래스 (3개 파일)
-├── Runtime/          # 런타임 로직 (5개 파일)
+├── Runtime/          # 런타임 로직 (1개 파일)
 ├── Service/          # 서비스 클래스 (6개 파일)
 ├── Slot/             # 슬롯 시스템 (11개 파일)
 ├── UI/               # UI 관련 (5개 파일)
@@ -25,18 +24,14 @@ SkillCardSystem/
 
 ## 📁 주요 컴포넌트
 
-### Core 폴더 (2개 파일)
-- **PlayerSkillCard.cs**: 플레이어 스킬카드 기본 클래스
-- **EnemySkillCard.cs**: 적 스킬카드 기본 클래스
-
 ### Data 폴더 (2개 파일)
-- **SkillCardData.cs**: 스킬카드 데이터 (ScriptableObject)
-- **PlayerSkillCard.cs**: 플레이어 스킬카드 데이터
+- **SkillCardDefinition.cs**: 통합 스킬카드 정의 (ScriptableObject) - 플레이어/적 통합
+- **PlayerSkillCard.cs**: 플레이어 스킬카드 데이터 (호환성 유지)
 
 ### Deck 폴더 (3개 파일)
-- **PlayerSkillDeck.cs**: 플레이어 스킬 덱
-- **EnemySkillDeck.cs**: 적 스킬 덱
-- **PlayerSkillCardEntry.cs**: 플레이어 스킬카드 엔트리
+- **PlayerSkillDeck.cs**: 플레이어 스킬 덱 (수량 기반 카드 엔트리 지원)
+- **EnemySkillDeck.cs**: 적 스킬 덱 (SkillCardDefinition 기반)
+- **PlayerSkillCardEntry.cs**: 플레이어 스킬카드 엔트리 (호환성 유지)
 
 ### Effect 폴더 (4개 파일)
 - **BleedEffectCommand.cs**: 출혈 효과 명령
@@ -58,6 +53,9 @@ SkillCardSystem/
 - **ICardCirculationSystem.cs**: 카드 순환 시스템 인터페이스
 - **ICardDropValidator.cs**: 카드 드롭 검증 인터페이스
 - **ICardExecutionContext.cs**: 카드 실행 컨텍스트 인터페이스
+
+### Runtime 폴더 (1개 파일)
+- **SkillCard.cs**: 통합 스킬카드 런타임 인스턴스 (MonoBehaviour, ISkillCard 구현)
 
 ### Manager 폴더 (3개 파일)
 - **PlayerHandManager.cs**: 플레이어 핸드 관리
@@ -82,15 +80,17 @@ SkillCardSystem/
 
 ## 🎯 주요 기능
 
-### 1. 카드 데이터 관리
+### 1. 통합 카드 데이터 관리
+- **SkillCardDefinition**: 플레이어/적 스킬카드를 통합한 데이터 모델
 - **ScriptableObject**: 카드 데이터를 에셋으로 관리
-- **런타임 인스턴스**: 게임 중 동적 생성/수정
+- **런타임 인스턴스**: 게임 중 동적 생성/수정 (MonoBehaviour 기반)
 
 ### 2. 효과 시스템
 - **모듈화된 효과**: 각 효과를 독립적인 모듈로 구현
 - **효과 실행**: 효과의 순차적 실행 및 결과 처리
 
 ### 3. 덱 관리
+- **수량 기반 덱**: 플레이어 덱에서 카드 수량 관리
 - **덱 구성**: 플레이어/적 덱 구성 및 관리
 - **카드 드로우**: 덱에서 카드 드로우
 
@@ -108,14 +108,21 @@ SkillCardSystem/
 
 ### 기본 사용법
 ```csharp
-// SkillCardFactory를 통한 카드 생성
+// SkillCardFactory를 통한 통합 카드 생성
 SkillCardFactory factory = new SkillCardFactory();
-ISkillCard playerCard = factory.CreatePlayerCard(cardData, effects, "플레이어");
-ISkillCard enemyCard = factory.CreateEnemyCard(cardData, effects, "적");
-
-// SkillCardDefinition 기반 카드 생성
 SkillCardDefinition definition = Resources.Load<SkillCardDefinition>("SkillCards/Fireball");
-ISkillCard card = factory.CreateFromDefinition(definition, Owner.Player, "마법사");
+
+// 플레이어 카드 생성
+ISkillCard playerCard = factory.CreateFromDefinition(definition, Owner.Player, "플레이어");
+
+// 적 카드 생성
+ISkillCard enemyCard = factory.CreateFromDefinition(definition, Owner.Enemy, "적");
+
+// 카드 실행
+playerCard.ExecuteSkill(sourceCharacter, targetCharacter);
+
+// 카드 연출 실행
+playerCard.StartPresentation(executionContext);
 
 // CardCirculationSystem을 통한 카드 순환 관리
 CardCirculationSystem circulationSystem = FindObjectOfType<CardCirculationSystem>();
@@ -325,3 +332,8 @@ sequenceDiagram
 - 2025-01-27 | Maintainer | SkillCardSystem 개발 문서 초기 작성 | 문서
 - 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 Installation 폴더명 오타 주의 표시 | 문서
 - 2025-01-27 | Maintainer | 실제 코드 분석 기반 주요 클래스 및 메서드 정보 추가 | 문서
+- 2025-01-27 | Maintainer | 통합 스킬카드 시스템으로 마이그레이션 완료 | 코드/문서
+- 2025-01-27 | Maintainer | SkillCardDefinition 기반 통합 데이터 모델 구현 | 코드/문서
+- 2025-01-27 | Maintainer | 플레이어/적 스킬카드 통합 관리 시스템 구현 | 코드/문서
+- 2025-01-27 | Maintainer | 수량 기반 덱 시스템 및 커스텀 에디터 구현 | 코드/문서
+- 2025-01-27 | Maintainer | EnemySkillCard.cs 제거 및 통합 런타임 인스턴스 구현 | 코드/문서

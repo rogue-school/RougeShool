@@ -55,7 +55,7 @@ CoreSystem/
 - **IPlayerCharacterSelectionManager.cs**: 플레이어 캐릭터 선택 관리 인터페이스
 
 ### Animation 폴더 규칙 (2개 파일)
-- **AnimationDatabaseManager.cs**: 애니메이션 데이터베이스 관리
+- **AnimationDatabaseManager.cs**: 통합 애니메이션 데이터베이스 관리 (플레이어/적 통합)
 - **AnimationManager.cs**: 애니메이션 시스템 관리
 
 ## 🎯 개발 규칙
