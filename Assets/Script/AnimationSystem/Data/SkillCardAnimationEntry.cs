@@ -1,6 +1,5 @@
 using UnityEngine;
 using Game.SkillCardSystem.Data;
-using Game.SkillCardSystem.Core;
 
 namespace Game.AnimationSystem.Data
 {
@@ -56,10 +55,10 @@ namespace Game.AnimationSystem.Data
     [System.Serializable]
     public class EnemySkillCardAnimationEntry
     {
-        [Header("적 스킬카드 SO")]
-        [Tooltip("애니메이션을 지정할 적 스킬카드 SO (EnemySkillCard만 선택)")]
-        [SerializeField] private EnemySkillCard enemySkillCard;
-        public EnemySkillCard EnemySkillCard => enemySkillCard;
+        [Header("스킬카드 정의")]
+        [Tooltip("애니메이션을 지정할 스킬카드 정의")]
+        [SerializeField] private SkillCardDefinition skillCardDefinition;
+        public SkillCardDefinition SkillCardDefinition => skillCardDefinition;
         
         [Header("생성 애니메이션")]
         [Tooltip("스킬카드 생성 시 애니메이션")]

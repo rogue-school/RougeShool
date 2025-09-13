@@ -5,7 +5,6 @@ using Game.CombatSystem.Slot; // SlotOwner
 using Game.SkillCardSystem.Runtime; // RuntimeSkillCard
 using System.Collections.Generic; // Added for List
 using Game.SkillCardSystem.Slot;
-using Game.SkillCardSystem.Core;
 using Game.CoreSystem.Animation;
 
 namespace Game.AnimationSystem.Manager
@@ -143,19 +142,20 @@ namespace Game.AnimationSystem.Manager
                 PlayPlayerCharacterDeathAnimation(characterId, target);
         }
 
-        // 스킬카드 애니메이션 실행
+        // 스킬카드 애니메이션 실행 (통합)
         public void PlaySkillCardAnimation(string cardId, string animationType, GameObject target)
         {
             // Debug.Log($"[AnimationFacade] PlaySkillCardAnimation 호출: cardId={cardId}, animationType={animationType}, target={target?.name}");
-            AnimationDatabaseManager.Instance.PlayPlayerSkillCardAnimation(cardId, target, animationType);
+            // 통합된 메서드 사용 (cardId만으로는 소유자 구분 불가능하므로 기본적으로 플레이어로 처리)
+            AnimationDatabaseManager.Instance.PlaySkillCardAnimation(cardId, target, animationType);
         }
         public void PlaySkillCardAnimation(string cardId, string animationType, GameObject target, System.Action onComplete)
         {
             // Debug.Log($"[AnimationFacade] PlaySkillCardAnimation(WithCallback) 호출: cardId={cardId}, animationType={animationType}, target={target?.name}");
-            AnimationDatabaseManager.Instance.PlayPlayerSkillCardAnimation(cardId, target, animationType, onComplete);
+            AnimationDatabaseManager.Instance.PlaySkillCardAnimation(cardId, target, animationType, onComplete);
         }
 
-        // ISkillCard 기반 오버로드 추가
+        // ISkillCard 기반 오버로드 (통합 메서드 사용)
         public void PlaySkillCardAnimation(ISkillCard card, string animationType, GameObject target, System.Action onComplete = null)
         {
             // Debug.Log($"[AnimationFacade] PlaySkillCardAnimation(ISkillCard) 호출: card={card?.GetCardName()}, animationType={animationType}, target={target?.name}");
@@ -165,11 +165,8 @@ namespace Game.AnimationSystem.Manager
                 onComplete?.Invoke();
                 return;
             }
-            var owner = card.GetOwner();
-            if (owner == SlotOwner.ENEMY)
-                AnimationDatabaseManager.Instance.PlayEnemySkillCardAnimation(card.CardDefinition.displayName, target, animationType, onComplete);
-            else
-                AnimationDatabaseManager.Instance.PlayPlayerSkillCardAnimation(card.CardDefinition.displayName, target, animationType, onComplete);
+            // 통합된 메서드 사용
+            AnimationDatabaseManager.Instance.PlaySkillCardAnimation(card, target, animationType, onComplete);
         }
 
         #region Drag Animation Methods
@@ -184,7 +181,7 @@ namespace Game.AnimationSystem.Manager
                 onComplete?.Invoke();
                 return;
             }
-            AnimationDatabaseManager.Instance.PlaySkillCardDragStartAnimation(card, target, onComplete);
+            AnimationDatabaseManager.Instance.PlaySkillCardAnimation(card, target, "drag", onComplete);
         }
 
         /// <summary>
@@ -198,7 +195,7 @@ namespace Game.AnimationSystem.Manager
                 onComplete?.Invoke();
                 return;
             }
-            AnimationDatabaseManager.Instance.PlaySkillCardDragEndAnimation(card, target, onComplete);
+            AnimationDatabaseManager.Instance.PlaySkillCardAnimation(card, target, "drag", onComplete);
         }
 
         /// <summary>
@@ -206,7 +203,7 @@ namespace Game.AnimationSystem.Manager
         /// </summary>
         public void PlayPlayerSkillCardDragStartAnimation(string cardId, GameObject target, System.Action onComplete = null)
         {
-            AnimationDatabaseManager.Instance.PlayPlayerSkillCardDragStartAnimation(cardId, target, onComplete);
+            AnimationDatabaseManager.Instance.PlaySkillCardAnimation(cardId, target, "drag", onComplete);
         }
 
         /// <summary>
@@ -214,7 +211,7 @@ namespace Game.AnimationSystem.Manager
         /// </summary>
         public void PlayPlayerSkillCardDragEndAnimation(string cardId, GameObject target, System.Action onComplete = null)
         {
-            AnimationDatabaseManager.Instance.PlayPlayerSkillCardDragEndAnimation(cardId, target, onComplete);
+            AnimationDatabaseManager.Instance.PlaySkillCardAnimation(cardId, target, "drag", onComplete);
         }
 
         /// <summary>
@@ -222,7 +219,7 @@ namespace Game.AnimationSystem.Manager
         /// </summary>
         public void PlayEnemySkillCardDragStartAnimation(string cardId, GameObject target, System.Action onComplete = null)
         {
-            AnimationDatabaseManager.Instance.PlayEnemySkillCardDragStartAnimation(cardId, target, onComplete);
+            AnimationDatabaseManager.Instance.PlaySkillCardAnimation(cardId, target, "drag", onComplete);
         }
 
         /// <summary>
@@ -230,7 +227,7 @@ namespace Game.AnimationSystem.Manager
         /// </summary>
         public void PlayEnemySkillCardDragEndAnimation(string cardId, GameObject target, System.Action onComplete = null)
         {
-            AnimationDatabaseManager.Instance.PlayEnemySkillCardDragEndAnimation(cardId, target, onComplete);
+            AnimationDatabaseManager.Instance.PlaySkillCardAnimation(cardId, target, "drag", onComplete);
         }
         #endregion
 
@@ -246,7 +243,7 @@ namespace Game.AnimationSystem.Manager
                 onComplete?.Invoke();
                 return;
             }
-            AnimationDatabaseManager.Instance.PlaySkillCardDropAnimation(card, target, onComplete);
+            AnimationDatabaseManager.Instance.PlaySkillCardAnimation(card, target, "drop", onComplete);
         }
 
         /// <summary>
@@ -254,7 +251,7 @@ namespace Game.AnimationSystem.Manager
         /// </summary>
         public void PlayPlayerSkillCardDropAnimation(string cardId, GameObject target, System.Action onComplete = null)
         {
-            AnimationDatabaseManager.Instance.PlayPlayerSkillCardDropAnimation(cardId, target, onComplete);
+            AnimationDatabaseManager.Instance.PlaySkillCardAnimation(cardId, target, "drop", onComplete);
         }
 
         /// <summary>
@@ -262,7 +259,7 @@ namespace Game.AnimationSystem.Manager
         /// </summary>
         public void PlayEnemySkillCardDropAnimation(string cardId, GameObject target, System.Action onComplete = null)
         {
-            AnimationDatabaseManager.Instance.PlayEnemySkillCardDropAnimation(cardId, target, onComplete);
+            AnimationDatabaseManager.Instance.PlaySkillCardAnimation(cardId, target, "drop", onComplete);
         }
         #endregion
 

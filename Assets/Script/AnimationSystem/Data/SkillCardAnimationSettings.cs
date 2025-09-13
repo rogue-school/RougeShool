@@ -4,86 +4,50 @@ using DG.Tweening;
 namespace Game.AnimationSystem.Data
 {
     /// <summary>
+    /// 애니메이션 스크립트 타입 열거형
+    /// </summary>
+    public enum AnimationScriptType
+    {
+        None,
+        DefaultSkillCardSpawnAnimation,
+        DefaultSkillCardMoveAnimation,
+        DefaultSkillCardMoveToCombatSlotAnimation,
+        DefaultSkillCardUseAnimation,
+        DefaultSkillCardDragAnimation,
+        DefaultSkillCardDropAnimation,
+        DefaultSkillCardVanishAnimation
+    }
+
+    /// <summary>
     /// 스킬 카드 애니메이션 설정을 위한 구조체
     /// </summary>
     [System.Serializable]
     public class SkillCardAnimationSettings
     {
         [Header("애니메이션 스크립트 타입")]
-        [SerializeField] private string animationScriptType;
-        
-        [Header("애니메이션 파라미터")]
-        [SerializeField] private float duration;
-        [SerializeField] private bool useEasing;
-        [SerializeField] private AnimationCurve customCurve;
-        [SerializeField] private Vector3 offset;
-        [SerializeField] private float scale;
+        [Tooltip("사용할 애니메이션 스크립트 타입")]
+        [SerializeField] private AnimationScriptType animationScriptType = AnimationScriptType.None;
         
         /// <summary>
         /// 애니메이션 스크립트 타입
         /// </summary>
-        public string AnimationScriptType
+        public AnimationScriptType AnimationScriptType
         {
             get => animationScriptType;
             set => animationScriptType = value;
         }
         
         /// <summary>
-        /// 애니메이션 지속 시간
-        /// </summary>
-        public float Duration
-        {
-            get => duration;
-            set => duration = value;
-        }
-        
-        /// <summary>
-        /// 이징 사용 여부
-        /// </summary>
-        public bool UseEasing
-        {
-            get => useEasing;
-            set => useEasing = value;
-        }
-        
-        /// <summary>
-        /// 커스텀 애니메이션 커브
-        /// </summary>
-        public AnimationCurve CustomCurve
-        {
-            get => customCurve;
-            set => customCurve = value;
-        }
-        
-        /// <summary>
-        /// 위치 오프셋
-        /// </summary>
-        public Vector3 Offset
-        {
-            get => offset;
-            set => offset = value;
-        }
-        
-        /// <summary>
-        /// 스케일 값
-        /// </summary>
-        public float Scale
-        {
-            get => scale;
-            set => scale = value;
-        }
-        
-        /// <summary>
         /// 기본값을 반환하는 정적 메서드
         /// </summary>
-        public static SkillCardAnimationSettings Default => new SkillCardAnimationSettings(string.Empty, 1.0f, true, Vector3.zero, 1.0f);
+        public static SkillCardAnimationSettings Default => new SkillCardAnimationSettings(AnimationScriptType.None);
         
         /// <summary>
         /// 설정이 비어있는지 확인합니다.
         /// </summary>
         public bool IsEmpty()
         {
-            return string.IsNullOrEmpty(animationScriptType);
+            return animationScriptType == AnimationScriptType.None;
         }
         
         /// <summary>
@@ -93,7 +57,14 @@ namespace Game.AnimationSystem.Data
         /// <param name="animationType">애니메이션 타입</param>
         public void PlayAnimation(GameObject target, string animationType, System.Action onComplete = null)
         {
-            var scriptType = GetScriptTypeForAnimation(animationType);
+            if (animationScriptType == AnimationScriptType.None)
+            {
+                // Fallback: 기본 애니메이션(페이드아웃/페이드인 등) 실행
+                PlayFallbackAnimation(target, animationType, onComplete);
+                return;
+            }
+
+            var scriptType = GetScriptTypeFromEnum();
 
             if (scriptType != null)
             {
@@ -144,21 +115,25 @@ namespace Game.AnimationSystem.Data
             }
         }
         
-        private System.Type GetScriptTypeForAnimation(string animationType)
+        /// <summary>
+        /// enum에서 실제 타입을 가져옵니다.
+        /// </summary>
+        public System.Type GetScriptTypeFromEnum()
         {
-            if (string.IsNullOrEmpty(animationType))
-                return null;
-                
-            // 애니메이션 타입에 따른 클래스명 매핑
-            string className = animationType switch
+            string className = animationScriptType switch
             {
-                "spawn" => "Game.AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation.DefaultSkillCardSpawnAnimation",
-                "move" => "Game.AnimationSystem.Animator.SkillCardAnimation.MoveAnimation.DefaultSkillCardMoveAnimation",
-                "moveToCombatSlot" => "Game.AnimationSystem.Animator.SkillCardAnimation.MoveToCombatSlotAnimation.DefaultSkillCardMoveToCombatSlotAnimation",
-                "drop" => "Game.AnimationSystem.Animator.SkillCardAnimation.DropAnimation.DefaultSkillCardDropAnimation",
-                "drag" => "Game.AnimationSystem.Animator.SkillCardAnimation.DragAnimation.DefaultSkillCardDragAnimation",
-                _ => animationType // 기본값으로 원본 사용
+                AnimationScriptType.DefaultSkillCardSpawnAnimation => "Game.AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation.DefaultSkillCardSpawnAnimation",
+                AnimationScriptType.DefaultSkillCardMoveAnimation => "Game.AnimationSystem.Animator.SkillCardAnimation.MoveAnimation.DefaultSkillCardMoveAnimation",
+                AnimationScriptType.DefaultSkillCardMoveToCombatSlotAnimation => "Game.AnimationSystem.Animator.SkillCardAnimation.MoveToCombatSlotAnimation.DefaultSkillCardMoveToCombatSlotAnimation",
+                AnimationScriptType.DefaultSkillCardUseAnimation => "Game.AnimationSystem.Animator.SkillCardAnimation.UseAnimation.DefaultSkillCardUseAnimation",
+                AnimationScriptType.DefaultSkillCardDragAnimation => "Game.AnimationSystem.Animator.SkillCardAnimation.DragAnimation.DefaultSkillCardDragAnimation",
+                AnimationScriptType.DefaultSkillCardDropAnimation => "Game.AnimationSystem.Animator.SkillCardAnimation.DropAnimation.DefaultSkillCardDropAnimation",
+                AnimationScriptType.DefaultSkillCardVanishAnimation => "Game.AnimationSystem.Animator.SkillCardAnimation.VanishAnimation.DefaultSkillCardVanishAnimation",
+                _ => null
             };
+
+            if (string.IsNullOrEmpty(className))
+                return null;
                 
             // 먼저 전체 타입명으로 시도
             var type = System.Type.GetType(className);
@@ -176,36 +151,7 @@ namespace Game.AnimationSystem.Data
             
             if (type == null)
             {
-                Debug.LogError($"[SkillCardAnimationSettings] 애니메이션 타입을 찾을 수 없습니다: {animationType} -> {className}");
-            }
-            return type;
-        }
-        
-        /// <summary>
-        /// 현재 설정된 애니메이션 스크립트 타입을 반환합니다.
-        /// </summary>
-        public System.Type GetScriptType()
-        {
-            if (string.IsNullOrEmpty(animationScriptType))
-                return null;
-                
-            // 먼저 전체 타입명으로 시도
-            var type = System.Type.GetType(animationScriptType);
-            if (type == null)
-            {
-                // 현재 어셈블리에서 타입 찾기 시도
-                var assemblies = System.AppDomain.CurrentDomain.GetAssemblies();
-                foreach (var assembly in assemblies)
-                {
-                    type = assembly.GetType(animationScriptType);
-                    if (type != null)
-                        break;
-                }
-            }
-            
-            if (type == null)
-            {
-                Debug.LogError($"[SkillCardAnimationSettings] 애니메이션 타입을 찾을 수 없습니다: {animationScriptType}");
+                Debug.LogError($"[SkillCardAnimationSettings] 애니메이션 타입을 찾을 수 없습니다: {animationScriptType} -> {className}");
             }
             return type;
         }
@@ -214,18 +160,9 @@ namespace Game.AnimationSystem.Data
         /// 매개변수 생성자
         /// </summary>
         /// <param name="scriptType">애니메이션 스크립트 타입</param>
-        /// <param name="duration">지속 시간</param>
-        /// <param name="useEasing">이징 사용 여부</param>
-        /// <param name="offset">위치 오프셋</param>
-        /// <param name="scale">스케일 값</param>
-        public SkillCardAnimationSettings(string scriptType, float duration = 1.0f, bool useEasing = true, Vector3 offset = default, float scale = 1.0f)
+        public SkillCardAnimationSettings(AnimationScriptType scriptType = AnimationScriptType.None)
         {
             this.animationScriptType = scriptType;
-            this.duration = duration;
-            this.useEasing = useEasing;
-            this.customCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
-            this.offset = offset;
-            this.scale = scale;
         }
     }
 } 

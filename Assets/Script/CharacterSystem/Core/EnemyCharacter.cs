@@ -216,13 +216,13 @@ namespace Game.CharacterSystem.Core
 
             var entry = skillDeck.GetRandomEntry();
 
-            if (entry?.card == null)
+            if (entry?.definition == null)
             {
-                Debug.LogError("[EnemyCharacter] 카드 선택 실패: entry 또는 card가 null입니다.");
+                Debug.LogError("[EnemyCharacter] 카드 선택 실패: entry 또는 definition이 null입니다.");
             }
             else
             {
-                Debug.Log($"[EnemyCharacter] 카드 선택 완료: {entry.card.name} (확률: {entry.probability})");
+                Debug.Log($"[EnemyCharacter] 카드 선택 완료: {entry.definition.displayName} (확률: {entry.probability})");
             }
 
             return entry;

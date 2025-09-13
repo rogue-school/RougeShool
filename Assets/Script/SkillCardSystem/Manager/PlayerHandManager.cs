@@ -78,13 +78,14 @@ namespace Game.SkillCardSystem.Manager
                 return;
             }
 
-            foreach (var entry in deck.Cards)
+            var allCards = deck.GetAllCards();
+            foreach (var cardDefinition in allCards)
             {
                 var pos = SkillCardSlotPosition.PLAYER_SLOT_1; // 기본값
                 ISkillCard card = null;
-                if (entry != null)
+                if (cardDefinition != null)
                 {
-                    card = cardFactory.CreatePlayerCard(entry, owner?.CharacterData?.name);
+                    card = cardFactory.CreateFromDefinition(cardDefinition, Game.SkillCardSystem.Data.Owner.Player, owner?.CharacterData?.name);
                 }
                 card.SetCurrentCoolTime(0);
                 cards[pos] = card;

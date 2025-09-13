@@ -8,7 +8,6 @@ using Game.CombatSystem.UI;
 using Game.CombatSystem.Utility;
 using Game.CombatSystem.Slot;
 using System.Linq;
-using Game.SkillCardSystem.Core;
 
 namespace Game.CombatSystem.DragDrop
 {

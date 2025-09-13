@@ -29,13 +29,13 @@ namespace Game.SkillCardSystem.Factory
             }
             
             // 정책 확인
-            if (definition.configuration.ownerPolicy == OwnerPolicy.PlayerOnly && owner != Owner.Player)
+            if (definition.configuration.ownerPolicy == OwnerPolicy.Player && owner != Owner.Player)
             {
                 Debug.LogWarning($"[SkillCardFactory] 카드 '{definition.displayName}'은 플레이어 전용입니다.");
                 return null;
             }
             
-            if (definition.configuration.ownerPolicy == OwnerPolicy.EnemyOnly && owner != Owner.Enemy)
+            if (definition.configuration.ownerPolicy == OwnerPolicy.Enemy && owner != Owner.Enemy)
             {
                 Debug.LogWarning($"[SkillCardFactory] 카드 '{definition.displayName}'은 적 전용입니다.");
                 return null;

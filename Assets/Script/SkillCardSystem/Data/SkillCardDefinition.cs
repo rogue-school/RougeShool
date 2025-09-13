@@ -250,9 +250,9 @@ namespace Game.SkillCardSystem.Data
     /// </summary>
     public enum OwnerPolicy
     {
-        Shared,      // 플레이어/적 공용
-        PlayerOnly,  // 플레이어 전용
-        EnemyOnly    // 적 전용
+        Shared,      // 공통 (플레이어/적 모두 사용)
+        Player,      // 플레이어 전용
+        Enemy        // 적 전용
     }
 
     /// <summary>
@@ -261,6 +261,7 @@ namespace Game.SkillCardSystem.Data
     public enum Owner
     {
         Player,  // 플레이어
-        Enemy    // 적
+        Enemy,   // 적
+        Shared   // 공용 (플레이어/적 모두 사용 가능)
     }
 }

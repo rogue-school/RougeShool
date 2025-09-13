@@ -2,7 +2,6 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using Game.SkillCardSystem.Data;
-using Game.SkillCardSystem.Core;
 using Game.CharacterSystem.Data;
 using Game.AnimationSystem.Controllers;
 
@@ -54,7 +53,7 @@ namespace Game.CoreSystem.Animation
         #region Public API - Data Access
         // AnimationDatabaseManager를 통한 통합 API만 제공
         public void PlaySkillCardAnimation(string cardId, string animationType, GameObject target)
-            => AnimationDatabaseManager.Instance.PlayPlayerSkillCardAnimation(cardId, target, animationType, null);
+            => AnimationDatabaseManager.Instance.PlaySkillCardAnimation(cardId, target, animationType, null);
         public void PlayCharacterAnimation(string characterId, string animationType, GameObject target, System.Action onComplete = null, bool isEnemy = false)
             => AnimationSystem.Manager.AnimationFacade.Instance.PlayCharacterAnimation(characterId, animationType, target, onComplete, isEnemy);
         public string GetCharacterDeathAnimationType(string characterId)

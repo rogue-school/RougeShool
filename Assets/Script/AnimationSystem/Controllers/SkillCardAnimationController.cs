@@ -1,7 +1,6 @@
 using UnityEngine;
 using DG.Tweening;
 using Game.SkillCardSystem.Data;
-using Game.SkillCardSystem.Core;
 using Game.CoreSystem.Audio;
 
 namespace Game.AnimationSystem.Controllers

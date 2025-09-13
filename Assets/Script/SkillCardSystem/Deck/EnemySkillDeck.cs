@@ -1,7 +1,6 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
-using Game.SkillCardSystem.Core;
 using Game.SkillCardSystem.Data;
 
 namespace Game.SkillCardSystem.Deck
@@ -20,9 +19,10 @@ namespace Game.SkillCardSystem.Deck
         public class CardEntry
         {
             /// <summary>
-            /// 스킬 카드 객체
+            /// 스킬 카드 객체 (레거시 - 사용하지 않음)
             /// </summary>
-            public EnemySkillCard card;
+            [System.Obsolete("EnemySkillCard는 더 이상 사용되지 않습니다. definition을 사용하세요.")]
+            public ScriptableObject card;
 
             [Tooltip("(신규) 공용 정의를 직접 참조합니다. 설정 시 card 대신 우선 사용")]
             public SkillCardDefinition definition;

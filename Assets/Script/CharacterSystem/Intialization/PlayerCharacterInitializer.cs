@@ -8,7 +8,6 @@ using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Interface;
 using Game.IManager;
 using Game.CombatSystem.Interface;
-using Game.SkillCardSystem.Core;
 using Game.AnimationSystem.Manager;
 using Game.CoreSystem.Manager;
 

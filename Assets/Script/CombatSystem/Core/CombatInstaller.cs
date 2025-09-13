@@ -12,7 +12,6 @@ using Game.SkillCardSystem.Interface;
 using Game.IManager;
 using Game.CombatSystem.Utility;
 using Game.CharacterSystem.Manager;
-using Game.SkillCardSystem.Core;
 using Game.SkillCardSystem.Factory;
 using Game.SkillCardSystem.Validator;
 using Game.SkillCardSystem.Manager;

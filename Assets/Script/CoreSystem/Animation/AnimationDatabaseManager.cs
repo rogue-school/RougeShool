@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using DG.Tweening;
 using Game.AnimationSystem.Data;
 
-using Game.SkillCardSystem.Core;
 using Game.CharacterSystem.Data;
 using Game.SkillCardSystem.Data;
 using Game.SkillCardSystem.Interface;
@@ -19,12 +18,11 @@ namespace Game.CoreSystem.Animation
     /// </summary>
     public class AnimationDatabaseManager : MonoBehaviour
     {
-        [Header("플레이어 데이터베이스 참조")]
-        [SerializeField] private PlayerSkillCardAnimationDatabase playerSkillCardDatabase;
-        [SerializeField] private PlayerCharacterAnimationDatabase playerCharacterDatabase;
+        [Header("통합 데이터베이스 참조")]
+        [SerializeField] private UnifiedSkillCardAnimationDatabase unifiedSkillCardDatabase;
         
-        [Header("적용 데이터베이스 참조")]
-        [SerializeField] private EnemySkillCardAnimationDatabase enemySkillCardDatabase;
+        [Header("캐릭터 데이터베이스 참조")]
+        [SerializeField] private PlayerCharacterAnimationDatabase playerCharacterDatabase;
         [SerializeField] private EnemyCharacterAnimationDatabase enemyCharacterDatabase;
         
         [Header("캐싱 설정")]
@@ -32,8 +30,7 @@ namespace Game.CoreSystem.Animation
         [SerializeField] private int maxCacheSize = 100;
         
         // 캐싱
-        private Dictionary<string, PlayerSkillCardAnimationEntry> playerSkillCardCache = new();
-        private Dictionary<string, EnemySkillCardAnimationEntry> enemySkillCardCache = new();
+        private Dictionary<string, UnifiedSkillCardAnimationEntry> unifiedSkillCardCache = new();
         private Dictionary<string, PlayerCharacterAnimationEntry> playerCharacterCache = new();
         private Dictionary<string, EnemyCharacterAnimationEntry> enemyCharacterCache = new();
         
@@ -64,8 +61,7 @@ namespace Game.CoreSystem.Animation
         #endregion
         
         #region Properties
-        public PlayerSkillCardAnimationDatabase PlayerSkillCardDatabase => playerSkillCardDatabase;
-        public EnemySkillCardAnimationDatabase EnemySkillCardDatabase => enemySkillCardDatabase;
+        public UnifiedSkillCardAnimationDatabase UnifiedSkillCardDatabase => unifiedSkillCardDatabase;
         public PlayerCharacterAnimationDatabase PlayerCharacterDatabase => playerCharacterDatabase;
         public EnemyCharacterAnimationDatabase EnemyCharacterDatabase => enemyCharacterDatabase;
         #endregion
@@ -105,14 +101,9 @@ namespace Game.CoreSystem.Animation
         /// </summary>
         private void InitializeManager()
         {
-            if (playerSkillCardDatabase == null)
+            if (unifiedSkillCardDatabase == null)
             {
-                playerSkillCardDatabase = Resources.Load<PlayerSkillCardAnimationDatabase>("Data/Animation/PlayerSkillcard/PlayerSkillCardAnimationDatabase");
-            }
-            
-            if (enemySkillCardDatabase == null)
-            {
-                enemySkillCardDatabase = Resources.Load<EnemySkillCardAnimationDatabase>("Data/Animation/EnmySkillcard/EnemySkillCardAnimationDatabase");
+                unifiedSkillCardDatabase = Resources.Load<UnifiedSkillCardAnimationDatabase>("Data/Animation/Unified/UnifiedSkillCardAnimationDatabase");
             }
             
             if (playerCharacterDatabase == null)
@@ -131,14 +122,9 @@ namespace Game.CoreSystem.Animation
         /// </summary>
         private void LoadDatabases()
         {
-            if (playerSkillCardDatabase == null)
+            if (unifiedSkillCardDatabase == null)
             {
-                Debug.LogWarning("플레이어 스킬카드 애니메이션 데이터베이스를 찾을 수 없습니다.");
-            }
-            
-            if (enemySkillCardDatabase == null)
-            {
-                Debug.LogWarning("적용 스킬카드 애니메이션 데이터베이스를 찾을 수 없습니다.");
+                Debug.LogWarning("통합 스킬카드 애니메이션 데이터베이스를 찾을 수 없습니다.");
             }
             
             if (playerCharacterDatabase == null)
@@ -159,130 +145,146 @@ namespace Game.CoreSystem.Animation
         {
             if (enableCaching)
             {
-                playerSkillCardCache.Clear();
-                enemySkillCardCache.Clear();
+                unifiedSkillCardCache.Clear();
                 playerCharacterCache.Clear();
                 enemyCharacterCache.Clear();
             }
         }
         #endregion
         
-        #region SkillCard Animation Methods
+        #region Unified SkillCard Animation Methods
         /// <summary>
-        /// 플레이어 스킬카드 애니메이션을 재생합니다. (콜백 미지원)
+        /// 통합된 스킬카드 애니메이션을 재생합니다.
         /// </summary>
-        public void PlayPlayerSkillCardAnimation(string skillCardId, GameObject target, string animationType = "cast")
+        public void PlaySkillCardAnimation(ISkillCard card, GameObject target, string animationType = "cast", System.Action onComplete = null)
         {
-            PlayPlayerSkillCardAnimation(skillCardId, target, animationType, null);
-        }
-        /// <summary>
-        /// 플레이어 스킬카드 애니메이션을 재생합니다. (콜백 지원)
-        /// </summary>
-        public void PlayPlayerSkillCardAnimation(string skillCardId, GameObject target, string animationType, System.Action onComplete)
-        {
-            var entry = GetPlayerSkillCardAnimationEntry(skillCardId);
-            if (entry != null)
+            if (card == null || target == null)
             {
-                var settings = GetSkillCardAnimationSettings(entry, animationType);
-                if (!settings.IsEmpty())
-                {
-                    settings.PlayAnimation(target, animationType, onComplete);
-                    OnSkillCardAnimationPlayed?.Invoke(skillCardId);
-                }
-                else
-                {
-                    Debug.LogWarning($"플레이어 스킬카드 '{skillCardId}'의 '{animationType}' 애니메이션이 설정되지 않았습니다.");
-                    onComplete?.Invoke();
-                }
-            }
-            else
-            {
-                Debug.LogWarning($"플레이어 스킬카드 '{skillCardId}'를 찾을 수 없습니다.");
-                onComplete?.Invoke();
-            }
-        }
-        
-        /// <summary>
-        /// 적용 스킬카드 애니메이션을 재생합니다.
-        /// </summary>
-        public void PlayEnemySkillCardAnimation(string skillCardId, GameObject target, string animationType = "cast", System.Action onComplete = null)
-        {
-            // 타겟 오브젝트 유효성 검사
-            if (target == null)
-            {
-                Debug.LogError($"타겟 오브젝트가 null입니다: {skillCardId}");
+                Debug.LogError("[AnimationDatabaseManager] 스킬카드 애니메이션 재생 실패: 필수 파라미터가 null입니다.");
                 onComplete?.Invoke();
                 return;
             }
 
-            var entry = GetEnemySkillCardAnimationEntry(skillCardId);
-            if (entry != null)
+            // 통합 데이터베이스 우선 사용
+            if (unifiedSkillCardDatabase != null)
             {
-                var settings = GetSkillCardAnimationSettings(entry, animationType);
-                if (!settings.IsEmpty())
-                {
-                    try
-                    {
-                        settings.PlayAnimation(target, animationType, () => {
-                            onComplete?.Invoke();
-                        });
-                        OnSkillCardAnimationPlayed?.Invoke(skillCardId);
-                    }
-                    catch (System.Exception e)
-                    {
-                        Debug.LogError($"적 스킬카드 애니메이션 실행 중 오류: {skillCardId} - {e.Message}");
-                        onComplete?.Invoke();
-                    }
-                }
-                else
-                {
-                    Debug.LogWarning($"적 스킬카드 '{skillCardId}'의 '{animationType}' 애니메이션 설정이 비어있습니다.");
-                    onComplete?.Invoke();
-                }
+                PlayUnifiedSkillCardAnimation(card, target, animationType, onComplete);
+                return;
+            }
+
+            // 통합 데이터베이스가 없으면 경고
+            Debug.LogWarning("통합 스킬카드 애니메이션 데이터베이스가 설정되지 않았습니다.");
+            onComplete?.Invoke();
+        }
+
+        /// <summary>
+        /// 통합된 스킬카드 애니메이션을 재생합니다. (string cardId 오버로드)
+        /// </summary>
+        public void PlaySkillCardAnimation(string cardId, GameObject target, string animationType = "cast", System.Action onComplete = null)
+        {
+            if (string.IsNullOrEmpty(cardId) || target == null || unifiedSkillCardDatabase == null)
+            {
+                Debug.LogError("[AnimationDatabaseManager] 통합 애니메이션 재생 실패: 필수 파라미터가 null입니다.");
+                onComplete?.Invoke();
+                return;
+            }
+
+            var entry = GetUnifiedSkillCardAnimationEntry(cardId);
+            
+            if (entry == null)
+            {
+                Debug.LogWarning($"통합 스킬카드 '{cardId}'를 찾을 수 없습니다.");
+                onComplete?.Invoke();
+                return;
+            }
+
+            // 기본적으로 플레이어 소유로 처리 (cardId만으로는 소유자 구분 불가)
+            var cardOwner = Owner.Player;
+
+            // 소유자 정책 확인
+            if (!entry.CanUseAnimation(cardOwner, animationType))
+            {
+                Debug.LogWarning($"스킬카드 '{cardId}'의 '{animationType}' 애니메이션을 소유자 '{cardOwner}'가 사용할 수 없습니다.");
+                onComplete?.Invoke();
+                return;
+            }
+
+            var settings = entry.GetSettingsByType(animationType);
+            if (!settings.IsEmpty())
+            {
+                settings.PlayAnimation(target, animationType, onComplete);
+                OnSkillCardAnimationPlayed?.Invoke(cardId);
             }
             else
             {
-                Debug.LogWarning($"적 스킬카드 '{skillCardId}'를 찾을 수 없습니다.");
+                Debug.LogWarning($"스킬카드 '{cardId}'의 '{animationType}' 애니메이션이 설정되지 않았습니다.");
                 onComplete?.Invoke();
             }
         }
-        
+
         /// <summary>
-        /// 스킬카드 애니메이션 항목을 가져옵니다. (플레이어/적 통합)
+        /// 통합된 스킬카드 애니메이션을 재생합니다.
         /// </summary>
-        public PlayerSkillCardAnimationEntry GetPlayerSkillCardAnimationEntry(string skillCardId)
+        public void PlayUnifiedSkillCardAnimation(ISkillCard card, GameObject target, string animationType = "cast", System.Action onComplete = null)
         {
-            if (string.IsNullOrEmpty(skillCardId) || playerSkillCardDatabase == null)
-                return null;
-            if (enableCaching && playerSkillCardCache.ContainsKey(skillCardId))
-                return playerSkillCardCache[skillCardId];
-            var entry = playerSkillCardDatabase.SkillCardAnimations.Find(e => e.SkillCardDefinition != null && e.SkillCardDefinition.displayName == skillCardId);
-            if (enableCaching && entry != null)
+            if (card == null || target == null || unifiedSkillCardDatabase == null)
             {
-                if (playerSkillCardCache.Count >= maxCacheSize)
-                {
-                    var firstKey = playerSkillCardCache.Keys.GetEnumerator();
-                    if (firstKey.MoveNext()) playerSkillCardCache.Remove(firstKey.Current);
-                }
-                playerSkillCardCache[skillCardId] = entry;
+                Debug.LogError("[AnimationDatabaseManager] 통합 애니메이션 재생 실패: 필수 파라미터가 null입니다.");
+                onComplete?.Invoke();
+                return;
             }
-            return entry;
+
+            var cardOwner = card.GetOwner() == SlotOwner.ENEMY ? Owner.Enemy : Owner.Player;
+            var entry = GetUnifiedSkillCardAnimationEntry(card.CardDefinition.cardId);
+            
+            if (entry == null)
+            {
+                Debug.LogWarning($"통합 스킬카드 '{card.CardDefinition.cardId}'를 찾을 수 없습니다.");
+                onComplete?.Invoke();
+                return;
+            }
+
+            // 소유자 정책 확인
+            if (!entry.CanUseAnimation(cardOwner, animationType))
+            {
+                Debug.LogWarning($"스킬카드 '{card.CardDefinition.cardId}'의 '{animationType}' 애니메이션을 소유자 '{cardOwner}'가 사용할 수 없습니다.");
+                onComplete?.Invoke();
+                return;
+            }
+
+            var settings = entry.GetSettingsByType(animationType);
+            if (!settings.IsEmpty())
+            {
+                settings.PlayAnimation(target, animationType, onComplete);
+                OnSkillCardAnimationPlayed?.Invoke(card.CardDefinition.cardId);
+            }
+            else
+            {
+                Debug.LogWarning($"스킬카드 '{card.CardDefinition.cardId}'의 '{animationType}' 애니메이션이 설정되지 않았습니다.");
+                onComplete?.Invoke();
+            }
         }
-        public EnemySkillCardAnimationEntry GetEnemySkillCardAnimationEntry(string skillCardId)
+
+        /// <summary>
+        /// 통합 스킬카드 애니메이션 엔트리를 가져옵니다.
+        /// </summary>
+        public UnifiedSkillCardAnimationEntry GetUnifiedSkillCardAnimationEntry(string cardId)
         {
-            if (string.IsNullOrEmpty(skillCardId) || enemySkillCardDatabase == null)
+            if (string.IsNullOrEmpty(cardId) || unifiedSkillCardDatabase == null)
                 return null;
-            if (enableCaching && enemySkillCardCache.ContainsKey(skillCardId))
-                return enemySkillCardCache[skillCardId];
-            var entry = enemySkillCardDatabase.SkillCardAnimations.Find(e => e.EnemySkillCard != null && e.EnemySkillCard.CardDefinition != null && e.EnemySkillCard.CardDefinition.displayName == skillCardId);
+
+            if (enableCaching && unifiedSkillCardCache.ContainsKey(cardId))
+                return unifiedSkillCardCache[cardId];
+
+            var entry = unifiedSkillCardDatabase.FindEntryByCardId(cardId);
             if (enableCaching && entry != null)
             {
-                if (enemySkillCardCache.Count >= maxCacheSize)
+                if (unifiedSkillCardCache.Count >= maxCacheSize)
                 {
-                    var firstKey = enemySkillCardCache.Keys.GetEnumerator();
-                    if (firstKey.MoveNext()) enemySkillCardCache.Remove(firstKey.Current);
+                    var firstKey = unifiedSkillCardCache.Keys.GetEnumerator();
+                    if (firstKey.MoveNext()) unifiedSkillCardCache.Remove(firstKey.Current);
                 }
-                enemySkillCardCache[skillCardId] = entry;
+                unifiedSkillCardCache[cardId] = entry;
             }
             return entry;
         }
@@ -384,16 +386,6 @@ namespace Game.CoreSystem.Animation
         #endregion
         
         #region Utility Methods
-        /// <summary>
-        /// 스킬카드 애니메이션 설정을 가져옵니다.
-        /// </summary>
-        private Game.AnimationSystem.Data.SkillCardAnimationSettings GetSkillCardAnimationSettings(PlayerSkillCardAnimationEntry entry, string animationType)
-        {
-            if (entry == null || string.IsNullOrEmpty(animationType))
-                return SkillCardAnimationSettings.Default;
-            var settings = entry.GetSettingsByType(animationType.ToLower());
-            return settings ?? SkillCardAnimationSettings.Default;
-        }
         
         /// <summary>
         /// 캐릭터 애니메이션 설정을 가져옵니다.
@@ -406,13 +398,6 @@ namespace Game.CoreSystem.Animation
             return settings ?? CharacterAnimationSettings.Default;
         }
         
-        private Game.AnimationSystem.Data.SkillCardAnimationSettings GetSkillCardAnimationSettings(EnemySkillCardAnimationEntry entry, string animationType)
-        {
-            if (entry == null || string.IsNullOrEmpty(animationType))
-                return SkillCardAnimationSettings.Default;
-            var settings = entry.GetSettingsByType(animationType.ToLower());
-            return settings ?? SkillCardAnimationSettings.Default;
-        }
         
         private Game.AnimationSystem.Data.CharacterAnimationSettings GetCharacterAnimationSettings(EnemyCharacterAnimationEntry entry, string animationType)
         {
@@ -436,8 +421,7 @@ namespace Game.CoreSystem.Animation
         /// </summary>
         public void ClearSkillCardCache()
         {
-            playerSkillCardCache.Clear();
-            enemySkillCardCache.Clear();
+            unifiedSkillCardCache.Clear();
             OnAnimationCacheUpdated?.Invoke("SkillCard");
         }
         
@@ -467,23 +451,13 @@ namespace Game.CoreSystem.Animation
         {
             Debug.Log("=== 애니메이션 데이터베이스 상태 ===");
             
-            if (playerSkillCardDatabase != null)
+            if (unifiedSkillCardDatabase != null)
             {
-                Debug.Log($"플레이어 스킬카드 데이터베이스:");
-                foreach (var entry in playerSkillCardDatabase.SkillCardAnimations)
+                Debug.Log($"통합 스킬카드 데이터베이스:");
+                foreach (var entry in unifiedSkillCardDatabase.SkillCardAnimations)
                 {
                     if (entry.SkillCardDefinition != null)
-                        Debug.Log($"  - {entry.SkillCardDefinition.displayName}");
-                }
-            }
-            
-            if (enemySkillCardDatabase != null)
-            {
-                Debug.Log($"적 스킬카드 데이터베이스:");
-                foreach (var entry in enemySkillCardDatabase.SkillCardAnimations)
-                {
-                    if (entry.EnemySkillCard != null && entry.EnemySkillCard.CardDefinition != null)
-                        Debug.Log($"  - {entry.EnemySkillCard.CardDefinition.displayName}");
+                        Debug.Log($"  - {entry.SkillCardDefinition.displayName} ({entry.OwnerPolicy})");
                 }
             }
             
@@ -517,8 +491,7 @@ namespace Game.CoreSystem.Animation
         {
             return new Dictionary<string, object>
             {
-                ["PlayerSkillCardCache"] = playerSkillCardCache.Count,
-                ["EnemySkillCardCache"] = enemySkillCardCache.Count,
+                ["UnifiedSkillCardCache"] = unifiedSkillCardCache.Count,
                 ["PlayerCharacterCache"] = playerCharacterCache.Count,
                 ["EnemyCharacterCache"] = enemyCharacterCache.Count
             };
@@ -529,7 +502,7 @@ namespace Game.CoreSystem.Animation
         /// </summary>
         private void PlayAnimationWithScript(GameObject target, Game.AnimationSystem.Data.SkillCardAnimationSettings settings, string animationType, System.Action onComplete)
         {
-            if (target == null || settings == null || string.IsNullOrEmpty(settings.AnimationScriptType))
+            if (target == null || settings == null || settings.AnimationScriptType == Game.AnimationSystem.Data.AnimationScriptType.None)
             {
                 Debug.LogWarning("[AnimationDatabaseManager] PlayAnimationWithScript: 잘못된 파라미터");
                 onComplete?.Invoke();
@@ -537,7 +510,7 @@ namespace Game.CoreSystem.Animation
             }
 
             // 타입 찾기 (SkillCardAnimationSettings의 매핑 로직 사용)
-            var type = settings.GetScriptType();
+            var type = settings.GetScriptTypeFromEnum();
             if (type == null)
             {
                 Debug.LogWarning($"[AnimationDatabaseManager] 타입을 찾을 수 없습니다: {settings.AnimationScriptType}");
@@ -562,228 +535,6 @@ namespace Game.CoreSystem.Animation
         }
         #endregion
 
-        // ISkillCard 기반 오버로드 추가
-        public void PlaySkillCardAnimation(ISkillCard card, GameObject target, string animationType = "cast", System.Action onComplete = null)
-        {
-            if (card == null)
-            {
-                Debug.LogError("[AnimationDatabaseManager] card가 null입니다.");
-                onComplete?.Invoke();
-                return;
-            }
-            var owner = card.GetOwner();
-            if (owner == SlotOwner.ENEMY)
-                PlayEnemySkillCardAnimation(card.CardDefinition.displayName, target, animationType, onComplete);
-            else
-                PlayPlayerSkillCardAnimation(card.CardDefinition.displayName, target, animationType, onComplete);
-        }
 
-        #region Drag Animation Methods
-        /// <summary>
-        /// 플레이어 스킬카드 드래그 시작 애니메이션을 재생합니다.
-        /// </summary>
-        public void PlayPlayerSkillCardDragStartAnimation(string skillCardId, GameObject target, System.Action onComplete = null)
-        {
-            Debug.Log($"플레이어 스킬카드 드래그 시작 애니메이션 시도 - 카드: {skillCardId}, 타겟: {target?.name}");
-            var entry = GetPlayerSkillCardAnimationEntry(skillCardId);
-            
-            if (entry == null)
-            {
-                Debug.LogWarning($"[AnimationDatabaseManager] 플레이어 스킬카드 엔트리를 찾을 수 없습니다: {skillCardId}");
-                onComplete?.Invoke();
-                return;
-            }
-
-            var settings = GetSkillCardAnimationSettings(entry, "drag");
-            if (settings == null || string.IsNullOrEmpty(settings.AnimationScriptType))
-            {
-                Debug.LogWarning($"[AnimationDatabaseManager] 플레이어 스킬카드 드래그 애니메이션 설정을 찾을 수 없습니다: {skillCardId}");
-                onComplete?.Invoke();
-                return;
-            }
-
-            PlayAnimationWithScript(target, settings, "start", onComplete);
-        }
-
-        /// <summary>
-        /// 플레이어 스킬카드 드래그 종료 애니메이션을 재생합니다.
-        /// </summary>
-        public void PlayPlayerSkillCardDragEndAnimation(string skillCardId, GameObject target, System.Action onComplete = null)
-        {
-            Debug.Log($"플레이어 스킬카드 드래그 종료 애니메이션 시도 - 카드: {skillCardId}, 타겟: {target?.name}");
-            var entry = GetPlayerSkillCardAnimationEntry(skillCardId);
-            
-            if (entry == null)
-            {
-                Debug.LogWarning($"[AnimationDatabaseManager] 플레이어 스킬카드 엔트리를 찾을 수 없습니다: {skillCardId}");
-                onComplete?.Invoke();
-                return;
-            }
-
-            var settings = GetSkillCardAnimationSettings(entry, "drag");
-            if (settings == null || string.IsNullOrEmpty(settings.AnimationScriptType))
-            {
-                Debug.LogWarning($"[AnimationDatabaseManager] 플레이어 스킬카드 드래그 애니메이션 설정을 찾을 수 없습니다: {skillCardId}");
-                onComplete?.Invoke();
-                return;
-            }
-
-            PlayAnimationWithScript(target, settings, "end", onComplete);
-        }
-
-        /// <summary>
-        /// 적 스킬카드 드래그 시작 애니메이션을 재생합니다.
-        /// </summary>
-        public void PlayEnemySkillCardDragStartAnimation(string skillCardId, GameObject target, System.Action onComplete = null)
-        {
-            Debug.Log($"적 스킬카드 드래그 시작 애니메이션 시도 - 카드: {skillCardId}, 타겟: {target?.name}");
-            var entry = GetEnemySkillCardAnimationEntry(skillCardId);
-            
-            if (entry == null)
-            {
-                Debug.LogWarning($"[AnimationDatabaseManager] 적 스킬카드 엔트리를 찾을 수 없습니다: {skillCardId}");
-                onComplete?.Invoke();
-                return;
-            }
-
-            var settings = GetSkillCardAnimationSettings(entry, "drag");
-            if (settings == null || string.IsNullOrEmpty(settings.AnimationScriptType))
-            {
-                Debug.LogWarning($"[AnimationDatabaseManager] 적 스킬카드 드래그 애니메이션 설정을 찾을 수 없습니다: {skillCardId}");
-                onComplete?.Invoke();
-                return;
-            }
-
-            PlayAnimationWithScript(target, settings, "start", onComplete);
-        }
-
-        /// <summary>
-        /// 적 스킬카드 드래그 종료 애니메이션을 재생합니다.
-        /// </summary>
-        public void PlayEnemySkillCardDragEndAnimation(string skillCardId, GameObject target, System.Action onComplete = null)
-        {
-            Debug.Log($"적 스킬카드 드래그 종료 애니메이션 시도 - 카드: {skillCardId}, 타겟: {target?.name}");
-            var entry = GetEnemySkillCardAnimationEntry(skillCardId);
-            
-            if (entry == null)
-            {
-                Debug.LogWarning($"[AnimationDatabaseManager] 적 스킬카드 엔트리를 찾을 수 없습니다: {skillCardId}");
-                onComplete?.Invoke();
-                return;
-            }
-
-            var settings = GetSkillCardAnimationSettings(entry, "drag");
-            if (settings == null || string.IsNullOrEmpty(settings.AnimationScriptType))
-            {
-                Debug.LogWarning($"[AnimationDatabaseManager] 적 스킬카드 드래그 애니메이션 설정을 찾을 수 없습니다: {skillCardId}");
-                onComplete?.Invoke();
-                return;
-            }
-
-            PlayAnimationWithScript(target, settings, "end", onComplete);
-        }
-
-        /// <summary>
-        /// ISkillCard 기반 드래그 애니메이션 (플레이어/적 자동 구분)
-        /// </summary>
-        public void PlaySkillCardDragStartAnimation(ISkillCard card, GameObject target, System.Action onComplete = null)
-        {
-            if (card == null)
-            {
-                Debug.LogError("[AnimationDatabaseManager] card가 null입니다.");
-                onComplete?.Invoke();
-                return;
-            }
-            var owner = card.GetOwner();
-            if (owner == SlotOwner.ENEMY)
-                PlayEnemySkillCardDragStartAnimation(card.CardDefinition.displayName, target, onComplete);
-            else
-                PlayPlayerSkillCardDragStartAnimation(card.CardDefinition.displayName, target, onComplete);
-        }
-
-        /// <summary>
-        /// ISkillCard 기반 드래그 종료 애니메이션 (플레이어/적 자동 구분)
-        /// </summary>
-        public void PlaySkillCardDragEndAnimation(ISkillCard card, GameObject target, System.Action onComplete = null)
-        {
-            if (card == null)
-            {
-                Debug.LogError("[AnimationDatabaseManager] card가 null입니다.");
-                onComplete?.Invoke();
-                return;
-            }
-            var owner = card.GetOwner();
-            if (owner == SlotOwner.ENEMY)
-                PlayEnemySkillCardDragEndAnimation(card.CardDefinition.displayName, target, onComplete);
-            else
-                PlayPlayerSkillCardDragEndAnimation(card.CardDefinition.displayName, target, onComplete);
-        }
-        #endregion
-
-        #region Drop Animation Methods
-        /// <summary>
-        /// 플레이어 스킬카드 드롭 애니메이션을 재생합니다.
-        /// </summary>
-        public void PlayPlayerSkillCardDropAnimation(string skillCardId, GameObject target, System.Action onComplete = null)
-        {
-            Debug.Log($"플레이어 스킬카드 드롭 애니메이션 시도 - 카드: {skillCardId}, 타겟: {target?.name}");
-            var entry = GetPlayerSkillCardAnimationEntry(skillCardId);
-            if (entry == null)
-            {
-                Debug.LogWarning($"[AnimationDatabaseManager] 플레이어 스킬카드 엔트리를 찾을 수 없습니다: {skillCardId}");
-                onComplete?.Invoke();
-                return;
-            }
-            var settings = GetSkillCardAnimationSettings(entry, "drop");
-            if (settings == null || string.IsNullOrEmpty(settings.AnimationScriptType))
-            {
-                Debug.LogWarning($"[AnimationDatabaseManager] 플레이어 스킬카드 드롭 애니메이션 설정을 찾을 수 없습니다: {skillCardId}");
-                onComplete?.Invoke();
-                return;
-            }
-            PlayAnimationWithScript(target, settings, "drop", onComplete);
-        }
-
-        /// <summary>
-        /// 적 스킬카드 드롭 애니메이션을 재생합니다.
-        /// </summary>
-        public void PlayEnemySkillCardDropAnimation(string skillCardId, GameObject target, System.Action onComplete = null)
-        {
-            Debug.Log($"적 스킬카드 드롭 애니메이션 시도 - 카드: {skillCardId}, 타겟: {target?.name}");
-            var entry = GetEnemySkillCardAnimationEntry(skillCardId);
-            if (entry == null)
-            {
-                Debug.LogWarning($"[AnimationDatabaseManager] 적 스킬카드 엔트리를 찾을 수 없습니다: {skillCardId}");
-                onComplete?.Invoke();
-                return;
-            }
-            var settings = GetSkillCardAnimationSettings(entry, "drop");
-            if (settings == null || string.IsNullOrEmpty(settings.AnimationScriptType))
-            {
-                Debug.LogWarning($"[AnimationDatabaseManager] 적 스킬카드 드롭 애니메이션 설정을 찾을 수 없습니다: {skillCardId}");
-                onComplete?.Invoke();
-                return;
-            }
-            PlayAnimationWithScript(target, settings, "drop", onComplete);
-        }
-
-        /// <summary>
-        /// ISkillCard 기반 드롭 애니메이션 (플레이어/적 자동 구분)
-        /// </summary>
-        public void PlaySkillCardDropAnimation(ISkillCard card, GameObject target, System.Action onComplete = null)
-        {
-            if (card == null)
-            {
-                Debug.LogError("[AnimationDatabaseManager] card가 null입니다.");
-                onComplete?.Invoke();
-                return;
-            }
-            var owner = card.GetOwner();
-            if (owner == SlotOwner.ENEMY)
-                PlayEnemySkillCardDropAnimation(card.CardDefinition.displayName, target, onComplete);
-            else
-                PlayPlayerSkillCardDropAnimation(card.CardDefinition.displayName, target, onComplete);
-        }
-        #endregion
     }
 } 

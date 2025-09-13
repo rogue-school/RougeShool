@@ -7,7 +7,6 @@ using Game.CombatSystem.Interface;
 using Game.CombatSystem.Data;
 using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
-using Game.SkillCardSystem.Core;
 using Game.SkillCardSystem.UI;
 using Game.SkillCardSystem.Data;
 using Game.SkillCardSystem.Slot;
@@ -397,9 +396,10 @@ namespace Game.CombatSystem.Manager
             {
                 runtimeCard = cardFactory.CreateFromDefinition(entry.definition, Game.SkillCardSystem.Data.Owner.Enemy, currentEnemy?.Data?.name);
             }
-            else if (entry.card != null)
+            else
             {
-                runtimeCard = cardFactory.CreateEnemyCard(entry.card.CardDefinition, currentEnemy?.Data?.name);
+                Debug.LogError("[EnemyHandManager] 카드 엔트리에 definition이 없습니다. 새로운 구조에서는 definition이 필수입니다.");
+                return;
             }
             runtimeCard.SetHandSlot(pos);
 
@@ -458,9 +458,11 @@ namespace Game.CombatSystem.Manager
             {
                 runtimeCard = cardFactory.CreateFromDefinition(entry.definition, Game.SkillCardSystem.Data.Owner.Enemy, currentEnemy?.Data?.name);
             }
-            else if (entry.card != null)
+            else
             {
-                runtimeCard = cardFactory.CreateEnemyCard(entry.card.CardDefinition, currentEnemy?.Data?.name);
+                Debug.LogError("[EnemyHandManager] 카드 엔트리에 definition이 없습니다. 새로운 구조에서는 definition이 필수입니다.");
+                onComplete?.Invoke();
+                yield break;
             }
             if (runtimeCard == null)
             {

@@ -84,7 +84,7 @@ namespace Game.CombatSystem.Service
 
             if (deck != null)
             {
-                var cards = deck.GetCards();
+                var cards = deck.GetAllCards();
                 var handSlots = slotRegistry.GetHandSlotRegistry().GetPlayerHandSlots().ToList();
 
                 int cardCount = cards.Count;
@@ -92,13 +92,13 @@ namespace Game.CombatSystem.Service
 
                 for (int i = 0; i < cardCount && i < slotCount; i++)
                 {
-                    var cardEntry = cards[i];
+                    var cardDefinition = cards[i];
                     var slot = handSlots[i];
 
                     // 카드 인스턴스 생성
                     var factory = new SkillCardFactory();
                     var skillCard = factory.CreateFromDefinition(
-                        cardEntry.Card,
+                        cardDefinition,
                         Owner.Player,
                         "Player"
                     );
