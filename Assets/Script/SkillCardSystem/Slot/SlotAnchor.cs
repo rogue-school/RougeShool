@@ -2,6 +2,7 @@ using UnityEngine;
 using Game.CharacterSystem.Slot;
 using Game.CombatSystem.Data;
 using Game.SkillCardSystem.Slot;
+using Game.SkillCardSystem.Data;
 
 namespace Game.CombatSystem.Slot
 {

@@ -14,7 +14,7 @@ using Game.CombatSystem.Context;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Core;
 using Game.StageSystem.Interface;
-using Game.Utility;
+using Game.UtilitySystem;
 using Game.CoreSystem.Utility;
 using Game.CombatSystem.State;
 using System.Threading.Tasks;

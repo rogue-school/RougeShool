@@ -7,6 +7,7 @@ using Game.SkillCardSystem.Slot;
 using Game.SkillCardSystem.UI;
 using Game.CombatSystem.Interface;
 using Game.CharacterSystem.Data;
+using Game.CoreSystem.Manager;
 
 namespace Game.CharacterSystem.Manager
 {
@@ -67,8 +68,8 @@ namespace Game.CharacterSystem.Manager
             }
 
             // 캐릭터 선택은 static 변수로만 처리
-            var selectedData = GameManager.Instance != null
-                ? GameManager.Instance.selectedCharacter
+            var selectedData = GameStateManager.Instance != null
+                ? GameStateManager.Instance.SelectedCharacter
                 : defaultCharacterData;
             if (selectedData == null)
             {

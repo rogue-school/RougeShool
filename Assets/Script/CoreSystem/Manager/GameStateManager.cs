@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Collections;
 using Game.CoreSystem.Interface;
 using Game.CoreSystem.Utility;
+using Game.CharacterSystem.Data;
 
 namespace Game.CoreSystem.Manager
 {
@@ -16,6 +17,9 @@ namespace Game.CoreSystem.Manager
         
         [Header("게임 상태")]
         [SerializeField] private GameState currentGameState = GameState.MainMenu;
+        
+        [Header("캐릭터 선택")]
+        [SerializeField] private PlayerCharacterData selectedCharacter;
         
         // 이벤트
         public System.Action<GameState> OnGameStateChanged;
@@ -84,6 +88,60 @@ namespace Game.CoreSystem.Manager
         /// 현재 게임 상태 반환
         /// </summary>
         public GameState CurrentGameState => currentGameState;
+        
+        /// <summary>
+        /// 선택된 캐릭터 데이터 반환
+        /// </summary>
+        public PlayerCharacterData SelectedCharacter => selectedCharacter;
+        
+        /// <summary>
+        /// 캐릭터 선택
+        /// </summary>
+        public void SelectCharacter(PlayerCharacterData characterData)
+        {
+            selectedCharacter = characterData;
+            GameLogger.LogInfo($"캐릭터 선택: {characterData?.DisplayName}", GameLogger.LogCategory.UI);
+        }
+        
+        /// <summary>
+        /// 게임 일시정지
+        /// </summary>
+        public void PauseGame()
+        {
+            Time.timeScale = 0f;
+            ChangeGameState(GameState.Paused);
+            GameLogger.LogInfo("게임 일시정지", GameLogger.LogCategory.UI);
+        }
+        
+        /// <summary>
+        /// 게임 재개
+        /// </summary>
+        public void ResumeGame()
+        {
+            Time.timeScale = 1f;
+            ChangeGameState(GameState.Playing);
+            GameLogger.LogInfo("게임 재개", GameLogger.LogCategory.UI);
+        }
+        
+        /// <summary>
+        /// 세션 초기화 (게임 진행 리셋)
+        /// </summary>
+        public void ResetSession()
+        {
+            selectedCharacter = null;
+            Time.timeScale = 1f;
+            ChangeGameState(GameState.MainMenu);
+            GameLogger.LogInfo("세션 초기화", GameLogger.LogCategory.UI);
+        }
+        
+        /// <summary>
+        /// 메인 메뉴로 이동
+        /// </summary>
+        public async void GoToMainMenu()
+        {
+            GameLogger.LogInfo("메인 메뉴로 이동", GameLogger.LogCategory.UI);
+            await SceneTransitionManager.Instance.TransitionToMainScene();
+        }
         
         #region ICoreSystemInitializable 구현
         /// <summary>

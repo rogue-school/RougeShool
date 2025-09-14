@@ -13,7 +13,9 @@ MonoBehaviour:
   m_Name: ENEMY_002_Slime
   m_EditorClassIdentifier: 
   cards:
-  - card: {fileID: 11400000, guid: e0a26135de8a5cc4fb8584333a13f940, type: 2}
+  - card: {fileID: 11400000, guid: 8f4cc4f7be7afaf4086ead461f38b31d, type: 2}
+    definition: {fileID: 11400000, guid: 8f4cc4f7be7afaf4086ead461f38b31d, type: 2}
     probability: 0.7
-  - card: {fileID: 11400000, guid: dadf093733361954cb83506b04576d43, type: 2}
+  - card: {fileID: 11400000, guid: 464c0a777cf5f9a42b27596b2e45163a, type: 2}
+    definition: {fileID: 11400000, guid: 464c0a777cf5f9a42b27596b2e45163a, type: 2}
     probability: 0.3

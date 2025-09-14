@@ -90,5 +90,31 @@ namespace Game.CombatSystem.Interface
         /// 다음 슬롯의 적 스킬카드를 무효화시킵니다.
         /// </summary>
         void ApplyGuardEffect();
+
+        /// <summary>
+        /// 현재 턴이 플레이어 턴인지 확인합니다.
+        /// 1번 슬롯이 비어있으면 플레이어 턴입니다.
+        /// </summary>
+        /// <returns>플레이어 턴 여부</returns>
+        bool IsPlayerTurn();
+
+        /// <summary>
+        /// 현재 턴이 적 턴인지 확인합니다.
+        /// 1번 슬롯에 적 스킬카드가 있으면 적 턴입니다.
+        /// </summary>
+        /// <returns>적 턴 여부</returns>
+        bool IsEnemyTurn();
+
+        /// <summary>
+        /// 다음 턴을 진행합니다.
+        /// 1번 슬롯의 카드를 실행하고 슬롯을 이동시킵니다.
+        /// </summary>
+        void ProceedToNextTurn();
+
+        /// <summary>
+        /// 4번 슬롯에 새로운 적 카드를 등록합니다.
+        /// </summary>
+        /// <param name="card">등록할 적 스킬카드</param>
+        void RegisterEnemyCardInSlot4(ISkillCard card);
     }
 }

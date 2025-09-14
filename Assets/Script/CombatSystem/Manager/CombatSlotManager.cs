@@ -18,6 +18,15 @@ namespace Game.CombatSystem.Manager
 
         private Dictionary<CombatSlotPosition, ICombatCardSlot> combatSlots = new();
 
+        // 최적화: 필수 슬롯 위치를 정적 배열로 캐싱
+        private static readonly CombatSlotPosition[] RequiredSlots = 
+        {
+            CombatSlotPosition.SLOT_1,
+            CombatSlotPosition.SLOT_2,
+            CombatSlotPosition.SLOT_3,
+            CombatSlotPosition.SLOT_4
+        };
+
         #endregion
 
         #region 초기화
@@ -30,6 +39,7 @@ namespace Game.CombatSystem.Manager
         /// <summary>
         /// 자식 오브젝트의 슬롯 UI를 자동으로 탐색하여 슬롯 정보를 등록합니다.
         /// 중복 슬롯은 경고 로그를 출력합니다.
+        /// 4개 슬롯 시스템을 지원합니다.
         /// </summary>
         private void AutoBindSlots()
         {
@@ -48,6 +58,25 @@ namespace Game.CombatSystem.Manager
                 else
                 {
                     Debug.LogWarning($"[CombatSlotManager] 중복 슬롯 발견: {execPos}");
+                }
+            }
+
+            // 4개 슬롯 시스템 검증
+            ValidateSlotCount();
+        }
+
+        /// <summary>
+        /// 4개 슬롯이 모두 등록되었는지 확인합니다. (최적화된 버전)
+        /// </summary>
+        private void ValidateSlotCount()
+        {
+            // 최적화: 정적 배열 사용으로 메모리 할당 방지
+            for (int i = 0; i < RequiredSlots.Length; i++)
+            {
+                var slot = RequiredSlots[i];
+                if (!combatSlots.ContainsKey(slot))
+                {
+                    Debug.LogWarning($"[CombatSlotManager] 필수 슬롯 누락: {slot}");
                 }
             }
         }

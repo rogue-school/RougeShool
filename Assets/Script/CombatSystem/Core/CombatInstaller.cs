@@ -25,10 +25,9 @@ using Game.UtilitySystem.GameFlow;
 using Game.SkillCardSystem.UI;
 using Game.CombatSystem.State;
 using Game.CombatSystem.Factory;
-using Game.Utility;
+using Game.UtilitySystem;
 using Game.CoreSystem.Utility;
 using Game.CombatSystem.DragDrop;
-using Game.CombatSystem.CoolTime;
 using Game.SkillCardSystem.Runtime;
 using Game.CoreSystem.Interface;
 using Game.CoreSystem.Save;
@@ -155,7 +154,6 @@ public class CombatInstaller : MonoInstaller
         Container.Bind<ICardReplacementHandler>().To<PlayerCardReplacementHandler>().AsSingle();
         Container.Bind<CardDropService>().AsSingle();
         Container.Bind<ITurnStartConditionChecker>().To<DefaultTurnStartConditionChecker>().AsSingle();
-        Container.Bind<ICoolTimeHandler>().To<CoolTimeHandler>().AsSingle();
     }
 
     #endregion
@@ -215,8 +213,8 @@ public class CombatInstaller : MonoInstaller
     private void BindInitializerSteps()
     {
         // 필수 초기화 스텝들 보장: 없으면 자동 생성 후 바인딩
-        EnsureAndBindInitializer<SlotInitializationStep>("SlotInitializationStep");
-        EnsureAndBindInitializer<FlowCoordinatorInitializationStep>("FlowCoordinatorInitializationStep");
+        EnsureAndBindInitializer<Game.CombatSystem.Intialization.SlotInitializationStep>("SlotInitializationStep");
+        EnsureAndBindInitializer<Game.CombatSystem.Intialization.FlowCoordinatorInitializationStep>("FlowCoordinatorInitializationStep");
         EnsureAndBindInitializer<PlayerCharacterInitializer>("PlayerCharacterInitializer");
         EnsureAndBindInitializer<PlayerSkillCardInitializer>("PlayerSkillCardInitializer");
         EnsureAndBindInitializer<EnemyCharacterInitializer>("EnemyCharacterInitializer");

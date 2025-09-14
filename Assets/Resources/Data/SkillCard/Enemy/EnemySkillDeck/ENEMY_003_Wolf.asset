@@ -13,7 +13,9 @@ MonoBehaviour:
   m_Name: ENEMY_003_Wolf
   m_EditorClassIdentifier: 
   cards:
-  - card: {fileID: 11400000, guid: 5cf0d6ffb75cb434aa7d9df52268eab0, type: 2}
+  - card: {fileID: 11400000, guid: e88b9a01bbf46904c9a318a622567d58, type: 2}
+    definition: {fileID: 11400000, guid: e88b9a01bbf46904c9a318a622567d58, type: 2}
     probability: 0.8
-  - card: {fileID: 11400000, guid: b67fd3a64c8a99b4d944e17f196ae955, type: 2}
+  - card: {fileID: 11400000, guid: e88b9a01bbf46904c9a318a622567d58, type: 2}
+    definition: {fileID: 11400000, guid: e88b9a01bbf46904c9a318a622567d58, type: 2}
     probability: 0.2

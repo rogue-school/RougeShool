@@ -13,5 +13,6 @@ MonoBehaviour:
   m_Name: ENEMY_001_Goblin
   m_EditorClassIdentifier: 
   cards:
-  - card: {fileID: 11400000, guid: e8b59f5ad5046374384af2a6d1a94ffa, type: 2}
+  - card: {fileID: 11400000, guid: 8f4cc4f7be7afaf4086ead461f38b31d, type: 2}
+    definition: {fileID: 11400000, guid: 8f4cc4f7be7afaf4086ead461f38b31d, type: 2}
     probability: 1

@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using Game.CoreSystem.Manager;
 
 public class SettingsUIController : MonoBehaviour
 {
@@ -8,8 +9,8 @@ public class SettingsUIController : MonoBehaviour
     [SerializeField] private GameObject confirmDialog;   // MainCanvas/ConfirmDialog
 
     [Header("First-Select (Optional)")]
-    [SerializeField] private GameObject firstSelectOnOpen;      // SettingsPanel ¿­¸± ¶§ Æ÷Ä¿½ºÇÒ ¹öÆ° (ContinueButton)
-    [SerializeField] private GameObject firstSelectOnConfirm;   // ConfirmDialog ¿­¸± ¶§ Æ÷Ä¿½ºÇÒ ¹öÆ° (ConfirmButton)
+    [SerializeField] private GameObject firstSelectOnOpen;      // SettingsPanel ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Æ° (ContinueButton)
+    [SerializeField] private GameObject firstSelectOnConfirm;   // ConfirmDialog ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Æ° (ConfirmButton)
 
     private bool settingsOpen = false;
     private bool confirmOpen = false;
@@ -20,7 +21,7 @@ public class SettingsUIController : MonoBehaviour
         if (confirmDialog != null) confirmDialog.SetActive(false);
     }
 
-    // ? ¹öÆ° ´­·¶À» ¶§
+    // ? ï¿½ï¿½Æ° ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½
     public void OpenSettings()
     {
         if (settingsOpen) return;
@@ -30,14 +31,14 @@ public class SettingsUIController : MonoBehaviour
         confirmDialog.SetActive(false);
         confirmOpen = false;
 
-        GameManager.Instance.PauseGame();
+        GameStateManager.Instance.PauseGame();
 
-        // UI Æ÷Ä¿½º
+        // UI ï¿½ï¿½Ä¿ï¿½ï¿½
         if (firstSelectOnOpen != null)
             EventSystem.current?.SetSelectedGameObject(firstSelectOnOpen);
     }
 
-    // °è¼ÓÇÏ±â
+    // ï¿½ï¿½ï¿½ï¿½Ï±ï¿½
     public void OnContinue()
     {
         if (!settingsOpen) return;
@@ -47,55 +48,55 @@ public class SettingsUIController : MonoBehaviour
         confirmOpen = false;
         settingsOpen = false;
 
-        GameManager.Instance.ResumeGame();
+        GameStateManager.Instance.ResumeGame();
     }
 
-    // Æ÷±âÇÏ±â (È®ÀÎÃ¢ ¿­±â)
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ï¿½ (È®ï¿½ï¿½Ã¢ ï¿½ï¿½ï¿½ï¿½)
     public void OnGiveUp()
     {
         if (!settingsOpen) return;
 
-        // ¼³Á¤ ÆÐ³ÎÀº ±×´ë·Î µÐ Ã¤·Î È®ÀÎÃ¢¸¸ ¶ç¿ò(¸ð´Þ)
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½Ð³ï¿½ï¿½ï¿½ ï¿½×´ï¿½ï¿½ ï¿½ï¿½ Ã¤ï¿½ï¿½ È®ï¿½ï¿½Ã¢ï¿½ï¿½ ï¿½ï¿½ï¿½(ï¿½ï¿½ï¿½)
         confirmOpen = true;
         confirmDialog.SetActive(true);
 
-        // Æ÷Ä¿½º ÀÌµ¿
+        // ï¿½ï¿½Ä¿ï¿½ï¿½ ï¿½Ìµï¿½
         if (firstSelectOnConfirm != null)
             EventSystem.current?.SetSelectedGameObject(firstSelectOnConfirm);
     }
 
-    // È®ÀÎÃ¢: ¿¹, Æ÷±âÇÕ´Ï´Ù
+    // È®ï¿½ï¿½Ã¢: ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½
     public void OnConfirmGiveUp()
     {
-        // ÀÌ¹Ì ÀÏ½ÃÁ¤Áö ÁßÀÌ¹Ç·Î timeScale=0 ¡æ ¸ÞÀÎÀ¸·Î °¥ ¶§ º¹±¸µÊ
-        GameManager.Instance.ResetSession();
-        GameManager.Instance.GoToMainMenu();
-        // ¾À ÀÌµ¿ ½Ã UI´Â »ç¶óÁö¹Ç·Î º°µµ Á¤¸® ºÒÇÊ¿ä
+        // ï¿½Ì¹ï¿½ ï¿½Ï½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ì¹Ç·ï¿½ timeScale=0 ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        GameStateManager.Instance.ResetSession();
+        GameStateManager.Instance.GoToMainMenu();
+        // ï¿½ï¿½ ï¿½Ìµï¿½ ï¿½ï¿½ UIï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ê¿ï¿½
     }
 
-    // È®ÀÎÃ¢: ¾Æ´Ï¿À
+    // È®ï¿½ï¿½Ã¢: ï¿½Æ´Ï¿ï¿½
     public void OnCancelGiveUp()
     {
         confirmOpen = false;
         confirmDialog.SetActive(false);
 
-        // ¼³Á¤ ÆÐ³ÎÀº ¿­·ÁÀÖ´Â »óÅÂ À¯Áö
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½Ð³ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         if (firstSelectOnOpen != null)
             EventSystem.current?.SetSelectedGameObject(firstSelectOnOpen);
     }
 
-    // ±×¸¸ÇÏ±â (ÃÊ±âÈ­ ¾øÀÌ ¸ÞÀÎÀ¸·Î)
+    // ï¿½×¸ï¿½ï¿½Ï±ï¿½ (ï¿½Ê±ï¿½È­ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½)
     public void OnQuit()
     {
-        GameManager.Instance.GoToMainMenu();
+        GameStateManager.Instance.GoToMainMenu();
     }
 
-    // ESC Å° Åä±Û (¼±ÅÃ »çÇ×)
+    // ESC Å° ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            // È®ÀÎÃ¢ÀÌ ¶° ÀÖÀ¸¸é ´Ý°í ¼³Á¤ ÆÐ³Î À¯Áö
+            // È®ï¿½ï¿½Ã¢ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ý°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ð³ï¿½ ï¿½ï¿½ï¿½ï¿½
             if (confirmOpen)
             {
                 OnCancelGiveUp();
@@ -108,7 +109,7 @@ public class SettingsUIController : MonoBehaviour
             }
             else
             {
-                OnContinue(); // ¼³Á¤ ´Ý°í Àç°³
+                OnContinue(); // ï¿½ï¿½ï¿½ï¿½ ï¿½Ý°ï¿½ ï¿½ç°³
             }
         }
     }

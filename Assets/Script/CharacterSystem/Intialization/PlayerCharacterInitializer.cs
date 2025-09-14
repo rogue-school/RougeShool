@@ -8,8 +8,8 @@ using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Interface;
 using Game.IManager;
 using Game.CombatSystem.Interface;
-using Game.AnimationSystem.Manager;
 using Game.CoreSystem.Manager;
+using Game.AnimationSystem.Manager;
 
 namespace Game.CombatSystem.Initialization
 {
@@ -243,11 +243,11 @@ namespace Game.CombatSystem.Initialization
                 }
             }
             
-            // GameManager의 선택 데이터 사용 (하위 호환성)
-            if (GameManager.Instance != null && GameManager.Instance.selectedCharacter != null)
+            // GameStateManager의 선택 데이터 사용 (하위 호환성)
+            if (GameStateManager.Instance != null && GameStateManager.Instance.SelectedCharacter != null)
             {
-                Debug.Log($"[PlayerCharacterInitializer] GameManager에서 캐릭터 사용: {GameManager.Instance.selectedCharacter.DisplayName}");
-                return GameManager.Instance.selectedCharacter;
+                Debug.Log($"[PlayerCharacterInitializer] GameStateManager에서 캐릭터 사용: {GameStateManager.Instance.SelectedCharacter.DisplayName}");
+                return GameStateManager.Instance.SelectedCharacter;
             }
 
             // 기본 데이터 사용

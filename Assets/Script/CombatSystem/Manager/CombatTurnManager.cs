@@ -12,6 +12,27 @@ using Game.AnimationSystem.Manager;
 namespace Game.CombatSystem.Manager
 {
     /// <summary>
+    /// 턴 타입을 나타내는 열거형입니다.
+    /// </summary>
+    public enum TurnType
+    {
+        /// <summary>
+        /// 플레이어 턴
+        /// </summary>
+        Player,
+        
+        /// <summary>
+        /// 적 턴
+        /// </summary>
+        Enemy,
+        
+        /// <summary>
+        /// 알 수 없는 턴
+        /// </summary>
+        Unknown
+    }
+
+    /// <summary>
     /// 전투 턴을 제어하고 상태 전이, 카드 등록, 턴 진행 가능 여부 등을 관리하는 클래스입니다.
     /// </summary>
     public class CombatTurnManager : MonoBehaviour, ICombatTurnManager
@@ -140,12 +161,11 @@ namespace Game.CombatSystem.Manager
 
         /// <summary>
         /// 턴 시작 준비가 되었는지 여부를 확인하고 이벤트를 발생시킵니다.
+        /// 1번 슬롯에 카드가 있으면 턴 시작 가능합니다.
         /// </summary>
         public void UpdateTurnReady()
         {
-            bool ready =
-                cardRegistry.GetCardInSlot(CombatSlotPosition.FIRST) != null &&
-                cardRegistry.GetCardInSlot(CombatSlotPosition.SECOND) != null;
+            bool ready = cardRegistry.GetCardInSlot(CombatSlotPosition.SLOT_1) != null;
 
             if (isTurnReady != ready)
             {
@@ -223,6 +243,72 @@ namespace Game.CombatSystem.Manager
         public int GetCurrentTurn()
         {
             return currentTurn;
+        }
+
+        #endregion
+
+        #region 새로운 턴 관리 시스템 (최적화됨)
+
+        /// <summary>
+        /// 현재 턴 타입을 반환합니다. (최적화된 버전)
+        /// </summary>
+        /// <returns>턴 타입 (Player, Enemy, Unknown)</returns>
+        public TurnType GetCurrentTurnType()
+        {
+            var card = cardRegistry.GetCardInSlot(CombatSlotPosition.SLOT_1);
+            if (card == null)
+                return TurnType.Player;
+            
+            return card.GetOwner() == SlotOwner.ENEMY ? TurnType.Enemy : TurnType.Player;
+        }
+
+        /// <summary>
+        /// 현재 턴이 플레이어 턴인지 확인합니다. (최적화된 버전)
+        /// </summary>
+        public bool IsPlayerTurn()
+        {
+            return GetCurrentTurnType() == TurnType.Player;
+        }
+
+        /// <summary>
+        /// 현재 턴이 적 턴인지 확인합니다. (최적화된 버전)
+        /// </summary>
+        public bool IsEnemyTurn()
+        {
+            return GetCurrentTurnType() == TurnType.Enemy;
+        }
+
+        /// <summary>
+        /// 다음 턴을 진행합니다. (최적화된 버전)
+        /// </summary>
+        public void ProceedToNextTurn()
+        {
+            var turnType = GetCurrentTurnType();
+            
+            switch (turnType)
+            {
+                case TurnType.Player:
+                    Debug.Log("[CombatTurnManager] 플레이어 턴 - 카드 배치 대기");
+                    // 플레이어가 카드를 배치할 때까지 대기
+                    break;
+                case TurnType.Enemy:
+                    Debug.Log("[CombatTurnManager] 적 턴 - 카드 실행");
+                    // 적 카드 실행 (CombatExecutorService.ExecuteImmediately() 호출)
+                    break;
+                default:
+                    Debug.LogWarning("[CombatTurnManager] 알 수 없는 턴 타입");
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// 4번 슬롯에 새로운 적 카드를 등록합니다.
+        /// </summary>
+        /// <param name="card">등록할 적 스킬카드</param>
+        public void RegisterEnemyCardInSlot4(ISkillCard card)
+        {
+            cardRegistry.RegisterCard(CombatSlotPosition.SLOT_4, card, null, SlotOwner.ENEMY);
+            Debug.Log($"[CombatTurnManager] 4번 슬롯에 적 카드 등록: {card.GetCardName()}");
         }
 
         #endregion
