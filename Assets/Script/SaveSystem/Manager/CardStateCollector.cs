@@ -213,12 +213,12 @@ namespace Game.SaveSystem.Manager
             }
 
             // 첫 번째 슬롯 카드 수집
-            var firstCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.FIRST);
-            cardState.firstSlotCard = CreateCardSlotData(firstCard, CombatSlotPosition.FIRST, "COMBAT");
+            var firstCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.SLOT_1);
+            cardState.firstSlotCard = CreateCardSlotData(firstCard, CombatSlotPosition.SLOT_1, "COMBAT");
             
             // 두 번째 슬롯 카드 수집
-            var secondCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.SECOND);
-            cardState.secondSlotCard = CreateCardSlotData(secondCard, CombatSlotPosition.SECOND, "COMBAT");
+            var secondCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.SLOT_2);
+            cardState.secondSlotCard = CreateCardSlotData(secondCard, CombatSlotPosition.SLOT_2, "COMBAT");
             
             Debug.Log($"[CardStateCollector] 전투 슬롯 카드 수집: FIRST={cardState.firstSlotCard?.cardName ?? "Empty"}, SECOND={cardState.secondSlotCard?.cardName ?? "Empty"}");
         }

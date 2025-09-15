@@ -126,6 +126,17 @@ public class CombatInstaller : MonoInstaller
         Container.Bind<IPlayerCharacterSelectionManager>().FromInstance(characterSelectionManager).AsSingle();
         
         BindMonoInterfaces<CombatTurnManager>();
+
+        // SaveManager 바인딩(CoreScene의 DontDestroyOnLoad 객체를 참조)
+        var saveManager = FindFirstObjectByType<SaveManager>(FindObjectsInactive.Include);
+        if (saveManager != null)
+        {
+            Container.Bind<SaveManager>().FromInstance(saveManager).AsSingle();
+        }
+        else
+        {
+            Debug.LogWarning("[CombatInstaller] SaveManager를 찾을 수 없습니다. CoreScene에서 초기화되었는지 확인하세요.");
+        }
     }
 
     #endregion
@@ -284,8 +295,8 @@ public class CombatInstaller : MonoInstaller
     {
         if (startButtonHandler == null)
         {
-            Debug.LogError("[CombatInstaller] startButtonHandler가 인스펙터에 할당되지 않았습니다.");
-            return;
+            Debug.LogWarning("[CombatInstaller] startButtonHandler가 비어 있습니다. 즉발 규칙에서는 생략합니다.");
+            return; // 선택 요소이므로 바인딩 생략
         }
 
         Container.Bind<TurnStartButtonHandler>().FromInstance(startButtonHandler).AsSingle();

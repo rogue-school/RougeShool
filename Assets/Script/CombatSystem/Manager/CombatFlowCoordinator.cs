@@ -153,7 +153,7 @@ namespace Game.CombatSystem.Manager
             yield return new WaitForSeconds(0.5f);
 
             IsEnemyFirst = UnityEngine.Random.value < 0.5f;
-            var slotToRegister = IsEnemyFirst ? CombatSlotPosition.FIRST : CombatSlotPosition.SECOND;
+            var slotToRegister = IsEnemyFirst ? CombatSlotPosition.SLOT_1 : CombatSlotPosition.SLOT_2;
 
             yield return enemyHandManager.StepwiseFillSlotsFromBack(0.3f);
 
@@ -400,7 +400,7 @@ namespace Game.CombatSystem.Manager
         private IEnumerator PerformFirstAttackInternal(Action onComplete = null)
         {
             CombatEvents.RaiseFirstAttackStarted();
-            var firstCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.FIRST);
+            var firstCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.SLOT_1);
             if (firstCard != null)
             {
                 ExecuteCard(firstCard);
@@ -413,8 +413,8 @@ namespace Game.CombatSystem.Manager
         public IEnumerator PerformSecondAttack()
         {
             CombatEvents.RaiseSecondAttackStarted();
-            var secondCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.SECOND);
-            var firstCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.FIRST);
+            var secondCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.SLOT_2);
+            var firstCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.SLOT_1);
 
             if (firstCard != null && firstCard.IsFromPlayer())
             {
@@ -425,7 +425,7 @@ namespace Game.CombatSystem.Manager
                     // {
                     //     if (secondCard != null && !secondCard.IsFromPlayer())
                     //     {
-                    //         slotRegistry.GetCombatSlot(CombatSlotPosition.SECOND)?.ClearAll();
+                    //         slotRegistry.GetCombatSlot(CombatSlotPosition.SLOT_2)?.ClearAll();
                     //         yield break;
                     //     }
                     // }

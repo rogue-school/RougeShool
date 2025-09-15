@@ -186,7 +186,7 @@ namespace Game.SaveSystem.Manager
                     var firstCard = CreateCardFromData(cardState.firstSlotCard);
                     if (firstCard != null)
                     {
-                        turnCardRegistry.RegisterCard(CombatSlotPosition.FIRST, firstCard, null, SlotOwner.PLAYER);
+                        turnCardRegistry.RegisterCard(CombatSlotPosition.SLOT_1, firstCard, null, SlotOwner.PLAYER);
                     }
                 }
                 
@@ -196,11 +196,11 @@ namespace Game.SaveSystem.Manager
                     var secondCard = CreateCardFromData(cardState.secondSlotCard);
                     if (secondCard != null)
                     {
-                        turnCardRegistry.RegisterCard(CombatSlotPosition.SECOND, secondCard, null, SlotOwner.ENEMY);
+                        turnCardRegistry.RegisterCard(CombatSlotPosition.SLOT_2, secondCard, null, SlotOwner.ENEMY);
                     }
                 }
                 
-                Debug.Log($"[CardStateRestorer] 전투 슬롯 카드 복원: FIRST={cardState.firstSlotCard?.cardName ?? "Empty"}, SECOND={cardState.secondSlotCard?.cardName ?? "Empty"}");
+                Debug.Log($"[CardStateRestorer] 전투 슬롯 카드 복원: SLOT_1={cardState.firstSlotCard?.cardName ?? "Empty"}, SLOT_2={cardState.secondSlotCard?.cardName ?? "Empty"}");
                 return true;
             }
             catch (System.Exception ex)

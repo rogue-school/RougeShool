@@ -208,9 +208,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53c39a7534d0e2b44987ec3be6b50932, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerSkillCardDatabase: {fileID: 0}
+  unifiedSkillCardDatabase: {fileID: 11400000, guid: d9d5fbb87655bbe488178fa23c0b166d, type: 2}
   playerCharacterDatabase: {fileID: 0}
-  enemySkillCardDatabase: {fileID: 0}
   enemyCharacterDatabase: {fileID: 0}
   enableCaching: 1
   maxCacheSize: 100
@@ -1329,6 +1328,7 @@ MonoBehaviour:
   coreSceneName: CoreScene
   mainSceneName: MainScene
   battleSceneName: BattleScene
+  stageSceneName: StageScene
   transitionDuration: 1
   transitionCurve:
     serializedVersion: 2
@@ -1561,6 +1561,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   currentGameState: 0
+  selectedCharacter: {fileID: 0}
 --- !u!1 &1343503450
 GameObject:
   m_ObjectHideFlags: 0
@@ -2461,10 +2462,6 @@ MonoBehaviour:
   bgmVolume: 0.7
   sfxVolume: 1
   fadeTime: 1
-  mainMenuBGM: {fileID: 0}
-  battleBGM: {fileID: 0}
-  shopBGM: {fileID: 0}
-  inventoryBGM: {fileID: 0}
 --- !u!1 &2125065708
 GameObject:
   m_ObjectHideFlags: 0

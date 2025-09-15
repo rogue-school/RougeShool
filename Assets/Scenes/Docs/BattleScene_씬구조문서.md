@@ -6,7 +6,7 @@
 ## 📦 준비물(사전 요구)
 - Zenject: SceneContext, CombatInstaller
 - 전투 매니저 스크립트: CombatFlowCoordinator, CombatStartupManager, CombatTurnManager, CombatSlotManager, PlayerManager, EnemyManager, GameOverManager
-- 슬롯 시스템: SlotRegistry, SlotInitializer, PlayerHandCardSlotUI, EnemyHandCardSlotUI, CombatExecutionSlotUI, CombatSlotPositionHolder, CharacterSlotUI, (컴포넌트) HandSlotRegistry/CombatSlotRegistry/CharacterSlotRegistry
+- 슬롯 시스템: SlotRegistry, SlotInitializer, PlayerHandCardSlotUI, CombatExecutionSlotUI, CharacterSlotUI, (컴포넌트) HandSlotRegistry/CombatSlotRegistry/CharacterSlotRegistry
 - 카드 UI 프리팹: SkillCardUI (CombatInstaller.cardUIPrefab)
 - 스테이지 데이터: StageData (StageManager.currentStage)
 - 카메라: Main Camera, UICamera
@@ -30,11 +30,9 @@
 4) 슬롯 UI 구성(UICanvas 하위)
 - `CombatArena/PlayerHandCardBackground` 하위에 `PlayerHandCardSlot_1..3` 생성
   - 각 오브젝트에 `PlayerHandCardSlotUI` 부착, position = PLAYER_SLOT_1..3
-- `CombatArena/EnemyHandCardBackground` 하위에 `EnemyHandCardSlot_1..3` 생성
-  - 각 오브젝트에 `EnemyHandCardSlotUI` 부착, position = ENEMY_SLOT_1..3
+- (삭제됨) 적 핸드 슬롯 UI는 사용하지 않습니다. 적 카드는 매니저에서 전투 슬롯에 직접 등록됩니다.
 - `CombatCardSlotBackground` 하위에 `CombatCardSlot_1..2` 생성
-  - 각 오브젝트에 `CombatExecutionSlotUI` 부착
-  - `CombatSlotPositionHolder`로 전장 위치(FIELD_LEFT/RIGHT) 지정
+  - 각 오브젝트에 `CombatExecutionSlotUI` 부착(인스펙터 Position=SLOT_1/SLOT_2)
 - 캐릭터 슬롯: `EnemyCharacterSlot`, `PlayerCharaterSlot`에 `CharacterSlotUI` 부착(owner/slotPosition 설정)
 
 5) 레지스트리/초기화 구성
@@ -76,13 +74,11 @@ UICanvas
 │  │     └─ PlayerHandCardSlot_3 (PlayerHandCardSlotUI)
 │  ├─ EnemyHandCard 📦
 │  │  └─ EnemyHandCardBackground
-│  │     ├─ EnemyHandCardSlot_1 (EnemyHandCardSlotUI)
-│  │     ├─ EnemyHandCardSlot_2 (EnemyHandCardSlotUI)
-│  │     └─ EnemyHandCardSlot_3 (EnemyHandCardSlotUI)
+│  │     └─ (적 핸드 슬롯 UI 사용 안 함)
 │  └─ (옵션) TurnStartButton
 ├─ CombatCardSlotBackground 📦
-│  ├─ CombatCardSlot_1 (CombatExecutionSlotUI, CombatSlotPositionHolder)
-│  └─ CombatCardSlot_2 (CombatExecutionSlotUI, CombatSlotPositionHolder)
+│  ├─ CombatCardSlot_1 (CombatExecutionSlotUI)
+│  └─ CombatCardSlot_2 (CombatExecutionSlotUI)
 ├─ EnemyCharacterSlot (CharacterSlotUI)
 └─ PlayerCharaterSlot (CharacterSlotUI)
 EventSystem
@@ -96,8 +92,8 @@ EventSystem
 | SceneContext | SceneContext | MonoInstallers | CombatInstaller | 필수 |
 | UICanvas | Canvas | camera | UICamera | 필수 |
 | PlayerHandCardSlot_1..3 | PlayerHandCardSlotUI | position | PLAYER_SLOT_1..3 | 필수 |
-| EnemyHandCardSlot_1..3 | EnemyHandCardSlotUI | position | ENEMY_SLOT_1..3 | 필수 |
-| CombatCardSlot_1..2 | CombatExecutionSlotUI | PositionHolder | FIRST/SECOND(+FIELD_LEFT/RIGHT) | 필수 |
+(행 제거) EnemyHandCardSlot_1..3 항목은 사용하지 않습니다.
+| CombatCardSlot_1..2 | CombatExecutionSlotUI | Position | SLOT_1/SLOT_2 | 필수 |
 | EnemyCharacterSlot | CharacterSlotUI | owner/slotPosition | owner=ENEMY, slot=1 | 필수 |
 | PlayerCharaterSlot | CharacterSlotUI | owner/slotPosition | owner=PLAYER, slot=0 | 필수 |
 | StageManager | StageManager | currentStage | StageData | 권장 |
@@ -125,11 +121,10 @@ EventSystem
   - currentStage: 전투에 사용할 `StageData`
 - GameOverManager
   - gameOverUI: 게임오버 UI 루트(패널)
-- PlayerHandCardSlotUI / EnemyHandCardSlotUI
+- PlayerHandCardSlotUI
   - position: PLAYER_SLOT_1..3 / ENEMY_SLOT_1..3 정확히 매핑
 - CombatExecutionSlotUI
-  - Position: FIRST/SECOND
-  - PositionHolder(별도 컴포넌트): FIELD_LEFT/RIGHT 설정
+  - Position: SLOT_1/SLOT_2
 - CharacterSlotUI
   - owner: PLAYER/ENEMY
   - slotPosition: 0(플레이어)/1(적 등, 프로젝트 규칙에 맞게)
@@ -184,22 +179,17 @@ UICanvas (Canvas, CanvasScaler, GraphicRaycaster)
 │   │           └─ [Inspector] position = PLAYER_SLOT_3
 │   ├─ EnemyHandCard (Empty)
 │   │   └─ EnemyHandCardBackground (Image)
-│   │       ├─ EnemyHandCardSlot_1 (Image, EnemyHandCardSlotUI)
-│   │       │   └─ [Inspector] position = ENEMY_SLOT_1
-│   │       ├─ EnemyHandCardSlot_2 (Image, EnemyHandCardSlotUI)
-│   │       │   └─ [Inspector] position = ENEMY_SLOT_2
-│   │       └─ EnemyHandCardSlot_3 (Image, EnemyHandCardSlotUI)
-│   │           └─ [Inspector] position = ENEMY_SLOT_3
+│   │       └─ (적 핸드 슬롯 UI 사용 안 함)
 │   └─ TurnStartButton (Button, Image, TMP_Text, TurnStartButtonHandler)
 ├─ CombatCardSlotBackground (Empty)
-│   ├─ CombatCardSlot_1 (Image, CombatExecutionSlotUI, CombatSlotPositionHolder)
+│   ├─ CombatCardSlot_1 (Image, CombatExecutionSlotUI)
 │   │   ├─ [Inspector]
 │   │   │   - CombatExecutionSlotUI.Position = FIRST
-│   │   │   - CombatSlotPositionHolder.FieldPosition = FIELD_LEFT
-│   └─ CombatCardSlot_2 (Image, CombatExecutionSlotUI, CombatSlotPositionHolder)
+│   │   │   - CombatExecutionSlotUI.Position = SLOT_1
+│   └─ CombatCardSlot_2 (Image, CombatExecutionSlotUI)
 │       ├─ [Inspector]
 │       │   - CombatExecutionSlotUI.Position = SECOND
-│       │   - CombatSlotPositionHolder.FieldPosition = FIELD_RIGHT
+│       │   - CombatExecutionSlotUI.Position = SLOT_2
 ├─ EnemyCharacterSlot (Image, CharacterSlotUI)
 │   └─ [Inspector] owner = ENEMY, slotPosition = 1
 └─ PlayerCharaterSlot (Image, CharacterSlotUI)

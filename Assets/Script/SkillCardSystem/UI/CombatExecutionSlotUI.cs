@@ -23,12 +23,8 @@ namespace Game.CombatSystem.UI
 
         public CombatFieldSlotPosition GetCombatPosition()
         {
-            return position switch
-            {
-                CombatSlotPosition.FIRST => CombatFieldSlotPosition.FIELD_LEFT,
-                CombatSlotPosition.SECOND => CombatFieldSlotPosition.FIELD_RIGHT,
-                _ => CombatFieldSlotPosition.NONE
-            };
+            // 4슬롯 체계에서는 필드 포지션을 사용하지 않습니다.
+            return CombatFieldSlotPosition.NONE;
         }
 
         public ISkillCard GetCard() => currentCard;

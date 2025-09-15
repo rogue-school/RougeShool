@@ -20,6 +20,7 @@ namespace Game.CoreSystem.Manager
 		[SerializeField] private string coreSceneName = "CoreScene";
 		[SerializeField] private string mainSceneName = "MainScene";
 		[SerializeField] private string battleSceneName = "BattleScene";
+		[SerializeField] private string stageSceneName = "StageScene";
 		
 		[Header("전환 설정")]
 		[SerializeField] private float transitionDuration = 0.1f; // 0.1초로 더 단축
@@ -108,6 +109,15 @@ namespace Game.CoreSystem.Manager
 			await TransitionToScene(battleSceneName, TransitionType.Fade);
 			TryPlayBGMForScene(battleSceneName);
 		}
+
+		/// <summary>
+		/// 스테이지 씬으로 전환
+		/// </summary>
+		public async Task TransitionToStageScene()
+		{
+			await TransitionToScene(stageSceneName, TransitionType.Fade);
+			TryPlayBGMForScene(stageSceneName);
+		}
 		
 		/// <summary>
 		/// 씬 전환 실행 (페이드 효과 비활성화)
@@ -160,6 +170,9 @@ namespace Game.CoreSystem.Manager
 					break;
 				case var s when s == battleSceneName:
 					cachedAudioEventTrigger.OnBattleBGM();
+					break;
+				case var s when s == stageSceneName:
+					cachedAudioEventTrigger.OnMainMenuBGM();
 					break;
 				default:
 					// 리소스 경로 규칙이 있을 경우 OnSceneBGM으로 대체 가능

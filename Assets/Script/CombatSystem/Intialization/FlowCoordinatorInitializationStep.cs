@@ -20,7 +20,7 @@ namespace Game.CombatSystem.Intialization
         [Inject] private ICombatStateFactory stateFactory;
         [Inject] private ITurnStartConditionChecker conditionChecker;
         [Inject] private ITurnCardRegistry cardRegistry;
-        [Inject] private TurnStartButtonHandler buttonHandler;
+        [InjectOptional] private TurnStartButtonHandler buttonHandler;
         [Inject] private IEnemyHandManager enemyHandManager;
 
         /// <summary>
@@ -36,8 +36,11 @@ namespace Game.CombatSystem.Intialization
         {
             Debug.Log("<color=cyan>[FlowCoordinatorInitializationStep] 전투 준비 흐름 초기화 시작</color>");
 
-            // 턴 시작 버튼 핸들러에 의존성 주입
-            buttonHandler.Inject(conditionChecker, turnManager, stateFactory, cardRegistry);
+            // 턴 시작 버튼 핸들러(선택) 주입: 버튼이 없으면 즉발 규칙으로 진행
+            if (buttonHandler != null)
+            {
+                buttonHandler.Inject(conditionChecker, turnManager, stateFactory, cardRegistry);
+            }
 
             // 턴 매니저 초기화 및 상태 팩토리 주입
             turnManager.Initialize();

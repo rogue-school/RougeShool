@@ -6,22 +6,28 @@ namespace Game.CombatSystem.Utility
 {
     public static class SlotPositionUtil
     {
+        // [Obsolete] 4-슬롯 표준 전환: CombatFieldSlotPosition 경로는 제거 예정
+        [System.Obsolete("4-슬롯 표준: CombatFieldSlotPosition 대신 CombatSlotPosition 사용" )]
         public static CombatSlotPosition ToExecutionSlot(CombatFieldSlotPosition fieldPosition) =>
             fieldPosition switch
             {
-                CombatFieldSlotPosition.FIELD_LEFT => CombatSlotPosition.FIRST,
-                CombatFieldSlotPosition.FIELD_RIGHT => CombatSlotPosition.SECOND,
+                CombatFieldSlotPosition.FIELD_LEFT => CombatSlotPosition.SLOT_1,
+                CombatFieldSlotPosition.FIELD_RIGHT => CombatSlotPosition.SLOT_2,
                 _ => CombatSlotPosition.NONE
             };
 
+        // [Obsolete]
+        [System.Obsolete("4-슬롯 표준: CombatFieldSlotPosition 대신 CombatSlotPosition 사용" )]
         public static CombatFieldSlotPosition ToFieldSlot(CombatSlotPosition position) =>
             position switch
             {
-                CombatSlotPosition.FIRST => CombatFieldSlotPosition.FIELD_LEFT,
-                CombatSlotPosition.SECOND => CombatFieldSlotPosition.FIELD_RIGHT,
+                CombatSlotPosition.SLOT_1 => CombatFieldSlotPosition.FIELD_LEFT,
+                CombatSlotPosition.SLOT_2 => CombatFieldSlotPosition.FIELD_RIGHT,
                 _ => CombatFieldSlotPosition.NONE
             };
 
+        // [Obsolete]
+        [System.Obsolete("4-슬롯 표준: 적 핸드 슬롯 변환은 사용하지 않음" )]
         public static SkillCardSlotPosition ToEnemyHandSlot(CombatFieldSlotPosition position)
         {
             return position switch
@@ -35,9 +41,9 @@ namespace Game.CombatSystem.Utility
         {
             return slot switch
             {
-                SkillCardSlotPosition.PLAYER_SLOT_1 => CombatSlotPosition.FIRST,
-                SkillCardSlotPosition.PLAYER_SLOT_2 => CombatSlotPosition.SECOND,
-                SkillCardSlotPosition.PLAYER_SLOT_3 => CombatSlotPosition.NONE, // 혹은 THIRD 추가 가능
+                SkillCardSlotPosition.PLAYER_SLOT_1 => CombatSlotPosition.SLOT_1,
+                SkillCardSlotPosition.PLAYER_SLOT_2 => CombatSlotPosition.SLOT_2,
+                SkillCardSlotPosition.PLAYER_SLOT_3 => CombatSlotPosition.NONE,
                 _ => CombatSlotPosition.NONE
             };
         }

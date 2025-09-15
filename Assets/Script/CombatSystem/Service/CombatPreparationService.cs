@@ -103,7 +103,7 @@ namespace Game.CombatSystem.Service
                         "Player"
                     );
 
-                    var combatSlotPosition = CombatSlotPosition.FIRST; // 기본값
+                    var combatSlotPosition = CombatSlotPosition.SLOT_1; // 기본값
 
                     if (slot is ICombatCardSlot combatSlot)
                     {

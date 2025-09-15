@@ -31,21 +31,7 @@ namespace Game.CombatSystem.Slot
         /// <summary>
         /// 슬롯 없음 (기본값 또는 비활성 상태)
         /// </summary>
-        NONE,
-
-        #region 호환성 (기존 코드 지원)
-
-        /// <summary>
-        /// 첫 번째 슬롯 (기존 호환성)
-        /// </summary>
-        FIRST = SLOT_1,
-
-        /// <summary>
-        /// 두 번째 슬롯 (기존 호환성)
-        /// </summary>
-        SECOND = SLOT_2
-
-        #endregion
+        NONE
 
         #endregion
     }

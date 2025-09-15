@@ -3,6 +3,13 @@
 ## 📋 시스템 개요
 CombatSystem은 게임의 전투 로직을 관리하는 핵심 시스템입니다. 전투 상태, 턴 관리, 카드 드래그 앤 드롭, 슬롯 관리 등 다양한 기능을 통합적으로 관리합니다.
 
+### 최근 변경(요약)
+- 슬롯 모델 통일: `CombatSlotPosition`은 `SLOT_1..SLOT_4`만 사용합니다.
+- 필드 포지션 경로 제거: `FIELD_LEFT/RIGHT` 경로 의존을 제거하고 논리 슬롯만 사용합니다.
+- 전투 슬롯 등록 기준: 슬롯 컴포넌트의 `Position`을 단일 진실로 사용합니다.
+- 드롭 제약: 플레이어 카드는 전투 슬롯 1번에만 드롭 가능합니다.
+- 적 핸드 슬롯 UI 제거: 적 카드는 매니저에서 전투 슬롯에 직접 등록합니다.
+
 ## 🏗️ 폴더 구조
 ```
 CombatSystem/
@@ -82,6 +89,7 @@ CombatSystem/
 ### 3. 카드 시스템
 - **카드 실행**: 카드 효과 실행
 - **카드 검증**: 실행 가능 여부 검증
+ - **슬롯 규칙**: 4슬롯 즉시 실행. 1번 슬롯 즉시 실행 후 `2→1, 3→2, 4→3` 이동
 
 ### 4. 전투 플로우
 - **전투 준비**: 전투 시작 전 준비
@@ -103,13 +111,13 @@ CombatSystem/
 - **SetState(ICombatTurnState state)**: 상태 설정
 - **CanProceedToNextTurn()**: 다음 턴 진행 가능 여부
 - **ProceedToNextTurn()**: 다음 턴으로 진행
-- **RegisterCard(ISkillCard card, CombatSlotPosition position)**: 카드 등록
+- **RegisterCard(ISkillCard card, CombatSlotPosition position)**: 카드 등록 (position은 `SLOT_1..SLOT_4`)
 - **ClearRegisteredCards()**: 등록된 카드 초기화
 - **OnTurnReadyChanged**: 턴 준비 상태 변경 이벤트
 
 ### CombatExecutorService 클래스
 - **ExecuteCombatPhase()**: 전체 전투 페이즈 실행 (코루틴)
-- **PerformAttack(CombatSlotPosition position)**: 지정 슬롯 공격 실행 (코루틴)
+- **PerformAttack(CombatSlotPosition position)**: 지정 슬롯 공격 실행 (코루틴, 일반적으로 `SLOT_1`)
 - **ExecuteCard(ISkillCard card, CombatSlotPosition position)**: 카드 실행
 - **CreateExecutionContext()**: 실행 컨텍스트 생성
 - **ProcessCardExecution()**: 카드 실행 처리
@@ -162,8 +170,8 @@ CombatTurnManager turnManager = FindObjectOfType<CombatTurnManager>();
 turnManager.Initialize();
 turnManager.SetState(new CombatPrepareState());
 
-// 카드 등록
-turnManager.RegisterCard(skillCard, CombatSlotPosition.FIRST);
+// 카드 등록 (예: 슬롯 1)
+turnManager.RegisterCard(skillCard, CombatSlotPosition.SLOT_1);
 
 // 턴 진행 가능 여부 확인
 if (turnManager.CanProceedToNextTurn())
@@ -186,10 +194,10 @@ CombatExecutorService executorService = new CombatExecutorService(
 StartCoroutine(executorService.ExecuteCombatPhase());
 
 // 특정 슬롯 공격 실행
-StartCoroutine(executorService.PerformAttack(CombatSlotPosition.FIRST));
+StartCoroutine(executorService.PerformAttack(CombatSlotPosition.SLOT_1));
 
 // 카드 실행
-executorService.ExecuteCard(skillCard, CombatSlotPosition.SECOND);
+executorService.ExecuteCard(skillCard, CombatSlotPosition.SLOT_2);
 ```
 
 ### 전투 준비 서비스 사용법

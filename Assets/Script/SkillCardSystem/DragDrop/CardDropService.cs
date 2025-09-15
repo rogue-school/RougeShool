@@ -78,8 +78,8 @@ namespace Game.CombatSystem.Service
             // 5. 슬롯 카드 교체 처리
             replacementHandler.ReplaceSlotCard(slot, card, ui);
 
-            // 6. 레지스트리에 등록
-            var execSlot = SlotPositionUtil.ToExecutionSlot(slot.GetCombatPosition());
+            // 6. 레지스트리에 등록 (슬롯의 논리 포지션을 직접 사용)
+            var execSlot = slot.Position;
             turnManager.RegisterCard(execSlot, card, ui, SlotOwner.PLAYER);
 
             return true;

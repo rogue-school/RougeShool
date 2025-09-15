@@ -15,7 +15,7 @@ namespace Game.SkillCardSystem.Effect
     {
         [Header("강제 슬롯 설정")]
         [Tooltip("다음 적 카드가 배치될 강제 슬롯 위치")]
-        [SerializeField] private CombatSlotPosition forcedSlot = CombatSlotPosition.FIRST;
+        [SerializeField] private CombatSlotPosition forcedSlot = CombatSlotPosition.SLOT_1;
 
         /// <summary>
         /// 해당 효과를 위한 커맨드 객체를 생성합니다.

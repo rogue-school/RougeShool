@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
+using Game.CoreSystem.Manager;
 
 public class Playbutton : MonoBehaviour
 {
@@ -7,14 +7,7 @@ public class Playbutton : MonoBehaviour
 
     public void OnButtonClicked()
     {
-        if (!string.IsNullOrEmpty(sceneToLoad))
-        {
-            Debug.Log("��ư�� Ŭ���߽��ϴ�. �� �̵� ��: " + sceneToLoad);
-            SceneManager.LoadScene(sceneToLoad);
-        }
-        else
-        {
-            Debug.Log("��ư�� Ŭ���߽��ϴ�. �̵��� �� �̸��� �������� �ʾҽ��ϴ�.");
-        }
+        // 중앙 전환 매니저 사용: StageScene으로 이동 (설정 시 다른 씬 메서드로 교체 가능)
+        _ = SceneTransitionManager.Instance.TransitionToStageScene();
     }
 }

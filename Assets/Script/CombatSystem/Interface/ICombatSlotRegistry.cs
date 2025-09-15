@@ -25,12 +25,7 @@ namespace Game.CombatSystem.Interface
         /// <returns>슬롯 객체</returns>
         ICombatCardSlot GetCombatSlot(CombatSlotPosition position);
 
-        /// <summary>
-        /// CombatFieldSlotPosition 기반으로 슬롯을 조회합니다.
-        /// 예: 플레이어/적 + 선공/후공 등의 복합 위치
-        /// </summary>
-        /// <param name="fieldPosition">조회할 필드 슬롯 포지션</param>
-        /// <returns>슬롯 객체</returns>
+        [System.Obsolete("4-슬롯 표준: CombatFieldSlotPosition 대신 CombatSlotPosition 사용")]
         ICombatCardSlot GetCombatSlot(CombatFieldSlotPosition fieldPosition);
 
         /// <summary>

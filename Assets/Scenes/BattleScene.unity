@@ -615,7 +615,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   <SlotPosition>k__BackingField: 0
-  <FieldSlotPosition>k__BackingField: 0
 --- !u!114 &370404090
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1156,7 +1155,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   <SlotPosition>k__BackingField: 1
-  <FieldSlotPosition>k__BackingField: 1
 --- !u!114 &898015908
 MonoBehaviour:
   m_ObjectHideFlags: 0

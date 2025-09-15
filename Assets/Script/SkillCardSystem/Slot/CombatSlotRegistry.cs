@@ -14,7 +14,6 @@ namespace Game.CombatSystem.Slot
         #region 필드
 
         private readonly Dictionary<CombatSlotPosition, ICombatCardSlot> _slotByPosition = new();
-        private readonly Dictionary<CombatFieldSlotPosition, ICombatCardSlot> _slotByFieldPosition = new();
         private readonly List<ICombatCardSlot> _allSlots = new();
 
         private bool _isInitialized = false;
@@ -35,40 +34,23 @@ namespace Game.CombatSystem.Slot
         public void RegisterCombatSlots(IEnumerable<ICombatCardSlot> slots)
         {
             _slotByPosition.Clear();
-            _slotByFieldPosition.Clear();
+            
             _allSlots.Clear();
 
             int registeredCount = 0;
 
             foreach (var slot in slots)
             {
-                if (slot is not MonoBehaviour monoSlot)
+                // 슬롯 포지션은 슬롯 자체의 Position 속성을 단일 진실로 사용
+                var pos = slot.Position;
+
+                if (_slotByPosition.ContainsKey(pos))
                 {
-                    Debug.LogWarning($"[CombatSlotRegistry] 슬롯은 MonoBehaviour 기반이어야 합니다: {slot}");
+                    Debug.LogError($"[CombatSlotRegistry] 중복된 CombatSlotPosition: {pos}");
                     continue;
                 }
 
-                var holder = monoSlot.GetComponent<CombatSlotPositionHolder>();
-                if (holder == null)
-                {
-                    Debug.LogWarning($"[CombatSlotRegistry] CombatSlotPositionHolder 컴포넌트 누락: {monoSlot.name}");
-                    continue;
-                }
-
-                if (_slotByPosition.ContainsKey(holder.SlotPosition))
-                {
-                    Debug.LogError($"[CombatSlotRegistry] 중복된 CombatSlotPosition: {holder.SlotPosition} - {monoSlot.name}");
-                    continue;
-                }
-
-                if (_slotByFieldPosition.ContainsKey(holder.FieldSlotPosition))
-                {
-                    Debug.LogError($"[CombatSlotRegistry] 중복된 CombatFieldSlotPosition: {holder.FieldSlotPosition} - {monoSlot.name}");
-                    continue;
-                }
-
-                _slotByPosition.Add(holder.SlotPosition, slot);
-                _slotByFieldPosition.Add(holder.FieldSlotPosition, slot);
+                _slotByPosition.Add(pos, slot);
                 _allSlots.Add(slot);
                 registeredCount++;
             }
@@ -94,8 +76,8 @@ namespace Game.CombatSystem.Slot
         /// </summary>
         public ICombatCardSlot GetCombatSlot(CombatFieldSlotPosition fieldPosition)
         {
-            _slotByFieldPosition.TryGetValue(fieldPosition, out var slot);
-            return slot;
+            Debug.LogWarning("[CombatSlotRegistry] 필드 포지션 기반 조회는 비권장입니다. SLOT_1..SLOT_4를 사용하세요.");
+            return null;
         }
 
         /// <summary>

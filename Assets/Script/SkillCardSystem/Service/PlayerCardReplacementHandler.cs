@@ -79,7 +79,7 @@ namespace Game.CombatSystem.Service
             // 새 카드 등록
             slot.SetCard(newCard);
             slot.SetCardUI(newCardUI);
-            var execSlot = SlotPositionUtil.ToExecutionSlot(slot.GetCombatPosition());
+            var execSlot = slot.Position;
             newCard.SetCombatSlot(execSlot);
 
             // 카드 UI 정렬 및 슬롯 부착

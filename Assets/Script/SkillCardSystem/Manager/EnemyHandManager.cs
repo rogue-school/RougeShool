@@ -153,11 +153,11 @@ namespace Game.CombatSystem.Manager
             if (card == null || ui == null)
             {
                 Debug.LogWarning("[EnemyHandManager] 전투 슬롯 등록 실패: 카드 또는 UI가 null");
-                return (null, null, CombatSlotPosition.FIRST);
+                return (null, null, CombatSlotPosition.SLOT_1);
             }
 
             var isFirst = UnityEngine.Random.value < 0.5f;
-            var pos = isFirst ? CombatSlotPosition.FIRST : CombatSlotPosition.SECOND;
+            var pos = isFirst ? CombatSlotPosition.SLOT_1 : CombatSlotPosition.SLOT_2;
 
             flowCoordinator.RegisterCardToCombatSlot(pos, card, ui);
             cardRegistry.RegisterCard(pos, card, ui, SlotOwner.ENEMY);
@@ -411,8 +411,7 @@ namespace Game.CombatSystem.Manager
             cardUI.transform.localScale = Vector3.one;
 
             slot.SetCard(runtimeCard);
-            if (slot is Game.CombatSystem.UI.EnemyHandCardSlotUI uiSlot)
-                uiSlot.SetCardUI(cardUI);
+            // 적 핸드 슬롯 UI는 제거됨. 핸드 UI 동기화는 내부 딕셔너리로만 관리.
 
             cardUIs[pos] = cardUI;
             _cardsInSlots[pos] = (runtimeCard, cardUI);
@@ -601,7 +600,7 @@ namespace Game.CombatSystem.Manager
             _cardsInSlots[to] = (card, cardUI);
 
             // 이동 이벤트 발행
-            CombatEvents.RaiseEnemyCardMoved(card.GetCardName(), cardUI.gameObject, Game.CombatSystem.Slot.CombatSlotPosition.FIRST);
+            CombatEvents.RaiseEnemyCardMoved(card.GetCardName(), cardUI.gameObject, Game.CombatSystem.Slot.CombatSlotPosition.SLOT_1);
 
             onComplete?.Invoke();
         }
@@ -614,7 +613,7 @@ namespace Game.CombatSystem.Manager
                 yield break;
             }
 
-            var slotPos = flowCoordinator.IsEnemyFirst ? CombatSlotPosition.FIRST : CombatSlotPosition.SECOND;
+            var slotPos = flowCoordinator.IsEnemyFirst ? CombatSlotPosition.SLOT_1 : CombatSlotPosition.SLOT_2;
 
             flowCoordinator.RegisterCardToTurnRegistry(slotPos, card, ui);
 

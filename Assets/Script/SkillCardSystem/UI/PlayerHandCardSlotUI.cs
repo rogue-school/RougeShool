@@ -2,17 +2,19 @@ using UnityEngine;
 using Zenject;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Data;
-using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Slot;
 using Game.SkillCardSystem.UI;
 using Game.CombatSystem.Utility;
 using Game.CombatSystem.DragDrop;
-using Game.AnimationSystem.Animator;
 using Game.AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation;
 
 namespace Game.CombatSystem.UI
 {
+    /// <summary>
+    /// 플레이어 핸드 슬롯 UI.
+    /// 이전 시스템의 불필요한 의존성을 제거하고, 플레이어 카드 전용으로 동작합니다.
+    /// </summary>
     public class PlayerHandCardSlotUI : MonoBehaviour, IHandCardSlot
     {
         [SerializeField] private SkillCardSlotPosition position;
@@ -52,8 +54,22 @@ namespace Game.CombatSystem.UI
             return currentCardUI;
         }
 
+        /// <summary>
+        /// 내부 전용: 카드와 UI를 이 슬롯에 부착합니다.
+        /// </summary>
         private void SetCardInternal(ISkillCard card, SkillCardUI prefab)
         {
+            if (card == null)
+            {
+                Debug.LogWarning("[PlayerHandCardSlotUI] null 카드는 등록할 수 없습니다.");
+                return;
+            }
+
+            if (!card.IsFromPlayer())
+            {
+                Debug.LogWarning("[PlayerHandCardSlotUI] 플레이어 슬롯에는 플레이어 카드만 배치할 수 있습니다.");
+                return;
+            }
             currentCard = card;
             currentCard.SetHandSlot(position);
 
@@ -64,7 +80,7 @@ namespace Game.CombatSystem.UI
 
             if (currentCardUI != null)
             {
-                // 정확한 부모로 강제 부착
+                // 정확한 부모로 강제 부착(레이아웃/정렬 용이)
                 CardSlotHelper.AttachCardToSlot(currentCardUI, this);
 
                 // 생성 애니메이션 실행 (존재 시)

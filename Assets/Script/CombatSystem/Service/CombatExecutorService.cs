@@ -54,8 +54,7 @@ namespace Game.CombatSystem.Service
         /// </summary>
         public void ExecuteImmediately()
         {
-            var fieldSlot = SlotPositionUtil.ToFieldSlot(CombatSlotPosition.SLOT_1);
-            var slot = combatSlotRegistry.GetCombatSlot(fieldSlot);
+            var slot = combatSlotRegistry.GetCombatSlot(CombatSlotPosition.SLOT_1);
 
             if (slot == null || slot.IsEmpty())
             {
@@ -98,7 +97,7 @@ namespace Game.CombatSystem.Service
             // 슬롯 조회 및 검증
             for (int i = 0; i < 4; i++)
             {
-                slots[i] = combatSlotRegistry.GetCombatSlot(SlotPositionUtil.ToFieldSlot(SlotMoveOrder[i]));
+                slots[i] = combatSlotRegistry.GetCombatSlot(SlotMoveOrder[i]);
                 if (slots[i] == null)
                 {
                     Debug.LogWarning($"[Executor] 슬롯 {SlotMoveOrder[i]}을 찾을 수 없습니다.");
@@ -137,8 +136,7 @@ namespace Game.CombatSystem.Service
                 yield break;
             }
 
-            var fieldSlot = SlotPositionUtil.ToFieldSlot(slotPosition);
-            var slot = combatSlotRegistry.GetCombatSlot(fieldSlot);
+            var slot = combatSlotRegistry.GetCombatSlot(slotPosition);
 
             if (slot == null || slot.IsEmpty())
             {

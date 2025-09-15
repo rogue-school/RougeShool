@@ -22,7 +22,7 @@ namespace Game.CombatSystem.Utility
 
         public static void RegisterCard(ICombatCardSlot slot, ISkillCard card, SkillCardUI ui)
         {
-            var execSlot = SlotPositionUtil.ToExecutionSlot(slot.GetCombatPosition());
+            var execSlot = slot.Position;
             card.SetCombatSlot(execSlot);
 
             slot.SetCard(card);

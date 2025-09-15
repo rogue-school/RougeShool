@@ -48,9 +48,7 @@ namespace Game.CombatSystem.Manager
             CombatExecutionSlotUI[] slotUIs = GetComponentsInChildren<CombatExecutionSlotUI>(true);
             foreach (var slotUI in slotUIs)
             {
-                CombatFieldSlotPosition fieldPos = slotUI.GetCombatPosition();
-                CombatSlotPosition execPos = SlotPositionUtil.ToExecutionSlot(fieldPos);
-
+                var execPos = slotUI.Position;
                 if (!combatSlots.ContainsKey(execPos))
                 {
                     combatSlots[execPos] = slotUI;
@@ -58,6 +56,31 @@ namespace Game.CombatSystem.Manager
                 else
                 {
                     Debug.LogWarning($"[CombatSlotManager] 중복 슬롯 발견: {execPos}");
+                }
+            }
+
+            // 보강: 현재 오브젝트의 자식에 슬롯이 없을 수 있으므로, 누락된 슬롯이 있으면 씬 전체에서 한 번 더 검색합니다.
+            bool hasMissing = false;
+            for (int i = 0; i < RequiredSlots.Length; i++)
+            {
+                if (!combatSlots.ContainsKey(RequiredSlots[i]))
+                {
+                    hasMissing = true;
+                    break;
+                }
+            }
+
+            if (hasMissing)
+            {
+                var allSlotUIs = Object.FindObjectsByType<CombatExecutionSlotUI>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                foreach (var slotUI in allSlotUIs)
+                {
+                    var execPos = slotUI.Position;
+                    if (!combatSlots.ContainsKey(execPos))
+                    {
+                        combatSlots[execPos] = slotUI;
+                        Debug.Log($"[CombatSlotManager] 자식 검색에 실패하여 전역 검색으로 슬롯을 바인딩했습니다: {execPos}");
+                    }
                 }
             }
 
@@ -96,14 +119,11 @@ namespace Game.CombatSystem.Manager
             return slot;
         }
 
-        /// <summary>
-        /// 필드 슬롯 위치를 실행 슬롯 위치로 변환한 후 해당 슬롯을 반환합니다.
-        /// </summary>
-        /// <param name="fieldPosition">CombatFieldSlotPosition</param>
+        [System.Obsolete("4-슬롯 표준: CombatFieldSlotPosition 대신 CombatSlotPosition 사용")]
         public ICombatCardSlot GetSlot(CombatFieldSlotPosition fieldPosition)
         {
-            var execPosition = SlotPositionUtil.ToExecutionSlot(fieldPosition);
-            return GetSlot(execPosition);
+            Debug.LogWarning("[CombatSlotManager] 필드 포지션 기반 조회는 비권장입니다. SLOT_1..SLOT_4를 사용하세요.");
+            return null;
         }
 
         #endregion
@@ -134,14 +154,10 @@ namespace Game.CombatSystem.Manager
             return !combatSlots.ContainsKey(position) || combatSlots[position].IsEmpty();
         }
 
-        /// <summary>
-        /// 지정한 필드 슬롯이 비어 있는지 확인합니다.
-        /// </summary>
-        /// <param name="fieldPosition">CombatFieldSlotPosition</param>
+        [System.Obsolete("4-슬롯 표준: CombatFieldSlotPosition 대신 CombatSlotPosition 사용")]
         public bool IsSlotEmpty(CombatFieldSlotPosition fieldPosition)
         {
-            var execPosition = SlotPositionUtil.ToExecutionSlot(fieldPosition);
-            return IsSlotEmpty(execPosition);
+            return true;
         }
 
         #endregion

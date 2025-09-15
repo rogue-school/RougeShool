@@ -10,7 +10,7 @@ namespace Game.CombatSystem.DragDrop
     {
         public void RegisterCard(ICombatCardSlot slot, ISkillCard card, SkillCardUI ui)
         {
-            var execSlot = SlotPositionUtil.ToExecutionSlot(slot.GetCombatPosition());
+            var execSlot = slot.Position;
             card.SetCombatSlot(execSlot);
 
             slot.SetCard(card);
@@ -18,7 +18,7 @@ namespace Game.CombatSystem.DragDrop
 
             CardSlotHelper.AttachCardToSlot(ui, (MonoBehaviour)slot);
 
-            Debug.Log($"[Registrar] 카드 등록 완료: {card.CardDefinition.Name} → {execSlot}");
+            Debug.Log($"[Registrar] 카드 등록 완료: {card.CardDefinition?.CardName ?? "Unknown"} → {execSlot}");
         }
     }
 }

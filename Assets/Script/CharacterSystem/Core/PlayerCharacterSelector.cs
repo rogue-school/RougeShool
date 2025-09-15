@@ -77,7 +77,7 @@ namespace Game.CharacterSystem.Core
         }
         
         // 새로운 씬 전환 시스템 사용
-        await Game.CoreSystem.Manager.SceneTransitionManager.Instance.TransitionToBattleScene();
+        await Game.CoreSystem.Manager.SceneTransitionManager.Instance.TransitionToStageScene();
     }
 }
 }
