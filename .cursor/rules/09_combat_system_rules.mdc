@@ -9,7 +9,7 @@ alwaysApply: true
 # CombatSystem 개발 규칙
 
 ## 📋 시스템 개요
-CombatSystem은 게임의 전투 로직을 관리하는 핵심 시스템입니다. 전투 상태, 턴 관리, 카드 드래그 앤 드롭, 슬롯 관리 등 다양한 기능을 통합적으로 관리합니다.
+CombatSystem은 4개 전투 슬롯(SLOT_1~SLOT_4)을 축으로 즉시 실행(즉발) 전투를 관리합니다. 적 핸드 슬롯과 턴 시작 버튼은 없으며, 1번 슬롯에서 카드가 존재하는 즉시 실행됩니다. 실행이 끝나면 슬롯은 2→1, 3→2, 4→3으로 이동하며 플레이어 1턴 → 적 1턴이 교대로 반복됩니다.
 
 ## 🏗️ 폴더 구조 규칙
 ```
@@ -84,10 +84,13 @@ CombatSystem/
 - **상태 전환**: 이벤트 기반 상태 변경
 - **상태 검증**: 상태 전환 유효성 검증
 
-### 2. 턴 관리 규칙
-- **턴 순서**: 캐릭터 속도 기반 턴 순서 결정
-- **턴 제한**: 턴당 행동 제한
-- **턴 종료**: 턴 종료 시 정리 작업
+### 2. 턴/슬롯 규칙(현행)
+- **슬롯 고정**: `SLOT_1..SLOT_4` 고정. 초기 상태는 `1:P(빈), 2:E(카드), 3:P(빈), 4:E(카드)`
+- **즉시 실행**: 1번 슬롯에 카드가 올라오면 즉시 실행(플레이어/적 공통)
+- **교대 규칙**: 플레이어 1턴 → 적 1턴 → 플레이어 1턴 → 적 1턴 … 반복
+- **슬롯 이동(Shift)**: 실행 종료 즉시 `2→1, 3→2, 4→3`, 4번은 비워짐
+- **적 카드 예약**: 적 카드는 미리/수시로 4번 슬롯에 등록되어 Shift로 전진
+- **가드 효과**: “다음 순서의 적 카드 1장 무효화” 후 즉시 소멸(수치/지속 없음)
 
 ### 3. Zenject DI 규칙
 - **CombatInstaller**: 전투 시스템 의존성 주입 설정
@@ -101,48 +104,33 @@ CombatSystem/
 
 ## 🔧 사용 방법
 
-### 기본 사용법
+### 기본 사용법(즉시 실행/교대)
 ```csharp
-// 전투 시작
-CombatFlowCoordinator combatCoordinator = FindObjectOfType<CombatFlowCoordinator>();
-combatCoordinator.StartCombat(stageData);
+// 현재 턴 판정 (1번 슬롯 기준)
+var turnType = turnManager.GetCurrentTurnType(); // Player 또는 Enemy
 
-// 턴 매니저를 통한 상태 관리
-CombatTurnManager turnManager = FindObjectOfType<CombatTurnManager>();
-turnManager.Initialize();
-turnManager.SetState(new CombatPrepareState());
+// 플레이어가 1번 슬롯에 카드를 올리는 순간 즉시 실행
+executor.ExecuteImmediately(playerCard, CombatSlotPosition.SLOT_1);
 
-// 카드 등록
-turnManager.RegisterCard(skillCard, CombatSlotPosition.FIRST);
+// 실행 종료 후 내부적으로 슬롯 이동(2→1, 3→2, 4→3) → 1번이 적 카드라면 즉시 적 실행
 
-// 턴 진행 가능 여부 확인
-if (turnManager.CanProceedToNextTurn())
-{
-    turnManager.ProceedToNextTurn();
-}
+// 적 카드 예약(필요 시)
+turnManager.RegisterEnemyCardInSlot4(enemyCardDefinition);
+
+// 가드 효과 적용(다음 적 카드 1장 무효화)
+turnManager.ApplyGuardEffect();
 ```
 
-### 전투 실행 서비스 사용법
+### 전투 실행 서비스 사용법(핵심 메서드)
 ```csharp
-// CombatExecutorService를 통한 전투 실행
-CombatExecutorService executorService = new CombatExecutorService(
-    combatSlotRegistry, 
-    contextProvider, 
-    cardExecutor, 
-    enemyHandManager
-);
+// 1번 슬롯 즉시 실행
+executor.ExecuteImmediately(card, CombatSlotPosition.SLOT_1);
 
-// 전체 전투 페이즈 실행
-StartCoroutine(executorService.ExecuteCombatPhase());
-
-// 특정 슬롯 공격 실행
-StartCoroutine(executorService.PerformAttack(CombatSlotPosition.FIRST));
-
-// 카드 실행
-executorService.ExecuteCard(skillCard, CombatSlotPosition.SECOND);
+// 슬롯 이동(내부에서 호출되지만, 필요 시 직접 호출 가능)
+executor.MoveSlotsForward();
 ```
 
-### 전투 준비 서비스 사용법
+### 전투 준비 서비스 사용법(선택)
 ```csharp
 // CombatPreparationService를 통한 전투 준비
 CombatPreparationService preparationService = new CombatPreparationService(
@@ -160,11 +148,7 @@ CombatPreparationService preparationService = new CombatPreparationService(
 // 전투 준비 실행
 StartCoroutine(preparationService.PrepareCombat());
 
-// 적 스폰
-preparationService.SpawnEnemy();
-
-// 플레이어 카드 설정
-preparationService.SetupPlayerCards();
+// 적 카드 초기 등록/보충은 RegisterEnemyCardInSlot4()로 처리
 ```
 
 ### 상태 패턴 사용법
@@ -231,10 +215,11 @@ turnManager.SetState(new CustomCombatState());
 ## 🧪 검증/테스트 지침
 
 ### 체크리스트
-- [ ] 전투 상태 전환 정상 동작 확인
-- [ ] 턴 관리 로직 검증
-- [ ] 슬롯 시스템 정상 동작 확인
-- [ ] Zenject DI 바인딩 완전성 확인
+- [ ] 1번 슬롯 즉시 실행 동작(플레이어/적) 확인
+- [ ] 실행 후 슬롯 이동(2→1, 3→2, 4→3) 정상 동작
+- [ ] 적 카드 4번 등록 → 자연스러운 전진 진입 확인
+- [ ] 가드 효과로 “다음 적 카드 1장” 무효화 확인
+- [ ] Zenject DI 바인딩 완전성 확인(Installer)
 
 ### 재현 절차
 1. 전투 시작부터 종료까지 전체 플로우 테스트
@@ -250,3 +235,4 @@ turnManager.SetState(new CustomCombatState());
 - 2025-01-27 | Maintainer | .mdc 규칙 파일로 변환 및 Cursor 규칙 저장 | 문서
 - 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 클래스/메서드/서비스 정보 추가 | 문서
 - 2025-01-27 | Maintainer | 가드 효과 시스템 통합 - ICombatTurnManager에 ApplyGuardEffect 메서드 추가 | 코드/문서
+- 2025-09-15 | Maintainer | 4슬롯 교대(플레이어→적) 즉시 실행 규칙 및 API 반영 | 문서
