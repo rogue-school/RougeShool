@@ -1,0 +1,311 @@
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using Game.CharacterSystem.Core;
+
+namespace Game.CharacterSystem.UI
+{
+    /// <summary>
+    /// 플레이어 캐릭터의 HP 바를 관리하는 컨트롤러입니다.
+    /// 체력 변화에 따라 HP 바의 채움 비율과 색상을 업데이트합니다.
+    /// </summary>
+    public class HPBarController : MonoBehaviour
+    {
+        #region Serialized Fields
+
+        [Header("HP Bar Components")]
+        [Tooltip("HP 바 배경 (테두리)")]
+        [SerializeField] private Image hpBarBackground;
+        
+        [Tooltip("HP 바 채움 부분")]
+        [SerializeField] private Image hpBarFill;
+        
+        [Tooltip("HP 바 장식 테두리")]
+        [SerializeField] private Image hpBarBorder;
+        
+        [Tooltip("HP 텍스트 (선택사항)")]
+        [SerializeField] private TextMeshProUGUI hpText;
+        
+        [Tooltip("HP 바 글로우 효과")]
+        [SerializeField] private Image hpBarGlow;
+
+        [Header("HP Bar Settings")]
+        [Tooltip("풀피일 때의 색상")]
+        [SerializeField] private Color fullHealthColor = new Color(0.2f, 0.8f, 0.2f, 1f); // 녹색
+        
+        [Tooltip("중간 체력일 때의 색상")]
+        [SerializeField] private Color halfHealthColor = new Color(1f, 0.8f, 0.2f, 1f); // 노란색
+        
+        [Tooltip("낮은 체력일 때의 색상")]
+        [SerializeField] private Color lowHealthColor = new Color(0.8f, 0.2f, 0.2f, 1f); // 빨간색
+        
+        [Tooltip("HP 바 변화 애니메이션 속도")]
+        [SerializeField] private float animationSpeed = 2f;
+        
+        [Header("Visual Effects")]
+        [Tooltip("글로우 효과 활성화")]
+        [SerializeField] private bool enableGlowEffect = true;
+        
+        [Tooltip("글로우 효과 강도")]
+        [SerializeField] private float glowIntensity = 1.5f;
+        
+        [Tooltip("글로우 효과 색상")]
+        [SerializeField] private Color glowColor = new Color(1f, 1f, 1f, 0.3f);
+        
+        [Tooltip("테두리 강조 효과")]
+        [SerializeField] private bool enableBorderHighlight = true;
+
+        #endregion
+
+        #region Private Fields
+
+        private PlayerCharacter playerCharacter;
+        private float targetFillAmount;
+        private bool isAnimating = false;
+        private Color originalGlowColor;
+        private Color originalBorderColor;
+
+        #endregion
+
+        #region Unity Lifecycle
+
+        private void Awake()
+        {
+            // 원본 색상 저장
+            if (hpBarGlow != null)
+                originalGlowColor = hpBarGlow.color;
+            if (hpBarBorder != null)
+                originalBorderColor = hpBarBorder.color;
+        }
+
+        private void Update()
+        {
+            // HP 바 애니메이션 처리
+            if (isAnimating && hpBarFill != null)
+            {
+                hpBarFill.fillAmount = Mathf.Lerp(hpBarFill.fillAmount, targetFillAmount, 
+                    animationSpeed * Time.deltaTime);
+                
+                // 애니메이션 완료 체크
+                if (Mathf.Abs(hpBarFill.fillAmount - targetFillAmount) < 0.01f)
+                {
+                    hpBarFill.fillAmount = targetFillAmount;
+                    isAnimating = false;
+                }
+            }
+            
+            // 글로우 효과 애니메이션
+            if (enableGlowEffect && hpBarGlow != null)
+            {
+                UpdateGlowEffect();
+            }
+        }
+
+        #endregion
+
+        #region 초기화
+
+        /// <summary>
+        /// 플레이어 캐릭터와 연결하여 HP 바를 초기화합니다.
+        /// </summary>
+        /// <param name="character">연결할 플레이어 캐릭터</param>
+        public void Initialize(PlayerCharacter character)
+        {
+            playerCharacter = character;
+            
+            if (playerCharacter == null)
+            {
+                Debug.LogWarning("[HPBarController] Initialize() - playerCharacter가 null입니다.");
+                return;
+            }
+
+            UpdateHPBar();
+        }
+
+        #endregion
+
+        #region HP 바 업데이트
+
+        /// <summary>
+        /// HP 바를 현재 체력에 맞게 업데이트합니다.
+        /// </summary>
+        public void UpdateHPBar()
+        {
+            if (playerCharacter == null || hpBarFill == null) return;
+
+            int currentHP = playerCharacter.GetCurrentHP();
+            int maxHP = playerCharacter.GetMaxHP();
+            
+            if (maxHP <= 0) return;
+
+            float hpRatio = (float)currentHP / maxHP;
+            
+            // HP 바 채움 비율 설정 (애니메이션과 함께)
+            targetFillAmount = hpRatio;
+            isAnimating = true;
+
+            // HP 비율에 따른 색상 변화
+            Color targetColor = GetHealthColor(hpRatio);
+            hpBarFill.color = targetColor;
+            
+            // 시각적 효과 업데이트
+            UpdateVisualEffects(hpRatio, targetColor);
+
+            // HP 텍스트 업데이트 (선택사항)
+            UpdateHPText(currentHP, maxHP);
+        }
+
+        /// <summary>
+        /// HP 비율에 따른 색상을 반환합니다.
+        /// </summary>
+        /// <param name="hpRatio">HP 비율 (0.0 ~ 1.0)</param>
+        /// <returns>해당하는 색상</returns>
+        private Color GetHealthColor(float hpRatio)
+        {
+            if (hpRatio > 0.6f)
+            {
+                // 풀피 ~ 중간 체력: 녹색에서 노란색으로
+                return Color.Lerp(halfHealthColor, fullHealthColor, (hpRatio - 0.6f) / 0.4f);
+            }
+            else if (hpRatio > 0.3f)
+            {
+                // 중간 체력 ~ 낮은 체력: 노란색에서 빨간색으로
+                return Color.Lerp(lowHealthColor, halfHealthColor, (hpRatio - 0.3f) / 0.3f);
+            }
+            else
+            {
+                // 낮은 체력: 빨간색
+                return lowHealthColor;
+            }
+        }
+
+        /// <summary>
+        /// HP 텍스트를 업데이트합니다.
+        /// </summary>
+        /// <param name="currentHP">현재 체력</param>
+        /// <param name="maxHP">최대 체력</param>
+        private void UpdateHPText(int currentHP, int maxHP)
+        {
+            if (hpText != null)
+            {
+                hpText.text = $"{currentHP}/{maxHP}";
+                
+                // 텍스트 색상도 HP 상태에 따라 변경
+                hpText.color = GetHealthColor((float)currentHP / maxHP);
+            }
+        }
+
+        /// <summary>
+        /// 시각적 효과들을 업데이트합니다.
+        /// </summary>
+        /// <param name="hpRatio">HP 비율</param>
+        /// <param name="healthColor">현재 체력 색상</param>
+        private void UpdateVisualEffects(float hpRatio, Color healthColor)
+        {
+            // 글로우 효과 업데이트
+            if (enableGlowEffect && hpBarGlow != null)
+            {
+                Color glowColorWithAlpha = new Color(healthColor.r, healthColor.g, healthColor.b, glowColor.a);
+                hpBarGlow.color = glowColorWithAlpha;
+            }
+            
+            // 테두리 강조 효과
+            if (enableBorderHighlight && hpBarBorder != null)
+            {
+                // HP가 낮을 때 테두리를 더 밝게
+                float borderIntensity = Mathf.Lerp(1.5f, 1f, hpRatio);
+                Color borderColor = new Color(originalBorderColor.r * borderIntensity, 
+                                            originalBorderColor.g * borderIntensity, 
+                                            originalBorderColor.b * borderIntensity, 
+                                            originalBorderColor.a);
+                hpBarBorder.color = borderColor;
+            }
+        }
+
+        /// <summary>
+        /// 글로우 효과를 애니메이션합니다.
+        /// </summary>
+        private void UpdateGlowEffect()
+        {
+            if (hpBarGlow == null) return;
+            
+            // 부드러운 글로우 펄스 효과
+            float pulse = Mathf.Sin(Time.time * 2f) * 0.1f + 0.9f;
+            Color currentGlowColor = hpBarGlow.color;
+            currentGlowColor.a = glowColor.a * pulse * glowIntensity;
+            hpBarGlow.color = currentGlowColor;
+        }
+
+        #endregion
+
+        #region 이벤트 처리
+
+        /// <summary>
+        /// 체력이 변경될 때 호출되는 메서드
+        /// </summary>
+        public void OnHealthChanged()
+        {
+            UpdateHPBar();
+        }
+
+        /// <summary>
+        /// HP 바를 즉시 업데이트합니다 (애니메이션 없이)
+        /// </summary>
+        public void UpdateHPBarImmediate()
+        {
+            if (playerCharacter == null || hpBarFill == null) return;
+
+            int currentHP = playerCharacter.GetCurrentHP();
+            int maxHP = playerCharacter.GetMaxHP();
+            
+            if (maxHP <= 0) return;
+
+            float hpRatio = (float)currentHP / maxHP;
+            
+            // 즉시 업데이트 (애니메이션 없이)
+            hpBarFill.fillAmount = hpRatio;
+            targetFillAmount = hpRatio;
+            isAnimating = false;
+
+            // 색상 업데이트
+            Color healthColor = GetHealthColor(hpRatio);
+            hpBarFill.color = healthColor;
+            
+            // 시각적 효과 업데이트
+            UpdateVisualEffects(hpRatio, healthColor);
+            
+            // 텍스트 업데이트
+            UpdateHPText(currentHP, maxHP);
+        }
+
+        #endregion
+
+        #region 공개 메서드
+
+        /// <summary>
+        /// HP 바 설정을 업데이트합니다.
+        /// </summary>
+        /// <param name="fullColor">풀피 색상</param>
+        /// <param name="halfColor">중간 체력 색상</param>
+        /// <param name="lowColor">낮은 체력 색상</param>
+        /// <param name="speed">애니메이션 속도</param>
+        public void UpdateSettings(Color fullColor, Color halfColor, Color lowColor, float speed)
+        {
+            fullHealthColor = fullColor;
+            halfHealthColor = halfColor;
+            lowHealthColor = lowColor;
+            animationSpeed = speed;
+        }
+
+        /// <summary>
+        /// HP 바를 숨기거나 보이게 합니다.
+        /// </summary>
+        /// <param name="visible">보이기 여부</param>
+        public void SetVisible(bool visible)
+        {
+            gameObject.SetActive(visible);
+        }
+
+        #endregion
+    }
+}

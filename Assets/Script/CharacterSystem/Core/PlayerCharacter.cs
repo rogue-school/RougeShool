@@ -9,6 +9,7 @@ using Game.IManager;
 using Game.CombatSystem.UI;
 using Game.CombatSystem;
 using Game.AnimationSystem.Manager;
+using Game.CharacterSystem.UI;
 
 namespace Game.CharacterSystem.Core
 {
@@ -35,6 +36,9 @@ namespace Game.CharacterSystem.Core
         [Header("Damage UI")]
         [SerializeField] private Transform hpTextAnchor;
         [SerializeField] private GameObject damageTextPrefab;
+
+        [Header("HP Bar UI")]
+        [SerializeField] private HPBarController hpBarController;
 
 
         #endregion
@@ -96,6 +100,12 @@ namespace Game.CharacterSystem.Core
         {
             SetMaxHP(data.MaxHP);
             UpdateUI();
+            
+            // HP 바 초기화
+            if (hpBarController != null)
+            {
+                hpBarController.Initialize(this);
+            }
         }
 
         #endregion
@@ -126,6 +136,9 @@ namespace Game.CharacterSystem.Core
                 hpText.text = currentHP.ToString();  // 현재 체력만 표시
                 hpText.color = Color.red;            // 붉은색으로 표시
             }
+            
+            // HP 바 업데이트
+            hpBarController?.OnHealthChanged();
         }
 
         /// <summary>
