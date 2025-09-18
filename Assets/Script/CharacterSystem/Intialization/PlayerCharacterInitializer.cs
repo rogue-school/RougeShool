@@ -8,8 +8,9 @@ using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Interface;
 using Game.IManager;
 using Game.CombatSystem.Interface;
-using Game.CoreSystem.Manager;
+using Game.CoreSystem.Interface;
 using Game.AnimationSystem.Manager;
+using Game.AnimationSystem.Interface;
 
 namespace Game.CombatSystem.Initialization
 {
@@ -29,6 +30,9 @@ namespace Game.CombatSystem.Initialization
 
         private IPlayerManager playerManager;
         private ISlotRegistry slotRegistry;
+        private IAnimationFacade animationFacade;
+        private IPlayerCharacterSelectionManager playerCharacterSelectionManager;
+        private IGameStateManager gameStateManager;
 
         #region 의존성 주입
 
@@ -36,10 +40,13 @@ namespace Game.CombatSystem.Initialization
         /// 의존성 주입 메서드입니다.
         /// </summary>
         [Inject]
-        public void Inject(IPlayerManager playerManager, ISlotRegistry slotRegistry)
+        public void Inject(IPlayerManager playerManager, ISlotRegistry slotRegistry, IAnimationFacade animationFacade, IPlayerCharacterSelectionManager playerCharacterSelectionManager, IGameStateManager gameStateManager)
         {
             this.playerManager = playerManager;
             this.slotRegistry = slotRegistry;
+            this.animationFacade = animationFacade;
+            this.playerCharacterSelectionManager = playerCharacterSelectionManager;
+            this.gameStateManager = gameStateManager;
         }
 
         #endregion
@@ -110,9 +117,9 @@ namespace Game.CombatSystem.Initialization
             string characterId = data.name; // ScriptableObject의 name
             
             // AnimationFacade가 사용 가능한지 확인
-            if (AnimationFacade.Instance != null)
+            if (animationFacade != null)
             {
-                AnimationFacade.Instance.PlayCharacterAnimation(characterId, "spawn", player.gameObject, () => animDone = true, false);
+                animationFacade.PlayCharacterAnimation(characterId, "spawn", player.gameObject, () => animDone = true, false);
                 yield return new WaitUntil(() => animDone);
             }
             else
@@ -229,9 +236,9 @@ namespace Game.CombatSystem.Initialization
         private PlayerCharacterData ResolvePlayerData()
         {
             // 새로운 캐릭터 선택 매니저에서 선택된 캐릭터 우선 사용
-            if (PlayerCharacterSelectionManager.Instance != null && PlayerCharacterSelectionManager.Instance.HasSelectedCharacter())
+            if (playerCharacterSelectionManager != null && playerCharacterSelectionManager.HasSelectedCharacter())
             {
-                var selectedCharacter = PlayerCharacterSelectionManager.Instance.GetSelectedCharacter();
+                var selectedCharacter = playerCharacterSelectionManager.GetSelectedCharacter();
                 if (selectedCharacter != null && !string.IsNullOrEmpty(selectedCharacter.DisplayName))
                 {
                     Debug.Log($"[PlayerCharacterInitializer] 선택된 캐릭터 사용: {selectedCharacter.DisplayName}");
@@ -244,10 +251,10 @@ namespace Game.CombatSystem.Initialization
             }
             
             // GameStateManager의 선택 데이터 사용 (하위 호환성)
-            if (GameStateManager.Instance != null && GameStateManager.Instance.SelectedCharacter != null)
+            if (gameStateManager != null && gameStateManager.SelectedCharacter != null)
             {
-                Debug.Log($"[PlayerCharacterInitializer] GameStateManager에서 캐릭터 사용: {GameStateManager.Instance.SelectedCharacter.DisplayName}");
-                return GameStateManager.Instance.SelectedCharacter;
+                Debug.Log($"[PlayerCharacterInitializer] GameStateManager에서 캐릭터 사용: {gameStateManager.SelectedCharacter.DisplayName}");
+                return gameStateManager.SelectedCharacter;
             }
 
             // 기본 데이터 사용

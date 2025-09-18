@@ -3,6 +3,8 @@ using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Interface;
 using Game.CharacterSystem.Interface;
 using Game.CoreSystem.Audio;
+using Game.CoreSystem.Interface;
+using Zenject;
 
 namespace Game.SkillCardSystem.Effect
 {
@@ -15,6 +17,12 @@ namespace Game.SkillCardSystem.Effect
         private int damageAmount;
         private int hits;
         private bool ignoreGuard;
+        private readonly IAudioManager audioManager;
+        
+        public DamageEffectCommand(IAudioManager audioManager)
+        {
+            this.audioManager = audioManager;
+        }
         
         /// <summary>
         /// 데미지 효과 명령을 생성합니다.
@@ -195,7 +203,7 @@ namespace Game.SkillCardSystem.Effect
         {
             // 기본 히트 사운드 재생 (다단 히트마다)
             // TODO: 실제 히트 사운드 클립으로 교체
-            if (AudioManager.Instance != null)
+            if (audioManager != null)
             {
                 // 기본 히트 사운드 재생 (임시)
                 // AudioManager.Instance.PlaySFX(hitSoundClip);

@@ -2,16 +2,16 @@ using UnityEngine;
 using Game.CharacterSystem.Data;
 using Game.CoreSystem.Interface;
 using Game.CoreSystem.Utility;
+using Zenject;
 
 namespace Game.CoreSystem.Manager
 {
     /// <summary>
-    /// 플레이어 캐릭터 선택을 관리하는 코어 매니저입니다.
+    /// 플레이어 캐릭터 선택을 관리하는 코어 매니저입니다. (Zenject DI 기반)
     /// 선택된 캐릭터 데이터를 저장하고 전달합니다.
     /// </summary>
     public class PlayerCharacterSelectionManager : MonoBehaviour, IPlayerCharacterSelectionManager, ICoreSystemInitializable
     {
-        public static PlayerCharacterSelectionManager Instance { get; private set; }
         
         [Header("선택된 캐릭터")]
         [SerializeField] private PlayerCharacterData selectedCharacterData;
@@ -20,19 +20,16 @@ namespace Game.CoreSystem.Manager
         public bool IsInitialized { get; private set; } = false;
         
         // 이벤트
-        public System.Action<PlayerCharacterData> OnCharacterSelected;
+        public System.Action<PlayerCharacterData> OnCharacterSelected { get; set; }
+        
+        /// <summary>
+        /// 선택된 캐릭터 데이터 반환
+        /// </summary>
+        public PlayerCharacterData SelectedCharacter => selectedCharacterData;
         
         private void Awake()
         {
-            if (Instance == null)
-            {
-                Instance = this;
-                GameLogger.LogInfo("PlayerCharacterSelectionManager 싱글톤 초기화 완료", GameLogger.LogCategory.UI);
-            }
-            else
-            {
-                Destroy(gameObject);
-            }
+            GameLogger.LogInfo("PlayerCharacterSelectionManager 초기화 완료", GameLogger.LogCategory.UI);
         }
         
         /// <summary>
@@ -135,6 +132,16 @@ namespace Game.CoreSystem.Manager
         {
             selectedCharacterData = null;
             GameLogger.LogInfo("캐릭터 선택 초기화됨", GameLogger.LogCategory.UI);
+        }
+        
+        /// <summary>
+        /// 캐릭터 선택 가능 여부 확인
+        /// </summary>
+        /// <param name="characterData">선택할 캐릭터 데이터</param>
+        /// <returns>선택 가능 여부</returns>
+        public bool CanSelectCharacter(PlayerCharacterData characterData)
+        {
+            return characterData != null && !string.IsNullOrEmpty(characterData.name);
         }
         
         #region ICoreSystemInitializable 구현

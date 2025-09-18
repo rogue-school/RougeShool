@@ -10,7 +10,8 @@ using Game.CombatSystem.Data;
 using Game.CombatSystem.Slot;
 using Game.CombatSystem.Context;
 using Game.CharacterSystem.Interface;
-using Game.CoreSystem.Audio;
+using Game.CoreSystem.Interface;
+using Zenject;
 using Game.CharacterSystem.Core;
 
 namespace Game.SkillCardSystem.Runtime
@@ -30,6 +31,9 @@ namespace Game.SkillCardSystem.Runtime
         
         private Dictionary<SkillCardSlotPosition, SkillCardSlotPosition> handSlotMap = new();
         private Dictionary<CombatSlotPosition, CombatSlotPosition> combatSlotMap = new();
+        
+        // 의존성 주입
+        [Inject] private IAudioManager audioManager;
         
         #region === 초기화 ===
         
@@ -283,9 +287,9 @@ namespace Game.SkillCardSystem.Runtime
         private void PlaySFX(AudioClip clip)
         {
             // AudioManager를 통한 사운드 재생
-            if (AudioManager.Instance != null)
+            if (audioManager != null)
             {
-                AudioManager.Instance.PlaySFX(clip);
+                audioManager.PlaySFX(clip);
             }
         }
         

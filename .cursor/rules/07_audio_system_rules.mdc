@@ -12,9 +12,11 @@ alwaysApply: true
 AudioSystem은 게임의 모든 오디오를 관리하는 시스템입니다. 오디오 풀링과 이벤트 기반 시스템을 제공하며, CoreSystem에 통합되어 전역적으로 관리됩니다. Zenject DI와 자동 초기화 시스템을 통해 안정적이고 확장 가능한 오디오 아키텍처를 제공합니다.
 
 ### 최근 변경(요약)
-- **CoreSystem 통합**: AudioManager가 CoreSystem의 일부로 통합 관리
-- **Zenject DI 지원**: 의존성 주입을 통한 느슨한 결합 구현
-- **자동 초기화**: ICoreSystemInitializable 인터페이스 기반 자동 초기화
+- **CoreSystem 통합 완료**: AudioManager가 CoreSystem의 일부로 통합 관리 완료
+- **Zenject DI 통합 완료**: 의존성 주입을 통한 느슨한 결합 구현 완료
+- **자동 초기화 완료**: ICoreSystemInitializable 인터페이스 기반 자동 초기화 완료
+- **싱글톤 제거 완료**: AudioManager에서 싱글톤 패턴 제거하고 DI 패턴으로 전환 완료
+- **인터페이스 기반 설계**: IAudioManager 인터페이스 구현으로 테스트 가능성 확보 완료
 - **오디오 풀링 최적화**: AudioPoolManager를 통한 성능 최적화
 - **우선순위 시스템**: 사운드별 우선순위 관리로 중요한 사운드 우선 재생
 

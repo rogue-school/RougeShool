@@ -18,14 +18,9 @@ namespace Game.CombatSystem.Interface
         ICombatTurnState CreatePlayerInputState();
 
         /// <summary>
-        /// 선공 캐릭터의 공격 상태를 생성합니다.
+        /// 공격 상태를 생성합니다.
         /// </summary>
-        ICombatTurnState CreateFirstAttackState();
-
-        /// <summary>
-        /// 후공 캐릭터의 공격 상태를 생성합니다.
-        /// </summary>
-        ICombatTurnState CreateSecondAttackState();
+        ICombatTurnState CreateAttackState();
 
         /// <summary>
         /// 공격 결과 정리 상태를 생성합니다.

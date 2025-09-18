@@ -2,6 +2,8 @@ using UnityEngine;
 using DG.Tweening;
 using Game.SkillCardSystem.Data;
 using Game.CoreSystem.Audio;
+using Game.CoreSystem.Interface;
+using Zenject;
 
 namespace Game.AnimationSystem.Controllers
 {
@@ -14,6 +16,14 @@ namespace Game.AnimationSystem.Controllers
 		#region Data
 		private readonly ScriptableObject cardData;
 		private readonly string cardName;
+		private readonly IAudioManager audioManager;
+		#endregion
+		
+		#region Constructor
+		public SkillCardAnimationController(IAudioManager audioManager)
+		{
+			this.audioManager = audioManager;
+		}
 		#endregion
 		
 		#region Animation Settings
@@ -319,7 +329,7 @@ namespace Game.AnimationSystem.Controllers
 				Debug.LogWarning("[SkillCardAnimationController] 재생할 클립이 없습니다.");
 				return;
 			}
-			AudioManager.Instance?.PlaySFXWithPool(clip, volume);
+			audioManager?.PlaySFXWithPool(clip, volume);
 		}
 		#endregion
 	}

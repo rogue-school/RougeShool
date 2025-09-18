@@ -5,6 +5,7 @@ using Game.IManager;
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Interface;
 using Game.AnimationSystem.Manager;
+using Game.AnimationSystem.Interface;
 using Game.CharacterSystem.Interface;
 
 namespace Game.CharacterSystem.Initialization
@@ -21,16 +22,18 @@ namespace Game.CharacterSystem.Initialization
 
         private IPlayerManager playerManager;
         private IPlayerHandManager handManager;
+        private IAnimationFacade animationFacade;
 
         #endregion
 
         #region 의존성 주입
 
         [Inject]
-        public void Construct(IPlayerManager playerManager, IPlayerHandManager handManager)
+        public void Construct(IPlayerManager playerManager, IPlayerHandManager handManager, IAnimationFacade animationFacade)
         {
             this.playerManager = playerManager;
             this.handManager = handManager;
+            this.animationFacade = animationFacade;
         }
 
         #endregion
@@ -67,9 +70,9 @@ namespace Game.CharacterSystem.Initialization
                     if (uiObj != null)
                     {
                         // AnimationFacade를 통해 애니메이션 실행
-                        if (AnimationFacade.Instance != null)
+                        if (animationFacade != null)
                         {
-                            AnimationFacade.Instance.PlaySkillCardAnimation(card.CardDefinition.displayName, "spawn", uiObj.gameObject);
+                            animationFacade.PlaySkillCardAnimation(card, uiObj.gameObject, "spawn");
                         }
                         animCount++; // 애니메이션 호출 완료
                     }

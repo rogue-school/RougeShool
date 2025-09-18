@@ -12,12 +12,15 @@ alwaysApply: true
 SaveSystem은 게임의 저장/로드 기능을 관리하는 시스템입니다. 슬레이 더 스파이어 방식의 턴 기반 자동 저장 시스템을 제공하며, CoreSystem에 통합되어 전역적으로 관리됩니다. ICoreSystemInitializable 인터페이스를 구현하여 자동 초기화되며, 한국어 로깅과 씬 전환 지속성을 지원합니다.
 
 ### 최근 변경(요약)
-- **CoreSystem 통합**: ICoreSystemInitializable 구현으로 자동 초기화
-- **전역 시스템**: CoreScene에서 DontDestroyOnLoad로 설정되어 모든 씬에서 접근 가능
-- **한국어 로깅**: GameLogger를 통한 카테고리별 로깅 (Save, Error)
-- **씬 전환 지속성**: 씬 전환 시에도 저장 시스템 상태 유지
-- **자동 저장**: 턴 완료, 스테이지 완료 등 특정 이벤트 시 자동 저장
-- **JSON 직렬화**: JsonUtility를 활용한 안전한 데이터 직렬화
+- **CoreSystem 통합 완료**: ICoreSystemInitializable 구현으로 자동 초기화 완료
+- **전역 시스템 완료**: CoreScene에서 DontDestroyOnLoad로 설정되어 모든 씬에서 접근 가능 완료
+- **한국어 로깅 완료**: GameLogger를 통한 카테고리별 로깅 (Save, Error) 완료
+- **씬 전환 지속성 완료**: 씬 전환 시에도 저장 시스템 상태 유지 완료
+- **자동 저장 완료**: 턴 완료, 스테이지 완료 등 특정 이벤트 시 자동 저장 완료
+- **JSON 직렬화 완료**: JsonUtility를 활용한 안전한 데이터 직렬화 완료
+- **Zenject DI 통합 완료**: SaveManager가 의존성 주입으로 전환 완료
+- **새로운 슬롯 시스템 반영 완료**: 모든 저장/복원 로직이 새로운 5슬롯 시스템으로 업데이트 완료
+- **레거시 슬롯 최적화 완료**: SLOT_1/SLOT_2 → BATTLE_SLOT/WAIT_SLOT_1 전환 완료
 
 ## 🏗️ 폴더 구조 규칙
 ```

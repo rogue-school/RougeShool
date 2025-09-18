@@ -2,7 +2,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using Game.CharacterSystem.Data;
-using Game.CoreSystem.Manager;
+using Game.CoreSystem.Interface;
+using Zenject;
 
 namespace Game.CharacterSystem.Core
 {
@@ -12,6 +13,10 @@ namespace Game.CharacterSystem.Core
     [SerializeField] private List<PlayerCharacterData> characterCandidates;
     [Header("캐릭터 선택 버튼 (데이터와 1:1 순서 매칭)")]
     [SerializeField] private List<Button> characterButtons;
+    
+    // 의존성 주입
+    [Inject] private IPlayerCharacterSelectionManager playerCharacterSelectionManager;
+    [Inject] private ISceneTransitionManager sceneTransitionManager;
 
     private void Start()
     {
@@ -66,9 +71,9 @@ namespace Game.CharacterSystem.Core
         Debug.Log($"선택된 캐릭터: {selectedCharacter.DisplayName ?? "이름 없음"}");
         
         // 캐릭터 선택 매니저에 선택된 캐릭터 저장
-        if (PlayerCharacterSelectionManager.Instance != null)
+        if (playerCharacterSelectionManager != null)
         {
-            PlayerCharacterSelectionManager.Instance.SelectCharacter(selectedCharacter);
+            playerCharacterSelectionManager.SelectCharacter(selectedCharacter);
         }
         else
         {
@@ -77,7 +82,7 @@ namespace Game.CharacterSystem.Core
         }
         
         // 새로운 씬 전환 시스템 사용
-        await Game.CoreSystem.Manager.SceneTransitionManager.Instance.TransitionToStageScene();
+        await sceneTransitionManager.TransitionToStageScene();
     }
 }
 }

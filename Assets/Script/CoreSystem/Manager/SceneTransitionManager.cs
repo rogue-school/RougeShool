@@ -6,15 +6,15 @@ using Game.UtilitySystem.GameFlow;
 using Game.CoreSystem.Interface;
 using Game.CoreSystem.Utility;
 using Game.CoreSystem.Audio;
+using Zenject;
 
 namespace Game.CoreSystem.Manager
 {
 	/// <summary>
-	/// 3개 씬 구조를 위한 씬 전환 매니저
+	/// 3개 씬 구조를 위한 씬 전환 매니저 (Zenject DI 기반)
 	/// </summary>
-	public class SceneTransitionManager : MonoBehaviour, ISceneLoader, ICoreSystemInitializable
+	public class SceneTransitionManager : MonoBehaviour, ISceneLoader, ICoreSystemInitializable, ISceneTransitionManager
 	{
-		public static SceneTransitionManager Instance { get; private set; }
 		
 		[Header("씬 설정")]
 		[SerializeField] private string coreSceneName = "CoreScene";
@@ -36,22 +36,23 @@ namespace Game.CoreSystem.Manager
 		[SerializeField] private UnityEngine.UI.Text loadingText;
 		
 		// 이벤트
-		public System.Action<string> OnSceneTransitionStart;
-		public System.Action<string> OnSceneTransitionEnd;
+		public System.Action<string> OnSceneTransitionStart { get; set; }
+		public System.Action<string> OnSceneTransitionEnd { get; set; }
 
 		private AudioEventTrigger cachedAudioEventTrigger;
 		
+		// 의존성 주입
+		private IAudioManager audioManager;
+		
+		[Inject]
+		public void Construct(IAudioManager audioManager)
+		{
+			this.audioManager = audioManager;
+		}
+		
 		private void Awake()
 		{
-			if (Instance == null)
-			{
-				Instance = this;
-				InitializeTransition();
-			}
-			else
-			{
-				Destroy(gameObject);
-			}
+			InitializeTransition();
 		}
 		
 		private void Start()
@@ -120,9 +121,17 @@ namespace Game.CoreSystem.Manager
 		}
 		
 		/// <summary>
+		/// 지정된 씬으로 전환
+		/// </summary>
+		public async Task TransitionToScene(string sceneName)
+		{
+			await TransitionToScene(sceneName, TransitionType.Fade);
+		}
+		
+		/// <summary>
 		/// 씬 전환 실행 (페이드 효과 비활성화)
 		/// </summary>
-		public async Task TransitionToScene(string sceneName, TransitionType transitionType = TransitionType.Fade)
+		public async Task TransitionToScene(string sceneName, TransitionType transitionType)
 		{
 			// 중복 호출 방지
 			if (IsTransitioning)
@@ -331,11 +340,5 @@ namespace Game.CoreSystem.Manager
 			IsInitialized = false;
 		}
 		#endregion
-	}
-	
-	public enum TransitionType
-	{
-		Fade,
-		Slide
 	}
 }

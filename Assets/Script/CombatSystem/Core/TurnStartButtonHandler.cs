@@ -90,7 +90,7 @@ namespace Game.CombatSystem.Core
                 return;
             }
 
-            var nextState = stateFactory?.CreateFirstAttackState();
+            var nextState = stateFactory?.CreateAttackState();
             if (nextState != null)
             {
                 turnManager?.RequestStateChange(nextState);

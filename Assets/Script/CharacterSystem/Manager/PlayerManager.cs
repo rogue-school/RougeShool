@@ -7,7 +7,7 @@ using Game.SkillCardSystem.Slot;
 using Game.SkillCardSystem.UI;
 using Game.CombatSystem.Interface;
 using Game.CharacterSystem.Data;
-using Game.CoreSystem.Manager;
+using Game.CoreSystem.Interface;
 
 namespace Game.CharacterSystem.Manager
 {
@@ -36,6 +36,7 @@ namespace Game.CharacterSystem.Manager
 
         private IPlayerCharacter playerCharacter;
         private IPlayerHandManager handManager;
+        private IGameStateManager gameStateManager;
 
         #endregion
 
@@ -46,9 +47,11 @@ namespace Game.CharacterSystem.Manager
         /// </summary>
         [Inject]
         public void Construct(
-            IPlayerHandManager handManager)
+            IPlayerHandManager handManager,
+            IGameStateManager gameStateManager)
         {
             this.handManager = handManager;
+            this.gameStateManager = gameStateManager;
         }
 
         #endregion
@@ -67,10 +70,8 @@ namespace Game.CharacterSystem.Manager
                 return;
             }
 
-            // 캐릭터 선택은 static 변수로만 처리
-            var selectedData = GameStateManager.Instance != null
-                ? GameStateManager.Instance.SelectedCharacter
-                : defaultCharacterData;
+            // 캐릭터 선택은 DI로 주입된 GameStateManager 사용
+            var selectedData = gameStateManager?.SelectedCharacter ?? defaultCharacterData;
             if (selectedData == null)
             {
                 Debug.LogError("[PlayerManager] 선택된 캐릭터 데이터가 없습니다.");

@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using Game.SkillCardSystem.Manager;
 using Game.AnimationSystem.Animator;
 using Game.AnimationSystem.Manager;
+using Game.AnimationSystem.Interface;
 using Game.CombatSystem.Core;
 using Game.AnimationSystem.Helper;
 using Game.AnimationSystem.Animator.SkillCardAnimation.MoveAnimation;
@@ -56,12 +57,15 @@ namespace Game.CombatSystem.Manager
 
         #region  의존성 주입 및 초기화
 
+        private IAnimationFacade animationFacade;
+
         [Inject]
-        public void Construct(ISlotRegistry slotRegistry, ISkillCardFactory cardFactory, ITurnCardRegistry cardRegistry)
+        public void Construct(ISlotRegistry slotRegistry, ISkillCardFactory cardFactory, ITurnCardRegistry cardRegistry, IAnimationFacade animationFacade)
         {
             this.slotRegistry = slotRegistry;
             this.cardFactory = cardFactory;
             this.cardRegistry = cardRegistry;
+            this.animationFacade = animationFacade;
         }
 
         /// <summary>
@@ -153,11 +157,11 @@ namespace Game.CombatSystem.Manager
             if (card == null || ui == null)
             {
                 Debug.LogWarning("[EnemyHandManager] 전투 슬롯 등록 실패: 카드 또는 UI가 null");
-                return (null, null, CombatSlotPosition.SLOT_1);
+                return (null, null, CombatSlotPosition.BATTLE_SLOT);
             }
 
             var isFirst = UnityEngine.Random.value < 0.5f;
-            var pos = isFirst ? CombatSlotPosition.SLOT_1 : CombatSlotPosition.SLOT_2;
+            var pos = isFirst ? CombatSlotPosition.BATTLE_SLOT : CombatSlotPosition.WAIT_SLOT_1;
 
             flowCoordinator.RegisterCardToCombatSlot(pos, card, ui);
             cardRegistry.RegisterCard(pos, card, ui, SlotOwner.ENEMY);
@@ -429,7 +433,7 @@ namespace Game.CombatSystem.Manager
                 if (uiObj != null)
                 {
                     bool animDone = false;
-                    AnimationSystem.Manager.AnimationFacade.Instance.PlaySkillCardAnimation(card, "spawn", uiObj.gameObject, () => animDone = true);
+                    animationFacade.PlaySkillCardAnimation(card, uiObj.gameObject, "spawn", () => animDone = true);
                     yield return new WaitUntil(() => animDone);
                 }
             }
@@ -600,7 +604,7 @@ namespace Game.CombatSystem.Manager
             _cardsInSlots[to] = (card, cardUI);
 
             // 이동 이벤트 발행
-            CombatEvents.RaiseEnemyCardMoved(card.GetCardName(), cardUI.gameObject, Game.CombatSystem.Slot.CombatSlotPosition.SLOT_1);
+            CombatEvents.RaiseEnemyCardMoved(card.GetCardName(), cardUI.gameObject, Game.CombatSystem.Slot.CombatSlotPosition.BATTLE_SLOT);
 
             onComplete?.Invoke();
         }
@@ -613,7 +617,7 @@ namespace Game.CombatSystem.Manager
                 yield break;
             }
 
-            var slotPos = flowCoordinator.IsEnemyFirst ? CombatSlotPosition.SLOT_1 : CombatSlotPosition.SLOT_2;
+            var slotPos = flowCoordinator.IsEnemyFirst ? CombatSlotPosition.BATTLE_SLOT : CombatSlotPosition.WAIT_SLOT_1;
 
             flowCoordinator.RegisterCardToTurnRegistry(slotPos, card, ui);
 

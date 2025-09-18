@@ -8,6 +8,7 @@ using Game.SkillCardSystem.UI;
 using Game.CombatSystem.Utility;
 using Game.CombatSystem.DragDrop;
 using Game.AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation;
+using Game.AnimationSystem.Interface;
 
 namespace Game.CombatSystem.UI
 {
@@ -23,12 +24,14 @@ namespace Game.CombatSystem.UI
         private SkillCardUI currentCardUI;
         private SkillCardUI cardUIPrefab;
         private ICombatFlowCoordinator flowCoordinator;
+        private IAnimationFacade animationFacade;
 
         [Inject]
-        public void Construct(SkillCardUI cardUIPrefab, ICombatFlowCoordinator flowCoordinator)
+        public void Construct(SkillCardUI cardUIPrefab, ICombatFlowCoordinator flowCoordinator, IAnimationFacade animationFacade)
         {
             this.cardUIPrefab = cardUIPrefab;
             this.flowCoordinator = flowCoordinator;
+            this.animationFacade = animationFacade;
         }
 
         public SkillCardSlotPosition GetSlotPosition() => position;
@@ -76,7 +79,7 @@ namespace Game.CombatSystem.UI
             if (currentCardUI != null)
                 Destroy(currentCardUI.gameObject);
 
-            currentCardUI = SkillCardUIFactory.CreateUI(prefab, transform, card, flowCoordinator);
+            currentCardUI = SkillCardUIFactory.CreateUI(prefab, transform, card, flowCoordinator, animationFacade);
 
             if (currentCardUI != null)
             {

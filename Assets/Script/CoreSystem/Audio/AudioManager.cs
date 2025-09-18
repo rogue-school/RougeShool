@@ -4,15 +4,15 @@ using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 using Game.CoreSystem.Interface;
 using Game.CoreSystem.Utility;
+using Zenject;
 
 namespace Game.CoreSystem.Audio
 {
     /// <summary>
-    /// 체계화된 오디오 시스템 (씬별 BGM + SFX 관리)
+    /// 체계화된 오디오 시스템 (씬별 BGM + SFX 관리, Zenject DI 기반)
     /// </summary>
-    public class AudioManager : MonoBehaviour, ICoreSystemInitializable
+    public class AudioManager : MonoBehaviour, ICoreSystemInitializable, IAudioManager
     {
-        public static AudioManager Instance { get; private set; }
         
         [Header("오디오 소스")]
         [SerializeField] private AudioSource bgmSource;  // 배경음악
@@ -26,6 +26,10 @@ namespace Game.CoreSystem.Audio
         [SerializeField] private float sfxVolume = 1.0f;
         [SerializeField] private float fadeTime = 1.0f;  // 페이드 시간
         
+        // 인터페이스 프로퍼티
+        public float BgmVolume => bgmVolume;
+        public float SfxVolume => sfxVolume;
+        
         // 현재 재생 중인 BGM
         private AudioClip currentBGM;
         private bool isFading = false;
@@ -33,17 +37,18 @@ namespace Game.CoreSystem.Audio
         // 초기화 상태
         public bool IsInitialized { get; private set; } = false;
         
+        // 의존성 주입
+        private ISaveManager saveManager;
+        
+        [Inject]
+        public void Construct(ISaveManager saveManager)
+        {
+            this.saveManager = saveManager;
+        }
+        
         private void Awake()
         {
-            if (Instance == null)
-            {
-                Instance = this;
-                InitializeAudio();
-            }
-            else
-            {
-                Destroy(gameObject);
-            }
+            InitializeAudio();
         }
         
         /// <summary>
@@ -174,11 +179,11 @@ namespace Game.CoreSystem.Audio
         /// <summary>
         /// 효과음 재생 (풀링 방식 - 전투/UI 사운드용)
         /// </summary>
-        public void PlaySFXWithPool(AudioClip sfxClip, float volume = 1.0f)
+        public void PlaySFXWithPool(AudioClip sfxClip, float volume = 1.0f, int priority = 5)
         {
             if (sfxClip == null || audioPoolManager == null) return;
             
-            audioPoolManager.PlaySound(sfxClip, volume);
+            audioPoolManager.PlaySound(sfxClip, volume, priority);
             
             Debug.Log($"[AudioManager] 풀링 효과음 재생: {sfxClip.name}");
         }
@@ -200,6 +205,16 @@ namespace Game.CoreSystem.Audio
         {
             sfxVolume = Mathf.Clamp01(volume);
             Debug.Log($"[AudioManager] SFX 볼륨 설정: {sfxVolume}");
+        }
+        
+        /// <summary>
+        /// 마스터 볼륨 설정
+        /// </summary>
+        public void SetMasterVolume(float volume)
+        {
+            float masterVolume = Mathf.Clamp01(volume);
+            AudioListener.volume = masterVolume;
+            Debug.Log($"[AudioManager] 마스터 볼륨 설정: {masterVolume}");
         }
         
         /// <summary>

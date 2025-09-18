@@ -22,7 +22,8 @@ namespace Game.SkillCardSystem.UI
             SkillCardUI prefab,
             Transform parent,
             ISkillCard card,
-            ICombatFlowCoordinator flowCoordinator)
+            ICombatFlowCoordinator flowCoordinator,
+            Game.AnimationSystem.Interface.IAnimationFacade animationFacade)
         {
             // === 유효성 검사 ===
             if (prefab == null || parent == null || card == null)
@@ -67,7 +68,7 @@ namespace Game.SkillCardSystem.UI
             {
                 if (flowCoordinator != null)
                 {
-                    dragHandler.Inject(flowCoordinator);
+                    dragHandler.Inject(flowCoordinator, animationFacade);
                 }
                 else
                 {

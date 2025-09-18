@@ -3,6 +3,13 @@
 ## 📋 시스템 개요
 AnimationSystem은 Unity 2D 게임의 모든 애니메이션을 통합 관리하는 시스템입니다. 캐릭터, 스킬카드, UI 등 다양한 요소의 애니메이션을 중앙화된 방식으로 제어합니다. 플레이어와 적 스킬카드의 애니메이션을 하나의 통합 데이터베이스에서 관리하며, 타입별 필터링된 드롭다운을 통해 정확한 애니메이션 설정을 제공합니다.
 
+### 최근 변경(요약)
+- **Zenject DI 통합**: AnimationFacade가 의존성 주입으로 전환 완료
+- **매개변수 순서 통일**: 모든 PlaySkillCardAnimation 호출이 `(ISkillCard, GameObject, string, Action)` 순서로 통일 완료
+- **싱글톤 제거**: AnimationFacade에서 싱글톤 패턴 제거하고 DI 패턴으로 전환 완료
+- **이벤트 구독 정리**: 제거된 메서드들의 이벤트 구독 정리 완료
+- **컴파일 에러 해결**: 모든 AnimationFacade 관련 컴파일 에러 해결 완료
+
 ## 🏗️ 폴더 구조
 ```
 AnimationSystem/

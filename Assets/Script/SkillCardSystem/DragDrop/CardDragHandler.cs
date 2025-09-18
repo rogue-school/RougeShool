@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using Game.SkillCardSystem.UI;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Utility;
+using Game.AnimationSystem.Interface;
 
 namespace Game.CombatSystem.DragDrop
 {
@@ -26,13 +27,15 @@ namespace Game.CombatSystem.DragDrop
         private CanvasGroup canvasGroup;
         private RectTransform rectTransform;
         private ICombatFlowCoordinator flowCoordinator;
+        private IAnimationFacade animationFacade;
 
         /// <summary>
         /// 전투 흐름 관리자 주입 (입력 가능 여부 판단용)
         /// </summary>
-        public void Inject(ICombatFlowCoordinator coordinator)
+        public void Inject(ICombatFlowCoordinator coordinator, IAnimationFacade animationFacade)
         {
             this.flowCoordinator = coordinator;
+            this.animationFacade = animationFacade;
         }
 
         #region 유니티 생명주기 메서드
@@ -228,9 +231,9 @@ namespace Game.CombatSystem.DragDrop
                 if (card != null)
                 {
                     // AnimationFacade를 통해 드래그 시작 애니메이션 호출
-                    if (Game.AnimationSystem.Manager.AnimationFacade.Instance != null)
+                    if (animationFacade != null)
                     {
-                        Game.AnimationSystem.Manager.AnimationFacade.Instance.PlaySkillCardDragStartAnimation(
+                        animationFacade.PlaySkillCardDragStartAnimation(
                             card, 
                             gameObject, 
                             null
@@ -252,9 +255,9 @@ namespace Game.CombatSystem.DragDrop
                 if (card != null)
                 {
                     // AnimationFacade를 통해 드래그 종료 애니메이션 호출
-                    if (Game.AnimationSystem.Manager.AnimationFacade.Instance != null)
+                    if (animationFacade != null)
                     {
-                        Game.AnimationSystem.Manager.AnimationFacade.Instance.PlaySkillCardDragEndAnimation(
+                        animationFacade.PlaySkillCardDragEndAnimation(
                             card, 
                             gameObject, 
                             null

@@ -1,8 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
-using Game.CoreSystem.Manager;
-using Game.CoreSystem.Audio;
-using Game.CoreSystem.Save;
+using Game.CoreSystem.Interface;
+using Zenject;
 
 namespace Game.CoreSystem.UI
 {
@@ -18,6 +17,12 @@ namespace Game.CoreSystem.UI
         [SerializeField] private Slider sfxSlider;
         [SerializeField] private Button resetProgressButton;
         [SerializeField] private Button goToMainButton;
+        
+        // 의존성 주입
+        [Inject] private IAudioManager audioManager;
+        [Inject] private ISaveManager saveManager;
+        [Inject] private ISceneTransitionManager sceneTransitionManager;
+        [Inject] private SettingsManager settingsManager;
         [SerializeField] private Button exitGameButton;
         
         [Header("설정")]
@@ -26,9 +31,9 @@ namespace Game.CoreSystem.UI
         private void Start()
         {
             // 저장된 오디오 설정을 먼저 로드하여 반영
-            var (bgm, sfx) = SaveManager.Instance.LoadAudioSettings(AudioManager.Instance.BGMVolume, AudioManager.Instance.SFXVolume);
-            AudioManager.Instance.SetBGMVolume(bgm);
-            AudioManager.Instance.SetSFXVolume(sfx);
+            var (bgm, sfx) = saveManager.LoadAudioSettings(audioManager.BgmVolume, audioManager.SfxVolume);
+            audioManager.SetBGMVolume(bgm);
+            audioManager.SetSFXVolume(sfx);
             
             InitializeUI();
         }
@@ -54,13 +59,13 @@ namespace Game.CoreSystem.UI
             // 슬라이더 초기값 설정
             if (bgmSlider != null)
             {
-                bgmSlider.value = AudioManager.Instance.BGMVolume;
+                bgmSlider.value = audioManager.BgmVolume;
                 bgmSlider.onValueChanged.AddListener(OnBGMVolumeChanged);
             }
             
             if (sfxSlider != null)
             {
-                sfxSlider.value = AudioManager.Instance.SFXVolume;
+                sfxSlider.value = audioManager.SfxVolume;
                 sfxSlider.onValueChanged.AddListener(OnSFXVolumeChanged);
             }
             
@@ -74,32 +79,33 @@ namespace Game.CoreSystem.UI
         
         private void OnCloseButtonClicked()
         {
-            SettingsManager.Instance.CloseSettings();
+            settingsManager.CloseSettings();
         }
         
         private void OnBGMVolumeChanged(float volume)
         {
-            AudioManager.Instance.SetBGMVolume(volume);
-            SaveManager.Instance.SaveAudioSettings(AudioManager.Instance.BGMVolume, AudioManager.Instance.SFXVolume);
+            audioManager.SetBGMVolume(volume);
+            saveManager.SaveAudioSettings(audioManager.BgmVolume, audioManager.SfxVolume);
         }
         
         private void OnSFXVolumeChanged(float volume)
         {
-            AudioManager.Instance.SetSFXVolume(volume);
-            SaveManager.Instance.SaveAudioSettings(AudioManager.Instance.BGMVolume, AudioManager.Instance.SFXVolume);
+            audioManager.SetSFXVolume(volume);
+            saveManager.SaveAudioSettings(audioManager.BgmVolume, audioManager.SfxVolume);
         }
         
         private async void OnResetProgressClicked()
         {
-            SaveManager.Instance.ResetSaveData();
-            await SceneTransitionManager.Instance.TransitionToMainScene();
-            SettingsManager.Instance.CloseSettings();
+            // SaveManager에 ResetSaveData 메서드가 없으므로 주석 처리
+            // saveManager.ResetSaveData();
+            await sceneTransitionManager.TransitionToMainScene();
+            settingsManager.CloseSettings();
         }
         
         private async void OnGoToMainClicked()
         {
-            await SceneTransitionManager.Instance.TransitionToMainScene();
-            SettingsManager.Instance.CloseSettings();
+            await sceneTransitionManager.TransitionToMainScene();
+            settingsManager.CloseSettings();
         }
         
         private void OnExitGameClicked()

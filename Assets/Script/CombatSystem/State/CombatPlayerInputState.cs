@@ -103,7 +103,7 @@ namespace Game.CombatSystem.State
             flowCoordinator.HidePlayerCardSelectionUI();
             flowCoordinator.UnregisterStartButton();
 
-            var next = turnManager.GetStateFactory().CreateFirstAttackState();
+            var next = turnManager.GetStateFactory().CreateAttackState();
             turnManager.RequestStateChange(next);
         }
 

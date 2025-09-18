@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
-using Game.CoreSystem.Manager;
+using Game.CoreSystem.Interface;
+using Zenject;
 
 public class SettingsUIController : MonoBehaviour
 {
@@ -14,6 +15,9 @@ public class SettingsUIController : MonoBehaviour
 
     private bool settingsOpen = false;
     private bool confirmOpen = false;
+    
+    // 의존성 주입
+    [Inject] private IGameStateManager gameStateManager;
 
     private void Awake()
     {
@@ -31,7 +35,7 @@ public class SettingsUIController : MonoBehaviour
         confirmDialog.SetActive(false);
         confirmOpen = false;
 
-        GameStateManager.Instance.PauseGame();
+        gameStateManager.PauseGame();
 
         // UI ��Ŀ��
         if (firstSelectOnOpen != null)
@@ -48,7 +52,7 @@ public class SettingsUIController : MonoBehaviour
         confirmOpen = false;
         settingsOpen = false;
 
-        GameStateManager.Instance.ResumeGame();
+        gameStateManager.ResumeGame();
     }
 
     // �����ϱ� (Ȯ��â ����)
@@ -69,8 +73,8 @@ public class SettingsUIController : MonoBehaviour
     public void OnConfirmGiveUp()
     {
         // �̹� �Ͻ����� ���̹Ƿ� timeScale=0 �� �������� �� �� ������
-        GameStateManager.Instance.ResetSession();
-        GameStateManager.Instance.GoToMainMenu();
+        gameStateManager.ResetSession();
+        gameStateManager.GoToMainMenu();
         // �� �̵� �� UI�� ������Ƿ� ���� ���� ���ʿ�
     }
 
@@ -88,7 +92,7 @@ public class SettingsUIController : MonoBehaviour
     // �׸��ϱ� (�ʱ�ȭ ���� ��������)
     public void OnQuit()
     {
-        GameStateManager.Instance.GoToMainMenu();
+        gameStateManager.GoToMainMenu();
     }
 
     // ESC Ű ��� (���� ����)

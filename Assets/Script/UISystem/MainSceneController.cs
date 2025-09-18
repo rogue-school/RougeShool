@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Threading.Tasks;
+using Game.CoreSystem.Interface;
+using Zenject;
 
 namespace Game.UISystem
 {
@@ -19,6 +21,10 @@ namespace Game.UISystem
         [SerializeField] private Slider bgmVolumeSlider;
         [SerializeField] private Slider sfxVolumeSlider;
         [SerializeField] private Button closeSettingsButton;
+        
+        // 의존성 주입
+        [Inject] private IGameStateManager gameStateManager;
+        [Inject] private IAudioManager audioManager;
         
         private void Start()
         {
@@ -96,7 +102,7 @@ namespace Game.UISystem
         private void OnExitButtonClicked()
         {
             Debug.Log("[MainSceneController] 게임 종료");
-            Game.CoreSystem.Manager.GameStateManager.Instance.ExitGame();
+            gameStateManager.ExitGame();
         }
         
         /// <summary>
@@ -114,7 +120,7 @@ namespace Game.UISystem
         /// </summary>
         private void OnBGMVolumeChanged(float value)
         {
-            Game.CoreSystem.Audio.AudioManager.Instance.SetBGMVolume(value);
+            audioManager.SetBGMVolume(value);
         }
         
         /// <summary>
@@ -122,7 +128,7 @@ namespace Game.UISystem
         /// </summary>
         private void OnSFXVolumeChanged(float value)
         {
-            Game.CoreSystem.Audio.AudioManager.Instance.SetSFXVolume(value);
+            audioManager.SetSFXVolume(value);
         }
     }
 }

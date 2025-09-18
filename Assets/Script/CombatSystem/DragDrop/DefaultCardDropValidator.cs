@@ -42,10 +42,10 @@ namespace Game.CombatSystem.DragDrop
                 return false;
             }
 
-            // 4. 슬롯 1번만 허용
-            if (slot.Position != Game.CombatSystem.Slot.CombatSlotPosition.SLOT_1)
+            // 4. 전투 슬롯만 허용
+            if (slot.Position != Game.CombatSystem.Slot.CombatSlotPosition.BATTLE_SLOT)
             {
-                reason = "카드는 전투 슬롯 1번에만 드롭할 수 있습니다.";
+                reason = "카드는 전투 슬롯에만 드롭할 수 있습니다.";
                 return false;
             }
 

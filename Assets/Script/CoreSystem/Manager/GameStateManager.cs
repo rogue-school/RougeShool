@@ -5,16 +5,15 @@ using System.Collections;
 using Game.CoreSystem.Interface;
 using Game.CoreSystem.Utility;
 using Game.CharacterSystem.Data;
+using Zenject;
 
 namespace Game.CoreSystem.Manager
 {
     /// <summary>
-    /// 게임 상태를 관리하는 최소 매니저
+    /// 게임 상태를 관리하는 매니저 (Zenject DI 기반)
     /// </summary>
-    public class GameStateManager : MonoBehaviour, ICoreSystemInitializable
+    public class GameStateManager : MonoBehaviour, ICoreSystemInitializable, IGameStateManager
     {
-        public static GameStateManager Instance { get; private set; }
-        
         [Header("게임 상태")]
         [SerializeField] private GameState currentGameState = GameState.MainMenu;
         
@@ -22,22 +21,18 @@ namespace Game.CoreSystem.Manager
         [SerializeField] private PlayerCharacterData selectedCharacter;
         
         // 이벤트
-        public System.Action<GameState> OnGameStateChanged;
+        public System.Action<GameState> OnGameStateChanged { get; set; }
         
         // 초기화 상태
         public bool IsInitialized { get; private set; } = false;
         
-        private void Awake()
+        // 의존성 주입
+        private ISceneTransitionManager sceneTransitionManager;
+        
+        [Inject]
+        public void Construct(ISceneTransitionManager sceneTransitionManager)
         {
-            if (Instance == null)
-            {
-                Instance = this;
-                GameLogger.LogInfo("GameStateManager 싱글톤 초기화 완료", GameLogger.LogCategory.UI);
-            }
-            else
-            {
-                Destroy(gameObject);
-            }
+            this.sceneTransitionManager = sceneTransitionManager;
         }
         
         /// <summary>
@@ -65,7 +60,7 @@ namespace Game.CoreSystem.Manager
             ChangeGameState(GameState.MainMenu);
             
             // 메인 씬으로 전환
-            await SceneTransitionManager.Instance.TransitionToMainScene();
+            await sceneTransitionManager.TransitionToMainScene();
             
             Debug.Log("[GameStateManager] 진행 초기화 완료");
         }
@@ -140,7 +135,7 @@ namespace Game.CoreSystem.Manager
         public async void GoToMainMenu()
         {
             GameLogger.LogInfo("메인 메뉴로 이동", GameLogger.LogCategory.UI);
-            await SceneTransitionManager.Instance.TransitionToMainScene();
+            await sceneTransitionManager.TransitionToMainScene();
         }
         
         #region ICoreSystemInitializable 구현
@@ -170,15 +165,5 @@ namespace Game.CoreSystem.Manager
             IsInitialized = false;
         }
         #endregion
-    }
-    
-    /// <summary>
-    /// 게임 상태 열거형
-    /// </summary>
-    public enum GameState
-    {
-        MainMenu,    // 메인 메뉴
-        Playing,     // 게임 진행 중
-        Paused       // 일시정지
     }
 }

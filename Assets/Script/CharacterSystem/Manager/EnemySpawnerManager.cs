@@ -10,7 +10,7 @@ using Game.CharacterSystem.Interface;
 using Zenject;
 using Game.CombatSystem.Utility;
 using Game.CombatSystem;
-using Game.AnimationSystem.Manager;
+using Game.AnimationSystem.Interface;
 
 namespace Game.CharacterSystem.Manager
 {
@@ -31,6 +31,7 @@ namespace Game.CharacterSystem.Manager
 
         [Inject] private ISlotRegistry slotRegistry;
         [Inject] private IEnemyManager enemyManager;
+        [Inject] private IAnimationFacade animationFacade;
 
         #endregion
 
@@ -110,7 +111,7 @@ namespace Game.CharacterSystem.Manager
 
             // 2. 등장 애니메이션 실행 및 대기 (파사드 패턴 적용)
             bool animDone = false;
-            AnimationFacade.Instance.PlayEnemyCharacterAnimation(
+            animationFacade.PlayEnemyCharacterAnimation(
                 data.name, // 캐릭터 ID (ScriptableObject의 name)
                 "spawn",
                 instance,

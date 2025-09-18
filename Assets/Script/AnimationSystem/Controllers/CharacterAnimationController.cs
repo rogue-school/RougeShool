@@ -2,6 +2,8 @@ using UnityEngine;
 using DG.Tweening;
 using Game.CharacterSystem.Data;
 using Game.CoreSystem.Audio;
+using Game.CoreSystem.Interface;
+using Zenject;
 
 namespace Game.AnimationSystem.Controllers
 {
@@ -14,6 +16,14 @@ namespace Game.AnimationSystem.Controllers
 		#region Data
 		private readonly ScriptableObject characterData;
 		private readonly string characterName;
+		private readonly IAudioManager audioManager;
+		#endregion
+		
+		#region Constructor
+		public CharacterAnimationController(IAudioManager audioManager)
+		{
+			this.audioManager = audioManager;
+		}
 		#endregion
 		
 		#region Animation Settings
@@ -379,7 +389,7 @@ namespace Game.AnimationSystem.Controllers
 				Debug.LogWarning("[CharacterAnimationController] 재생할 클립이 없습니다.");
 				return;
 			}
-			AudioManager.Instance?.PlaySFXWithPool(clip, volume);
+			audioManager?.PlaySFXWithPool(clip, volume);
 		}
 		#endregion
 	}

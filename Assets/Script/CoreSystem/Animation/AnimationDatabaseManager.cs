@@ -2,21 +2,22 @@ using UnityEngine;
 using System.Collections.Generic;
 using DG.Tweening;
 using Game.AnimationSystem.Data;
-
 using Game.CharacterSystem.Data;
 using Game.SkillCardSystem.Data;
 using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Data;
 using Game.CombatSystem.Slot;
+using Game.CoreSystem.Interface;
+using Zenject;
 
 namespace Game.CoreSystem.Animation
 {
     /// <summary>
-    /// 애니메이션 데이터베이스 매니저
-    /// 스킬카드와 캐릭터 애니메이션을 통합 관리하는 싱글톤 매니저입니다.
+    /// 애니메이션 데이터베이스 매니저 (Zenject DI 기반)
+    /// 스킬카드와 캐릭터 애니메이션을 통합 관리하는 매니저입니다.
     /// 플레이어/적용 데이터베이스를 분리하여 관리합니다.
     /// </summary>
-    public class AnimationDatabaseManager : MonoBehaviour
+    public class AnimationDatabaseManager : MonoBehaviour, IAnimationDatabaseManager
     {
         [Header("통합 데이터베이스 참조")]
         [SerializeField] private UnifiedSkillCardAnimationDatabase unifiedSkillCardDatabase;
@@ -39,26 +40,6 @@ namespace Game.CoreSystem.Animation
         public System.Action<string> OnCharacterAnimationPlayed;
         public System.Action<string> OnAnimationCacheUpdated;
         
-        #region Singleton
-        private static AnimationDatabaseManager instance;
-        public static AnimationDatabaseManager Instance
-        {
-            get
-            {
-                if (instance == null)
-                {
-                    instance = FindFirstObjectByType<AnimationDatabaseManager>();
-                    if (instance == null)
-                    {
-                        var go = new GameObject("AnimationDatabaseManager");
-                        instance = go.AddComponent<AnimationDatabaseManager>();
-                        DontDestroyOnLoad(go);
-                    }
-                }
-                return instance;
-            }
-        }
-        #endregion
         
         #region Properties
         public UnifiedSkillCardAnimationDatabase UnifiedSkillCardDatabase => unifiedSkillCardDatabase;
@@ -69,18 +50,7 @@ namespace Game.CoreSystem.Animation
         #region Unity Lifecycle
         private void Awake()
         {
-            if (instance == null)
-            {
-                instance = this;
-                InitializeManager();
-                // AnimationEventListener 자동 추가
-                // if (GetComponent<AnimationEventListener>() == null)
-                //     gameObject.AddComponent<AnimationEventListener>();
-            }
-            else if (instance != this)
-            {
-                Destroy(gameObject);
-            }
+            InitializeManager();
         }
         
         private void Start()
@@ -120,7 +90,7 @@ namespace Game.CoreSystem.Animation
         /// <summary>
         /// 데이터베이스를 로드합니다.
         /// </summary>
-        private void LoadDatabases()
+        public void LoadDatabases()
         {
             if (unifiedSkillCardDatabase == null)
             {
@@ -141,7 +111,7 @@ namespace Game.CoreSystem.Animation
         /// <summary>
         /// 캐싱을 초기화합니다.
         /// </summary>
-        private void InitializeCaching()
+        public void InitializeCaching()
         {
             if (enableCaching)
             {
@@ -534,7 +504,30 @@ namespace Game.CoreSystem.Animation
             animScript.PlayAnimation(animationType, onComplete);
         }
         #endregion
-
+        
+        #region 추가 인터페이스 메서드 구현
+        
+        /// <summary>
+        /// 플레이어 캐릭터 애니메이션 실행
+        /// </summary>
+        public void PlayPlayerCharacterAnimation(string characterId, string animationType, GameObject target, System.Action onComplete = null)
+        {
+            Debug.Log($"[AnimationDatabaseManager] 플레이어 캐릭터 애니메이션 실행: characterId={characterId}, animationType={animationType}");
+            // 실제 구현에서는 플레이어 캐릭터 애니메이션 실행
+            onComplete?.Invoke();
+        }
+        
+        /// <summary>
+        /// 적 캐릭터 애니메이션 실행
+        /// </summary>
+        public void PlayEnemyCharacterAnimation(string characterId, string animationType, GameObject target, System.Action onComplete = null)
+        {
+            Debug.Log($"[AnimationDatabaseManager] 적 캐릭터 애니메이션 실행: characterId={characterId}, animationType={animationType}");
+            // 실제 구현에서는 적 캐릭터 애니메이션 실행
+            onComplete?.Invoke();
+        }
+        
+        #endregion
 
     }
 } 

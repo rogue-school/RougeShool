@@ -1,9 +1,12 @@
 using UnityEngine;
+using Zenject;
 using System.Collections.Generic;
 using System.Linq;
 using Game.SkillCardSystem.Data;
 using Game.CharacterSystem.Data;
 using Game.AnimationSystem.Controllers;
+using Game.AnimationSystem.Interface;
+using Game.CoreSystem.Interface;
 
 namespace Game.CoreSystem.Animation
 {
@@ -13,20 +16,17 @@ namespace Game.CoreSystem.Animation
     /// </summary>
     public class AnimationManager : MonoBehaviour
     {
-        #region Singleton
-        public static AnimationManager Instance { get; private set; }
-        
-        private void Awake()
+        #region Private Fields
+        private IAnimationDatabaseManager animationDatabaseManager;
+        private IAnimationFacade animationFacade;
+        #endregion
+
+        #region DI
+        [Inject]
+        public void Construct(IAnimationDatabaseManager animationDatabaseManager, IAnimationFacade animationFacade)
         {
-            if (Instance == null)
-            {
-                Instance = this;
-                // InitializeManager(); // 데이터 로드 및 컨트롤러 생성은 AnimationDatabaseManager에서 처리
-            }
-            else
-            {
-                Destroy(gameObject);
-            }
+            this.animationDatabaseManager = animationDatabaseManager;
+            this.animationFacade = animationFacade;
         }
         #endregion
         
@@ -47,18 +47,17 @@ namespace Game.CoreSystem.Animation
         
         #region Initialization
         // AnimationDatabaseManager를 통한 통합 API만 제공
-        public void LoadAllData() => AnimationDatabaseManager.Instance.ReloadDatabases();
+        public void LoadAllData() => animationDatabaseManager.ReloadDatabases();
         #endregion
         
         #region Public API - Data Access
         // AnimationDatabaseManager를 통한 통합 API만 제공
-        public void PlaySkillCardAnimation(string cardId, string animationType, GameObject target)
-            => AnimationDatabaseManager.Instance.PlaySkillCardAnimation(cardId, target, animationType, null);
+        // string cardId 기반 메서드는 제거됨 - ISkillCard 기반 메서드만 사용
         public void PlayCharacterAnimation(string characterId, string animationType, GameObject target, System.Action onComplete = null, bool isEnemy = false)
-            => AnimationSystem.Manager.AnimationFacade.Instance.PlayCharacterAnimation(characterId, animationType, target, onComplete, isEnemy);
+            => animationFacade.PlayCharacterAnimation(characterId, animationType, target, onComplete, isEnemy);
         public string GetCharacterDeathAnimationType(string characterId)
         {
-            var entry = AnimationDatabaseManager.Instance.GetPlayerCharacterAnimationEntry(characterId);
+            var entry = animationDatabaseManager.GetPlayerCharacterAnimationEntry(characterId);
             if (entry != null && !entry.DeathAnimation.IsEmpty())
                 return entry.DeathAnimation.AnimationScriptType;
             return null;
@@ -74,7 +73,7 @@ namespace Game.CoreSystem.Animation
         // Debug.Log/Debug.LogError만 남김 (주석)
         // 실제 치명적 에러 상황만 로그로 남기고, 나머지는 제거
         // AnimationDatabaseManager를 통한 통합 API만 제공
-        public void PrintStatus() => AnimationDatabaseManager.Instance.DebugDatabaseStatus();
+        public void PrintStatus() => animationDatabaseManager.DebugDatabaseStatus();
         #endregion
     }
 } 

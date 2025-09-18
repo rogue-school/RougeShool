@@ -6,15 +6,15 @@ using System.Threading.Tasks;
 using System.Collections;
 using Game.CoreSystem.Interface;
 using Game.CoreSystem.Utility;
+using Zenject;
 
 namespace Game.CoreSystem.Save
 {
 	/// <summary>
-	/// 씬 전체 저장을 관리하는 매니저
+	/// 씬 전체 저장을 관리하는 매니저 (Zenject DI 기반)
 	/// </summary>
-	public class SaveManager : MonoBehaviour, ICoreSystemInitializable
+	public class SaveManager : MonoBehaviour, ICoreSystemInitializable, ISaveManager
 	{
-		public static SaveManager Instance { get; private set; }
 		
 		[Header("저장 설정")]
 		[SerializeField] private string saveFileName = "GameSave.json";
@@ -29,17 +29,12 @@ namespace Game.CoreSystem.Save
 		// 초기화 상태
 		public bool IsInitialized { get; private set; } = false;
 		
+		// 의존성 주입
+		[Inject] private IGameStateManager gameStateManager;
+		
 		private void Awake()
 		{
-			if (Instance == null)
-			{
-				Instance = this;
-				Debug.Log("[SaveManager] 초기화 완료");
-			}
-			else
-			{
-				Destroy(gameObject);
-			}
+			Debug.Log("[SaveManager] 초기화 완료");
 		}
 		
 		/// <summary>
@@ -56,17 +51,17 @@ namespace Game.CoreSystem.Save
 		/// <summary>
 		/// 오디오 설정 로드 (없으면 기본값 반환)
 		/// </summary>
-		public (float bgm, float sfx) LoadAudioSettings(float defaultBgm = 0.7f, float defaultSfx = 1.0f)
+		public (float bgmVolume, float sfxVolume) LoadAudioSettings(float defaultBgmVolume = 0.7f, float defaultSfxVolume = 1.0f)
 		{
-			float bgm = PlayerPrefs.HasKey(KEY_BGM_VOLUME) ? PlayerPrefs.GetFloat(KEY_BGM_VOLUME) : defaultBgm;
-			float sfx = PlayerPrefs.HasKey(KEY_SFX_VOLUME) ? PlayerPrefs.GetFloat(KEY_SFX_VOLUME) : defaultSfx;
+			float bgm = PlayerPrefs.HasKey(KEY_BGM_VOLUME) ? PlayerPrefs.GetFloat(KEY_BGM_VOLUME) : defaultBgmVolume;
+			float sfx = PlayerPrefs.HasKey(KEY_SFX_VOLUME) ? PlayerPrefs.GetFloat(KEY_SFX_VOLUME) : defaultSfxVolume;
 			return (Mathf.Clamp01(bgm), Mathf.Clamp01(sfx));
 		}
 		
 		/// <summary>
 		/// 현재 씬 전체 저장
 		/// </summary>
-		public async Task<bool> SaveCurrentScene()
+		public async Task SaveCurrentScene()
 		{
 			try
 			{
@@ -83,12 +78,10 @@ namespace Game.CoreSystem.Save
 				await File.WriteAllTextAsync(filePath, jsonData);
 				
 				Debug.Log($"[SaveManager] 씬 저장 완료: {filePath}");
-				return true;
 			}
 			catch (System.Exception ex)
 			{
 				Debug.LogError($"[SaveManager] 씬 저장 실패: {ex.Message}");
-				return false;
 			}
 		}
 		
@@ -164,7 +157,7 @@ namespace Game.CoreSystem.Save
 			sceneData.sceneName = SceneManager.GetActiveScene().name;
 			
 			// 게임 상태
-			sceneData.gameState = Game.CoreSystem.Manager.GameStateManager.Instance.CurrentGameState;
+			sceneData.gameState = gameStateManager.CurrentGameState;
 			
 			// 씬의 모든 GameObject 정보 수집
 			sceneData.gameObjects = new List<GameObjectData>();
@@ -195,7 +188,7 @@ namespace Game.CoreSystem.Save
 		private void RestoreSceneData(SceneSaveData sceneData)
 		{
 			// 게임 상태 복원
-			Game.CoreSystem.Manager.GameStateManager.Instance.ChangeGameState(sceneData.gameState);
+			gameStateManager.ChangeGameState(sceneData.gameState);
 			
 			// GameObject 정보 복원
 			foreach (var objData in sceneData.gameObjects)
@@ -218,6 +211,95 @@ namespace Game.CoreSystem.Save
 		{
 			string filePath = Path.Combine(Application.persistentDataPath, saveFileName);
 			return File.Exists(filePath);
+		}
+		
+		/// <summary>
+		/// 게임 상태 저장
+		/// </summary>
+		public async Task SaveGameState(string saveName)
+		{
+			try
+			{
+				Debug.Log($"[SaveManager] 게임 상태 저장 시작: {saveName}");
+				
+				// 현재 씬의 모든 데이터 수집
+				var sceneData = CollectSceneData();
+				
+				// JSON으로 직렬화
+				string jsonData = JsonUtility.ToJson(sceneData, true);
+				
+				// 파일로 저장
+				string filePath = Path.Combine(Application.persistentDataPath, $"{saveName}.json");
+				await File.WriteAllTextAsync(filePath, jsonData);
+				
+				Debug.Log($"[SaveManager] 게임 상태 저장 완료: {filePath}");
+			}
+			catch (System.Exception ex)
+			{
+				Debug.LogError($"[SaveManager] 게임 상태 저장 실패: {ex.Message}");
+			}
+		}
+		
+		/// <summary>
+		/// 게임 상태 로드
+		/// </summary>
+		public async Task LoadGameState(string saveName)
+		{
+			try
+			{
+				Debug.Log($"[SaveManager] 게임 상태 로드 시작: {saveName}");
+				
+				string filePath = Path.Combine(Application.persistentDataPath, $"{saveName}.json");
+				
+				if (!File.Exists(filePath))
+				{
+					Debug.LogWarning($"[SaveManager] 저장 파일이 존재하지 않습니다: {filePath}");
+					return;
+				}
+				
+				// 파일에서 데이터 읽기
+				string jsonData = await File.ReadAllTextAsync(filePath);
+				
+				// JSON 역직렬화
+				var sceneData = JsonUtility.FromJson<SceneSaveData>(jsonData);
+				
+				// 씬 데이터 복원
+				RestoreSceneData(sceneData);
+				
+				Debug.Log($"[SaveManager] 게임 상태 로드 완료: {saveName}");
+			}
+			catch (System.Exception ex)
+			{
+				Debug.LogError($"[SaveManager] 게임 상태 로드 실패: {ex.Message}");
+			}
+		}
+		
+		/// <summary>
+		/// 자동 저장 실행
+		/// </summary>
+		public async Task TriggerAutoSave(string condition)
+		{
+			try
+			{
+				Debug.Log($"[SaveManager] 자동 저장 실행: {condition}");
+				
+				// 현재 씬의 모든 데이터 수집
+				var sceneData = CollectSceneData();
+				
+				// JSON으로 직렬화
+				string jsonData = JsonUtility.ToJson(sceneData, true);
+				
+				// 자동 저장 파일로 저장
+				string timestamp = System.DateTime.Now.ToString("yyyyMMdd_HHmmss");
+				string filePath = Path.Combine(Application.persistentDataPath, $"AutoSave_{condition}_{timestamp}.json");
+				await File.WriteAllTextAsync(filePath, jsonData);
+				
+				Debug.Log($"[SaveManager] 자동 저장 완료: {filePath}");
+			}
+			catch (System.Exception ex)
+			{
+				Debug.LogError($"[SaveManager] 자동 저장 실패: {ex.Message}");
+			}
 		}
 		
 		#region ICoreSystemInitializable 구현
@@ -342,7 +424,7 @@ namespace Game.CoreSystem.Save
 	public class SceneSaveData
 	{
 		public string sceneName;
-		public Game.CoreSystem.Manager.GameState gameState;
+		public Game.CoreSystem.Interface.GameState gameState;
 		public List<GameObjectData> gameObjects;
 	}
 	

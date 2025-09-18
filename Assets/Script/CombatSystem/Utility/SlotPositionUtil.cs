@@ -41,8 +41,8 @@ namespace Game.CombatSystem.Utility
         {
             return slot switch
             {
-                SkillCardSlotPosition.PLAYER_SLOT_1 => CombatSlotPosition.SLOT_1,
-                SkillCardSlotPosition.PLAYER_SLOT_2 => CombatSlotPosition.SLOT_2,
+                SkillCardSlotPosition.PLAYER_SLOT_1 => CombatSlotPosition.BATTLE_SLOT,
+                SkillCardSlotPosition.PLAYER_SLOT_2 => CombatSlotPosition.WAIT_SLOT_1,
                 SkillCardSlotPosition.PLAYER_SLOT_3 => CombatSlotPosition.NONE,
                 _ => CombatSlotPosition.NONE
             };

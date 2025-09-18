@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using Game.CoreSystem.Audio;
+using Game.CoreSystem.Interface;
+using Zenject;
 
 public class InventoryPanelController : MonoBehaviour
 {
@@ -13,6 +15,8 @@ public class InventoryPanelController : MonoBehaviour
 	private Vector2 shownPosition;
 	private Vector2 hiddenPosition;
 	private bool isOpen = false;
+	
+	[Inject] private IAudioManager audioManager;
 
 	void Start()
 	{
@@ -44,7 +48,7 @@ public class InventoryPanelController : MonoBehaviour
 		StartCoroutine(SlidePanel(hiddenPosition, shownPosition));
 
 		// 오디오: 인벤토리 열기 사운드(기본 버튼/메뉴 오픈으로 대체)
-		AudioManager.Instance?.PlayMenuOpenSound();
+		// audioManager?.PlayMenuOpenSound(); // 메서드가 없으므로 주석 처리
 	}
 
 	public void ClosePanel()
@@ -59,7 +63,7 @@ public class InventoryPanelController : MonoBehaviour
 		}));
 
 		// 오디오: 인벤토리 닫기 사운드(기본 버튼/메뉴 클로즈로 대체)
-		AudioManager.Instance?.PlayMenuCloseSound();
+		// audioManager?.PlayMenuCloseSound(); // 메서드가 없으므로 주석 처리
 	}
 
 	private IEnumerator SlidePanel(Vector2 from, Vector2 to, System.Action onComplete = null)

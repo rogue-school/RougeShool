@@ -1,7 +1,14 @@
 # SaveSystem 개발 문서
 
 ## 📋 시스템 개요
-SaveSystem은 게임의 저장/로드 기능을 관리하는 시스템입니다. 슬레이 더 스파이어 방식의 턴 기반 자동 저장 시스템을 제공합니다.
+SaveSystem은 게임의 저장/로드 기능을 관리하는 시스템입니다. 슬레이 더 스파이어 방식의 턴 기반 자동 저장 시스템을 제공합니다. CoreSystem에 통합되어 전역적으로 관리되며, ICoreSystemInitializable 인터페이스를 구현하여 자동 초기화됩니다.
+
+### 최근 변경(요약)
+- **CoreSystem 통합**: SaveManager가 CoreSystem의 일부로 통합 관리 완료
+- **Zenject DI 통합**: SaveManager가 의존성 주입으로 전환 완료
+- **자동 초기화**: ICoreSystemInitializable 인터페이스 구현으로 자동 초기화 완료
+- **새로운 슬롯 시스템 반영**: 모든 저장/복원 로직이 새로운 5슬롯 시스템으로 업데이트 완료
+- **레거시 슬롯 최적화**: SLOT_1/SLOT_2 → BATTLE_SLOT/WAIT_SLOT_1 전환 완료
 
 ## 🏗️ 현재 폴더 구조 (리팩토링 후)
 ```

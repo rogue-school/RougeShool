@@ -4,8 +4,10 @@ using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Factory;
 using Game.SkillCardSystem.Validator;
 using Game.CoreSystem.Audio;
+using Game.CoreSystem.Interface;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Core;
+using Zenject;
 
 namespace Game.SkillCardSystem.Executor
 {
@@ -17,18 +19,22 @@ namespace Game.SkillCardSystem.Executor
     {
         private readonly ICardEffectCommandFactory commandFactory;
         private readonly ICardExecutionValidator validator;
+        private readonly IAudioManager audioManager;
 
         /// <summary>
         /// CardExecutor 생성자.
         /// </summary>
         /// <param name="commandFactory">카드 이펙트 커맨드 생성 팩토리</param>
         /// <param name="validator">카드 실행 유효성 검사기</param>
+        /// <param name="audioManager">오디오 매니저</param>
         public CardExecutor(
             ICardEffectCommandFactory commandFactory,
-            ICardExecutionValidator validator)
+            ICardExecutionValidator validator,
+            IAudioManager audioManager)
         {
             this.commandFactory = commandFactory;
             this.validator = validator;
+            this.audioManager = audioManager;
         }
 
         /// <summary>
@@ -74,7 +80,7 @@ namespace Game.SkillCardSystem.Executor
             var clip = card.CardDefinition?.SfxClip;
             if (clip != null)
             {
-                AudioManager.Instance?.PlaySFX(clip);
+                audioManager?.PlaySFX(clip);
             }
 
             // 카드 비주얼 이펙트 재생

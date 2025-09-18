@@ -4,11 +4,14 @@
 CombatSystem은 게임의 전투 로직을 관리하는 핵심 시스템입니다. 새로운 5슬롯 시스템(전투슬롯 1개 + 대기슬롯 4개)을 기반으로 전투 상태, 턴 관리, 카드 드래그 앤 드롭, 슬롯 관리 등 다양한 기능을 통합적으로 관리합니다.
 
 ### 최근 변경(요약)
-- **새로운 5슬롯 시스템**: `BATTLE_SLOT` + `WAIT_SLOT_1~4` 구조로 전환
-- **셋업 단계 추가**: 전투 시작 전 카드 배치 단계 구현
-- **즉시 실행 시스템**: 전투슬롯에 카드 배치 시 즉시 실행
-- **레거시 호환성**: 기존 4슬롯 시스템과의 호환성 유지
-- **슬롯 이동 로직**: 대기4→대기3→대기2→대기1→전투슬롯 순서로 이동
+- **새로운 5슬롯 시스템**: `BATTLE_SLOT` + `WAIT_SLOT_1~4` 구조로 전환 완료
+- **셋업 단계 추가**: 전투 시작 전 카드 배치 단계 구현 완료
+- **즉시 실행 시스템**: 전투슬롯에 카드 배치 시 즉시 실행 구현 완료
+- **레거시 호환성**: 기존 4슬롯 시스템과의 호환성 유지 완료
+- **슬롯 이동 로직**: 대기4→대기3→대기2→대기1→전투슬롯 순서로 이동 구현 완료
+- **Zenject DI 통합**: 모든 CombatSystem 컴포넌트가 의존성 주입으로 전환 완료
+- **CombatSecondAttackState 제거**: 단일 `CombatAttackState`로 통합 완료
+- **레거시 슬롯 최적화**: 모든 `SLOT_1/SLOT_2` → `BATTLE_SLOT/WAIT_SLOT_1` 전환 완료
 
 ## 🏗️ 폴더 구조
 ```
@@ -524,5 +527,8 @@ sequenceDiagram
 - 2025-01-27 | Maintainer | CombatExecutorService에 새로운 슬롯 실행 및 이동 로직 추가 | 코드/문서
 - 2025-01-27 | Maintainer | CombatSlotManager에 5슬롯 관리 기능 추가 | 코드/문서
 - 2025-01-27 | Maintainer | 레거시 호환성 유지 및 경고 억제 처리 | 코드/문서
+- 2025-01-27 | Maintainer | Zenject DI 통합 완료 - 모든 CombatSystem 컴포넌트 전환 | 코드/문서
+- 2025-01-27 | Maintainer | CombatSecondAttackState 제거 및 CombatAttackState로 통합 | 코드/문서
+- 2025-01-27 | Maintainer | 레거시 슬롯 시스템 완전 최적화 - SLOT_1/SLOT_2 → BATTLE_SLOT/WAIT_SLOT_1 | 코드/문서
 - 2025-01-27 | Maintainer | 개발 문서 업데이트 - 새로운 5슬롯 시스템 반영 | 문서
 - 2025-01-27 | Maintainer | 가드 효과 시스템 통합 - ICombatTurnManager에 ApplyGuardEffect 메서드 추가 | 코드/문서

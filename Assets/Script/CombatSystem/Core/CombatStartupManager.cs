@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Game.CombatSystem.Interface;
+using Game.CoreSystem.Interface;
 using Zenject;
 
 namespace Game.CombatSystem.Core
@@ -17,6 +18,7 @@ namespace Game.CombatSystem.Core
         private List<ICombatInitializerStep> steps;
 
         [Inject] private ICombatTurnManager turnManager;
+        [Inject] private ISceneTransitionManager sceneTransitionManager;
 
         #region Unity Methods
 
@@ -59,8 +61,8 @@ namespace Game.CombatSystem.Core
             int maxWaitTime = 20; // 최대 1초 대기 (0.05초 * 20)
             int waitCount = 0;
             
-            while (Game.CoreSystem.Manager.SceneTransitionManager.Instance != null && 
-                   Game.CoreSystem.Manager.SceneTransitionManager.Instance.IsTransitioning &&
+            while (sceneTransitionManager != null && 
+                   sceneTransitionManager.IsTransitioning &&
                    waitCount < maxWaitTime)
             {
                 yield return new WaitForSeconds(0.05f);

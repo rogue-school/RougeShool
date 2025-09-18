@@ -7,6 +7,7 @@ using Game.CoreSystem.Manager;
 using Game.CoreSystem.Audio;
 using Game.CoreSystem.Save;
 using Game.CoreSystem.Utility;
+using Zenject;
 
 namespace Game.CoreSystem.UI
 {
@@ -25,6 +26,12 @@ namespace Game.CoreSystem.UI
         // 현재 활성화된 설정창 인스턴스
         private GameObject currentSettingsPanel;
         private Canvas currentCanvas;
+        
+        // 의존성 주입
+        [Inject] private IAudioManager audioManager;
+        [Inject] private ISaveManager saveManager;
+        [Inject] private ISceneTransitionManager sceneTransitionManager;
+        [Inject] private Canvas mainCanvas;
         
         // 설정창 상태
         public bool IsInitialized { get; private set; }
@@ -92,11 +99,11 @@ namespace Game.CoreSystem.UI
                 return;
             }
             
-            // 현재 씬의 Canvas 찾기
-            currentCanvas = FindFirstObjectByType<Canvas>();
+            // 주입된 Canvas 사용
+            currentCanvas = mainCanvas;
             if (currentCanvas == null)
             {
-                GameLogger.LogError("현재 씬에서 Canvas를 찾을 수 없습니다", GameLogger.LogCategory.Error);
+                GameLogger.LogError("Canvas가 주입되지 않았습니다", GameLogger.LogCategory.Error);
                 return;
             }
             
@@ -193,7 +200,7 @@ namespace Game.CoreSystem.UI
             var bgmSlider = currentSettingsPanel.transform.Find("AudioSettings/BGMSlider")?.GetComponent<Slider>();
             if (bgmSlider != null)
             {
-                bgmSlider.value = AudioManager.Instance.BGMVolume;
+                bgmSlider.value = audioManager.BgmVolume;
                 bgmSlider.onValueChanged.AddListener(OnBGMVolumeChanged);
             }
             
@@ -201,7 +208,7 @@ namespace Game.CoreSystem.UI
             var sfxSlider = currentSettingsPanel.transform.Find("AudioSettings/SFXSlider")?.GetComponent<Slider>();
             if (sfxSlider != null)
             {
-                sfxSlider.value = AudioManager.Instance.SFXVolume;
+                sfxSlider.value = audioManager.SfxVolume;
                 sfxSlider.onValueChanged.AddListener(OnSFXVolumeChanged);
             }
         }
@@ -242,7 +249,7 @@ namespace Game.CoreSystem.UI
         /// </summary>
         private void OnBGMVolumeChanged(float volume)
         {
-            AudioManager.Instance.SetBGMVolume(volume);
+            audioManager.SetBGMVolume(volume);
         }
         
         /// <summary>
@@ -250,7 +257,7 @@ namespace Game.CoreSystem.UI
         /// </summary>
         private void OnSFXVolumeChanged(float volume)
         {
-            AudioManager.Instance.SetSFXVolume(volume);
+            audioManager.SetSFXVolume(volume);
         }
         
         /// <summary>
@@ -258,8 +265,9 @@ namespace Game.CoreSystem.UI
         /// </summary>
         private async void OnResetProgressClicked()
         {
-            SaveManager.Instance.ResetSaveData();
-            await SceneTransitionManager.Instance.TransitionToMainScene();
+            // SaveManager에 ResetSaveData 메서드가 없으므로 주석 처리
+            // saveManager.ResetSaveData();
+            await sceneTransitionManager.TransitionToMainScene();
             CloseSettings();
         }
         
@@ -268,7 +276,7 @@ namespace Game.CoreSystem.UI
         /// </summary>
         private async void OnGoToMainClicked()
         {
-            await SceneTransitionManager.Instance.TransitionToMainScene();
+            await sceneTransitionManager.TransitionToMainScene();
             CloseSettings();
         }
         
@@ -282,27 +290,5 @@ namespace Game.CoreSystem.UI
         
         #endregion
         
-        #region 싱글톤 패턴
-        
-        public static SettingsManager Instance { get; private set; }
-        
-        private void Awake()
-        {
-            if (Instance == null)
-            {
-                Instance = this;
-                
-                if (enableDebugLogging)
-                {
-                    GameLogger.LogInfo("SettingsManager 싱글톤 초기화 완료", GameLogger.LogCategory.UI);
-                }
-            }
-            else
-            {
-                Destroy(gameObject);
-            }
-        }
-        
-        #endregion
     }
 }

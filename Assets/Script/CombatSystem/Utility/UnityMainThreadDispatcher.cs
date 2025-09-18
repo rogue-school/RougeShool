@@ -9,6 +9,20 @@ using UnityEngine;
 public class UnityMainThreadDispatcher : MonoBehaviour
 {
     private static readonly Queue<Action> _executionQueue = new();
+    public static UnityMainThreadDispatcher Instance { get; private set; }
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
 
     public static void Enqueue(Action action)
     {
@@ -34,11 +48,8 @@ public class UnityMainThreadDispatcher : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Initialize()
     {
-#if UNITY_2023_1_OR_NEWER
-        if (FindFirstObjectByType<UnityMainThreadDispatcher>() == null)
-#else
-        if (FindObjectOfType<UnityMainThreadDispatcher>() == null)
-#endif
+        // UnityMainThreadDispatcher는 Zenject DI로 자동 바인딩됨
+        if (Instance == null)
         {
             var go = new GameObject("UnityMainThreadDispatcher");
             DontDestroyOnLoad(go);

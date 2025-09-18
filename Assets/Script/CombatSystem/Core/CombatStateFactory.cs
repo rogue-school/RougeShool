@@ -14,8 +14,7 @@ namespace Game.CombatSystem.Factory
 
         [Inject] private IFactory<CombatPrepareState> prepareFactory;
         [Inject] private IFactory<CombatPlayerInputState> inputFactory;
-        [Inject] private IFactory<CombatAttackState> firstAttackFactory;
-        [Inject] private IFactory<CombatSecondAttackState> secondAttackFactory;
+        [Inject] private IFactory<CombatAttackState> attackFactory;
         [Inject] private IFactory<CombatResultState> resultFactory;
         [Inject] private IFactory<CombatVictoryState> victoryFactory;
         [Inject] private IFactory<CombatGameOverState> gameOverFactory;
@@ -35,14 +34,9 @@ namespace Game.CombatSystem.Factory
         public ICombatTurnState CreatePlayerInputState() => inputFactory.Create();
 
         /// <summary>
-        /// 선공 턴 상태 생성
+        /// 공격 상태 생성
         /// </summary>
-        public ICombatTurnState CreateFirstAttackState() => firstAttackFactory.Create();
-
-        /// <summary>
-        /// 후공 턴 상태 생성
-        /// </summary>
-        public ICombatTurnState CreateSecondAttackState() => secondAttackFactory.Create();
+        public ICombatTurnState CreateAttackState() => attackFactory.Create();
 
         /// <summary>
         /// 결과 계산 상태 생성

@@ -7,6 +7,7 @@ using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Manager;
 using Game.IManager;
 using DG.Tweening;
+using Zenject;
 
 namespace Game.CharacterSystem.UI
 {
@@ -83,7 +84,7 @@ namespace Game.CharacterSystem.UI
         #region Private Fields
 
         private PlayerCharacter playerCharacter;
-        private PlayerResourceManager resourceManager;
+        [Inject] private PlayerResourceManager resourceManager;
         private PlayerCharacterType characterType;
         
         // 애니메이션 관련
@@ -151,11 +152,10 @@ namespace Game.CharacterSystem.UI
             playerCharacter = character;
             characterType = character.CharacterData.CharacterType;
             
-            // 리소스 매니저 연결
-            resourceManager = FindFirstObjectByType<PlayerResourceManager>();
+            // 리소스 매니저는 Zenject DI로 주입됨
             if (resourceManager == null)
             {
-                Debug.LogWarning("[PlayerCharacterUIController] PlayerResourceManager를 찾을 수 없습니다.");
+                Debug.LogWarning("[PlayerCharacterUIController] PlayerResourceManager가 주입되지 않았습니다.");
             }
 
             // 캐릭터 정보 설정

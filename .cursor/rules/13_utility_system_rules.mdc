@@ -12,11 +12,12 @@ alwaysApply: true
 UtilitySystem은 게임의 유틸리티 기능들을 관리하는 시스템입니다. 게임 플로우, DontDestroyOnLoad 관리, 드롭 핸들러 주입 등 다양한 유틸리티 기능을 제공합니다. 싱글톤 패턴을 통한 전역 접근, 컨텍스트 패턴을 통한 상태 관리, 의존성 주입 패턴을 통한 느슨한 결합을 지원합니다.
 
 ### 최근 변경(요약)
-- **싱글톤 패턴**: DontDestroyOnLoadContainer, DropHandlerInjector의 전역 접근
-- **컨텍스트 패턴**: GameContext를 통한 플레이어 캐릭터 선택 상태 관리
-- **의존성 주입 패턴**: DropHandlerInjector를 통한 드롭 핸들러 자동 주입
-- **게임 플로우 관리**: 씬 전환 및 게임 상태 관리
-- **자동 관리**: 오브젝트의 생성/소멸 자동 관리
+- **싱글톤 패턴 완료**: DontDestroyOnLoadContainer, DropHandlerInjector의 전역 접근 완료
+- **컨텍스트 패턴 완료**: GameContext를 통한 플레이어 캐릭터 선택 상태 관리 완료
+- **의존성 주입 패턴 완료**: DropHandlerInjector를 통한 드롭 핸들러 자동 주입 완료
+- **게임 플로우 관리 완료**: 씬 전환 및 게임 상태 관리 완료
+- **자동 관리 완료**: 오브젝트의 생성/소멸 자동 관리 완료
+- **Zenject DI 통합 완료**: 모든 UtilitySystem 컴포넌트가 의존성 주입으로 전환 완료
 
 ## 🏗️ 폴더 구조 규칙
 ```

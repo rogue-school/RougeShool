@@ -19,7 +19,7 @@ using Game.CoreSystem.Utility;
 using Game.CombatSystem.State;
 using System.Threading.Tasks;
 using Game.CombatSystem;
-
+using Game.AnimationSystem.Interface;
 using System.Collections.Generic;
 
 namespace Game.CombatSystem.Manager
@@ -42,6 +42,7 @@ namespace Game.CombatSystem.Manager
         [Inject] private ISlotRegistry slotRegistry;
         [Inject] private ICardExecutor cardExecutor;
         [Inject] private ICoroutineRunner coroutineRunner;
+        [Inject] private IAnimationFacade animationFacade;
 
         #endregion
 
@@ -153,7 +154,7 @@ namespace Game.CombatSystem.Manager
             yield return new WaitForSeconds(0.5f);
 
             IsEnemyFirst = UnityEngine.Random.value < 0.5f;
-            var slotToRegister = IsEnemyFirst ? CombatSlotPosition.SLOT_1 : CombatSlotPosition.SLOT_2;
+            var slotToRegister = IsEnemyFirst ? CombatSlotPosition.BATTLE_SLOT : CombatSlotPosition.WAIT_SLOT_1;
 
             yield return enemyHandManager.StepwiseFillSlotsFromBack(0.3f);
 
@@ -275,7 +276,7 @@ namespace Game.CombatSystem.Manager
 
                 // 2. 이동 애니메이션 실행 (AnimationFacade 사용)
                 bool animationComplete = false;
-                AnimationSystem.Manager.AnimationFacade.Instance.PlaySkillCardAnimation(card, "moveToCombatSlot", uiMb.gameObject, () => {
+                animationFacade.PlaySkillCardAnimation(card, uiMb.gameObject, "moveToCombatSlot", () => {
                     animationComplete = true;
                 });
                 
@@ -400,7 +401,7 @@ namespace Game.CombatSystem.Manager
         private IEnumerator PerformFirstAttackInternal(Action onComplete = null)
         {
             CombatEvents.RaiseFirstAttackStarted();
-            var firstCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.SLOT_1);
+            var firstCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.BATTLE_SLOT);
             if (firstCard != null)
             {
                 ExecuteCard(firstCard);
@@ -413,8 +414,8 @@ namespace Game.CombatSystem.Manager
         public IEnumerator PerformSecondAttack()
         {
             CombatEvents.RaiseSecondAttackStarted();
-            var secondCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.SLOT_2);
-            var firstCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.SLOT_1);
+            var secondCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.WAIT_SLOT_1);
+            var firstCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.BATTLE_SLOT);
 
             if (firstCard != null && firstCard.IsFromPlayer())
             {
@@ -638,11 +639,11 @@ namespace Game.CombatSystem.Manager
 
         private void OnPlayerCharacterSpawned(string characterId, GameObject characterObject)
         {
-            AnimationSystem.Manager.AnimationFacade.Instance.PlayCharacterAnimation(characterId, "spawn", characterObject);
+            animationFacade.PlayCharacterAnimation(characterId, "spawn", characterObject);
         }
         private void OnEnemyCharacterSpawned(string enemyId, GameObject enemyObject)
         {
-            AnimationSystem.Manager.AnimationFacade.Instance.PlayCharacterAnimation(enemyId, "spawn", enemyObject, null, true);
+            animationFacade.PlayCharacterAnimation(enemyId, "spawn", enemyObject, null, true);
         }
         private void OnPlayerSkillCardUsed(string cardId, GameObject cardObject)
         {
