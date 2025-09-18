@@ -1,14 +1,14 @@
 # CombatSystem 개발 문서
 
 ## 📋 시스템 개요
-CombatSystem은 게임의 전투 로직을 관리하는 핵심 시스템입니다. 전투 상태, 턴 관리, 카드 드래그 앤 드롭, 슬롯 관리 등 다양한 기능을 통합적으로 관리합니다.
+CombatSystem은 게임의 전투 로직을 관리하는 핵심 시스템입니다. 새로운 5슬롯 시스템(전투슬롯 1개 + 대기슬롯 4개)을 기반으로 전투 상태, 턴 관리, 카드 드래그 앤 드롭, 슬롯 관리 등 다양한 기능을 통합적으로 관리합니다.
 
 ### 최근 변경(요약)
-- 슬롯 모델 통일: `CombatSlotPosition`은 `SLOT_1..SLOT_4`만 사용합니다.
-- 필드 포지션 경로 제거: `FIELD_LEFT/RIGHT` 경로 의존을 제거하고 논리 슬롯만 사용합니다.
-- 전투 슬롯 등록 기준: 슬롯 컴포넌트의 `Position`을 단일 진실로 사용합니다.
-- 드롭 제약: 플레이어 카드는 전투 슬롯 1번에만 드롭 가능합니다.
-- 적 핸드 슬롯 UI 제거: 적 카드는 매니저에서 전투 슬롯에 직접 등록합니다.
+- **새로운 5슬롯 시스템**: `BATTLE_SLOT` + `WAIT_SLOT_1~4` 구조로 전환
+- **셋업 단계 추가**: 전투 시작 전 카드 배치 단계 구현
+- **즉시 실행 시스템**: 전투슬롯에 카드 배치 시 즉시 실행
+- **레거시 호환성**: 기존 4슬롯 시스템과의 호환성 유지
+- **슬롯 이동 로직**: 대기4→대기3→대기2→대기1→전투슬롯 순서로 이동
 
 ## 🏗️ 폴더 구조
 ```
@@ -78,22 +78,30 @@ CombatSystem/
 
 ## 🎯 주요 기능
 
-### 1. 전투 상태 관리
-- **상태 패턴**: 다양한 전투 상태를 상태 패턴으로 관리
-- **상태 전환**: 조건에 따른 자동 상태 전환
+### 1. 새로운 5슬롯 시스템
+- **전투슬롯**: 카드 효과가 즉시 발동하는 슬롯
+- **대기슬롯**: 카드가 순차적으로 이동하는 4개 슬롯
+- **셋업 단계**: 전투 시작 전 카드 배치 단계
+- **즉시 실행**: 전투슬롯에 카드 배치 시 즉시 실행
 
-### 2. 턴 관리
-- **턴 순서**: 캐릭터 속도에 따른 턴 순서 결정
-- **턴 제한**: 턴당 행동 제한
+### 2. 전투 단계 관리
+- **셋업 단계**: 카드 배치 및 초기 설정
+- **전투 단계**: 카드 실행 및 턴 진행
+- **종료 단계**: 전투 결과 처리
 
-### 3. 카드 시스템
-- **카드 실행**: 카드 효과 실행
+### 3. 턴 관리 시스템
+- **고정 턴 순서**: 플레이어 → 적 → 플레이어 → 적 반복
+- **턴 완료 조건**: 전투슬롯에서 카드 사용 시 턴 완료
+- **슬롯 이동**: 대기4→대기3→대기2→대기1→전투슬롯 순서
+
+### 4. 카드 시스템
+- **카드 실행**: 전투슬롯에서만 카드 실행
 - **카드 검증**: 실행 가능 여부 검증
- - **슬롯 규칙**: 4슬롯 즉시 실행. 1번 슬롯 즉시 실행 후 `2→1, 3→2, 4→3` 이동
+- **드롭 제약**: 플레이어는 전투슬롯에만 카드 드롭 가능
 
-### 4. 전투 플로우
-- **전투 준비**: 전투 시작 전 준비
-- **입력 제어**: 플레이어 입력 처리
+### 5. 레거시 호환성
+- **4슬롯 시스템**: 기존 시스템과의 호환성 유지
+- **점진적 마이그레이션**: 새로운 시스템으로 점진적 전환
 
 ## 📊 주요 클래스 및 메서드
 
@@ -111,16 +119,36 @@ CombatSystem/
 - **SetState(ICombatTurnState state)**: 상태 설정
 - **CanProceedToNextTurn()**: 다음 턴 진행 가능 여부
 - **ProceedToNextTurn()**: 다음 턴으로 진행
-- **RegisterCard(ISkillCard card, CombatSlotPosition position)**: 카드 등록 (position은 `SLOT_1..SLOT_4`)
+- **RegisterCard(ISkillCard card, CombatSlotPosition position)**: 카드 등록 (레거시: `SLOT_1..SLOT_4`, 신규: `BATTLE_SLOT`, `WAIT_SLOT_1~4`)
 - **ClearRegisteredCards()**: 등록된 카드 초기화
 - **OnTurnReadyChanged**: 턴 준비 상태 변경 이벤트
 
+#### 새로운 5슬롯 시스템 메서드
+- **GetCurrentPhase()**: 현재 전투 단계 반환 (Setup/Battle/End)
+- **GetCurrentSetupStep()**: 현재 셋업 단계 반환 (0~8)
+- **IsSetupComplete()**: 셋업 완료 여부 확인
+- **StartSetupPhase()**: 셋업 단계 시작
+- **ProceedSetupStep()**: 셋업 단계 진행
+- **CompleteSetup()**: 셋업 완료 및 전투 단계 전환
+- **GetCurrentTurnTypeNew()**: 새로운 시스템에서 현재 턴 타입 반환
+- **CompleteTurn()**: 턴 완료 처리
+- **CanProceedTurn()**: 턴 진행 가능 여부 확인
+
 ### CombatExecutorService 클래스
 - **ExecuteCombatPhase()**: 전체 전투 페이즈 실행 (코루틴)
-- **PerformAttack(CombatSlotPosition position)**: 지정 슬롯 공격 실행 (코루틴, 일반적으로 `SLOT_1`)
+- **PerformAttack(CombatSlotPosition position)**: 지정 슬롯 공격 실행 (코루틴, 레거시: `SLOT_1`)
 - **ExecuteCard(ISkillCard card, CombatSlotPosition position)**: 카드 실행
 - **CreateExecutionContext()**: 실행 컨텍스트 생성
 - **ProcessCardExecution()**: 카드 실행 처리
+
+#### 새로운 5슬롯 시스템 메서드
+- **ExecuteCardInBattleSlot()**: 전투슬롯에서 카드 실행 (코루틴)
+- **ExecuteImmediatelyNew()**: 새로운 시스템에서 즉시 실행
+- **PerformAttackNew()**: 새로운 시스템에서 슬롯 공격 실행 (코루틴, `BATTLE_SLOT`만 지원)
+- **MoveSlotsForwardNew()**: 새로운 시스템에서 슬롯 이동 (대기4→대기3→대기2→대기1→전투슬롯)
+- **PlaceCardInSetup()**: 셋업 단계에서 카드 배치
+- **HasCardInBattleSlot()**: 전투슬롯에 카드 존재 여부 확인
+- **GetCardInBattleSlot()**: 전투슬롯의 카드 반환
 
 ### CombatPreparationService 클래스
 - **PrepareCombat()**: 전투 준비 (코루틴)
@@ -128,6 +156,22 @@ CombatSystem/
 - **SetupPlayerCards()**: 플레이어 카드 설정
 - **InitializeTurnSystem()**: 턴 시스템 초기화
 - **RegisterCombatSlots()**: 전투 슬롯 등록
+
+### CombatSlotManager 클래스
+- **AutoBindSlots()**: 슬롯 자동 바인딩 (레거시 4슬롯 시스템)
+- **GetCombatSlot()**: 슬롯 반환
+- **IsSlotEmpty()**: 슬롯 비어있음 여부 확인
+- **ClearAllSlots()**: 모든 슬롯 초기화
+
+#### 새로운 5슬롯 시스템 메서드
+- **AutoBindSlotsNew()**: 새로운 5슬롯 시스템 자동 바인딩
+- **ValidateSlotCountNew()**: 새로운 시스템 슬롯 개수 검증
+- **HasCardInBattleSlot()**: 전투슬롯에 카드 존재 여부 확인
+- **GetCardInBattleSlot()**: 전투슬롯의 카드 반환
+- **HasCardInWaitSlot()**: 대기슬롯에 카드 존재 여부 확인
+- **GetCardInWaitSlot()**: 대기슬롯의 카드 반환
+- **ClearAllSlotsNew()**: 새로운 시스템 모든 슬롯 초기화
+- **DebugSlotsStatusNew()**: 새로운 시스템 슬롯 상태 디버그 출력
 
 ### CombatStartupManager 클래스
 - **FindInitializerSteps()**: 초기화 스텝 수집
@@ -159,18 +203,41 @@ CombatSystem/
 
 ## 🔧 사용 방법
 
-### 기본 사용법
+### 새로운 5슬롯 시스템 사용법
 ```csharp
 // 전투 시작
 CombatFlowCoordinator combatCoordinator = FindObjectOfType<CombatFlowCoordinator>();
 combatCoordinator.StartCombat(stageData);
 
-// 턴 매니저를 통한 상태 관리
+// 턴 매니저를 통한 새로운 시스템 상태 관리
+CombatTurnManager turnManager = FindObjectOfType<CombatTurnManager>();
+turnManager.Initialize();
+
+// 셋업 단계 시작
+turnManager.StartSetupPhase();
+
+// 셋업 단계에서 카드 배치
+turnManager.ProceedSetupStep(CombatSlotPosition.WAIT_SLOT_4, SlotOwner.PLAYER);
+turnManager.ProceedSetupStep(CombatSlotPosition.WAIT_SLOT_3, SlotOwner.ENEMY);
+// ... 셋업 완료까지 진행
+
+// 전투 단계에서 턴 관리
+if (turnManager.CanProceedTurn())
+{
+    var currentTurnType = turnManager.GetCurrentTurnTypeNew();
+    // 턴 실행 후 완료
+    turnManager.CompleteTurn();
+}
+```
+
+### 레거시 4슬롯 시스템 사용법
+```csharp
+// 턴 매니저를 통한 레거시 상태 관리
 CombatTurnManager turnManager = FindObjectOfType<CombatTurnManager>();
 turnManager.Initialize();
 turnManager.SetState(new CombatPrepareState());
 
-// 카드 등록 (예: 슬롯 1)
+// 카드 등록 (레거시 슬롯)
 turnManager.RegisterCard(skillCard, CombatSlotPosition.SLOT_1);
 
 // 턴 진행 가능 여부 확인
@@ -180,9 +247,36 @@ if (turnManager.CanProceedToNextTurn())
 }
 ```
 
-### 전투 실행 서비스 사용법
+### 새로운 5슬롯 시스템 전투 실행 서비스 사용법
 ```csharp
-// CombatExecutorService를 통한 전투 실행
+// CombatExecutorService를 통한 새로운 시스템 전투 실행
+CombatExecutorService executorService = new CombatExecutorService(
+    combatSlotRegistry, 
+    contextProvider, 
+    cardExecutor, 
+    enemyHandManager
+);
+
+// 전투슬롯에서 카드 실행
+StartCoroutine(executorService.ExecuteCardInBattleSlot());
+
+// 새로운 시스템에서 즉시 실행
+executorService.ExecuteImmediatelyNew();
+
+// 셋업 단계에서 카드 배치
+executorService.PlaceCardInSetup(CombatSlotPosition.WAIT_SLOT_4, skillCard);
+
+// 전투슬롯 상태 확인
+if (executorService.HasCardInBattleSlot())
+{
+    var card = executorService.GetCardInBattleSlot();
+    // 카드 실행 처리
+}
+```
+
+### 레거시 4슬롯 시스템 전투 실행 서비스 사용법
+```csharp
+// CombatExecutorService를 통한 레거시 전투 실행
 CombatExecutorService executorService = new CombatExecutorService(
     combatSlotRegistry, 
     contextProvider, 
@@ -193,10 +287,10 @@ CombatExecutorService executorService = new CombatExecutorService(
 // 전체 전투 페이즈 실행
 StartCoroutine(executorService.ExecuteCombatPhase());
 
-// 특정 슬롯 공격 실행
+// 특정 슬롯 공격 실행 (레거시)
 StartCoroutine(executorService.PerformAttack(CombatSlotPosition.SLOT_1));
 
-// 카드 실행
+// 카드 실행 (레거시)
 executorService.ExecuteCard(skillCard, CombatSlotPosition.SLOT_2);
 ```
 
@@ -424,4 +518,11 @@ sequenceDiagram
 - 2025-01-27 | Maintainer | CombatSystem 개발 문서 초기 작성 | 문서
 - 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 파일 수 정정 | 문서
 - 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 클래스/메서드/서비스 정보 추가 | 문서
+- 2025-01-27 | Maintainer | 새로운 5슬롯 시스템 구현 완료 | 코드/문서
+- 2025-01-27 | Maintainer | CombatSlotPosition 확장 - BATTLE_SLOT, WAIT_SLOT_1~4 추가 | 코드/문서
+- 2025-01-27 | Maintainer | CombatTurnManager에 셋업 단계 및 새로운 턴 관리 로직 추가 | 코드/문서
+- 2025-01-27 | Maintainer | CombatExecutorService에 새로운 슬롯 실행 및 이동 로직 추가 | 코드/문서
+- 2025-01-27 | Maintainer | CombatSlotManager에 5슬롯 관리 기능 추가 | 코드/문서
+- 2025-01-27 | Maintainer | 레거시 호환성 유지 및 경고 억제 처리 | 코드/문서
+- 2025-01-27 | Maintainer | 개발 문서 업데이트 - 새로운 5슬롯 시스템 반영 | 문서
 - 2025-01-27 | Maintainer | 가드 효과 시스템 통합 - ICombatTurnManager에 ApplyGuardEffect 메서드 추가 | 코드/문서

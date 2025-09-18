@@ -39,55 +39,55 @@ version: 1.0.0
 - **파일**: `05_core_system_rules.mdc`
 - **범위**: `Assets/Script/CoreSystem/**/*.cs`
 - **설명**: Unity 2D 코어 시스템 통합 관리
-- **주요 기능**: 싱글톤 매니저, 초기화 순서, Zenject DI
+- **주요 기능**: 싱글톤 매니저, 자동 초기화, Zenject DI, 한국어 로깅, 씬 전환 지속성
 
 ### AnimationSystem 규칙
 - **파일**: `06_animation_system_rules.mdc`
 - **범위**: `Assets/Script/AnimationSystem/**/*.cs`
 - **설명**: Unity 2D 애니메이션 통합 관리
-- **주요 기능**: 통합 데이터베이스, 타입별 필터링, 그룹화된 UI, DOTween 기반 애니메이션
+- **주요 기능**: 통합 데이터베이스, 타입별 필터링, 그룹화된 UI, DOTween 기반 애니메이션, Zenject DI
 
 ### AudioSystem 규칙
 - **파일**: `07_audio_system_rules.mdc`
 - **범위**: `Assets/Script/AudioSystem/**/*.cs`, `Assets/Script/CoreSystem/Audio/**/*.cs`
 - **설명**: Unity 2D 오디오 시스템 통합 관리
-- **주요 기능**: 싱글톤 매니저, 오디오 풀링, 이벤트 기반 사운드
+- **주요 기능**: CoreSystem 통합, 자동 초기화, 오디오 풀링, 우선순위 시스템, 한국어 로깅
 
 ### CharacterSystem 규칙
 - **파일**: `08_character_system_rules.mdc`
 - **범위**: `Assets/Script/CharacterSystem/**/*.cs`
 - **설명**: Unity 2D 캐릭터 통합 관리
-- **주요 기능**: 캐릭터 타입별 특수 기능, 리소스 관리, 상태 관리
+- **주요 기능**: League of Legends 스타일 UI, 통합 UI 컨트롤러, 버프/디버프 아이콘 시스템, 리소스 타입별 UI
 
 ### CombatSystem 규칙
 - **파일**: `09_combat_system_rules.mdc`
 - **범위**: `Assets/Script/CombatSystem/**/*.cs`
 - **설명**: Unity 2D 전투 시스템 통합 관리
-- **주요 기능**: 상태 패턴, 턴 관리, Zenject DI
+- **주요 기능**: 새로운 5슬롯 시스템, 셋업 페이즈, 즉시 실행, 레거시 호환성, Zenject DI
 
 ### SaveSystem 규칙
 - **파일**: `10_save_system_rules.mdc`
 - **범위**: `Assets/Script/SaveSystem/**/*.cs`
 - **설명**: Unity 2D 저장 시스템 통합 관리
-- **주요 기능**: JSON 직렬화, 안전한 저장, 암호화
+- **주요 기능**: CoreSystem 통합, 자동 초기화, 슬레이 더 스파이어 방식, 한국어 로깅, 씬 전환 지속성
 
 ### SkillCardSystem 규칙
 - **파일**: `11_skillcard_system_rules.mdc`
 - **범위**: `Assets/Script/SkillCardSystem/**/*.cs`
 - **설명**: Unity 2D 스킬카드 통합 관리
-- **주요 기능**: 통합 데이터 모델, 수량 기반 덱, 효과 시스템, 드래그 앤 드롭
+- **주요 기능**: 통합 데이터 모델, 소유자 정책, 수량 기반 덱, 용어 변경, 가드 효과 리팩토링
 
 ### StageSystem 규칙
 - **파일**: `12_stage_system_rules.mdc`
 - **범위**: `Assets/Script/StageSystem/**/*.cs`
 - **설명**: Unity 2D 스테이지 시스템 통합 관리
-- **주요 기능**: 팩토리 패턴, 상태 관리, 보상 시스템
+- **주요 기능**: 팩토리 패턴, 상태 기반 관리, 이벤트 기반 보상 시스템, ScriptableObject 기반 데이터 관리
 
 ### UtilitySystem 규칙
 - **파일**: `13_utility_system_rules.mdc`
 - **범위**: `Assets/Script/UtilitySystem/**/*.cs`
 - **설명**: Unity 2D 유틸리티 시스템 통합 관리
-- **주요 기능**: 유틸리티 클래스, 게임 플로우 관리, 의존성 주입
+- **주요 기능**: 싱글톤 패턴, 컨텍스트 패턴, 의존성 주입 패턴, 컨테이너 패턴
 
 ## 🎯 규칙 사용 가이드
 
@@ -112,35 +112,30 @@ version: 1.0.0
 ## 🔧 공통 개발 원칙
 
 ### 1. 아키텍처 패턴
-- **싱글톤 패턴**: 매니저 클래스에 적용
-- **팩토리 패턴**: 객체 생성 로직 캡슐화
-- **전략 패턴**: 알고리즘 런타임 교체
-- **옵저버 패턴**: 이벤트 기반 통신
+- **싱글톤 패턴**: 매니저 클래스에 적용 (CoreSystem, AudioSystem, SaveSystem)
+- **팩토리 패턴**: 객체 생성 로직 캡슐화 (StageSystem, SkillCardSystem)
+- **전략 패턴**: 알고리즘 런타임 교체 (CombatSystem, AnimationSystem)
+- **옵저버 패턴**: 이벤트 기반 통신 (모든 시스템)
+- **컨텍스트 패턴**: 상태 관리 (UtilitySystem, CharacterSystem)
+- **컨테이너 패턴**: 생명주기 관리 (UtilitySystem, CoreSystem)
 
 ### 2. 성능 최적화
-- **DOTween 사용**: 애니메이션은 DOTween 우선
-- **Zenject DI**: 의존성 주입으로 느슨한 결합
-- **이벤트 기반**: Update() 최소화
-- **메모리 관리**: 불필요한 참조 해제
+- **DOTween 사용**: 애니메이션은 DOTween 우선 (AnimationSystem)
+- **Zenject DI**: 의존성 주입으로 느슨한 결합 (모든 시스템)
+- **이벤트 기반**: Update() 최소화 (모든 시스템)
+- **메모리 관리**: 불필요한 참조 해제 (모든 시스템)
+- **오디오 풀링**: AudioSource 재사용 (AudioSystem)
+- **통합 데이터베이스**: 중복 제거 (AnimationSystem, SkillCardSystem)
 
 ### 3. 코드 품질
-- **예외 처리**: 모든 public 메서드 예외 처리
-- **로깅**: GameLogger를 통한 한국어 로깅
-- **문서화**: XML 문서화 필수
-- **테스트**: 단위 테스트 및 수동 테스트
+- **예외 처리**: 모든 public 메서드 예외 처리 (모든 시스템)
+- **한국어 로깅**: GameLogger를 통한 카테고리별 로깅 (모든 시스템)
+- **XML 문서화**: 공개 API 문서화 필수 (모든 시스템)
+- **테스트**: 단위 테스트 및 수동 테스트 (모든 시스템)
+- **자동 초기화**: ICoreSystemInitializable 인터페이스 (CoreSystem 통합 시스템)
 
 ### 4. 폴더 구조
-- **시스템별 분리**: 각 시스템별 폴더 분리
-- **네임스페이스 일치**: 폴더와 네임스페이스 일치
-- **일관된 구조**: 모든 시스템 동일한 구조 적용
-
-## 📝 변경 기록(Delta)
-- 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
-
-- 2025-01-27 | Maintainer | 시스템 규칙 인덱스 초기 생성 | 문서
-- 2025-01-27 | Maintainer | 9개 시스템 규칙 파일 통합 관리 | 문서
-- 2025-01-27 | Maintainer | 규칙 파일 명명 체계 정리 및 순서화 (01-14) | 문서
-- 2025-01-27 | Maintainer | 전체 규칙 파일 구조 섹션 추가 및 인덱스 업데이트 | 문서
-- 2025-01-27 | Maintainer | AnimationSystem 및 SkillCardSystem 통합 시스템 반영 | 문서
-- 2025-01-27 | Maintainer | 모든 시스템 규칙 파일 최신화 완료 | 문서
-- 2025-01-27 | Maintainer | 가드 효과 리팩토링 및 용어 변경 반영 - 모든 관련 문서 업데이트 | 문서
+- **시스템별 분리**: 각 시스템별 폴더 분리 (모든 시스템)
+- **네임스페이스 일치**: 폴더와 네임스페이스 일치 (모든 시스템)
+- **일관된 구조**: 모든 시스템 동일한 구조 적용 (모든 시스템)
+- **CoreSystem 통합**: 전역 시스템은 CoreSystem에 통합 (AudioSystem, SaveSystem)

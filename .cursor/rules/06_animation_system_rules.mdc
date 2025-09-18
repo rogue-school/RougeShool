@@ -9,7 +9,14 @@ alwaysApply: true
 # AnimationSystem 개발 규칙
 
 ## 📋 시스템 개요
-AnimationSystem은 Unity 2D 게임의 모든 애니메이션을 통합 관리하는 시스템입니다. 캐릭터, 스킬카드, UI 등 다양한 요소의 애니메이션을 중앙화된 방식으로 제어합니다. 플레이어와 적 스킬카드의 애니메이션을 하나의 통합 데이터베이스에서 관리하며, 타입별 필터링된 드롭다운을 통해 정확한 애니메이션 설정을 제공합니다.
+AnimationSystem은 Unity 2D 게임의 모든 애니메이션을 통합 관리하는 시스템입니다. 캐릭터, 스킬카드, UI 등 다양한 요소의 애니메이션을 중앙화된 방식으로 제어합니다. 플레이어와 적 스킬카드의 애니메이션을 하나의 통합 데이터베이스에서 관리하며, 타입별 필터링된 드롭다운을 통해 정확한 애니메이션 설정을 제공합니다. DOTween 기반의 고성능 애니메이션 시스템과 Zenject DI를 통한 확장 가능한 아키텍처를 제공합니다.
+
+### 최근 변경(요약)
+- **통합 애니메이션 시스템**: 플레이어/적 스킬카드 애니메이션 통합 데이터베이스
+- **DOTween 최적화**: 애니메이션 풀링 및 SafeMode 설정으로 성능 최적화
+- **타입별 필터링**: 그룹화된 커스텀 에디터 UI로 개발 효율성 향상
+- **Zenject DI 통합**: 의존성 주입을 통한 느슨한 결합 구현
+- **001 시리즈 제거**: 불필요한 카드 시리즈 정리 및 None 옵션 제거
 
 ## 🏗️ 폴더 구조 규칙
 ```
@@ -122,6 +129,18 @@ AnimationSystem/
 - SkillCardAnimationController: 스킬카드 애니메이션 통합 관리
 - 이벤트 기반 애니메이션 실행
 
+### 5. Zenject DI 규칙
+- **AnimationSystemInitializer**: 애니메이션 시스템 Zenject DI 설정
+- **인터페이스 기반**: DI 바인딩은 인터페이스 기반으로 테스트 가능성 확보
+- **팩토리 패턴**: 애니메이션 객체 생성 로직 캡슐화
+- **생명주기 관리**: 적절한 스코프 설정으로 메모리 효율성 확보
+
+### 6. 통합 데이터베이스 규칙
+- **UnifiedSkillCardAnimationDatabase**: 플레이어/적 스킬카드 통합 관리
+- **타입별 필터링**: 그룹화된 커스텀 에디터 UI로 개발 효율성 향상
+- **소유자 정책**: Shared, Player, Enemy 정책으로 애니메이션 사용 권한 관리
+- **마이그레이션 도구**: 기존 데이터베이스에서 통합 시스템으로 마이그레이션
+
 ## 🔧 사용 방법
 
 ### 기본 사용법
@@ -137,6 +156,54 @@ AnimationFacade.Instance.PlaySkillCardDropAnimation(skillCard, target, onComplet
 // 캐릭터 애니메이션 실행
 AnimationFacade.Instance.PlayCharacterAnimation(characterId, "spawn", target, onComplete, isEnemy);
 AnimationFacade.Instance.PlayCharacterDeathAnimation(characterId, target, onComplete, isEnemy);
+```
+
+### 통합 데이터베이스 사용법
+```csharp
+// UnifiedSkillCardAnimationDatabase 사용
+UnifiedSkillCardAnimationDatabase database = Resources.Load<UnifiedSkillCardAnimationDatabase>("AnimationDatabases/UnifiedSkillCardAnimationDatabase");
+
+// 카드 ID로 애니메이션 엔트리 검색
+var entry = database.FindEntryByCardId("Fireball_001");
+if (entry != null && entry.CanUseAnimation(Owner.Player))
+{
+    var settings = entry.GetSettingsByType("spawn");
+    // 애니메이션 설정 사용
+}
+
+// 소유자 정책 확인
+if (entry.OwnerPolicy == OwnerPolicy.Shared)
+{
+    // 플레이어와 적 모두 사용 가능
+}
+else if (entry.OwnerPolicy == OwnerPolicy.Player)
+{
+    // 플레이어만 사용 가능
+}
+else if (entry.OwnerPolicy == OwnerPolicy.Enemy)
+{
+    // 적만 사용 가능
+}
+```
+
+### Zenject DI 사용법
+```csharp
+// AnimationSystemInitializer를 통한 DI 설정
+public class AnimationSystemInstaller : MonoInstaller<AnimationSystemInstaller>
+{
+    public override void InstallBindings()
+    {
+        // 애니메이션 팩토리 바인딩
+        Container.Bind<IAnimationFactory>().To<AnimationFactory>().AsSingle();
+        
+        // 애니메이션 컨트롤러 바인딩
+        Container.Bind<ICharacterAnimationController>().To<CharacterAnimationController>().AsSingle();
+        Container.Bind<ISkillCardAnimationController>().To<SkillCardAnimationController>().AsSingle();
+        
+        // 데이터베이스 바인딩
+        Container.Bind<UnifiedSkillCardAnimationDatabase>().FromResource("AnimationDatabases/UnifiedSkillCardAnimationDatabase").AsSingle();
+    }
+}
 ```
 
 ### 주요 클래스 및 메서드
@@ -234,30 +301,3 @@ public class AnimationSettings
 ### 스레드 안전성
 - 싱글톤 패턴의 스레드 안전성 보장
 - 이벤트 기반 비동기 처리
-
-## 🧪 검증/테스트 지침
-
-### 체크리스트
-- [ ] DOTween SafeMode 활성화 확인
-- [ ] 애니메이션 풀링 설정 확인
-- [ ] 인터페이스 구현 완전성 확인
-- [ ] 예외 처리 및 null 체크 구현
-- [ ] 성능 프로파일링 통과
-
-### 재현 절차
-1. 각 애니메이션 타입별 테스트 케이스 실행
-2. 메모리 누수 검사
-3. 프레임레이트 영향도 측정
-
-## 📝 변경 기록(Delta)
-- 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
-
-- 2025-01-27 | Maintainer | AnimationSystem 개발 문서 초기 작성 | 문서
-- 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 파일 수 정정 | 문서
-- 2025-01-27 | Maintainer | .mdc 규칙 파일로 변환 및 Cursor 규칙 저장 | 문서
-- 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 함수/변수/클래스 정보 추가 | 문서
-- 2025-01-27 | Maintainer | 통합 애니메이션 시스템으로 마이그레이션 완료 | 코드/문서
-- 2025-01-27 | Maintainer | 플레이어/적 스킬카드 애니메이션 통합 데이터베이스 구현 | 코드/문서
-- 2025-01-27 | Maintainer | 타입별 필터링된 드롭다운 시스템 구현 | 코드/문서
-- 2025-01-27 | Maintainer | 그룹화된 커스텀 에디터 UI 구현 | 코드/문서
-- 2025-01-27 | Maintainer | 001 시리즈 제거 및 None 옵션 제거 | 코드/문서

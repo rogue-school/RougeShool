@@ -9,7 +9,14 @@ alwaysApply: true
 # AudioSystem 개발 규칙
 
 ## 📋 시스템 개요
-AudioSystem은 게임의 모든 오디오를 관리하는 시스템입니다. 오디오 풀링과 이벤트 기반 시스템을 제공하며, CoreSystem에 통합되어 전역적으로 관리됩니다.
+AudioSystem은 게임의 모든 오디오를 관리하는 시스템입니다. 오디오 풀링과 이벤트 기반 시스템을 제공하며, CoreSystem에 통합되어 전역적으로 관리됩니다. Zenject DI와 자동 초기화 시스템을 통해 안정적이고 확장 가능한 오디오 아키텍처를 제공합니다.
+
+### 최근 변경(요약)
+- **CoreSystem 통합**: AudioManager가 CoreSystem의 일부로 통합 관리
+- **Zenject DI 지원**: 의존성 주입을 통한 느슨한 결합 구현
+- **자동 초기화**: ICoreSystemInitializable 인터페이스 기반 자동 초기화
+- **오디오 풀링 최적화**: AudioPoolManager를 통한 성능 최적화
+- **우선순위 시스템**: 사운드별 우선순위 관리로 중요한 사운드 우선 재생
 
 ## 🏗️ 폴더 구조 규칙
 ```
@@ -64,6 +71,18 @@ CoreSystem/Audio/     # 실제 구현 위치
 - **전투 사운드**: 우선순위 6-10 (높음)
 - **UI 사운드**: 우선순위 3-5 (중간)
 - **기타 사운드**: 우선순위 1-2 (낮음)
+
+### 5. CoreSystem 통합 규칙
+- **ICoreSystemInitializable**: CoreSystem 초기화 인터페이스 구현
+- **자동 초기화**: CoreSystemInitializer에서 자동 초기화
+- **전역 접근**: 싱글톤 패턴으로 어디서든 접근 가능
+- **씬 전환 지속**: DontDestroyOnLoad로 씬 전환 시에도 유지
+- **한국어 로깅**: GameLogger를 통한 카테고리별 로깅
+
+### 6. Zenject DI 규칙
+- **의존성 주입**: Zenject를 통한 느슨한 결합 구현
+- **인터페이스 기반**: DI 바인딩은 인터페이스 기반으로 테스트 가능성 확보
+- **생명주기 관리**: 적절한 스코프 설정으로 메모리 효율성 확보
 
 ## 🔧 사용 방법
 
@@ -134,6 +153,16 @@ if (AudioManager.Instance.IsInitialized)
     // 오디오 시스템 사용 가능
     AudioManager.Instance.PlayBGM(bgmClip);
 }
+
+// 씬 전환 시 오디오 시스템 지속성 확인
+// CoreScene에서 DontDestroyOnLoad로 설정되어 모든 씬에서 접근 가능
+AudioManager.Instance.SetBGMVolume(0.6f); // 씬 전환 후에도 볼륨 유지
+AudioManager.Instance.SetSFXVolume(1.0f); // 씬 전환 후에도 볼륨 유지
+
+// 한국어 로깅과 연동
+GameLogger.LogInfo("오디오 시스템 초기화 완료", GameLogger.LogCategory.Audio);
+GameLogger.LogWarning("오디오 파일 로드 실패", GameLogger.LogCategory.Audio);
+GameLogger.LogError("오디오 시스템 오류 발생", GameLogger.LogCategory.Error);
 ```
 
 ## 🏗️ 아키텍처 패턴
@@ -168,28 +197,3 @@ if (AudioManager.Instance.IsInitialized)
 ### 메모리 관리
 - **리소스 해제**: 오디오 클립 사용 완료 후 해제
 - **메모리 누수 방지**: 불필요한 참조 해제
-
-## 🧪 검증/테스트 지침
-
-### 체크리스트
-- [ ] 오디오 재생 기능 정상 동작 확인
-- [ ] 볼륨 제어 기능 검증
-- [ ] 페이드 효과 정상 동작 확인
-- [ ] 오디오 풀링 성능 확인
-- [ ] 이벤트 기반 사운드 재생 확인
-- [ ] 우선순위 시스템 정상 동작 확인
-- [ ] 쿨다운 시스템 정상 동작 확인
-
-### 재현 절차
-1. 각 오디오 타입별 재생 테스트
-2. 볼륨 제어 시나리오 테스트
-3. 페이드 효과 시나리오 테스트
-4. 성능 프로파일링
-
-## 📝 변경 기록(Delta)
-- 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
-
-- 2025-01-27 | Maintainer | AudioSystem 개발 문서 초기 작성 | 문서
-- 2025-01-27 | Maintainer | 실제 구현 위치 명시 및 폴더 구조 정정 | 문서
-- 2025-01-27 | Maintainer | .mdc 규칙 파일로 변환 및 Cursor 규칙 저장 | 문서
-- 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 클래스/메서드/우선순위 정보 추가 | 문서

@@ -39,6 +39,9 @@ namespace Game.CharacterSystem.Core
 
         [Header("HP Bar UI")]
         [SerializeField] private HPBarController hpBarController;
+        
+        [Header("새로운 통합 UI")]
+        [SerializeField] private PlayerCharacterUIController playerCharacterUIController;
 
 
         #endregion
@@ -106,6 +109,12 @@ namespace Game.CharacterSystem.Core
             {
                 hpBarController.Initialize(this);
             }
+            
+            // 새로운 통합 UI 초기화
+            if (playerCharacterUIController != null)
+            {
+                playerCharacterUIController.Initialize(this);
+            }
         }
 
         #endregion
@@ -150,6 +159,12 @@ namespace Game.CharacterSystem.Core
             base.TakeDamage(amount);
             UpdateUI();
 
+            // 새로운 통합 UI 업데이트
+            if (playerCharacterUIController != null)
+            {
+                playerCharacterUIController.OnTakeDamage(amount);
+            }
+
             if (damageTextPrefab != null && hpTextAnchor != null)
             {
                 var instance = Instantiate(damageTextPrefab);
@@ -168,6 +183,12 @@ namespace Game.CharacterSystem.Core
         {
             base.Heal(amount);
             UpdateUI();
+
+            // 새로운 통합 UI 업데이트
+            if (playerCharacterUIController != null)
+            {
+                playerCharacterUIController.OnHeal(amount);
+            }
 
             if (damageTextPrefab != null && hpTextAnchor != null)
             {
@@ -220,6 +241,48 @@ namespace Game.CharacterSystem.Core
         {
             Debug.Log($"[PlayerCharacter] 카드 복귀: {card?.CardDefinition?.displayName}");
             // 실제 핸드 복원 로직은 handManager 내부에 구현되어야 함
+        }
+
+        #endregion
+
+        #region 버프/디버프 시스템
+
+        /// <summary>
+        /// 버프/디버프 아이콘을 추가합니다.
+        /// </summary>
+        /// <param name="effectId">효과 ID</param>
+        /// <param name="iconSprite">아이콘 스프라이트</param>
+        /// <param name="isBuff">버프 여부</param>
+        /// <param name="duration">지속 시간 (초, -1이면 영구)</param>
+        public void AddBuffDebuffIcon(string effectId, Sprite iconSprite, bool isBuff, float duration = -1f)
+        {
+            if (playerCharacterUIController != null)
+            {
+                playerCharacterUIController.AddBuffDebuffIcon(effectId, iconSprite, isBuff, duration);
+            }
+        }
+
+        /// <summary>
+        /// 버프/디버프 아이콘을 제거합니다.
+        /// </summary>
+        /// <param name="effectId">효과 ID</param>
+        public void RemoveBuffDebuffIcon(string effectId)
+        {
+            if (playerCharacterUIController != null)
+            {
+                playerCharacterUIController.RemoveBuffDebuffIcon(effectId);
+            }
+        }
+
+        /// <summary>
+        /// 모든 버프/디버프 아이콘을 제거합니다.
+        /// </summary>
+        public void ClearAllBuffDebuffIcons()
+        {
+            if (playerCharacterUIController != null)
+            {
+                playerCharacterUIController.ClearAllBuffDebuffIcons();
+            }
         }
 
         #endregion

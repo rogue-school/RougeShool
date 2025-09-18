@@ -6,6 +6,7 @@ using Game.CombatSystem.UI;
 using Game.IManager;
 using Game.CombatSystem.Utility;
 using Game.AnimationSystem.Manager;
+using Game.SkillCardSystem.Interface;
 
 namespace Game.CombatSystem.Manager
 {
@@ -18,13 +19,25 @@ namespace Game.CombatSystem.Manager
 
         private Dictionary<CombatSlotPosition, ICombatCardSlot> combatSlots = new();
 
-        // 최적화: 필수 슬롯 위치를 정적 배열로 캐싱
+        // 최적화: 필수 슬롯 위치를 정적 배열로 캐싱 (레거시 4슬롯 시스템)
+#pragma warning disable CS0618 // 레거시 호환성을 위해 의도적으로 사용
         private static readonly CombatSlotPosition[] RequiredSlots = 
         {
             CombatSlotPosition.SLOT_1,
             CombatSlotPosition.SLOT_2,
             CombatSlotPosition.SLOT_3,
             CombatSlotPosition.SLOT_4
+        };
+#pragma warning restore CS0618
+
+        // 새로운 5슬롯 시스템용 필수 슬롯 위치
+        private static readonly CombatSlotPosition[] NewRequiredSlots = 
+        {
+            CombatSlotPosition.BATTLE_SLOT,
+            CombatSlotPosition.WAIT_SLOT_1,
+            CombatSlotPosition.WAIT_SLOT_2,
+            CombatSlotPosition.WAIT_SLOT_3,
+            CombatSlotPosition.WAIT_SLOT_4
         };
 
         #endregion
@@ -158,6 +171,174 @@ namespace Game.CombatSystem.Manager
         public bool IsSlotEmpty(CombatFieldSlotPosition fieldPosition)
         {
             return true;
+        }
+
+        #endregion
+
+        #region 새로운 5슬롯 시스템
+
+        /// <summary>
+        /// 새로운 5슬롯 시스템: 자식 오브젝트의 슬롯 UI를 자동으로 탐색하여 슬롯 정보를 등록합니다.
+        /// 5개 슬롯 시스템을 지원합니다.
+        /// </summary>
+        public void AutoBindSlotsNew()
+        {
+            combatSlots.Clear();
+
+            CombatExecutionSlotUI[] slotUIs = GetComponentsInChildren<CombatExecutionSlotUI>(true);
+            foreach (var slotUI in slotUIs)
+            {
+                var execPos = slotUI.Position;
+                if (!combatSlots.ContainsKey(execPos))
+                {
+                    combatSlots[execPos] = slotUI;
+                }
+                else
+                {
+                    Debug.LogWarning($"[CombatSlotManager] 중복 슬롯 발견: {execPos}");
+                }
+            }
+
+            // 보강: 현재 오브젝트의 자식에 슬롯이 없을 수 있으므로, 누락된 슬롯이 있으면 씬 전체에서 한 번 더 검색합니다.
+            bool hasMissing = false;
+            for (int i = 0; i < NewRequiredSlots.Length; i++)
+            {
+                if (!combatSlots.ContainsKey(NewRequiredSlots[i]))
+                {
+                    hasMissing = true;
+                    break;
+                }
+            }
+
+            if (hasMissing)
+            {
+                var allSlotUIs = Object.FindObjectsByType<CombatExecutionSlotUI>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                foreach (var slotUI in allSlotUIs)
+                {
+                    var execPos = slotUI.Position;
+                    if (!combatSlots.ContainsKey(execPos))
+                    {
+                        combatSlots[execPos] = slotUI;
+                        Debug.Log($"[CombatSlotManager] 자식 검색에 실패하여 전역 검색으로 슬롯을 바인딩했습니다: {execPos}");
+                    }
+                }
+            }
+
+            // 새로운 5슬롯 시스템 검증
+            ValidateSlotCountNew();
+        }
+
+        /// <summary>
+        /// 새로운 5슬롯 시스템: 5개 슬롯이 모두 등록되었는지 확인합니다.
+        /// </summary>
+        private void ValidateSlotCountNew()
+        {
+            for (int i = 0; i < NewRequiredSlots.Length; i++)
+            {
+                var slot = NewRequiredSlots[i];
+                if (!combatSlots.ContainsKey(slot))
+                {
+                    Debug.LogError($"[CombatSlotManager] 새로운 5슬롯 시스템에서 필수 슬롯이 누락되었습니다: {slot}");
+                }
+            }
+
+            Debug.Log($"[CombatSlotManager] 새로운 5슬롯 시스템 슬롯 바인딩 완료: {combatSlots.Count}개 슬롯 등록됨");
+        }
+
+        /// <summary>
+        /// 새로운 5슬롯 시스템: 전투슬롯에 카드가 있는지 확인합니다.
+        /// </summary>
+        /// <returns>전투슬롯에 카드가 있으면 true</returns>
+        public bool HasCardInBattleSlot()
+        {
+            return !IsSlotEmpty(CombatSlotPosition.BATTLE_SLOT);
+        }
+
+        /// <summary>
+        /// 새로운 5슬롯 시스템: 전투슬롯의 카드를 반환합니다.
+        /// </summary>
+        /// <returns>전투슬롯의 카드, 없으면 null</returns>
+        public ISkillCard GetCardInBattleSlot()
+        {
+            if (combatSlots.TryGetValue(CombatSlotPosition.BATTLE_SLOT, out var slot))
+            {
+                return slot.GetCard();
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 새로운 5슬롯 시스템: 대기슬롯에 카드가 있는지 확인합니다.
+        /// </summary>
+        /// <param name="waitSlotNumber">대기슬롯 번호 (1~4)</param>
+        /// <returns>해당 대기슬롯에 카드가 있으면 true</returns>
+        public bool HasCardInWaitSlot(int waitSlotNumber)
+        {
+            var position = CombatSlotPositionExtensions.FromWaitSlotNumber(waitSlotNumber);
+            if (position == CombatSlotPosition.NONE)
+            {
+                Debug.LogWarning($"[CombatSlotManager] 유효하지 않은 대기슬롯 번호: {waitSlotNumber}");
+                return false;
+            }
+            return !IsSlotEmpty(position);
+        }
+
+        /// <summary>
+        /// 새로운 5슬롯 시스템: 대기슬롯의 카드를 반환합니다.
+        /// </summary>
+        /// <param name="waitSlotNumber">대기슬롯 번호 (1~4)</param>
+        /// <returns>해당 대기슬롯의 카드, 없으면 null</returns>
+        public ISkillCard GetCardInWaitSlot(int waitSlotNumber)
+        {
+            var position = CombatSlotPositionExtensions.FromWaitSlotNumber(waitSlotNumber);
+            if (position == CombatSlotPosition.NONE)
+            {
+                Debug.LogWarning($"[CombatSlotManager] 유효하지 않은 대기슬롯 번호: {waitSlotNumber}");
+                return null;
+            }
+
+            if (combatSlots.TryGetValue(position, out var slot))
+            {
+                return slot.GetCard();
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 새로운 5슬롯 시스템: 모든 슬롯의 상태를 초기화합니다.
+        /// </summary>
+        public void ClearAllSlotsNew()
+        {
+            foreach (var slot in NewRequiredSlots)
+            {
+                if (combatSlots.TryGetValue(slot, out var slotComponent))
+                {
+                    slotComponent.ClearAll();
+                }
+            }
+            Debug.Log("[CombatSlotManager] 새로운 5슬롯 시스템 모든 슬롯 초기화 완료");
+        }
+
+        /// <summary>
+        /// 새로운 5슬롯 시스템: 슬롯 상태를 디버그 출력합니다.
+        /// </summary>
+        public void DebugSlotsStatusNew()
+        {
+            Debug.Log("=== 새로운 5슬롯 시스템 슬롯 상태 ===");
+            foreach (var slot in NewRequiredSlots)
+            {
+                if (combatSlots.TryGetValue(slot, out var slotComponent))
+                {
+                    var card = slotComponent.GetCard();
+                    var cardName = card?.GetCardName() ?? "비어있음";
+                    Debug.Log($"{slot}: {cardName}");
+                }
+                else
+                {
+                    Debug.Log($"{slot}: 슬롯 없음");
+                }
+            }
+            Debug.Log("=====================================");
         }
 
         #endregion

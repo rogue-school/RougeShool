@@ -33,6 +33,27 @@ namespace Game.CombatSystem.Manager
     }
 
     /// <summary>
+    /// 전투 단계를 나타내는 열거형입니다.
+    /// </summary>
+    public enum CombatPhase
+    {
+        /// <summary>
+        /// 셋업 단계 (전투 시작 전 카드 배치)
+        /// </summary>
+        Setup,
+        
+        /// <summary>
+        /// 전투 단계 (카드 실행 및 턴 진행)
+        /// </summary>
+        Battle,
+        
+        /// <summary>
+        /// 전투 종료
+        /// </summary>
+        End
+    }
+
+    /// <summary>
     /// 전투 턴을 제어하고 상태 전이, 카드 등록, 턴 진행 가능 여부 등을 관리하는 클래스입니다.
     /// </summary>
     public class CombatTurnManager : MonoBehaviour, ICombatTurnManager
@@ -52,10 +73,25 @@ namespace Game.CombatSystem.Manager
         private bool isTurnReady;
         private int currentTurn = 1;
 
+        // 새로운 5슬롯 시스템을 위한 상태
+        private CombatPhase currentPhase = CombatPhase.Setup;
+        private int setupStep = 0; // 셋업 단계 (0~8)
+        private bool isSetupComplete = false;
+
         /// <summary>
         /// 턴 시작 가능 상태가 변경될 때 발생하는 이벤트입니다.
         /// </summary>
         public event Action<bool> OnTurnReadyChanged;
+
+        /// <summary>
+        /// 전투 단계가 변경될 때 발생하는 이벤트입니다.
+        /// </summary>
+        public event Action<CombatPhase> OnCombatPhaseChanged;
+
+        /// <summary>
+        /// 셋업 단계가 진행될 때 발생하는 이벤트입니다.
+        /// </summary>
+        public event Action<int> OnSetupStepChanged;
 
         #endregion
 
@@ -160,12 +196,14 @@ namespace Game.CombatSystem.Manager
         }
 
         /// <summary>
-        /// 턴 시작 준비가 되었는지 여부를 확인하고 이벤트를 발생시킵니다.
+        /// 턴 시작 준비가 되었는지 여부를 확인하고 이벤트를 발생시킵니다. (레거시 시스템용)
         /// 1번 슬롯에 카드가 있으면 턴 시작 가능합니다.
         /// </summary>
         public void UpdateTurnReady()
         {
+#pragma warning disable CS0618 // 레거시 호환성을 위해 의도적으로 사용
             bool ready = cardRegistry.GetCardInSlot(CombatSlotPosition.SLOT_1) != null;
+#pragma warning restore CS0618
 
             if (isTurnReady != ready)
             {
@@ -250,12 +288,14 @@ namespace Game.CombatSystem.Manager
         #region 새로운 턴 관리 시스템 (최적화됨)
 
         /// <summary>
-        /// 현재 턴 타입을 반환합니다. (최적화된 버전)
+        /// 현재 턴 타입을 반환합니다. (최적화된 버전, 레거시 시스템용)
         /// </summary>
         /// <returns>턴 타입 (Player, Enemy, Unknown)</returns>
         public TurnType GetCurrentTurnType()
         {
+#pragma warning disable CS0618 // 레거시 호환성을 위해 의도적으로 사용
             var card = cardRegistry.GetCardInSlot(CombatSlotPosition.SLOT_1);
+#pragma warning restore CS0618
             if (card == null)
                 return TurnType.Player;
             
@@ -302,12 +342,14 @@ namespace Game.CombatSystem.Manager
         }
 
         /// <summary>
-        /// 4번 슬롯에 새로운 적 카드를 등록합니다.
+        /// 4번 슬롯에 새로운 적 카드를 등록합니다. (레거시 시스템용)
         /// </summary>
         /// <param name="card">등록할 적 스킬카드</param>
         public void RegisterEnemyCardInSlot4(ISkillCard card)
         {
+#pragma warning disable CS0618 // 레거시 호환성을 위해 의도적으로 사용
             cardRegistry.RegisterCard(CombatSlotPosition.SLOT_4, card, null, SlotOwner.ENEMY);
+#pragma warning restore CS0618
             Debug.Log($"[CombatTurnManager] 4번 슬롯에 적 카드 등록: {card.GetCardName()}");
         }
 
@@ -327,6 +369,155 @@ namespace Game.CombatSystem.Manager
             // TODO: 실제 가드 로직 구현
             // 1. 가드 상태 플래그 설정
             // 2. 다음 슬롯의 적 카드 실행 시 무효화 처리
+        }
+
+        #endregion
+
+        #region 새로운 5슬롯 시스템
+
+        /// <summary>
+        /// 현재 전투 단계를 반환합니다.
+        /// </summary>
+        /// <returns>현재 전투 단계</returns>
+        public CombatPhase GetCurrentPhase()
+        {
+            return currentPhase;
+        }
+
+        /// <summary>
+        /// 현재 셋업 단계를 반환합니다.
+        /// </summary>
+        /// <returns>현재 셋업 단계 (0~8)</returns>
+        public int GetCurrentSetupStep()
+        {
+            return setupStep;
+        }
+
+        /// <summary>
+        /// 셋업이 완료되었는지 확인합니다.
+        /// </summary>
+        /// <returns>셋업 완료 여부</returns>
+        public bool IsSetupComplete()
+        {
+            return isSetupComplete;
+        }
+
+        /// <summary>
+        /// 셋업 단계를 시작합니다.
+        /// </summary>
+        public void StartSetupPhase()
+        {
+            currentPhase = CombatPhase.Setup;
+            setupStep = 0;
+            isSetupComplete = false;
+            
+            Debug.Log("[CombatTurnManager] 셋업 단계 시작");
+            OnCombatPhaseChanged?.Invoke(currentPhase);
+            OnSetupStepChanged?.Invoke(setupStep);
+        }
+
+        /// <summary>
+        /// 셋업 단계에서 다음 단계로 진행합니다.
+        /// </summary>
+        /// <param name="slotPosition">카드를 배치할 슬롯 위치</param>
+        /// <param name="cardOwner">카드 소유자</param>
+        public void ProceedSetupStep(CombatSlotPosition slotPosition, SlotOwner cardOwner)
+        {
+            if (currentPhase != CombatPhase.Setup || isSetupComplete)
+            {
+                Debug.LogWarning("[CombatTurnManager] 셋업 단계가 아니거나 이미 완료되었습니다.");
+                return;
+            }
+
+            setupStep++;
+            Debug.Log($"[CombatTurnManager] 셋업 단계 {setupStep}: {slotPosition}에 {cardOwner} 카드 배치");
+            OnSetupStepChanged?.Invoke(setupStep);
+
+            // 셋업 완료 조건 확인 (전투슬롯에 카드 배치)
+            if (slotPosition == CombatSlotPosition.BATTLE_SLOT)
+            {
+                CompleteSetup();
+            }
+        }
+
+        /// <summary>
+        /// 셋업을 완료하고 전투 단계로 전환합니다.
+        /// </summary>
+        private void CompleteSetup()
+        {
+            isSetupComplete = true;
+            currentPhase = CombatPhase.Battle;
+            
+            Debug.Log("[CombatTurnManager] 셋업 완료 - 전투 단계 시작");
+            OnCombatPhaseChanged?.Invoke(currentPhase);
+        }
+
+        /// <summary>
+        /// 새로운 5슬롯 시스템에서 현재 턴 타입을 반환합니다.
+        /// </summary>
+        /// <returns>턴 타입 (Player, Enemy, Unknown)</returns>
+        public TurnType GetCurrentTurnTypeNew()
+        {
+            if (currentPhase == CombatPhase.Setup)
+            {
+                // 셋업 단계에서는 플레이어부터 시작
+                return TurnType.Player;
+            }
+
+            if (currentPhase == CombatPhase.Battle)
+            {
+                // 전투 단계에서는 전투슬롯에 카드가 있으면 해당 소유자의 턴
+                var battleSlotCard = cardRegistry.GetCardInSlot(CombatSlotPosition.BATTLE_SLOT);
+                if (battleSlotCard != null)
+                {
+                    return battleSlotCard.GetOwner() == SlotOwner.ENEMY ? TurnType.Enemy : TurnType.Player;
+                }
+                
+                // 전투슬롯이 비어있으면 플레이어 턴
+                return TurnType.Player;
+            }
+
+            return TurnType.Unknown;
+        }
+
+        /// <summary>
+        /// 새로운 5슬롯 시스템에서 턴을 완료합니다.
+        /// 전투슬롯에서 카드 사용 시 호출됩니다.
+        /// </summary>
+        public void CompleteTurn()
+        {
+            if (currentPhase != CombatPhase.Battle)
+            {
+                Debug.LogWarning("[CombatTurnManager] 전투 단계가 아닙니다.");
+                return;
+            }
+
+            currentTurn++;
+            Debug.Log($"[CombatTurnManager] 턴 완료 - 현재 턴: {currentTurn}");
+            
+            // 카드 이동은 CombatExecutorService에서 처리
+            // 여기서는 턴 완료 이벤트만 발생
+        }
+
+        /// <summary>
+        /// 새로운 5슬롯 시스템에서 턴이 진행 가능한지 확인합니다.
+        /// </summary>
+        /// <returns>턴 진행 가능 여부</returns>
+        public bool CanProceedTurn()
+        {
+            if (currentPhase == CombatPhase.Setup)
+            {
+                return !isSetupComplete;
+            }
+
+            if (currentPhase == CombatPhase.Battle)
+            {
+                // 전투슬롯에 카드가 있으면 턴 진행 가능
+                var battleSlotCard = cardRegistry.GetCardInSlot(CombatSlotPosition.BATTLE_SLOT);
+                return battleSlotCard != null;
+            }
+
+            return false;
         }
 
         #endregion

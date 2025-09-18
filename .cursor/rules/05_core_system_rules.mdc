@@ -9,7 +9,14 @@ alwaysApply: true
 # CoreSystem 개발 규칙
 
 ## 📋 시스템 개요
-CoreSystem은 게임의 핵심 시스템들을 관리하는 중앙 집중식 시스템입니다. 모든 씬에서 공유되는 전역 시스템들을 통합적으로 관리하며, 게임의 기본 기능을 제공합니다.
+CoreSystem은 게임의 핵심 시스템들을 관리하는 중앙 집중식 시스템입니다. 모든 씬에서 공유되는 전역 시스템들을 통합적으로 관리하며, 게임의 기본 기능을 제공합니다. Zenject DI와 자동 초기화 시스템을 통해 안정적이고 확장 가능한 아키텍처를 제공합니다.
+
+### 최근 변경(요약)
+- **Zenject DI 통합**: 의존성 주입을 통한 느슨한 결합 구현
+- **자동 초기화 시스템**: ICoreSystemInitializable 인터페이스 기반 자동 초기화
+- **오디오 풀링 시스템**: AudioPoolManager를 통한 성능 최적화
+- **슬레이 더 스파이어 방식 저장**: 턴 기반 자동 저장 시스템
+- **한국어 로깅**: GameLogger를 통한 카테고리별 로깅
 
 ## 🏗️ 폴더 구조 규칙
 ```
@@ -91,6 +98,12 @@ CoreSystem/
 - **로딩 화면**: 전환 중 로딩 화면 표시
 - **전환 효과**: 페이드 인/아웃 효과
 
+### 7. Zenject DI 규칙
+- **의존성 주입**: Zenject를 통한 느슨한 결합 구현
+- **인터페이스 기반**: DI 바인딩은 인터페이스 기반으로 테스트 가능성 확보
+- **Installer 패턴**: 각 시스템별 Installer 클래스로 DI 설정 중앙화
+- **생명주기 관리**: Zenject의 `AsSingle()`, `NonLazy()` 등 적절한 스코프 설정
+
 ## 🔧 사용 방법
 
 ### 기본 사용법
@@ -141,6 +154,39 @@ public class MySystem : MonoBehaviour, ICoreSystemInitializable
     {
         GameLogger.LogError("MySystem 초기화 실패", GameLogger.LogCategory.Error);
         IsInitialized = false;
+    }
+}
+```
+
+### Zenject DI 사용법
+```csharp
+// Installer 클래스 구현
+public class MySystemInstaller : MonoInstaller<MySystemInstaller>
+{
+    public override void InstallBindings()
+    {
+        // 인터페이스 기반 바인딩
+        Container.Bind<IMyService>().To<MyService>().AsSingle();
+        
+        // 싱글톤 매니저 바인딩
+        Container.Bind<MyManager>().AsSingle().NonLazy();
+        
+        // 팩토리 패턴 바인딩
+        Container.BindFactory<MyObject, MyObject.Factory>();
+    }
+}
+
+// 의존성 주입 사용
+public class MyController : MonoBehaviour
+{
+    [Inject] private IMyService myService;
+    [Inject] private MyManager myManager;
+    
+    private void Start()
+    {
+        // 주입된 서비스 사용
+        myService.DoSomething();
+        myManager.Initialize();
     }
 }
 ```
@@ -206,28 +252,3 @@ if (!poolManager.IsInCooldown("ButtonClick"))
 - **리소스 해제**: IDisposable 패턴을 통한 리소스 정리
 - **메모리 누수 방지**: 이벤트 구독 해제, 순환 참조 방지
 - **프로파일링**: Unity Profiler를 통한 메모리 사용량 모니터링
-
-## 🧪 검증/테스트 지침
-
-### 체크리스트
-- [ ] 싱글톤 패턴 정상 동작 확인
-- [ ] 초기화 순서 정확성 검증
-- [ ] ICoreSystemInitializable 인터페이스 구현 확인
-- [ ] 로깅 시스템 정상 동작 확인
-- [ ] 오디오 시스템 정상 동작 확인
-- [ ] 씬 전환 기능 정상 동작 확인
-- [ ] 저장 시스템 정상 동작 확인
-
-### 재현 절차
-1. 코어 시스템 초기화부터 종료까지 전체 플로우 테스트
-2. 각 매니저별 기능 테스트
-3. 씬 전환 시 지속성 테스트
-4. 성능 프로파일링
-
-## 📝 변경 기록(Delta)
-- 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
-
-- 2025-01-27 | Maintainer | CoreSystem 개발 문서 초기 작성 | 문서
-- 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 파일 수 정정 | 문서
-- 2025-01-27 | Maintainer | .mdc 규칙 파일로 변환 및 Cursor 규칙 저장 | 문서
-- 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 클래스/메서드/인터페이스 정보 추가 | 문서

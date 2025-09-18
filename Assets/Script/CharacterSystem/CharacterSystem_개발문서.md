@@ -1,7 +1,14 @@
 # CharacterSystem 개발 문서
 
 ## 📋 시스템 개요
-CharacterSystem은 게임의 모든 캐릭터(플레이어, 적)를 관리하는 시스템입니다. 캐릭터의 기본 속성, 상태, 행동을 통합적으로 관리합니다.
+CharacterSystem은 게임의 모든 캐릭터(플레이어, 적)를 관리하는 시스템입니다. 캐릭터의 기본 속성, 상태, 행동을 통합적으로 관리하며, 새로운 리그 오브 레전드 스타일의 플레이어 캐릭터 UI 시스템을 제공합니다.
+
+### 최근 변경(요약)
+- **새로운 플레이어 UI 시스템**: 리그 오브 레전드 스타일의 HP/MP 바 구현
+- **통합 UI 컨트롤러**: PlayerCharacterUIController로 모든 플레이어 UI 통합 관리
+- **버프/디버프 아이콘 시스템**: 개별 아이콘 관리 및 시각적 효과 제공
+- **캐릭터별 리소스 시스템**: 검/활/지팡이 타입별 특수 리소스 관리
+- **DOTween 애니메이션**: 부드러운 UI 전환 및 시각적 피드백
 
 ## 🏗️ 폴더 구조
 ```
@@ -53,9 +60,11 @@ CharacterSystem/
 - **PlayerCharacterInitializer.cs**: 플레이어 캐릭터 초기화
 - **PlayerSkillCardInitializer.cs**: 플레이어 스킬카드 초기화
 
-### UI 폴더 (2개 파일)
+### UI 폴더 (4개 파일)
 - **CharacterSlotUI.cs**: 캐릭터 슬롯 UI
 - **CharacterUIController.cs**: 캐릭터 UI 컨트롤러
+- **PlayerCharacterUIController.cs**: 플레이어 캐릭터 통합 UI 컨트롤러 (새로 추가)
+- **BuffDebuffIcon.cs**: 버프/디버프 아이콘 관리 (새로 추가)
 
 ### Utility 폴더 (4개 파일)
 - **CharacterDeathHandler.cs**: 캐릭터 사망 처리
@@ -93,6 +102,14 @@ CharacterSystem/
 - **자동 초기화**: 캐릭터 생성 시 자동 설정
 - **스킬카드 초기화**: 캐릭터별 스킬카드 덱 설정
 
+### 7. 새로운 플레이어 UI 시스템
+- **리그 오브 레전드 스타일**: HP/MP 바의 시각적 디자인
+- **통합 UI 컨트롤러**: 모든 플레이어 UI 요소를 하나의 컨트롤러로 관리
+- **캐릭터 정보 표시**: 초상화, 문양, 이름, HP/MP 바
+- **버프/디버프 아이콘**: 개별 아이콘 관리 및 지속시간 표시
+- **DOTween 애니메이션**: 부드러운 UI 전환 및 시각적 피드백
+- **캐릭터별 리소스 표시**: 검(없음), 활(화살), 지팡이(마나) 타입별 표시
+
 ## 📊 주요 클래스 및 메서드
 
 ### EnemyManager 클래스
@@ -111,6 +128,27 @@ CharacterSystem/
 - **CurrentResource**: 현재 리소스 양 (프로퍼티)
 - **MaxResource**: 최대 리소스 양 (프로퍼티)
 - **ResourceName**: 리소스 이름 (프로퍼티)
+
+### PlayerCharacterUIController 클래스 (새로 추가)
+- **Initialize(PlayerCharacter character)**: 플레이어 캐릭터로 UI 초기화
+- **UpdateHP(int currentHP, int maxHP)**: HP 바 업데이트
+- **UpdateResource(int currentResource, int maxResource)**: 리소스 바 업데이트
+- **OnTakeDamage(int damage)**: 데미지 받을 때 UI 효과
+- **OnHeal(int healAmount)**: 힐 받을 때 UI 효과
+- **AddBuffDebuffIcon(Sprite icon, string name, int duration, bool isDebuff)**: 버프/디버프 아이콘 추가
+- **RemoveBuffDebuffIcon(string iconName)**: 버프/디버프 아이콘 제거
+- **ClearAllBuffDebuffIcons()**: 모든 버프/디버프 아이콘 제거
+- **SetCharacterInfo(PlayerCharacterData data)**: 캐릭터 정보 설정
+- **UpdateResourceDisplay()**: 리소스 표시 업데이트
+
+### BuffDebuffIcon 클래스 (새로 추가)
+- **Initialize(Sprite icon, string name, int duration, bool isDebuff)**: 아이콘 초기화
+- **UpdateDuration(int newDuration)**: 지속시간 업데이트
+- **StartExpirationWarning()**: 만료 경고 시작
+- **Expire()**: 아이콘 만료 처리
+- **SetHoverEffect(bool isHovering)**: 호버 효과 설정
+- **FadeIn()**: 페이드 인 애니메이션
+- **FadeOut()**: 페이드 아웃 애니메이션
 
 ### EnemySpawnerManager 클래스
 - **SpawnEnemy(EnemyCharacterData data)**: 적 데이터로 스폰
@@ -162,6 +200,64 @@ if (player.IsAlive)
     // 공격 실행
     player.Attack(enemy);
 }
+```
+
+### 새로운 플레이어 UI 시스템 사용법
+```csharp
+// PlayerCharacterUIController를 통한 UI 관리
+PlayerCharacterUIController uiController = FindObjectOfType<PlayerCharacterUIController>();
+
+// 플레이어 캐릭터로 UI 초기화
+uiController.Initialize(player);
+
+// HP 업데이트
+uiController.UpdateHP(player.CurrentHP, player.MaxHP);
+
+// 리소스 업데이트 (활 캐릭터의 경우)
+uiController.UpdateResource(resourceManager.CurrentResource, resourceManager.MaxResource);
+
+// 데미지 받을 때 UI 효과
+uiController.OnTakeDamage(10);
+
+// 힐 받을 때 UI 효과
+uiController.OnHeal(5);
+
+// 버프 아이콘 추가
+Sprite buffIcon = Resources.Load<Sprite>("Icons/StrengthBuff");
+uiController.AddBuffDebuffIcon(buffIcon, "힘 강화", 3, false); // 3턴 지속
+
+// 디버프 아이콘 추가
+Sprite debuffIcon = Resources.Load<Sprite>("Icons/PoisonDebuff");
+uiController.AddBuffDebuffIcon(debuffIcon, "독", 2, true); // 2턴 지속
+
+// 버프/디버프 아이콘 제거
+uiController.RemoveBuffDebuffIcon("힘 강화");
+
+// 모든 버프/디버프 아이콘 제거
+uiController.ClearAllBuffDebuffIcons();
+```
+
+### BuffDebuffIcon 개별 관리 사용법
+```csharp
+// BuffDebuffIcon 직접 생성 및 관리
+BuffDebuffIcon buffIcon = Instantiate(buffIconPrefab);
+buffIcon.Initialize(iconSprite, "힘 강화", 3, false);
+
+// 지속시간 업데이트
+buffIcon.UpdateDuration(2);
+
+// 만료 경고 시작 (1턴 남았을 때)
+buffIcon.StartExpirationWarning();
+
+// 호버 효과 설정
+buffIcon.SetHoverEffect(true);
+
+// 페이드 인/아웃 애니메이션
+buffIcon.FadeIn();
+buffIcon.FadeOut();
+
+// 아이콘 만료 처리
+buffIcon.Expire();
 ```
 
 ### 매니저를 통한 캐릭터 관리
@@ -424,4 +520,11 @@ sequenceDiagram
 - 2025-01-27 | Maintainer | CharacterSystem 개발 문서 초기 작성 | 문서
 - 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 Intialization 폴더명 오타 주의 표시 | 문서
 - 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 클래스/메서드/인터페이스 정보 추가 | 문서
+- 2025-01-27 | Maintainer | 새로운 플레이어 UI 시스템 구현 완료 | 코드/문서
+- 2025-01-27 | Maintainer | PlayerCharacterUIController 클래스 구현 - 리그 오브 레전드 스타일 UI | 코드/문서
+- 2025-01-27 | Maintainer | BuffDebuffIcon 클래스 구현 - 개별 버프/디버프 아이콘 관리 | 코드/문서
+- 2025-01-27 | Maintainer | PlayerCharacter 클래스에 새로운 UI 시스템 통합 | 코드/문서
+- 2025-01-27 | Maintainer | 캐릭터별 리소스 시스템 구현 - 검/활/지팡이 타입별 표시 | 코드/문서
+- 2025-01-27 | Maintainer | DOTween 애니메이션 시스템 통합 - 부드러운 UI 전환 | 코드/문서
+- 2025-01-27 | Maintainer | 개발 문서 업데이트 - 새로운 UI 시스템 반영 | 문서
 - 2025-01-27 | Maintainer | 실제 코드 기반 캐릭터 기본 속성 수정 (속도/공격력 제거, 가드/리소스/턴효과 추가) | 문서

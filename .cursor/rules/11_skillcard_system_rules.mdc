@@ -11,6 +11,14 @@ alwaysApply: true
 ## 📋 시스템 개요
 SkillCardSystem은 게임의 스킬카드 시스템을 관리하는 핵심 시스템입니다. 카드 데이터, 효과, 실행, 검증, UI, 드래그 앤 드롭, 슬롯 관리 등을 통합적으로 관리합니다. 플레이어와 적 스킬카드를 통합된 데이터 모델로 관리하며, 덱 기반 시스템과 효과 시스템을 제공합니다.
 
+### 최근 변경(요약)
+- **통합 데이터 모델**: SkillCardDefinition 기반으로 플레이어/적 스킬카드 통합 관리
+- **수량 기반 덱**: 플레이어 덱에서 카드 수량 관리 및 커스텀 에디터 지원
+- **통합 런타임 인스턴스**: SkillCard 클래스로 플레이어/적 카드 통합 관리
+- **소유자 정책**: Shared, Player, Enemy 정책으로 애니메이션 사용 권한 관리
+- **용어 변경**: 가드 관통을 가드 무시로 변경, 모든 효과 이펙트 한글화
+- **가드 효과 리팩토링**: 스킬카드 시스템으로 이동, 불필요한 가드량 제거
+
 ## 🏗️ 폴더 구조 규칙
 ```
 SkillCardSystem/
@@ -115,6 +123,14 @@ SkillCardSystem/
 - **드롭 검증**: 드롭 가능 여부 검증
 - **드롭 서비스**: 드롭 후 처리
 
+### 6. 통합 데이터 모델 규칙
+- **SkillCardDefinition**: 플레이어/적 스킬카드를 통합한 ScriptableObject 기반 데이터 모델
+- **소유자 정책**: Shared(공용), Player(플레이어 전용), Enemy(적 전용) 정책으로 애니메이션 사용 권한 관리
+- **통합 런타임 인스턴스**: SkillCard 클래스로 플레이어/적 카드 통합 관리
+- **수량 기반 덱**: 플레이어 덱에서 카드 수량 관리 및 커스텀 에디터 지원
+- **용어 변경**: 가드 관통을 가드 무시로 변경, 모든 효과 이펙트 한글화
+- **가드 효과 리팩토링**: 스킬카드 시스템으로 이동, 불필요한 가드량 제거
+
 ## 🔧 사용 방법
 
 ### 기본 사용법
@@ -140,6 +156,41 @@ CardCirculationSystem circulationSystem = FindObjectOfType<CardCirculationSystem
 circulationSystem.Initialize(initialCards);
 List<ISkillCard> drawnCards = circulationSystem.DrawCardsForTurn();
 circulationSystem.MoveCardToUsedStorage(usedCard);
+```
+
+### 통합 데이터 모델 사용법
+```csharp
+// SkillCardDefinition 기반 통합 카드 생성
+SkillCardDefinition definition = Resources.Load<SkillCardDefinition>("SkillCards/Fireball");
+
+// 플레이어 카드 생성 (소유자 정책: Player)
+ISkillCard playerCard = factory.CreateFromDefinition(definition, Owner.Player, "플레이어");
+
+// 적 카드 생성 (소유자 정책: Enemy)
+ISkillCard enemyCard = factory.CreateFromDefinition(definition, Owner.Enemy, "적");
+
+// 소유자 정책 확인
+if (definition.OwnerPolicy == OwnerPolicy.Shared)
+{
+    // 공용 카드 - 플레이어와 적 모두 사용 가능
+    Debug.Log("공용 카드입니다.");
+}
+else if (definition.OwnerPolicy == OwnerPolicy.Player)
+{
+    // 플레이어 전용 카드
+    Debug.Log("플레이어 전용 카드입니다.");
+}
+else if (definition.OwnerPolicy == OwnerPolicy.Enemy)
+{
+    // 적 전용 카드
+    Debug.Log("적 전용 카드입니다.");
+}
+
+// 수량 기반 덱 관리
+PlayerSkillDeck playerDeck = new PlayerSkillDeck();
+playerDeck.AddCard(definition, 3); // Fireball 카드를 3장 추가
+playerDeck.RemoveCard(definition, 1); // Fireball 카드를 1장 제거
+int cardCount = playerDeck.GetCardCount(definition); // Fireball 카드 수량 조회
 ```
 
 ### 주요 클래스 및 메서드
@@ -198,34 +249,3 @@ circulationSystem.MoveCardToUsedStorage(usedCard);
 - **생명주기 관리**: 카드 객체의 생성/소멸 관리
 - **리소스 해제**: 카드 사용 후 리소스 정리
 - **메모리 누수 방지**: 이벤트 구독 해제
-
-## 🧪 검증/테스트 지침
-
-### 체크리스트
-- [ ] 카드 생성/소멸 정상 동작 확인
-- [ ] 드래그 앤 드롭 기능 검증
-- [ ] 효과 실행 정확성 확인
-- [ ] 핸드 관리 로직 검증
-- [ ] 카드 순환 시스템 정상 동작 확인
-
-### 재현 절차
-1. 각 카드 타입별 생성/실행 테스트
-2. 드래그 앤 드롭 시나리오 테스트
-3. 효과 실행 시나리오 테스트
-4. 성능 프로파일링
-
-## 📝 변경 기록(Delta)
-- 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
-
-- 2025-01-27 | Maintainer | SkillCardSystem 개발 문서 초기 작성 | 문서
-- 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 Installation 폴더명 오타 주의 표시 | 문서
-- 2025-01-27 | Maintainer | .mdc 규칙 파일로 변환 및 Cursor 규칙 저장 | 문서
-- 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 클래스/메서드/인터페이스 정보 추가 | 문서
-- 2025-01-27 | Maintainer | 통합 스킬카드 시스템으로 마이그레이션 완료 | 코드/문서
-- 2025-01-27 | Maintainer | SkillCardDefinition 기반 통합 데이터 모델 구현 | 코드/문서
-- 2025-01-27 | Maintainer | 플레이어/적 스킬카드 통합 관리 시스템 구현 | 코드/문서
-- 2025-01-27 | Maintainer | 수량 기반 덱 시스템 및 커스텀 에디터 구현 | 코드/문서
-- 2025-01-27 | Maintainer | EnemySkillCard.cs 제거 및 통합 런타임 인스턴스 구현 | 코드/문서
-- 2025-01-27 | Maintainer | SkillCardDefinition 리팩토링 - 불필요한 연출 타이밍 필드 제거 | 코드/문서
-- 2025-01-27 | Maintainer | 용어 변경 - 가드 관통을 가드 무시로 변경, 모든 효과 이펙트 한글화 | 코드/문서
-- 2025-01-27 | Maintainer | 가드 효과 리팩토링 - 스킬카드 시스템으로 이동, 불필요한 가드량 제거 | 코드/문서

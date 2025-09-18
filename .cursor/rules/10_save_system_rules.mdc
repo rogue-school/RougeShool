@@ -9,7 +9,15 @@ alwaysApply: true
 # SaveSystem 개발 규칙
 
 ## 📋 시스템 개요
-SaveSystem은 게임의 저장/로드 기능을 관리하는 시스템입니다. 슬레이 더 스파이어 방식의 턴 기반 자동 저장 시스템을 제공하며, CoreSystem에 통합되어 전역적으로 관리됩니다.
+SaveSystem은 게임의 저장/로드 기능을 관리하는 시스템입니다. 슬레이 더 스파이어 방식의 턴 기반 자동 저장 시스템을 제공하며, CoreSystem에 통합되어 전역적으로 관리됩니다. ICoreSystemInitializable 인터페이스를 구현하여 자동 초기화되며, 한국어 로깅과 씬 전환 지속성을 지원합니다.
+
+### 최근 변경(요약)
+- **CoreSystem 통합**: ICoreSystemInitializable 구현으로 자동 초기화
+- **전역 시스템**: CoreScene에서 DontDestroyOnLoad로 설정되어 모든 씬에서 접근 가능
+- **한국어 로깅**: GameLogger를 통한 카테고리별 로깅 (Save, Error)
+- **씬 전환 지속성**: 씬 전환 시에도 저장 시스템 상태 유지
+- **자동 저장**: 턴 완료, 스테이지 완료 등 특정 이벤트 시 자동 저장
+- **JSON 직렬화**: JsonUtility를 활용한 안전한 데이터 직렬화
 
 ## 🏗️ 폴더 구조 규칙
 ```
@@ -61,8 +69,12 @@ CoreSystem/Save/       # 실제 구현 위치
 - **데이터 검증**: 저장된 데이터의 유효성 검증
 
 ### 4. CoreSystem 통합 규칙
-- **전역 시스템**: CoreSystem에 통합된 전역 저장 관리
-- **ICoreSystemInitializable**: CoreSystem 초기화 인터페이스 구현
+- **ICoreSystemInitializable**: CoreSystem 초기화 인터페이스 구현으로 자동 초기화
+- **전역 시스템**: CoreScene에서 DontDestroyOnLoad로 설정되어 모든 씬에서 접근 가능
+- **자동 초기화**: CoreSystemInitializer에서 자동으로 Initialize() 호출
+- **씬 전환 지속성**: 씬 전환 시에도 저장 시스템 상태 유지
+- **한국어 로깅**: GameLogger를 통한 카테고리별 로깅 (Save, Error)
+- **전역 접근**: SaveManager.Instance를 통한 어디서든 접근 가능
 
 ## 🔧 사용 방법
 
@@ -158,6 +170,29 @@ if (condition.IsValid())
 Debug.Log(condition.ToString());
 ```
 
+### CoreSystem 초기화 연동
+```csharp
+// ICoreSystemInitializable 구현으로 자동 초기화
+// CoreSystemInitializer에서 자동으로 Initialize() 호출됨
+
+// 초기화 상태 확인
+if (SaveManager.Instance.IsInitialized)
+{
+    // 저장 시스템 사용 가능
+    await SaveManager.Instance.SaveCurrentScene();
+}
+
+// 씬 전환 시 저장 시스템 지속성 확인
+// CoreScene에서 DontDestroyOnLoad로 설정되어 모든 씬에서 접근 가능
+SaveManager.Instance.SaveAudioSettings(0.6f, 1.0f); // 씬 전환 후에도 설정 유지
+var (bgm, sfx) = SaveManager.Instance.LoadAudioSettings(0.7f, 1.0f); // 씬 전환 후에도 설정 로드
+
+// 한국어 로깅과 연동
+GameLogger.LogInfo("저장 시스템 초기화 완료", GameLogger.LogCategory.Save);
+GameLogger.LogWarning("저장 파일 로드 실패", GameLogger.LogCategory.Save);
+GameLogger.LogError("저장 시스템 오류 발생", GameLogger.LogCategory.Error);
+```
+
 ## 🏗️ 아키텍처 패턴
 
 ### 1. 매니저 패턴
@@ -192,26 +227,3 @@ Debug.Log(condition.ToString());
 - **생명주기 관리**: 저장 데이터 객체의 생성/소멸 관리
 - **리소스 해제**: 저장 완료 후 리소스 정리
 - **메모리 누수 방지**: 이벤트 구독 해제, 데이터 참조 해제
-
-## 🧪 검증/테스트 지침
-
-### 체크리스트
-- [ ] 자동 저장 조건 정상 동작 확인
-- [ ] 데이터 직렬화/역직렬화 검증
-- [ ] 상태 복원 정확성 확인
-- [ ] 이벤트 기반 저장 트리거 확인
-- [ ] CoreSystem 통합 확인
-
-### 재현 절차
-1. 각 저장 조건별 테스트 케이스 실행
-2. 데이터 무결성 검사
-3. 상태 복원 시나리오 테스트
-4. 성능 프로파일링
-
-## 📝 변경 기록(Delta)
-- 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
-
-- 2025-01-27 | Maintainer | SaveSystem 개발 문서 초기 작성 | 문서
-- 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 파일 수 정정 | 문서
-- 2025-01-27 | Maintainer | .mdc 규칙 파일로 변환 및 Cursor 규칙 저장 | 문서
-- 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 클래스/메서드/데이터 구조 정보 추가 | 문서

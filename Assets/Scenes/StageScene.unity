@@ -223,7 +223,7 @@ GameObject:
   - component: {fileID: 17320653}
   - component: {fileID: 17320652}
   m_Layer: 5
-  m_Name: Combatslot2
+  m_Name: WaitSlot1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -529,7 +529,7 @@ GameObject:
   - component: {fileID: 87409930}
   - component: {fileID: 87409929}
   m_Layer: 5
-  m_Name: Combatslot3
+  m_Name: WaitSlot2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -619,7 +619,7 @@ GameObject:
   - component: {fileID: 140985751}
   - component: {fileID: 140985752}
   m_Layer: 5
-  m_Name: Combatslot1
+  m_Name: BattleSlot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1128,7 +1128,7 @@ GameObject:
   - component: {fileID: 233269046}
   - component: {fileID: 233269045}
   m_Layer: 5
-  m_Name: Combatslot4 (1)
+  m_Name: WaitSlot4
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1165,7 +1165,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e299146b919471f4fb8b232c2f32b195, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  position: 3
+  position: 4
 --- !u!114 &233269046
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1279,6 +1279,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 237540140}
   m_CullTransparentMesh: 1
+--- !u!1 &250451701
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 250451702}
+  m_Layer: 0
+  m_Name: PlayerCharacterUIController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &250451702
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 250451701}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 115.88444, y: 577.0277, z: 3.6562266}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &273381228
 GameObject:
   m_ObjectHideFlags: 0
@@ -4003,7 +4034,7 @@ GameObject:
   - component: {fileID: 1301956487}
   - component: {fileID: 1301956486}
   m_Layer: 5
-  m_Name: Combatslot4
+  m_Name: WaitSlot3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6402,3 +6433,4 @@ SceneRoots:
   - {fileID: 1217189992}
   - {fileID: 1083373629}
   - {fileID: 206878164}
+  - {fileID: 250451702}
