@@ -12,13 +12,11 @@ alwaysApply: true
 CharacterSystem은 게임의 모든 캐릭터(플레이어, 적)를 관리하는 시스템입니다. 캐릭터의 기본 속성, 상태, 행동을 통합적으로 관리하며, League of Legends 스타일의 플레이어 UI 시스템과 버프/디버프 아이콘 시스템을 제공합니다.
 
 ### 최근 변경(요약)
-- **새로운 플레이어 UI 시스템 완료**: League of Legends 스타일의 HP/MP 바, 캐릭터 초상화, 문양, 이름 표시 구현 완료
-- **통합 UI 컨트롤러 완료**: `PlayerCharacterUIController`를 통한 모든 플레이어 UI 통합 관리 완료
-- **버프/디버프 아이콘 시스템 완료**: `BuffDebuffIcon`을 통한 시각적 효과 표시 구현 완료
-- **리소스 타입별 UI 완료**: 검(리소스 없음), 활(화살), 지팡이(마나) 타입별 UI 표시 구현 완료
-- **DOTween 애니메이션 완료**: HP/MP 바 전환 시 부드러운 애니메이션 효과 구현 완료
-- **Zenject DI 통합 완료**: 모든 CharacterSystem 컴포넌트가 의존성 주입으로 전환 완료
-- **컴파일 에러 해결 완료**: CharacterType, CharacterName 프로퍼티 문제 해결 완료
+- **플레이어 UI 일원화**: `PlayerCharacterUIController` 중심 구조로 통합, 호환용 `SetTarget(ICharacter)` 제공
+- **적 UI 분리**: `EnemyCharacterUIController` 추가(Hp/버프 최소 UI)
+- **레거시 제거**: `CharacterUIController` 전면 제거 및 참조 정리, `CharacterSlotUI`의 UI 자동 연결 로직 삭제
+- **공유 이벤트 추가**: `ICharacter/CharacterBase`에 HP/가드/버프 이벤트 및 `GetBuffs()` 추가
+- **DOTween/DI 정리**: UI 애니메이션 및 Zenject 의존성 주입 정비
 
 ## 🏗️ 폴더 구조 규칙
 ```
@@ -71,10 +69,10 @@ CharacterSystem/
 - **PlayerSkillCardInitializer.cs**: 플레이어 스킬카드 초기화
 
 ### UI 폴더 규칙 (4개 파일)
-- **CharacterSlotUI.cs**: 캐릭터 슬롯 UI
-- **CharacterUIController.cs**: 캐릭터 UI 컨트롤러
-- **PlayerCharacterUIController.cs**: 플레이어 캐릭터 통합 UI 컨트롤러 (League of Legends 스타일)
-- **BuffDebuffIcon.cs**: 버프/디버프 아이콘 관리
+- **CharacterSlotUI.cs**: 캐릭터 슬롯 UI (UI 자동 연결 로직 제거)
+- ~~CharacterUIController.cs~~: [삭제됨]
+- **PlayerCharacterUIController.cs**: 플레이어 통합 UI 컨트롤러
+- **EnemyCharacterUIController.cs**: 적 전용 UI 컨트롤러
 
 ### Utility 폴더 규칙 (4개 파일)
 - **CharacterDeathHandler.cs**: 캐릭터 사망 처리

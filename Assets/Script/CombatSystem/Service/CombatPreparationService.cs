@@ -27,7 +27,7 @@ namespace Game.CombatSystem.Service
         private readonly IPlayerManager playerManager;
         private readonly IEnemySpawnerManager enemySpawnerManager;
         private readonly IEnemyManager enemyManager;
-        private readonly IEnemyHandManager enemyHandManager;
+        // 적 핸드 시스템 제거
         private readonly ITurnCardRegistry turnCardRegistry;
         private readonly ICardPlacementService placementService;
         private readonly ICombatTurnManager turnManager;
@@ -45,7 +45,7 @@ namespace Game.CombatSystem.Service
             IPlayerManager playerManager,
             IEnemySpawnerManager enemySpawnerManager,
             IEnemyManager enemyManager,
-            IEnemyHandManager enemyHandManager,
+            
             ITurnCardRegistry turnCardRegistry,
             ICardPlacementService placementService,
             ICombatTurnManager turnManager,
@@ -55,7 +55,6 @@ namespace Game.CombatSystem.Service
             this.playerManager = playerManager;
             this.enemySpawnerManager = enemySpawnerManager;
             this.enemyManager = enemyManager;
-            this.enemyHandManager = enemyHandManager;
             this.turnCardRegistry = turnCardRegistry;
             this.placementService = placementService;
             this.turnManager = turnManager;

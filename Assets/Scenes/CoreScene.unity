@@ -341,6 +341,70 @@ MonoBehaviour:
   applyToNewChildren: 1
   persistAcrossScenes: 1
   enableDebugLogging: 0
+--- !u!1 &347513469
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 347513471}
+  - component: {fileID: 347513470}
+  m_Layer: 0
+  m_Name: SceneContext
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &347513470
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 347513469}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89715ad69b973a14899afa2c6730b30b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _scriptableObjectInstallers: []
+  _monoInstallers:
+  - {fileID: 1396837153}
+  _installerPrefabs: []
+  _autoRun: 1
+  OnPreInstall:
+    m_PersistentCalls:
+      m_Calls: []
+  OnPostInstall:
+    m_PersistentCalls:
+      m_Calls: []
+  OnPreResolve:
+    m_PersistentCalls:
+      m_Calls: []
+  OnPostResolve:
+    m_PersistentCalls:
+      m_Calls: []
+  _parentNewObjectsUnderSceneContext: 0
+  _contractNames: []
+  _parentContractNames: []
+--- !u!4 &347513471
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 347513469}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &360456546
 GameObject:
   m_ObjectHideFlags: 0
@@ -1637,6 +1701,58 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1343503450}
   m_CullTransparentMesh: 1
+--- !u!1 &1396837152
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1396837154}
+  - component: {fileID: 1396837153}
+  m_Layer: 0
+  m_Name: 'CoreSystemInstaller '
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1396837153
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1396837152}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0a4ff19d4f63b041b22d3b0047e51fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  coreSystemInitializer: {fileID: 1580648945}
+  gameStateManager: {fileID: 1291306327}
+  sceneTransitionManager: {fileID: 922812240}
+  audioManager: {fileID: 1938332464}
+  saveManager: {fileID: 1124059154}
+  animationDatabaseManager: {fileID: 205070009}
+  coroutineRunner: {fileID: 789670093}
+  playerCharacterSelectionManager: {fileID: 80656796}
+--- !u!4 &1396837154
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1396837152}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1407089954
 GameObject:
   m_ObjectHideFlags: 0
@@ -2042,18 +2158,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enableAutoInitialization: 1
-  enableAutoBinding: 1
   enableDebugLogging: 1
-  initializationOrder:
-  - CoroutineRunner
-  - GameStateManager
-  - SceneTransitionManager
-  - AudioManager
-  - SaveManager
-  - AnimationDatabaseManager
-  - AnimationManager
-  - LoadingScreenController
-  - TransitionEffectController
+  isInitializationComplete: 0
 --- !u!1 &1735536412
 GameObject:
   m_ObjectHideFlags: 0
@@ -2510,3 +2616,5 @@ SceneRoots:
   - {fileID: 369463427}
   - {fileID: 360456549}
   - {fileID: 288834489}
+  - {fileID: 347513471}
+  - {fileID: 1396837154}

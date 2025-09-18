@@ -8,6 +8,7 @@ using Game.SkillCardSystem.UI;
 using Game.CombatSystem.Interface;
 using Game.CharacterSystem.Data;
 using Game.CoreSystem.Interface;
+using Game.CharacterSystem.UI;
 
 namespace Game.CharacterSystem.Manager
 {
@@ -25,6 +26,10 @@ namespace Game.CharacterSystem.Manager
 
         [Tooltip("플레이어 캐릭터가 배치될 슬롯 위치")]
         [SerializeField] private Transform playerSlot;
+
+        [Header("플레이어 UI")]
+        [Tooltip("플레이어 HUD UI 컨트롤러(씬 상 존재)")]
+        [SerializeField] private PlayerCharacterUIController playerUI;
 
         [Header("기본 캐릭터 데이터")]
         [Tooltip("캐릭터 선택이 없을 경우 사용할 기본 캐릭터 데이터")]
@@ -96,6 +101,12 @@ namespace Game.CharacterSystem.Manager
             character.SetCharacterData(selectedData);
             SetPlayer(character);
             InitializeHandManager();
+
+            // UI 대상 연결(있을 때만)
+            if (playerUI != null && character is ICharacter ic)
+            {
+                playerUI.SetTarget(ic);
+            }
         }
 
         /// <summary>

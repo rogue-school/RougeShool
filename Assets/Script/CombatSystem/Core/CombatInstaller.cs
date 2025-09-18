@@ -92,7 +92,7 @@ public class CombatInstaller : MonoInstaller
         BindMono<ICombatFlowCoordinator, CombatFlowCoordinator>();
         BindMono<IPlayerManager, PlayerManager>();
         BindMono<IEnemyManager, EnemyManager>();
-        BindMono<IEnemyHandManager, EnemyHandManager>();
+        // 적 핸드 시스템 완전 비활성화: 더 이상 바인딩하지 않음
         BindMono<IPlayerHandManager, PlayerHandManager>();
         BindMono<ICombatSlotManager, CombatSlotManager>();
         // Victory/GameOver UI는 현재 미사용이므로 바인딩 중지
@@ -193,7 +193,8 @@ public class CombatInstaller : MonoInstaller
         EnsureAndBindInitializer<PlayerCharacterInitializer>("PlayerCharacterInitializer");
         EnsureAndBindInitializer<PlayerSkillCardInitializer>("PlayerSkillCardInitializer");
         EnsureAndBindInitializer<EnemyCharacterInitializer>("EnemyCharacterInitializer");
-        EnsureAndBindInitializer<EnemyHandInitializer>("EnemyHandInitializer");
+        // 적 핸드 초기화 스텝 제거
+        // EnsureAndBindInitializer<EnemyHandInitializer>("EnemyHandInitializer");
 
         // CombatStartupManager는 Zenject DI로 자동 바인딩됨
     }

@@ -2,11 +2,7 @@ using UnityEngine;
 using Zenject;
 using System;
 using Game.SkillCardSystem.Interface;
-using Game.CombatSystem.Data; // SlotOwner
-using Game.CombatSystem.Slot; // SlotOwner
-using Game.SkillCardSystem.Runtime; // RuntimeSkillCard
 using System.Collections.Generic; // Added for List
-using Game.SkillCardSystem.Slot;
 using Game.CoreSystem.Animation;
 using Game.AnimationSystem.Interface;
 using Game.CoreSystem.Interface;
@@ -22,23 +18,13 @@ namespace Game.AnimationSystem.Manager
 
         #region Private Fields
         private IAnimationDatabaseManager animationDatabaseManager;
-        private Game.CombatSystem.Manager.EnemyHandManager enemyHandManager;
-        private Game.CombatSystem.Slot.HandSlotRegistry handSlotRegistry;
-        private Game.SkillCardSystem.Manager.PlayerHandManager playerHandManager;
         #endregion
 
         #region DI
         [Inject]
-        public void Construct(
-            IAnimationDatabaseManager animationDatabaseManager,
-            Game.CombatSystem.Manager.EnemyHandManager enemyHandManager,
-            Game.CombatSystem.Slot.HandSlotRegistry handSlotRegistry,
-            Game.SkillCardSystem.Manager.PlayerHandManager playerHandManager)
+        public void Construct(IAnimationDatabaseManager animationDatabaseManager)
         {
             this.animationDatabaseManager = animationDatabaseManager;
-            this.enemyHandManager = enemyHandManager;
-            this.handSlotRegistry = handSlotRegistry;
-            this.playerHandManager = playerHandManager;
         }
         #endregion
 
@@ -54,27 +40,19 @@ namespace Game.AnimationSystem.Manager
         private void HandlePlayerCharacterDeath(Game.CharacterSystem.Data.PlayerCharacterData data, GameObject obj)
         {
             PlayPlayerCharacterDeathAnimation(data.name, obj);
-            VanishAllHandCardsOnCharacterDeath(data.name, false); // 플레이어 사망 시 핸드 카드 소멸 애니메이션 호출
+            VanishAllHandCardsOnCharacterDeath(data.name, false);
         }
         private void HandleEnemyCharacterDeath(Game.CharacterSystem.Data.EnemyCharacterData data, GameObject obj)
         {
             PlayEnemyCharacterDeathAnimation(data.name, obj);
-            VanishAllHandCardsOnCharacterDeath(data.name, true); // 적 사망 시 핸드 카드 소멸 애니메이션 호출
+            VanishAllHandCardsOnCharacterDeath(data.name, true);
         }
         // 스킬카드 생성 애니메이션 - string cardId 기반 메서드들은 제거됨
         // ISkillCard 기반 메서드만 사용
-        // 전투슬롯 판별 (임시)
-        private bool IsCombatSlot(Game.CombatSystem.Slot.CombatSlotPosition pos)
-        {
-            // 실제 전투슬롯 판별 로직 필요
-            return true; // 임시로 항상 true
-        }
+        // (핸드 시스템 제거됨에 따라 미사용 로직 정리)
 
         // 핸드 슬롯 스킬카드 소멸 애니메이션 이벤트 핸들러
-        private void HandleHandSkillCardsVanishOnCharacterDeath(bool isPlayer)
-        {
-            VanishAllHandCardsOnCharacterDeath("Unknown", !isPlayer); // isPlayer가 true면 isEnemy는 false
-        }
+        private void HandleHandSkillCardsVanishOnCharacterDeath(bool isPlayer) {}
 
         // 데이터 로드
         public void LoadAllData() => animationDatabaseManager.ReloadDatabases();
@@ -217,80 +195,9 @@ namespace Game.AnimationSystem.Manager
         /// <param name="isEnemy">적 캐릭터 여부</param>
         public void VanishAllHandCardsOnCharacterDeath(string characterId, bool isEnemy = false)
         {
-            IsHandVanishAnimationPlaying = true;
-            Debug.Log($"[AnimationFacade] VanishAllHandCardsOnCharacterDeath 호출: characterId={characterId}, isEnemy={isEnemy}");
-
-            // [수정] 적 캐릭터의 경우, EnemyHandManager를 통해 직접 소멸을 요청합니다.
-            if (isEnemy)
-            {
-                // Use injected enemyHandManager
-                if (enemyHandManager != null)
-                {
-                    Debug.Log($"[AnimationFacade] EnemyHandManager를 통해 모든 적 핸드 카드 소멸 시작");
-                    enemyHandManager.VanishAllCardsForDeathAnimation(() => {
-                        IsHandVanishAnimationPlaying = false;
-                    });
-                }
-                else
-                {
-                    Debug.LogWarning("[AnimationFacade] EnemyHandManager를 찾을 수 없어 소멸 애니메이션을 실행할 수 없습니다.");
-                    IsHandVanishAnimationPlaying = false;
-                }
-                return; // 새로운 로직 실행 후 반드시 종료
-            }
-
-            Debug.Log($"[AnimationFacade] (사망) 핸드 슬롯 전체 소멸 시작: 플레이어={!isEnemy}");
-            // Use injected handSlotRegistry
-            var ownerType = !isEnemy ? SlotOwner.PLAYER : SlotOwner.ENEMY;
-            var handSlots = handSlotRegistry?.GetHandSlots(ownerType);
-            var skillCards = new List<GameObject>();
-            var slotPositions = new List<Game.SkillCardSystem.Slot.SkillCardSlotPosition>();
-            if (handSlots != null)
-            {
-                foreach (var slot in handSlots)
-                {
-                    var cardUI = slot.GetCardUI();
-                    var slotPos = slot.GetSlotPosition();
-                    var card = slot.GetCard();
-                    string cardUIName = (cardUI is UnityEngine.MonoBehaviour mb2 && mb2 != null) ? mb2.name : (cardUI != null ? cardUI.GetType().Name : "null");
-                    string cardName = card != null ? card.GetCardName() : "null";
-                    Debug.Log($"[VanishDebug] 슬롯: {slotPos}, 카드: {cardName}, 카드UI: {cardUIName}");
-                    if (cardUI is UnityEngine.MonoBehaviour mb && mb != null)
-                    {
-                        skillCards.Add(mb.gameObject);
-                        slotPositions.Add(slotPos);
-                    }
-                }
-            }
-            if (skillCards.Count == 0)
-            {
-                Debug.Log($"[AnimationFacade] 소멸할 스킬카드가 없습니다 (isEnemy={isEnemy})");
-                IsHandVanishAnimationPlaying = false;
-                return;
-            }
-            int finished = 0;
-            for (int i = 0; i < skillCards.Count; i++)
-            {
-                var cardObj = skillCards[i];
-                var slotPos = slotPositions[i];
-                var vanishAnim = cardObj.GetComponent<AnimationSystem.Animator.SkillCardAnimation.VanishAnimation.DefaultSkillCardVanishAnimation>() ?? cardObj.AddComponent<AnimationSystem.Animator.SkillCardAnimation.VanishAnimation.DefaultSkillCardVanishAnimation>();
-                vanishAnim.PlayVanishAnimation(() => {
-                    if (!isEnemy)
-                    {
-                        // Use injected playerHandManager
-                        playerHandManager?.RemoveCardUIAndReferences(slotPos);
-                    }
-                    else
-                    {
-                        // 이 경로는 더 이상 사용되지 않습니다.
-                    }
-                    finished++;
-                    if (finished == skillCards.Count)
-                    {
-                        IsHandVanishAnimationPlaying = false;
-                    }
-                });
-            }
+            // 핸드 시스템 제거됨: 무시하고 종료
+            IsHandVanishAnimationPlaying = false;
+            Debug.Log("[AnimationFacade] 핸드 시스템이 제거되어 소멸 애니메이션을 건너뜁니다.");
         }
         
         /// <summary>
@@ -299,26 +206,7 @@ namespace Game.AnimationSystem.Manager
         /// <param name="characterName">캐릭터 이름</param>
         /// <param name="isPlayerCharacter">플레이어 캐릭터 여부</param>
         /// <returns>스킬카드 GameObject 리스트</returns>
-        private List<GameObject> FindCharacterSkillCards(string characterName, bool isPlayerCharacter)
-        {
-            var skillCards = new List<GameObject>();
-            
-            // 플레이어/적 스킬카드 슬롯들에서 해당 캐릭터의 카드들을 찾기
-            var cardSlots = FindObjectsByType<Game.SkillCardSystem.UI.SkillCardUI>(FindObjectsSortMode.None);
-            
-            foreach (var cardSlot in cardSlots)
-            {
-                if (cardSlot == null || cardSlot.GetCard() == null) continue;
-                
-                // 스킬카드가 특정 캐릭터에 속하는지 확인
-                if (IsSkillCardBelongsToCharacter(cardSlot.GetCard(), characterName, isPlayerCharacter))
-                {
-                    skillCards.Add(cardSlot.gameObject);
-                }
-            }
-            
-            return skillCards;
-        }
+        private List<GameObject> FindCharacterSkillCards(string characterName, bool isPlayerCharacter) { return new List<GameObject>(); }
         
         /// <summary>
         /// 스킬카드가 특정 캐릭터에 속하는지 확인합니다.
@@ -327,25 +215,7 @@ namespace Game.AnimationSystem.Manager
         /// <param name="characterName">캐릭터 이름</param>
         /// <param name="isPlayerCharacter">플레이어 캐릭터 여부</param>
         /// <returns>캐릭터에 속하는지 여부</returns>
-        private bool IsSkillCardBelongsToCharacter(Game.SkillCardSystem.Interface.ISkillCard skillCard, string characterName, bool isPlayerCharacter)
-        {
-            // 스킬카드의 소유자 정보를 확인
-            // 실제 구현에서는 스킬카드에 캐릭터 정보가 포함되어 있어야 함
-            // 현재는 간단히 플레이어/적 구분만으로 처리
-            
-            if (isPlayerCharacter)
-            {
-                // 플레이어 캐릭터의 스킬카드인지 확인
-                return skillCard.GetCardName().Contains("Player") || 
-                       skillCard.GetCardName().Contains(characterName);
-            }
-            else
-            {
-                // 적 캐릭터의 스킬카드인지 확인
-                return skillCard.GetCardName().Contains("Enemy") || 
-                       skillCard.GetCardName().Contains(characterName);
-            }
-        }
+        private bool IsSkillCardBelongsToCharacter(Game.SkillCardSystem.Interface.ISkillCard skillCard, string characterName, bool isPlayerCharacter) { return false; }
         
         #region 추가 인터페이스 메서드 구현
         

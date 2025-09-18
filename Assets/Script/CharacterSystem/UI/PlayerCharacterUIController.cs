@@ -1,13 +1,13 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using DG.Tweening;
+using Zenject;
+using System.Collections.Generic;
 using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Data;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Manager;
-using Game.IManager;
-using DG.Tweening;
-using Zenject;
 
 namespace Game.CharacterSystem.UI
 {
@@ -169,6 +169,23 @@ namespace Game.CharacterSystem.UI
             UpdateMPBar();
             
             Debug.Log($"[PlayerCharacterUIController] {characterType} 캐릭터 UI 초기화 완료");
+        }
+
+        /// <summary>
+        /// 호환성 메서드: 기존 코드에서 ICharacter 기반 SetTarget을 호출하는 경우를 위해 유지.
+        /// PlayerCharacter이면 Initialize로 연결한다.
+        /// </summary>
+        /// <param name="character">대상 캐릭터</param>
+        public void SetTarget(Game.CharacterSystem.Interface.ICharacter character)
+        {
+            if (character is PlayerCharacter pc)
+            {
+                Initialize(pc);
+            }
+            else
+            {
+                Debug.LogWarning("[PlayerCharacterUIController] SetTarget: PlayerCharacter가 아닙니다. 호출을 무시합니다.");
+            }
         }
 
         /// <summary>

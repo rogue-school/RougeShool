@@ -20,11 +20,13 @@ namespace Game.CoreSystem.Manager
     {
         // 의존성 주입
         private List<ICoreSystemInitializable> coreSystems;
+        private ISceneTransitionManager sceneTransitionManager;
         
         [Inject]
-        public void Construct(List<ICoreSystemInitializable> coreSystems)
+        public void Construct(List<ICoreSystemInitializable> coreSystems, ISceneTransitionManager sceneTransitionManager)
         {
             this.coreSystems = coreSystems;
+            this.sceneTransitionManager = sceneTransitionManager;
         }
         
         private void Awake()
@@ -40,6 +42,7 @@ namespace Game.CoreSystem.Manager
         [Header("초기화 설정")]
         [SerializeField] private bool enableAutoInitialization = true;
         [SerializeField] private bool enableDebugLogging = true;
+        [SerializeField] private bool autoGoToMainAfterInit = true;
         #endregion
 
         #region 초기화 상태
@@ -120,6 +123,12 @@ namespace Game.CoreSystem.Manager
             }
             
             OnAllSystemsInitialized?.Invoke();
+
+            if (autoGoToMainAfterInit && sceneTransitionManager != null)
+            {
+                // 코어 초기화 완료 후 메인 씬으로 자동 전환(옵션)
+                StartCoroutine(GoToMainSceneNextFrame());
+            }
         }
         #endregion
 
@@ -153,6 +162,17 @@ namespace Game.CoreSystem.Manager
             if (loadingController != null)
             {
                 // 필요한 바인딩 로직
+            }
+        }
+
+        private System.Collections.IEnumerator GoToMainSceneNextFrame()
+        {
+            // 한 프레임 대기 후 전환(씬 로딩 안정화)
+            yield return null;
+            var task = sceneTransitionManager.TransitionToMainScene();
+            while (!task.IsCompleted)
+            {
+                yield return null;
             }
         }
         #endregion

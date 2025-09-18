@@ -56,18 +56,11 @@ namespace Game.CharacterSystem.UI
         #region 슬롯 내부 처리
 
         /// <summary>
-        /// 캐릭터 UI 컨트롤러를 연결합니다.
+        /// 레거시 CharacterUIController 제거로 더 이상 슬롯에서 UI를 직접 연결하지 않습니다.
         /// </summary>
         private void SetupCharacterUI(ICharacter character)
         {
-            if (character is CharacterBase baseChar)
-            {
-                var uiController = GetComponentInChildren<CharacterUIController>();
-                if (uiController != null)
-                {
-                    baseChar.SetCardUI(uiController);
-                }
-            }
+            // 의도적으로 비워둠: UI는 각 매니저/컨트롤러에서 직접 연결
         }
 
         /// <summary>

@@ -21,7 +21,6 @@ namespace Game.CombatSystem.State
         private readonly ICombatTurnManager turnManager;
         private readonly ICombatFlowCoordinator flowCoordinator;
         private readonly IPlayerHandManager playerHandManager;
-        private readonly IEnemyHandManager enemyHandManager;
         private readonly ISlotRegistry slotRegistry;
         private readonly ICoroutineRunner coroutineRunner;
         private readonly TurnContext turnContext;
@@ -37,7 +36,6 @@ namespace Game.CombatSystem.State
             ICombatTurnManager turnManager,
             ICombatFlowCoordinator flowCoordinator,
             IPlayerHandManager playerHandManager,
-            IEnemyHandManager enemyHandManager,
             ISlotRegistry slotRegistry,
             ICoroutineRunner coroutineRunner,
             TurnContext turnContext)
@@ -45,7 +43,6 @@ namespace Game.CombatSystem.State
             this.turnManager = turnManager;
             this.flowCoordinator = flowCoordinator;
             this.playerHandManager = playerHandManager;
-            this.enemyHandManager = enemyHandManager;
             this.slotRegistry = slotRegistry;
             this.coroutineRunner = coroutineRunner;
             this.turnContext = turnContext;
@@ -89,26 +86,8 @@ namespace Game.CombatSystem.State
                 yield return new WaitUntil(() => flowCoordinator.GetEnemy() != null);
             }
 
-            // 적 초기화
-            var enemy = flowCoordinator.GetEnemy();
-            if (!enemyHandManager.HasInitializedEnemy(enemy))
-            {
-                enemyHandManager.Initialize(enemy);
-                yield return new WaitForEndOfFrame();
-            }
-
-            // 적 핸드 슬롯 채우기
-            yield return enemyHandManager.StepwiseFillSlotsFromBack(0.3f);
-
-            // ENEMY_SLOT_1에 카드 준비될 때까지 대기
-            yield return WaitForEnemyCardReady();
-
-            // 카드 등록 (애니메이션 포함)
-            yield return enemyHandManager.PopCardAndRegisterToCombatSlotCoroutine(flowCoordinator);
-            enemyHandManager.RemoveCardFromSlot(SkillCardSlotPosition.ENEMY_SLOT_1);
-
-            // 빈 슬롯 다시 채우기
-            yield return enemyHandManager.StepwiseFillSlotsFromBack(0.3f);
+            // 적 핸드 시스템 제거: 준비 단계 간소화
+            yield return null;
 
             // 다음 상태로 전환 (플레이어 입력)
             Debug.Log("<color=cyan>[STATE] CombatPrepareState → CombatPlayerInputState 전이</color>");
@@ -121,17 +100,7 @@ namespace Game.CombatSystem.State
         /// <summary>
         /// 적 카드 슬롯이 준비될 때까지 대기합니다.
         /// </summary>
-        private IEnumerator WaitForEnemyCardReady()
-        {
-            while (true)
-            {
-                var (card, ui) = enemyHandManager.PeekCardInSlot(SkillCardSlotPosition.ENEMY_SLOT_1);
-                if (card != null && ui != null)
-                    break;
-
-                yield return null;
-            }
-        }
+        private IEnumerator WaitForEnemyCardReady() { yield break; }
 
         #endregion
 

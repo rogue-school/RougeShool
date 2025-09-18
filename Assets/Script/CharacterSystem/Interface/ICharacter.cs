@@ -1,5 +1,6 @@
 using Game.SkillCardSystem.Interface;
 using UnityEngine;
+using System;
 
 namespace Game.CharacterSystem.Interface
 {
@@ -9,6 +10,24 @@ namespace Game.CharacterSystem.Interface
     /// </summary>
     public interface ICharacter
     {
+        #region 이벤트
+
+        /// <summary>
+        /// 체력 변경 이벤트 (현재 체력, 최대 체력)
+        /// </summary>
+        event Action<int, int> OnHPChanged;
+
+        /// <summary>
+        /// 가드 상태 변경 이벤트 (isGuarded)
+        /// </summary>
+        event Action<bool> OnGuardStateChanged;
+
+        /// <summary>
+        /// 버프/디버프 목록 변경 이벤트 (읽기 전용 리스트 스냅샷)
+        /// </summary>
+        event Action<System.Collections.Generic.IReadOnlyList<IPerTurnEffect>> OnBuffsChanged;
+
+        #endregion
         #region 정보 조회
 
         /// <summary>
@@ -30,6 +49,11 @@ namespace Game.CharacterSystem.Interface
         /// 최대 체력을 반환합니다.
         /// </summary>
         int GetMaxHP();
+
+        /// <summary>
+        /// 현재 적용 중인 버프/디버프 목록을 반환합니다.
+        /// </summary>
+        System.Collections.Generic.IReadOnlyList<IPerTurnEffect> GetBuffs();
 
         /// <summary>
         /// 플레이어 조작 캐릭터인지 여부를 반환합니다.

@@ -31,7 +31,7 @@ namespace Game.CoreSystem.UI
         [Inject] private IAudioManager audioManager;
         [Inject] private ISaveManager saveManager;
         [Inject] private ISceneTransitionManager sceneTransitionManager;
-        [Inject] private Canvas mainCanvas;
+        [InjectOptional] private Canvas mainCanvas;
         
         // 설정창 상태
         public bool IsInitialized { get; private set; }
@@ -47,14 +47,15 @@ namespace Game.CoreSystem.UI
         {
             if (IsInitialized) yield break;
             
-            // 프리팹이 없으면 Resources에서 로드
+            // 프리팹이 없으면 Resources에서 로드 (없어도 기능을 일시 비활성화하고 계속 진행)
             if (settingsPanelPrefab == null)
             {
                 settingsPanelPrefab = Resources.Load<GameObject>("Prefab/SettingsPanel");
                 if (settingsPanelPrefab == null)
                 {
-                    GameLogger.LogError("설정창 프리팹을 찾을 수 없습니다. Resources/Prefab/SettingsPanel.prefab을 확인하세요.", GameLogger.LogCategory.Error);
-                    OnInitializationFailed();
+                    GameLogger.LogWarning("설정창 프리팹이 없어 설정 기능을 일시 비활성화합니다.", GameLogger.LogCategory.UI);
+                    // 프리팹 없이도 초기화는 완료로 간주하여 다른 시스템 진행을 막지 않음
+                    IsInitialized = true;
                     yield break;
                 }
             }
@@ -99,11 +100,18 @@ namespace Game.CoreSystem.UI
                 return;
             }
             
-            // 주입된 Canvas 사용
-            currentCanvas = mainCanvas;
+            // 프리팹이 없으면 기능 비활성화
+            if (settingsPanelPrefab == null)
+            {
+                GameLogger.LogWarning("설정창 프리팹이 없어 설정창을 열 수 없습니다.", GameLogger.LogCategory.UI);
+                return;
+            }
+
+            // 주입된 Canvas 사용(선택 주입). 없으면 탐색 시도
+            currentCanvas = mainCanvas != null ? mainCanvas : FindFirstObjectByType<Canvas>();
             if (currentCanvas == null)
             {
-                GameLogger.LogError("Canvas가 주입되지 않았습니다", GameLogger.LogCategory.Error);
+                GameLogger.LogWarning("Canvas를 찾지 못해 설정창을 열 수 없습니다.", GameLogger.LogCategory.UI);
                 return;
             }
             

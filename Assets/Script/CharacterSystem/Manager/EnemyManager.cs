@@ -3,6 +3,7 @@ using Game.CombatSystem.Interface;
 using Game.IManager;
 using Game.SkillCardSystem.Interface;
 using UnityEngine;
+using Game.CharacterSystem.UI;
 
 namespace Game.CharacterSystem.Manager
 {
@@ -24,6 +25,16 @@ namespace Game.CharacterSystem.Manager
     public void RegisterEnemy(IEnemyCharacter enemy)
     {
         currentEnemy = enemy;
+
+            // 적 UI 컨트롤러 자동 연결(있을 때만)
+            if (enemy is Component enemyComp)
+            {
+                var ui = enemyComp.GetComponentInChildren<EnemyCharacterUIController>(true);
+                if (ui != null && enemy is ICharacter ic)
+                {
+                    ui.SetTarget(ic);
+                }
+            }
     }
 
     /// <summary>

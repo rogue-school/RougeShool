@@ -18,22 +18,20 @@ namespace Game.CombatSystem.Service
         private readonly ICombatSlotRegistry combatSlotRegistry;
         private ICardExecutionContextProvider contextProvider;
         private ICardExecutor cardExecutor;
-        private readonly IEnemyHandManager enemyHandManager;
+        // 적 핸드 시스템 제거
         private ICombatTurnManager turnManager;
 
         /// <summary>
-        /// 생성자 - 전투 슬롯, 컨텍스트 제공자, 카드 실행기, 적 핸드 매니저를 주입받습니다.
+        /// 생성자 - 전투 슬롯, 컨텍스트 제공자, 카드 실행기를 주입받습니다.
         /// </summary>
         public CombatExecutorService(
             ICombatSlotRegistry combatSlotRegistry,
             ICardExecutionContextProvider contextProvider,
-            ICardExecutor cardExecutor,
-            IEnemyHandManager enemyHandManager)
+            ICardExecutor cardExecutor)
         {
             this.combatSlotRegistry = combatSlotRegistry;
             this.contextProvider = contextProvider;
             this.cardExecutor = cardExecutor;
-            this.enemyHandManager = enemyHandManager;
         }
 
         #endregion

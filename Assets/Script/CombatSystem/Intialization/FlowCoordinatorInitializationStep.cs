@@ -21,7 +21,7 @@ namespace Game.CombatSystem.Intialization
         [Inject] private ITurnStartConditionChecker conditionChecker;
         [Inject] private ITurnCardRegistry cardRegistry;
         [InjectOptional] private TurnStartButtonHandler buttonHandler;
-        [Inject] private IEnemyHandManager enemyHandManager;
+        // 적 핸드 시스템 제거
 
         /// <summary>
         /// 초기화 순서. 이 단계는 50번째로 실행됩니다.

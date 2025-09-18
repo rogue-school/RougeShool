@@ -4,13 +4,14 @@
 CharacterSystem은 게임의 모든 캐릭터(플레이어, 적)를 관리하는 시스템입니다. 캐릭터의 기본 속성, 상태, 행동을 통합적으로 관리하며, 새로운 리그 오브 레전드 스타일의 플레이어 캐릭터 UI 시스템을 제공합니다.
 
 ### 최근 변경(요약)
-- **새로운 플레이어 UI 시스템**: 리그 오브 레전드 스타일의 HP/MP 바 구현 완료
-- **통합 UI 컨트롤러**: PlayerCharacterUIController로 모든 플레이어 UI 통합 관리 완료
-- **버프/디버프 아이콘 시스템**: 개별 아이콘 관리 및 시각적 효과 제공 완료
-- **캐릭터별 리소스 시스템**: 검/활/지팡이 타입별 특수 리소스 관리 완료
-- **DOTween 애니메이션**: 부드러운 UI 전환 및 시각적 피드백 구현 완료
-- **Zenject DI 통합**: 모든 CharacterSystem 컴포넌트가 의존성 주입으로 전환 완료
-- **컴파일 에러 해결**: CharacterType, CharacterName 프로퍼티 문제 해결 완료
+- **새로운 플레이어 UI 시스템**: 리그 오브 레전드 스타일 HP/MP 바, 정보 표시 완료
+- **통합 UI 컨트롤러**: `PlayerCharacterUIController`로 플레이어 UI 일원화, 호환용 `SetTarget(ICharacter)` 제공
+- **적 UI 컨트롤러 추가**: `EnemyCharacterUIController`로 HP/버프 최소 UI 분리
+- **레거시 제거**: `CharacterUIController` 전면 제거 및 모든 참조 정리, `CharacterSlotUI`에서 UI 직접 연결 로직 삭제
+- **공유 이벤트 추가**: `ICharacter/CharacterBase`에 `OnHPChanged`, `OnGuardStateChanged`, `OnBuffsChanged`, `GetBuffs()` 추가 및 발행
+- **캐릭터별 리소스 시스템**: 검/활/지팡이 타입별 리소스 UI 반영
+- **DOTween 애니메이션**: 부드러운 UI 전환/색상 변화 적용
+- **Zenject DI 통합**: 관련 컨트롤러/매니저 DI 정리
 
 ## 🏗️ 폴더 구조
 ```
@@ -63,10 +64,10 @@ CharacterSystem/
 - **PlayerSkillCardInitializer.cs**: 플레이어 스킬카드 초기화
 
 ### UI 폴더 (4개 파일)
-- **CharacterSlotUI.cs**: 캐릭터 슬롯 UI
-- **CharacterUIController.cs**: 캐릭터 UI 컨트롤러
-- **PlayerCharacterUIController.cs**: 플레이어 캐릭터 통합 UI 컨트롤러 (새로 추가)
-- **BuffDebuffIcon.cs**: 버프/디버프 아이콘 관리 (새로 추가)
+- **CharacterSlotUI.cs**: 캐릭터 슬롯 UI (UI 자동 연결 로직 제거됨)
+- ~~CharacterUIController.cs~~: [삭제됨] 레거시 UI 컨트롤러 전면 제거
+- **PlayerCharacterUIController.cs**: 플레이어 통합 UI 컨트롤러
+- **EnemyCharacterUIController.cs**: 적 전용 간결 UI 컨트롤러
 
 ### Utility 폴더 (4개 파일)
 - **CharacterDeathHandler.cs**: 캐릭터 사망 처리
@@ -131,17 +132,12 @@ CharacterSystem/
 - **MaxResource**: 최대 리소스 양 (프로퍼티)
 - **ResourceName**: 리소스 이름 (프로퍼티)
 
-### PlayerCharacterUIController 클래스 (새로 추가)
+### PlayerCharacterUIController 클래스 (업데이트)
 - **Initialize(PlayerCharacter character)**: 플레이어 캐릭터로 UI 초기화
-- **UpdateHP(int currentHP, int maxHP)**: HP 바 업데이트
-- **UpdateResource(int currentResource, int maxResource)**: 리소스 바 업데이트
-- **OnTakeDamage(int damage)**: 데미지 받을 때 UI 효과
-- **OnHeal(int healAmount)**: 힐 받을 때 UI 효과
-- **AddBuffDebuffIcon(Sprite icon, string name, int duration, bool isDebuff)**: 버프/디버프 아이콘 추가
-- **RemoveBuffDebuffIcon(string iconName)**: 버프/디버프 아이콘 제거
-- **ClearAllBuffDebuffIcons()**: 모든 버프/디버프 아이콘 제거
-- **SetCharacterInfo(PlayerCharacterData data)**: 캐릭터 정보 설정
-- **UpdateResourceDisplay()**: 리소스 표시 업데이트
+- **SetTarget(ICharacter character)**: 호환용, 내부에서 Initialize(PlayerCharacter) 위임
+- **UpdateHPBar()/UpdateMPBar()**: 바/텍스트/색상 애니메이션 포함 업데이트
+- **OnTakeDamage(int), OnHeal(int)**: 피격/회복 시 연출 훅
+- **Add/Remove/Clear BuffDebuffIcon**: 버프/디버프 아이콘 관리
 
 ### BuffDebuffIcon 클래스 (새로 추가)
 - **Initialize(Sprite icon, string name, int duration, bool isDebuff)**: 아이콘 초기화
@@ -151,6 +147,10 @@ CharacterSystem/
 - **SetHoverEffect(bool isHovering)**: 호버 효과 설정
 - **FadeIn()**: 페이드 인 애니메이션
 - **FadeOut()**: 페이드 아웃 애니메이션
+
+### EnemyCharacterUIController 클래스 (신규)
+- **SetTarget(ICharacter character)**: 대상 캐릭터 설정 및 구독
+- 내부적으로 `OnHPChanged`, `OnBuffsChanged`를 구독하여 슬라이더/아이콘 갱신
 
 ### EnemySpawnerManager 클래스
 - **SpawnEnemy(EnemyCharacterData data)**: 적 데이터로 스폰
@@ -530,3 +530,4 @@ sequenceDiagram
 - 2025-01-27 | Maintainer | DOTween 애니메이션 시스템 통합 - 부드러운 UI 전환 | 코드/문서
 - 2025-01-27 | Maintainer | 개발 문서 업데이트 - 새로운 UI 시스템 반영 | 문서
 - 2025-01-27 | Maintainer | 실제 코드 기반 캐릭터 기본 속성 수정 (속도/공격력 제거, 가드/리소스/턴효과 추가) | 문서
+- 2025-09-18 | Maintainer | 레거시 `CharacterUIController` 제거, 이벤트 기반 UI로 전환, `PlayerCharacterUIController` 호환 메서드 추가, `CharacterSlotUI` 자동 연결 제거 반영 | 코드/문서
