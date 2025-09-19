@@ -1,0 +1,398 @@
+# Zenject DI 시스템 규칙 (Production)
+
+> 목적: RougeShool 프로젝트의 Zenject DI 컨테이너 구조와 바인딩 관계를 체계적으로 관리하고, 개발자가 DI 시스템을 이해하고 올바르게 사용할 수 있도록 가이드라인을 제공한다.
+
+## 1) Zenject DI 컨테이너 계층 구조
+
+### 1-1) 컨테이너 계층도
+```
+ProjectContext (전역 컨테이너)
+├── CoreScene (CoreSystemInstaller)
+│   ├── CoreSystemInitializer
+│   ├── GameStateManager
+│   ├── SceneTransitionManager
+│   ├── AudioManager (DontDestroyOnLoad)
+│   ├── SaveManager (DontDestroyOnLoad)
+│   ├── AnimationDatabaseManager
+│   ├── CoroutineRunner (DontDestroyOnLoad)
+│   └── PlayerCharacterSelectionManager
+├── MainScene (MainSceneInstaller)
+│   └── PlayerCharacterSelector
+├── StageScene (CombatInstaller)
+│   ├── CombatFlowCoordinator
+│   ├── CombatSlotManager
+│   ├── CardCirculationSystem
+│   ├── TurnBasedCardManager
+│   ├── PlayerDeckManager
+│   ├── SlotInitializer
+│   ├── PlayerCharacterInitializer
+│   ├── EnemyCharacterInitializer
+│   ├── SlotInitializationStep
+│   ├── FlowCoordinatorInitializationStep
+│   ├── PlayerSkillCardInitializer
+│   └── StageManager (적 카드 직접 생성 시스템)
+└── BattleScene (CombatInstaller)
+    └── (동일한 구조)
+```
+
+### 1-2) 컨테이너 생명주기
+- **ProjectContext**: 게임 시작 시 생성, 게임 종료까지 유지
+- **CoreScene**: 게임 시작 시 생성, `DontDestroyOnLoad`로 씬 전환 시에도 유지
+- **씬별 SceneContext**: 씬 로드 시 생성, 씬 언로드 시 소멸
+- **부모-자식 관계**: 씬 컨테이너는 CoreScene 컨테이너를 부모로 참조
+
+## 2) Installer 클래스별 역할
+
+### 2-1) CoreSystemInstaller (CoreScene)
+```csharp
+// 위치: Assets/Script/CoreSystem/CoreSystemInstaller.cs
+// 역할: 전역 시스템 매니저들을 DI 컨테이너에 바인딩
+// 생명주기: DontDestroyOnLoad로 게임 전체에서 유지
+
+public class CoreSystemInstaller : MonoInstaller<CoreSystemInstaller>
+{
+    // 바인딩 대상들
+    - CoreSystemInitializer
+    - GameStateManager  
+    - SceneTransitionManager
+    - AudioManager
+    - SaveManager
+    - AnimationDatabaseManager
+    - CoroutineRunner
+    - PlayerCharacterSelectionManager
+}
+```
+
+### 2-2) CombatInstaller (StageScene/BattleScene)
+```csharp
+// 위치: Assets/Script/CombatSystem/Core/CombatInstaller.cs
+// 역할: 전투 시스템 관련 컴포넌트들을 DI 컨테이너에 바인딩
+// 특징: 씬별로 독립적인 컨테이너에서 실행
+
+public class CombatInstaller : MonoInstaller
+{
+    // 바인딩 대상들
+    - CombatFlowCoordinator
+    - CombatSlotManager
+    - CardCirculationSystem
+    - TurnBasedCardManager
+    - PlayerDeckManager
+    - SlotInitializer
+    - PlayerCharacterInitializer
+    - EnemyCharacterInitializer
+    - SlotInitializationStep
+    - FlowCoordinatorInitializationStep
+    - PlayerSkillCardInitializer
+    - StageManager (적 카드 직접 생성 시스템)
+    - 외부 시스템 참조 (CoreScene의 컴포넌트들)
+}
+```
+
+### 2-3) MainSceneInstaller (MainScene)
+```csharp
+// 위치: Assets/Script/CoreSystem/Manager/MainSceneInstaller.cs
+// 역할: MainScene 전용 컴포넌트들을 DI 컨테이너에 바인딩
+// 특징: CoreScene의 전역 매니저들을 재해결하여 주입
+
+public class MainSceneInstaller : MonoInstaller<MainSceneInstaller>
+{
+    // 바인딩 대상들
+    - PlayerCharacterSelector
+    - CoreScene 매니저들 재해결
+}
+```
+
+### 2-4) CardInstaller (SkillCardSystem)
+```csharp
+// 위치: Assets/Script/SkillCardSystem/Installation/CardInstaller.cs
+// 역할: 스킬카드 시스템 관련 컴포넌트들을 DI 컨테이너에 바인딩
+
+public class CardInstaller : MonoInstaller<CardInstaller>
+{
+    // 바인딩 대상들
+    - SkillCardRegistry
+    - SkillCardFactory
+}
+```
+
+## 3) DI 바인딩 패턴
+
+### 3-1) MonoBehaviour 바인딩 패턴
+```csharp
+// 패턴 1: 씬에서 찾아서 바인딩
+var component = FindFirstObjectByType<ComponentType>();
+if (component != null)
+{
+    Container.Bind<IInterface>().FromInstance(component).AsSingle();
+}
+else
+{
+    Container.Bind<IInterface>().FromInstance(null).AsSingle();
+}
+
+// 패턴 2: 자동 바인딩
+Container.BindInterfacesAndSelfTo<ComponentType>().FromComponentInHierarchy().AsSingle();
+
+// 패턴 3: 특정 인터페이스만 바인딩
+Container.Bind<IInterface>().To<ComponentType>().FromComponentInHierarchy().AsSingle();
+```
+
+### 3-2) 서비스 바인딩 패턴
+```csharp
+// 팩토리 패턴
+Container.Bind<IFactory<StateType>>().To<StateTypeFactory>().AsTransient();
+Container.Bind<IStateFactory>().To<StateFactory>().AsSingle();
+
+// 서비스 패턴
+Container.Bind<IService>().To<Service>().AsSingle();
+Container.BindInterfacesTo<Service>().AsSingle();
+```
+
+### 3-3) 스코프별 바인딩
+```csharp
+// 싱글톤 (게임 전체에서 하나의 인스턴스)
+Container.Bind<IManager>().To<Manager>().AsSingle();
+
+// 트랜지언트 (요청할 때마다 새 인스턴스)
+Container.Bind<IFactory>().To<Factory>().AsTransient();
+
+// 컨테이너 스코프 (컨테이너 생명주기와 동일)
+Container.Bind<IService>().To<Service>().AsCached();
+```
+
+## 4) 씬별 DI 컨테이너 연결 관계
+
+### 4-1) CoreScene → StageScene 연결
+```csharp
+// CoreScene에서 바인딩된 컴포넌트들
+- AudioManager (DontDestroyOnLoad)
+- SaveManager (DontDestroyOnLoad)  
+- CoroutineRunner (DontDestroyOnLoad)
+- SceneTransitionManager (DontDestroyOnLoad)
+
+// StageScene에서 참조
+CombatInstaller.BindAudioManager() → CoreScene의 AudioManager 참조
+CombatInstaller.BindSaveManager() → CoreScene의 SaveManager 참조
+CombatInstaller.BindCoroutineRunner() → CoreScene의 CoroutineRunner 참조
+```
+
+### 4-2) StageScene → BattleScene 연결
+```csharp
+// StageScene에서 바인딩된 컴포넌트들
+- CombatFlowCoordinator
+- CombatSlotManager
+- CardCirculationSystem
+- TurnBasedCardManager
+
+// BattleScene에서 동일한 구조로 재바인딩
+// (씬별로 독립적인 컨테이너이므로 각각 바인딩 필요)
+```
+
+## 5) 적 카드 직접 생성 시스템 DI 구조
+
+### 5-1) 적 핸드 매니저 시스템 제거
+- **IEnemyHandManager 인터페이스 삭제**: 적 핸드 매니저 관련 모든 코드 제거
+- **HandInitializer 간소화**: 플레이어 핸드만 초기화, 적 핸드 관련 로직 제거
+- **저장 시스템 간소화**: 적 핸드 관련 저장/복원 로직 제거
+
+### 5-2) StageManager 적 카드 생성 의존성
+```csharp
+// StageManager.cs에 추가된 의존성 주입
+[Inject] private ITurnCardRegistry turnCardRegistry;  // 카드 등록용
+[Inject] private ISkillCardFactory cardFactory;       // 카드 생성용
+
+// 적 카드 직접 생성 메서드
+private void SpawnEnemyCardToWaitSlot4(IEnemyCharacter enemy)
+{
+    // EnemyCharacterData로 캐스팅하여 EnemyDeck에 접근
+    if (!(enemy?.CharacterData is EnemyCharacterData enemyData) || enemyData.EnemyDeck == null)
+        return;
+
+    // 적 덱에서 랜덤 카드 선택 및 WAIT_SLOT_4에 등록
+    var randomEntry = enemyData.EnemyDeck.GetRandomEntry();
+    var enemyCard = cardFactory.CreateFromDefinition(randomEntry.definition, Owner.Enemy, enemyData.CharacterName);
+    turnCardRegistry.RegisterCard(CombatSlotPosition.WAIT_SLOT_4, enemyCard, null, SlotOwner.ENEMY);
+}
+```
+
+### 5-3) 새로운 적 카드 시스템 아키텍처
+```
+적 스폰 흐름:
+1. StageManager.SpawnNextEnemyCoroutine()
+2. EnemySpawnerManager.SpawnEnemy() → 적 캐릭터 생성
+3. StageManager.RegisterEnemy() → 적 캐릭터 등록
+4. StageManager.SpawnEnemyCardToWaitSlot4() → 적 카드 직접 생성
+5. ITurnCardRegistry.RegisterCard() → WAIT_SLOT_4에 카드 등록
+```
+
+## 6) DI 바인딩 규칙
+
+### 6-1) 필수 바인딩 규칙
+- **모든 MonoBehaviour**: 씬에서 `FindFirstObjectByType`으로 찾아서 바인딩
+- **인터페이스 우선**: 구현체보다 인터페이스로 바인딩
+- **null 안전성**: 컴포넌트를 찾지 못하면 null로 바인딩하고 경고 로그
+- **스코프 명시**: `AsSingle()`, `AsTransient()`, `AsCached()` 명시적 사용
+
+### 6-2) 바인딩 순서 규칙
+```csharp
+public override void InstallBindings()
+{
+    // 1. 상태 팩토리 바인딩
+    BindStateFactories();
+    
+    // 2. MonoBehaviour 바인딩
+    BindMonoBehaviours();
+    
+    // 3. 서비스 바인딩
+    BindServices();
+    
+    // 4. 외부 시스템 바인딩
+    BindExternalSystems();
+    
+    // 5. UI 바인딩
+    BindUIComponents();
+}
+```
+
+### 6-3) 에러 처리 규칙
+```csharp
+// 컴포넌트를 찾지 못한 경우
+if (component == null)
+{
+    Debug.LogWarning($"[Installer] {typeof(T).Name}를 씬에서 찾을 수 없습니다. null로 바인딩합니다.");
+    Container.Bind<IInterface>().FromInstance(null).AsSingle();
+}
+else
+{
+    Debug.Log($"[Installer] {typeof(T).Name} 발견: {component.name}");
+    Container.Bind<IInterface>().FromInstance(component).AsSingle();
+}
+```
+
+## 7) DI 컨테이너 디버깅
+
+### 7-1) 바인딩 상태 확인
+```csharp
+// 바인딩된 인스턴스 확인
+var instance = Container.Resolve<IInterface>();
+Debug.Log($"바인딩된 인스턴스: {instance?.GetType().Name}");
+
+// 바인딩 가능 여부 확인
+bool canResolve = Container.CanResolve<IInterface>();
+Debug.Log($"바인딩 가능: {canResolve}");
+```
+
+### 7-2) 의존성 주입 확인
+```csharp
+// Inject 메서드에서 의존성 확인
+[Inject]
+public void Construct(IDependency dependency)
+{
+    if (dependency == null)
+    {
+        Debug.LogWarning($"[{GetType().Name}] 의존성 주입 실패: {typeof(IDependency).Name}");
+    }
+    else
+    {
+        Debug.Log($"[{GetType().Name}] 의존성 주입 성공: {dependency.GetType().Name}");
+    }
+}
+```
+
+## 8) DI 컨테이너 최적화
+
+### 8-1) 성능 최적화
+- **Lazy 바인딩**: `NonLazy()` 사용으로 불필요한 초기화 방지
+- **캐싱**: `AsCached()` 사용으로 인스턴스 재사용
+- **풀링**: 객체 풀링과 DI 조합으로 GC 압박 최소화
+
+### 8-2) 메모리 최적화
+- **스코프 관리**: 적절한 스코프 설정으로 메모리 사용량 최적화
+- **참조 해제**: 씬 언로드 시 불필요한 참조 해제
+- **싱글톤 활용**: 전역 매니저는 싱글톤으로 중복 생성 방지
+
+## 9) DI 컨테이너 확장
+
+### 9-1) 새로운 Installer 추가
+```csharp
+// 1. MonoInstaller 상속
+public class NewSystemInstaller : MonoInstaller<NewSystemInstaller>
+{
+    public override void InstallBindings()
+    {
+        // 바인딩 로직 구현
+    }
+}
+
+// 2. 씬에 SceneContext 추가
+// 3. SceneContext의 Mono Installers에 등록
+```
+
+### 9-2) 새로운 바인딩 패턴 추가
+```csharp
+// 커스텀 바인딩 메서드
+private void BindCustomPattern<TInterface, TImpl>() 
+    where TImpl : Component, TInterface
+{
+    var instance = FindFirstObjectByType<TImpl>();
+    if (instance != null)
+    {
+        Container.Bind<TInterface>().FromInstance(instance).AsSingle();
+        Container.Bind<TImpl>().FromInstance(instance).AsSingle();
+    }
+}
+```
+
+## 10) DI 컨테이너 검증
+
+### 10-1) 바인딩 검증 체크리스트
+- [ ] 모든 필요한 인터페이스가 바인딩되었는가?
+- [ ] MonoBehaviour 컴포넌트가 씬에 존재하는가?
+- [ ] 스코프가 적절히 설정되었는가?
+- [ ] null 안전성이 보장되는가?
+- [ ] 순환 의존성이 없는가?
+
+### 10-2) 런타임 검증
+```csharp
+// 바인딩 검증 메서드
+private void ValidateBindings()
+{
+    var requiredInterfaces = new Type[]
+    {
+        typeof(IAudioManager),
+        typeof(ISaveManager),
+        typeof(ICoroutineRunner)
+    };
+    
+    foreach (var interfaceType in requiredInterfaces)
+    {
+        if (!Container.CanResolve(interfaceType))
+        {
+            Debug.LogError($"필수 바인딩 누락: {interfaceType.Name}");
+        }
+    }
+}
+```
+
+## 11) 변경 기록(Delta)
+- 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
+
+예)
+- 2025-01-27 | Maintainer | Zenject DI 시스템 규칙 신규 제정 | 문서
+- 2025-01-27 | Maintainer | DI 컨테이너 계층 구조 및 바인딩 패턴 정리 | 문서
+- 2025-01-27 | Maintainer | 씬별 DI 컨테이너 연결 관계 문서화 | 문서
+- 2025-01-27 | Maintainer | CombatStartupManager 제거 및 Zenject DI 자동 바인딩 시스템으로 리팩토링 | 코드/문서
+- 2025-01-27 | Maintainer | 초기화 스텝들 자동 바인딩 시스템 구현 및 불필요한 중간 계층 제거 | 코드/문서
+- 2025-01-27 | Maintainer | 적 핸드 매니저 시스템 제거 및 적 카드 직접 생성 시스템 구현 | 코드/문서
+- 2025-01-27 | Maintainer | StageManager DI 바인딩 추가 및 적 카드 생성 의존성 주입 확장 | 코드/문서
+
+---
+
+description: "RougeShool 프로젝트 Zenject DI 시스템 구조 및 바인딩 관계 관리 규칙"
+auto_attach:
+  - Assets/Script/**/Installer.cs
+  - Assets/Script/**/Installer.cs.meta
+  - Assets/Scenes/**/*.unity
+rule_id: zenject_di_system_rules
+version: 1.0.0
+alwaysApply: true

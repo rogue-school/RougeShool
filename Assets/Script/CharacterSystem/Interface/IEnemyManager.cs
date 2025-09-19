@@ -1,12 +1,12 @@
 using Game.CharacterSystem.Interface;
 using Game.CombatSystem.Interface;
-using Game.SkillCardSystem.Interface;
 
 namespace Game.CharacterSystem.Interface
 {
     /// <summary>
-    /// 전투 중 적 캐릭터 및 핸드 매니저를 관리하는 인터페이스입니다.
-    /// 적 등록, 조회, 초기화, 핸드 접근 등의 기능을 제공합니다.
+    /// 전투 중 적 캐릭터를 관리하는 인터페이스입니다.
+    /// 적 등록, 조회, 초기화 등의 기능을 제공합니다.
+    /// 적 카드는 핸드 없이 대기 슬롯에서 직접 관리됩니다.
     /// </summary>
     public interface IEnemyManager
     {
@@ -44,11 +44,7 @@ namespace Game.CharacterSystem.Interface
         /// </summary>
         void Reset();
 
-        /// <summary>
-        /// 등록된 적의 핸드 매니저를 반환합니다.
-        /// </summary>
-        /// <returns>적 핸드 매니저</returns>
-        IEnemyHandManager GetEnemyHandManager();
+        // 적 핸드 매니저 관련 메서드 제거됨 - 적 카드는 대기 슬롯에서 직접 관리
 
         /// <summary>
         /// 등록된 적 캐릭터를 명시적으로 등록 해제합니다.

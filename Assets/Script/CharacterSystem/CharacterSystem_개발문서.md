@@ -4,6 +4,10 @@
 CharacterSystem은 게임의 모든 캐릭터(플레이어, 적)를 관리하는 시스템입니다. 캐릭터의 기본 속성, 상태, 행동을 통합적으로 관리하며, 새로운 리그 오브 레전드 스타일의 플레이어 캐릭터 UI 시스템을 제공합니다.
 
 ### 최근 변경(요약)
+- **적 핸드 매니저 시스템 제거 완료**: `IEnemyHandManager` 인터페이스 및 관련 코드 완전 제거
+- **적 카드 직접 생성 시스템**: `StageManager`에서 적 카드를 `WAIT_SLOT_4`에 직접 생성
+- **HandInitializer 간소화**: 플레이어 핸드만 초기화, 적 핸드 관련 로직 제거
+- **저장 시스템 간소화**: 적 핸드 관련 저장/복원 로직 제거, 대기 슬롯 상태만 관리
 - **새로운 플레이어 UI 시스템**: 리그 오브 레전드 스타일 HP/MP 바, 정보 표시 완료
 - **통합 UI 컨트롤러**: `PlayerCharacterUIController`로 플레이어 UI 일원화, 호환용 `SetTarget(ICharacter)` 제공
 - **적 UI 컨트롤러 추가**: `EnemyCharacterUIController`로 HP/버프 최소 UI 분리
@@ -55,11 +59,10 @@ CharacterSystem/
 - **EnemyManager.cs**: 적 캐릭터 매니저
 - **PlayerResourceManager.cs**: 플레이어 리소스 관리 매니저
 
-### Intialization 폴더 (6개 파일) [폴더명 오타 주의]
+### Intialization 폴더 (5개 파일) [폴더명 오타 주의]
 - **EnemyCharacterInitializer.cs**: 적 캐릭터 초기화
-- **EnemyHandInitializer.cs**: 적 핸드 초기화
 - **EnemyInitializer.cs**: 적 초기화 통합 관리
-- **HandInitializer.cs**: 핸드 초기화 기본 클래스
+- **HandInitializer.cs**: 플레이어 핸드 초기화 (적 핸드 관련 로직 제거됨)
 - **PlayerCharacterInitializer.cs**: 플레이어 캐릭터 초기화
 - **PlayerSkillCardInitializer.cs**: 플레이어 스킬카드 초기화
 
@@ -122,6 +125,7 @@ CharacterSystem/
 - **HasEnemy()**: 적 캐릭터 등록 여부 확인
 - **ClearEnemy()**: 등록된 적 캐릭터 초기화
 - **Reset()**: 매니저 상태 초기화
+- **적 핸드 매니저 관련 메서드 제거됨**: `GetEnemyHandManager()` 등 적 핸드 관련 기능 완전 제거
 
 ### PlayerResourceManager 클래스
 - **Initialize(PlayerCharacterData characterData)**: 캐릭터 데이터로 초기화
@@ -531,3 +535,4 @@ sequenceDiagram
 - 2025-01-27 | Maintainer | 개발 문서 업데이트 - 새로운 UI 시스템 반영 | 문서
 - 2025-01-27 | Maintainer | 실제 코드 기반 캐릭터 기본 속성 수정 (속도/공격력 제거, 가드/리소스/턴효과 추가) | 문서
 - 2025-09-18 | Maintainer | 레거시 `CharacterUIController` 제거, 이벤트 기반 UI로 전환, `PlayerCharacterUIController` 호환 메서드 추가, `CharacterSlotUI` 자동 연결 제거 반영 | 코드/문서
+- 2025-01-27 | Maintainer | 적 핸드 매니저 시스템 완전 제거, `IEnemyHandManager` 인터페이스 삭제, `HandInitializer` 간소화, 적 카드 직접 생성 시스템 구현 | 코드/문서

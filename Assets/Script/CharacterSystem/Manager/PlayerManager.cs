@@ -53,7 +53,7 @@ namespace Game.CharacterSystem.Manager
         [Inject]
         public void Construct(
             IPlayerHandManager handManager,
-            IGameStateManager gameStateManager)
+            IGameStateManager gameStateManager = null)
         {
             this.handManager = handManager;
             this.gameStateManager = gameStateManager;

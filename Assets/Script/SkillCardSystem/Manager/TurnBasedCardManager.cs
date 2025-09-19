@@ -63,16 +63,15 @@ namespace Game.SkillCardSystem.Manager
                 return;
             }
 
-            // 사용하지 않은 카드들을 Used Storage로 이동
+            // 턴 종료 처리 (보관함 시스템 제거됨)
             if (currentTurnCards.Count > 0)
             {
-                circulationSystem.MoveCardsToUsedStorage(new List<ISkillCard>(currentTurnCards));
                 currentTurnCards.Clear();
             }
 
             isTurnStarted = false;
             hasPlayedThisTurn = false;
-            Debug.Log("[TurnBasedCardManager] 턴 종료: 사용하지 않은 카드들을 Used Storage로 이동");
+            Debug.Log("[TurnBasedCardManager] 턴 종료 완료");
         }
 
         #endregion
@@ -104,7 +103,7 @@ namespace Game.SkillCardSystem.Manager
                 return;
             }
 
-            // 카드를 Used Storage로 이동
+            // 카드 사용 처리 (보관함 시스템 제거됨)
             circulationSystem.MoveCardToUsedStorage(card);
             currentTurnCards.Remove(card);
             hasPlayedThisTurn = true;

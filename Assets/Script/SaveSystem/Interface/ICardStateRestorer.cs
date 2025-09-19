@@ -24,12 +24,7 @@ namespace Game.SaveSystem.Interface
         /// <returns>복원 성공 여부</returns>
         bool RestorePlayerHandState(CompleteCardStateData cardState);
 
-        /// <summary>
-        /// 적 핸드카드 상태를 복원합니다.
-        /// </summary>
-        /// <param name="cardState">복원할 카드 상태 데이터</param>
-        /// <returns>복원 성공 여부</returns>
-        bool RestoreEnemyHandState(CompleteCardStateData cardState);
+        // 적 핸드카드 상태 복원 메서드 제거됨 - 적 카드는 대기 슬롯에서 직접 관리
 
         /// <summary>
         /// 전투 슬롯 카드 상태를 복원합니다.

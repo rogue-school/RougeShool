@@ -1,20 +1,19 @@
 using Game.CharacterSystem.Interface;
 using Game.CombatSystem.Interface;
 using Game.IManager;
-using Game.SkillCardSystem.Interface;
 using UnityEngine;
 using Game.CharacterSystem.UI;
 
 namespace Game.CharacterSystem.Manager
 {
     /// <summary>
-    /// 전투 중 등장한 적 캐릭터와 핸드 매니저를 관리하는 매니저 클래스입니다.
+    /// 전투 중 등장한 적 캐릭터를 관리하는 매니저 클래스입니다.
     /// 현재 적 캐릭터와 관련된 상태를 보관하거나 초기화합니다.
+    /// 적 카드는 핸드 없이 대기 슬롯에서 직접 관리됩니다.
     /// </summary>
     public class EnemyManager : MonoBehaviour, IEnemyManager
 {
     private IEnemyCharacter currentEnemy;
-    private IEnemyHandManager enemyHandManager;
 
     #region 등록 / 설정
 
@@ -46,14 +45,7 @@ namespace Game.CharacterSystem.Manager
         Debug.Log("[EnemyManager] 적 등록 해제");
     }
 
-    /// <summary>
-    /// 적 핸드 매니저를 설정합니다.
-    /// </summary>
-    /// <param name="handManager">적 핸드 매니저</param>
-    public void SetEnemyHandManager(IEnemyHandManager handManager)
-    {
-        enemyHandManager = handManager;
-    }
+    // 적 핸드 매니저 관련 메서드 제거됨 - 적 카드는 대기 슬롯에서 직접 관리
 
     #endregion
 
@@ -69,10 +61,7 @@ namespace Game.CharacterSystem.Manager
     /// </summary>
     public IEnemyCharacter GetCurrentEnemy() => currentEnemy;
 
-    /// <summary>
-    /// 현재 등록된 적 핸드 매니저를 반환합니다.
-    /// </summary>
-    public IEnemyHandManager GetEnemyHandManager() => enemyHandManager;
+    // 적 핸드 매니저 조회 메서드 제거됨 - 적 카드는 대기 슬롯에서 직접 관리
 
     /// <summary>
     /// 적 캐릭터가 등록되어 있는지 여부를 확인합니다.
@@ -84,12 +73,12 @@ namespace Game.CharacterSystem.Manager
     #region 초기화
 
     /// <summary>
-    /// 등록된 적 캐릭터 및 핸드 매니저를 모두 초기화합니다.
+    /// 등록된 적 캐릭터를 초기화합니다.
     /// </summary>
     public void ClearEnemy()
     {
         currentEnemy = null;
-        enemyHandManager = null;
+        Debug.Log("[EnemyManager] 적 캐릭터 초기화 완료");
     }
 
     /// <summary>

@@ -474,11 +474,11 @@ namespace Game.SkillCardSystem.Manager
                 }
             }
 
-            Debug.Log("[PlayerHandManager] 턴 종료: 사용하지 않은 카드들을 Used Storage로 이동");
+            Debug.Log("[PlayerHandManager] 턴 종료 완료 (보관함 시스템 제거됨)");
         }
 
         /// <summary>
-        /// 카드를 사용합니다. (Used Storage로 이동)
+        /// 카드를 사용합니다. (보관함 시스템 제거됨)
         /// </summary>
         /// <param name="card">사용할 카드</param>
         public void UseCard(ISkillCard card)

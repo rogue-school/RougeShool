@@ -38,7 +38,7 @@ namespace Game.SkillCardSystem.Manager
         #region 의존성 주입 및 초기화
 
         [Inject]
-        public void Construct(SaveManager saveManager)
+        public void Construct(SaveManager saveManager = null)
         {
             this.saveManager = saveManager;
             InitializeDeck();

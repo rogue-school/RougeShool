@@ -5,7 +5,7 @@ namespace Game.SkillCardSystem.Interface
 {
     /// <summary>
     /// 카드 순환 시스템 인터페이스입니다.
-    /// Unused Storage ↔ Used Storage 간의 무한 순환을 관리합니다.
+    /// 플레이어 덱에서 랜덤하게 카드를 드로우하는 시스템입니다.
     /// </summary>
     public interface ICardCirculationSystem
     {
@@ -15,37 +15,15 @@ namespace Game.SkillCardSystem.Interface
         int CardsPerTurn { get; }
 
         /// <summary>
-        /// 현재 Unused Storage의 카드 수
+        /// 현재 덱의 카드 수
         /// </summary>
-        int UnusedCardCount { get; }
-
-        /// <summary>
-        /// 현재 Used Storage의 카드 수
-        /// </summary>
-        int UsedCardCount { get; }
+        int DeckCardCount { get; }
 
         /// <summary>
         /// 턴 시작 시 카드를 드로우합니다.
         /// </summary>
         /// <returns>드로우된 카드 리스트</returns>
         List<ISkillCard> DrawCardsForTurn();
-
-        /// <summary>
-        /// 사용한 카드를 Used Storage로 이동시킵니다.
-        /// </summary>
-        /// <param name="card">사용한 카드</param>
-        void MoveCardToUsedStorage(ISkillCard card);
-
-        /// <summary>
-        /// 여러 카드를 Used Storage로 이동시킵니다.
-        /// </summary>
-        /// <param name="cards">사용한 카드들</param>
-        void MoveCardsToUsedStorage(List<ISkillCard> cards);
-
-        /// <summary>
-        /// Used Storage가 비어있으면 Unused Storage로 순환시킵니다.
-        /// </summary>
-        void CirculateCardsIfNeeded();
 
         /// <summary>
         /// 카드 순환 시스템을 초기화합니다.
@@ -56,30 +34,73 @@ namespace Game.SkillCardSystem.Interface
         /// <summary>
         /// 카드 순환 시스템을 리셋합니다.
         /// </summary>
-        void Reset();
+        void Clear();
+
+        #region 레거시 호환성 (보관함 시스템 제거됨)
 
         /// <summary>
-        /// 현재 Unused Storage의 모든 카드를 반환합니다. (저장 시스템용)
+        /// 사용한 카드를 처리합니다. (보관함 시스템 제거됨)
         /// </summary>
-        /// <returns>Unused Storage의 카드 리스트</returns>
+        /// <param name="card">사용한 카드</param>
+        void MoveCardToUsedStorage(ISkillCard card);
+
+        /// <summary>
+        /// 여러 카드를 처리합니다. (보관함 시스템 제거됨)
+        /// </summary>
+        /// <param name="cards">사용한 카드들</param>
+        void MoveCardsToUsedStorage(List<ISkillCard> cards);
+
+        /// <summary>
+        /// 카드 순환을 처리합니다. (보관함 시스템 제거됨)
+        /// </summary>
+        void CirculateCardsIfNeeded();
+
+        /// <summary>
+        /// 현재 미사용 카드들을 반환합니다. (저장 시스템용, 빈 리스트 반환)
+        /// </summary>
+        /// <returns>빈 카드 리스트</returns>
         List<ISkillCard> GetUnusedCards();
 
         /// <summary>
-        /// 현재 Used Storage의 모든 카드를 반환합니다. (저장 시스템용)
+        /// 현재 사용된 카드들을 반환합니다. (저장 시스템용, 빈 리스트 반환)
         /// </summary>
-        /// <returns>Used Storage의 카드 리스트</returns>
+        /// <returns>빈 카드 리스트</returns>
         List<ISkillCard> GetUsedCards();
 
         /// <summary>
-        /// Unused Storage에 카드들을 복원합니다. (저장 시스템용)
+        /// 미사용 카드들을 복원합니다. (저장 시스템용, 아무것도 하지 않음)
         /// </summary>
         /// <param name="cards">복원할 카드들</param>
         void RestoreUnusedCards(List<ISkillCard> cards);
 
         /// <summary>
-        /// Used Storage에 카드들을 복원합니다. (저장 시스템용)
+        /// 사용된 카드들을 복원합니다. (저장 시스템용, 아무것도 하지 않음)
         /// </summary>
         /// <param name="cards">복원할 카드들</param>
         void RestoreUsedCards(List<ISkillCard> cards);
+
+        #endregion
+
+        #region 핸드 관리
+
+        /// <summary>
+        /// 카드를 핸드로 이동시킵니다.
+        /// </summary>
+        /// <param name="card">이동할 카드</param>
+        void MoveCardToHand(ISkillCard card);
+
+        /// <summary>
+        /// 카드를 버린 카드 더미로 이동시킵니다.
+        /// </summary>
+        /// <param name="card">이동할 카드</param>
+        void MoveCardToDiscard(ISkillCard card);
+
+        /// <summary>
+        /// 카드를 소멸 더미로 이동시킵니다.
+        /// </summary>
+        /// <param name="card">이동할 카드</param>
+        void MoveCardToExhaust(ISkillCard card);
+
+        #endregion
     }
 }

@@ -23,11 +23,7 @@ namespace Game.SaveSystem.Interface
         /// <returns>플레이어 핸드카드 데이터</returns>
         CompleteCardStateData CollectPlayerHandState();
 
-        /// <summary>
-        /// 적 핸드카드 상태를 수집합니다.
-        /// </summary>
-        /// <returns>적 핸드카드 데이터</returns>
-        CompleteCardStateData CollectEnemyHandState();
+        // 적 핸드카드 상태 수집 메서드 제거됨 - 적 카드는 대기 슬롯에서 직접 관리
 
         /// <summary>
         /// 전투 슬롯 카드 상태를 수집합니다.

@@ -23,7 +23,6 @@ namespace Game.SaveSystem.Manager
         #region 의존성 주입
 
         [Inject] private IPlayerHandManager playerHandManager;
-        [Inject] private IEnemyHandManager enemyHandManager;
         [Inject] private ITurnCardRegistry turnCardRegistry;
         [Inject] private ICardCirculationSystem circulationSystem;
         [Inject] private ICombatTurnManager combatTurnManager;
@@ -52,12 +51,11 @@ namespace Game.SaveSystem.Manager
                 
                 // 각 상태 복원
                 bool playerSuccess = RestorePlayerHandState(cardState);
-                bool enemySuccess = RestoreEnemyHandState(cardState);
                 bool combatSuccess = RestoreCombatSlotState(cardState);
                 bool circulationSuccess = RestoreCardCirculationState(cardState);
                 bool turnSuccess = RestoreTurnState(cardState);
                 
-                bool allSuccess = playerSuccess && enemySuccess && combatSuccess && circulationSuccess && turnSuccess;
+                bool allSuccess = playerSuccess && combatSuccess && circulationSuccess && turnSuccess;
                 
                 if (allSuccess)
                 {
@@ -122,50 +120,7 @@ namespace Game.SaveSystem.Manager
             }
         }
 
-        /// <summary>
-        /// 적 핸드카드 상태를 복원합니다.
-        /// </summary>
-        public bool RestoreEnemyHandState(CompleteCardStateData cardState)
-        {
-            if (enemyHandManager == null || cardState.enemyHandSlots == null)
-            {
-                Debug.LogWarning("[CardStateRestorer] EnemyHandManager가 없거나 적 핸드 데이터가 없습니다.");
-                return false;
-            }
-
-            try
-            {
-                // 적 핸드 슬롯들 복원 (순서 중요!)
-                var enemySlots = new[] { 
-                    SkillCardSlotPosition.ENEMY_SLOT_1, 
-                    SkillCardSlotPosition.ENEMY_SLOT_2, 
-                    SkillCardSlotPosition.ENEMY_SLOT_3 
-                };
-                
-                for (int i = 0; i < enemySlots.Length && i < cardState.enemyHandSlots.Count; i++)
-                {
-                    var slotPos = enemySlots[i];
-                    var cardData = cardState.enemyHandSlots[i];
-                    
-                    if (!cardData.IsEmpty())
-                    {
-                        var card = CreateCardFromData(cardData);
-                        if (card != null)
-                        {
-                            enemyHandManager.RestoreCardToHand(card, slotPos);
-                        }
-                    }
-                }
-                
-                Debug.Log($"[CardStateRestorer] 적 핸드카드 복원: {cardState.enemyHandSlots.Count}장");
-                return true;
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError($"[CardStateRestorer] 적 핸드카드 복원 실패: {ex.Message}");
-                return false;
-            }
-        }
+        // 적 핸드카드 상태 복원 메서드 제거됨 - 적 카드는 대기 슬롯에서 직접 관리
 
         /// <summary>
         /// 전투 슬롯 카드 상태를 복원합니다.
@@ -223,21 +178,10 @@ namespace Game.SaveSystem.Manager
 
             try
             {
-                // 미사용 카드들 복원
-                if (cardState.unusedStorageCards != null && cardState.unusedStorageCards.Count > 0)
-                {
-                    var unusedCards = CreateCardsFromIds(cardState.unusedStorageCards);
-                    circulationSystem.RestoreUnusedCards(unusedCards);
-                }
+                // 카드 순환 상태 복원 (보관함 시스템 제거됨)
+                // unusedStorageCards와 usedStorageCards는 더 이상 사용되지 않습니다.
                 
-                // 사용된 카드들 복원
-                if (cardState.usedStorageCards != null && cardState.usedStorageCards.Count > 0)
-                {
-                    var usedCards = CreateCardsFromIds(cardState.usedStorageCards);
-                    circulationSystem.RestoreUsedCards(usedCards);
-                }
-                
-                Debug.Log($"[CardStateRestorer] 카드 순환 상태 복원: Unused={cardState.unusedStorageCards?.Count ?? 0}장, Used={cardState.usedStorageCards?.Count ?? 0}장");
+                Debug.Log("[CardStateRestorer] 카드 순환 상태 복원 완료 (보관함 시스템 제거됨)");
                 return true;
             }
             catch (System.Exception ex)
@@ -290,7 +234,7 @@ namespace Game.SaveSystem.Manager
         /// </summary>
         public bool CanRestoreCardState()
         {
-            return playerHandManager != null && enemyHandManager != null && cardFactory != null;
+            return playerHandManager != null && cardFactory != null;
         }
 
         /// <summary>
@@ -313,7 +257,6 @@ namespace Game.SaveSystem.Manager
             
             // 실제 구현에서는 각 매니저의 초기화 메서드 호출
             // playerHandManager.ClearHand();
-            // enemyHandManager.ClearHand();
             // turnCardRegistry.ClearSlots();
             // circulationSystem.ResetCirculation();
         }

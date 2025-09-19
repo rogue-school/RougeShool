@@ -19,19 +19,8 @@ namespace Game.CombatSystem.Manager
 
         private Dictionary<CombatSlotPosition, ICombatCardSlot> combatSlots = new();
 
-        // 최적화: 필수 슬롯 위치를 정적 배열로 캐싱 (레거시 4슬롯 시스템)
-#pragma warning disable CS0618 // 레거시 호환성을 위해 의도적으로 사용
+        // 최적화: 필수 슬롯 위치를 정적 배열로 캐싱 (새로운 5슬롯 시스템)
         private static readonly CombatSlotPosition[] RequiredSlots = 
-        {
-            CombatSlotPosition.SLOT_1,
-            CombatSlotPosition.SLOT_2,
-            CombatSlotPosition.SLOT_3,
-            CombatSlotPosition.SLOT_4
-        };
-#pragma warning restore CS0618
-
-        // 새로운 5슬롯 시스템용 필수 슬롯 위치
-        private static readonly CombatSlotPosition[] NewRequiredSlots = 
         {
             CombatSlotPosition.BATTLE_SLOT,
             CombatSlotPosition.WAIT_SLOT_1,
@@ -39,6 +28,7 @@ namespace Game.CombatSystem.Manager
             CombatSlotPosition.WAIT_SLOT_3,
             CombatSlotPosition.WAIT_SLOT_4
         };
+
 
         #endregion
 
@@ -58,13 +48,15 @@ namespace Game.CombatSystem.Manager
         {
             combatSlots.Clear();
 
-            CombatExecutionSlotUI[] slotUIs = GetComponentsInChildren<CombatExecutionSlotUI>(true);
-            foreach (var slotUI in slotUIs)
+            // 먼저 자식에서 검색 (더 효율적)
+            CombatExecutionSlotUI[] childSlotUIs = GetComponentsInChildren<CombatExecutionSlotUI>(true);
+            foreach (var slotUI in childSlotUIs)
             {
                 var execPos = slotUI.Position;
                 if (!combatSlots.ContainsKey(execPos))
                 {
                     combatSlots[execPos] = slotUI;
+                    // 자식에서 슬롯 바인딩
                 }
                 else
                 {
@@ -92,7 +84,7 @@ namespace Game.CombatSystem.Manager
                     if (!combatSlots.ContainsKey(execPos))
                     {
                         combatSlots[execPos] = slotUI;
-                        Debug.Log($"[CombatSlotManager] 자식 검색에 실패하여 전역 검색으로 슬롯을 바인딩했습니다: {execPos}");
+                        // 전역 검색으로 슬롯 바인딩 (정상적인 동작)
                     }
                 }
             }
@@ -201,9 +193,9 @@ namespace Game.CombatSystem.Manager
 
             // 보강: 현재 오브젝트의 자식에 슬롯이 없을 수 있으므로, 누락된 슬롯이 있으면 씬 전체에서 한 번 더 검색합니다.
             bool hasMissing = false;
-            for (int i = 0; i < NewRequiredSlots.Length; i++)
+            for (int i = 0; i < RequiredSlots.Length; i++)
             {
-                if (!combatSlots.ContainsKey(NewRequiredSlots[i]))
+                if (!combatSlots.ContainsKey(RequiredSlots[i]))
                 {
                     hasMissing = true;
                     break;
@@ -219,7 +211,7 @@ namespace Game.CombatSystem.Manager
                     if (!combatSlots.ContainsKey(execPos))
                     {
                         combatSlots[execPos] = slotUI;
-                        Debug.Log($"[CombatSlotManager] 자식 검색에 실패하여 전역 검색으로 슬롯을 바인딩했습니다: {execPos}");
+                        // 전역 검색으로 슬롯 바인딩 (정상적인 동작)
                     }
                 }
             }
@@ -233,9 +225,9 @@ namespace Game.CombatSystem.Manager
         /// </summary>
         private void ValidateSlotCountNew()
         {
-            for (int i = 0; i < NewRequiredSlots.Length; i++)
+            for (int i = 0; i < RequiredSlots.Length; i++)
             {
-                var slot = NewRequiredSlots[i];
+                var slot = RequiredSlots[i];
                 if (!combatSlots.ContainsKey(slot))
                 {
                     Debug.LogError($"[CombatSlotManager] 새로운 5슬롯 시스템에서 필수 슬롯이 누락되었습니다: {slot}");
@@ -309,7 +301,7 @@ namespace Game.CombatSystem.Manager
         /// </summary>
         public void ClearAllSlotsNew()
         {
-            foreach (var slot in NewRequiredSlots)
+            foreach (var slot in RequiredSlots)
             {
                 if (combatSlots.TryGetValue(slot, out var slotComponent))
                 {
@@ -325,7 +317,7 @@ namespace Game.CombatSystem.Manager
         public void DebugSlotsStatusNew()
         {
             Debug.Log("=== 새로운 5슬롯 시스템 슬롯 상태 ===");
-            foreach (var slot in NewRequiredSlots)
+            foreach (var slot in RequiredSlots)
             {
                 if (combatSlots.TryGetValue(slot, out var slotComponent))
                 {

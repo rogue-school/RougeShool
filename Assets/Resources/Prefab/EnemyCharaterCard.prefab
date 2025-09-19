@@ -360,7 +360,6 @@ GameObject:
   m_Component:
   - component: {fileID: 2886042496763500975}
   - component: {fileID: 1784468190560083363}
-  - component: {fileID: 8744304457702177956}
   - component: {fileID: 3204949284726287543}
   m_Layer: 5
   m_Name: EnemyCharaterCard
@@ -407,21 +406,6 @@ MonoBehaviour:
   portraitImage: {fileID: 1631975328147475406}
   hpTextAnchor: {fileID: 805663586528428179}
   damageTextPrefab: {fileID: 6781140808306196491, guid: e5df9cbbbb6c8344787434930ac5ec5b, type: 3}
---- !u!114 &8744304457702177956
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7769799778275336730}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5988b34a720b55c4499dd9ececd298c6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  nameText: {fileID: 3990270840846056283}
-  hpText: {fileID: 6969683324459299986}
-  portraitImage: {fileID: 1631975328147475406}
 --- !u!225 &3204949284726287543
 CanvasGroup:
   m_ObjectHideFlags: 0

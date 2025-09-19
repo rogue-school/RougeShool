@@ -22,7 +22,6 @@ namespace Game.SaveSystem.Manager
         #region 의존성 주입
 
         [Inject] private IPlayerHandManager playerHandManager;
-        [Inject] private IEnemyHandManager enemyHandManager;
         [Inject] private ITurnCardRegistry turnCardRegistry;
         [Inject] private ICardCirculationSystem circulationSystem;
         [Inject] private ICombatTurnManager combatTurnManager;
@@ -46,7 +45,6 @@ namespace Game.SaveSystem.Manager
             
             // 각 상태 수집
             CollectPlayerHandState(cardState);
-            CollectEnemyHandState(cardState);
             CollectCombatSlotState(cardState);
             CollectCardCirculationState(cardState);
             CollectTurnState(cardState);
@@ -65,15 +63,7 @@ namespace Game.SaveSystem.Manager
             return cardState;
         }
 
-        /// <summary>
-        /// 적 핸드카드 상태를 수집합니다.
-        /// </summary>
-        public CompleteCardStateData CollectEnemyHandState()
-        {
-            var cardState = new CompleteCardStateData();
-            CollectEnemyHandState(cardState);
-            return cardState;
-        }
+        // 적 핸드카드 상태 수집 메서드 제거됨 - 적 카드는 대기 슬롯에서 직접 관리
 
         /// <summary>
         /// 전투 슬롯 카드 상태를 수집합니다.
@@ -123,7 +113,7 @@ namespace Game.SaveSystem.Manager
         /// </summary>
         public bool CanCollectCardState()
         {
-            return playerHandManager != null && enemyHandManager != null;
+            return playerHandManager != null;
         }
 
         /// <summary>
@@ -171,35 +161,7 @@ namespace Game.SaveSystem.Manager
             Debug.Log($"[CardStateCollector] 플레이어 핸드카드 수집: {cardState.playerHandSlots.Count}장");
         }
 
-        /// <summary>
-        /// 적 핸드카드 상태를 수집합니다.
-        /// </summary>
-        private void CollectEnemyHandState(CompleteCardStateData cardState)
-        {
-            if (enemyHandManager == null)
-            {
-                Debug.LogWarning("[CardStateCollector] EnemyHandManager가 없습니다.");
-                return;
-            }
-
-            cardState.enemyHandSlots = new List<CardSlotData>();
-            
-            // 적 핸드 슬롯들 수집 (순서 중요!)
-            var enemySlots = new[] { 
-                SkillCardSlotPosition.ENEMY_SLOT_1, 
-                SkillCardSlotPosition.ENEMY_SLOT_2, 
-                SkillCardSlotPosition.ENEMY_SLOT_3 
-            };
-            
-            foreach (var slotPos in enemySlots)
-            {
-                var card = enemyHandManager.GetCardInSlot(slotPos);
-                var cardData = CreateCardSlotData(card, slotPos, "ENEMY");
-                cardState.enemyHandSlots.Add(cardData);
-            }
-            
-            Debug.Log($"[CardStateCollector] 적 핸드카드 수집: {cardState.enemyHandSlots.Count}장");
-        }
+        // 적 핸드카드 상태 수집 메서드 제거됨 - 적 카드는 대기 슬롯에서 직접 관리
 
         /// <summary>
         /// 전투 슬롯 카드 상태를 수집합니다.
@@ -234,13 +196,10 @@ namespace Game.SaveSystem.Manager
                 return;
             }
 
-            // 미사용 카드들 수집
-            cardState.unusedStorageCards = ConvertCardsToIds(circulationSystem.GetUnusedCards());
+            // 카드 순환 상태 수집 (보관함 시스템 제거됨)
+            // unusedStorageCards와 usedStorageCards는 더 이상 사용되지 않습니다.
             
-            // 사용된 카드들 수집
-            cardState.usedStorageCards = ConvertCardsToIds(circulationSystem.GetUsedCards());
-            
-            Debug.Log($"[CardStateCollector] 카드 순환 상태 수집: Unused={cardState.unusedStorageCards.Count}장, Used={cardState.usedStorageCards.Count}장");
+            Debug.Log("[CardStateCollector] 카드 순환 상태 수집 완료 (보관함 시스템 제거됨)");
         }
 
         /// <summary>

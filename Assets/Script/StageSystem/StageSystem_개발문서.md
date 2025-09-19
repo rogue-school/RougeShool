@@ -1,7 +1,13 @@
 # StageSystem 개발 문서
 
 ## 📋 시스템 개요
-StageSystem은 게임의 스테이지 진행을 관리하는 시스템입니다. 각 스테이지는 SubBoss와 Boss로 구성되며, 스테이지 완료 시 보상과 함께 다음 스테이지로 진행됩니다.
+StageSystem은 게임의 스테이지 진행을 관리하는 시스템입니다. 각 스테이지는 SubBoss와 Boss로 구성되며, 스테이지 완료 시 보상과 함께 다음 스테이지로 진행됩니다. 적 캐릭터 스폰과 함께 적 카드를 대기 슬롯에 직접 생성하는 기능을 제공합니다.
+
+### 최근 변경(요약)
+- **적 카드 직접 생성 시스템**: `StageManager`에서 적 카드를 `WAIT_SLOT_4`에 직접 생성
+- **적 핸드 시스템 제거**: 적 핸드 매니저 없이 대기 슬롯에서 직접 관리
+- **타입 안전성 강화**: `ICharacterData`를 `EnemyCharacterData`로 캐스팅하여 안전한 프로퍼티 접근
+- **의존성 주입 확장**: `ITurnCardRegistry`, `ISkillCardFactory` 의존성 추가
 
 ## 🏗️ 폴더 구조
 ```
@@ -80,6 +86,60 @@ stageManager.GiveBossRewards();
 stageManager.GiveStageCompletionRewards();
 ```
 
+### 적 카드 직접 생성 시스템 사용법 (신규)
+```csharp
+// StageManager에서 적 스폰과 함께 카드 생성
+public IEnumerator SpawnNextEnemyCoroutine()
+{
+    // 적 캐릭터 스폰
+    var result = spawnerManager.SpawnEnemy(enemyData);
+    if (result.IsSuccess)
+    {
+        // 적 캐릭터 등록
+        RegisterEnemy(result.Enemy);
+        
+        // 적 카드를 WAIT_SLOT_4에 직접 생성
+        SpawnEnemyCardToWaitSlot4(result.Enemy);
+    }
+}
+
+// 적 카드 직접 생성 메서드
+private void SpawnEnemyCardToWaitSlot4(IEnemyCharacter enemy)
+{
+    // EnemyCharacterData로 캐스팅하여 EnemyDeck에 접근
+    if (!(enemy?.CharacterData is EnemyCharacterData enemyData) || enemyData.EnemyDeck == null)
+    {
+        Debug.LogWarning("[StageManager] 적 스킬 덱이 없습니다.");
+        return;
+    }
+
+    // 적 덱에서 랜덤 카드 선택
+    var enemyDeck = enemyData.EnemyDeck;
+    var randomEntry = enemyDeck.GetRandomEntry();
+    
+    if (randomEntry?.definition == null)
+    {
+        Debug.LogWarning("[StageManager] 적 덱에서 카드를 선택할 수 없습니다.");
+        return;
+    }
+
+    // 적 카드 생성
+    var enemyCard = cardFactory.CreateFromDefinition(
+        randomEntry.definition,
+        Owner.Enemy,
+        enemyData.CharacterName
+    );
+
+    // WAIT_SLOT_4에 카드 등록
+    turnCardRegistry.RegisterCard(
+        CombatSlotPosition.WAIT_SLOT_4,
+        enemyCard,
+        null, // UI는 나중에 생성
+        SlotOwner.ENEMY
+    );
+}
+```
+
 ## 📊 주요 클래스 및 메서드
 
 ### StageManager 클래스
@@ -96,6 +156,7 @@ stageManager.GiveStageCompletionRewards();
 - **GiveStageCompletionRewards()**: 스테이지 완료 보상 지급
 - **SetCurrentRewards(StageRewardData rewards)**: 현재 보상 데이터 설정
 - **GetCurrentRewards()**: 현재 보상 데이터 조회
+- **SpawnEnemyCardToWaitSlot4(IEnemyCharacter enemy)**: 적 카드를 WAIT_SLOT_4에 직접 생성 (신규)
 - **CurrentPhase**: 현재 스테이지 단계 (프로퍼티)
 - **ProgressState**: 현재 스테이지 진행 상태 (프로퍼티)
 - **IsSubBossDefeated**: 준보스 처치 여부 (프로퍼티)
@@ -265,3 +326,4 @@ sequenceDiagram
 - 2025-01-27 | Maintainer | StageSystem 개발 문서 초기 작성 | 문서
 - 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 파일 수 정정 | 문서
 - 2025-01-27 | Maintainer | 실제 코드 분석 기반 주요 클래스 및 메서드 정보 추가 | 문서
+- 2025-01-27 | Maintainer | 적 카드 직접 생성 시스템 구현, 타입 안전성 강화, 의존성 주입 확장 완료 | 코드/문서

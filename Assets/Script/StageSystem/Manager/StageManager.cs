@@ -9,6 +9,11 @@ using Game.StageSystem.Data;
 using Game.StageSystem.Interface;
 using Zenject;
 using Game.CombatSystem.Utility;
+using Game.SkillCardSystem.Data;
+using Game.SkillCardSystem.Factory;
+using Game.SkillCardSystem.Interface;
+using Game.CombatSystem.Slot;
+using Game.CombatSystem.Data;
 
 namespace Game.StageSystem.Manager
 {
@@ -49,6 +54,8 @@ namespace Game.StageSystem.Manager
         [Inject] private IEnemyManager enemyManager;
         [Inject] private IEnemySpawnValidator spawnValidator;
         [Inject] private ICharacterDeathListener deathListener;
+        [Inject] private ITurnCardRegistry turnCardRegistry;
+        [Inject] private ISkillCardFactory cardFactory;
 
         #endregion
 
@@ -93,6 +100,10 @@ namespace Game.StageSystem.Manager
                 yield break;
             }
             RegisterEnemy(result.Enemy);
+            
+            // 적 카드를 WAIT_SLOT_4에 직접 생성
+            SpawnEnemyCardToWaitSlot4(result.Enemy);
+            
             currentEnemyIndex++;
             isSpawning = false;
         }
@@ -113,6 +124,60 @@ namespace Game.StageSystem.Manager
             enemyManager.RegisterEnemy(enemy);
             if (enemy is EnemyCharacter concrete && deathListener != null)
                 concrete.SetDeathListener(deathListener);
+        }
+
+        /// <summary>
+        /// 적 카드를 WAIT_SLOT_4에 직접 생성합니다.
+        /// 적 핸드 시스템 없이 대기 슬롯에서 직접 관리됩니다.
+        /// </summary>
+        private void SpawnEnemyCardToWaitSlot4(IEnemyCharacter enemy)
+        {
+            // EnemyCharacterData로 캐스팅하여 EnemyDeck에 접근
+            if (!(enemy?.CharacterData is EnemyCharacterData enemyData) || enemyData.EnemyDeck == null)
+            {
+                Debug.LogWarning("[StageManager] 적 스킬 덱이 없습니다.");
+                return;
+            }
+
+            if (turnCardRegistry == null || cardFactory == null)
+            {
+                Debug.LogWarning("[StageManager] 필요한 의존성이 주입되지 않았습니다.");
+                return;
+            }
+
+            try
+            {
+                // 적 덱에서 랜덤 카드 선택
+                var enemyDeck = enemyData.EnemyDeck;
+                var randomEntry = enemyDeck.GetRandomEntry();
+                
+                if (randomEntry?.definition == null)
+                {
+                    Debug.LogWarning("[StageManager] 적 덱에서 카드를 선택할 수 없습니다.");
+                    return;
+                }
+
+                // 적 카드 생성
+                var enemyCard = cardFactory.CreateFromDefinition(
+                    randomEntry.definition,
+                    Owner.Enemy,
+                    enemyData.CharacterName
+                );
+
+                // WAIT_SLOT_4에 카드 등록
+                turnCardRegistry.RegisterCard(
+                    CombatSlotPosition.WAIT_SLOT_4,
+                    enemyCard,
+                    null, // UI는 나중에 생성
+                    SlotOwner.ENEMY
+                );
+
+                Debug.Log($"[StageManager] 적 카드 생성 완료: {enemyCard.GetCardName()} → WAIT_SLOT_4");
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"[StageManager] 적 카드 생성 실패: {ex.Message}");
+            }
         }
 
         /// <summary>

@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 7108402241666552278}
   - component: {fileID: 6515069228709645013}
-  - component: {fileID: 4088457067113692024}
   - component: {fileID: -4247973713695969958}
   m_Layer: 5
   m_Name: PlayerCharacterCard
@@ -58,21 +57,8 @@ MonoBehaviour:
   descriptionText: {fileID: 0}
   hpTextAnchor: {fileID: 3110135411923897481}
   damageTextPrefab: {fileID: 6781140808306196491, guid: e5df9cbbbb6c8344787434930ac5ec5b, type: 3}
---- !u!114 &4088457067113692024
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3064394028095851597}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5988b34a720b55c4499dd9ececd298c6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  nameText: {fileID: 8289530968991228569}
-  hpText: {fileID: 4820315423849995655}
-  portraitImage: {fileID: 4212231588447136040}
+  hpBarController: {fileID: 0}
+  playerCharacterUIController: {fileID: 0}
 --- !u!225 &-4247973713695969958
 CanvasGroup:
   m_ObjectHideFlags: 0

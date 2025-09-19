@@ -20,15 +20,7 @@ namespace Game.SaveSystem.Data
 
         #endregion
 
-        #region 적 핸드카드
-
-        /// <summary>
-        /// 적 핸드카드 (슬롯별 + 순서 중요)
-        /// </summary>
-        [Header("적 핸드카드")]
-        public List<CardSlotData> enemyHandSlots = new();
-
-        #endregion
+        // 적 핸드카드 관련 필드 제거됨 - 적 카드는 대기 슬롯에서 직접 관리
 
         #region 전투 슬롯에 배치된 카드
 
@@ -48,15 +40,10 @@ namespace Game.SaveSystem.Data
         #region 카드 순환 시스템 상태
 
         /// <summary>
-        /// 미사용 카드들 (Unused Storage)
+        /// 카드 순환 상태 (보관함 시스템 제거됨)
         /// </summary>
-        [Header("카드 순환 상태")]
-        public List<string> unusedStorageCards = new();
-
-        /// <summary>
-        /// 사용된 카드들 (Used Storage)
-        /// </summary>
-        public List<string> usedStorageCards = new();
+        [Header("카드 순환 상태 (보관함 시스템 제거됨)")]
+        // unusedStorageCards와 usedStorageCards 필드가 제거되었습니다.
 
         #endregion
 
@@ -118,13 +105,7 @@ namespace Game.SaveSystem.Data
             return playerHandSlots != null && playerHandSlots.Count > 0;
         }
 
-        /// <summary>
-        /// 적 핸드카드가 있는지 확인
-        /// </summary>
-        public bool HasEnemyHandCards()
-        {
-            return enemyHandSlots != null && enemyHandSlots.Count > 0;
-        }
+        // 적 핸드카드 확인 메서드 제거됨 - 적 카드는 대기 슬롯에서 직접 관리
 
         /// <summary>
         /// 전투 슬롯에 카드가 배치되어 있는지 확인
@@ -135,12 +116,12 @@ namespace Game.SaveSystem.Data
         }
 
         /// <summary>
-        /// 카드 순환 시스템 상태가 있는지 확인
+        /// 카드 순환 시스템 상태가 있는지 확인 (보관함 시스템 제거됨)
         /// </summary>
         public bool HasCardCirculationState()
         {
-            return (unusedStorageCards != null && unusedStorageCards.Count > 0) ||
-                   (usedStorageCards != null && usedStorageCards.Count > 0);
+            // 보관함 시스템이 제거되어 항상 false 반환
+            return false;
         }
 
         #endregion

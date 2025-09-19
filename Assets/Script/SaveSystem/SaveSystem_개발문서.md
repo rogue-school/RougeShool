@@ -4,6 +4,10 @@
 SaveSystem은 게임의 저장/로드 기능을 관리하는 시스템입니다. 슬레이 더 스파이어 방식의 턴 기반 자동 저장 시스템을 제공합니다. CoreSystem에 통합되어 전역적으로 관리되며, ICoreSystemInitializable 인터페이스를 구현하여 자동 초기화됩니다.
 
 ### 최근 변경(요약)
+- **적 핸드 매니저 시스템 제거 완료**: `IEnemyHandManager` 관련 저장/복원 로직 완전 제거
+- **적 카드 직접 생성 시스템 반영**: 적 카드는 핸드 없이 대기 슬롯에서 직접 관리되므로 저장 시스템 간소화
+- **저장 데이터 구조 간소화**: `enemyHandSlots` 필드 제거, 대기 슬롯 상태만 저장/복원
+- **인터페이스 간소화**: `ICardStateCollector`, `ICardStateRestorer`에서 적 핸드 관련 메서드 제거
 - **CoreSystem 통합**: SaveManager가 CoreSystem의 일부로 통합 관리 완료
 - **Zenject DI 통합**: SaveManager가 의존성 주입으로 전환 완료
 - **자동 초기화**: ICoreSystemInitializable 인터페이스 구현으로 자동 초기화 완료
@@ -87,15 +91,15 @@ SaveSystem/ (새로운 구조)
 
 ### CompleteCardStateData 클래스
 - **playerHandSlots**: 플레이어 핸드카드 슬롯 목록 (프로퍼티)
-- **enemyHandSlots**: 적 핸드카드 슬롯 목록 (프로퍼티)
 - **firstSlotCard**: 첫 번째 전투 슬롯 카드 (프로퍼티)
 - **secondSlotCard**: 두 번째 전투 슬롯 카드 (프로퍼티)
-- **unusedStorageCards**: 미사용 카드 저장소 (프로퍼티)
-- **usedStorageCards**: 사용된 카드 저장소 (프로퍼티)
+- **unusedStorageCards**: 미사용 카드 저장소 (프로퍼티) - 보관함 시스템 제거됨
+- **usedStorageCards**: 사용된 카드 저장소 (프로퍼티) - 보관함 시스템 제거됨
 - **isPlayerFirst**: 플레이어 선공 여부 (프로퍼티)
 - **IsValid()**: 데이터 유효성 검증
 - **GetSaveTime()**: 저장 시간 반환
 - **SetSaveTime()**: 저장 시간 설정
+- **적 핸드 관련 필드 제거됨**: `enemyHandSlots` 필드 제거, 적 카드는 대기 슬롯에서 직접 관리
 
 ### AutoSaveCondition 클래스
 - **conditionName**: 조건 이름 (프로퍼티)
@@ -420,3 +424,4 @@ sequenceDiagram
 - 2025-01-27 | Maintainer | SaveSystem 개발 문서 초기 작성 | 문서
 - 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 파일 수 정정 | 문서
 - 2025-01-27 | Maintainer | 실제 코드 분석 기반 구체적 클래스/메서드/데이터 구조 정보 추가 | 문서
+- 2025-01-27 | Maintainer | 적 핸드 매니저 시스템 제거, 저장 데이터 구조 간소화, 인터페이스 간소화 완료 | 코드/문서
