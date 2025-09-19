@@ -29,28 +29,26 @@ namespace Game.CharacterSystem.UI
         [Tooltip("캐릭터 이름 텍스트")]
         [SerializeField] private TextMeshProUGUI characterNameText;
 
-        [Header("HP/MP 바 시스템")]
+        [Header("HP/Resource 바 시스템")]
         [Tooltip("HP 바 배경")]
         [SerializeField] private Image hpBarBackground;
         
         [Tooltip("HP 바 채움 부분")]
         [SerializeField] private Image hpBarFill;
         
-        [Tooltip("MP/리소스 바 배경")]
-        [SerializeField] private Image mpBarBackground;
+        [Tooltip("Resource 바 배경")]
+        [SerializeField] private Image resourceBarBackground;
         
-        [Tooltip("MP/리소스 바 채움 부분")]
-        [SerializeField] private Image mpBarFill;
+        [Tooltip("Resource 바 채움 부분")]
+        [SerializeField] private Image resourceBarFill;
         
-        [Tooltip("리소스가 없는 캐릭터용 빈 공간 이미지")]
-        [SerializeField] private Image emptyResourceImage;
 
-        [Header("HP/MP 텍스트")]
+        [Header("HP/Resource 텍스트")]
         [Tooltip("HP 텍스트 (현재/최대)")]
         [SerializeField] private TextMeshProUGUI hpText;
         
-        [Tooltip("MP/리소스 텍스트 (현재/최대)")]
-        [SerializeField] private TextMeshProUGUI mpText;
+        [Tooltip("Resource 텍스트 (현재/최대)")]
+        [SerializeField] private TextMeshProUGUI resourceText;
 
         [Header("버프/디버프 아이콘")]
         [Tooltip("버프/디버프 아이콘들을 담을 부모 오브젝트")]
@@ -84,12 +82,12 @@ namespace Game.CharacterSystem.UI
         #region Private Fields
 
         private PlayerCharacter playerCharacter;
-        [Inject] private PlayerResourceManager resourceManager;
+        [InjectOptional] private PlayerResourceManager resourceManager;
         private PlayerCharacterType characterType;
         
         // 애니메이션 관련
         private Tween hpBarTween;
-        private Tween mpBarTween;
+        private Tween resourceBarTween;
         private Tween colorTween;
         
         // 버프/디버프 아이콘 관리
@@ -113,7 +111,7 @@ namespace Game.CharacterSystem.UI
         {
             // DOTween 정리
             hpBarTween?.Kill();
-            mpBarTween?.Kill();
+            resourceBarTween?.Kill();
             colorTween?.Kill();
         }
 
@@ -130,11 +128,9 @@ namespace Game.CharacterSystem.UI
             if (hpBarFill != null)
                 hpBarFill.fillAmount = 1f;
             
-            if (mpBarFill != null)
-                mpBarFill.fillAmount = 1f;
+            if (resourceBarFill != null)
+                resourceBarFill.fillAmount = 1f;
             
-            if (emptyResourceImage != null)
-                emptyResourceImage.gameObject.SetActive(false);
         }
 
         /// <summary>
@@ -237,23 +233,21 @@ namespace Game.CharacterSystem.UI
         /// </summary>
         private void SetupResourceSystem()
         {
-            if (mpBarBackground == null || mpBarFill == null || emptyResourceImage == null) return;
+            if (resourceBarBackground == null || resourceBarFill == null) return;
 
             switch (characterType)
             {
                 case PlayerCharacterType.Sword:
-                    // 검 캐릭터는 리소스 없음
-                    mpBarBackground.gameObject.SetActive(false);
-                    mpBarFill.gameObject.SetActive(false);
-                    emptyResourceImage.gameObject.SetActive(true);
+                    // 검 캐릭터는 리소스 없음 - 리소스 바 숨김
+                    resourceBarBackground.gameObject.SetActive(false);
+                    resourceBarFill.gameObject.SetActive(false);
                     break;
                     
                 case PlayerCharacterType.Bow:
                 case PlayerCharacterType.Staff:
-                    // 활/지팡이 캐릭터는 리소스 있음
-                    mpBarBackground.gameObject.SetActive(true);
-                    mpBarFill.gameObject.SetActive(true);
-                    emptyResourceImage.gameObject.SetActive(false);
+                    // 활/지팡이 캐릭터는 리소스 있음 - 리소스 바 표시
+                    resourceBarBackground.gameObject.SetActive(true);
+                    resourceBarFill.gameObject.SetActive(true);
                     break;
             }
         }
@@ -350,37 +344,37 @@ namespace Game.CharacterSystem.UI
 
             float mpRatio = (float)currentResource / maxResource;
             
-            // MP 바 애니메이션
-            AnimateMPBar(mpRatio);
+            // Resource 바 애니메이션
+            AnimateResourceBar(mpRatio);
             
-            // MP 텍스트 업데이트
-            UpdateMPText(currentResource, maxResource);
+            // Resource 텍스트 업데이트
+            UpdateResourceText(currentResource, maxResource);
         }
 
         /// <summary>
-        /// MP 바 애니메이션을 실행합니다.
+        /// Resource 바 애니메이션을 실행합니다.
         /// </summary>
         /// <param name="targetRatio">목표 비율</param>
-        private void AnimateMPBar(float targetRatio)
+        private void AnimateResourceBar(float targetRatio)
         {
-            if (mpBarFill == null) return;
+            if (resourceBarFill == null) return;
             
-            mpBarTween?.Kill();
-            mpBarTween = DOTween.To(() => mpBarFill.fillAmount, x => mpBarFill.fillAmount = x, 
+            resourceBarTween?.Kill();
+            resourceBarTween = DOTween.To(() => resourceBarFill.fillAmount, x => resourceBarFill.fillAmount = x, 
                 targetRatio, 1f / barAnimationSpeed);
         }
 
         /// <summary>
-        /// MP 텍스트를 업데이트합니다.
+        /// Resource 텍스트를 업데이트합니다.
         /// </summary>
         /// <param name="current">현재 리소스</param>
         /// <param name="max">최대 리소스</param>
-        private void UpdateMPText(int current, int max)
+        private void UpdateResourceText(int current, int max)
         {
-            if (mpText != null)
+            if (resourceText != null)
             {
                 string resourceName = GetResourceName();
-                mpText.text = $"{current}/{max}";
+                resourceText.text = $"{current}/{max}";
             }
         }
 
@@ -518,8 +512,8 @@ namespace Game.CharacterSystem.UI
             if (hpText != null)
                 hpText.text = "";
             
-            if (mpText != null)
-                mpText.text = "";
+            if (resourceText != null)
+                resourceText.text = "";
             
             // 이미지 초기화
             if (characterPortrait != null)
@@ -532,8 +526,8 @@ namespace Game.CharacterSystem.UI
             if (hpBarFill != null)
                 hpBarFill.fillAmount = 1f;
             
-            if (mpBarFill != null)
-                mpBarFill.fillAmount = 1f;
+            if (resourceBarFill != null)
+                resourceBarFill.fillAmount = 1f;
             
             // 버프/디버프 아이콘 초기화
             ClearAllBuffDebuffIcons();

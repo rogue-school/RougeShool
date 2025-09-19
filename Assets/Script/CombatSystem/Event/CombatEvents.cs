@@ -59,8 +59,6 @@ namespace Game.CombatSystem
         public static event Action OnTurnEnded;
         // 첫 번째 공격 시작
         public static event Action OnFirstAttackStarted;
-        // 두 번째 공격 시작
-        public static event Action OnSecondAttackStarted;
         // 공격 결과 처리
         public static event Action OnAttackResultProcessed;
         #endregion
@@ -117,7 +115,6 @@ namespace Game.CombatSystem
         public static void RaiseTurnStarted() => OnTurnStarted?.Invoke();
         public static void RaiseTurnEnded() => OnTurnEnded?.Invoke();
         public static void RaiseFirstAttackStarted() => OnFirstAttackStarted?.Invoke();
-        public static void RaiseSecondAttackStarted() => OnSecondAttackStarted?.Invoke();
         public static void RaiseAttackResultProcessed() => OnAttackResultProcessed?.Invoke();
 
         // 전투 결과 관련

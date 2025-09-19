@@ -38,7 +38,6 @@ namespace Game.CombatSystem.Manager
         [Inject] private IPlayerHandManager playerHandManager;
         // 적 핸드 시스템 제거
         [Inject] private ITurnCardRegistry turnCardRegistry;
-        [Inject] private ICombatPreparationService preparationService;
         [Inject] private ISlotRegistry slotRegistry;
         [Inject] private ICardExecutor cardExecutor;
         [Inject] private ICoroutineRunner coroutineRunner;
@@ -83,7 +82,33 @@ namespace Game.CombatSystem.Manager
 
         public void StartCombatFlow()
         {
+            Debug.Log("[CombatFlowCoordinator] 전투 시작");
             DisableStartButton();
+            
+            // turnManager null 체크
+            if (turnManager == null)
+            {
+                Debug.LogError("[CombatFlowCoordinator] turnManager가 null입니다. DI 바인딩을 확인해주세요.");
+                return;
+            }
+            
+            // StateFactory null 체크
+            var stateFactory = turnManager.GetStateFactory();
+            if (stateFactory == null)
+            {
+                Debug.LogError("[CombatFlowCoordinator] StateFactory가 null입니다. turnManager 초기화를 확인해주세요.");
+                return;
+            }
+            
+            // CombatPrepareState로 전환하여 전투 시작 시퀀스 실행
+            var prepareState = stateFactory.CreatePrepareState();
+            if (prepareState == null)
+            {
+                Debug.LogError("[CombatFlowCoordinator] CombatPrepareState 생성에 실패했습니다.");
+                return;
+            }
+            
+            turnManager.RequestStateChange(prepareState);
         }
 
         #endregion
@@ -108,13 +133,6 @@ namespace Game.CombatSystem.Manager
 
         #region 인터페이스 구현
 
-        /// <summary>
-        /// 전투 준비 루틴을 실행합니다. (인터페이스 구현)
-        /// </summary>
-        public void RequestCombatPreparation(Action<bool> onComplete)
-        {
-            StartCoroutine(PerformCombatPreparation(onComplete));
-        }
 
         public void RegisterCardToTurnRegistry(CombatSlotPosition pos, ISkillCard card, ISkillCardUI ui)
         {
@@ -132,33 +150,6 @@ namespace Game.CombatSystem.Manager
             yield return RegisterCardToCombatSlotCoroutine(pos, card, ui as SkillCardUI); // 다운캐스팅 유의
         }
 
-        public IEnumerator PerformCombatPreparation() => PerformCombatPreparation(_ => { });
-
-        public IEnumerator PerformCombatPreparation(Action<bool> onComplete)
-        {
-            if (!slotRegistry.IsInitialized)
-            {
-                Debug.LogError("[CombatFlowCoordinator] 슬롯 레지스트리가 아직 초기화되지 않았습니다.");
-                onComplete?.Invoke(false);
-                yield break;
-            }
-
-            var enemy = enemyManager.GetEnemy();
-            if (enemy == null)
-            {
-                Debug.LogWarning("[CombatFlowCoordinator] 적이 존재하지 않습니다.");
-                onComplete?.Invoke(false);
-                yield break;
-            }
-
-            yield return new WaitForSeconds(0.5f);
-
-            IsEnemyFirst = UnityEngine.Random.value < 0.5f;
-            var slotToRegister = IsEnemyFirst ? CombatSlotPosition.BATTLE_SLOT : CombatSlotPosition.WAIT_SLOT_1;
-            // 적 핸드 시스템 제거: 셋업 등록은 외부 서비스로 대체되거나 스킵
-            yield return null;
-            onComplete?.Invoke(true);
-        }
 
         #endregion
 
@@ -377,35 +368,6 @@ namespace Game.CombatSystem.Manager
             onComplete?.Invoke();
         }
 
-        public IEnumerator PerformSecondAttack()
-        {
-            CombatEvents.RaiseSecondAttackStarted();
-            var secondCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.WAIT_SLOT_1);
-            var firstCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.BATTLE_SLOT);
-
-            if (firstCard != null && firstCard.IsFromPlayer())
-            {
-                foreach (var effect in firstCard.CreateEffects())
-                {
-                    // GuardEffectSO 관련 로직은 일시적으로 주석 처리
-                    // if (effect is GuardEffectSO)
-                    // {
-                    //     if (secondCard != null && !secondCard.IsFromPlayer())
-                    //     {
-                    //         slotRegistry.GetCombatSlot(CombatSlotPosition.SLOT_2)?.ClearAll();
-                    //         yield break;
-                    //     }
-                    // }
-                }
-            }
-
-            if (secondCard != null)
-            {
-                ExecuteCard(secondCard);
-            }
-
-            yield return new WaitForSeconds(1f);
-        }
 
         /// <summary>
         /// 카드 실행 및 사망 여부 검사
@@ -500,8 +462,6 @@ namespace Game.CombatSystem.Manager
             }
         }
 
-        // 적 핸드 시스템 제거: 안전 클리어는 더 이상 필요 없음
-        public IEnumerator ClearEnemyHandSafely() { yield break; }
 
         #endregion
 
@@ -668,7 +628,8 @@ namespace Game.CombatSystem.Manager
         // ICombatFlowCoordinator 인터페이스 구현: 전투 승리 후 상태 정리
         public IEnumerator CleanupAfterVictory()
         {
-            yield return ClearEnemyHandSafely();
+            // 적 핸드 시스템이 제거되어 더 이상 정리할 것이 없음
+            yield return null;
         }
 
         /// <summary>
@@ -679,6 +640,27 @@ namespace Game.CombatSystem.Manager
         {
             IsEnemyFirst = isEnemyFirst;
             Debug.Log($"[CombatFlowCoordinator] 적 선공 설정: {IsEnemyFirst}");
+        }
+        
+        /// <summary>
+        /// 저장된 전투 상태를 복원합니다.
+        /// 이어하기 기능을 위해 사용됩니다.
+        /// </summary>
+        public System.Collections.IEnumerator ResumeCombatFromSave()
+        {
+            Debug.Log("[CombatFlowCoordinator] 저장된 전투 상태 복원 시작");
+            
+            // TODO: 실제 저장된 데이터 로드 및 복원 로직 구현
+            // 1. 저장된 캐릭터 상태 복원
+            // 2. 저장된 슬롯 상태 복원
+            // 3. 저장된 턴 상태 복원
+            // 4. 저장된 카드 상태 복원
+            
+            // 임시로 새 전투 시작 (실제 구현 시 저장된 상태로 복원)
+            Debug.Log("[CombatFlowCoordinator] 임시로 새 전투 시작 (실제 구현 필요)");
+            StartCombatFlow();
+            
+            yield return null;
         }
     }
 }

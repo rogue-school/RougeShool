@@ -414,6 +414,25 @@ namespace Game.CoreSystem.Save
 				GameLogger.LogError($"플레이어 덱 구성 삭제 실패: {ex.Message}", GameLogger.LogCategory.Error);
 			}
 		}
+		
+		/// <summary>
+		/// 저장된 전투 데이터가 있는지 확인합니다.
+		/// 이어하기 기능을 위해 사용됩니다.
+		/// </summary>
+		public bool HasCombatSaveData()
+		{
+			try
+			{
+				// 저장된 전투 데이터 키 확인 (예: 최근 저장된 전투 상태)
+				string combatSaveKey = "CombatSaveData_Recent";
+				return PlayerPrefs.HasKey(combatSaveKey) && !string.IsNullOrEmpty(PlayerPrefs.GetString(combatSaveKey));
+			}
+			catch (System.Exception ex)
+			{
+				GameLogger.LogError($"전투 저장 데이터 확인 실패: {ex.Message}", GameLogger.LogCategory.Error);
+				return false;
+			}
+		}
 		#endregion
 	}
 	

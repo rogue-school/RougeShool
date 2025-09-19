@@ -46,8 +46,8 @@ namespace Game.CombatSystem.Intialization
             turnManager.Initialize();
             flowCoordinator.InjectTurnStateDependencies(turnManager, stateFactory);
 
-            // 전투 준비 수행
-            yield return flowCoordinator.PerformCombatPreparation();
+            // 전투 준비는 CombatStartupManager에서 처리됨
+            yield return null;
 
             Debug.Log("<color=cyan>[FlowCoordinatorInitializationStep] 전투 준비 성공</color>");
 

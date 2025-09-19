@@ -26,17 +26,6 @@ namespace Game.CombatSystem.Utility
                 _ => CombatFieldSlotPosition.NONE
             };
 
-        // [Obsolete]
-        [System.Obsolete("4-슬롯 표준: 적 핸드 슬롯 변환은 사용하지 않음" )]
-        public static SkillCardSlotPosition ToEnemyHandSlot(CombatFieldSlotPosition position)
-        {
-            return position switch
-            {
-                CombatFieldSlotPosition.FIELD_LEFT => SkillCardSlotPosition.ENEMY_SLOT_1,
-                CombatFieldSlotPosition.FIELD_RIGHT => SkillCardSlotPosition.ENEMY_SLOT_2,
-                _ => SkillCardSlotPosition.ENEMY_SLOT_1
-            };
-        }
         public static CombatSlotPosition ToCombatSlot(SkillCardSlotPosition slot)
         {
             return slot switch

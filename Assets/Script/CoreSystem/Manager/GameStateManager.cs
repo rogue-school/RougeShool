@@ -35,6 +35,12 @@ namespace Game.CoreSystem.Manager
             this.sceneTransitionManager = sceneTransitionManager;
         }
         
+        private void Awake()
+        {
+            // 씬 전환 시에도 선택된 캐릭터 등 상태 유지
+            DontDestroyOnLoad(gameObject);
+        }
+        
         /// <summary>
         /// 게임 상태 변경
         /// </summary>

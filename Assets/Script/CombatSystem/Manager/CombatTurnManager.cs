@@ -37,10 +37,6 @@ namespace Game.CombatSystem.Manager
     /// </summary>
     public enum CombatPhase
     {
-        /// <summary>
-        /// 셋업 단계 (전투 시작 전 카드 배치)
-        /// </summary>
-        Setup,
         
         /// <summary>
         /// 전투 단계 (카드 실행 및 턴 진행)
@@ -74,24 +70,14 @@ namespace Game.CombatSystem.Manager
         private int currentTurn = 1;
 
         // 새로운 5슬롯 시스템을 위한 상태
-        private CombatPhase currentPhase = CombatPhase.Setup;
-        private int setupStep = 0; // 셋업 단계 (0~8)
-        private bool isSetupComplete = false;
+        private CombatPhase currentPhase = CombatPhase.Battle;
 
         /// <summary>
         /// 턴 시작 가능 상태가 변경될 때 발생하는 이벤트입니다.
         /// </summary>
         public event Action<bool> OnTurnReadyChanged;
 
-        /// <summary>
-        /// 전투 단계가 변경될 때 발생하는 이벤트입니다.
-        /// </summary>
-        public event Action<CombatPhase> OnCombatPhaseChanged;
 
-        /// <summary>
-        /// 셋업 단계가 진행될 때 발생하는 이벤트입니다.
-        /// </summary>
-        public event Action<int> OnSetupStepChanged;
 
         #endregion
 
@@ -384,73 +370,6 @@ namespace Game.CombatSystem.Manager
             return currentPhase;
         }
 
-        /// <summary>
-        /// 현재 셋업 단계를 반환합니다.
-        /// </summary>
-        /// <returns>현재 셋업 단계 (0~8)</returns>
-        public int GetCurrentSetupStep()
-        {
-            return setupStep;
-        }
-
-        /// <summary>
-        /// 셋업이 완료되었는지 확인합니다.
-        /// </summary>
-        /// <returns>셋업 완료 여부</returns>
-        public bool IsSetupComplete()
-        {
-            return isSetupComplete;
-        }
-
-        /// <summary>
-        /// 셋업 단계를 시작합니다.
-        /// </summary>
-        public void StartSetupPhase()
-        {
-            currentPhase = CombatPhase.Setup;
-            setupStep = 0;
-            isSetupComplete = false;
-            
-            Debug.Log("[CombatTurnManager] 셋업 단계 시작");
-            OnCombatPhaseChanged?.Invoke(currentPhase);
-            OnSetupStepChanged?.Invoke(setupStep);
-        }
-
-        /// <summary>
-        /// 셋업 단계에서 다음 단계로 진행합니다.
-        /// </summary>
-        /// <param name="slotPosition">카드를 배치할 슬롯 위치</param>
-        /// <param name="cardOwner">카드 소유자</param>
-        public void ProceedSetupStep(CombatSlotPosition slotPosition, SlotOwner cardOwner)
-        {
-            if (currentPhase != CombatPhase.Setup || isSetupComplete)
-            {
-                Debug.LogWarning("[CombatTurnManager] 셋업 단계가 아니거나 이미 완료되었습니다.");
-                return;
-            }
-
-            setupStep++;
-            Debug.Log($"[CombatTurnManager] 셋업 단계 {setupStep}: {slotPosition}에 {cardOwner} 카드 배치");
-            OnSetupStepChanged?.Invoke(setupStep);
-
-            // 셋업 완료 조건 확인 (전투슬롯에 카드 배치)
-            if (slotPosition == CombatSlotPosition.BATTLE_SLOT)
-            {
-                CompleteSetup();
-            }
-        }
-
-        /// <summary>
-        /// 셋업을 완료하고 전투 단계로 전환합니다.
-        /// </summary>
-        private void CompleteSetup()
-        {
-            isSetupComplete = true;
-            currentPhase = CombatPhase.Battle;
-            
-            Debug.Log("[CombatTurnManager] 셋업 완료 - 전투 단계 시작");
-            OnCombatPhaseChanged?.Invoke(currentPhase);
-        }
 
         /// <summary>
         /// 새로운 5슬롯 시스템에서 현재 턴 타입을 반환합니다.
@@ -458,11 +377,6 @@ namespace Game.CombatSystem.Manager
         /// <returns>턴 타입 (Player, Enemy, Unknown)</returns>
         public TurnType GetCurrentTurnTypeNew()
         {
-            if (currentPhase == CombatPhase.Setup)
-            {
-                // 셋업 단계에서는 플레이어부터 시작
-                return TurnType.Player;
-            }
 
             if (currentPhase == CombatPhase.Battle)
             {
@@ -505,11 +419,6 @@ namespace Game.CombatSystem.Manager
         /// <returns>턴 진행 가능 여부</returns>
         public bool CanProceedTurn()
         {
-            if (currentPhase == CombatPhase.Setup)
-            {
-                return !isSetupComplete;
-            }
-
             if (currentPhase == CombatPhase.Battle)
             {
                 // 전투슬롯에 카드가 있으면 턴 진행 가능

@@ -63,7 +63,6 @@ namespace Game.CombatSystem.State
                 Game.CombatSystem.CombatEvents.RaiseHandSkillCardsVanishOnCharacterDeath(false);
 
                 flowCoordinator.RemoveEnemyCharacter();
-                yield return flowCoordinator.ClearEnemyHandSafely();
                 yield return new WaitForSeconds(0.2f);
 
                 if (!flowCoordinator.CheckHasNextEnemy())

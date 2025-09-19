@@ -21,19 +21,5 @@ namespace Game.SkillCardSystem.Slot
         /// </summary>
         PLAYER_SLOT_3,
 
-        /// <summary>
-        /// 적의 첫 번째 슬롯 (오른쪽)
-        /// </summary>
-        ENEMY_SLOT_1,
-
-        /// <summary>
-        /// 적의 두 번째 슬롯 (중앙)
-        /// </summary>
-        ENEMY_SLOT_2,
-
-        /// <summary>
-        /// 적의 세 번째 슬롯 (왼쪽)
-        /// </summary>
-        ENEMY_SLOT_3
     }
 }

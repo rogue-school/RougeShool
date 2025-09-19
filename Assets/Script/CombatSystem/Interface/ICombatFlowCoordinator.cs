@@ -18,27 +18,12 @@ namespace Game.CombatSystem.Interface
         IEnumerator RegisterCardToCombatSlotCoroutine(CombatSlotPosition pos, ISkillCard card, ISkillCardUI ui);
         IEnumerator RegisterCardToCombatSlotAsync(CombatSlotPosition pos, ISkillCard card, SkillCardUI ui);
 
-        /// <summary>
-        /// 슬롯 초기화, 캐릭터 배치 등 전투 준비 절차를 수행합니다.
-        /// </summary>
-        IEnumerator PerformCombatPreparation();
-
-        /// <summary>
-        /// 전투 준비 완료 후 콜백을 실행하는 비동기 초기화 메서드입니다.
-        /// </summary>
-        /// <param name="onComplete">전투 준비 완료 시 호출될 콜백</param>
-        IEnumerator PerformCombatPreparation(Action<bool> onComplete);
 
         /// <summary>
         /// 전투 흐름을 시작합니다. (상태 초기화 포함)
         /// </summary>
         void StartCombatFlow();
 
-        /// <summary>
-        /// 비동기 방식으로 전투 준비를 요청합니다.
-        /// </summary>
-        /// <param name="onComplete">준비 완료 후 호출될 콜백</param>
-        void RequestCombatPreparation(Action<bool> onComplete);
 
         /// <summary>
         /// 턴 상태 매니저와 상태 팩토리를 주입합니다.
@@ -54,10 +39,6 @@ namespace Game.CombatSystem.Interface
         /// </summary>
         IEnumerator PerformFirstAttack();
 
-        /// <summary>
-        /// 후공 캐릭터의 카드 실행 절차를 수행합니다.
-        /// </summary>
-        IEnumerator PerformSecondAttack();
 
         /// <summary>
         /// 공격 후 결과를 처리합니다. (체력 감소, 사망 처리 등)
@@ -114,10 +95,6 @@ namespace Game.CombatSystem.Interface
         /// </summary>
         void RemoveEnemyCharacter();
 
-        /// <summary>
-        /// 적의 핸드 슬롯을 초기화합니다.
-        /// </summary>
-        IEnumerator ClearEnemyHandSafely();
 
         /// <summary>
         /// 적 전투 슬롯에 등록된 카드만 제거합니다.

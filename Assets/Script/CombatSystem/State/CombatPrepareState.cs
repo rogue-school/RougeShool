@@ -8,6 +8,7 @@ using Game.UtilitySystem;
 using Game.CoreSystem.Utility;
 using Game.CombatSystem.Context;
 using Game.CombatSystem;
+using Game.CombatSystem.Manager;
 
 namespace Game.CombatSystem.State
 {
@@ -24,6 +25,7 @@ namespace Game.CombatSystem.State
         private readonly ISlotRegistry slotRegistry;
         private readonly ICoroutineRunner coroutineRunner;
         private readonly TurnContext turnContext;
+        private readonly CombatStartupManager startupManager;
 
         #endregion
 
@@ -38,7 +40,8 @@ namespace Game.CombatSystem.State
             IPlayerHandManager playerHandManager,
             ISlotRegistry slotRegistry,
             ICoroutineRunner coroutineRunner,
-            TurnContext turnContext)
+            TurnContext turnContext,
+            CombatStartupManager startupManager)
         {
             this.turnManager = turnManager;
             this.flowCoordinator = flowCoordinator;
@@ -46,6 +49,7 @@ namespace Game.CombatSystem.State
             this.slotRegistry = slotRegistry;
             this.coroutineRunner = coroutineRunner;
             this.turnContext = turnContext;
+            this.startupManager = startupManager;
         }
 
         #endregion
@@ -68,26 +72,36 @@ namespace Game.CombatSystem.State
         #region 준비 루틴
 
         /// <summary>
-        /// 전투 준비 루틴. 슬롯 확인, 적 생성 및 카드 등록을 처리.
+        /// 전투 준비 루틴. 새로운 CombatStartupManager를 사용하여 전투 시작 시퀀스를 실행합니다.
         /// </summary>
         private IEnumerator PrepareRoutine()
         {
             Debug.Log("[CombatPrepareState] PrepareRoutine 시작");
-            // 슬롯 초기화 대기
-            yield return new WaitUntil(() => slotRegistry.IsInitialized);
-
-            // 선공/후공 무작위 결정 (매 전투마다)
-            flowCoordinator.IsEnemyFirst = UnityEngine.Random.value < 0.5f;
-
-            // 적이 없으면 생성
-            if (!flowCoordinator.HasEnemy())
+            
+            // CombatStartupManager null 체크
+            if (startupManager == null)
             {
-                flowCoordinator.SpawnNextEnemy();
-                yield return new WaitUntil(() => flowCoordinator.GetEnemy() != null);
+                Debug.LogError("[CombatPrepareState] CombatStartupManager가 null입니다. DI 바인딩을 확인해주세요.");
+                yield break;
             }
 
-            // 적 핸드 시스템 제거: 준비 단계 간소화
-            yield return null;
+            Debug.Log("[CombatPrepareState] CombatStartupManager 확인 완료, 전투 시작 시퀀스 실행");
+
+            // 전투 시작 시퀀스 실행
+            bool startupComplete = false;
+            startupManager.StartCombatSequence((success) => {
+                startupComplete = true;
+                if (success)
+                {
+                    Debug.Log("[CombatPrepareState] 전투 시작 시퀀스 완료");
+                }
+                else
+                {
+                    Debug.LogError("[CombatPrepareState] 전투 시작 시퀀스 실패");
+                }
+            });
+
+            yield return new WaitUntil(() => startupComplete);
 
             // 다음 상태로 전환 (플레이어 입력)
             Debug.Log("<color=cyan>[STATE] CombatPrepareState → CombatPlayerInputState 전이</color>");

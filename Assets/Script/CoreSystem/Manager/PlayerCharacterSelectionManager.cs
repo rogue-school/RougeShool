@@ -22,6 +22,15 @@ namespace Game.CoreSystem.Manager
         // 이벤트
         public System.Action<PlayerCharacterData> OnCharacterSelected { get; set; }
         
+        // 의존성 주입
+        private IGameStateManager gameStateManager;
+        
+        [Inject]
+        public void Construct(IGameStateManager gameStateManager)
+        {
+            this.gameStateManager = gameStateManager;
+        }
+        
         /// <summary>
         /// 선택된 캐릭터 데이터 반환
         /// </summary>
@@ -54,6 +63,17 @@ namespace Game.CoreSystem.Manager
             
             selectedCharacterData = characterData;
             OnCharacterSelected?.Invoke(characterData);
+            
+            // GameStateManager에도 캐릭터 선택 정보 전달
+            if (gameStateManager != null)
+            {
+                gameStateManager.SelectCharacter(characterData);
+                GameLogger.LogInfo($"GameStateManager에 캐릭터 선택 정보 전달: {characterData.DisplayName}", GameLogger.LogCategory.UI);
+            }
+            else
+            {
+                GameLogger.LogWarning("GameStateManager가 null입니다. 캐릭터 선택 정보를 전달할 수 없습니다.", GameLogger.LogCategory.UI);
+            }
             
             GameLogger.LogInfo($"캐릭터 선택됨: {characterData.DisplayName}", GameLogger.LogCategory.UI);
         }

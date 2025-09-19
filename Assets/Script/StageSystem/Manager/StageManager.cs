@@ -19,7 +19,7 @@ namespace Game.StageSystem.Manager
 {
     /// <summary>
     /// 현재 스테이지의 적 캐릭터를 관리하고 생성합니다.
-    /// 핸드 등록은 EnemyHandInitializer 등 다른 시스템에서 처리합니다.
+    /// 적 카드는 대기 슬롯에 직접 배치됩니다.
     /// 로그 스쿨 시스템: 준보스/보스 단계별 관리 지원
     /// </summary>
     public class StageManager : MonoBehaviour, IStageManager, IStagePhaseManager, IStageRewardManager
@@ -29,8 +29,6 @@ namespace Game.StageSystem.Manager
         [Header("스테이지 데이터")]
         [SerializeField] private StageData currentStage;
         
-        [Header("로그 스쿨 시스템 - 단계별 스테이지")]
-        [SerializeField] private StagePhaseData currentPhaseStage;
 
         #endregion
 
@@ -245,9 +243,10 @@ namespace Game.StageSystem.Manager
 
         public void StartSubBossPhase()
         {
-            if (currentPhaseStage == null || !currentPhaseStage.HasValidSubBoss())
+            // StagePhaseData가 없어도 StageData만으로 진행 가능
+            if (currentStage == null || currentStage.enemies.Count == 0)
             {
-                Debug.LogWarning("[StageManager] 준보스 데이터가 유효하지 않습니다.");
+                Debug.LogWarning("[StageManager] 스테이지 데이터가 유효하지 않습니다.");
                 return;
             }
 
@@ -258,14 +257,15 @@ namespace Game.StageSystem.Manager
             OnPhaseChanged?.Invoke(currentPhase);
             OnProgressChanged?.Invoke(progressState);
             
-            Debug.Log($"[StageManager] 준보스 단계 시작: {currentPhaseStage.StageName}");
+            Debug.Log($"[StageManager] 준보스 단계 시작: {currentStage.name}");
         }
 
         public void StartBossPhase()
         {
-            if (currentPhaseStage == null || !currentPhaseStage.HasValidBoss())
+            // StagePhaseData가 없어도 StageData만으로 진행 가능
+            if (currentStage == null || currentStage.enemies.Count == 0)
             {
-                Debug.LogWarning("[StageManager] 보스 데이터가 유효하지 않습니다.");
+                Debug.LogWarning("[StageManager] 스테이지 데이터가 유효하지 않습니다.");
                 return;
             }
 
@@ -276,7 +276,7 @@ namespace Game.StageSystem.Manager
             OnPhaseChanged?.Invoke(currentPhase);
             OnProgressChanged?.Invoke(progressState);
             
-            Debug.Log($"[StageManager] 보스 단계 시작: {currentPhaseStage.StageName}");
+            Debug.Log($"[StageManager] 보스 단계 시작: {currentStage.name}");
         }
 
         public void CompleteStage()
@@ -290,7 +290,7 @@ namespace Game.StageSystem.Manager
             // 스테이지 완료 보상 지급
             GiveStageCompletionRewards();
             
-            Debug.Log($"[StageManager] 스테이지 완료: {currentPhaseStage.StageName}");
+            Debug.Log($"[StageManager] 스테이지 완료: {currentStage.name}");
         }
 
         public void FailStage()
@@ -298,7 +298,7 @@ namespace Game.StageSystem.Manager
             progressState = StageProgressState.Failed;
             OnProgressChanged?.Invoke(progressState);
             
-            Debug.Log($"[StageManager] 스테이지 실패: {currentPhaseStage.StageName}");
+            Debug.Log($"[StageManager] 스테이지 실패: {currentStage.name}");
         }
 
         public bool IsSubBossPhase() => currentPhase == StagePhaseState.SubBoss;

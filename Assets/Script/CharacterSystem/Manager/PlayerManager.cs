@@ -31,9 +31,6 @@ namespace Game.CharacterSystem.Manager
         [Tooltip("플레이어 HUD UI 컨트롤러(씬 상 존재)")]
         [SerializeField] private PlayerCharacterUIController playerUI;
 
-        [Header("기본 캐릭터 데이터")]
-        [Tooltip("캐릭터 선택이 없을 경우 사용할 기본 캐릭터 데이터")]
-        [SerializeField] private PlayerCharacterData defaultCharacterData;
 
         #endregion
 
@@ -76,10 +73,10 @@ namespace Game.CharacterSystem.Manager
             }
 
             // 캐릭터 선택은 DI로 주입된 GameStateManager 사용
-            var selectedData = gameStateManager?.SelectedCharacter ?? defaultCharacterData;
+            var selectedData = gameStateManager?.SelectedCharacter;
             if (selectedData == null)
             {
-                Debug.LogError("[PlayerManager] 선택된 캐릭터 데이터가 없습니다.");
+                Debug.LogError("[PlayerManager] 선택된 캐릭터 데이터가 없습니다. GameStateManager에서 캐릭터를 선택해주세요.");
                 return;
             }
 

@@ -68,6 +68,87 @@ public class CombatInstaller : MonoInstaller
         BindAudioManager();
         BindCoroutineRunner();
         BindSlotInitializer();
+        BindCharacterSystem();
+        
+        // 전투 시작 로직 추가
+        StartCoroutine(StartCombatAfterInitialization());
+    }
+    
+    /// <summary>
+    /// 초기화 완료 후 전투를 시작합니다.
+    /// 이어하기 기능을 고려하여 조건부로 전투를 시작합니다.
+    /// </summary>
+    private System.Collections.IEnumerator StartCombatAfterInitialization()
+    {
+        // 모든 초기화가 완료될 때까지 대기
+        yield return new WaitForEndOfFrame();
+        
+        // 이어하기 상태 확인
+        bool isResumingGame = CheckIfResumingGame();
+        
+        if (isResumingGame)
+        {
+            Debug.Log("[CombatInstaller] 이어하기 모드: 저장된 전투 상태 복원");
+            yield return ResumeCombatFromSave();
+        }
+        else
+        {
+            Debug.Log("[CombatInstaller] 새 전투 시작");
+            yield return StartNewCombat();
+        }
+    }
+    
+    /// <summary>
+    /// 이어하기 상태인지 확인합니다.
+    /// </summary>
+    private bool CheckIfResumingGame()
+    {
+        // SaveManager를 통해 이어하기 상태 확인
+        var saveManager = FindFirstObjectByType<Game.CoreSystem.Save.SaveManager>();
+        if (saveManager != null)
+        {
+            // 저장된 전투 데이터가 있는지 확인
+            return saveManager.HasCombatSaveData();
+        }
+        
+        // 기본값: 새 전투 시작
+        return false;
+    }
+    
+    /// <summary>
+    /// 저장된 전투 상태를 복원합니다.
+    /// </summary>
+    private System.Collections.IEnumerator ResumeCombatFromSave()
+    {
+        var flowCoordinator = FindFirstObjectByType<Game.CombatSystem.Manager.CombatFlowCoordinator>();
+        if (flowCoordinator != null)
+        {
+            // 저장된 데이터 로드 및 전투 상태 복원
+            yield return flowCoordinator.ResumeCombatFromSave();
+        }
+        else
+        {
+            Debug.LogError("[CombatInstaller] CombatFlowCoordinator를 찾을 수 없습니다!");
+        }
+    }
+    
+    /// <summary>
+    /// 새로운 전투를 시작합니다.
+    /// </summary>
+    private System.Collections.IEnumerator StartNewCombat()
+    {
+        var flowCoordinator = FindFirstObjectByType<Game.CombatSystem.Manager.CombatFlowCoordinator>();
+        if (flowCoordinator != null)
+        {
+            Debug.Log("[CombatInstaller] 새 전투 시작");
+            flowCoordinator.StartCombatFlow();
+        }
+        else
+        {
+            Debug.LogError("[CombatInstaller] CombatFlowCoordinator를 찾을 수 없습니다!");
+        }
+        
+        yield return null;
     }
 
     #region 상태머신
@@ -101,6 +182,7 @@ public class CombatInstaller : MonoInstaller
         // 적 핸드 시스템 완전 비활성화: 더 이상 바인딩하지 않음
         BindMono<IPlayerHandManager, PlayerHandManager>();
         BindMono<ICombatSlotManager, CombatSlotManager>();
+        Container.Bind<CombatStartupManager>().FromComponentInHierarchy().AsSingle();
         // Victory/GameOver UI는 현재 미사용이므로 바인딩 중지
         // BindMono<IVictoryManager, VictoryManager>();
         // BindMono<IGameOverManager, GameOverManager>();
@@ -112,7 +194,18 @@ public class CombatInstaller : MonoInstaller
         
         // PlayerCharacterSelectionManager는 CoreSystemInstaller에서 바인딩됨
         
-        BindMonoInterfaces<CombatTurnManager>();
+        // CombatTurnManager 명시적 바인딩
+        var turnManager = FindFirstObjectByType<CombatTurnManager>();
+        if (turnManager != null)
+        {
+            Container.Bind<ICombatTurnManager>().FromInstance(turnManager).AsSingle();
+            Container.Bind<CombatTurnManager>().FromInstance(turnManager).AsSingle();
+            Debug.Log("[CombatInstaller] CombatTurnManager 바인딩 완료");
+        }
+        else
+        {
+            Debug.LogError("[CombatInstaller] CombatTurnManager를 찾을 수 없습니다.");
+        }
 
         // SaveManager는 CoreSystemInstaller에서 바인딩됨
     }
@@ -126,7 +219,6 @@ public class CombatInstaller : MonoInstaller
     /// </summary>
     private void BindServices()
     {
-        Container.Bind<ICombatPreparationService>().To<CombatPreparationService>().AsSingle();
         Container.Bind<ICardPlacementService>().To<CardPlacementService>().AsSingle();
         Container.Bind<ITurnCardRegistry>().To<TurnCardRegistry>().AsSingle();
         Container.Bind<ISlotSelector>().To<SlotSelector>().AsSingle();
@@ -507,6 +599,41 @@ public class CombatInstaller : MonoInstaller
     {
         // 이 메서드는 더 이상 사용되지 않음 - Zenject DI가 자동으로 처리
         Debug.LogWarning($"[CombatInstaller] EnsureAndBindInitializer<{typeof(T).Name}>는 더 이상 사용되지 않습니다. Zenject DI가 자동으로 처리합니다.");
+    }
+
+    /// <summary>
+    /// 캐릭터 시스템 관련 컴포넌트들을 바인딩합니다.
+    /// </summary>
+    private void BindCharacterSystem()
+    {
+        Debug.Log("[CombatInstaller] 캐릭터 시스템 바인딩 시작");
+        
+        // PlayerResourceManager 바인딩
+        var playerResourceManager = FindFirstObjectByType<PlayerResourceManager>();
+        if (playerResourceManager != null)
+        {
+            Container.Bind<PlayerResourceManager>().FromInstance(playerResourceManager).AsSingle();
+            Debug.Log("[CombatInstaller] PlayerResourceManager 바인딩 완료");
+        }
+        else
+        {
+            Debug.LogWarning("[CombatInstaller] PlayerResourceManager를 찾을 수 없습니다.");
+        }
+        
+        // GameStateManager 바인딩 (DontDestroyOnLoad로 유지되는 인스턴스)
+        var gameStateManager = FindFirstObjectByType<GameStateManager>();
+        if (gameStateManager != null)
+        {
+            Container.Bind<IGameStateManager>().FromInstance(gameStateManager).AsSingle();
+            Container.Bind<GameStateManager>().FromInstance(gameStateManager).AsSingle();
+            Debug.Log("[CombatInstaller] GameStateManager 바인딩 완료");
+        }
+        else
+        {
+            Debug.LogWarning("[CombatInstaller] GameStateManager를 찾을 수 없습니다.");
+        }
+        
+        Debug.Log("[CombatInstaller] 캐릭터 시스템 바인딩 완료");
     }
 
     #endregion

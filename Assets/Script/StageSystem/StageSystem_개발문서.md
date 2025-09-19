@@ -167,12 +167,9 @@ private void SpawnEnemyCardToWaitSlot4(IEnemyCharacter enemy)
 - **OnEnemyDeath(IEnemyCharacter enemy)**: 적 사망 시 호출
 
 ### StageDataFactory 클래스
-- **CreateBossRushStage(EnemyCharacterData subBoss, EnemyCharacterData boss, string stageName, int stageNumber)**: 준보스/보스 구성 스테이지 생성
 - **CreateDefaultRewards(bool hasSubBossRewards, bool hasBossRewards, bool hasCompletionRewards)**: 기본 보상 데이터 생성
-- **ValidateStageData(StagePhaseData stageData)**: 스테이지 데이터 유효성 검증
 
 ### 데이터 클래스
-- **StagePhaseData**: 스테이지 단계별 데이터 (SubBoss, Boss, StageName, StageNumber, StageDescription)
 - **StagePhaseState**: 스테이지 단계 상태 열거형 (None, SubBoss, Boss, Completed)
 - **StageProgressState**: 스테이지 진행 상태 열거형 (NotStarted, SubBossBattle, BossBattle, Completed, Failed)
 - **StageRewardData**: 스테이지 보상 데이터 (RewardItem, RewardCurrency)
