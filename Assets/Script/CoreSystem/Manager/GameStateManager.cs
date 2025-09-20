@@ -12,19 +12,24 @@ namespace Game.CoreSystem.Manager
     /// <summary>
     /// 게임 상태를 관리하는 매니저 (Zenject DI 기반)
     /// </summary>
-    public class GameStateManager : MonoBehaviour, ICoreSystemInitializable, IGameStateManager
+    public class GameStateManager : BaseCoreManager<IGameStateManager>, IGameStateManager
     {
+        #region GameStateManager 전용 설정
+        
         [Header("게임 상태")]
+        [Tooltip("현재 게임 상태")]
         [SerializeField] private GameState currentGameState = GameState.MainMenu;
         
         [Header("캐릭터 선택")]
+        [Tooltip("선택된 플레이어 캐릭터 데이터")]
         [SerializeField] private PlayerCharacterData selectedCharacter;
+        
+        #endregion
         
         // 이벤트
         public System.Action<GameState> OnGameStateChanged { get; set; }
         
-        // 초기화 상태
-        public bool IsInitialized { get; private set; } = false;
+        // 초기화 상태는 베이스 클래스에서 관리
         
         // 의존성 주입
         private ISceneTransitionManager sceneTransitionManager;
@@ -35,18 +40,10 @@ namespace Game.CoreSystem.Manager
             this.sceneTransitionManager = sceneTransitionManager;
         }
         
-        private void Awake()
+        protected override void Awake()
         {
-            // 씬 전환 시에도 선택된 캐릭터 등 상태 유지
-            // 루트 오브젝트에서만 DontDestroyOnLoad를 적용해야 경고가 발생하지 않습니다.
-            if (transform.parent == null)
-            {
-                DontDestroyOnLoad(gameObject);
-            }
-            else
-            {
-                Debug.LogWarning("[GameStateManager] 루트 오브젝트가 아니므로 DontDestroyOnLoad를 적용할 수 없습니다. 루트로 이동을 권장합니다.");
-            }
+            base.Awake();
+            // 베이스 클래스에서 DontDestroyOnLoad 처리
         }
         
         /// <summary>
@@ -152,32 +149,34 @@ namespace Game.CoreSystem.Manager
             await sceneTransitionManager.TransitionToMainScene();
         }
         
-        #region ICoreSystemInitializable 구현
-        /// <summary>
-        /// 시스템 초기화 수행
-        /// </summary>
-        public IEnumerator Initialize()
+        #region 베이스 클래스 구현
+
+        protected override System.Collections.IEnumerator OnInitialize()
         {
-            GameLogger.LogInfo("GameStateManager 초기화 시작", GameLogger.LogCategory.UI);
-            
             // 초기 상태 설정
             currentGameState = GameState.MainMenu;
             
-            // 초기화 완료
-            IsInitialized = true;
+            // UI 연결
+            ConnectUI();
             
-            GameLogger.LogInfo("GameStateManager 초기화 완료", GameLogger.LogCategory.UI);
+            // 참조 검증
+            ValidateReferences();
+            
             yield return null;
         }
-        
-        /// <summary>
-        /// 초기화 실패 시 호출
-        /// </summary>
-        public void OnInitializationFailed()
+
+        public override void Reset()
         {
-            GameLogger.LogError("GameStateManager 초기화 실패", GameLogger.LogCategory.Error);
-            IsInitialized = false;
+            selectedCharacter = null;
+            currentGameState = GameState.MainMenu;
+            Time.timeScale = 1f;
+            
+            if (enableDebugLogging)
+            {
+                GameLogger.LogInfo("GameStateManager 리셋 완료", GameLogger.LogCategory.UI);
+            }
         }
+
         #endregion
     }
 }

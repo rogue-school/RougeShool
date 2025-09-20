@@ -3,7 +3,7 @@ description: "StageSystem 개발 가이드 및 규칙 - Unity 2D 스테이지 �
 globs: ["Assets/Script/StageSystem/**/*.cs"]
 rule_id: stage_system_rules
 version: 1.2.0
-alwaysApply: true
+alwaysApply: false
 ---
 
 # StageSystem 개발 규칙

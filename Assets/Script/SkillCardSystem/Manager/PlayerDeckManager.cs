@@ -14,13 +14,19 @@ namespace Game.SkillCardSystem.Manager
     /// 플레이어 덱을 동적으로 관리하는 매니저 클래스입니다.
     /// 게임 중 덱 구성 변경, 카드 추가/제거, 보상 지급 등을 담당합니다.
     /// </summary>
-    public class PlayerDeckManager : MonoBehaviour, IPlayerDeckManager
+    public class PlayerDeckManager : BaseSkillCardManager<IPlayerDeckManager>, IPlayerDeckManager
     {
         #region 필드
 
+        #region PlayerDeckManager 전용 설정
+        
         [Header("덱 설정")]
+        [Tooltip("기본 덱")]
         [SerializeField] private PlayerSkillDeck defaultDeck;
+        [Tooltip("최대 덱 크기")]
         [SerializeField] private int maxDeckSize = 30;
+        
+        #endregion
 
         private List<PlayerSkillDeck.CardEntry> currentDeck = new();
         private SaveManager saveManager;
@@ -41,8 +47,48 @@ namespace Game.SkillCardSystem.Manager
         public void Construct(SaveManager saveManager = null)
         {
             this.saveManager = saveManager;
-            InitializeDeck();
         }
+
+        #region 베이스 클래스 구현
+
+        protected override System.Collections.IEnumerator OnInitialize()
+        {
+            // 덱 초기화
+            InitializeDeck();
+
+            // 카드 설정 검증
+            if (!ValidateCardSettings())
+            {
+                yield break;
+            }
+
+            // 참조 검증
+            ValidateReferences();
+
+            // 카드 UI 연결
+            ConnectCardUI();
+
+            // 매니저 상태 로깅
+            LogManagerState();
+
+            yield return null;
+        }
+
+        public override void Reset()
+        {
+            // 덱 정리
+            currentDeck.Clear();
+
+            // 기본 덱으로 초기화
+            InitializeDeck();
+
+            if (enableDebugLogging)
+            {
+                GameLogger.LogInfo("PlayerDeckManager 리셋 완료", GameLogger.LogCategory.SkillCard);
+            }
+        }
+
+        #endregion
 
         private void InitializeDeck()
         {

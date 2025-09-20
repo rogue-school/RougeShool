@@ -66,32 +66,36 @@ public class CombatInstaller : MonoInstaller
     /// </summary>
     private void BindIntegratedManagers()
     {
-        // CombatManager 바인딩
-        var combatManager = FindFirstObjectByType<CombatManager>();
-        if (combatManager != null)
+        // CombatFlowManager 바인딩
+        var combatFlowManager = FindFirstObjectByType<CombatFlowManager>();
+        if (combatFlowManager != null)
         {
-            Container.Bind<CombatManager>().FromInstance(combatManager).AsSingle();
-            Debug.Log("[CombatInstaller] CombatManager 바인딩 완료");
-        }
-        else
-        {
-            Debug.LogWarning("[CombatInstaller] CombatManager를 찾을 수 없습니다. CombatStartupManager가 생성합니다.");
+            Container.Bind<ICombatFlowManager>().FromInstance(combatFlowManager).AsSingle();
+            Debug.Log("[CombatInstaller] CombatFlowManager 바인딩 완료");
         }
 
-        // CharacterManager 바인딩
-        var characterManager = FindFirstObjectByType<CharacterManager>();
-        if (characterManager != null)
+        // CombatExecutionManager 바인딩
+        var combatExecutionManager = FindFirstObjectByType<CombatExecutionManager>();
+        if (combatExecutionManager != null)
         {
-            Container.Bind<CharacterManager>().FromInstance(characterManager).AsSingle();
-            Debug.Log("[CombatInstaller] CharacterManager 바인딩 완료");
+            Container.Bind<ICombatExecutionManager>().FromInstance(combatExecutionManager).AsSingle();
+            Debug.Log("[CombatInstaller] CombatExecutionManager 바인딩 완료");
         }
 
-        // CardManager 바인딩
-        var cardManager = FindFirstObjectByType<CardManager>();
-        if (cardManager != null)
+        // CombatSlotManager 바인딩
+        var combatSlotManager = FindFirstObjectByType<CombatSlotManager>();
+        if (combatSlotManager != null)
         {
-            Container.Bind<CardManager>().FromInstance(cardManager).AsSingle();
-            Debug.Log("[CombatInstaller] CardManager 바인딩 완료");
+            Container.Bind<CombatSlotManager>().FromInstance(combatSlotManager).AsSingle();
+            Debug.Log("[CombatInstaller] CombatSlotManager 바인딩 완료");
+        }
+
+        // CombatTurnManager 바인딩
+        var combatTurnManager = FindFirstObjectByType<CombatTurnManager>();
+        if (combatTurnManager != null)
+        {
+            Container.Bind<CombatTurnManager>().FromInstance(combatTurnManager).AsSingle();
+            Debug.Log("[CombatInstaller] CombatTurnManager 바인딩 완료");
         }
     }
 

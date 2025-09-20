@@ -15,7 +15,7 @@ namespace Game.CoreSystem.Manager
     /// <summary>
     /// CoreScene의 모든 시스템을 자동으로 초기화하는 중앙 관리자 (Zenject DI 기반)
     /// </summary>
-    public class CoreSystemInitializer : MonoBehaviour
+    public class CoreSystemInitializer : BaseCoreManager<ICoreSystemInitializable>
     {
         // 의존성 주입
         private List<ICoreSystemInitializable> coreSystems;
@@ -28,20 +28,18 @@ namespace Game.CoreSystem.Manager
             this.sceneTransitionManager = sceneTransitionManager;
         }
         
-        private void Awake()
+        protected override void Awake()
         {
-            // 디버그 로깅 설정
-            if (enableDebugLogging)
-            {
-                GameLogger.LogInfo("CoreSystemInitializer 초기화 시작", GameLogger.LogCategory.UI);
-            }
+            base.Awake();
+            // 베이스 클래스에서 기본 초기화 처리
         }
 
-        #region 초기화 설정
-        [Header("초기화 설정")]
-        [SerializeField] private bool enableAutoInitialization = true;
-        [SerializeField] private bool enableDebugLogging = true; // 상단(전체) 진행 로그
-        [SerializeField] private bool logPerSystemDetails = false; // 시스템별 상세 시작/완료 로그
+        #region CoreSystem 전용 설정
+        [Header("CoreSystem 전용 설정")]
+        [Tooltip("시스템별 상세 시작/완료 로그")]
+        [SerializeField] private bool logPerSystemDetails = false;
+        
+        [Tooltip("초기화 완료 후 자동으로 메인 씬으로 이동")]
         [SerializeField] private bool autoGoToMainAfterInit = true;
         #endregion
 
@@ -58,11 +56,21 @@ namespace Game.CoreSystem.Manager
         #endregion
 
         #region 초기화 시작
-        private void Start()
+        protected override void Start()
         {
-            if (enableAutoInitialization && coreSystems != null)
+            base.Start();
+            // 베이스 클래스에서 자동 초기화 처리
+        }
+
+        protected override System.Collections.IEnumerator OnInitialize()
+        {
+            if (coreSystems != null)
             {
-                StartCoroutine(InitializeAllSystems());
+                yield return StartCoroutine(InitializeAllSystems());
+            }
+            else
+            {
+                GameLogger.LogWarning("CoreSystems가 주입되지 않았습니다.", GameLogger.LogCategory.UI);
             }
         }
 
@@ -175,6 +183,21 @@ namespace Game.CoreSystem.Manager
                 yield return null;
             }
         }
+        #endregion
+
+        #region Reset 구현
+
+        public override void Reset()
+        {
+            isInitializationComplete = false;
+            IsInitialized = false;
+            
+            if (enableDebugLogging)
+            {
+                GameLogger.LogInfo("CoreSystemInitializer 리셋 완료", GameLogger.LogCategory.UI);
+            }
+        }
+
         #endregion
     }
 }

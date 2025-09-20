@@ -12,7 +12,7 @@ namespace Game.SaveSystem.Manager
     /// 자동 저장 매니저
     /// 슬레이 더 스파이어 방식: 특정 이벤트 발생 시 자동 저장
     /// </summary>
-    public class AutoSaveManager : MonoBehaviour
+    public class AutoSaveManager : BaseSaveManager<IAutoSaveManager>
     {
         #region 의존성 주입
 
@@ -22,10 +22,12 @@ namespace Game.SaveSystem.Manager
 
         #endregion
 
-        #region 인스펙터 필드
+        #region AutoSaveManager 전용 설정
 
         [Header("자동 저장 설정")]
+        [Tooltip("자동 저장 활성화")]
         [SerializeField] private bool autoSaveEnabled = true;
+        [Tooltip("자동 저장 조건들")]
         [SerializeField] private List<AutoSaveCondition> autoSaveConditions = new();
 
         #endregion
@@ -33,16 +35,52 @@ namespace Game.SaveSystem.Manager
         #region 내부 상태
 
         private Dictionary<string, AutoSaveCondition> conditionMap = new();
-        private bool isInitialized = false;
+        // 초기화 상태는 베이스 클래스에서 관리
 
         #endregion
 
         #region 초기화
 
-        private void Start()
+        protected override void Start()
         {
-            InitializeAutoSaveConditions();
+            base.Start();
+            // 베이스 클래스에서 자동 초기화 처리
         }
+
+        #region 베이스 클래스 구현
+
+        protected override System.Collections.IEnumerator OnInitialize()
+        {
+            // 자동 저장 조건 초기화
+            InitializeAutoSaveConditions();
+
+            // 참조 검증
+            ValidateReferences();
+
+            // 저장 UI 연결
+            ConnectSaveUI();
+
+            // 매니저 상태 로깅
+            LogManagerState();
+
+            yield return null;
+        }
+
+        public override void Reset()
+        {
+            // 조건 맵 정리
+            conditionMap.Clear();
+
+            // 자동 저장 조건 재초기화
+            InitializeAutoSaveConditions();
+
+            if (enableDebugLogging)
+            {
+                GameLogger.LogInfo("AutoSaveManager 리셋 완료", GameLogger.LogCategory.Save);
+            }
+        }
+
+        #endregion
 
         /// <summary>
         /// 자동 저장 조건들을 초기화합니다.

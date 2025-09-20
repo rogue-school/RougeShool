@@ -1,5 +1,8 @@
 ---
-description: Unity 2D 개발 표준(아키텍처/DI/리팩토링/Git/품질 게이트, Cursor 연동)
+description: "Unity 2D 개발 표준(아키텍처/DI/리팩토링/Git/품질 게이트, Cursor 연동)"
+globs: ["**/*.cs", "**/*.unity", "**/*.prefab", "**/*.md"]
+rule_id: rouge_shool_project_rules
+version: 1.2.0
 alwaysApply: true
 ---
 
@@ -124,26 +127,6 @@ Assets/Script/
 - 2025-01-27 | Maintainer | AnimationSystem 완전 제거 및 임시 처리 규칙 추가 | 문서
 - 2025-01-27 | Maintainer | DOTween Pro 전문 활용 규칙 추가 및 플러그인 규칙 업데이트 | 문서
 
----
-description: Unity 6000.0.42f1 2D Built-in Render Pipeline 최적화 개발 규칙
-globs: ["**/*.cs", "**/*.unity", "**/*.prefab"]
-alwaysApply: true
-rule_id: rouge_shool_project_rules
-version: 1.1.0
----
-
-# RougeShool Unity 2D 게임 개발 룰
-
-## 📋 AI 룰 적용 순서 및 우선순위
-AI는 다음 순서대로 룰을 적용해야 함:
-1. 🔥 핵심 필수 규칙 (최우선 - 반드시 적용)
-2. 🚫 예시 코드 생성 방지 규칙 (최우선 - 반드시 적용)
-3. 🧠 체계적 사고 과정 규칙 (필수 - 코드 생성 전 적용)
-4. 🤖 AI 코드 생성 규칙 (필수 - 모든 코드 생성 시 적용)
-5. 🎯 Cursor AI 특화 기능 활용 규칙 (필수 - Cursor 기능 활용 시 적용)
-6. 🏗️ CoreScene 자동화 규칙 (중간 우선순위 - CoreScene 관련 시 적용)
-7. ⚡ Unity 2D 최적화 규칙 (중간 우선순위 - 가능한 한 적용)
-8. 💡 선택적 규칙 (낮은 우선순위 - 상황에 따라 적용)
 
 ## 📋 기본 개발 원칙
 - 모든 주석, 문서, 로그 메시지는 한국어로 작성해야 함

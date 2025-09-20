@@ -9,6 +9,7 @@ using Game.CombatSystem.Interface;
 using Game.CharacterSystem.Data;
 using Game.CoreSystem.Interface;
 using Game.CharacterSystem.UI;
+using Game.CoreSystem.Utility;
 
 namespace Game.CharacterSystem.Manager
 {
@@ -16,27 +17,18 @@ namespace Game.CharacterSystem.Manager
     /// 플레이어 캐릭터 및 핸드 매니저를 관리하는 클래스입니다.
     /// 캐릭터 생성, 선택 데이터 로드, 핸드 초기화 등을 처리합니다.
     /// </summary>
-    public class PlayerManager : MonoBehaviour, IPlayerManager
+    public class PlayerManager : BaseCharacterManager<IPlayerCharacter>, IPlayerManager
     {
-        #region Serialized Fields
+        #region 추가 인스펙터 필드
 
-        [Header("프리팹 및 슬롯")]
-        [Tooltip("플레이어 캐릭터 프리팹")]
-        [SerializeField] private GameObject playerPrefab;
-
-        [Tooltip("플레이어 캐릭터가 배치될 슬롯 위치")]
-        [SerializeField] private Transform playerSlot;
-
-        [Header("플레이어 UI")]
+        [Header("플레이어 전용 설정")]
         [Tooltip("플레이어 HUD UI 컨트롤러(씬 상 존재)")]
         [SerializeField] private PlayerCharacterUIController playerUI;
-
 
         #endregion
 
         #region Private Fields
 
-        private IPlayerCharacter playerCharacter;
         private IPlayerHandManager handManager;
         private IGameStateManager gameStateManager;
 
@@ -61,12 +53,20 @@ namespace Game.CharacterSystem.Manager
         #region 캐릭터 생성 및 설정
 
         /// <summary>
-        /// 선택된 캐릭터 데이터를 기반으로 플레이어 캐릭터를 생성 및 등록합니다.
-        /// 이미 생성된 경우 핸드 초기화만 수행합니다.
+        /// 플레이어 캐릭터를 생성하고 등록합니다.
         /// </summary>
         public void CreateAndRegisterPlayer()
         {
-            if (playerCharacter != null)
+            CreateAndRegisterCharacter();
+        }
+        
+        /// <summary>
+        /// 선택된 캐릭터 데이터를 기반으로 플레이어 캐릭터를 생성 및 등록합니다.
+        /// 이미 생성된 경우 핸드 초기화만 수행합니다.
+        /// </summary>
+        public override void CreateAndRegisterCharacter()
+        {
+            if (currentCharacter != null)
             {
                 InitializeHandManager();
                 return;
@@ -76,33 +76,32 @@ namespace Game.CharacterSystem.Manager
             var selectedData = gameStateManager?.SelectedCharacter;
             if (selectedData == null)
             {
-                Debug.LogError("[PlayerManager] 선택된 캐릭터 데이터가 없습니다. GameStateManager에서 캐릭터를 선택해주세요.");
+                GameLogger.LogError("선택된 캐릭터 데이터가 없습니다. GameStateManager에서 캐릭터를 선택해주세요.", GameLogger.LogCategory.Character);
                 return;
             }
 
-            if (playerPrefab == null || playerSlot == null)
+            if (!ValidateReferences())
             {
-                Debug.LogError("[PlayerManager] 프리팹 또는 슬롯 참조가 누락되었습니다.");
                 return;
             }
 
-            var instance = Instantiate(playerPrefab, playerSlot);
-            
-            // HideFlags 초기화 (Unity Assertion 에러 방지)
-            instance.hideFlags = HideFlags.None;
+            var instance = CreateCharacterInstance();
 
             if (!instance.TryGetComponent(out IPlayerCharacter character))
             {
-                Debug.LogError("[PlayerManager] IPlayerCharacter 컴포넌트 누락.");
+                GameLogger.LogError("IPlayerCharacter 컴포넌트가 누락되었습니다.", GameLogger.LogCategory.Character);
                 Destroy(instance);
                 return;
             }
 
             character.SetCharacterData(selectedData);
-            SetPlayer(character);
+            SetCharacter(character);
             InitializeHandManager();
 
             // UI 대상 연결(있을 때만)
+            ConnectCharacterUI(character);
+            
+            // 플레이어 전용 UI 연결
             if (playerUI != null && character is ICharacter ic)
             {
                 playerUI.SetTarget(ic);
@@ -115,23 +114,32 @@ namespace Game.CharacterSystem.Manager
         private void InitializeHandManager()
         {
             // 먼저 핸드 소유자를 지정해야 덱 조회가 정상 동작합니다.
-            if (playerCharacter != null)
+            if (currentCharacter != null)
             {
-                handManager.SetPlayer(playerCharacter);
+                handManager.SetPlayer(currentCharacter);
             }
 
             // 플레이어 스킬카드 생성은 CombatStartupManager에서 처리
             // handManager.GenerateInitialHand(); // 기존 시스템 비활성화
             handManager.LogPlayerHandSlotStates();
-            playerCharacter.InjectHandManager(handManager);
+            currentCharacter.InjectHandManager(handManager);
         }
 
         /// <summary>
         /// 플레이어 캐릭터를 설정합니다.
         /// </summary>
+        /// <param name="player">설정할 플레이어 캐릭터</param>
         public void SetPlayer(IPlayerCharacter player)
         {
-            playerCharacter = player;
+            SetCharacter(player);
+        }
+        
+        /// <summary>
+        /// 플레이어 캐릭터를 설정합니다.
+        /// </summary>
+        public override void SetCharacter(IPlayerCharacter character)
+        {
+            currentCharacter = character;
         }
 
         #endregion
@@ -141,7 +149,12 @@ namespace Game.CharacterSystem.Manager
         /// <summary>
         /// 현재 플레이어 캐릭터를 반환합니다.
         /// </summary>
-        public IPlayerCharacter GetPlayer() => playerCharacter;
+        public override IPlayerCharacter GetCharacter() => currentCharacter;
+
+        /// <summary>
+        /// 현재 플레이어 캐릭터를 반환합니다. (호환성 유지)
+        /// </summary>
+        public IPlayerCharacter GetPlayer() => currentCharacter;
 
         /// <summary>
         /// 플레이어 핸드 매니저를 반환합니다.
@@ -165,11 +178,21 @@ namespace Game.CharacterSystem.Manager
         #region 초기화
 
         /// <summary>
-        /// 매니저 상태를 초기화합니다. (확장용)
+        /// 캐릭터 등록을 해제합니다.
         /// </summary>
-        public void Reset()
+        public override void UnregisterCharacter()
         {
-            Debug.Log("[PlayerManager] Reset 호출됨.");
+            currentCharacter = null;
+            GameLogger.LogInfo("플레이어 캐릭터 등록 해제", GameLogger.LogCategory.Character);
+        }
+
+        /// <summary>
+        /// 매니저 상태를 초기화합니다.
+        /// </summary>
+        public override void Reset()
+        {
+            UnregisterCharacter();
+            GameLogger.LogInfo("PlayerManager 초기화 완료", GameLogger.LogCategory.Character);
         }
 
         #endregion

@@ -1,9 +1,9 @@
 ---
-description: 씬 하이라키 제작/검증/문서화 표준(CoreScene/BattleScene)
-globs: ["Assets/Scenes/**", "Assets/Scenes/Docs/**"]
-version: 1.2.0
-alwaysApply: true
+description: "씬 하이라키 제작/검증/문서화 표준(CoreScene/BattleScene)"
+globs: ["Assets/Scenes/**/*.unity", "Assets/Scenes/Docs/**/*.md"]
 rule_id: scene_hierarchy_documentation_rules
+version: 1.2.0
+alwaysApply: false
 ---
 
 # 씬 하이라키 제작/검증/문서화 표준 (Production)

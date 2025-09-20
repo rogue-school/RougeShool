@@ -3,7 +3,7 @@ description: "CoreSystem 개발 가이드 및 규칙 - Unity 2D 코어 시스템
 globs: ["Assets/Script/CoreSystem/**/*.cs"]
 rule_id: core_system_rules
 version: 1.2.0
-alwaysApply: true
+alwaysApply: false
 ---
 
 # CoreSystem 개발 규칙

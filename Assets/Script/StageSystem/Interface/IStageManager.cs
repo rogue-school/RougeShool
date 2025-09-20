@@ -1,5 +1,5 @@
 using Game.CharacterSystem.Data;
-using Game.CombatSystem.Stage;
+using Game.StageSystem.Data;
 
 namespace Game.StageSystem.Interface
 {

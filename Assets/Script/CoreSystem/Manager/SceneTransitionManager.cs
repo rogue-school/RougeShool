@@ -13,27 +13,39 @@ namespace Game.CoreSystem.Manager
 	/// <summary>
 	/// 3개 씬 구조를 위한 씬 전환 매니저 (Zenject DI 기반)
 	/// </summary>
-	public class SceneTransitionManager : MonoBehaviour, ISceneLoader, ICoreSystemInitializable, ISceneTransitionManager
+	public class SceneTransitionManager : BaseCoreManager<ISceneTransitionManager>, ISceneLoader, ISceneTransitionManager
 	{
 		
+		#region SceneTransitionManager 전용 설정
+		
 		[Header("씬 설정")]
+		[Tooltip("코어 씬 이름")]
 		[SerializeField] private string coreSceneName = "CoreScene";
+		[Tooltip("메인 씬 이름")]
 		[SerializeField] private string mainSceneName = "MainScene";
+		[Tooltip("전투 씬 이름")]
 		[SerializeField] private string battleSceneName = "BattleScene";
+		[Tooltip("스테이지 씬 이름")]
 		[SerializeField] private string stageSceneName = "StageScene";
 		
 		[Header("전환 설정")]
-		[SerializeField] private float transitionDuration = 0.1f; // 0.1초로 더 단축
+		[Tooltip("전환 지속 시간")]
+		[SerializeField] private float transitionDuration = 0.1f;
+		[Tooltip("전환 커브")]
 		[SerializeField] private AnimationCurve transitionCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 		
 		[Header("UI 참조")]
+		[Tooltip("전환 캔버스 그룹")]
 		[SerializeField] private CanvasGroup transitionCanvas;
+		[Tooltip("전환 이미지")]
 		[SerializeField] private UnityEngine.UI.Image transitionImage;
-		
-		// 초기화 상태
-		public bool IsInitialized { get; private set; } = false;
-		public bool IsTransitioning { get; private set; } = false; // 전환 상태 추가
+		[Tooltip("로딩 텍스트")]
 		[SerializeField] private UnityEngine.UI.Text loadingText;
+		
+		#endregion
+		
+		// 초기화 상태는 베이스 클래스에서 관리
+		public bool IsTransitioning { get; private set; } = false; // 전환 상태 추가
 		
 		// 이벤트
 		public System.Action<string> OnSceneTransitionStart { get; set; }
@@ -50,13 +62,15 @@ namespace Game.CoreSystem.Manager
 			this.audioManager = audioManager;
 		}
 		
-		private void Awake()
+		protected override void Awake()
 		{
+			base.Awake();
 			InitializeTransition();
 		}
 		
-		private void Start()
+		protected override void Start()
 		{
+			base.Start();
 			// 씬 전환 상태 초기화 (씬 로드 후 상태 리셋)
 			IsTransitioning = false;
 		}
@@ -314,11 +328,10 @@ namespace Game.CoreSystem.Manager
 			SceneManager.LoadScene(sceneName);
 		}
 		
-		#region ICoreSystemInitializable 구현
-		public IEnumerator Initialize()
+		#region 베이스 클래스 구현
+
+		protected override System.Collections.IEnumerator OnInitialize()
 		{
-			GameLogger.LogInfo("SceneTransitionManager 초기화 시작", GameLogger.LogCategory.UI);
-			
 			// 초기 상태 설정
 			if (transitionCanvas != null)
 			{
@@ -327,18 +340,32 @@ namespace Game.CoreSystem.Manager
 				transitionCanvas.blocksRaycasts = false;
 			}
 			
-			// 초기화 완료
-			IsInitialized = true;
+			// UI 연결
+			ConnectUI();
 			
-			GameLogger.LogInfo("SceneTransitionManager 초기화 완료", GameLogger.LogCategory.UI);
+			// 참조 검증
+			ValidateReferences();
+			
 			yield return null;
 		}
-		
-		public void OnInitializationFailed()
+
+		public override void Reset()
 		{
-			GameLogger.LogError("SceneTransitionManager 초기화 실패", GameLogger.LogCategory.Error);
-			IsInitialized = false;
+			IsTransitioning = false;
+			
+			if (transitionCanvas != null)
+			{
+				transitionCanvas.alpha = 0f;
+				transitionCanvas.interactable = false;
+				transitionCanvas.blocksRaycasts = false;
+			}
+			
+			if (enableDebugLogging)
+			{
+				GameLogger.LogInfo("SceneTransitionManager 리셋 완료", GameLogger.LogCategory.UI);
+			}
 		}
+
 		#endregion
 	}
 }

@@ -3,7 +3,7 @@ description: "SaveSystem 개발 가이드 및 규칙 - Unity 2D 저장 시스템
 globs: ["Assets/Script/SaveSystem/**/*.cs", "Assets/Script/CoreSystem/Save/**/*.cs"]
 rule_id: save_system_rules
 version: 1.2.0
-alwaysApply: true
+alwaysApply: false
 ---
 
 # SaveSystem 개발 규칙

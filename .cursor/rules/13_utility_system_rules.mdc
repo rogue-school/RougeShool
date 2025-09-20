@@ -3,7 +3,7 @@ description: "UtilitySystem 개발 가이드 및 규칙 - Unity 2D 유틸리티 
 globs: ["Assets/Script/UtilitySystem/**/*.cs"]
 rule_id: utility_system_rules
 version: 1.2.0
-alwaysApply: true
+alwaysApply: false
 ---
 
 # UtilitySystem 개발 규칙

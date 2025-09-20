@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using Game.CharacterSystem.Data;
 
-namespace Game.CombatSystem.Stage
+namespace Game.StageSystem.Data
 {
     [CreateAssetMenu(menuName = "Game/Stage/Stage Data")]
     public class StageData : ScriptableObject

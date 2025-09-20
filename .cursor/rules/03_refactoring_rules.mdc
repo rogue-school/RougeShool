@@ -1,7 +1,9 @@
 ---
-description: 안전하고 단계적인 리팩토링 규칙(의사결정/단계/품질 게이트/문서 동기화)
-globs: ["Assets/Script/**"]
-alwaysApply: true
+description: "안전하고 단계적인 리팩토링 규칙(의사결정/단계/품질 게이트/문서 동기화)"
+globs: ["Assets/Script/**/*.cs"]
+rule_id: refactoring_rules
+version: 1.1.0
+alwaysApply: false
 ---
 
 # 리팩토링 규칙 (Production)

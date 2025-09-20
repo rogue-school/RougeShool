@@ -17,7 +17,7 @@ namespace Game.SkillCardSystem.Manager
     /// 카드 생성, 제거, 복구 및 드래그 가능 여부 설정 등의 기능을 담당합니다.
     /// 카드 순환 시스템과 연동하여 로그 스쿨 시스템을 지원합니다.
     /// </summary>
-    public class PlayerHandManager : MonoBehaviour, IPlayerHandManager
+    public class PlayerHandManager : BaseSkillCardManager<IPlayerHandManager>, IPlayerHandManager
     {
         #region 필드
 
@@ -59,6 +59,45 @@ namespace Game.SkillCardSystem.Manager
         public void SetPlayer(IPlayerCharacter player)
         {
             this.owner = player;
+        }
+
+        #endregion
+
+        #region 베이스 클래스 구현
+
+        protected override System.Collections.IEnumerator OnInitialize()
+        {
+            // 카드 설정 검증
+            if (!ValidateCardSettings())
+            {
+                yield break;
+            }
+
+            // 참조 검증
+            ValidateReferences();
+
+            // 카드 UI 연결
+            ConnectCardUI();
+
+            // 매니저 상태 로깅
+            LogManagerState();
+
+            yield return null;
+        }
+
+        public override void Reset()
+        {
+            // 카드 정리
+            cards.Clear();
+            cardUIs.Clear();
+
+            // 소유자 초기화
+            owner = null;
+
+            if (enableDebugLogging)
+            {
+                GameLogger.LogInfo("PlayerHandManager 리셋 완료", GameLogger.LogCategory.SkillCard);
+            }
         }
 
         #endregion

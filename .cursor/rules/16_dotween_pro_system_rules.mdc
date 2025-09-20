@@ -1,3 +1,11 @@
+---
+description: "RougeShool 프로젝트 DOTween Pro 플러그인 전문 활용 규칙"
+globs: ["Assets/Script/**/*.cs", "Assets/Plugins/Demigiant/DOTweenPro/**/*.cs", "Assets/Plugins/Demigiant/DOTweenSettings.asset", "Assets/Plugins/Demigiant/DOTween/**/*.cs"]
+rule_id: dotween_pro_system_rules
+version: 1.0.0
+alwaysApply: false
+---
+
 # DOTween Pro 시스템 개발 규칙 (Production)
 
 > 목적: DOTween Pro 플러그인을 전문적으로 활용하여 Unity 2D 게임의 모든 애니메이션을 체계적으로 관리한다. 성능 최적화, 메모리 관리, 코드 품질을 보장하며 AnimationSystem 재구현 시 표준이 된다.
@@ -550,15 +558,3 @@ public class AnimationFacade : MonoBehaviour, IAnimationFacade
 - 2025-01-27 | Maintainer | 디버깅 및 프로파일링 규칙 추가 | 문서
 - 2025-01-27 | Maintainer | 테스트 및 검증 규칙 추가 | 문서
 - 2025-01-27 | Maintainer | 마이그레이션 가이드 및 AnimationSystem 재구현 가이드 추가 | 문서
-
----
-
-description: "RougeShool 프로젝트 DOTween Pro 플러그인 전문 활용 규칙"
-auto_attach:
-  - Assets/Script/**/*.cs
-  - Assets/Plugins/Demigiant/DOTweenPro/**/*
-  - Assets/Plugins/Demigiant/DOTweenSettings.asset
-rule_id: dotween_pro_system_rules
-version: 1.0.0
-alwaysApply: true
----

@@ -39,11 +39,8 @@ namespace Game.CombatSystem.Initialization
         {
             Debug.Log("<color=cyan>[EnemyCharacterInitializer] 적 캐릭터 초기화 시작</color>");
 
-            // 코루틴 기반 적 스폰
-            if (_stageManager is Game.StageSystem.Manager.StageManager concrete)
-                yield return concrete.SpawnNextEnemyCoroutine();
-            else
-                _stageManager.SpawnNextEnemy();
+            // 적 스폰 (동기 방식)
+            _stageManager.SpawnNextEnemy();
 
             Debug.Log("<color=cyan>[EnemyCharacterInitializer] 적 캐릭터 생성 완료</color>");
             yield return null;

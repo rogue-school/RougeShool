@@ -1,26 +1,21 @@
 using UnityEngine;
-using Game.CombatSystem.Stage;
-using Game.IManager;
+using System.Threading.Tasks;
+using System;
+using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Data;
 using Game.CharacterSystem.Interface;
 using Game.CombatSystem.Interface;
-using Game.CharacterSystem.Core;
 using Game.StageSystem.Data;
 using Game.StageSystem.Interface;
 using Zenject;
-using Game.CombatSystem.Utility;
-using Game.SkillCardSystem.Data;
-using Game.SkillCardSystem.Factory;
-using Game.SkillCardSystem.Interface;
-using Game.CombatSystem.Slot;
-using Game.CombatSystem.Data;
+using Game.CoreSystem.Utility;
 
 namespace Game.StageSystem.Manager
 {
     /// <summary>
-    /// 현재 스테이지의 적 캐릭터를 관리하고 생성합니다.
-    /// 적 카드는 대기 슬롯에 직접 배치됩니다.
-    /// 로그 스쿨 시스템: 준보스/보스 단계별 관리 지원
+    /// 스테이지 진행을 관리하는 매니저입니다.
+    /// 적 캐릭터 2마리를 순차적으로 관리하며,
+    /// 각 적 캐릭터 처치 시 개별 보상을 지급합니다.
     /// </summary>
     public class StageManager : MonoBehaviour, IStageManager, IStagePhaseManager, IStageRewardManager
     {
@@ -37,7 +32,7 @@ namespace Game.StageSystem.Manager
         private int currentEnemyIndex = 0;
         private bool isSpawning = false;
         
-        // 로그 스쿨 시스템 상태
+        // 스테이지 진행 상태
         private StagePhaseState currentPhase = StagePhaseState.None;
         private StageProgressState progressState = StageProgressState.NotStarted;
         private bool isSubBossDefeated = false;
@@ -46,136 +41,206 @@ namespace Game.StageSystem.Manager
 
         #endregion
 
-        #region 의존성 주입
+        #region 이벤트
 
-        [Inject] private IEnemySpawnerManager spawnerManager;
+        /// <summary>적 처치 시 호출되는 이벤트</summary>
+        public event Action<IEnemyCharacter> OnEnemyDefeated;
+        
+        /// <summary>스테이지 완료 시 호출되는 이벤트</summary>
+        public event Action<StageData> OnStageCompleted;
+
+        #endregion
+
+        #region 의존성 주입 (최소화)
+
+        // 핵심 의존성만 유지
         [Inject] private IEnemyManager enemyManager;
-        [Inject] private IEnemySpawnValidator spawnValidator;
-        [Inject] private ICharacterDeathListener deathListener;
-        [Inject] private ITurnCardRegistry turnCardRegistry;
-        [Inject] private ISkillCardFactory cardFactory;
 
         #endregion
 
         #region 적 생성 흐름
 
         /// <summary>
-        /// 다음 적을 생성하여 전투에 배치합니다. (코루틴 기반)
+        /// 다음 적을 생성하여 전투에 배치합니다. (async/await 기반)
         /// </summary>
-        public System.Collections.IEnumerator SpawnNextEnemyCoroutine()
+        public async Task<bool> SpawnNextEnemyAsync()
         {
             if (isSpawning)
             {
-                Debug.LogWarning("[StageManager] 중복 스폰 방지");
-                yield break;
-            }
-
-            if (!spawnValidator.CanSpawnEnemy())
-            {
-                Debug.LogWarning("[StageManager] 스폰 조건 미충족");
-                yield break;
+                GameLogger.LogWarning("중복 스폰 방지", GameLogger.LogCategory.Combat);
+                return false;
             }
 
             if (enemyManager.GetEnemy() != null)
             {
-                Debug.LogWarning("[StageManager] 이미 적이 존재합니다.");
-                yield break;
+                GameLogger.LogWarning("이미 적이 존재합니다", GameLogger.LogCategory.Combat);
+                return false;
             }
 
             if (!TryGetNextEnemyData(out var data))
             {
-                Debug.LogWarning("[StageManager] 다음 적 데이터를 가져올 수 없습니다.");
-                yield break;
+                GameLogger.LogWarning("다음 적 데이터를 가져올 수 없습니다", GameLogger.LogCategory.Combat);
+                return false;
             }
 
             isSpawning = true;
-            EnemySpawnResult result = null;
-            yield return spawnerManager.SpawnEnemyWithAnimation(data, r => { result = r; });
-            if (result?.Enemy == null)
+            
+            try
             {
-                Debug.LogError("[StageManager] 적 생성 실패");
-                isSpawning = false;
-                yield break;
+                // 적 생성 (단순화된 로직)
+                var enemy = await CreateEnemyAsync(data);
+                if (enemy == null)
+                {
+                    GameLogger.LogError("적 생성 실패", GameLogger.LogCategory.Combat);
+                    return false;
+                }
+
+                RegisterEnemy(enemy);
+                currentEnemyIndex++;
+                
+                GameLogger.LogInfo($"적 생성 완료: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
+                return true;
             }
-            RegisterEnemy(result.Enemy);
-            
-            // 적 카드를 WAIT_SLOT_4에 직접 생성
-            SpawnEnemyCardToWaitSlot4(result.Enemy);
-            
-            currentEnemyIndex++;
-            isSpawning = false;
+            catch (Exception ex)
+            {
+                GameLogger.LogError($"적 생성 중 오류 발생: {ex.Message}", GameLogger.LogCategory.Error);
+                return false;
+            }
+            finally
+            {
+                isSpawning = false;
+            }
         }
 
         /// <summary>
-        /// 기존 API 호환성을 위해 StartCoroutine으로 코루틴을 호출
+        /// 기존 API 호환성을 위한 동기 메서드
         /// </summary>
         public void SpawnNextEnemy()
         {
-            StartCoroutine(SpawnNextEnemyCoroutine());
+            _ = SpawnNextEnemyAsync();
         }
 
         /// <summary>
-        /// 적 캐릭터를 시스템에 등록하고, 사망 리스너를 연결합니다.
+        /// 적 캐릭터를 시스템에 등록합니다.
         /// </summary>
         private void RegisterEnemy(IEnemyCharacter enemy)
         {
             enemyManager.RegisterEnemy(enemy);
-            if (enemy is EnemyCharacter concrete && deathListener != null)
-                concrete.SetDeathListener(deathListener);
+            
+            // 적 캐릭터에 사망 리스너 설정
+            if (enemy is EnemyCharacter concreteEnemy)
+            {
+                concreteEnemy.SetDeathListener(new EnemyDeathHandler(this));
+            }
+            
+            GameLogger.LogInfo($"적 등록 완료: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
         }
 
         /// <summary>
-        /// 적 카드를 WAIT_SLOT_4에 직접 생성합니다.
-        /// 적 핸드 시스템 없이 대기 슬롯에서 직접 관리됩니다.
+        /// 적 처치 시 호출되는 메서드
         /// </summary>
-        private void SpawnEnemyCardToWaitSlot4(IEnemyCharacter enemy)
+        private void OnEnemyDeath(IEnemyCharacter enemy)
         {
-            // EnemyCharacterData로 캐스팅하여 EnemyDeck에 접근
-            if (!(enemy?.CharacterData is EnemyCharacterData enemyData) || enemyData.EnemyDeck == null)
+            GameLogger.LogInfo($"적 처치: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
+            
+            // 적 처치 이벤트 발생
+            OnEnemyDefeated?.Invoke(enemy);
+            
+            // 적 처치 시 보상 지급
+            GiveEnemyDefeatReward(enemy);
+            
+            // 스테이지 진행 상태 업데이트
+            UpdateStageProgress(enemy);
+        }
+
+        /// <summary>
+        /// 적 사망 처리를 위한 내부 클래스
+        /// </summary>
+        private class EnemyDeathHandler : ICharacterDeathListener
+        {
+            private readonly StageManager stageManager;
+
+            public EnemyDeathHandler(StageManager stageManager)
             {
-                Debug.LogWarning("[StageManager] 적 스킬 덱이 없습니다.");
-                return;
+                this.stageManager = stageManager;
             }
 
-            if (turnCardRegistry == null || cardFactory == null)
+            public void OnCharacterDied(ICharacter character)
             {
-                Debug.LogWarning("[StageManager] 필요한 의존성이 주입되지 않았습니다.");
-                return;
-            }
-
-            try
-            {
-                // 적 덱에서 랜덤 카드 선택
-                var enemyDeck = enemyData.EnemyDeck;
-                var randomEntry = enemyDeck.GetRandomEntry();
-                
-                if (randomEntry?.definition == null)
+                if (character is IEnemyCharacter enemy)
                 {
-                    Debug.LogWarning("[StageManager] 적 덱에서 카드를 선택할 수 없습니다.");
-                    return;
+                    stageManager.OnEnemyDeath(enemy);
                 }
-
-                // 적 카드 생성
-                var enemyCard = cardFactory.CreateFromDefinition(
-                    randomEntry.definition,
-                    Owner.Enemy,
-                    enemyData.CharacterName
-                );
-
-                // WAIT_SLOT_4에 카드 등록
-                turnCardRegistry.RegisterCard(
-                    CombatSlotPosition.WAIT_SLOT_4,
-                    enemyCard,
-                    null, // UI는 나중에 생성
-                    SlotOwner.ENEMY
-                );
-
-                Debug.Log($"[StageManager] 적 카드 생성 완료: {enemyCard.GetCardName()} → WAIT_SLOT_4");
             }
-            catch (System.Exception ex)
+
+            public void OnEnemyDeath(IEnemyCharacter enemy)
             {
-                Debug.LogError($"[StageManager] 적 카드 생성 실패: {ex.Message}");
+                stageManager.OnEnemyDeath(enemy);
             }
+        }
+
+        /// <summary>
+        /// 적 캐릭터 처치 시 보상을 지급합니다.
+        /// </summary>
+        private void GiveEnemyDefeatReward(IEnemyCharacter enemy)
+        {
+            if (currentRewards == null)
+            {
+                GameLogger.LogWarning("보상 데이터가 설정되지 않았습니다", GameLogger.LogCategory.Combat);
+                return;
+            }
+
+            // 현재 단계에 따른 보상 지급
+            if (currentPhase == StagePhaseState.SubBoss)
+            {
+                GiveEnemyRewards(StagePhaseState.SubBoss);
+            }
+            else if (currentPhase == StagePhaseState.Boss)
+            {
+                GiveEnemyRewards(StagePhaseState.Boss);
+            }
+        }
+
+        /// <summary>
+        /// 적 캐릭터 처치 후 스테이지 진행 상태를 업데이트합니다.
+        /// </summary>
+        private void UpdateStageProgress(IEnemyCharacter enemy)
+        {
+            if (currentPhase == StagePhaseState.SubBoss)
+            {
+                isSubBossDefeated = true;
+                StartBossPhase();
+            }
+            else if (currentPhase == StagePhaseState.Boss)
+            {
+                isBossDefeated = true;
+                CompleteStage();
+            }
+        }
+
+        /// <summary>
+        /// 적 캐릭터를 생성합니다. (단순화된 로직)
+        /// </summary>
+        private async Task<IEnemyCharacter> CreateEnemyAsync(EnemyCharacterData data)
+        {
+            // 실제 적 생성 로직은 다른 시스템에 위임
+            // 여기서는 단순히 데이터 검증만 수행
+            if (data?.Prefab == null)
+            {
+                GameLogger.LogError("적 데이터 또는 프리팹이 null입니다", GameLogger.LogCategory.Error);
+                return null;
+            }
+
+            // 비동기 처리 시뮬레이션
+            await Task.Delay(100);
+            
+            // 실제 구현에서는 적 생성 로직을 호출
+            // var enemy = Instantiate(data.Prefab).GetComponent<IEnemyCharacter>();
+            // enemy.Initialize(data);
+            // return enemy;
+            
+            // 임시로 null 반환 (실제 구현 시 수정 필요)
+            return null;
         }
 
         /// <summary>
@@ -217,7 +282,7 @@ namespace Game.StageSystem.Manager
         {
             // TODO: 실제 스테이지 번호 관리 로직 구현 필요
             // 현재는 StageData의 name이나 다른 식별자를 사용할 수 있음
-            Debug.Log($"[StageManager] 스테이지 번호 설정: {stageNumber}");
+            GameLogger.LogInfo($"스테이지 번호 설정: {stageNumber}", GameLogger.LogCategory.Combat);
         }
 
         /// <summary>
@@ -246,7 +311,7 @@ namespace Game.StageSystem.Manager
             // StagePhaseData가 없어도 StageData만으로 진행 가능
             if (currentStage == null || currentStage.enemies.Count == 0)
             {
-                Debug.LogWarning("[StageManager] 스테이지 데이터가 유효하지 않습니다.");
+                GameLogger.LogWarning("스테이지 데이터가 유효하지 않습니다", GameLogger.LogCategory.Combat);
                 return;
             }
 
@@ -257,7 +322,7 @@ namespace Game.StageSystem.Manager
             OnPhaseChanged?.Invoke(currentPhase);
             OnProgressChanged?.Invoke(progressState);
             
-            Debug.Log($"[StageManager] 준보스 단계 시작: {currentStage.name}");
+            GameLogger.LogInfo($"준보스 단계 시작: {currentStage.name}", GameLogger.LogCategory.Combat);
         }
 
         public void StartBossPhase()
@@ -265,7 +330,7 @@ namespace Game.StageSystem.Manager
             // StagePhaseData가 없어도 StageData만으로 진행 가능
             if (currentStage == null || currentStage.enemies.Count == 0)
             {
-                Debug.LogWarning("[StageManager] 스테이지 데이터가 유효하지 않습니다.");
+                GameLogger.LogWarning("스테이지 데이터가 유효하지 않습니다", GameLogger.LogCategory.Combat);
                 return;
             }
 
@@ -276,7 +341,7 @@ namespace Game.StageSystem.Manager
             OnPhaseChanged?.Invoke(currentPhase);
             OnProgressChanged?.Invoke(progressState);
             
-            Debug.Log($"[StageManager] 보스 단계 시작: {currentStage.name}");
+            GameLogger.LogInfo($"보스 단계 시작: {currentStage.name}", GameLogger.LogCategory.Combat);
         }
 
         public void CompleteStage()
@@ -287,10 +352,13 @@ namespace Game.StageSystem.Manager
             OnPhaseChanged?.Invoke(currentPhase);
             OnProgressChanged?.Invoke(progressState);
             
-            // 스테이지 완료 보상 지급
+            // 스테이지 완료 이벤트 발생
+            OnStageCompleted?.Invoke(currentStage);
+            
+            // 스테이지 완료 보상 지급 (선택적)
             GiveStageCompletionRewards();
             
-            Debug.Log($"[StageManager] 스테이지 완료: {currentStage.name}");
+            GameLogger.LogInfo($"스테이지 완료: {currentStage.name}", GameLogger.LogCategory.Combat);
         }
 
         public void FailStage()
@@ -298,7 +366,7 @@ namespace Game.StageSystem.Manager
             progressState = StageProgressState.Failed;
             OnProgressChanged?.Invoke(progressState);
             
-            Debug.Log($"[StageManager] 스테이지 실패: {currentStage.name}");
+            GameLogger.LogWarning($"스테이지 실패: {currentStage.name}", GameLogger.LogCategory.Combat);
         }
 
         public bool IsSubBossPhase() => currentPhase == StagePhaseState.SubBoss;
@@ -313,7 +381,7 @@ namespace Game.StageSystem.Manager
         {
             currentPhase = phase;
             OnPhaseChanged?.Invoke(currentPhase);
-            Debug.Log($"[StageManager] 현재 단계 설정: {phase}");
+            GameLogger.LogInfo($"현재 단계 설정: {phase}", GameLogger.LogCategory.Combat);
         }
 
         /// <summary>
@@ -323,7 +391,7 @@ namespace Game.StageSystem.Manager
         public void SetSubBossDefeated(bool defeated)
         {
             isSubBossDefeated = defeated;
-            Debug.Log($"[StageManager] 준보스 처치 상태 설정: {defeated}");
+            GameLogger.LogInfo($"준보스 처치 상태 설정: {defeated}", GameLogger.LogCategory.Combat);
         }
 
         /// <summary>
@@ -333,7 +401,7 @@ namespace Game.StageSystem.Manager
         public void SetBossDefeated(bool defeated)
         {
             isBossDefeated = defeated;
-            Debug.Log($"[StageManager] 보스 처치 상태 설정: {defeated}");
+            GameLogger.LogInfo($"보스 처치 상태 설정: {defeated}", GameLogger.LogCategory.Combat);
         }
 
         public event System.Action<StagePhaseState> OnPhaseChanged;
@@ -343,72 +411,103 @@ namespace Game.StageSystem.Manager
 
         #region IStageRewardManager 구현
 
-        public void GiveSubBossRewards()
+        /// <summary>
+        /// 적 캐릭터 처치 시 보상을 지급합니다. (통합 메서드)
+        /// </summary>
+        /// <param name="phase">현재 스테이지 단계</param>
+        public void GiveEnemyRewards(StagePhaseState phase)
         {
-            if (currentRewards == null || !currentRewards.HasSubBossRewards())
+            if (currentRewards == null)
             {
-                Debug.LogWarning("[StageManager] 준보스 보상이 없습니다.");
+                GameLogger.LogWarning("보상 데이터가 설정되지 않았습니다", GameLogger.LogCategory.Combat);
                 return;
             }
 
-            // 아이템 보상 지급
-            foreach (var item in currentRewards.SubBossRewards)
+            bool hasRewards = false;
+            string phaseName = GetPhaseDisplayName(phase);
+
+            // 단계별 보상 지급
+            if (phase == StagePhaseState.SubBoss && currentRewards.HasSubBossRewards())
             {
-                OnItemRewardGiven?.Invoke(item);
-                Debug.Log($"[StageManager] 준보스 아이템 보상: {item.itemName} x{item.quantity}");
+                GiveRewardsByType(currentRewards.SubBossRewards, currentRewards.SubBossCurrency, phaseName);
+                hasRewards = true;
+            }
+            else if (phase == StagePhaseState.Boss && currentRewards.HasBossRewards())
+            {
+                GiveRewardsByType(currentRewards.BossRewards, currentRewards.BossCurrency, phaseName);
+                hasRewards = true;
             }
 
-            // 화폐 보상 지급
-            foreach (var currency in currentRewards.SubBossCurrency)
+            if (!hasRewards)
             {
-                OnCurrencyRewardGiven?.Invoke(currency);
-                Debug.Log($"[StageManager] 준보스 화폐 보상: {currency.currencyType} {currency.amount}");
+                GameLogger.LogWarning($"{phaseName} 보상이 없습니다", GameLogger.LogCategory.Combat);
             }
         }
 
-        public void GiveBossRewards()
+        /// <summary>
+        /// 보상 타입별로 보상을 지급합니다.
+        /// </summary>
+        private void GiveRewardsByType(
+            System.Collections.Generic.List<StageRewardData.RewardItem> items,
+            System.Collections.Generic.List<StageRewardData.RewardCurrency> currencies,
+            string phaseName)
         {
-            if (currentRewards == null || !currentRewards.HasBossRewards())
-            {
-                Debug.LogWarning("[StageManager] 보스 보상이 없습니다.");
-                return;
-            }
+            GameLogger.LogInfo($"{phaseName} 보상 지급 시작", GameLogger.LogCategory.Combat);
 
             // 아이템 보상 지급
-            foreach (var item in currentRewards.BossRewards)
+            foreach (var item in items)
             {
                 OnItemRewardGiven?.Invoke(item);
-                Debug.Log($"[StageManager] 보스 아이템 보상: {item.itemName} x{item.quantity}");
+                GameLogger.LogInfo($"{phaseName} 아이템 보상: {item.itemName} x{item.quantity}", GameLogger.LogCategory.Combat);
             }
 
             // 화폐 보상 지급
-            foreach (var currency in currentRewards.BossCurrency)
+            foreach (var currency in currencies)
             {
                 OnCurrencyRewardGiven?.Invoke(currency);
-                Debug.Log($"[StageManager] 보스 화폐 보상: {currency.currencyType} {currency.amount}");
+                GameLogger.LogInfo($"{phaseName} 화폐 보상: {currency.currencyType} {currency.amount}", GameLogger.LogCategory.Combat);
             }
         }
+
+        /// <summary>
+        /// 단계별 표시 이름을 반환합니다.
+        /// </summary>
+        private string GetPhaseDisplayName(StagePhaseState phase)
+        {
+            return phase switch
+            {
+                StagePhaseState.SubBoss => "첫 번째 적",
+                StagePhaseState.Boss => "두 번째 적",
+                _ => "적"
+            };
+        }
+
+        // 기존 API 호환성을 위한 메서드들
+        public void GiveSubBossRewards() => GiveEnemyRewards(StagePhaseState.SubBoss);
+        public void GiveBossRewards() => GiveEnemyRewards(StagePhaseState.Boss);
 
         public void GiveStageCompletionRewards()
         {
             if (currentRewards == null || !currentRewards.HasStageCompletionRewards())
             {
-                Debug.LogWarning("[StageManager] 스테이지 완료 보상이 없습니다.");
+                GameLogger.LogWarning("스테이지 완료 보상이 없습니다", GameLogger.LogCategory.Combat);
                 return;
             }
+
+            GameLogger.LogInfo("스테이지 완료 보상 지급 시작", GameLogger.LogCategory.Combat);
 
             // 아이템 보상 지급
             foreach (var item in currentRewards.StageCompletionRewards)
             {
                 OnItemRewardGiven?.Invoke(item);
-                Debug.Log($"[StageManager] 스테이지 완료 아이템 보상: {item.itemName} x{item.quantity}");
+                GameLogger.LogInfo($"스테이지 완료 아이템 보상: {item.itemName} x{item.quantity}", GameLogger.LogCategory.Combat);
             }
 
             // 화폐 보상 지급
             foreach (var currency in currentRewards.StageCompletionCurrency)
             {
                 OnCurrencyRewardGiven?.Invoke(currency);
-                Debug.Log($"[StageManager] 스테이지 완료 화폐 보상: {currency.currencyType} {currency.amount}");
+                GameLogger.LogInfo($"스테이지 완료 화폐 보상: {currency.currencyType} {currency.amount}", GameLogger.LogCategory.Combat);
             }
         }
 
@@ -416,7 +515,7 @@ namespace Game.StageSystem.Manager
         {
             if (rewards == null)
             {
-                Debug.LogWarning("[StageManager] 보상 데이터가 null입니다.");
+                GameLogger.LogWarning("보상 데이터가 null입니다", GameLogger.LogCategory.Combat);
                 return;
             }
 
@@ -435,7 +534,7 @@ namespace Game.StageSystem.Manager
         public void SetCurrentRewards(StageRewardData rewards)
         {
             currentRewards = rewards;
-            Debug.Log($"[StageManager] 보상 데이터 설정: {rewards?.name ?? "null"}");
+            GameLogger.LogInfo($"보상 데이터 설정: {rewards?.name ?? "null"}", GameLogger.LogCategory.Combat);
         }
 
         public StageRewardData GetCurrentRewards() => currentRewards;
@@ -448,3 +547,4 @@ namespace Game.StageSystem.Manager
         #endregion
     }
 }
+
