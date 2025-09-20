@@ -1,25 +1,25 @@
 using UnityEngine;
 using System.Collections;
-using Game.CombatSystem.Interface;
+using Game.CombatSystem.Manager;
 using Game.UtilitySystem;
 using Game.CoreSystem.Utility;
 using Game.CombatSystem;
 
 namespace Game.CombatSystem.State
 {
-    public class CombatVictoryState : ICombatTurnState
+    public class CombatVictoryState
     {
-        private readonly ICombatTurnManager turnManager;
-        private readonly ICombatFlowCoordinator flowCoordinator;
+        private readonly TurnManager turnManager;
+        private readonly CombatSlotManager slotManager;
         private readonly ICoroutineRunner coroutineRunner;
 
         public CombatVictoryState(
-            ICombatTurnManager turnManager,
-            ICombatFlowCoordinator flowCoordinator,
+            TurnManager turnManager,
+            CombatSlotManager slotManager,
             ICoroutineRunner coroutineRunner)
         {
             this.turnManager = turnManager;
-            this.flowCoordinator = flowCoordinator;
+            this.slotManager = slotManager;
             this.coroutineRunner = coroutineRunner;
         }
 
@@ -32,22 +32,11 @@ namespace Game.CombatSystem.State
 
         private IEnumerator HandleVictory()
         {
-            yield return flowCoordinator.PerformVictoryPhase();
+            Debug.Log("[CombatVictoryState] 승리 처리 중...");
+            yield return new WaitForSeconds(1.0f);
 
-            yield return flowCoordinator.CleanupAfterVictory();
-
-            if (flowCoordinator.CheckHasNextEnemy())
-            {
-                Debug.Log("<color=cyan>[STATE] CombatVictoryState → CombatPrepareState 전이 (다음 적 존재)</color>");
-                var next = turnManager.GetStateFactory().CreatePrepareState();
-                turnManager.RequestStateChange(next);
-            }
-            else
-            {
-                Debug.Log("<color=cyan>[STATE] CombatVictoryState → CombatGameOverState 전이 (모든 적 처치 완료)</color>");
-                var next = turnManager.GetStateFactory().CreateGameOverState();
-                turnManager.RequestStateChange(next);
-            }
+            // Note: Victory handling is now simplified in the new architecture
+            Debug.Log("<color=cyan>[STATE] CombatVictoryState → 전투 완료</color>");
         }
 
         public void ExecuteState() { }

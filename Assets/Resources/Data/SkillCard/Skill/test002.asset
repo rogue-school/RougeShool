@@ -28,4 +28,4 @@ MonoBehaviour:
       ignoreGuard: 0
     hasEffects: 0
     effects: []
-    ownerPolicy: 0
+    ownerPolicy: 1

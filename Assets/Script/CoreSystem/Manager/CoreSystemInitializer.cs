@@ -7,7 +7,6 @@ using Game.CoreSystem.Utility;
 using Game.CoreSystem.UI;
 using Game.CoreSystem.Audio;
 using Game.CoreSystem.Save;
-using Game.CoreSystem.Animation;
 using Game.CoreSystem.Interface;
 using Zenject;
 
@@ -41,7 +40,8 @@ namespace Game.CoreSystem.Manager
         #region 초기화 설정
         [Header("초기화 설정")]
         [SerializeField] private bool enableAutoInitialization = true;
-        [SerializeField] private bool enableDebugLogging = true;
+        [SerializeField] private bool enableDebugLogging = true; // 상단(전체) 진행 로그
+        [SerializeField] private bool logPerSystemDetails = false; // 시스템별 상세 시작/완료 로그
         [SerializeField] private bool autoGoToMainAfterInit = true;
         #endregion
 
@@ -90,7 +90,7 @@ namespace Game.CoreSystem.Manager
         #region 시스템 초기화 (Zenject DI 기반)
         private System.Collections.IEnumerator InitializeSystem(ICoreSystemInitializable system, string systemName)
         {
-            if (enableDebugLogging)
+            if (logPerSystemDetails)
             {
                 GameLogger.LogInfo($"{systemName} 초기화 시작", GameLogger.LogCategory.UI);
             }
@@ -103,7 +103,7 @@ namespace Game.CoreSystem.Manager
             }
             
             // 초기화 완료 후 성공 처리
-            if (enableDebugLogging)
+            if (logPerSystemDetails)
             {
                 GameLogger.LogInfo($"{systemName} 초기화 완료", GameLogger.LogCategory.UI);
             }

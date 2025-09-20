@@ -1,25 +1,21 @@
-using Game.CombatSystem.Interface;
 using UnityEngine;
-using Game.IManager;
-using Game.CombatSystem.Context;
-using Game.CharacterSystem.Interface;
-using Game.AnimationSystem.Interface;
+using Game.CombatSystem.Manager;
+using Game.CharacterSystem.Manager;
 
 namespace Game.CombatSystem.State
 {
     /// <summary>
     /// 공격 상태를 나타내며, 공격 처리 후 결과 상태로 전환합니다.
+    /// 새로운 싱글톤 기반 아키텍처로 단순화되었습니다.
     /// </summary>
-    public class CombatAttackState : ICombatTurnState
+    public class CombatAttackState
     {
         #region 필드
 
-        private readonly ICombatTurnManager turnManager;
-        private readonly ICombatFlowCoordinator flowCoordinator;
-        private readonly ICombatSlotRegistry slotRegistry;
-        private readonly IPlayerManager playerManager;
-        private readonly TurnContext turnContext;
-        private readonly IAnimationFacade animationFacade;
+        private readonly TurnManager turnManager;
+        private readonly CombatSlotManager slotManager;
+        private readonly PlayerManager playerManager;
+        private readonly EnemyManager enemyManager;
 
         #endregion
 
@@ -29,20 +25,16 @@ namespace Game.CombatSystem.State
         /// 공격 상태를 초기화합니다.
         /// </summary>
         public CombatAttackState(
-            ICombatTurnManager turnManager,
-            ICombatFlowCoordinator flowCoordinator,
-            ICombatSlotRegistry slotRegistry,
-            IPlayerManager playerManager,
-            TurnContext turnContext,
-            IAnimationFacade animationFacade
+            TurnManager turnManager,
+            CombatSlotManager slotManager,
+            PlayerManager playerManager,
+            EnemyManager enemyManager
         )
         {
             this.turnManager = turnManager;
-            this.flowCoordinator = flowCoordinator;
-            this.slotRegistry = slotRegistry;
+            this.slotManager = slotManager;
             this.playerManager = playerManager;
-            this.turnContext = turnContext;
-            this.animationFacade = animationFacade;
+            this.enemyManager = enemyManager;
         }
 
         #endregion
@@ -55,42 +47,33 @@ namespace Game.CombatSystem.State
         public void EnterState()
         {
             Debug.Log("<color=cyan>[STATE] CombatAttackState 진입</color>");
-            // 애니메이션 락이 걸려 있으면 대기 또는 return
-            if (animationFacade.IsHandVanishAnimationPlaying)
+            
+            // 새로운 시스템에서는 SlotExecutionSystem을 통해 카드 실행
+            var executionSystem = SlotExecutionSystem.Instance;
+            if (executionSystem != null)
             {
-                Debug.Log("[CombatAttackState] 핸드 소멸 애니메이션 진행 중이므로 상태 전이 대기");
-                return;
+                // 전투 시퀀스 실행 (비동기)
+                _ = executionSystem.ExecuteCombatSequence();
+                
+                // 사망 체크
+                bool enemyDead = enemyManager.GetEnemy()?.IsDead() ?? false;
+                bool playerDead = playerManager.GetPlayer()?.IsDead() ?? false;
+
+                if (enemyDead || playerDead)
+                {
+                    Debug.Log("<color=cyan>[STATE] CombatAttackState → CombatResultState 전이 (캐릭터 사망)</color>");
+                    // TODO: 결과 상태로 전환 로직 구현
+                }
+                else
+                {
+                    Debug.Log("<color=cyan>[STATE] CombatAttackState → 다음 턴으로 전환</color>");
+                    turnManager.NextTurn();
+                }
             }
-            flowCoordinator.RequestFirstAttack(() =>
+            else
             {
-                bool enemyDead = flowCoordinator.IsEnemyDead();
-                bool playerDead = flowCoordinator.IsPlayerDead();
-
-                // 1. 사망 시 소멸 애니메이션 먼저 실행 (중복 방지)
-                if (enemyDead && !turnContext.WasHandCardsVanishedThisTurn)
-                {
-                    animationFacade.VanishAllHandCardsOnCharacterDeath("enemy", false);
-                    turnContext.MarkHandCardsVanished();
-                    Debug.Log("<color=cyan>[STATE] CombatAttackState → CombatResultState 전이 (적 사망 후 소멸 애니메이션 완료)</color>");
-                    var next = turnManager.GetStateFactory().CreateResultState();
-                    turnManager.RequestStateChange(next);
-                    return;
-                }
-                if (playerDead && !turnContext.WasHandCardsVanishedThisTurn)
-                {
-                    animationFacade.VanishAllHandCardsOnCharacterDeath("player", false);
-                    turnContext.MarkHandCardsVanished();
-                    Debug.Log("<color=cyan>[STATE] CombatAttackState → CombatResultState 전이 (플레이어 사망 후 소멸 애니메이션 완료)</color>");
-                    var next = turnManager.GetStateFactory().CreateResultState();
-                    turnManager.RequestStateChange(next);
-                    return;
-                }
-
-                // 2. 사망이 아니면 기존대로 바로 상태 전이
-                Debug.Log("<color=cyan>[STATE] CombatAttackState → CombatResultState 전이</color>");
-                var nextState = turnManager.GetStateFactory().CreateResultState();
-                turnManager.RequestStateChange(nextState);
-            });
+                Debug.LogError("[CombatAttackState] SlotExecutionSystem을 찾을 수 없습니다!");
+            }
         }
 
         /// <summary>

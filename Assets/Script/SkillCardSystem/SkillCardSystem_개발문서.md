@@ -3,40 +3,62 @@
 ## 📋 시스템 개요
 SkillCardSystem은 게임의 스킬카드 시스템을 관리하는 핵심 시스템입니다. 카드 데이터, 효과, 실행, 검증, UI, 드래그 앤 드롭, 슬롯 관리 등을 통합적으로 관리합니다. 플레이어와 적 스킬카드를 통합된 데이터 모델로 관리하며, 덱 기반 시스템과 효과 시스템을 제공합니다.
 
+### 최근 변경(요약)
+- **AnimationSystem 의존성 완전 제거**: 모든 AnimationSystem 관련 코드 제거 완료
+- **임시 애니메이션 비활성화**: 애니메이션 호출 부분을 Debug.Log로 대체하여 게임 로직 정상 동작
+- **통합 데이터 모델**: SkillCardDefinition 기반으로 플레이어/적 스킬카드 통합 관리 완료
+- **수량 기반 덱**: 플레이어 덱에서 카드 수량 관리 및 커스텀 에디터 지원 완료
+- **통합 런타임 인스턴스**: SkillCard 클래스로 플레이어/적 카드 통합 관리 완료
+- **소유자 정책**: Shared, Player, Enemy 정책으로 애니메이션 사용 권한 관리 완료
+- **용어 변경**: 가드 관통을 가드 무시로 변경, 모든 효과 이펙트 한글화 완료
+- **가드 효과 리팩토링**: 스킬카드 시스템으로 이동, 불필요한 가드량 제거 완료
+- **Zenject DI 통합**: 모든 SkillCardSystem 컴포넌트가 의존성 주입으로 전환 완료
+- **레거시 슬롯 최적화**: 모든 `SLOT_1/SLOT_2` → `BATTLE_SLOT/WAIT_SLOT_1` 전환 완료
+- **컴파일 에러 해결**: 모든 SkillCardSystem 관련 컴파일 에러 해결 완료
+
 ## 🏗️ 폴더 구조
 ```
 SkillCardSystem/
 ├── Data/             # 카드 데이터 (2개 파일)
-├── Deck/             # 덱 관리 (3개 파일)
-├── DragDrop/         # 드래그 앤 드롭 (3개 파일)
+├── Deck/             # 덱 관리 (2개 파일)
+├── DragDrop/         # 드래그 앤 드롭 (4개 파일)
 ├── Effect/           # 효과 구현 (12개 파일)
 ├── Executor/         # 실행기 (1개 파일)
 ├── Factory/          # 팩토리 패턴 (3개 파일)
-├── Installation/     # DI 설치 (1개 파일) [주의: 폴더명 오타 - Installer이어야 함]
-├── Interface/        # 인터페이스 (27개 파일)
+├── Installer/        # DI 설치 (1개 파일)
+├── Interface/        # 인터페이스 (28개 파일)
 ├── Manager/          # 매니저 클래스 (5개 파일)
-├── Runtime/          # 런타임 로직 (1개 파일)
+├── Runtime/          # 런타임 로직 (2개 파일)
 ├── Service/          # 서비스 클래스 (6개 파일)
-├── Slot/             # 슬롯 시스템 (11개 파일)
-├── UI/               # UI 관련 (6개 파일)
-└── Validator/        # 검증기 (2개 파일)
+├── Slot/             # 슬롯 시스템 (10개 파일)
+├── UI/               # UI 관련 (5개 파일)
+├── Validator/        # 검증기 (2개 파일)
+└── Editor/           # 에디터 도구 (3개 파일)
 ```
 
 ## 📁 주요 컴포넌트
 
 ### Data 폴더 (2개 파일)
 - **SkillCardDefinition.cs**: 통합 스킬카드 정의 (ScriptableObject) - 플레이어/적 통합
-- **PlayerSkillCard.cs**: 플레이어 스킬카드 데이터 (호환성 유지)
+- **SlotRole.cs**: 슬롯 역할 열거형
 
-### Deck 폴더 (3개 파일)
+### Deck 폴더 (2개 파일)
 - **PlayerSkillDeck.cs**: 플레이어 스킬 덱 (수량 기반 카드 엔트리 지원)
 - **EnemySkillDeck.cs**: 적 스킬 덱 (SkillCardDefinition 기반)
-- **PlayerSkillCardEntry.cs**: 플레이어 스킬카드 엔트리 (호환성 유지)
 
-### Effect 폴더 (4개 파일)
+### Effect 폴더 (12개 파일)
+- **BleedEffect.cs**: 출혈 효과
 - **BleedEffectCommand.cs**: 출혈 효과 명령
+- **BleedEffectSO.cs**: 출혈 효과 데이터
+- **DamageEffectCommand.cs**: 데미지 효과 명령
 - **DamageEffectSO.cs**: 데미지 효과 데이터
-- **GuardEffectSO.cs**: 방어 효과 데이터
+- **ForceNextSlotEffectCommand.cs**: 다음 슬롯 강제 효과 명령
+- **ForceNextSlotEffectSO.cs**: 다음 슬롯 강제 효과 데이터
+- **GuardEffectCommand.cs**: 가드 효과 명령
+- **GuardEffectSO.cs**: 가드 효과 데이터
+- **RegenEffect.cs**: 재생 효과
+- **RegenEffectCommand.cs**: 재생 효과 명령
+- **RegenEffectSO.cs**: 재생 효과 데이터
 - **SkillCardEffectSO.cs**: 스킬카드 효과 기본 클래스
 
 ### Factory 폴더 (3개 파일)
@@ -370,6 +392,7 @@ sequenceDiagram
 - 2025-01-27 | Maintainer | 플레이어/적 스킬카드 통합 관리 시스템 구현 | 코드/문서
 - 2025-01-27 | Maintainer | 수량 기반 덱 시스템 및 커스텀 에디터 구현 | 코드/문서
 - 2025-01-27 | Maintainer | EnemySkillCard.cs 제거 및 통합 런타임 인스턴스 구현 | 코드/문서
+- 2025-01-27 | Maintainer | AnimationSystem 의존성 완전 제거 및 컴파일 에러 해결 | 코드/문서
 - 2025-01-27 | Maintainer | 동적 덱 관리 시스템 구현 - 게임 중 덱 구성 변경 | 코드/문서
 - 2025-01-27 | Maintainer | 카드 보상 시스템 구현 - 스테이지 완료 시 카드 지급 | 코드/문서
 - 2025-01-27 | Maintainer | 덱 편집 UI 구현 - 게임 중 덱 편집 인터페이스 | 코드/문서

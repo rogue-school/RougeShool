@@ -4,8 +4,6 @@ using Zenject;
 using Game.IManager;
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Interface;
-using Game.AnimationSystem.Manager;
-using Game.AnimationSystem.Interface;
 using Game.CharacterSystem.Interface;
 
 namespace Game.CharacterSystem.Initialization
@@ -22,18 +20,16 @@ namespace Game.CharacterSystem.Initialization
 
         private IPlayerManager playerManager;
         private IPlayerHandManager handManager;
-        private IAnimationFacade animationFacade;
 
         #endregion
 
         #region 의존성 주입
 
         [Inject]
-        public void Construct(IPlayerManager playerManager, IPlayerHandManager handManager, IAnimationFacade animationFacade)
+        public void Construct(IPlayerManager playerManager, IPlayerHandManager handManager)
         {
             this.playerManager = playerManager;
             this.handManager = handManager;
-            this.animationFacade = animationFacade;
         }
 
         #endregion
@@ -42,7 +38,7 @@ namespace Game.CharacterSystem.Initialization
 
         public IEnumerator Initialize()
         {
-            Debug.Log("<color=cyan>[PlayerSkillCardInitializer] 플레이어 스킬카드 초기화 시작</color>");
+            Debug.Log("<color=cyan>[PlayerSkillCardInitializer] 플레이어 스킬카드 초기화 시작 (CombatStartupManager에서 처리됨)</color>");
 
             var player = playerManager.GetPlayer();
             if (player == null)
@@ -52,7 +48,7 @@ namespace Game.CharacterSystem.Initialization
             }
 
             handManager.SetPlayer(player);          // owner를 runtime에 명시적으로 설정
-            handManager.GenerateInitialHand();
+            // handManager.GenerateInitialHand(); // CombatStartupManager에서 처리
             handManager.LogPlayerHandSlotStates();
             player.InjectHandManager(handManager);  // 연결
 
@@ -69,11 +65,8 @@ namespace Game.CharacterSystem.Initialization
                     var uiObj = ui as Game.SkillCardSystem.UI.SkillCardUI;
                     if (uiObj != null)
                     {
-                        // AnimationFacade를 통해 애니메이션 실행
-                        if (animationFacade != null)
-                        {
-                            animationFacade.PlaySkillCardAnimation(card, uiObj.gameObject, "spawn");
-                        }
+                        // 애니메이션 건너뛰기 (AnimationSystem 제거로 인해 임시 비활성화)
+                        Debug.Log($"[PlayerSkillCardInitializer] 카드 애니메이션을 건너뜁니다: {card.GetCardName()}");
                         animCount++; // 애니메이션 호출 완료
                     }
                 }

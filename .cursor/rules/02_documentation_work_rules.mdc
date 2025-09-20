@@ -63,6 +63,7 @@ alwaysApply: true
 2) 동기화 규칙:
 - 씬 변경 시: `scene_hierarchy_documentation_rules.mdc`의 트리/표/체크리스트를 따라 문서 동기화.
 - 시스템 변경 시: 공개 API, 초기화 순서, DI, 상태도 변경을 문서에 반영.
+- AnimationSystem 제거 시: 모든 관련 문서에서 AnimationSystem 참조 제거 및 임시 처리 방법 문서화.
 3) PR 체크리스트(필수):
 - [ ] 문서와 코드/씬의 주요 값·참조 일치
 - [ ] 인스펙터 연결 표의 [필수] 항목 누락 없음
@@ -159,6 +160,7 @@ alwaysApply: true
 - 2025-09-09 | Maintainer | Cursor AI 도구/API 사양 및 사용 규칙 추가 | 문서
 - 2025-09-09 | Maintainer | Cursor Rules 프론트매터(Always 적용) 추가 | 문서
 - 2025-09-09 | Maintainer | 씬 문서 명칭/경로 정정 및 CI/PR 게이트 수치화 | 문서
+- 2025-01-27 | Maintainer | AnimationSystem 제거로 인한 문서 동기화 규칙 추가 | 문서
 
 # 아래 내용은 구 규칙(중복)으로 삭제되었습니다. 단일 규칙 유지.
 

@@ -2,9 +2,8 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Game.SkillCardSystem.UI;
-using Game.CombatSystem.Interface;
+using Game.CombatSystem.Manager;
 using Game.CombatSystem.Utility;
-using Game.AnimationSystem.Interface;
 
 namespace Game.CombatSystem.DragDrop
 {
@@ -26,16 +25,14 @@ namespace Game.CombatSystem.DragDrop
         private Canvas canvas;
         private CanvasGroup canvasGroup;
         private RectTransform rectTransform;
-        private ICombatFlowCoordinator flowCoordinator;
-        private IAnimationFacade animationFacade;
+        private CombatSlotManager slotManager;
 
         /// <summary>
-        /// 전투 흐름 관리자 주입 (입력 가능 여부 판단용)
+        /// 전투 슬롯 관리자 주입 (입력 가능 여부 판단용)
         /// </summary>
-        public void Inject(ICombatFlowCoordinator coordinator, IAnimationFacade animationFacade)
+        public void Inject(CombatSlotManager slotManager)
         {
-            this.flowCoordinator = coordinator;
-            this.animationFacade = animationFacade;
+            this.slotManager = slotManager;
         }
 
         #region 유니티 생명주기 메서드
@@ -90,13 +87,8 @@ namespace Game.CombatSystem.DragDrop
             {
                 rectTransform.localPosition = localPoint;
                 
-                // 드래그 애니메이션 업데이트 (그림자 위치 갱신)
-                var dragAnimation = GetComponent<Game.AnimationSystem.Animator.SkillCardAnimation.DragAnimation.DefaultSkillCardDragAnimation>();
-                if (dragAnimation != null)
-                {
-                    // 카드 위치 업데이트 후 즉시 그림자 위치 동기화
-                    dragAnimation.UpdateDragAnimation(eventData.delta);
-                }
+                // 드래그 애니메이션 업데이트 건너뛰기 (AnimationSystem 제거로 인해 임시 비활성화)
+                Debug.Log("[CardDragHandler] 드래그 애니메이션 업데이트를 건너뜁니다.");
             }
         }
 
@@ -157,7 +149,7 @@ namespace Game.CombatSystem.DragDrop
         /// </summary>
         private bool CanDrag()
         {
-            return flowCoordinator != null && flowCoordinator.IsPlayerInputEnabled();
+            return slotManager != null; // Note: Simplified check for new architecture
         }
 
         /// <summary>
@@ -186,37 +178,17 @@ namespace Game.CombatSystem.DragDrop
             foreach (var img in GetComponentsInChildren<Image>())
                 img.raycastTarget = false;
             
-            // 드래그 애니메이션 컴포넌트 찾기
-            var dragAnimation = GetComponent<Game.AnimationSystem.Animator.SkillCardAnimation.DragAnimation.DefaultSkillCardDragAnimation>();
+            // 드롭 실패 처리 (AnimationSystem 제거로 인해 즉시 리셋)
+            Debug.Log("[CardDragHandler] 드롭 실패 애니메이션을 건너뛰고 즉시 리셋합니다.");
             
-            if (dragAnimation != null)
-            {
-                // 드롭 실패 애니메이션 실행 (원래 위치로 부드럽게 이동)
-                dragAnimation.PlayDropFailAnimation(OriginalWorldPosition, () => {
-                    // 애니메이션 완료 후 실제 위치 리셋
-                    CardSlotHelper.ResetCardToOriginal(cardUI);
-                    
-                    // 드래그 애니메이션 상태 완전 리셋
-                    dragAnimation.CompleteAnimation();
-                    
-                    // 애니메이션 완료 후 UI 상태 완전 복원
-                    canvasGroup.alpha = 1f;
-                    canvasGroup.blocksRaycasts = true;
-                    foreach (var img in GetComponentsInChildren<Image>())
-                        img.raycastTarget = true;
-                });
-            }
-            else
-            {
-                // 드래그 애니메이션 컴포넌트가 없으면 즉시 리셋
-                CardSlotHelper.ResetCardToOriginal(cardUI);
-                
-                // UI 상태 완전 복원
-                canvasGroup.alpha = 1f;
-                canvasGroup.blocksRaycasts = true;
-                foreach (var img in GetComponentsInChildren<Image>())
-                    img.raycastTarget = true;
-            }
+            // 즉시 리셋
+            CardSlotHelper.ResetCardToOriginal(cardUI);
+            
+            // UI 상태 복원
+            canvasGroup.alpha = 1f;
+            canvasGroup.blocksRaycasts = true;
+            foreach (var img in GetComponentsInChildren<Image>())
+                img.raycastTarget = true;
         }
 
         /// <summary>
@@ -230,15 +202,8 @@ namespace Game.CombatSystem.DragDrop
                 var card = skillCardUI.GetCard();
                 if (card != null)
                 {
-                    // AnimationFacade를 통해 드래그 시작 애니메이션 호출
-                    if (animationFacade != null)
-                    {
-                        animationFacade.PlaySkillCardDragStartAnimation(
-                            card, 
-                            gameObject, 
-                            null
-                        );
-                    }
+                    // 드래그 시작 애니메이션 건너뛰기 (AnimationSystem 제거로 인해 임시 비활성화)
+                    Debug.Log($"[CardDragHandler] 드래그 시작 애니메이션을 건너뜁니다: {card.GetCardName()}");
                 }
             }
         }
@@ -254,15 +219,8 @@ namespace Game.CombatSystem.DragDrop
                 var card = skillCardUI.GetCard();
                 if (card != null)
                 {
-                    // AnimationFacade를 통해 드래그 종료 애니메이션 호출
-                    if (animationFacade != null)
-                    {
-                        animationFacade.PlaySkillCardDragEndAnimation(
-                            card, 
-                            gameObject, 
-                            null
-                        );
-                    }
+                    // 드래그 종료 애니메이션 건너뛰기 (AnimationSystem 제거로 인해 임시 비활성화)
+                    Debug.Log($"[CardDragHandler] 드래그 종료 애니메이션을 건너뜁니다: {card.GetCardName()}");
                 }
             }
         }

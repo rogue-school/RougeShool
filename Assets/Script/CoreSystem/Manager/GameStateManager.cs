@@ -38,7 +38,15 @@ namespace Game.CoreSystem.Manager
         private void Awake()
         {
             // 씬 전환 시에도 선택된 캐릭터 등 상태 유지
-            DontDestroyOnLoad(gameObject);
+            // 루트 오브젝트에서만 DontDestroyOnLoad를 적용해야 경고가 발생하지 않습니다.
+            if (transform.parent == null)
+            {
+                DontDestroyOnLoad(gameObject);
+            }
+            else
+            {
+                Debug.LogWarning("[GameStateManager] 루트 오브젝트가 아니므로 DontDestroyOnLoad를 적용할 수 없습니다. 루트로 이동을 권장합니다.");
+            }
         }
         
         /// <summary>

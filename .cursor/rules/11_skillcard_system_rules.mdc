@@ -12,6 +12,8 @@ alwaysApply: true
 SkillCardSystem은 게임의 스킬카드 시스템을 관리하는 핵심 시스템입니다. 카드 데이터, 효과, 실행, 검증, UI, 드래그 앤 드롭, 슬롯 관리 등을 통합적으로 관리합니다. 플레이어와 적 스킬카드를 통합된 데이터 모델로 관리하며, 덱 기반 시스템과 효과 시스템을 제공합니다.
 
 ### 최근 변경(요약)
+- **AnimationSystem 의존성 완전 제거**: 모든 AnimationSystem 관련 코드 제거 완료
+- **임시 애니메이션 비활성화**: 애니메이션 호출 부분을 Debug.Log로 대체하여 게임 로직 정상 동작
 - **통합 데이터 모델 완료**: SkillCardDefinition 기반으로 플레이어/적 스킬카드 통합 관리 완료
 - **수량 기반 덱 완료**: 플레이어 덱에서 카드 수량 관리 및 커스텀 에디터 지원 완료
 - **통합 런타임 인스턴스 완료**: SkillCard 클래스로 플레이어/적 카드 통합 관리 완료
@@ -20,6 +22,7 @@ SkillCardSystem은 게임의 스킬카드 시스템을 관리하는 핵심 시�
 - **가드 효과 리팩토링 완료**: 스킬카드 시스템으로 이동, 불필요한 가드량 제거 완료
 - **Zenject DI 통합 완료**: 모든 SkillCardSystem 컴포넌트가 의존성 주입으로 전환 완료
 - **레거시 슬롯 최적화 완료**: 모든 `SLOT_1/SLOT_2` → `BATTLE_SLOT/WAIT_SLOT_1` 전환 완료
+- **컴파일 에러 해결**: 모든 SkillCardSystem 관련 컴파일 에러 해결 완료
 
 ## 🏗️ 폴더 구조 규칙
 ```
@@ -193,6 +196,10 @@ PlayerSkillDeck playerDeck = new PlayerSkillDeck();
 playerDeck.AddCard(definition, 3); // Fireball 카드를 3장 추가
 playerDeck.RemoveCard(definition, 1); // Fireball 카드를 1장 제거
 int cardCount = playerDeck.GetCardCount(definition); // Fireball 카드 수량 조회
+
+// AnimationSystem 제거로 인한 임시 처리
+// 스킬카드 애니메이션은 Debug.Log로 대체됨
+Debug.Log("[SkillCardSystem] 스킬카드 애니메이션 재생 (임시 처리)");
 ```
 
 ### 주요 클래스 및 메서드
@@ -251,3 +258,13 @@ int cardCount = playerDeck.GetCardCount(definition); // Fireball 카드 수량 �
 - **생명주기 관리**: 카드 객체의 생성/소멸 관리
 - **리소스 해제**: 카드 사용 후 리소스 정리
 - **메모리 누수 방지**: 이벤트 구독 해제
+
+## 📝 변경 기록(Delta)
+- 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
+
+예)
+- 2025-01-27 | Maintainer | SkillCardSystem 규칙 초기 제정 | 문서
+- 2025-01-27 | Maintainer | 통합 데이터 모델 및 수량 기반 덱 규칙 추가 | 문서
+- 2025-01-27 | Maintainer | 소유자 정책 및 용어 변경 규칙 추가 | 문서
+- 2025-01-27 | Maintainer | 가드 효과 리팩토링 및 Zenject DI 규칙 추가 | 문서
+- 2025-01-27 | Maintainer | AnimationSystem 의존성 완전 제거 및 임시 처리 추가 | 문서

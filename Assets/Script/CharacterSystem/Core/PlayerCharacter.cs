@@ -8,7 +8,6 @@ using Game.SkillCardSystem.Slot;
 using Game.IManager;
 using Game.CombatSystem.UI;
 using Game.CombatSystem;
-using Game.AnimationSystem.Manager;
 using Game.CharacterSystem.UI;
 
 namespace Game.CharacterSystem.Core

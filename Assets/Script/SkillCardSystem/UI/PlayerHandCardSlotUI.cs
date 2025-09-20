@@ -1,14 +1,12 @@
 using UnityEngine;
 using Zenject;
-using Game.CombatSystem.Interface;
+using Game.CombatSystem.Manager;
 using Game.CombatSystem.Data;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Slot;
 using Game.SkillCardSystem.UI;
 using Game.CombatSystem.Utility;
 using Game.CombatSystem.DragDrop;
-using Game.AnimationSystem.Animator.SkillCardAnimation.SpawnAnimation;
-using Game.AnimationSystem.Interface;
 
 namespace Game.CombatSystem.UI
 {
@@ -16,22 +14,20 @@ namespace Game.CombatSystem.UI
     /// 플레이어 핸드 슬롯 UI.
     /// 이전 시스템의 불필요한 의존성을 제거하고, 플레이어 카드 전용으로 동작합니다.
     /// </summary>
-    public class PlayerHandCardSlotUI : MonoBehaviour, IHandCardSlot
+    public class PlayerHandCardSlotUI : MonoBehaviour
     {
         [SerializeField] private SkillCardSlotPosition position;
 
         private ISkillCard currentCard;
         private SkillCardUI currentCardUI;
         private SkillCardUI cardUIPrefab;
-        private ICombatFlowCoordinator flowCoordinator;
-        private IAnimationFacade animationFacade;
+        private CombatSlotManager slotManager;
 
         [Inject]
-        public void Construct(SkillCardUI cardUIPrefab, ICombatFlowCoordinator flowCoordinator, IAnimationFacade animationFacade)
+        public void Construct(SkillCardUI cardUIPrefab, CombatSlotManager slotManager)
         {
             this.cardUIPrefab = cardUIPrefab;
-            this.flowCoordinator = flowCoordinator;
-            this.animationFacade = animationFacade;
+            this.slotManager = slotManager;
         }
 
         public SkillCardSlotPosition GetSlotPosition() => position;
@@ -79,15 +75,15 @@ namespace Game.CombatSystem.UI
             if (currentCardUI != null)
                 Destroy(currentCardUI.gameObject);
 
-            currentCardUI = SkillCardUIFactory.CreateUI(prefab, transform, card, flowCoordinator, animationFacade);
+            currentCardUI = SkillCardUIFactory.CreateUI(prefab, transform, card, slotManager, null);
 
             if (currentCardUI != null)
             {
                 // 정확한 부모로 강제 부착(레이아웃/정렬 용이)
                 CardSlotHelper.AttachCardToSlot(currentCardUI, this);
 
-                // 생성 애니메이션 실행 (존재 시)
-                currentCardUI.GetComponent<DefaultSkillCardSpawnAnimation>()?.PlaySpawnAnimation();
+                // 생성 애니메이션 건너뛰기 (AnimationSystem 제거로 인해 임시 비활성화)
+                Debug.Log($"[PlayerHandCardSlotUI] 카드 생성 애니메이션을 건너뜁니다: {card.GetCardName()}");
 
                 // 복귀 기준 위치 명시
                 var dragHandler = currentCardUI.GetComponent<CardDragHandler>();
@@ -126,10 +122,6 @@ namespace Game.CombatSystem.UI
                 currentCardUI.SetInteractable(interactable);
         }
 
-        public void SetCoolTimeDisplay(int coolTime, bool isOnCooldown)
-        {
-            currentCardUI?.ShowCoolTime(coolTime, isOnCooldown);
-        }
 
         private void OnValidate()
         {

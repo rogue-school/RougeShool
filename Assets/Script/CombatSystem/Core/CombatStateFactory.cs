@@ -26,32 +26,32 @@ namespace Game.CombatSystem.Factory
         /// <summary>
         /// 준비 상태 생성
         /// </summary>
-        public ICombatTurnState CreatePrepareState() => prepareFactory.Create();
+        public CombatPrepareState CreatePrepareState() => prepareFactory.Create();
 
         /// <summary>
         /// 플레이어 입력 상태 생성
         /// </summary>
-        public ICombatTurnState CreatePlayerInputState() => inputFactory.Create();
+        public CombatPlayerInputState CreatePlayerInputState() => inputFactory.Create();
 
         /// <summary>
         /// 공격 상태 생성
         /// </summary>
-        public ICombatTurnState CreateAttackState() => attackFactory.Create();
+        public CombatAttackState CreateAttackState() => attackFactory.Create();
 
         /// <summary>
         /// 결과 계산 상태 생성
         /// </summary>
-        public ICombatTurnState CreateResultState() => resultFactory.Create();
+        public CombatResultState CreateResultState() => resultFactory.Create();
 
         /// <summary>
         /// 승리 상태 생성
         /// </summary>
-        public ICombatTurnState CreateVictoryState() => victoryFactory.Create();
+        public CombatVictoryState CreateVictoryState() => victoryFactory.Create();
 
         /// <summary>
         /// 게임 오버 상태 생성
         /// </summary>
-        public ICombatTurnState CreateGameOverState() => gameOverFactory.Create();
+        public CombatGameOverState CreateGameOverState() => gameOverFactory.Create();
 
         #endregion
     }

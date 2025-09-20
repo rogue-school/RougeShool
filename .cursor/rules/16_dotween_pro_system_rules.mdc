@@ -1,0 +1,564 @@
+# DOTween Pro 시스템 개발 규칙 (Production)
+
+> 목적: DOTween Pro 플러그인을 전문적으로 활용하여 Unity 2D 게임의 모든 애니메이션을 체계적으로 관리한다. 성능 최적화, 메모리 관리, 코드 품질을 보장하며 AnimationSystem 재구현 시 표준이 된다.
+
+## 1) 적용 범위와 원칙
+- 범위: `Assets/Script/**` 전역, 모든 애니메이션 관련 코드
+- 원칙: DOTween 우선 사용 → 성능 최적화 → 메모리 관리 → 코드 품질 → 확장성
+- Single Source of Truth: DOTween 설정, 애니메이션 패턴, 성능 기준을 통일한다.
+
+## 2) DOTween Pro 기본 설정 및 초기화
+
+### 2-1) DOTweenSettings 설정 (필수)
+```csharp
+// 위치: Assets/Plugins/Demigiant/DOTweenSettings.asset
+// 현재 설정 상태 확인 및 최적화 필요
+
+// 필수 설정값
+- useSafeMode: true (안정성 보장)
+- logBehaviour: 2 (Warning 이상만 로그)
+- defaultAutoKill: true (자동 정리)
+- defaultRecyclable: false (재사용 비활성화)
+- defaultEaseType: 6 (OutQuad 기본값)
+- modules.uiEnabled: true (UI 애니메이션 활성화)
+- modules.textMeshProEnabled: true (TextMeshPro 지원 활성화)
+```
+
+### 2-2) DOTween 초기화 규칙
+```csharp
+// CoreSystemInitializer에서 DOTween 초기화
+public class CoreSystemInitializer : MonoBehaviour, ICoreSystemInitializable
+{
+    public IEnumerator Initialize()
+    {
+        // DOTween 초기화 (최우선)
+        DOTween.Init(true, true, LogBehaviour.ErrorsOnly);
+        DOTween.SetTweensCapacity(200, 50); // 성능 최적화
+        
+        // SafeMode 설정
+        DOTween.useSafeMode = true;
+        
+        // 기본 설정
+        DOTween.defaultEaseType = Ease.OutQuad;
+        DOTween.defaultAutoKill = true;
+        DOTween.defaultRecyclable = false;
+        
+        GameLogger.LogInfo("DOTween 초기화 완료", GameLogger.LogCategory.UI);
+        yield return null;
+    }
+}
+```
+
+## 3) 애니메이션 패턴 및 사용법
+
+### 3-1) 기본 애니메이션 패턴
+```csharp
+// 패턴 1: 기본 트윈 (권장)
+transform.DOMove(targetPosition, duration)
+    .SetEase(Ease.OutQuad)
+    .OnComplete(() => Debug.Log("이동 완료"));
+
+// 패턴 2: 체인 애니메이션
+transform.DOScale(Vector3.one * 1.2f, 0.3f)
+    .SetEase(Ease.OutBack)
+    .OnComplete(() => {
+        transform.DOScale(Vector3.one, 0.2f)
+            .SetEase(Ease.InBack);
+    });
+
+// 패턴 3: 병렬 애니메이션
+Sequence sequence = DOTween.Sequence();
+sequence.Append(transform.DOMove(targetPos, 1f));
+sequence.Join(image.DOFade(0f, 1f));
+sequence.AppendCallback(() => Debug.Log("시퀀스 완료"));
+```
+
+### 3-2) UI 애니메이션 패턴
+```csharp
+// UI 페이드 인/아웃
+CanvasGroup canvasGroup = GetComponent<CanvasGroup>();
+canvasGroup.DOFade(1f, 0.5f).SetEase(Ease.OutQuad);
+
+// UI 스케일 애니메이션
+transform.DOScale(Vector3.one, 0.3f)
+    .SetEase(Ease.OutBack)
+    .From(Vector3.zero);
+
+// UI 색상 애니메이션
+Image image = GetComponent<Image>();
+image.DOColor(Color.red, 0.5f)
+    .SetLoops(2, LoopType.Yoyo);
+```
+
+### 3-3) TextMeshPro 애니메이션 패턴
+```csharp
+// 텍스트 타이핑 효과
+TextMeshProUGUI text = GetComponent<TextMeshProUGUI>();
+text.DOText("안녕하세요!", 2f)
+    .SetEase(Ease.Linear);
+
+// 텍스트 색상 변화
+text.DOColor(Color.red, 1f)
+    .SetEase(Ease.InOutQuad);
+```
+
+## 4) 성능 최적화 규칙
+
+### 4-1) 메모리 관리
+```csharp
+// 트윈 풀링 설정
+DOTween.SetTweensCapacity(200, 50); // 활성 트윈, 풀 크기
+
+// 자동 정리 활성화
+DOTween.defaultAutoKill = true;
+
+// 재사용 비활성화 (메모리 안정성)
+DOTween.defaultRecyclable = false;
+```
+
+### 4-2) 성능 모니터링
+```csharp
+// 트윈 상태 확인
+int activeTweens = DOTween.TotalPlayingTweens();
+int pausedTweens = DOTween.TotalPausedTweens();
+
+// 메모리 사용량 확인
+GameLogger.LogInfo($"활성 트윈: {activeTweens}, 일시정지: {pausedTweens}", 
+    GameLogger.LogCategory.UI);
+```
+
+### 4-3) 최적화 패턴
+```csharp
+// 패턴 1: 트윈 재사용 (고성능)
+private Tween moveTween;
+public void MoveTo(Vector3 target)
+{
+    moveTween?.Kill(); // 기존 트윈 정리
+    moveTween = transform.DOMove(target, 1f)
+        .SetEase(Ease.OutQuad)
+        .OnComplete(() => moveTween = null);
+}
+
+// 패턴 2: 시퀀스 풀링
+private Sequence animationSequence;
+public void PlayAnimation()
+{
+    animationSequence?.Kill();
+    animationSequence = DOTween.Sequence()
+        .Append(transform.DOScale(1.2f, 0.3f))
+        .Append(transform.DOScale(1f, 0.3f))
+        .OnComplete(() => animationSequence = null);
+}
+```
+
+## 5) 아키텍처 패턴
+
+### 5-1) 애니메이션 매니저 패턴
+```csharp
+// DOTweenAnimationManager 싱글톤
+public class DOTweenAnimationManager : MonoBehaviour
+{
+    public static DOTweenAnimationManager Instance { get; private set; }
+    
+    private Dictionary<string, Tween> activeTweens = new Dictionary<string, Tween>();
+    
+    public Tween PlayAnimation(string id, Tween tween)
+    {
+        // 기존 트윈 정리
+        if (activeTweens.ContainsKey(id))
+        {
+            activeTweens[id].Kill();
+        }
+        
+        // 새 트윈 등록
+        activeTweens[id] = tween;
+        tween.OnComplete(() => activeTweens.Remove(id));
+        
+        return tween;
+    }
+    
+    public void StopAnimation(string id)
+    {
+        if (activeTweens.ContainsKey(id))
+        {
+            activeTweens[id].Kill();
+            activeTweens.Remove(id);
+        }
+    }
+}
+```
+
+### 5-2) 애니메이션 팩토리 패턴
+```csharp
+// DOTweenAnimationFactory
+public static class DOTweenAnimationFactory
+{
+    public static Tween CreateFadeIn(CanvasGroup canvasGroup, float duration = 0.5f)
+    {
+        return canvasGroup.DOFade(1f, duration)
+            .SetEase(Ease.OutQuad)
+            .From(0f);
+    }
+    
+    public static Tween CreateScaleBounce(Transform transform, float duration = 0.3f)
+    {
+        return transform.DOScale(Vector3.one, duration)
+            .SetEase(Ease.OutBack)
+            .From(Vector3.zero);
+    }
+    
+    public static Sequence CreateSlideIn(Transform transform, Vector3 fromPos, float duration = 0.5f)
+    {
+        Sequence sequence = DOTween.Sequence();
+        sequence.Append(transform.DOMove(fromPos, 0f)); // 초기 위치
+        sequence.Append(transform.DOMove(Vector3.zero, duration).SetEase(Ease.OutQuad));
+        return sequence;
+    }
+}
+```
+
+### 5-3) 애니메이션 인터페이스 패턴
+```csharp
+// IAnimationController 인터페이스
+public interface IAnimationController
+{
+    void PlaySpawnAnimation();
+    void PlayDeathAnimation();
+    void PlayDamageAnimation();
+    void StopAllAnimations();
+}
+
+// 구현 예시
+public class CharacterAnimationController : MonoBehaviour, IAnimationController
+{
+    private Tween spawnTween;
+    private Tween deathTween;
+    
+    public void PlaySpawnAnimation()
+    {
+        spawnTween?.Kill();
+        spawnTween = transform.DOScale(Vector3.one, 0.5f)
+            .SetEase(Ease.OutBack)
+            .From(Vector3.zero);
+    }
+    
+    public void PlayDeathAnimation()
+    {
+        deathTween?.Kill();
+        deathTween = transform.DOScale(Vector3.zero, 0.8f)
+            .SetEase(Ease.InBack)
+            .OnComplete(() => gameObject.SetActive(false));
+    }
+    
+    public void StopAllAnimations()
+    {
+        spawnTween?.Kill();
+        deathTween?.Kill();
+    }
+}
+```
+
+## 6) 시스템별 애니메이션 규칙
+
+### 6-1) CharacterSystem 애니메이션
+```csharp
+// PlayerCharacterUIController에서 HP/MP 바 애니메이션
+public void UpdateHP(int currentHP, int maxHP)
+{
+    float targetFill = (float)currentHP / maxHP;
+    
+    hpBarFill.DOFillAmount(targetFill, 0.3f)
+        .SetEase(Ease.OutQuad);
+    
+    // HP 텍스트 카운팅 애니메이션
+    int startHP = int.Parse(hpText.text.Split('/')[0]);
+    DOTween.To(() => startHP, x => {
+        hpText.text = $"{x}/{maxHP}";
+    }, currentHP, 0.5f);
+}
+
+// BuffDebuffIcon 애니메이션
+public void PlaySpawnAnimation()
+{
+    transform.DOScale(Vector3.one, 0.3f)
+        .SetEase(Ease.OutBack)
+        .From(Vector3.zero);
+}
+
+public void PlayRemoveAnimation()
+{
+    transform.DOScale(Vector3.zero, 0.2f)
+        .SetEase(Ease.InBack)
+        .OnComplete(() => Destroy(gameObject));
+}
+```
+
+### 6-2) CombatSystem 애니메이션
+```csharp
+// 카드 드래그 애니메이션
+public void OnDragStart()
+{
+    transform.DOScale(1.1f, 0.2f)
+        .SetEase(Ease.OutQuad);
+    
+    canvasGroup.DOFade(0.8f, 0.2f);
+}
+
+public void OnDragEnd()
+{
+    transform.DOScale(1f, 0.2f)
+        .SetEase(Ease.OutQuad);
+    
+    canvasGroup.DOFade(1f, 0.2f);
+}
+
+// 슬롯 이동 애니메이션
+public void MoveToSlot(Transform targetSlot)
+{
+    transform.DOMove(targetSlot.position, 0.5f)
+        .SetEase(Ease.OutQuad)
+        .OnComplete(() => {
+            // 슬롯 도착 후 처리
+            Debug.Log("카드가 슬롯에 도착했습니다.");
+        });
+}
+```
+
+### 6-3) UISystem 애니메이션
+```csharp
+// 버튼 호버 애니메이션
+public void OnPointerEnter(PointerEventData eventData)
+{
+    transform.DOScale(1.05f, 0.2f)
+        .SetEase(Ease.OutQuad);
+}
+
+public void OnPointerExit(PointerEventData eventData)
+{
+    transform.DOScale(1f, 0.2f)
+        .SetEase(Ease.OutQuad);
+}
+
+// 팝업 창 애니메이션
+public void ShowPopup()
+{
+    gameObject.SetActive(true);
+    transform.DOScale(Vector3.one, 0.3f)
+        .SetEase(Ease.OutBack)
+        .From(Vector3.zero);
+}
+
+public void HidePopup()
+{
+    transform.DOScale(Vector3.zero, 0.2f)
+        .SetEase(Ease.InBack)
+        .OnComplete(() => gameObject.SetActive(false));
+}
+```
+
+## 7) 에러 처리 및 안정성
+
+### 7-1) SafeMode 활용
+```csharp
+// DOTween SafeMode 설정 (필수)
+DOTween.useSafeMode = true;
+
+// 안전한 트윈 생성
+try
+{
+    transform.DOMove(targetPosition, duration)
+        .SetEase(Ease.OutQuad)
+        .OnComplete(() => Debug.Log("이동 완료"));
+}
+catch (System.Exception e)
+{
+    GameLogger.LogError($"애니메이션 오류: {e.Message}", GameLogger.LogCategory.Error);
+}
+```
+
+### 7-2) 트윈 검증
+```csharp
+// 트윈 유효성 검사
+public bool IsValidTween(Tween tween)
+{
+    return tween != null && tween.IsActive() && !tween.IsComplete();
+}
+
+// 안전한 트윈 정리
+public void SafeKillTween(ref Tween tween)
+{
+    if (tween != null && tween.IsActive())
+    {
+        tween.Kill();
+    }
+    tween = null;
+}
+```
+
+## 8) 디버깅 및 프로파일링
+
+### 8-1) 트윈 디버깅
+```csharp
+// 트윈 상태 로깅
+public void LogTweenStatus()
+{
+    GameLogger.LogInfo($"총 트윈 수: {DOTween.TotalPlayingTweens()}", 
+        GameLogger.LogCategory.UI);
+    GameLogger.LogInfo($"일시정지된 트윈: {DOTween.TotalPausedTweens()}", 
+        GameLogger.LogCategory.UI);
+}
+
+// 특정 트윈 디버깅
+tween.OnUpdate(() => {
+    Debug.Log($"트윈 진행률: {tween.ElapsedPercentage()}%");
+});
+```
+
+### 8-2) 성능 모니터링
+```csharp
+// 프레임레이트 영향 모니터링
+private void Update()
+{
+    if (Time.frameCount % 60 == 0) // 1초마다
+    {
+        int activeTweens = DOTween.TotalPlayingTweens();
+        if (activeTweens > 50) // 임계값 초과 시 경고
+        {
+            GameLogger.LogWarning($"활성 트윈 수가 많습니다: {activeTweens}", 
+                GameLogger.LogCategory.UI);
+        }
+    }
+}
+```
+
+## 9) 테스트 및 검증
+
+### 9-1) 애니메이션 테스트
+```csharp
+// 애니메이션 완료 테스트
+[Test]
+public void TestAnimationCompletion()
+{
+    bool animationCompleted = false;
+    
+    transform.DOMove(Vector3.one, 1f)
+        .OnComplete(() => animationCompleted = true);
+    
+    yield return new WaitForSeconds(1.1f);
+    
+    Assert.IsTrue(animationCompleted);
+}
+
+// 애니메이션 중단 테스트
+[Test]
+public void TestAnimationKill()
+{
+    Tween tween = transform.DOMove(Vector3.one, 10f);
+    
+    yield return new WaitForSeconds(0.5f);
+    
+    tween.Kill();
+    
+    Assert.IsFalse(tween.IsActive());
+}
+```
+
+### 9-2) 성능 테스트
+```csharp
+// 메모리 사용량 테스트
+[Test]
+public void TestMemoryUsage()
+{
+    int initialTweens = DOTween.TotalPlayingTweens();
+    
+    // 100개 트윈 생성
+    for (int i = 0; i < 100; i++)
+    {
+        transform.DOMove(Vector3.one, 1f);
+    }
+    
+    yield return new WaitForSeconds(1.1f);
+    
+    int finalTweens = DOTween.TotalPlayingTweens();
+    
+    // 자동 정리 확인
+    Assert.AreEqual(initialTweens, finalTweens);
+}
+```
+
+## 10) 마이그레이션 가이드
+
+### 10-1) 기존 애니메이션 코드 마이그레이션
+```csharp
+// 기존 코루틴 방식
+// StartCoroutine(MoveCoroutine());
+
+// DOTween 방식으로 변경
+transform.DOMove(targetPosition, duration)
+    .SetEase(Ease.OutQuad)
+    .OnComplete(() => Debug.Log("이동 완료"));
+```
+
+### 10-2) AnimationSystem 재구현 시 적용
+```csharp
+// AnimationSystem 재구현 시 DOTween 기반으로 구현
+public class AnimationFacade : MonoBehaviour, IAnimationFacade
+{
+    private DOTweenAnimationManager animationManager;
+    
+    public void PlayCharacterAnimation(string characterId, string animationType, 
+        Transform target, System.Action onComplete, bool isEnemy)
+    {
+        Tween animationTween = CreateCharacterAnimation(characterId, animationType, target);
+        
+        if (onComplete != null)
+        {
+            animationTween.OnComplete(() => onComplete());
+        }
+        
+        animationManager.PlayAnimation($"{characterId}_{animationType}", animationTween);
+    }
+    
+    private Tween CreateCharacterAnimation(string characterId, string animationType, Transform target)
+    {
+        switch (animationType)
+        {
+            case "spawn":
+                return target.DOScale(Vector3.one, 0.5f)
+                    .SetEase(Ease.OutBack)
+                    .From(Vector3.zero);
+            case "death":
+                return target.DOScale(Vector3.zero, 0.8f)
+                    .SetEase(Ease.InBack);
+            default:
+                return target.DOScale(Vector3.one, 0.3f);
+        }
+    }
+}
+```
+
+## 11) 변경 기록(Delta)
+- 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
+
+예)
+- 2025-01-27 | Maintainer | DOTween Pro 시스템 규칙 신규 제정 | 문서
+- 2025-01-27 | Maintainer | DOTween 초기화 및 설정 규칙 추가 | 문서
+- 2025-01-27 | Maintainer | 애니메이션 패턴 및 사용법 규칙 추가 | 문서
+- 2025-01-27 | Maintainer | 성능 최적화 및 메모리 관리 규칙 추가 | 문서
+- 2025-01-27 | Maintainer | 아키텍처 패턴 및 시스템별 애니메이션 규칙 추가 | 문서
+- 2025-01-27 | Maintainer | 에러 처리 및 안정성 규칙 추가 | 문서
+- 2025-01-27 | Maintainer | 디버깅 및 프로파일링 규칙 추가 | 문서
+- 2025-01-27 | Maintainer | 테스트 및 검증 규칙 추가 | 문서
+- 2025-01-27 | Maintainer | 마이그레이션 가이드 및 AnimationSystem 재구현 가이드 추가 | 문서
+
+---
+
+description: "RougeShool 프로젝트 DOTween Pro 플러그인 전문 활용 규칙"
+auto_attach:
+  - Assets/Script/**/*.cs
+  - Assets/Plugins/Demigiant/DOTweenPro/**/*
+  - Assets/Plugins/Demigiant/DOTweenSettings.asset
+rule_id: dotween_pro_system_rules
+version: 1.0.0
+alwaysApply: true
+---

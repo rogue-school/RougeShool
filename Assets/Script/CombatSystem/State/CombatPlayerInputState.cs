@@ -1,21 +1,18 @@
 using UnityEngine;
-using Game.CombatSystem.Interface;
-using Game.SkillCardSystem.Runtime;
+using Game.CombatSystem.Manager;
 
 namespace Game.CombatSystem.State
 {
     /// <summary>
     /// 플레이어의 입력을 처리하는 전투 상태입니다.
-    /// 쿨타임 감소, 카드 선택 UI 활성화, 시작 버튼 등록 등을 수행합니다.
+    /// 카드 선택 UI 활성화, 시작 버튼 등록 등을 수행합니다.
     /// </summary>
-    public class CombatPlayerInputState : ICombatTurnState
+    public class CombatPlayerInputState
     {
         #region 필드
 
-        private readonly ICombatFlowCoordinator flowCoordinator;
-        private readonly ITurnCardRegistry cardRegistry;
-        private readonly ICombatTurnManager turnManager;
-        private readonly SkillCardCooldownSystem cooldownSystem;
+        private readonly CombatSlotManager slotManager;
+        private readonly TurnManager turnManager;
 
         private bool hasStarted = false;
 
@@ -27,15 +24,11 @@ namespace Game.CombatSystem.State
         /// CombatPlayerInputState의 생성자입니다.
         /// </summary>
         public CombatPlayerInputState(
-            ICombatFlowCoordinator flowCoordinator,
-            ITurnCardRegistry cardRegistry,
-            ICombatTurnManager turnManager,
-            SkillCardCooldownSystem cooldownSystem)
+            CombatSlotManager slotManager,
+            TurnManager turnManager)
         {
-            this.flowCoordinator = flowCoordinator;
-            this.cardRegistry = cardRegistry;
+            this.slotManager = slotManager;
             this.turnManager = turnManager;
-            this.cooldownSystem = cooldownSystem;
         }
 
         #endregion
@@ -43,20 +36,15 @@ namespace Game.CombatSystem.State
         #region 상태 인터페이스 구현
 
         /// <summary>
-        /// 상태 진입 시 호출됩니다. 쿨타임을 감소시키고 UI 및 입력을 활성화합니다.
+        /// 상태 진입 시 호출됩니다. UI 및 입력을 활성화합니다.
         /// </summary>
         public void EnterState()
         {
             Debug.Log("<color=cyan>[STATE] CombatPlayerInputState 진입</color>");
             hasStarted = false;
 
-            cooldownSystem.ReduceAllCooldowns();
-
-            flowCoordinator.EnablePlayerInput();
-            flowCoordinator.ShowPlayerCardSelectionUI();
-            flowCoordinator.DisableStartButton();
-
-            flowCoordinator.RegisterStartButton(OnStartButtonPressed);
+            // Note: UI management is now handled by the simplified architecture
+            Debug.Log("[CombatPlayerInputState] 플레이어 입력 대기 상태");
         }
 
         /// <summary>
@@ -73,10 +61,7 @@ namespace Game.CombatSystem.State
         public void ExitState()
         {
             Debug.Log("<color=cyan>[STATE] CombatPlayerInputState 종료</color>");
-            flowCoordinator.DisablePlayerInput();
-            flowCoordinator.HidePlayerCardSelectionUI();
-            flowCoordinator.UnregisterStartButton();
-            flowCoordinator.DisableStartButton();
+            // Note: UI management is now handled by the simplified architecture
         }
 
         #endregion
@@ -98,13 +83,8 @@ namespace Game.CombatSystem.State
             hasStarted = true;
             Debug.Log("<color=cyan>[STATE] CombatPlayerInputState → CombatAttackState 전이</color>");
 
-            flowCoordinator.DisableStartButton();
-            flowCoordinator.DisablePlayerInput();
-            flowCoordinator.HidePlayerCardSelectionUI();
-            flowCoordinator.UnregisterStartButton();
-
-            var next = turnManager.GetStateFactory().CreateAttackState();
-            turnManager.RequestStateChange(next);
+            // Note: State transitions are now handled by the simplified TurnManager
+            turnManager.NextTurn();
         }
 
         #endregion

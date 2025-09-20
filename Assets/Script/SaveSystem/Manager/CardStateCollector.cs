@@ -6,7 +6,7 @@ using Game.SaveSystem.Data;
 using Game.SaveSystem.Interface;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Slot;
-using Game.CombatSystem.Interface;
+using Game.CombatSystem.Manager;
 using Game.CombatSystem.Slot;
 using Game.CharacterSystem.Interface;
 using Zenject;
@@ -22,10 +22,8 @@ namespace Game.SaveSystem.Manager
         #region 의존성 주입
 
         [Inject] private IPlayerHandManager playerHandManager;
-        [Inject] private ITurnCardRegistry turnCardRegistry;
         [Inject] private ICardCirculationSystem circulationSystem;
-        [Inject] private ICombatTurnManager combatTurnManager;
-        [Inject] private ICombatFlowCoordinator combatFlowCoordinator;
+        [Inject] private CombatSlotManager combatSlotManager;
 
         #endregion
 
@@ -100,11 +98,7 @@ namespace Game.SaveSystem.Manager
         /// </summary>
         public string GetCurrentTurnPhase()
         {
-            // 턴 단계를 결정하는 로직
-            if (combatTurnManager == null)
-                return "Unknown";
-            
-            // 실제 구현에서는 턴 매니저의 상태를 확인
+            // Note: Turn phase is now handled by the simplified TurnManager
             return "TurnPhase"; // 임시 구현
         }
 
@@ -168,18 +162,18 @@ namespace Game.SaveSystem.Manager
         /// </summary>
         private void CollectCombatSlotState(CompleteCardStateData cardState)
         {
-            if (turnCardRegistry == null)
+            if (combatSlotManager == null)
             {
-                Debug.LogWarning("[CardStateCollector] TurnCardRegistry가 없습니다.");
+                Debug.LogWarning("[CardStateCollector] CombatSlotManager가 없습니다.");
                 return;
             }
 
             // 전투 슬롯 카드 수집
-            var battleCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.BATTLE_SLOT);
+            var battleCard = combatSlotManager.GetCardInSlot(CombatSlotPosition.BATTLE_SLOT);
             cardState.firstSlotCard = CreateCardSlotData(battleCard, CombatSlotPosition.BATTLE_SLOT, "COMBAT");
             
             // 대기 슬롯 1 카드 수집
-            var waitCard = turnCardRegistry.GetCardInSlot(CombatSlotPosition.WAIT_SLOT_1);
+            var waitCard = combatSlotManager.GetCardInSlot(CombatSlotPosition.WAIT_SLOT_1);
             cardState.secondSlotCard = CreateCardSlotData(waitCard, CombatSlotPosition.WAIT_SLOT_1, "COMBAT");
             
             Debug.Log($"[CardStateCollector] 전투 슬롯 카드 수집: BATTLE_SLOT={cardState.firstSlotCard?.cardName ?? "Empty"}, WAIT_SLOT_1={cardState.secondSlotCard?.cardName ?? "Empty"}");
@@ -207,15 +201,9 @@ namespace Game.SaveSystem.Manager
         /// </summary>
         private void CollectTurnState(CompleteCardStateData cardState)
         {
-            if (combatFlowCoordinator == null || combatTurnManager == null)
-            {
-                Debug.LogWarning("[CardStateCollector] 턴 관련 매니저가 없습니다.");
-                return;
-            }
-
-            // 턴 상태 수집
-            cardState.isPlayerFirst = !combatFlowCoordinator.IsEnemyFirst;
-            cardState.currentTurn = combatTurnManager.GetCurrentTurn();
+            // Note: Turn state is now handled by the simplified TurnManager
+            cardState.isPlayerFirst = true; // 플레이어가 먼저 시작
+            cardState.currentTurn = 1; // 임시 값
             cardState.turnPhase = GetCurrentTurnPhase();
             
             Debug.Log($"[CardStateCollector] 턴 상태 수집: PlayerFirst={cardState.isPlayerFirst}, Turn={cardState.currentTurn}, Phase={cardState.turnPhase}");

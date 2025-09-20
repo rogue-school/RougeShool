@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
-using Game.CombatSystem.Interface;
+using Game.CombatSystem.Manager;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.UI;
 using Game.CombatSystem.Service;
@@ -11,13 +11,13 @@ namespace Game.CombatSystem.DragDrop
     public class CardDropToSlotHandler : MonoBehaviour, IDropHandler
     {
         private CardDropService _dropService;
-        private ICombatFlowCoordinator _flowCoordinator;
+        private CombatSlotManager _slotManager;
 
         [Inject]
-        public void Construct(CardDropService dropService, ICombatFlowCoordinator flowCoordinator)
+        public void Construct(CardDropService dropService, CombatSlotManager slotManager)
         {
             _dropService = dropService;
-            _flowCoordinator = flowCoordinator;
+            _slotManager = slotManager;
         }
 
         public void OnDrop(PointerEventData eventData)
@@ -25,7 +25,7 @@ namespace Game.CombatSystem.DragDrop
             var cardUI = eventData.pointerDrag?.GetComponent<SkillCardUI>();
             var card = cardUI?.GetCard();
             var dragHandler = eventData.pointerDrag?.GetComponent<CardDragHandler>();
-            var slot = GetComponent<ICombatCardSlot>();
+            var slot = GetComponent<CombatSlot>();
 
             if (slot == null)
             {
@@ -50,11 +50,9 @@ namespace Game.CombatSystem.DragDrop
             {
                 dragHandler.droppedSuccessfully = true;
 
-                if (slot is MonoBehaviour slotMb)
-                {
-                    dragHandler.OriginalParent = slotMb.transform;
-                    dragHandler.OriginalWorldPosition = slotMb.transform.position;
-                }
+                // CombatSlot은 MonoBehaviour가 아니므로 transform 접근 불가
+                // 대신 슬롯의 위치 정보를 다른 방식으로 처리해야 함
+                // TODO: 슬롯 위치 정보를 위한 대안 구현 필요
 
                 // 드롭 성공
             }

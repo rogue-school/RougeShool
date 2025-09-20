@@ -1,7 +1,18 @@
 # UtilitySystem 개발 문서
 
 ## 📋 시스템 개요
-UtilitySystem은 게임의 유틸리티 기능들을 관리하는 시스템입니다. 게임 플로우, DontDestroyOnLoad 관리, 드롭 핸들러 주입 등 다양한 유틸리티 기능을 제공합니다.
+UtilitySystem은 게임의 유틸리티 기능들을 관리하는 시스템입니다. 게임 플로우, DontDestroyOnLoad 관리, 드롭 핸들러 주입 등 다양한 유틸리티 기능을 제공합니다. 싱글톤 패턴을 통한 전역 접근, 컨텍스트 패턴을 통한 상태 관리, 의존성 주입 패턴을 통한 느슨한 결합을 지원합니다.
+
+### 최근 변경(요약)
+- **AnimationSystem 의존성 완전 제거**: 모든 AnimationSystem 관련 코드 제거 완료
+- **임시 애니메이션 비활성화**: 애니메이션 호출 부분을 Debug.Log로 대체하여 게임 로직 정상 동작
+- **싱글톤 패턴 완료**: DontDestroyOnLoadContainer, DropHandlerInjector의 전역 접근 완료
+- **컨텍스트 패턴 완료**: GameContext를 통한 플레이어 캐릭터 선택 상태 관리 완료
+- **의존성 주입 패턴 완료**: DropHandlerInjector를 통한 드롭 핸들러 자동 주입 완료
+- **게임 플로우 관리 완료**: 씬 전환 및 게임 상태 관리 완료
+- **자동 관리 완료**: 오브젝트의 생성/소멸 자동 관리 완료
+- **Zenject DI 통합 완료**: 모든 UtilitySystem 컴포넌트가 의존성 주입으로 전환 완료
+- **컴파일 에러 해결**: 모든 UtilitySystem 관련 컴파일 에러 해결 완료
 
 ## 🏗️ 폴더 구조 (리팩토링 후)
 ```
@@ -39,11 +50,11 @@ UtilitySystem/
 - **의존성 관리**: 드롭 핸들러 간 의존성 관리
 - **초기화**: 드롭 핸들러의 자동 초기화
 
-### 4. 카메라 해상도 수정 (제거됨)
-- ~~**해상도 조정**: 다양한 해상도에 맞춰 카메라 설정 조정~~
-- ~~**비율 유지**: 화면 비율 유지~~
-- ~~**자동 적용**: 게임 시작 시 자동 적용~~
-- **제거 사유**: 불필요한 기능으로 판단되어 제거됨
+### 4. 디자인 패턴
+- **싱글톤 패턴**: DontDestroyOnLoadContainer, DropHandlerInjector의 전역 접근
+- **컨텍스트 패턴**: GameContext를 통한 플레이어 캐릭터 선택 상태 관리
+- **의존성 주입 패턴**: DropHandlerInjector를 통한 드롭 핸들러 자동 주입
+- **컨테이너 패턴**: DontDestroyOnLoadContainer를 통한 오브젝트 생명주기 관리
 
 ## 🔧 사용 방법
 
@@ -116,4 +127,5 @@ DropHandlerInjector.InjectToAllCombatSlots(slotRegistry, dropService, flowCoordi
 
 - 2025-01-27 | Maintainer | UtilitySystem 개발 문서 초기 작성 | 문서
 - 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 파일 수 정정 | 문서
+- 2025-01-27 | Maintainer | AnimationSystem 의존성 완전 제거 및 컴파일 에러 해결 | 코드/문서
 - 2025-01-27 | Maintainer | 실제 코드 분석 기반 주요 클래스 및 메서드 정보 추가 | 문서

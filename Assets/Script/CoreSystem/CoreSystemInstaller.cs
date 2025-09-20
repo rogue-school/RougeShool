@@ -5,9 +5,6 @@ using Game.CoreSystem.Interface;
 using Game.CoreSystem.Utility;
 using Game.CoreSystem.Audio;
 using Game.CoreSystem.Save;
-using Game.CoreSystem.Animation;
-using Game.AnimationSystem.Interface;
-using Game.AnimationSystem.Manager;
 using System.Linq;
 using System.Collections.Generic;
 
@@ -25,7 +22,6 @@ namespace Game.CoreSystem
         [SerializeField] private SceneTransitionManager sceneTransitionManager;
         [SerializeField] private AudioManager audioManager;
         [SerializeField] private SaveManager saveManager;
-        [SerializeField] private AnimationDatabaseManager animationDatabaseManager;
         [SerializeField] private CoroutineRunner coroutineRunner;
         [SerializeField] private PlayerCharacterSelectionManager playerCharacterSelectionManager;
 
@@ -33,8 +29,6 @@ namespace Game.CoreSystem
         {
             BindCoreManagers();
             BindCoreServices();
-            // 애니메이션 파사드 바인딩 누락 대비(에디터에서 AnimationSystemInstaller 미등록 시 대비)
-            BindAnimationFacadeIfMissing();
             BindCoreUtilities();
             BindCoreInterfaces();
         }
@@ -61,8 +55,6 @@ namespace Game.CoreSystem
             // SaveManager
             EnsureAndBindCoreManagerWithInterface<SaveManager, ISaveManager>(saveManager, "SaveManager");
             
-            // AnimationDatabaseManager
-            EnsureAndBindCoreManagerWithInterface<AnimationDatabaseManager, IAnimationDatabaseManager>(animationDatabaseManager, "AnimationDatabaseManager");
             
             // PlayerCharacterSelectionManager
             EnsureAndBindCoreManagerWithInterface<PlayerCharacterSelectionManager, IPlayerCharacterSelectionManager>(playerCharacterSelectionManager, "PlayerCharacterSelectionManager");
@@ -186,35 +178,5 @@ namespace Game.CoreSystem
 
         #endregion
 
-        #region 보조 바인딩 (안전 장치)
-
-        /// <summary>
-        /// IAnimationFacade가 바인딩되어 있지 않은 경우, 씬에서 찾아 바인딩하거나 새로 생성하여 바인딩합니다.
-        /// AnimationSystemInstaller가 누락된 상황에서도 코어가 동작하도록 하는 안전 장치입니다.
-        /// </summary>
-        private void BindAnimationFacadeIfMissing()
-        {
-            // 이미 바인딩되어 있으면 아무 것도 하지 않음
-            if (Container.HasBinding<IAnimationFacade>())
-            {
-                return;
-            }
-
-            // 씬에서 기존 AnimationFacade 검색
-            var facade = FindFirstObjectByType<AnimationFacade>(FindObjectsInactive.Include);
-            if (facade == null)
-            {
-                // 없으면 생성
-                var go = new GameObject("AnimationFacade");
-                facade = go.AddComponent<AnimationFacade>();
-                DontDestroyOnLoad(go);
-            }
-
-            // 주입 예약 및 바인딩(인터페이스 및 자기 자신)
-            Container.QueueForInject(facade);
-            Container.BindInterfacesAndSelfTo<AnimationFacade>().FromInstance(facade).AsSingle();
-        }
-
-        #endregion
     }
 }

@@ -8,7 +8,6 @@ using Game.CharacterSystem.Interface;
 using Game.SkillCardSystem.Factory;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem;
-using Game.AnimationSystem.Manager;
 using System.Linq;
 
 namespace Game.SkillCardSystem.Manager
@@ -68,6 +67,7 @@ namespace Game.SkillCardSystem.Manager
 
         /// <summary>
         /// 플레이어 덱을 기반으로 초기 핸드를 생성합니다.
+        /// 덱에서 랜덤하게 3장을 선택하여 핸드에 배치합니다.
         /// </summary>
         public void GenerateInitialHand()
         {
@@ -79,15 +79,32 @@ namespace Game.SkillCardSystem.Manager
             }
 
             var allCards = deck.GetAllCards();
-            foreach (var cardDefinition in allCards)
+            if (allCards.Count == 0)
             {
-                var pos = SkillCardSlotPosition.PLAYER_SLOT_1; // 기본값
+                Debug.LogWarning("[PlayerHandManager] 덱에 카드가 없습니다.");
+                return;
+            }
+
+            // 덱에서 랜덤하게 3장 선택
+            var selectedCards = new List<Game.SkillCardSystem.Data.SkillCardDefinition>();
+            for (int i = 0; i < 3 && allCards.Count > 0; i++)
+            {
+                int randomIndex = Random.Range(0, allCards.Count);
+                selectedCards.Add(allCards[randomIndex]);
+            }
+
+            // 선택된 카드들을 슬롯에 배치
+            for (int slotIndex = 0; slotIndex < selectedCards.Count; slotIndex++)
+            {
+                SkillCardSlotPosition pos = (SkillCardSlotPosition)slotIndex; // PLAYER_SLOT_1(0), PLAYER_SLOT_2(1), PLAYER_SLOT_3(2)
+                var cardDefinition = selectedCards[slotIndex];
                 ISkillCard card = null;
+                
                 if (cardDefinition != null)
                 {
                     card = cardFactory.CreateFromDefinition(cardDefinition, Game.SkillCardSystem.Data.Owner.Player, owner?.CharacterData?.name);
                 }
-                card.SetCurrentCoolTime(0);
+                
                 cards[pos] = card;
 
                 var slot = slotRegistry.GetPlayerHandSlot(pos);
@@ -100,6 +117,8 @@ namespace Game.SkillCardSystem.Manager
                     // (PlayerSkillCardInitializer에서 일괄 처리)
                 }
             }
+            
+            Debug.Log($"[PlayerHandManager] 초기 핸드 생성 완료: {selectedCards.Count}장 (랜덤 선택)");
         }
 
         #endregion
@@ -259,23 +278,6 @@ namespace Game.SkillCardSystem.Manager
             }
         }
 
-        /// <summary>
-        /// 손패 카드들의 쿨타임 표시를 업데이트합니다.
-        /// </summary>
-        public void UpdateCoolTimeDisplay()
-        {
-            foreach (var pos in cardUIs.Keys.ToList())
-            {
-                var ui = cardUIs[pos];
-                if (ui == null || ui.gameObject == null)
-                {
-                    cardUIs.Remove(pos);
-                    if (cards.ContainsKey(pos)) cards.Remove(pos);
-                    continue;
-                }
-                ui.UpdateCoolTimeDisplay();
-            }
-        }
 
         /// <summary>
         /// 사망 등으로 인해 소멸 애니메이션이 끝난 후, 해당 슬롯의 카드UI와 참조를 완전히 해제/파괴합니다.

@@ -9,8 +9,6 @@ using Game.CharacterSystem.Interface;
 using Game.IManager;
 using Game.CombatSystem.Interface;
 using Game.CoreSystem.Interface;
-using Game.AnimationSystem.Manager;
-using Game.AnimationSystem.Interface;
 
 namespace Game.CombatSystem.Initialization
 {
@@ -30,7 +28,6 @@ namespace Game.CombatSystem.Initialization
 
         private IPlayerManager playerManager;
         private ISlotRegistry slotRegistry;
-        private IAnimationFacade animationFacade;
         private IPlayerCharacterSelectionManager playerCharacterSelectionManager;
         private IGameStateManager gameStateManager;
 
@@ -40,11 +37,10 @@ namespace Game.CombatSystem.Initialization
         /// 의존성 주입 메서드입니다.
         /// </summary>
         [Inject]
-        public void Inject(IPlayerManager playerManager, ISlotRegistry slotRegistry, IAnimationFacade animationFacade, IPlayerCharacterSelectionManager playerCharacterSelectionManager, IGameStateManager gameStateManager)
+        public void Inject(IPlayerManager playerManager, ISlotRegistry slotRegistry, IPlayerCharacterSelectionManager playerCharacterSelectionManager, IGameStateManager gameStateManager)
         {
             this.playerManager = playerManager;
             this.slotRegistry = slotRegistry;
-            this.animationFacade = animationFacade;
             this.playerCharacterSelectionManager = playerCharacterSelectionManager;
             this.gameStateManager = gameStateManager;
         }
@@ -112,22 +108,9 @@ namespace Game.CombatSystem.Initialization
 
             character.SetCharacterData(data); // ★ 데이터 먼저 주입
 
-            // 4. 등장 애니메이션 실행 및 대기 (데이터베이스 기반)
-            bool animDone = false;
-            string characterId = data.name; // ScriptableObject의 name
-            
-            // AnimationFacade가 사용 가능한지 확인
-            if (animationFacade != null)
-            {
-                animationFacade.PlayCharacterAnimation(characterId, "spawn", player.gameObject, () => animDone = true, false);
-                yield return new WaitUntil(() => animDone);
-            }
-            else
-            {
-                Debug.LogWarning("[PlayerCharacterInitializer] AnimationFacade가 사용 불가능합니다. 애니메이션을 건너뜁니다.");
-                // 애니메이션 없이 바로 완료 처리
-                animDone = true;
-            }
+            // 4. 등장 애니메이션 건너뛰기 (AnimationSystem 제거로 인해 임시 비활성화)
+            Debug.Log("[PlayerCharacterInitializer] 애니메이션을 건너뜁니다.");
+            yield return new WaitForSeconds(0.1f); // 짧은 대기 시간
 
             // 5. 슬롯/매니저에 등록
             slot.SetCharacter(character);

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: BOSS_001_Orc_Axe
   m_EditorClassIdentifier: 
   cards:
-  - card: {fileID: 11400000, guid: 888eefdbb32105c49b9f56bbd105ed63, type: 2}
-    probability: 0.2
-  - card: {fileID: 11400000, guid: 17272803ffb06ae46967e3b6904a3cc8, type: 2}
-    probability: 0.8
+  - definition: {fileID: 11400000, guid: f38403ff39c06bc478b70442ddc400e3, type: 2}
+    probability: 0
+  - definition: {fileID: 11400000, guid: f38403ff39c06bc478b70442ddc400e3, type: 2}
+    probability: 0

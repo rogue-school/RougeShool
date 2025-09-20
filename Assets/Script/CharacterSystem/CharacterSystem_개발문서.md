@@ -4,18 +4,14 @@
 CharacterSystem은 게임의 모든 캐릭터(플레이어, 적)를 관리하는 시스템입니다. 캐릭터의 기본 속성, 상태, 행동을 통합적으로 관리하며, 새로운 리그 오브 레전드 스타일의 플레이어 캐릭터 UI 시스템을 제공합니다.
 
 ### 최근 변경(요약)
-- **적 핸드 매니저 시스템 제거 완료**: `IEnemyHandManager` 인터페이스 및 관련 코드 완전 제거
-- **적 카드 직접 생성 시스템**: `StageManager`에서 적 카드를 `WAIT_SLOT_4`에 직접 생성
-- **HandInitializer 간소화**: 플레이어 핸드만 초기화, 적 핸드 관련 로직 제거
-- **저장 시스템 간소화**: 적 핸드 관련 저장/복원 로직 제거, 대기 슬롯 상태만 관리
-- **새로운 플레이어 UI 시스템**: 리그 오브 레전드 스타일 HP/MP 바, 정보 표시 완료
-- **통합 UI 컨트롤러**: `PlayerCharacterUIController`로 플레이어 UI 일원화, 호환용 `SetTarget(ICharacter)` 제공
-- **적 UI 컨트롤러 추가**: `EnemyCharacterUIController`로 HP/버프 최소 UI 분리
-- **레거시 제거**: `CharacterUIController` 전면 제거 및 모든 참조 정리, `CharacterSlotUI`에서 UI 직접 연결 로직 삭제
-- **공유 이벤트 추가**: `ICharacter/CharacterBase`에 `OnHPChanged`, `OnGuardStateChanged`, `OnBuffsChanged`, `GetBuffs()` 추가 및 발행
-- **캐릭터별 리소스 시스템**: 검/활/지팡이 타입별 리소스 UI 반영
-- **DOTween 애니메이션**: 부드러운 UI 전환/색상 변화 적용
-- **Zenject DI 통합**: 관련 컨트롤러/매니저 DI 정리
+- **AnimationSystem 의존성 완전 제거**: 모든 AnimationSystem 관련 코드 제거 완료
+- **임시 애니메이션 비활성화**: 애니메이션 호출 부분을 Debug.Log로 대체하여 게임 로직 정상 동작
+- **플레이어 UI 일원화**: `PlayerCharacterUIController` 중심 구조로 통합, 호환용 `SetTarget(ICharacter)` 제공
+- **적 UI 분리**: `EnemyCharacterUIController` 추가(Hp/버프 최소 UI)
+- **레거시 제거**: `CharacterUIController` 전면 제거 및 참조 정리, `CharacterSlotUI`의 UI 자동 연결 로직 삭제
+- **공유 이벤트 추가**: `ICharacter/CharacterBase`에 HP/가드/버프 이벤트 및 `GetBuffs()` 추가
+- **DOTween/DI 정리**: UI 애니메이션 및 Zenject 의존성 주입 정비
+- **컴파일 에러 해결**: 모든 CharacterSystem 관련 컴파일 에러 해결 완료
 
 ## 🏗️ 폴더 구조
 ```
@@ -24,19 +20,19 @@ CharacterSystem/
 ├── Data/             # 캐릭터 데이터 (4개 파일)
 ├── Interface/        # 캐릭터 인터페이스 (8개 파일)
 ├── Manager/          # 캐릭터 매니저 (3개 파일)
-├── Intialization/    # 캐릭터 초기화 (6개 파일) [주의: 폴더명 오타 - Initialization이어야 함]
+├── Initialization/   # 캐릭터 초기화 (6개 파일)
 ├── Slot/             # 캐릭터 슬롯 (1개 파일)
-├── UI/               # 캐릭터 UI (2개 파일)
+├── UI/               # 캐릭터 UI (4개 파일)
 └── Utility/          # 캐릭터 유틸리티 (4개 파일)
 ```
 
 ## 📁 주요 컴포넌트
 
 ### Core 폴더 (4개 파일)
-- **CharacterBase.cs**: 모든 캐릭터의 기본 클래스
+- **CharacterBase.cs**: 모든 캐릭터의 기본 클래스 (MonoBehaviour 상속)
 - **PlayerCharacter.cs**: 플레이어 캐릭터 구현
 - **EnemyCharacter.cs**: 적 캐릭터 구현
-- **CharacterState.cs**: 캐릭터 상태 관리
+- **PlayerCharacterSelector.cs**: 플레이어 캐릭터 선택기
 
 ### Data 폴더 (4개 파일)
 - **PlayerCharacterData.cs**: 플레이어 캐릭터 데이터 (ScriptableObject)
@@ -44,33 +40,42 @@ CharacterSystem/
 - **PlayerCharacterType.cs**: 플레이어 캐릭터 타입 열거형
 - **PlayerCharacterTypeHelper.cs**: 플레이어 캐릭터 타입 헬퍼
 
-### Interface 폴더 (8개 파일)
+### Interface 폴더 (17개 파일)
 - **ICharacter.cs**: 캐릭터 기본 인터페이스
 - **ICharacterData.cs**: 캐릭터 데이터 인터페이스
-- **ICharacterState.cs**: 캐릭터 상태 인터페이스
-- **ICharacterAction.cs**: 캐릭터 행동 인터페이스
-- **ICharacterEffect.cs**: 캐릭터 효과 인터페이스
-- **ICharacterUI.cs**: 캐릭터 UI 인터페이스
-- **IPlayerResourceManager.cs**: 플레이어 리소스 관리 인터페이스
 - **ICharacterDeathListener.cs**: 캐릭터 사망 리스너 인터페이스
+- **ICharacterSlot.cs**: 캐릭터 슬롯 인터페이스
+- **ICharacterSlotRegistry.cs**: 캐릭터 슬롯 레지스트리 인터페이스
+- **IEnemyCharacter.cs**: 적 캐릭터 인터페이스
+- **IEnemyInitializer.cs**: 적 초기화 인터페이스
+- **IEnemyManager.cs**: 적 매니저 인터페이스
+- **IEnemySpawnerManager.cs**: 적 스포너 매니저 인터페이스
+- **IEnemySpawnValidator.cs**: 적 스폰 검증 인터페이스
+- **IPlayerCharacter.cs**: 플레이어 캐릭터 인터페이스
+- **IPlayerCharacterInitializer.cs**: 플레이어 캐릭터 초기화 인터페이스
+- **IPlayerCharacterSelector.cs**: 플레이어 캐릭터 선택기 인터페이스
+- **IPlayerManager.cs**: 플레이어 매니저 인터페이스
+- **IPlayerResourceManager.cs**: 플레이어 리소스 관리 인터페이스
 
-### Manager 폴더 (3개 파일)
-- **PlayerManager.cs**: 플레이어 캐릭터 매니저
-- **EnemyManager.cs**: 적 캐릭터 매니저
+### Manager 폴더 (4개 파일)
+- **PlayerManager.cs**: 플레이어 캐릭터 매니저 (싱글톤)
+- **EnemyManager.cs**: 적 캐릭터 매니저 (싱글톤)
+- **EnemySpawnerManager.cs**: 적 스포너 매니저
 - **PlayerResourceManager.cs**: 플레이어 리소스 관리 매니저
 
-### Intialization 폴더 (5개 파일) [폴더명 오타 주의]
+### Initialization 폴더 (6개 파일)
 - **EnemyCharacterInitializer.cs**: 적 캐릭터 초기화
 - **EnemyInitializer.cs**: 적 초기화 통합 관리
 - **HandInitializer.cs**: 플레이어 핸드 초기화 (적 핸드 관련 로직 제거됨)
 - **PlayerCharacterInitializer.cs**: 플레이어 캐릭터 초기화
 - **PlayerSkillCardInitializer.cs**: 플레이어 스킬카드 초기화
 
-### UI 폴더 (4개 파일)
+### UI 폴더 (5개 파일)
+- **BuffDebuffIcon.cs**: 버프/디버프 아이콘 UI
 - **CharacterSlotUI.cs**: 캐릭터 슬롯 UI (UI 자동 연결 로직 제거됨)
-- ~~CharacterUIController.cs~~: [삭제됨] 레거시 UI 컨트롤러 전면 제거
+- **EnemyCharacterUIController.cs**: 적 전용 UI 컨트롤러
+- **HPBarController.cs**: HP 바 컨트롤러
 - **PlayerCharacterUIController.cs**: 플레이어 통합 UI 컨트롤러
-- **EnemyCharacterUIController.cs**: 적 전용 간결 UI 컨트롤러
 
 ### Utility 폴더 (4개 파일)
 - **CharacterDeathHandler.cs**: 캐릭터 사망 처리
@@ -532,6 +537,7 @@ sequenceDiagram
 - 2025-01-27 | Maintainer | PlayerCharacter 클래스에 새로운 UI 시스템 통합 | 코드/문서
 - 2025-01-27 | Maintainer | 캐릭터별 리소스 시스템 구현 - 검/활/지팡이 타입별 표시 | 코드/문서
 - 2025-01-27 | Maintainer | DOTween 애니메이션 시스템 통합 - 부드러운 UI 전환 | 코드/문서
+- 2025-01-27 | Maintainer | AnimationSystem 의존성 완전 제거 및 컴파일 에러 해결 | 코드/문서
 - 2025-01-27 | Maintainer | 개발 문서 업데이트 - 새로운 UI 시스템 반영 | 문서
 - 2025-01-27 | Maintainer | 실제 코드 기반 캐릭터 기본 속성 수정 (속도/공격력 제거, 가드/리소스/턴효과 추가) | 문서
 - 2025-09-18 | Maintainer | 레거시 `CharacterUIController` 제거, 이벤트 기반 UI로 전환, `PlayerCharacterUIController` 호환 메서드 추가, `CharacterSlotUI` 자동 연결 제거 반영 | 코드/문서

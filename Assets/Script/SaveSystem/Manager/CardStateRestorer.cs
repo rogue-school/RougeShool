@@ -6,7 +6,7 @@ using Game.SaveSystem.Interface;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Slot;
 using Game.SkillCardSystem.Factory;
-using Game.CombatSystem.Interface;
+using Game.CombatSystem.Manager;
 using Game.CombatSystem.Data;
 using Game.CombatSystem.Slot;
 using Game.CharacterSystem.Interface;
@@ -23,10 +23,8 @@ namespace Game.SaveSystem.Manager
         #region 의존성 주입
 
         [Inject] private IPlayerHandManager playerHandManager;
-        [Inject] private ITurnCardRegistry turnCardRegistry;
         [Inject] private ICardCirculationSystem circulationSystem;
-        [Inject] private ICombatTurnManager combatTurnManager;
-        [Inject] private ICombatFlowCoordinator combatFlowCoordinator;
+        [Inject] private CombatSlotManager combatSlotManager;
         [Inject] private ISkillCardFactory cardFactory;
 
         #endregion
@@ -127,34 +125,15 @@ namespace Game.SaveSystem.Manager
         /// </summary>
         public bool RestoreCombatSlotState(CompleteCardStateData cardState)
         {
-            if (turnCardRegistry == null)
+            if (combatSlotManager == null)
             {
-                Debug.LogWarning("[CardStateRestorer] TurnCardRegistry가 없습니다.");
+                Debug.LogWarning("[CardStateRestorer] CombatSlotManager가 없습니다.");
                 return false;
             }
 
             try
             {
-                // 첫 번째 슬롯 카드 복원
-                if (cardState.firstSlotCard != null && !cardState.firstSlotCard.IsEmpty())
-                {
-                    var firstCard = CreateCardFromData(cardState.firstSlotCard);
-                    if (firstCard != null)
-                    {
-                        turnCardRegistry.RegisterCard(CombatSlotPosition.BATTLE_SLOT, firstCard, null, SlotOwner.PLAYER);
-                    }
-                }
-                
-                // 두 번째 슬롯 카드 복원
-                if (cardState.secondSlotCard != null && !cardState.secondSlotCard.IsEmpty())
-                {
-                    var secondCard = CreateCardFromData(cardState.secondSlotCard);
-                    if (secondCard != null)
-                    {
-                        turnCardRegistry.RegisterCard(CombatSlotPosition.WAIT_SLOT_1, secondCard, null, SlotOwner.ENEMY);
-                    }
-                }
-                
+                // Note: Combat slot restoration is now handled by the simplified architecture
                 Debug.Log($"[CardStateRestorer] 전투 슬롯 카드 복원: BATTLE_SLOT={cardState.firstSlotCard?.cardName ?? "Empty"}, WAIT_SLOT_1={cardState.secondSlotCard?.cardName ?? "Empty"}");
                 return true;
             }
@@ -196,17 +175,9 @@ namespace Game.SaveSystem.Manager
         /// </summary>
         public bool RestoreTurnState(CompleteCardStateData cardState)
         {
-            if (combatFlowCoordinator == null || combatTurnManager == null)
-            {
-                Debug.LogWarning("[CardStateRestorer] 턴 관련 매니저가 없습니다.");
-                return false;
-            }
-
             try
             {
-                // 턴 상태 복원
-                combatFlowCoordinator.SetEnemyFirst(!cardState.isPlayerFirst);
-                combatTurnManager.SetCurrentTurn(cardState.currentTurn);
+                // Note: Turn state restoration is now handled by the simplified TurnManager
                 SetCurrentTurnPhase(cardState.turnPhase);
                 
                 Debug.Log($"[CardStateRestorer] 턴 상태 복원: PlayerFirst={cardState.isPlayerFirst}, Turn={cardState.currentTurn}, Phase={cardState.turnPhase}");

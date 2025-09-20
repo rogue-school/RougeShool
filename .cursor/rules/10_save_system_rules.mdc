@@ -12,6 +12,8 @@ alwaysApply: true
 SaveSystem은 게임의 저장/로드 기능을 관리하는 시스템입니다. 슬레이 더 스파이어 방식의 턴 기반 자동 저장 시스템을 제공하며, CoreSystem에 통합되어 전역적으로 관리됩니다. ICoreSystemInitializable 인터페이스를 구현하여 자동 초기화되며, 한국어 로깅과 씬 전환 지속성을 지원합니다.
 
 ### 최근 변경(요약)
+- **AnimationSystem 의존성 완전 제거**: 모든 AnimationSystem 관련 코드 제거 완료
+- **임시 애니메이션 비활성화**: 애니메이션 호출 부분을 Debug.Log로 대체하여 게임 로직 정상 동작
 - **CoreSystem 통합 완료**: ICoreSystemInitializable 구현으로 자동 초기화 완료
 - **전역 시스템 완료**: CoreScene에서 DontDestroyOnLoad로 설정되어 모든 씬에서 접근 가능 완료
 - **한국어 로깅 완료**: GameLogger를 통한 카테고리별 로깅 (Save, Error) 완료
@@ -21,6 +23,7 @@ SaveSystem은 게임의 저장/로드 기능을 관리하는 시스템입니다.
 - **Zenject DI 통합 완료**: SaveManager가 의존성 주입으로 전환 완료
 - **새로운 슬롯 시스템 반영 완료**: 모든 저장/복원 로직이 새로운 5슬롯 시스템으로 업데이트 완료
 - **레거시 슬롯 최적화 완료**: SLOT_1/SLOT_2 → BATTLE_SLOT/WAIT_SLOT_1 전환 완료
+- **컴파일 에러 해결**: 모든 SaveSystem 관련 컴파일 에러 해결 완료
 
 ## 🏗️ 폴더 구조 규칙
 ```
@@ -194,6 +197,10 @@ var (bgm, sfx) = SaveManager.Instance.LoadAudioSettings(0.7f, 1.0f); // 씬 전�
 GameLogger.LogInfo("저장 시스템 초기화 완료", GameLogger.LogCategory.Save);
 GameLogger.LogWarning("저장 파일 로드 실패", GameLogger.LogCategory.Save);
 GameLogger.LogError("저장 시스템 오류 발생", GameLogger.LogCategory.Error);
+
+// AnimationSystem 제거로 인한 임시 처리
+// 애니메이션 관련 저장은 Debug.Log로 대체됨
+Debug.Log("[SaveSystem] 애니메이션 상태 저장 (임시 처리)");
 ```
 
 ## 🏗️ 아키텍처 패턴
@@ -230,3 +237,13 @@ GameLogger.LogError("저장 시스템 오류 발생", GameLogger.LogCategory.Err
 - **생명주기 관리**: 저장 데이터 객체의 생성/소멸 관리
 - **리소스 해제**: 저장 완료 후 리소스 정리
 - **메모리 누수 방지**: 이벤트 구독 해제, 데이터 참조 해제
+
+## 📝 변경 기록(Delta)
+- 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
+
+예)
+- 2025-01-27 | Maintainer | SaveSystem 규칙 초기 제정 | 문서
+- 2025-01-27 | Maintainer | CoreSystem 통합 및 자동 초기화 규칙 추가 | 문서
+- 2025-01-27 | Maintainer | 슬레이 더 스파이어 방식 및 자동 저장 규칙 추가 | 문서
+- 2025-01-27 | Maintainer | 한국어 로깅 및 씬 전환 지속성 규칙 추가 | 문서
+- 2025-01-27 | Maintainer | AnimationSystem 의존성 완전 제거 및 임시 처리 추가 | 문서

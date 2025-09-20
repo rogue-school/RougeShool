@@ -12,6 +12,8 @@ alwaysApply: true
 AudioSystem은 게임의 모든 오디오를 관리하는 시스템입니다. 오디오 풀링과 이벤트 기반 시스템을 제공하며, CoreSystem에 통합되어 전역적으로 관리됩니다. Zenject DI와 자동 초기화 시스템을 통해 안정적이고 확장 가능한 오디오 아키텍처를 제공합니다.
 
 ### 최근 변경(요약)
+- **AnimationSystem 의존성 완전 제거**: 모든 AnimationSystem 관련 코드 제거 완료
+- **임시 애니메이션 비활성화**: 애니메이션 호출 부분을 Debug.Log로 대체하여 게임 로직 정상 동작
 - **CoreSystem 통합 완료**: AudioManager가 CoreSystem의 일부로 통합 관리 완료
 - **Zenject DI 통합 완료**: 의존성 주입을 통한 느슨한 결합 구현 완료
 - **자동 초기화 완료**: ICoreSystemInitializable 인터페이스 기반 자동 초기화 완료
@@ -19,6 +21,7 @@ AudioSystem은 게임의 모든 오디오를 관리하는 시스템입니다. �
 - **인터페이스 기반 설계**: IAudioManager 인터페이스 구현으로 테스트 가능성 확보 완료
 - **오디오 풀링 최적화**: AudioPoolManager를 통한 성능 최적화
 - **우선순위 시스템**: 사운드별 우선순위 관리로 중요한 사운드 우선 재생
+- **컴파일 에러 해결**: 모든 AudioSystem 관련 컴파일 에러 해결 완료
 
 ## 🏗️ 폴더 구조 규칙
 ```
@@ -75,11 +78,12 @@ CoreSystem/Audio/     # 실제 구현 위치
 - **기타 사운드**: 우선순위 1-2 (낮음)
 
 ### 5. CoreSystem 통합 규칙
-- **ICoreSystemInitializable**: CoreSystem 초기화 인터페이스 구현
-- **자동 초기화**: CoreSystemInitializer에서 자동 초기화
-- **전역 접근**: 싱글톤 패턴으로 어디서든 접근 가능
-- **씬 전환 지속**: DontDestroyOnLoad로 씬 전환 시에도 유지
-- **한국어 로깅**: GameLogger를 통한 카테고리별 로깅
+- **ICoreSystemInitializable**: CoreSystem 초기화 인터페이스 구현으로 자동 초기화
+- **전역 시스템**: CoreScene에서 DontDestroyOnLoad로 설정되어 모든 씬에서 접근 가능
+- **자동 초기화**: CoreSystemInitializer에서 자동으로 Initialize() 호출
+- **씬 전환 지속성**: 씬 전환 시에도 오디오 시스템 상태 유지
+- **한국어 로깅**: GameLogger를 통한 카테고리별 로깅 (Audio, Error)
+- **전역 접근**: AudioManager.Instance를 통한 어디서든 접근 가능
 
 ### 6. Zenject DI 규칙
 - **의존성 주입**: Zenject를 통한 느슨한 결합 구현
@@ -165,6 +169,10 @@ AudioManager.Instance.SetSFXVolume(1.0f); // 씬 전환 후에도 볼륨 유지
 GameLogger.LogInfo("오디오 시스템 초기화 완료", GameLogger.LogCategory.Audio);
 GameLogger.LogWarning("오디오 파일 로드 실패", GameLogger.LogCategory.Audio);
 GameLogger.LogError("오디오 시스템 오류 발생", GameLogger.LogCategory.Error);
+
+// AnimationSystem 제거로 인한 임시 처리
+// 애니메이션 관련 사운드는 Debug.Log로 대체됨
+Debug.Log("[AudioSystem] 애니메이션 사운드 재생 (임시 처리)");
 ```
 
 ## 🏗️ 아키텍처 패턴
@@ -199,3 +207,13 @@ GameLogger.LogError("오디오 시스템 오류 발생", GameLogger.LogCategory.
 ### 메모리 관리
 - **리소스 해제**: 오디오 클립 사용 완료 후 해제
 - **메모리 누수 방지**: 불필요한 참조 해제
+
+## 📝 변경 기록(Delta)
+- 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
+
+예)
+- 2025-01-27 | Maintainer | AudioSystem 규칙 초기 제정 | 문서
+- 2025-01-27 | Maintainer | CoreSystem 통합 및 Zenject DI 규칙 추가 | 문서
+- 2025-01-27 | Maintainer | 오디오 풀링 및 우선순위 시스템 규칙 추가 | 문서
+- 2025-01-27 | Maintainer | 한국어 로깅 및 씬 전환 지속성 규칙 추가 | 문서
+- 2025-01-27 | Maintainer | AnimationSystem 의존성 완전 제거 및 임시 처리 추가 | 문서

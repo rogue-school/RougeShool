@@ -40,4 +40,4 @@ MonoBehaviour:
         drawCount: 0
         resourceDelta: 0
       executionOrder: 0
-    ownerPolicy: 0
+    ownerPolicy: 1

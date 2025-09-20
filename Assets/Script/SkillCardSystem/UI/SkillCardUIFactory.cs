@@ -1,7 +1,7 @@
 using UnityEngine;
 using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.DragDrop;
-using Game.CombatSystem.Interface;
+using Game.CombatSystem.Manager;
 
 namespace Game.SkillCardSystem.UI
 {
@@ -16,14 +16,14 @@ namespace Game.SkillCardSystem.UI
         /// <param name="prefab">스킬 카드 UI 프리팹</param>
         /// <param name="parent">UI를 배치할 부모 트랜스폼</param>
         /// <param name="card">연결할 카드 데이터</param>
-        /// <param name="flowCoordinator">카드 실행을 조정하는 흐름 제어자</param>
+        /// <param name="slotManager">전투 슬롯 관리자</param>
         /// <returns>초기화된 SkillCardUI 인스턴스</returns>
         public static SkillCardUI CreateUI(
             SkillCardUI prefab,
             Transform parent,
             ISkillCard card,
-            ICombatFlowCoordinator flowCoordinator,
-            Game.AnimationSystem.Interface.IAnimationFacade animationFacade)
+            CombatSlotManager slotManager,
+            object animationFacade)
         {
             // === 유효성 검사 ===
             if (prefab == null || parent == null || card == null)
@@ -66,13 +66,13 @@ namespace Game.SkillCardSystem.UI
 
             if (dragHandler != null)
             {
-                if (flowCoordinator != null)
+                if (slotManager != null)
                 {
-                    dragHandler.Inject(flowCoordinator, animationFacade);
+                    dragHandler.Inject(slotManager);
                 }
                 else
                 {
-                    Debug.LogWarning("[SkillCardUIFactory] flowCoordinator가 null입니다.");
+                    Debug.LogWarning("[SkillCardUIFactory] slotManager가 null입니다.");
                 }
             }
 

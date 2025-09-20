@@ -18,10 +18,5 @@ namespace Game.SkillCardSystem.Interface
         /// <returns>연결된 카드 객체</returns>
         ISkillCard GetCard();
 
-        /// <summary>
-        /// 카드의 현재 쿨타임 상태를 기반으로 UI를 갱신합니다.
-        /// 예: 텍스트, 이미지, 드래그 가능 여부 등 시각적 요소 반영.
-        /// </summary>
-        void UpdateCoolTimeDisplay();
     }
 }

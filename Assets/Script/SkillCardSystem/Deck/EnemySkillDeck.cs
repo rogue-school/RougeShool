@@ -18,20 +18,30 @@ namespace Game.SkillCardSystem.Deck
         [Serializable]
         public class CardEntry
         {
-            /// <summary>
-            /// 스킬 카드 객체 (레거시 - 사용하지 않음)
-            /// </summary>
-            [System.Obsolete("EnemySkillCard는 더 이상 사용되지 않습니다. definition을 사용하세요.")]
-            public ScriptableObject card;
-
-            [Tooltip("(신규) 공용 정의를 직접 참조합니다. 설정 시 card 대신 우선 사용")]
+            [Header("카드 정의")]
+            [Tooltip("스킬카드 정의 (적 또는 공용 카드만 선택 가능)")]
             public SkillCardDefinition definition;
 
-            /// <summary>
-            /// 이 카드가 선택될 확률 (0~1)
-            /// </summary>
+            [Header("등장 확률")]
+            [Tooltip("이 카드가 선택될 확률 (0~1)")]
             [Range(0f, 1f)]
-            public float probability;
+            public float probability = 1.0f;
+
+            /// <summary>
+            /// 카드 엔트리가 유효한지 확인합니다.
+            /// </summary>
+            public bool IsValid()
+            {
+                return definition != null && probability >= 0f;
+            }
+
+            /// <summary>
+            /// 카드 엔트리의 문자열 표현을 반환합니다.
+            /// </summary>
+            public override string ToString()
+            {
+                return definition != null ? $"{definition.displayName} (확률: {probability:F2})" : "Invalid Entry";
+            }
         }
 
         [Header("적용될 카드 목록 (확률 기반)")]
@@ -65,5 +75,36 @@ namespace Game.SkillCardSystem.Deck
         /// 덱에 포함된 모든 카드 엔트리를 반환합니다.
         /// </summary>
         public List<CardEntry> GetAllCards() => cards;
+
+        /// <summary>
+        /// 적과 공용 카드만 필터링하여 반환합니다.
+        /// </summary>
+        public List<CardEntry> GetValidCards()
+        {
+            var validCards = new List<CardEntry>();
+            
+            foreach (var card in cards)
+            {
+                if (card.definition != null && 
+                    (card.definition.configuration.ownerPolicy == OwnerPolicy.Enemy || 
+                     card.definition.configuration.ownerPolicy == OwnerPolicy.Shared))
+                {
+                    validCards.Add(card);
+                }
+            }
+            
+            return validCards;
+        }
+
+        /// <summary>
+        /// 카드가 적 덱에 사용 가능한지 확인합니다.
+        /// </summary>
+        public bool IsCardValidForEnemy(SkillCardDefinition cardDefinition)
+        {
+            if (cardDefinition == null) return false;
+            
+            return cardDefinition.configuration.ownerPolicy == OwnerPolicy.Enemy || 
+                   cardDefinition.configuration.ownerPolicy == OwnerPolicy.Shared;
+        }
     }
 }

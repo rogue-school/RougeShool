@@ -26,8 +26,8 @@ namespace Game.SkillCardSystem.Deck
             public SkillCardDefinition cardDefinition;
 
             [Header("수량 설정")]
-            [Tooltip("덱에 포함될 카드 수량")]
-            [Range(1, 10)]
+            [Tooltip("덱에 포함될 카드 수량 (개발자가 원하는 만큼 설정 가능)")]
+            [Min(1)]
             public int quantity = 1;
 
             /// <summary>

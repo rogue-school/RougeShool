@@ -13,7 +13,7 @@ ProjectContext (전역 컨테이너)
 │   ├── SceneTransitionManager
 │   ├── AudioManager (DontDestroyOnLoad)
 │   ├── SaveManager (DontDestroyOnLoad)
-│   ├── AnimationDatabaseManager
+│   ├── (AnimationDatabaseManager 제거됨)
 │   ├── CoroutineRunner (DontDestroyOnLoad)
 │   └── PlayerCharacterSelectionManager
 ├── MainScene (MainSceneInstaller)
@@ -48,6 +48,7 @@ ProjectContext (전역 컨테이너)
 // 위치: Assets/Script/CoreSystem/CoreSystemInstaller.cs
 // 역할: 전역 시스템 매니저들을 DI 컨테이너에 바인딩
 // 생명주기: DontDestroyOnLoad로 게임 전체에서 유지
+// 변경사항: AnimationSystem 관련 바인딩 제거 완료
 
 public class CoreSystemInstaller : MonoInstaller<CoreSystemInstaller>
 {
@@ -57,7 +58,6 @@ public class CoreSystemInstaller : MonoInstaller<CoreSystemInstaller>
     - SceneTransitionManager
     - AudioManager
     - SaveManager
-    - AnimationDatabaseManager
     - CoroutineRunner
     - PlayerCharacterSelectionManager
 }
@@ -67,6 +67,7 @@ public class CoreSystemInstaller : MonoInstaller<CoreSystemInstaller>
 ```csharp
 // 위치: Assets/Script/CombatSystem/Core/CombatInstaller.cs
 // 역할: 전투 시스템 관련 컴포넌트들을 DI 컨테이너에 바인딩
+// 변경사항: AnimationSystem 관련 바인딩 제거 완료
 // 특징: 씬별로 독립적인 컨테이너에서 실행
 
 public class CombatInstaller : MonoInstaller
@@ -85,6 +86,7 @@ public class CombatInstaller : MonoInstaller
     - PlayerSkillCardInitializer
     - StageManager (적 카드 직접 생성 시스템)
     - 외부 시스템 참조 (CoreScene의 컴포넌트들)
+    // 제거된 바인딩: AnimationFacade, CombatStartupManager
 }
 ```
 
@@ -119,12 +121,13 @@ public class CardInstaller : MonoInstaller<CardInstaller>
 
 ### 3-1) MonoBehaviour 바인딩 패턴
 ```csharp
-// 패턴 1: 씬에서 찾아서 바인딩
+// 패턴 1: 씬에서 찾아서 바인딩 (AnimationSystem 제거로 인해 수정됨)
 var component = FindFirstObjectByType<ComponentType>();
 if (component != null)
 {
     Container.Bind<IInterface>().FromInstance(component).AsSingle();
 }
+// AnimationFacade 바인딩 제거됨
 else
 {
     Container.Bind<IInterface>().FromInstance(null).AsSingle();
@@ -169,11 +172,13 @@ Container.Bind<IService>().To<Service>().AsCached();
 - SaveManager (DontDestroyOnLoad)  
 - CoroutineRunner (DontDestroyOnLoad)
 - SceneTransitionManager (DontDestroyOnLoad)
+// AnimationDatabaseManager 제거됨
 
 // StageScene에서 참조
 CombatInstaller.BindAudioManager() → CoreScene의 AudioManager 참조
 CombatInstaller.BindSaveManager() → CoreScene의 SaveManager 참조
 CombatInstaller.BindCoroutineRunner() → CoreScene의 CoroutineRunner 참조
+// AnimationFacade 바인딩 제거됨
 ```
 
 ### 4-2) StageScene → BattleScene 연결
@@ -385,6 +390,7 @@ private void ValidateBindings()
 - 2025-01-27 | Maintainer | 초기화 스텝들 자동 바인딩 시스템 구현 및 불필요한 중간 계층 제거 | 코드/문서
 - 2025-01-27 | Maintainer | 적 핸드 매니저 시스템 제거 및 적 카드 직접 생성 시스템 구현 | 코드/문서
 - 2025-01-27 | Maintainer | StageManager DI 바인딩 추가 및 적 카드 생성 의존성 주입 확장 | 코드/문서
+- 2025-01-27 | Maintainer | AnimationSystem 제거로 인한 DI 바인딩 정리 | 문서
 
 ---
 

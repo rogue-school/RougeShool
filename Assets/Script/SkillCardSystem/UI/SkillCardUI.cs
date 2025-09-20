@@ -15,14 +15,12 @@ namespace Game.SkillCardSystem.UI
         #region UI Components
 
         [Header("카드 정보 UI")]
-        [SerializeField] private TextMeshProUGUI cardNameText;
-        [SerializeField] private TextMeshProUGUI damageText;
-        [SerializeField] private TextMeshProUGUI descriptionText;
-        [SerializeField] private Image cardArtImage;
+        [SerializeField] private TextMeshProUGUI cardNameText;      // 선택사항: 카드명 표시
+        [SerializeField] private TextMeshProUGUI damageText;        // 선택사항: 데미지 표시
+        [SerializeField] private TextMeshProUGUI descriptionText;   // 선택사항: 설명 표시
+        [SerializeField] private Image cardArtImage;               // 필수: 카드 아트워크
 
-        [Header("쿨타임 UI")]
-        [SerializeField] private GameObject coolTimeOverlay;
-        [SerializeField] private TextMeshProUGUI coolTimeText;
+        [Header("UI 그룹")]
         [SerializeField] private CanvasGroup canvasGroup;
 
         #endregion
@@ -42,6 +40,7 @@ namespace Game.SkillCardSystem.UI
 
         /// <summary>
         /// 스킬 카드 데이터를 설정하고 UI를 초기화합니다.
+        /// 설명, 데미지, 카드명 필드는 선택사항이며 null이어도 정상 작동합니다.
         /// </summary>
         /// <param name="newCard">연결할 카드 인스턴스</param>
         public void SetCard(ISkillCard newCard)
@@ -54,48 +53,49 @@ namespace Game.SkillCardSystem.UI
                 return;
             }
 
-            cardNameText.text = card.GetCardName();
-            descriptionText.text = card.GetDescription();
+            // 카드명 설정 (선택사항)
+            if (cardNameText != null)
+            {
+                string cardName = card.GetCardName();
+                cardNameText.text = !string.IsNullOrEmpty(cardName) ? cardName : "";
+            }
 
-            if (cardArtImage != null && card.GetArtwork() != null)
-                cardArtImage.sprite = card.GetArtwork();
+            // 설명 설정 (선택사항)
+            if (descriptionText != null)
+            {
+                string description = card.GetDescription();
+                descriptionText.text = !string.IsNullOrEmpty(description) ? description : "";
+            }
 
-            UpdateCoolTimeDisplay();
-        }
+            // 데미지 설정 (선택사항)
+            if (damageText != null)
+            {
+                if (card.CardDefinition?.configuration?.hasDamage == true)
+                {
+                    int damage = card.CardDefinition.configuration.damageConfig.baseDamage;
+                    damageText.text = damage.ToString();
+                }
+                else
+                {
+                    damageText.text = ""; // 데미지가 없는 카드는 빈 문자열
+                }
+            }
 
-        /// <summary>
-        /// 현재 카드의 쿨타임 정보를 바탕으로 UI를 갱신합니다.
-        /// </summary>
-        public void UpdateCoolTimeDisplay()
-        {
-            if (card == null) return;
-
-            int currentCoolTime = card.GetCurrentCoolTime();
-            bool isCooling = currentCoolTime > 0;
-
-            if (coolTimeOverlay != null)
-                coolTimeOverlay.SetActive(isCooling);
-
-            if (coolTimeText != null)
-                coolTimeText.text = isCooling ? currentCoolTime.ToString() : "";
-
+            // 카드 아트워크 설정 (필수)
             if (cardArtImage != null)
             {
-                // 회색 음영 처리: 쿨타임 중이면 회색, 아니면 원래 색
-                cardArtImage.color = isCooling ? new Color(0.3f, 0.3f, 0.3f, 1f) : Color.white;
-            }
-
-            if (card.IsFromPlayer())
-            {
-                SetInteractable(!isCooling);
-                SetDraggable(!isCooling);
-            }
-            else
-            {
-                SetInteractable(false);
-                SetDraggable(false);
+                Sprite artwork = card.GetArtwork();
+                if (artwork != null)
+                {
+                    cardArtImage.sprite = artwork;
+                }
+                else
+                {
+                    Debug.LogWarning("[SkillCardUI] 카드 아트워크가 null입니다. 기본 이미지를 설정해주세요.");
+                }
             }
         }
+
 
         /// <summary>
         /// 현재 UI에 설정된 카드를 반환합니다.
@@ -124,19 +124,6 @@ namespace Game.SkillCardSystem.UI
                 dragHandler.enabled = isEnabled;
         }
 
-        /// <summary>
-        /// 외부에서 강제로 쿨타임 UI를 갱신합니다. (디버깅 또는 테스트용)
-        /// </summary>
-        /// <param name="coolTime">표시할 쿨타임</param>
-        /// <param name="show">쿨타임 UI 표시 여부</param>
-        public void ShowCoolTime(int coolTime, bool show)
-        {
-            if (coolTimeOverlay != null)
-                coolTimeOverlay.SetActive(show);
-
-            if (coolTimeText != null)
-                coolTimeText.text = show ? coolTime.ToString() : "";
-        }
 
         #endregion
     }

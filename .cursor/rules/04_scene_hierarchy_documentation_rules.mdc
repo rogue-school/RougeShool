@@ -169,16 +169,18 @@ Main Camera / UICamera
 - **PlayerHandManager**: 플레이어 핸드 카드 관리
 - **EnemyHandManager**: 적 핸드 카드 관리
 
-### 11-5) AnimationSystem 씬 구성
-- **AnimationFacade**: 애니메이션 시스템 통합 인터페이스
-- **CharacterAnimationController**: 캐릭터 애니메이션 관리
-- **SkillCardAnimationController**: 스킬카드 애니메이션 관리
+### 11-5) AnimationSystem 씬 구성 (현재 비활성화)
+- **AnimationFacade**: 애니메이션 시스템 통합 인터페이스 (제거됨)
+- **CharacterAnimationController**: 캐릭터 애니메이션 관리 (제거됨)
+- **SkillCardAnimationController**: 스킬카드 애니메이션 관리 (제거됨)
+- **임시 처리**: 모든 애니메이션 호출을 Debug.Log로 대체하여 게임 로직 정상 동작
 
 ## 12) 성능 최적화 고려사항
-- **DOTween 최적화**: 애니메이션 풀링으로 GC 압박 최소화
+- **DOTween 최적화**: 애니메이션 풀링으로 GC 압박 최소화 (현재 AnimationSystem 제거로 임시 비활성화)
 - **Zenject DI**: 객체 생성 비용 절약 및 의존성 관리
 - **UI 업데이트**: 필요한 경우에만 UI 갱신
 - **메모리 관리**: 씬 전환 시 불필요한 참조 해제
+- **AnimationSystem 제거**: 모든 애니메이션 관련 컴포넌트 제거로 메모리 사용량 감소
 
 ## 13) 트러블슈팅 가이드
 
@@ -186,7 +188,8 @@ Main Camera / UICamera
 - **씬 전환 실패**: SceneTransitionManager 참조 누락
 - **오디오 재생 안됨**: AudioManager.bgmSource/sfxSource 연결 누락
 - **DI 바인딩 실패**: CombatInstaller 등록 누락
-- **애니메이션 오류**: AnimationFacade 초기화 순서 문제
+- **애니메이션 오류**: AnimationFacade 초기화 순서 문제 (현재 AnimationSystem 제거로 해결됨)
+- **AnimationSystem 관련 에러**: 모든 AnimationSystem 참조 제거 완료, 임시 Debug.Log 처리 적용
 
 ### 13-2) 해결 방법
 - GameLogger를 통한 로그 확인
@@ -202,3 +205,4 @@ Main Camera / UICamera
 - 2025-01-27 | Maintainer | 시스템별 씬 구성 가이드 추가 | 문서
 - 2025-01-27 | Maintainer | 성능 최적화 및 트러블슈팅 가이드 추가 | 문서
 - 2025-01-27 | Maintainer | Cursor AI 연계 절차 업데이트 | 문서
+- 2025-01-27 | Maintainer | AnimationSystem 제거로 인한 씬 구성 업데이트 | 문서

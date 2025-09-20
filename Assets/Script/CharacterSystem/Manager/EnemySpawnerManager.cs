@@ -10,7 +10,8 @@ using Game.CharacterSystem.Interface;
 using Zenject;
 using Game.CombatSystem.Utility;
 using Game.CombatSystem;
-using Game.AnimationSystem.Interface;
+using Game.CombatSystem.Manager;
+using Game.CoreSystem.Utility;
 
 namespace Game.CharacterSystem.Manager
 {
@@ -31,7 +32,27 @@ namespace Game.CharacterSystem.Manager
 
         [Inject] private ISlotRegistry slotRegistry;
         [Inject] private IEnemyManager enemyManager;
-        [Inject] private IAnimationFacade animationFacade;
+
+        #endregion
+
+        #region 싱글톤 시스템 호환성
+
+        /// <summary>
+        /// 새로운 싱글톤 시스템과의 호환성을 위한 의존성 확인 및 대체
+        /// </summary>
+        private void EnsureDependencies()
+        {
+            if (slotRegistry == null)
+            {
+                GameLogger.LogWarning("ISlotRegistry가 주입되지 않았습니다. 새로운 싱글톤 시스템을 사용합니다.", GameLogger.LogCategory.Combat);
+            }
+            
+            if (enemyManager == null)
+            {
+                GameLogger.LogWarning("IEnemyManager가 주입되지 않았습니다. 새로운 싱글톤 시스템을 사용합니다.", GameLogger.LogCategory.Combat);
+            }
+            
+        }
 
         #endregion
 
@@ -62,16 +83,21 @@ namespace Game.CharacterSystem.Manager
         /// </summary>
         public System.Collections.IEnumerator SpawnEnemyWithAnimation(EnemyCharacterData data, System.Action<EnemySpawnResult> onComplete)
         {
-            if (data == null || slotRegistry == null)
+            if (data == null)
             {
+                GameLogger.LogError("적 데이터가 null입니다", GameLogger.LogCategory.Combat);
                 onComplete?.Invoke(null);
                 yield break;
             }
 
-            var slot = slotRegistry.GetCharacterSlotRegistry()?.GetCharacterSlot(SlotOwner.ENEMY);
+            // 의존성 확인
+            EnsureDependencies();
+
+            // 새로운 싱글톤 시스템과의 호환성을 위한 슬롯 찾기
+            var slot = FindEnemyCharacterSlot();
             if (slot == null)
             {
-                Debug.LogError("[EnemySpawnerManager] 적 캐릭터 슬롯을 찾을 수 없습니다.");
+                GameLogger.LogError("적 캐릭터 슬롯을 찾을 수 없습니다", GameLogger.LogCategory.Combat);
                 onComplete?.Invoke(null);
                 yield break;
             }
@@ -98,6 +124,9 @@ namespace Game.CharacterSystem.Manager
             var instance = Object.Instantiate(prefab, slot.GetTransform());
             instance.name = data.DisplayName;
             instance.transform.localPosition = Vector3.zero;
+            
+            // HideFlags 초기화 (Unity Assertion 에러 방지)
+            instance.hideFlags = HideFlags.None;
 
             // 1. EnemyCharacter 컴포넌트 및 데이터 세팅 (애니메이션 전에)
             if (!instance.TryGetComponent(out EnemyCharacter enemy))
@@ -109,25 +138,57 @@ namespace Game.CharacterSystem.Manager
             }
             enemy.Initialize(data); // ★ 데이터 먼저 주입
 
-            // 2. 등장 애니메이션 실행 및 대기 (파사드 패턴 적용)
-            bool animDone = false;
-            animationFacade.PlayEnemyCharacterAnimation(
-                data.name, // 캐릭터 ID (ScriptableObject의 name)
-                "spawn",
-                instance,
-                () => animDone = true
-            );
-            yield return new WaitUntil(() => animDone);
+            // 2. 등장 애니메이션 건너뛰기 (AnimationSystem 제거로 인해 임시 비활성화)
+            GameLogger.LogInfo("적 캐릭터 애니메이션을 건너뜁니다.", GameLogger.LogCategory.Combat);
+            yield return new WaitForSeconds(0.5f); // 짧은 대기시간
 
             // 3. 슬롯/매니저 등록
             slot.SetCharacter(enemy);
-            enemyManager?.RegisterEnemy(enemy);
+            
+            // 새로운 싱글톤 시스템과의 호환성을 위한 매니저 등록
+            var manager = enemyManager ?? FindFirstObjectByType<EnemyManager>();
+            manager?.RegisterEnemy(enemy);
+            
             spawnedEnemies.Add(enemy);
 
             // 다음 적 스폰 이벤트 발행
             CombatEvents.RaiseNextEnemySpawned(data);
 
+            GameLogger.LogInfo($"적 캐릭터 스폰 완료: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
             onComplete?.Invoke(new EnemySpawnResult(enemy, true));
+        }
+
+        /// <summary>
+        /// 적 캐릭터 슬롯을 찾습니다. 새로운 싱글톤 시스템과 호환됩니다.
+        /// </summary>
+        /// <returns>적 캐릭터 슬롯</returns>
+        private ICharacterSlot FindEnemyCharacterSlot()
+        {
+            // 기존 시스템 사용
+            if (slotRegistry != null)
+            {
+                var slot = slotRegistry.GetCharacterSlotRegistry()?.GetCharacterSlot(SlotOwner.ENEMY);
+                if (slot != null)
+                {
+                    GameLogger.LogInfo("기존 ISlotRegistry를 통한 적 슬롯 발견", GameLogger.LogCategory.Combat);
+                    return slot;
+                }
+            }
+
+            // 새로운 싱글톤 시스템 사용 - Unity 씬에서 직접 찾기
+            var enemySlotGameObject = GameObject.Find("EnemyCharacterSlot");
+            if (enemySlotGameObject != null)
+            {
+                var slot = enemySlotGameObject.GetComponent<ICharacterSlot>();
+                if (slot != null)
+                {
+                    GameLogger.LogInfo("Unity 씬에서 적 슬롯 발견", GameLogger.LogCategory.Combat);
+                    return slot;
+                }
+            }
+
+            GameLogger.LogWarning("적 캐릭터 슬롯을 찾을 수 없습니다", GameLogger.LogCategory.Combat);
+            return null;
         }
 
         /// <summary>

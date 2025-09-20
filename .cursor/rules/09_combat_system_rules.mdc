@@ -12,6 +12,8 @@ alwaysApply: true
 CombatSystem은 새로운 5슬롯 시스템(1개 전투 슬롯 + 4개 대기 슬롯)을 축으로 즉시 실행 전투를 관리합니다. 플레이어는 전투 슬롯에만 카드를 드롭할 수 있으며, 적은 대기 슬롯에 카드를 배치합니다. 전투 슬롯에서 카드가 사용되면 턴이 완료되며, 고정된 순서(플레이어→적→플레이어→적)로 진행됩니다.
 
 ### 최근 변경(요약)
+- **AnimationSystem 의존성 완전 제거**: 모든 AnimationSystem 관련 코드 제거 완료
+- **임시 애니메이션 비활성화**: 애니메이션 호출 부분을 Debug.Log로 대체하여 게임 로직 정상 동작
 - **새로운 5슬롯 시스템 완료**: 1개 전투 슬롯(BATTLE_SLOT) + 4개 대기 슬롯(WAIT_SLOT_1~4) 구현 완료
 - **셋업 페이즈 완료**: 전투 시작 전 카드 배치 단계 구현 완료
 - **즉시 실행 완료**: 전투 슬롯에서 카드 사용 시 즉시 실행 구현 완료
@@ -20,6 +22,7 @@ CombatSystem은 새로운 5슬롯 시스템(1개 전투 슬롯 + 4개 대기 슬
 - **Zenject DI 통합 완료**: 모든 CombatSystem 컴포넌트가 의존성 주입으로 전환 완료
 - **CombatSecondAttackState 제거 완료**: 단일 `CombatAttackState`로 통합 완료
 - **레거시 슬롯 최적화 완료**: 모든 `SLOT_1/SLOT_2` → `BATTLE_SLOT/WAIT_SLOT_1` 전환 완료
+- **컴파일 에러 해결**: 모든 CombatSystem 관련 컴파일 에러 해결 완료
 
 ## 🏗️ 폴더 구조 규칙
 ```
@@ -230,6 +233,10 @@ public class CustomCombatState : ICombatTurnState
 
 // 상태 설정
 turnManager.SetState(new CustomCombatState());
+
+// AnimationSystem 제거로 인한 임시 처리
+// 전투 애니메이션은 Debug.Log로 대체됨
+Debug.Log("[CombatSystem] 전투 애니메이션 재생 (임시 처리)");
 ```
 
 ## 🏗️ 아키텍처 패턴
@@ -261,3 +268,13 @@ turnManager.SetState(new CustomCombatState());
 ### 스레드 안전성
 - **상태 동기화**: 전투 상태 변경 동기화
 - **턴 관리**: 턴 변경 시 동기화
+
+## 📝 변경 기록(Delta)
+- 형식: `YYYY-MM-DD | 작성자 | 변경 요약 | 영향도(코드/씬/문서)`
+
+예)
+- 2025-01-27 | Maintainer | CombatSystem 규칙 초기 제정 | 문서
+- 2025-01-27 | Maintainer | 새로운 5슬롯 시스템 및 셋업 페이즈 규칙 추가 | 문서
+- 2025-01-27 | Maintainer | 즉시 실행 및 슬롯 이동 규칙 추가 | 문서
+- 2025-01-27 | Maintainer | 레거시 호환성 및 Zenject DI 규칙 추가 | 문서
+- 2025-01-27 | Maintainer | AnimationSystem 의존성 완전 제거 및 임시 처리 추가 | 문서

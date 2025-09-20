@@ -5,6 +5,7 @@ using Game.CombatSystem.Interface;
 using Game.CombatSystem.Data;
 using Game.CombatSystem.Slot;
 using Game.CombatSystem.Utility;
+using Game.CombatSystem.Manager;
 
 namespace Game.CombatSystem.Service
 {
@@ -16,7 +17,7 @@ namespace Game.CombatSystem.Service
     {
         private readonly ICardDropValidator validator;
         private readonly ICardRegistrar registrar;
-        private readonly ICombatTurnManager turnManager;
+        private readonly TurnManager turnManager;
         private readonly ICardReplacementHandler replacementHandler;
         private readonly IPlayerHandManager playerHandManager;
 
@@ -26,7 +27,7 @@ namespace Game.CombatSystem.Service
         public CardDropService(
             ICardDropValidator validator,
             ICardRegistrar registrar,
-            ICombatTurnManager turnManager,
+            TurnManager turnManager,
             ICardReplacementHandler replacementHandler,
             IPlayerHandManager playerHandManager)
         {
@@ -46,12 +47,12 @@ namespace Game.CombatSystem.Service
         /// <param name="slot">드롭 대상 슬롯</param>
         /// <param name="message">실패 시 원인 메시지</param>
         /// <returns>드롭 성공 여부</returns>
-        public bool TryDropCard(ISkillCard card, SkillCardUI ui, ICombatCardSlot slot, out string message)
+        public bool TryDropCard(ISkillCard card, SkillCardUI ui, CombatSlot slot, out string message)
         {
             message = "";
 
             // 1. 플레이어 입력 턴 여부 확인
-            if (!turnManager.IsPlayerInputTurn())
+            if (!turnManager.IsPlayerTurn())
             {
                 message = "플레이어 입력 턴이 아닙니다.";
                 Debug.LogWarning($"[CardDropService] {message}");
@@ -68,21 +69,38 @@ namespace Game.CombatSystem.Service
 
             // 3. 쿨타임 검사는 기획상 사용하지 않음 (항상 통과)
 
-            // 4. 드롭 유효성 검사
-            if (!validator.IsValidDrop(card, slot, out message))
+            // 4. 드롭 유효성 검사 (새로운 아키텍처에서는 단순화)
+            if (!CanDropCard(card, slot))
             {
+                message = "카드 드롭 조건을 만족하지 않습니다.";
                 Debug.LogWarning($"[CardDropService] 드롭 유효성 실패: {message}");
                 return false;
             }
 
-            // 5. 슬롯 카드 교체 처리
-            replacementHandler.ReplaceSlotCard(slot, card, ui);
+            // 5. 슬롯에 카드 배치
+            if (!slot.TryPlaceCard(card))
+            {
+                message = "슬롯에 카드 배치 실패";
+                Debug.LogWarning($"[CardDropService] {message}");
+                return false;
+            }
 
-            // 6. 레지스트리에 등록 (슬롯의 논리 포지션을 직접 사용)
-            var execSlot = slot.Position;
-            turnManager.RegisterCard(execSlot, card, ui, SlotOwner.PLAYER);
+            // 6. 새로운 아키텍처에서는 별도의 레지스트리 등록 불필요
+            // CombatSlotManager가 슬롯 상태를 직접 관리
 
             return true;
+        }
+
+        /// <summary>
+        /// 카드 드롭 가능 여부를 확인합니다.
+        /// </summary>
+        /// <param name="card">드롭할 카드</param>
+        /// <param name="slot">대상 슬롯</param>
+        /// <returns>드롭 가능하면 true</returns>
+        private bool CanDropCard(ISkillCard card, CombatSlot slot)
+        {
+            // 슬롯이 비어있고, 카드 소유자가 슬롯 소유자와 일치하는지 확인
+            return slot.IsEmpty && card.GetOwner() == slot.Owner;
         }
     }
 }

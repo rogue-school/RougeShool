@@ -47,13 +47,6 @@ namespace Game.SkillCardSystem.Validator
                 return false;
             }
 
-            // === 쿨타임 검사 ===
-            int currentCoolTime = card.GetCurrentCoolTime();
-            if (currentCoolTime > 0)
-            {
-                Debug.LogWarning($"[CardValidator] '{card.GetCardName()}'는 쿨타임 중입니다. (남은 턴: {currentCoolTime})");
-                return false;
-            }
 
             return true;
         }

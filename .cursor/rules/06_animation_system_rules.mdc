@@ -1,26 +1,25 @@
 ---
-description: "AnimationSystem 개발 가이드 및 규칙 - Unity 2D 애니메이션 통합 관리"
+description: "AnimationSystem 개발 가이드 및 규칙 - Unity 2D 애니메이션 통합 관리 (비활성화)"
 globs: ["Assets/Script/AnimationSystem/**/*.cs"]
 rule_id: animation_system_rules
-version: 1.2.0
-alwaysApply: true
+version: 1.3.0
+alwaysApply: false
 ---
 
-# AnimationSystem 개발 규칙
+# AnimationSystem 개발 규칙 (비활성화)
 
-## 📋 시스템 개요
-AnimationSystem은 Unity 2D 게임의 모든 애니메이션을 통합 관리하는 시스템입니다. 캐릭터, 스킬카드, UI 등 다양한 요소의 애니메이션을 중앙화된 방식으로 제어합니다. 플레이어와 적 스킬카드의 애니메이션을 하나의 통합 데이터베이스에서 관리하며, 타입별 필터링된 드롭다운을 통해 정확한 애니메이션 설정을 제공합니다. DOTween 기반의 고성능 애니메이션 시스템과 Zenject DI를 통한 확장 가능한 아키텍처를 제공합니다.
+## ⚠️ 시스템 상태
+**AnimationSystem은 현재 완전히 제거된 상태입니다.** 모든 AnimationSystem 관련 코드가 제거되었으며, 애니메이션 호출 부분은 임시로 Debug.Log로 대체되어 게임 로직이 정상 동작합니다.
+
+## 📋 시스템 개요 (참고용)
+AnimationSystem은 Unity 2D 게임의 모든 애니메이션을 통합 관리하는 시스템이었습니다. 캐릭터, 스킬카드, UI 등 다양한 요소의 애니메이션을 중앙화된 방식으로 제어했습니다. 플레이어와 적 스킬카드의 애니메이션을 하나의 통합 데이터베이스에서 관리하며, 타입별 필터링된 드롭다운을 통해 정확한 애니메이션 설정을 제공했습니다. DOTween 기반의 고성능 애니메이션 시스템과 Zenject DI를 통한 확장 가능한 아키텍처를 제공했습니다.
 
 ### 최근 변경(요약)
-- **Zenject DI 통합 완료**: AnimationFacade가 의존성 주입으로 전환 완료
-- **매개변수 순서 통일 완료**: 모든 PlaySkillCardAnimation 호출이 `(ISkillCard, GameObject, string, Action)` 순서로 통일 완료
-- **싱글톤 제거 완료**: AnimationFacade에서 싱글톤 패턴 제거하고 DI 패턴으로 전환 완료
-- **이벤트 구독 정리 완료**: 제거된 메서드들의 이벤트 구독 정리 완료
-- **컴파일 에러 해결 완료**: 모든 AnimationFacade 관련 컴파일 에러 해결 완료
-- **통합 애니메이션 시스템**: 플레이어/적 스킬카드 애니메이션 통합 데이터베이스
-- **DOTween 최적화**: 애니메이션 풀링 및 SafeMode 설정으로 성능 최적화
-- **타입별 필터링**: 그룹화된 커스텀 에디터 UI로 개발 효율성 향상
-- **001 시리즈 제거**: 불필요한 카드 시리즈 정리 및 None 옵션 제거
+- **AnimationSystem 완전 제거**: 모든 AnimationSystem 관련 코드 제거 완료
+- **임시 애니메이션 비활성화**: 애니메이션 호출 부분을 Debug.Log로 대체하여 게임 로직 정상 동작
+- **컴파일 에러 해결**: 모든 AnimationSystem 관련 컴파일 에러 해결 완료
+- **의존성 정리**: 다른 시스템에서 AnimationSystem 의존성 완전 제거
+- **향후 재구현 예정**: 새로운 애니메이션 시스템으로 재구현 예정
 
 ## 🏗️ 폴더 구조 규칙
 ```

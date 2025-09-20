@@ -21,9 +21,8 @@ namespace Game.IManager
         /// </summary>
         /// <param name="playerManager">플레이어 매니저 인스턴스</param>
         /// <param name="slotRegistry">슬롯 레지스트리 인스턴스</param>
-        /// <param name="animationFacade">애니메이션 파사드 인스턴스</param>
         /// <param name="playerCharacterSelectionManager">플레이어 캐릭터 선택 매니저 인스턴스</param>
         /// <param name="gameStateManager">게임 상태 매니저 인스턴스</param>
-        void Inject(IPlayerManager playerManager, ISlotRegistry slotRegistry, Game.AnimationSystem.Interface.IAnimationFacade animationFacade, Game.CoreSystem.Interface.IPlayerCharacterSelectionManager playerCharacterSelectionManager, Game.CoreSystem.Interface.IGameStateManager gameStateManager);
+        void Inject(IPlayerManager playerManager, ISlotRegistry slotRegistry, Game.CoreSystem.Interface.IPlayerCharacterSelectionManager playerCharacterSelectionManager, Game.CoreSystem.Interface.IGameStateManager gameStateManager);
     }
 }

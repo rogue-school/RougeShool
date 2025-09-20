@@ -87,6 +87,9 @@ namespace Game.CharacterSystem.Manager
             }
 
             var instance = Instantiate(playerPrefab, playerSlot);
+            
+            // HideFlags 초기화 (Unity Assertion 에러 방지)
+            instance.hideFlags = HideFlags.None;
 
             if (!instance.TryGetComponent(out IPlayerCharacter character))
             {
@@ -111,7 +114,14 @@ namespace Game.CharacterSystem.Manager
         /// </summary>
         private void InitializeHandManager()
         {
-            handManager.GenerateInitialHand();
+            // 먼저 핸드 소유자를 지정해야 덱 조회가 정상 동작합니다.
+            if (playerCharacter != null)
+            {
+                handManager.SetPlayer(playerCharacter);
+            }
+
+            // 플레이어 스킬카드 생성은 CombatStartupManager에서 처리
+            // handManager.GenerateInitialHand(); // 기존 시스템 비활성화
             handManager.LogPlayerHandSlotStates();
             playerCharacter.InjectHandManager(handManager);
         }

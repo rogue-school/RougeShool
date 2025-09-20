@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using Game.CombatSystem.Interface;
+using Game.CombatSystem.Manager;
 
 namespace Game.CombatSystem.Core
 {
@@ -14,9 +15,8 @@ namespace Game.CombatSystem.Core
         [SerializeField] private Button startButton;
 
         private ITurnStartConditionChecker conditionChecker;
-        private ICombatTurnManager turnManager;
+        private TurnManager turnManager;
         private ICombatStateFactory stateFactory;
-        private ITurnCardRegistry cardRegistry;
 
         private bool isInjected = false;
 
@@ -25,17 +25,12 @@ namespace Game.CombatSystem.Core
         /// </summary>
         public void Inject(
             ITurnStartConditionChecker conditionChecker,
-            ICombatTurnManager turnManager,
-            ICombatStateFactory stateFactory,
-            ITurnCardRegistry cardRegistry)
+            TurnManager turnManager,
+            ICombatStateFactory stateFactory)
         {
             this.conditionChecker = conditionChecker;
             this.turnManager = turnManager;
             this.stateFactory = stateFactory;
-            this.cardRegistry = cardRegistry;
-
-            if (this.cardRegistry != null)
-                this.cardRegistry.OnCardStateChanged += EvaluateButtonInteractable;
 
             isInjected = true;
         }
@@ -56,9 +51,6 @@ namespace Game.CombatSystem.Core
 
         private void OnDestroy()
         {
-            if (cardRegistry != null)
-                cardRegistry.OnCardStateChanged -= EvaluateButtonInteractable;
-
             if (startButton != null)
                 startButton.onClick.RemoveListener(OnStartButtonClicked);
         }
@@ -80,7 +72,7 @@ namespace Game.CombatSystem.Core
         }
 
         /// <summary>
-        /// 버튼 클릭 시 상태 전이를 요청합니다.
+        /// 버튼 클릭 시 턴을 진행합니다.
         /// </summary>
         private void OnStartButtonClicked()
         {
@@ -90,16 +82,9 @@ namespace Game.CombatSystem.Core
                 return;
             }
 
-            var nextState = stateFactory?.CreateAttackState();
-            if (nextState != null)
-            {
-                turnManager?.RequestStateChange(nextState);
-                Debug.Log("<color=cyan>[TurnStartButtonHandler] 상태 전이 요청</color>");
-            }
-            else
-            {
-                Debug.LogError("[TurnStartButtonHandler] nextState 생성 실패");
-            }
+            // 새로운 아키텍처에서는 단순히 턴을 진행
+            turnManager?.NextTurn();
+            Debug.Log("<color=cyan>[TurnStartButtonHandler] 턴 진행 요청</color>");
         }
 
         #endregion
