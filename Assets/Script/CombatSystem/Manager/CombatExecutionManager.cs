@@ -48,7 +48,7 @@ namespace Game.CombatSystem.Manager
 
         [Inject] private PlayerManager playerManager;
         [Inject] private EnemyManager enemyManager;
-        [Inject] private CombatSlotManager slotManager;
+        // CombatSlotManager 제거됨 - 슬롯 관리 기능을 CombatFlowManager로 이전
         [Inject] private TurnManager turnManager;
 
         #endregion
@@ -224,10 +224,9 @@ namespace Game.CombatSystem.Manager
         /// </summary>
         public void MoveSlotsForwardNew()
         {
-            if (slotManager != null)
-            {
-                slotManager.MoveSlotsForwardNew();
-            }
+            // CombatFlowManager의 슬롯 관리 기능 사용
+            var combatFlowManager = FindFirstObjectByType<CombatFlowManager>();
+            combatFlowManager?.MoveSlotsForwardNew();
         }
 
         /// <summary>
@@ -235,10 +234,9 @@ namespace Game.CombatSystem.Manager
         /// </summary>
         public void MoveSlotsForward()
         {
-            if (slotManager != null)
-            {
-                slotManager.MoveSlotsForward();
-            }
+            // CombatFlowManager의 슬롯 관리 기능 사용
+            var combatFlowManager = FindFirstObjectByType<CombatFlowManager>();
+            combatFlowManager?.MoveSlotsForward();
         }
 
         #endregion
@@ -354,11 +352,7 @@ namespace Game.CombatSystem.Manager
                 isValid = false;
             }
 
-            if (slotManager == null)
-            {
-                GameLogger.LogError("CombatSlotManager가 주입되지 않았습니다.", GameLogger.LogCategory.Error);
-                isValid = false;
-            }
+            // CombatSlotManager 제거됨 - 슬롯 관리 기능을 CombatFlowManager로 통합
 
             if (turnManager == null)
             {

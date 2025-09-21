@@ -22,11 +22,11 @@ CharacterSystem은 게임의 모든 캐릭터(플레이어, 적)를 관리하는
 CharacterSystem/
 ├── Core/             # 캐릭터 핵심 로직 (4개 파일)
 ├── Data/             # 캐릭터 데이터 (4개 파일)
-├── Interface/        # 캐릭터 인터페이스 (5개 파일) ← 17개에서 71% 감소
+├── Interface/        # 캐릭터 인터페이스 (3개 파일) ← 17개에서 82% 감소
 ├── Manager/          # 캐릭터 매니저 (4개 파일) ← 5개에서 통합
-├── Initialization/   # 캐릭터 초기화 (5개 파일) ← 6개에서 통합
+├── Initialization/   # 캐릭터 초기화 (4개 파일) ← 6개에서 통합
 ├── Slot/             # 캐릭터 슬롯 (1개 파일)
-├── UI/               # 캐릭터 UI (4개 파일)
+├── UI/               # 캐릭터 UI (5개 파일)
 └── Utility/          # 캐릭터 유틸리티 (4개 파일)
 ```
 
@@ -49,7 +49,7 @@ CharacterSystem/
 - **ICharacterData.cs**: 캐릭터 데이터 인터페이스
 - **ICharacterSlot.cs**: 캐릭터 슬롯 인터페이스
 
-### Manager 폴더 (3개 파일)
+### Manager 폴더 (4개 파일)
 - **BaseCharacterManager.cs**: 캐릭터 매니저 기본 클래스
 - **PlayerManager.cs**: 플레이어 캐릭터 매니저 (통합)
 - **EnemyManager.cs**: 적 캐릭터 매니저 (통합)

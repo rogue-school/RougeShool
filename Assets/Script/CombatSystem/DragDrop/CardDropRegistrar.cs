@@ -1,5 +1,6 @@
 using UnityEngine;
 using Game.SkillCardSystem.Interface;
+using Game.CoreSystem.Utility;
 using Game.SkillCardSystem.UI;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Utility;
@@ -21,19 +22,19 @@ namespace Game.CombatSystem.DragDrop
 
             CardSlotHelper.AttachCardToSlot(ui, (MonoBehaviour)slot);
 
-            Debug.Log($"[Registrar] 카드 등록 완료: {card.CardDefinition?.CardName ?? "Unknown"} → {execSlot}");
+            GameLogger.LogInfo($"[Registrar] 카드 등록 완료: {card.CardDefinition?.CardName ?? "Unknown"} → {execSlot}", GameLogger.LogCategory.Combat);
         }
 
         public void RegisterPlayerCard(ISkillCard card)
         {
             playerCard = card;
-            Debug.Log($"[Registrar] 플레이어 카드 등록: {card.CardDefinition?.CardName ?? "Unknown"}");
+            GameLogger.LogInfo($"[Registrar] 플레이어 카드 등록: {card.CardDefinition?.CardName ?? "Unknown"}", GameLogger.LogCategory.Combat);
         }
 
         public void RegisterEnemyCard(ISkillCard card)
         {
             enemyCard = card;
-            Debug.Log($"[Registrar] 적 카드 등록: {card.CardDefinition?.CardName ?? "Unknown"}");
+            GameLogger.LogInfo($"[Registrar] 적 카드 등록: {card.CardDefinition?.CardName ?? "Unknown"}", GameLogger.LogCategory.Combat);
         }
 
         public (ISkillCard player, ISkillCard enemy) GetRegisteredCards()
@@ -45,7 +46,7 @@ namespace Game.CombatSystem.DragDrop
         {
             playerCard = null;
             enemyCard = null;
-            Debug.Log("[Registrar] 등록된 카드들 초기화");
+            GameLogger.LogInfo("[Registrar] 등록된 카드들 초기화", GameLogger.LogCategory.Combat);
         }
     }
 }

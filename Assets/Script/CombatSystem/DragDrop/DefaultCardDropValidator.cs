@@ -1,6 +1,7 @@
 using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Interface;
 using UnityEngine;
+using Game.CoreSystem.Utility;
 
 namespace Game.CombatSystem.DragDrop
 {
@@ -74,7 +75,7 @@ namespace Game.CombatSystem.DragDrop
         public void Execute(ISkillCard card, ICardExecutionContext context)
         {
             // TODO: 카드 실행 로직 구현
-            Debug.Log($"[DefaultCardDropValidator] 카드 실행: {card.CardDefinition.CardName}");
+            GameLogger.LogInfo($"[DefaultCardDropValidator] 카드 실행: {card.CardDefinition.CardName}", GameLogger.LogCategory.Combat);
         }
     }
 }

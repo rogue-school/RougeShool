@@ -1,5 +1,7 @@
+using System;
 using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Interface;
+using Game.CoreSystem.Utility;
 using UnityEngine;
 
 namespace Game.SkillCardSystem.Validator
@@ -23,6 +25,21 @@ namespace Game.SkillCardSystem.Validator
         public bool IsValidDrop(ISkillCard card, ICombatCardSlot slot, out string reason)
         {
             reason = null;
+            
+            if (card == null)
+            {
+                reason = "카드가 null입니다.";
+                GameLogger.LogWarning("[CardValidator] 드롭 검증 실패: 카드가 null입니다.", GameLogger.LogCategory.SkillCard);
+                return false;
+            }
+            
+            if (slot == null)
+            {
+                reason = "슬롯이 null입니다.";
+                GameLogger.LogWarning("[CardValidator] 드롭 검증 실패: 슬롯이 null입니다.", GameLogger.LogCategory.SkillCard);
+                return false;
+            }
+            
             // TODO: 드롭 검증 로직 구현
             return true;
         }
@@ -38,26 +55,26 @@ namespace Game.SkillCardSystem.Validator
             // === Null 체크 ===
             if (card == null)
             {
-                Debug.LogWarning("[CardValidator] 카드가 null입니다.");
+                GameLogger.LogWarning("[CardValidator] 카드가 null입니다.", GameLogger.LogCategory.SkillCard);
                 return false;
             }
 
             if (context == null)
             {
-                Debug.LogWarning("[CardValidator] 컨텍스트가 null입니다.");
+                GameLogger.LogWarning("[CardValidator] 컨텍스트가 null입니다.", GameLogger.LogCategory.SkillCard);
                 return false;
             }
 
             // === 대상 유효성 확인 ===
             if (context.Target == null)
             {
-                Debug.LogWarning("[CardValidator] 대상이 null입니다.");
+                GameLogger.LogWarning("[CardValidator] 대상이 null입니다.", GameLogger.LogCategory.SkillCard);
                 return false;
             }
 
             if (context.Target.IsDead())
             {
-                Debug.LogWarning($"[CardValidator] 대상 {context.Target.GetCharacterName()}은 사망 상태입니다.");
+                GameLogger.LogWarning($"[CardValidator] 대상 {context.Target.GetCharacterName()}은 사망 상태입니다.", GameLogger.LogCategory.SkillCard);
                 return false;
             }
 
@@ -72,14 +89,26 @@ namespace Game.SkillCardSystem.Validator
         /// <param name="context">카드 실행 컨텍스트</param>
         public void Execute(ISkillCard card, ICardExecutionContext context)
         {
+            if (card == null)
+            {
+                GameLogger.LogError("[CardValidator] 카드가 null입니다.", GameLogger.LogCategory.SkillCard);
+                throw new ArgumentNullException(nameof(card), "실행할 카드는 null일 수 없습니다.");
+            }
+            
+            if (context == null)
+            {
+                GameLogger.LogError("[CardValidator] 컨텍스트가 null입니다.", GameLogger.LogCategory.SkillCard);
+                throw new ArgumentNullException(nameof(context), "카드 실행 컨텍스트는 null일 수 없습니다.");
+            }
+            
             if (!CanExecute(card, context))
             {
-                Debug.LogWarning($"[CardValidator] 카드 실행 불가: {card.CardDefinition?.CardName ?? "Unknown"}");
-                return;
+                GameLogger.LogWarning($"[CardValidator] 카드 실행 불가: {card.CardDefinition?.CardName ?? "Unknown"}", GameLogger.LogCategory.SkillCard);
+                throw new InvalidOperationException($"카드 '{card.CardDefinition?.CardName ?? "Unknown"}'를 실행할 수 없습니다.");
             }
 
             // 카드 실행 로직
-            Debug.Log($"[CardValidator] 카드 실행: {card.CardDefinition?.CardName ?? "Unknown"} → {context.Target?.GetCharacterName() ?? "Unknown"}");
+            GameLogger.LogInfo($"[CardValidator] 카드 실행: {card.CardDefinition?.CardName ?? "Unknown"} → {context.Target?.GetCharacterName() ?? "Unknown"}", GameLogger.LogCategory.SkillCard);
             
             // TODO: 실제 카드 효과 실행 로직 구현 필요
         }

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Game.CoreSystem.Utility;
 using Game.SkillCardSystem.Data;
 using Game.SkillCardSystem.Effect;
 using Game.SkillCardSystem.Interface;
@@ -229,7 +230,7 @@ namespace Game.SkillCardSystem.Runtime
         /// </summary>
         public void ExecuteSkill()
         {
-            Debug.LogWarning("[SkillCard] ExecuteSkill() without parameters is not supported in new structure. Use ExecuteSkill(source, target) instead.");
+            GameLogger.LogWarning("[SkillCard] ExecuteSkill() without parameters is not supported in new structure. Use ExecuteSkill(source, target) instead.", GameLogger.LogCategory.SkillCard);
         }
         
         /// <summary>
@@ -251,13 +252,13 @@ namespace Game.SkillCardSystem.Runtime
         {
             if (context?.Source is not CharacterBase || context.Target is not CharacterBase targetChar)
             {
-                Debug.LogWarning("[SkillCard] context 또는 대상 타입 오류");
+                GameLogger.LogWarning("[SkillCard] context 또는 대상 타입 오류", GameLogger.LogCategory.SkillCard);
                 return;
             }
             
             if (targetChar.IsDead())
             {
-                Debug.LogWarning("[SkillCard] 대상자가 이미 사망했습니다.");
+                GameLogger.LogWarning("[SkillCard] 대상자가 이미 사망했습니다.", GameLogger.LogCategory.SkillCard);
                 return;
             }
             

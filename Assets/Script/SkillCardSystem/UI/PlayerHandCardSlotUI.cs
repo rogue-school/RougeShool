@@ -22,13 +22,12 @@ namespace Game.CombatSystem.UI
         private ISkillCard currentCard;
         private SkillCardUI currentCardUI;
         private SkillCardUI cardUIPrefab;
-        private CombatSlotManager slotManager;
+        // CombatSlotManager 제거됨 - 슬롯 관리 기능을 CombatFlowManager로 통합
 
         [Inject]
-        public void Construct(SkillCardUI cardUIPrefab, CombatSlotManager slotManager)
+        public void Construct(SkillCardUI cardUIPrefab)
         {
             this.cardUIPrefab = cardUIPrefab;
-            this.slotManager = slotManager;
         }
 
         public SkillCardSlotPosition GetSlotPosition() => position;
@@ -61,13 +60,13 @@ namespace Game.CombatSystem.UI
         {
             if (card == null)
             {
-                Debug.LogWarning("[PlayerHandCardSlotUI] null 카드는 등록할 수 없습니다.");
+                GameLogger.LogWarning("[PlayerHandCardSlotUI] null 카드는 등록할 수 없습니다.", GameLogger.LogCategory.SkillCard);
                 return;
             }
 
             if (!card.IsFromPlayer())
             {
-                Debug.LogWarning("[PlayerHandCardSlotUI] 플레이어 슬롯에는 플레이어 카드만 배치할 수 있습니다.");
+                GameLogger.LogWarning("[PlayerHandCardSlotUI] 플레이어 슬롯에는 플레이어 카드만 배치할 수 있습니다.", GameLogger.LogCategory.SkillCard);
                 return;
             }
             currentCard = card;
@@ -76,7 +75,7 @@ namespace Game.CombatSystem.UI
             if (currentCardUI != null)
                 Destroy(currentCardUI.gameObject);
 
-            currentCardUI = SkillCardUIFactory.CreateUI(prefab, transform, card, slotManager, null);
+            currentCardUI = SkillCardUIFactory.CreateUI(prefab, transform, card, null);
 
             if (currentCardUI != null)
             {
@@ -96,7 +95,7 @@ namespace Game.CombatSystem.UI
             }
             else
             {
-                Debug.LogError("[PlayerHandCardSlotUI] 카드 UI 생성 실패");
+                GameLogger.LogError("[PlayerHandCardSlotUI] 카드 UI 생성 실패", GameLogger.LogCategory.SkillCard);
             }
         }
 

@@ -1,5 +1,6 @@
 using UnityEngine;
 using Game.StageSystem.Data;
+using Game.CoreSystem.Utility;
 
 namespace Game.StageSystem.Factory
 {
@@ -21,7 +22,7 @@ namespace Game.StageSystem.Factory
             var rewardData = ScriptableObject.CreateInstance<StageRewardData>();
             rewardData.InitializeDefaultEnemyDefeatRewards();
 
-            Debug.Log("[StageDataFactory] 기본 적 처치 보상 데이터 생성 완료");
+            GameLogger.LogInfo("[StageDataFactory] 기본 적 처치 보상 데이터 생성 완료", GameLogger.LogCategory.Core);
             return rewardData;
         }
 

@@ -26,14 +26,14 @@ namespace Game.CombatSystem.DragDrop
         private Canvas canvas;
         private CanvasGroup canvasGroup;
         private RectTransform rectTransform;
-        private CombatSlotManager slotManager;
+        // CombatSlotManager 제거됨 - 슬롯 관리 기능을 CombatFlowManager로 통합
 
         /// <summary>
-        /// 전투 슬롯 관리자 주입 (입력 가능 여부 판단용)
+        /// CombatSlotManager 제거됨 - 슬롯 관리 기능을 CombatFlowManager로 통합
         /// </summary>
-        public void Inject(CombatSlotManager slotManager)
+        public void Inject()
         {
-            this.slotManager = slotManager;
+            // CombatSlotManager 제거됨
         }
 
         #region 유니티 생명주기 메서드
@@ -45,7 +45,7 @@ namespace Game.CombatSystem.DragDrop
             canvas = GetComponentInParent<Canvas>();
 
             if (canvasGroup == null)
-                Debug.LogError("[CardDragHandler] CanvasGroup이 없습니다!");
+                GameLogger.LogError("[CardDragHandler] CanvasGroup이 없습니다!", GameLogger.LogCategory.SkillCard);
         }
 
         #endregion
@@ -150,7 +150,7 @@ namespace Game.CombatSystem.DragDrop
         /// </summary>
         private bool CanDrag()
         {
-            return slotManager != null; // Note: Simplified check for new architecture
+            return true; // CombatSlotManager 제거됨 - 항상 드래그 가능
         }
 
         /// <summary>
@@ -161,7 +161,7 @@ namespace Game.CombatSystem.DragDrop
         {
             if (cardUI == null)
             {
-                Debug.LogWarning("[CardDragHandler] ResetToOrigin 실패 - cardUI가 null입니다.");
+                GameLogger.LogWarning("[CardDragHandler] ResetToOrigin 실패 - cardUI가 null입니다.", GameLogger.LogCategory.SkillCard);
                 return;
             }
 

@@ -38,11 +38,6 @@ namespace Game.StageSystem.Manager
             [Range(0f, 5f)]
             public float transitionDelay = 1f;
 
-            [Space(5)]
-            [Header("난이도 설정")]
-            [Tooltip("스테이지 난이도 배율")]
-            [Range(0.5f, 3f)]
-            public float difficultyMultiplier = 1f;
         }
 
 

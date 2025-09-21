@@ -1,5 +1,6 @@
 using UnityEngine;
 using Game.SkillCardSystem.Interface;
+using Game.CoreSystem.Utility;
 using Game.CombatSystem.DragDrop;
 using Game.CombatSystem.Manager;
 
@@ -16,19 +17,18 @@ namespace Game.SkillCardSystem.UI
         /// <param name="prefab">스킬 카드 UI 프리팹</param>
         /// <param name="parent">UI를 배치할 부모 트랜스폼</param>
         /// <param name="card">연결할 카드 데이터</param>
-        /// <param name="slotManager">전투 슬롯 관리자</param>
+        /// <param name="animationFacade">애니메이션 파사드</param>
         /// <returns>초기화된 SkillCardUI 인스턴스</returns>
         public static SkillCardUI CreateUI(
             SkillCardUI prefab,
             Transform parent,
             ISkillCard card,
-            CombatSlotManager slotManager,
             object animationFacade)
         {
             // === 유효성 검사 ===
             if (prefab == null || parent == null || card == null)
             {
-                Debug.LogError("[SkillCardUIFactory] 카드 UI 생성 실패 - null 인자 존재");
+                GameLogger.LogError("[SkillCardUIFactory] 카드 UI 생성 실패 - null 인자 존재", GameLogger.LogCategory.SkillCard);
                 return null;
             }
 
@@ -36,7 +36,7 @@ namespace Game.SkillCardSystem.UI
             var instance = Object.Instantiate(prefab, parent, false);
             if (instance == null)
             {
-                Debug.LogError("[SkillCardUIFactory] 프리팹 인스턴스화 실패");
+                GameLogger.LogError("[SkillCardUIFactory] 프리팹 인스턴스화 실패", GameLogger.LogCategory.SkillCard);
                 return null;
             }
 
@@ -66,14 +66,8 @@ namespace Game.SkillCardSystem.UI
 
             if (dragHandler != null)
             {
-                if (slotManager != null)
-                {
-                    dragHandler.Inject(slotManager);
-                }
-                else
-                {
-                    Debug.LogWarning("[SkillCardUIFactory] slotManager가 null입니다.");
-                }
+                // CombatSlotManager 제거됨 - Inject 메서드 호출 제거
+                dragHandler.Inject();
             }
 
             // === Raycast 설정: 기본적으로 클릭 가능해야 함 ===

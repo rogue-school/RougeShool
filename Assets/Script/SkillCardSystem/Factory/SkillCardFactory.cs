@@ -1,9 +1,11 @@
+using System;
 using UnityEngine;
 using Game.SkillCardSystem.Data;
 using Game.SkillCardSystem.Runtime;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Effect;
 using Game.CombatSystem.Interface;
+using Game.CoreSystem.Utility;
 
 namespace Game.SkillCardSystem.Factory
 {
@@ -24,27 +26,27 @@ namespace Game.SkillCardSystem.Factory
         {
             if (definition == null)
             {
-                Debug.LogError("[SkillCardFactory] SkillCardDefinition이 null입니다.");
-                return null;
+                GameLogger.LogError("[SkillCardFactory] SkillCardDefinition이 null입니다.", GameLogger.LogCategory.SkillCard);
+                throw new ArgumentNullException(nameof(definition), "카드 정의는 null일 수 없습니다.");
             }
             
             // 정책 확인
             if (definition.configuration.ownerPolicy == OwnerPolicy.Player && owner != Owner.Player)
             {
-                Debug.LogWarning($"[SkillCardFactory] 카드 '{definition.displayName}'은 플레이어 전용입니다.");
-                return null;
+                GameLogger.LogWarning($"[SkillCardFactory] 카드 '{definition.displayName}'은 플레이어 전용입니다.", GameLogger.LogCategory.SkillCard);
+                throw new InvalidOperationException($"카드 '{definition.displayName}'은 플레이어 전용입니다. 현재 소유자: {owner}");
             }
             
             if (definition.configuration.ownerPolicy == OwnerPolicy.Enemy && owner != Owner.Enemy)
             {
-                Debug.LogWarning($"[SkillCardFactory] 카드 '{definition.displayName}'은 적 전용입니다.");
-                return null;
+                GameLogger.LogWarning($"[SkillCardFactory] 카드 '{definition.displayName}'은 적 전용입니다.", GameLogger.LogCategory.SkillCard);
+                throw new InvalidOperationException($"카드 '{definition.displayName}'은 적 전용입니다. 현재 소유자: {owner}");
             }
             
             // 새로운 SkillCard 인스턴스 생성 (GameObject 없이)
             var skillCard = new SkillCard(definition, owner, null); // audioManager는 나중에 주입
             
-            Debug.Log($"[SkillCardFactory] 카드 생성 완료: {definition.displayName} (Owner: {owner})");
+            GameLogger.LogInfo($"[SkillCardFactory] 카드 생성 완료: {definition.displayName} (Owner: {owner})", GameLogger.LogCategory.SkillCard);
             
             return skillCard;
         }
@@ -57,12 +59,18 @@ namespace Game.SkillCardSystem.Factory
         /// <returns>생성된 스킬카드</returns>
         public ISkillCard CreateFromId(string cardId, Owner owner)
         {
+            if (string.IsNullOrEmpty(cardId))
+            {
+                GameLogger.LogError("[SkillCardFactory] 카드 ID가 null이거나 비어있습니다.", GameLogger.LogCategory.SkillCard);
+                throw new ArgumentNullException(nameof(cardId), "카드 ID는 null이거나 비어있을 수 없습니다.");
+            }
+            
             var definition = Resources.Load<SkillCardDefinition>($"SkillCards/{cardId}");
             
             if (definition == null)
             {
-                Debug.LogError($"[SkillCardFactory] 카드 정의를 찾을 수 없습니다: {cardId}");
-                return null;
+                GameLogger.LogError($"[SkillCardFactory] 카드 정의를 찾을 수 없습니다: {cardId}", GameLogger.LogCategory.SkillCard);
+                throw new InvalidOperationException($"카드 ID '{cardId}'에 해당하는 정의를 찾을 수 없습니다.");
             }
             
             return CreateFromDefinition(definition, owner);
@@ -80,7 +88,7 @@ namespace Game.SkillCardSystem.Factory
             
             if (card != null && !string.IsNullOrEmpty(ownerCharacterName))
             {
-                Debug.Log($"[SkillCardFactory] 플레이어 카드 생성: {definition.displayName} (Character: {ownerCharacterName})");
+                GameLogger.LogInfo($"[SkillCardFactory] 플레이어 카드 생성: {definition.displayName} (Character: {ownerCharacterName})", GameLogger.LogCategory.SkillCard);
             }
             
             return card;
@@ -98,7 +106,7 @@ namespace Game.SkillCardSystem.Factory
             
             if (card != null && !string.IsNullOrEmpty(ownerCharacterName))
             {
-                Debug.Log($"[SkillCardFactory] 적 카드 생성: {definition.displayName} (Character: {ownerCharacterName})");
+                GameLogger.LogInfo($"[SkillCardFactory] 적 카드 생성: {definition.displayName} (Character: {ownerCharacterName})", GameLogger.LogCategory.SkillCard);
             }
             
             return card;
@@ -113,31 +121,31 @@ namespace Game.SkillCardSystem.Factory
         {
             if (definition == null)
             {
-                Debug.LogError("[SkillCardFactory] 카드 정의가 null입니다.");
+                GameLogger.LogError("[SkillCardFactory] 카드 정의가 null입니다.", GameLogger.LogCategory.SkillCard);
                 return false;
             }
             
             if (string.IsNullOrEmpty(definition.cardId))
             {
-                Debug.LogError("[SkillCardFactory] 카드 ID가 비어있습니다.");
+                GameLogger.LogError("[SkillCardFactory] 카드 ID가 비어있습니다.", GameLogger.LogCategory.SkillCard);
                 return false;
             }
             
             if (string.IsNullOrEmpty(definition.displayName))
             {
-                Debug.LogError("[SkillCardFactory] 카드 표시 이름이 비어있습니다.");
+                GameLogger.LogError("[SkillCardFactory] 카드 표시 이름이 비어있습니다.", GameLogger.LogCategory.SkillCard);
                 return false;
             }
             
             if (definition.artwork == null)
             {
-                Debug.LogWarning($"[SkillCardFactory] 카드 '{definition.displayName}'의 아트워크가 없습니다.");
+                GameLogger.LogWarning($"[SkillCardFactory] 카드 '{definition.displayName}'의 아트워크가 없습니다.", GameLogger.LogCategory.SkillCard);
             }
             
             // 데미지와 효과가 모두 없는 경우 경고
             if (!definition.configuration.hasDamage && !definition.configuration.hasEffects)
             {
-                Debug.LogWarning($"[SkillCardFactory] 카드 '{definition.displayName}'에 데미지나 효과가 없습니다.");
+                GameLogger.LogWarning($"[SkillCardFactory] 카드 '{definition.displayName}'에 데미지나 효과가 없습니다.", GameLogger.LogCategory.SkillCard);
             }
             
             // 효과 구성 검증
@@ -147,7 +155,7 @@ namespace Game.SkillCardSystem.Factory
                 {
                     if (effectConfig.effectSO == null)
                     {
-                        Debug.LogError($"[SkillCardFactory] 카드 '{definition.displayName}'에 null 효과가 있습니다.");
+                        GameLogger.LogError($"[SkillCardFactory] 카드 '{definition.displayName}'에 null 효과가 있습니다.", GameLogger.LogCategory.SkillCard);
                         return false;
                     }
                 }
@@ -167,7 +175,7 @@ namespace Game.SkillCardSystem.Factory
             
             if (definition == null)
             {
-                Debug.LogError($"[SkillCardFactory] 카드 정의를 로드할 수 없습니다: {cardId}");
+                GameLogger.LogError($"[SkillCardFactory] 카드 정의를 로드할 수 없습니다: {cardId}", GameLogger.LogCategory.SkillCard);
                 return null;
             }
             
@@ -182,7 +190,7 @@ namespace Game.SkillCardSystem.Factory
         {
             var definitions = Resources.LoadAll<SkillCardDefinition>("SkillCards");
             
-            Debug.Log($"[SkillCardFactory] 총 {definitions.Length}개의 카드 정의를 로드했습니다.");
+            GameLogger.LogInfo($"[SkillCardFactory] 총 {definitions.Length}개의 카드 정의를 로드했습니다.", GameLogger.LogCategory.SkillCard);
             
             return definitions;
         }

@@ -1,3 +1,4 @@
+using System;
 using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Data;
 using Game.CharacterSystem.Interface;
@@ -7,6 +8,7 @@ using Game.CombatSystem.Interface;
 using Game.CombatSystem;
 using Game.SkillCardSystem.Deck;
 using Game.SkillCardSystem.Interface;
+using Game.CoreSystem.Utility;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine;
@@ -96,6 +98,12 @@ namespace Game.CharacterSystem.Core
         /// <param name="listener">사망 리스너</param>
         public void SetDeathListener(object listener)
         {
+            if (listener == null)
+            {
+                GameLogger.LogError("[EnemyCharacter] 사망 리스너가 null입니다.", GameLogger.LogCategory.Character);
+                throw new ArgumentNullException(nameof(listener), "사망 리스너는 null일 수 없습니다.");
+            }
+            
             // TODO: 사망 리스너 구현
         }
 
@@ -107,8 +115,8 @@ namespace Game.CharacterSystem.Core
         {
             if (data == null)
             {
-                Debug.LogWarning("[EnemyCharacter] 초기화 실패 - null 데이터");
-                return;
+                GameLogger.LogError("[EnemyCharacter] 초기화 실패 - null 데이터", GameLogger.LogCategory.Character);
+                throw new ArgumentNullException(nameof(data), "적 캐릭터 데이터는 null일 수 없습니다.");
             }
 
             CharacterData = data;
@@ -219,7 +227,7 @@ namespace Game.CharacterSystem.Core
         {
             if (skillDeck == null)
             {
-                Debug.LogError("[EnemyCharacter] 스킬 덱이 null입니다.");
+                GameLogger.LogError("[EnemyCharacter] 스킬 덱이 null입니다.", GameLogger.LogCategory.Character);
                 return null;
             }
 
@@ -227,11 +235,11 @@ namespace Game.CharacterSystem.Core
 
             if (entry?.definition == null)
             {
-                Debug.LogError("[EnemyCharacter] 카드 선택 실패: entry 또는 definition이 null입니다.");
+                GameLogger.LogError("[EnemyCharacter] 카드 선택 실패: entry 또는 definition이 null입니다.", GameLogger.LogCategory.Character);
             }
             else
             {
-                Debug.Log($"[EnemyCharacter] 카드 선택 완료: {entry.definition.displayName} (확률: {entry.probability})");
+                GameLogger.LogInfo($"[EnemyCharacter] 카드 선택 완료: {entry.definition.displayName} (확률: {entry.probability})", GameLogger.LogCategory.Character);
             }
 
             return entry;
@@ -245,7 +253,7 @@ namespace Game.CharacterSystem.Core
             if (isDead) return;
 
             isDead = true;
-            Debug.Log($"[EnemyCharacter] '{GetCharacterName()}' 사망 처리 (MarkAsDead 호출)");
+            GameLogger.LogInfo($"[EnemyCharacter] '{GetCharacterName()}' 사망 처리 (MarkAsDead 호출)", GameLogger.LogCategory.Character);
 
             // 사망 애니메이션/이벤트 발행 코드 제거
             // Game.CombatSystem.CombatEvents.RaiseHandSkillCardsVanishOnCharacterDeath(false);
@@ -263,9 +271,14 @@ namespace Game.CharacterSystem.Core
 
         public void SetCharacterData(EnemyCharacterData data)
         {
+            if (data == null)
+            {
+                GameLogger.LogError("[EnemyCharacter] 적 캐릭터 데이터가 null입니다.", GameLogger.LogCategory.Character);
+                throw new ArgumentNullException(nameof(data), "적 캐릭터 데이터는 null일 수 없습니다.");
+            }
+            
             CharacterData = data;
-            if (CharacterData != null)
-                this.gameObject.name = CharacterData.name;
+            this.gameObject.name = CharacterData.name;
             Initialize(data);
         }
 

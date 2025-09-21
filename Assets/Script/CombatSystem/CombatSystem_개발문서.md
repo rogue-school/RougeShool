@@ -18,14 +18,16 @@ CombatSystem은 게임의 전투 로직을 관리하는 핵심 시스템입니�
 - **Zenject DI 통합**: 모든 CombatSystem 컴포넌트가 의존성 주입으로 전환 완료
 - **CombatSecondAttackState 제거**: 단일 `CombatAttackState`로 통합 완료
 - **레거시 슬롯 최적화**: 모든 `SLOT_1/SLOT_2` → `BATTLE_SLOT/WAIT_SLOT_1` 전환 완료
+- **CombatSlotManager 제거**: 불필요한 시각적 설정, 슬롯 구성, 슬롯 패턴 제거 완료
+- **슬롯 관리 통합**: CombatSlotManager 기능을 CombatFlowManager로 통합 완료
 - **컴파일 에러 해결**: 모든 CombatSystem 관련 컴파일 에러 해결 완료
 
 ## 🏗️ 폴더 구조 (최적화 완료)
 ```
 CombatSystem/
 ├── Core/             # 핵심 로직 (4개 파일)
-├── Manager/          # 매니저 클래스 (4개 파일) ← 8개에서 통합
-├── Interface/        # 인터페이스 (8개 파일) ← 22개에서 64% 감소
+├── Manager/          # 매니저 클래스 (3개 파일) ← 8개에서 통합
+├── Interface/        # 인터페이스 (6개 파일) ← 22개에서 73% 감소
 ├── State/            # 상태 패턴 (6개 파일)
 ├── Service/          # 서비스 클래스 (3개 파일) ← 4개에서 통합
 ├── Data/             # 데이터 클래스 (1개 파일)
@@ -46,19 +48,17 @@ CombatSystem/
 - **DefaultCombatState.cs**: 기본 전투 상태
 - **TurnStartButtonHandler.cs**: 턴 시작 버튼 핸들러
 
-### Manager 폴더 (4개 파일)
+### Manager 폴더 (3개 파일)
 - **CombatExecutionManager.cs**: 전투 실행 매니저
-- **CombatFlowManager.cs**: 전투 플로우 매니저
-- **CombatSlotManager.cs**: 전투 슬롯 매니저
+- **CombatFlowManager.cs**: 전투 플로우 매니저 (슬롯 관리 기능 통합)
 - **TurnManager.cs**: 턴 매니저
 
-### Interface 폴더 (8개 파일)
+### Interface 폴더 (6개 파일)
 - **CombatPhase.cs**: 전투 단계 열거형
 - **ExecutionCommand.cs**: 실행 명령 클래스
 - **ExecutionResult.cs**: 실행 결과 클래스
 - **ICombatExecutionManager.cs**: 전투 실행 매니저 인터페이스
 - **ICombatFlowManager.cs**: 전투 플로우 매니저 인터페이스
-- **ICombatSlotManager.cs**: 전투 슬롯 매니저 인터페이스
 - **ICombatTurnManager.cs**: 전투 턴 매니저 인터페이스
 
 ### State 폴더 (6개 파일)

@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using Game.CoreSystem.Utility;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Manager;
 using Game.CombatSystem.Service;
@@ -39,7 +40,7 @@ namespace Game.CombatSystem.Core
         {
             if (startButton == null)
             {
-                Debug.LogWarning("[TurnStartButtonHandler] startButton이 할당되지 않았습니다!");
+                GameLogger.LogWarning("[TurnStartButtonHandler] startButton이 할당되지 않았습니다!", GameLogger.LogCategory.Combat);
                 return;
             }
 
@@ -80,13 +81,13 @@ namespace Game.CombatSystem.Core
             // if (!isInjected || conditionChecker == null || !conditionChecker.CanStartTurn())
             if (!isInjected || conditionChecker == null || !(conditionChecker?.CanStartTurn() ?? false))
             {
-                Debug.LogWarning("[TurnStartButtonHandler] 버튼 클릭 조건 불충족");
+                GameLogger.LogWarning("[TurnStartButtonHandler] 버튼 클릭 조건 불충족", GameLogger.LogCategory.Combat);
                 return;
             }
 
             // 새로운 아키텍처에서는 단순히 턴을 진행
             turnManager?.NextTurn();
-            Debug.Log("<color=cyan>[TurnStartButtonHandler] 턴 진행 요청</color>");
+            GameLogger.LogInfo("[TurnStartButtonHandler] 턴 진행 요청", GameLogger.LogCategory.Combat);
         }
 
         #endregion

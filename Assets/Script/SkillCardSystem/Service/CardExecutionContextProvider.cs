@@ -1,7 +1,9 @@
+using System;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Data;
 using Game.SkillCardSystem.Interface;
 using Game.CharacterSystem.Interface;
+using Game.CoreSystem.Utility;
 using UnityEngine;
 using Game.CombatSystem.Context;
 using Game.CombatSystem.Slot;
@@ -30,6 +32,18 @@ namespace Game.CombatSystem.Service
         /// </summary>
         public CardExecutionContextProvider(PlayerManager playerManager, EnemyManager enemyManager)
         {
+            if (playerManager == null)
+            {
+                GameLogger.LogError("[ContextProvider] PlayerManager가 null입니다.", GameLogger.LogCategory.SkillCard);
+                throw new ArgumentNullException(nameof(playerManager), "PlayerManager는 null일 수 없습니다.");
+            }
+            
+            if (enemyManager == null)
+            {
+                GameLogger.LogError("[ContextProvider] EnemyManager가 null입니다.", GameLogger.LogCategory.SkillCard);
+                throw new ArgumentNullException(nameof(enemyManager), "EnemyManager는 null일 수 없습니다.");
+            }
+            
             this.playerManager = playerManager;
             this.enemyManager = enemyManager;
         }
@@ -47,8 +61,8 @@ namespace Game.CombatSystem.Service
         {
             if (card == null)
             {
-                Debug.LogError("[ContextProvider] 카드가 null입니다.");
-                return null;
+                GameLogger.LogError("[ContextProvider] 카드가 null입니다.", GameLogger.LogCategory.SkillCard);
+                throw new ArgumentNullException(nameof(card), "컨텍스트를 생성할 카드는 null일 수 없습니다.");
             }
 
             ICharacter source, target;
@@ -66,8 +80,8 @@ namespace Game.CombatSystem.Service
                     break;
 
                 default:
-                    Debug.LogError("[ContextProvider] 알 수 없는 소유자");
-                    return null;
+                    GameLogger.LogError("[ContextProvider] 알 수 없는 소유자", GameLogger.LogCategory.SkillCard);
+                    throw new InvalidOperationException($"알 수 없는 카드 소유자: {card.GetOwner()}");
             }
 
             return new DefaultCardExecutionContext(card, source, target);

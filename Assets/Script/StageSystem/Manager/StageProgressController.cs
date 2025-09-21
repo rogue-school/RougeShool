@@ -1,5 +1,6 @@
 using UnityEngine;
 using Game.StageSystem.Data;
+using Game.CoreSystem.Utility;
 using Game.StageSystem.Interface;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Manager;
@@ -46,11 +47,11 @@ namespace Game.StageSystem.Manager
         {
             if (stageManager == null)
             {
-                Debug.LogError("[StageProgressController] StageManager가 없습니다.");
+                GameLogger.LogError("[StageProgressController] StageManager가 없습니다.", GameLogger.LogCategory.Core);
                 return;
             }
 
-            Debug.Log("[StageProgressController] 스테이지 시작");
+            GameLogger.LogInfo("[StageProgressController] 스테이지 시작", GameLogger.LogCategory.Core);
             stageManager.StartStage();
         }
 
@@ -65,7 +66,7 @@ namespace Game.StageSystem.Manager
         {
             if (enemy == null) return;
 
-            Debug.Log($"[StageProgressController] 적 사망: {enemy.CharacterName}");
+            GameLogger.LogInfo($"[StageProgressController] 적 사망: {enemy.CharacterName}", GameLogger.LogCategory.Core);
 
             // 적 처치 보상 지급
             rewardManager.GiveEnemyDefeatRewards();
@@ -83,7 +84,7 @@ namespace Game.StageSystem.Manager
         /// </summary>
         public void FailStage()
         {
-            Debug.Log("[StageProgressController] 스테이지 실패");
+            GameLogger.LogInfo("[StageProgressController] 스테이지 실패", GameLogger.LogCategory.Core);
             stageManager.FailStage();
         }
 
@@ -92,7 +93,7 @@ namespace Game.StageSystem.Manager
         /// </summary>
         public void ResetStage()
         {
-            Debug.Log("[StageProgressController] 스테이지 리셋");
+            GameLogger.LogInfo("[StageProgressController] 스테이지 리셋", GameLogger.LogCategory.Core);
             
             // 적 제거
             if (enemyManager != null)
@@ -120,13 +121,13 @@ namespace Game.StageSystem.Manager
         {
             if (stageManager == null)
             {
-                Debug.Log("[StageProgressController] StageManager가 없습니다.");
+                GameLogger.LogInfo("[StageProgressController] StageManager가 없습니다.", GameLogger.LogCategory.Core);
                 return;
             }
 
-            Debug.Log($"[StageProgressController] 진행 상태: {stageManager.ProgressState}");
-            Debug.Log($"[StageProgressController] 스테이지 완료: {stageManager.IsStageCompleted}");
-            Debug.Log($"[StageProgressController] 다음 적 있음: {stageManager.HasNextEnemy()}");
+            GameLogger.LogInfo($"[StageProgressController] 진행 상태: {stageManager.ProgressState}", GameLogger.LogCategory.Core);
+            GameLogger.LogInfo($"[StageProgressController] 스테이지 완료: {stageManager.IsStageCompleted}", GameLogger.LogCategory.Core);
+            GameLogger.LogInfo($"[StageProgressController] 다음 적 있음: {stageManager.HasNextEnemy()}", GameLogger.LogCategory.Core);
         }
 
         #endregion

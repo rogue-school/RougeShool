@@ -95,13 +95,7 @@ public class CombatInstaller : MonoInstaller
             GameLogger.LogInfo(" CombatExecutionManager 바인딩 완료");
         }
 
-        // CombatSlotManager 바인딩
-        var combatSlotManager = FindFirstObjectByType<CombatSlotManager>();
-        if (combatSlotManager != null)
-        {
-            Container.Bind<CombatSlotManager>().FromInstance(combatSlotManager).AsSingle();
-            GameLogger.LogInfo(" CombatSlotManager 바인딩 완료");
-        }
+        // CombatSlotManager 제거됨 - 슬롯 관리 기능을 CombatFlowManager로 통합
 
         // TurnManager는 BindFactories()에서 바인딩됨
     }
@@ -190,17 +184,7 @@ public class CombatInstaller : MonoInstaller
     /// </summary>
     private void BindMonoBehaviours()
     {
-        // 새로운 싱글톤 매니저들 바인딩
-        var slotManager = FindFirstObjectByType<CombatSlotManager>();
-        if (slotManager != null)
-        {
-            Container.Bind<CombatSlotManager>().FromInstance(slotManager).AsSingle();
-            GameLogger.LogInfo(" CombatSlotManager 바인딩 완료");
-        }
-        else
-        {
-            GameLogger.LogError(" CombatSlotManager를 찾을 수 없습니다.");
-        }
+        // CombatSlotManager 제거됨 - 슬롯 관리 기능을 CombatFlowManager로 통합
 
         // TurnManager는 BindFactories()에서 바인딩됨
 
@@ -437,7 +421,7 @@ public class CombatInstaller : MonoInstaller
         }
         else
         {
-            Debug.Log($"[CombatInstaller] SaveManager 발견: {saveManager.name}");
+            GameLogger.LogInfo($"[CombatInstaller] SaveManager 발견: {saveManager.name}", GameLogger.LogCategory.Combat);
             
             // ISaveManager 인터페이스로 바인딩
             Container.Bind<ISaveManager>().FromInstance(saveManager).AsSingle();
@@ -467,7 +451,7 @@ public class CombatInstaller : MonoInstaller
         }
         else
         {
-            Debug.Log($"[CombatInstaller] AudioManager 발견: {audioManager.name}");
+            GameLogger.LogInfo($"[CombatInstaller] AudioManager 발견: {audioManager.name}", GameLogger.LogCategory.Combat);
             
             // IAudioManager 인터페이스로 바인딩
             Container.Bind<IAudioManager>().FromInstance(audioManager).AsSingle();
@@ -494,7 +478,7 @@ public class CombatInstaller : MonoInstaller
         }
         else
         {
-            Debug.Log($"[CombatInstaller] CoroutineRunner 발견: {coroutineRunner.name}");
+            GameLogger.LogInfo($"[CombatInstaller] CoroutineRunner 발견: {coroutineRunner.name}", GameLogger.LogCategory.Combat);
             
             // ICoroutineRunner 인터페이스로 바인딩
             Container.Bind<ICoroutineRunner>().FromInstance(coroutineRunner).AsSingle();
@@ -538,7 +522,7 @@ public class CombatInstaller : MonoInstaller
         }
         else
         {
-            Debug.Log($"[CombatInstaller] PlayerDeckManager 발견: {playerDeckManager.name}");
+            GameLogger.LogInfo($"[CombatInstaller] PlayerDeckManager 발견: {playerDeckManager.name}", GameLogger.LogCategory.Combat);
             
             // IPlayerDeckManager 인터페이스로 바인딩
             Container.Bind<IPlayerDeckManager>().FromInstance(playerDeckManager).AsSingle();

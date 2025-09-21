@@ -1,5 +1,6 @@
 using UnityEngine;
 using Game.CharacterSystem.Data;
+using Game.CoreSystem.Utility;
 using Game.CombatSystem.Data;
 using Game.CombatSystem.Slot;
 using Game.CharacterSystem.Core;
@@ -43,14 +44,14 @@ namespace Game.CombatSystem.Initialization
         {
             if (data == null)
             {
-                Debug.LogError("[EnemyInitializer] EnemyCharacterData가 null입니다.");
+                GameLogger.LogError("[EnemyInitializer] EnemyCharacterData가 null입니다.", GameLogger.LogCategory.Character);
                 return;
             }
 
             var slot = GetEnemySlot();
             if (slot == null)
             {
-                Debug.LogError("[EnemyInitializer] 적 슬롯을 찾지 못했습니다. 초기화 중단");
+                GameLogger.LogError("[EnemyInitializer] 적 슬롯을 찾지 못했습니다. 초기화 중단", GameLogger.LogCategory.Character);
                 return;
             }
 
@@ -59,7 +60,7 @@ namespace Game.CombatSystem.Initialization
             var enemy = InstantiateAndConfigureEnemy(data, slot);
             if (enemy == null)
             {
-                Debug.LogError("[EnemyInitializer] 적 인스턴스 생성 실패");
+                GameLogger.LogError("[EnemyInitializer] 적 인스턴스 생성 실패", GameLogger.LogCategory.Character);
                 return;
             }
 
@@ -86,7 +87,7 @@ namespace Game.CombatSystem.Initialization
         {
             if (slotRegistry == null)
             {
-                Debug.LogError("[EnemyInitializer] slotRegistry가 주입되지 않았습니다.");
+                GameLogger.LogError("[EnemyInitializer] slotRegistry가 주입되지 않았습니다.", GameLogger.LogCategory.Character);
                 return null;
             }
 
@@ -95,7 +96,7 @@ namespace Game.CombatSystem.Initialization
             var slot = slotRegistry?.GetCharacterSlot(SlotOwner.ENEMY);
 
             if (slot == null)
-                Debug.LogError("[EnemyInitializer] ENEMY용 캐릭터 슬롯을 찾지 못했습니다.");
+                GameLogger.LogError("[EnemyInitializer] ENEMY용 캐릭터 슬롯을 찾지 못했습니다.", GameLogger.LogCategory.Character);
 
             return slot;
         }
@@ -119,7 +120,7 @@ namespace Game.CombatSystem.Initialization
             var prefab = data.Prefab ?? defaultEnemyPrefab;
             if (prefab == null)
             {
-                Debug.LogError("[EnemyInitializer] 사용할 적 프리팹이 없습니다.");
+                GameLogger.LogError("[EnemyInitializer] 사용할 적 프리팹이 없습니다.", GameLogger.LogCategory.Character);
                 return null;
             }
 
@@ -128,7 +129,7 @@ namespace Game.CombatSystem.Initialization
 
             if (!instance.TryGetComponent(out EnemyCharacter enemy))
             {
-                Debug.LogError("[EnemyInitializer] EnemyCharacter 컴포넌트를 찾지 못했습니다.");
+                GameLogger.LogError("[EnemyInitializer] EnemyCharacter 컴포넌트를 찾지 못했습니다.", GameLogger.LogCategory.Character);
                 Destroy(instance);
                 return null;
             }

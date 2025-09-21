@@ -295,7 +295,7 @@ namespace Game.CoreSystem.Utility
             // 매니저들
             RegisterComponentRole<PlayerManager>(ComponentRole.MANAGER, "플레이어 캐릭터 관리 전용");
             RegisterComponentRole<CombatFlowManager>(ComponentRole.MANAGER, "전투 플로우 관리 전용");
-            RegisterComponentRole<CombatSlotManager>(ComponentRole.MANAGER, "전투 슬롯 관리 전용");
+            // CombatSlotManager 제거됨 - 슬롯 관리 기능을 CombatFlowManager로 통합
             
             // UI 컨트롤러들
             RegisterComponentRole<PlayerCharacterUIController>(ComponentRole.UI_CONTROLLER, "플레이어 UI 제어 전용");

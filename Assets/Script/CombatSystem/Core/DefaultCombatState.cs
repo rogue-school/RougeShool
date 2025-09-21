@@ -1,5 +1,6 @@
 using UnityEngine;
 using Game.CombatSystem.Interface;
+using Game.CoreSystem.Utility;
 
 namespace Game.CombatSystem.Core
 {
@@ -36,7 +37,7 @@ namespace Game.CombatSystem.Core
         /// </summary>
         public void EnterState()
         {
-            Debug.Log("<color=cyan>[DefaultCombatState] 상태 진입</color>");
+            GameLogger.LogInfo("[DefaultCombatState] 상태 진입", GameLogger.LogCategory.Combat);
         }
 
         /// <summary>
@@ -44,7 +45,7 @@ namespace Game.CombatSystem.Core
         /// </summary>
         public void ExecuteState()
         {
-            Debug.Log("<color=cyan>[DefaultCombatState] 상태 실행 중 (기본 상태)</color>");
+            GameLogger.LogInfo("[DefaultCombatState] 상태 실행 중 (기본 상태)", GameLogger.LogCategory.Combat);
             // 필요 시 자동 상태 전이 가능
             // 예: turnManager.RequestStateChange(...);
         }
@@ -54,7 +55,7 @@ namespace Game.CombatSystem.Core
         /// </summary>
         public void ExitState()
         {
-            Debug.Log("<color=cyan>[DefaultCombatState] 상태 종료</color>");
+            GameLogger.LogInfo("[DefaultCombatState] 상태 종료", GameLogger.LogCategory.Combat);
         }
 
         #endregion

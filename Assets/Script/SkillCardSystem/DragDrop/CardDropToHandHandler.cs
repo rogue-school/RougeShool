@@ -8,6 +8,7 @@ using Game.CombatSystem.UI;
 using Game.CombatSystem.Utility;
 using Game.CombatSystem.Slot;
 using System.Linq;
+using Game.CoreSystem.Utility;
 
 namespace Game.CombatSystem.DragDrop
 {
@@ -17,7 +18,7 @@ namespace Game.CombatSystem.DragDrop
 
         public void OnDrop(PointerEventData eventData)
         {
-            Debug.Log("[CardDropToHandHandler] 드롭 감지됨");
+            GameLogger.LogInfo("[CardDropToHandHandler] 드롭 감지됨", GameLogger.LogCategory.SkillCard);
 
             var cardUI = eventData.pointerDrag?.GetComponent<SkillCardUI>();
             var dragHandler = eventData.pointerDrag?.GetComponent<CardDragHandler>();
@@ -40,7 +41,7 @@ namespace Game.CombatSystem.DragDrop
             dragHandler.OriginalParent = this.transform;
             dragHandler.OriginalWorldPosition = this.transform.position;
 
-            Debug.Log($"[CardDropToHandHandler] 카드 핸드 복귀 완료: {card.CardDefinition.Name}");
+            GameLogger.LogInfo($"[CardDropToHandHandler] 카드 핸드 복귀 완료: {card.CardDefinition.Name}", GameLogger.LogCategory.SkillCard);
         }
     }
 }

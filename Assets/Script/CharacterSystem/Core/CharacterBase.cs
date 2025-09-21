@@ -6,6 +6,7 @@ using Game.CharacterSystem.UI;
 using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem;
+using Game.CoreSystem.Utility;
 using System;
 
 namespace Game.CharacterSystem.Core
@@ -104,7 +105,7 @@ namespace Game.CharacterSystem.Core
         public virtual void SetGuarded(bool value)
         {
             isGuarded = value;
-            Debug.Log($"[{GetCharacterName()}] 가드 상태: {isGuarded}");
+            GameLogger.LogInfo($"[{GetCharacterName()}] 가드 상태: {isGuarded}", GameLogger.LogCategory.Character);
             OnGuardStateChanged?.Invoke(isGuarded);
         }
 
@@ -112,8 +113,14 @@ namespace Game.CharacterSystem.Core
         /// <param name="amount">증가량</param>
         public virtual void GainGuard(int amount)
         {
+            if (amount < 0)
+            {
+                GameLogger.LogError($"[{GetCharacterName()}] 잘못된 가드 증가량: {amount}", GameLogger.LogCategory.Character);
+                throw new ArgumentException($"가드 증가량은 음수일 수 없습니다. 입력값: {amount}", nameof(amount));
+            }
+            
             currentGuard += amount;
-            Debug.Log($"[{GetCharacterName()}] 가드 +{amount} → 현재 가드: {currentGuard}");
+            GameLogger.LogInfo($"[{GetCharacterName()}] 가드 +{amount} → 현재 가드: {currentGuard}", GameLogger.LogCategory.Character);
 
             // 가드 이벤트 발행은 자식 클래스에서 처리
             OnGuarded(amount);
@@ -125,14 +132,14 @@ namespace Game.CharacterSystem.Core
         {
             if (amount <= 0)
             {
-                Debug.LogWarning($"[{GetCharacterName()}] 잘못된 회복량 무시됨: {amount}");
-                return;
+                GameLogger.LogError($"[{GetCharacterName()}] 잘못된 회복량: {amount}", GameLogger.LogCategory.Character);
+                throw new ArgumentException($"회복량은 양수여야 합니다. 입력값: {amount}", nameof(amount));
             }
 
             currentHP = Mathf.Min(currentHP + amount, maxHP);
             OnHPChanged?.Invoke(currentHP, maxHP);
 
-            Debug.Log($"[{GetCharacterName()}] 회복: {amount}, 현재 체력: {currentHP}");
+            GameLogger.LogInfo($"[{GetCharacterName()}] 회복: {amount}, 현재 체력: {currentHP}", GameLogger.LogCategory.Character);
 
             // 회복 이벤트 발행은 자식 클래스에서 처리
             OnHealed(amount);
@@ -144,21 +151,21 @@ namespace Game.CharacterSystem.Core
         {
             if (amount <= 0)
             {
-                Debug.LogWarning($"[{GetCharacterDataName()}] 잘못된 피해량 무시됨: {amount}");
-                return;
+                GameLogger.LogError($"[{GetCharacterDataName()}] 잘못된 피해량: {amount}", GameLogger.LogCategory.Character);
+                throw new ArgumentException($"피해량은 양수여야 합니다. 입력값: {amount}", nameof(amount));
             }
 
             // 가드 상태 확인
             if (isGuarded)
             {
-                Debug.Log($"[{GetCharacterDataName()}] 가드로 데미지 차단: {amount}");
+                GameLogger.LogInfo($"[{GetCharacterDataName()}] 가드로 데미지 차단: {amount}", GameLogger.LogCategory.Character);
                 return; // 가드 상태면 데미지 무효화
             }
 
             currentHP = Mathf.Max(currentHP - amount, 0);
             OnHPChanged?.Invoke(currentHP, maxHP);
 
-            Debug.Log($"[{GetCharacterDataName()}] 피해: {amount}, 남은 체력: {currentHP}");
+            GameLogger.LogInfo($"[{GetCharacterDataName()}] 피해: {amount}, 남은 체력: {currentHP}", GameLogger.LogCategory.Character);
 
             // 피해 이벤트 발행은 자식 클래스에서 처리
             OnDamaged(amount);
@@ -171,6 +178,12 @@ namespace Game.CharacterSystem.Core
         /// <param name="value">최대 체력 값</param>
         public virtual void SetMaxHP(int value)
         {
+            if (value <= 0)
+            {
+                GameLogger.LogError($"[{GetCharacterName()}] 잘못된 최대 체력: {value}", GameLogger.LogCategory.Character);
+                throw new ArgumentException($"최대 체력은 양수여야 합니다. 입력값: {value}", nameof(value));
+            }
+            
             maxHP = value;
             currentHP = maxHP;
             OnHPChanged?.Invoke(currentHP, maxHP);
@@ -201,7 +214,7 @@ namespace Game.CharacterSystem.Core
             // 가드 상태면 상태이상 효과 차단
             if (isGuarded)
             {
-                Debug.Log($"[{GetCharacterDataName()}] 가드로 상태이상 효과 차단: {effect.GetType().Name}");
+                GameLogger.LogInfo($"[{GetCharacterDataName()}] 가드로 상태이상 효과 차단: {effect.GetType().Name}", GameLogger.LogCategory.Character);
                 return false;
             }
 
@@ -232,7 +245,7 @@ namespace Game.CharacterSystem.Core
         /// <summary>캐릭터 사망 처리</summary>
         public virtual void Die()
         {
-            Debug.Log($"[{GetCharacterName()}] 사망 처리됨.");
+            GameLogger.LogInfo($"[{GetCharacterName()}] 사망 처리됨.", GameLogger.LogCategory.Character);
         }
 
         /// <summary>

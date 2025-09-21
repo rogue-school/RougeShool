@@ -15,7 +15,7 @@ namespace Game.CombatSystem.State
         #region 필드
 
         private readonly TurnManager turnManager;
-        private readonly CombatSlotManager slotManager;
+        // CombatSlotManager 제거됨 - 슬롯 관리 기능을 CombatFlowManager로 통합
         private readonly PlayerManager playerManager;
         private readonly EnemyManager enemyManager;
         private readonly ICoroutineRunner coroutineRunner;
@@ -29,14 +29,12 @@ namespace Game.CombatSystem.State
         /// </summary>
         public CombatGameOverState(
             TurnManager turnManager,
-            CombatSlotManager slotManager,
             PlayerManager playerManager,
             EnemyManager enemyManager,
             ICoroutineRunner coroutineRunner
         )
         {
             this.turnManager = turnManager;
-            this.slotManager = slotManager;
             this.playerManager = playerManager;
             this.enemyManager = enemyManager;
             this.coroutineRunner = coroutineRunner;

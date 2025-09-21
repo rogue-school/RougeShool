@@ -1,5 +1,6 @@
 using UnityEngine;
 using Game.CombatSystem.Manager;
+using Game.CoreSystem.Utility;
 
 namespace Game.CombatSystem.State
 {
@@ -11,7 +12,7 @@ namespace Game.CombatSystem.State
     {
         #region 필드
 
-        private readonly CombatSlotManager slotManager;
+        // CombatSlotManager 제거됨 - 슬롯 관리 기능을 CombatFlowManager로 통합
         private readonly TurnManager turnManager;
 
         private bool hasStarted = false;
@@ -24,10 +25,8 @@ namespace Game.CombatSystem.State
         /// CombatPlayerInputState의 생성자입니다.
         /// </summary>
         public CombatPlayerInputState(
-            CombatSlotManager slotManager,
             TurnManager turnManager)
         {
-            this.slotManager = slotManager;
             this.turnManager = turnManager;
         }
 
@@ -40,11 +39,11 @@ namespace Game.CombatSystem.State
         /// </summary>
         public void EnterState()
         {
-            Debug.Log("<color=cyan>[STATE] CombatPlayerInputState 진입</color>");
+            GameLogger.LogInfo("[STATE] CombatPlayerInputState 진입", GameLogger.LogCategory.Combat);
             hasStarted = false;
 
             // Note: UI management is now handled by the simplified architecture
-            Debug.Log("[CombatPlayerInputState] 플레이어 입력 대기 상태");
+            GameLogger.LogInfo("[CombatPlayerInputState] 플레이어 입력 대기 상태", GameLogger.LogCategory.Combat);
         }
 
         /// <summary>
@@ -60,7 +59,7 @@ namespace Game.CombatSystem.State
         /// </summary>
         public void ExitState()
         {
-            Debug.Log("<color=cyan>[STATE] CombatPlayerInputState 종료</color>");
+            GameLogger.LogInfo("[STATE] CombatPlayerInputState 종료", GameLogger.LogCategory.Combat);
             // Note: UI management is now handled by the simplified architecture
         }
 
@@ -76,12 +75,12 @@ namespace Game.CombatSystem.State
         {
             if (hasStarted)
             {
-                Debug.LogWarning("[CombatPlayerInputState] 이미 시작 버튼이 눌렸습니다.");
+                GameLogger.LogWarning("[CombatPlayerInputState] 이미 시작 버튼이 눌렸습니다.", GameLogger.LogCategory.Combat);
                 return;
             }
 
             hasStarted = true;
-            Debug.Log("<color=cyan>[STATE] CombatPlayerInputState → CombatAttackState 전이</color>");
+            GameLogger.LogInfo("[STATE] CombatPlayerInputState → CombatAttackState 전이", GameLogger.LogCategory.Combat);
 
             // Note: State transitions are now handled by the simplified TurnManager
             turnManager.NextTurn();

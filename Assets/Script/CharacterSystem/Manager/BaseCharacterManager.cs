@@ -24,9 +24,6 @@ namespace Game.CharacterSystem.Manager
         [Tooltip("캐릭터가 배치될 슬롯 위치")]
         [SerializeField] protected Transform characterSlot;
 
-        [Header("캐릭터 UI")]
-        [Tooltip("캐릭터 UI 컨트롤러")]
-        [SerializeField] protected MonoBehaviour characterUIController;
 
         #endregion
 
@@ -58,8 +55,9 @@ namespace Game.CharacterSystem.Manager
 
         /// <summary>
         /// 캐릭터 UI 컨트롤러를 반환합니다.
+        /// 기본적으로는 null을 반환하며, 하위 클래스에서 오버라이드하여 구현합니다.
         /// </summary>
-        protected override MonoBehaviour GetUIController() => characterUIController;
+        protected override MonoBehaviour GetUIController() => null;
 
         #endregion
 
@@ -137,20 +135,13 @@ namespace Game.CharacterSystem.Manager
 
         /// <summary>
         /// 캐릭터 UI를 연결합니다.
+        /// 기본적으로는 아무것도 하지 않으며, 하위 클래스에서 오버라이드하여 구현합니다.
         /// </summary>
         /// <param name="character">연결할 캐릭터</param>
         protected virtual void ConnectCharacterUI(TCharacter character)
         {
-            if (characterUIController != null && character is ICharacter ic)
-            {
-                // SetTarget 메서드가 있는지 확인 후 호출
-                var setTargetMethod = characterUIController.GetType().GetMethod("SetTarget");
-                if (setTargetMethod != null)
-                {
-                    setTargetMethod.Invoke(characterUIController, new object[] { ic });
-                    GameLogger.LogInfo($"캐릭터 UI 연결 완료: {character.GetCharacterName()}", GameLogger.LogCategory.Character);
-                }
-            }
+            // 기본 구현: 아무것도 하지 않음
+            // 하위 클래스에서 오버라이드하여 각각의 UI 연결 로직을 구현
         }
 
         /// <summary>

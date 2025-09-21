@@ -10,16 +10,14 @@ namespace Game.CombatSystem.State
     public class CombatVictoryState
     {
         private readonly TurnManager turnManager;
-        private readonly CombatSlotManager slotManager;
+        // CombatSlotManager 제거됨 - 슬롯 관리 기능을 CombatFlowManager로 통합
         private readonly ICoroutineRunner coroutineRunner;
 
         public CombatVictoryState(
             TurnManager turnManager,
-            CombatSlotManager slotManager,
             ICoroutineRunner coroutineRunner)
         {
             this.turnManager = turnManager;
-            this.slotManager = slotManager;
             this.coroutineRunner = coroutineRunner;
         }
 

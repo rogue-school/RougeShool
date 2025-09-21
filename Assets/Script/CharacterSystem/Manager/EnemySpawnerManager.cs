@@ -109,7 +109,7 @@ namespace Game.CharacterSystem.Manager
             var prefab = data.Prefab ?? defaultEnemyPrefab;
             if (prefab == null)
             {
-                Debug.LogError("[EnemySpawnerManager] 프리팹이 설정되지 않았습니다.");
+                GameLogger.LogError("[EnemySpawnerManager] 프리팹이 설정되지 않았습니다.", GameLogger.LogCategory.Character);
                 onComplete?.Invoke(null);
                 yield break;
             }
@@ -124,7 +124,7 @@ namespace Game.CharacterSystem.Manager
             // 1. EnemyCharacter 컴포넌트 및 데이터 세팅 (애니메이션 전에)
             if (!instance.TryGetComponent(out EnemyCharacter enemy))
             {
-                Debug.LogError("[EnemySpawnerManager] EnemyCharacter 컴포넌트 누락");
+                GameLogger.LogError("[EnemySpawnerManager] EnemyCharacter 컴포넌트 누락", GameLogger.LogCategory.Character);
                 Object.Destroy(instance);
                 onComplete?.Invoke(null);
                 yield break;
@@ -189,7 +189,7 @@ namespace Game.CharacterSystem.Manager
         /// </summary>
         public void SpawnInitialEnemy()
         {
-            Debug.LogWarning("[EnemySpawnerManager] StageManager를 통해 적을 생성하세요. 이 메서드는 더 이상 사용되지 않습니다.");
+            GameLogger.LogWarning("[EnemySpawnerManager] StageManager를 통해 적을 생성하세요. 이 메서드는 더 이상 사용되지 않습니다.", GameLogger.LogCategory.Character);
         }
 
         #endregion

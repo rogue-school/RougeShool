@@ -11,31 +11,29 @@ namespace Game.CombatSystem.State
     public class CombatResultState
     {
         private readonly TurnManager turnManager;
-        private readonly CombatSlotManager slotManager;
+        // CombatSlotManager 제거됨 - 슬롯 관리 기능을 CombatFlowManager로 통합
         private readonly ICoroutineRunner coroutineRunner;
         private readonly IPlayerHandManager playerHandManager;
 
         public CombatResultState(
             TurnManager turnManager,
-            CombatSlotManager slotManager,
             ICoroutineRunner coroutineRunner,
             IPlayerHandManager playerHandManager)
         {
             this.turnManager = turnManager;
-            this.slotManager = slotManager;
             this.coroutineRunner = coroutineRunner;
             this.playerHandManager = playerHandManager;
         }
 
         public void EnterState()
         {
-            Debug.Log("<color=cyan>[STATE] CombatResultState 진입</color>");
+            GameLogger.LogInfo("[STATE] CombatResultState 진입", GameLogger.LogCategory.Combat);
             coroutineRunner.RunCoroutine(ExecuteResultPhase());
         }
 
         private IEnumerator ExecuteResultPhase()
         {
-            Debug.Log("[CombatResultState] 결과 처리 중...");
+            GameLogger.LogInfo("[CombatResultState] 결과 처리 중...", GameLogger.LogCategory.Combat);
             
             // 1. 플레이어 카드 복귀
             ReturnPlayerCardsToHand();
@@ -46,21 +44,21 @@ namespace Game.CombatSystem.State
             yield return new WaitForSeconds(0.5f);
 
             // 3. 다음 턴으로 전환
-            Debug.Log("<color=cyan>[STATE] CombatResultState → 다음 턴으로 전환</color>");
+            GameLogger.LogInfo("[STATE] CombatResultState → 다음 턴으로 전환", GameLogger.LogCategory.Combat);
             turnManager.NextTurn();
         }
 
         private void ReturnPlayerCardsToHand()
         {
             // Note: Card return logic is now handled by the simplified architecture
-            Debug.Log("[CombatResultState] 플레이어 카드 복귀 처리");
+            GameLogger.LogInfo("[CombatResultState] 플레이어 카드 복귀 처리", GameLogger.LogCategory.Combat);
         }
 
         public void ExecuteState() { }
 
         public void ExitState()
         {
-            Debug.Log("<color=cyan>[STATE] CombatResultState 종료</color>");
+            GameLogger.LogInfo("[STATE] CombatResultState 종료", GameLogger.LogCategory.Combat);
         }
     }
 }

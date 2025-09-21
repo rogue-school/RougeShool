@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
@@ -9,6 +10,7 @@ using Game.CharacterSystem.Manager;
 using Game.CombatSystem.UI;
 using Game.CombatSystem;
 using Game.CharacterSystem.UI;
+using Game.CoreSystem.Utility;
 
 namespace Game.CharacterSystem.Core
 {
@@ -66,7 +68,7 @@ namespace Game.CharacterSystem.Core
             }
             else
             {
-                Debug.LogWarning($"[PlayerCharacter] {gameObject.name}의 CharacterData가 설정되지 않았습니다. 런타임에 초기화됩니다.");
+                GameLogger.LogWarning($"[PlayerCharacter] {gameObject.name}의 CharacterData가 설정되지 않았습니다. 런타임에 초기화됩니다.", GameLogger.LogCategory.Character);
             }
         }
 
@@ -88,9 +90,14 @@ namespace Game.CharacterSystem.Core
         /// <param name="data">플레이어 캐릭터 데이터</param>
         public void SetCharacterData(PlayerCharacterData data)
         {
+            if (data == null)
+            {
+                GameLogger.LogError("[PlayerCharacter] 플레이어 캐릭터 데이터가 null입니다.", GameLogger.LogCategory.Character);
+                throw new ArgumentNullException(nameof(data), "플레이어 캐릭터 데이터는 null일 수 없습니다.");
+            }
+            
             CharacterData = data;
-            if (CharacterData != null)
-                this.gameObject.name = CharacterData.name;
+            this.gameObject.name = CharacterData.name;
             InitializeCharacter(data);
         }
 
@@ -238,7 +245,7 @@ namespace Game.CharacterSystem.Core
         /// <param name="card">복원할 카드</param>
         public void RestoreCardToHand(ISkillCard card)
         {
-            Debug.Log($"[PlayerCharacter] 카드 복귀: {card?.CardDefinition?.displayName}");
+            GameLogger.LogInfo($"[PlayerCharacter] 카드 복귀: {card?.CardDefinition?.displayName}", GameLogger.LogCategory.Character);
             // 실제 핸드 복원 로직은 handManager 내부에 구현되어야 함
         }
 

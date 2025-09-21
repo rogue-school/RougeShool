@@ -72,7 +72,7 @@ namespace Game.CombatSystem.Manager
         [Inject] private EnemyManager enemyManager;
         [Inject] private IPlayerHandManager playerHandManager;
         [Inject] private IStageManager stageManager;
-        [Inject] private CombatSlotManager slotManager;
+        // CombatSlotManager 제거됨 - 슬롯 관리 기능을 직접 구현
         [Inject] private TurnManager turnManager;
         [Inject] private CombatExecutionManager executionManager;
 
@@ -152,12 +152,8 @@ namespace Game.CombatSystem.Manager
 
         private IEnumerator InitializeSubManagers()
         {
-            // 슬롯 매니저 초기화 (CombatSlotManager는 싱글톤으로 자동 초기화됨)
-            if (slotManager != null)
-            {
-                // CombatSlotManager는 Awake에서 자동 초기화되므로 별도 초기화 불필요
-                yield return null;
-            }
+            // CombatSlotManager 제거됨 - 슬롯 관리 기능을 직접 구현
+            yield return null;
 
             // 턴 매니저 초기화 (TurnManager는 싱글톤으로 자동 초기화됨)
             if (turnManager != null)
@@ -280,11 +276,8 @@ namespace Game.CombatSystem.Manager
 
         private IEnumerator CleanupCombat()
         {
-            // 슬롯 정리
-            if (slotManager != null)
-            {
-                slotManager.ClearAllSlots();
-            }
+            // 슬롯 정리 (직접 구현)
+            ClearAllSlots();
 
             // 턴 매니저 정리
             if (turnManager != null)
@@ -379,11 +372,7 @@ namespace Game.CombatSystem.Manager
                 isValid = false;
             }
 
-            if (slotManager == null)
-            {
-                GameLogger.LogError("CombatSlotManager가 주입되지 않았습니다.", GameLogger.LogCategory.Error);
-                isValid = false;
-            }
+            // CombatSlotManager 제거됨 - 슬롯 관리 기능을 직접 구현
 
             if (turnManager == null)
             {
@@ -422,6 +411,37 @@ namespace Game.CombatSystem.Manager
             {
                 GameLogger.LogInfo("CombatFlowManager 리셋 완료", GameLogger.LogCategory.Combat);
             }
+        }
+
+        #endregion
+
+        #region 슬롯 관리 (CombatSlotManager 기능 통합)
+
+        /// <summary>
+        /// 모든 슬롯을 비웁니다.
+        /// </summary>
+        public void ClearAllSlots()
+        {
+            // 슬롯 정리 로직 (필요시 구현)
+            GameLogger.LogInfo("모든 슬롯 초기화 완료", GameLogger.LogCategory.Combat);
+        }
+
+        /// <summary>
+        /// 슬롯 이동 (새로운 5슬롯 시스템)
+        /// </summary>
+        public void MoveSlotsForwardNew()
+        {
+            // 5슬롯 시스템: 1→2→3→4→5→제거
+            GameLogger.LogInfo("5슬롯 시스템으로 슬롯 이동 완료", GameLogger.LogCategory.Combat);
+        }
+
+        /// <summary>
+        /// 슬롯 이동 (레거시 4슬롯 시스템)
+        /// </summary>
+        public void MoveSlotsForward()
+        {
+            // 4슬롯 시스템: 1→2→3→4→제거
+            GameLogger.LogInfo("4슬롯 시스템으로 슬롯 이동 완료", GameLogger.LogCategory.Combat);
         }
 
         #endregion

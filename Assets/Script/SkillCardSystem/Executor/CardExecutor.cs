@@ -7,6 +7,7 @@ using Game.CoreSystem.Audio;
 using Game.CoreSystem.Interface;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Core;
+using Game.CoreSystem.Utility;
 using Zenject;
 
 namespace Game.SkillCardSystem.Executor
@@ -47,14 +48,14 @@ namespace Game.SkillCardSystem.Executor
         {
             if (!validator.CanExecute(card, context))
             {
-                Debug.LogWarning($"[CardExecutor] 실행 조건 불충족: {card?.GetCardName() ?? "알 수 없음"}");
+                GameLogger.LogWarning($"[CardExecutor] 실행 조건 불충족: {card?.GetCardName() ?? "알 수 없음"}", GameLogger.LogCategory.SkillCard);
                 return;
             }
 
             var effects = card.CreateEffects();
             if (effects == null || effects.Count == 0)
             {
-                Debug.LogWarning($"[CardExecutor] '{card.GetCardName()}'에 등록된 이펙트가 없습니다.");
+                GameLogger.LogWarning($"[CardExecutor] '{card.GetCardName()}'에 등록된 이펙트가 없습니다.", GameLogger.LogCategory.SkillCard);
                 return;
             }
 
@@ -73,7 +74,7 @@ namespace Game.SkillCardSystem.Executor
                 var command = commandFactory.Create(effect, power);
                 command?.Execute(context, turnManager);
 
-                Debug.Log($"[CardExecutor] {card.GetCardName()} → {effect.GetEffectName()}, power: {power}");
+                GameLogger.LogInfo($"[CardExecutor] {card.GetCardName()} → {effect.GetEffectName()}, power: {power}", GameLogger.LogCategory.SkillCard);
             }
 
             // 효과 후 카드 사운드 재생

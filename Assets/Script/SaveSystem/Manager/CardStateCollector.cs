@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Game.CoreSystem.Utility;
 using System.Collections.Generic;
 using System.Linq;
 using Game.SaveSystem.Data;
@@ -23,7 +24,7 @@ namespace Game.SaveSystem.Manager
 
         [Inject] private IPlayerHandManager playerHandManager;
         [Inject] private ICardCirculationSystem circulationSystem;
-        [Inject] private CombatSlotManager combatSlotManager;
+        // CombatSlotManager 제거됨 - 슬롯 상태 수집 기능을 다른 방식으로 처리
 
         #endregion
 
@@ -47,7 +48,7 @@ namespace Game.SaveSystem.Manager
             CollectCardCirculationState(cardState);
             CollectTurnState(cardState);
             
-            Debug.Log($"[CardStateCollector] 카드 상태 수집 완료: {saveTrigger}");
+            GameLogger.LogInfo($"[CardStateCollector] 카드 상태 수집 완료: {saveTrigger}", GameLogger.LogCategory.Save);
             return cardState;
         }
 
@@ -132,7 +133,7 @@ namespace Game.SaveSystem.Manager
         {
             if (playerHandManager == null)
             {
-                Debug.LogWarning("[CardStateCollector] PlayerHandManager가 없습니다.");
+                GameLogger.LogWarning("[CardStateCollector] PlayerHandManager가 없습니다.", GameLogger.LogCategory.Save);
                 return;
             }
 
@@ -152,7 +153,7 @@ namespace Game.SaveSystem.Manager
                 cardState.playerHandSlots.Add(cardData);
             }
             
-            Debug.Log($"[CardStateCollector] 플레이어 핸드카드 수집: {cardState.playerHandSlots.Count}장");
+            GameLogger.LogInfo($"[CardStateCollector] 플레이어 핸드카드 수집: {cardState.playerHandSlots.Count}장", GameLogger.LogCategory.Save);
         }
 
         // 적 핸드카드 상태 수집 메서드 제거됨 - 적 카드는 대기 슬롯에서 직접 관리
@@ -162,21 +163,14 @@ namespace Game.SaveSystem.Manager
         /// </summary>
         private void CollectCombatSlotState(CompleteCardStateData cardState)
         {
-            if (combatSlotManager == null)
-            {
-                Debug.LogWarning("[CardStateCollector] CombatSlotManager가 없습니다.");
-                return;
-            }
-
-            // 전투 슬롯 카드 수집
-            var battleCard = combatSlotManager.GetCardInSlot(CombatSlotPosition.BATTLE_SLOT);
-            cardState.firstSlotCard = CreateCardSlotData(battleCard, CombatSlotPosition.BATTLE_SLOT, "COMBAT");
+            // CombatSlotManager 제거됨 - 슬롯 상태 수집 기능을 다른 방식으로 처리
+            GameLogger.LogWarning("[CardStateCollector] CombatSlotManager 제거됨 - 슬롯 상태 수집 기능 비활성화", GameLogger.LogCategory.Save);
             
-            // 대기 슬롯 1 카드 수집
-            var waitCard = combatSlotManager.GetCardInSlot(CombatSlotPosition.WAIT_SLOT_1);
-            cardState.secondSlotCard = CreateCardSlotData(waitCard, CombatSlotPosition.WAIT_SLOT_1, "COMBAT");
+            // 빈 슬롯 데이터로 초기화
+            cardState.firstSlotCard = null;
+            cardState.secondSlotCard = null;
             
-            Debug.Log($"[CardStateCollector] 전투 슬롯 카드 수집: BATTLE_SLOT={cardState.firstSlotCard?.cardName ?? "Empty"}, WAIT_SLOT_1={cardState.secondSlotCard?.cardName ?? "Empty"}");
+            GameLogger.LogInfo($"[CardStateCollector] 전투 슬롯 카드 수집: BATTLE_SLOT={cardState.firstSlotCard?.cardName ?? "Empty"}, WAIT_SLOT_1={cardState.secondSlotCard?.cardName ?? "Empty"}", GameLogger.LogCategory.Save);
         }
 
         /// <summary>
@@ -186,14 +180,14 @@ namespace Game.SaveSystem.Manager
         {
             if (circulationSystem == null)
             {
-                Debug.LogWarning("[CardStateCollector] CardCirculationSystem이 없습니다.");
+                GameLogger.LogWarning("[CardStateCollector] CardCirculationSystem이 없습니다.", GameLogger.LogCategory.Save);
                 return;
             }
 
             // 카드 순환 상태 수집 (보관함 시스템 제거됨)
             // unusedStorageCards와 usedStorageCards는 더 이상 사용되지 않습니다.
             
-            Debug.Log("[CardStateCollector] 카드 순환 상태 수집 완료 (보관함 시스템 제거됨)");
+            GameLogger.LogInfo("[CardStateCollector] 카드 순환 상태 수집 완료 (보관함 시스템 제거됨)", GameLogger.LogCategory.Save);
         }
 
         /// <summary>
@@ -206,7 +200,7 @@ namespace Game.SaveSystem.Manager
             cardState.currentTurn = 1; // 임시 값
             cardState.turnPhase = GetCurrentTurnPhase();
             
-            Debug.Log($"[CardStateCollector] 턴 상태 수집: PlayerFirst={cardState.isPlayerFirst}, Turn={cardState.currentTurn}, Phase={cardState.turnPhase}");
+            GameLogger.LogInfo($"[CardStateCollector] 턴 상태 수집: PlayerFirst={cardState.isPlayerFirst}, Turn={cardState.currentTurn}, Phase={cardState.turnPhase}", GameLogger.LogCategory.Save);
         }
 
         /// <summary>

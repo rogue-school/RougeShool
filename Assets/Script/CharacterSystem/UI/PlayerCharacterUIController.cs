@@ -8,6 +8,7 @@ using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Data;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Manager;
+using Game.CoreSystem.Utility;
 
 namespace Game.CharacterSystem.UI
 {
@@ -141,7 +142,7 @@ namespace Game.CharacterSystem.UI
         {
             if (character == null)
             {
-                Debug.LogWarning("[PlayerCharacterUIController] Initialize() - character가 null입니다.");
+                GameLogger.LogWarning("[PlayerCharacterUIController] Initialize() - character가 null입니다.", GameLogger.LogCategory.Character);
                 return;
             }
 
@@ -151,7 +152,7 @@ namespace Game.CharacterSystem.UI
             // 리소스 매니저는 Zenject DI로 주입됨
             if (playerManager == null)
             {
-                Debug.LogWarning("[PlayerCharacterUIController] PlayerManager가 주입되지 않았습니다.");
+                GameLogger.LogWarning("[PlayerCharacterUIController] PlayerManager가 주입되지 않았습니다.", GameLogger.LogCategory.Character);
             }
 
             // 캐릭터 정보 설정
@@ -164,7 +165,7 @@ namespace Game.CharacterSystem.UI
             UpdateHPBar();
             UpdateMPBar();
             
-            Debug.Log($"[PlayerCharacterUIController] {characterType} 캐릭터 UI 초기화 완료");
+            GameLogger.LogInfo($"[PlayerCharacterUIController] {characterType} 캐릭터 UI 초기화 완료", GameLogger.LogCategory.Character);
         }
 
         /// <summary>
@@ -180,7 +181,7 @@ namespace Game.CharacterSystem.UI
             }
             else
             {
-                Debug.LogWarning("[PlayerCharacterUIController] SetTarget: PlayerCharacter가 아닙니다. 호출을 무시합니다.");
+                GameLogger.LogWarning("[PlayerCharacterUIController] SetTarget: PlayerCharacter가 아닙니다. 호출을 무시합니다.", GameLogger.LogCategory.Character);
             }
         }
 
@@ -224,7 +225,7 @@ namespace Game.CharacterSystem.UI
             }
             else
             {
-                Debug.LogWarning($"[PlayerCharacterUIController] 문양 스프라이트를 찾을 수 없습니다: {emblemPath}");
+                GameLogger.LogWarning($"[PlayerCharacterUIController] 문양 스프라이트를 찾을 수 없습니다: {emblemPath}", GameLogger.LogCategory.Character);
             }
         }
 
@@ -428,7 +429,7 @@ namespace Game.CharacterSystem.UI
             // 딕셔너리에 저장
             activeBuffDebuffIcons[effectId] = iconObj;
 
-            Debug.Log($"[PlayerCharacterUIController] {(isBuff ? "버프" : "디버프")} 아이콘 추가: {effectId}");
+            GameLogger.LogInfo($"[PlayerCharacterUIController] {(isBuff ? "버프" : "디버프")} 아이콘 추가: {effectId}", GameLogger.LogCategory.Character);
         }
 
         /// <summary>
@@ -441,7 +442,7 @@ namespace Game.CharacterSystem.UI
             {
                 Destroy(iconObj);
                 activeBuffDebuffIcons.Remove(effectId);
-                Debug.Log($"[PlayerCharacterUIController] 버프/디버프 아이콘 제거: {effectId}");
+                GameLogger.LogInfo($"[PlayerCharacterUIController] 버프/디버프 아이콘 제거: {effectId}", GameLogger.LogCategory.Character);
             }
         }
 
@@ -456,7 +457,7 @@ namespace Game.CharacterSystem.UI
                     Destroy(icon);
             }
             activeBuffDebuffIcons.Clear();
-            Debug.Log("[PlayerCharacterUIController] 모든 버프/디버프 아이콘 제거");
+            GameLogger.LogInfo("[PlayerCharacterUIController] 모든 버프/디버프 아이콘 제거", GameLogger.LogCategory.Character);
         }
 
         #endregion
@@ -532,7 +533,7 @@ namespace Game.CharacterSystem.UI
             // 버프/디버프 아이콘 초기화
             ClearAllBuffDebuffIcons();
             
-            Debug.Log("[PlayerCharacterUIController] UI 초기화 완료");
+            GameLogger.LogInfo("[PlayerCharacterUIController] UI 초기화 완료", GameLogger.LogCategory.Character);
         }
 
         #endregion
@@ -546,7 +547,7 @@ namespace Game.CharacterSystem.UI
         private void ShowDamageText(int damage)
         {
             // TODO: 데미지 텍스트 표시 로직 구현
-            Debug.Log($"[PlayerCharacterUIController] 데미지: {damage}");
+            GameLogger.LogInfo($"[PlayerCharacterUIController] 데미지: {damage}", GameLogger.LogCategory.Character);
         }
 
         /// <summary>
@@ -556,7 +557,7 @@ namespace Game.CharacterSystem.UI
         private void ShowHealText(int healAmount)
         {
             // TODO: 힐 텍스트 표시 로직 구현
-            Debug.Log($"[PlayerCharacterUIController] 회복: {healAmount}");
+            GameLogger.LogInfo($"[PlayerCharacterUIController] 회복: {healAmount}", GameLogger.LogCategory.Character);
         }
 
         #endregion

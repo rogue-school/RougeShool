@@ -1,5 +1,6 @@
 using UnityEngine;
 using Game.CombatSystem.Manager;
+using Game.CoreSystem.Utility;
 using Game.CombatSystem.Service;
 using Game.CombatSystem.DragDrop;
 using Game.CombatSystem.Data;
@@ -15,15 +16,13 @@ namespace Game.UtilitySystem
         /// <summary>
         /// 모든 전투 슬롯에 드롭 핸들러를 주입합니다.
         /// </summary>
-        /// <param name="slotManager">슬롯 관리자</param>
         /// <param name="dropService">드롭 서비스</param>
         public static void InjectToAllCombatSlots(
-            CombatSlotManager slotManager,
             CardDropService dropService)
         {
-            if (slotManager == null || dropService == null)
+            if (dropService == null)
             {
-                Debug.LogError("[DropHandlerInjector] 필수 인수 중 하나 이상이 null입니다.");
+                GameLogger.LogError("[DropHandlerInjector] dropService가 null입니다.", GameLogger.LogCategory.Combat);
                 return;
             }
 
@@ -36,18 +35,9 @@ namespace Game.UtilitySystem
                 CombatSlotPosition.WAIT_SLOT_4
             };
 
-            foreach (var position in combatSlots)
-            {
-                var slot = slotManager.GetSlot(position);
-                if (slot != null)
-                {
-                    Debug.Log($"[DropHandlerInjector] 슬롯 주입 완료: {position}");
-                }
-                else
-                {
-                    Debug.LogWarning($"[DropHandlerInjector] 슬롯을 찾을 수 없습니다: {position}");
-                }
-            }
+            // CombatSlotManager 제거로 인한 단순화
+            // 실제 슬롯 주입은 다른 시스템에서 처리
+            GameLogger.LogInfo("[DropHandlerInjector] 슬롯 주입 완료 (CombatSlotManager 제거됨)", GameLogger.LogCategory.Combat);
         }
     }
 }

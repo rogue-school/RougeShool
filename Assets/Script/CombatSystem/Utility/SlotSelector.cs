@@ -3,6 +3,7 @@ using System.Linq;
 using UnityEngine;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
+using Game.CoreSystem.Utility;
 
 namespace Game.CombatSystem.Utility
 {
@@ -47,7 +48,7 @@ namespace Game.CombatSystem.Utility
 
             if (enemySlot == null || playerSlot == null)
             {
-                Debug.LogWarning("[SlotSelector] 슬롯 자동 선택 실패: 슬롯이 부족하거나 상태가 불완전합니다.");
+                GameLogger.LogWarning("[SlotSelector] 슬롯 자동 선택 실패: 슬롯이 부족하거나 상태가 불완전합니다.", GameLogger.LogCategory.Combat);
                 return (CombatSlotPosition.NONE, CombatSlotPosition.NONE);
             }
 

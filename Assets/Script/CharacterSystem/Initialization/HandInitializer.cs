@@ -1,6 +1,7 @@
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Interface;
 using UnityEngine;
+using Game.CoreSystem.Utility;
 
 namespace Game.CombatSystem.Initializer
 {
@@ -28,7 +29,7 @@ namespace Game.CombatSystem.Initializer
         public void SetupHands()
         {
             playerHand.ClearAll();
-            Debug.Log("<color=cyan>[HandInitializer] 플레이어 핸드 초기화 완료 (적 카드는 대기 슬롯에서 직접 관리)</color>");
+            GameLogger.LogInfo("[HandInitializer] 플레이어 핸드 초기화 완료 (적 카드는 대기 슬롯에서 직접 관리)", GameLogger.LogCategory.Character);
         }
 
         /// <summary>
@@ -37,7 +38,7 @@ namespace Game.CombatSystem.Initializer
         public void AutoBindAllSlots()
         {
             // 현재는 자동 바인딩 기능이 구현되지 않음
-            Debug.Log("<color=cyan>[HandInitializer] 자동 슬롯 바인딩 기능은 현재 구현되지 않음</color>");
+            GameLogger.LogInfo("[HandInitializer] 자동 슬롯 바인딩 기능은 현재 구현되지 않음", GameLogger.LogCategory.Character);
         }
     }
 }

@@ -40,12 +40,12 @@ namespace Game.CharacterSystem.Initialization
 
         public IEnumerator Initialize()
         {
-            Debug.Log("<color=cyan>[PlayerSkillCardInitializer] 플레이어 스킬카드 초기화 시작 (CombatStartupManager에서 처리됨)</color>");
+            GameLogger.LogInfo("[PlayerSkillCardInitializer] 플레이어 스킬카드 초기화 시작 (CombatStartupManager에서 처리됨)", GameLogger.LogCategory.Character);
 
             var player = playerManager.GetPlayer();
             if (player == null)
             {
-                Debug.LogError("[PlayerSkillCardInitializer] 플레이어가 존재하지 않습니다.");
+                GameLogger.LogError("[PlayerSkillCardInitializer] 플레이어가 존재하지 않습니다.", GameLogger.LogCategory.Character);
                 yield break;
             }
 
@@ -80,7 +80,7 @@ namespace Game.CharacterSystem.Initialization
             // 애니메이션 완료 대기 (간단한 지연)
             yield return new WaitForSeconds(0.5f);
 
-            Debug.Log("<color=cyan>[PlayerSkillCardInitializer] 플레이어 핸드 카드 등장 애니메이션 완료</color>");
+            GameLogger.LogInfo("[PlayerSkillCardInitializer] 플레이어 핸드 카드 등장 애니메이션 완료", GameLogger.LogCategory.Character);
             yield return null;
         }
 

@@ -3,6 +3,7 @@ using UnityEngine;
 using Zenject;
 using Game.CombatSystem.Interface;
 using Game.StageSystem.Interface;
+using Game.CoreSystem.Utility;
 
 namespace Game.CombatSystem.Initialization
 {
@@ -36,12 +37,12 @@ namespace Game.CombatSystem.Initialization
         /// </summary>
         public IEnumerator Initialize()
         {
-            Debug.Log("<color=cyan>[EnemyCharacterInitializer] 적 캐릭터 초기화 시작</color>");
+            GameLogger.LogInfo("[EnemyCharacterInitializer] 적 캐릭터 초기화 시작", GameLogger.LogCategory.Character);
 
             // 적 스폰 (동기 방식)
             _stageManager.SpawnNextEnemy();
 
-            Debug.Log("<color=cyan>[EnemyCharacterInitializer] 적 캐릭터 생성 완료</color>");
+            GameLogger.LogInfo("[EnemyCharacterInitializer] 적 캐릭터 생성 완료", GameLogger.LogCategory.Character);
             yield return null;
         }
     }

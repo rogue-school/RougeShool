@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using Game.CoreSystem.Utility;
 using System.Linq;
 using Game.SaveSystem.Data;
 using Game.SaveSystem.Interface;
@@ -24,7 +25,7 @@ namespace Game.SaveSystem.Manager
 
         [Inject] private IPlayerHandManager playerHandManager;
         [Inject] private ICardCirculationSystem circulationSystem;
-        [Inject] private CombatSlotManager combatSlotManager;
+        // CombatSlotManager 제거됨 - 슬롯 상태 복원 기능을 다른 방식으로 처리
         [Inject] private ISkillCardFactory cardFactory;
 
         #endregion
@@ -38,7 +39,7 @@ namespace Game.SaveSystem.Manager
         {
             if (!ValidateCardStateForRestore(cardState))
             {
-                Debug.LogError("[CardStateRestorer] 복원할 카드 상태가 유효하지 않습니다.");
+                GameLogger.LogError("[CardStateRestorer] 복원할 카드 상태가 유효하지 않습니다.", GameLogger.LogCategory.Save);
                 return false;
             }
 
@@ -57,18 +58,18 @@ namespace Game.SaveSystem.Manager
                 
                 if (allSuccess)
                 {
-                    Debug.Log($"[CardStateRestorer] 카드 상태 복원 완료: {cardState.saveTrigger}");
+                    GameLogger.LogInfo($"[CardStateRestorer] 카드 상태 복원 완료: {cardState.saveTrigger}", GameLogger.LogCategory.Save);
                 }
                 else
                 {
-                    Debug.LogWarning("[CardStateRestorer] 일부 카드 상태 복원에 실패했습니다.");
+                    GameLogger.LogWarning("[CardStateRestorer] 일부 카드 상태 복원에 실패했습니다.", GameLogger.LogCategory.Save);
                 }
                 
                 return allSuccess;
             }
             catch (System.Exception ex)
             {
-                Debug.LogError($"[CardStateRestorer] 카드 상태 복원 중 오류 발생: {ex.Message}");
+                GameLogger.LogError($"[CardStateRestorer] 카드 상태 복원 중 오류 발생: {ex.Message}", GameLogger.LogCategory.Save);
                 return false;
             }
         }
@@ -80,7 +81,7 @@ namespace Game.SaveSystem.Manager
         {
             if (playerHandManager == null || cardState.playerHandSlots == null)
             {
-                Debug.LogWarning("[CardStateRestorer] PlayerHandManager가 없거나 플레이어 핸드 데이터가 없습니다.");
+                GameLogger.LogWarning("[CardStateRestorer] PlayerHandManager가 없거나 플레이어 핸드 데이터가 없습니다.", GameLogger.LogCategory.Save);
                 return false;
             }
 
@@ -108,12 +109,12 @@ namespace Game.SaveSystem.Manager
                     }
                 }
                 
-                Debug.Log($"[CardStateRestorer] 플레이어 핸드카드 복원: {cardState.playerHandSlots.Count}장");
+                GameLogger.LogInfo($"[CardStateRestorer] 플레이어 핸드카드 복원: {cardState.playerHandSlots.Count}장", GameLogger.LogCategory.Save);
                 return true;
             }
             catch (System.Exception ex)
             {
-                Debug.LogError($"[CardStateRestorer] 플레이어 핸드카드 복원 실패: {ex.Message}");
+                GameLogger.LogError($"[CardStateRestorer] 플레이어 핸드카드 복원 실패: {ex.Message}", GameLogger.LogCategory.Save);
                 return false;
             }
         }
@@ -125,23 +126,9 @@ namespace Game.SaveSystem.Manager
         /// </summary>
         public bool RestoreCombatSlotState(CompleteCardStateData cardState)
         {
-            if (combatSlotManager == null)
-            {
-                Debug.LogWarning("[CardStateRestorer] CombatSlotManager가 없습니다.");
-                return false;
-            }
-
-            try
-            {
-                // Note: Combat slot restoration is now handled by the simplified architecture
-                Debug.Log($"[CardStateRestorer] 전투 슬롯 카드 복원: BATTLE_SLOT={cardState.firstSlotCard?.cardName ?? "Empty"}, WAIT_SLOT_1={cardState.secondSlotCard?.cardName ?? "Empty"}");
-                return true;
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogError($"[CardStateRestorer] 전투 슬롯 카드 복원 실패: {ex.Message}");
-                return false;
-            }
+            // CombatSlotManager 제거됨 - 슬롯 상태 복원 기능을 다른 방식으로 처리
+            GameLogger.LogWarning("[CardStateRestorer] CombatSlotManager 제거됨 - 슬롯 상태 복원 기능 비활성화", GameLogger.LogCategory.Save);
+            return false;
         }
 
         /// <summary>
@@ -151,7 +138,7 @@ namespace Game.SaveSystem.Manager
         {
             if (circulationSystem == null)
             {
-                Debug.LogWarning("[CardStateRestorer] CardCirculationSystem이 없습니다.");
+                GameLogger.LogWarning("[CardStateRestorer] CardCirculationSystem이 없습니다.", GameLogger.LogCategory.Save);
                 return false;
             }
 
@@ -160,12 +147,12 @@ namespace Game.SaveSystem.Manager
                 // 카드 순환 상태 복원 (보관함 시스템 제거됨)
                 // unusedStorageCards와 usedStorageCards는 더 이상 사용되지 않습니다.
                 
-                Debug.Log("[CardStateRestorer] 카드 순환 상태 복원 완료 (보관함 시스템 제거됨)");
+                GameLogger.LogInfo("[CardStateRestorer] 카드 순환 상태 복원 완료 (보관함 시스템 제거됨)", GameLogger.LogCategory.Save);
                 return true;
             }
             catch (System.Exception ex)
             {
-                Debug.LogError($"[CardStateRestorer] 카드 순환 상태 복원 실패: {ex.Message}");
+                GameLogger.LogError($"[CardStateRestorer] 카드 순환 상태 복원 실패: {ex.Message}", GameLogger.LogCategory.Save);
                 return false;
             }
         }
@@ -180,12 +167,12 @@ namespace Game.SaveSystem.Manager
                 // Note: Turn state restoration is now handled by the simplified TurnManager
                 SetCurrentTurnPhase(cardState.turnPhase);
                 
-                Debug.Log($"[CardStateRestorer] 턴 상태 복원: PlayerFirst={cardState.isPlayerFirst}, Turn={cardState.currentTurn}, Phase={cardState.turnPhase}");
+                GameLogger.LogInfo($"[CardStateRestorer] 턴 상태 복원: PlayerFirst={cardState.isPlayerFirst}, Turn={cardState.currentTurn}, Phase={cardState.turnPhase}", GameLogger.LogCategory.Save);
                 return true;
             }
             catch (System.Exception ex)
             {
-                Debug.LogError($"[CardStateRestorer] 턴 상태 복원 실패: {ex.Message}");
+                GameLogger.LogError($"[CardStateRestorer] 턴 상태 복원 실패: {ex.Message}", GameLogger.LogCategory.Save);
                 return false;
             }
         }
@@ -196,7 +183,7 @@ namespace Game.SaveSystem.Manager
         public bool SetCurrentTurnPhase(string turnPhase)
         {
             // 실제 구현에서는 턴 매니저의 상태를 설정
-            Debug.Log($"[CardStateRestorer] 턴 단계 설정: {turnPhase}");
+            GameLogger.LogInfo($"[CardStateRestorer] 턴 단계 설정: {turnPhase}", GameLogger.LogCategory.Save);
             return true;
         }
 
@@ -224,7 +211,7 @@ namespace Game.SaveSystem.Manager
         /// </summary>
         public void ClearCurrentGameState()
         {
-            Debug.Log("[CardStateRestorer] 현재 게임 상태 초기화");
+            GameLogger.LogInfo("[CardStateRestorer] 현재 게임 상태 초기화", GameLogger.LogCategory.Save);
             
             // 실제 구현에서는 각 매니저의 초기화 메서드 호출
             // playerHandManager.ClearHand();
@@ -251,12 +238,12 @@ namespace Game.SaveSystem.Manager
                 // card.SetCurrentCoolTime(cardData.coolDownTime);
                 // return card;
                 
-                Debug.Log($"[CardStateRestorer] 카드 생성: {cardData.cardName}");
+                GameLogger.LogInfo($"[CardStateRestorer] 카드 생성: {cardData.cardName}", GameLogger.LogCategory.Save);
                 return null; // 임시 구현
             }
             catch (System.Exception ex)
             {
-                Debug.LogError($"[CardStateRestorer] 카드 생성 실패: {ex.Message}");
+                GameLogger.LogError($"[CardStateRestorer] 카드 생성 실패: {ex.Message}", GameLogger.LogCategory.Save);
                 return null;
             }
         }

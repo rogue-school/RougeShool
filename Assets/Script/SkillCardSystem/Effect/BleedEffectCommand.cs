@@ -1,5 +1,6 @@
 using UnityEngine;
 using Game.CombatSystem.Interface;
+using Game.CoreSystem.Utility;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Effect;
 
@@ -34,7 +35,7 @@ namespace Game.SkillCardSystem.Effect
         {
             if (context?.Target == null)
             {
-                Debug.LogWarning("[BleedEffectCommand] 대상이 null이므로 출혈 효과를 적용할 수 없습니다.");
+                GameLogger.LogWarning("[BleedEffectCommand] 대상이 null이므로 출혈 효과를 적용할 수 없습니다.", GameLogger.LogCategory.SkillCard);
                 return;
             }
 
@@ -43,11 +44,11 @@ namespace Game.SkillCardSystem.Effect
             // 가드 상태 확인하여 상태이상 효과 등록
             if (context.Target.RegisterStatusEffect(bleedEffect))
             {
-                Debug.Log($"[BleedEffectCommand] {context.Target.GetCharacterName()}에게 출혈 {amount} 적용 (지속 {duration}턴)");
+                GameLogger.LogInfo($"[BleedEffectCommand] {context.Target.GetCharacterName()}에게 출혈 {amount} 적용 (지속 {duration}턴)", GameLogger.LogCategory.SkillCard);
             }
             else
             {
-                Debug.Log($"[BleedEffectCommand] {context.Target.GetCharacterName()}의 가드로 출혈 효과 차단됨");
+                GameLogger.LogInfo($"[BleedEffectCommand] {context.Target.GetCharacterName()}의 가드로 출혈 효과 차단됨", GameLogger.LogCategory.SkillCard);
             }
         }
     }

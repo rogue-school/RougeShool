@@ -19,7 +19,7 @@ namespace Game.CombatSystem.State
         #region 필드
 
         private readonly TurnManager turnManager;
-        private readonly CombatSlotManager slotManager;
+        // CombatSlotManager 제거됨 - 슬롯 관리 기능을 CombatFlowManager로 통합
         private readonly IPlayerHandManager playerHandManager;
         private readonly ICoroutineRunner coroutineRunner;
         private readonly TurnContext turnContext;
@@ -34,14 +34,12 @@ namespace Game.CombatSystem.State
         /// </summary>
         public CombatPrepareState(
             TurnManager turnManager,
-            CombatSlotManager slotManager,
             IPlayerHandManager playerHandManager,
             ICoroutineRunner coroutineRunner,
             TurnContext turnContext,
             CombatFlowManager combatFlowManager)
         {
             this.turnManager = turnManager;
-            this.slotManager = slotManager;
             this.playerHandManager = playerHandManager;
             this.coroutineRunner = coroutineRunner;
             this.turnContext = turnContext;
@@ -111,7 +109,7 @@ namespace Game.CombatSystem.State
 
         public void ExitState()
         {
-            Debug.Log("<color=cyan>[STATE] CombatPrepareState 종료</color>");
+            GameLogger.LogInfo("[STATE] CombatPrepareState 종료", GameLogger.LogCategory.Combat);
         }
 
         #endregion
