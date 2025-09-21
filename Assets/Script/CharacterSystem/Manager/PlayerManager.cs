@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 using Zenject;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Core;
@@ -37,6 +38,15 @@ namespace Game.CharacterSystem.Manager
         private IPlayerHandManager handManager;
         private IGameStateManager gameStateManager;
         private PlayerCharacterData cachedSelectedCharacter;
+
+        #endregion
+
+        #region Events
+
+        /// <summary>
+        /// 플레이어 캐릭터가 생성되고 초기화가 완료되었을 때 발생하는 이벤트
+        /// </summary>
+        public event Action<ICharacter> OnPlayerCharacterReady;
 
         #endregion
 
@@ -255,6 +265,9 @@ namespace Game.CharacterSystem.Manager
             
             // 핸드 매니저 초기화
             InitializeHandManager();
+            
+            // 플레이어 캐릭터 준비 완료 이벤트 발생
+            OnPlayerCharacterReady?.Invoke(character);
             
             GameLogger.LogInfo($"플레이어 캐릭터 생성 완료: {character.GetCharacterName()}", GameLogger.LogCategory.Character);
         }

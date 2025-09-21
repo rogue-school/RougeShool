@@ -7,21 +7,21 @@ using Game.SkillCardSystem.Deck;
 using Game.SkillCardSystem.Interface;
 using Game.CoreSystem.Save;
 using Game.CoreSystem.Utility;
+using Game.CharacterSystem.Manager;
+using Game.CharacterSystem.Data;
+using Game.CharacterSystem.Interface;
 
 namespace Game.SkillCardSystem.Manager
 {
     /// <summary>
-    /// 단순화된 플레이어 덱 매니저
-    /// 덱 관리만 담당하는 최소한의 기능만 제공
+    /// 플레이어 덱 매니저
+    /// 캐릭터 데이터에서 덱 정보를 가져와서 관리하는 시스템
     /// </summary>
     public class PlayerDeckManager : MonoBehaviour, IPlayerDeckManager
     {
-        #region 최소한의 인스펙터 설정
+        #region 인스펙터 설정
         
-        [Header("덱 설정")]
-        [Tooltip("기본 덱")]
-        [SerializeField] private PlayerSkillDeck defaultDeck;
-        
+        [Header("디버그 설정")]
         [Tooltip("디버그 로깅 활성화")]
         [SerializeField] private bool enableDebugLogging = true;
         
@@ -29,6 +29,7 @@ namespace Game.SkillCardSystem.Manager
         
         #region 의존성 주입 (DI로 자동 해결)
         
+        [Inject] private PlayerManager playerManager;
         [InjectOptional] private SaveManager saveManager;
         
         #endregion
@@ -49,9 +50,10 @@ namespace Game.SkillCardSystem.Manager
         
         #region 초기화
         
-        private void Awake()
+        private void Start()
         {
-            InitializeDeck();
+            // Zenject DI가 완료된 후 초기화
+            StartCoroutine(InitializeDeckWhenReady());
             
             if (enableDebugLogging)
             {
@@ -59,24 +61,94 @@ namespace Game.SkillCardSystem.Manager
             }
         }
         
+        private void OnDestroy()
+        {
+            // 이벤트 구독 해제
+            if (playerManager != null)
+            {
+                // PlayerManager의 이벤트 구독 해제는 PlayerManager가 파괴될 때 자동으로 해제됨
+            }
+        }
+        
         /// <summary>
-        /// 덱을 초기화합니다.
+        /// PlayerManager가 준비될 때까지 대기한 후 이벤트를 구독합니다.
+        /// </summary>
+        private System.Collections.IEnumerator InitializeDeckWhenReady()
+        {
+            // PlayerManager가 준비될 때까지 대기
+            int maxWaitFrames = 300; // 최대 5초 대기 (60fps 기준)
+            int waitFrames = 0;
+            
+            while (playerManager == null && waitFrames < maxWaitFrames)
+            {
+                yield return new UnityEngine.WaitForSeconds(0.1f);
+                waitFrames++;
+            }
+            
+            if (playerManager == null)
+            {
+                GameLogger.LogError("PlayerManager를 찾을 수 없습니다. 덱 초기화를 건너뜁니다.", GameLogger.LogCategory.SkillCard);
+                yield break;
+            }
+            
+            GameLogger.LogInfo("PlayerManager 발견됨, 이벤트 구독 중...", GameLogger.LogCategory.SkillCard);
+            
+            // PlayerManager의 OnPlayerCharacterReady 이벤트 구독
+            playerManager.OnPlayerCharacterReady += OnPlayerCharacterReady;
+            
+            // 이미 플레이어 캐릭터가 있다면 즉시 초기화
+            if (playerManager.GetPlayer() != null)
+            {
+                GameLogger.LogInfo("플레이어 캐릭터가 이미 존재함, 즉시 덱 초기화", GameLogger.LogCategory.SkillCard);
+                InitializeDeck();
+            }
+        }
+        
+        /// <summary>
+        /// PlayerManager의 OnPlayerCharacterReady 이벤트 핸들러
+        /// </summary>
+        /// <param name="character">준비된 플레이어 캐릭터</param>
+        private void OnPlayerCharacterReady(ICharacter character)
+        {
+            GameLogger.LogInfo($"플레이어 캐릭터 준비 완료: {character.GetCharacterName()}, 덱 초기화 시작", GameLogger.LogCategory.SkillCard);
+            InitializeDeck();
+        }
+        
+        /// <summary>
+        /// 덱을 초기화합니다. (캐릭터 데이터에서 덱 정보를 가져옴)
         /// </summary>
         private void InitializeDeck()
         {
-            if (defaultDeck != null)
+            var player = playerManager?.GetPlayer();
+            if (player == null)
             {
-                currentDeck = new List<PlayerSkillDeck.CardEntry>(defaultDeck.GetAllCardEntries());
-                
-                if (enableDebugLogging)
+                GameLogger.LogWarning("플레이어 매니저에서 플레이어를 찾을 수 없습니다.", GameLogger.LogCategory.SkillCard);
+                currentDeck = new List<PlayerSkillDeck.CardEntry>();
+                return;
+            }
+            
+            // CharacterData가 PlayerCharacterData인지 확인
+            if (player.CharacterData is PlayerCharacterData playerData)
+            {
+                if (playerData.SkillDeck != null)
                 {
-                    GameLogger.LogInfo($"덱 초기화: {currentDeck.Count}장", GameLogger.LogCategory.SkillCard);
+                    currentDeck = new List<PlayerSkillDeck.CardEntry>(playerData.SkillDeck.GetAllCardEntries());
+                    
+                    if (enableDebugLogging)
+                    {
+                        GameLogger.LogInfo($"덱 초기화 완료: {playerData.DisplayName}의 덱 ({currentDeck.Count}종류, {GetTotalCardCount()}장)", GameLogger.LogCategory.SkillCard);
+                    }
+                }
+                else
+                {
+                    currentDeck = new List<PlayerSkillDeck.CardEntry>();
+                    GameLogger.LogWarning($"플레이어 캐릭터 '{playerData.DisplayName}'의 스킬 덱이 설정되지 않았습니다.", GameLogger.LogCategory.SkillCard);
                 }
             }
             else
             {
                 currentDeck = new List<PlayerSkillDeck.CardEntry>();
-                GameLogger.LogWarning("기본 덱이 설정되지 않았습니다.", GameLogger.LogCategory.SkillCard);
+                GameLogger.LogWarning($"플레이어 캐릭터의 CharacterData가 PlayerCharacterData가 아닙니다. 타입: {player.CharacterData?.GetType().Name ?? "null"}", GameLogger.LogCategory.SkillCard);
             }
         }
         
@@ -401,16 +473,24 @@ namespace Game.SkillCardSystem.Manager
         }
         
         /// <summary>
-        /// 기본 덱으로 리셋합니다.
+        /// 캐릭터의 기본 덱으로 리셋합니다.
         /// </summary>
-        public void ResetToDefaultDeck()
+        public void ResetToCharacterDeck()
         {
             InitializeDeck();
             
             if (enableDebugLogging)
             {
-                GameLogger.LogInfo("기본 덱으로 리셋 완료", GameLogger.LogCategory.SkillCard);
+                GameLogger.LogInfo("캐릭터 기본 덱으로 리셋 완료", GameLogger.LogCategory.SkillCard);
             }
+        }
+        
+        /// <summary>
+        /// 기본 덱으로 리셋합니다. (기존 메서드 호환성)
+        /// </summary>
+        public void ResetToDefaultDeck()
+        {
+            ResetToCharacterDeck();
         }
         
         /// <summary>
@@ -427,6 +507,75 @@ namespace Game.SkillCardSystem.Manager
         public void LoadDeck()
         {
             LoadDeckConfiguration();
+        }
+        
+        #endregion
+        
+        #region 캐릭터 연동
+        
+        /// <summary>
+        /// 현재 플레이어 캐릭터의 덱 정보를 가져옵니다.
+        /// </summary>
+        /// <returns>플레이어 캐릭터의 스킬 덱</returns>
+        public PlayerSkillDeck GetCharacterDeck()
+        {
+            var player = playerManager?.GetPlayer();
+            if (player?.CharacterData is PlayerCharacterData playerData)
+            {
+                return playerData.SkillDeck;
+            }
+            return null;
+        }
+        
+        /// <summary>
+        /// 현재 플레이어 캐릭터의 이름을 가져옵니다.
+        /// </summary>
+        /// <returns>플레이어 캐릭터 이름</returns>
+        public string GetCharacterName()
+        {
+            var player = playerManager?.GetPlayer();
+            if (player?.CharacterData is PlayerCharacterData playerData)
+            {
+                return playerData.DisplayName;
+            }
+            return "Unknown";
+        }
+        
+        /// <summary>
+        /// 캐릭터가 변경되었을 때 덱을 다시 초기화합니다.
+        /// </summary>
+        public void RefreshDeckFromCharacter()
+        {
+            InitializeDeck();
+            
+            if (enableDebugLogging)
+            {
+                GameLogger.LogInfo($"캐릭터 변경으로 인한 덱 새로고침: {GetCharacterName()}", GameLogger.LogCategory.SkillCard);
+            }
+        }
+        
+        /// <summary>
+        /// 현재 덱이 캐릭터의 기본 덱과 다른지 확인합니다.
+        /// </summary>
+        /// <returns>덱이 변경되었는지 여부</returns>
+        public bool IsDeckModified()
+        {
+            var characterDeck = GetCharacterDeck();
+            if (characterDeck == null) return false;
+            
+            var characterEntries = characterDeck.GetAllCardEntries();
+            if (characterEntries.Count != currentDeck.Count) return true;
+            
+            foreach (var characterEntry in characterEntries)
+            {
+                var currentEntry = currentDeck.FirstOrDefault(e => e.cardDefinition == characterEntry.cardDefinition);
+                if (currentEntry == null || currentEntry.quantity != characterEntry.quantity)
+                {
+                    return true;
+                }
+            }
+            
+            return false;
         }
         
         #endregion

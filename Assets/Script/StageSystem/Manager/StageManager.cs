@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Threading.Tasks;
 using System;
+using System.Collections.Generic;
 using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Data;
 using Game.CharacterSystem.Interface;
@@ -26,18 +27,12 @@ namespace Game.StageSystem.Manager
         public class StageSettings
         {
             [Header("스테이지 데이터")]
-            [Tooltip("현재 스테이지 데이터")]
-            public StageData currentStage;
+            [Tooltip("모든 스테이지 데이터 (1-4번 스테이지)")]
+            public List<StageData> allStages = new List<StageData>();
 
-            [Space(5)]
-            [Header("진행 설정")]
-            [Tooltip("자동 스테이지 진행")]
-            public bool autoProgress = true;
-
-            [Tooltip("스테이지 전환 지연 시간 (초)")]
-            [Range(0f, 5f)]
-            public float transitionDelay = 1f;
-
+            [Tooltip("현재 진행 중인 스테이지 번호 (1-4)")]
+            [Range(1, 4)]
+            public int currentStageNumber = 1;
         }
 
 
@@ -75,6 +70,11 @@ namespace Game.StageSystem.Manager
         
         // 스테이지 진행 상태
         private StageProgressState progressState = StageProgressState.NotStarted;
+        
+        // 다중 스테이지 관리
+        private StageData currentStage;
+        private int totalStagesCompleted = 0;
+        private bool isGameCompleted = false;
 
         #endregion
 
@@ -85,6 +85,12 @@ namespace Game.StageSystem.Manager
         
         /// <summary>스테이지 완료 시 호출되는 이벤트</summary>
         public event Action<StageData> OnStageCompleted;
+        
+        /// <summary>게임 완료 시 호출되는 이벤트 (모든 스테이지 완료)</summary>
+        public event Action OnGameCompleted;
+        
+        /// <summary>스테이지 전환 시 호출되는 이벤트</summary>
+        public event Action<StageData, StageData> OnStageTransition;
 
         #endregion
 
@@ -267,12 +273,12 @@ namespace Game.StageSystem.Manager
         {
             data = null;
 
-            if (stageSettings.currentStage == null ||
-                stageSettings.currentStage.enemies == null ||
-                currentEnemyIndex >= stageSettings.currentStage.enemies.Count)
+            if (currentStage == null ||
+                currentStage.enemies == null ||
+                currentEnemyIndex >= currentStage.enemies.Count)
                 return false;
 
-            data = stageSettings.currentStage.enemies[currentEnemyIndex];
+            data = currentStage.enemies[currentEnemyIndex];
             return data != null && data.Prefab != null;
         }
 
@@ -281,11 +287,11 @@ namespace Game.StageSystem.Manager
         #region 스테이지 정보
 
         /// <inheritdoc />
-        public StageData GetCurrentStage() => stageSettings.currentStage;
+        public StageData GetCurrentStage() => currentStage;
 
         /// <inheritdoc />
         public bool HasNextEnemy() =>
-            stageSettings.currentStage != null && currentEnemyIndex < stageSettings.currentStage.enemies.Count;
+            currentStage != null && currentEnemyIndex < currentStage.enemies.Count;
 
         /// <summary>
         /// 아직 처치하지 않은 적이 더 있는지 확인합니다.
@@ -297,7 +303,7 @@ namespace Game.StageSystem.Manager
 
         /// <inheritdoc />
         public EnemyCharacterData PeekNextEnemyData() =>
-            HasNextEnemy() ? stageSettings.currentStage.enemies[currentEnemyIndex] : null;
+            HasNextEnemy() ? currentStage.enemies[currentEnemyIndex] : null;
 
         /// <summary>
         /// 현재 스테이지 번호를 설정합니다. (저장 시스템용)
@@ -305,8 +311,14 @@ namespace Game.StageSystem.Manager
         /// <param name="stageNumber">스테이지 번호</param>
         public void SetCurrentStageNumber(int stageNumber)
         {
-            // TODO: 실제 스테이지 번호 관리 로직 구현 필요
-            // 현재는 StageData의 name이나 다른 식별자를 사용할 수 있음
+            if (stageNumber < 1 || stageNumber > 4)
+            {
+                GameLogger.LogError($"잘못된 스테이지 번호: {stageNumber}", GameLogger.LogCategory.Combat);
+                return;
+            }
+            
+            stageSettings.currentStageNumber = stageNumber;
+            LoadStage(stageNumber);
             GameLogger.LogInfo($"스테이지 번호 설정: {stageNumber}", GameLogger.LogCategory.Combat);
         }
 
@@ -316,8 +328,99 @@ namespace Game.StageSystem.Manager
         /// <returns>스테이지 번호</returns>
         public int GetCurrentStageNumber()
         {
-            // TODO: 실제 스테이지 번호 반환 로직 구현 필요
-            return 0; // 임시값
+            return stageSettings.currentStageNumber;
+        }
+        
+        /// <summary>
+        /// 다음 스테이지가 있는지 확인합니다.
+        /// </summary>
+        public bool HasNextStage()
+        {
+            return stageSettings.currentStageNumber < 4;
+        }
+        
+        /// <summary>
+        /// 다음 스테이지로 진행합니다.
+        /// </summary>
+        public bool ProgressToNextStage()
+        {
+            if (!HasNextStage())
+            {
+                GameLogger.LogWarning("더 이상 진행할 스테이지가 없습니다", GameLogger.LogCategory.Combat);
+                return false;
+            }
+            
+            int nextStageNumber = stageSettings.currentStageNumber + 1;
+            return LoadStage(nextStageNumber);
+        }
+        
+        /// <summary>
+        /// 특정 스테이지를 로드합니다.
+        /// </summary>
+        /// <param name="stageNumber">로드할 스테이지 번호</param>
+        public bool LoadStage(int stageNumber)
+        {
+            if (stageNumber < 1 || stageNumber > 4)
+            {
+                GameLogger.LogError($"잘못된 스테이지 번호: {stageNumber}", GameLogger.LogCategory.Combat);
+                return false;
+            }
+            
+            var stageData = GetStageData(stageNumber);
+            if (stageData == null)
+            {
+                GameLogger.LogError($"스테이지 {stageNumber} 데이터를 찾을 수 없습니다", GameLogger.LogCategory.Combat);
+                return false;
+            }
+            
+            if (!stageData.IsValid())
+            {
+                GameLogger.LogError($"스테이지 {stageNumber} 데이터가 유효하지 않습니다", GameLogger.LogCategory.Combat);
+                return false;
+            }
+            
+            // 이전 스테이지 저장
+            var previousStage = currentStage;
+            
+            // 새 스테이지 설정
+            currentStage = stageData;
+            stageSettings.currentStageNumber = stageNumber;
+            currentEnemyIndex = 0;
+            isStageCompleted = false;
+            progressState = StageProgressState.NotStarted;
+            
+            // 스테이지 전환 이벤트 발생
+            if (previousStage != null)
+            {
+                OnStageTransition?.Invoke(previousStage, currentStage);
+            }
+            
+            GameLogger.LogInfo($"스테이지 {stageNumber} 로드 완료: {currentStage.stageName}", GameLogger.LogCategory.Combat);
+            return true;
+        }
+        
+        /// <summary>
+        /// 특정 번호의 스테이지 데이터를 가져옵니다.
+        /// </summary>
+        /// <param name="stageNumber">스테이지 번호</param>
+        /// <returns>스테이지 데이터</returns>
+        private StageData GetStageData(int stageNumber)
+        {
+            if (stageSettings.allStages == null || stageSettings.allStages.Count == 0)
+            {
+                GameLogger.LogError("스테이지 데이터가 설정되지 않았습니다", GameLogger.LogCategory.Combat);
+                return null;
+            }
+            
+            foreach (var stage in stageSettings.allStages)
+            {
+                if (stage != null && stage.stageNumber == stageNumber)
+                {
+                    return stage;
+                }
+            }
+            
+            return null;
         }
 
         #endregion
@@ -334,7 +437,7 @@ namespace Game.StageSystem.Manager
         /// </summary>
         public void StartStage()
         {
-            if (stageSettings.currentStage == null || stageSettings.currentStage.enemies.Count == 0)
+            if (currentStage == null || currentStage.enemies.Count == 0)
             {
                 GameLogger.LogWarning("스테이지 데이터가 유효하지 않습니다", GameLogger.LogCategory.Combat);
                 return;
@@ -346,7 +449,7 @@ namespace Game.StageSystem.Manager
             
             OnProgressChanged?.Invoke(progressState);
             
-            GameLogger.LogInfo($"스테이지 시작: {stageSettings.currentStage.name}", GameLogger.LogCategory.Combat);
+            GameLogger.LogInfo($"스테이지 시작: {currentStage.stageName} (스테이지 {currentStage.stageNumber})", GameLogger.LogCategory.Combat);
             
             // 첫 번째 적 생성
             _ = SpawnNextEnemyAsync();
@@ -359,27 +462,97 @@ namespace Game.StageSystem.Manager
         {
             progressState = StageProgressState.Completed;
             isStageCompleted = true;
+            totalStagesCompleted++;
             
             OnProgressChanged?.Invoke(progressState);
             
             // 스테이지 완료 이벤트 발생
-            OnStageCompleted?.Invoke(stageSettings.currentStage);
+            OnStageCompleted?.Invoke(currentStage);
             
-            GameLogger.LogInfo($"스테이지 완료 (승리!): {stageSettings.currentStage.name}", GameLogger.LogCategory.Combat);
+            GameLogger.LogInfo($"스테이지 완료 (승리!): {currentStage.stageName} (스테이지 {currentStage.stageNumber})", GameLogger.LogCategory.Combat);
+            
+            // 다음 스테이지로 진행 또는 게임 완료 처리
+            if (currentStage.IsLastStage)
+            {
+                // 마지막 스테이지 완료 - 게임 완료!
+                CompleteGame();
+            }
+            else if (currentStage.autoProgressToNext)
+            {
+                // 다음 스테이지로 자동 진행 (즉시)
+                if (ProgressToNextStage())
+                {
+                    GameLogger.LogInfo($"다음 스테이지로 진행: {currentStage.stageName}", GameLogger.LogCategory.Combat);
+                    StartStage();
+                }
+            }
         }
+        
+        /// <summary>
+        /// 게임을 완료합니다. (모든 스테이지 완료)
+        /// </summary>
+        private void CompleteGame()
+        {
+            isGameCompleted = true;
+            OnGameCompleted?.Invoke();
+            GameLogger.LogInfo("🎉 게임 완료! 모든 스테이지를 클리어했습니다!", GameLogger.LogCategory.Combat);
+        }
+        
 
         public void FailStage()
         {
             progressState = StageProgressState.Failed;
             OnProgressChanged?.Invoke(progressState);
             
-            GameLogger.LogWarning($"스테이지 실패: {stageSettings.currentStage.name}", GameLogger.LogCategory.Combat);
+            GameLogger.LogWarning($"스테이지 실패: {currentStage?.stageName ?? "Unknown"} (스테이지 {stageSettings.currentStageNumber})", GameLogger.LogCategory.Combat);
         }
 
         public event System.Action<StageProgressState> OnProgressChanged;
 
         #endregion
 
+        #region 게임 상태 정보
+
+        /// <summary>
+        /// 게임이 완료되었는지 확인합니다.
+        /// </summary>
+        public bool IsGameCompleted => isGameCompleted;
+
+        /// <summary>
+        /// 완료된 스테이지 수를 가져옵니다.
+        /// </summary>
+        public int TotalStagesCompleted => totalStagesCompleted;
+
+        /// <summary>
+        /// 전체 스테이지 수를 가져옵니다.
+        /// </summary>
+        public int TotalStages => 4;
+
+        /// <summary>
+        /// 게임 진행률을 가져옵니다. (0.0 ~ 1.0)
+        /// </summary>
+        public float GameProgress => (float)totalStagesCompleted / TotalStages;
+
+        /// <summary>
+        /// 특정 스테이지 데이터를 가져옵니다. (public 버전)
+        /// </summary>
+        /// <param name="stageNumber">스테이지 번호</param>
+        /// <returns>스테이지 데이터</returns>
+        public StageData GetStageDataPublic(int stageNumber)
+        {
+            return GetStageData(stageNumber);
+        }
+
+        /// <summary>
+        /// 모든 스테이지 데이터를 가져옵니다.
+        /// </summary>
+        /// <returns>모든 스테이지 데이터</returns>
+        public List<StageData> GetAllStages()
+        {
+            return stageSettings.allStages ?? new List<StageData>();
+        }
+
+        #endregion
 
         #endregion
     }

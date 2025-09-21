@@ -37,6 +37,12 @@ namespace Game.CharacterSystem.Data
         [field: SerializeField]
         public Sprite Portrait { get; private set; }
 
+        /// <summary>
+        /// 캐릭터의 문양(앰블렘) 이미지입니다.
+        /// </summary>
+        [field: SerializeField]
+        public Sprite Emblem { get; private set; }
+
         #endregion
 
         #region 리소스 시스템

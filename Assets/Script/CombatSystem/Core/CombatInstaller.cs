@@ -122,6 +122,11 @@ public class CombatInstaller : MonoInstaller
     /// </summary>
     private void BindFactories()
     {
+        // PlayerManager 바인딩 - 먼저 바인딩 (PlayerDeckManager가 의존함)
+        Container.BindInterfacesAndSelfTo<PlayerManager>()
+            .FromComponentInHierarchy().AsSingle();
+        GameLogger.LogInfo(" PlayerManager 바인딩 완료 (씬에서 찾기)");
+        
         // SkillCardFactory 바인딩
         Container.Bind<ISkillCardFactory>().To<SkillCardFactory>().AsSingle();
         GameLogger.LogInfo(" SkillCardFactory 바인딩 완료");
@@ -134,17 +139,35 @@ public class CombatInstaller : MonoInstaller
         // Container.Bind<ITurnBasedCardManager>().To<TurnBasedCardManager>().AsSingle();
         GameLogger.LogInfo(" TurnBasedCardManager 바인딩 완료");
         
-        // PlayerDeckManager 바인딩 (CardCirculationSystem이 의존함) - MonoBehaviour이므로 씬에서 찾기
-        Container.Bind<IPlayerDeckManager>().FromComponentInHierarchy().AsSingle();
+        // PlayerHandManager 바인딩 - PlayerManager 이후에 바인딩
+        Container.BindInterfacesAndSelfTo<PlayerHandManager>()
+            .FromNewComponentOnNewGameObject().AsSingle();
+        GameLogger.LogInfo(" PlayerHandManager 바인딩 완료");
+        
+        // PlayerDeckManager 바인딩 - PlayerManager 이후에 바인딩
+        Container.BindInterfacesAndSelfTo<PlayerDeckManager>()
+            .FromNewComponentOnNewGameObject().AsSingle();
         GameLogger.LogInfo(" PlayerDeckManager 바인딩 완료");
         
         // TurnContext 바인딩 (CharacterDeathHandler가 의존함)
         Container.Bind<TurnContext>().AsSingle();
         GameLogger.LogInfo(" TurnContext 바인딩 완료");
         
-        // IStageManager 바인딩 (CharacterDeathHandler가 의존함) - MonoBehaviour이므로 씬에서 찾기
-        Container.Bind<IStageManager>().FromComponentInHierarchy().AsSingle();
-        GameLogger.LogInfo(" IStageManager 바인딩 완료");
+        // IStageManager 바인딩 - 씬에 있으면 사용, 없으면 자동 생성
+        var stageManager = FindFirstObjectByType<StageManager>();
+        if (stageManager != null)
+        {
+            Container.Bind<IStageManager>().FromInstance(stageManager).AsSingle();
+            GameLogger.LogInfo(" IStageManager 바인딩 완료 (씬에서 찾기)");
+        }
+        else
+        {
+            // StageManager가 없으면 자동 생성
+            var stageManagerGO = new GameObject("StageManager");
+            stageManager = stageManagerGO.AddComponent<StageManager>();
+            Container.Bind<IStageManager>().FromInstance(stageManager).AsSingle();
+            GameLogger.LogInfo(" IStageManager 자동 생성 및 바인딩 완료");
+        }
         
         // CardDropService 의존성 바인딩 (구조화된 배열에서 처리됨)
         // Container.Bind<ITurnCardRegistry>().To<TurnCardRegistry>().AsSingle(); // 삭제됨
@@ -207,13 +230,30 @@ public class CombatInstaller : MonoInstaller
         }
 
         // 기존 매니저들 바인딩
-        BindMonoInterfaces<PlayerManager>();
-        Container.BindInterfacesAndSelfTo<PlayerHandManager>()
+        // PlayerManager는 BindFactories()에서 바인딩됨 (씬에서 찾기)
+        // PlayerHandManager는 BindFactories()에서 바인딩됨
+        
+        // EnemyManager 바인딩 - 씬에 있으면 사용, 없으면 자동 생성
+        var enemyManager = FindFirstObjectByType<EnemyManager>();
+        if (enemyManager != null)
+        {
+            Container.BindInterfacesAndSelfTo<EnemyManager>().FromInstance(enemyManager).AsSingle();
+            GameLogger.LogInfo(" EnemyManager 바인딩 완료 (씬에서 찾기)");
+        }
+        else
+        {
+            // EnemyManager가 없으면 자동 생성
+            var enemyManagerGO = new GameObject("EnemyManager");
+            enemyManager = enemyManagerGO.AddComponent<EnemyManager>();
+            Container.BindInterfacesAndSelfTo<EnemyManager>().FromInstance(enemyManager).AsSingle();
+            GameLogger.LogInfo(" EnemyManager 자동 생성 및 바인딩 완료");
+        }
+        
+        // IStageManager는 BindFactories()에서 바인딩됨
+        
+        // CharacterDeathHandler 바인딩 - 자동 생성으로 최적화
+        Container.BindInterfacesAndSelfTo<CharacterDeathHandler>()
             .FromNewComponentOnNewGameObject().AsSingle();
-        Container.Bind<IPlayerHandManager>().To<PlayerHandManager>().AsSingle();
-        // BindMono<IEnemySpawnerManager, EnemySpawnerManager>(); // 삭제됨
-        BindMono<IStageManager, StageManager>();
-        // BindMono<ICharacterDeathListener, CharacterDeathHandler>(); // 삭제됨
         
         // CoroutineRunner는 CoreSystemInstaller에서 바인딩됨
         // PlayerCharacterSelectionManager는 CoreSystemInstaller에서 바인딩됨
@@ -511,24 +551,10 @@ public class CombatInstaller : MonoInstaller
     {
         GameLogger.LogInfo(" 덱 관리 시스템 바인딩 시작");
         
-        // PlayerDeckManager를 씬에서 찾기
-        var playerDeckManager = FindFirstObjectByType<PlayerDeckManager>();
+        // PlayerDeckManager는 BindFactories()에서 자동 생성으로 바인딩됨
+        // 여기서는 추가 설정만 수행
         
-        if (playerDeckManager == null)
-        {
-            GameLogger.LogWarning(" PlayerDeckManager를 씬에서 찾을 수 없습니다. null로 바인딩합니다.");
-            // IPlayerDeckManager를 null로 바인딩
-            Container.Bind<IPlayerDeckManager>().FromInstance(null).AsSingle();
-        }
-        else
-        {
-            GameLogger.LogInfo($"[CombatInstaller] PlayerDeckManager 발견: {playerDeckManager.name}", GameLogger.LogCategory.Combat);
-            
-            // IPlayerDeckManager 인터페이스로 바인딩
-            Container.Bind<IPlayerDeckManager>().FromInstance(playerDeckManager).AsSingle();
-            
-            GameLogger.LogInfo(" 덱 관리 시스템 바인딩 완료");
-        }
+        GameLogger.LogInfo(" 덱 관리 시스템 바인딩 완료");
     }
 
     #endregion

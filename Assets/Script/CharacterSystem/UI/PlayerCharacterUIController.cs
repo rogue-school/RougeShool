@@ -146,8 +146,16 @@ namespace Game.CharacterSystem.UI
                 return;
             }
 
+            if (character.CharacterData == null)
+            {
+                GameLogger.LogWarning("[PlayerCharacterUIController] Initialize() - character.CharacterData가 null입니다. 나중에 다시 시도합니다.", GameLogger.LogCategory.Character);
+                // 나중에 다시 시도하도록 예약
+                StartCoroutine(RetryInitializeWhenReady(character));
+                return;
+            }
+
             playerCharacter = character;
-            characterType = character.CharacterData.CharacterType;
+            characterType = (character.CharacterData as PlayerCharacterData)?.CharacterType ?? PlayerCharacterType.Sword;
             
             // 리소스 매니저는 Zenject DI로 주입됨
             if (playerManager == null)
@@ -157,6 +165,33 @@ namespace Game.CharacterSystem.UI
 
             // 캐릭터 정보 설정
             SetCharacterInfo();
+        }
+        
+        /// <summary>
+        /// CharacterData가 준비될 때까지 대기한 후 다시 초기화를 시도합니다.
+        /// </summary>
+        private System.Collections.IEnumerator RetryInitializeWhenReady(PlayerCharacter character)
+        {
+            // CharacterData가 설정될 때까지 대기 (최대 5초)
+            int maxWaitFrames = 300; // 최대 5초 대기 (60fps 기준)
+            int waitFrames = 0;
+            
+            while (character.CharacterData == null && waitFrames < maxWaitFrames)
+            {
+                yield return new UnityEngine.WaitForSeconds(0.1f);
+                waitFrames++;
+            }
+            
+            if (character.CharacterData == null)
+            {
+                GameLogger.LogError("[PlayerCharacterUIController] CharacterData가 설정되지 않았습니다. 초기화를 건너뜁니다.", GameLogger.LogCategory.Character);
+                yield break;
+            }
+            
+            GameLogger.LogInfo("[PlayerCharacterUIController] CharacterData가 준비되었습니다. 다시 초기화합니다.", GameLogger.LogCategory.Character);
+            
+            // 다시 초기화 시도
+            Initialize(character);
             
             // 리소스 시스템 설정
             SetupResourceSystem();
@@ -192,7 +227,8 @@ namespace Game.CharacterSystem.UI
         {
             if (playerCharacter?.CharacterData == null) return;
 
-            var data = playerCharacter.CharacterData;
+            var data = playerCharacter.CharacterData as PlayerCharacterData;
+            if (data == null) return;
             
             // 캐릭터 이름
             if (characterNameText != null)
@@ -202,20 +238,38 @@ namespace Game.CharacterSystem.UI
             if (characterPortrait != null && data.Portrait != null)
                 characterPortrait.sprite = data.Portrait;
             
-            // 캐릭터 문양 (타입별 아이콘)
+            // 캐릭터 문양 (데이터에서 직접 설정)
             if (characterEmblem != null)
-                SetCharacterEmblem(characterType);
+                SetCharacterEmblem(data);
         }
 
         /// <summary>
-        /// 캐릭터 타입에 따른 문양을 설정합니다.
+        /// 캐릭터 데이터에서 문양을 설정합니다.
         /// </summary>
-        /// <param name="type">캐릭터 타입</param>
-        private void SetCharacterEmblem(PlayerCharacterType type)
+        /// <param name="data">플레이어 캐릭터 데이터</param>
+        private void SetCharacterEmblem(PlayerCharacterData data)
         {
             if (characterEmblem == null) return;
 
-            // 타입별 문양 스프라이트 로드 (Resources 폴더에서)
+            // 데이터에서 직접 문양 설정
+            if (data.Emblem != null)
+            {
+                characterEmblem.sprite = data.Emblem;
+            }
+            else
+            {
+                // 문양이 설정되지 않은 경우 기본 문양 로드 시도
+                SetCharacterEmblemFallback(data.CharacterType);
+            }
+        }
+
+        /// <summary>
+        /// 문양이 설정되지 않은 경우 기본 문양을 로드합니다.
+        /// </summary>
+        /// <param name="type">캐릭터 타입</param>
+        private void SetCharacterEmblemFallback(PlayerCharacterType type)
+        {
+            // 타입별 기본 문양 스프라이트 로드 (Resources 폴더에서)
             string emblemPath = $"CharacterEmblems/{type}Emblem";
             Sprite emblemSprite = Resources.Load<Sprite>(emblemPath);
             
@@ -225,7 +279,7 @@ namespace Game.CharacterSystem.UI
             }
             else
             {
-                GameLogger.LogWarning($"[PlayerCharacterUIController] 문양 스프라이트를 찾을 수 없습니다: {emblemPath}", GameLogger.LogCategory.Character);
+                GameLogger.LogWarning($"[PlayerCharacterUIController] 기본 문양 스프라이트를 찾을 수 없습니다: {emblemPath}", GameLogger.LogCategory.Character);
             }
         }
 

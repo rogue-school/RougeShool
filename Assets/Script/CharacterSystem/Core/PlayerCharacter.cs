@@ -26,7 +26,12 @@ namespace Game.CharacterSystem.Core
         /// 플레이어 데이터 스크립터블 오브젝트
         /// </summary>
         [field: SerializeField]
-        public new PlayerCharacterData CharacterData { get; private set; }
+        public PlayerCharacterData PlayerCharacterData { get; private set; }
+        
+        /// <summary>
+        /// ICharacter 인터페이스의 CharacterData 프로퍼티 구현
+        /// </summary>
+        public override object CharacterData => PlayerCharacterData;
 
         [Header("UI Components")]
         [SerializeField] private TextMeshProUGUI nameText;
@@ -61,10 +66,10 @@ namespace Game.CharacterSystem.Core
         /// </summary>
         private void Awake()
         {
-            if (CharacterData != null)
+            if (PlayerCharacterData != null)
             {
-                this.gameObject.name = CharacterData.name;
-                InitializeCharacter(CharacterData);
+                this.gameObject.name = PlayerCharacterData.name;
+                InitializeCharacter(PlayerCharacterData);
             }
             else
             {
@@ -75,10 +80,10 @@ namespace Game.CharacterSystem.Core
         #if UNITY_EDITOR
         private void OnValidate()
         {
-            if (CharacterData != null)
-                this.gameObject.name = CharacterData.name;
+            if (PlayerCharacterData != null)
+                this.gameObject.name = PlayerCharacterData.name;
         }
-#endif
+        #endif
 
         #endregion
 
@@ -96,9 +101,26 @@ namespace Game.CharacterSystem.Core
                 throw new ArgumentNullException(nameof(data), "플레이어 캐릭터 데이터는 null일 수 없습니다.");
             }
             
-            CharacterData = data;
-            this.gameObject.name = CharacterData.name;
+            PlayerCharacterData = data;
+            this.gameObject.name = PlayerCharacterData.name;
             InitializeCharacter(data);
+        }
+
+        /// <summary>
+        /// ICharacter 인터페이스의 SetCharacterData 구현
+        /// </summary>
+        /// <param name="data">캐릭터 데이터 (object 타입)</param>
+        public override void SetCharacterData(object data)
+        {
+            if (data is PlayerCharacterData playerData)
+            {
+                SetCharacterData(playerData);
+            }
+            else
+            {
+                GameLogger.LogError($"[PlayerCharacter] 잘못된 데이터 타입입니다. 예상: PlayerCharacterData, 실제: {data?.GetType().Name ?? "null"}", GameLogger.LogCategory.Character);
+                throw new ArgumentException("PlayerCharacterData 타입이 필요합니다.", nameof(data));
+            }
         }
 
         /// <summary>
@@ -132,18 +154,18 @@ namespace Game.CharacterSystem.Core
         /// </summary>
         private void UpdateUI()
         {
-            if (CharacterData == null) return;
+            if (PlayerCharacterData == null) return;
 
             // 캐릭터 이름 숨기기
             if (nameText != null)
                 nameText.text = ""; // 빈 문자열로 설정하여 이름 숨김
             
-            portraitImage.sprite = CharacterData.Portrait;
+            portraitImage.sprite = PlayerCharacterData.Portrait;
 
             // 체력 숫자 및 색상 설정
-            if (currentHP >= CharacterData.MaxHP)
+            if (currentHP >= PlayerCharacterData.MaxHP)
             {
-                hpText.text = CharacterData.MaxHP.ToString(); // 최대 체력 표시
+                hpText.text = PlayerCharacterData.MaxHP.ToString(); // 최대 체력 표시
                 hpText.color = Color.white;          // 회색 또는 흰색으로 보임
             }
             else
@@ -303,7 +325,16 @@ namespace Game.CharacterSystem.Core
         /// <summary>
         /// 캐릭터 이름 반환
         /// </summary>
-        public override string GetCharacterName() => CharacterData?.DisplayName ?? "Unnamed Player";
+        public override string GetCharacterName() 
+        {
+            if (PlayerCharacterData != null)
+            {
+                return PlayerCharacterData.DisplayName;
+            }
+            
+            // CharacterData가 아직 설정되지 않은 경우 GameObject 이름 사용
+            return gameObject.name.Replace("(Clone)", "").Trim();
+        }
 
         /// <summary>
         /// 생존 여부 반환 (명시적 override)
@@ -319,13 +350,13 @@ namespace Game.CharacterSystem.Core
             Game.CombatSystem.CombatEvents.RaiseHandSkillCardsVanishOnCharacterDeath(true);
 
             base.Die();
-            Game.CombatSystem.CombatEvents.RaisePlayerCharacterDeath(CharacterData, this.gameObject);
+            Game.CombatSystem.CombatEvents.RaisePlayerCharacterDeath(PlayerCharacterData, this.gameObject);
         }
 
         // CharacterBase에서 사용할 이름 반환
         protected override string GetCharacterDataName()
         {
-            return CharacterData?.name ?? "Unknown";
+            return PlayerCharacterData?.name ?? "Unknown";
         }
 
         #endregion
@@ -335,19 +366,19 @@ namespace Game.CharacterSystem.Core
         /// <summary>가드 획득 시 이벤트 발행</summary>
         protected override void OnGuarded(int amount)
         {
-            CombatEvents.RaisePlayerCharacterGuarded(CharacterData, this.gameObject, amount);
+            CombatEvents.RaisePlayerCharacterGuarded(PlayerCharacterData, this.gameObject, amount);
         }
 
         /// <summary>회복 시 이벤트 발행</summary>
         protected override void OnHealed(int amount)
         {
-            CombatEvents.RaisePlayerCharacterHealed(CharacterData, this.gameObject, amount);
+            CombatEvents.RaisePlayerCharacterHealed(PlayerCharacterData, this.gameObject, amount);
         }
 
         /// <summary>피해 시 이벤트 발행</summary>
         protected override void OnDamaged(int amount)
         {
-            CombatEvents.RaisePlayerCharacterDamaged(CharacterData, this.gameObject, amount);
+            CombatEvents.RaisePlayerCharacterDamaged(PlayerCharacterData, this.gameObject, amount);
         }
 
         #endregion
