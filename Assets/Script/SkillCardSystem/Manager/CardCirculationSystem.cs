@@ -1,20 +1,32 @@
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.Data;
+using Game.StageSystem.Data;
+using Game.CoreSystem.Utility;
 
 namespace Game.SkillCardSystem.Manager
 {
     /// <summary>
-    /// 카드 순환 시스템 구현체입니다.
-    /// 플레이어 덱에서 랜덤하게 카드를 드로우하는 시스템입니다.
+    /// 카드 순환 및 보상 시스템 통합 구현체입니다.
+    /// 플레이어 덱에서 랜덤하게 카드를 드로우하고 보상을 관리합니다.
     /// </summary>
-    public class CardCirculationSystem : MonoBehaviour, ICardCirculationSystem
+    public class CardCirculationSystem : ICardCirculationSystem
     {
         #region 필드
 
         private readonly List<ISkillCard> playerDeck = new();
         private readonly List<ISkillCard> currentTurnCards = new();
+        private readonly IPlayerDeckManager playerDeckManager;
+
+        #endregion
+
+        #region 생성자
+
+        public CardCirculationSystem(IPlayerDeckManager playerDeckManager)
+        {
+            this.playerDeckManager = playerDeckManager;
+        }
 
         #endregion
 
@@ -31,7 +43,7 @@ namespace Game.SkillCardSystem.Manager
         {
             if (initialCards == null || initialCards.Count == 0)
             {
-                Debug.LogError("[CardCirculationSystem] 초기 카드 리스트가 비어있습니다.");
+                GameLogger.LogError("초기 카드 리스트가 비어있습니다.", GameLogger.LogCategory.SkillCard);
                 return;
             }
 
@@ -44,14 +56,14 @@ namespace Game.SkillCardSystem.Manager
                 playerDeck.Add(card);
             }
 
-            Debug.Log($"[CardCirculationSystem] 초기화 완료: {playerDeck.Count}장의 카드");
+            GameLogger.LogInfo($"카드 순환 시스템 초기화 완료: {playerDeck.Count}장", GameLogger.LogCategory.SkillCard);
         }
 
         public void Clear()
         {
             playerDeck.Clear();
             currentTurnCards.Clear();
-            Debug.Log("[CardCirculationSystem] 모든 카드가 제거되었습니다.");
+            GameLogger.LogInfo("카드 순환 시스템 초기화됨", GameLogger.LogCategory.SkillCard);
         }
 
         #endregion
@@ -64,7 +76,7 @@ namespace Game.SkillCardSystem.Manager
 
             if (playerDeck.Count == 0)
             {
-                Debug.LogWarning("[CardCirculationSystem] 덱이 비어있어 카드를 드로우할 수 없습니다.");
+                GameLogger.LogWarning("덱이 비어있어 카드를 드로우할 수 없습니다.", GameLogger.LogCategory.SkillCard);
                 return currentTurnCards;
             }
 
@@ -79,101 +91,80 @@ namespace Game.SkillCardSystem.Manager
                 }
             }
 
-            Debug.Log($"[CardCirculationSystem] 턴 드로우: {currentTurnCards.Count}장 (덱: {playerDeck.Count}장)");
+            GameLogger.LogInfo($"턴 드로우 완료: {currentTurnCards.Count}장 (덱: {playerDeck.Count}장)", GameLogger.LogCategory.SkillCard);
             return currentTurnCards;
         }
 
         #endregion
 
-        #region 카드 관리 (레거시 호환성)
 
-        public void MoveCardToUsedStorage(ISkillCard card)
+        #region 보상 관리
+
+        /// <summary>
+        /// 적 캐릭터 처치 보상 카드를 지급합니다.
+        /// </summary>
+        /// <param name="rewardData">보상 데이터</param>
+        public void GiveEnemyDefeatCardRewards(StageRewardData rewardData)
         {
-            // 카드 보관함 시스템이 제거되었으므로 아무것도 하지 않음
-            Debug.Log($"[CardCirculationSystem] 카드 사용 완료: {card.CardDefinition?.CardName ?? "Unknown"} (보관함 시스템 제거됨)");
-        }
-
-        public void MoveCardsToUsedStorage(List<ISkillCard> cards)
-        {
-            // 카드 보관함 시스템이 제거되었으므로 아무것도 하지 않음
-            Debug.Log($"[CardCirculationSystem] 카드들 사용 완료: {cards.Count}장 (보관함 시스템 제거됨)");
-        }
-
-        public void ShuffleUnusedStorage()
-        {
-            // 카드 보관함 시스템이 제거되었으므로 아무것도 하지 않음
-            Debug.Log("[CardCirculationSystem] 보관함 시스템이 제거되어 셔플 기능이 비활성화되었습니다.");
-        }
-
-        public void CirculateCardsIfNeeded()
-        {
-            // 카드 보관함 시스템이 제거되었으므로 아무것도 하지 않음
-            Debug.Log("[CardCirculationSystem] 보관함 시스템이 제거되어 순환 기능이 비활성화되었습니다.");
-        }
-
-        #endregion
-
-        #region 핸드 관리
-
-        public void MoveCardToHand(ISkillCard card)
-        {
-            if (card == null)
+            if (rewardData == null)
             {
-                Debug.LogWarning("[CardCirculationSystem] null 카드를 핸드로 이동할 수 없습니다.");
+                GameLogger.LogWarning("보상 데이터가 null입니다.", GameLogger.LogCategory.SkillCard);
                 return;
             }
 
-            Debug.Log($"[CardCirculationSystem] 카드 핸드 이동: {card.CardDefinition?.CardName ?? "Unknown"}");
+            // 적 처치 보상 카드 지급
+            foreach (var cardReward in rewardData.EnemyDefeatCards)
+            {
+                if (cardReward.cardDefinition != null)
+                {
+                    bool success = playerDeckManager.AddCardToDeck(cardReward.cardDefinition, cardReward.quantity);
+                    if (success)
+                    {
+                        GameLogger.LogInfo($"적 처치 카드 보상 지급: {cardReward.cardDefinition.displayName} x{cardReward.quantity}", GameLogger.LogCategory.SkillCard);
+                    }
+                    else
+                    {
+                        GameLogger.LogWarning($"적 처치 카드 보상 지급 실패: {cardReward.cardDefinition.displayName}", GameLogger.LogCategory.SkillCard);
+                    }
+                }
+                else
+                {
+                    GameLogger.LogWarning("카드 정의가 null인 보상이 있습니다.", GameLogger.LogCategory.SkillCard);
+                }
+            }
         }
 
-        public void MoveCardToDiscard(ISkillCard card)
+        /// <summary>
+        /// 특정 카드를 보상으로 지급합니다.
+        /// </summary>
+        /// <param name="cardDefinition">지급할 카드 정의</param>
+        /// <param name="quantity">지급할 수량</param>
+        /// <returns>지급 성공 여부</returns>
+        public bool GiveCardReward(SkillCardDefinition cardDefinition, int quantity = 1)
         {
-            if (card == null)
+            if (cardDefinition == null)
             {
-                Debug.LogWarning("[CardCirculationSystem] null 카드를 버린 카드 더미로 이동할 수 없습니다.");
-                return;
+                GameLogger.LogError("카드 정의가 null입니다.", GameLogger.LogCategory.SkillCard);
+                return false;
             }
 
-            Debug.Log($"[CardCirculationSystem] 카드 버린 카드 더미 이동: {card.CardDefinition?.CardName ?? "Unknown"}");
-        }
-
-        public void MoveCardToExhaust(ISkillCard card)
-        {
-            if (card == null)
+            if (quantity <= 0)
             {
-                Debug.LogWarning("[CardCirculationSystem] null 카드를 소멸 더미로 이동할 수 없습니다.");
-                return;
+                GameLogger.LogError($"잘못된 수량입니다: {quantity}", GameLogger.LogCategory.SkillCard);
+                return false;
             }
 
-            Debug.Log($"[CardCirculationSystem] 카드 소멸 더미 이동: {card.CardDefinition?.CardName ?? "Unknown"}");
-        }
+            bool success = playerDeckManager.AddCardToDeck(cardDefinition, quantity);
+            if (success)
+            {
+                GameLogger.LogInfo($"카드 보상 지급: {cardDefinition.displayName} x{quantity}", GameLogger.LogCategory.SkillCard);
+            }
+            else
+            {
+                GameLogger.LogWarning($"카드 보상 지급 실패: {cardDefinition.displayName} x{quantity}", GameLogger.LogCategory.SkillCard);
+            }
 
-        #endregion
-
-        #region 저장 시스템 호환성 (레거시)
-
-        public List<ISkillCard> GetUnusedCards()
-        {
-            // 보관함 시스템이 제거되었으므로 빈 리스트 반환
-            return new List<ISkillCard>();
-        }
-
-        public List<ISkillCard> GetUsedCards()
-        {
-            // 보관함 시스템이 제거되었으므로 빈 리스트 반환
-            return new List<ISkillCard>();
-        }
-
-        public void RestoreUnusedCards(List<ISkillCard> cards)
-        {
-            // 보관함 시스템이 제거되었으므로 아무것도 하지 않음
-            Debug.Log("[CardCirculationSystem] 보관함 시스템이 제거되어 복원 기능이 비활성화되었습니다.");
-        }
-
-        public void RestoreUsedCards(List<ISkillCard> cards)
-        {
-            // 보관함 시스템이 제거되었으므로 아무것도 하지 않음
-            Debug.Log("[CardCirculationSystem] 보관함 시스템이 제거되어 복원 기능이 비활성화되었습니다.");
+            return success;
         }
 
         #endregion

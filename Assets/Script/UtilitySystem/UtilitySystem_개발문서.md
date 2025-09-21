@@ -4,8 +4,8 @@
 UtilitySystem은 게임의 유틸리티 기능들을 관리하는 시스템입니다. 게임 플로우, DontDestroyOnLoad 관리, 드롭 핸들러 주입 등 다양한 유틸리티 기능을 제공합니다. 싱글톤 패턴을 통한 전역 접근, 컨텍스트 패턴을 통한 상태 관리, 의존성 주입 패턴을 통한 느슨한 결합을 지원합니다.
 
 ### 최근 변경(요약)
-- **AnimationSystem 의존성 완전 제거**: 모든 AnimationSystem 관련 코드 제거 완료
-- **임시 애니메이션 비활성화**: 애니메이션 호출 부분을 Debug.Log로 대체하여 게임 로직 정상 동작
+- **로깅 시스템 표준화**: Debug.Log를 GameLogger로 전환 완료
+- **AnimationSystem 참조 정리**: 남은 AnimationSystem 참조 완전 제거 완료
 - **싱글톤 패턴 완료**: DontDestroyOnLoadContainer, DropHandlerInjector의 전역 접근 완료
 - **컨텍스트 패턴 완료**: GameContext를 통한 플레이어 캐릭터 선택 상태 관리 완료
 - **의존성 주입 패턴 완료**: DropHandlerInjector를 통한 드롭 핸들러 자동 주입 완료

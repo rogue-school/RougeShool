@@ -35,33 +35,6 @@ namespace Game.CombatSystem.Slot
 
         #endregion
 
-        #region 레거시 호환성 (하위 호환성 유지)
-
-        /// <summary>
-        /// 첫 번째 슬롯 (레거시 - BATTLE_SLOT과 동일)
-        /// </summary>
-        [System.Obsolete("새로운 시스템에서는 BATTLE_SLOT을 사용하세요")]
-        SLOT_1 = BATTLE_SLOT,
-
-        /// <summary>
-        /// 두 번째 슬롯 (레거시 - WAIT_SLOT_1과 동일)
-        /// </summary>
-        [System.Obsolete("새로운 시스템에서는 WAIT_SLOT_1을 사용하세요")]
-        SLOT_2 = WAIT_SLOT_1,
-
-        /// <summary>
-        /// 세 번째 슬롯 (레거시 - WAIT_SLOT_2과 동일)
-        /// </summary>
-        [System.Obsolete("새로운 시스템에서는 WAIT_SLOT_2을 사용하세요")]
-        SLOT_3 = WAIT_SLOT_2,
-
-        /// <summary>
-        /// 네 번째 슬롯 (레거시 - WAIT_SLOT_3과 동일)
-        /// </summary>
-        [System.Obsolete("새로운 시스템에서는 WAIT_SLOT_3을 사용하세요")]
-        SLOT_4 = WAIT_SLOT_3,
-
-        #endregion
 
         #region 공통
 

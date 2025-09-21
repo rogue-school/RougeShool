@@ -4,13 +4,12 @@
 CoreSystem은 게임의 핵심 시스템들을 관리하는 중앙 집중식 시스템입니다. 모든 씬에서 공유되는 전역 시스템들을 통합적으로 관리하며, 게임의 기본 기능을 제공합니다. Zenject DI와 자동 초기화 시스템을 통해 안정적이고 확장 가능한 아키텍처를 제공합니다.
 
 ### 최근 변경(요약)
-- **AnimationSystem 의존성 완전 제거**: 모든 AnimationSystem 관련 코드 제거 완료
-- **임시 애니메이션 비활성화**: 애니메이션 호출 부분을 Debug.Log로 대체하여 게임 로직 정상 동작
+- **로깅 시스템 표준화**: Debug.Log를 GameLogger로 전환 완료
+- **AnimationSystem 참조 정리**: 남은 AnimationSystem 참조 완전 제거 완료
 - **Zenject DI 통합**: 모든 CoreSystem 매니저가 의존성 주입으로 전환 완료
 - **싱글톤 제거**: GameStateManager, SceneTransitionManager, AudioManager, SaveManager 등에서 싱글톤 패턴 제거 완료
 - **자동 초기화 시스템**: ICoreSystemInitializable 인터페이스 기반 자동 초기화 구현 완료
 - **인터페이스 기반 설계**: 모든 매니저가 인터페이스를 구현하여 테스트 가능성 확보 완료
-- **컴파일 에러 해결**: 모든 CoreSystem 관련 컴파일 에러 해결 완료
 
 ## 🏗️ 폴더 구조
 ```

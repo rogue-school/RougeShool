@@ -36,70 +36,21 @@ namespace Game.SkillCardSystem.Interface
         /// </summary>
         void Clear();
 
-        #region 레거시 호환성 (보관함 시스템 제거됨)
+        #region 보상 관리
 
         /// <summary>
-        /// 사용한 카드를 처리합니다. (보관함 시스템 제거됨)
+        /// 적 캐릭터 처치 보상 카드를 지급합니다.
         /// </summary>
-        /// <param name="card">사용한 카드</param>
-        void MoveCardToUsedStorage(ISkillCard card);
+        /// <param name="rewardData">보상 데이터</param>
+        void GiveEnemyDefeatCardRewards(Game.StageSystem.Data.StageRewardData rewardData);
 
         /// <summary>
-        /// 여러 카드를 처리합니다. (보관함 시스템 제거됨)
+        /// 특정 카드를 보상으로 지급합니다.
         /// </summary>
-        /// <param name="cards">사용한 카드들</param>
-        void MoveCardsToUsedStorage(List<ISkillCard> cards);
-
-        /// <summary>
-        /// 카드 순환을 처리합니다. (보관함 시스템 제거됨)
-        /// </summary>
-        void CirculateCardsIfNeeded();
-
-        /// <summary>
-        /// 현재 미사용 카드들을 반환합니다. (저장 시스템용, 빈 리스트 반환)
-        /// </summary>
-        /// <returns>빈 카드 리스트</returns>
-        List<ISkillCard> GetUnusedCards();
-
-        /// <summary>
-        /// 현재 사용된 카드들을 반환합니다. (저장 시스템용, 빈 리스트 반환)
-        /// </summary>
-        /// <returns>빈 카드 리스트</returns>
-        List<ISkillCard> GetUsedCards();
-
-        /// <summary>
-        /// 미사용 카드들을 복원합니다. (저장 시스템용, 아무것도 하지 않음)
-        /// </summary>
-        /// <param name="cards">복원할 카드들</param>
-        void RestoreUnusedCards(List<ISkillCard> cards);
-
-        /// <summary>
-        /// 사용된 카드들을 복원합니다. (저장 시스템용, 아무것도 하지 않음)
-        /// </summary>
-        /// <param name="cards">복원할 카드들</param>
-        void RestoreUsedCards(List<ISkillCard> cards);
-
-        #endregion
-
-        #region 핸드 관리
-
-        /// <summary>
-        /// 카드를 핸드로 이동시킵니다.
-        /// </summary>
-        /// <param name="card">이동할 카드</param>
-        void MoveCardToHand(ISkillCard card);
-
-        /// <summary>
-        /// 카드를 버린 카드 더미로 이동시킵니다.
-        /// </summary>
-        /// <param name="card">이동할 카드</param>
-        void MoveCardToDiscard(ISkillCard card);
-
-        /// <summary>
-        /// 카드를 소멸 더미로 이동시킵니다.
-        /// </summary>
-        /// <param name="card">이동할 카드</param>
-        void MoveCardToExhaust(ISkillCard card);
+        /// <param name="cardDefinition">지급할 카드 정의</param>
+        /// <param name="quantity">지급할 수량</param>
+        /// <returns>지급 성공 여부</returns>
+        bool GiveCardReward(Game.SkillCardSystem.Data.SkillCardDefinition cardDefinition, int quantity = 1);
 
         #endregion
     }

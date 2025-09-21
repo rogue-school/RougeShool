@@ -4,6 +4,8 @@
 StageSystem은 게임의 스테이지 진행을 관리하는 시스템입니다. 각 스테이지는 SubBoss와 Boss로 구성되며, 스테이지 완료 시 보상과 함께 다음 스테이지로 진행됩니다. 적 캐릭터 스폰과 함께 적 카드를 대기 슬롯에 직접 생성하는 기능을 제공합니다.
 
 ### 최근 변경(요약)
+- **로깅 시스템 표준화**: Debug.Log를 GameLogger로 전환 완료
+- **AnimationSystem 참조 정리**: 남은 AnimationSystem 참조 완전 제거 완료
 - **적 카드 직접 생성 시스템**: `StageManager`에서 적 카드를 `WAIT_SLOT_4`에 직접 생성
 - **적 핸드 시스템 제거**: 적 핸드 매니저 없이 대기 슬롯에서 직접 관리
 - **타입 안전성 강화**: `ICharacterData`를 `EnemyCharacterData`로 캐스팅하여 안전한 프로퍼티 접근

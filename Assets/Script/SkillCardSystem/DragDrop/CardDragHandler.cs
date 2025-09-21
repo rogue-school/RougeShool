@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using Game.SkillCardSystem.UI;
 using Game.CombatSystem.Manager;
 using Game.CombatSystem.Utility;
+using Game.CoreSystem.Utility;
 
 namespace Game.CombatSystem.DragDrop
 {
@@ -88,7 +89,7 @@ namespace Game.CombatSystem.DragDrop
                 rectTransform.localPosition = localPoint;
                 
                 // 드래그 애니메이션 업데이트 건너뛰기 (AnimationSystem 제거로 인해 임시 비활성화)
-                Debug.Log("[CardDragHandler] 드래그 애니메이션 업데이트를 건너뜁니다.");
+                GameLogger.LogInfo("드래그 애니메이션 업데이트를 건너뜁니다.", GameLogger.LogCategory.SkillCard);
             }
         }
 
@@ -179,7 +180,7 @@ namespace Game.CombatSystem.DragDrop
                 img.raycastTarget = false;
             
             // 드롭 실패 처리 (AnimationSystem 제거로 인해 즉시 리셋)
-            Debug.Log("[CardDragHandler] 드롭 실패 애니메이션을 건너뛰고 즉시 리셋합니다.");
+            GameLogger.LogInfo("드롭 실패 애니메이션을 건너뛰고 즉시 리셋합니다.", GameLogger.LogCategory.SkillCard);
             
             // 즉시 리셋
             CardSlotHelper.ResetCardToOriginal(cardUI);
@@ -203,7 +204,7 @@ namespace Game.CombatSystem.DragDrop
                 if (card != null)
                 {
                     // 드래그 시작 애니메이션 건너뛰기 (AnimationSystem 제거로 인해 임시 비활성화)
-                    Debug.Log($"[CardDragHandler] 드래그 시작 애니메이션을 건너뜁니다: {card.GetCardName()}");
+                    GameLogger.LogInfo($"드래그 시작 애니메이션을 건너뜁니다: {card.GetCardName()}", GameLogger.LogCategory.SkillCard);
                 }
             }
         }
@@ -220,7 +221,7 @@ namespace Game.CombatSystem.DragDrop
                 if (card != null)
                 {
                     // 드래그 종료 애니메이션 건너뛰기 (AnimationSystem 제거로 인해 임시 비활성화)
-                    Debug.Log($"[CardDragHandler] 드래그 종료 애니메이션을 건너뜁니다: {card.GetCardName()}");
+                    GameLogger.LogInfo($"드래그 종료 애니메이션을 건너뜁니다: {card.GetCardName()}", GameLogger.LogCategory.SkillCard);
                 }
             }
         }

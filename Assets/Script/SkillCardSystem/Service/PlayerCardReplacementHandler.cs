@@ -65,13 +65,13 @@ namespace Game.CombatSystem.Service
                 var oldHandSlot = oldCard.GetHandSlot();
                 if (oldHandSlot.HasValue)
                 {
-                    handManager.RestoreCardToHand(oldCard, oldHandSlot.Value);
+                    handManager.AddCardToSlot(oldHandSlot.Value, oldCard);
                     CardSlotHelper.AttachCardToHandSlot(oldUI, oldHandSlot.Value);
                 }
                 else
                 {
                     Debug.LogWarning("[PlayerCardReplacementHandler] 핸드 슬롯 정보 없음 → 자동 복귀");
-                    handManager.RestoreCardToHand(oldCard);
+                    handManager.AddCardToHand(oldCard);
                     CardSlotHelper.ResetCardToOriginal(oldUI);
                 }
             }

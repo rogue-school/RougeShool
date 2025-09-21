@@ -4,6 +4,7 @@ using System.Linq;
 using Game.SaveSystem.Data;
 using Game.SaveSystem.Interface;
 using Game.CoreSystem.Save;
+using Game.CoreSystem.Utility;
 using Zenject;
 
 namespace Game.SaveSystem.Manager
@@ -35,6 +36,7 @@ namespace Game.SaveSystem.Manager
         #region 내부 상태
 
         private Dictionary<string, AutoSaveCondition> conditionMap = new();
+        private bool isInitialized = false;
         // 초기화 상태는 베이스 클래스에서 관리
 
         #endregion
@@ -119,37 +121,37 @@ namespace Game.SaveSystem.Manager
         {
             autoSaveConditions.Add(new AutoSaveCondition(
                 "EnemyCardPlaced",
-                AutoSaveTrigger.EnemyCardPlaced,
+                Game.SaveSystem.Data.AutoSaveTrigger.EnemyCardPlaced,
                 "적이 카드를 올려놓은 후 자동 저장"
             ));
 
             autoSaveConditions.Add(new AutoSaveCondition(
                 "BeforeTurnStart",
-                AutoSaveTrigger.BeforeTurnStart,
+                Game.SaveSystem.Data.AutoSaveTrigger.BeforeTurnStart,
                 "턴 시작 버튼 누르기 전 자동 저장"
             ));
 
             autoSaveConditions.Add(new AutoSaveCondition(
                 "DuringTurnExecution",
-                AutoSaveTrigger.DuringTurnExecution,
+                Game.SaveSystem.Data.AutoSaveTrigger.DuringTurnExecution,
                 "턴 실행 중 자동 저장"
             ));
 
             autoSaveConditions.Add(new AutoSaveCondition(
                 "TurnCompleted",
-                AutoSaveTrigger.TurnCompleted,
+                Game.SaveSystem.Data.AutoSaveTrigger.TurnCompleted,
                 "턴 완료 후 자동 저장"
             ));
 
             autoSaveConditions.Add(new AutoSaveCondition(
                 "StageCompleted",
-                AutoSaveTrigger.StageCompleted,
+                Game.SaveSystem.Data.AutoSaveTrigger.StageCompleted,
                 "스테이지 완료 후 자동 저장"
             ));
 
             autoSaveConditions.Add(new AutoSaveCondition(
                 "GameExit",
-                AutoSaveTrigger.GameExit,
+                Game.SaveSystem.Data.AutoSaveTrigger.GameExit,
                 "게임 종료 시 자동 저장"
             ));
         }

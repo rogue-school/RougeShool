@@ -14,6 +14,7 @@ namespace Game.CombatSystem.Interface
         Resolution,     // 해결
         Victory,        // 승리
         Defeat,         // 패배
+        Ended,          // 종료
         Paused          // 일시정지
     }
     
@@ -36,6 +37,7 @@ namespace Game.CombatSystem.Interface
                 CombatPhase.Resolution => "해결",
                 CombatPhase.Victory => "승리",
                 CombatPhase.Defeat => "패배",
+                CombatPhase.Ended => "종료",
                 CombatPhase.Paused => "일시정지",
                 _ => "알 수 없음"
             };

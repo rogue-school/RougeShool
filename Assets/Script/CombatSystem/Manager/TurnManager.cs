@@ -44,7 +44,75 @@ namespace Game.CombatSystem.Manager
             Enemy 
         }
 
-        [Header("턴 설정")]
+        [System.Serializable]
+        public class TurnSettings
+        {
+            [Header("기본 턴 설정")]
+            [Tooltip("시작 턴 타입")]
+            public TurnType startingTurn = TurnType.Player;
+
+            [Tooltip("초기 턴 카운트")]
+            [Range(1, 100)]
+            public int initialTurnCount = 1;
+
+            [Space(5)]
+            [Header("턴 제한")]
+            [Tooltip("최대 턴 수 (0 = 무제한)")]
+            [Range(0, 1000)]
+            public int maxTurns = 0;
+
+            [Tooltip("턴 시간 제한 (초, 0 = 무제한)")]
+            [Range(0f, 300f)]
+            public float turnTimeLimit = 0f;
+        }
+
+        [System.Serializable]
+        public class TurnEvents
+        {
+            [Header("이벤트 설정")]
+            [Tooltip("턴 시작 시 이벤트 발생")]
+            public bool enableTurnStartEvents = true;
+
+            [Tooltip("턴 종료 시 이벤트 발생")]
+            public bool enableTurnEndEvents = true;
+
+            [Tooltip("턴 변경 시 이벤트 발생")]
+            public bool enableTurnChangeEvents = true;
+
+            [Space(5)]
+            [Header("애니메이션")]
+            [Tooltip("턴 전환 애니메이션 시간")]
+            [Range(0.1f, 3f)]
+            public float transitionDuration = 1f;
+        }
+
+        [System.Serializable]
+        public class DebugSettings
+        {
+            [Header("디버그 옵션")]
+            [Tooltip("턴 정보 로깅")]
+            public bool enableTurnLogging = true;
+
+            [Tooltip("턴 상태 시각화")]
+            public bool showTurnStatus = false;
+
+            [Tooltip("턴 타이머 표시")]
+            public bool showTurnTimer = false;
+        }
+
+        [Header("🔄 턴 설정")]
+        [SerializeField] private TurnSettings turnSettings = new TurnSettings();
+        
+        [Space(10)]
+        [Header("🎭 턴 이벤트")]
+        [SerializeField] private TurnEvents turnEvents = new TurnEvents();
+        
+        [Space(10)]
+        [Header("🔧 디버그 설정")]
+        [SerializeField] private DebugSettings debugSettings = new DebugSettings();
+
+        [Space(10)]
+        [Header("📊 현재 상태")]
         [SerializeField] private TurnType currentTurn = TurnType.Player;
         [SerializeField] private int turnCount = 1;
 
@@ -58,9 +126,13 @@ namespace Game.CombatSystem.Manager
         /// </summary>
         private void InitializeTurn()
         {
-            currentTurn = TurnType.Player;
-            turnCount = 1;
-            GameLogger.LogInfo("턴 관리자 초기화 완료 (플레이어 턴 시작)", GameLogger.LogCategory.Combat);
+            currentTurn = turnSettings.startingTurn;
+            turnCount = turnSettings.initialTurnCount;
+            
+            if (debugSettings.enableTurnLogging)
+            {
+                GameLogger.LogInfo($"턴 관리자 초기화 완료 ({currentTurn} 턴 시작)", GameLogger.LogCategory.Combat);
+            }
         }
 
         /// <summary>
@@ -92,13 +164,29 @@ namespace Game.CombatSystem.Manager
         /// </summary>
         public void SwitchTurn()
         {
+            // 최대 턴 수 확인
+            if (turnSettings.maxTurns > 0 && turnCount >= turnSettings.maxTurns)
+            {
+                if (debugSettings.enableTurnLogging)
+                {
+                    GameLogger.LogWarning($"최대 턴 수({turnSettings.maxTurns})에 도달했습니다.", GameLogger.LogCategory.Combat);
+                }
+                return;
+            }
+
             currentTurn = currentTurn == TurnType.Player ? TurnType.Enemy : TurnType.Player;
             turnCount++;
             
-            OnTurnChanged?.Invoke(currentTurn);
+            if (turnEvents.enableTurnChangeEvents)
+            {
+                OnTurnChanged?.Invoke(currentTurn);
+            }
             
-            var turnName = currentTurn == TurnType.Player ? "플레이어" : "적";
-            GameLogger.LogInfo($"턴 전환: {turnName} 턴 (턴 {turnCount})", GameLogger.LogCategory.Combat);
+            if (debugSettings.enableTurnLogging)
+            {
+                var turnName = currentTurn == TurnType.Player ? "플레이어" : "적";
+                GameLogger.LogInfo($"턴 전환: {turnName} 턴 (턴 {turnCount})", GameLogger.LogCategory.Combat);
+            }
         }
 
         /// <summary>
@@ -114,9 +202,14 @@ namespace Game.CombatSystem.Manager
         /// </summary>
         public void ResetTurn()
         {
-            currentTurn = TurnType.Player;
-            turnCount = 1;
-            GameLogger.LogInfo("턴 리셋 완료 (플레이어 턴 시작)", GameLogger.LogCategory.Combat);
+            currentTurn = turnSettings.startingTurn;
+            turnCount = turnSettings.initialTurnCount;
+            
+            if (debugSettings.enableTurnLogging)
+            {
+                var turnName = currentTurn == TurnType.Player ? "플레이어" : "적";
+                GameLogger.LogInfo($"턴 리셋 완료 ({turnName} 턴 시작)", GameLogger.LogCategory.Combat);
+            }
         }
 
         /// <summary>

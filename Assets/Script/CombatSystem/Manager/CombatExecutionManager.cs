@@ -48,7 +48,7 @@ namespace Game.CombatSystem.Manager
         [Inject] private IPlayerManager playerManager;
         [Inject] private IEnemyManager enemyManager;
         [Inject] private CombatSlotManager slotManager;
-        [Inject] private CombatTurnManager turnManager;
+        [Inject] private TurnManager turnManager;
 
         #endregion
 
@@ -141,6 +141,12 @@ namespace Game.CombatSystem.Manager
                 return;
             }
 
+            if (!enableImmediateExecution)
+            {
+                GameLogger.LogWarning("즉시 실행이 비활성화되어 있습니다.", GameLogger.LogCategory.Combat);
+                return;
+            }
+
             StartCoroutine(ExecuteCardCoroutine(card, slotPosition));
         }
 
@@ -188,7 +194,7 @@ namespace Game.CombatSystem.Manager
             if (sourceCharacter == null || targetCharacter == null)
             {
                 GameLogger.LogError("소스 또는 타겟 캐릭터를 찾을 수 없습니다.", GameLogger.LogCategory.Error);
-                return new ExecutionResult { Success = false, ErrorMessage = "캐릭터를 찾을 수 없음" };
+                return new ExecutionResult(false, null, "캐릭터를 찾을 수 없음");
             }
 
             // 카드 실행
@@ -199,12 +205,12 @@ namespace Game.CombatSystem.Manager
                 // 실행 이벤트 발생
                 OnCardExecuted?.Invoke(card, sourceCharacter, targetCharacter);
 
-                return new ExecutionResult { Success = true };
+                return new ExecutionResult(true, null, "카드 실행 성공");
             }
             catch (System.Exception ex)
             {
                 GameLogger.LogError($"카드 실행 중 오류 발생: {ex.Message}", GameLogger.LogCategory.Error);
-                return new ExecutionResult { Success = false, ErrorMessage = ex.Message };
+                return new ExecutionResult(false, null, ex.Message);
             }
         }
 
@@ -295,7 +301,7 @@ namespace Game.CombatSystem.Manager
 
             if (enableDebugLogging)
             {
-                GameLogger.LogInfo($"실행 명령 큐에 추가: {command.CardName}", GameLogger.LogCategory.Combat);
+                GameLogger.LogInfo($"실행 명령 큐에 추가: {command.commandType}", GameLogger.LogCategory.Combat);
             }
         }
 
@@ -389,29 +395,4 @@ namespace Game.CombatSystem.Manager
         #endregion
     }
 
-    #region 지원 클래스
-
-    /// <summary>
-    /// 실행 명령
-    /// </summary>
-    public class ExecutionCommand
-    {
-        public string CardName { get; set; }
-        public CombatSlotPosition SlotPosition { get; set; }
-        public ICharacter SourceCharacter { get; set; }
-        public ICharacter TargetCharacter { get; set; }
-    }
-
-    /// <summary>
-    /// 실행 결과
-    /// </summary>
-    public class ExecutionResult
-    {
-        public bool Success { get; set; }
-        public string ErrorMessage { get; set; }
-        public float DamageDealt { get; set; }
-        public float HealingDone { get; set; }
-    }
-
-    #endregion
 }

@@ -1,6 +1,7 @@
 using UnityEngine;
 using Game.CombatSystem.Manager;
 using Game.CharacterSystem.Manager;
+using Game.CoreSystem.Utility;
 
 namespace Game.CombatSystem.State
 {
@@ -46,33 +47,25 @@ namespace Game.CombatSystem.State
         /// </summary>
         public void EnterState()
         {
-            Debug.Log("<color=cyan>[STATE] CombatAttackState 진입</color>");
+            GameLogger.LogInfo("CombatAttackState 진입", GameLogger.LogCategory.Combat);
             
-            // 새로운 시스템에서는 SlotExecutionSystem을 통해 카드 실행
-            var executionSystem = SlotExecutionSystem.Instance;
-            if (executionSystem != null)
-            {
-                // 전투 시퀀스 실행 (비동기)
-                _ = executionSystem.ExecuteCombatSequence();
-                
-                // 사망 체크
-                bool enemyDead = enemyManager.GetEnemy()?.IsDead() ?? false;
-                bool playerDead = playerManager.GetPlayer()?.IsDead() ?? false;
+            // 새로운 시스템에서는 CombatExecutionManager를 통해 카드 실행
+            // CombatExecutionManager는 DI로 주입되므로 별도 참조 불필요
+            // 전투 시퀀스 실행 로직은 추후 구현 예정
+            
+            // 사망 체크
+            bool enemyDead = enemyManager.GetEnemy()?.IsDead() ?? false;
+            bool playerDead = playerManager.GetPlayer()?.IsDead() ?? false;
 
-                if (enemyDead || playerDead)
-                {
-                    Debug.Log("<color=cyan>[STATE] CombatAttackState → CombatResultState 전이 (캐릭터 사망)</color>");
-                    // TODO: 결과 상태로 전환 로직 구현
-                }
-                else
-                {
-                    Debug.Log("<color=cyan>[STATE] CombatAttackState → 다음 턴으로 전환</color>");
-                    turnManager.NextTurn();
-                }
+            if (enemyDead || playerDead)
+            {
+                GameLogger.LogInfo("CombatAttackState → CombatResultState 전이 (캐릭터 사망)", GameLogger.LogCategory.Combat);
+                // TODO: 결과 상태로 전환 로직 구현
             }
             else
             {
-                Debug.LogError("[CombatAttackState] SlotExecutionSystem을 찾을 수 없습니다!");
+                GameLogger.LogInfo("CombatAttackState → 다음 턴으로 전환", GameLogger.LogCategory.Combat);
+                turnManager.NextTurn();
             }
         }
 
@@ -86,7 +79,7 @@ namespace Game.CombatSystem.State
         /// </summary>
         public void ExitState() 
         { 
-            Debug.Log("<color=cyan>[STATE] CombatAttackState 종료</color>"); 
+            GameLogger.LogInfo("CombatAttackState 종료", GameLogger.LogCategory.Combat); 
         }
 
         #endregion

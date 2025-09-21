@@ -103,7 +103,7 @@ namespace Game.SaveSystem.Manager
                         var card = CreateCardFromData(cardData);
                         if (card != null)
                         {
-                            playerHandManager.RestoreCardToHand(card, slotPos);
+                            playerHandManager.AddCardToSlot(slotPos, card);
                         }
                     }
                 }

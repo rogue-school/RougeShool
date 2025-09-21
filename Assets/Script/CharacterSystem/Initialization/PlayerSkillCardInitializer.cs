@@ -4,7 +4,9 @@ using Zenject;
 using Game.IManager;
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.Slot;
 using Game.CharacterSystem.Interface;
+using Game.CoreSystem.Utility;
 
 namespace Game.CharacterSystem.Initialization
 {
@@ -49,24 +51,27 @@ namespace Game.CharacterSystem.Initialization
 
             handManager.SetPlayer(player);          // owner를 runtime에 명시적으로 설정
             // handManager.GenerateInitialHand(); // CombatStartupManager에서 처리
-            handManager.LogPlayerHandSlotStates();
             player.InjectHandManager(handManager);  // 연결
 
             // 카드 등장 애니메이션 병렬 실행 및 대기
-            var allCards = handManager.GetAllHandCards();
             int total = 0;
             int animCount = 0;
             
-            foreach (var (card, ui) in allCards)
+            // 모든 슬롯을 확인하여 카드와 UI 가져오기
+            for (int i = 0; i < 3; i++)
             {
-                if (ui != null)
+                var slotPos = (SkillCardSlotPosition)i;
+                var card = handManager.GetCardInSlot(slotPos);
+                var ui = handManager.GetCardUIInSlot(slotPos);
+                
+                if (card != null && ui != null)
                 {
                     total++;
                     var uiObj = ui as Game.SkillCardSystem.UI.SkillCardUI;
                     if (uiObj != null)
                     {
                         // 애니메이션 건너뛰기 (AnimationSystem 제거로 인해 임시 비활성화)
-                        Debug.Log($"[PlayerSkillCardInitializer] 카드 애니메이션을 건너뜁니다: {card.GetCardName()}");
+                        GameLogger.LogInfo($"카드 애니메이션을 건너뜁니다: {card.GetCardName()}", GameLogger.LogCategory.Character);
                         animCount++; // 애니메이션 호출 완료
                     }
                 }

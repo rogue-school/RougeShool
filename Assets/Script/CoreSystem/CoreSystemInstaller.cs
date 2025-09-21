@@ -11,8 +11,8 @@ using System.Collections.Generic;
 namespace Game.CoreSystem
 {
     /// <summary>
-    /// CoreSystem용 Zenject 설치자
-    /// 모든 코어 시스템 매니저와 서비스를 바인딩합니다.
+    /// CoreSystem용 Zenject 설치자 (최적화됨)
+    /// 모든 코어 시스템 매니저와 서비스를 효율적으로 바인딩합니다.
     /// </summary>
     public class CoreSystemInstaller : MonoInstaller<CoreSystemInstaller>
     {
@@ -25,40 +25,75 @@ namespace Game.CoreSystem
         [SerializeField] private CoroutineRunner coroutineRunner;
         [SerializeField] private PlayerCharacterSelectionManager playerCharacterSelectionManager;
 
+        [Header("DI 최적화 설정")]
+#pragma warning disable CS0414 // 사용하지 않는 필드 경고 억제 (향후 사용 예정)
+        [SerializeField] private bool enableLazyInitialization = true;
+        [SerializeField] private bool enableCircularDependencyCheck = true;
+#pragma warning restore CS0414
+        [SerializeField] private bool enablePerformanceLogging = false;
+
         public override void InstallBindings()
         {
-            BindCoreManagers();
-            BindCoreServices();
-            BindCoreUtilities();
-            BindCoreInterfaces();
+            // 성능 측정 시작
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            
+            // 최적화된 바인딩 순서
+            BindCoreServices();      // 서비스 먼저 (의존성 없음)
+            BindCoreUtilities();     // 유틸리티 (서비스 의존)
+            BindCoreManagers();      // 매니저 (서비스/유틸리티 의존)
+            BindCoreInterfaces();    // 인터페이스 (모든 것 의존)
+            
+            stopwatch.Stop();
+            if (enablePerformanceLogging)
+            {
+                GameLogger.LogInfo($"CoreSystemInstaller 바인딩 완료: {stopwatch.ElapsedMilliseconds}ms", GameLogger.LogCategory.Core);
+            }
         }
 
-        #region 코어 매니저 바인딩
+        #region 코어 매니저 바인딩 (최적화됨)
 
         /// <summary>
-        /// 코어 매니저들을 바인딩합니다.
+        /// 코어 매니저들을 최적화된 방식으로 바인딩합니다.
         /// </summary>
         private void BindCoreManagers()
         {
-            // CoreSystemInitializer - 최우선 바인딩
-            EnsureAndBindCoreManager<CoreSystemInitializer>(coreSystemInitializer, "CoreSystemInitializer");
-            
-            // GameStateManager
-            EnsureAndBindCoreManagerWithInterface<GameStateManager, IGameStateManager>(gameStateManager, "GameStateManager");
-            
-            // SceneTransitionManager
-            EnsureAndBindCoreManagerWithInterface<SceneTransitionManager, ISceneTransitionManager>(sceneTransitionManager, "SceneTransitionManager");
-            
-            // AudioManager
-            EnsureAndBindCoreManagerWithInterface<AudioManager, IAudioManager>(audioManager, "AudioManager");
-            
-            // SaveManager
-            EnsureAndBindCoreManagerWithInterface<SaveManager, ISaveManager>(saveManager, "SaveManager");
-            
-            
-            // PlayerCharacterSelectionManager
-            EnsureAndBindCoreManagerWithInterface<PlayerCharacterSelectionManager, IPlayerCharacterSelectionManager>(playerCharacterSelectionManager, "PlayerCharacterSelectionManager");
-            
+            // 매니저들을 배열로 관리하여 반복문으로 처리
+            var managers = new (MonoBehaviour instance, string name, System.Type interfaceType)[]
+            {
+                (coreSystemInitializer, "CoreSystemInitializer", null),
+                (sceneTransitionManager, "SceneTransitionManager", typeof(ISceneTransitionManager)),
+                (gameStateManager, "GameStateManager", typeof(IGameStateManager)),
+                (audioManager, "AudioManager", typeof(IAudioManager)),
+                (saveManager, "SaveManager", typeof(ISaveManager)),
+                (playerCharacterSelectionManager, "PlayerCharacterSelectionManager", typeof(IPlayerCharacterSelectionManager))
+            };
+
+            foreach (var (instance, name, interfaceType) in managers)
+            {
+                if (instance != null)
+                {
+                    // 기본 바인딩
+                    Container.Bind(instance.GetType()).FromInstance(instance).AsSingle();
+                    
+                    // 인터페이스 바인딩 (있는 경우)
+                    if (interfaceType != null)
+                    {
+                        Container.Bind(interfaceType).FromInstance(instance).AsSingle();
+                    }
+                    
+                    // 의존성 주입 예약
+                    Container.QueueForInject(instance);
+                    
+                    if (enablePerformanceLogging)
+                    {
+                        GameLogger.LogInfo($"{name} 바인딩 완료", GameLogger.LogCategory.Core);
+                    }
+                }
+                else
+                {
+                    GameLogger.LogWarning($"{name}가 할당되지 않았습니다.", GameLogger.LogCategory.Core);
+                }
+            }
         }
 
         #endregion
@@ -103,27 +138,34 @@ namespace Game.CoreSystem
             var initializableComponents = FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None)
                 .OfType<ICoreSystemInitializable>();
             
-            // 이미 바인딩된 ICoreSystemInitializable 컴포넌트들 제외
-            var alreadyBoundComponents = new HashSet<ICoreSystemInitializable>
+            // 이미 BindCoreManagers에서 바인딩된 매니저들을 제외
+            var alreadyBoundTypes = new HashSet<System.Type>
             {
-                gameStateManager,
-                sceneTransitionManager,
-                audioManager,
-                saveManager,
-                playerCharacterSelectionManager
-            }.Where(x => x != null);
+                typeof(CoreSystemInitializer),
+                typeof(SceneTransitionManager),
+                typeof(GameStateManager),
+                typeof(AudioManager),
+                typeof(SaveManager),
+                typeof(PlayerCharacterSelectionManager)
+            };
             
-            var componentsToBind = initializableComponents.Except(alreadyBoundComponents);
-            
-            foreach (var component in componentsToBind)
+            // 아직 바인딩되지 않은 ICoreSystemInitializable 컴포넌트만 바인딩
+            foreach (var component in initializableComponents)
             {
-                Container.BindInterfacesAndSelfTo(component.GetType()).FromInstance(component).AsSingle();
+                if (!alreadyBoundTypes.Contains(component.GetType()))
+                {
+                    Container.BindInterfacesAndSelfTo(component.GetType()).FromInstance(component).AsSingle();
+                }
             }
             
             // ICoreSystemInitializable 리스트로 바인딩 (CoreSystemInitializer에서 사용)
+            // CoreSystemInitializer는 자기 자신을 제외하고 바인딩
             Container.Bind<List<ICoreSystemInitializable>>().FromMethod(context =>
             {
-                return new List<ICoreSystemInitializable>(initializableComponents);
+                var systemsToInitialize = initializableComponents
+                    .Where(x => !ReferenceEquals(x, coreSystemInitializer) && !alreadyBoundTypes.Contains(x.GetType()))
+                    .ToList();
+                return new List<ICoreSystemInitializable>(systemsToInitialize);
             }).AsSingle();
         }
 
@@ -147,9 +189,8 @@ namespace Game.CoreSystem
                 }
             }
             
-            // 의존성 주입 예약
+            // 의존성 주입 예약 (바인딩은 BindCoreInterfaces에서 처리)
             Container.QueueForInject(instance);
-            Container.Bind<T>().FromInstance(instance).AsSingle();
         }
 
         /// <summary>
@@ -169,11 +210,8 @@ namespace Game.CoreSystem
                 }
             }
             
-            // 의존성 주입 예약
+            // 의존성 주입 예약 (바인딩은 BindCoreInterfaces에서 처리)
             Container.QueueForInject(instance);
-            
-            // 구체 타입과 인터페이스를 하나의 바인딩으로 처리
-            Container.BindInterfacesAndSelfTo<TConcrete>().FromInstance(instance).AsSingle();
         }
 
         #endregion

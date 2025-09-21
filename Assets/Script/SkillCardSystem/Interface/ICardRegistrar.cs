@@ -5,8 +5,8 @@ using Game.CombatSystem.Interface;
 namespace Game.CombatSystem.Interface
 {
     /// <summary>
-    /// 전투 슬롯에 스킬 카드와 그에 대응하는 UI를 등록하는 기능을 제공합니다.
-    /// 슬롯은 등록된 카드와 UI를 기반으로 실행 및 시각적 처리를 수행합니다.
+    /// 카드 등록 관련 통합 인터페이스입니다.
+    /// 전투 슬롯 등록과 카드 정보 관리를 모두 담당합니다.
     /// </summary>
     public interface ICardRegistrar
     {
@@ -26,5 +26,38 @@ namespace Game.CombatSystem.Interface
         /// 시각적 효과 및 드래그 관련 처리를 담당합니다.
         /// </param>
         void RegisterCard(ICombatCardSlot slot, ISkillCard card, SkillCardUI ui);
+
+        /// <summary>
+        /// 플레이어가 선택한 스킬 카드를 등록합니다.
+        /// 이후 전투 실행 시 등록된 카드가 참조됩니다.
+        /// </summary>
+        /// <param name="card">
+        /// 등록할 플레이어의 <see cref="ISkillCard"/> 인스턴스입니다.
+        /// </param>
+        void RegisterPlayerCard(ISkillCard card);
+
+        /// <summary>
+        /// 적이 선택한 스킬 카드를 등록합니다.
+        /// 이후 전투 실행 시 등록된 카드가 참조됩니다.
+        /// </summary>
+        /// <param name="card">
+        /// 등록할 적의 <see cref="ISkillCard"/> 인스턴스입니다.
+        /// </param>
+        void RegisterEnemyCard(ISkillCard card);
+
+        /// <summary>
+        /// 현재 등록된 플레이어 및 적 스킬 카드를 반환합니다.
+        /// </summary>
+        /// <returns>
+        /// 등록된 플레이어 카드와 적 카드의 튜플.
+        /// 등록되지 않은 경우 null을 포함할 수 있습니다.
+        /// </returns>
+        (ISkillCard player, ISkillCard enemy) GetRegisteredCards();
+
+        /// <summary>
+        /// 등록된 플레이어 및 적 카드 정보를 초기화합니다.
+        /// 턴 종료 또는 전투 결과 이후 호출됩니다.
+        /// </summary>
+        void Clear();
     }
 }

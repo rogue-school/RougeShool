@@ -1296,6 +1296,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 405f4a7e157390043827d347de1c758c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  enableDebugLogging: 1
+  autoInitialize: 1
+  persistAcrossScenes: 1
+  managerConfig: {fileID: 0}
+  relatedPrefab: {fileID: 0}
+  uiController: {fileID: 0}
+  uiContainer: {fileID: 0}
+  dependencyManager: {fileID: 0}
+  serviceContainer: {fileID: 0}
   coreSceneName: CoreScene
   mainSceneName: MainScene
   battleSceneName: BattleScene
@@ -1531,6 +1540,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0791c1d80c325854398b18a8c16f83a4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  enableDebugLogging: 1
+  autoInitialize: 1
+  persistAcrossScenes: 1
+  managerConfig: {fileID: 0}
+  relatedPrefab: {fileID: 0}
+  uiController: {fileID: 0}
+  uiContainer: {fileID: 0}
+  dependencyManager: {fileID: 0}
+  serviceContainer: {fileID: 0}
   currentGameState: 0
   selectedCharacter: {fileID: 0}
 --- !u!1 &1343503450
@@ -2063,8 +2081,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a55d975c6c5822448a29c224edf63fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enableAutoInitialization: 1
   enableDebugLogging: 1
+  autoInitialize: 1
+  persistAcrossScenes: 1
+  managerConfig: {fileID: 0}
+  relatedPrefab: {fileID: 0}
+  uiController: {fileID: 0}
+  uiContainer: {fileID: 0}
+  dependencyManager: {fileID: 0}
+  serviceContainer: {fileID: 0}
   logPerSystemDetails: 0
   autoGoToMainAfterInit: 1
   isInitializationComplete: 0

@@ -9,6 +9,7 @@ using Game.CharacterSystem.Interface;
 using Game.IManager;
 using Game.CombatSystem.Interface;
 using Game.CoreSystem.Interface;
+using Game.CoreSystem.Utility;
 
 namespace Game.CombatSystem.Initialization
 {
@@ -54,7 +55,7 @@ namespace Game.CombatSystem.Initialization
         /// </summary>
         public IEnumerator Initialize()
         {
-            Debug.Log("<color=cyan>[PlayerCharacterInitializer] 플레이어 캐릭터 초기화 시작</color>");
+            GameLogger.LogInfo("플레이어 캐릭터 초기화 시작", GameLogger.LogCategory.Character);
             
             // 1. 슬롯 초기화 대기
             yield return new WaitUntil(() =>
@@ -72,7 +73,7 @@ namespace Game.CombatSystem.Initialization
             var prefabToUse = ResolvePlayerPrefab();
             if (prefabToUse == null)
             {
-                Debug.LogError("[PlayerCharacterInitializer] playerPrefab이 설정되지 않았고 리소스 로드에도 실패했습니다.");
+                GameLogger.LogError(" playerPrefab이 설정되지 않았고 리소스 로드에도 실패했습니다.");
                 yield break;
             }
 
@@ -94,7 +95,7 @@ namespace Game.CombatSystem.Initialization
             // 3. PlayerCharacter 컴포넌트 및 데이터 세팅 (애니메이션 전에)
             if (!player.TryGetComponent(out PlayerCharacter character))
             {
-                Debug.LogError("[PlayerCharacterInitializer] PlayerCharacter 컴포넌트를 찾을 수 없습니다.");
+                GameLogger.LogError(" PlayerCharacter 컴포넌트를 찾을 수 없습니다.");
                 Object.Destroy(player.gameObject);
                 yield break;
             }
@@ -102,21 +103,21 @@ namespace Game.CombatSystem.Initialization
             var data = ResolvePlayerData();
             if (data == null)
             {
-                Debug.LogError("[PlayerCharacterInitializer] 캐릭터 데이터가 없습니다.");
+                GameLogger.LogError(" 캐릭터 데이터가 없습니다.");
                 yield break;
             }
 
             character.SetCharacterData(data); // ★ 데이터 먼저 주입
 
             // 4. 등장 애니메이션 건너뛰기 (AnimationSystem 제거로 인해 임시 비활성화)
-            Debug.Log("[PlayerCharacterInitializer] 애니메이션을 건너뜁니다.");
+            GameLogger.LogInfo("애니메이션을 건너뜁니다.", GameLogger.LogCategory.Character);
             yield return new WaitForSeconds(0.1f); // 짧은 대기 시간
 
             // 5. 슬롯/매니저에 등록
             slot.SetCharacter(character);
             playerManager?.SetPlayer(character);
             
-            Debug.Log("<color=cyan>[PlayerCharacterInitializer] 플레이어 캐릭터 초기화 완료</color>");
+            GameLogger.LogInfo(" 플레이어 캐릭터 초기화 완료</color>");
         }
 
         #endregion
@@ -130,7 +131,7 @@ namespace Game.CombatSystem.Initialization
         {
             if (!ValidateData())
             {
-                Debug.LogError("[PlayerCharacterInitializer] 유효하지 않은 초기화 데이터입니다.");
+                GameLogger.LogError(" 유효하지 않은 초기화 데이터입니다.");
                 return;
             }
 
@@ -163,7 +164,7 @@ namespace Game.CombatSystem.Initialization
             // PlayerCharacter 컴포넌트 확인
             if (!player.TryGetComponent(out PlayerCharacter character))
             {
-                Debug.LogError("[PlayerCharacterInitializer] PlayerCharacter 컴포넌트를 찾을 수 없습니다.");
+                GameLogger.LogError(" PlayerCharacter 컴포넌트를 찾을 수 없습니다.");
                 Destroy(player.gameObject);
                 return;
             }
@@ -172,7 +173,7 @@ namespace Game.CombatSystem.Initialization
             var data = ResolvePlayerData();
             if (data == null)
             {
-                Debug.LogError("[PlayerCharacterInitializer] 캐릭터 데이터가 없습니다.");
+                GameLogger.LogError(" 캐릭터 데이터가 없습니다.");
                 return;
             }
 
@@ -201,13 +202,13 @@ namespace Game.CombatSystem.Initialization
             var registry = slotRegistry?.GetCharacterSlotRegistry();
             if (registry == null)
             {
-                Debug.LogError("[PlayerCharacterInitializer] CharacterSlotRegistry가 null입니다.");
+                GameLogger.LogError(" CharacterSlotRegistry가 null입니다.");
                 return null;
             }
 
             var slot = registry.GetCharacterSlot(SlotOwner.PLAYER);
             if (slot == null)
-                Debug.LogError("[PlayerCharacterInitializer] SlotOwner.PLAYER에 해당하는 캐릭터 슬롯이 없습니다.");
+                GameLogger.LogError(" SlotOwner.PLAYER에 해당하는 캐릭터 슬롯이 없습니다.");
 
             return slot;
         }
@@ -229,7 +230,7 @@ namespace Game.CombatSystem.Initialization
                 }
                 else
                 {
-                    Debug.LogError("[PlayerCharacterInitializer] 선택된 캐릭터가 null이거나 DisplayName이 설정되지 않았습니다.");
+                    GameLogger.LogError(" 선택된 캐릭터가 null이거나 DisplayName이 설정되지 않았습니다.");
                 }
             }
             
@@ -247,7 +248,7 @@ namespace Game.CombatSystem.Initialization
                 return defaultData;
             }
 
-            Debug.LogError("[PlayerCharacterInitializer] 캐릭터 데이터가 없습니다. (선택된 캐릭터, GameManager, 기본 데이터 모두 null)");
+            GameLogger.LogError(" 캐릭터 데이터가 없습니다. (선택된 캐릭터, GameManager, 기본 데이터 모두 null)");
             return null;
         }
 

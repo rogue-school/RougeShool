@@ -41,6 +41,9 @@ namespace Game.CoreSystem.Manager
         
         [Tooltip("초기화 완료 후 자동으로 메인 씬으로 이동")]
         [SerializeField] private bool autoGoToMainAfterInit = true;
+        
+        [Tooltip("필수 시스템만 초기화 (불필요한 시스템 제외)")]
+        [SerializeField] private bool initializeEssentialSystemsOnly = true;
         #endregion
 
         #region 초기화 상태
@@ -52,7 +55,7 @@ namespace Game.CoreSystem.Manager
         // 이벤트
         public System.Action OnAllSystemsInitialized;
         public System.Action<string> OnSystemInitialized;
-        public System.Action<string> OnInitializationFailed;
+        public new System.Action<string> OnInitializationFailed;
         #endregion
 
         #region 초기화 시작
@@ -64,13 +67,13 @@ namespace Game.CoreSystem.Manager
 
         protected override System.Collections.IEnumerator OnInitialize()
         {
-            if (coreSystems != null)
+            if (coreSystems != null && coreSystems.Count > 0)
             {
                 yield return StartCoroutine(InitializeAllSystems());
             }
             else
             {
-                GameLogger.LogWarning("CoreSystems가 주입되지 않았습니다.", GameLogger.LogCategory.UI);
+                GameLogger.LogInfo("초기화할 추가 시스템이 없습니다. 모든 코어 시스템이 이미 초기화되었습니다.", GameLogger.LogCategory.UI);
             }
         }
 
@@ -81,8 +84,13 @@ namespace Game.CoreSystem.Manager
                 GameLogger.LogInfo("CoreSystem 자동 초기화 시작", GameLogger.LogCategory.UI);
             }
             
+            // 필수 시스템만 초기화하는 경우 필터링
+            var systemsToInitialize = initializeEssentialSystemsOnly 
+                ? FilterEssentialSystems(coreSystems)
+                : coreSystems;
+            
             // Zenject DI로 주입된 시스템들을 순차적으로 초기화
-            foreach (var system in coreSystems)
+            foreach (var system in systemsToInitialize)
             {
                 if (system != null)
                 {
@@ -118,6 +126,60 @@ namespace Game.CoreSystem.Manager
             
             OnSystemInitialized?.Invoke(systemName);
         }
+        #endregion
+
+        #region 필수 시스템 필터링
+        
+        /// <summary>
+        /// 현재 게임에 필수적인 시스템들만 필터링합니다.
+        /// </summary>
+        private List<ICoreSystemInitializable> FilterEssentialSystems(List<ICoreSystemInitializable> allSystems)
+        {
+            var essentialSystems = new List<ICoreSystemInitializable>();
+            
+            foreach (var system in allSystems)
+            {
+                var systemType = system.GetType();
+                var systemName = systemType.Name;
+                
+                // 필수 시스템들만 포함
+                if (IsEssentialSystem(systemName))
+                {
+                    essentialSystems.Add(system);
+                    if (enableDebugLogging)
+                    {
+                        GameLogger.LogInfo($"필수 시스템 포함: {systemName}", GameLogger.LogCategory.UI);
+                    }
+                }
+                else
+                {
+                    if (enableDebugLogging)
+                    {
+                        GameLogger.LogInfo($"불필요한 시스템 제외: {systemName}", GameLogger.LogCategory.UI);
+                    }
+                }
+            }
+            
+            return essentialSystems;
+        }
+        
+        /// <summary>
+        /// 시스템이 필수적인지 판단합니다.
+        /// </summary>
+        private bool IsEssentialSystem(string systemName)
+        {
+            // 현재 게임에 필수적인 시스템들
+            var essentialSystemNames = new HashSet<string>
+            {
+                "AudioManager",
+                "SaveManager", 
+                "PlayerCharacterSelectionManager",
+                "CoreSystemInitializer"
+            };
+            
+            return essentialSystemNames.Contains(systemName);
+        }
+        
         #endregion
 
         #region 초기화 완료

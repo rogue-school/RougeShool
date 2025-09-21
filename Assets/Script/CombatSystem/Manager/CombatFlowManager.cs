@@ -19,8 +19,25 @@ using Zenject;
 namespace Game.CombatSystem.Manager
 {
     /// <summary>
-    /// 전투 플로우 전체를 관리하는 통합 매니저
-    /// CombatManager와 CombatStartupManager의 기능을 통합합니다.
+    /// 전투 플로우 전체를 관리하는 통합 매니저입니다.
+    /// 
+    /// 주요 기능:
+    /// - 전투 시작부터 종료까지의 전체 플로우 관리
+    /// - 턴 기반 전투 시스템 제어
+    /// - 캐릭터 및 카드 시스템과의 통합 관리
+    /// - 상태 기반 전투 진행 제어
+    /// 
+    /// 사용 예시:
+    /// ```csharp
+    /// // 전투 시작
+    /// combatFlowManager.StartCombat();
+    /// 
+    /// // 턴 진행
+    /// combatFlowManager.ProgressTurn();
+    /// 
+    /// // 전투 종료
+    /// combatFlowManager.EndCombat();
+    /// ```
     /// </summary>
     public class CombatFlowManager : MonoBehaviour, ICombatFlowManager
     {
@@ -56,7 +73,7 @@ namespace Game.CombatSystem.Manager
         [Inject] private IPlayerHandManager playerHandManager;
         [Inject] private IStageManager stageManager;
         [Inject] private CombatSlotManager slotManager;
-        [Inject] private CombatTurnManager turnManager;
+        [Inject] private TurnManager turnManager;
         [Inject] private CombatExecutionManager executionManager;
 
         #endregion
@@ -135,22 +152,25 @@ namespace Game.CombatSystem.Manager
 
         private IEnumerator InitializeSubManagers()
         {
-            // 슬롯 매니저 초기화
+            // 슬롯 매니저 초기화 (CombatSlotManager는 싱글톤으로 자동 초기화됨)
             if (slotManager != null)
             {
-                yield return StartCoroutine(slotManager.Initialize());
+                // CombatSlotManager는 Awake에서 자동 초기화되므로 별도 초기화 불필요
+                yield return null;
             }
 
-            // 턴 매니저 초기화
+            // 턴 매니저 초기화 (TurnManager는 싱글톤으로 자동 초기화됨)
             if (turnManager != null)
             {
-                yield return StartCoroutine(turnManager.Initialize());
+                // TurnManager는 Awake에서 자동 초기화되므로 별도 초기화 불필요
+                yield return null;
             }
 
-            // 실행 매니저 초기화
+            // 실행 매니저 초기화 (CombatExecutionManager는 별도 초기화 불필요)
             if (executionManager != null)
             {
-                yield return StartCoroutine(executionManager.Initialize());
+                // CombatExecutionManager는 Start에서 자동 초기화되므로 별도 초기화 불필요
+                yield return null;
             }
         }
 
@@ -203,25 +223,23 @@ namespace Game.CombatSystem.Manager
 
         private IEnumerator PrepareCombat()
         {
-            // 플레이어 캐릭터 생성
+            // 매니저들 초기화 확인
             if (playerManager != null)
             {
-                playerManager.CreateAndRegisterCharacter();
+                GameLogger.LogInfo("플레이어 매니저 확인 완료", GameLogger.LogCategory.Combat);
             }
 
-            // 적 캐릭터 생성 (StageManager를 통해)
             if (stageManager != null)
             {
-                yield return StartCoroutine(stageManager.SpawnNextEnemyAsync());
+                GameLogger.LogInfo("스테이지 매니저 확인 완료", GameLogger.LogCategory.Combat);
             }
 
-            // 핸드 초기화
             if (playerHandManager != null)
             {
-                yield return StartCoroutine(playerHandManager.InitializeHand());
+                GameLogger.LogInfo("플레이어 핸드 매니저 확인 완료", GameLogger.LogCategory.Combat);
             }
 
-            // 적은 핸드 시스템을 사용하지 않음 - StageManager에서 직접 관리
+            yield return null; // 코루틴을 위해 yield return 추가
         }
 
         /// <summary>
@@ -314,7 +332,28 @@ namespace Game.CombatSystem.Manager
                 return;
             }
 
+            if (!enableTurnBasedCombat)
+            {
+                GameLogger.LogWarning("턴 기반 전투가 비활성화되어 있습니다.", GameLogger.LogCategory.Combat);
+                return;
+            }
+
             if (turnManager != null)
+            {
+                turnManager.NextTurn();
+            }
+
+            // 자동 턴 진행이 활성화된 경우 다음 턴도 자동으로 진행
+            if (autoProgressTurn && turnManager != null)
+            {
+                StartCoroutine(AutoProgressNextTurn());
+            }
+        }
+
+        private System.Collections.IEnumerator AutoProgressNextTurn()
+        {
+            yield return new WaitForSeconds(1.0f); // 1초 대기
+            if (isCombatActive && enableTurnBasedCombat)
             {
                 turnManager.NextTurn();
             }

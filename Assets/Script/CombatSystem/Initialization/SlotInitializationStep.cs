@@ -1,5 +1,4 @@
 using UnityEngine;
-using Zenject;
 using Game.CombatSystem.Interface;
 using System.Collections;
 using System.Linq;
@@ -10,14 +9,22 @@ namespace Game.CombatSystem.Intialization
     /// <summary>
     /// 전투 시작 시 슬롯 정보를 자동으로 바인딩하고 레지스트리에 등록하는 초기화 스텝입니다.
     /// </summary>
-    public class SlotInitializationStep : MonoBehaviour, ICombatInitializerStep
+    public class SlotInitializationStep : ICombatInitializerStep
     {
-        #region 필드 및 주입
+        #region 필드
 
-        [Inject] private ISlotRegistry slotRegistry;
-        [Inject] private SlotInitializer slotInitializer;
+        private readonly ISlotRegistry slotRegistry;
 
         public int Order => 0;
+
+        #endregion
+
+        #region 생성자
+
+        public SlotInitializationStep(ISlotRegistry slotRegistry)
+        {
+            this.slotRegistry = slotRegistry;
+        }
 
         #endregion
 
@@ -28,19 +35,14 @@ namespace Game.CombatSystem.Intialization
             Debug.Log("<color=cyan>[SlotInitializationStep] 슬롯 초기화 시작</color>");
 
             // null 체크 추가
-            if (slotInitializer == null)
-            {
-                Debug.LogError("[SlotInitializationStep] slotInitializer가 null입니다.");
-                yield break;
-            }
-
             if (slotRegistry == null)
             {
                 Debug.LogError("[SlotInitializationStep] slotRegistry가 null입니다.");
                 yield break;
             }
 
-            slotInitializer.AutoBindAllSlots();
+            // 슬롯 자동 바인딩 (SlotInitializer 제거로 인해 직접 처리)
+            Debug.Log("[SlotInitializationStep] 슬롯 자동 바인딩 기능은 현재 구현되지 않음");
 
             // 슬롯 레지스트리 초기화 대기
             float timeout = 5f; // 5초 타임아웃

@@ -93,7 +93,7 @@ namespace Game.SkillCardSystem.Editor
             EditorGUI.indentLevel--;
             
             EditorGUILayout.Space();
-            EditorGUILayout.HelpBox("연출 타이밍은 각 시스템(AudioSystem, AnimationSystem)에서 관리됩니다.", MessageType.Info);
+            EditorGUILayout.HelpBox("연출 타이밍은 각 시스템(AudioSystem, DOTween Pro)에서 관리됩니다.", MessageType.Info);
         }
         
         private void DrawConfigurationSection()

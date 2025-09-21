@@ -23,7 +23,7 @@ namespace Game.CombatSystem.State
         private readonly IPlayerHandManager playerHandManager;
         private readonly ICoroutineRunner coroutineRunner;
         private readonly TurnContext turnContext;
-        private readonly CombatManager combatManager;
+        private readonly CombatFlowManager combatFlowManager;
 
         #endregion
 
@@ -38,14 +38,14 @@ namespace Game.CombatSystem.State
             IPlayerHandManager playerHandManager,
             ICoroutineRunner coroutineRunner,
             TurnContext turnContext,
-            CombatManager combatManager)
+            CombatFlowManager combatFlowManager)
         {
             this.turnManager = turnManager;
             this.slotManager = slotManager;
             this.playerHandManager = playerHandManager;
             this.coroutineRunner = coroutineRunner;
             this.turnContext = turnContext;
-            this.combatManager = combatManager;
+            this.combatFlowManager = combatFlowManager;
         }
 
         #endregion
@@ -57,7 +57,7 @@ namespace Game.CombatSystem.State
         /// </summary>
         public void EnterState()
         {
-            Debug.Log("<color=cyan>[STATE] CombatPrepareState 진입</color>");
+            GameLogger.LogInfo("CombatPrepareState 진입", GameLogger.LogCategory.Combat);
             CombatEvents.RaiseCombatStarted();
             turnContext.Reset();
             coroutineRunner.RunCoroutine(PrepareRoutine());
@@ -72,28 +72,28 @@ namespace Game.CombatSystem.State
         /// </summary>
         private IEnumerator PrepareRoutine()
         {
-            Debug.Log("[CombatPrepareState] PrepareRoutine 시작");
+            GameLogger.LogInfo("PrepareRoutine 시작", GameLogger.LogCategory.Combat);
             
-            // CombatManager null 체크
-            if (combatManager == null)
+            // CombatFlowManager null 체크
+            if (combatFlowManager == null)
             {
-                Debug.LogError("[CombatPrepareState] CombatManager가 null입니다. DI 바인딩을 확인해주세요.");
+                GameLogger.LogError("CombatFlowManager가 null입니다. DI 바인딩을 확인해주세요.", GameLogger.LogCategory.Error);
                 yield break;
             }
 
-            Debug.Log("[CombatPrepareState] CombatManager 확인 완료, 전투 시작 시퀀스 실행");
+            GameLogger.LogInfo("CombatFlowManager 확인 완료, 전투 시작 시퀀스 실행", GameLogger.LogCategory.Combat);
 
-            // 전투 시작 시퀀스 실행 (CombatManager 사용)
-            Debug.Log("[CombatPrepareState] 전투 시작 시퀀스 실행");
+            // 전투 시작 시퀀스 실행 (CombatFlowManager 사용)
+            GameLogger.LogInfo("전투 시작 시퀀스 실행", GameLogger.LogCategory.Combat);
             
-            // 간단한 전투 시작 로직 (CombatManager의 실제 메서드 구현 대기)
+            // 간단한 전투 시작 로직 (CombatFlowManager의 실제 메서드 구현 대기)
             yield return new WaitForSeconds(1.0f); // 기본 대기시간
             
-            Debug.Log("[CombatPrepareState] 전투 시작 시퀀스 완료");
+            GameLogger.LogInfo("전투 시작 시퀀스 완료", GameLogger.LogCategory.Combat);
 
             // 다음 상태로 전환 (플레이어 입력)
-            Debug.Log("<color=cyan>[STATE] CombatPrepareState → CombatPlayerInputState 전이</color>");
-            Debug.Log("[CombatPrepareState] 상태 전이: PlayerInputState");
+            GameLogger.LogInfo("CombatPrepareState → CombatPlayerInputState 전이", GameLogger.LogCategory.Combat);
+            GameLogger.LogInfo("상태 전이: PlayerInputState", GameLogger.LogCategory.Combat);
             // Note: State transitions are now handled by the simplified TurnManager
         }
 

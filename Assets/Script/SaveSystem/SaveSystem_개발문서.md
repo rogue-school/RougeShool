@@ -4,8 +4,8 @@
 SaveSystem은 게임의 저장/로드 기능을 관리하는 시스템입니다. 슬레이 더 스파이어 방식의 턴 기반 자동 저장 시스템을 제공합니다. CoreSystem에 통합되어 전역적으로 관리되며, ICoreSystemInitializable 인터페이스를 구현하여 자동 초기화됩니다.
 
 ### 최근 변경(요약)
-- **AnimationSystem 의존성 완전 제거**: 모든 AnimationSystem 관련 코드 제거 완료
-- **임시 애니메이션 비활성화**: 애니메이션 호출 부분을 Debug.Log로 대체하여 게임 로직 정상 동작
+- **로깅 시스템 표준화**: Debug.Log를 GameLogger로 전환 완료
+- **AnimationSystem 참조 정리**: 남은 AnimationSystem 참조 완전 제거 완료
 - **CoreSystem 통합**: SaveManager가 CoreSystem의 일부로 통합 관리 완료
 - **Zenject DI 통합**: SaveManager가 의존성 주입으로 전환 완료
 - **자동 초기화**: ICoreSystemInitializable 인터페이스 구현으로 자동 초기화 완료

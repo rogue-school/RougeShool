@@ -25,8 +25,6 @@ namespace Game.CombatSystem.Interface
         /// <returns>슬롯 객체</returns>
         ICombatCardSlot GetCombatSlot(CombatSlotPosition position);
 
-        [System.Obsolete("4-슬롯 표준: CombatFieldSlotPosition 대신 CombatSlotPosition 사용")]
-        ICombatCardSlot GetCombatSlot(CombatFieldSlotPosition fieldPosition);
 
         /// <summary>
         /// 등록된 모든 슬롯들을 반환합니다.

@@ -44,96 +44,57 @@ namespace Game.StageSystem.Data
 
         #region 보상 데이터
 
-        [Header("준보스 보상")]
-        [SerializeField] private List<RewardItem> subBossRewards = new();
-        [SerializeField] private List<RewardCurrency> subBossCurrency = new();
-        [SerializeField] private List<RewardCard> subBossCards = new();
-
-        [Header("보스 보상")]
-        [SerializeField] private List<RewardItem> bossRewards = new();
-        [SerializeField] private List<RewardCurrency> bossCurrency = new();
-        [SerializeField] private List<RewardCard> bossCards = new();
-
-        [Header("스테이지 완료 보상")]
-        [SerializeField] private List<RewardItem> stageCompletionRewards = new();
-        [SerializeField] private List<RewardCurrency> stageCompletionCurrency = new();
-        [SerializeField] private List<RewardCard> stageCompletionCards = new();
+        [Header("적 처치 보상")]
+        [SerializeField] private List<RewardItem> enemyDefeatRewards = new();
+        [SerializeField] private List<RewardCurrency> enemyDefeatCurrency = new();
+        [SerializeField] private List<RewardCard> enemyDefeatCards = new();
 
         #endregion
 
         #region 프로퍼티
 
         /// <summary>
-        /// 준보스 보상 아이템
+        /// 적 처치 보상 아이템
         /// </summary>
-        public List<RewardItem> SubBossRewards => subBossRewards;
+        public List<RewardItem> EnemyDefeatRewards => enemyDefeatRewards;
 
         /// <summary>
-        /// 준보스 보상 화폐
+        /// 적 처치 보상 화폐
         /// </summary>
-        public List<RewardCurrency> SubBossCurrency => subBossCurrency;
+        public List<RewardCurrency> EnemyDefeatCurrency => enemyDefeatCurrency;
 
         /// <summary>
-        /// 준보스 보상 카드
+        /// 적 처치 보상 카드
         /// </summary>
-        public List<RewardCard> SubBossCards => subBossCards;
-
-        /// <summary>
-        /// 보스 보상 아이템
-        /// </summary>
-        public List<RewardItem> BossRewards => bossRewards;
-
-        /// <summary>
-        /// 보스 보상 화폐
-        /// </summary>
-        public List<RewardCurrency> BossCurrency => bossCurrency;
-
-        /// <summary>
-        /// 보스 보상 카드
-        /// </summary>
-        public List<RewardCard> BossCards => bossCards;
-
-        /// <summary>
-        /// 스테이지 완료 보상 아이템
-        /// </summary>
-        public List<RewardItem> StageCompletionRewards => stageCompletionRewards;
-
-        /// <summary>
-        /// 스테이지 완료 보상 화폐
-        /// </summary>
-        public List<RewardCurrency> StageCompletionCurrency => stageCompletionCurrency;
-
-        /// <summary>
-        /// 스테이지 완료 보상 카드
-        /// </summary>
-        public List<RewardCard> StageCompletionCards => stageCompletionCards;
+        public List<RewardCard> EnemyDefeatCards => enemyDefeatCards;
 
         #endregion
 
         #region 보상 확인
 
         /// <summary>
-        /// 준보스 보상이 있는지 확인
+        /// 적 처치 보상이 있는지 확인
         /// </summary>
-        public bool HasSubBossRewards()
+        public bool HasEnemyDefeatRewards()
         {
-            return subBossRewards.Count > 0 || subBossCurrency.Count > 0 || subBossCards.Count > 0;
+            return enemyDefeatRewards.Count > 0 || enemyDefeatCurrency.Count > 0 || enemyDefeatCards.Count > 0;
         }
 
-        /// <summary>
-        /// 보스 보상이 있는지 확인
-        /// </summary>
-        public bool HasBossRewards()
-        {
-            return bossRewards.Count > 0 || bossCurrency.Count > 0 || bossCards.Count > 0;
-        }
+        #endregion
+
+        #region 초기화 메서드
 
         /// <summary>
-        /// 스테이지 완료 보상이 있는지 확인
+        /// 기본 적 처치 보상으로 초기화
+        /// TODO: 향후 인벤토리 아이템 및 스킬카드 강화 시스템 구현 예정
         /// </summary>
-        public bool HasStageCompletionRewards()
+        public void InitializeDefaultEnemyDefeatRewards()
         {
-            return stageCompletionRewards.Count > 0 || stageCompletionCurrency.Count > 0 || stageCompletionCards.Count > 0;
+            // 현재는 보상 시스템이 구현되지 않음
+            // 향후 인벤토리 아이템과 스킬카드 강화 시스템이 추가될 예정
+            enemyDefeatRewards.Clear();
+            enemyDefeatCurrency.Clear();
+            enemyDefeatCards.Clear();
         }
 
         #endregion

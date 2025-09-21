@@ -34,7 +34,7 @@ namespace Game.CombatSystem.DragDrop
                 targetSlot?.ClearAll();
             }
 
-            handManager.RestoreCardToHand(card);
+            handManager.AddCardToHand(card);
             CardSlotHelper.ResetCardToOriginal(cardUI);
 
             dragHandler.OriginalParent = this.transform;

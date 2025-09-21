@@ -7,14 +7,14 @@ namespace Game.CoreSystem.Manager
 {
     /// <summary>
     /// CoreSystem 매니저들의 공통 베이스 클래스
-    /// 인스펙터 필드 표준화 및 공통 기능을 제공합니다.
+    /// 핵심 기능만 제공하고 각 매니저의 특화된 역할을 보장합니다.
     /// </summary>
     public abstract class BaseCoreManager<T> : MonoBehaviour, ICoreSystemInitializable 
         where T : class
     {
-        #region 기본 설정
+        #region 핵심 설정 (모든 매니저 공통)
 
-        [Header("매니저 기본 설정")]
+        [Header("핵심 매니저 설정")]
         [Tooltip("디버그 로깅 활성화")]
         [SerializeField] protected bool enableDebugLogging = true;
 
@@ -24,38 +24,14 @@ namespace Game.CoreSystem.Manager
         [Tooltip("씬 전환 시 유지 여부")]
         [SerializeField] protected bool persistAcrossScenes = true;
 
-        #endregion
-
-        #region 데이터 및 설정
-
-        [Header("데이터 및 설정")]
-        [Tooltip("매니저 설정 데이터")]
-        [SerializeField] protected ScriptableObject managerConfig;
-
-        [Tooltip("관련 프리팹")]
-        [SerializeField] protected GameObject relatedPrefab;
+        [Tooltip("필수 참조가 없어도 초기화 진행")]
+        [SerializeField] protected bool initializeWithoutRequiredReferences = true;
 
         #endregion
 
-        #region UI 연결
+        #region 매니저별 특화 설정 (하위 클래스에서 오버라이드)
 
-        [Header("UI 연결")]
-        [Tooltip("관련 UI 컨트롤러")]
-        [SerializeField] protected MonoBehaviour uiController;
-
-        [Tooltip("UI 패널 컨테이너")]
-        [SerializeField] protected Transform uiContainer;
-
-        #endregion
-
-        #region 의존성 및 서비스
-
-        [Header("의존성 및 서비스")]
-        [Tooltip("의존성 매니저")]
-        [SerializeField] protected MonoBehaviour dependencyManager;
-
-        [Tooltip("서비스 컨테이너")]
-        [SerializeField] protected Transform serviceContainer;
+        // 특화된 설정 메서드들은 ValidateReferences 섹션에서 정의됩니다.
 
         #endregion
 
@@ -144,35 +120,89 @@ namespace Game.CoreSystem.Manager
         #region 공통 유틸리티
 
         /// <summary>
-        /// 필수 참조 필드의 유효성을 검사합니다.
+        /// 필수 참조 필드의 유효성을 검사합니다. (하위 클래스에서 특화된 검사 추가 가능)
         /// </summary>
         protected virtual bool ValidateReferences()
         {
             bool isValid = true;
-
-            if (managerConfig == null)
+            
+            // 매니저별 특화된 설정 검사
+            var managerConfig = GetManagerConfig();
+            if (managerConfig == null && RequiresManagerConfig())
             {
-                GameLogger.LogWarning($"{GetType().Name}: 매니저 설정 데이터가 할당되지 않았습니다.", GameLogger.LogCategory.UI);
+                GameLogger.LogWarning($"{GetType().Name}: 매니저 설정 데이터가 필요하지만 할당되지 않았습니다.", GameLogger.LogCategory.Core);
+                if (!initializeWithoutRequiredReferences)
+                {
+                    isValid = false;
+                }
             }
-
-            if (relatedPrefab == null)
+            
+            // 매니저별 특화된 프리팹 검사
+            var relatedPrefab = GetRelatedPrefab();
+            if (relatedPrefab == null && RequiresRelatedPrefab())
             {
-                GameLogger.LogWarning($"{GetType().Name}: 관련 프리팹이 할당되지 않았습니다.", GameLogger.LogCategory.UI);
+                GameLogger.LogWarning($"{GetType().Name}: 관련 프리팹이 필요하지만 할당되지 않았습니다.", GameLogger.LogCategory.Core);
+                if (!initializeWithoutRequiredReferences)
+                {
+                    isValid = false;
+                }
             }
-
-            if (uiController == null)
+            
+            // 매니저별 특화된 UI 컨트롤러 검사
+            var uiController = GetUIController();
+            if (uiController == null && RequiresUIController())
             {
-                GameLogger.LogWarning($"{GetType().Name}: UI 컨트롤러가 할당되지 않았습니다.", GameLogger.LogCategory.UI);
+                GameLogger.LogWarning($"{GetType().Name}: UI 컨트롤러가 필요하지만 할당되지 않았습니다.", GameLogger.LogCategory.Core);
+                if (!initializeWithoutRequiredReferences)
+                {
+                    isValid = false;
+                }
             }
-
+            
             return isValid;
         }
+
+        /// <summary>
+        /// 매니저 설정이 필요한지 확인 (하위 클래스에서 오버라이드)
+        /// </summary>
+        protected virtual bool RequiresManagerConfig() => false;
+
+        /// <summary>
+        /// 관련 프리팹이 필요한지 확인 (하위 클래스에서 오버라이드)
+        /// </summary>
+        protected virtual bool RequiresRelatedPrefab() => false;
+
+        /// <summary>
+        /// UI 컨트롤러가 필요한지 확인 (하위 클래스에서 오버라이드)
+        /// </summary>
+        protected virtual bool RequiresUIController() => false;
+
+        /// <summary>
+        /// 매니저별 특화된 설정 데이터를 반환 (하위 클래스에서 오버라이드)
+        /// </summary>
+        protected virtual ScriptableObject GetManagerConfig() => null;
+
+        /// <summary>
+        /// 매니저별 특화된 프리팹을 반환 (하위 클래스에서 오버라이드)
+        /// </summary>
+        protected virtual GameObject GetRelatedPrefab() => null;
+
+        /// <summary>
+        /// 매니저별 특화된 UI 컨트롤러를 반환 (하위 클래스에서 오버라이드)
+        /// </summary>
+        protected virtual MonoBehaviour GetUIController() => null;
+
+        /// <summary>
+        /// 매니저별 특화된 UI 컨테이너를 반환 (하위 클래스에서 오버라이드)
+        /// </summary>
+        protected virtual Transform GetUIContainer() => null;
 
         /// <summary>
         /// UI 컨트롤러를 연결합니다.
         /// </summary>
         protected virtual void ConnectUI()
         {
+            var uiController = GetUIController();
             if (uiController != null)
             {
                 GameLogger.LogInfo($"{GetType().Name}: UI 컨트롤러 연결 - {uiController.GetType().Name}", GameLogger.LogCategory.UI);

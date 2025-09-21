@@ -28,6 +28,7 @@ namespace Game.CoreSystem.Utility
         #region Log Categories
         public enum LogCategory
         {
+            Core,
             Combat,
             Animation,
             AnimationVerbose,
@@ -39,11 +40,13 @@ namespace Game.CoreSystem.Utility
             Network,
             UI,
             Audio,
+            Save,
             Error
         }
 
         private static readonly Dictionary<LogCategory, bool> logCategories = new Dictionary<LogCategory, bool>
         {
+            [LogCategory.Core] = true,
             [LogCategory.Combat] = true,
             [LogCategory.Animation] = true,
             [LogCategory.AnimationVerbose] = false,
@@ -55,6 +58,7 @@ namespace Game.CoreSystem.Utility
             [LogCategory.Network] = true,
             [LogCategory.UI] = true,
             [LogCategory.Audio] = true,
+            [LogCategory.Save] = true,
             [LogCategory.Error] = true
         };
         #endregion

@@ -18,6 +18,7 @@ using Game.SkillCardSystem.Manager;
 using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Initialization;
+using Game.CoreSystem.Utility;
 using Game.UtilitySystem.GameFlow;
 using Game.CoreSystem.Manager;
 using Game.CoreSystem.Interface;
@@ -26,36 +27,49 @@ using Game.StageSystem.Interface;
 using Game.SkillCardSystem.UI;
 using Game.CombatSystem.State;
 using Game.CombatSystem.Factory;
+using Game.CombatSystem.DragDrop;
 using Game.UtilitySystem;
 using Game.CoreSystem.Save;
 using Game.CoreSystem.Audio;
-using Game.CoreSystem.Utility;
-using Game.CombatSystem.DragDrop;
 using Game.SkillCardSystem.Runtime;
  
 
 /// <summary>
-/// 전투 씬에서 사용하는 Zenject 설치자입니다.
-/// 새로운 통합 CombatManager 시스템에 맞게 간소화되었습니다.
+/// 전투 씬용 Zenject 설치자 (역할 명확화됨)
+/// DI 바인딩만 담당하고 객체 생성은 다른 시스템에 위임합니다.
 /// </summary>
 public class CombatInstaller : MonoInstaller
 {
-    [Header("카드 UI 프리팹")]
+    [Header("전투 씬 프리팹")]
     [SerializeField] private SkillCardUI cardUIPrefab;
 
+    [Header("DI 바인딩 설정")]
+#pragma warning disable CS0414 // 사용하지 않는 필드 경고 억제 (향후 사용 예정)
+    [SerializeField] private bool enableLazyInitialization = true;
+    [SerializeField] private bool enableCircularDependencyCheck = true;
+    [SerializeField] private bool enableAutoObjectCreation = false; // 객체 자동 생성 비활성화
+#pragma warning restore CS0414
+    [SerializeField] private bool enablePerformanceLogging = false;
 
     public override void InstallBindings()
     {
-        // 새로운 통합 시스템 바인딩
-        BindIntegratedManagers();
+        // 성능 측정 시작
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
         
-        // 기존 시스템 호환성 유지
-        BindLegacyManagers();
+        // 최적화된 바인딩 순서 (의존성 순서 고려)
+        BindCoreServices();          // 핵심 서비스 (의존성 없음)
+        BindFactories();            // 팩토리 (서비스 의존)
+        BindSlotSystem();           // 슬롯 시스템 (팩토리 의존)
+        BindIntegratedManagers();   // 통합 매니저 (모든 것 의존)
+        BindUIPrefabs();            // UI 프리팹 (매니저 의존)
         
-        // UI 및 프리팹 바인딩
-        BindUIPrefabs();
+        stopwatch.Stop();
+        if (enablePerformanceLogging)
+        {
+            GameLogger.LogInfo($"CombatInstaller 바인딩 완료: {stopwatch.ElapsedMilliseconds}ms", GameLogger.LogCategory.Combat);
+        }
         
-        Debug.Log("[CombatInstaller] 통합 시스템 바인딩 완료 - CombatManager가 전투를 관리합니다");
+        GameLogger.LogInfo("최적화된 전투 시스템 바인딩 완료", GameLogger.LogCategory.Combat);
     }
     
 
@@ -71,7 +85,7 @@ public class CombatInstaller : MonoInstaller
         if (combatFlowManager != null)
         {
             Container.Bind<ICombatFlowManager>().FromInstance(combatFlowManager).AsSingle();
-            Debug.Log("[CombatInstaller] CombatFlowManager 바인딩 완료");
+            GameLogger.LogInfo(" CombatFlowManager 바인딩 완료");
         }
 
         // CombatExecutionManager 바인딩
@@ -79,7 +93,7 @@ public class CombatInstaller : MonoInstaller
         if (combatExecutionManager != null)
         {
             Container.Bind<ICombatExecutionManager>().FromInstance(combatExecutionManager).AsSingle();
-            Debug.Log("[CombatInstaller] CombatExecutionManager 바인딩 완료");
+            GameLogger.LogInfo(" CombatExecutionManager 바인딩 완료");
         }
 
         // CombatSlotManager 바인딩
@@ -87,32 +101,12 @@ public class CombatInstaller : MonoInstaller
         if (combatSlotManager != null)
         {
             Container.Bind<CombatSlotManager>().FromInstance(combatSlotManager).AsSingle();
-            Debug.Log("[CombatInstaller] CombatSlotManager 바인딩 완료");
+            GameLogger.LogInfo(" CombatSlotManager 바인딩 완료");
         }
 
-        // CombatTurnManager 바인딩
-        var combatTurnManager = FindFirstObjectByType<CombatTurnManager>();
-        if (combatTurnManager != null)
-        {
-            Container.Bind<CombatTurnManager>().FromInstance(combatTurnManager).AsSingle();
-            Debug.Log("[CombatInstaller] CombatTurnManager 바인딩 완료");
-        }
+        // TurnManager는 BindFactories()에서 바인딩됨
     }
 
-    /// <summary>
-    /// 기존 매니저들 바인딩 (호환성 유지)
-    /// </summary>
-    private void BindLegacyManagers()
-    {
-        // 기존 매니저들 바인딩
-        BindMono<IPlayerManager, PlayerManager>();
-        BindMono<IEnemyManager, EnemyManager>();
-        BindMono<IPlayerHandManager, PlayerHandManager>();
-        
-        // CombatStartupManager 바인딩 제거 (Obsolete)
-        
-        Debug.Log("[CombatInstaller] 기존 매니저들 바인딩 완료");
-    }
 
     /// <summary>
     /// UI 프리팹 바인딩
@@ -122,12 +116,58 @@ public class CombatInstaller : MonoInstaller
         if (cardUIPrefab != null)
         {
             Container.Bind<SkillCardUI>().FromInstance(cardUIPrefab).AsSingle();
-            Debug.Log("[CombatInstaller] SkillCardUI 프리팹 바인딩 완료");
+            GameLogger.LogInfo(" SkillCardUI 프리팹 바인딩 완료");
         }
         else
         {
-            Debug.LogWarning("[CombatInstaller] SkillCardUI 프리팹이 설정되지 않았습니다.");
+            GameLogger.LogWarning(" SkillCardUI 프리팹이 설정되지 않았습니다.");
         }
+    }
+
+    /// <summary>
+    /// 팩토리 및 서비스 바인딩
+    /// </summary>
+    private void BindFactories()
+    {
+        // SkillCardFactory 바인딩
+        Container.Bind<ISkillCardFactory>().To<SkillCardFactory>().AsSingle();
+        GameLogger.LogInfo(" SkillCardFactory 바인딩 완료");
+        
+        // CardCirculationSystem 바인딩
+        Container.Bind<ICardCirculationSystem>().To<CardCirculationSystem>().AsSingle();
+        GameLogger.LogInfo(" CardCirculationSystem 바인딩 완료");
+        
+        // TurnBasedCardManager 바인딩
+        Container.Bind<ITurnBasedCardManager>().To<TurnBasedCardManager>().AsSingle();
+        GameLogger.LogInfo(" TurnBasedCardManager 바인딩 완료");
+        
+        // PlayerDeckManager 바인딩 (CardCirculationSystem이 의존함) - MonoBehaviour이므로 씬에서 찾기
+        Container.Bind<IPlayerDeckManager>().FromComponentInHierarchy().AsSingle();
+        GameLogger.LogInfo(" PlayerDeckManager 바인딩 완료");
+        
+        // TurnContext 바인딩 (CharacterDeathHandler가 의존함)
+        Container.Bind<TurnContext>().AsSingle();
+        GameLogger.LogInfo(" TurnContext 바인딩 완료");
+        
+        // IStageManager 바인딩 (CharacterDeathHandler가 의존함) - MonoBehaviour이므로 씬에서 찾기
+        Container.Bind<IStageManager>().FromComponentInHierarchy().AsSingle();
+        GameLogger.LogInfo(" IStageManager 바인딩 완료");
+        
+        // CardDropService 의존성 바인딩 (구조화된 배열에서 처리됨)
+        Container.Bind<ITurnCardRegistry>().To<TurnCardRegistry>().AsSingle();
+        
+        // TurnManager 바인딩 (씬에 없으면 동적 생성)
+        var turnManager = FindFirstObjectByType<TurnManager>();
+        if (turnManager == null)
+        {
+            var turnManagerGO = new GameObject("TurnManager");
+            turnManager = turnManagerGO.AddComponent<TurnManager>();
+            GameLogger.LogInfo(" TurnManager 동적 생성 완료");
+        }
+        Container.Bind<TurnManager>().FromInstance(turnManager).AsSingle();
+        GameLogger.LogInfo(" TurnManager 바인딩 완료");
+        
+        GameLogger.LogInfo(" CardDropService 및 의존성 바인딩 완료");
     }
 
     #endregion
@@ -162,48 +202,37 @@ public class CombatInstaller : MonoInstaller
         if (slotManager != null)
         {
             Container.Bind<CombatSlotManager>().FromInstance(slotManager).AsSingle();
-            Debug.Log("[CombatInstaller] CombatSlotManager 바인딩 완료");
+            GameLogger.LogInfo(" CombatSlotManager 바인딩 완료");
         }
         else
         {
-            Debug.LogError("[CombatInstaller] CombatSlotManager를 찾을 수 없습니다.");
+            GameLogger.LogError(" CombatSlotManager를 찾을 수 없습니다.");
         }
 
-        var turnManager = FindFirstObjectByType<TurnManager>();
-        if (turnManager != null)
-        {
-            Container.Bind<TurnManager>().FromInstance(turnManager).AsSingle();
-            Debug.Log("[CombatInstaller] TurnManager 바인딩 완료");
-        }
-        else
-        {
-            // TurnManager가 없으면 생성
-            var turnManagerGO = new GameObject("TurnManager");
-            turnManager = turnManagerGO.AddComponent<TurnManager>();
-            Container.Bind<TurnManager>().FromInstance(turnManager).AsSingle();
-            Debug.Log("[CombatInstaller] TurnManager 생성 및 바인딩 완료");
-        }
+        // TurnManager는 BindFactories()에서 바인딩됨
 
-        var executionSystem = FindFirstObjectByType<SlotExecutionSystem>();
-        if (executionSystem != null)
+        // CombatExecutionManager 바인딩 (SlotExecutionSystem 대신 CombatExecutionManager 사용)
+        var executionManager = FindFirstObjectByType<CombatExecutionManager>();
+        if (executionManager != null)
         {
-            Container.Bind<SlotExecutionSystem>().FromInstance(executionSystem).AsSingle();
-            Debug.Log("[CombatInstaller] SlotExecutionSystem 바인딩 완료");
+            Container.Bind<CombatExecutionManager>().FromInstance(executionManager).AsSingle();
+            Container.Bind<ICombatExecutionManager>().FromInstance(executionManager).AsSingle();
+            GameLogger.LogInfo(" CombatExecutionManager 바인딩 완료");
         }
         else
         {
-            // SlotExecutionSystem이 없으면 생성
-            var executionSystemGO = new GameObject("SlotExecutionSystem");
-            executionSystem = executionSystemGO.AddComponent<SlotExecutionSystem>();
-            Container.Bind<SlotExecutionSystem>().FromInstance(executionSystem).AsSingle();
-            Debug.Log("[CombatInstaller] SlotExecutionSystem 생성 및 바인딩 완료");
+            // CombatExecutionManager가 없으면 생성
+            var executionManagerGO = new GameObject("CombatExecutionManager");
+            executionManager = executionManagerGO.AddComponent<CombatExecutionManager>();
+            Container.Bind<CombatExecutionManager>().FromInstance(executionManager).AsSingle();
+            Container.Bind<ICombatExecutionManager>().FromInstance(executionManager).AsSingle();
+            GameLogger.LogInfo(" CombatExecutionManager 생성 및 바인딩 완료");
         }
 
         // 기존 매니저들 바인딩
         BindMono<IPlayerManager, PlayerManager>();
         BindMono<IEnemyManager, EnemyManager>();
         BindMono<IPlayerHandManager, PlayerHandManager>();
-        // CombatStartupManager 바인딩 제거 (Obsolete)
         BindMono<IEnemySpawnerManager, EnemySpawnerManager>();
         BindMono<IStageManager, StageManager>();
         BindMono<ICharacterDeathListener, CharacterDeathHandler>();
@@ -218,26 +247,44 @@ public class CombatInstaller : MonoInstaller
     #region 서비스 바인딩
 
     /// <summary>
-    /// 주요 서비스 클래스 바인딩
+    /// 핵심 서비스 클래스 바인딩 (중복 제거됨)
     /// </summary>
-    private void BindServices()
+    private void BindCoreServices()
     {
-        Container.Bind<ICardPlacementService>().To<CardPlacementService>().AsSingle();
-        Container.Bind<ITurnCardRegistry>().To<TurnCardRegistry>().AsSingle();
-        Container.Bind<ISlotSelector>().To<SlotSelector>().AsSingle();
-        // Note: CombatExecutorService removed in simplified architecture
-        Container.Bind<ICardExecutor>().To<CardExecutor>().AsSingle();
-        Container.Bind<ICardExecutionContextProvider>().To<CardExecutionContextProvider>().AsSingle();
-        Container.Bind<ICardEffectCommandFactory>().To<CardEffectCommandFactory>().AsSingle();
-        Container.Bind<ICardExecutionValidator>().To<DefaultCardExecutionValidator>().AsSingle();
-        Container.Bind<IEnemySpawnValidator>().To<DefaultEnemySpawnValidator>().AsSingle();
-        Container.Bind<IPlayerInputController>().To<PlayerInputController>().AsSingle();
-        Container.Bind<ISkillCardFactory>().To<SkillCardFactory>().AsSingle();
-        Container.Bind<ICardDropValidator>().To<DefaultCardDropValidator>().AsSingle();
-        Container.Bind<ICardRegistrar>().To<DefaultCardRegistrar>().AsSingle();
-        Container.Bind<ICardReplacementHandler>().To<PlayerCardReplacementHandler>().AsSingle();
+        // 서비스들을 배열로 관리하여 반복문으로 처리
+        var services = new (System.Type interfaceType, System.Type implementationType)[]
+        {
+            (typeof(ICardPlacementService), typeof(CardPlacementService)),
+            (typeof(ISlotSelector), typeof(SlotSelector)),
+            (typeof(ICardExecutor), typeof(CardExecutor)),
+            (typeof(ICardExecutionContextProvider), typeof(CardExecutionContextProvider)),
+            (typeof(ICardEffectCommandFactory), typeof(CardEffectCommandFactory)),
+            (typeof(ICardExecutionValidator), typeof(DefaultCardExecutionValidator)),
+            (typeof(IEnemySpawnValidator), typeof(DefaultEnemySpawnValidator)),
+            (typeof(IPlayerInputController), typeof(PlayerInputController)),
+            (typeof(ICardDropValidator), typeof(DefaultCardDropValidator)),
+            (typeof(ICardRegistrar), typeof(DefaultCardRegistrar)),
+            (typeof(ICardReplacementHandler), typeof(PlayerCardReplacementHandler)),
+            (typeof(ITurnStartConditionChecker), typeof(DefaultTurnStartConditionChecker))
+        };
+
+        foreach (var (interfaceType, implementationType) in services)
+        {
+            Container.Bind(interfaceType).To(implementationType).AsSingle();
+            
+            if (enablePerformanceLogging)
+            {
+                GameLogger.LogInfo($"{interfaceType.Name} 바인딩 완료", GameLogger.LogCategory.Combat);
+            }
+        }
+
+        // 특별한 경우들
         Container.Bind<CardDropService>().AsSingle();
-        Container.Bind<ITurnStartConditionChecker>().To<DefaultTurnStartConditionChecker>().AsSingle();
+        
+        if (enablePerformanceLogging)
+        {
+            GameLogger.LogInfo("핵심 서비스 바인딩 완료", GameLogger.LogCategory.Combat);
+        }
     }
 
     #endregion
@@ -266,7 +313,33 @@ public class CombatInstaller : MonoInstaller
         var slotRegistry = FindFirstObjectByType<SlotRegistry>();
         if (slotRegistry == null)
         {
-            Debug.LogError("[CombatInstaller] SlotRegistry를 씬에서 찾을 수 없습니다.");
+            GameLogger.LogWarning(" SlotRegistry를 씬에서 찾을 수 없습니다. 임시로 생성합니다.");
+            // 임시로 SlotRegistry와 필요한 슬롯 레지스트리들을 생성
+            var tempSlotRegistry = new GameObject("TempSlotRegistry").AddComponent<SlotRegistry>();
+            
+            // 필요한 슬롯 레지스트리들을 생성하여 할당
+            var tempHandSlotRegistry = new GameObject("TempHandSlotRegistry").AddComponent<HandSlotRegistry>();
+            var tempCombatSlotRegistry = new GameObject("TempCombatSlotRegistry").AddComponent<CombatSlotRegistry>();
+            var tempCharacterSlotRegistry = new GameObject("TempCharacterSlotRegistry").AddComponent<CharacterSlotRegistry>();
+            
+            // 리플렉션을 사용하여 인스펙터 필드에 할당
+            var handSlotField = typeof(SlotRegistry).GetField("handSlotRegistry", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var combatSlotField = typeof(SlotRegistry).GetField("combatSlotRegistry", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var characterSlotField = typeof(SlotRegistry).GetField("characterSlotRegistry", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            
+            handSlotField?.SetValue(tempSlotRegistry, tempHandSlotRegistry);
+            combatSlotField?.SetValue(tempSlotRegistry, tempCombatSlotRegistry);
+            characterSlotField?.SetValue(tempSlotRegistry, tempCharacterSlotRegistry);
+            
+            Container.Bind<SlotRegistry>().FromInstance(tempSlotRegistry).AsSingle();
+            Container.Bind<ISlotRegistry>().FromInstance(tempSlotRegistry).AsSingle();
+            
+            // 개별 슬롯 레지스트리들도 바인딩
+            Container.Bind<IHandSlotRegistry>().FromInstance(tempHandSlotRegistry).AsSingle();
+            Container.Bind<ICombatSlotRegistry>().FromInstance(tempCombatSlotRegistry).AsSingle();
+            Container.Bind<ICharacterSlotRegistry>().FromInstance(tempCharacterSlotRegistry).AsSingle();
+            
+            GameLogger.LogInfo(" 임시 슬롯 시스템 바인딩 완료");
             return;
         }
 
@@ -288,7 +361,7 @@ public class CombatInstaller : MonoInstaller
         if (characterSlotRegistry != null)
             Container.Bind<ICharacterSlotRegistry>().FromInstance(characterSlotRegistry).AsSingle();
 
-        Debug.Log("[CombatInstaller] 슬롯 시스템 바인딩 완료");
+        GameLogger.LogInfo(" 슬롯 시스템 바인딩 완료");
     }
 
     #endregion
@@ -301,13 +374,12 @@ public class CombatInstaller : MonoInstaller
     private void BindInitializerSteps()
     {
         // Zenject DI가 자동으로 FromComponentInHierarchy()로 바인딩
-        Container.BindInterfacesAndSelfTo<Game.CombatSystem.Intialization.SlotInitializationStep>().FromComponentInHierarchy().AsSingle();
-        // Note: FlowCoordinatorInitializationStep removed in simplified architecture
+        Container.Bind<ICombatInitializerStep>().To<Game.CombatSystem.Intialization.SlotInitializationStep>().AsSingle();
         Container.BindInterfacesAndSelfTo<PlayerCharacterInitializer>().FromComponentInHierarchy().AsSingle();
         Container.BindInterfacesAndSelfTo<PlayerSkillCardInitializer>().FromComponentInHierarchy().AsSingle();
         Container.BindInterfacesAndSelfTo<EnemyCharacterInitializer>().FromComponentInHierarchy().AsSingle();
         
-        Debug.Log("[CombatInstaller] 초기화 스텝들 바인딩 완료");
+        GameLogger.LogInfo(" 초기화 스텝들 바인딩 완료");
     }
 
     #endregion
@@ -320,7 +392,7 @@ public class CombatInstaller : MonoInstaller
         var transitionManager = FindFirstObjectByType<SceneTransitionManager>();
         if (transitionManager == null)
         {
-            Debug.LogError("[CombatInstaller] SceneTransitionManager를 씬에서 찾을 수 없습니다.");
+            GameLogger.LogError(" SceneTransitionManager를 씬에서 찾을 수 없습니다.");
             return;
         }
 
@@ -328,7 +400,7 @@ public class CombatInstaller : MonoInstaller
         Container.Bind<ISceneLoader>().FromInstance(transitionManager).AsSingle();
         Container.Bind<ISceneTransitionManager>().FromInstance(transitionManager).AsSingle();
         
-        Debug.Log("[CombatInstaller] 씬 로더 바인딩 완료");
+        GameLogger.LogInfo(" 씬 로더 바인딩 완료");
     }
 
     #endregion
@@ -351,32 +423,13 @@ public class CombatInstaller : MonoInstaller
 
     private void BindCardCirculationSystem()
     {
-        // CardCirculationSystem은 MonoBehaviour이므로 씬에서 찾아야 함
-        var circulationSystem = FindFirstObjectByType<CardCirculationSystem>();
-        if (circulationSystem == null)
-        {
-            Debug.LogError("[CombatInstaller] CardCirculationSystem을 씬에서 찾을 수 없습니다.");
-            return;
-        }
-
-        // ICardCirculationSystem 인터페이스로 바인딩
-        Container.Bind<ICardCirculationSystem>().FromInstance(circulationSystem).AsSingle();
+        GameLogger.LogInfo(" BindCardCirculationSystem 호출 시작");
         
-        // TurnBasedCardManager는 MonoBehaviour이므로 씬에서 찾아야 함
-        var turnBasedCardManager = FindFirstObjectByType<TurnBasedCardManager>();
-        if (turnBasedCardManager == null)
-        {
-            Debug.LogWarning("[CombatInstaller] TurnBasedCardManager를 씬에서 찾을 수 없습니다. null로 바인딩합니다.");
-            // ITurnBasedCardManager를 null로 바인딩
-            Container.Bind<ITurnBasedCardManager>().FromInstance(null).AsSingle();
-        }
-        else
-        {
-            // ITurnBasedCardManager 인터페이스로 바인딩
-            Container.Bind<ITurnBasedCardManager>().FromInstance(turnBasedCardManager).AsSingle();
-        }
+        // DI 서비스로 바인딩 (MonoBehaviour 제거됨)
+        Container.Bind<ICardCirculationSystem>().To<CardCirculationSystem>().AsSingle();
+        Container.Bind<ITurnBasedCardManager>().To<TurnBasedCardManager>().AsSingle();
         
-        Debug.Log("[CombatInstaller] 카드 순환 시스템 바인딩 완료");
+        GameLogger.LogInfo(" 카드 순환 시스템 바인딩 완료");
     }
 
     #endregion
@@ -388,11 +441,11 @@ public class CombatInstaller : MonoInstaller
     /// </summary>
     private void BindAnimationFacade()
     {
-        Debug.Log("[CombatInstaller] BindAnimationFacade 호출 시작");
+        GameLogger.LogInfo(" BindAnimationFacade 호출 시작");
         
         // AnimationFacade를 씬에서 찾기
         // AnimationFacade 바인딩 제거 (AnimationSystem 제거로 인해 비활성화)
-        Debug.Log("[CombatInstaller] AnimationFacade 바인딩을 건너뜁니다.");
+        GameLogger.LogInfo("AnimationFacade 바인딩을 건너뜁니다.", GameLogger.LogCategory.Combat);
     }
 
     /// <summary>
@@ -400,14 +453,14 @@ public class CombatInstaller : MonoInstaller
     /// </summary>
     private void BindSaveManager()
     {
-        Debug.Log("[CombatInstaller] BindSaveManager 호출 시작");
+        GameLogger.LogInfo(" BindSaveManager 호출 시작");
         
         // SaveManager를 씬에서 찾기
         var saveManager = FindFirstObjectByType<SaveManager>();
         
         if (saveManager == null)
         {
-            Debug.LogWarning("[CombatInstaller] SaveManager를 씬에서 찾을 수 없습니다. null로 바인딩합니다.");
+            GameLogger.LogWarning(" SaveManager를 씬에서 찾을 수 없습니다. null로 바인딩합니다.");
             // ISaveManager와 SaveManager를 null로 바인딩
             Container.Bind<ISaveManager>().FromInstance(null).AsSingle();
             Container.Bind<SaveManager>().FromInstance(null).AsSingle();
@@ -422,7 +475,7 @@ public class CombatInstaller : MonoInstaller
             // SaveManager 클래스로도 바인딩 (PlayerDeckManager가 직접 요구)
             Container.Bind<SaveManager>().FromInstance(saveManager).AsSingle();
             
-            Debug.Log("[CombatInstaller] 저장 시스템 바인딩 완료");
+            GameLogger.LogInfo(" 저장 시스템 바인딩 완료");
         }
     }
 
@@ -431,14 +484,14 @@ public class CombatInstaller : MonoInstaller
     /// </summary>
     private void BindAudioManager()
     {
-        Debug.Log("[CombatInstaller] BindAudioManager 호출 시작");
+        GameLogger.LogInfo(" BindAudioManager 호출 시작");
         
         // AudioManager를 씬에서 찾기
         var audioManager = FindFirstObjectByType<AudioManager>();
         
         if (audioManager == null)
         {
-            Debug.LogWarning("[CombatInstaller] AudioManager를 씬에서 찾을 수 없습니다. null로 바인딩합니다.");
+            GameLogger.LogWarning(" AudioManager를 씬에서 찾을 수 없습니다. null로 바인딩합니다.");
             // IAudioManager를 null로 바인딩
             Container.Bind<IAudioManager>().FromInstance(null).AsSingle();
         }
@@ -449,7 +502,7 @@ public class CombatInstaller : MonoInstaller
             // IAudioManager 인터페이스로 바인딩
             Container.Bind<IAudioManager>().FromInstance(audioManager).AsSingle();
             
-            Debug.Log("[CombatInstaller] 오디오 시스템 바인딩 완료");
+            GameLogger.LogInfo(" 오디오 시스템 바인딩 완료");
         }
     }
 
@@ -458,14 +511,14 @@ public class CombatInstaller : MonoInstaller
     /// </summary>
     private void BindCoroutineRunner()
     {
-        Debug.Log("[CombatInstaller] BindCoroutineRunner 호출 시작");
+        GameLogger.LogInfo(" BindCoroutineRunner 호출 시작");
         
         // CoroutineRunner를 씬에서 찾기
         var coroutineRunner = FindFirstObjectByType<CoroutineRunner>();
         
         if (coroutineRunner == null)
         {
-            Debug.LogWarning("[CombatInstaller] CoroutineRunner를 씬에서 찾을 수 없습니다. null로 바인딩합니다.");
+            GameLogger.LogWarning(" CoroutineRunner를 씬에서 찾을 수 없습니다. null로 바인딩합니다.");
             // ICoroutineRunner를 null로 바인딩
             Container.Bind<ICoroutineRunner>().FromInstance(null).AsSingle();
         }
@@ -477,7 +530,7 @@ public class CombatInstaller : MonoInstaller
             Container.Bind<ICoroutineRunner>().FromInstance(coroutineRunner).AsSingle();
         }
         
-        Debug.Log("[CombatInstaller] 코루틴 러너 바인딩 완료");
+        GameLogger.LogInfo(" 코루틴 러너 바인딩 완료");
     }
 
     /// <summary>
@@ -485,26 +538,12 @@ public class CombatInstaller : MonoInstaller
     /// </summary>
     private void BindSlotInitializer()
     {
-        Debug.Log("[CombatInstaller] BindSlotInitializer 호출 시작");
+        GameLogger.LogInfo(" BindSlotInitializer 호출 시작");
         
-        // SlotInitializer를 씬에서 찾기
-        var slotInitializer = FindFirstObjectByType<SlotInitializer>();
+        // SlotInitializer가 제거되었으므로 바인딩 건너뜀
+        GameLogger.LogInfo(" SlotInitializer가 제거되어 바인딩을 건너뜁니다.");
         
-        if (slotInitializer == null)
-        {
-            Debug.LogWarning("[CombatInstaller] SlotInitializer를 씬에서 찾을 수 없습니다. null로 바인딩합니다.");
-            // SlotInitializer를 null로 바인딩
-            Container.Bind<SlotInitializer>().FromInstance(null).AsSingle();
-        }
-        else
-        {
-            Debug.Log($"[CombatInstaller] SlotInitializer 발견: {slotInitializer.name}");
-            
-            // SlotInitializer 클래스로 바인딩
-            Container.Bind<SlotInitializer>().FromInstance(slotInitializer).AsSingle();
-        }
-        
-        Debug.Log("[CombatInstaller] 슬롯 초기화기 바인딩 완료");
+        GameLogger.LogInfo(" 슬롯 초기화기 바인딩 완료");
     }
 
     #endregion
@@ -516,14 +555,14 @@ public class CombatInstaller : MonoInstaller
     /// </summary>
     private void BindDeckManagementSystem()
     {
-        Debug.Log("[CombatInstaller] 덱 관리 시스템 바인딩 시작");
+        GameLogger.LogInfo(" 덱 관리 시스템 바인딩 시작");
         
         // PlayerDeckManager를 씬에서 찾기
         var playerDeckManager = FindFirstObjectByType<PlayerDeckManager>();
         
         if (playerDeckManager == null)
         {
-            Debug.LogWarning("[CombatInstaller] PlayerDeckManager를 씬에서 찾을 수 없습니다. null로 바인딩합니다.");
+            GameLogger.LogWarning(" PlayerDeckManager를 씬에서 찾을 수 없습니다. null로 바인딩합니다.");
             // IPlayerDeckManager를 null로 바인딩
             Container.Bind<IPlayerDeckManager>().FromInstance(null).AsSingle();
         }
@@ -534,7 +573,7 @@ public class CombatInstaller : MonoInstaller
             // IPlayerDeckManager 인터페이스로 바인딩
             Container.Bind<IPlayerDeckManager>().FromInstance(playerDeckManager).AsSingle();
             
-            Debug.Log("[CombatInstaller] 덱 관리 시스템 바인딩 완료");
+            GameLogger.LogInfo(" 덱 관리 시스템 바인딩 완료");
         }
     }
 
@@ -558,32 +597,24 @@ public class CombatInstaller : MonoInstaller
         Container.BindInterfacesAndSelfTo<T>().FromComponentInHierarchy().AsSingle();
     }
 
-    /// <summary>
-    /// Zenject DI가 자동으로 FromComponentInHierarchy()로 바인딩하므로 불필요한 메서드
-    /// </summary>
-    private void EnsureAndBindInitializer<T>(string gameObjectName) where T : Component
-    {
-        // 이 메서드는 더 이상 사용되지 않음 - Zenject DI가 자동으로 처리
-        Debug.LogWarning($"[CombatInstaller] EnsureAndBindInitializer<{typeof(T).Name}>는 더 이상 사용되지 않습니다. Zenject DI가 자동으로 처리합니다.");
-    }
 
     /// <summary>
     /// 캐릭터 시스템 관련 컴포넌트들을 바인딩합니다.
     /// </summary>
     private void BindCharacterSystem()
     {
-        Debug.Log("[CombatInstaller] 캐릭터 시스템 바인딩 시작");
+        GameLogger.LogInfo(" 캐릭터 시스템 바인딩 시작");
         
         // PlayerResourceManager 바인딩
         var playerResourceManager = FindFirstObjectByType<PlayerResourceManager>();
         if (playerResourceManager != null)
         {
             Container.Bind<PlayerResourceManager>().FromInstance(playerResourceManager).AsSingle();
-            Debug.Log("[CombatInstaller] PlayerResourceManager 바인딩 완료");
+            GameLogger.LogInfo(" PlayerResourceManager 바인딩 완료");
         }
         else
         {
-            Debug.LogWarning("[CombatInstaller] PlayerResourceManager를 찾을 수 없습니다.");
+            GameLogger.LogWarning(" PlayerResourceManager를 찾을 수 없습니다.");
         }
         
         // GameStateManager 바인딩 (DontDestroyOnLoad로 유지되는 인스턴스)
@@ -592,14 +623,14 @@ public class CombatInstaller : MonoInstaller
         {
             Container.Bind<IGameStateManager>().FromInstance(gameStateManager).AsSingle();
             Container.Bind<GameStateManager>().FromInstance(gameStateManager).AsSingle();
-            Debug.Log("[CombatInstaller] GameStateManager 바인딩 완료");
+            GameLogger.LogInfo(" GameStateManager 바인딩 완료");
         }
         else
         {
-            Debug.LogWarning("[CombatInstaller] GameStateManager를 찾을 수 없습니다.");
+            GameLogger.LogWarning(" GameStateManager를 찾을 수 없습니다.");
         }
         
-        Debug.Log("[CombatInstaller] 캐릭터 시스템 바인딩 완료");
+        GameLogger.LogInfo(" 캐릭터 시스템 바인딩 완료");
     }
 
     #endregion

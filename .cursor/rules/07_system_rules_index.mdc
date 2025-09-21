@@ -15,90 +15,90 @@ version: 1.0.0
 
 ### 🔥 핵심 규칙 (Core Rules)
 - **01_rouge_shool_project_rules.mdc**: 프로젝트 전체 개발 규칙
-- **02_documentation_work_rules.mdc**: 문서 작성 및 관리 규칙
-- **03_refactoring_rules.mdc**: 코드 리팩토링 규칙
-- **04_scene_hierarchy_documentation_rules.mdc**: 씬 구조 문서화 규칙
+- **02_code_quality_standards.mdc**: 코드 품질 향상 표준
+- **03_script_migration_rules.mdc**: 스크립트 대체 및 마이그레이션 규칙
+- **04_refactoring_rules.mdc**: 코드 리팩토링 규칙
+- **05_documentation_work_rules.mdc**: 문서 작성 및 관리 규칙
+- **06_scene_hierarchy_documentation_rules.mdc**: 씬 구조 문서화 규칙
+- **07_system_rules_index.mdc**: 시스템 규칙 통합 인덱스 (현재 파일)
+- **08_zenject_di_system_rules.mdc**: Zenject DI 시스템 구조 및 바인딩 관계 관리 규칙
+- **09_dotween_pro_system_rules.mdc**: DOTween Pro 플러그인 전문 활용 규칙
 
 ### 🏗️ 시스템 개발 규칙 (System Development Rules)
-- **05_core_system_rules.mdc**: 코어 시스템 개발 규칙
-- **06_animation_system_rules.mdc**: 애니메이션 시스템 개발 규칙
-- **07_audio_system_rules.mdc**: 오디오 시스템 개발 규칙
-- **08_character_system_rules.mdc**: 캐릭터 시스템 개발 규칙
-- **09_combat_system_rules.mdc**: 전투 시스템 개발 규칙
-- **10_save_system_rules.mdc**: 저장 시스템 개발 규칙
-- **11_skillcard_system_rules.mdc**: 스킬카드 시스템 개발 규칙
-- **12_stage_system_rules.mdc**: 스테이지 시스템 개발 규칙
-- **13_utility_system_rules.mdc**: 유틸리티 시스템 개발 규칙
-
-### 📚 통합 규칙 (Integration Rules)
-- **14_system_rules_index.mdc**: 시스템 규칙 통합 인덱스 (현재 파일)
-- **15_zenject_di_system_rules.mdc**: Zenject DI 시스템 구조 및 바인딩 관계 관리 규칙
-- **16_dotween_pro_system_rules.mdc**: DOTween Pro 플러그인 전문 활용 규칙
+- **10_core_system_rules.mdc**: 코어 시스템 개발 규칙
+- **11_character_system_rules.mdc**: 캐릭터 시스템 개발 규칙
+- **12_combat_system_rules.mdc**: 전투 시스템 개발 규칙
+- **13_skillcard_system_rules.mdc**: 스킬카드 시스템 개발 규칙
+- **14_save_system_rules.mdc**: 저장 시스템 개발 규칙
+- **15_stage_system_rules.mdc**: 스테이지 시스템 개발 규칙
+- **16_utility_system_rules.mdc**: 유틸리티 시스템 개발 규칙
+- **17_audio_system_rules.mdc**: 오디오 시스템 개발 규칙
+- **18_animation_system_rules.mdc**: 애니메이션 시스템 개발 규칙 (비활성화)
 
 ## 🎯 시스템별 상세 규칙
 
 ### CoreSystem 규칙
-- **파일**: `05_core_system_rules.mdc`
+- **파일**: `10_core_system_rules.mdc`
 - **범위**: `Assets/Script/CoreSystem/**/*.cs`
 - **설명**: Unity 2D 코어 시스템 통합 관리
 - **주요 기능**: Zenject DI 통합 완료, 싱글톤 제거 완료, 자동 초기화, 인터페이스 기반 설계, 한국어 로깅, 씬 전환 지속성
 
 ### AnimationSystem 규칙 (현재 비활성화)
-- **파일**: `06_animation_system_rules.mdc`
+- **파일**: `18_animation_system_rules.mdc`
 - **범위**: `Assets/Script/AnimationSystem/**/*.cs` (제거됨)
 - **설명**: Unity 2D 애니메이션 통합 관리 (현재 비활성화)
 - **주요 기능**: AnimationSystem 완전 제거 완료, 임시 Debug.Log 처리 적용, 향후 재구현 예정
 
 ### AudioSystem 규칙
-- **파일**: `07_audio_system_rules.mdc`
+- **파일**: `17_audio_system_rules.mdc`
 - **범위**: `Assets/Script/AudioSystem/**/*.cs`, `Assets/Script/CoreSystem/Audio/**/*.cs`
 - **설명**: Unity 2D 오디오 시스템 통합 관리
 - **주요 기능**: AnimationSystem 의존성 제거 완료, CoreSystem 통합 완료, Zenject DI 통합 완료, 자동 초기화 완료, 싱글톤 제거 완료, 인터페이스 기반 설계, 오디오 풀링, 우선순위 시스템, 한국어 로깅
 
 ### CharacterSystem 규칙
-- **파일**: `08_character_system_rules.mdc`
+- **파일**: `11_character_system_rules.mdc`
 - **범위**: `Assets/Script/CharacterSystem/**/*.cs`
 - **설명**: Unity 2D 캐릭터 통합 관리
 - **주요 기능**: AnimationSystem 의존성 제거 완료, League of Legends 스타일 UI 완료, 통합 UI 컨트롤러 완료, 버프/디버프 아이콘 시스템 완료, 리소스 타입별 UI 완료, DOTween 애니메이션 완료, Zenject DI 통합 완료, 컴파일 에러 해결 완료
 
 ### CombatSystem 규칙
-- **파일**: `09_combat_system_rules.mdc`
+- **파일**: `12_combat_system_rules.mdc`
 - **범위**: `Assets/Script/CombatSystem/**/*.cs`
 - **설명**: Unity 2D 전투 시스템 통합 관리
 - **주요 기능**: AnimationSystem 의존성 제거 완료, 새로운 5슬롯 시스템 완료, 셋업 페이즈 완료, 즉시 실행 완료, 레거시 호환성 완료, Zenject DI 통합 완료, CombatSecondAttackState 제거 완료, 레거시 슬롯 최적화 완료
 
 ### SaveSystem 규칙
-- **파일**: `10_save_system_rules.mdc`
+- **파일**: `14_save_system_rules.mdc`
 - **범위**: `Assets/Script/SaveSystem/**/*.cs`
 - **설명**: Unity 2D 저장 시스템 통합 관리
 - **주요 기능**: AnimationSystem 의존성 제거 완료, CoreSystem 통합 완료, 자동 초기화 완료, Zenject DI 통합 완료, 새로운 슬롯 시스템 반영 완료, 레거시 슬롯 최적화 완료, 슬레이 더 스파이어 방식, 한국어 로깅, 씬 전환 지속성
 
 ### SkillCardSystem 규칙
-- **파일**: `11_skillcard_system_rules.mdc`
+- **파일**: `13_skillcard_system_rules.mdc`
 - **범위**: `Assets/Script/SkillCardSystem/**/*.cs`
 - **설명**: Unity 2D 스킬카드 통합 관리
 - **주요 기능**: AnimationSystem 의존성 제거 완료, 통합 데이터 모델 완료, 소유자 정책 완료, 수량 기반 덱 완료, 용어 변경 완료, 가드 효과 리팩토링 완료, Zenject DI 통합 완료, 레거시 슬롯 최적화 완료
 
 ### StageSystem 규칙
-- **파일**: `12_stage_system_rules.mdc`
+- **파일**: `15_stage_system_rules.mdc`
 - **범위**: `Assets/Script/StageSystem/**/*.cs`
 - **설명**: Unity 2D 스테이지 시스템 통합 관리
 - **주요 기능**: AnimationSystem 의존성 제거 완료, 팩토리 패턴 완료, 상태 기반 관리 완료, 이벤트 기반 보상 시스템 완료, ScriptableObject 기반 데이터 관리 완료, 런타임 인스턴스 완료, Zenject DI 통합 완료
 
 ### UtilitySystem 규칙
-- **파일**: `13_utility_system_rules.mdc`
+- **파일**: `16_utility_system_rules.mdc`
 - **범위**: `Assets/Script/UtilitySystem/**/*.cs`
 - **설명**: Unity 2D 유틸리티 시스템 통합 관리
 - **주요 기능**: AnimationSystem 의존성 제거 완료, 싱글톤 패턴 완료, 컨텍스트 패턴 완료, 의존성 주입 패턴 완료, 컨테이너 패턴 완료, 게임 플로우 관리 완료, 자동 관리 완료, Zenject DI 통합 완료
 
 ### Zenject DI System 규칙
-- **파일**: `15_zenject_di_system_rules.mdc`
+- **파일**: `08_zenject_di_system_rules.mdc`
 - **범위**: `Assets/Script/**/*.cs`, `Assets/Plugins/Zenject/**/*.cs`
 - **설명**: Zenject DI 시스템 구조 및 바인딩 관계 관리
 - **주요 기능**: DI 컨테이너 계층 구조, Installer 클래스별 역할, 바인딩 패턴, 씬별 연결 관계, 성능 최적화, 메모리 관리, 테스트 및 모킹, 마이그레이션 가이드
 
 ### DOTween Pro System 규칙
-- **파일**: `16_dotween_pro_system_rules.mdc`
+- **파일**: `09_dotween_pro_system_rules.mdc`
 - **범위**: `Assets/Script/**/*.cs`, `Assets/Plugins/Demigiant/DOTweenPro/**/*`
 - **설명**: DOTween Pro 플러그인 전문 활용 및 애니메이션 시스템 관리
 - **주요 기능**: DOTween 초기화 및 설정, 애니메이션 패턴, 성능 최적화, 메모리 관리, 아키텍처 패턴, 시스템별 애니메이션, 에러 처리 및 안정성, 디버깅 및 프로파일링, 테스트 및 검증, 마이그레이션 가이드

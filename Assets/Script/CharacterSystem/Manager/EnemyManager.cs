@@ -130,7 +130,7 @@ namespace Game.CharacterSystem.Manager
     /// <summary>
     /// 매니저 상태를 초기화합니다.
     /// </summary>
-    public override void Reset()
+    public override void ResetCharacter()
     {
         UnregisterCharacter();
         GameLogger.LogInfo("EnemyManager 초기화 완료", GameLogger.LogCategory.Character);

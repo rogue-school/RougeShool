@@ -21,9 +21,76 @@ namespace Game.StageSystem.Manager
     {
         #region 인스펙터 필드
 
-        [Header("스테이지 데이터")]
-        [SerializeField] private StageData currentStage;
+        [System.Serializable]
+        public class StageSettings
+        {
+            [Header("스테이지 데이터")]
+            [Tooltip("현재 스테이지 데이터")]
+            public StageData currentStage;
+
+            [Space(5)]
+            [Header("진행 설정")]
+            [Tooltip("자동 스테이지 진행")]
+            public bool autoProgress = true;
+
+            [Tooltip("스테이지 전환 지연 시간 (초)")]
+            [Range(0f, 5f)]
+            public float transitionDelay = 1f;
+
+            [Space(5)]
+            [Header("난이도 설정")]
+            [Tooltip("스테이지 난이도 배율")]
+            [Range(0.5f, 3f)]
+            public float difficultyMultiplier = 1f;
+        }
+
+        [System.Serializable]
+        public class RewardSettings
+        {
+            [Header("보상 설정")]
+            [Tooltip("적 처치 보상 활성화")]
+            public bool enableEnemyDefeatRewards = true;
+
+            [Tooltip("보상 지급 지연 시간 (초)")]
+            [Range(0f, 3f)]
+            public float rewardDelay = 0.5f;
+
+            [Space(5)]
+            [Header("보상 효과")]
+            [Tooltip("보상 애니메이션 활성화")]
+            public bool enableRewardAnimation = true;
+
+            [Tooltip("보상 사운드 활성화")]
+            public bool enableRewardSound = true;
+        }
+
+        [System.Serializable]
+        public class DebugSettings
+        {
+            [Header("디버그 옵션")]
+            [Tooltip("스테이지 정보 로깅")]
+            public bool enableStageLogging = true;
+
+            [Tooltip("적 상태 시각화")]
+            public bool showEnemyStatus = false;
+
+            [Tooltip("보상 정보 표시")]
+            public bool showRewardInfo = false;
+
+            [Tooltip("스테이지 진행 상태 표시")]
+            public bool showProgressStatus = false;
+        }
+
+        [Header("🏰 스테이지 설정")]
+        [SerializeField] private StageSettings stageSettings = new StageSettings();
         
+        [Space(10)]
+        [Header("🎁 보상 설정")]
+        [SerializeField] private RewardSettings rewardSettings = new RewardSettings();
+        
+        [Space(10)]
+        [Header("🔧 디버그 설정")]
+        [SerializeField] private DebugSettings debugSettings = new DebugSettings();
 
         #endregion
 
@@ -250,12 +317,12 @@ namespace Game.StageSystem.Manager
         {
             data = null;
 
-            if (currentStage == null ||
-                currentStage.enemies == null ||
-                currentEnemyIndex >= currentStage.enemies.Count)
+            if (stageSettings.currentStage == null ||
+                stageSettings.currentStage.enemies == null ||
+                currentEnemyIndex >= stageSettings.currentStage.enemies.Count)
                 return false;
 
-            data = currentStage.enemies[currentEnemyIndex];
+            data = stageSettings.currentStage.enemies[currentEnemyIndex];
             return data != null && data.Prefab != null;
         }
 
@@ -264,15 +331,15 @@ namespace Game.StageSystem.Manager
         #region 스테이지 정보
 
         /// <inheritdoc />
-        public StageData GetCurrentStage() => currentStage;
+        public StageData GetCurrentStage() => stageSettings.currentStage;
 
         /// <inheritdoc />
         public bool HasNextEnemy() =>
-            currentStage != null && currentEnemyIndex < currentStage.enemies.Count;
+            stageSettings.currentStage != null && currentEnemyIndex < stageSettings.currentStage.enemies.Count;
 
         /// <inheritdoc />
         public EnemyCharacterData PeekNextEnemyData() =>
-            HasNextEnemy() ? currentStage.enemies[currentEnemyIndex] : null;
+            HasNextEnemy() ? stageSettings.currentStage.enemies[currentEnemyIndex] : null;
 
         /// <summary>
         /// 현재 스테이지 번호를 설정합니다. (저장 시스템용)
@@ -309,7 +376,7 @@ namespace Game.StageSystem.Manager
         public void StartSubBossPhase()
         {
             // StagePhaseData가 없어도 StageData만으로 진행 가능
-            if (currentStage == null || currentStage.enemies.Count == 0)
+            if (stageSettings.currentStage == null || stageSettings.currentStage.enemies.Count == 0)
             {
                 GameLogger.LogWarning("스테이지 데이터가 유효하지 않습니다", GameLogger.LogCategory.Combat);
                 return;
@@ -322,13 +389,13 @@ namespace Game.StageSystem.Manager
             OnPhaseChanged?.Invoke(currentPhase);
             OnProgressChanged?.Invoke(progressState);
             
-            GameLogger.LogInfo($"준보스 단계 시작: {currentStage.name}", GameLogger.LogCategory.Combat);
+            GameLogger.LogInfo($"준보스 단계 시작: {stageSettings.currentStage.name}", GameLogger.LogCategory.Combat);
         }
 
         public void StartBossPhase()
         {
             // StagePhaseData가 없어도 StageData만으로 진행 가능
-            if (currentStage == null || currentStage.enemies.Count == 0)
+            if (stageSettings.currentStage == null || stageSettings.currentStage.enemies.Count == 0)
             {
                 GameLogger.LogWarning("스테이지 데이터가 유효하지 않습니다", GameLogger.LogCategory.Combat);
                 return;
@@ -341,7 +408,7 @@ namespace Game.StageSystem.Manager
             OnPhaseChanged?.Invoke(currentPhase);
             OnProgressChanged?.Invoke(progressState);
             
-            GameLogger.LogInfo($"보스 단계 시작: {currentStage.name}", GameLogger.LogCategory.Combat);
+            GameLogger.LogInfo($"보스 단계 시작: {stageSettings.currentStage.name}", GameLogger.LogCategory.Combat);
         }
 
         public void CompleteStage()
@@ -353,12 +420,12 @@ namespace Game.StageSystem.Manager
             OnProgressChanged?.Invoke(progressState);
             
             // 스테이지 완료 이벤트 발생
-            OnStageCompleted?.Invoke(currentStage);
+            OnStageCompleted?.Invoke(stageSettings.currentStage);
             
             // 스테이지 완료 보상 지급 (선택적)
             GiveStageCompletionRewards();
             
-            GameLogger.LogInfo($"스테이지 완료: {currentStage.name}", GameLogger.LogCategory.Combat);
+            GameLogger.LogInfo($"스테이지 완료: {stageSettings.currentStage.name}", GameLogger.LogCategory.Combat);
         }
 
         public void FailStage()
@@ -366,7 +433,7 @@ namespace Game.StageSystem.Manager
             progressState = StageProgressState.Failed;
             OnProgressChanged?.Invoke(progressState);
             
-            GameLogger.LogWarning($"스테이지 실패: {currentStage.name}", GameLogger.LogCategory.Combat);
+            GameLogger.LogWarning($"스테이지 실패: {stageSettings.currentStage.name}", GameLogger.LogCategory.Combat);
         }
 
         public bool IsSubBossPhase() => currentPhase == StagePhaseState.SubBoss;
@@ -426,15 +493,10 @@ namespace Game.StageSystem.Manager
             bool hasRewards = false;
             string phaseName = GetPhaseDisplayName(phase);
 
-            // 단계별 보상 지급
-            if (phase == StagePhaseState.SubBoss && currentRewards.HasSubBossRewards())
+            // 적 처치 보상 지급 (통합된 보상 시스템)
+            if (currentRewards.HasEnemyDefeatRewards())
             {
-                GiveRewardsByType(currentRewards.SubBossRewards, currentRewards.SubBossCurrency, phaseName);
-                hasRewards = true;
-            }
-            else if (phase == StagePhaseState.Boss && currentRewards.HasBossRewards())
-            {
-                GiveRewardsByType(currentRewards.BossRewards, currentRewards.BossCurrency, phaseName);
+                GiveRewardsByType(currentRewards.EnemyDefeatRewards, currentRewards.EnemyDefeatCurrency, phaseName);
                 hasRewards = true;
             }
 
@@ -488,26 +550,26 @@ namespace Game.StageSystem.Manager
 
         public void GiveStageCompletionRewards()
         {
-            if (currentRewards == null || !currentRewards.HasStageCompletionRewards())
+            if (currentRewards == null || !currentRewards.HasEnemyDefeatRewards())
             {
-                GameLogger.LogWarning("스테이지 완료 보상이 없습니다", GameLogger.LogCategory.Combat);
+                GameLogger.LogWarning("적 처치 보상이 없습니다", GameLogger.LogCategory.Combat);
                 return;
             }
 
-            GameLogger.LogInfo("스테이지 완료 보상 지급 시작", GameLogger.LogCategory.Combat);
+            GameLogger.LogInfo("적 처치 보상 지급 시작", GameLogger.LogCategory.Combat);
 
             // 아이템 보상 지급
-            foreach (var item in currentRewards.StageCompletionRewards)
+            foreach (var item in currentRewards.EnemyDefeatRewards)
             {
                 OnItemRewardGiven?.Invoke(item);
-                GameLogger.LogInfo($"스테이지 완료 아이템 보상: {item.itemName} x{item.quantity}", GameLogger.LogCategory.Combat);
+                GameLogger.LogInfo($"적 처치 아이템 보상: {item.itemName} x{item.quantity}", GameLogger.LogCategory.Combat);
             }
 
             // 화폐 보상 지급
-            foreach (var currency in currentRewards.StageCompletionCurrency)
+            foreach (var currency in currentRewards.EnemyDefeatCurrency)
             {
                 OnCurrencyRewardGiven?.Invoke(currency);
-                GameLogger.LogInfo($"스테이지 완료 화폐 보상: {currency.currencyType} {currency.amount}", GameLogger.LogCategory.Combat);
+                GameLogger.LogInfo($"적 처치 화폐 보상: {currency.currencyType} {currency.amount}", GameLogger.LogCategory.Combat);
             }
         }
 
@@ -527,9 +589,7 @@ namespace Game.StageSystem.Manager
             GiveStageCompletionRewards();
         }
 
-        public bool HasSubBossRewards() => currentRewards?.HasSubBossRewards() ?? false;
-        public bool HasBossRewards() => currentRewards?.HasBossRewards() ?? false;
-        public bool HasStageCompletionRewards() => currentRewards?.HasStageCompletionRewards() ?? false;
+        public bool HasEnemyDefeatRewards() => currentRewards?.HasEnemyDefeatRewards() ?? false;
 
         public void SetCurrentRewards(StageRewardData rewards)
         {

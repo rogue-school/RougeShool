@@ -4,8 +4,8 @@
 CharacterSystem은 게임의 모든 캐릭터(플레이어, 적)를 관리하는 시스템입니다. 캐릭터의 기본 속성, 상태, 행동을 통합적으로 관리하며, 새로운 리그 오브 레전드 스타일의 플레이어 캐릭터 UI 시스템을 제공합니다.
 
 ### 최근 변경(요약)
-- **AnimationSystem 의존성 완전 제거**: 모든 AnimationSystem 관련 코드 제거 완료
-- **임시 애니메이션 비활성화**: 애니메이션 호출 부분을 Debug.Log로 대체하여 게임 로직 정상 동작
+- **로깅 시스템 표준화**: Debug.Log를 GameLogger로 전환 완료
+- **AnimationSystem 참조 정리**: 남은 AnimationSystem 참조 완전 제거 완료
 - **플레이어 UI 일원화**: `PlayerCharacterUIController` 중심 구조로 통합, 호환용 `SetTarget(ICharacter)` 제공
 - **적 UI 분리**: `EnemyCharacterUIController` 추가(Hp/버프 최소 UI)
 - **레거시 제거**: `CharacterUIController` 전면 제거 및 참조 정리, `CharacterSlotUI`의 UI 자동 연결 로직 삭제

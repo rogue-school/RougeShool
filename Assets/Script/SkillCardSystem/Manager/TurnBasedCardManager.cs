@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using Zenject;
 using Game.SkillCardSystem.Interface;
 
 namespace Game.SkillCardSystem.Manager
@@ -9,12 +8,12 @@ namespace Game.SkillCardSystem.Manager
     /// 턴 기반 카드 관리 구현체입니다.
     /// 카드 순환 시스템과 연동하여 턴별 카드 관리를 담당합니다.
     /// </summary>
-    public class TurnBasedCardManager : MonoBehaviour, ITurnBasedCardManager
+    public class TurnBasedCardManager : ITurnBasedCardManager
     {
         #region 필드
 
-        private ICardCirculationSystem circulationSystem;
-        private List<ISkillCard> currentTurnCards = new();
+        private readonly ICardCirculationSystem circulationSystem;
+        private readonly List<ISkillCard> currentTurnCards = new();
         private bool isTurnStarted = false;
         private bool hasPlayedThisTurn = false;
 
@@ -27,10 +26,9 @@ namespace Game.SkillCardSystem.Manager
 
         #endregion
 
-        #region 의존성 주입
+        #region 생성자
 
-        [Inject]
-        public void Construct(ICardCirculationSystem circulationSystem)
+        public TurnBasedCardManager(ICardCirculationSystem circulationSystem)
         {
             this.circulationSystem = circulationSystem;
         }
@@ -48,7 +46,8 @@ namespace Game.SkillCardSystem.Manager
             }
 
             // 카드 순환 시스템에서 카드 드로우
-            currentTurnCards = circulationSystem.DrawCardsForTurn();
+            currentTurnCards.Clear();
+            currentTurnCards.AddRange(circulationSystem.DrawCardsForTurn());
             hasPlayedThisTurn = false;
             isTurnStarted = true;
 
@@ -104,7 +103,6 @@ namespace Game.SkillCardSystem.Manager
             }
 
             // 카드 사용 처리 (보관함 시스템 제거됨)
-            circulationSystem.MoveCardToUsedStorage(card);
             currentTurnCards.Remove(card);
             hasPlayedThisTurn = true;
 

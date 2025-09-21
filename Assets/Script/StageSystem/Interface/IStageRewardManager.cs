@@ -35,19 +35,9 @@ namespace Game.StageSystem.Interface
         #region 보상 확인
 
         /// <summary>
-        /// 준보스 보상이 있는지 확인
+        /// 적 처치 보상이 있는지 확인
         /// </summary>
-        bool HasSubBossRewards();
-
-        /// <summary>
-        /// 보스 보상이 있는지 확인
-        /// </summary>
-        bool HasBossRewards();
-
-        /// <summary>
-        /// 스테이지 완료 보상이 있는지 확인
-        /// </summary>
-        bool HasStageCompletionRewards();
+        bool HasEnemyDefeatRewards();
 
         #endregion
 

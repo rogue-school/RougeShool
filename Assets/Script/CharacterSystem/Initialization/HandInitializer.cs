@@ -31,5 +31,14 @@ namespace Game.CombatSystem.Initializer
             playerHand.ClearAll();
             Debug.Log("<color=cyan>[HandInitializer] 플레이어 핸드 초기화 완료 (적 카드는 대기 슬롯에서 직접 관리)</color>");
         }
+
+        /// <summary>
+        /// 모든 슬롯을 자동으로 바인딩합니다.
+        /// </summary>
+        public void AutoBindAllSlots()
+        {
+            // 현재는 자동 바인딩 기능이 구현되지 않음
+            Debug.Log("<color=cyan>[HandInitializer] 자동 슬롯 바인딩 기능은 현재 구현되지 않음</color>");
+        }
     }
 }

@@ -50,5 +50,24 @@ namespace Game.SkillCardSystem.Validator
 
             return true;
         }
+
+        /// <summary>
+        /// 카드를 실행합니다.
+        /// </summary>
+        /// <param name="card">실행할 스킬 카드</param>
+        /// <param name="context">카드 실행 컨텍스트</param>
+        public void Execute(ISkillCard card, ICardExecutionContext context)
+        {
+            if (!CanExecute(card, context))
+            {
+                Debug.LogWarning($"[CardValidator] 카드 실행 불가: {card.CardDefinition?.CardName ?? "Unknown"}");
+                return;
+            }
+
+            // 카드 실행 로직
+            Debug.Log($"[CardValidator] 카드 실행: {card.CardDefinition?.CardName ?? "Unknown"} → {context.Target?.GetCharacterName() ?? "Unknown"}");
+            
+            // TODO: 실제 카드 효과 실행 로직 구현 필요
+        }
     }
 }

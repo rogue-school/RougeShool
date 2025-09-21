@@ -82,7 +82,7 @@ namespace Game.SkillCardSystem.Manager
             // 기본 덱으로 초기화
             InitializeDeck();
 
-            if (enableDebugLogging)
+            if (managerSettings.enableDebugLogging)
             {
                 GameLogger.LogInfo("PlayerDeckManager 리셋 완료", GameLogger.LogCategory.SkillCard);
             }
@@ -111,6 +111,26 @@ namespace Game.SkillCardSystem.Manager
             {
                 GameLogger.LogWarning("기본 덱이 설정되지 않았습니다.", GameLogger.LogCategory.SkillCard);
             }
+        }
+
+        #endregion
+
+        #region 베이스 클래스 오버라이드
+
+        /// <summary>
+        /// PlayerDeckManager는 핸드 컨테이너가 필요하지 않습니다.
+        /// </summary>
+        protected override bool RequiresHandContainer()
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// PlayerDeckManager는 덱 컨테이너만 필요합니다.
+        /// </summary>
+        protected override bool RequiresDeckContainer()
+        {
+            return true;
         }
 
         #endregion
