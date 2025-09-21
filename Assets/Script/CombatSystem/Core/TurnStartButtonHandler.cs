@@ -15,9 +15,8 @@ namespace Game.CombatSystem.Core
         [Header("전투 시작 버튼")]
         [SerializeField] private Button startButton;
 
-        private object conditionChecker; // TODO: 적절한 타입으로 교체 필요
+        private DefaultTurnStartConditionChecker conditionChecker;
         private TurnManager turnManager;
-        private object stateFactory; // TODO: 적절한 타입으로 교체 필요
 
         private bool isInjected = false;
 
@@ -25,13 +24,11 @@ namespace Game.CombatSystem.Core
         /// Zenject 의존성 주입 메서드
         /// </summary>
         public void Inject(
-            object conditionChecker,
-            TurnManager turnManager,
-            object stateFactory)
+            DefaultTurnStartConditionChecker conditionChecker,
+            TurnManager turnManager)
         {
             this.conditionChecker = conditionChecker;
             this.turnManager = turnManager;
-            this.stateFactory = stateFactory;
 
             isInjected = true;
         }
@@ -70,7 +67,7 @@ namespace Game.CombatSystem.Core
 
             // TODO: conditionChecker가 object 타입이므로 적절한 캐스팅 필요
             // bool canStart = conditionChecker.CanStartTurn();
-            bool canStart = (conditionChecker as DefaultTurnStartConditionChecker)?.CanStartTurn() ?? false;
+            bool canStart = conditionChecker?.CanStartTurn() ?? false;
             startButton.interactable = canStart;
         }
 
@@ -81,7 +78,7 @@ namespace Game.CombatSystem.Core
         {
             // TODO: conditionChecker가 object 타입이므로 적절한 캐스팅 필요
             // if (!isInjected || conditionChecker == null || !conditionChecker.CanStartTurn())
-            if (!isInjected || conditionChecker == null || !((conditionChecker as DefaultTurnStartConditionChecker)?.CanStartTurn() ?? false))
+            if (!isInjected || conditionChecker == null || !(conditionChecker?.CanStartTurn() ?? false))
             {
                 Debug.LogWarning("[TurnStartButtonHandler] 버튼 클릭 조건 불충족");
                 return;

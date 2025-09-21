@@ -1,16 +1,17 @@
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Data;
 using Game.CharacterSystem.Interface;
+using Game.CoreSystem.Utility;
 
 namespace Game.CombatSystem.Slot
 {
     /// <summary>
     /// 전투 캐릭터 슬롯을 등록하고 조회하는 레지스트리입니다.
+    /// DI 컨테이너에서 자동 생성됩니다.
     /// </summary>
-    public class CharacterSlotRegistry : MonoBehaviour
+    public class CharacterSlotRegistry
     {
         #region 필드
 

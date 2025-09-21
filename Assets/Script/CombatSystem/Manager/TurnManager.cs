@@ -7,6 +7,8 @@ using Game.CombatSystem.Slot;
 using Game.CoreSystem.Utility;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.UI;
+using Game.CharacterSystem.Manager;
+using Game.CharacterSystem.Core;
 using Zenject;
 
 namespace Game.CombatSystem.Manager
@@ -178,6 +180,9 @@ namespace Game.CombatSystem.Manager
                 }
                 return;
             }
+
+            // 턴 전환 전 모든 캐릭터의 턴 효과 처리
+            ProcessAllCharacterTurnEffects();
 
             currentTurn = currentTurn == TurnType.Player ? TurnType.Enemy : TurnType.Player;
             turnCount++;
@@ -529,8 +534,40 @@ namespace Game.CombatSystem.Manager
         /// </summary>
         public void ApplyGuardEffect()
         {
-            // TODO: 가드 효과 구현
-            GameLogger.LogInfo("가드 효과 적용", GameLogger.LogCategory.Combat);
+            // 가드 효과는 GuardEffectCommand에서 직접 처리하므로 여기서는 로깅만
+            GameLogger.LogInfo("가드 효과 적용 요청됨", GameLogger.LogCategory.Combat);
+        }
+
+        /// <summary>
+        /// 모든 캐릭터의 턴 효과를 처리합니다.
+        /// </summary>
+        private void ProcessAllCharacterTurnEffects()
+        {
+            // 플레이어 캐릭터 처리
+            var playerManager = FindFirstObjectByType<PlayerManager>();
+            if (playerManager?.GetCharacter() != null)
+            {
+                playerManager.GetCharacter().ProcessTurnEffects();
+                GameLogger.LogInfo($"플레이어 캐릭터 턴 효과 처리: {playerManager.GetCharacter().GetCharacterName()}", GameLogger.LogCategory.Combat);
+            }
+
+            // 적 캐릭터들 처리
+            var enemyManager = FindFirstObjectByType<EnemyManager>();
+            if (enemyManager?.GetCharacter() != null)
+            {
+                enemyManager.GetCharacter().ProcessTurnEffects();
+                GameLogger.LogInfo($"적 캐릭터 턴 효과 처리: {enemyManager.GetCharacter().GetCharacterName()}", GameLogger.LogCategory.Combat);
+            }
+
+            // 추가로 씬의 모든 캐릭터 컴포넌트 처리 (안전장치)
+            var allCharacters = FindObjectsByType<CharacterBase>(FindObjectsSortMode.None);
+            foreach (var character in allCharacters)
+            {
+                if (character != null && character.gameObject.activeInHierarchy)
+                {
+                    character.ProcessTurnEffects();
+                }
+            }
         }
         
         /// <summary>

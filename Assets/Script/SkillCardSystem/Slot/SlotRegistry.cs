@@ -1,19 +1,22 @@
 using UnityEngine;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
+using Zenject;
+using Game.CoreSystem.Utility;
 
 namespace Game.CombatSystem.Slot
 {
     /// <summary>
     /// 전투 슬롯, 핸드 슬롯, 캐릭터 슬롯 레지스트리를 통합 관리하는 클래스입니다.
+    /// DI 컨테이너에서 슬롯 레지스트리들을 주입받습니다.
     /// </summary>
     public class SlotRegistry : MonoBehaviour
     {
-        #region 인스펙터에서 할당된 슬롯 레지스트리
+        #region DI로 주입받는 슬롯 레지스트리
 
-        [SerializeField] private HandSlotRegistry handSlotRegistry;
-        [SerializeField] private CombatSlotRegistry combatSlotRegistry;
-        [SerializeField] private CharacterSlotRegistry characterSlotRegistry;
+        [Inject] private HandSlotRegistry handSlotRegistry;
+        [Inject] private CombatSlotRegistry combatSlotRegistry;
+        [Inject] private CharacterSlotRegistry characterSlotRegistry;
 
         #endregion
 

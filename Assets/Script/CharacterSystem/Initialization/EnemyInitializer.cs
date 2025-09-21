@@ -18,7 +18,7 @@ namespace Game.CombatSystem.Initialization
         [SerializeField] private EnemyCharacterData defaultEnemyData;
 
         private ICharacter spawnedEnemy;
-        private object slotRegistry; // TODO: 적절한 타입으로 교체 필요
+        private CharacterSlotRegistry slotRegistry;
 
         #region 의존성 주입
 
@@ -26,7 +26,7 @@ namespace Game.CombatSystem.Initialization
         /// 슬롯 레지스트리를 주입합니다.
         /// </summary>
         /// <param name="slotRegistry">캐릭터 슬롯 레지스트리</param>
-        public void Inject(object slotRegistry)
+        public void Inject(CharacterSlotRegistry slotRegistry)
         {
             this.slotRegistry = slotRegistry;
         }
@@ -92,7 +92,7 @@ namespace Game.CombatSystem.Initialization
 
             // TODO: slotRegistry가 object 타입이므로 적절한 캐스팅 필요
             // var slot = slotRegistry.GetCharacterSlotRegistry().GetCharacterSlot(SlotOwner.ENEMY);
-            var slot = (slotRegistry as CharacterSlotRegistry)?.GetCharacterSlot(SlotOwner.ENEMY);
+            var slot = slotRegistry?.GetCharacterSlot(SlotOwner.ENEMY);
 
             if (slot == null)
                 Debug.LogError("[EnemyInitializer] ENEMY용 캐릭터 슬롯을 찾지 못했습니다.");

@@ -37,6 +37,11 @@ namespace Game.StageSystem.Data
         NotStarted,
 
         /// <summary>
+        /// 스테이지 진행 중
+        /// </summary>
+        InProgress,
+
+        /// <summary>
         /// 준보스 전투 중
         /// </summary>
         SubBossBattle,

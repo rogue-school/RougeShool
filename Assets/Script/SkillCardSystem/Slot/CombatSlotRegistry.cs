@@ -1,15 +1,16 @@
 using System.Collections.Generic;
-using UnityEngine;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Utility;
 using System.Linq;
+using Game.CoreSystem.Utility;
 
 namespace Game.CombatSystem.Slot
 {
     /// <summary>
     /// 전투 슬롯을 등록하고 슬롯 위치에 따라 조회할 수 있도록 관리하는 레지스트리입니다.
+    /// DI 컨테이너에서 자동 생성됩니다.
     /// </summary>
-    public class CombatSlotRegistry : MonoBehaviour
+    public class CombatSlotRegistry
     {
         #region 필드
 
@@ -46,7 +47,7 @@ namespace Game.CombatSystem.Slot
 
                 if (_slotByPosition.ContainsKey(pos))
                 {
-                    Debug.LogError($"[CombatSlotRegistry] 중복된 CombatSlotPosition: {pos}");
+                    GameLogger.LogError($"[CombatSlotRegistry] 중복된 CombatSlotPosition: {pos}", GameLogger.LogCategory.Combat);
                     continue;
                 }
 
@@ -76,7 +77,7 @@ namespace Game.CombatSystem.Slot
         /// </summary>
         public ICombatCardSlot GetCombatSlot(CombatFieldSlotPosition fieldPosition)
         {
-            Debug.LogWarning("[CombatSlotRegistry] 필드 포지션 기반 조회는 비권장입니다. SLOT_1..SLOT_4를 사용하세요.");
+            GameLogger.LogWarning("[CombatSlotRegistry] 필드 포지션 기반 조회는 비권장입니다. SLOT_1..SLOT_4를 사용하세요.", GameLogger.LogCategory.Combat);
             return null;
         }
 

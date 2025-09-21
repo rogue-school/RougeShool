@@ -6,7 +6,7 @@ using Game.CombatSystem.Utility;
 
 namespace Game.CombatSystem.DragDrop
 {
-    public class DefaultCardRegistrar
+    public class CardDropRegistrar
     {
         private ISkillCard playerCard;
         private ISkillCard enemyCard;

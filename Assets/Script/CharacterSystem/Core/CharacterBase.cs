@@ -148,6 +148,13 @@ namespace Game.CharacterSystem.Core
                 return;
             }
 
+            // 가드 상태 확인
+            if (isGuarded)
+            {
+                Debug.Log($"[{GetCharacterDataName()}] 가드로 데미지 차단: {amount}");
+                return; // 가드 상태면 데미지 무효화
+            }
+
             currentHP = Mathf.Max(currentHP - amount, 0);
             OnHPChanged?.Invoke(currentHP, maxHP);
 
@@ -184,6 +191,23 @@ namespace Game.CharacterSystem.Core
                 perTurnEffects.Add(effect);
                 OnBuffsChanged?.Invoke(perTurnEffects.AsReadOnly());
             }
+        }
+
+        /// <summary>상태이상 효과 등록 (가드 상태 확인)</summary>
+        /// <param name="effect">상태이상 효과 인스턴스</param>
+        /// <returns>등록 성공 여부</returns>
+        public virtual bool RegisterStatusEffect(IPerTurnEffect effect)
+        {
+            // 가드 상태면 상태이상 효과 차단
+            if (isGuarded)
+            {
+                Debug.Log($"[{GetCharacterDataName()}] 가드로 상태이상 효과 차단: {effect.GetType().Name}");
+                return false;
+            }
+
+            // 가드 상태가 아니면 정상 등록
+            RegisterPerTurnEffect(effect);
+            return true;
         }
 
         /// <summary>등록된 턴 효과를 처리합니다 (만료된 효과 제거 포함)</summary>

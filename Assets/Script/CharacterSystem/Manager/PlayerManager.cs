@@ -8,7 +8,7 @@ using Game.SkillCardSystem.UI;
 using Game.CombatSystem.Interface;
 using Game.CharacterSystem.Data;
 using Game.CoreSystem.Interface;
-using Game.CharacterSystem.UI;
+using Game.CoreSystem.Manager;
 using Game.CoreSystem.Utility;
 
 namespace Game.CharacterSystem.Manager
@@ -22,16 +22,13 @@ namespace Game.CharacterSystem.Manager
     {
         #region 플레이어 캐릭터 전용 설정
 
-        [Header("플레이어 캐릭터 설정")]
-        [Tooltip("플레이어 캐릭터 프리팹")]
-        [SerializeField] private PlayerCharacter playerPrefab;
+        [Header("플레이어 UI 연결 (씬 UI 통합)")]
+        [Tooltip("플레이어 캐릭터 UI 컨트롤러 - 씬에 있는 PlayerCharacterUIController를 자동으로 찾아 연결합니다")]
+        [SerializeField] private MonoBehaviour playerUI;
 
-        [Tooltip("기본 플레이어 데이터")]
-        [SerializeField] private PlayerCharacterData defaultPlayerData;
-
-        [Header("플레이어 UI 연결")]
-        [Tooltip("플레이어 HUD UI 컨트롤러 (선택사항)")]
-        [SerializeField] private PlayerCharacterUIController playerUI;
+        [Header("자동 UI 연결 설정")]
+        [Tooltip("씬에서 PlayerCharacterUIController를 자동으로 찾아 연결할지 여부")]
+        [SerializeField] private bool autoConnectUI = true;
 
         #endregion
 
@@ -39,6 +36,7 @@ namespace Game.CharacterSystem.Manager
 
         private IPlayerHandManager handManager;
         private IGameStateManager gameStateManager;
+        private PlayerCharacterData cachedSelectedCharacter;
 
         #endregion
 
@@ -72,13 +70,126 @@ namespace Game.CharacterSystem.Manager
 
         /// <summary>
         /// 플레이어 캐릭터 프리팹을 반환합니다.
+        /// 베이스 클래스의 characterPrefab을 사용합니다.
         /// </summary>
-        protected override GameObject GetRelatedPrefab() => playerPrefab?.gameObject;
+        protected override GameObject GetRelatedPrefab() => characterPrefab;
 
         /// <summary>
         /// 플레이어 UI 컨트롤러를 반환합니다.
+        /// 씬에 통합된 UI를 자동으로 찾아 연결합니다.
         /// </summary>
-        protected override MonoBehaviour GetUIController() => playerUI;
+        protected override MonoBehaviour GetUIController()
+        {
+            // 수동으로 설정된 UI가 있으면 사용
+            if (playerUI != null)
+                return playerUI;
+
+            // 자동 연결이 활성화되어 있으면 씬에서 찾기
+            if (autoConnectUI)
+            {
+                var foundUI = FindFirstObjectByType<Game.CharacterSystem.UI.PlayerCharacterUIController>();
+                if (foundUI != null)
+                {
+                    playerUI = foundUI;
+                    GameLogger.LogInfo("씬에서 PlayerCharacterUIController를 자동으로 찾아 연결했습니다.", GameLogger.LogCategory.Character);
+                    return playerUI;
+                }
+            }
+
+            GameLogger.LogWarning("PlayerCharacterUIController를 찾을 수 없습니다. 씬에 UI가 있는지 확인해주세요.", GameLogger.LogCategory.Character);
+            return null;
+        }
+
+        #endregion
+
+        #region BaseCharacterManager 오버라이드
+
+        /// <summary>
+        /// 플레이어 매니저 특화 초기화 로직
+        /// </summary>
+        protected override System.Collections.IEnumerator InitializeCharacterManager()
+        {
+            // 초기화 완료 후 자동으로 캐릭터 생성
+            yield return new WaitForEndOfFrame();
+            
+            // 캐릭터 데이터를 안전하게 가져오기
+            var selectedData = GetSelectedCharacterData();
+            
+            if (selectedData != null)
+            {
+                GameLogger.LogInfo($"선택된 캐릭터 발견: {selectedData.DisplayName}", GameLogger.LogCategory.Character);
+                CreateAndRegisterCharacter();
+            }
+            else
+            {
+                GameLogger.LogWarning("선택된 캐릭터 데이터가 없습니다. 수동으로 캐릭터를 생성해주세요.", GameLogger.LogCategory.Character);
+            }
+        }
+
+        /// <summary>
+        /// GameStateManager를 찾는 안전한 방법
+        /// </summary>
+        private IGameStateManager FindGameStateManager()
+        {
+            // 1. DI로 주입된 매니저 사용
+            if (gameStateManager != null)
+            {
+                return gameStateManager;
+            }
+
+            // 2. 씬에서 직접 찾기
+            var foundManager = FindFirstObjectByType<GameStateManager>();
+            if (foundManager != null)
+            {
+                return foundManager;
+            }
+
+            // 3. 모든 GameObject에서 찾기
+            var allObjects = FindObjectsByType<GameObject>(FindObjectsSortMode.None);
+            foreach (var obj in allObjects)
+            {
+                var manager = obj.GetComponent<GameStateManager>();
+                if (manager != null)
+                {
+                    return manager;
+                }
+            }
+
+            GameLogger.LogWarning("GameStateManager를 찾을 수 없습니다.", GameLogger.LogCategory.Character);
+            return null;
+        }
+
+        /// <summary>
+        /// 선택된 캐릭터 데이터를 가져오는 안전한 방법
+        /// </summary>
+        private PlayerCharacterData GetSelectedCharacterData()
+        {
+            // 1. 캐시된 데이터 사용
+            if (cachedSelectedCharacter != null)
+            {
+                return cachedSelectedCharacter;
+            }
+
+            // 2. GameStateManager에서 가져오기
+            var gameStateManager = FindGameStateManager();
+            if (gameStateManager?.SelectedCharacter != null)
+            {
+                cachedSelectedCharacter = gameStateManager.SelectedCharacter;
+                return cachedSelectedCharacter;
+            }
+
+
+            return null;
+        }
+
+        /// <summary>
+        /// 캐릭터 데이터를 캐시에 저장
+        /// </summary>
+        public void CacheSelectedCharacter(PlayerCharacterData characterData)
+        {
+            cachedSelectedCharacter = characterData;
+            GameLogger.LogInfo($"캐릭터 데이터 캐시됨: {characterData?.DisplayName}", GameLogger.LogCategory.Character);
+        }
 
         #endregion
 
@@ -104,8 +215,8 @@ namespace Game.CharacterSystem.Manager
                 return;
             }
 
-            // 캐릭터 선택은 DI로 주입된 GameStateManager 사용
-            var selectedData = gameStateManager?.SelectedCharacter;
+            // 캐릭터 선택은 안전한 방법으로 가져오기
+            var selectedData = GetSelectedCharacterData();
             if (selectedData == null)
             {
                 GameLogger.LogError("선택된 캐릭터 데이터가 없습니다. GameStateManager에서 캐릭터를 선택해주세요.", GameLogger.LogCategory.Character);
@@ -117,7 +228,11 @@ namespace Game.CharacterSystem.Manager
                 return;
             }
 
+            // 캐릭터 인스턴스 생성
             var instance = CreateCharacterInstance();
+
+            // 캐릭터 발가락 위치 설정
+            SetCharacterFootPosition(instance);
 
             if (!instance.TryGetComponent(out ICharacter character))
             {
@@ -126,17 +241,54 @@ namespace Game.CharacterSystem.Manager
                 return;
             }
 
+            // 데이터 설정 (Awake 이후에 설정하여 경고 방지)
             character.SetCharacterData(selectedData);
-            SetCharacter(character);
-            InitializeHandManager();
-
-            // UI 대상 연결(있을 때만)
-            ConnectCharacterUI(character);
             
-            // 플레이어 전용 UI 연결
-            if (playerUI != null && character is ICharacter ic)
+            // 리소스 초기화
+            InitializeResource(selectedData);
+            
+            // 캐릭터 등록
+            SetCharacter(character);
+            
+            // UI 연결 (씬에 통합된 UI)
+            ConnectPlayerUI(character);
+            
+            // 핸드 매니저 초기화
+            InitializeHandManager();
+            
+            GameLogger.LogInfo($"플레이어 캐릭터 생성 완료: {character.GetCharacterName()}", GameLogger.LogCategory.Character);
+        }
+
+        /// <summary>
+        /// 플레이어 UI를 연결합니다. (씬에 통합된 UI)
+        /// </summary>
+        /// <param name="character">연결할 플레이어 캐릭터</param>
+        private void ConnectPlayerUI(ICharacter character)
+        {
+            var uiController = GetUIController();
+            if (uiController == null)
             {
-                playerUI.SetTarget(ic);
+                GameLogger.LogWarning("플레이어 UI 컨트롤러를 찾을 수 없습니다. UI 연결을 건너뜁니다.", GameLogger.LogCategory.Character);
+                return;
+            }
+
+            // PlayerCharacterUIController인지 확인
+            if (uiController is Game.CharacterSystem.UI.PlayerCharacterUIController playerUIController)
+            {
+                // PlayerCharacter로 캐스팅하여 연결
+                if (character is PlayerCharacter playerCharacter)
+                {
+                    playerUIController.Initialize(playerCharacter);
+                    GameLogger.LogInfo($"플레이어 UI 연결 완료: {character.GetCharacterName()}", GameLogger.LogCategory.Character);
+                }
+                else
+                {
+                    GameLogger.LogWarning("캐릭터가 PlayerCharacter 타입이 아닙니다. UI 연결을 건너뜁니다.", GameLogger.LogCategory.Character);
+                }
+            }
+            else
+            {
+                GameLogger.LogWarning("UI 컨트롤러가 PlayerCharacterUIController 타입이 아닙니다.", GameLogger.LogCategory.Character);
             }
         }
 
@@ -145,16 +297,27 @@ namespace Game.CharacterSystem.Manager
         /// </summary>
         private void InitializeHandManager()
         {
-            // 먼저 핸드 소유자를 지정해야 덱 조회가 정상 동작합니다.
-            if (currentCharacter != null)
+            if (handManager == null)
             {
-                handManager.SetPlayer(currentCharacter);
+                GameLogger.LogWarning("handManager가 null입니다. 핸드 매니저 초기화를 건너뜁니다.", GameLogger.LogCategory.Character);
+                return;
             }
+
+            if (currentCharacter == null)
+            {
+                GameLogger.LogWarning("currentCharacter가 null입니다. 핸드 매니저 초기화를 건너뜁니다.", GameLogger.LogCategory.Character);
+                return;
+            }
+
+            // 먼저 핸드 소유자를 지정해야 덱 조회가 정상 동작합니다.
+            handManager.SetPlayer(currentCharacter);
 
             // 플레이어 스킬카드 생성은 CombatStartupManager에서 처리
             // handManager.GenerateInitialHand(); // 기존 시스템 비활성화
             // 디버깅 로그 제거됨 (단순화)
             currentCharacter.InjectHandManager(handManager);
+            
+            GameLogger.LogInfo($"핸드 매니저 초기화 완료: {currentCharacter.GetCharacterName()}", GameLogger.LogCategory.Character);
         }
 
         /// <summary>
@@ -353,28 +516,19 @@ namespace Game.CharacterSystem.Manager
             foreach (Transform child in slotTransform)
                 Destroy(child.gameObject);
 
-            // 캐릭터 생성 및 부모 설정
-            var player = Instantiate(playerPrefab);
-            player.name = "PlayerCharacter";
-            player.transform.SetParent(slotTransform, false);
+            // 플레이어 캐릭터 생성 및 부모 설정
+            var playerCharacterInstance = Instantiate(characterPrefab);
+            playerCharacterInstance.name = "PlayerCharacter";
+            playerCharacterInstance.transform.SetParent(slotTransform, false);
 
-            // RectTransform 정렬
-            if (player.TryGetComponent(out RectTransform rt))
-            {
-                rt.anchorMin = new Vector2(0.5f, 0.5f);
-                rt.anchorMax = new Vector2(0.5f, 0.5f);
-                rt.pivot = new Vector2(0.5f, 0.5f);
-                rt.anchoredPosition = Vector2.zero;
-                rt.localPosition = Vector3.zero;
-                rt.localRotation = Quaternion.identity;
-                rt.localScale = Vector3.one;
-            }
+            // 캐릭터 발가락 위치 설정
+            SetCharacterFootPosition(playerCharacterInstance);
 
             // PlayerCharacter 컴포넌트 확인
-            if (!player.TryGetComponent(out PlayerCharacter character))
+            if (!playerCharacterInstance.TryGetComponent(out PlayerCharacter playerCharacterComponent))
             {
                 GameLogger.LogError("PlayerCharacter 컴포넌트를 찾을 수 없습니다.", GameLogger.LogCategory.Character);
-                Destroy(player.gameObject);
+                Destroy(playerCharacterInstance.gameObject);
                 return;
             }
 
@@ -386,20 +540,20 @@ namespace Game.CharacterSystem.Manager
                 return;
             }
 
-            character.SetCharacterData(data);
+            playerCharacterComponent.SetCharacterData(data);
             InitializeResource(data); // 리소스 초기화
-            slot.SetCharacter(character);
-            SetPlayer(character);
+            slot.SetCharacter(playerCharacterComponent);
+            SetPlayer(playerCharacterComponent);
             
             GameLogger.LogInfo("플레이어 캐릭터 초기화 완료", GameLogger.LogCategory.Character);
         }
         
         /// <summary>
-        /// 플레이어 프리팹과 슬롯 레지스트리의 유효성을 검사합니다.
+        /// 플레이어 캐릭터 프리팹의 유효성을 검사합니다.
         /// </summary>
         private bool ValidateData()
         {
-            return playerPrefab != null;
+            return characterPrefab != null;
         }
         
         /// <summary>
@@ -414,20 +568,47 @@ namespace Game.CharacterSystem.Manager
         
         /// <summary>
         /// 플레이어 캐릭터 데이터 선택 로직입니다.
+        /// GetSelectedCharacterData()를 사용합니다.
         /// </summary>
         private PlayerCharacterData ResolvePlayerData()
         {
-            // 기본 데이터 사용
-            if (defaultPlayerData != null)
-            {
-                GameLogger.LogInfo($"기본 캐릭터 데이터 사용: {defaultPlayerData.DisplayName}", GameLogger.LogCategory.Character);
-                return defaultPlayerData;
-            }
-
-            GameLogger.LogError("캐릭터 데이터가 없습니다.", GameLogger.LogCategory.Character);
-            return null;
+            return GetSelectedCharacterData();
         }
         
+        #endregion
+
+        #region 캐릭터 위치 설정 유틸리티
+
+        /// <summary>
+        /// 캐릭터의 하단 외각(발바닥 라인)이 트랜스폼 위치에 오도록 RectTransform을 설정합니다.
+        /// </summary>
+        /// <param name="characterInstance">설정할 캐릭터 인스턴스</param>
+        /// <param name="footOffset">발바닥 오프셋 (기본값: 0f, 음수값으로 더 아래쪽 설정 가능)</param>
+        public static void SetCharacterFootPosition(GameObject characterInstance, float footOffset = 0f)
+        {
+            if (characterInstance.TryGetComponent(out RectTransform rt))
+            {
+                rt.anchorMin = new Vector2(0.5f, 0f);      // 하단 중앙 앵커
+                rt.anchorMax = new Vector2(0.5f, 0f);      // 하단 중앙 앵커
+                rt.pivot = new Vector2(0.5f, footOffset);   // 하단 외각 피벗 (발바닥 라인 + 오프셋)
+                rt.anchoredPosition = Vector2.zero;
+                rt.localPosition = Vector3.zero;
+                rt.localRotation = Quaternion.identity;
+                rt.localScale = Vector3.one;
+                
+                GameLogger.LogInfo($"캐릭터 하단 외각 위치 설정 완료: {characterInstance.name} (오프셋: {footOffset})", GameLogger.LogCategory.Character);
+            }
+        }
+
+        /// <summary>
+        /// 캐릭터의 하단 외각(발바닥 라인)이 트랜스폼 위치에 오도록 RectTransform을 설정합니다. (기본 오프셋 사용)
+        /// </summary>
+        /// <param name="characterInstance">설정할 캐릭터 인스턴스</param>
+        public static void SetCharacterFootPosition(GameObject characterInstance)
+        {
+            SetCharacterFootPosition(characterInstance, 0f); // 기본값: 프리팹 하단 외각
+        }
+
         #endregion
     }
 }

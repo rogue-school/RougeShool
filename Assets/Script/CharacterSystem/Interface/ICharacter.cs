@@ -126,6 +126,13 @@ namespace Game.CharacterSystem.Interface
         void RegisterPerTurnEffect(IPerTurnEffect effect);
 
         /// <summary>
+        /// 상태이상 효과를 등록합니다 (가드 상태 확인).
+        /// </summary>
+        /// <param name="effect">등록할 상태이상 효과</param>
+        /// <returns>등록 성공 여부</returns>
+        bool RegisterStatusEffect(IPerTurnEffect effect);
+
+        /// <summary>
         /// 등록된 턴 효과들을 처리합니다.
         /// </summary>
         void ProcessTurnEffects();

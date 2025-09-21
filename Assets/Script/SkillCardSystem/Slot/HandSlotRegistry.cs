@@ -1,16 +1,17 @@
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Data;
 using Game.SkillCardSystem.Slot;
+using Game.CoreSystem.Utility;
 
 namespace Game.CombatSystem.Slot
 {
     /// <summary>
     /// 플레이어 및 적의 핸드 슬롯을 등록하고 관리하는 레지스트리 클래스입니다.
+    /// DI 컨테이너에서 자동 생성됩니다.
     /// </summary>
-    public class HandSlotRegistry : MonoBehaviour
+    public class HandSlotRegistry
     {
         #region 필드
 

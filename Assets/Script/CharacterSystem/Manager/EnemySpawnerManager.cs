@@ -30,8 +30,7 @@ namespace Game.CharacterSystem.Manager
 
         #region 의존성
 
-        [Inject] private object slotRegistry; // TODO: 적절한 타입으로 교체 필요
-        [Inject] private EnemyManager enemyManager;
+        [Inject] private CharacterSlotRegistry slotRegistry;
 
         #endregion
 
@@ -46,12 +45,6 @@ namespace Game.CharacterSystem.Manager
             {
                 GameLogger.LogWarning("slotRegistry가 주입되지 않았습니다. 새로운 싱글톤 시스템을 사용합니다.", GameLogger.LogCategory.Combat);
             }
-            
-            if (enemyManager == null)
-            {
-                GameLogger.LogWarning("EnemyManager가 주입되지 않았습니다. 새로운 싱글톤 시스템을 사용합니다.", GameLogger.LogCategory.Combat);
-            }
-            
         }
 
         #endregion
@@ -146,7 +139,7 @@ namespace Game.CharacterSystem.Manager
             slot.SetCharacter(enemy);
             
             // 새로운 싱글톤 시스템과의 호환성을 위한 매니저 등록
-            var manager = enemyManager ?? FindFirstObjectByType<EnemyManager>();
+            var manager = FindFirstObjectByType<EnemyManager>();
             manager?.RegisterEnemy(enemy);
             
             spawnedEnemies.Add(enemy);
@@ -167,9 +160,7 @@ namespace Game.CharacterSystem.Manager
             // 기존 시스템 사용
             if (slotRegistry != null)
             {
-                // TODO: slotRegistry가 object 타입이므로 적절한 캐스팅 필요
-                // var slot = slotRegistry.GetCharacterSlotRegistry()?.GetCharacterSlot(SlotOwner.ENEMY);
-                var slot = (slotRegistry as CharacterSlotRegistry)?.GetCharacterSlot(SlotOwner.ENEMY);
+                var slot = slotRegistry?.GetCharacterSlot(SlotOwner.ENEMY);
                 if (slot != null)
                 {
                     GameLogger.LogInfo("기존 slotRegistry를 통한 적 슬롯 발견", GameLogger.LogCategory.Combat);

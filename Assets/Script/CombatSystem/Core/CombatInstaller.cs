@@ -155,9 +155,9 @@ public class CombatInstaller : MonoInstaller
         // CardDropService 의존성 바인딩 (구조화된 배열에서 처리됨)
         // Container.Bind<ITurnCardRegistry>().To<TurnCardRegistry>().AsSingle(); // 삭제됨
         
-        // TurnManager 바인딩 - 인터페이스와 함께 자동 바인딩으로 최적화
+        // TurnManager 바인딩 - 자동 생성으로 최적화
         Container.BindInterfacesAndSelfTo<TurnManager>()
-            .FromComponentInHierarchy().AsSingle();
+            .FromNewComponentOnNewGameObject().AsSingle();
         GameLogger.LogInfo(" TurnManager 바인딩 완료");
         
         GameLogger.LogInfo(" CardDropService 및 의존성 바인딩 완료");
@@ -223,16 +223,19 @@ public class CombatInstaller : MonoInstaller
         }
 
         // 기존 매니저들 바인딩
-        // BindMono<IPlayerManager, PlayerManager>(); // 삭제됨
-        // BindMono<IEnemyManager, EnemyManager>(); // 삭제됨
-        BindMono<IPlayerHandManager, PlayerHandManager>();
+        BindMonoInterfaces<PlayerManager>();
+        Container.BindInterfacesAndSelfTo<PlayerHandManager>()
+            .FromNewComponentOnNewGameObject().AsSingle();
+        Container.Bind<IPlayerHandManager>().To<PlayerHandManager>().AsSingle();
         // BindMono<IEnemySpawnerManager, EnemySpawnerManager>(); // 삭제됨
         BindMono<IStageManager, StageManager>();
         // BindMono<ICharacterDeathListener, CharacterDeathHandler>(); // 삭제됨
         
         // CoroutineRunner는 CoreSystemInstaller에서 바인딩됨
         // PlayerCharacterSelectionManager는 CoreSystemInstaller에서 바인딩됨
-        // SaveManager는 CoreSystemInstaller에서 바인딩됨
+        
+        // SaveManager 바인딩
+        BindSaveManager();
     }
 
     #endregion
@@ -302,57 +305,31 @@ public class CombatInstaller : MonoInstaller
     /// </summary>
     private void BindSlotSystem()
     {
-        // SlotRegistry는 MonoBehaviour이므로 씬에서 찾아야 함
+        // 슬롯 레지스트리들을 DI 컨테이너에서 자동 생성
+        Container.Bind<HandSlotRegistry>().AsSingle();
+        Container.Bind<CombatSlotRegistry>().AsSingle();
+        Container.Bind<CharacterSlotRegistry>().AsSingle();
+        
+        // SlotRegistry는 MonoBehaviour이므로 씬에서 찾아서 바인딩
         var slotRegistry = FindFirstObjectByType<SlotRegistry>();
-        if (slotRegistry == null)
+        if (slotRegistry != null)
         {
-            GameLogger.LogWarning(" SlotRegistry를 씬에서 찾을 수 없습니다. 임시로 생성합니다.");
-            // 임시로 SlotRegistry와 필요한 슬롯 레지스트리들을 생성
-            var tempSlotRegistry = new GameObject("TempSlotRegistry").AddComponent<SlotRegistry>();
-            
-            // 필요한 슬롯 레지스트리들을 생성하여 할당
-            var tempHandSlotRegistry = new GameObject("TempHandSlotRegistry").AddComponent<HandSlotRegistry>();
-            var tempCombatSlotRegistry = new GameObject("TempCombatSlotRegistry").AddComponent<CombatSlotRegistry>();
-            var tempCharacterSlotRegistry = new GameObject("TempCharacterSlotRegistry").AddComponent<CharacterSlotRegistry>();
-            
-            // 리플렉션을 사용하여 인스펙터 필드에 할당
-            var handSlotField = typeof(SlotRegistry).GetField("handSlotRegistry", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var combatSlotField = typeof(SlotRegistry).GetField("combatSlotRegistry", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var characterSlotField = typeof(SlotRegistry).GetField("characterSlotRegistry", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            
-            handSlotField?.SetValue(tempSlotRegistry, tempHandSlotRegistry);
-            combatSlotField?.SetValue(tempSlotRegistry, tempCombatSlotRegistry);
-            characterSlotField?.SetValue(tempSlotRegistry, tempCharacterSlotRegistry);
-            
-            Container.Bind<SlotRegistry>().FromInstance(tempSlotRegistry).AsSingle();
-            // Container.Bind<ISlotRegistry>().FromInstance(tempSlotRegistry).AsSingle(); // 삭제됨
-            
-            // 개별 슬롯 레지스트리들도 바인딩
-            // Container.Bind<IHandSlotRegistry>().FromInstance(tempHandSlotRegistry).AsSingle(); // 삭제됨
-            // Container.Bind<ICombatSlotRegistry>().FromInstance(tempCombatSlotRegistry).AsSingle(); // 삭제됨
-            // Container.Bind<ICharacterSlotRegistry>().FromInstance(tempCharacterSlotRegistry).AsSingle(); // 삭제됨
-            
-            GameLogger.LogInfo(" 임시 슬롯 시스템 바인딩 완료");
-            return;
+            Container.Bind<SlotRegistry>().FromInstance(slotRegistry).AsSingle();
+            GameLogger.LogInfo(" SlotRegistry 바인딩 완료");
+        }
+        else
+        {
+            // SlotRegistry가 없으면 자동 생성
+            Container.BindInterfacesAndSelfTo<SlotRegistry>()
+                .FromNewComponentOnNewGameObject().AsSingle();
+            GameLogger.LogInfo(" SlotRegistry 자동 생성 및 바인딩 완료");
         }
 
-        // SlotRegistry와 관련 인터페이스들을 DI 컨테이너에 바인딩
-        Container.Bind<SlotRegistry>().FromInstance(slotRegistry).AsSingle();
-        // Container.Bind<ISlotRegistry>().FromInstance(slotRegistry).AsSingle(); // 삭제됨
-        
-        // 각 슬롯 레지스트리들을 개별적으로 바인딩
-        var combatSlotRegistry = slotRegistry.GetCombatSlotRegistry();
-        var handSlotRegistry = slotRegistry.GetHandSlotRegistry();
-        var characterSlotRegistry = slotRegistry.GetCharacterSlotRegistry();
-        
-        if (combatSlotRegistry != null)
-            Container.Bind<CombatSlotRegistry>().FromInstance(combatSlotRegistry).AsSingle();
-        
-        if (handSlotRegistry != null)
-            Container.Bind<HandSlotRegistry>().FromInstance(handSlotRegistry).AsSingle();
-        
-        if (characterSlotRegistry != null)
-            Container.Bind<CharacterSlotRegistry>().FromInstance(characterSlotRegistry).AsSingle();
+        // DefaultTurnStartConditionChecker 바인딩
+        Container.Bind<DefaultTurnStartConditionChecker>().AsSingle();
+
+        // CardDropRegistrar 바인딩
+        Container.Bind<CardDropRegistrar>().AsSingle();
 
         GameLogger.LogInfo(" 슬롯 시스템 바인딩 완료");
     }

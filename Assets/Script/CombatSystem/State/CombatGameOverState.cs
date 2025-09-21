@@ -51,7 +51,7 @@ namespace Game.CombatSystem.State
         /// </summary>
         public void EnterState()
         {
-            Debug.Log("<color=cyan>[STATE] CombatGameOverState 진입</color>");
+            GameLogger.LogError("CombatGameOverState 진입 - 게임 오버!", GameLogger.LogCategory.Combat);
             coroutineRunner.RunCoroutine(GameOverRoutine());
         }
 
@@ -65,7 +65,7 @@ namespace Game.CombatSystem.State
         /// </summary>
         public void ExitState() 
         { 
-            Debug.Log("<color=cyan>[STATE] CombatGameOverState 종료</color>"); 
+            GameLogger.LogInfo("CombatGameOverState 종료", GameLogger.LogCategory.Combat); 
         }
 
         #endregion
@@ -77,19 +77,19 @@ namespace Game.CombatSystem.State
         /// </summary>
         private IEnumerator GameOverRoutine()
         {
-            Debug.Log("[CombatGameOverState] 게임 오버 처리 중...");
+            GameLogger.LogError("게임 오버 처리 중...", GameLogger.LogCategory.Combat);
             
-            // TODO: 게임 오버 애니메이션 및 UI 표시
+            // 게임 오버 애니메이션 및 UI 표시 (향후 구현)
             yield return new WaitForSeconds(1.0f);
 
             if (CheckPlayerDeath())
             {
-                // TODO: 설정 창으로 메인 화면 복귀 로직 구현 예정
-                Debug.Log("[CombatGameOverState] 플레이어 사망 - 설정 창으로 메인 화면 복귀 예정");
+                // 메인 화면으로 복귀 (향후 구현)
+                GameLogger.LogError("플레이어 사망 - 메인 화면으로 복귀", GameLogger.LogCategory.Combat);
             }
             else
             {
-                Debug.Log("[CombatGameOverState] 적 사망 - 승리 처리");
+                GameLogger.LogInfo("적 사망 - 승리 처리", GameLogger.LogCategory.Combat);
             }
         }
 

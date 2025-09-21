@@ -10,16 +10,15 @@ namespace Game.StageSystem.Manager
 {
     /// <summary>
     /// 스테이지 진행 로직을 통합 관리하는 컨트롤러
-    /// 로그 스쿨 시스템: 준보스 → 보스 순서로 진행
+    /// 모든 적 처치 시 스테이지 완료(승리) 처리
     /// </summary>
     public class StageProgressController : MonoBehaviour
     {
         #region 의존성 주입
 
-        [Inject] private IStagePhaseManager phaseManager;
+        [Inject] private IStageManager stageManager;
         [Inject] private IStageRewardManager rewardManager;
         [Inject] private EnemyManager enemyManager;
-        // TODO: CharacterDeathListener 구현 필요
 
         #endregion
 
@@ -41,18 +40,18 @@ namespace Game.StageSystem.Manager
         #region 스테이지 시작
 
         /// <summary>
-        /// 스테이지 시작 (준보스부터 시작)
+        /// 스테이지 시작
         /// </summary>
         public void StartStage()
         {
-            if (phaseManager == null)
+            if (stageManager == null)
             {
-                Debug.LogError("[StageProgressController] PhaseManager가 없습니다.");
+                Debug.LogError("[StageProgressController] StageManager가 없습니다.");
                 return;
             }
 
             Debug.Log("[StageProgressController] 스테이지 시작");
-            phaseManager.StartSubBossPhase();
+            stageManager.StartStage();
         }
 
         #endregion
@@ -68,43 +67,11 @@ namespace Game.StageSystem.Manager
 
             Debug.Log($"[StageProgressController] 적 사망: {enemy.CharacterName}");
 
-            // 현재 단계에 따라 처리
-            if (phaseManager.IsSubBossPhase())
-            {
-                OnSubBossDefeated();
-            }
-            else if (phaseManager.IsBossPhase())
-            {
-                OnBossDefeated();
-            }
-        }
-
-        /// <summary>
-        /// 준보스 처치 시 처리
-        /// </summary>
-        private void OnSubBossDefeated()
-        {
-            Debug.Log("[StageProgressController] 준보스 처치 완료");
+            // 적 처치 보상 지급
+            rewardManager.GiveEnemyDefeatRewards();
             
-            // 준보스 보상 지급
-            rewardManager.GiveSubBossRewards();
-            
-            // 보스 단계로 진행
-            phaseManager.StartBossPhase();
-        }
-
-        /// <summary>
-        /// 보스 처치 시 처리
-        /// </summary>
-        private void OnBossDefeated()
-        {
-            Debug.Log("[StageProgressController] 보스 처치 완료");
-            
-            // 보스 보상 지급
-            rewardManager.GiveBossRewards();
-            
-            // 스테이지 완료
-            phaseManager.CompleteStage();
+            // StageManager에서 다음 적 생성 또는 스테이지 완료 처리
+            // (StageManager.UpdateStageProgress에서 자동으로 처리됨)
         }
 
         #endregion
@@ -117,7 +84,7 @@ namespace Game.StageSystem.Manager
         public void FailStage()
         {
             Debug.Log("[StageProgressController] 스테이지 실패");
-            phaseManager.FailStage();
+            stageManager.FailStage();
         }
 
         /// <summary>
@@ -151,16 +118,15 @@ namespace Game.StageSystem.Manager
         [ContextMenu("현재 상태 출력")]
         public void PrintCurrentState()
         {
-            if (phaseManager == null)
+            if (stageManager == null)
             {
-                Debug.Log("[StageProgressController] PhaseManager가 없습니다.");
+                Debug.Log("[StageProgressController] StageManager가 없습니다.");
                 return;
             }
 
-            Debug.Log($"[StageProgressController] 현재 단계: {phaseManager.CurrentPhase}");
-            Debug.Log($"[StageProgressController] 진행 상태: {phaseManager.ProgressState}");
-            Debug.Log($"[StageProgressController] 준보스 처치: {phaseManager.IsSubBossDefeated}");
-            Debug.Log($"[StageProgressController] 보스 처치: {phaseManager.IsBossDefeated}");
+            Debug.Log($"[StageProgressController] 진행 상태: {stageManager.ProgressState}");
+            Debug.Log($"[StageProgressController] 스테이지 완료: {stageManager.IsStageCompleted}");
+            Debug.Log($"[StageProgressController] 다음 적 있음: {stageManager.HasNextEnemy()}");
         }
 
         #endregion

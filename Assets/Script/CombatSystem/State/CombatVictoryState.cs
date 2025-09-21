@@ -25,25 +25,28 @@ namespace Game.CombatSystem.State
 
         public void EnterState()
         {
-            Debug.Log("<color=cyan>[STATE] CombatVictoryState 진입</color>");
+            GameLogger.LogInfo("CombatVictoryState 진입", GameLogger.LogCategory.Combat);
             CombatEvents.RaiseVictory();
             coroutineRunner.RunCoroutine(HandleVictory());
         }
 
         private IEnumerator HandleVictory()
         {
-            Debug.Log("[CombatVictoryState] 승리 처리 중...");
+            GameLogger.LogInfo("승리 처리 중...", GameLogger.LogCategory.Combat);
             yield return new WaitForSeconds(1.0f);
 
-            // Note: Victory handling is now simplified in the new architecture
-            Debug.Log("<color=cyan>[STATE] CombatVictoryState → 전투 완료</color>");
+            // 승리 UI 표시 (향후 구현)
+            GameLogger.LogInfo("스테이지 완료 - 승리!", GameLogger.LogCategory.Combat);
+            
+            // 다음 스테이지로 진행하거나 메인 화면으로 복귀 (향후 구현)
+            GameLogger.LogInfo("승리 처리 완료", GameLogger.LogCategory.Combat);
         }
 
         public void ExecuteState() { }
 
         public void ExitState()
         {
-            Debug.Log("<color=cyan>[STATE] CombatVictoryState 종료</color>");
+            GameLogger.LogInfo("CombatVictoryState 종료", GameLogger.LogCategory.Combat);
         }
     }
 }

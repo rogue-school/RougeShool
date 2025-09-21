@@ -1,18 +1,20 @@
 using UnityEngine;
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Interface;
+using Game.CharacterSystem.Interface;
+using Game.CoreSystem.Utility;
 
 namespace Game.SkillCardSystem.Effect
 {
     /// <summary>
     /// 가드 효과를 적용하는 커맨드 클래스입니다.
-    /// 다음 슬롯의 적 스킬카드를 무효화시킵니다.
+    /// 캐릭터에게 1턴 동안 가드 버프를 적용합니다.
     /// </summary>
     public class GuardEffectCommand : ICardEffectCommand
     {
         /// <summary>
         /// 가드 효과를 실행합니다.
-        /// 다음 슬롯의 적 스킬카드를 무효화시킵니다.
+        /// 캐릭터에게 1턴 동안 가드 버프를 적용합니다.
         /// </summary>
         /// <param name="context">카드 실행 컨텍스트</param>
         /// <param name="turnManager">전투 턴 매니저</param>
@@ -20,19 +22,21 @@ namespace Game.SkillCardSystem.Effect
         {
             if (context?.Source == null)
             {
-                Debug.LogWarning("[GuardEffectCommand] 소스가 null입니다.");
+                GameLogger.LogWarning("[GuardEffectCommand] 소스가 null입니다.", GameLogger.LogCategory.Combat);
                 return;
             }
 
-            // 가드 효과는 턴 매니저를 통해 처리
-            if (turnManager != null)
+            // 소스 캐릭터에게 가드 버프 적용
+            if (context.Source is ICharacter character)
             {
-                turnManager.ApplyGuardEffect();
-                Debug.Log($"[GuardEffectCommand] 가드 효과 적용됨 - 다음 슬롯의 적 스킬카드 무효화");
+                var guardBuff = new GuardBuff(1); // 1턴 지속
+                character.RegisterPerTurnEffect(guardBuff);
+                
+                GameLogger.LogInfo($"[GuardEffectCommand] {character.GetCharacterName()}에게 가드 버프 적용 (1턴 지속)", GameLogger.LogCategory.Combat);
             }
             else
             {
-                Debug.LogWarning("[GuardEffectCommand] TurnManager가 null입니다.");
+                GameLogger.LogWarning("[GuardEffectCommand] 소스가 캐릭터가 아닙니다.", GameLogger.LogCategory.Combat);
             }
         }
 

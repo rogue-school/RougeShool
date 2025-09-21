@@ -17,26 +17,20 @@ namespace Game.CombatSystem.Service
     public class CardDropService
     {
         private readonly ICardValidator validator;
-        private readonly DefaultCardRegistrar registrar;
+        private readonly CardDropRegistrar registrar;
         private readonly TurnManager turnManager;
-        private readonly object replacementHandler; // TODO: 적절한 타입으로 교체 필요
-        private readonly IPlayerHandManager playerHandManager;
 
         /// <summary>
         /// 생성자. 필요한 의존성을 주입합니다.
         /// </summary>
         public CardDropService(
             ICardValidator validator,
-            DefaultCardRegistrar registrar,
-            TurnManager turnManager,
-            object replacementHandler,
-            IPlayerHandManager playerHandManager)
+            CardDropRegistrar registrar,
+            TurnManager turnManager)
         {
             this.validator = validator;
             this.registrar = registrar;
             this.turnManager = turnManager;
-            this.replacementHandler = replacementHandler;
-            this.playerHandManager = playerHandManager;
         }
 
         /// <summary>

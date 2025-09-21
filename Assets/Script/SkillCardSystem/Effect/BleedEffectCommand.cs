@@ -39,9 +39,16 @@ namespace Game.SkillCardSystem.Effect
             }
 
             var bleedEffect = new BleedEffect(amount, duration);
-            context.Target.RegisterPerTurnEffect(bleedEffect);
-
-            Debug.Log($"[BleedEffectCommand] {context.Target.GetCharacterName()}에게 출혈 {amount} 적용 (지속 {duration}턴)");
+            
+            // 가드 상태 확인하여 상태이상 효과 등록
+            if (context.Target.RegisterStatusEffect(bleedEffect))
+            {
+                Debug.Log($"[BleedEffectCommand] {context.Target.GetCharacterName()}에게 출혈 {amount} 적용 (지속 {duration}턴)");
+            }
+            else
+            {
+                Debug.Log($"[BleedEffectCommand] {context.Target.GetCharacterName()}의 가드로 출혈 효과 차단됨");
+            }
         }
     }
 }

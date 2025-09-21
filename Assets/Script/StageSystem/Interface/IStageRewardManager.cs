@@ -10,14 +10,9 @@ namespace Game.StageSystem.Interface
         #region 보상 지급
 
         /// <summary>
-        /// 준보스 보상 지급
+        /// 적 처치 보상 지급
         /// </summary>
-        void GiveSubBossRewards();
-
-        /// <summary>
-        /// 보스 보상 지급
-        /// </summary>
-        void GiveBossRewards();
+        void GiveEnemyDefeatRewards();
 
         /// <summary>
         /// 스테이지 완료 보상 지급
