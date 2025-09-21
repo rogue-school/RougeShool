@@ -4,13 +4,13 @@ using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Data;
 using Game.CombatSystem.Data;
 using Game.CombatSystem.Slot;
-using Game.IManager;
 using Game.CombatSystem.Interface;
 using Game.CharacterSystem.Interface;
 using Zenject;
 using Game.CombatSystem.Utility;
 using Game.CombatSystem;
 using Game.CombatSystem.Manager;
+using Game.CharacterSystem.Manager;
 using Game.CoreSystem.Utility;
 
 namespace Game.CharacterSystem.Manager
@@ -19,7 +19,7 @@ namespace Game.CharacterSystem.Manager
     /// 적 캐릭터 프리팹을 스폰하여 슬롯에 배치하는 매니저입니다.
     /// 실제 전투 설정은 StageManager와 HandManager에서 수행됩니다.
     /// </summary>
-    public class EnemySpawnerManager : MonoBehaviour, IEnemySpawnerManager
+    public class EnemySpawnerManager : MonoBehaviour
     {
         #region 인스펙터 설정
 
@@ -30,8 +30,8 @@ namespace Game.CharacterSystem.Manager
 
         #region 의존성
 
-        [Inject] private ISlotRegistry slotRegistry;
-        [Inject] private IEnemyManager enemyManager;
+        [Inject] private object slotRegistry; // TODO: 적절한 타입으로 교체 필요
+        [Inject] private EnemyManager enemyManager;
 
         #endregion
 
@@ -44,12 +44,12 @@ namespace Game.CharacterSystem.Manager
         {
             if (slotRegistry == null)
             {
-                GameLogger.LogWarning("ISlotRegistry가 주입되지 않았습니다. 새로운 싱글톤 시스템을 사용합니다.", GameLogger.LogCategory.Combat);
+                GameLogger.LogWarning("slotRegistry가 주입되지 않았습니다. 새로운 싱글톤 시스템을 사용합니다.", GameLogger.LogCategory.Combat);
             }
             
             if (enemyManager == null)
             {
-                GameLogger.LogWarning("IEnemyManager가 주입되지 않았습니다. 새로운 싱글톤 시스템을 사용합니다.", GameLogger.LogCategory.Combat);
+                GameLogger.LogWarning("EnemyManager가 주입되지 않았습니다. 새로운 싱글톤 시스템을 사용합니다.", GameLogger.LogCategory.Combat);
             }
             
         }
@@ -167,10 +167,12 @@ namespace Game.CharacterSystem.Manager
             // 기존 시스템 사용
             if (slotRegistry != null)
             {
-                var slot = slotRegistry.GetCharacterSlotRegistry()?.GetCharacterSlot(SlotOwner.ENEMY);
+                // TODO: slotRegistry가 object 타입이므로 적절한 캐스팅 필요
+                // var slot = slotRegistry.GetCharacterSlotRegistry()?.GetCharacterSlot(SlotOwner.ENEMY);
+                var slot = (slotRegistry as CharacterSlotRegistry)?.GetCharacterSlot(SlotOwner.ENEMY);
                 if (slot != null)
                 {
-                    GameLogger.LogInfo("기존 ISlotRegistry를 통한 적 슬롯 발견", GameLogger.LogCategory.Combat);
+                    GameLogger.LogInfo("기존 slotRegistry를 통한 적 슬롯 발견", GameLogger.LogCategory.Combat);
                     return slot;
                 }
             }

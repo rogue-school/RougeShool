@@ -8,7 +8,7 @@ namespace Game.CombatSystem.Service
     /// 플레이어 입력을 제어하는 컨트롤러입니다.
     /// 핸드 카드 드래그 입력을 활성화 또는 비활성화합니다.
     /// </summary>
-    public class PlayerInputController : IPlayerInputController
+    public class PlayerInputController
     {
         #region 필드
 

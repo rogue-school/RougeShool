@@ -82,7 +82,7 @@ namespace Game.CharacterSystem.UI
         #region Private Fields
 
         private PlayerCharacter playerCharacter;
-        [InjectOptional] private PlayerResourceManager resourceManager;
+        [InjectOptional] private PlayerManager playerManager;
         private PlayerCharacterType characterType;
         
         // 애니메이션 관련
@@ -149,9 +149,9 @@ namespace Game.CharacterSystem.UI
             characterType = character.CharacterData.CharacterType;
             
             // 리소스 매니저는 Zenject DI로 주입됨
-            if (resourceManager == null)
+            if (playerManager == null)
             {
-                Debug.LogWarning("[PlayerCharacterUIController] PlayerResourceManager가 주입되지 않았습니다.");
+                Debug.LogWarning("[PlayerCharacterUIController] PlayerManager가 주입되지 않았습니다.");
             }
 
             // 캐릭터 정보 설정
@@ -331,14 +331,14 @@ namespace Game.CharacterSystem.UI
         /// </summary>
         public void UpdateMPBar()
         {
-            if (playerCharacter == null || resourceManager == null) return;
+            if (playerCharacter == null || playerManager == null) return;
             
             // 검 캐릭터는 리소스가 없음
             if (characterType == PlayerCharacterType.Sword)
                 return;
 
-            int currentResource = resourceManager.CurrentResource;
-            int maxResource = resourceManager.MaxResource;
+            int currentResource = playerManager.CurrentResource;
+            int maxResource = playerManager.MaxResource;
             
             if (maxResource <= 0) return;
 
@@ -503,7 +503,7 @@ namespace Game.CharacterSystem.UI
         public void ClearUI()
         {
             playerCharacter = null;
-            resourceManager = null;
+            playerManager = null;
             
             // 텍스트 초기화
             if (characterNameText != null)

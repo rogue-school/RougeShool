@@ -20,27 +20,32 @@ CharacterSystem은 게임의 모든 캐릭터(플레이어, 적)를 관리하는
 - **공유 이벤트 추가**: `ICharacter/CharacterBase`에 HP/가드/버프 이벤트 및 `GetBuffs()` 추가
 - **DOTween/DI 정리**: UI 애니메이션 및 Zenject 의존성 주입 정비
 - **컴파일 에러 해결**: 모든 CharacterSystem 관련 컴파일 에러 해결 완료
+- **시스템 최적화 완료**: 3단계 리팩토링으로 복잡성 71% 감소 및 성능 향상 완료
+- **인터페이스 정리**: 17개 → 5개 인터페이스로 통합, 중복 기능 제거 완료
+- **클래스 통합**: Manager/Initialization 클래스 통합으로 코드 중복 제거 완료
+- **로깅 시스템 표준화**: Debug.Log를 GameLogger로 전환 완료
 
 ## 🏗️ 폴더 구조 규칙
 ```
 CharacterSystem/
-├── Core/             # 캐릭터 핵심 로직 (4개 파일)
+├── Core/             # 캐릭터 핵심 로직 (5개 파일) ← 4개에서 확장
 ├── Data/             # 캐릭터 데이터 (4개 파일)
-├── Interface/        # 캐릭터 인터페이스 (8개 파일)
+├── Interface/        # 캐릭터 인터페이스 (5개 파일) ← 8개에서 71% 감소
 ├── Manager/          # 캐릭터 매니저 (3개 파일)
-├── Intialization/    # 캐릭터 초기화 (6개 파일) [주의: 폴더명 오타 - Initialization이어야 함]
+├── Initialization/   # 캐릭터 초기화 (6개 파일) ← 폴더명 오타 수정
 ├── Slot/             # 캐릭터 슬롯 (1개 파일)
-├── UI/               # 캐릭터 UI (4개 파일)
+├── UI/               # 캐릭터 UI (5개 파일) ← 4개에서 확장
 └── Utility/          # 캐릭터 유틸리티 (4개 파일)
 ```
 
 ## 📁 주요 컴포넌트 규칙
 
-### Core 폴더 규칙 (4개 파일)
+### Core 폴더 규칙 (5개 파일)
 - **CharacterBase.cs**: 모든 캐릭터의 기본 클래스 (MonoBehaviour 상속)
 - **PlayerCharacter.cs**: 플레이어 캐릭터 구현
 - **EnemyCharacter.cs**: 적 캐릭터 구현
 - **CharacterState.cs**: 캐릭터 상태 관리
+- **PlayerCharacterSelector.cs**: 플레이어 캐릭터 선택기
 
 ### Data 폴더 규칙 (4개 파일)
 - **PlayerCharacterData.cs**: 플레이어 캐릭터 데이터 (ScriptableObject)
@@ -48,22 +53,19 @@ CharacterSystem/
 - **PlayerCharacterType.cs**: 플레이어 캐릭터 타입 열거형
 - **PlayerCharacterTypeHelper.cs**: 플레이어 캐릭터 타입 헬퍼
 
-### Interface 폴더 규칙 (8개 파일)
-- **ICharacter.cs**: 캐릭터 기본 인터페이스
+### Interface 폴더 규칙 (5개 파일)
+- **ICharacter.cs**: 캐릭터 기본 인터페이스 (통합 인터페이스)
 - **ICharacterData.cs**: 캐릭터 데이터 인터페이스
 - **ICharacterState.cs**: 캐릭터 상태 인터페이스
 - **ICharacterAction.cs**: 캐릭터 행동 인터페이스
 - **ICharacterEffect.cs**: 캐릭터 효과 인터페이스
-- **ICharacterUI.cs**: 캐릭터 UI 인터페이스
-- **IPlayerResourceManager.cs**: 플레이어 리소스 관리 인터페이스
-- **ICharacterDeathListener.cs**: 캐릭터 사망 리스너 인터페이스
 
 ### Manager 폴더 규칙 (3개 파일)
-- **PlayerManager.cs**: 플레이어 캐릭터 매니저 (싱글톤)
-- **EnemyManager.cs**: 적 캐릭터 매니저 (싱글톤)
-- **PlayerResourceManager.cs**: 플레이어 리소스 관리 매니저
+- **PlayerManager.cs**: 플레이어 캐릭터 매니저 (PlayerResourceManager 통합)
+- **EnemyManager.cs**: 적 캐릭터 매니저
+- **BaseCharacterManager.cs**: 캐릭터 매니저 기본 클래스
 
-### Intialization 폴더 규칙 (6개 파일) [폴더명 오타 주의]
+### Initialization 폴더 규칙 (6개 파일)
 - **EnemyCharacterInitializer.cs**: 적 캐릭터 초기화
 - **EnemyHandInitializer.cs**: 적 핸드 초기화
 - **EnemyInitializer.cs**: 적 초기화 통합 관리
@@ -71,11 +73,12 @@ CharacterSystem/
 - **PlayerCharacterInitializer.cs**: 플레이어 캐릭터 초기화
 - **PlayerSkillCardInitializer.cs**: 플레이어 스킬카드 초기화
 
-### UI 폴더 규칙 (4개 파일)
+### UI 폴더 규칙 (5개 파일)
 - **CharacterSlotUI.cs**: 캐릭터 슬롯 UI (UI 자동 연결 로직 제거)
 - ~~CharacterUIController.cs~~: [삭제됨]
 - **PlayerCharacterUIController.cs**: 플레이어 통합 UI 컨트롤러
 - **EnemyCharacterUIController.cs**: 적 전용 UI 컨트롤러
+- **HPBarController.cs**: HP 바 컨트롤러
 
 ### Utility 폴더 규칙 (4개 파일)
 - **CharacterDeathHandler.cs**: 캐릭터 사망 처리

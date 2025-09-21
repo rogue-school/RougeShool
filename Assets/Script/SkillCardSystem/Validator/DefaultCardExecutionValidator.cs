@@ -11,8 +11,22 @@ namespace Game.SkillCardSystem.Validator
     /// - 대상이 생존해 있는지
     /// - 쿨타임이 완료되었는지 확인합니다.
     /// </summary>
-    public class DefaultCardExecutionValidator : ICardExecutionValidator
+    public class DefaultCardExecutionValidator : ICardValidator
     {
+        /// <summary>
+        /// 지정된 카드가 주어진 슬롯에 드롭 가능한지를 판별합니다.
+        /// </summary>
+        /// <param name="card">드롭을 시도하는 스킬 카드</param>
+        /// <param name="slot">드롭 대상 슬롯</param>
+        /// <param name="reason">드롭이 불가능한 경우 사유를 문자열로 반환합니다.</param>
+        /// <returns>true이면 드롭이 허용되고, false이면 드롭이 차단됩니다.</returns>
+        public bool IsValidDrop(ISkillCard card, ICombatCardSlot slot, out string reason)
+        {
+            reason = null;
+            // TODO: 드롭 검증 로직 구현
+            return true;
+        }
+        
         /// <summary>
         /// 카드가 현재 실행 가능한 상태인지 검사합니다.
         /// </summary>

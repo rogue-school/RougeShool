@@ -1,5 +1,4 @@
 using Game.CombatSystem.Interface;
-using Game.IManager;
 using Game.SkillCardSystem.Interface;
 using UnityEngine;
 
@@ -9,7 +8,7 @@ namespace Game.CombatSystem.Initializer
     /// 플레이어 핸드를 초기화하는 클래스입니다.
     /// 적 카드는 핸드 없이 대기 슬롯에서 직접 관리됩니다.
     /// </summary>
-    public class HandInitializer : IHandInitializer
+    public class HandInitializer
     {
         private readonly IPlayerHandManager playerHand;
 

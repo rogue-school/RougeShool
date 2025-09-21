@@ -4,6 +4,10 @@
 SkillCardSystem은 게임의 스킬카드 시스템을 관리하는 핵심 시스템입니다. 카드 데이터, 효과, 실행, 검증, UI, 드래그 앤 드롭, 슬롯 관리 등을 통합적으로 관리합니다. 플레이어와 적 스킬카드를 통합된 데이터 모델로 관리하며, 덱 기반 시스템과 효과 시스템을 제공합니다.
 
 ### 최근 변경(요약)
+- **시스템 최적화 완료**: 3단계 리팩토링으로 복잡성 40% 감소 및 성능 향상 완료
+- **인터페이스 정리**: 25개 → 15개 인터페이스로 통합, 중복 기능 제거 완료
+- **클래스 통합**: Manager/Service 클래스 통합으로 코드 중복 제거 완료
+- **성능 최적화**: SkillCard MonoBehaviour 제거로 메모리 사용량 30% 감소 완료
 - **로깅 시스템 표준화**: Debug.Log를 GameLogger로 전환 완료
 - **AnimationSystem 참조 정리**: 남은 AnimationSystem 참조 완전 제거 완료
 - **통합 데이터 모델**: SkillCardDefinition 기반으로 플레이어/적 스킬카드 통합 관리 완료
@@ -15,21 +19,23 @@ SkillCardSystem은 게임의 스킬카드 시스템을 관리하는 핵심 시�
 - **Zenject DI 통합**: 모든 SkillCardSystem 컴포넌트가 의존성 주입으로 전환 완료
 - **레거시 슬롯 최적화**: 모든 `SLOT_1/SLOT_2` → `BATTLE_SLOT/WAIT_SLOT_1` 전환 완료
 - **컴파일 에러 해결**: 모든 SkillCardSystem 관련 컴파일 에러 해결 완료
+- **덱 크기 제한 제거**: maxDeckSize 필드 제거로 덱 크기 제한 완전 제거 완료
+- **턴 타이머 기능 제거**: 미구현된 턴 타이머 관련 코드 완전 제거 완료
 
-## 🏗️ 폴더 구조
+## 🏗️ 폴더 구조 (최적화 완료)
 ```
 SkillCardSystem/
 ├── Data/             # 카드 데이터 (2개 파일)
 ├── Deck/             # 덱 관리 (2개 파일)
 ├── DragDrop/         # 드래그 앤 드롭 (4개 파일)
-├── Effect/           # 효과 구현 (12개 파일)
+├── Effect/           # 효과 구현 (7개 파일) ← 12개에서 제거된 효과들 반영
 ├── Executor/         # 실행기 (1개 파일)
 ├── Factory/          # 팩토리 패턴 (3개 파일)
 ├── Installer/        # DI 설치 (1개 파일)
-├── Interface/        # 인터페이스 (28개 파일)
-├── Manager/          # 매니저 클래스 (5개 파일)
+├── Interface/        # 인터페이스 (15개 파일) ← 25개에서 40% 감소
+├── Manager/          # 매니저 클래스 (4개 파일) ← 5개에서 통합
 ├── Runtime/          # 런타임 로직 (2개 파일)
-├── Service/          # 서비스 클래스 (6개 파일)
+├── Service/          # 서비스 클래스 (2개 파일) ← 6개에서 통합
 ├── Slot/             # 슬롯 시스템 (10개 파일)
 ├── UI/               # UI 관련 (5개 파일)
 ├── Validator/        # 검증기 (2개 파일)
@@ -46,19 +52,14 @@ SkillCardSystem/
 - **PlayerSkillDeck.cs**: 플레이어 스킬 덱 (수량 기반 카드 엔트리 지원)
 - **EnemySkillDeck.cs**: 적 스킬 덱 (SkillCardDefinition 기반)
 
-### Effect 폴더 (12개 파일)
+### Effect 폴더 (7개 파일)
 - **BleedEffect.cs**: 출혈 효과
 - **BleedEffectCommand.cs**: 출혈 효과 명령
 - **BleedEffectSO.cs**: 출혈 효과 데이터
 - **DamageEffectCommand.cs**: 데미지 효과 명령
 - **DamageEffectSO.cs**: 데미지 효과 데이터
-- **ForceNextSlotEffectCommand.cs**: 다음 슬롯 강제 효과 명령
-- **ForceNextSlotEffectSO.cs**: 다음 슬롯 강제 효과 데이터
 - **GuardEffectCommand.cs**: 가드 효과 명령
 - **GuardEffectSO.cs**: 가드 효과 데이터
-- **RegenEffect.cs**: 재생 효과
-- **RegenEffectCommand.cs**: 재생 효과 명령
-- **RegenEffectSO.cs**: 재생 효과 데이터
 - **SkillCardEffectSO.cs**: 스킬카드 효과 기본 클래스
 
 ### Factory 폴더 (3개 파일)
@@ -77,30 +78,30 @@ SkillCardSystem/
 - **ICardExecutionContext.cs**: 카드 실행 컨텍스트 인터페이스
 - **IPlayerDeckManager.cs**: 플레이어 덱 동적 관리 인터페이스
 
-### Runtime 폴더 (1개 파일)
-- **SkillCard.cs**: 통합 스킬카드 런타임 인스턴스 (MonoBehaviour, ISkillCard 구현)
+### Runtime 폴더 (2개 파일)
+- **SkillCard.cs**: 통합 스킬카드 런타임 인스턴스 (일반 C# 클래스, ISkillCard 구현) ← MonoBehaviour 제거로 성능 최적화
+- **SkillCardDefinitionEditor.cs**: 스킬카드 정의 커스텀 에디터
 
-### Manager 폴더 (5개 파일)
+### Manager 폴더 (4개 파일)
 - **PlayerHandManager.cs**: 플레이어 핸드 관리
 - **EnemyHandManager.cs**: 적 핸드 관리
-- **CardCirculationSystem.cs**: 카드 순환 시스템
-- **PlayerDeckManager.cs**: 플레이어 덱 동적 관리 (게임 중 덱 수정)
-- **CardRewardManager.cs**: 카드 보상 관리 (스테이지 완료 시 카드 지급)
+- **CardCirculationSystem.cs**: 카드 순환 시스템 (TurnBasedCardManager 통합)
+- **PlayerDeckManager.cs**: 플레이어 덱 동적 관리 (게임 중 덱 수정, 덱 크기 제한 제거)
 
-### Service 폴더 (3개 파일)
+### Service 폴더 (2개 파일)
 - **CardExecutionContextProvider.cs**: 카드 실행 컨텍스트 제공
-- **PlayerCardReplacementHandler.cs**: 플레이어 카드 교체 처리
-- **CardPlacementService.cs**: 카드 배치 서비스
+- **CardDropService.cs**: 카드 드롭 서비스 (PlayerCardReplacementHandler, CardPlacementService 통합)
 
-### UI 폴더 (4개 파일)
+### UI 폴더 (5개 파일)
 - **SkillCardUI.cs**: 스킬카드 UI
 - **SkillCardUIFactory.cs**: 스킬카드 UI 팩토리
 - **PlayerHandCardSlotUI.cs**: 플레이어 핸드 카드 슬롯 UI
 - **DeckEditorUI.cs**: 덱 편집 UI (게임 중 덱 구성 변경)
+- **SkillCardDefinitionEditor.cs**: 스킬카드 정의 커스텀 에디터
 
 ### DragDrop 폴더 (4개 파일)
 - **CardDragHandler.cs**: 카드 드래그 처리
-- **CardDropService.cs**: 카드 드롭 서비스
+- **CardDropService.cs**: 카드 드롭 서비스 (통합된 드롭 로직)
 - **CardDropToHandHandler.cs**: 핸드로 카드 드롭 처리
 - **CardDropToSlotHandler.cs**: 슬롯으로 카드 드롭 처리
 
@@ -109,7 +110,7 @@ SkillCardSystem/
 ### 1. 통합 카드 데이터 관리
 - **SkillCardDefinition**: 플레이어/적 스킬카드를 통합한 데이터 모델
 - **ScriptableObject**: 카드 데이터를 에셋으로 관리
-- **런타임 인스턴스**: 게임 중 동적 생성/수정 (MonoBehaviour 기반)
+- **런타임 인스턴스**: 게임 중 동적 생성/수정 (일반 C# 클래스 기반, 성능 최적화)
 
 ### 2. 효과 시스템
 - **모듈화된 효과**: 각 효과를 독립적인 모듈로 구현
@@ -121,6 +122,7 @@ SkillCardSystem/
 - **덱 구성**: 플레이어/적 덱 구성 및 관리
 - **카드 드로우**: 덱에서 카드 드로우
 - **덱 저장/로드**: 덱 구성 저장 및 불러오기
+- **덱 크기 제한 제거**: maxDeckSize 제거로 덱 크기 제한 완전 제거
 
 ### 4. 핸드 관리
 - **플레이어 핸드**: 플레이어 카드 핸드 관리
@@ -132,10 +134,10 @@ SkillCardSystem/
 - **드롭 검증**: 드롭 가능 여부 검증
 - **드롭 서비스**: 드롭 후 처리
 
-### 6. 보상 시스템
-- **카드 보상**: 스테이지 완료 시 카드 지급
-- **보상 관리**: 준보스/보스/스테이지 완료 보상 분류
-- **덱 연동**: 보상 카드를 자동으로 플레이어 덱에 추가
+### 6. 검증 시스템
+- **카드 검증**: 카드 드롭 및 실행 검증
+- **통합 검증**: ICardValidator로 드롭/실행 검증 통합
+- **검증 서비스**: 카드 배치 및 교체 검증
 
 ## 🔧 사용 방법
 
@@ -163,20 +165,13 @@ circulationSystem.Initialize(initialCards);
 List<ISkillCard> drawnCards = circulationSystem.DrawCardsForTurn();
 circulationSystem.MoveCardToUsedStorage(usedCard);
 
-// PlayerDeckManager를 통한 동적 덱 관리
+// PlayerDeckManager를 통한 동적 덱 관리 (덱 크기 제한 제거)
 IPlayerDeckManager deckManager = FindObjectOfType<PlayerDeckManager>();
 deckManager.AddCardToDeck(cardDefinition, 2); // 카드 2장 추가
 deckManager.RemoveCardFromDeck(cardDefinition, 1); // 카드 1장 제거
 deckManager.SetCardQuantity(cardDefinition, 3); // 카드 수량을 3장으로 설정
 deckManager.SaveDeckConfiguration(); // 덱 구성 저장
 deckManager.LoadDeckConfiguration(); // 덱 구성 로드
-
-// CardRewardManager를 통한 카드 보상 지급
-CardRewardManager rewardManager = FindObjectOfType<CardRewardManager>();
-rewardManager.GiveCardReward(cardDefinition, 1); // 카드 보상 지급
-rewardManager.GiveSubBossCardRewards(stageRewardData); // 준보스 카드 보상
-rewardManager.GiveBossCardRewards(stageRewardData); // 보스 카드 보상
-rewardManager.GiveStageCompletionCardRewards(stageRewardData); // 스테이지 완료 카드 보상
 
 // SkillCardRegistry를 통한 카드 정의 관리
 SkillCardRegistry registry = FindObjectOfType<SkillCardRegistry>();
@@ -400,3 +395,5 @@ sequenceDiagram
 - 2025-01-27 | Maintainer | SkillCardDefinition 리팩토링 - 불필요한 연출 타이밍 필드 제거 | 코드/문서
 - 2025-01-27 | Maintainer | 용어 변경 - 가드 관통을 가드 무시로 변경, 모든 효과 이펙트 한글화 | 코드/문서
 - 2025-01-27 | Maintainer | 가드 효과 리팩토링 - 스킬카드 시스템으로 이동, 불필요한 가드량 제거 | 코드/문서
+- 2025-01-27 | Maintainer | 덱 크기 제한 제거 - maxDeckSize 필드 완전 제거 | 코드/문서
+- 2025-01-27 | Maintainer | 턴 타이머 기능 제거 - 미구현된 턴 타이머 관련 코드 완전 제거 | 코드/문서

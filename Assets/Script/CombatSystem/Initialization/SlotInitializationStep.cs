@@ -9,11 +9,11 @@ namespace Game.CombatSystem.Intialization
     /// <summary>
     /// 전투 시작 시 슬롯 정보를 자동으로 바인딩하고 레지스트리에 등록하는 초기화 스텝입니다.
     /// </summary>
-    public class SlotInitializationStep : ICombatInitializerStep
+    public class SlotInitializationStep
     {
         #region 필드
 
-        private readonly ISlotRegistry slotRegistry;
+        private readonly object slotRegistry; // TODO: 적절한 타입으로 교체 필요
 
         public int Order => 0;
 
@@ -21,7 +21,7 @@ namespace Game.CombatSystem.Intialization
 
         #region 생성자
 
-        public SlotInitializationStep(ISlotRegistry slotRegistry)
+        public SlotInitializationStep(object slotRegistry)
         {
             this.slotRegistry = slotRegistry;
         }
@@ -48,7 +48,9 @@ namespace Game.CombatSystem.Intialization
             float timeout = 5f; // 5초 타임아웃
             float elapsed = 0f;
             
-            while ((slotRegistry == null || !slotRegistry.IsInitialized) && elapsed < timeout)
+            // TODO: slotRegistry가 object 타입이므로 적절한 캐스팅 필요
+            // while ((slotRegistry == null || !slotRegistry.IsInitialized) && elapsed < timeout)
+            while ((slotRegistry == null || !((slotRegistry as SlotRegistry)?.IsInitialized ?? false)) && elapsed < timeout)
             {
                 elapsed += Time.deltaTime;
                 yield return null;
@@ -60,9 +62,11 @@ namespace Game.CombatSystem.Intialization
                 yield break;
             }
 
-            Debug.Log($"[SlotInitializationStep] 핸드 슬롯 수: {slotRegistry.GetHandSlotRegistry()?.GetAllHandSlots()?.Count() ?? 0}");
-            Debug.Log($"[SlotInitializationStep] 전투 슬롯 수: {slotRegistry.GetCombatSlotRegistry()?.GetAllCombatSlots()?.Count() ?? 0}");
-            Debug.Log($"[SlotInitializationStep] 캐릭터 슬롯 수: {slotRegistry.GetCharacterSlotRegistry()?.GetAllCharacterSlots()?.Count() ?? 0}");
+            // TODO: slotRegistry가 object 타입이므로 적절한 캐스팅 필요
+            // Debug.Log($"[SlotInitializationStep] 핸드 슬롯 수: {slotRegistry.GetHandSlotRegistry()?.GetAllHandSlots()?.Count() ?? 0}");
+            // Debug.Log($"[SlotInitializationStep] 전투 슬롯 수: {slotRegistry.GetCombatSlotRegistry()?.GetAllCombatSlots()?.Count() ?? 0}");
+            // Debug.Log($"[SlotInitializationStep] 캐릭터 슬롯 수: {slotRegistry.GetCharacterSlotRegistry()?.GetAllCharacterSlots()?.Count() ?? 0}");
+            Debug.Log($"[SlotInitializationStep] 슬롯 초기화 완료 (상세 정보는 임시로 비활성화)");
 
             Debug.Log("<color=cyan>[SlotInitializationStep] 슬롯 초기화 완료</color>");
         }

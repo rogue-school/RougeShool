@@ -68,8 +68,8 @@ namespace Game.CombatSystem.Manager
 
         #region 의존성 주입
 
-        [Inject] private IPlayerManager playerManager;
-        [Inject] private IEnemyManager enemyManager;
+        [Inject] private PlayerManager playerManager;
+        [Inject] private EnemyManager enemyManager;
         [Inject] private IPlayerHandManager playerHandManager;
         [Inject] private IStageManager stageManager;
         [Inject] private CombatSlotManager slotManager;
@@ -424,6 +424,33 @@ namespace Game.CombatSystem.Manager
             }
         }
 
+        #endregion
+        
+        #region 게임 오버 관리 (GameOverManager 통합)
+        
+        [Header("게임 오버 설정")]
+        [SerializeField] private GameObject gameOverUI;
+        
+        /// <summary>
+        /// 게임 오버 UI를 화면에 표시합니다.
+        /// </summary>
+        public void ShowGameOverUI()
+        {
+            GameLogger.LogInfo("게임 오버 UI 호출됨", GameLogger.LogCategory.Combat);
+            if (gameOverUI != null)
+                gameOverUI.SetActive(true);
+        }
+
+        /// <summary>
+        /// 게임 오버 처리를 시작합니다.
+        /// </summary>
+        public void TriggerGameOver()
+        {
+            GameLogger.LogInfo("게임 오버 처리 시작", GameLogger.LogCategory.Combat);
+            ShowGameOverUI();
+            EndCombat();
+        }
+        
         #endregion
     }
 }

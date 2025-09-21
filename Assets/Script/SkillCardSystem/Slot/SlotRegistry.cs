@@ -7,7 +7,7 @@ namespace Game.CombatSystem.Slot
     /// <summary>
     /// 전투 슬롯, 핸드 슬롯, 캐릭터 슬롯 레지스트리를 통합 관리하는 클래스입니다.
     /// </summary>
-    public class SlotRegistry : MonoBehaviour, ISlotRegistry
+    public class SlotRegistry : MonoBehaviour
     {
         #region 인스펙터에서 할당된 슬롯 레지스트리
 
@@ -31,17 +31,17 @@ namespace Game.CombatSystem.Slot
         /// <summary>
         /// 핸드 슬롯 레지스트리를 반환합니다.
         /// </summary>
-        public IHandSlotRegistry GetHandSlotRegistry() => handSlotRegistry;
+        public HandSlotRegistry GetHandSlotRegistry() => handSlotRegistry;
 
         /// <summary>
         /// 전투 슬롯 레지스트리를 반환합니다.
         /// </summary>
-        public ICombatSlotRegistry GetCombatSlotRegistry() => combatSlotRegistry;
+        public CombatSlotRegistry GetCombatSlotRegistry() => combatSlotRegistry;
 
         /// <summary>
         /// 캐릭터 슬롯 레지스트리를 반환합니다.
         /// </summary>
-        public ICharacterSlotRegistry GetCharacterSlotRegistry() => characterSlotRegistry;
+        public CharacterSlotRegistry GetCharacterSlotRegistry() => characterSlotRegistry;
 
         #endregion
 

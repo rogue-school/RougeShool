@@ -8,6 +8,7 @@ using Game.SkillCardSystem.Data;
 using Game.CombatSystem.Slot;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Utility;
+using Game.CharacterSystem.Manager;
 using Zenject;
 
 namespace Game.CombatSystem.Manager
@@ -45,8 +46,8 @@ namespace Game.CombatSystem.Manager
 
         #region 의존성 주입
 
-        [Inject] private IPlayerManager playerManager;
-        [Inject] private IEnemyManager enemyManager;
+        [Inject] private PlayerManager playerManager;
+        [Inject] private EnemyManager enemyManager;
         [Inject] private CombatSlotManager slotManager;
         [Inject] private TurnManager turnManager;
 

@@ -1,6 +1,6 @@
 using Game.CombatSystem.Interface;
 using Game.CharacterSystem.Interface;
-using Game.IManager;
+using Game.CharacterSystem.Manager;
 
 namespace Game.CombatSystem.Service
 {
@@ -8,11 +8,11 @@ namespace Game.CombatSystem.Service
     /// 적 스폰이 가능한지 여부를 판단하는 기본 구현체입니다.
     /// 현재 필드에 적이 없거나 사망한 경우에만 새로운 적 스폰이 가능합니다.
     /// </summary>
-    public class DefaultEnemySpawnValidator : IEnemySpawnValidator
+    public class DefaultEnemySpawnValidator
     {
         #region Fields
 
-        private readonly IEnemyManager enemyManager;
+        private readonly EnemyManager enemyManager;
 
         #endregion
 
@@ -22,7 +22,7 @@ namespace Game.CombatSystem.Service
         /// 기본 적 스폰 검증자를 생성합니다.
         /// </summary>
         /// <param name="enemyManager">적 매니저</param>
-        public DefaultEnemySpawnValidator(IEnemyManager enemyManager)
+        public DefaultEnemySpawnValidator(EnemyManager enemyManager)
         {
             this.enemyManager = enemyManager;
         }

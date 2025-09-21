@@ -2,8 +2,10 @@ using UnityEngine;
 using System.Linq;
 using Game.CombatSystem.Data;
 using Game.CombatSystem.Slot;
+using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Interface;
 using Game.CoreSystem.Utility;
+using Zenject;
 
 namespace Game.CombatSystem.Manager
 {
@@ -26,37 +28,16 @@ namespace Game.CombatSystem.Manager
     }
 
     /// <summary>
-    /// 싱글게임용 전투 슬롯 관리자 (싱글톤)
+    /// 싱글게임용 전투 슬롯 관리자 (Zenject DI)
     /// 전투 슬롯의 생성, 배치, 검증을 담당합니다.
     /// </summary>
-    public class CombatSlotManager : MonoBehaviour
+    public class CombatSlotManager : MonoBehaviour, ICombatSlotManager
     {
-        #region 싱글톤
-
-        public static CombatSlotManager Instance { get; private set; }
+        #region 초기화 (Zenject DI)
 
         private void Awake()
         {
-            if (Instance == null)
-            {
-                Instance = this;
-                
-                // 루트 GameObject인지 확인 후 DontDestroyOnLoad 적용
-                if (transform.parent == null)
-                {
-                    DontDestroyOnLoad(gameObject);
-                }
-                else
-                {
-                    GameLogger.LogWarning("CombatSlotManager가 루트 GameObject가 아닙니다. DontDestroyOnLoad를 적용할 수 없습니다.", GameLogger.LogCategory.Combat);
-                }
-                
-                InitializeSlots();
-            }
-            else
-            {
-                Destroy(gameObject);
-            }
+            InitializeSlots();
         }
 
         #endregion
@@ -267,7 +248,7 @@ namespace Game.CombatSystem.Manager
         /// </summary>
         /// <param name="position">슬롯 위치</param>
         /// <returns>슬롯 인스턴스, 없으면 null</returns>
-        public CombatSlot GetSlot(CombatSlotPosition position)
+        public ICombatCardSlot GetSlot(CombatSlotPosition position)
         {
             if (slots == null || slots.Length == 0)
             {
@@ -294,11 +275,13 @@ namespace Game.CombatSystem.Manager
             }
 
             // 배치 전 슬롯 상태 확인
-            var wasEmpty = slot.IsEmpty;
-            var existingCard = slot.OccupiedCard?.GetCardName() ?? "없음";
+            bool wasEmpty = slot.IsEmpty();
+            string existingCard = slot.GetCard()?.GetCardName() ?? "없음";
             GameLogger.LogInfo($"슬롯 {position} 배치 전 상태: 비어있음={wasEmpty}, 기존카드={existingCard}", GameLogger.LogCategory.Combat);
 
-            var success = slot.TryPlaceCard(card);
+            // 카드 배치
+            slot.SetCard(card);
+            bool success = true;
             if (success)
             {
                 GameLogger.LogInfo($"카드 배치 성공: {card.GetCardName()} → {position}", GameLogger.LogCategory.Combat);
@@ -325,9 +308,10 @@ namespace Game.CombatSystem.Manager
                 return null;
             }
 
-            var card = slot.RemoveCard();
+            var card = slot.GetCard();
             if (card != null)
             {
+                slot.ClearAll();
                 GameLogger.LogInfo($"카드 제거 성공: {card.GetCardName()} ← {position}", GameLogger.LogCategory.Combat);
             }
 
@@ -402,7 +386,7 @@ namespace Game.CombatSystem.Manager
         public bool IsSlotEmpty(CombatSlotPosition position)
         {
             var slot = GetSlot(position);
-            return slot?.IsEmpty ?? true;
+            return slot?.IsEmpty() ?? true;
         }
 
         /// <summary>
@@ -413,7 +397,7 @@ namespace Game.CombatSystem.Manager
         public ISkillCard GetCardInSlot(CombatSlotPosition position)
         {
             var slot = GetSlot(position);
-            return slot?.OccupiedCard;
+            return slot?.GetCard();
         }
 
         #endregion
@@ -442,12 +426,13 @@ namespace Game.CombatSystem.Manager
     /// 싱글게임용 전투 슬롯 클래스
     /// </summary>
     [System.Serializable]
-    public class CombatSlot
+    public class CombatSlot : ICombatCardSlot
     {
         public CombatSlotPosition Position { get; }
         public SlotOwner Owner { get; }
         public ISkillCard OccupiedCard { get; private set; }
-        public bool IsEmpty => OccupiedCard == null;
+        
+        private ISkillCardUI cardUI;
 
         public CombatSlot(CombatSlotPosition position, SlotOwner owner)
         {
@@ -480,23 +465,7 @@ namespace Game.CombatSystem.Manager
             return card;
         }
 
-        /// <summary>
-        /// 슬롯에 카드가 있는지 확인합니다.
-        /// </summary>
-        /// <returns>카드가 있으면 true</returns>
-        public bool HasCard()
-        {
-            return !IsEmpty;
-        }
 
-        /// <summary>
-        /// 슬롯에 카드를 설정합니다.
-        /// </summary>
-        /// <param name="card">설정할 카드</param>
-        public void SetCard(ISkillCard card)
-        {
-            OccupiedCard = card;
-        }
 
         /// <summary>
         /// 카드 배치 가능 여부를 확인합니다.
@@ -505,7 +474,7 @@ namespace Game.CombatSystem.Manager
         /// <returns>배치 가능하면 true</returns>
         private bool CanPlaceCard(ISkillCard card)
         {
-            if (!IsEmpty)
+            if (OccupiedCard != null)
             {
                 GameLogger.LogWarning($"슬롯 {Position}이 이미 사용 중입니다", GameLogger.LogCategory.Combat);
                 return false;
@@ -522,5 +491,123 @@ namespace Game.CombatSystem.Manager
 
             return true;
         }
+
+        #region ICombatCardSlot 구현
+
+        /// <summary>
+        /// 슬롯의 전체 필드 포지션 정보를 반환합니다.
+        /// </summary>
+        public CombatFieldSlotPosition GetCombatPosition()
+        {
+            // 기본 구현: Position을 CombatFieldSlotPosition으로 변환
+            return Position switch
+            {
+                CombatSlotPosition.BATTLE_SLOT => CombatFieldSlotPosition.FIELD_LEFT,
+                CombatSlotPosition.WAIT_SLOT_1 => CombatFieldSlotPosition.FIELD_RIGHT,
+                CombatSlotPosition.WAIT_SLOT_2 => CombatFieldSlotPosition.FIELD_LEFT,
+                CombatSlotPosition.WAIT_SLOT_3 => CombatFieldSlotPosition.FIELD_RIGHT,
+                CombatSlotPosition.WAIT_SLOT_4 => CombatFieldSlotPosition.FIELD_LEFT,
+                _ => CombatFieldSlotPosition.NONE
+            };
+        }
+
+        /// <summary>
+        /// 슬롯에 현재 등록된 스킬 카드 데이터를 반환합니다.
+        /// </summary>
+        public ISkillCard GetCard()
+        {
+            return OccupiedCard;
+        }
+
+        /// <summary>
+        /// 슬롯에 스킬 카드 데이터를 등록합니다.
+        /// </summary>
+        public void SetCard(ISkillCard card)
+        {
+            OccupiedCard = card;
+        }
+
+        /// <summary>
+        /// 슬롯에 등록된 카드 UI 객체를 반환합니다.
+        /// </summary>
+        public ISkillCardUI GetCardUI()
+        {
+            return cardUI;
+        }
+
+        /// <summary>
+        /// 카드 UI를 슬롯에 등록합니다.
+        /// </summary>
+        public void SetCardUI(ISkillCardUI cardUI)
+        {
+            this.cardUI = cardUI;
+        }
+
+        /// <summary>
+        /// 카드 데이터와 카드 UI 모두를 제거합니다.
+        /// </summary>
+        public void ClearAll()
+        {
+            OccupiedCard = null;
+            cardUI = null;
+        }
+
+        /// <summary>
+        /// 카드 UI만 제거합니다. 카드 데이터는 유지됩니다.
+        /// </summary>
+        public void ClearCardUI()
+        {
+            cardUI = null;
+        }
+
+        /// <summary>
+        /// 슬롯에 카드 데이터가 존재하는지 여부를 반환합니다.
+        /// </summary>
+        public bool HasCard()
+        {
+            return OccupiedCard != null;
+        }
+
+        /// <summary>
+        /// 슬롯이 완전히 비어 있는지 확인합니다 (카드 + UI 모두 없음).
+        /// </summary>
+        public bool IsEmpty()
+        {
+            return OccupiedCard == null && cardUI == null;
+        }
+
+        /// <summary>
+        /// 슬롯에 등록된 카드의 효과를 자동 실행합니다.
+        /// </summary>
+        public void ExecuteCardAutomatically()
+        {
+            if (OccupiedCard != null)
+            {
+                // 기본 컨텍스트로 카드 실행
+                OccupiedCard.ExecuteSkill();
+            }
+        }
+
+        /// <summary>
+        /// 주어진 컨텍스트를 사용하여 카드 효과를 실행합니다.
+        /// </summary>
+        public void ExecuteCardAutomatically(ICardExecutionContext ctx)
+        {
+            if (OccupiedCard != null)
+            {
+                OccupiedCard.ExecuteCardAutomatically(ctx);
+            }
+        }
+
+        /// <summary>
+        /// 카드 UI가 배치될 슬롯의 트랜스폼을 반환합니다.
+        /// </summary>
+        public Transform GetTransform()
+        {
+            // 기본 구현: null 반환 (실제 구현에서는 슬롯의 Transform을 반환해야 함)
+            return null;
+        }
+
+        #endregion
     }
 }

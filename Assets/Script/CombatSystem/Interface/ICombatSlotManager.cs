@@ -1,7 +1,6 @@
-using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
 
-namespace Game.IManager
+namespace Game.CombatSystem.Interface
 {
     /// <summary>
     /// 전투 슬롯(선공/후공 슬롯)을 관리하는 매니저 인터페이스입니다.

@@ -29,7 +29,7 @@ AudioSystem/
 └── (빈 폴더)          # 실제 구현은 CoreSystem/Audio에 위치
 
 CoreSystem/Audio/     # 실제 구현 위치
-├── AudioManager.cs           # 오디오 매니저 (싱글톤)
+├── AudioManager.cs           # 오디오 매니저 (DI 기반)
 ├── AudioPoolManager.cs       # 오디오 풀링 매니저
 └── AudioEventTrigger.cs      # 오디오 이벤트 트리거
 ```
@@ -37,7 +37,7 @@ CoreSystem/Audio/     # 실제 구현 위치
 ## 📁 주요 컴포넌트 규칙
 
 ### AudioManager.cs 규칙
-- **싱글톤 패턴**: Instance 프로퍼티를 통한 전역 접근
+- **DI 기반 설계**: Zenject 의존성 주입을 통한 느슨한 결합
 - **ICoreSystemInitializable**: CoreSystem 초기화 인터페이스 구현
 - **오디오 소스 관리**: BGM용, SFX용 AudioSource 분리 관리
 - **페이드 효과**: BGM 전환 시 부드러운 페이드 인/아웃

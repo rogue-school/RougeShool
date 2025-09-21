@@ -30,12 +30,12 @@ namespace Game.CombatSystem.Interface
         /// 컨텍스트에서 현재 플레이어 캐릭터를 반환합니다.
         /// Source 또는 Target 중 해당되는 플레이어가 있으면 반환됩니다.
         /// </summary>
-        IPlayerCharacter GetPlayer();
+        ICharacter GetPlayer();
 
         /// <summary>
         /// 컨텍스트에서 현재 적 캐릭터를 반환합니다.
         /// Source 또는 Target 중 해당되는 적이 있으면 반환됩니다.
         /// </summary>
-        IEnemyCharacter GetEnemy();
+        ICharacter GetEnemy();
     }
 }

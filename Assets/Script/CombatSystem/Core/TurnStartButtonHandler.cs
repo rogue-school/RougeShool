@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Manager;
+using Game.CombatSystem.Service;
 
 namespace Game.CombatSystem.Core
 {
@@ -14,9 +15,9 @@ namespace Game.CombatSystem.Core
         [Header("전투 시작 버튼")]
         [SerializeField] private Button startButton;
 
-        private ITurnStartConditionChecker conditionChecker;
+        private object conditionChecker; // TODO: 적절한 타입으로 교체 필요
         private TurnManager turnManager;
-        private ICombatStateFactory stateFactory;
+        private object stateFactory; // TODO: 적절한 타입으로 교체 필요
 
         private bool isInjected = false;
 
@@ -24,9 +25,9 @@ namespace Game.CombatSystem.Core
         /// Zenject 의존성 주입 메서드
         /// </summary>
         public void Inject(
-            ITurnStartConditionChecker conditionChecker,
+            object conditionChecker,
             TurnManager turnManager,
-            ICombatStateFactory stateFactory)
+            object stateFactory)
         {
             this.conditionChecker = conditionChecker;
             this.turnManager = turnManager;
@@ -67,7 +68,9 @@ namespace Game.CombatSystem.Core
             if (!isInjected || conditionChecker == null || startButton == null)
                 return;
 
-            bool canStart = conditionChecker.CanStartTurn();
+            // TODO: conditionChecker가 object 타입이므로 적절한 캐스팅 필요
+            // bool canStart = conditionChecker.CanStartTurn();
+            bool canStart = (conditionChecker as DefaultTurnStartConditionChecker)?.CanStartTurn() ?? false;
             startButton.interactable = canStart;
         }
 
@@ -76,7 +79,9 @@ namespace Game.CombatSystem.Core
         /// </summary>
         private void OnStartButtonClicked()
         {
-            if (!isInjected || conditionChecker == null || !conditionChecker.CanStartTurn())
+            // TODO: conditionChecker가 object 타입이므로 적절한 캐스팅 필요
+            // if (!isInjected || conditionChecker == null || !conditionChecker.CanStartTurn())
+            if (!isInjected || conditionChecker == null || !((conditionChecker as DefaultTurnStartConditionChecker)?.CanStartTurn() ?? false))
             {
                 Debug.LogWarning("[TurnStartButtonHandler] 버튼 클릭 조건 불충족");
                 return;

@@ -6,6 +6,7 @@ using Game.CombatSystem.Data;
 using Game.CombatSystem.Slot;
 using Game.CombatSystem.Utility;
 using Game.CombatSystem.Manager;
+using Game.CombatSystem.DragDrop;
 
 namespace Game.CombatSystem.Service
 {
@@ -15,20 +16,20 @@ namespace Game.CombatSystem.Service
     /// </summary>
     public class CardDropService
     {
-        private readonly ICardDropValidator validator;
-        private readonly ICardRegistrar registrar;
+        private readonly ICardValidator validator;
+        private readonly DefaultCardRegistrar registrar;
         private readonly TurnManager turnManager;
-        private readonly ICardReplacementHandler replacementHandler;
+        private readonly object replacementHandler; // TODO: 적절한 타입으로 교체 필요
         private readonly IPlayerHandManager playerHandManager;
 
         /// <summary>
         /// 생성자. 필요한 의존성을 주입합니다.
         /// </summary>
         public CardDropService(
-            ICardDropValidator validator,
-            ICardRegistrar registrar,
+            ICardValidator validator,
+            DefaultCardRegistrar registrar,
             TurnManager turnManager,
-            ICardReplacementHandler replacementHandler,
+            object replacementHandler,
             IPlayerHandManager playerHandManager)
         {
             this.validator = validator;
@@ -100,7 +101,7 @@ namespace Game.CombatSystem.Service
         private bool CanDropCard(ISkillCard card, CombatSlot slot)
         {
             // 슬롯이 비어있고, 카드 소유자가 슬롯 소유자와 일치하는지 확인
-            return slot.IsEmpty && card.GetOwner() == slot.Owner;
+            return slot.IsEmpty() && card.GetOwner() == slot.Owner;
         }
     }
 }

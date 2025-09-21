@@ -15,10 +15,10 @@ namespace Game.SkillCardSystem.Executor
     /// 스킬 카드의 이펙트를 실제로 실행하는 클래스입니다.
     /// 유효성 검사 후 커맨드 패턴 기반으로 이펙트를 처리합니다.
     /// </summary>
-    public class CardExecutor : ICardExecutor
+    public class CardExecutor
     {
         private readonly ICardEffectCommandFactory commandFactory;
-        private readonly ICardExecutionValidator validator;
+        private readonly ICardValidator validator;
         private readonly IAudioManager audioManager;
 
         /// <summary>
@@ -29,7 +29,7 @@ namespace Game.SkillCardSystem.Executor
         /// <param name="audioManager">오디오 매니저</param>
         public CardExecutor(
             ICardEffectCommandFactory commandFactory,
-            ICardExecutionValidator validator,
+            ICardValidator validator,
             IAudioManager audioManager)
         {
             this.commandFactory = commandFactory;
@@ -58,12 +58,12 @@ namespace Game.SkillCardSystem.Executor
                 return;
             }
 
-            // 카드가 순서 제공을 지원하면 우선 사용
-            if (card is ICardEffectOrderProvider orderProvider)
-            {
-                var ordered = orderProvider.GetOrderedEffects();
-                if (ordered != null && ordered.Count > 0) effects = ordered;
-            }
+            // 카드가 순서 제공을 지원하면 우선 사용 (삭제된 인터페이스)
+            // if (card is ICardEffectOrderProvider orderProvider)
+            // {
+            //     var ordered = orderProvider.GetOrderedEffects();
+            //     if (ordered != null && ordered.Count > 0) effects = ordered;
+            // }
 
             foreach (var effect in effects)
             {

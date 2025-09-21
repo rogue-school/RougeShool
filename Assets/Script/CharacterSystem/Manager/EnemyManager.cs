@@ -1,6 +1,6 @@
 using Game.CharacterSystem.Interface;
 using Game.CombatSystem.Interface;
-using Game.IManager;
+using Game.CharacterSystem.Manager;
 using UnityEngine;
 using Game.CharacterSystem.UI;
 using Game.CoreSystem.Utility;
@@ -13,7 +13,7 @@ namespace Game.CharacterSystem.Manager
     /// 현재 적 캐릭터와 관련된 상태를 보관하거나 초기화합니다.
     /// 적 카드는 핸드 없이 대기 슬롯에서 직접 관리됩니다.
     /// </summary>
-    public class EnemyManager : BaseCharacterManager<IEnemyCharacter>, IEnemyManager
+    public class EnemyManager : BaseCharacterManager<ICharacter>
 {
 
     #region DI
@@ -44,7 +44,7 @@ namespace Game.CharacterSystem.Manager
     /// 적 캐릭터를 등록합니다.
     /// </summary>
     /// <param name="enemy">등록할 적 캐릭터</param>
-    public void RegisterEnemy(IEnemyCharacter enemy)
+    public void RegisterEnemy(ICharacter enemy)
     {
         SetCharacter(enemy);
         
@@ -65,7 +65,7 @@ namespace Game.CharacterSystem.Manager
     /// <summary>
     /// 적 캐릭터를 설정합니다.
     /// </summary>
-    public override void SetCharacter(IEnemyCharacter character)
+    public override void SetCharacter(ICharacter character)
     {
         currentCharacter = character;
     }
@@ -96,17 +96,17 @@ namespace Game.CharacterSystem.Manager
     /// <summary>
     /// 현재 등록된 적 캐릭터를 반환합니다.
     /// </summary>
-    public override IEnemyCharacter GetCharacter() => currentCharacter;
+    public override ICharacter GetCharacter() => currentCharacter;
 
     /// <summary>
     /// 현재 등록된 적 캐릭터를 반환합니다. (호환성 유지)
     /// </summary>
-    public IEnemyCharacter GetEnemy() => currentCharacter;
+    public ICharacter GetEnemy() => currentCharacter;
 
     /// <summary>
     /// 현재 등록된 적 캐릭터를 반환합니다. (명시적 이름)
     /// </summary>
-    public IEnemyCharacter GetCurrentEnemy() => currentCharacter;
+    public ICharacter GetCurrentEnemy() => currentCharacter;
 
     // 적 핸드 매니저 조회 메서드 제거됨 - 적 카드는 대기 슬롯에서 직접 관리
 

@@ -2,7 +2,6 @@ using UnityEngine;
 using Zenject;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Core;
-using Game.IManager;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Slot;
 using Game.SkillCardSystem.UI;
@@ -19,7 +18,7 @@ namespace Game.CharacterSystem.Manager
     /// 캐릭터 생성, 데이터 로드, 상태 관리만 담당합니다.
     /// 핸드 관리나 UI 관리는 다른 매니저에 위임합니다.
     /// </summary>
-    public class PlayerManager : BaseCharacterManager<IPlayerCharacter>, IPlayerManager
+    public class PlayerManager : BaseCharacterManager<ICharacter>
     {
         #region 플레이어 캐릭터 전용 설정
 
@@ -120,9 +119,9 @@ namespace Game.CharacterSystem.Manager
 
             var instance = CreateCharacterInstance();
 
-            if (!instance.TryGetComponent(out IPlayerCharacter character))
+            if (!instance.TryGetComponent(out ICharacter character))
             {
-                GameLogger.LogError("IPlayerCharacter 컴포넌트가 누락되었습니다.", GameLogger.LogCategory.Character);
+                GameLogger.LogError("ICharacter 컴포넌트가 누락되었습니다.", GameLogger.LogCategory.Character);
                 Destroy(instance);
                 return;
             }
@@ -162,7 +161,7 @@ namespace Game.CharacterSystem.Manager
         /// 플레이어 캐릭터를 설정합니다.
         /// </summary>
         /// <param name="player">설정할 플레이어 캐릭터</param>
-        public void SetPlayer(IPlayerCharacter player)
+        public void SetPlayer(ICharacter player)
         {
             SetCharacter(player);
         }
@@ -170,7 +169,7 @@ namespace Game.CharacterSystem.Manager
         /// <summary>
         /// 플레이어 캐릭터를 설정합니다.
         /// </summary>
-        public override void SetCharacter(IPlayerCharacter character)
+        public override void SetCharacter(ICharacter character)
         {
             currentCharacter = character;
         }
@@ -182,12 +181,12 @@ namespace Game.CharacterSystem.Manager
         /// <summary>
         /// 현재 플레이어 캐릭터를 반환합니다.
         /// </summary>
-        public override IPlayerCharacter GetCharacter() => currentCharacter;
+        public override ICharacter GetCharacter() => currentCharacter;
 
         /// <summary>
         /// 현재 플레이어 캐릭터를 반환합니다. (호환성 유지)
         /// </summary>
-        public IPlayerCharacter GetPlayer() => currentCharacter;
+        public ICharacter GetPlayer() => currentCharacter;
 
         /// <summary>
         /// 플레이어 핸드 매니저를 반환합니다.
@@ -235,6 +234,200 @@ namespace Game.CharacterSystem.Manager
             GameLogger.LogInfo("PlayerManager 초기화 완료", GameLogger.LogCategory.Character);
         }
 
+        #endregion
+        
+        #region 리소스 관리 (PlayerResourceManager 통합)
+        
+        private int currentResource;
+        private int maxResource;
+        private string resourceName;
+        
+        /// <summary>현재 리소스</summary>
+        public int CurrentResource => currentResource;
+        
+        /// <summary>최대 리소스</summary>
+        public int MaxResource => maxResource;
+        
+        /// <summary>리소스 이름</summary>
+        public string ResourceName => resourceName;
+        
+        /// <summary>
+        /// 리소스를 소모합니다.
+        /// </summary>
+        /// <param name="amount">소모할 양</param>
+        /// <returns>소모 성공 여부</returns>
+        public bool ConsumeResource(int amount)
+        {
+            if (amount < 0)
+            {
+                GameLogger.LogWarning("음수 리소스 소모는 불가능합니다.", GameLogger.LogCategory.Character);
+                return false;
+            }
+
+            if (currentResource < amount)
+            {
+                GameLogger.LogWarning($"리소스 부족: {currentResource}/{maxResource} (필요: {amount})", GameLogger.LogCategory.Character);
+                return false;
+            }
+
+            currentResource -= amount;
+            GameLogger.LogInfo($"리소스 소모: {amount} (남은 양: {currentResource}/{maxResource})", GameLogger.LogCategory.Character);
+            return true;
+        }
+        
+        /// <summary>
+        /// 리소스를 회복합니다.
+        /// </summary>
+        /// <param name="amount">회복할 양</param>
+        public void RestoreResource(int amount)
+        {
+            if (amount < 0)
+            {
+                GameLogger.LogWarning("음수 리소스 회복은 불가능합니다.", GameLogger.LogCategory.Character);
+                return;
+            }
+
+            currentResource = Mathf.Min(currentResource + amount, maxResource);
+            GameLogger.LogInfo($"리소스 회복: {amount} (현재 양: {currentResource}/{maxResource})", GameLogger.LogCategory.Character);
+        }
+        
+        /// <summary>
+        /// 리소스를 최대치로 회복합니다.
+        /// </summary>
+        public void RestoreToMax()
+        {
+            currentResource = maxResource;
+            GameLogger.LogInfo($"리소스 최대치 회복: {currentResource}/{maxResource}", GameLogger.LogCategory.Character);
+        }
+        
+        /// <summary>
+        /// 충분한 리소스가 있는지 확인합니다.
+        /// </summary>
+        /// <param name="amount">확인할 양</param>
+        /// <returns>충분한 리소스 여부</returns>
+        public bool HasEnoughResource(int amount)
+        {
+            return currentResource >= amount;
+        }
+        
+        /// <summary>
+        /// 리소스를 초기화합니다.
+        /// </summary>
+        /// <param name="characterData">캐릭터 데이터</param>
+        private void InitializeResource(PlayerCharacterData characterData)
+        {
+            if (characterData == null)
+            {
+                GameLogger.LogError("캐릭터 데이터가 null입니다.", GameLogger.LogCategory.Character);
+                return;
+            }
+
+            maxResource = characterData.MaxResource;
+            resourceName = characterData.ResourceName;
+            currentResource = maxResource; // 시작 시 최대치로 설정
+
+            GameLogger.LogInfo($"{characterData.DisplayName} 리소스 초기화: {resourceName} {currentResource}/{maxResource}", GameLogger.LogCategory.Character);
+        }
+        
+        #endregion
+        
+        #region 캐릭터 초기화 (PlayerCharacterInitializer 통합)
+        
+        /// <summary>
+        /// 플레이어 캐릭터를 생성하고 슬롯에 배치합니다.
+        /// </summary>
+        public void SetupPlayerCharacter()
+        {
+            if (!ValidateData())
+            {
+                GameLogger.LogError("유효하지 않은 초기화 데이터입니다.", GameLogger.LogCategory.Character);
+                return;
+            }
+
+            var slot = GetPlayerSlot();
+            if (slot == null) return;
+
+            Transform slotTransform = ((MonoBehaviour)slot).transform;
+
+            // 기존 자식 제거
+            foreach (Transform child in slotTransform)
+                Destroy(child.gameObject);
+
+            // 캐릭터 생성 및 부모 설정
+            var player = Instantiate(playerPrefab);
+            player.name = "PlayerCharacter";
+            player.transform.SetParent(slotTransform, false);
+
+            // RectTransform 정렬
+            if (player.TryGetComponent(out RectTransform rt))
+            {
+                rt.anchorMin = new Vector2(0.5f, 0.5f);
+                rt.anchorMax = new Vector2(0.5f, 0.5f);
+                rt.pivot = new Vector2(0.5f, 0.5f);
+                rt.anchoredPosition = Vector2.zero;
+                rt.localPosition = Vector3.zero;
+                rt.localRotation = Quaternion.identity;
+                rt.localScale = Vector3.one;
+            }
+
+            // PlayerCharacter 컴포넌트 확인
+            if (!player.TryGetComponent(out PlayerCharacter character))
+            {
+                GameLogger.LogError("PlayerCharacter 컴포넌트를 찾을 수 없습니다.", GameLogger.LogCategory.Character);
+                Destroy(player.gameObject);
+                return;
+            }
+
+            // 데이터 설정
+            var data = ResolvePlayerData();
+            if (data == null)
+            {
+                GameLogger.LogError("캐릭터 데이터가 없습니다.", GameLogger.LogCategory.Character);
+                return;
+            }
+
+            character.SetCharacterData(data);
+            InitializeResource(data); // 리소스 초기화
+            slot.SetCharacter(character);
+            SetPlayer(character);
+            
+            GameLogger.LogInfo("플레이어 캐릭터 초기화 완료", GameLogger.LogCategory.Character);
+        }
+        
+        /// <summary>
+        /// 플레이어 프리팹과 슬롯 레지스트리의 유효성을 검사합니다.
+        /// </summary>
+        private bool ValidateData()
+        {
+            return playerPrefab != null;
+        }
+        
+        /// <summary>
+        /// 플레이어 캐릭터를 배치할 슬롯을 조회합니다.
+        /// </summary>
+        private ICharacterSlot GetPlayerSlot()
+        {
+            // 슬롯 레지스트리에서 플레이어 슬롯 조회
+            // 실제 구현은 슬롯 시스템에 따라 달라질 수 있음
+            return null; // TODO: 실제 슬롯 조회 로직 구현
+        }
+        
+        /// <summary>
+        /// 플레이어 캐릭터 데이터 선택 로직입니다.
+        /// </summary>
+        private PlayerCharacterData ResolvePlayerData()
+        {
+            // 기본 데이터 사용
+            if (defaultPlayerData != null)
+            {
+                GameLogger.LogInfo($"기본 캐릭터 데이터 사용: {defaultPlayerData.DisplayName}", GameLogger.LogCategory.Character);
+                return defaultPlayerData;
+            }
+
+            GameLogger.LogError("캐릭터 데이터가 없습니다.", GameLogger.LogCategory.Character);
+            return null;
+        }
+        
         #endregion
     }
 }

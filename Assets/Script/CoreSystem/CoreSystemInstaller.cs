@@ -5,6 +5,8 @@ using Game.CoreSystem.Interface;
 using Game.CoreSystem.Utility;
 using Game.CoreSystem.Audio;
 using Game.CoreSystem.Save;
+using Game.CombatSystem.Utility;
+using Game.CombatSystem.Interface;
 using System.Linq;
 using System.Collections.Generic;
 
@@ -120,6 +122,10 @@ namespace Game.CoreSystem
         {
             // CoroutineRunner - 인터페이스와 함께 바인딩
             EnsureAndBindCoreManagerWithInterface<CoroutineRunner, ICoroutineRunner>(coroutineRunner, "CoroutineRunner");
+            
+            // UnityMainThreadDispatcher - 인터페이스와 함께 바인딩 (전역 시스템으로 추가)
+            Container.BindInterfacesAndSelfTo<UnityMainThreadDispatcher>()
+                .FromComponentInHierarchy().AsSingle();
             
             // GameLogger (정적 클래스이므로 인스턴스 바인딩 불필요)
             // GameLogger는 정적 메서드로 사용하므로 DI 바인딩하지 않음

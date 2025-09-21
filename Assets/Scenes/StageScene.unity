@@ -709,7 +709,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   slotConfig:
     slotCount: 5
-    slotPattern: 0
+    slotPattern: 1
   visualSettings:
     playerSlotColor: {r: 0.2, g: 0.6, b: 1, a: 0.8}
     enemySlotColor: {r: 1, g: 0.3, b: 0.3, a: 0.8}
@@ -958,7 +958,6 @@ Transform:
   - {fileID: 1538624262}
   - {fileID: 422074199}
   - {fileID: 1629137751}
-  - {fileID: 937399271}
   - {fileID: 146651896}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -2793,6 +2792,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fd75d9430d961ee4f93db06cd0aba179, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  enableDebugLogging: 1
+  autoInitialize: 1
+  persistAcrossScenes: 1
+  initializeWithoutRequiredReferences: 1
   characterPrefab: {fileID: 7769799778275336730, guid: 2c6e844c91775424681f573a6951211e, type: 3}
   characterSlot: {fileID: 353723020}
   characterUIController: {fileID: 0}
@@ -2991,6 +2994,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cardUIPrefab: {fileID: 4627134175914890069, guid: dd8cb0a8e6cf7b34bbbbfe597c28aa49, type: 3}
+  enableLazyInitialization: 1
+  enableCircularDependencyCheck: 1
+  enableAutoObjectCreation: 0
+  enablePerformanceLogging: 0
 --- !u!1 &928501430
 GameObject:
   m_ObjectHideFlags: 0
@@ -3066,50 +3073,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 928501430}
   m_CullTransparentMesh: 1
---- !u!1 &937399270
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 937399271}
-  - component: {fileID: 937399272}
-  m_Layer: 0
-  m_Name: PlayerResourceManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &937399271
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 937399270}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 206878164}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &937399272
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 937399270}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0e86713960f7e343a800a23db1ce2b2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &940505063
 GameObject:
   m_ObjectHideFlags: 0
@@ -3154,35 +3117,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 94bbd7148bcde8542aa9a15589a05e75, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  managerSettings:
-    enableDebugLogging: 1
-    autoInitialize: 1
-    persistAcrossScenes: 0
-    enableCardPooling: 1
-    maxPoolSize: 50
-  cardSettings:
-    cardPrefab: {fileID: 0}
-    cardUIPrefab: {fileID: 0}
-    cardConfig: {fileID: 0}
-    cardDatabase: {fileID: 0}
-  deckHandSettings:
-    maxHandSize: 7
-    initialHandSize: 5
-    enableDeckShuffle: 1
-    deckSize: 30
-    drawCardCount: 1
-  uiSettings:
-    handContainer: {fileID: 0}
-    deckContainer: {fileID: 0}
-    dropArea: {fileID: 0}
-    cardUIController: {fileID: 0}
-    dragDropHandler: {fileID: 0}
-  serviceSettings:
-    cardFactory: {fileID: 0}
-    cardValidator: {fileID: 0}
-    cardCirculationSystem: {fileID: 0}
-    cardEventManager: {fileID: 0}
-    cardAnimationManager: {fileID: 0}
+  maxHandSize: 3
+  enableDebugLogging: 1
 --- !u!1 &946231362
 GameObject:
   m_ObjectHideFlags: 0
@@ -4713,9 +4649,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c70699d735b1963428df43904099bb3d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  enableDebugLogging: 1
+  autoInitialize: 1
+  persistAcrossScenes: 1
+  initializeWithoutRequiredReferences: 1
   characterPrefab: {fileID: 3064394028095851597, guid: 8475e0b2803738446a6cb8a5b49f9ca3, type: 3}
   characterSlot: {fileID: 1130412199}
   characterUIController: {fileID: 0}
+  playerPrefab: {fileID: 0}
+  defaultPlayerData: {fileID: 0}
   playerUI: {fileID: 1629137752}
 --- !u!1 &1529888834
 GameObject:
@@ -4956,37 +4898,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 164ac7d3b8b299642af4654e196d3e15, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  managerSettings:
-    enableDebugLogging: 1
-    autoInitialize: 1
-    persistAcrossScenes: 0
-    enableCardPooling: 1
-    maxPoolSize: 50
-  cardSettings:
-    cardPrefab: {fileID: 0}
-    cardUIPrefab: {fileID: 0}
-    cardConfig: {fileID: 0}
-    cardDatabase: {fileID: 0}
-  deckHandSettings:
-    maxHandSize: 7
-    initialHandSize: 5
-    enableDeckShuffle: 1
-    deckSize: 30
-    drawCardCount: 1
-  uiSettings:
-    handContainer: {fileID: 0}
-    deckContainer: {fileID: 0}
-    dropArea: {fileID: 0}
-    cardUIController: {fileID: 0}
-    dragDropHandler: {fileID: 0}
-  serviceSettings:
-    cardFactory: {fileID: 0}
-    cardValidator: {fileID: 0}
-    cardCirculationSystem: {fileID: 0}
-    cardEventManager: {fileID: 0}
-    cardAnimationManager: {fileID: 0}
   defaultDeck: {fileID: 11400000, guid: 01a1f3cd905df2e439aedf79636eaf13, type: 2}
-  maxDeckSize: 30
+  enableDebugLogging: 1
 --- !u!1 &1625152532
 GameObject:
   m_ObjectHideFlags: 0

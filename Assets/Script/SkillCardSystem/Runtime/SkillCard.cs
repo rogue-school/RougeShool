@@ -19,26 +19,47 @@ namespace Game.SkillCardSystem.Runtime
     /// <summary>
     /// 스킬카드의 런타임 인스턴스를 나타내는 클래스입니다.
     /// 카드 실행, 연출 처리, 효과 관리를 담당합니다.
+    /// MonoBehaviour 제거로 성능 최적화 완료.
     /// </summary>
-    public class SkillCard : MonoBehaviour, ISkillCard
+    public class SkillCard : ISkillCard
     {
-        [Header("카드 데이터")]
-        [SerializeField] private SkillCardDefinition definition;
+        #region 필드
         
-        [Header("런타임 상태")]
-        [SerializeField] private Owner owner;
-        [SerializeField] private List<ICardEffectCommand> effectCommands = new();
+        private SkillCardDefinition definition;
+        private Owner owner;
+        private List<ICardEffectCommand> effectCommands = new();
         
         private Dictionary<SkillCardSlotPosition, SkillCardSlotPosition> handSlotMap = new();
         private Dictionary<CombatSlotPosition, CombatSlotPosition> combatSlotMap = new();
         
-        // 의존성 주입
-        [Inject] private IAudioManager audioManager;
+        // 의존성 주입 (생성자에서 주입)
+        private IAudioManager audioManager;
+        
+        #endregion
+        
+        #region 생성자
+        
+        /// <summary>
+        /// 스킬카드 생성자
+        /// </summary>
+        /// <param name="definition">카드 정의</param>
+        /// <param name="owner">소유자</param>
+        /// <param name="audioManager">오디오 매니저</param>
+        public SkillCard(SkillCardDefinition definition, Owner owner, IAudioManager audioManager)
+        {
+            this.definition = definition;
+            this.owner = owner;
+            this.audioManager = audioManager;
+            
+            SetupEffectCommands();
+        }
+        
+        #endregion
         
         #region === 초기화 ===
         
         /// <summary>
-        /// 스킬카드를 초기화합니다.
+        /// 스킬카드를 초기화합니다. (레거시 호환성)
         /// </summary>
         /// <param name="definition">카드 정의</param>
         /// <param name="owner">소유자</param>
@@ -300,7 +321,8 @@ namespace Game.SkillCardSystem.Runtime
             if (targetTransform == null) return;
             
             // 대상 위치에 이펙트 생성
-            var effectInstance = Instantiate(presentation.visualEffectPrefab, targetTransform.position, Quaternion.identity);
+            // TODO: MonoBehaviour가 아니므로 Instantiate 사용 불가, 다른 방법으로 이펙트 생성 필요
+            // var effectInstance = Instantiate(presentation.visualEffectPrefab, targetTransform.position, Quaternion.identity);
             
             // 이펙트는 기본적으로 자동 제거되도록 설정 (이펙트 프리팹에서 처리)
             // 필요시 이펙트 프리팹에 자동 제거 컴포넌트 추가

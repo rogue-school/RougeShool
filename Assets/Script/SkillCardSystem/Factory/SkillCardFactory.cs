@@ -41,12 +41,8 @@ namespace Game.SkillCardSystem.Factory
                 return null;
             }
             
-            // 새로운 SkillCard 인스턴스 생성
-            var cardObject = new GameObject($"SkillCard_{definition.cardId}");
-            var skillCard = cardObject.AddComponent<SkillCard>();
-            
-            // 초기화
-            skillCard.Initialize(definition, owner);
+            // 새로운 SkillCard 인스턴스 생성 (GameObject 없이)
+            var skillCard = new SkillCard(definition, owner, null); // audioManager는 나중에 주입
             
             Debug.Log($"[SkillCardFactory] 카드 생성 완료: {definition.displayName} (Owner: {owner})");
             

@@ -17,17 +17,17 @@ namespace Game.CharacterSystem.Core
     /// 적 캐릭터의 구체 구현 클래스입니다.
     /// 체력, UI, 스킬 덱, 패시브 효과, 사망 처리 등 적 전용 로직을 포함합니다.
     /// </summary>
-    public class EnemyCharacter : CharacterBase, IEnemyCharacter
+    public class EnemyCharacter : CharacterBase, ICharacter
     {
         [Header("Character Data")]
         [field: SerializeField]
-        public EnemyCharacterData CharacterData { get; private set; }
+        public new EnemyCharacterData CharacterData { get; private set; }
 
-        // IEnemyCharacter.CharacterData 명시적 구현
-        Game.CharacterSystem.Interface.ICharacterData Game.CharacterSystem.Interface.IEnemyCharacter.CharacterData => CharacterData;
+        // CharacterData 프로퍼티
+        public ICharacterData CharacterDataInterface => CharacterData;
 
-        // IEnemyCharacter.CharacterName 구현
-        public string CharacterName => CharacterData?.CharacterName ?? "Unknown Enemy";
+        // CharacterName 구현
+        public override string CharacterName => CharacterData?.CharacterName ?? "Unknown Enemy";
 
         [Header("UI Components")]
         [SerializeField] private TextMeshProUGUI nameText;
@@ -39,7 +39,7 @@ namespace Game.CharacterSystem.Core
         [SerializeField] private GameObject damageTextPrefab; // 데미지 텍스트 프리팹
 
         private EnemySkillDeck skillDeck;
-        private ICharacterDeathListener deathListener;
+        private System.Action<ICharacter> onDeathCallback;
         private bool isDead = false;
 
         /// <summary>
@@ -91,6 +91,15 @@ namespace Game.CharacterSystem.Core
         public bool IsMarkedDead => isDead;
 
         /// <summary>
+        /// 사망 리스너를 설정합니다.
+        /// </summary>
+        /// <param name="listener">사망 리스너</param>
+        public void SetDeathListener(object listener)
+        {
+            // TODO: 사망 리스너 구현
+        }
+
+        /// <summary>
         /// 적 캐릭터 초기화
         /// </summary>
         /// <param name="data">적 캐릭터 데이터</param>
@@ -114,9 +123,9 @@ namespace Game.CharacterSystem.Core
         /// 사망 시 외부 이벤트 수신자를 설정합니다.
         /// </summary>
         /// <param name="listener">리스너</param>
-        public void SetDeathListener(ICharacterDeathListener listener)
+        public void SetDeathCallback(System.Action<ICharacter> callback)
         {
-            deathListener = listener;
+            onDeathCallback = callback;
         }
 
         /// <summary>
@@ -241,7 +250,7 @@ namespace Game.CharacterSystem.Core
             // 사망 애니메이션/이벤트 발행 코드 제거
             // Game.CombatSystem.CombatEvents.RaiseHandSkillCardsVanishOnCharacterDeath(false);
             // Game.CombatSystem.CombatEvents.RaiseEnemyCharacterDeath(CharacterData, this.gameObject);
-            deathListener?.OnCharacterDied(this);
+            onDeathCallback?.Invoke(this);
         }
 
         /// <summary>

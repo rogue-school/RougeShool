@@ -1,7 +1,6 @@
 using System.Collections;
 using UnityEngine;
 using Zenject;
-using Game.IManager;
 using Game.CombatSystem.Interface;
 using Game.StageSystem.Interface;
 
@@ -11,7 +10,7 @@ namespace Game.CombatSystem.Initialization
     /// 전투 시작 시 적 캐릭터를 초기화하는 스텝 클래스입니다.
     /// 스테이지 매니저를 통해 적을 생성하며, 초기화 순서를 설정할 수 있습니다.
     /// </summary>
-    public class EnemyCharacterInitializer : MonoBehaviour, ICombatInitializerStep
+    public class EnemyCharacterInitializer : MonoBehaviour
     {
         [SerializeField]
         [Tooltip("초기화 순서 (낮을수록 먼저 실행됨)")]

@@ -14,7 +14,7 @@ namespace Game.SkillCardSystem.Interface
         /// 현재 플레이어 캐릭터를 설정합니다.
         /// </summary>
         /// <param name="player">플레이어 캐릭터</param>
-        void SetPlayer(IPlayerCharacter player);
+        void SetPlayer(ICharacter player);
 
         /// <summary>
         /// 게임 시작 시 초기 손패를 생성합니다.
@@ -69,6 +69,6 @@ namespace Game.SkillCardSystem.Interface
         /// 플레이어 캐릭터를 반환합니다.
         /// </summary>
         /// <returns>플레이어 캐릭터</returns>
-        IPlayerCharacter GetPlayer();
+        ICharacter GetPlayer();
     }
 }

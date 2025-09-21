@@ -9,6 +9,7 @@ using Game.CoreSystem.Audio;
 using Game.CoreSystem.Save;
 using Game.CoreSystem.Interface;
 using Zenject;
+using DG.Tweening;
 
 namespace Game.CoreSystem.Manager
 {
@@ -67,6 +68,10 @@ namespace Game.CoreSystem.Manager
 
         protected override System.Collections.IEnumerator OnInitialize()
         {
+            // 1. DOTween Pro 초기화 (최우선)
+            yield return StartCoroutine(InitializeDOTweenPro());
+            
+            // 2. 코어 시스템 초기화
             if (coreSystems != null && coreSystems.Count > 0)
             {
                 yield return StartCoroutine(InitializeAllSystems());
@@ -75,6 +80,37 @@ namespace Game.CoreSystem.Manager
             {
                 GameLogger.LogInfo("초기화할 추가 시스템이 없습니다. 모든 코어 시스템이 이미 초기화되었습니다.", GameLogger.LogCategory.UI);
             }
+        }
+        
+        /// <summary>
+        /// DOTween Pro를 최적화된 설정으로 초기화합니다.
+        /// </summary>
+        private System.Collections.IEnumerator InitializeDOTweenPro()
+        {
+            if (enableDebugLogging)
+            {
+                GameLogger.LogInfo("DOTween Pro 초기화 시작", GameLogger.LogCategory.UI);
+            }
+            
+            // DOTween 초기화
+            DOTween.Init(true, true, LogBehaviour.ErrorsOnly);
+            DOTween.SetTweensCapacity(500, 100); // 대규모 프로젝트 최적화
+            
+            // 안전성 설정
+            DOTween.useSafeMode = true;
+            
+            // 성능 설정
+            DOTween.defaultEaseType = Ease.OutQuad;
+            DOTween.defaultAutoKill = true;
+            DOTween.defaultRecyclable = false;
+            
+            // TextMeshPro 모듈 활성화 확인
+            if (enableDebugLogging)
+            {
+                GameLogger.LogInfo("DOTween Pro 초기화 완료 - TextMeshPro 지원 활성화됨", GameLogger.LogCategory.UI);
+            }
+            
+            yield return null;
         }
 
         private System.Collections.IEnumerator InitializeAllSystems()

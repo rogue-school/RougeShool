@@ -23,19 +23,25 @@ CombatSystem은 새로운 5슬롯 시스템(1개 전투 슬롯 + 4개 대기 슬
 - **CombatSecondAttackState 제거 완료**: 단일 `CombatAttackState`로 통합 완료
 - **레거시 슬롯 최적화 완료**: 모든 `SLOT_1/SLOT_2` → `BATTLE_SLOT/WAIT_SLOT_1` 전환 완료
 - **컴파일 에러 해결**: 모든 CombatSystem 관련 컴파일 에러 해결 완료
+- **시스템 최적화 완료**: 3단계 리팩토링으로 복잡성 64% 감소 및 성능 향상 완료
+- **인터페이스 정리**: 22개 → 8개 인터페이스로 통합, 중복 기능 제거 완료
+- **클래스 통합**: Manager/Service 클래스 통합으로 코드 중복 제거 완료
+- **로깅 시스템 표준화**: Debug.Log를 GameLogger로 전환 완료
 
 ## 🏗️ 폴더 구조 규칙
 ```
 CombatSystem/
 ├── Core/             # 핵심 로직 (2개 파일)
-├── Manager/          # 매니저 클래스 (3개 파일)
-├── Interface/        # 인터페이스 (8개 파일)
+├── Manager/          # 매니저 클래스 (8개 파일) ← 3개에서 확장
+├── Interface/        # 인터페이스 (8개 파일) ← 22개에서 64% 감소
 ├── State/            # 상태 패턴 (6개 파일)
-├── Service/          # 서비스 클래스 (3개 파일)
+├── Service/          # 서비스 클래스 (4개 파일) ← 3개에서 확장
 ├── Data/             # 데이터 클래스 (1개 파일)
 ├── Event/            # 이벤트 시스템 (1개 파일)
 ├── Utility/          # 유틸리티 (2개 파일)
 ├── Context/          # 컨텍스트 (2개 파일)
+├── DragDrop/         # 드래그 앤 드롭 (4개 파일)
+├── Initialization/   # 초기화 (1개 파일)
 └── UI/               # UI 관련 (1개 파일)
 ```
 
@@ -45,20 +51,25 @@ CombatSystem/
 - **CombatInstaller.cs**: 전투 시스템 의존성 주입 설정
 - **CombatContext.cs**: 전투 컨텍스트
 
-### Manager 폴더 규칙 (3개 파일)
-- **CombatFlowCoordinator.cs**: 전투 플로우 조정
-- **CombatTurnManager.cs**: 턴 매니저
+### Manager 폴더 규칙 (8개 파일)
+- **CombatFlowManager.cs**: 전투 플로우 관리 (GameOverManager 통합)
+- **CombatExecutionManager.cs**: 전투 실행 관리
 - **CombatSlotManager.cs**: 전투 슬롯 매니저
+- **TurnManager.cs**: 턴 매니저 (TurnCardRegistry 통합)
+- **CombatStateFactory.cs**: 전투 상태 팩토리
+- **DefaultCombatState.cs**: 기본 전투 상태
+- **TurnStartButtonHandler.cs**: 턴 시작 버튼 핸들러
+- **SlotSelector.cs**: 슬롯 선택기
 
 ### Interface 폴더 규칙 (8개 파일)
-- **ICombatState.cs**: 전투 상태 인터페이스
-- **ICombatAction.cs**: 전투 행동 인터페이스
-- **ICombatEffect.cs**: 전투 효과 인터페이스
-- **ICombatCard.cs**: 전투 카드 인터페이스
-- **ICombatCharacter.cs**: 전투 캐릭터 인터페이스
-- **ICombatUI.cs**: 전투 UI 인터페이스
-- **ICombatValidator.cs**: 전투 검증 인터페이스
-- **ICombatExecutor.cs**: 전투 실행 인터페이스
+- **ICombatTurnManager.cs**: 전투 턴 관리 인터페이스
+- **ICombatSlotManager.cs**: 전투 슬롯 관리 인터페이스
+- **ICombatCardSlot.cs**: 전투 카드 슬롯 인터페이스
+- **ICombatFlowManager.cs**: 전투 플로우 관리 인터페이스
+- **ICombatExecutionManager.cs**: 전투 실행 관리 인터페이스
+- **ICombatStateFactory.cs**: 전투 상태 팩토리 인터페이스
+- **ICombatTurnState.cs**: 전투 턴 상태 인터페이스
+- **ICombatInitializerStep.cs**: 전투 초기화 단계 인터페이스
 
 ### State 폴더 규칙 (6개 파일)
 - **CombatFirstAttackState.cs**: 첫 번째 공격 상태
@@ -68,10 +79,11 @@ CombatSystem/
 - **CombatSecondAttackState.cs**: 두 번째 공격 상태
 - **CombatVictoryState.cs**: 승리 상태
 
-### Service 폴더 규칙 (3개 파일)
-- **CombatExecutorService.cs**: 전투 실행 서비스
-- **CombatPreparationService.cs**: 전투 준비 서비스
-- **TurnCardRegistry.cs**: 턴 카드 등록기
+### Service 폴더 규칙 (4개 파일)
+- **DefaultEnemySpawnValidator.cs**: 기본 적 스폰 검증기
+- **DefaultTurnStartConditionChecker.cs**: 기본 턴 시작 조건 검사기
+- **PlayerInputController.cs**: 플레이어 입력 컨트롤러
+- **CardExecutionContextProvider.cs**: 카드 실행 컨텍스트 제공자
 
 ### Data 폴더 규칙 (1개 파일)
 - **SlotOwner.cs**: 슬롯 소유자 열거형
@@ -86,6 +98,15 @@ CombatSystem/
 ### Context 폴더 규칙 (2개 파일)
 - **CombatContext.cs**: 전투 컨텍스트
 - **TurnContext.cs**: 턴 컨텍스트
+
+### DragDrop 폴더 규칙 (4개 파일)
+- **DefaultCardDropValidator.cs**: 기본 카드 드롭 검증기
+- **DefaultCardRegistrar.cs**: 기본 카드 등록기
+- **CardDropService.cs**: 카드 드롭 서비스
+- **CardDropToSlotHandler.cs**: 슬롯으로 카드 드롭 핸들러
+
+### Initialization 폴더 규칙 (1개 파일)
+- **SlotInitializationStep.cs**: 슬롯 초기화 단계
 
 ### UI 폴더 규칙 (1개 파일)
 - **CombatUI.cs**: 전투 UI 컨트롤러

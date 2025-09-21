@@ -22,6 +22,8 @@ CoreSystem은 게임의 핵심 시스템들을 관리하는 중앙 집중식 시
 - **오디오 풀링 시스템**: AudioPoolManager를 통한 성능 최적화
 - **슬레이 더 스파이어 방식 저장**: 턴 기반 자동 저장 시스템
 - **한국어 로깅**: GameLogger를 통한 카테고리별 로깅
+- **DOTween Pro 통합**: DOTween Pro 초기화 및 설정 완료
+- **성능 최적화**: 컴포넌트 상호작용 최적화 및 DI 성능 테스터 추가
 
 ## 🏗️ 폴더 구조 규칙
 ```
@@ -29,7 +31,7 @@ CoreSystem/
 ├── Manager/          # 코어 매니저 (5개 파일)
 ├── Audio/           # 오디오 관리 (3개 파일)
 ├── Save/            # 저장 관리 (1개 파일)
-├── Utility/         # 코어 유틸리티 (3개 파일)
+├── Utility/         # 코어 유틸리티 (7개 파일) ← 3개에서 확장
 ├── UI/              # 코어 UI (4개 파일)
 ├── Interface/       # 코어 인터페이스 (6개 파일)
 └── Data/            # 코어 데이터 (빈 폴더)
@@ -52,10 +54,14 @@ CoreSystem/
 ### Save 폴더 규칙 (1개 파일)
 - **SaveManager.cs**: 저장 시스템 관리 (싱글톤)
 
-### Utility 폴더 규칙 (3개 파일)
+### Utility 폴더 규칙 (7개 파일)
 - **CoroutineRunner.cs**: 코루틴 실행 관리
 - **GameLogger.cs**: 게임 로깅 시스템 (싱글톤)
 - **ICoroutineRunner.cs**: 코루틴 러너 인터페이스
+- **ComponentInteractionOptimizer.cs**: 컴포넌트 상호작용 최적화
+- **ComponentRoleManager.cs**: 컴포넌트 역할 관리
+- **DIOptimizationUtility.cs**: DI 최적화 유틸리티
+- **DIPerformanceTester.cs**: DI 성능 테스터
 
 ### UI 폴더 규칙 (4개 파일)
 - **LoadingScreenController.cs**: 로딩 화면 컨트롤러

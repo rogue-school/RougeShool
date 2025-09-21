@@ -53,10 +53,10 @@ namespace Game.CombatSystem.Context
         /// Source 또는 Target 중 하나가 플레이어여야 합니다.
         /// </summary>
         /// <returns>플레이어 캐릭터 또는 null</returns>
-        public IPlayerCharacter GetPlayer()
+        public ICharacter GetPlayer()
         {
-            return Source is IPlayerCharacter player ? player :
-                   Target is IPlayerCharacter targetPlayer ? targetPlayer : null;
+            return Source?.IsPlayerControlled() == true ? Source :
+                   Target?.IsPlayerControlled() == true ? Target : null;
         }
 
         /// <summary>
@@ -64,10 +64,10 @@ namespace Game.CombatSystem.Context
         /// Source 또는 Target 중 하나가 적이어야 합니다.
         /// </summary>
         /// <returns>적 캐릭터 또는 null</returns>
-        public IEnemyCharacter GetEnemy()
+        public ICharacter GetEnemy()
         {
-            return Source is IEnemyCharacter enemy ? enemy :
-                   Target is IEnemyCharacter targetEnemy ? targetEnemy : null;
+            return Source?.IsPlayerControlled() == false ? Source :
+                   Target?.IsPlayerControlled() == false ? Target : null;
         }
 
         #endregion

@@ -1,12 +1,15 @@
+using System;
 using Game.CombatSystem.Data;
 using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.UI;
+using Game.CombatSystem.Manager;
 
 namespace Game.CombatSystem.Interface
 {
     /// <summary>
-    /// 전투 턴의 상태 관리 및 카드 등록, 턴 흐름 제어를 담당하는 인터페이스입니다.
+    /// 전투 턴의 상태 관리 및 카드 등록, 턴 흐름 제어를 담당하는 통합 인터페이스입니다.
+    /// ITurnManager와 ICombatTurnManager를 통합하여 단순화했습니다.
     /// </summary>
     public interface ICombatTurnManager
     {
@@ -26,25 +29,25 @@ namespace Game.CombatSystem.Interface
         /// 다음 턴 상태 전이를 예약합니다.
         /// </summary>
         /// <param name="nextState">전이할 다음 상태</param>
-        void RequestStateChange(ICombatTurnState nextState);
+        void RequestStateChange(object nextState);
 
         /// <summary>
         /// 즉시 새로운 상태로 전이합니다.
         /// </summary>
         /// <param name="newState">전이할 상태</param>
-        void ChangeState(ICombatTurnState newState);
+        void ChangeState(object newState);
 
         /// <summary>
         /// 현재 턴 상태를 반환합니다.
         /// </summary>
         /// <returns>현재 턴 상태</returns>
-        ICombatTurnState GetCurrentState();
+        object GetCurrentState();
 
         /// <summary>
         /// 상태 생성 팩토리를 반환합니다.
         /// </summary>
         /// <returns>전투 상태 팩토리</returns>
-        ICombatStateFactory GetStateFactory();
+        object GetStateFactory();
 
         /// <summary>
         /// 적이 사용할 슬롯을 예약합니다 (예: 후공 실행용).
@@ -116,5 +119,68 @@ namespace Game.CombatSystem.Interface
         /// </summary>
         /// <param name="card">등록할 적 스킬카드</param>
         void RegisterEnemyCardInSlot4(ISkillCard card);
+        
+        #region ITurnManager 통합 기능
+        
+        /// <summary>현재 턴 타입</summary>
+        TurnManager.TurnType CurrentTurn { get; }
+        
+        /// <summary>현재 턴 수</summary>
+        int TurnCount { get; }
+        
+        /// <summary>게임 활성화 상태</summary>
+        bool IsGameActive { get; }
+        
+        /// <summary>턴 시간 제한 (초)</summary>
+        float TurnTimeLimit { get; }
+        
+        /// <summary>남은 턴 시간</summary>
+        float RemainingTurnTime { get; }
+        
+        /// <summary>
+        /// 특정 턴 타입으로 설정합니다.
+        /// </summary>
+        /// <param name="turnType">설정할 턴 타입</param>
+        void SetTurn(TurnManager.TurnType turnType);
+        
+        /// <summary>
+        /// 게임을 시작합니다.
+        /// </summary>
+        void StartGame();
+        
+        /// <summary>
+        /// 게임을 종료합니다.
+        /// </summary>
+        void EndGame();
+        
+        /// <summary>
+        /// 턴을 일시정지합니다.
+        /// </summary>
+        void PauseTurn();
+        
+        /// <summary>
+        /// 턴을 재개합니다.
+        /// </summary>
+        void ResumeTurn();
+        
+        /// <summary>
+        /// 턴 시간을 리셋합니다.
+        /// </summary>
+        void ResetTurnTimer();
+        
+        // 이벤트들
+        /// <summary>턴이 변경될 때 발생하는 이벤트</summary>
+        event Action<TurnManager.TurnType> OnTurnChanged;
+        
+        /// <summary>턴 카운트가 변경될 때 발생하는 이벤트</summary>
+        event Action<int> OnTurnCountChanged;
+        
+        /// <summary>게임이 시작될 때 발생하는 이벤트</summary>
+        event Action OnGameStarted;
+        
+        /// <summary>게임이 종료될 때 발생하는 이벤트</summary>
+        event Action OnGameEnded;
+        
+        #endregion
     }
 }

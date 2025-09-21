@@ -2,19 +2,17 @@ using UnityEngine;
 using Game.CombatSystem.Interface;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Core;
-using Game.IManager;
 using Zenject;
 using Game.CombatSystem.Context;
 using Game.StageSystem.Interface;
 
 namespace Game.CombatSystem.Utility
 {
-    public class CharacterDeathHandler : MonoBehaviour, ICharacterDeathListener
+    public class CharacterDeathHandler : MonoBehaviour
     {
         [Inject] private TurnContext turnContext;
         [Inject] private IStageManager stageManager;
-        [InjectOptional] private IVictoryManager victoryManager;
-        [InjectOptional] private IGameOverManager gameOverManager;
+        // TODO: VictoryManager와 GameOverManager 구현 필요
 
         public void OnCharacterDied(ICharacter character)
         {
@@ -26,14 +24,12 @@ namespace Game.CombatSystem.Utility
             }
             else if (character.IsPlayerControlled())
             {
-                if (gameOverManager != null)
-                {
-                    gameOverManager.TriggerGameOver();
-                }
+                // TODO: 게임 오버 처리 구현 필요
+                Debug.Log("[CharacterDeathHandler] 플레이어 사망 - 게임 오버 처리 필요");
             }
         }
 
-        public void OnEnemyDeath(IEnemyCharacter enemy)
+        public void OnEnemyDeath(ICharacter enemy)
         {
             Debug.Log($"[CharacterDeathHandler] 적 사망 처리: {enemy.GetCharacterName()}");
             turnContext.MarkEnemyDefeated();

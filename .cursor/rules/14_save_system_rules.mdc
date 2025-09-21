@@ -28,10 +28,10 @@ SaveSystem은 게임의 저장/로드 기능을 관리하는 시스템입니다.
 ## 🏗️ 폴더 구조 규칙
 ```
 SaveSystem/
-├── Manager/           # 저장 매니저 (3개 파일)
-├── Interface/         # 저장 인터페이스 (2개 파일)
+├── Manager/           # 저장 매니저 (4개 파일)
+├── Interface/         # 저장 인터페이스 (3개 파일)
 ├── Data/              # 저장 데이터 (3개 파일)
-└── Event/             # 저장 이벤트 (2개 파일)
+└── Event/             # 저장 이벤트 (1개 파일)
 
 CoreSystem/Save/       # 실제 구현 위치
 └── SaveManager.cs     # 실제 저장 매니저 구현 (확장됨)
@@ -39,23 +39,24 @@ CoreSystem/Save/       # 실제 구현 위치
 
 ## 📁 주요 컴포넌트 규칙
 
-### Manager 폴더 규칙 (3개 파일)
+### Manager 폴더 규칙 (4개 파일)
+- **AutoSaveManager.cs**: 자동 저장 매니저
+- **BaseSaveManager.cs**: 기본 저장 매니저
 - **CardStateCollector.cs**: 카드 상태 수집
 - **CardStateRestorer.cs**: 카드 상태 복원
-- **SaveManager.cs**: 저장 매니저
 
-### Interface 폴더 규칙 (2개 파일)
-- **ISaveManager.cs**: 저장 매니저 인터페이스
-- **ICardStateManager.cs**: 카드 상태 관리 인터페이스
+### Interface 폴더 규칙 (3개 파일)
+- **IAutoSaveManager.cs**: 자동 저장 매니저 인터페이스
+- **ICardStateCollector.cs**: 카드 상태 수집 인터페이스
+- **ICardStateRestorer.cs**: 카드 상태 복원 인터페이스
 
 ### Data 폴더 규칙 (3개 파일)
+- **AutoSaveCondition.cs**: 자동 저장 조건
+- **CardSlotData.cs**: 카드 슬롯 데이터
 - **CompleteCardStateData.cs**: 완전한 카드 상태 데이터
-- **PlayerHandData.cs**: 플레이어 핸드 데이터
-- **EnemyHandData.cs**: 적 핸드 데이터
 
-### Event 폴더 규칙 (2개 파일)
+### Event 폴더 규칙 (1개 파일)
 - **SaveEventTrigger.cs**: 저장 이벤트 트리거
-- **AutoSaveTrigger.cs**: 자동 저장 트리거
 
 ## 🎯 개발 규칙
 

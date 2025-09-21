@@ -4,6 +4,7 @@ using System;
 using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Data;
 using Game.CharacterSystem.Interface;
+using Game.CharacterSystem.Manager;
 using Game.CombatSystem.Interface;
 using Game.StageSystem.Data;
 using Game.StageSystem.Interface;
@@ -111,7 +112,7 @@ namespace Game.StageSystem.Manager
         #region 이벤트
 
         /// <summary>적 처치 시 호출되는 이벤트</summary>
-        public event Action<IEnemyCharacter> OnEnemyDefeated;
+        public event Action<ICharacter> OnEnemyDefeated;
         
         /// <summary>스테이지 완료 시 호출되는 이벤트</summary>
         public event Action<StageData> OnStageCompleted;
@@ -121,7 +122,7 @@ namespace Game.StageSystem.Manager
         #region 의존성 주입 (최소화)
 
         // 핵심 의존성만 유지
-        [Inject] private IEnemyManager enemyManager;
+        [Inject] private EnemyManager enemyManager;
 
         #endregion
 
@@ -190,7 +191,7 @@ namespace Game.StageSystem.Manager
         /// <summary>
         /// 적 캐릭터를 시스템에 등록합니다.
         /// </summary>
-        private void RegisterEnemy(IEnemyCharacter enemy)
+        private void RegisterEnemy(ICharacter enemy)
         {
             enemyManager.RegisterEnemy(enemy);
             
@@ -206,7 +207,7 @@ namespace Game.StageSystem.Manager
         /// <summary>
         /// 적 처치 시 호출되는 메서드
         /// </summary>
-        private void OnEnemyDeath(IEnemyCharacter enemy)
+        private void OnEnemyDeath(ICharacter enemy)
         {
             GameLogger.LogInfo($"적 처치: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
             
@@ -223,7 +224,7 @@ namespace Game.StageSystem.Manager
         /// <summary>
         /// 적 사망 처리를 위한 내부 클래스
         /// </summary>
-        private class EnemyDeathHandler : ICharacterDeathListener
+        private class EnemyDeathHandler
         {
             private readonly StageManager stageManager;
 
@@ -234,13 +235,13 @@ namespace Game.StageSystem.Manager
 
             public void OnCharacterDied(ICharacter character)
             {
-                if (character is IEnemyCharacter enemy)
+                if (!character.IsPlayerControlled())
                 {
-                    stageManager.OnEnemyDeath(enemy);
+                    stageManager.OnEnemyDeath(character);
                 }
             }
 
-            public void OnEnemyDeath(IEnemyCharacter enemy)
+            public void OnEnemyDeath(ICharacter enemy)
             {
                 stageManager.OnEnemyDeath(enemy);
             }
@@ -249,7 +250,7 @@ namespace Game.StageSystem.Manager
         /// <summary>
         /// 적 캐릭터 처치 시 보상을 지급합니다.
         /// </summary>
-        private void GiveEnemyDefeatReward(IEnemyCharacter enemy)
+        private void GiveEnemyDefeatReward(ICharacter enemy)
         {
             if (currentRewards == null)
             {
@@ -271,7 +272,7 @@ namespace Game.StageSystem.Manager
         /// <summary>
         /// 적 캐릭터 처치 후 스테이지 진행 상태를 업데이트합니다.
         /// </summary>
-        private void UpdateStageProgress(IEnemyCharacter enemy)
+        private void UpdateStageProgress(ICharacter enemy)
         {
             if (currentPhase == StagePhaseState.SubBoss)
             {
@@ -288,7 +289,7 @@ namespace Game.StageSystem.Manager
         /// <summary>
         /// 적 캐릭터를 생성합니다. (단순화된 로직)
         /// </summary>
-        private async Task<IEnemyCharacter> CreateEnemyAsync(EnemyCharacterData data)
+        private async Task<ICharacter> CreateEnemyAsync(EnemyCharacterData data)
         {
             // 실제 적 생성 로직은 다른 시스템에 위임
             // 여기서는 단순히 데이터 검증만 수행
@@ -302,7 +303,7 @@ namespace Game.StageSystem.Manager
             await Task.Delay(100);
             
             // 실제 구현에서는 적 생성 로직을 호출
-            // var enemy = Instantiate(data.Prefab).GetComponent<IEnemyCharacter>();
+            // var enemy = Instantiate(data.Prefab).GetComponent<ICharacter>();
             // enemy.Initialize(data);
             // return enemy;
             

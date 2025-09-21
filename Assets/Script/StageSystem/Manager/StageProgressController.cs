@@ -2,6 +2,7 @@ using UnityEngine;
 using Game.StageSystem.Data;
 using Game.StageSystem.Interface;
 using Game.CharacterSystem.Interface;
+using Game.CharacterSystem.Manager;
 using Game.CombatSystem.Interface;
 using Zenject;
 
@@ -17,8 +18,8 @@ namespace Game.StageSystem.Manager
 
         [Inject] private IStagePhaseManager phaseManager;
         [Inject] private IStageRewardManager rewardManager;
-        [Inject] private IEnemyManager enemyManager;
-        [Inject] private ICharacterDeathListener deathListener;
+        [Inject] private EnemyManager enemyManager;
+        // TODO: CharacterDeathListener 구현 필요
 
         #endregion
 
@@ -61,7 +62,7 @@ namespace Game.StageSystem.Manager
         /// <summary>
         /// 적 사망 시 호출되는 메서드
         /// </summary>
-        public void OnEnemyDeath(IEnemyCharacter enemy)
+        public void OnEnemyDeath(ICharacter enemy)
         {
             if (enemy == null) return;
 

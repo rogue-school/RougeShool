@@ -5,7 +5,7 @@ using Game.CharacterSystem.Data;
 using Game.SkillCardSystem.Interface;
 using Game.CharacterSystem.Interface;
 using Game.SkillCardSystem.Slot;
-using Game.IManager;
+using Game.CharacterSystem.Manager;
 using Game.CombatSystem.UI;
 using Game.CombatSystem;
 using Game.CharacterSystem.UI;
@@ -16,7 +16,7 @@ namespace Game.CharacterSystem.Core
     /// 플레이어 캐릭터의 구체 클래스입니다.
     /// UI, 카드 핸들링, 플레이어 데이터 연동 등의 기능을 담당합니다.
     /// </summary>
-    public class PlayerCharacter : CharacterBase, IPlayerCharacter
+    public class PlayerCharacter : CharacterBase, ICharacter
     {
         #region Serialized Fields
 
@@ -24,7 +24,7 @@ namespace Game.CharacterSystem.Core
         /// 플레이어 데이터 스크립터블 오브젝트
         /// </summary>
         [field: SerializeField]
-        public PlayerCharacterData CharacterData { get; private set; }
+        public new PlayerCharacterData CharacterData { get; private set; }
 
         [Header("UI Components")]
         [SerializeField] private TextMeshProUGUI nameText;

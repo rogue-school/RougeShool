@@ -8,8 +8,8 @@ using Game.CoreSystem.Utility;
 namespace Game.SkillCardSystem.Manager
 {
     /// <summary>
-    /// 카드 순환 및 보상 시스템 통합 구현체입니다.
-    /// 플레이어 덱에서 랜덤하게 카드를 드로우하고 보상을 관리합니다.
+    /// 카드 순환, 보상, 턴 관리 통합 시스템입니다.
+    /// 플레이어 덱에서 랜덤하게 카드를 드로우하고 보상 및 턴 관리를 담당합니다.
     /// </summary>
     public class CardCirculationSystem : ICardCirculationSystem
     {
@@ -18,6 +18,10 @@ namespace Game.SkillCardSystem.Manager
         private readonly List<ISkillCard> playerDeck = new();
         private readonly List<ISkillCard> currentTurnCards = new();
         private readonly IPlayerDeckManager playerDeckManager;
+        
+        // 턴 관리 필드
+        private bool isTurnStarted = false;
+        private bool hasPlayedThisTurn = false;
 
         #endregion
 
@@ -166,6 +170,102 @@ namespace Game.SkillCardSystem.Manager
 
             return success;
         }
+
+        #endregion
+        
+        #region 턴 관리 (TurnBasedCardManager 통합)
+        
+        /// <summary>
+        /// 턴을 시작합니다.
+        /// </summary>
+        public void StartTurn()
+        {
+            if (isTurnStarted)
+            {
+                GameLogger.LogWarning("턴이 이미 시작되었습니다.", GameLogger.LogCategory.SkillCard);
+                return;
+            }
+
+            // 카드 드로우
+            currentTurnCards.Clear();
+            currentTurnCards.AddRange(DrawCardsForTurn());
+            hasPlayedThisTurn = false;
+            isTurnStarted = true;
+
+            GameLogger.LogInfo($"턴 시작: {currentTurnCards.Count}장 드로우", GameLogger.LogCategory.SkillCard);
+        }
+
+        /// <summary>
+        /// 턴을 종료합니다.
+        /// </summary>
+        public void EndTurn()
+        {
+            if (!isTurnStarted)
+            {
+                GameLogger.LogWarning("턴이 시작되지 않았습니다.", GameLogger.LogCategory.SkillCard);
+                return;
+            }
+
+            // 턴 종료 처리
+            if (currentTurnCards.Count > 0)
+            {
+                currentTurnCards.Clear();
+            }
+
+            isTurnStarted = false;
+            hasPlayedThisTurn = false;
+            GameLogger.LogInfo("턴 종료 완료", GameLogger.LogCategory.SkillCard);
+        }
+
+        /// <summary>
+        /// 카드를 사용합니다.
+        /// </summary>
+        /// <param name="card">사용할 카드</param>
+        public void UseCard(ISkillCard card)
+        {
+            if (card == null)
+            {
+                GameLogger.LogWarning("null 카드를 사용할 수 없습니다.", GameLogger.LogCategory.SkillCard);
+                return;
+            }
+
+            if (!currentTurnCards.Contains(card))
+            {
+                GameLogger.LogWarning("현재 턴의 카드가 아닙니다.", GameLogger.LogCategory.SkillCard);
+                return;
+            }
+
+            if (hasPlayedThisTurn)
+            {
+                GameLogger.LogWarning("이 턴에는 이미 카드를 사용했습니다. 턴당 1장 제한.", GameLogger.LogCategory.SkillCard);
+                return;
+            }
+
+            // 카드 사용 처리
+            currentTurnCards.Remove(card);
+            hasPlayedThisTurn = true;
+
+            GameLogger.LogInfo($"카드 사용: {card.CardDefinition?.CardName ?? "Unknown"} (남은 카드: {currentTurnCards.Count})", GameLogger.LogCategory.SkillCard);
+        }
+
+        /// <summary>
+        /// 현재 턴의 카드들을 반환합니다.
+        /// </summary>
+        /// <returns>현재 턴 카드 리스트</returns>
+        public List<ISkillCard> GetCurrentTurnCards()
+        {
+            return new List<ISkillCard>(currentTurnCards);
+        }
+
+        /// <summary>
+        /// 턴이 시작되었는지 여부를 반환합니다.
+        /// </summary>
+        public bool IsTurnStarted => isTurnStarted;
+
+        /// <summary>
+        /// 사용 가능한 카드 수를 반환합니다.
+        /// </summary>
+        public int AvailableCardsCount => currentTurnCards.Count;
 
         #endregion
     }

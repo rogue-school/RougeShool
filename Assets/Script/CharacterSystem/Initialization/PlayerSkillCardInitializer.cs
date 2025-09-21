@@ -1,11 +1,11 @@
 using System.Collections;
 using UnityEngine;
 using Zenject;
-using Game.IManager;
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Slot;
 using Game.CharacterSystem.Interface;
+using Game.CharacterSystem.Manager;
 using Game.CoreSystem.Utility;
 
 namespace Game.CharacterSystem.Initialization
@@ -13,14 +13,14 @@ namespace Game.CharacterSystem.Initialization
     /// <summary>
     /// 플레이어 캐릭터의 스킬카드를 초기화하고 핸드 슬롯에 배치합니다.
     /// </summary>
-    public class PlayerSkillCardInitializer : MonoBehaviour, ICombatInitializerStep
+    public class PlayerSkillCardInitializer : MonoBehaviour
     {
         [SerializeField] private int order = 20;
         public int Order => order;
 
         #region 의존성 필드
 
-        private IPlayerManager playerManager;
+        private PlayerManager playerManager;
         private IPlayerHandManager handManager;
 
         #endregion
@@ -28,7 +28,7 @@ namespace Game.CharacterSystem.Initialization
         #region 의존성 주입
 
         [Inject]
-        public void Construct(IPlayerManager playerManager, IPlayerHandManager handManager)
+        public void Construct(PlayerManager playerManager, IPlayerHandManager handManager)
         {
             this.playerManager = playerManager;
             this.handManager = handManager;

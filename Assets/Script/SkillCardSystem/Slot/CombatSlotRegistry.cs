@@ -9,7 +9,7 @@ namespace Game.CombatSystem.Slot
     /// <summary>
     /// 전투 슬롯을 등록하고 슬롯 위치에 따라 조회할 수 있도록 관리하는 레지스트리입니다.
     /// </summary>
-    public class CombatSlotRegistry : MonoBehaviour, ICombatSlotRegistry
+    public class CombatSlotRegistry : MonoBehaviour
     {
         #region 필드
 

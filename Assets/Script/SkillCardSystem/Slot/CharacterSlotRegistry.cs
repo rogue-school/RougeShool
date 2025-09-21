@@ -10,7 +10,7 @@ namespace Game.CombatSystem.Slot
     /// <summary>
     /// 전투 캐릭터 슬롯을 등록하고 조회하는 레지스트리입니다.
     /// </summary>
-    public class CharacterSlotRegistry : MonoBehaviour, ICharacterSlotRegistry
+    public class CharacterSlotRegistry : MonoBehaviour
     {
         #region 필드
 

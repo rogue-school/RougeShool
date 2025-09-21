@@ -5,8 +5,8 @@ using Game.CharacterSystem.Interface;
 using UnityEngine;
 using Game.CombatSystem.Context;
 using Game.CombatSystem.Slot;
-using Game.IManager;
 using Game.SkillCardSystem.Executor;
+using Game.CharacterSystem.Manager;
 
 namespace Game.CombatSystem.Service
 {
@@ -14,12 +14,12 @@ namespace Game.CombatSystem.Service
     /// 카드 실행 컨텍스트를 제공하는 서비스입니다.
     /// 카드의 소유자에 따라 실행에 필요한 소스/타겟 정보를 설정합니다.
     /// </summary>
-    public class CardExecutionContextProvider : ICardExecutionContextProvider
+    public class CardExecutionContextProvider
     {
         #region 필드
 
-        private readonly IPlayerManager playerManager;
-        private readonly IEnemyManager enemyManager;
+        private readonly PlayerManager playerManager;
+        private readonly EnemyManager enemyManager;
 
         #endregion
 
@@ -28,7 +28,7 @@ namespace Game.CombatSystem.Service
         /// <summary>
         /// 생성자에서 의존성 주입을 통해 매니저를 초기화합니다.
         /// </summary>
-        public CardExecutionContextProvider(IPlayerManager playerManager, IEnemyManager enemyManager)
+        public CardExecutionContextProvider(PlayerManager playerManager, EnemyManager enemyManager)
         {
             this.playerManager = playerManager;
             this.enemyManager = enemyManager;

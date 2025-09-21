@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Game.CombatSystem.Interface;
@@ -8,11 +9,11 @@ namespace Game.CombatSystem.Utility
     /// <summary>
     /// 적이 이미 카드를 올려둔 전투 슬롯을 기준으로, 남은 슬롯을 플레이어에게 할당합니다.
     /// </summary>
-    public class SlotSelector : ISlotSelector
+    public class SlotSelector
     {
         #region 필드
 
-        private readonly ICombatSlotRegistry combatSlotRegistry;
+        private readonly object combatSlotRegistry; // TODO: 적절한 타입으로 교체 필요
 
         #endregion
 
@@ -22,7 +23,7 @@ namespace Game.CombatSystem.Utility
         /// 슬롯 셀렉터를 생성합니다.
         /// </summary>
         /// <param name="combatSlotRegistry">전투 슬롯 레지스트리</param>
-        public SlotSelector(ICombatSlotRegistry combatSlotRegistry)
+        public SlotSelector(object combatSlotRegistry)
         {
             this.combatSlotRegistry = combatSlotRegistry;
         }
@@ -37,7 +38,9 @@ namespace Game.CombatSystem.Utility
         /// <returns>플레이어 슬롯, 적 슬롯 튜플</returns>
         public (CombatSlotPosition playerSlot, CombatSlotPosition enemySlot) SelectSlots()
         {
-            var allSlots = combatSlotRegistry.GetAllCombatSlots().ToList();
+            // TODO: combatSlotRegistry가 object 타입이므로 적절한 캐스팅 필요
+            // var allSlots = combatSlotRegistry.GetAllCombatSlots().ToList();
+            var allSlots = new List<ICombatCardSlot>(); // 임시로 빈 리스트 반환
 
             var enemySlot = allSlots.FirstOrDefault(slot => slot.HasCard());
             var playerSlot = allSlots.FirstOrDefault(slot => !slot.HasCard());

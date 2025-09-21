@@ -4,7 +4,6 @@ using Game.CombatSystem.Data;
 using Game.CombatSystem.Slot;
 using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Interface;
-using Game.IManager;
 using Game.CombatSystem.Interface;
 
 namespace Game.CombatSystem.Initialization
@@ -12,14 +11,14 @@ namespace Game.CombatSystem.Initialization
     /// <summary>
     /// 적 캐릭터를 생성하고 슬롯에 배치하는 초기화 클래스입니다.
     /// </summary>
-    public class EnemyInitializer : MonoBehaviour, IEnemyInitializer
+    public class EnemyInitializer : MonoBehaviour
     {
         [Header("기본 적 프리팹 및 데이터")]
         [SerializeField] private GameObject defaultEnemyPrefab;
         [SerializeField] private EnemyCharacterData defaultEnemyData;
 
-        private IEnemyCharacter spawnedEnemy;
-        private ISlotRegistry slotRegistry;
+        private ICharacter spawnedEnemy;
+        private object slotRegistry; // TODO: 적절한 타입으로 교체 필요
 
         #region 의존성 주입
 
@@ -27,7 +26,7 @@ namespace Game.CombatSystem.Initialization
         /// 슬롯 레지스트리를 주입합니다.
         /// </summary>
         /// <param name="slotRegistry">캐릭터 슬롯 레지스트리</param>
-        public void Inject(ISlotRegistry slotRegistry)
+        public void Inject(object slotRegistry)
         {
             this.slotRegistry = slotRegistry;
         }
@@ -71,7 +70,7 @@ namespace Game.CombatSystem.Initialization
         /// <summary>
         /// 생성된 적 캐릭터를 반환합니다.
         /// </summary>
-        public IEnemyCharacter GetSpawnedEnemy()
+        public ICharacter GetSpawnedEnemy()
         {
             return spawnedEnemy;
         }
@@ -87,11 +86,13 @@ namespace Game.CombatSystem.Initialization
         {
             if (slotRegistry == null)
             {
-                Debug.LogError("[EnemyInitializer] ISlotRegistry가 주입되지 않았습니다.");
+                Debug.LogError("[EnemyInitializer] slotRegistry가 주입되지 않았습니다.");
                 return null;
             }
 
-            var slot = slotRegistry.GetCharacterSlotRegistry().GetCharacterSlot(SlotOwner.ENEMY);
+            // TODO: slotRegistry가 object 타입이므로 적절한 캐스팅 필요
+            // var slot = slotRegistry.GetCharacterSlotRegistry().GetCharacterSlot(SlotOwner.ENEMY);
+            var slot = (slotRegistry as CharacterSlotRegistry)?.GetCharacterSlot(SlotOwner.ENEMY);
 
             if (slot == null)
                 Debug.LogError("[EnemyInitializer] ENEMY용 캐릭터 슬롯을 찾지 못했습니다.");

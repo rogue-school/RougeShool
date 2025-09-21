@@ -47,6 +47,12 @@ namespace Game.CharacterSystem.Core
         /// <summary>캐릭터 이름 반환</summary>
         public virtual string GetCharacterName() => gameObject.name;
 
+        /// <summary>캐릭터 이름 프로퍼티</summary>
+        public virtual string CharacterName => GetCharacterName();
+
+        /// <summary>캐릭터 데이터 프로퍼티</summary>
+        public virtual object CharacterData => null;
+
         /// <summary>데이터 기반 캐릭터 이름 반환 (자식에서 override)</summary>
         protected virtual string GetCharacterDataName() => "Unknown";
 
@@ -210,6 +216,24 @@ namespace Game.CharacterSystem.Core
         /// 반드시 자식 클래스에서 구현되어야 합니다.
         /// </summary>
         public abstract bool IsPlayerControlled();
+
+        /// <summary>
+        /// 캐릭터 데이터를 설정합니다.
+        /// </summary>
+        /// <param name="data">설정할 캐릭터 데이터</param>
+        public virtual void SetCharacterData(object data)
+        {
+            // TODO: 자식 클래스에서 구현
+        }
+
+        /// <summary>
+        /// 핸드 매니저를 주입합니다.
+        /// </summary>
+        /// <param name="handManager">주입할 핸드 매니저</param>
+        public virtual void InjectHandManager(object handManager)
+        {
+            // TODO: 자식 클래스에서 구현
+        }
 
         #endregion
     }

@@ -36,6 +36,16 @@ namespace Game.CharacterSystem.Interface
         string GetCharacterName();
 
         /// <summary>
+        /// 캐릭터의 이름을 반환합니다. (프로퍼티)
+        /// </summary>
+        string CharacterName { get; }
+
+        /// <summary>
+        /// 캐릭터 데이터를 반환합니다.
+        /// </summary>
+        object CharacterData { get; }
+
+        /// <summary>
         /// 현재 체력을 반환합니다.
         /// </summary>
         int GetHP();
@@ -119,6 +129,18 @@ namespace Game.CharacterSystem.Interface
         /// 등록된 턴 효과들을 처리합니다.
         /// </summary>
         void ProcessTurnEffects();
+
+        /// <summary>
+        /// 캐릭터 데이터를 설정합니다.
+        /// </summary>
+        /// <param name="data">설정할 캐릭터 데이터</param>
+        void SetCharacterData(object data);
+
+        /// <summary>
+        /// 핸드 매니저를 주입합니다.
+        /// </summary>
+        /// <param name="handManager">주입할 핸드 매니저</param>
+        void InjectHandManager(object handManager);
 
         #endregion
         Transform Transform { get; }

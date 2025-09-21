@@ -10,7 +10,7 @@ namespace Game.CombatSystem.Slot
     /// <summary>
     /// 플레이어 및 적의 핸드 슬롯을 등록하고 관리하는 레지스트리 클래스입니다.
     /// </summary>
-    public class HandSlotRegistry : MonoBehaviour, IHandSlotRegistry
+    public class HandSlotRegistry : MonoBehaviour
     {
         #region 필드
 
@@ -58,6 +58,14 @@ namespace Game.CombatSystem.Slot
         public IEnumerable<IHandCardSlot> GetHandSlots(SlotOwner owner)
         {
             return handSlots.Where(slot => slot.GetOwner() == owner);
+        }
+
+        /// <summary>
+        /// 플레이어 핸드 슬롯을 반환합니다.
+        /// </summary>
+        public IEnumerable<IHandCardSlot> GetPlayerHandSlot()
+        {
+            return GetHandSlots(SlotOwner.PLAYER);
         }
 
         #endregion

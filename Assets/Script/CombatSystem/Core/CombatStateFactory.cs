@@ -8,7 +8,7 @@ namespace Game.CombatSystem.Factory
     /// 전투 턴 상태 객체들을 생성하는 팩토리입니다.
     /// Zenject의 IFactory를 활용하여 의존성 주입 기반 상태 생성을 제공합니다.
     /// </summary>
-    public class CombatStateFactory : ICombatStateFactory
+    public class CombatStateFactory
     {
         #region Injected Factories
 
