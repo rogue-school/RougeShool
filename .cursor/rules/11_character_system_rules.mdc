@@ -12,6 +12,13 @@ alwaysApply: false
 CharacterSystem은 게임의 모든 캐릭터(플레이어, 적)를 관리하는 시스템입니다. 캐릭터의 기본 속성, 상태, 행동을 통합적으로 관리하며, League of Legends 스타일의 플레이어 UI 시스템과 버프/디버프 아이콘 시스템을 제공합니다.
 
 ### 최근 변경(요약)
+- **플레이어 캐릭터 시스템 완전 구현**: PlayerCharacter 생성, 초기화, UI 연결 완료
+- **ICharacter 인터페이스 구현 완료**: SetCharacterData(object) 오버라이드 구현, 상속 구조 정리
+- **PlayerCharacterData 구조 개선**: Emblem 필드 추가로 데이터 기반 문양 설정 가능
+- **PlayerCharacterUIController 개선**: 데이터 기반 문양 설정, Fallback 시스템 구현
+- **Zenject DI 통합 완료**: PlayerManager, PlayerDeckManager, PlayerHandManager 자동 바인딩
+- **이벤트 기반 초기화**: OnPlayerCharacterReady 이벤트로 의존성 순서 문제 해결
+- **컴파일 경고 해결**: CS0114 경고 해결, 상속 구조 정리 완료
 - **AnimationSystem 의존성 완전 제거**: 모든 AnimationSystem 관련 코드 제거 완료
 - **임시 애니메이션 비활성화**: 애니메이션 호출 부분을 Debug.Log로 대체하여 게임 로직 정상 동작
 - **플레이어 UI 일원화**: `PlayerCharacterUIController` 중심 구조로 통합, 호환용 `SetTarget(ICharacter)` 제공
@@ -124,6 +131,8 @@ CharacterSystem/
 - **통합 UI 컨트롤러**: `PlayerCharacterUIController`를 통한 모든 플레이어 UI 통합 관리
 - **League of Legends 스타일**: HP 바(위), 특수 리소스 바(아래) 구조
 - **캐릭터 정보 표시**: 초상화, 문양, 이름, HP/MP 바 표시
+- **데이터 기반 문양 설정**: PlayerCharacterData.Emblem 필드를 통한 문양 설정
+- **문양 Fallback 시스템**: 문양이 없으면 기본 문양 자동 로드
 - **리소스 타입별 UI**: 검(빈 공간), 활(화살), 지팡이(마나) 타입별 UI 표시
 - **버프/디버프 아이콘**: 시각적 효과 표시 및 지속시간 관리
 - **DOTween 애니메이션**: HP/MP 바 전환 시 부드러운 애니메이션 효과
@@ -237,6 +246,8 @@ uiController.AddBuffDebuffIcon(buffIcon, duration, isBuff);
 uiController.RemoveBuffDebuffIcon(buffIcon);
 uiController.ClearAllBuffDebuffIcons();
 
+// 데이터 기반 문양 설정 (PlayerCharacterData.Emblem 사용)
+// 문양이 설정되지 않은 경우 자동으로 기본 문양 로드
 // AnimationSystem 제거로 인한 임시 처리
 // 캐릭터 애니메이션은 Debug.Log로 대체됨
 Debug.Log("[CharacterSystem] 캐릭터 애니메이션 재생 (임시 처리)");
@@ -299,3 +310,9 @@ icon.RemoveIcon();
 - 2025-01-27 | Maintainer | League of Legends 스타일 UI 및 버프/디버프 아이콘 시스템 규칙 추가 | 문서
 - 2025-01-27 | Maintainer | DOTween 애니메이션 및 Zenject DI 규칙 추가 | 문서
 - 2025-01-27 | Maintainer | AnimationSystem 의존성 완전 제거 및 임시 처리 추가 | 문서
+- 2025-01-27 | Maintainer | 플레이어 캐릭터 시스템 완전 구현 규칙 추가 | 문서
+- 2025-01-27 | Maintainer | ICharacter 인터페이스 구현 및 상속 구조 정리 규칙 추가 | 문서
+- 2025-01-27 | Maintainer | PlayerCharacterData 구조 개선 및 데이터 기반 문양 설정 규칙 추가 | 문서
+- 2025-01-27 | Maintainer | PlayerCharacterUIController 개선 및 Fallback 시스템 규칙 추가 | 문서
+- 2025-01-27 | Maintainer | Zenject DI 통합 및 이벤트 기반 초기화 규칙 추가 | 문서
+- 2025-01-27 | Maintainer | 컴파일 경고 해결 및 상속 구조 정리 규칙 추가 | 문서

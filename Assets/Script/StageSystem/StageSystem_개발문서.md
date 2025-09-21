@@ -12,13 +12,23 @@ StageSystem은 게임의 스테이지 진행을 관리하는 시스템입니다.
 - **타입 안전성 강화**: `ICharacterData`를 `EnemyCharacterData`로 캐스팅하여 안전한 프로퍼티 접근
 - **의존성 주입 확장**: `ITurnCardRegistry`, `ISkillCardFactory` 의존성 추가
 
-## 🏗️ 폴더 구조
+## 🏗️ 폴더 구조 (실제 파일 수 기준)
 ```
 StageSystem/
 ├── Manager/          # 스테이지 매니저 (2개 파일)
+│   ├── StageManager.cs
+│   └── StageProgressController.cs
 ├── Interface/        # 스테이지 인터페이스 (3개 파일)
+│   ├── IStageManager.cs
+│   ├── IStagePhaseManager.cs
+│   └── IStageRewardManager.cs
 ├── Factory/          # 스테이지 팩토리 (1개 파일)
-└── Data/             # 스테이지 데이터 (2개 파일)
+│   └── StageDataFactory.cs
+├── Data/             # 스테이지 데이터 (3개 파일)
+│   ├── StageData.cs
+│   ├── StagePhaseState.cs
+│   └── StageRewardData.cs
+└── StageSystem_개발문서.md
 ```
 
 ## 📁 주요 컴포넌트

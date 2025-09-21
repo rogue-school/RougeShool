@@ -13,13 +13,25 @@ SaveSystem은 게임의 저장/로드 기능을 관리하는 시스템입니다.
 - **레거시 슬롯 최적화**: SLOT_1/SLOT_2 → BATTLE_SLOT/WAIT_SLOT_1 전환 완료
 - **컴파일 에러 해결**: 모든 SaveSystem 관련 컴파일 에러 해결 완료
 
-## 🏗️ 현재 폴더 구조 (리팩토링 후)
+## 🏗️ 폴더 구조 (실제 파일 수 기준)
 ```
 SaveSystem/
-├── Manager/           # 저장 매니저 (3개 파일)
-├── Interface/         # 저장 인터페이스 (2개 파일)
+├── Manager/           # 저장 매니저 (4개 파일)
+│   ├── AutoSaveManager.cs
+│   ├── BaseSaveManager.cs
+│   ├── CardStateCollector.cs
+│   └── CardStateRestorer.cs
+├── Interface/         # 저장 인터페이스 (3개 파일)
+│   ├── IAutoSaveManager.cs
+│   ├── ICardStateCollector.cs
+│   └── ICardStateRestorer.cs
 ├── Data/              # 저장 데이터 (3개 파일)
-└── Event/             # 저장 이벤트 (1개 파일)
+│   ├── AutoSaveCondition.cs
+│   ├── CardSlotData.cs
+│   └── CompleteCardStateData.cs
+├── Event/             # 저장 이벤트 (1개 파일)
+│   └── SaveEventTrigger.cs
+└── SaveSystem_개발문서.md
 ```
 
 ## 📁 실제 구현 위치

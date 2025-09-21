@@ -14,11 +14,16 @@ UtilitySystem은 게임의 유틸리티 기능들을 관리하는 시스템입�
 - **Zenject DI 통합 완료**: 모든 UtilitySystem 컴포넌트가 의존성 주입으로 전환 완료
 - **컴파일 에러 해결**: 모든 UtilitySystem 관련 컴파일 에러 해결 완료
 
-## 🏗️ 폴더 구조 (리팩토링 후)
+## 🏗️ 폴더 구조 (실제 파일 수 기준)
 ```
 UtilitySystem/
 ├── GameFlow/         # 게임 플로우 (3개 파일)
-└── 루트/             # 루트 유틸리티 (2개 파일) - 간소화됨
+│   ├── GameContext.cs
+│   ├── IGameContext.cs
+│   └── ISceneLoader.cs
+├── DontDestroyOnLoadContainer.cs
+├── DropHandlerInjector.cs
+└── UtilitySystem_개발문서.md
 ```
 
 ## 📁 주요 컴포넌트 (리팩토링 후)

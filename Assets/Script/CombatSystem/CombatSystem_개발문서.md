@@ -22,22 +22,64 @@ CombatSystem은 게임의 전투 로직을 관리하는 핵심 시스템입니�
 - **슬롯 관리 통합**: CombatSlotManager 기능을 CombatFlowManager로 통합 완료
 - **컴파일 에러 해결**: 모든 CombatSystem 관련 컴파일 에러 해결 완료
 
-## 🏗️ 폴더 구조 (최적화 완료)
+## 🏗️ 폴더 구조 (실제 파일 수 기준)
 ```
 CombatSystem/
 ├── Core/             # 핵심 로직 (4개 파일)
-├── Manager/          # 매니저 클래스 (3개 파일) ← 8개에서 통합
-├── Interface/        # 인터페이스 (6개 파일) ← 22개에서 73% 감소
-├── State/            # 상태 패턴 (6개 파일)
-├── Service/          # 서비스 클래스 (3개 파일) ← 4개에서 통합
+│   ├── CombatInstaller.cs
+│   ├── CombatStateFactory.cs
+│   ├── DefaultCombatState.cs
+│   └── TurnStartButtonHandler.cs
+├── Manager/          # 매니저 클래스 (3개 파일)
+│   ├── CombatExecutionManager.cs
+│   ├── CombatFlowManager.cs
+│   └── TurnManager.cs
+├── Interface/        # 인터페이스 (6개 파일)
+│   ├── CombatPhase.cs
+│   ├── ExecutionCommand.cs
+│   ├── ExecutionResult.cs
+│   ├── ICombatExecutionManager.cs
+│   ├── ICombatFlowManager.cs
+│   └── ICombatTurnManager.cs
+├── State/            # 상태 패턴 (5개 파일)
+│   ├── CombatAttackState.cs
+│   ├── CombatGameOverState.cs
+│   ├── CombatPlayerInputState.cs
+│   ├── CombatPrepareState.cs
+│   ├── CombatResultState.cs
+│   └── CombatVictoryState.cs
+├── Service/          # 서비스 클래스 (3개 파일)
+│   ├── DefaultEnemySpawnValidator.cs
+│   ├── DefaultTurnStartConditionChecker.cs
+│   └── PlayerInputController.cs
 ├── Data/             # 데이터 클래스 (1개 파일)
+│   └── SlotOwner.cs
 ├── Event/            # 이벤트 시스템 (1개 파일)
+│   └── CombatEvents.cs
 ├── Utility/          # 유틸리티 (4개 파일)
+│   ├── CardSlotHelper.cs
+│   ├── SlotSelector.cs
+│   ├── SlotValidator.cs
+│   └── UnityMainThreadDispatcher.cs
 ├── Context/          # 컨텍스트 (2개 파일)
+│   ├── DefaultCardExecutionContext.cs
+│   └── TurnContext.cs
 ├── DragDrop/         # 드래그 앤 드롭 (2개 파일)
+│   ├── CardDropRegistrar.cs
+│   └── DefaultCardDropValidator.cs
 ├── Factory/          # 팩토리 패턴 (6개 파일)
-├── Intialization/    # 초기화 (1개 파일) [주의: 폴더명 오타 - Initialization이어야 함]
-└── UI/               # UI 관련 (1개 파일)
+│   ├── CombatAttackStateFactory.cs
+│   ├── CombatGameOverStateFactory.cs
+│   ├── CombatPlayerInputStateFactory.cs
+│   ├── CombatPrepareStateFactory.cs
+│   ├── CombatResultStateFactory.cs
+│   └── CombatVictoryStateFactory.cs
+├── Initialization/   # 초기화 (1개 파일)
+│   └── SlotInitializationStep.cs
+├── UI/               # UI 관련 (1개 파일)
+│   └── DamageTextUI.cs
+└── Docs/             # 개발 문서 (1개 파일)
+    └── CombatSystem_개발문서.md
 ```
 
 ## 📁 주요 컴포넌트

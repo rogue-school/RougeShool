@@ -22,24 +22,88 @@ SkillCardSystem은 게임의 스킬카드 시스템을 관리하는 핵심 시�
 - **덱 크기 제한 제거**: maxDeckSize 필드 제거로 덱 크기 제한 완전 제거 완료
 - **턴 타이머 기능 제거**: 미구현된 턴 타이머 관련 코드 완전 제거 완료
 
-## 🏗️ 폴더 구조 (최적화 완료)
+## 🏗️ 폴더 구조 (실제 파일 수 기준)
 ```
 SkillCardSystem/
 ├── Data/             # 카드 데이터 (2개 파일)
+│   ├── SkillCardDefinition.cs
+│   └── SlotRole.cs
 ├── Deck/             # 덱 관리 (2개 파일)
+│   ├── EnemySkillDeck.cs
+│   └── PlayerSkillDeck.cs
 ├── DragDrop/         # 드래그 앤 드롭 (4개 파일)
-├── Effect/           # 효과 구현 (7개 파일) ← 12개에서 제거된 효과들 반영
+│   ├── CardDragHandler.cs
+│   ├── CardDropService.cs
+│   ├── CardDropToHandHandler.cs
+│   └── CardDropToSlotHandler.cs
+├── Effect/           # 효과 구현 (7개 파일)
+│   ├── BleedEffect.cs
+│   ├── BleedEffectCommand.cs
+│   ├── BleedEffectSO.cs
+│   ├── DamageEffectCommand.cs
+│   ├── DamageEffectSO.cs
+│   ├── GuardBuff.cs
+│   ├── GuardEffectCommand.cs
+│   ├── GuardEffectSO.cs
+│   └── SkillCardEffectSO.cs
 ├── Executor/         # 실행기 (1개 파일)
+│   └── CardExecutor.cs
 ├── Factory/          # 팩토리 패턴 (3개 파일)
+│   ├── CardEffectCommandFactory.cs
+│   ├── SkillCardEntry.cs
+│   └── SkillCardFactory.cs
 ├── Installer/        # DI 설치 (1개 파일)
-├── Interface/        # 인터페이스 (15개 파일) ← 25개에서 40% 감소
-├── Manager/          # 매니저 클래스 (4개 파일) ← 5개에서 통합
+│   └── CardInstaller.cs
+├── Interface/        # 인터페이스 (15개 파일)
+│   ├── ICardCirculationSystem.cs
+│   ├── ICardEffect.cs
+│   ├── ICardEffectCommand.cs
+│   ├── ICardEffectCommandFactory.cs
+│   ├── ICardExecutionContext.cs
+│   ├── ICardValidator.cs
+│   ├── ICombatCardSlot.cs
+│   ├── IHandCardSlot.cs
+│   ├── IPerTurnEffect.cs
+│   ├── IPlayerDeckManager.cs
+│   ├── IPlayerHandManager.cs
+│   ├── ISkillCard.cs
+│   ├── ISkillCardFactory.cs
+│   ├── ISkillCardUI.cs
+│   └── SlotRegistry.cs
+├── Manager/          # 매니저 클래스 (3개 파일)
+│   ├── BaseSkillCardManager.cs
+│   ├── CardCirculationSystem.cs
+│   ├── PlayerDeckManager.cs
+│   └── PlayerHandManager.cs
 ├── Runtime/          # 런타임 로직 (2개 파일)
-├── Service/          # 서비스 클래스 (2개 파일) ← 6개에서 통합
-├── Slot/             # 슬롯 시스템 (10개 파일)
+│   ├── EnemySkillCardRuntime.cs
+│   └── SkillCard.cs
+├── Service/          # 서비스 클래스 (2개 파일)
+│   ├── CardExecutionContextProvider.cs
+│   └── SkillCardRegistry.cs
+├── Slot/             # 슬롯 시스템 (9개 파일)
+│   ├── BaseCardSlotUI.cs
+│   ├── CharacterSlotRegistry.cs
+│   ├── CombatFieldSlotPosition.cs
+│   ├── CombatSlotPosition.cs
+│   ├── CombatSlotRegistry.cs
+│   ├── HandSlotRegistry.cs
+│   ├── SkillCardSlotPosition.cs
+│   ├── SlotAnchor.cs
+│   └── SlotRegistry.cs
 ├── UI/               # UI 관련 (5개 파일)
+│   ├── CombatExecutionSlotUI.cs
+│   ├── DeckEditorUI.cs
+│   ├── PlayerHandCardSlotUI.cs
+│   ├── SkillCardUI.cs
+│   └── SkillCardUIFactory.cs
 ├── Validator/        # 검증기 (2개 파일)
+│   ├── CardDefinitionValidator.cs
+│   └── DefaultCardExecutionValidator.cs
 └── Editor/           # 에디터 도구 (3개 파일)
+    ├── EnemySkillDeckEditor.cs
+    ├── PlayerSkillDeckEditor.cs
+    └── SkillCardDefinitionEditor.cs
 ```
 
 ## 📁 주요 컴포넌트

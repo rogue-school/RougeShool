@@ -13,16 +13,45 @@ CoreSystem은 게임의 핵심 시스템들을 관리하는 중앙 집중식 시
 - **한국어 로깅**: GameLogger를 통한 카테고리별 로깅
 - **씬 전환 지속성**: 씬 전환 시에도 시스템 상태 유지
 
-## 🏗️ 폴더 구조
+## 🏗️ 폴더 구조 (실제 파일 수 기준)
 ```
 CoreSystem/
 ├── Manager/          # 코어 매니저 (6개 파일)
+│   ├── BaseCoreManager.cs
+│   ├── CoreSystemInitializer.cs
+│   ├── GameStateManager.cs
+│   ├── MainSceneInstaller.cs
+│   ├── PlayerCharacterSelectionManager.cs
+│   └── SceneTransitionManager.cs
 ├── Audio/           # 오디오 관리 (3개 파일)
+│   ├── AudioEventTrigger.cs
+│   ├── AudioManager.cs
+│   ├── AudioPoolManager.cs
+│   └── AudioSystem_개발문서.md
 ├── Save/            # 저장 관리 (1개 파일)
-├── Utility/         # 코어 유틸리티 (3개 파일)
+│   └── SaveManager.cs
+├── Utility/         # 코어 유틸리티 (7개 파일)
+│   ├── ComponentInteractionOptimizer.cs
+│   ├── ComponentRoleManager.cs
+│   ├── CoroutineRunner.cs
+│   ├── DIOptimizationUtility.cs
+│   ├── DIPerformanceTester.cs
+│   ├── GameLogger.cs
+│   └── ICoroutineRunner.cs
 ├── UI/              # 코어 UI (4개 파일)
+│   ├── LoadingScreenController.cs
+│   ├── SettingsManager.cs
+│   ├── SettingsPanelController.cs
+│   └── TransitionEffectController.cs
 ├── Interface/       # 코어 인터페이스 (6개 파일)
-└── Data/            # 코어 데이터 (빈 폴더)
+│   ├── IAudioManager.cs
+│   ├── ICoreSystemInitializable.cs
+│   ├── IGameStateManager.cs
+│   ├── IPlayerCharacterSelectionManager.cs
+│   ├── ISaveManager.cs
+│   └── ISceneTransitionManager.cs
+├── CoreSystemInstaller.cs
+└── CoreSystem_개발문서.md
 ```
 
 ## 📁 주요 컴포넌트

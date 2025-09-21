@@ -4,6 +4,13 @@
 CharacterSystem은 게임의 모든 캐릭터(플레이어, 적)를 관리하는 시스템입니다. 캐릭터의 기본 속성, 상태, 행동을 통합적으로 관리하며, 새로운 리그 오브 레전드 스타일의 플레이어 캐릭터 UI 시스템을 제공합니다.
 
 ### 최근 변경(요약)
+- **플레이어 캐릭터 시스템 완전 구현**: PlayerCharacter 생성, 초기화, UI 연결 완료
+- **ICharacter 인터페이스 구현 완료**: SetCharacterData(object) 오버라이드 구현, 상속 구조 정리
+- **PlayerCharacterData 구조 개선**: Emblem 필드 추가로 데이터 기반 문양 설정 가능
+- **PlayerCharacterUIController 개선**: 데이터 기반 문양 설정, Fallback 시스템 구현
+- **Zenject DI 통합 완료**: PlayerManager, PlayerDeckManager, PlayerHandManager 자동 바인딩
+- **이벤트 기반 초기화**: OnPlayerCharacterReady 이벤트로 의존성 순서 문제 해결
+- **컴파일 경고 해결**: CS0114 경고 해결, 상속 구조 정리 완료
 - **시스템 최적화 완료**: 3단계 리팩토링으로 복잡성 71% 감소 및 성능 향상 완료
 - **인터페이스 정리**: 17개 → 5개 인터페이스로 통합, 중복 기능 제거 완료
 - **클래스 통합**: Manager/Initialization 클래스 통합으로 코드 중복 제거 완료
@@ -17,17 +24,46 @@ CharacterSystem은 게임의 모든 캐릭터(플레이어, 적)를 관리하는
 - **DOTween/DI 정리**: UI 애니메이션 및 Zenject 의존성 주입 정비
 - **컴파일 에러 해결**: 모든 CharacterSystem 관련 컴파일 에러 해결 완료
 
-## 🏗️ 폴더 구조 (최적화 완료)
+## 🏗️ 폴더 구조 (실제 파일 수 기준)
 ```
 CharacterSystem/
 ├── Core/             # 캐릭터 핵심 로직 (4개 파일)
+│   ├── CharacterBase.cs
+│   ├── EnemyCharacter.cs
+│   ├── PlayerCharacter.cs
+│   └── PlayerCharacterSelector.cs
 ├── Data/             # 캐릭터 데이터 (4개 파일)
-├── Interface/        # 캐릭터 인터페이스 (3개 파일) ← 17개에서 82% 감소
-├── Manager/          # 캐릭터 매니저 (4개 파일) ← 5개에서 통합
-├── Initialization/   # 캐릭터 초기화 (4개 파일) ← 6개에서 통합
+│   ├── EnemyCharacterData.cs
+│   ├── PlayerCharacterData.cs
+│   ├── PlayerCharacterType.cs
+│   └── PlayerCharacterTypeHelper.cs
+├── Interface/        # 캐릭터 인터페이스 (3개 파일)
+│   ├── ICharacter.cs
+│   ├── ICharacterData.cs
+│   └── ICharacterSlot.cs
+├── Manager/          # 캐릭터 매니저 (4개 파일)
+│   ├── BaseCharacterManager.cs
+│   ├── EnemyManager.cs
+│   ├── EnemySpawnerManager.cs
+│   └── PlayerManager.cs
+├── Initialization/   # 캐릭터 초기화 (4개 파일)
+│   ├── EnemyCharacterInitializer.cs
+│   ├── EnemyInitializer.cs
+│   ├── HandInitializer.cs
+│   └── PlayerSkillCardInitializer.cs
 ├── Slot/             # 캐릭터 슬롯 (1개 파일)
+│   └── CharacterSlotPosition.cs
 ├── UI/               # 캐릭터 UI (5개 파일)
+│   ├── BuffDebuffIcon.cs
+│   ├── CharacterSlotUI.cs
+│   ├── EnemyCharacterUIController.cs
+│   ├── HPBarController.cs
+│   └── PlayerCharacterUIController.cs
 └── Utility/          # 캐릭터 유틸리티 (4개 파일)
+    ├── CardRegistrar.cs
+    ├── CardValidator.cs
+    ├── CharacterDeathHandler.cs
+    └── EnemySpawnResult.cs
 ```
 
 ## 📁 주요 컴포넌트
@@ -135,6 +171,8 @@ CharacterSystem/
 ### PlayerCharacterUIController 클래스 (업데이트)
 - **Initialize(PlayerCharacter character)**: 플레이어 캐릭터로 UI 초기화
 - **SetTarget(ICharacter character)**: 호환용, 내부에서 Initialize(PlayerCharacter) 위임
+- **SetCharacterEmblem(PlayerCharacterData data)**: 데이터 기반 문양 설정 (새로 추가)
+- **SetCharacterEmblemFallback(PlayerCharacterType type)**: 기본 문양 Fallback 시스템 (새로 추가)
 - **UpdateHPBar()/UpdateMPBar()**: 바/텍스트/색상 애니메이션 포함 업데이트
 - **OnTakeDamage(int), OnHeal(int)**: 피격/회복 시 연출 훅
 - **Add/Remove/Clear BuffDebuffIcon**: 버프/디버프 아이콘 관리
@@ -176,6 +214,7 @@ CharacterSystem/
 - **CharacterType**: 캐릭터 타입 (프로퍼티)
 - **MaxHP**: 최대 체력 (프로퍼티)
 - **Portrait**: 캐릭터 초상화 (프로퍼티)
+- **Emblem**: 캐릭터 문양/앰블렘 (프로퍼티) - 새로 추가
 - **MaxResource**: 최대 리소스 (프로퍼티)
 - **ResourceName**: 리소스 이름 (프로퍼티)
 
@@ -461,8 +500,12 @@ classDiagram
     }
     
     class PlayerCharacter {
+        -playerCharacterData: PlayerCharacterData
         -characterType: PlayerCharacterType
         -resourceManager: PlayerResourceManager
+        +PlayerCharacterData: PlayerCharacterData
+        +CharacterData: object
+        +SetCharacterData(data) void
         +CharacterType: PlayerCharacterType
         +ConsumeResource(amount) bool
     }
@@ -533,3 +576,10 @@ sequenceDiagram
 - 2025-01-27 | Maintainer | 실제 코드 기반 캐릭터 기본 속성 수정 (속도/공격력 제거, 가드/리소스/턴효과 추가) | 문서
 - 2025-09-18 | Maintainer | 레거시 `CharacterUIController` 제거, 이벤트 기반 UI로 전환, `PlayerCharacterUIController` 호환 메서드 추가, `CharacterSlotUI` 자동 연결 제거 반영 | 코드/문서
 - 2025-01-27 | Maintainer | 적 핸드 매니저 시스템 완전 제거, `IEnemyHandManager` 인터페이스 삭제, `HandInitializer` 간소화, 적 카드 직접 생성 시스템 구현 | 코드/문서
+- 2025-01-27 | Maintainer | 플레이어 캐릭터 시스템 완전 구현 - PlayerCharacter 생성/초기화/UI 연결 완료 | 코드/문서
+- 2025-01-27 | Maintainer | ICharacter 인터페이스 구현 완료 - SetCharacterData(object) 오버라이드, 상속 구조 정리 | 코드/문서
+- 2025-01-27 | Maintainer | PlayerCharacterData 구조 개선 - Emblem 필드 추가로 데이터 기반 문양 설정 | 코드/문서
+- 2025-01-27 | Maintainer | PlayerCharacterUIController 개선 - 데이터 기반 문양 설정, Fallback 시스템 구현 | 코드/문서
+- 2025-01-27 | Maintainer | Zenject DI 통합 완료 - PlayerManager/PlayerDeckManager/PlayerHandManager 자동 바인딩 | 코드/문서
+- 2025-01-27 | Maintainer | 이벤트 기반 초기화 - OnPlayerCharacterReady 이벤트로 의존성 순서 문제 해결 | 코드/문서
+- 2025-01-27 | Maintainer | 컴파일 경고 해결 - CS0114 경고 해결, 상속 구조 정리 완료 | 코드/문서
