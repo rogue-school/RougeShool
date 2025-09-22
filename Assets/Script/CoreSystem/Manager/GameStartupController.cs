@@ -101,7 +101,22 @@ namespace Game.CoreSystem.Manager
             // 3. 전투/대기 슬롯 채우기
             yield return StartCoroutine(SetupCombatSlots());
 
-            // 4. 플레이어 스킬카드 생성
+            // TurnManager의 동적 셋업 완료까지 코루틴으로 정확히 대기
+            var tmgr = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
+            if (tmgr != null)
+            {
+                var waitMethod = tmgr.GetType().GetMethod(
+                    "WaitForInitialQueueSetup",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
+                if (waitMethod != null)
+                {
+                    var routine = waitMethod.Invoke(tmgr, null) as System.Collections.IEnumerator;
+                    if (routine != null)
+                        yield return StartCoroutine(routine);
+                }
+            }
+
+            // 4. 플레이어 스킬카드 생성 (전투 시작 이전에만 실행)
             yield return StartCoroutine(SetupPlayerSkillCards());
 
             // 5. 전투 시작
@@ -130,6 +145,20 @@ namespace Game.CoreSystem.Manager
             // 플레이어는 이미 셋업되어 있으므로 건너뛰고 적만 새로 셋업
             yield return StartCoroutine(SetupEnemyCharacter());
             yield return StartCoroutine(SetupCombatSlots());
+            // 동적 셋업 완료까지 코루틴으로 정확히 대기
+            var tmgr2 = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
+            if (tmgr2 != null)
+            {
+                var waitMethod2 = tmgr2.GetType().GetMethod(
+                    "WaitForInitialQueueSetup",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
+                if (waitMethod2 != null)
+                {
+                    var routine2 = waitMethod2.Invoke(tmgr2, null) as System.Collections.IEnumerator;
+                    if (routine2 != null)
+                        yield return StartCoroutine(routine2);
+                }
+            }
             yield return StartCoroutine(SetupPlayerSkillCards());
 
             // 전투 재시작

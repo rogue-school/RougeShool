@@ -21,6 +21,20 @@ namespace Game.CombatSystem.Manager
     /// </summary>
     public class TurnManager : MonoBehaviour, ICombatTurnManager
     {
+        // 초기 전투/대기 슬롯 셋업 완료 신호
+        public bool _initialSlotSetupCompleted = false;
+        public event Action OnInitialSlotSetupCompleted;
+
+        /// <summary>
+        /// 초기 전투/대기 슬롯 셋업 완료까지 대기하는 코루틴을 반환합니다.
+        /// </summary>
+        public System.Collections.IEnumerator WaitForInitialQueueSetup()
+        {
+            while (!_initialSlotSetupCompleted)
+            {
+                yield return null;
+            }
+        }
         #region 초기화 (Zenject DI)
 
         private void Awake()
@@ -661,6 +675,8 @@ namespace Game.CombatSystem.Manager
             }
 
             GameLogger.LogInfo("동적 슬롯 셋업 완료", GameLogger.LogCategory.Combat);
+            _initialSlotSetupCompleted = true;
+            OnInitialSlotSetupCompleted?.Invoke();
         }
 
         /// <summary>

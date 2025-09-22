@@ -15,7 +15,7 @@ namespace Game.CombatSystem.UI
     /// 플레이어 핸드 슬롯 UI.
     /// 이전 시스템의 불필요한 의존성을 제거하고, 플레이어 카드 전용으로 동작합니다.
     /// </summary>
-    public class PlayerHandCardSlotUI : MonoBehaviour
+    public class PlayerHandCardSlotUI : MonoBehaviour, Game.CombatSystem.Interface.IHandCardSlot
     {
         [SerializeField] private SkillCardSlotPosition position;
 

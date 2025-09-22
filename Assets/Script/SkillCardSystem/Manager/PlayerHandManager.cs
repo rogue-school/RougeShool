@@ -61,8 +61,14 @@ namespace Game.SkillCardSystem.Manager
             }
             if (handSlotRegistry == null)
             {
-                GameLogger.LogWarning("초기 손패 생성 실패 - HandSlotRegistry가 null", GameLogger.LogCategory.SkillCard);
-                return;
+                // SlotRegistry에서 가져오기 시도
+                var slotRegistry = Object.FindFirstObjectByType<Game.CombatSystem.Slot.SlotRegistry>();
+                handSlotRegistry = slotRegistry?.GetHandSlotRegistry();
+                if (handSlotRegistry == null)
+                {
+                    GameLogger.LogWarning("초기 손패 생성 실패 - HandSlotRegistry가 null", GameLogger.LogCategory.SkillCard);
+                    return;
+                }
             }
             if (circulationSystem == null)
             {
@@ -71,15 +77,38 @@ namespace Game.SkillCardSystem.Manager
             }
             if (cardUIPrefab == null)
             {
-                GameLogger.LogWarning("초기 손패 생성 실패 - SkillCardUI 프리팹이 주입되지 않음", GameLogger.LogCategory.SkillCard);
-                return;
+                // Resources에서 로드 시도
+                cardUIPrefab = Resources.Load<Game.SkillCardSystem.UI.SkillCardUI>("Prefab/SkillCard");
+                if (cardUIPrefab != null)
+                {
+                    GameLogger.LogInfo("핸드용 SkillCardUI 프리팹을 Resources에서 로드했습니다.", GameLogger.LogCategory.SkillCard);
+                }
+                else
+                {
+                    GameLogger.LogWarning("초기 손패 생성 실패 - SkillCardUI 프리팹이 주입/로드되지 않음", GameLogger.LogCategory.SkillCard);
+                    return;
+                }
             }
 
             var slots = handSlotRegistry.GetPlayerHandSlot().ToList();
             if (slots == null || slots.Count == 0)
             {
-                GameLogger.LogWarning("초기 손패 생성 실패 - 플레이어 핸드 슬롯이 없음", GameLogger.LogCategory.SkillCard);
-                return;
+                // 씬에서 직접 수집 후 등록 시도
+                var found = Object.FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None)
+                    .OfType<Game.CombatSystem.Interface.IHandCardSlot>()
+                    .Where(s => s.GetOwner() == Game.CombatSystem.Data.SlotOwner.PLAYER)
+                    .ToList();
+                if (found.Count > 0)
+                {
+                    handSlotRegistry.RegisterHandSlots(found);
+                    slots = handSlotRegistry.GetPlayerHandSlot().ToList();
+                    GameLogger.LogInfo($"플레이어 핸드 슬롯 자동 등록: {slots.Count}개", GameLogger.LogCategory.SkillCard);
+                }
+                if (slots == null || slots.Count == 0)
+                {
+                    GameLogger.LogWarning("초기 손패 생성 실패 - 플레이어 핸드 슬롯이 없음", GameLogger.LogCategory.SkillCard);
+                    return;
+                }
             }
 
             // 슬롯 초기화(기존 잔여 UI/카드 제거)
