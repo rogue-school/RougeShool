@@ -34,6 +34,19 @@ SaveSystem/
 └── SaveSystem_개발문서.md
 ```
 
+## 스크립트 목록(1:1 매핑)
+- SaveSystem/Manager/CardStateRestorer.cs
+- SaveSystem/Manager/CardStateCollector.cs
+- SaveSystem/Manager/AutoSaveManager.cs
+- SaveSystem/Manager/BaseSaveManager.cs
+- SaveSystem/Interface/IAutoSaveManager.cs
+- SaveSystem/Interface/ICardStateRestorer.cs
+- SaveSystem/Interface/ICardStateCollector.cs
+- SaveSystem/Data/CompleteCardStateData.cs
+- SaveSystem/Event/SaveEventTrigger.cs
+- SaveSystem/Data/CardSlotData.cs
+- SaveSystem/Data/AutoSaveCondition.cs
+
 ## 📁 실제 구현 위치
 ```
 CoreSystem/Save/

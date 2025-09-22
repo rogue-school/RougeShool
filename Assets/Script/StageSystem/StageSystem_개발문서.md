@@ -31,6 +31,17 @@ StageSystem/
 └── StageSystem_개발문서.md
 ```
 
+## 스크립트 목록(1:1 매핑)
+- StageSystem/Manager/StageManager.cs
+- StageSystem/Factory/StageDataFactory.cs
+- StageSystem/Data/StageData.cs
+- StageSystem/Interface/IStageManager.cs
+- StageSystem/Manager/StageProgressController.cs
+- StageSystem/Data/StagePhaseState.cs
+- StageSystem/Interface/IStageRewardManager.cs
+- StageSystem/Data/StageRewardData.cs
+- StageSystem/Interface/IStagePhaseManager.cs
+
 ## 📁 주요 컴포넌트
 
 ### Manager 폴더 (2개 파일)

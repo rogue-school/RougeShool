@@ -18,6 +18,18 @@ UISystem/
 └── UISystem_개발문서.md        # 개발 문서
 ```
 
+## 스크립트 목록(1:1 매핑)
+- UISystem/PanelManager.cs
+- UISystem/BaseUIController.cs
+- UISystem/SettingsUIController.cs
+- UISystem/Newgame.cs
+- UISystem/MainSceneController.cs
+- UISystem/Xbutton.cs
+- UISystem/play.cs
+- UISystem/WeaponSelector.cs
+- UISystem/UnderlineHoverEffect.cs
+- UISystem/ExitGame.cs
+
 ## 📁 주요 컴포넌트 (현재 상태)
 
 ### 현재 구현된 파일들

@@ -66,6 +66,37 @@ CharacterSystem/
     └── EnemySpawnResult.cs
 ```
 
+## 스크립트 목록(1:1 매핑)
+- CharacterSystem/Manager/PlayerManager.cs
+- CharacterSystem/Core/EnemyCharacter.cs
+- CharacterSystem/Manager/EnemyManager.cs
+- CharacterSystem/Core/PlayerCharacter.cs
+- CharacterSystem/UI/PlayerCharacterUIController.cs
+- CharacterSystem/Data/PlayerCharacterData.cs
+- CharacterSystem/Initialization/HandInitializer.cs
+- CharacterSystem/Initialization/EnemyCharacterInitializer.cs
+- CharacterSystem/Initialization/PlayerSkillCardInitializer.cs
+- CharacterSystem/Initialization/EnemyInitializer.cs
+- CharacterSystem/Manager/EnemySpawnerManager.cs
+- CharacterSystem/Core/CharacterBase.cs
+- CharacterSystem/Manager/BaseCharacterManager.cs
+- CharacterSystem/Interface/ICharacter.cs
+- CharacterSystem/Utility/CharacterDeathHandler.cs
+- CharacterSystem/UI/HPBarController.cs
+- CharacterSystem/UI/EnemyCharacterUIController.cs
+- CharacterSystem/UI/CharacterSlotUI.cs
+- CharacterSystem/UI/BuffDebuffIcon.cs
+- CharacterSystem/Core/PlayerCharacterSelector.cs
+- CharacterSystem/Utility/CardRegistrar.cs
+- CharacterSystem/Utility/EnemySpawnResult.cs
+- CharacterSystem/Utility/CardValidator.cs
+- CharacterSystem/Interface/ICharacterSlot.cs
+- CharacterSystem/Data/PlayerCharacterTypeHelper.cs
+- CharacterSystem/Data/PlayerCharacterType.cs
+- CharacterSystem/Data/EnemyCharacterData.cs
+- CharacterSystem/Slot/CharacterSlotPosition.cs
+- CharacterSystem/Interface/ICharacterData.cs
+
 ## 📁 주요 컴포넌트
 
 ### Core 폴더 (4개 파일)

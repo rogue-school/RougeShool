@@ -26,6 +26,13 @@ UtilitySystem/
 └── UtilitySystem_개발문서.md
 ```
 
+## 스크립트 목록(1:1 매핑)
+- UtilitySystem/DropHandlerInjector.cs
+- UtilitySystem/GameFlow/ISceneLoader.cs
+- UtilitySystem/GameFlow/IGameContext.cs
+- UtilitySystem/GameFlow/GameContext.cs
+- UtilitySystem/DontDestroyOnLoadContainer.cs
+
 ## 📁 주요 컴포넌트 (리팩토링 후)
 
 ### GameFlow 폴더 (3개 파일)

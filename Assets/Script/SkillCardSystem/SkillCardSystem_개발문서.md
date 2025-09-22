@@ -106,6 +106,71 @@ SkillCardSystem/
     └── SkillCardDefinitionEditor.cs
 ```
 
+## 스크립트 목록(1:1 매핑)
+- SkillCardSystem/UI/SkillCardUIFactory.cs
+- SkillCardSystem/UI/SkillCardUI.cs
+- SkillCardSystem/Manager/PlayerHandManager.cs
+- SkillCardSystem/Slot/SlotRegistry.cs
+- SkillCardSystem/Manager/PlayerDeckManager.cs
+- SkillCardSystem/DragDrop/CardDropToHandHandler.cs
+- SkillCardSystem/DragDrop/CardDropToSlotHandler.cs
+- SkillCardSystem/Effect/BleedEffectCommand.cs
+- SkillCardSystem/DragDrop/CardDropService.cs
+- SkillCardSystem/UI/PlayerHandCardSlotUI.cs
+- SkillCardSystem/DragDrop/CardDragHandler.cs
+- SkillCardSystem/Validator/DefaultCardExecutionValidator.cs
+- SkillCardSystem/Runtime/SkillCard.cs
+- SkillCardSystem/Service/CardExecutionContextProvider.cs
+- SkillCardSystem/Factory/SkillCardFactory.cs
+- SkillCardSystem/Effect/BleedEffectSO.cs
+- SkillCardSystem/Executor/CardExecutor.cs
+- SkillCardSystem/Slot/CombatSlotRegistry.cs
+- SkillCardSystem/Slot/HandSlotRegistry.cs
+- SkillCardSystem/Slot/CharacterSlotRegistry.cs
+- SkillCardSystem/Effect/GuardEffectCommand.cs
+- SkillCardSystem/Effect/GuardBuff.cs
+- SkillCardSystem/Interface/ICardValidator.cs
+- SkillCardSystem/Interface/IPlayerHandManager.cs
+- SkillCardSystem/Interface/ICardExecutionContext.cs
+- SkillCardSystem/Manager/CardCirculationSystem.cs
+- SkillCardSystem/Manager/BaseSkillCardManager.cs
+- SkillCardSystem/Interface/ICardCirculationSystem.cs
+- SkillCardSystem/Slot/CombatSlotPosition.cs
+- SkillCardSystem/Editor/SkillCardDefinitionEditor.cs
+- SkillCardSystem/Editor/EnemySkillDeckEditor.cs
+- SkillCardSystem/Deck/EnemySkillDeck.cs
+- SkillCardSystem/Deck/PlayerSkillDeck.cs
+- SkillCardSystem/Interface/ISkillCardUI.cs
+- SkillCardSystem/Slot/SkillCardSlotPosition.cs
+- SkillCardSystem/Installer/CardInstaller.cs
+- SkillCardSystem/Effect/DamageEffectCommand.cs
+- SkillCardSystem/UI/CombatExecutionSlotUI.cs
+- SkillCardSystem/Slot/SlotAnchor.cs
+- SkillCardSystem/Data/SlotRole.cs
+- SkillCardSystem/Data/SkillCardDefinition.cs
+- SkillCardSystem/UI/DeckEditorUI.cs
+- SkillCardSystem/Interface/IPlayerDeckManager.cs
+- SkillCardSystem/Editor/PlayerSkillDeckEditor.cs
+- SkillCardSystem/Factory/SkillCardEntry.cs
+- SkillCardSystem/Validator/CardDefinitionValidator.cs
+- SkillCardSystem/Service/SkillCardRegistry.cs
+- SkillCardSystem/Runtime/EnemySkillCardRuntime.cs
+- SkillCardSystem/Interface/ISkillCardFactory.cs
+- SkillCardSystem/Interface/ISkillCard.cs
+- SkillCardSystem/Slot/CombatFieldSlotPosition.cs
+- SkillCardSystem/Interface/IHandCardSlot.cs
+- SkillCardSystem/Interface/ICombatCardSlot.cs
+- SkillCardSystem/Interface/ICardEffectCommandFactory.cs
+- SkillCardSystem/Factory/CardEffectCommandFactory.cs
+- SkillCardSystem/Effect/SkillCardEffectSO.cs
+- SkillCardSystem/Effect/GuardEffectSO.cs
+- SkillCardSystem/Effect/DamageEffectSO.cs
+- SkillCardSystem/Effect/BleedEffect.cs
+- SkillCardSystem/Slot/BaseCardSlotUI.cs
+- SkillCardSystem/Interface/IPerTurnEffect.cs
+- SkillCardSystem/Interface/ICardEffectCommand.cs
+- SkillCardSystem/Interface/ICardEffect.cs
+
 ## 📁 주요 컴포넌트
 
 ### Data 폴더 (2개 파일)

@@ -54,6 +54,37 @@ CoreSystem/
 └── CoreSystem_개발문서.md
 ```
 
+## 스크립트 목록(1:1 매핑)
+- CoreSystem/Manager/GameStartupController.cs
+- CoreSystem/Utility/ComponentRoleManager.cs
+- CoreSystem/Manager/CoreSystemInitializer.cs
+- CoreSystem/CoreSystemInstaller.cs
+- CoreSystem/Manager/BaseCoreManager.cs
+- CoreSystem/Utility/ComponentInteractionOptimizer.cs
+- CoreSystem/Utility/DIPerformanceTester.cs
+- CoreSystem/Utility/DIOptimizationUtility.cs
+- CoreSystem/Utility/GameLogger.cs
+- CoreSystem/Manager/SceneTransitionManager.cs
+- CoreSystem/Manager/GameStateManager.cs
+- CoreSystem/Save/SaveManager.cs
+- CoreSystem/Manager/PlayerCharacterSelectionManager.cs
+- CoreSystem/UI/SettingsPanelController.cs
+- CoreSystem/UI/SettingsManager.cs
+- CoreSystem/Manager/MainSceneInstaller.cs
+- CoreSystem/Interface/ISceneTransitionManager.cs
+- CoreSystem/Interface/IGameStateManager.cs
+- CoreSystem/Interface/IPlayerCharacterSelectionManager.cs
+- CoreSystem/Interface/ISaveManager.cs
+- CoreSystem/Interface/IAudioManager.cs
+- CoreSystem/Audio/AudioManager.cs
+- CoreSystem/Utility/ICoroutineRunner.cs
+- CoreSystem/Utility/CoroutineRunner.cs
+- CoreSystem/UI/TransitionEffectController.cs
+- CoreSystem/UI/LoadingScreenController.cs
+- CoreSystem/Interface/ICoreSystemInitializable.cs
+- CoreSystem/Audio/AudioPoolManager.cs
+- CoreSystem/Audio/AudioEventTrigger.cs
+
 ## 📁 주요 컴포넌트
 
 ### Manager 폴더 (6개 파일)
