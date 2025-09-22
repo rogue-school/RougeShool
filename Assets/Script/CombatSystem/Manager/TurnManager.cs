@@ -10,6 +10,8 @@ using Game.SkillCardSystem.UI;
 using Game.CharacterSystem.Manager;
 using Game.CharacterSystem.Core;
 using Zenject;
+using DG.Tweening;
+using TMPro;
 
 namespace Game.CombatSystem.Manager
 {
@@ -302,6 +304,7 @@ namespace Game.CombatSystem.Manager
         #region 카드 레지스트리 관리 (TurnCardRegistry 통합)
         
         private readonly Dictionary<CombatSlotPosition, ISkillCard> _cards = new();
+        private readonly Dictionary<CombatSlotPosition, Game.SkillCardSystem.UI.SkillCardUI> _cardUIs = new();
         private CombatSlotPosition? _reservedEnemySlot;
         
         /// <summary>
@@ -325,6 +328,8 @@ namespace Game.CombatSystem.Manager
             }
 
             _cards[position] = card;
+            if (ui != null)
+                _cardUIs[position] = ui;
 
             if (owner == SlotOwner.ENEMY)
                 _reservedEnemySlot = position;
@@ -356,19 +361,16 @@ namespace Game.CombatSystem.Manager
                 var slotGameObject = GameObject.Find(slotName);
                 if (slotGameObject != null)
                 {
-                    var existingUIs = slotGameObject.GetComponentsInChildren<Game.SkillCardSystem.UI.SkillCardUI>();
-                    foreach (var ui in existingUIs)
+                    if (_cardUIs.TryGetValue(slot, out var ui) && ui != null)
                     {
-                        if (ui != null)
-                        {
-                            DestroyImmediate(ui.gameObject);
-                            GameLogger.LogInfo($"슬롯 UI 제거: {slotName}", GameLogger.LogCategory.Combat);
-                        }
+                        DestroyImmediate(ui.gameObject);
+                        GameLogger.LogInfo($"슬롯 UI 제거: {slotName}", GameLogger.LogCategory.Combat);
                     }
                 }
 
                 // 데이터 제거
                 _cards.Remove(slot);
+                _cardUIs.Remove(slot);
                 OnCardStateChanged?.Invoke();
             }
         }
@@ -602,17 +604,24 @@ namespace Game.CombatSystem.Manager
         /// <param name="enemyName">적 이름</param>
         public void SetupInitialEnemyQueue(Game.CharacterSystem.Data.EnemyCharacterData enemyData, string enemyName)
         {
+            StartCoroutine(SetupInitialEnemyQueueRoutine(enemyData, enemyName));
+        }
+
+        /// <summary>
+        /// 코루틴: 동적 셋업을 단계별로 순차 진행
+        /// </summary>
+        private System.Collections.IEnumerator SetupInitialEnemyQueueRoutine(Game.CharacterSystem.Data.EnemyCharacterData enemyData, string enemyName)
+        {
             if (enemyData?.EnemyDeck == null)
             {
                 GameLogger.LogWarning($"적 데이터 또는 적 덱이 null입니다. 적: {enemyName}", GameLogger.LogCategory.Combat);
-                return;
+                yield break;
             }
 
             var factory = new Game.SkillCardSystem.Factory.SkillCardFactory();
-            
-            // SkillCardUI 프리팹을 Resources에서 로드
+
+            // SkillCardUI 프리팁 로드
             var cardUIPrefab = Resources.Load<Game.SkillCardSystem.UI.SkillCardUI>("Prefab/SkillCard");
-            
             if (cardUIPrefab == null)
             {
                 GameLogger.LogWarning("SkillCardUI 프리팹을 찾을 수 없습니다. UI 없이 데이터만 등록합니다.", GameLogger.LogCategory.Combat);
@@ -621,37 +630,33 @@ namespace Game.CombatSystem.Manager
             {
                 GameLogger.LogInfo("SkillCardUI 프리팹 로드 완료", GameLogger.LogCategory.Combat);
             }
-            
+
             GameLogger.LogInfo("동적 슬롯 셋업 시작 - 실제 게임 플레이 방식", GameLogger.LogCategory.Combat);
-            
+
             bool isPlayerTurn = true; // 플레이어부터 시작
-            
-            // 5번의 카드 생성 및 이동으로 모든 슬롯 채우기
+
             for (int i = 0; i < 5; i++)
             {
                 if (isPlayerTurn)
                 {
-                    // 플레이어 마커 생성 및 배치
-                    var playerMarker = CreatePlayerMarker();
-                    if (playerMarker != null)
+                    var marker = CreatePlayerMarker();
+                    if (marker != null)
                     {
-                        PlaceCardInWaitSlot4AndMove(playerMarker, SlotOwner.PLAYER, cardUIPrefab);
+                        yield return PlaceCardInWaitSlot4AndMoveRoutine(marker, SlotOwner.PLAYER, cardUIPrefab);
                         GameLogger.LogInfo($"[{i+1}/5] 플레이어 마커 생성 및 배치 완료", GameLogger.LogCategory.Combat);
                     }
                 }
                 else
                 {
-                    // 적 카드 생성 및 배치
-                    var enemyCardEntry = enemyData.EnemyDeck.GetRandomEntry();
-                    if (enemyCardEntry?.definition != null)
+                    var entry = enemyData.EnemyDeck.GetRandomEntry();
+                    if (entry?.definition != null)
                     {
-                        var enemyCard = factory.CreateEnemyCard(enemyCardEntry.definition, enemyName);
-                        PlaceCardInWaitSlot4AndMove(enemyCard, SlotOwner.ENEMY, cardUIPrefab);
-                        GameLogger.LogInfo($"[{i+1}/5] 적 카드 생성 및 배치 완료: {enemyCard.CardDefinition?.CardName}", GameLogger.LogCategory.Combat);
+                        var card = factory.CreateEnemyCard(entry.definition, enemyName);
+                        yield return PlaceCardInWaitSlot4AndMoveRoutine(card, SlotOwner.ENEMY, cardUIPrefab);
+                        GameLogger.LogInfo($"[{i+1}/5] 적 카드 생성 및 배치 완료: {card.CardDefinition?.CardName}", GameLogger.LogCategory.Combat);
                     }
                 }
-                
-                // 플레이어와 적 교대
+
                 isPlayerTurn = !isPlayerTurn;
             }
 
@@ -677,39 +682,45 @@ namespace Game.CombatSystem.Manager
         /// <param name="card">배치할 카드</param>
         /// <param name="owner">카드 소유자</param>
         /// <param name="cardUIPrefab">카드 UI 프리팹</param>
-        private void PlaceCardInWaitSlot4AndMove(ISkillCard card, SlotOwner owner, Game.SkillCardSystem.UI.SkillCardUI cardUIPrefab)
+        private System.Collections.IEnumerator PlaceCardInWaitSlot4AndMoveRoutine(ISkillCard card, SlotOwner owner, Game.SkillCardSystem.UI.SkillCardUI cardUIPrefab)
         {
             if (card == null)
             {
                 GameLogger.LogWarning("배치할 카드가 null입니다.", GameLogger.LogCategory.Combat);
-                return;
+                yield break;
             }
 
             // 1. 대기4에 카드 배치
             var cardUI = CreateCardUIForSlot(card, CombatSlotPosition.WAIT_SLOT_4, null, cardUIPrefab);
+            var spawnTween = PlaySpawnTween(cardUI);
             RegisterCard(CombatSlotPosition.WAIT_SLOT_4, card, cardUI, owner);
             GameLogger.LogInfo($"대기4에 카드 배치: {card.GetCardName()}", GameLogger.LogCategory.Combat);
+            if (spawnTween != null) yield return spawnTween.WaitForCompletion();
 
             // 2. 배틀슬롯이 비어있으면 모든 카드를 앞으로 이동
             if (!HasCardInSlot(CombatSlotPosition.BATTLE_SLOT))
             {
-                MoveAllSlotsForward();
+                yield return MoveAllSlotsForwardRoutine();
                 GameLogger.LogInfo("배틀슬롯이 비어있어 모든 카드 앞으로 이동", GameLogger.LogCategory.Combat);
             }
         }
 
+        // 기존 즉시 실행 버전은 내부적으로 코루틴 호출로 대체(호환용)
+        private void PlaceCardInWaitSlot4AndMove(ISkillCard card, SlotOwner owner, Game.SkillCardSystem.UI.SkillCardUI cardUIPrefab)
+        {
+            StartCoroutine(PlaceCardInWaitSlot4AndMoveRoutine(card, owner, cardUIPrefab));
+        }
+
         /// <summary>
-        /// 모든 슬롯의 카드를 앞으로 한 칸씩 이동시킵니다.
+        /// 모든 슬롯의 카드를 앞으로 한 칸씩 이동시킵니다. (코루틴)
         /// 대기4 → 대기3 → 대기2 → 대기1 → 배틀슬롯
         /// </summary>
-        private void MoveAllSlotsForward()
+        private System.Collections.IEnumerator MoveAllSlotsForwardRoutine()
         {
-            // 앞에서부터 이동 (배틀슬롯이 비어있다고 가정)
-            MoveCardToSlot(CombatSlotPosition.WAIT_SLOT_1, CombatSlotPosition.BATTLE_SLOT);
-            MoveCardToSlot(CombatSlotPosition.WAIT_SLOT_2, CombatSlotPosition.WAIT_SLOT_1);
-            MoveCardToSlot(CombatSlotPosition.WAIT_SLOT_3, CombatSlotPosition.WAIT_SLOT_2);
-            MoveCardToSlot(CombatSlotPosition.WAIT_SLOT_4, CombatSlotPosition.WAIT_SLOT_3);
-            
+            yield return MoveCardToSlotRoutine(CombatSlotPosition.WAIT_SLOT_1, CombatSlotPosition.BATTLE_SLOT);
+            yield return MoveCardToSlotRoutine(CombatSlotPosition.WAIT_SLOT_2, CombatSlotPosition.WAIT_SLOT_1);
+            yield return MoveCardToSlotRoutine(CombatSlotPosition.WAIT_SLOT_3, CombatSlotPosition.WAIT_SLOT_2);
+            yield return MoveCardToSlotRoutine(CombatSlotPosition.WAIT_SLOT_4, CombatSlotPosition.WAIT_SLOT_3);
             GameLogger.LogInfo("슬롯 이동 완료: 4→3→2→1→배틀", GameLogger.LogCategory.Combat);
         }
 
@@ -718,21 +729,68 @@ namespace Game.CombatSystem.Manager
         /// </summary>
         /// <param name="fromSlot">원본 슬롯</param>
         /// <param name="toSlot">대상 슬롯</param>
-        private void MoveCardToSlot(CombatSlotPosition fromSlot, CombatSlotPosition toSlot)
+        private System.Collections.IEnumerator MoveCardToSlotRoutine(CombatSlotPosition fromSlot, CombatSlotPosition toSlot)
         {
             var card = GetCardInSlot(fromSlot);
-            if (card == null) return;
+            if (card == null) yield break;
 
-            // 원본 슬롯에서 제거
-            ClearSlot(fromSlot);
-            
-            // 대상 슬롯에 배치 (UI도 함께 이동)
-            var cardUIPrefab = Resources.Load<Game.SkillCardSystem.UI.SkillCardUI>("Prefab/SkillCard");
-            var newCardUI = CreateCardUIForSlot(card, toSlot, null, cardUIPrefab);
+            // UI 이동 트윈 후 데이터 갱신
+            if (_cardUIs.TryGetValue(fromSlot, out var ui) && ui != null)
+            {
+                var targetName = GetSlotGameObjectName(toSlot);
+                var targetGo = GameObject.Find(targetName);
+                var target = targetGo != null ? targetGo.transform as RectTransform : null;
+                var uiRect = ui.transform as RectTransform;
+                if (uiRect != null && target != null)
+                {
+                    // 목적지 월드 좌표 계산 후 월드 기준 이동 트윈 → 완료 시 부모 재설정
+                    Vector3 endWorld = (target as RectTransform) != null
+                        ? (target as RectTransform).TransformPoint(Vector3.zero)
+                        : target.position;
+                    var moveTween = uiRect.DOMove(endWorld, 0.25f).SetEase(Ease.OutQuad);
+                    var scaleTween = uiRect.DOScale(1f, 0.25f).SetEase(Ease.OutQuad);
+                    yield return moveTween.WaitForCompletion();
+                    // 최종 부모로 설정하고 로컬 정렬
+                    uiRect.SetParent(target, false);
+                    uiRect.anchoredPosition = Vector2.zero;
+                }
+            }
+
+            // 데이터 재등록
+            _cards.Remove(fromSlot);
+            if (_cardUIs.ContainsKey(fromSlot)) _cardUIs.Remove(fromSlot);
             var owner = card.IsFromPlayer() ? SlotOwner.PLAYER : SlotOwner.ENEMY;
-            RegisterCard(toSlot, card, newCardUI, owner);
+            _cards[toSlot] = card;
+            if (ui != null) _cardUIs[toSlot] = ui;
+            OnCardStateChanged?.Invoke();
             
             GameLogger.LogInfo($"카드 이동: {card.GetCardName()} ({fromSlot} → {toSlot})", GameLogger.LogCategory.Combat);
+        }
+
+        // 기존 즉시 실행 버전(호환용)
+        private void MoveCardToSlot(CombatSlotPosition fromSlot, CombatSlotPosition toSlot)
+        {
+            StartCoroutine(MoveCardToSlotRoutine(fromSlot, toSlot));
+        }
+
+        /// <summary>
+        /// 카드 스폰 트윈(등장 연출)을 재생합니다.
+        /// </summary>
+        private Tween PlaySpawnTween(Game.SkillCardSystem.UI.SkillCardUI cardUI)
+        {
+            if (cardUI == null) return null;
+            if (cardUI.TryGetComponent<CanvasGroup>(out var cg))
+            {
+                cg.alpha = 0f;
+                cg.DOFade(1f, 0.2f).SetEase(Ease.OutQuad);
+            }
+            var rt = cardUI.transform as RectTransform;
+            if (rt != null)
+            {
+                rt.localScale = Vector3.one * 0.7f;
+                return rt.DOScale(1f, 0.2f).SetEase(Ease.OutBack);
+            }
+            return null;
         }
 
         /// <summary>
@@ -832,6 +890,33 @@ namespace Game.CombatSystem.Manager
 
                 // SkillCardUIFactory를 통해 UI 생성
                 var cardUI = Game.SkillCardSystem.UI.SkillCardUIFactory.CreateUI(cardUIPrefab, slotTransform, card, null);
+
+                // 플레이어 마커 UI 간소화: 텍스트 숨김, 드래그 비활성화
+                try
+                {
+                    if (card?.CardDefinition?.cardId == "PLAYER_MARKER" && cardUI != null)
+                    {
+                        var t = cardUI.transform;
+                        var nameGo = t.Find("CardName")?.gameObject;
+                        if (nameGo != null) nameGo.SetActive(false);
+                        var deGo = t.Find("DE")?.gameObject;
+                        if (deGo != null) deGo.SetActive(false);
+                        // 모든 TMP 텍스트 숨김 보강
+                        var tmps = cardUI.GetComponentsInChildren<TMP_Text>(true);
+                        foreach (var tmp in tmps)
+                        {
+                            tmp.gameObject.SetActive(false);
+                        }
+                        // 드래그 비활성화 및 레이캐스트 최소화
+                        cardUI.SetDraggable(false);
+                        if (cardUI.TryGetComponent<UnityEngine.CanvasGroup>(out var cg))
+                        {
+                            cg.interactable = false;
+                            cg.blocksRaycasts = false;
+                        }
+                    }
+                }
+                catch { }
                 
                 if (cardUI != null)
                 {

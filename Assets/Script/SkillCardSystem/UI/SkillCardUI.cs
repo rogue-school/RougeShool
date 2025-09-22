@@ -53,6 +53,43 @@ namespace Game.SkillCardSystem.UI
                 return;
             }
 
+            // 플레이어 마커 카드인 경우: 자식 UI를 사용하지 않고 부모 이미지에 엠블럼만 표시
+            bool isPlayerMarker = card.CardDefinition?.cardId == "PLAYER_MARKER";
+            if (isPlayerMarker)
+            {
+                // 자식 텍스트 및 아트 오브젝트 비활성화
+                if (cardNameText != null) cardNameText.gameObject.SetActive(false);
+                if (damageText != null) damageText.gameObject.SetActive(false);
+                if (descriptionText != null) descriptionText.gameObject.SetActive(false);
+                if (cardArtImage != null) cardArtImage.gameObject.SetActive(false);
+
+                // 부모(Image) 컴포넌트에 엠블럼 연결
+                var rootImage = GetComponent<UnityEngine.UI.Image>();
+                if (rootImage != null)
+                {
+                    var emblem = card.GetArtwork();
+                    if (emblem != null)
+                    {
+                        rootImage.sprite = emblem;
+                    }
+                    // 마커는 상호작용/레이캐스트가 불필요
+                    rootImage.raycastTarget = false;
+                }
+
+                // 마커는 상호작용/드래그 비활성화
+                if (canvasGroup != null)
+                {
+                    canvasGroup.interactable = false;
+                    canvasGroup.blocksRaycasts = false;
+                }
+                if (TryGetComponent(out Game.CombatSystem.DragDrop.CardDragHandler dragHandlerForMarker))
+                {
+                    dragHandlerForMarker.enabled = false;
+                }
+
+                return;
+            }
+
             // 카드명 설정 (선택사항)
             if (cardNameText != null)
             {
