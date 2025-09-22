@@ -32,8 +32,7 @@ namespace Game.StageSystem.Factory
             stageData.difficulty = difficulty;
             stageData.stageDescription = $"{stageName} - 난이도 {difficulty}";
             stageData.autoProgressToNext = true;
-            stageData.stageReward = CreateDefaultRewards();
-
+            
             GameLogger.LogInfo($"[StageDataFactory] 스테이지 {stageNumber} 데이터 생성 완료: {stageName}", GameLogger.LogCategory.Core);
             return stageData;
         }

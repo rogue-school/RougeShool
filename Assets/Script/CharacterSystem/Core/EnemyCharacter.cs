@@ -73,7 +73,14 @@ namespace Game.CharacterSystem.Core
         /// </summary>
         public override string GetCharacterName()
         {
-            return CharacterData?.DisplayName ?? "Unnamed Enemy";
+            if (CharacterData == null)
+            {
+                return gameObject.name.Replace("(Clone)", string.Empty).Trim();
+            }
+            // DisplayName이 없으면 ScriptableObject 이름으로 대체
+            return string.IsNullOrEmpty(CharacterData.DisplayName)
+                ? CharacterData.name
+                : CharacterData.DisplayName;
         }
 
         // CharacterBase에서 사용할 이름 반환
@@ -187,18 +194,20 @@ namespace Game.CharacterSystem.Core
         {
             if (CharacterData == null) return;
 
-            nameText.text = GetCharacterName();
-            hpText.text = currentHP.ToString(); // 현재 체력만 표시
-            portraitImage.sprite = CharacterData.Portrait;
-
-            // 체력 색상 설정: 최대 체력이면 흰색, 아니면 붉은색
-            if (currentHP >= GetMaxHP())
+            if (nameText != null)
             {
-                hpText.color = Color.white;
+                nameText.text = GetCharacterName();
             }
-            else
+
+            if (hpText != null)
             {
-                hpText.color = Color.red;
+                hpText.text = currentHP.ToString();
+                hpText.color = currentHP >= GetMaxHP() ? Color.white : Color.red;
+            }
+
+            if (portraitImage != null)
+            {
+                portraitImage.sprite = CharacterData.Portrait;
             }
         }
 
@@ -280,6 +289,20 @@ namespace Game.CharacterSystem.Core
             CharacterData = data;
             this.gameObject.name = CharacterData.name;
             Initialize(data);
+        }
+
+        /// <summary>
+        /// ICharacter(부모) 경유 호출 시에도 EnemyCharacterData를 설정할 수 있도록 오버라이드
+        /// </summary>
+        public override void SetCharacterData(object data)
+        {
+            if (data is EnemyCharacterData enemyData)
+            {
+                SetCharacterData(enemyData);
+                return;
+            }
+
+            GameLogger.LogError($"[EnemyCharacter] 잘못된 데이터 타입입니다. 예상: EnemyCharacterData, 실제: {data?.GetType().Name ?? "null"}", GameLogger.LogCategory.Character);
         }
 
         #region 이벤트 처리 오버라이드

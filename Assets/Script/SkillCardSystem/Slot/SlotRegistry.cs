@@ -3,6 +3,7 @@ using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
 using Zenject;
 using Game.CoreSystem.Utility;
+using System.Linq;
 
 namespace Game.CombatSystem.Slot
 {
@@ -26,6 +27,25 @@ namespace Game.CombatSystem.Slot
         /// 슬롯 레지스트리가 초기화되었는지 여부를 나타냅니다.
         /// </summary>
         public bool IsInitialized { get; private set; }
+
+        #endregion
+
+        #region 초기화
+
+        private void Awake()
+        {
+            // 씬 내 전투 슬롯 자동 등록
+            if (combatSlotRegistry != null)
+            {
+                var slots = FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None)
+                    .OfType<ICombatCardSlot>()
+                    .ToList();
+                combatSlotRegistry.RegisterCombatSlots(slots);
+                GameLogger.LogInfo($"CombatSlotRegistry 자동 등록: {slots.Count}개", GameLogger.LogCategory.Combat);
+            }
+
+            MarkInitialized();
+        }
 
         #endregion
 

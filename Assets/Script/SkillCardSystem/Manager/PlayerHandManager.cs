@@ -19,6 +19,8 @@ namespace Game.SkillCardSystem.Manager
 
         private ICharacter currentPlayer;
         private HandSlotRegistry handSlotRegistry;
+        [InjectOptional] private Game.SkillCardSystem.UI.SkillCardUI cardUIPrefab;
+        [InjectOptional] private ICardCirculationSystem circulationSystem;
 
         #endregion
 
@@ -45,12 +47,92 @@ namespace Game.SkillCardSystem.Manager
         }
 
         /// <summary>
-        /// 게임 시작 시 초기 손패를 생성합니다.
+        /// 게임 시작 시 초기 손패를 생성합니다. (항상 3장, 덱 비파괴 샘플링)
         /// </summary>
         public void GenerateInitialHand()
         {
             GameLogger.LogInfo("초기 손패 생성", GameLogger.LogCategory.SkillCard);
-            // TODO: 실제 초기 손패 생성 로직 구현
+
+            // 의존성 상세 진단
+            if (currentPlayer == null)
+            {
+                GameLogger.LogWarning("초기 손패 생성 실패 - Player가 null", GameLogger.LogCategory.SkillCard);
+                return;
+            }
+            if (handSlotRegistry == null)
+            {
+                GameLogger.LogWarning("초기 손패 생성 실패 - HandSlotRegistry가 null", GameLogger.LogCategory.SkillCard);
+                return;
+            }
+            if (circulationSystem == null)
+            {
+                GameLogger.LogWarning("초기 손패 생성 실패 - ICardCirculationSystem이 주입되지 않음", GameLogger.LogCategory.SkillCard);
+                return;
+            }
+            if (cardUIPrefab == null)
+            {
+                GameLogger.LogWarning("초기 손패 생성 실패 - SkillCardUI 프리팹이 주입되지 않음", GameLogger.LogCategory.SkillCard);
+                return;
+            }
+
+            var slots = handSlotRegistry.GetPlayerHandSlot().ToList();
+            if (slots == null || slots.Count == 0)
+            {
+                GameLogger.LogWarning("초기 손패 생성 실패 - 플레이어 핸드 슬롯이 없음", GameLogger.LogCategory.SkillCard);
+                return;
+            }
+
+            // 슬롯 초기화(기존 잔여 UI/카드 제거)
+            foreach (var s in slots)
+            {
+                s.Clear();
+            }
+
+            // 비파괴 샘플링: 순환 시스템에서 3장 받아 손패에 부착
+            var drawn = circulationSystem.DrawCardsForTurn();
+            int toAttach = Mathf.Min(3, slots.Count);
+            for (int i = 0; i < toAttach && i < drawn.Count; i++)
+            {
+                var slot = slots[i];
+                var card = drawn[i];
+                if (card != null && slot != null)
+                {
+                    slot.AttachCard(card, cardUIPrefab);
+                    GameLogger.LogInfo($"핸드에 카드 추가: {card.GetCardName()} (슬롯 {slot.GetSlotPosition()})", GameLogger.LogCategory.SkillCard);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 손패가 targetCount 미만이면 비파괴 샘플링으로 보충합니다.
+        /// </summary>
+        public void RefillHandTo(int targetCount)
+        {
+            if (handSlotRegistry == null || circulationSystem == null || cardUIPrefab == null)
+            {
+                GameLogger.LogWarning("손패 보충 실패 - 의존성 누락", GameLogger.LogCategory.SkillCard);
+                return;
+            }
+
+            var slots = handSlotRegistry.GetPlayerHandSlot().ToList();
+            int occupied = slots.Count(s => s.HasCard());
+            int need = Mathf.Clamp(targetCount - occupied, 0, slots.Count - occupied);
+            if (need <= 0) return;
+
+            var drawn = circulationSystem.DrawCardsForTurn();
+            int added = 0;
+            foreach (var slot in slots)
+            {
+                if (added >= need) break;
+                if (!slot.HasCard())
+                {
+                    var card = drawn.ElementAtOrDefault(added);
+                    if (card == null) break;
+                    slot.AttachCard(card, cardUIPrefab);
+                    added++;
+                }
+            }
+            GameLogger.LogInfo($"손패 보충 완료: {occupied}+{added}→{occupied + added}", GameLogger.LogCategory.SkillCard);
         }
 
         /// <summary>

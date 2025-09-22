@@ -33,10 +33,6 @@ namespace Game.StageSystem.Data
         [Tooltip("이 스테이지에 등장할 적 목록")]
         public List<EnemyCharacterData> enemies;
         
-        [Space(10)]
-        [Header("보상 설정")]
-        [Tooltip("스테이지 완료 보상")]
-        public StageRewardData stageReward;
         
         #region 프로퍼티
         

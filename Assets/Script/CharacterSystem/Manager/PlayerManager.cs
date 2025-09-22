@@ -11,6 +11,7 @@ using Game.CharacterSystem.Data;
 using Game.CoreSystem.Interface;
 using Game.CoreSystem.Manager;
 using Game.CoreSystem.Utility;
+using DG.Tweening;
 
 namespace Game.CharacterSystem.Manager
 {
@@ -237,11 +238,13 @@ namespace Game.CharacterSystem.Manager
                 return;
             }
 
-            // 캐릭터 인스턴스 생성
-            var instance = CreateCharacterInstance();
+			// 캐릭터 인스턴스 생성
+			var instance = CreateCharacterInstance();
 
-            // 캐릭터 발가락 위치 설정
-            SetCharacterFootPosition(instance);
+			// 캐릭터 발가락 위치 설정
+			SetCharacterFootPosition(instance);
+			// 등장 연출 (왼쪽 바깥에서 자리로) 완료 후 Ready 이벤트 발생
+			var entrance = TryPlayEntranceAnimation(instance.transform, fromLeft: true);
 
             if (!instance.TryGetComponent(out ICharacter character))
             {
@@ -265,10 +268,20 @@ namespace Game.CharacterSystem.Manager
             // 핸드 매니저 초기화
             InitializeHandManager();
             
-            // 플레이어 캐릭터 준비 완료 이벤트 발생
-            OnPlayerCharacterReady?.Invoke(character);
-            
-            GameLogger.LogInfo($"플레이어 캐릭터 생성 완료: {character.GetCharacterName()}", GameLogger.LogCategory.Character);
+			// 플레이어 캐릭터 준비 완료 이벤트를 입장 연출 종료 시점에 발생
+			if (entrance != null)
+			{
+				entrance.OnComplete(() =>
+				{
+					OnPlayerCharacterReady?.Invoke(character);
+					GameLogger.LogInfo($"플레이어 캐릭터 생성/입장 완료: {character.GetCharacterName()}", GameLogger.LogCategory.Character);
+				});
+			}
+			else
+			{
+				OnPlayerCharacterReady?.Invoke(character);
+				GameLogger.LogInfo($"플레이어 캐릭터 생성 완료(연출 없음): {character.GetCharacterName()}", GameLogger.LogCategory.Character);
+			}
         }
 
         /// <summary>
@@ -388,6 +401,36 @@ namespace Game.CharacterSystem.Manager
             handManager?.GetCardUIInSlot(pos);
 
         #endregion
+
+		#region 연출 유틸리티 (입장 애니메이션)
+
+		/// <summary>
+		/// 캐릭터가 화면 밖에서 슬라이드 인 되는 연출을 수행합니다.
+		/// RectTransform이 있으면 DOAnchorPos, 아니면 DOMove를 사용합니다.
+		/// </summary>
+		private Tween TryPlayEntranceAnimation(Transform target, bool fromLeft)
+		{
+			if (target == null) return null;
+			const float duration = 1.5f;
+			var ease = Ease.InOutCubic; // 처음 느림 → 빠름 → 마지막 살짝 느림
+
+			if (target is RectTransform rt)
+			{
+				Vector2 end = rt.anchoredPosition;
+				Vector2 start = new Vector2(fromLeft ? -1100f : 1100f, end.y);
+				rt.anchoredPosition = start;
+				return rt.DOAnchorPos(end, duration).SetEase(ease);
+			}
+			else
+			{
+				Vector3 end = target.position;
+				Vector3 start = new Vector3(fromLeft ? -1100f : 1100f, end.y, end.z);
+				target.position = start;
+				return target.DOMove(end, duration).SetEase(ease);
+			}
+		}
+
+		#endregion
 
         #region 초기화
 

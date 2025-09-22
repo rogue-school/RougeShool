@@ -11,6 +11,7 @@ using Game.SkillCardSystem.Interface;
 using Game.StageSystem.Manager;
 using Game.StageSystem.Interface;
 using Game.CoreSystem.Interface;
+using Game.CharacterSystem.Core;
 
 namespace Game.CoreSystem.Manager
 {
@@ -160,11 +161,17 @@ namespace Game.CoreSystem.Manager
                 yield break;
             }
 
-            // 플레이어 캐릭터 생성
+            // 플레이어 캐릭터 생성 (입장 연출 완료까지 대기하기 위해 이벤트 구독)
+            bool playerReady = false;
+            System.Action<Game.CharacterSystem.Interface.ICharacter> onReady = null;
+            onReady = (ch) => { playerReady = true; };
+            playerManager.OnPlayerCharacterReady += onReady;
+
             playerManager.CreateAndRegisterCharacter();
 
-            // 플레이어 캐릭터 생성 완료까지 대기
-            yield return new WaitUntil(() => playerManager.GetCharacter() != null);
+            // 캐릭터 생성 + 입장 애니메이션 완료까지 대기
+            yield return new WaitUntil(() => playerManager.GetCharacter() != null && playerReady);
+            playerManager.OnPlayerCharacterReady -= onReady;
 
             isPlayerSetupComplete = true;
             OnSetupPhaseComplete?.Invoke(currentSetupPhase);
@@ -212,8 +219,9 @@ namespace Game.CoreSystem.Manager
                 yield break;
             }
 
-            // 적 생성 완료까지 대기
+            // 적 생성 완료 + 입장 애니메이션 여유 시간 대기
             yield return new WaitUntil(() => enemyManager.GetCharacter() != null);
+            yield return new WaitForSeconds(1.6f);
 
             OnSetupPhaseComplete?.Invoke(currentSetupPhase);
 
@@ -229,12 +237,43 @@ namespace Game.CoreSystem.Manager
             currentSetupPhase = SetupPhase.CombatSlots;
             GameLogger.LogInfo("전투/대기 슬롯 채우기 시작", GameLogger.LogCategory.Core);
 
-            // CombatFlowManager를 통한 슬롯 초기화
-            if (combatFlowManager != null)
+            // 현재 적 정보로 초기 적 큐 세팅
+            var enemy = enemyManager != null ? enemyManager.GetCharacter() : null;
+            if (enemy is EnemyCharacter enemyCharacter)
             {
-                // 슬롯 초기화 로직 (CombatFlowManager에 구현되어 있을 것으로 예상)
-                GameLogger.LogInfo("전투 슬롯 초기화 중...", GameLogger.LogCategory.Core);
-                yield return new WaitForSeconds(setupDelayBetweenSteps);
+                var turnMgr = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
+                if (turnMgr != null)
+                {
+                    // 리플렉션 기반 호출로 컴파일 의존성 제거
+                    try
+                    {
+                        var tmType = turnMgr.GetType();
+                        var setup = tmType.GetMethod("SetupInitialEnemyQueue", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
+                        if (setup != null)
+                        {
+                            setup.Invoke(turnMgr, new object[] { enemyCharacter.Data, enemyCharacter.GetCharacterName() });
+                        }
+                        var force = tmType.GetMethod("ForceOneCycle", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
+                        if (force != null)
+                        {
+                            force.Invoke(turnMgr, null);
+                        }
+                        GameLogger.LogInfo("초기 적 카드 큐 세팅 진행", GameLogger.LogCategory.Core);
+                    }
+                    catch (System.Exception e)
+                    {
+                        GameLogger.LogWarning($"초기 적 큐 세팅 호출 실패: {e.Message}", GameLogger.LogCategory.Core);
+                    }
+                    yield return new WaitForSeconds(0.2f);
+                }
+                else
+                {
+                    GameLogger.LogWarning("TurnManager를 찾을 수 없어 슬롯 세팅을 건너뜁니다.", GameLogger.LogCategory.Core);
+                }
+            }
+            else
+            {
+                GameLogger.LogWarning("적 정보가 없어 슬롯 세팅을 건너뜁니다.", GameLogger.LogCategory.Core);
             }
 
             OnSetupPhaseComplete?.Invoke(currentSetupPhase);
@@ -260,8 +299,9 @@ namespace Game.CoreSystem.Manager
                     // 핸드 매니저에 플레이어 설정
                     playerHandManager.SetPlayer(player);
 
-                    // 초기 핸드 생성 (CombatStartupManager 역할 대체)
+                    // 초기 핸드 생성 (UI 포함)
                     GameLogger.LogInfo("플레이어 초기 핸드 생성 중...", GameLogger.LogCategory.Core);
+                    playerHandManager.GenerateInitialHand();
                     yield return new WaitForSeconds(setupDelayBetweenSteps);
                 }
             }

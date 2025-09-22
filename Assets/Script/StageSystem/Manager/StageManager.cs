@@ -11,6 +11,7 @@ using Game.StageSystem.Data;
 using Game.StageSystem.Interface;
 using Zenject;
 using Game.CoreSystem.Utility;
+using DG.Tweening;
 
 namespace Game.StageSystem.Manager
 {
@@ -291,7 +292,7 @@ namespace Game.StageSystem.Manager
 
             // 적 프리팹 인스턴스 생성 (characterSlot에 배치)
             var enemyInstance = Instantiate(data.Prefab, characterSlot);
-            enemyInstance.name = $"Enemy_{data.CharacterName}";
+            enemyInstance.name = data.name; // ScriptableObject의 이름 사용
             
             // ICharacter 컴포넌트 확인
             if (!enemyInstance.TryGetComponent(out ICharacter enemy))
@@ -303,9 +304,37 @@ namespace Game.StageSystem.Manager
             
             // 적 데이터 설정
             enemy.SetCharacterData(data);
+            // 등장 연출 (오른쪽 바깥에서 자리로) - Ease.InOutCubic 그래프
+            TryPlayEntranceAnimation(enemyInstance.transform, fromLeft: false);
             
             GameLogger.LogInfo($"적 캐릭터 생성 및 배치 완료: {data.CharacterName} (슬롯: {characterSlot.name})", GameLogger.LogCategory.Combat);
             return enemy;
+        }
+
+        /// <summary>
+        /// 캐릭터가 화면 밖에서 슬라이드 인 되는 연출을 수행합니다.
+        /// RectTransform이 있으면 DOAnchorPos, 아니면 DOMove를 사용합니다.
+        /// </summary>
+        private Tween TryPlayEntranceAnimation(Transform target, bool fromLeft)
+        {
+            if (target == null) return null;
+            const float duration = 1.5f;
+            var ease = Ease.InOutCubic;
+
+            if (target is RectTransform rt)
+            {
+                Vector2 end = rt.anchoredPosition;
+                Vector2 start = new Vector2(fromLeft ? -1100f : 1100f, end.y);
+                rt.anchoredPosition = start;
+                return rt.DOAnchorPos(end, duration).SetEase(ease);
+            }
+            else
+            {
+                Vector3 end = target.position;
+                Vector3 start = new Vector3(fromLeft ? -1100f : 1100f, end.y, end.z);
+                target.position = start;
+                return target.DOMove(end, duration).SetEase(ease);
+            }
         }
 
         /// <summary>
