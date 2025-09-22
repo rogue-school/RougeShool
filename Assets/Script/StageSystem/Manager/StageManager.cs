@@ -30,9 +30,6 @@ namespace Game.StageSystem.Manager
             [Tooltip("모든 스테이지 데이터 (1-4번 스테이지)")]
             public List<StageData> allStages = new List<StageData>();
 
-            [Tooltip("현재 진행 중인 스테이지 번호 (1-4)")]
-            [Range(1, 4)]
-            public int currentStageNumber = 1;
         }
 
 
@@ -91,6 +88,28 @@ namespace Game.StageSystem.Manager
         
         /// <summary>스테이지 전환 시 호출되는 이벤트</summary>
         public event Action<StageData, StageData> OnStageTransition;
+
+        #endregion
+
+        #region Unity Lifecycle
+
+        /// <summary>
+        /// 스테이지 매니저 초기화
+        /// GameStartupController에서 수동으로 시작하므로 자동 시작 제거
+        /// </summary>
+        private void Start()
+        {
+            // GameStartupController에서 수동으로 시작하므로 자동 시작 제거
+            // 기본 스테이지만 로드하고 시작은 GameStartupController에서 처리
+            if (LoadStage(1))
+            {
+                GameLogger.LogInfo("기본 스테이지 로드 완료 - GameStartupController에서 시작 대기", GameLogger.LogCategory.Combat);
+            }
+            else
+            {
+                GameLogger.LogError("기본 스테이지 로드 실패", GameLogger.LogCategory.Combat);
+            }
+        }
 
         #endregion
 
@@ -242,12 +261,10 @@ namespace Game.StageSystem.Manager
         }
 
         /// <summary>
-        /// 적 캐릭터를 생성합니다. (단순화된 로직)
+        /// 적 캐릭터를 생성합니다.
         /// </summary>
         private async Task<ICharacter> CreateEnemyAsync(EnemyCharacterData data)
         {
-            // 실제 적 생성 로직은 다른 시스템에 위임
-            // 여기서는 단순히 데이터 검증만 수행
             if (data?.Prefab == null)
             {
                 GameLogger.LogError("적 데이터 또는 프리팹이 null입니다", GameLogger.LogCategory.Error);
@@ -257,13 +274,38 @@ namespace Game.StageSystem.Manager
             // 비동기 처리 시뮬레이션
             await Task.Delay(100);
             
-            // 실제 구현에서는 적 생성 로직을 호출
-            // var enemy = Instantiate(data.Prefab).GetComponent<ICharacter>();
-            // enemy.Initialize(data);
-            // return enemy;
+            // EnemyManager의 characterSlot을 찾아서 적을 배치
+            var enemyManager = FindFirstObjectByType<EnemyManager>();
+            if (enemyManager == null)
+            {
+                GameLogger.LogError("EnemyManager를 찾을 수 없습니다", GameLogger.LogCategory.Error);
+                return null;
+            }
+
+            var characterSlot = enemyManager.GetCharacterSlot();
+            if (characterSlot == null)
+            {
+                GameLogger.LogError("EnemyManager의 characterSlot을 찾을 수 없습니다", GameLogger.LogCategory.Error);
+                return null;
+            }
+
+            // 적 프리팹 인스턴스 생성 (characterSlot에 배치)
+            var enemyInstance = Instantiate(data.Prefab, characterSlot);
+            enemyInstance.name = $"Enemy_{data.CharacterName}";
             
-            // 임시로 null 반환 (실제 구현 시 수정 필요)
-            return null;
+            // ICharacter 컴포넌트 확인
+            if (!enemyInstance.TryGetComponent(out ICharacter enemy))
+            {
+                GameLogger.LogError($"적 프리팹에 ICharacter 컴포넌트가 없습니다: {data.CharacterName}", GameLogger.LogCategory.Error);
+                Destroy(enemyInstance);
+                return null;
+            }
+            
+            // 적 데이터 설정
+            enemy.SetCharacterData(data);
+            
+            GameLogger.LogInfo($"적 캐릭터 생성 및 배치 완료: {data.CharacterName} (슬롯: {characterSlot.name})", GameLogger.LogCategory.Combat);
+            return enemy;
         }
 
         /// <summary>
@@ -317,7 +359,6 @@ namespace Game.StageSystem.Manager
                 return;
             }
             
-            stageSettings.currentStageNumber = stageNumber;
             LoadStage(stageNumber);
             GameLogger.LogInfo($"스테이지 번호 설정: {stageNumber}", GameLogger.LogCategory.Combat);
         }
@@ -328,7 +369,7 @@ namespace Game.StageSystem.Manager
         /// <returns>스테이지 번호</returns>
         public int GetCurrentStageNumber()
         {
-            return stageSettings.currentStageNumber;
+            return currentStage?.stageNumber ?? 1;
         }
         
         /// <summary>
@@ -336,7 +377,7 @@ namespace Game.StageSystem.Manager
         /// </summary>
         public bool HasNextStage()
         {
-            return stageSettings.currentStageNumber < 4;
+            return currentStage?.stageNumber < 4;
         }
         
         /// <summary>
@@ -350,7 +391,7 @@ namespace Game.StageSystem.Manager
                 return false;
             }
             
-            int nextStageNumber = stageSettings.currentStageNumber + 1;
+            int nextStageNumber = (currentStage?.stageNumber ?? 1) + 1;
             return LoadStage(nextStageNumber);
         }
         
@@ -384,7 +425,6 @@ namespace Game.StageSystem.Manager
             
             // 새 스테이지 설정
             currentStage = stageData;
-            stageSettings.currentStageNumber = stageNumber;
             currentEnemyIndex = 0;
             isStageCompleted = false;
             progressState = StageProgressState.NotStarted;
@@ -504,7 +544,7 @@ namespace Game.StageSystem.Manager
             progressState = StageProgressState.Failed;
             OnProgressChanged?.Invoke(progressState);
             
-            GameLogger.LogWarning($"스테이지 실패: {currentStage?.stageName ?? "Unknown"} (스테이지 {stageSettings.currentStageNumber})", GameLogger.LogCategory.Combat);
+            GameLogger.LogWarning($"스테이지 실패: {currentStage?.stageName ?? "Unknown"} (스테이지 {currentStage?.stageNumber ?? 1})", GameLogger.LogCategory.Combat);
         }
 
         public event System.Action<StageProgressState> OnProgressChanged;

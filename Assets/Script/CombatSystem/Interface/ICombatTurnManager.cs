@@ -131,8 +131,6 @@ namespace Game.CombatSystem.Interface
         /// <summary>게임 활성화 상태</summary>
         bool IsGameActive { get; }
         
-        /// <summary>턴 시간 제한 (초)</summary>
-        float TurnTimeLimit { get; }
         
         /// <summary>남은 턴 시간</summary>
         float RemainingTurnTime { get; }

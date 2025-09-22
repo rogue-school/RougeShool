@@ -13,13 +13,13 @@ using Game.CombatSystem.Utility;
 using Game.CharacterSystem.Manager;
 using Game.SkillCardSystem.Factory;
 using Game.SkillCardSystem.Validator;
+using Game.CoreSystem.Manager;
 using Game.SkillCardSystem.Manager;
 using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Initialization;
 using Game.CoreSystem.Utility;
 using Game.UtilitySystem.GameFlow;
-using Game.CoreSystem.Manager;
 using Game.CoreSystem.Interface;
 using Game.StageSystem.Manager;
 using Game.StageSystem.Interface;
@@ -79,25 +79,91 @@ public class CombatInstaller : MonoInstaller
     /// </summary>
     private void BindIntegratedManagers()
     {
-        // CombatFlowManager 바인딩
-        var combatFlowManager = FindFirstObjectByType<CombatFlowManager>();
-        if (combatFlowManager != null)
+        // PlayerManager 바인딩 - 씬에 있으면 사용, 없으면 자동 생성
+        var playerManager = FindFirstObjectByType<PlayerManager>();
+        if (playerManager != null)
         {
-            Container.Bind<ICombatFlowManager>().FromInstance(combatFlowManager).AsSingle();
-            GameLogger.LogInfo(" CombatFlowManager 바인딩 완료");
+            Container.Bind<PlayerManager>().FromInstance(playerManager).AsSingle();
+            GameLogger.LogInfo(" PlayerManager 바인딩 완료 (씬에서 찾기)");
+        }
+        else
+        {
+            // PlayerManager가 없으면 자동 생성
+            var playerManagerGO = new GameObject("PlayerManager");
+            playerManager = playerManagerGO.AddComponent<PlayerManager>();
+            Container.Bind<PlayerManager>().FromInstance(playerManager).AsSingle();
+            // 자동 생성된 컴포넌트에 의존성 주입
+            Container.Inject(playerManager);
+            GameLogger.LogInfo(" PlayerManager 자동 생성 및 바인딩 완료");
         }
 
-        // CombatExecutionManager 바인딩
+        // EnemyManager 바인딩 - 씬에 있으면 사용, 없으면 자동 생성
+        var enemyManager = FindFirstObjectByType<EnemyManager>();
+        if (enemyManager != null)
+        {
+            Container.Bind<EnemyManager>().FromInstance(enemyManager).AsSingle();
+            GameLogger.LogInfo(" EnemyManager 바인딩 완료 (씬에서 찾기)");
+        }
+        else
+        {
+            // EnemyManager가 없으면 자동 생성
+            var enemyManagerGO = new GameObject("EnemyManager");
+            enemyManager = enemyManagerGO.AddComponent<EnemyManager>();
+            Container.Bind<EnemyManager>().FromInstance(enemyManager).AsSingle();
+            // 자동 생성된 컴포넌트에 의존성 주입
+            Container.Inject(enemyManager);
+            GameLogger.LogInfo(" EnemyManager 자동 생성 및 바인딩 완료");
+        }
+
+        // GameStartupController 바인딩 - 씬에 있으면 사용, 없으면 자동 생성
+        var gameStartupController = FindFirstObjectByType<GameStartupController>();
+        if (gameStartupController != null)
+        {
+            Container.Bind<GameStartupController>().FromInstance(gameStartupController).AsSingle();
+            GameLogger.LogInfo(" GameStartupController 바인딩 완료 (씬에서 찾기)");
+        }
+        else
+        {
+            // GameStartupController가 없으면 자동 생성
+            var gameStartupControllerGO = new GameObject("GameStartupController");
+            gameStartupController = gameStartupControllerGO.AddComponent<GameStartupController>();
+            Container.Bind<GameStartupController>().FromInstance(gameStartupController).AsSingle();
+            // 자동 생성된 컴포넌트에 의존성 주입
+            Container.Inject(gameStartupController);
+            GameLogger.LogInfo(" GameStartupController 자동 생성 및 바인딩 완료");
+        }
+
+        // CombatExecutionManager 바인딩 - PlayerManager와 EnemyManager 이후에 바인딩 (CombatFlowManager보다 먼저)
         var combatExecutionManager = FindFirstObjectByType<CombatExecutionManager>();
         if (combatExecutionManager != null)
         {
             Container.Bind<ICombatExecutionManager>().FromInstance(combatExecutionManager).AsSingle();
-            GameLogger.LogInfo(" CombatExecutionManager 바인딩 완료");
+            GameLogger.LogInfo(" CombatExecutionManager 바인딩 완료 (씬에서 찾기)");
+        }
+        else
+        {
+            // CombatExecutionManager가 없으면 자동 생성
+            Container.BindInterfacesAndSelfTo<CombatExecutionManager>()
+                .FromNewComponentOnNewGameObject()
+                .AsSingle();
+            GameLogger.LogInfo(" CombatExecutionManager 자동 생성 및 바인딩 완료");
         }
 
-        // CombatSlotManager 제거됨 - 슬롯 관리 기능을 CombatFlowManager로 통합
-
-        // TurnManager는 BindFactories()에서 바인딩됨
+        // CombatFlowManager 바인딩 - CombatExecutionManager 이후에 바인딩
+        var combatFlowManager = FindFirstObjectByType<CombatFlowManager>();
+        if (combatFlowManager != null)
+        {
+            Container.Bind<ICombatFlowManager>().FromInstance(combatFlowManager).AsSingle();
+            GameLogger.LogInfo(" CombatFlowManager 바인딩 완료 (씬에서 찾기)");
+        }
+        else
+        {
+            // CombatFlowManager가 없으면 자동 생성
+            Container.BindInterfacesAndSelfTo<CombatFlowManager>()
+                .FromNewComponentOnNewGameObject()
+                .AsSingle();
+            GameLogger.LogInfo(" CombatFlowManager 자동 생성 및 바인딩 완료");
+        }
     }
 
 
@@ -122,10 +188,6 @@ public class CombatInstaller : MonoInstaller
     /// </summary>
     private void BindFactories()
     {
-        // PlayerManager 바인딩 - 먼저 바인딩 (PlayerDeckManager가 의존함)
-        Container.BindInterfacesAndSelfTo<PlayerManager>()
-            .FromComponentInHierarchy().AsSingle();
-        GameLogger.LogInfo(" PlayerManager 바인딩 완료 (씬에서 찾기)");
         
         // SkillCardFactory 바인딩
         Container.Bind<ISkillCardFactory>().To<SkillCardFactory>().AsSingle();

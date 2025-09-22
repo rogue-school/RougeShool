@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: test101
   displayNameKO: 
   description: 
-  artwork: {fileID: -7706200154523153285, guid: b61cd3e76e22ef94e8d9f8ed2454374f, type: 3}
+  artwork: {fileID: 4761272007329623712, guid: a5bbe42e7858cb9429017e8388e58bca, type: 3}
   presentation:
     sfxClip: {fileID: 0}
     visualEffectPrefab: {fileID: 0}

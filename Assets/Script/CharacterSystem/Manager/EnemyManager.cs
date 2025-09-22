@@ -133,6 +133,11 @@ namespace Game.CharacterSystem.Manager
     /// </summary>
     public bool HasEnemy() => currentCharacter != null;
 
+    /// <summary>
+    /// 적 캐릭터가 배치될 슬롯을 반환합니다.
+    /// </summary>
+    public Transform GetCharacterSlot() => characterSlot;
+
     #endregion
 
     #region 초기화

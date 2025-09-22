@@ -19,6 +19,12 @@ namespace Game.StageSystem.Interface
         void SpawnNextEnemy();
 
         /// <summary>
+        /// 다음 적을 비동기로 스폰합니다.
+        /// </summary>
+        /// <returns>스폰 성공 여부</returns>
+        System.Threading.Tasks.Task<bool> SpawnNextEnemyAsync();
+
+        /// <summary>
         /// 현재 진행 중인 스테이지 데이터를 반환합니다.
         /// </summary>
         /// <returns>현재 스테이지 데이터</returns>

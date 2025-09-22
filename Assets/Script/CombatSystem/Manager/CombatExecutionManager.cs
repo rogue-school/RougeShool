@@ -25,8 +25,6 @@ namespace Game.CombatSystem.Manager
         [Tooltip("디버그 로깅 활성화")]
         [SerializeField] private bool enableDebugLogging = true;
 
-        [Tooltip("자동 초기화 활성화")]
-        [SerializeField] private bool autoInitialize = true;
 
         #endregion
 
@@ -80,10 +78,8 @@ namespace Game.CombatSystem.Manager
 
         private void Start()
         {
-            if (autoInitialize)
-            {
-                StartCoroutine(InitializeExecution());
-            }
+            // 의존성 검증을 지연시켜 다른 매니저들이 완전히 초기화될 때까지 대기
+            // CombatFlowManager에서 필요할 때 초기화됨
         }
 
         #endregion

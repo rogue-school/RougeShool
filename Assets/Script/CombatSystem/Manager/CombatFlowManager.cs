@@ -47,8 +47,6 @@ namespace Game.CombatSystem.Manager
         [Tooltip("디버그 로깅 활성화")]
         [SerializeField] private bool enableDebugLogging = true;
 
-        [Tooltip("자동 초기화 활성화")]
-        [SerializeField] private bool autoInitialize = true;
 
         #endregion
 
@@ -91,6 +89,7 @@ namespace Game.CombatSystem.Manager
         public System.Action<CombatPhase> OnCombatPhaseChanged { get; set; }
         public System.Action OnCombatStarted { get; set; }
         public System.Action OnCombatEnded { get; set; }
+        public System.Action<ICharacter> OnEnemyDefeated { get; set; }
 
         #endregion
 
@@ -106,17 +105,15 @@ namespace Game.CombatSystem.Manager
 
         private void Start()
         {
-            if (autoInitialize)
-            {
-                StartCoroutine(InitializeCombat());
-            }
+            // 의존성 검증을 지연시켜 다른 매니저들이 완전히 초기화될 때까지 대기
+            // GameStartupController에서 StartCombat() 호출 시 초기화됨
         }
 
         #endregion
 
         #region 초기화
 
-        private IEnumerator InitializeCombat()
+        public IEnumerator InitializeCombat()
         {
             if (isInitialized)
             {
@@ -288,6 +285,23 @@ namespace Game.CombatSystem.Manager
             yield return null;
         }
 
+        /// <summary>
+        /// 적 처치 시 호출되는 메서드
+        /// GameStartupController에게 적 사망 알림
+        /// </summary>
+        public void OnEnemyDeath(ICharacter enemy)
+        {
+            if (enemy == null) return;
+
+            GameLogger.LogInfo($"적 처치: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
+
+            // 적 처치 이벤트 발생
+            OnEnemyDefeated?.Invoke(enemy);
+
+            // 전투 종료
+            EndCombat();
+        }
+
         #endregion
 
         #region 전투 상태 관리
@@ -376,7 +390,7 @@ namespace Game.CombatSystem.Manager
 
             if (turnManager == null)
             {
-                GameLogger.LogError("CombatTurnManager가 주입되지 않았습니다.", GameLogger.LogCategory.Error);
+                GameLogger.LogError("TurnManager가 주입되지 않았습니다.", GameLogger.LogCategory.Error);
                 isValid = false;
             }
 

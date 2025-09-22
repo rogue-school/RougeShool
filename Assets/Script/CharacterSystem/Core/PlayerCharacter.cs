@@ -34,10 +34,7 @@ namespace Game.CharacterSystem.Core
         public override object CharacterData => PlayerCharacterData;
 
         [Header("UI Components")]
-        [SerializeField] private TextMeshProUGUI nameText;
-        [SerializeField] private TextMeshProUGUI hpText;
         [SerializeField] private Image portraitImage;
-        [SerializeField] private TextMeshProUGUI descriptionText;
 
         [Header("Damage UI")]
         [SerializeField] private Transform hpTextAnchor;
@@ -150,31 +147,17 @@ namespace Game.CharacterSystem.Core
         #region UI Handling
 
         /// <summary>
-        /// 이름, 체력, 초상화 등 UI 갱신
+        /// 포트레이트 이미지 업데이트 (나머지 UI는 씬 통합 UI에서 관리)
         /// </summary>
         private void UpdateUI()
         {
             if (PlayerCharacterData == null) return;
 
-            // 캐릭터 이름 숨기기
-            if (nameText != null)
-                nameText.text = ""; // 빈 문자열로 설정하여 이름 숨김
+            // 포트레이트 이미지만 설정
+            if (portraitImage != null)
+                portraitImage.sprite = PlayerCharacterData.Portrait;
             
-            portraitImage.sprite = PlayerCharacterData.Portrait;
-
-            // 체력 숫자 및 색상 설정
-            if (currentHP >= PlayerCharacterData.MaxHP)
-            {
-                hpText.text = PlayerCharacterData.MaxHP.ToString(); // 최대 체력 표시
-                hpText.color = Color.white;          // 회색 또는 흰색으로 보임
-            }
-            else
-            {
-                hpText.text = currentHP.ToString();  // 현재 체력만 표시
-                hpText.color = Color.red;            // 붉은색으로 표시
-            }
-            
-            // HP 바 업데이트
+            // HP 바 업데이트 (HP 바 컨트롤러가 있는 경우)
             hpBarController?.OnHealthChanged();
         }
 

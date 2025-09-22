@@ -52,15 +52,6 @@ namespace Game.CombatSystem.Manager
             [Range(1, 100)]
             public int initialTurnCount = 1;
 
-            [Space(5)]
-            [Header("턴 제한")]
-            [Tooltip("최대 턴 수 (0 = 무제한)")]
-            [Range(0, 1000)]
-            public int maxTurns = 0;
-
-            [Tooltip("턴 시간 제한 (초, 0 = 무제한)")]
-            [Range(0f, 300f)]
-            public float turnTimeLimit = 0f;
         }
 
         [System.Serializable]
@@ -119,7 +110,6 @@ namespace Game.CombatSystem.Manager
         public TurnType CurrentTurn => currentTurn;
         public int TurnCount => turnCount;
         public bool IsGameActive => isGameActive;
-        public float TurnTimeLimit => turnSettings.turnTimeLimit;
         public float RemainingTurnTime => remainingTurnTime;
         
         // ITurnManager 인터페이스 구현 - 이벤트
@@ -171,15 +161,6 @@ namespace Game.CombatSystem.Manager
         /// </summary>
         public void SwitchTurn()
         {
-            // 최대 턴 수 확인
-            if (turnSettings.maxTurns > 0 && turnCount >= turnSettings.maxTurns)
-            {
-                if (debugSettings.enableTurnLogging)
-                {
-                    GameLogger.LogWarning($"최대 턴 수({turnSettings.maxTurns})에 도달했습니다.", GameLogger.LogCategory.Combat);
-                }
-                return;
-            }
 
             // 턴 전환 전 모든 캐릭터의 턴 효과 처리
             ProcessAllCharacterTurnEffects();
@@ -242,7 +223,6 @@ namespace Game.CombatSystem.Manager
         public void StartGame()
         {
             isGameActive = true;
-            remainingTurnTime = turnSettings.turnTimeLimit;
             OnGameStarted?.Invoke();
             
             if (debugSettings.enableTurnLogging)
@@ -295,11 +275,11 @@ namespace Game.CombatSystem.Manager
         /// </summary>
         public void ResetTurnTimer()
         {
-            remainingTurnTime = turnSettings.turnTimeLimit;
+            remainingTurnTime = 0f;
             
             if (debugSettings.enableTurnLogging)
             {
-                GameLogger.LogInfo($"턴 시간 리셋: {remainingTurnTime}초", GameLogger.LogCategory.Combat);
+                GameLogger.LogInfo("턴 시간 리셋", GameLogger.LogCategory.Combat);
             }
         }
 
