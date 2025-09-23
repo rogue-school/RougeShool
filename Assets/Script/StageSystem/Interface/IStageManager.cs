@@ -63,5 +63,17 @@ namespace Game.StageSystem.Interface
         /// </summary>
         /// <returns>스테이지가 완료되었으면 true</returns>
         bool IsStageCompleted { get; }
+
+        /// <summary>
+        /// 다음 스테이지가 존재하는지 확인합니다.
+        /// </summary>
+        /// <returns>다음 스테이지가 있으면 true</returns>
+        bool HasNextStage();
+
+        /// <summary>
+        /// 다음 스테이지로 진행합니다.
+        /// </summary>
+        /// <returns>성공 시 true</returns>
+        bool ProgressToNextStage();
     }
 }

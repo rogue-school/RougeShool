@@ -99,7 +99,25 @@ namespace Game.SkillCardSystem.Runtime
                     if (effectConfig.effectSO != null)
                     {
                         var customSettings = effectConfig.useCustomSettings ? effectConfig.customSettings : null;
-                        var command = effectConfig.effectSO.CreateEffectCommand(0);
+
+                        // 출혈 효과의 커스텀 설정(수치/지속)을 반영
+                        if (effectConfig.effectSO is BleedEffectSO)
+                        {
+                            if (effectConfig.useCustomSettings && customSettings != null)
+                            {
+                                // 커스텀 출혈 수치/지속 사용
+                                var bleedCommand = new BleedEffectCommand(
+                                    customSettings.bleedAmount,
+                                    customSettings.bleedDuration
+                                );
+                                effectCommands.Add(bleedCommand);
+                                continue;
+                            }
+                        }
+
+                        // 기타 효과는 기존 로직(파워 계산 후 SO에서 생성)
+                        var power = GetEffectPower(effectConfig.effectSO);
+                        var command = effectConfig.effectSO.CreateEffectCommand(power);
                         if (command != null)
                         {
                             effectCommands.Add(command);

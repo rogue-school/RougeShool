@@ -21,6 +21,7 @@ namespace Game.CombatSystem.Service
         private readonly ICardValidator validator;
         private readonly CardDropRegistrar registrar;
         private readonly TurnManager turnManager;
+        private readonly CombatExecutionManager executionManager;
 
         /// <summary>
         /// 생성자. 필요한 의존성을 주입합니다.
@@ -28,11 +29,13 @@ namespace Game.CombatSystem.Service
         public CardDropService(
             ICardValidator validator,
             CardDropRegistrar registrar,
-            TurnManager turnManager)
+            TurnManager turnManager,
+            CombatExecutionManager executionManager)
         {
             this.validator = validator;
             this.registrar = registrar;
             this.turnManager = turnManager;
+            this.executionManager = executionManager;
         }
 
         /// <summary>
@@ -84,6 +87,9 @@ namespace Game.CombatSystem.Service
                 combatSlot.SetCard(card);
                 combatSlot.SetCardUI(ui);
 
+                // 슬롯 위치 확인 및 실행 트리거
+                var slotPosition = combatSlot.Position;
+                
                 // UI 정중앙 스냅(부드럽게 이동 후 부모 설정)
                 var target = combatSlot.GetTransform() as RectTransform;
                 var uiRect = ui.transform as RectTransform;
@@ -97,13 +103,48 @@ namespace Game.CombatSystem.Service
                         uiRect.SetParent(target, false);
                         uiRect.anchoredPosition = Vector2.zero;
                         uiRect.localScale = Vector3.one;
+                        
+                        // 카드 배치 완료 후 실행 처리
+                        TriggerCardExecution(card, slotPosition);
                     });
+                }
+                else
+                {
+                    // UI 이동이 불가능한 경우 즉시 실행
+                    TriggerCardExecution(card, slotPosition);
                 }
                 return true;
             }
 
             // 다른 슬롯 타입은 추후 확장
             return false;
+        }
+
+        /// <summary>
+        /// 카드 실행을 트리거합니다.
+        /// </summary>
+        /// <param name="card">실행할 카드</param>
+        /// <param name="slotPosition">카드가 배치된 슬롯 위치</param>
+        private void TriggerCardExecution(ISkillCard card, CombatSlotPosition slotPosition)
+        {
+            if (card == null || executionManager == null)
+            {
+                GameLogger.LogWarning("[CardDropService] 카드 실행 실패 - 카드 또는 실행 매니저가 null", GameLogger.LogCategory.SkillCard);
+                return;
+            }
+
+            // 배틀 슬롯에 배치된 경우 즉시 실행
+            if (slotPosition == CombatSlotPosition.BATTLE_SLOT)
+            {
+                GameLogger.LogInfo($"[CardDropService] 배틀 슬롯 카드 즉시 실행: {card.GetCardName()}", GameLogger.LogCategory.SkillCard);
+                executionManager.ExecuteCardImmediately(card, slotPosition);
+            }
+            else
+            {
+                // 대기 슬롯의 경우 턴 매니저에 알림 (향후 턴 진행 시 실행됨)
+                GameLogger.LogInfo($"[CardDropService] 대기 슬롯 카드 등록: {card.GetCardName()} at {slotPosition}", GameLogger.LogCategory.SkillCard);
+                // 필요시 turnManager.OnCardQueued(card, slotPosition) 같은 이벤트 추가 가능
+            }
         }
 
         /// <summary>

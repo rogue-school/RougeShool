@@ -117,6 +117,15 @@ namespace Game.CombatSystem.Manager
             }
         }
 
+        private IEnumerator InitializeAndExecute(ISkillCard card, CombatSlotPosition slotPosition)
+        {
+            yield return InitializeExecution();
+            if (isInitialized)
+            {
+                ExecuteCardImmediately(card, slotPosition);
+            }
+        }
+
         #endregion
 
         #region 카드 실행
@@ -128,7 +137,8 @@ namespace Game.CombatSystem.Manager
         {
             if (!isInitialized)
             {
-                GameLogger.LogWarning("실행 시스템이 초기화되지 않았습니다.", GameLogger.LogCategory.Combat);
+                // 지연 초기화 후 실행
+                StartCoroutine(InitializeAndExecute(card, slotPosition));
                 return;
             }
 
@@ -153,7 +163,7 @@ namespace Game.CombatSystem.Manager
 
             if (enableDebugLogging)
             {
-                GameLogger.LogInfo($"카드 실행 시작: {card.GetCardName()} at {slotPosition}", GameLogger.LogCategory.Combat);
+                GameLogger.LogInfo($"카드 실행 시작: {FormatCardTag(card)} at {slotPosition}", GameLogger.LogCategory.Combat);
             }
 
             // 실행 지연
@@ -174,19 +184,46 @@ namespace Game.CombatSystem.Manager
             // 실행 완료 이벤트 발생
             OnExecutionCompleted?.Invoke(result);
 
+            // 실행 후 처리: 배틀 슬롯에서 사용된 카드는 소유자와 무관하게 정리 및 다음 턴 진행
+            if (card != null && slotPosition == CombatSlotPosition.BATTLE_SLOT)
+            {
+                try
+                {
+                    if (card.IsFromPlayer())
+                    {
+                        // 플레이어 핸드에서 해당 카드 제거
+                        var handMgr = FindFirstObjectByType<Game.SkillCardSystem.Manager.PlayerHandManager>();
+                        handMgr?.RemoveCard(card);
+                        GameLogger.LogInfo($"플레이어 핸드에서 카드 제거: {FormatCardTag(card)}", GameLogger.LogCategory.SkillCard);
+                    }
+
+                    // 배틀 슬롯 정리 (UI 포함)
+                    turnManager?.ClearSlot(CombatSlotPosition.BATTLE_SLOT);
+                    GameLogger.LogInfo("배틀 슬롯 정리 완료 (카드 제거)", GameLogger.LogCategory.Combat);
+
+                    // 다음 턴 진행 → TurnManager가 비어있는 배틀 슬롯을 감지해 큐 전진(1칸) 및 대기4 보충을 수행
+                    turnManager?.ProceedToNextTurn();
+                    GameLogger.LogInfo("다음 턴 진행", GameLogger.LogCategory.Combat);
+                }
+                catch (System.Exception ex)
+                {
+                    GameLogger.LogWarning($"실행 후 처리 중 예외: {ex.Message}", GameLogger.LogCategory.Combat);
+                }
+            }
+
             isExecuting = false;
 
             if (enableDebugLogging)
             {
-                GameLogger.LogInfo($"카드 실행 완료: {card.GetCardName()}", GameLogger.LogCategory.Combat);
+                GameLogger.LogInfo($"카드 실행 완료: {FormatCardTag(card)}", GameLogger.LogCategory.Combat);
             }
         }
 
         private ExecutionResult ExecuteCard(ISkillCard card, CombatSlotPosition slotPosition)
         {
-            // 소스와 타겟 캐릭터 결정
-            ICharacter sourceCharacter = GetSourceCharacter(slotPosition);
-            ICharacter targetCharacter = GetTargetCharacter(slotPosition);
+            // 소스와 타겟 캐릭터 결정 (카드 소유자 기준)
+            ICharacter sourceCharacter = GetSourceCharacter(card);
+            ICharacter targetCharacter = GetTargetCharacter(card);
 
             if (sourceCharacter == null || targetCharacter == null)
             {
@@ -209,6 +246,17 @@ namespace Game.CombatSystem.Manager
                 GameLogger.LogError($"카드 실행 중 오류 발생: {ex.Message}", GameLogger.LogCategory.Error);
                 return new ExecutionResult(false, null, ex.Message);
             }
+        }
+
+        /// <summary>
+        /// 소유자_카드ID 형태로 태그 문자열을 반환합니다. 예: 플레이어_test001, 적_test101
+        /// </summary>
+        private string FormatCardTag(Game.SkillCardSystem.Interface.ISkillCard card)
+        {
+            if (card == null || card.CardDefinition == null) return "[UnknownCard]";
+            string owner = card.IsFromPlayer() ? "플레이어" : "적";
+            string id = string.IsNullOrEmpty(card.CardDefinition.cardId) ? (card.GetCardName() ?? "Unknown") : card.CardDefinition.cardId;
+            return $"{owner}_{id}";
         }
 
         #endregion
@@ -242,46 +290,25 @@ namespace Game.CombatSystem.Manager
         /// <summary>
         /// 소스 캐릭터 결정
         /// </summary>
-        private ICharacter GetSourceCharacter(CombatSlotPosition slotPosition)
+        private ICharacter GetSourceCharacter(Game.SkillCardSystem.Interface.ISkillCard card)
         {
-            // 슬롯 위치에 따라 소스 캐릭터 결정
-            if (IsPlayerSlot(slotPosition))
-            {
-                return playerManager?.GetPlayer();
-            }
-            else
-            {
-                return enemyManager?.GetCurrentEnemy();
-            }
+            // 카드 소유자 기준으로 소스 결정
+            return card != null && card.IsFromPlayer()
+                ? playerManager?.GetPlayer()
+                : enemyManager?.GetCurrentEnemy();
         }
 
         /// <summary>
         /// 타겟 캐릭터 결정
         /// </summary>
-        private ICharacter GetTargetCharacter(CombatSlotPosition slotPosition)
+        private ICharacter GetTargetCharacter(Game.SkillCardSystem.Interface.ISkillCard card)
         {
-            // 슬롯 위치에 따라 타겟 캐릭터 결정
-            if (IsPlayerSlot(slotPosition))
-            {
-                return enemyManager?.GetCurrentEnemy();
-            }
-            else
-            {
-                return playerManager?.GetPlayer();
-            }
+            // 카드 소유자 기준으로 타겟 결정 (상대편)
+            return card != null && card.IsFromPlayer()
+                ? enemyManager?.GetCurrentEnemy()
+                : playerManager?.GetPlayer();
         }
-
-        /// <summary>
-        /// 플레이어 슬롯인지 확인
-        /// </summary>
-        private bool IsPlayerSlot(CombatSlotPosition slotPosition)
-        {
-            return slotPosition == CombatSlotPosition.BATTLE_SLOT ||
-                   slotPosition == CombatSlotPosition.WAIT_SLOT_1 ||
-                   slotPosition == CombatSlotPosition.WAIT_SLOT_2 ||
-                   slotPosition == CombatSlotPosition.WAIT_SLOT_3 ||
-                   slotPosition == CombatSlotPosition.WAIT_SLOT_4;
-        }
+        
 
         #endregion
 

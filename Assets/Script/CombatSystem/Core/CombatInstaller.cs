@@ -231,8 +231,10 @@ public class CombatInstaller : MonoInstaller
             GameLogger.LogInfo(" IStageManager 자동 생성 및 바인딩 완료");
         }
         
-        // CardDropService 의존성 바인딩 (구조화된 배열에서 처리됨)
-        // Container.Bind<ITurnCardRegistry>().To<TurnCardRegistry>().AsSingle(); // 삭제됨
+        // CardDropService 바인딩 (CombatExecutionManager 의존성 추가)
+        // 주입 의존성은 사전 바인딩된 타입으로 자동 해결되도록 단순 바인딩
+        // (Install 중 Resolve 방지, 의존성 순서 문제 예방)
+        Container.Bind<CardDropService>().AsSingle();
         
         // TurnManager 바인딩 - 자동 생성으로 최적화
         Container.BindInterfacesAndSelfTo<TurnManager>()
@@ -361,7 +363,7 @@ public class CombatInstaller : MonoInstaller
         }
 
         // 특별한 경우들
-        Container.Bind<CardDropService>().AsSingle();
+        // Container.Bind<CardDropService>().AsSingle(); // 중복 바인딩 제거 - BindFactories에서 의존성 포함 바인딩
         
         if (enablePerformanceLogging)
         {

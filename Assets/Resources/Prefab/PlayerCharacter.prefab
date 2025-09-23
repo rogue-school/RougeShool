@@ -52,7 +52,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   <PlayerCharacterData>k__BackingField: {fileID: 0}
   portraitImage: {fileID: 4212231588447136040}
-  hpTextAnchor: {fileID: 0}
+  hpTextAnchor: {fileID: 5948721942734503284}
   damageTextPrefab: {fileID: 6781140808306196491, guid: e5df9cbbbb6c8344787434930ac5ec5b, type: 3}
   hpBarController: {fileID: 0}
   playerCharacterUIController: {fileID: 0}

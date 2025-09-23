@@ -183,6 +183,18 @@ namespace Game.CoreSystem.Manager
             currentSetupPhase = SetupPhase.PlayerCharacter;
             GameLogger.LogInfo("플레이어 캐릭터 셋업 시작", GameLogger.LogCategory.Core);
 
+            // 플레이어 매니저가 주입되지 않았으면 런타임에서 찾아서 보강
+            if (playerManager == null)
+            {
+                playerManager = FindFirstObjectByType<PlayerManager>();
+                if (playerManager == null)
+                {
+                    GameLogger.LogWarning("PlayerManager가 아직 준비되지 않았습니다. 생성 대기 중...", GameLogger.LogCategory.Core);
+                    yield return new WaitUntil(() => (playerManager = FindFirstObjectByType<PlayerManager>()) != null);
+                    GameLogger.LogInfo("PlayerManager 런타임 발견", GameLogger.LogCategory.Core);
+                }
+            }
+
             // 플레이어 캐릭터가 이미 생성되어 있는지 확인
             var existingPlayer = playerManager.GetCharacter();
             if (existingPlayer != null)

@@ -177,24 +177,43 @@ namespace Game.CombatSystem.Manager
         /// </summary>
         public void SwitchTurn()
         {
-
-            // 턴 전환 전 모든 캐릭터의 턴 효과 처리
-            ProcessAllCharacterTurnEffects();
-
+            // 턴 타입 전환 먼저 수행
             currentTurn = currentTurn == TurnType.Player ? TurnType.Enemy : TurnType.Player;
             turnCount++;
+            _handGeneratedForTurn = false; // 새 턴 시작 - 손패 생성 플래그 리셋
             
+            // 전환 즉시 로그 (가독성 개선)
+            if (debugSettings.enableTurnLogging)
+            {
+                var turnNameLog = currentTurn == TurnType.Player ? "플레이어" : "적";
+                GameLogger.LogInfo($"턴 전환: {turnNameLog} 턴 (턴 {turnCount})", GameLogger.LogCategory.Combat);
+            }
+
+            // 턴 변경 이벤트 통지
             if (turnEvents.enableTurnChangeEvents)
             {
                 OnTurnChanged?.Invoke(currentTurn);
                 OnTurnCountChanged?.Invoke(turnCount);
             }
             
-            if (debugSettings.enableTurnLogging)
-            {
-                var turnName = currentTurn == TurnType.Player ? "플레이어" : "적";
-                GameLogger.LogInfo($"턴 전환: {turnName} 턴 (턴 {turnCount})", GameLogger.LogCategory.Combat);
-            }
+            // 새 턴 시작 효과 처리 (시작 턴 효과가 먼저 적용되도록 위치 이동)
+            ProcessAllCharacterTurnEffects();
+
+			// 적 턴 시작 전 플레이어 핸드 정리
+			if (currentTurn == TurnType.Enemy)
+			{
+				var handMgr = FindFirstObjectByType<Game.SkillCardSystem.Manager.PlayerHandManager>();
+				if (handMgr != null)
+				{
+					handMgr.ClearAll();
+					GameLogger.LogInfo("플레이어 핸드 정리 (적 턴 시작 전)", GameLogger.LogCategory.SkillCard);
+				}
+			}
+
+            // 플레이어 턴 손패 생성은 슬롯 전진/보충이 끝난 뒤에 수행 (AdvanceQueueAtTurnStartRoutine 끝부분에서 수행)
+
+			// 새 턴 시작 시 배틀 슬롯이 비어있다면 대기열 전진
+			StartCoroutine(AdvanceQueueAtTurnStartRoutine());
         }
 
         /// <summary>
@@ -301,6 +320,17 @@ namespace Game.CombatSystem.Manager
 
         #endregion
 
+        // 내부 전진/생성 제어 플래그
+        private bool _isAdvancingQueue = false;
+        private bool _nextSpawnIsPlayer = false; // 대기4 교대 스폰 제어 (false=적, true=플레이어 마커)
+        private readonly System.Collections.Generic.HashSet<Game.SkillCardSystem.Interface.ISkillCard> _scheduledEnemyExec = new();
+        private bool _suppressAutoRefill = false; // 초기 셋업 등 특정 구간에서 자동 보충 억제
+        private bool _suppressAutoExecution = false; // 초기 셋업 중 자동 실행 억제
+        private bool _handGeneratedForTurn = false; // 해당 턴에서 손패 생성 여부
+        // 초기 셋업 시 사용한 적 덱/이름 캐시 (보충 시 동일 소스 사용 보장)
+        private Game.CharacterSystem.Data.EnemyCharacterData _cachedEnemyData;
+        private string _cachedEnemyName;
+
         #region 디버그
 
         /// <summary>
@@ -311,6 +341,15 @@ namespace Game.CombatSystem.Manager
         {
             var turnName = currentTurn == TurnType.Player ? "플레이어" : "적";
             GameLogger.LogInfo($"현재 턴: {turnName} (턴 {turnCount})", GameLogger.LogCategory.Combat);
+        }
+
+        /// <summary>
+        /// 로그 태그(턴/프레임)를 생성합니다. 예: [T2-Enemy-F12345]
+        /// </summary>
+        private string FormatLogTag()
+        {
+            var turnName = currentTurn == TurnType.Player ? "Player" : "Enemy";
+            return $"[T{turnCount}-{turnName}-F{Time.frameCount}]";
         }
 
         #endregion
@@ -591,7 +630,110 @@ namespace Game.CombatSystem.Manager
         /// </summary>
         public void ProceedToNextTurn()
         {
+            // 다음 턴 전환만 수행하고, 전진은 SwitchTurn → AdvanceQueueAtTurnStartRoutine에서 단일 경로로 처리
             NextTurn();
+        }
+
+        // 즉시 전진 루틴 제거: 전진은 항상 턴 시작 루틴에서만 수행
+
+		private System.Collections.IEnumerator AdvanceQueueAtTurnStartRoutine()
+		{
+			// 턴 전환 직후 한 프레임 대기(이벤트/UI 정리 후)
+			yield return null;
+			if (!HasCardInSlot(CombatSlotPosition.BATTLE_SLOT))
+			{
+                yield return MoveAllSlotsForwardRoutine();
+			}
+
+			// 전진/보충이 끝났으므로, 플레이어 턴이면 이제 손패 생성
+			if (currentTurn == TurnType.Player && !_handGeneratedForTurn)
+			{
+				var handMgr = FindFirstObjectByType<Game.SkillCardSystem.Manager.PlayerHandManager>();
+				if (handMgr != null)
+				{
+					_handGeneratedForTurn = true;
+					GameLogger.LogInfo("플레이어 턴 - 전진/보충 완료 후 손패 생성", GameLogger.LogCategory.SkillCard);
+					handMgr.GenerateInitialHand();
+				}
+			}
+        }
+
+        /// <summary>
+        /// 대기 슬롯 4가 비어있으면 교대 규칙에 따라 카드를 보충합니다.
+        /// </summary>
+        private System.Collections.IEnumerator RefillWaitSlot4IfNeededRoutine()
+        {
+            if (_suppressAutoRefill)
+            {
+                GameLogger.LogInfo($"{FormatLogTag()} [Refill] 자동 보충 억제 중 → 스킵", GameLogger.LogCategory.Combat);
+                yield break;
+            }
+            if (GetCardInSlot(CombatSlotPosition.WAIT_SLOT_4) != null)
+            {
+                GameLogger.LogInfo($"{FormatLogTag()} [Refill] 대기4 이미 점유 → 스킵", GameLogger.LogCategory.Combat);
+                yield break;
+            }
+
+            // 프리팹 로드
+            var cardUIPrefab = Resources.Load<Game.SkillCardSystem.UI.SkillCardUI>("Prefab/SkillCard");
+            if (cardUIPrefab == null)
+            {
+                GameLogger.LogWarning($"{FormatLogTag()} [Refill] SkillCardUI 프리팹을 찾지 못함", GameLogger.LogCategory.Combat);
+                yield break;
+            }
+
+            // 플레이어 마커 ↔ 적 카드 교대 생성
+            if (_nextSpawnIsPlayer)
+            {
+                var marker = CreatePlayerMarker();
+                if (marker != null)
+                {
+                    // Wait4에 고정 배치(전진 트리거하지 않음)
+                    var ui = CreateCardUIForSlot(marker, CombatSlotPosition.WAIT_SLOT_4, null, cardUIPrefab);
+                    var tween = PlaySpawnTween(ui);
+                    RegisterCard(CombatSlotPosition.WAIT_SLOT_4, marker, ui, SlotOwner.PLAYER);
+                    GameLogger.LogInfo($"{FormatLogTag()} [Refill] 대기4 보충: 플레이어 마커", GameLogger.LogCategory.Combat);
+                    if (tween != null) yield return tween.WaitForCompletion();
+                }
+            }
+            else
+            {
+                // 적 카드 생성 (캐시된 덱 우선)
+                var enemyManager = FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
+                var enemy = enemyManager?.GetCharacter();
+                var runtimeData = enemy?.CharacterData as Game.CharacterSystem.Data.EnemyCharacterData;
+                var runtimeName = enemy?.GetCharacterName() ?? "Enemy";
+                var enemyData = _cachedEnemyData ?? runtimeData;
+                var enemyName = string.IsNullOrEmpty(_cachedEnemyName) ? runtimeName : _cachedEnemyName;
+                var factory = new Game.SkillCardSystem.Factory.SkillCardFactory();
+
+                Game.SkillCardSystem.Deck.EnemySkillDeck.CardEntry entry = null;
+                if (enemyData?.EnemyDeck != null)
+                {
+                    // GetRandomEntry가 간헐적으로 null을 반환할 수 있으므로 소량 재시도
+                    for (int attempt = 0; attempt < 5 && entry == null; attempt++)
+                    {
+                        entry = enemyData.EnemyDeck.GetRandomEntry();
+                    }
+                }
+
+                if (entry?.definition != null)
+                {
+                    var card = factory.CreateEnemyCard(entry.definition, enemyName);
+                    var ui = CreateCardUIForSlot(card, CombatSlotPosition.WAIT_SLOT_4, null, cardUIPrefab);
+                    var tween = PlaySpawnTween(ui);
+                    RegisterCard(CombatSlotPosition.WAIT_SLOT_4, card, ui, SlotOwner.ENEMY);
+                    GameLogger.LogInfo($"{FormatLogTag()} [Refill] 대기4 보충: 적 카드 {card.GetCardName()}", GameLogger.LogCategory.Combat);
+                    if (tween != null) yield return tween.WaitForCompletion();
+                }
+                else
+                {
+                    GameLogger.LogWarning($"{FormatLogTag()} [Refill] 적 덱에서 카드를 얻지 못함", GameLogger.LogCategory.Combat);
+                }
+            }
+
+            // 다음 생성 주체 토글
+            _nextSpawnIsPlayer = !_nextSpawnIsPlayer;
         }
         
         /// <summary>
@@ -647,6 +789,13 @@ namespace Game.CombatSystem.Manager
 
             GameLogger.LogInfo("동적 슬롯 셋업 시작 - 실제 게임 플레이 방식", GameLogger.LogCategory.Combat);
 
+            // 초기 셋업 구간에서는 자동 보충/자동 실행 억제 (중복 생성/조기 실행 방지)
+            _suppressAutoRefill = true;
+            _suppressAutoExecution = true;
+            // 적 덱/이름 캐시 저장
+            _cachedEnemyData = enemyData;
+            _cachedEnemyName = enemyName;
+
             bool isPlayerTurn = true; // 플레이어부터 시작
 
             for (int i = 0; i < 5; i++)
@@ -677,6 +826,16 @@ namespace Game.CombatSystem.Manager
             GameLogger.LogInfo("동적 슬롯 셋업 완료", GameLogger.LogCategory.Combat);
             _initialSlotSetupCompleted = true;
             OnInitialSlotSetupCompleted?.Invoke();
+
+            // 이동/애니메이션이 모두 끝날 때까지 대기 후 해제
+            while (_isAdvancingQueue)
+            {
+                yield return null;
+            }
+            yield return null;
+            // 초기 셋업 종료 후 자동 보충/자동 실행 활성화
+            _suppressAutoRefill = false;
+            _suppressAutoExecution = false;
         }
 
         /// <summary>
@@ -706,14 +865,19 @@ namespace Game.CombatSystem.Manager
                 yield break;
             }
 
-            // 1. 대기4에 카드 배치
+            // 1. 대기4에 카드 배치 (중복 방지: 이미 있으면 스킵)
+            if (GetCardInSlot(CombatSlotPosition.WAIT_SLOT_4) != null)
+            {
+                yield break;
+            }
             var cardUI = CreateCardUIForSlot(card, CombatSlotPosition.WAIT_SLOT_4, null, cardUIPrefab);
             var spawnTween = PlaySpawnTween(cardUI);
             RegisterCard(CombatSlotPosition.WAIT_SLOT_4, card, cardUI, owner);
             GameLogger.LogInfo($"대기4에 카드 배치: {card.GetCardName()}", GameLogger.LogCategory.Combat);
             if (spawnTween != null) yield return spawnTween.WaitForCompletion();
 
-            // 2. 배틀슬롯이 비어있으면 모든 카드를 앞으로 이동
+            // 2. 배틀슬롯이 비어있으면 모든 카드를 앞으로 이동 (현재 프레임의 레이아웃/애니메이션 반영을 위해 1프레임 대기)
+            yield return null;
             if (!HasCardInSlot(CombatSlotPosition.BATTLE_SLOT))
             {
                 yield return MoveAllSlotsForwardRoutine();
@@ -733,11 +897,23 @@ namespace Game.CombatSystem.Manager
         /// </summary>
         private System.Collections.IEnumerator MoveAllSlotsForwardRoutine()
         {
+            if (_isAdvancingQueue) yield break;
+            _isAdvancingQueue = true;
+
             yield return MoveCardToSlotRoutine(CombatSlotPosition.WAIT_SLOT_1, CombatSlotPosition.BATTLE_SLOT);
             yield return MoveCardToSlotRoutine(CombatSlotPosition.WAIT_SLOT_2, CombatSlotPosition.WAIT_SLOT_1);
             yield return MoveCardToSlotRoutine(CombatSlotPosition.WAIT_SLOT_3, CombatSlotPosition.WAIT_SLOT_2);
             yield return MoveCardToSlotRoutine(CombatSlotPosition.WAIT_SLOT_4, CombatSlotPosition.WAIT_SLOT_3);
-            GameLogger.LogInfo("슬롯 이동 완료: 4→3→2→1→배틀", GameLogger.LogCategory.Combat);
+
+            // 전진 후 대기4 보충 (모든 이동 트윈이 끝난 다음 1프레임 대기 후 보충)
+            yield return null;
+            yield return RefillWaitSlot4IfNeededRoutine();
+
+            _isAdvancingQueue = false;
+            GameLogger.LogInfo($"{FormatLogTag()} 슬롯 이동 완료: 4→3→2→1→배틀", GameLogger.LogCategory.Combat);
+
+            // 전진이 끝난 시점에서 배틀 슬롯의 적 카드를 자동 실행 (Enemy 턴, 억제 해제 상태)
+            TryAutoExecuteEnemyAtBattleSlot();
         }
 
         /// <summary>
@@ -780,7 +956,68 @@ namespace Game.CombatSystem.Manager
             if (ui != null) _cardUIs[toSlot] = ui;
             OnCardStateChanged?.Invoke();
             
-            GameLogger.LogInfo($"카드 이동: {card.GetCardName()} ({fromSlot} → {toSlot})", GameLogger.LogCategory.Combat);
+            GameLogger.LogInfo($"{FormatLogTag()} 카드 이동: {card.GetCardName()} ({fromSlot} → {toSlot})", GameLogger.LogCategory.Combat);
+
+            // 적 카드가 배틀 슬롯으로 이동했을 때 자동 실행 (초기 셋업 중 억제 + 단일 경로 보장)
+            if (toSlot == CombatSlotPosition.BATTLE_SLOT && !card.IsFromPlayer())
+            {
+                // 게이트 조건
+                bool canAutoExecute = !_suppressAutoExecution && _initialSlotSetupCompleted && !_isAdvancingQueue && currentTurn == TurnType.Enemy;
+                GameLogger.LogInfo($"{FormatLogTag()} [AutoExec-Check] to=BATTLE, owner=ENEMY, can={canAutoExecute}, suppress={_suppressAutoExecution}, setupDone={_initialSlotSetupCompleted}, advancing={_isAdvancingQueue}, turn={currentTurn}", GameLogger.LogCategory.Combat);
+
+                if (canAutoExecute && !_scheduledEnemyExec.Contains(card))
+                {
+                    _scheduledEnemyExec.Add(card);
+                    var executionManager = FindFirstObjectByType<CombatExecutionManager>();
+                    if (executionManager != null)
+                    {
+                        // 안전을 위해 한 프레임 대기 후 실행(레이아웃/보충/전진 반영 시간 확보)
+                        StartCoroutine(ExecuteEnemyCardNextFrame(executionManager, card, toSlot));
+                    }
+                }
+                else if (!canAutoExecute)
+                {
+                    GameLogger.LogInfo($"{FormatLogTag()} [AutoExec-Skip] 게이트 조건 불충족으로 자동 실행 스킵", GameLogger.LogCategory.Combat);
+                }
+            }
+        }
+
+        private System.Collections.IEnumerator ExecuteEnemyCardNextFrame(CombatExecutionManager exec, ISkillCard card, CombatSlotPosition toSlot)
+        {
+            yield return null;
+            // 최종 게이트 재검증 후 실행
+            bool canAutoExecute = !_suppressAutoExecution && _initialSlotSetupCompleted && !_isAdvancingQueue && currentTurn == TurnType.Enemy;
+            if (canAutoExecute && GetCardInSlot(CombatSlotPosition.BATTLE_SLOT) == card)
+            {
+                GameLogger.LogInfo($"{FormatLogTag()} 적 카드 배틀 슬롯 도달, 자동 실행: {card.GetCardName()}", GameLogger.LogCategory.Combat);
+                exec.ExecuteCardImmediately(card, toSlot);
+            }
+            else
+            {
+                GameLogger.LogInfo($"{FormatLogTag()} [AutoExec-Skip@NextFrame] 게이트 조건 불충족 또는 카드 변경", GameLogger.LogCategory.Combat);
+            }
+        }
+
+        /// <summary>
+        /// 전진이 모두 끝난 후 배틀 슬롯에 적 카드가 대기 중이면 자동 실행합니다.
+        /// </summary>
+        private void TryAutoExecuteEnemyAtBattleSlot()
+        {
+            if (_suppressAutoExecution || !_initialSlotSetupCompleted || _isAdvancingQueue || currentTurn != TurnType.Enemy)
+                return;
+
+            var card = GetCardInSlot(CombatSlotPosition.BATTLE_SLOT);
+            if (card != null && !card.IsFromPlayer())
+            {
+                if (_scheduledEnemyExec.Contains(card)) return;
+                _scheduledEnemyExec.Add(card);
+                var exec = FindFirstObjectByType<CombatExecutionManager>();
+                if (exec != null)
+                {
+                    GameLogger.LogInfo($"{FormatLogTag()} 배틀 슬롯 적 카드 자동 실행 트리거: {card.GetCardName()}", GameLogger.LogCategory.Combat);
+                    exec.ExecuteCardImmediately(card, CombatSlotPosition.BATTLE_SLOT);
+                }
+            }
         }
 
         // 기존 즉시 실행 버전(호환용)

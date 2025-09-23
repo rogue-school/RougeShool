@@ -15,6 +15,7 @@ using Game.CombatSystem.Interface;
 using Game.StageSystem.Manager;
 using Game.StageSystem.Interface;
 using Zenject;
+using Game.CombatSystem.State;
 
 namespace Game.CombatSystem.Manager
 {
@@ -82,6 +83,19 @@ namespace Game.CombatSystem.Manager
         private bool isCombatActive = false;
         private bool isInitialized = false;
 
+        // 메타 플로우 상태 머신 (전투 외부 흐름 관리)
+        private enum FlowState
+        {
+            Prepare,
+            InCombat,
+            Victory,
+            Rewards,
+            StageTransition,
+            GameOver
+        }
+
+        private FlowState currentFlowState = FlowState.Prepare;
+
         #endregion
 
         #region 이벤트
@@ -132,6 +146,9 @@ namespace Game.CombatSystem.Manager
                 yield break;
             }
 
+            // 메타 플로우 상태 초기화
+            currentFlowState = FlowState.Prepare;
+
             // 초기 상태 설정
             currentPhase = initialPhase;
             isCombatActive = false;
@@ -165,6 +182,122 @@ namespace Game.CombatSystem.Manager
                 // CombatExecutionManager는 Start에서 자동 초기화되므로 별도 초기화 불필요
                 yield return null;
             }
+        }
+
+        // 메타 플로우 전이 함수
+        private void TransitionTo(FlowState next)
+        {
+            if (currentFlowState == next) return;
+
+            // Exit 훅
+            switch (currentFlowState)
+            {
+                case FlowState.Prepare:
+                case FlowState.InCombat:
+                case FlowState.Victory:
+                case FlowState.Rewards:
+                case FlowState.StageTransition:
+                case FlowState.GameOver:
+                    break;
+            }
+
+            currentFlowState = next;
+
+            // Enter 훅
+            switch (currentFlowState)
+            {
+                case FlowState.Prepare:
+                    OnEnterPrepare();
+                    break;
+                case FlowState.InCombat:
+                    OnEnterInCombat();
+                    break;
+                case FlowState.Victory:
+                    OnEnterVictory();
+                    break;
+                case FlowState.Rewards:
+                    OnEnterRewards();
+                    break;
+                case FlowState.StageTransition:
+                    OnEnterStageTransition();
+                    break;
+                case FlowState.GameOver:
+                    OnEnterGameOver();
+                    break;
+            }
+        }
+
+        private void OnEnterPrepare()
+        {
+            GameLogger.LogInfo("[Flow] 준비 상태 진입", GameLogger.LogCategory.Combat);
+        }
+
+        private void OnEnterInCombat()
+        {
+            GameLogger.LogInfo("[Flow] 전투 진행 상태 진입", GameLogger.LogCategory.Combat);
+        }
+
+        private void OnEnterVictory()
+        {
+            GameLogger.LogInfo("[Flow] 승리 상태 진입", GameLogger.LogCategory.Combat);
+            // 승리 연출 완료 후 보상 단계로 전이
+            TransitionTo(FlowState.Rewards);
+        }
+
+        private void OnEnterRewards()
+        {
+            GameLogger.LogInfo("[Flow] 보상 상태 진입 - 보상 UI 표시", GameLogger.LogCategory.Combat);
+            // TODO: 보상 UI 표시 후 선택 완료 시 아래 호출
+            // OnRewardsSelected();
+        }
+
+        private void OnEnterStageTransition()
+        {
+            GameLogger.LogInfo("[Flow] 스테이지 전환 상태 진입", GameLogger.LogCategory.Combat);
+            if (stageManager != null)
+            {
+                // 다음 스테이지로 진행 후 시작
+                if (stageManager.ProgressToNextStage())
+                {
+                    GameLogger.LogInfo("다음 스테이지 로드 완료 - 스테이지 시작", GameLogger.LogCategory.Combat);
+                    stageManager.StartStage();
+                }
+                else
+                {
+                    GameLogger.LogWarning("다음 스테이지로 진행할 수 없습니다.", GameLogger.LogCategory.Combat);
+                }
+            }
+            else
+            {
+                GameLogger.LogWarning("StageManager가 주입되지 않아 전환을 진행할 수 없습니다.", GameLogger.LogCategory.Combat);
+            }
+
+            // 전환 완료 후 준비 상태로 회귀
+            TransitionTo(FlowState.Prepare);
+        }
+
+        private void OnEnterGameOver()
+        {
+            GameLogger.LogInfo("[Flow] 게임 오버 상태 진입", GameLogger.LogCategory.Combat);
+            // TODO: 게임오버 UI 표시 및 재도전/로비 이동 버튼 처리
+        }
+
+        // 외부(보상 UI)에서 호출: 보상 선택 완료
+        public void OnRewardsSelected()
+        {
+            TransitionTo(FlowState.StageTransition);
+        }
+
+        // 외부(EnemyManager 등)에서 호출: 모든 적 처치
+        public void NotifyVictory()
+        {
+            TransitionTo(FlowState.Victory);
+        }
+
+        // 외부(PlayerManager 등)에서 호출: 플레이어 사망
+        public void NotifyGameOver()
+        {
+            TransitionTo(FlowState.GameOver);
         }
 
         #endregion
@@ -204,6 +337,9 @@ namespace Game.CombatSystem.Manager
             // 전투 활성화
             isCombatActive = true;
             ChangeCombatPhase(CombatPhase.Preparation);
+
+            // 메타 플로우: 전투 진행 상태로 전이
+            TransitionTo(FlowState.InCombat);
 
             // 전투 시작 이벤트 발생
             OnCombatStarted?.Invoke();
@@ -298,7 +434,21 @@ namespace Game.CombatSystem.Manager
             // 적 처치 이벤트 발생
             OnEnemyDefeated?.Invoke(enemy);
 
+            // 메타 플로우: 승리 진입
+            NotifyVictory();
+
             // 전투 종료
+            EndCombat();
+        }
+
+        /// <summary>
+        /// 플레이어 사망 통지 → 게임오버 처리
+        /// </summary>
+        public void OnPlayerDeath(ICharacter player)
+        {
+            if (player == null) return;
+            GameLogger.LogInfo($"플레이어 사망: {player.GetCharacterName()}", GameLogger.LogCategory.Combat);
+            NotifyGameOver();
             EndCombat();
         }
 
