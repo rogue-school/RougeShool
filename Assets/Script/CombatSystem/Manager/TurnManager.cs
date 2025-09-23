@@ -594,33 +594,28 @@ namespace Game.CombatSystem.Manager
         }
 
         /// <summary>
-        /// 모든 캐릭터의 턴 효과를 처리합니다.
+        /// 턴 효과를 현재 턴의 주체에게만 1회 처리합니다.
         /// </summary>
         private void ProcessAllCharacterTurnEffects()
         {
-            // 플레이어 캐릭터 처리
-            var playerManager = FindFirstObjectByType<PlayerManager>();
-            if (playerManager?.GetCharacter() != null)
+            if (currentTurn == TurnType.Player)
             {
-                playerManager.GetCharacter().ProcessTurnEffects();
-                GameLogger.LogInfo($"플레이어 캐릭터 턴 효과 처리: {playerManager.GetCharacter().GetCharacterName()}", GameLogger.LogCategory.Combat);
-            }
-
-            // 적 캐릭터들 처리
-            var enemyManager = FindFirstObjectByType<EnemyManager>();
-            if (enemyManager?.GetCharacter() != null)
-            {
-                enemyManager.GetCharacter().ProcessTurnEffects();
-                GameLogger.LogInfo($"적 캐릭터 턴 효과 처리: {enemyManager.GetCharacter().GetCharacterName()}", GameLogger.LogCategory.Combat);
-            }
-
-            // 추가로 씬의 모든 캐릭터 컴포넌트 처리 (안전장치)
-            var allCharacters = FindObjectsByType<CharacterBase>(FindObjectsSortMode.None);
-            foreach (var character in allCharacters)
-            {
-                if (character != null && character.gameObject.activeInHierarchy)
+                var playerManager = FindFirstObjectByType<PlayerManager>();
+                var player = playerManager?.GetCharacter();
+                if (player != null)
                 {
-                    character.ProcessTurnEffects();
+                    player.ProcessTurnEffects();
+                    GameLogger.LogInfo($"플레이어 캐릭터 턴 효과 처리: {player.GetCharacterName()}", GameLogger.LogCategory.Combat);
+                }
+            }
+            else // Enemy turn
+            {
+                var enemyManager = FindFirstObjectByType<EnemyManager>();
+                var enemy = enemyManager?.GetCharacter();
+                if (enemy != null)
+                {
+                    enemy.ProcessTurnEffects();
+                    GameLogger.LogInfo($"적 캐릭터 턴 효과 처리: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
                 }
             }
         }

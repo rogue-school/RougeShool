@@ -13,7 +13,6 @@ namespace Game.SkillCardSystem.Effect
         private readonly int amount;
         private int remainingTurns;
         private readonly Sprite icon;
-        private bool pendingStart = true; // 적용된 직후 턴은 대기 → 다음 턴부터 발동
 
         /// <summary>
         /// 출혈 효과 생성자
@@ -43,12 +42,6 @@ namespace Game.SkillCardSystem.Effect
             if (target == null)
             {
                 Debug.LogWarning("[BleedEffect] 대상이 null입니다. 출혈 효과 무시됨.");
-                return;
-            }
-            // 적용된 턴은 건너뛰고, 다음 턴부터 작동
-            if (pendingStart)
-            {
-                pendingStart = false;
                 return;
             }
             target.TakeDamage(amount);
