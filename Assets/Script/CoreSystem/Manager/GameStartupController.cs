@@ -38,6 +38,9 @@ namespace Game.CoreSystem.Manager
         [Inject] private PlayerManager playerManager;
         [InjectOptional] private EnemyManager enemyManager;
         [Inject] private IPlayerHandManager playerHandManager;
+        [InjectOptional] private Game.SkillCardSystem.Interface.IPlayerDeckManager playerDeckManager;
+        [InjectOptional] private Game.SkillCardSystem.Interface.ICardCirculationSystem circulationSystem;
+        [InjectOptional] private Game.SkillCardSystem.Interface.ISkillCardFactory cardFactory;
         [Inject] private IStageManager stageManager;
         [InjectOptional] private CombatFlowManager combatFlowManager;
         [InjectOptional] private IGameStateManager gameStateManager;
@@ -327,6 +330,38 @@ namespace Game.CoreSystem.Manager
                 {
                     // 핸드 매니저에 플레이어 설정
                     playerHandManager.SetPlayer(player);
+
+                    // 덱 순환 시스템이 비어있다면 플레이어 덱으로 초기화
+                    if (circulationSystem != null && (circulationSystem.DeckCardCount <= 0))
+                    {
+                        if (playerDeckManager != null && cardFactory != null)
+                        {
+                            var deckEntries = playerDeckManager.GetCurrentDeck();
+                            var initialCards = new System.Collections.Generic.List<Game.SkillCardSystem.Interface.ISkillCard>();
+                            foreach (var entry in deckEntries)
+                            {
+                                if (entry.cardDefinition == null || entry.quantity <= 0) continue;
+                                for (int i = 0; i < entry.quantity; i++)
+                                {
+                                    var sc = cardFactory.CreatePlayerCard(entry.cardDefinition, player.GetCharacterName());
+                                    if (sc != null) initialCards.Add(sc);
+                                }
+                            }
+                            if (initialCards.Count > 0)
+                            {
+                                circulationSystem.Initialize(initialCards);
+                                GameLogger.LogInfo($"카드 순환 시스템 초기화: {initialCards.Count}장", GameLogger.LogCategory.SkillCard);
+                            }
+                            else
+                            {
+                                GameLogger.LogWarning("플레이어 덱이 비어 있어 순환 시스템을 초기화하지 못했습니다.", GameLogger.LogCategory.SkillCard);
+                            }
+                        }
+                        else
+                        {
+                            GameLogger.LogWarning("순환 시스템 초기화를 위한 의존성이 없습니다(ICardCirculationSystem/IPlayerDeckManager/ISkillCardFactory).", GameLogger.LogCategory.SkillCard);
+                        }
+                    }
 
                     // 초기 핸드 생성 (UI 포함)
                     GameLogger.LogInfo("플레이어 초기 핸드 생성 중...", GameLogger.LogCategory.Core);

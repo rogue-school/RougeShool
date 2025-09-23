@@ -8,6 +8,7 @@ using Game.CombatSystem.Slot;
 using Game.CombatSystem.Utility;
 using Game.CombatSystem.Manager;
 using Game.CombatSystem.DragDrop;
+using DG.Tweening;
 
 namespace Game.CombatSystem.Service
 {
@@ -73,14 +74,36 @@ namespace Game.CombatSystem.Service
                 return false;
             }
 
-            // 5. 슬롯에 카드 배치 (CombatSlotManager 제거로 인한 단순화)
-            // 실제 슬롯 배치는 다른 시스템에서 처리
+            // 5. 슬롯에 카드 배치 및 UI 스냅
             GameLogger.LogInfo($"[CardDropService] 카드 드롭 성공: {card.CardDefinition?.CardName ?? "Unknown"}", GameLogger.LogCategory.SkillCard);
 
-            // 6. 새로운 아키텍처에서는 별도의 레지스트리 등록 불필요
-            // CombatSlotManager가 슬롯 상태를 직접 관리
+            var combatSlot = slot as ICombatCardSlot;
+            if (combatSlot != null)
+            {
+                // 데이터 등록
+                combatSlot.SetCard(card);
+                combatSlot.SetCardUI(ui);
 
-            return true;
+                // UI 정중앙 스냅(부드럽게 이동 후 부모 설정)
+                var target = combatSlot.GetTransform() as RectTransform;
+                var uiRect = ui.transform as RectTransform;
+                if (target != null && uiRect != null)
+                {
+                    // 월드 위치로 부드럽게 이동
+                    uiRect.SetParent(target.root, true); // 우선 월드 이동을 위해 루트 유지
+                    var endWorld = target.position;
+                    uiRect.DOMove(endWorld, 0.15f).SetEase(Ease.OutQuad).OnComplete(() =>
+                    {
+                        uiRect.SetParent(target, false);
+                        uiRect.anchoredPosition = Vector2.zero;
+                        uiRect.localScale = Vector3.one;
+                    });
+                }
+                return true;
+            }
+
+            // 다른 슬롯 타입은 추후 확장
+            return false;
         }
 
         /// <summary>

@@ -131,6 +131,18 @@ namespace Game.SkillCardSystem.UI
                     Debug.LogWarning("[SkillCardUI] 카드 아트워크가 null입니다. 기본 이미지를 설정해주세요.");
                 }
             }
+
+            // 소유자에 따라 드래그/상호작용 제어 (플레이어만 드래그 가능)
+            bool isPlayerCard = card.IsFromPlayer();
+            if (canvasGroup != null)
+            {
+                canvasGroup.interactable = isPlayerCard;
+                canvasGroup.blocksRaycasts = isPlayerCard;
+            }
+            if (TryGetComponent(out Game.CombatSystem.DragDrop.CardDragHandler dragHandler))
+            {
+                dragHandler.enabled = isPlayerCard;
+            }
         }
 
 
