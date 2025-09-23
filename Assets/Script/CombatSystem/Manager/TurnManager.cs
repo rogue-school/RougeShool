@@ -935,6 +935,15 @@ namespace Game.CombatSystem.Manager
                 var uiRect = ui.transform as RectTransform;
                 if (uiRect != null && target != null)
                 {
+                    // 이동 중에는 최상위 캔버스 하위로 올려서 항상 슬롯 위에 보이도록 처리
+                    var originalParent = uiRect.parent as RectTransform;
+                    var root = target.root as RectTransform;
+                    if (root != null)
+                    {
+                        uiRect.SetParent(root, true);
+                        uiRect.SetAsLastSibling();
+                    }
+
                     // 목적지 월드 좌표 계산 후 월드 기준 이동 트윈 → 완료 시 부모 재설정
                     Vector3 endWorld = (target as RectTransform) != null
                         ? (target as RectTransform).TransformPoint(Vector3.zero)
