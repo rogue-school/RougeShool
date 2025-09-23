@@ -31,6 +31,8 @@ namespace Game.SkillCardSystem.Effect
             {
                 var guardBuff = new GuardBuff(1); // 1턴 지속
                 character.RegisterPerTurnEffect(guardBuff);
+                // 즉시 보호 활성화: 다음 자신의 턴 시작 시 카운트가 0이 되면 해제됨
+                character.SetGuarded(true);
                 
                 GameLogger.LogInfo($"[GuardEffectCommand] {character.GetCharacterName()}에게 가드 버프 적용 (1턴 지속)", GameLogger.LogCategory.Combat);
             }

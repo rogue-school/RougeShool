@@ -15,6 +15,16 @@ namespace Game.SkillCardSystem.Interface
         bool IsExpired { get; }
 
         /// <summary>
+        /// 남은 턴 수를 반환합니다.
+        /// </summary>
+        int RemainingTurns { get; }
+
+        /// <summary>
+        /// UI에 사용할 아이콘 스프라이트 (없으면 null)
+        /// </summary>
+        UnityEngine.Sprite Icon { get; }
+
+        /// <summary>
         /// 턴 시작 시 효과를 적용합니다.
         /// 예: 체력 감소, 버프 지속 시간 감소 등.
         /// </summary>

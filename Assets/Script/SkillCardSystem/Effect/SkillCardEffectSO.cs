@@ -19,6 +19,13 @@ namespace Game.SkillCardSystem.Effect
         [TextArea]
         [SerializeField] private string description;
 
+        [Header("아이콘 (버프/디버프 UI용)")]
+        [Tooltip("이 효과를 나타낼 기본 아이콘")]
+        [UnityEngine.Serialization.FormerlySerializedAs("icon")]
+        [SerializeField] protected Sprite effectIcon;
+
+        public Sprite GetIcon() => effectIcon;
+
         /// <summary>
         /// 이펙트의 이름을 반환합니다.
         /// </summary>

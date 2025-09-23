@@ -233,9 +233,10 @@ namespace Game.CharacterSystem.Core
                 if (effect.IsExpired)
                 {
                     perTurnEffects.Remove(effect);
-                    OnBuffsChanged?.Invoke(perTurnEffects.AsReadOnly());
                 }
             }
+            // 매 턴 UI가 남은 턴 수를 갱신할 수 있도록 전체 리스트를 통지
+            OnBuffsChanged?.Invoke(perTurnEffects.AsReadOnly());
         }
 
         #endregion

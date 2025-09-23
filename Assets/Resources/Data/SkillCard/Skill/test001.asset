@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: test001
   m_EditorClassIdentifier: 
   cardId: test001
-  displayName: test001
+  displayName: "\uCD9C\uD608(1\uB370\uBBF8\uC9C0,3\uD134)"
   displayNameKO: 
   description: 
   artwork: {fileID: -4334128287016464269, guid: 463e4b460b09de44091d4ab4f0de7d5c, type: 3}
@@ -40,4 +40,4 @@ MonoBehaviour:
         drawCount: 0
         resourceDelta: 0
       executionOrder: 0
-    ownerPolicy: 1
+    ownerPolicy: 0

@@ -14,16 +14,18 @@ namespace Game.SkillCardSystem.Effect
     {
         private readonly int amount;
         private readonly int duration;
+        private readonly Sprite icon;
 
         /// <summary>
         /// 출혈 커맨드를 초기화합니다.
         /// </summary>
         /// <param name="amount">매 턴 입힐 피해량</param>
         /// <param name="duration">지속 턴 수</param>
-        public BleedEffectCommand(int amount, int duration)
+        public BleedEffectCommand(int amount, int duration, Sprite icon = null)
         {
             this.amount = amount;
             this.duration = duration;
+            this.icon = icon;
         }
 
         /// <summary>
@@ -39,7 +41,12 @@ namespace Game.SkillCardSystem.Effect
                 return;
             }
 
-            var bleedEffect = new BleedEffect(amount, duration);
+            if (icon == null)
+            {
+                GameLogger.LogWarning("[BleedEffectCommand] 아이콘이 null입니다. BleedEffectSO의 Icon이 비어있지 않은지 확인하세요.", GameLogger.LogCategory.SkillCard);
+            }
+
+            var bleedEffect = new BleedEffect(amount, duration, icon);
             
             // 가드 상태 확인하여 상태이상 효과 등록
             if (context.Target.RegisterStatusEffect(bleedEffect))

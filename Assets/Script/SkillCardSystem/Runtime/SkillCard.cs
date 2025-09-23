@@ -108,7 +108,8 @@ namespace Game.SkillCardSystem.Runtime
                                 // 커스텀 출혈 수치/지속 사용
                                 var bleedCommand = new BleedEffectCommand(
                                     customSettings.bleedAmount,
-                                    customSettings.bleedDuration
+                                    customSettings.bleedDuration,
+                                    effectConfig.effectSO.GetIcon()
                                 );
                                 effectCommands.Add(bleedCommand);
                                 continue;

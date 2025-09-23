@@ -9,6 +9,7 @@ using Game.CharacterSystem.Data;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Manager;
 using Game.CoreSystem.Utility;
+using UnityEngine.Serialization;
 
 namespace Game.CharacterSystem.UI
 {
@@ -36,20 +37,17 @@ namespace Game.CharacterSystem.UI
         
         [Tooltip("HP 바 채움 부분")]
         [SerializeField] private Image hpBarFill;
-        
-        [Tooltip("Resource 바 배경")]
-        [SerializeField] private Image resourceBarBackground;
-        
-        [Tooltip("Resource 바 채움 부분")]
-        [SerializeField] private Image resourceBarFill;
-        
+		
+		[Header("리소스 핍(Pip)")]
+		[Tooltip("리소스 핍들을 담는 부모 오브젝트 (활/지팡이 등)")]
+		[SerializeField] private Transform resourcePipParent;
+		
+		[Tooltip("리소스 핍 프리팹(단일 사각/아이콘)")]
+		[SerializeField] private GameObject resourcePipPrefab;
 
         [Header("HP/Resource 텍스트")]
         [Tooltip("HP 텍스트 (현재/최대)")]
         [SerializeField] private TextMeshProUGUI hpText;
-        
-        [Tooltip("Resource 텍스트 (현재/최대)")]
-        [SerializeField] private TextMeshProUGUI resourceText;
 
         [Header("버프/디버프 아이콘")]
         [Tooltip("버프/디버프 아이콘들을 담을 부모 오브젝트")]
@@ -67,9 +65,17 @@ namespace Game.CharacterSystem.UI
         
         [Tooltip("중간 체력일 때 HP 바 색상")]
         [SerializeField] private Color midHPColor = Color.yellow;
-        
-        [Tooltip("MP 바 색상")]
-        [SerializeField] private Color mpColor = Color.blue;
+        [Tooltip("Resource Active Color (켜진 핍 색상)")]
+        [FormerlySerializedAs("mpColor")]
+        [SerializeField] private Color resourceActiveColor = Color.blue;
+		
+		[Tooltip("리소스 핍 비활성 색상(자원 없음: 하늘색 계열)")]
+		[SerializeField] private Color pipInactiveColor = new Color(0.6f, 1f, 1f, 0.9f);
+		
+		[Tooltip("리소스 핍 사용 불가 색상(검 캐릭터 전용 회색)")]
+		[SerializeField] private Color pipUnavailableColor = new Color(0.7f, 0.7f, 0.7f, 0.9f);
+
+        // 핍 개수는 데이터의 MaxResource에서 가져옵니다(0이면 1개 회색으로 표시)
 
         [Header("애니메이션 설정")]
         [Tooltip("HP/MP 바 애니메이션 속도")]
@@ -91,8 +97,15 @@ namespace Game.CharacterSystem.UI
         private Tween resourceBarTween;
         private Tween colorTween;
         
-        // 버프/디버프 아이콘 관리
-        private System.Collections.Generic.Dictionary<string, GameObject> activeBuffDebuffIcons = new();
+		// 버프/디버프 아이콘 관리
+		private System.Collections.Generic.Dictionary<string, GameObject> activeBuffDebuffIcons = new();
+		
+		// 리소스 핍 관리
+		private readonly System.Collections.Generic.List<Image> resourcePips = new();
+		private bool usePipResource = false;
+
+        // 이벤트 구독 상태
+        private bool isSubscribed = false;
 
         #endregion
 
@@ -114,6 +127,8 @@ namespace Game.CharacterSystem.UI
             hpBarTween?.Kill();
             resourceBarTween?.Kill();
             colorTween?.Kill();
+
+            UnsubscribeCharacterEvents();
         }
 
         #endregion
@@ -123,15 +138,57 @@ namespace Game.CharacterSystem.UI
         /// <summary>
         /// UI 초기화
         /// </summary>
-        private void InitializeUI()
+		private void InitializeUI()
         {
             // 초기 상태 설정
             if (hpBarFill != null)
+            {
+                EnsureHpImageConfigured(hpBarFill);
                 hpBarFill.fillAmount = 1f;
+            }
+            if (hpBarBackground != null)
+            {
+                EnsureSpriteIfMissing(hpBarBackground);
+            }
             
-            if (resourceBarFill != null)
-                resourceBarFill.fillAmount = 1f;
-            
+            // 리소스 바는 사용하지 않음(핍 방식)
+			
+			// 핍 컨테이너는 기본 비활성(캐릭터 타입 결정 후 On)
+			if (resourcePipParent != null)
+				resourcePipParent.gameObject.SetActive(false);
+        }
+
+        /// <summary>
+        /// HP Fill 이미지가 스프라이트 없이도 동작하도록 기본 스프라이트/타입을 설정합니다.
+        /// </summary>
+        /// <param name="img">대상 이미지</param>
+        private void EnsureHpImageConfigured(Image img)
+        {
+            if (img == null) return;
+            EnsureSpriteIfMissing(img);
+            if (img.type != Image.Type.Filled)
+            {
+                img.type = Image.Type.Filled;
+                img.fillMethod = Image.FillMethod.Horizontal;
+                img.fillOrigin = (int)Image.OriginHorizontal.Left;
+            }
+        }
+
+        /// <summary>
+        /// 스프라이트가 없으면 Unity 기본 UISprite로 대체합니다.
+        /// </summary>
+        private void EnsureSpriteIfMissing(Image img)
+        {
+            if (img == null) return;
+            if (img.sprite == null)
+            {
+                // Unity 기본 리소스 경로가 환경마다 다를 수 있어, 1x1 단색 스프라이트를 동적으로 생성
+                var tex = Texture2D.whiteTexture;
+                var rect = new Rect(0, 0, 1, 1);
+                var pivot = new Vector2(0.5f, 0.5f);
+                var generated = Sprite.Create(tex, rect, pivot, 1f);
+                img.sprite = generated;
+            }
         }
 
         /// <summary>
@@ -165,6 +222,13 @@ namespace Game.CharacterSystem.UI
 
             // 캐릭터 정보 설정
             SetCharacterInfo();
+
+            // 리소스/HP UI 즉시 설정 (CharacterData가 이미 준비된 경우를 대비)
+            SetupResourceSystem();
+            UpdateHPBar();
+            UpdateMPBar();
+
+            SubscribeCharacterEvents();
         }
         
         /// <summary>
@@ -217,6 +281,63 @@ namespace Game.CharacterSystem.UI
             else
             {
                 GameLogger.LogWarning("[PlayerCharacterUIController] SetTarget: PlayerCharacter가 아닙니다. 호출을 무시합니다.", GameLogger.LogCategory.Character);
+            }
+        }
+
+        /// <summary>
+        /// 캐릭터 HP 변경 이벤트 구독
+        /// </summary>
+        private void SubscribeCharacterEvents()
+        {
+            if (isSubscribed || playerCharacter == null) return;
+            playerCharacter.OnHPChanged += OnHpChangedHandler;
+            playerCharacter.OnBuffsChanged += OnBuffsChangedHandler;
+            isSubscribed = true;
+        }
+
+        /// <summary>
+        /// 캐릭터 HP 변경 이벤트 구독 해제
+        /// </summary>
+        private void UnsubscribeCharacterEvents()
+        {
+            if (!isSubscribed || playerCharacter == null) return;
+            playerCharacter.OnHPChanged -= OnHpChangedHandler;
+            playerCharacter.OnBuffsChanged -= OnBuffsChangedHandler;
+            isSubscribed = false;
+        }
+
+        private void OnHpChangedHandler(int current, int max)
+        {
+            UpdateHPBar();
+        }
+
+        private void OnBuffsChangedHandler(System.Collections.Generic.IReadOnlyList<Game.SkillCardSystem.Interface.IPerTurnEffect> effects)
+        {
+            if (buffDebuffParent == null) return;
+            // 모두 제거 후 다시 구성(간단/안전)
+            foreach (Transform child in buffDebuffParent)
+            {
+                if (Application.isPlaying) Destroy(child.gameObject); else DestroyImmediate(child.gameObject);
+            }
+
+            foreach (var e in effects)
+            {
+                if (e.Icon == null)
+                {
+                    Game.CoreSystem.Utility.GameLogger.LogWarning("[PlayerCharacterUI] 효과 아이콘이 비어 있습니다. SO에 Sprite가 지정되었는지 확인하세요.", Game.CoreSystem.Utility.GameLogger.LogCategory.UI);
+                }
+                var slotObj = Instantiate(buffDebuffIconPrefab, buffDebuffParent);
+                var view = slotObj.GetComponent<BuffDebuffSlotView>();
+                if (view != null)
+                {
+                    view.SetData(e.Icon, e.RemainingTurns);
+                }
+                else
+                {
+                    // 최소 폴백: Image에 직접 아이콘만 지정
+                    var img = slotObj.GetComponent<UnityEngine.UI.Image>();
+                    if (img != null) img.sprite = e.Icon;
+                }
             }
         }
 
@@ -288,21 +409,30 @@ namespace Game.CharacterSystem.UI
         /// </summary>
         private void SetupResourceSystem()
         {
-            if (resourceBarBackground == null || resourceBarFill == null) return;
-
             switch (characterType)
             {
                 case PlayerCharacterType.Sword:
-                    // 검 캐릭터는 리소스 없음 - 리소스 바 숨김
-                    resourceBarBackground.gameObject.SetActive(false);
-                    resourceBarFill.gameObject.SetActive(false);
+                    // 검 캐릭터는 리소스 없음 - 핍은 1개 회색으로 표시
+					usePipResource = false;
+					if (resourcePipParent != null)
+					{
+						resourcePipParent.gameObject.SetActive(true);
+						int count = Mathf.Max(1, GetMaxResourceFromData());
+						RebuildPips(count);
+						UpdateUnavailablePips();
+					}
                     break;
                     
                 case PlayerCharacterType.Bow:
                 case PlayerCharacterType.Staff:
-                    // 활/지팡이 캐릭터는 리소스 있음 - 리소스 바 표시
-                    resourceBarBackground.gameObject.SetActive(true);
-                    resourceBarFill.gameObject.SetActive(true);
+                    // 활/지팡이 캐릭터는 리소스 있음 - 핍 방식 사용
+					usePipResource = true;
+					if (resourcePipParent != null)
+					{
+						resourcePipParent.gameObject.SetActive(true);
+						int count = Mathf.Max(1, GetMaxResourceFromData());
+						RebuildPips(count);
+					}
                     break;
             }
         }
@@ -384,68 +514,106 @@ namespace Game.CharacterSystem.UI
         /// <summary>
         /// MP/리소스 바를 업데이트합니다.
         /// </summary>
-        public void UpdateMPBar()
+		public void UpdateMPBar()
         {
             if (playerCharacter == null || playerManager == null) return;
             
             // 검 캐릭터는 리소스가 없음
             if (characterType == PlayerCharacterType.Sword)
+            {
+                UpdateUnavailablePips();
                 return;
+            }
 
             int currentResource = playerManager.CurrentResource;
             int maxResource = playerManager.MaxResource;
             
             if (maxResource <= 0) return;
-
-            float mpRatio = (float)currentResource / maxResource;
-            
-            // Resource 바 애니메이션
-            AnimateResourceBar(mpRatio);
-            
-            // Resource 텍스트 업데이트
-            UpdateResourceText(currentResource, maxResource);
+			
+			if (usePipResource)
+			{
+				// 데이터의 MaxResource 기반으로 갱신
+				if (resourcePipParent != null && resourcePipPrefab != null)
+				{
+					int desired = Mathf.Max(1, maxResource);
+					if (resourcePips.Count != desired)
+						RebuildPips(desired);
+					UpdateResourcePips(currentResource, desired);
+				}
+			}
+			else
+			{
+				// 검 캐릭터: 회색 1칸 유지
+				UpdateUnavailablePips();
+			}
         }
+		
+		/// <summary>
+		/// 지정 개수로 리소스 핍을 다시 생성합니다.
+		/// </summary>
+		private void RebuildPips(int count)
+		{
+			if (resourcePipParent == null || resourcePipPrefab == null) return;
+			// 모두 제거
+			for (int i = resourcePipParent.childCount - 1; i >= 0; i--)
+			{
+				var child = resourcePipParent.GetChild(i);
+				if (Application.isPlaying) Destroy(child.gameObject); else DestroyImmediate(child.gameObject);
+			}
+			resourcePips.Clear();
+			// 지정 개수 생성(최소 1)
+			int create = Mathf.Max(1, count);
+			for (int i = 0; i < create; i++)
+			{
+				var obj = Instantiate(resourcePipPrefab, resourcePipParent);
+				var img = obj.GetComponent<Image>();
+				if (img != null) resourcePips.Add(img);
+			}
+		}
 
-        /// <summary>
-        /// Resource 바 애니메이션을 실행합니다.
-        /// </summary>
-        /// <param name="targetRatio">목표 비율</param>
-        private void AnimateResourceBar(float targetRatio)
-        {
-            if (resourceBarFill == null) return;
-            
-            resourceBarTween?.Kill();
-            resourceBarTween = DOTween.To(() => resourceBarFill.fillAmount, x => resourceBarFill.fillAmount = x, 
-                targetRatio, 1f / barAnimationSpeed);
-        }
+		/// <summary>
+		/// 리소스 핍의 on/off를 갱신합니다.
+		/// </summary>
+		private void UpdateResourcePips(int current, int max)
+		{
+			if (resourcePips.Count == 0) return;
+            var activeColor = resourceActiveColor;
+			var inactiveColor = pipInactiveColor;
+			for (int i = 0; i < resourcePips.Count; i++)
+			{
+				var img = resourcePips[i];
+				if (img == null) continue;
+				img.color = i < current ? activeColor : inactiveColor;
+			}
+		}
 
-        /// <summary>
-        /// Resource 텍스트를 업데이트합니다.
-        /// </summary>
-        /// <param name="current">현재 리소스</param>
-        /// <param name="max">최대 리소스</param>
-        private void UpdateResourceText(int current, int max)
-        {
-            if (resourceText != null)
-            {
-                string resourceName = GetResourceName();
-                resourceText.text = $"{current}/{max}";
-            }
-        }
+		/// <summary>
+		/// 검 캐릭터: 모든 핍을 회색으로 설정해 비활성 상태 표현.
+		/// </summary>
+		private void UpdateUnavailablePips()
+		{
+			if (resourcePips.Count == 0)
+			{
+				RebuildPips(1);
+			}
+			for (int i = 0; i < resourcePips.Count; i++)
+			{
+				var img = resourcePips[i];
+				if (img == null) continue;
+				img.color = pipUnavailableColor;
+			}
+		}
 
-        /// <summary>
-        /// 캐릭터 타입에 따른 리소스 이름을 반환합니다.
-        /// </summary>
-        /// <returns>리소스 이름</returns>
-        private string GetResourceName()
-        {
-            return characterType switch
-            {
-                PlayerCharacterType.Bow => "화살",
-                PlayerCharacterType.Staff => "마나",
-                _ => "리소스"
-            };
-        }
+		/// <summary>
+		/// 데이터/매니저에서 최대 리소스를 가져옵니다.
+		/// </summary>
+		private int GetMaxResourceFromData()
+		{
+			if (playerManager != null && playerManager.MaxResource > 0)
+				return playerManager.MaxResource;
+			var data = playerCharacter?.CharacterData as PlayerCharacterData;
+			return data != null ? Mathf.Max(0, data.MaxResource) : 0;
+		}
 
         #endregion
 
@@ -567,8 +735,7 @@ namespace Game.CharacterSystem.UI
             if (hpText != null)
                 hpText.text = "";
             
-            if (resourceText != null)
-                resourceText.text = "";
+            // 리소스 텍스트는 사용하지 않음
             
             // 이미지 초기화
             if (characterPortrait != null)
@@ -581,8 +748,7 @@ namespace Game.CharacterSystem.UI
             if (hpBarFill != null)
                 hpBarFill.fillAmount = 1f;
             
-            if (resourceBarFill != null)
-                resourceBarFill.fillAmount = 1f;
+            // 리소스 바는 사용하지 않음
             
             // 버프/디버프 아이콘 초기화
             ClearAllBuffDebuffIcons();

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 861458062e34fcd4685dff11b945e1b9, type: 3}
   m_Name: ENEMY_001_Goblin
   m_EditorClassIdentifier: 
-  <DisplayName>k__BackingField: "\uC801(\uACE0\uBE14\uB9B0)\uD14C\uC2A4\uD2B8"
+  <DisplayName>k__BackingField: "\uBE44\uC694\uB124"
   <MaxHP>k__BackingField: 23
   <Portrait>k__BackingField: {fileID: -4517942587009331976, guid: 957e9665db98a04478febf3e79f89ac8, type: 3}
   <Prefab>k__BackingField: {fileID: 7769799778275336730, guid: 2c6e844c91775424681f573a6951211e, type: 3}

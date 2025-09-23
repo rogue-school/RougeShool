@@ -1,5 +1,6 @@
 using UnityEngine;
 using Game.SkillCardSystem.Interface;
+using UnityEngine.Serialization;
 using Game.SkillCardSystem.Effect;
 using Game.CombatSystem.Interface;
 using Game.CoreSystem.Utility;
@@ -20,6 +21,12 @@ namespace Game.SkillCardSystem.Effect
         [Tooltip("출혈 지속 턴 수")]
         [SerializeField] private int duration;
 
+        // 레거시 마이그레이션: 과거 자식 필드명(icon)에서 부모(effectIcon)로 이전
+        [FormerlySerializedAs("icon")]
+        [SerializeField, HideInInspector] private Sprite legacyIcon;
+
+        // 아이콘은 상위 SkillCardEffectSO.icon을 사용
+
         /// <summary>
         /// 출혈 이펙트 커맨드를 생성합니다. 파워 수치를 기반으로 피해량이 증가합니다.
         /// </summary>
@@ -27,7 +34,12 @@ namespace Game.SkillCardSystem.Effect
         /// <returns>출혈 커맨드 객체</returns>
         public override ICardEffectCommand CreateEffectCommand(int power)
         {
-            return new BleedEffectCommand(bleedAmount + power, duration);
+            var soIcon = GetIcon();
+            if (soIcon == null)
+            {
+                Game.CoreSystem.Utility.GameLogger.LogWarning($"[BleedEffectSO] Icon이 비어 있습니다. SO 이름='{name}'", Game.CoreSystem.Utility.GameLogger.LogCategory.SkillCard);
+            }
+            return new BleedEffectCommand(bleedAmount + power, duration, soIcon);
         }
 
         /// <summary>
@@ -44,7 +56,7 @@ namespace Game.SkillCardSystem.Effect
                 return;
             }
 
-            var bleed = new BleedEffect(value, duration);
+            var bleed = new BleedEffect(value, duration, GetIcon());
             
             // 가드 상태 확인하여 상태이상 효과 등록
             if (context.Target.RegisterStatusEffect(bleed))
@@ -54,6 +66,19 @@ namespace Game.SkillCardSystem.Effect
             else
             {
                 GameLogger.LogInfo($"[BleedEffectSO] {context.Target.GetCharacterName()}의 가드로 출혈 효과 차단됨", GameLogger.LogCategory.SkillCard);
+            }
+        }
+
+        private void OnValidate()
+        {
+            // 에셋을 열었을 때 레거시 아이콘이 남아 있으면 부모 필드로 이관
+            if (effectIcon == null && legacyIcon != null)
+            {
+                effectIcon = legacyIcon;
+                legacyIcon = null;
+                #if UNITY_EDITOR
+                UnityEditor.EditorUtility.SetDirty(this);
+                #endif
             }
         }
     }

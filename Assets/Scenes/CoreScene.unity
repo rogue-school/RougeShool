@@ -1299,12 +1299,7 @@ MonoBehaviour:
   enableDebugLogging: 1
   autoInitialize: 1
   persistAcrossScenes: 1
-  managerConfig: {fileID: 0}
-  relatedPrefab: {fileID: 0}
-  uiController: {fileID: 0}
-  uiContainer: {fileID: 0}
-  dependencyManager: {fileID: 0}
-  serviceContainer: {fileID: 0}
+  initializeWithoutRequiredReferences: 1
   coreSceneName: CoreScene
   mainSceneName: MainScene
   battleSceneName: BattleScene
@@ -1543,12 +1538,7 @@ MonoBehaviour:
   enableDebugLogging: 1
   autoInitialize: 1
   persistAcrossScenes: 1
-  managerConfig: {fileID: 0}
-  relatedPrefab: {fileID: 0}
-  uiController: {fileID: 0}
-  uiContainer: {fileID: 0}
-  dependencyManager: {fileID: 0}
-  serviceContainer: {fileID: 0}
+  initializeWithoutRequiredReferences: 1
   currentGameState: 0
   selectedCharacter: {fileID: 0}
 --- !u!1 &1343503450
@@ -1662,6 +1652,9 @@ MonoBehaviour:
   saveManager: {fileID: 1124059154}
   coroutineRunner: {fileID: 789670093}
   playerCharacterSelectionManager: {fileID: 80656796}
+  enableLazyInitialization: 1
+  enableCircularDependencyCheck: 1
+  enablePerformanceLogging: 0
 --- !u!4 &1396837154
 Transform:
   m_ObjectHideFlags: 0
@@ -2084,14 +2077,10 @@ MonoBehaviour:
   enableDebugLogging: 1
   autoInitialize: 1
   persistAcrossScenes: 1
-  managerConfig: {fileID: 0}
-  relatedPrefab: {fileID: 0}
-  uiController: {fileID: 0}
-  uiContainer: {fileID: 0}
-  dependencyManager: {fileID: 0}
-  serviceContainer: {fileID: 0}
+  initializeWithoutRequiredReferences: 1
   logPerSystemDetails: 0
   autoGoToMainAfterInit: 1
+  initializeEssentialSystemsOnly: 1
   isInitializationComplete: 0
 --- !u!1 &1735536412
 GameObject:

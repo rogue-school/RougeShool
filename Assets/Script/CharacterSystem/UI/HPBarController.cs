@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Game.CharacterSystem.Core;
+using Game.CharacterSystem.Interface;
 
 namespace Game.CharacterSystem.UI
 {
@@ -41,6 +42,13 @@ namespace Game.CharacterSystem.UI
         
         [Tooltip("HP 바 변화 애니메이션 속도")]
         [SerializeField] private float animationSpeed = 2f;
+
+        [Header("표시 모드")]
+        [Tooltip("플레이어/적 표시 모드")]
+        [SerializeField] private DisplayMode displayMode = DisplayMode.Player;
+        
+        [Tooltip("숫자 표기 사용(적 일반은 비권장)")]
+        [SerializeField] private bool showNumbers = true;
         
         [Header("Visual Effects")]
         [Tooltip("글로우 효과 활성화")]
@@ -59,11 +67,14 @@ namespace Game.CharacterSystem.UI
 
         #region Private Fields
 
-        private PlayerCharacter playerCharacter;
+        private ICharacter targetCharacter;
         private float targetFillAmount;
         private bool isAnimating = false;
         private Color originalGlowColor;
         private Color originalBorderColor;
+
+        // 이벤트 구독 여부
+        private bool isSubscribed = false;
 
         #endregion
 
@@ -76,6 +87,14 @@ namespace Game.CharacterSystem.UI
                 originalGlowColor = hpBarGlow.color;
             if (hpBarBorder != null)
                 originalBorderColor = hpBarBorder.color;
+
+            // 이미지가 없거나 타입이 잘못된 경우 자동 구성(스프라이트 없이도 색상만으로 동작)
+            ConfigureHpImagesForFallback();
+        }
+
+        private void OnDisable()
+        {
+            Unsubscribe();
         }
 
         private void Update()
@@ -106,20 +125,30 @@ namespace Game.CharacterSystem.UI
         #region 초기화
 
         /// <summary>
-        /// 플레이어 캐릭터와 연결하여 HP 바를 초기화합니다.
+        /// 어떤 캐릭터(ICharacter)와도 연결하여 HP 바를 초기화합니다.
         /// </summary>
-        /// <param name="character">연결할 플레이어 캐릭터</param>
-        public void Initialize(PlayerCharacter character)
+        /// <param name="character">연결할 캐릭터</param>
+        public void Initialize(ICharacter character)
         {
-            playerCharacter = character;
-            
-            if (playerCharacter == null)
+            Unsubscribe();
+            targetCharacter = character;
+
+            if (targetCharacter == null)
             {
-                Debug.LogWarning("[HPBarController] Initialize() - playerCharacter가 null입니다.");
+                Debug.LogWarning("[HPBarController] Initialize(ICharacter) - character가 null입니다.");
                 return;
             }
 
+            Subscribe();
             UpdateHPBar();
+        }
+
+        /// <summary>
+        /// 기존 호환: PlayerCharacter 전용 초기화.
+        /// </summary>
+        public void Initialize(PlayerCharacter character)
+        {
+            Initialize((ICharacter)character);
         }
 
         #endregion
@@ -131,10 +160,10 @@ namespace Game.CharacterSystem.UI
         /// </summary>
         public void UpdateHPBar()
         {
-            if (playerCharacter == null || hpBarFill == null) return;
+            if (targetCharacter == null || hpBarFill == null) return;
 
-            int currentHP = playerCharacter.GetCurrentHP();
-            int maxHP = playerCharacter.GetMaxHP();
+            int currentHP = targetCharacter.GetCurrentHP();
+            int maxHP = targetCharacter.GetMaxHP();
             
             if (maxHP <= 0) return;
 
@@ -153,6 +182,41 @@ namespace Game.CharacterSystem.UI
 
             // HP 텍스트 업데이트 (선택사항)
             UpdateHPText(currentHP, maxHP);
+        }
+
+        /// <summary>
+        /// 스프라이트가 없어도 동작하도록 기본 스프라이트/타입을 설정합니다.
+        /// </summary>
+        private void ConfigureHpImagesForFallback()
+        {
+            EnsureSpriteIfMissing(hpBarBackground);
+            if (hpBarFill != null)
+            {
+                EnsureSpriteIfMissing(hpBarFill);
+                if (hpBarFill.type != Image.Type.Filled)
+                {
+                    hpBarFill.type = Image.Type.Filled;
+                    hpBarFill.fillMethod = Image.FillMethod.Horizontal;
+                    hpBarFill.fillOrigin = (int)Image.OriginHorizontal.Left;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 이미지에 스프라이트가 없으면 Unity 기본 UISprite로 채웁니다.
+        /// </summary>
+        private void EnsureSpriteIfMissing(Image img)
+        {
+            if (img == null) return;
+            if (img.sprite == null)
+            {
+                // 환경 의존성 제거: 1x1 단색 스프라이트를 즉석 생성
+                var tex = Texture2D.whiteTexture;
+                var rect = new Rect(0, 0, 1, 1);
+                var pivot = new Vector2(0.5f, 0.5f);
+                var generated = Sprite.Create(tex, rect, pivot, 1f);
+                img.sprite = generated;
+            }
         }
 
         /// <summary>
@@ -186,13 +250,15 @@ namespace Game.CharacterSystem.UI
         /// <param name="maxHP">최대 체력</param>
         private void UpdateHPText(int currentHP, int maxHP)
         {
-            if (hpText != null)
+            if (hpText == null) return;
+            if (!showNumbers && displayMode != DisplayMode.Player)
             {
-                hpText.text = $"{currentHP}/{maxHP}";
-                
-                // 텍스트 색상도 HP 상태에 따라 변경
-                hpText.color = GetHealthColor((float)currentHP / maxHP);
+                hpText.text = string.Empty;
+                return;
             }
+            hpText.text = $"{currentHP}/{maxHP}";
+            // 텍스트 색상도 HP 상태에 따라 변경
+            hpText.color = GetHealthColor((float)currentHP / maxHP);
         }
 
         /// <summary>
@@ -253,10 +319,10 @@ namespace Game.CharacterSystem.UI
         /// </summary>
         public void UpdateHPBarImmediate()
         {
-            if (playerCharacter == null || hpBarFill == null) return;
+            if (targetCharacter == null || hpBarFill == null) return;
 
-            int currentHP = playerCharacter.GetCurrentHP();
-            int maxHP = playerCharacter.GetMaxHP();
+            int currentHP = targetCharacter.GetCurrentHP();
+            int maxHP = targetCharacter.GetMaxHP();
             
             if (maxHP <= 0) return;
 
@@ -307,5 +373,38 @@ namespace Game.CharacterSystem.UI
         }
 
         #endregion
+
+        #region 이벤트 구독/해제
+
+        private void Subscribe()
+        {
+            if (targetCharacter == null || isSubscribed) return;
+            targetCharacter.OnHPChanged += OnTargetHpChanged;
+            isSubscribed = true;
+        }
+
+        private void Unsubscribe()
+        {
+            if (targetCharacter == null || !isSubscribed) return;
+            targetCharacter.OnHPChanged -= OnTargetHpChanged;
+            isSubscribed = false;
+        }
+
+        private void OnTargetHpChanged(int current, int max)
+        {
+            UpdateHPBar();
+        }
+
+        #endregion
+    }
+
+    /// <summary>
+    /// HP 바 표시 모드
+    /// </summary>
+    public enum DisplayMode
+    {
+        Player,
+        EnemyNormal,
+        EnemyBoss
     }
 }

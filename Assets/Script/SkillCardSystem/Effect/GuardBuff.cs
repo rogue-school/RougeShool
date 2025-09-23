@@ -12,6 +12,9 @@ namespace Game.SkillCardSystem.Effect
         /// <summary>남은 턴 수</summary>
         public int RemainingTurns { get; private set; }
 
+        /// <summary>UI 아이콘(없으면 null)</summary>
+        public UnityEngine.Sprite Icon { get; private set; }
+
         /// <summary>가드 버프가 만료되었는지 여부</summary>
         public bool IsExpired => RemainingTurns <= 0;
 
@@ -19,9 +22,10 @@ namespace Game.SkillCardSystem.Effect
         /// 가드 버프를 생성합니다.
         /// </summary>
         /// <param name="duration">지속 턴 수 (기본값: 1)</param>
-        public GuardBuff(int duration = 1)
+        public GuardBuff(int duration = 1, UnityEngine.Sprite icon = null)
         {
             RemainingTurns = duration;
+            Icon = icon;
         }
 
         /// <summary>
@@ -31,21 +35,13 @@ namespace Game.SkillCardSystem.Effect
         public void OnTurnStart(ICharacter target)
         {
             if (target == null) return;
-
-            // 가드 버프가 활성화되어 있으면 가드 상태 설정
-            if (RemainingTurns > 0)
-            {
-                target.SetGuarded(true);
-            }
-
-            // 턴 수 감소
+            // 모든 효과 규칙: 적용된 턴에는 대기 → 다음 '자신의' 턴 시작 시 1틱 처리
+            // 가드의 1틱 처리 = 해당 턴 전체를 보호하고, 턴 시작 시점에서 카운트만 감소
+            // (보호는 외부 로직: IsGuarded 상태를 전투 시스템이 조회하여 처리)
             RemainingTurns--;
-
-            // 만료된 경우 가드 상태 해제
-            if (IsExpired)
-            {
-                target.SetGuarded(false);
-            }
+            // 남은 턴이 여전히 존재하면 그 턴 동안 보호 상태 유지
+            // 0이 되면 이번 턴 시작 직후 만료 → 외부 시스템에서 더 이상 가드 판정 없음
+            target.SetGuarded(!IsExpired);
         }
 
         /// <summary>

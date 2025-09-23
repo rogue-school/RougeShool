@@ -12,22 +12,27 @@ namespace Game.SkillCardSystem.Effect
     {
         private readonly int amount;
         private int remainingTurns;
+        private readonly Sprite icon;
+        private bool pendingStart = true; // 적용된 직후 턴은 대기 → 다음 턴부터 발동
 
         /// <summary>
         /// 출혈 효과 생성자
         /// </summary>
         /// <param name="amount">매 턴 입힐 피해량</param>
         /// <param name="duration">지속 턴 수</param>
-        public BleedEffect(int amount, int duration)
+        public BleedEffect(int amount, int duration, Sprite icon = null)
         {
             this.amount = amount;
             this.remainingTurns = duration;
+            this.icon = icon;
         }
 
         /// <summary>
         /// 출혈 효과가 만료되었는지 여부를 반환합니다.
         /// </summary>
         public bool IsExpired => remainingTurns <= 0;
+        public int RemainingTurns => remainingTurns;
+        public Sprite Icon => icon;
 
         /// <summary>
         /// 턴 시작 시 대상에게 피해를 입히고 남은 턴을 감소시킵니다.
@@ -40,7 +45,12 @@ namespace Game.SkillCardSystem.Effect
                 Debug.LogWarning("[BleedEffect] 대상이 null입니다. 출혈 효과 무시됨.");
                 return;
             }
-
+            // 적용된 턴은 건너뛰고, 다음 턴부터 작동
+            if (pendingStart)
+            {
+                pendingStart = false;
+                return;
+            }
             target.TakeDamage(amount);
             remainingTurns--;
 

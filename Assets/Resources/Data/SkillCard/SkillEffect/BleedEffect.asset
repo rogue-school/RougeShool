@@ -12,7 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71c2981000762b44782f8774c28b8d06, type: 3}
   m_Name: BleedEffect
   m_EditorClassIdentifier: 
-  effectName: 
+  effectName: "\uCD9C\uD608"
   description: 
+  effectIcon: {fileID: -4210270633776242855, guid: 85a3280756aa76e46bda6c66d1a7554c, type: 3}
   bleedAmount: 0
   duration: 0
+  legacyIcon: {fileID: 0}
