@@ -7,8 +7,8 @@ StageSystem은 게임의 스테이지 진행을 관리하는 시스템입니다.
 - **로깅 시스템 표준화**: Debug.Log를 GameLogger로 전환 완료
 - **AnimationSystem 참조 정리**: 남은 AnimationSystem 참조 완전 제거 완료
 - **불필요한 난이도 배율 제거**: StageManager에서 difficultyMultiplier 필드 제거 완료
-- **적 카드 직접 생성 시스템**: `StageManager`에서 적 카드를 `WAIT_SLOT_4`에 직접 생성
-- **적 핸드 시스템 제거**: 적 핸드 매니저 없이 대기 슬롯에서 직접 관리
+\- **전투 연계 갱신**: 적 카드 직접 생성은 TurnManager의 동적 큐/보충 로직으로 대체(필요 시 캐시된 덱 사용)
+\- **스테이지 전환 API 추가**: `IStageManager.HasNextStage()`, `ProgressToNextStage()` 사용, 다음 스테이지 시작은 `StartStage()`
 - **타입 안전성 강화**: `ICharacterData`를 `EnemyCharacterData`로 캐스팅하여 안전한 프로퍼티 접근
 - **의존성 주입 확장**: `ITurnCardRegistry`, `ISkillCardFactory` 의존성 추가
 
@@ -80,7 +80,7 @@ StageSystem/
 ### 4. 진행 관리
 - **적 처치 추적**: 적 처치 시 진행 상황 업데이트
 - **스테이지 완료 조건**: 스테이지 완료 조건 확인
-- **다음 스테이지**: 다음 스테이지로 자동 진행
+ - **다음 스테이지**: `ProgressToNextStage()` 성공 시 `StartStage()`로 전환 (CombatFlowManager StageTransition와 연계)
 
 ## 🔧 사용 방법
 
@@ -110,58 +110,24 @@ stageManager.GiveBossRewards();
 stageManager.GiveStageCompletionRewards();
 ```
 
-### 적 카드 직접 생성 시스템 사용법 (신규)
-```csharp
-// StageManager에서 적 스폰과 함께 카드 생성
-public IEnumerator SpawnNextEnemyCoroutine()
-{
-    // 적 캐릭터 스폰
-    var result = spawnerManager.SpawnEnemy(enemyData);
-    if (result.IsSuccess)
-    {
-        // 적 캐릭터 등록
-        RegisterEnemy(result.Enemy);
-        
-        // 적 카드를 WAIT_SLOT_4에 직접 생성
-        SpawnEnemyCardToWaitSlot4(result.Enemy);
-    }
-}
-
-// 적 카드 직접 생성 메서드
-private void SpawnEnemyCardToWaitSlot4(IEnemyCharacter enemy)
-{
-    // EnemyCharacterData로 캐스팅하여 EnemyDeck에 접근
-    if (!(enemy?.CharacterData is EnemyCharacterData enemyData) || enemyData.EnemyDeck == null)
-    {
-        Debug.LogWarning("[StageManager] 적 스킬 덱이 없습니다.");
-        return;
-    }
-
-    // 적 덱에서 랜덤 카드 선택
-    var enemyDeck = enemyData.EnemyDeck;
-    var randomEntry = enemyDeck.GetRandomEntry();
+### 전투 플로우 연계
+```mermaid
+sequenceDiagram
+    participant E as EnemyManager
+    participant CFM as CombatFlowManager
+    participant SM as StageManager
     
-    if (randomEntry?.definition == null)
-    {
-        Debug.LogWarning("[StageManager] 적 덱에서 카드를 선택할 수 없습니다.");
-        return;
-    }
-
-    // 적 카드 생성
-    var enemyCard = cardFactory.CreateFromDefinition(
-        randomEntry.definition,
-        Owner.Enemy,
-        enemyData.CharacterName
-    );
-
-    // WAIT_SLOT_4에 카드 등록
-    turnCardRegistry.RegisterCard(
-        CombatSlotPosition.WAIT_SLOT_4,
-        enemyCard,
-        null, // UI는 나중에 생성
-        SlotOwner.ENEMY
-    );
-}
+    E-->>CFM: OnEnemyDefeated
+    CFM->>CFM: NotifyVictory()
+    CFM->>CFM: Rewards → StageTransition
+    CFM->>SM: ProgressToNextStage()
+    SM-->>CFM: true/false
+    alt has next stage
+        SM->>SM: StartStage()
+        CFM->>CFM: TransitionTo(Prepare)
+    else
+        CFM->>CFM: No next stage (flow end or game complete)
+    end
 ```
 
 ## 📊 주요 클래스 및 메서드

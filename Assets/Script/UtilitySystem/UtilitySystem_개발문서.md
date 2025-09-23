@@ -13,6 +13,9 @@ UtilitySystem은 게임의 유틸리티 기능들을 관리하는 시스템입�
 - **자동 관리 완료**: 오브젝트의 생성/소멸 자동 관리 완료
 - **Zenject DI 통합 완료**: 모든 UtilitySystem 컴포넌트가 의존성 주입으로 전환 완료
 - **컴파일 에러 해결**: 모든 UtilitySystem 관련 컴파일 에러 해결 완료
+- **GameLogger 규칙 적용(신규)**: 카테고리별 한국어 로그, 오류/경고/정보 레벨 준수
+- **코루틴 가이드(신규)**: DOTween과 함께 사용하는 코루틴 프레임 동기화 규칙 추가
+- **Drop 연동 갱신(신규)**: CardDropService/CombatExecutionManager/TurnManager 연계 사용 예시 추가
 
 ## 🏗️ 폴더 구조 (실제 파일 수 기준)
 ```
@@ -84,14 +87,25 @@ container.RemoveObject(gameObject);
 int objectCount = container.GetObjectCount();
 bool isEmpty = container.IsEmpty();
 
-// DropHandlerInjector를 통한 드롭 핸들러 주입
-ICombatSlotRegistry slotRegistry = FindObjectOfType<CombatSlotRegistry>();
-CardDropService dropService = FindObjectOfType<CardDropService>();
-ICombatFlowCoordinator flowCoordinator = FindObjectOfType<CombatFlowCoordinator>();
-DropHandlerInjector.InjectToAllCombatSlots(slotRegistry, dropService, flowCoordinator);
+// DropHandlerInjector를 통한 드롭 핸들러 주입 (업데이트)
+var slotRegistry = FindFirstObjectByType<Game.SkillCardSystem.Slot.CombatSlotRegistry>();
+var dropService = FindFirstObjectByType<Game.SkillCardSystem.Service.CardDropService>();
+var exec = FindFirstObjectByType<Game.CombatSystem.Manager.CombatExecutionManager>();
+var turn = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
+DropHandlerInjector.InjectToAllCombatSlots(slotRegistry, dropService, exec, turn);
 ```
 
-## 📊 주요 클래스 및 메서드
+### 코루틴/애니메이션 가이드
+- **프레임 동기화**: 애니메이션 직후 상태 판정은 `yield return tween.WaitForCompletion()` 또는 `yield return null` 1프레임 지연 후 수행
+- **Z-Order 보장**: 이동 시작 시 루트 캔버스로 승격(SetParent(root,true)) → SetAsLastSibling → 도착 후 재부모화
+- **안전 플래그**: 진행 중 재진입 방지용 플래그 사용(예: `_isAdvancingQueue`)
+
+### GameLogger 사용 규칙
+- **카테고리**: Combat, SkillCard, Core 등 시스템별 구분
+- **태그**: TurnManager `FormatLogTag()` 스타일 권장(`[T{turn}-{owner}-F{frame}]`)
+- **레벨**: Error/Warning/Info 구분, 한국어 메시지 사용
+
+## 📊 주요 클래스 및 메서드 (추가)
 
 ### GameContext 클래스
 - **SetSelectedCharacter(PlayerCharacterData data)**: 선택된 플레이어 캐릭터 설정
@@ -111,6 +125,9 @@ DropHandlerInjector.InjectToAllCombatSlots(slotRegistry, dropService, flowCoordi
 
 ### DropHandlerInjector 클래스 (정적 클래스)
 - **InjectToAllCombatSlots(ICombatSlotRegistry slotRegistry, CardDropService dropService, ICombatFlowCoordinator flowCoordinator)**: 모든 전투 슬롯에 드롭 핸들러 주입
+
+### DropHandlerInjector 클래스 (업데이트 시그니처 예시)
+- **InjectToAllCombatSlots(CombatSlotRegistry, CardDropService, CombatExecutionManager, TurnManager)**: 모든 전투 슬롯에 드롭 핸들러 주입 및 실행 플로우 연계
 
 ### 인터페이스
 - **IGameContext**: 게임 컨텍스트 인터페이스 (SelectedCharacter, SetSelectedCharacter)
@@ -141,3 +158,4 @@ DropHandlerInjector.InjectToAllCombatSlots(slotRegistry, dropService, flowCoordi
 - 2025-01-27 | Maintainer | 실제 폴더 구조 반영 및 파일 수 정정 | 문서
 - 2025-01-27 | Maintainer | AnimationSystem 의존성 완전 제거 및 컴파일 에러 해결 | 코드/문서
 - 2025-01-27 | Maintainer | 실제 코드 분석 기반 주요 클래스 및 메서드 정보 추가 | 문서
+- 2025-09-23 | Maintainer | GameLogger/코루틴 가이드/Drop 연계 최신화 | 문서

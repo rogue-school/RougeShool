@@ -12,6 +12,9 @@ SaveSystem은 게임의 저장/로드 기능을 관리하는 시스템입니다.
 - **새로운 슬롯 시스템 반영**: 모든 저장/복원 로직이 새로운 5슬롯 시스템으로 업데이트 완료
 - **레거시 슬롯 최적화**: SLOT_1/SLOT_2 → BATTLE_SLOT/WAIT_SLOT_1 전환 완료
 - **컴파일 에러 해결**: 모든 SaveSystem 관련 컴파일 에러 해결 완료
+- **TurnManager 연계 강화(신규)**: 턴/큐 진행 이벤트 기반 자동 저장(초기 큐 셋업 완료, 턴 전환, 카드 실행 완료)
+- **적 핸드 제거 반영(신규)**: 적 핸드 데이터/매니저 완전 제거, 적 카드는 대기큐에서만 관리
+- **데이터 구조 정합화(신규)**: 전투 슬롯 상태를 BATTLE/WAIT1~4 + 소유자/카드ID로 저장, PLAYER_MARKER 지원
 
 ## 🏗️ 폴더 구조 (실제 파일 수 기준)
 ```
@@ -103,14 +106,13 @@ SaveSystem/ (새로운 구조)
 - **IsAutoSaveEnabled**: 자동 저장 활성화 여부 (프로퍼티)
 
 ### SaveEventTrigger 클래스
-- **OnEnemyCardPlaced()**: 적 카드 배치 후 저장 트리거
-- **OnTurnStartButtonPressed()**: 턴 시작 버튼 누르기 전 저장 트리거
-- **OnTurnExecution()**: 턴 실행 중 저장 트리거
-- **OnTurnCompleted()**: 턴 완료 후 저장 트리거
-- **OnStageCompleted()**: 스테이지 완료 후 저장 트리거
-- **OnStageFailed()**: 스테이지 실패 후 저장 트리거
-- **OnCombatStart()**: 전투 시작 시 저장 트리거
-- **OnCombatEnd()**: 전투 종료 시 저장 트리거
+- **OnInitialQueueSetupCompleted()**: 전투/대기 슬롯 초기 셋업 완료 시
+- **OnTurnChanged()**: 턴 전환 직후
+- **OnCardExecutionCompleted()**: 배틀 슬롯 카드 실행 완료 직후
+- **OnStageCompleted()**: 스테이지 완료 후
+- **OnStageFailed()**: 스테이지 실패 후
+- **OnCombatStart()**: 전투 시작 시
+- **OnCombatEnd()**: 전투 종료 시
 
 ### CompleteCardStateData 클래스
 - **playerHandSlots**: 플레이어 핸드카드 슬롯 목록 (프로퍼티)
@@ -148,11 +150,10 @@ SaveSystem/ (새로운 구조)
 public class CompleteCardStateData
 {
     public PlayerHandData playerHand;           // 플레이어 핸드 상태
-    public EnemyHandData enemyHand;            // 적 핸드 상태
-    public CombatSlotData combatSlots;         // 전투 슬롯 상태
-    public CardCirculationData circulation;    // 카드 순환 상태
-    public GameStateData gameState;            // 게임 상태
-    public string saveTime;                    // 저장 시간
+    public CombatSlotData combatSlots;          // 전투/대기 슬롯 상태
+    public CardCirculationData circulation;     // 카드 순환 상태
+    public GameStateData gameState;             // 게임 상태(턴/큐 메타)
+    public string saveTime;                     // 저장 시간
 }
 
 [System.Serializable]
@@ -163,19 +164,18 @@ public class PlayerHandData
 }
 
 [System.Serializable]
-public class EnemyHandData
-{
-    public List<string> cardIds;              // 카드 ID 목록
-    public List<Vector2> cardPositions;       // 카드 위치
-}
-
-[System.Serializable]
 public class CombatSlotData
 {
-    public string firstSlotCardId;             // 첫 번째 슬롯 카드
-    public string secondSlotCardId;            // 두 번째 슬롯 카드
-    public SlotOwner firstSlotOwner;           // 첫 번째 슬롯 소유자
-    public SlotOwner secondSlotOwner;          // 두 번째 슬롯 소유자
+    public string battleSlotCardId;            // 배틀 슬롯 카드ID (또는 PLAYER_MARKER)
+    public SlotOwner battleSlotOwner;          // 배틀 슬롯 소유자
+    public string wait1CardId;                 // 대기 1 슬롯 카드ID
+    public SlotOwner wait1Owner;               // 대기 1 슬롯 소유자
+    public string wait2CardId;                 // 대기 2 슬롯 카드ID
+    public SlotOwner wait2Owner;               // 대기 2 슬롯 소유자
+    public string wait3CardId;                 // 대기 3 슬롯 카드ID
+    public SlotOwner wait3Owner;               // 대기 3 슬롯 소유자
+    public string wait4CardId;                 // 대기 4 슬롯 카드ID
+    public SlotOwner wait4Owner;               // 대기 4 슬롯 소유자
 }
 
 [System.Serializable]
@@ -188,9 +188,11 @@ public class CardCirculationData
 [System.Serializable]
 public class GameStateData
 {
-    public int currentTurn;                   // 현재 턴
-    public bool isEnemyFirst;                 // 적 선공 여부
-    public string currentPhase;               // 현재 페이즈
+    public int turnCount;                     // 현재 턴 수(1부터 증가)
+    public string currentTurn;                // "Player" 또는 "Enemy"
+    public bool nextSpawnIsPlayer;            // 대기4 교대 스폰 여부
+    public bool initialQueueSetupCompleted;   // 초기 큐 셋업 완료 여부
+    public string flowState;                  // CombatFlowManager 메타 상태
 }
 ```
 
@@ -259,24 +261,37 @@ saveEventTrigger.OnCombatEnd();              // 전투 종료 시
 CompleteCardStateData cardState = new CompleteCardStateData();
 
 // 플레이어 핸드카드 설정
-cardState.playerHandSlots.Add(new CardSlotData("Card1", true));
-cardState.playerHandSlots.Add(new CardSlotData("Card2", false));
+cardState.playerHand = new PlayerHandData
+{
+    cardIds = new List<string> { "player_card_001", "player_card_002", "player_card_003" },
+    cardPositions = new List<Vector2> { Vector2.zero, new Vector2(100, 0), new Vector2(200, 0) }
+};
 
-// 적 핸드카드 설정
-cardState.enemyHandSlots.Add(new CardSlotData("EnemyCard1", true));
-cardState.enemyHandSlots.Add(new CardSlotData("EnemyCard2", false));
-
-// 전투 슬롯 카드 설정
-cardState.firstSlotCard = new CardSlotData("CombatCard1", true);
-cardState.secondSlotCard = new CardSlotData("CombatCard2", false);
+// 전투/대기 슬롯 카드 설정
+cardState.combatSlots = new CombatSlotData
+{
+    battleSlotCardId = "PLAYER_MARKER",
+    battleSlotOwner = SlotOwner.PLAYER,
+    wait4CardId = "enemy_skill_101",
+    wait4Owner = SlotOwner.ENEMY
+};
 
 // 카드 순환 상태 설정
-cardState.unusedStorageCards.Add("UnusedCard1");
-cardState.unusedStorageCards.Add("UnusedCard2");
-cardState.usedStorageCards.Add("UsedCard1");
+cardState.circulation = new CardCirculationData
+{
+    unusedCards = new List<string> { "enemy_skill_101", "enemy_skill_102" },
+    usedCards = new List<string> { "player_skill_001" }
+};
 
 // 턴 상태 설정
-cardState.isPlayerFirst = true;
+cardState.gameState = new GameStateData
+{
+    turnCount = 1,
+    currentTurn = "Player",
+    nextSpawnIsPlayer = false,
+    initialQueueSetupCompleted = true,
+    flowState = "InCombat"
+};
 
 // 데이터 유효성 검증
 if (cardState.IsValid())
@@ -307,12 +322,11 @@ Debug.Log(condition.ToString());
 ### 자동 저장 트리거 사용법 (신규)
 ```csharp
 // 특정 이벤트 시 자동 저장
-AutoSaveTrigger.Instance.OnEnemyCardPlaced();    // 적 카드 배치 시
-AutoSaveTrigger.Instance.OnBeforePlayerTurn();   // 플레이어 턴 시작 전
-AutoSaveTrigger.Instance.OnTurnExecution();      // 턴 실행 중
-AutoSaveTrigger.Instance.OnTurnCompleted();       // 턴 완료 시
-AutoSaveTrigger.Instance.OnStageCompleted();      // 스테이지 완료 시
-AutoSaveTrigger.Instance.OnGameExit();            // 게임 종료 시
+AutoSaveTrigger.Instance.OnInitialQueueSetupCompleted(); // 초기 큐 셋업 완료
+AutoSaveTrigger.Instance.OnTurnChanged();                 // 턴 전환 직후
+AutoSaveTrigger.Instance.OnCardExecutionCompleted();      // 카드 실행 완료 직후
+AutoSaveTrigger.Instance.OnStageCompleted();              // 스테이지 완료 시
+AutoSaveTrigger.Instance.OnGameExit();                    // 게임 종료 시
 ```
 
 ### 커스텀 데이터 저장

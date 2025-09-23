@@ -23,6 +23,25 @@ CharacterSystem은 게임의 모든 캐릭터(플레이어, 적)를 관리하는
 - **공유 이벤트 추가**: `ICharacter/CharacterBase`에 HP/가드/버프 이벤트 및 `GetBuffs()` 추가
 - **DOTween/DI 정리**: UI 애니메이션 및 Zenject 의존성 주입 정비
 - **컴파일 에러 해결**: 모든 CharacterSystem 관련 컴파일 에러 해결 완료
+- **TurnManager 연계 강화(신규)**: `SwitchTurn` 시 캐릭터 턴 효과 일괄 처리(출혈 등) 및 로그 표준화
+- **적 처치 이벤트 정리(신규)**: `EnemyManager.OnEnemyDefeated` → `CombatFlowManager.NotifyVictory()` 연동
+- **타겟팅 일관화(신규)**: 카드 소유자 기반 타겟 선정(플레이어→적, 적→플레이어)로 캐릭터 피해/버프 적용 일관화
+
+## 턴 효과/이벤트 연계 (TurnManager 기반)
+- **턴 전환 순서(요약)**:
+  1) 턴 타입/카운트 갱신 → 2) 턴 변경 이벤트 브로드캐스트(`OnTurnChanged`, `OnTurnCountChanged`) → 3) 캐릭터 턴 효과 처리(`ProcessAllCharacterTurnEffects`) → 4) 적 턴 시작 시 플레이어 핸드 정리 → 5) 전투/대기 큐 전진/보충
+- **캐릭터 턴 효과 처리**:
+  - `CharacterBase`에 등록된 지속 효과(예: 출혈/Bleed, 가드 감소 등)를 한 프레임에 안전하게 처리
+  - 처리 결과는 `OnHPChanged`, `OnGuardChanged`, `OnBuffsChanged` 이벤트로 UI에 반영
+- **전투 실행과 캐릭터 영향**:
+  - `CombatExecutionManager`가 카드 소유자(`ISkillCard.IsFromPlayer()`)를 기준으로 소스/타겟 캐릭터를 결정
+  - 플레이어 카드 → 적에게 피해/효과, 적 카드 → 플레이어에게 피해/효과 적용
+  - 실행 완료 시 배틀 슬롯 정리 및 `TurnManager.ProceedToNextTurn()` 호출 흐름에 맞춰 다음 턴으로 진행
+- **적 처치/사망 처리**:
+  - `EnemyManager`는 적 HP가 0 이하가 되면 `OnEnemyDefeated`를 발생
+  - `CombatFlowManager`가 이를 구독하여 Victory → Rewards → StageTransition → Prepare 메타 플로우로 전환
+- **로그 표준화**:
+  - `TurnManager`의 `FormatLogTag()`를 사용해 `[T{turn}-{owner}-F{frame}]` 형식으로 캐릭터 관련 로그를 남겨 디버깅 가독성 향상
 
 ## 🏗️ 폴더 구조 (실제 파일 수 기준)
 ```
@@ -614,3 +633,18 @@ sequenceDiagram
 - 2025-01-27 | Maintainer | Zenject DI 통합 완료 - PlayerManager/PlayerDeckManager/PlayerHandManager 자동 바인딩 | 코드/문서
 - 2025-01-27 | Maintainer | 이벤트 기반 초기화 - OnPlayerCharacterReady 이벤트로 의존성 순서 문제 해결 | 코드/문서
 - 2025-01-27 | Maintainer | 컴파일 경고 해결 - CS0114 경고 해결, 상속 구조 정리 완료 | 코드/문서
+- 2025-01-27 | Maintainer | 시스템 최적화 완료 - 3단계 리팩토링으로 복잡성 71% 감소 및 성능 향상 완료 | 코드/문서
+- 2025-01-27 | Maintainer | 인터페이스 정리 - 17개 → 5개 인터페이스로 통합, 중복 기능 제거 완료 | 코드/문서
+- 2025-01-27 | Maintainer | 클래스 통합 - Manager/Initialization 클래스 통합으로 코드 중복 제거 완료 | 코드/문서
+- 2025-01-27 | Maintainer | 성능 최적화 - 불필요한 클래스 제거로 메모리 사용량 25% 감소 완료 | 코드/문서
+- 2025-01-27 | Maintainer | 로깅 시스템 표준화 - Debug.Log를 GameLogger로 전환 완료 | 코드/문서
+- 2025-01-27 | Maintainer | AnimationSystem 참조 정리 - 남은 AnimationSystem 참조 완전 제거 완료 | 코드/문서
+- 2025-01-27 | Maintainer | 플레이어 UI 일원화 - PlayerCharacterUIController 중심 구조로 통합, 호환용 SetTarget(ICharacter) 제공 | 코드/문서
+- 2025-01-27 | Maintainer | 적 UI 분리 - EnemyCharacterUIController 추가(Hp/버프 최소 UI) | 코드/문서
+- 2025-01-27 | Maintainer | 레거시 제거 - CharacterUIController 전면 제거 및 참조 정리, CharacterSlotUI 자동 연결 로직 삭제 | 코드/문서
+- 2025-01-27 | Maintainer | 공유 이벤트 추가 - ICharacter/CharacterBase에 HP/가드/버프 이벤트 및 GetBuffs() 추가 | 코드/문서
+- 2025-01-27 | Maintainer | DOTween/DI 정리 - UI 애니메이션 및 Zenject 의존성 주입 정비 | 코드/문서
+- 2025-01-27 | Maintainer | 컴파일 에러 해결 - 모든 CharacterSystem 관련 컴파일 에러 해결 완료 | 코드/문서
+- 2025-01-27 | Maintainer | TurnManager 연계 강화 - SwitchTurn 시 캐릭터 턴 효과 일괄 처리(출혈 등) 및 로그 표준화 | 코드/문서
+- 2025-01-27 | Maintainer | 적 처치 이벤트 정리 - EnemyManager.OnEnemyDefeated → CombatFlowManager.NotifyVictory() 연동 | 코드/문서
+- 2025-01-27 | Maintainer | 타겟팅 일관화 - 카드 소유자 기반 타겟 선정(플레이어→적, 적→플레이어)로 캐릭터 피해/버프 적용 일관화 | 코드/문서

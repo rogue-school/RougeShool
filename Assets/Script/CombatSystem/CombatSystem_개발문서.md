@@ -21,6 +21,61 @@ CombatSystem은 게임의 전투 로직을 관리하는 핵심 시스템입니�
 - **CombatSlotManager 제거**: 불필요한 시각적 설정, 슬롯 구성, 슬롯 패턴 제거 완료
 - **슬롯 관리 통합**: CombatSlotManager 기능을 CombatFlowManager로 통합 완료
 - **컴파일 에러 해결**: 모든 CombatSystem 관련 컴파일 에러 해결 완료
+\- **턴/큐 흐름 정리**: `SwitchTurn()` 재정렬(턴 로그→이벤트→턴 시작 효과→정리→전진), 전진 루틴 단일화
+\- **자동 실행 게이트**: 적 카드 자동 실행은 Enemy 턴 + 초기 셋업 완료 + 전진 중 아님 + 억제 해제일 때만
+\- **대기4 보충 타이밍**: 전진 종료 후 1프레임 대기 뒤 `RefillWaitSlot4IfNeededRoutine()`에서 교대 보충(플레이어 마커↔적 카드)
+\- **플레이어 손패 생성 시점**: Player 턴 전진/보충이 끝난 후에만 `PlayerHandManager.GenerateInitialHand()` 호출
+\- **카드 이동 시 Z-Order 보장**: 이동 중 최상위 캔버스로 올려 슬롯 위에 보이도록 처리 후 목적지로 복귀
+
+---
+
+## 🔄 현재 구현 핵심 흐름(요약)
+
+1) 초기 셋업(동적)
+- `TurnManager.SetupInitialEnemyQueueRoutine()`
+  - `_suppressAutoRefill = true`, `_suppressAutoExecution = true`로 억제 후 플레이어 마커/적 카드를 교대로 `WAIT_SLOT_4`에 생성하고, 배틀 슬롯이 비면 전진
+  - 완료 시 `_initialSlotSetupCompleted = true` → 전진/애니메이션 종료 대기 → 억제 해제
+
+2) 턴 전환과 전진
+- `SwitchTurn()`
+  - 턴 로그/이벤트 → 턴 시작 효과(`ProcessAllCharacterTurnEffects`) → Enemy 턴이면 손패 정리 → `AdvanceQueueAtTurnStartRoutine()`
+- `AdvanceQueueAtTurnStartRoutine()`
+  - 한 프레임 대기 후 배틀 슬롯 비었으면 `MoveAllSlotsForwardRoutine()` 실행
+- `MoveAllSlotsForwardRoutine()`
+  - 4→3→2→1→배틀 전진 → 1프레임 대기 → `RefillWaitSlot4IfNeededRoutine()` 보충 → `TryAutoExecuteEnemyAtBattleSlot()`로 배틀 슬롯의 적 카드 자동 실행 시도(게이트 충족 시)
+- Player 턴이면 전진/보충 완료 후 최초 1회 `GenerateInitialHand()`
+
+3) 자동 실행 게이트(Enemy 카드)
+- 조건: Enemy 턴 && 초기 셋업 완료 && 전진 중 아님 && 억제 꺼짐
+- 위치: 배틀 슬롯 도달 시 1프레임 지연 재검증 실행 + 전진 종료 후 즉시 재검증 실행
+
+4) 카드 이동 시 Z-Order
+- 이동 시작: 최상위 캔버스 하위로 올리고 최후행으로 정렬(SetAsLastSibling)
+- 이동 종료: 목적지 슬롯으로 재부모, `anchoredPosition=Vector2.zero`
+
+5) 대기4 보충 규칙
+- 보충 억제/이미 점유/프리팹 미존재 시 스킵(로그 남김)
+- 플레이어 마커 ↔ 적 카드 교대로 한 장만 보충(재진입 방지)
+- 적 카드는 캐시된 Enemy 덱/이름 우선 사용, 필요 시 런타임 덱 사용, 무작위 선택 재시도(최대 5회)
+
+---
+
+## 🧭 API 요약 업데이트(핵심)
+
+- `TurnManager.SwitchTurn()`
+  - 턴 로그/이벤트 → `ProcessAllCharacterTurnEffects()` → Enemy 턴 시 `PlayerHandManager.ClearAll()` → `AdvanceQueueAtTurnStartRoutine()`
+- `TurnManager.AdvanceQueueAtTurnStartRoutine()`
+  - 한 프레임 대기 → 배틀 슬롯 비면 `MoveAllSlotsForwardRoutine()` → Player 턴이면 전진/보충 완료 후 `GenerateInitialHand()`
+- `TurnManager.MoveAllSlotsForwardRoutine()`
+  - 순차 이동 → 1프레임 대기 → `RefillWaitSlot4IfNeededRoutine()` → `TryAutoExecuteEnemyAtBattleSlot()`
+- `TurnManager.RefillWaitSlot4IfNeededRoutine()`
+  - 교대 보충(플레이어 마커/적 카드), 조건 미충족 시 상세 로그
+- `TurnManager.TryAutoExecuteEnemyAtBattleSlot()`
+  - 게이트 충족 시 배틀 슬롯의 적 카드 즉시 실행
+- `TurnManager.MoveCardToSlotRoutine()`
+  - 이동 중 최상위 캔버스 승격→트윈→목적지 재부모(Z-Order 보장)
+
+---
 
 ## 🏗️ 폴더 구조 (실제 파일 수 기준)
 ```

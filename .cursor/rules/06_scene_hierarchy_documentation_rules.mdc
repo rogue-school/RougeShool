@@ -41,6 +41,11 @@ alwaysApply: false
 ### 3-α) 언더스코어 라벨 포맷(선택)
 `이름_카테고리_주요표시(⭐)_컴포넌트목록`
 
+### 3-β) 전투 슬롯 컨테이너 규칙 (신규)
+- **컨테이너 명명**: `CombatSlots/BattleSlot`, `WaitSlot1..4` GameObject 명시
+- **정렬**: 카드 이동 중 루트 Canvas 최상단으로 승격, 도착 후 목표 슬롯에 재부모화
+- **인스펙터 표 필수 필드**: 각 슬롯 RectTransform, SlotOwner, Position Enum, DropHandler 연결
+
 ## 4) 표 템플릿
 
 ### 4-1) 인스펙터 연결 표
@@ -206,3 +211,4 @@ Main Camera / UICamera
 - 2025-01-27 | Maintainer | 성능 최적화 및 트러블슈팅 가이드 추가 | 문서
 - 2025-01-27 | Maintainer | Cursor AI 연계 절차 업데이트 | 문서
 - 2025-01-27 | Maintainer | AnimationSystem 제거로 인한 씬 구성 업데이트 | 문서
+- 2025-09-23 | Maintainer | 전투 슬롯/Z-Order/인스펙터 필수 항목 추가 | 문서

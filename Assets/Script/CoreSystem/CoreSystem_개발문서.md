@@ -7,7 +7,7 @@ CoreSystem은 게임의 핵심 시스템들을 관리하는 중앙 집중식 시
 - **AnimationSystem 의존성 완전 제거**: 모든 AnimationSystem 관련 코드 제거 완료
 - **임시 애니메이션 비활성화**: 애니메이션 호출 부분을 Debug.Log로 대체하여 게임 로직 정상 동작
 - **Zenject DI 통합 완료**: 모든 CoreSystem 매니저가 의존성 주입으로 전환 완료
-- **싱글톤 제거 완료**: GameStateManager, SceneTransitionManager, AudioManager, SaveManager 등에서 싱글톤 패턴 제거 완료
+- **싱글톤 제거 진행**: 주요 매니저를 Zenject DI로 전환(문서 기준 최신 코드와 차이가 있는 항목은 정리 중)
 - **자동 초기화 완료**: ICoreSystemInitializable 인터페이스 기반 자동 초기화 구현 완료
 - **인터페이스 기반 설계**: 모든 매니저가 인터페이스를 구현하여 테스트 가능성 확보 완료
 - **한국어 로깅**: GameLogger를 통한 카테고리별 로깅
@@ -133,6 +133,7 @@ CoreSystem/
 - **자동 초기화**: 모든 코어 시스템의 자동 초기화
 - **초기화 순서**: 의존성을 고려한 초기화 순서 관리
 - **초기화 상태**: 초기화 완료 상태 추적
+ - **전투 흐름 연계**: Combat 초기화 시 `GameStartupController`가 Turn/Stage/Player/Enemy 셋업 순으로 실행되도록 보장
 
 ### 2. 씬 전환 관리
 - **씬 로딩**: 씬 로딩 및 전환 처리
@@ -148,6 +149,7 @@ CoreSystem/
 - **카테고리별 로깅**: 시스템별 로그 분류
 - **로그 레벨**: 에러, 경고, 정보 등 레벨별 로깅
 - **조건부 컴파일**: 릴리즈 빌드에서 로그 제거
+ - **전투 연동 로그**: Turn/Queue/Refill/AutoExec/Hand 생성 등 핵심 이벤트에 한국어 로그 표준 적용
 
 ### 5. 코루틴 관리
 - **중앙화된 실행**: 모든 코루틴을 중앙에서 관리

@@ -179,7 +179,7 @@ SkillCardSystem/
 
 ### Deck 폴더 (2개 파일)
 - **PlayerSkillDeck.cs**: 플레이어 스킬 덱 (수량 기반 카드 엔트리 지원)
-- **EnemySkillDeck.cs**: 적 스킬 덱 (SkillCardDefinition 기반)
+- **EnemySkillDeck.cs**: 적 스킬 덱 (확률 기반 `EnemySkillDeck.CardEntry`, `GetRandomEntry()` 제공)
 
 ### Effect 폴더 (7개 파일)
 - **BleedEffect.cs**: 출혈 효과
@@ -222,17 +222,17 @@ SkillCardSystem/
 - **CardDropService.cs**: 카드 드롭 서비스 (PlayerCardReplacementHandler, CardPlacementService 통합)
 
 ### UI 폴더 (5개 파일)
-- **SkillCardUI.cs**: 스킬카드 UI
+- **SkillCardUI.cs**: 스킬카드 UI(PLAYER_MARKER는 이름/설명/TMP 모두 비활성화, 루트 Image에 엠블럼 사용, 드래그/레이캐스트 비활성)
 - **SkillCardUIFactory.cs**: 스킬카드 UI 팩토리
 - **PlayerHandCardSlotUI.cs**: 플레이어 핸드 카드 슬롯 UI
 - **DeckEditorUI.cs**: 덱 편집 UI (게임 중 덱 구성 변경)
 - **SkillCardDefinitionEditor.cs**: 스킬카드 정의 커스텀 에디터
 
 ### DragDrop 폴더 (4개 파일)
-- **CardDragHandler.cs**: 카드 드래그 처리
-- **CardDropService.cs**: 카드 드롭 서비스 (통합된 드롭 로직)
+- **CardDragHandler.cs**: 카드 드래그 처리(DOTween 연출: 시작 확대/투명도, 이동 보간, 실패 복귀)
+- **CardDropService.cs**: 카드 드롭 서비스(드롭 후 슬롯 중앙으로 트윈 → 재부모 → 배틀 슬롯이면 즉시 실행 트리거)
 - **CardDropToHandHandler.cs**: 핸드로 카드 드롭 처리
-- **CardDropToSlotHandler.cs**: 슬롯으로 카드 드롭 처리
+- **CardDropToSlotHandler.cs**: 슬롯으로 카드 드롭 처리(타깃은 `ICombatCardSlot`)
 
 ## 🎯 주요 기능
 
@@ -255,13 +255,13 @@ SkillCardSystem/
 
 ### 4. 핸드 관리
 - **플레이어 핸드**: 플레이어 카드 핸드 관리
-- **적 핸드**: 적 카드 핸드 관리
+- **적 핸드**: 적 카드 핸드 관리(공용 프리팹 사용하되 적 카드는 드래그/레이캐스트 비활성)
 - **카드 순환**: 사용된 카드의 순환 시스템
 
 ### 5. 드래그 앤 드롭
 - **카드 드래그**: 카드 드래그 처리
 - **드롭 검증**: 드롭 가능 여부 검증
-- **드롭 서비스**: 드롭 후 처리
+- **드롭 서비스**: 드롭 후 처리(슬롯 중앙 위치 트윈/재부모/즉시 실행 트리거)
 
 ### 6. 검증 시스템
 - **카드 검증**: 카드 드롭 및 실행 검증
