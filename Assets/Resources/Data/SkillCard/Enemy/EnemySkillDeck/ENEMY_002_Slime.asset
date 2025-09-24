@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: ENEMY_002_Slime
   m_EditorClassIdentifier: 
   cards:
-  - definition: {fileID: 11400000, guid: f38403ff39c06bc478b70442ddc400e3, type: 2}
+  - definition: {fileID: 0}
     probability: 0.7
-  - definition: {fileID: 11400000, guid: f38403ff39c06bc478b70442ddc400e3, type: 2}
+  - definition: {fileID: 0}
     probability: 0.3

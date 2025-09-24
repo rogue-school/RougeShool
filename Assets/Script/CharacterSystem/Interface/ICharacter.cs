@@ -82,6 +82,12 @@ namespace Game.CharacterSystem.Interface
         void TakeDamage(int amount);
 
         /// <summary>
+        /// 가드를 무시하고 피해를 입습니다.
+        /// </summary>
+        /// <param name="amount">피해량</param>
+        void TakeDamageIgnoreGuard(int amount);
+
+        /// <summary>
         /// 체력을 회복합니다.
         /// </summary>
         /// <param name="amount">회복량</param>

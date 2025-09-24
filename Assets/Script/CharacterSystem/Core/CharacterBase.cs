@@ -174,6 +174,29 @@ namespace Game.CharacterSystem.Core
                 Die();
         }
 
+        /// <summary>가드를 무시하고 피해를 받아 체력을 감소시킵니다</summary>
+        /// <param name="amount">피해량</param>
+        public virtual void TakeDamageIgnoreGuard(int amount)
+        {
+            if (amount <= 0)
+            {
+                GameLogger.LogError($"[{GetCharacterDataName()}] 잘못된 피해량: {amount}", GameLogger.LogCategory.Character);
+                throw new ArgumentException($"피해량은 양수여야 합니다. 입력값: {amount}", nameof(amount));
+            }
+
+            // 가드 체크 없이 직접 데미지 적용
+            currentHP = Mathf.Max(currentHP - amount, 0);
+            OnHPChanged?.Invoke(currentHP, maxHP);
+
+            GameLogger.LogInfo($"[{GetCharacterDataName()}] 가드 무시 피해: {amount}, 남은 체력: {currentHP}", GameLogger.LogCategory.Character);
+
+            // 피해 이벤트 발행은 자식 클래스에서 처리
+            OnDamaged(amount);
+
+            if (IsDead())
+                Die();
+        }
+
         /// <summary>최대 체력을 설정하고 현재 체력을 동일하게 초기화합니다</summary>
         /// <param name="value">최대 체력 값</param>
         public virtual void SetMaxHP(int value)

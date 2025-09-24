@@ -2,6 +2,7 @@ using UnityEngine;
 using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Interface;
 using Game.CharacterSystem.Interface;
+using Game.CharacterSystem.Core;
 using Game.CoreSystem.Audio;
 using Game.CoreSystem.Interface;
 using Zenject;
@@ -186,13 +187,37 @@ namespace Game.SkillCardSystem.Effect
             
             if (ignoreGuard)
             {
-                target.TakeDamage(damageAmount);
+                // 가드 무시: TakeDamage를 우회하고 직접 체력 감소
+                ApplyDamageDirectly(target, damageAmount);
                 Debug.Log($"[DamageEffectCommand] 가드 무시 데미지: {damageAmount}");
             }
             else
             {
+                // 일반 데미지: 가드 체크 포함
                 target.TakeDamage(damageAmount);
                 Debug.Log($"[DamageEffectCommand] 일반 데미지: {damageAmount}");
+            }
+        }
+        
+        /// <summary>
+        /// 가드를 무시하고 직접 데미지를 적용합니다.
+        /// </summary>
+        /// <param name="target">대상</param>
+        /// <param name="damage">데미지량</param>
+        private void ApplyDamageDirectly(ICharacter target, int damage)
+        {
+            if (damage <= 0) return;
+            
+            // CharacterBase의 가드 무시 데미지 메서드 사용
+            if (target is CharacterBase characterBase)
+            {
+                characterBase.TakeDamageIgnoreGuard(damage);
+                Debug.Log($"[DamageEffectCommand] 가드 무시 직접 데미지: {damage}");
+            }
+            else
+            {
+                // CharacterBase가 아닌 경우 일반 TakeDamage 사용
+                target.TakeDamage(damage);
             }
         }
         

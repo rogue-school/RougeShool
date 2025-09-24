@@ -10,22 +10,22 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 63917f595383ae84bafad72d7862ecd5, type: 3}
-  m_Name: SkillCardDefinition
+  m_Name: "test \uAC00\uB4DC\uBB34\uC2DC"
   m_EditorClassIdentifier: 
-  cardId: 
-  displayName: 
+  cardId: "\uAC00\uB4DC\uBB34\uC2DC"
+  displayName: "\uAC00\uB4DC\uBB34\uC2DC"
   displayNameKO: 
   description: 
-  artwork: {fileID: 0}
+  artwork: {fileID: 4264714366617519430, guid: 00fe0d12d678fec4dae1b3dc98c7832e, type: 3}
   presentation:
     sfxClip: {fileID: 0}
     visualEffectPrefab: {fileID: 0}
   configuration:
-    hasDamage: 0
+    hasDamage: 1
     damageConfig:
-      baseDamage: 0
+      baseDamage: 2
       hits: 1
-      ignoreGuard: 0
+      ignoreGuard: 1
     hasEffects: 0
     effects: []
     ownerPolicy: 0

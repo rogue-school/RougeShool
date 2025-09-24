@@ -29,12 +29,39 @@ namespace Game.SkillCardSystem.Effect
             // 소스 캐릭터에게 가드 버프 적용
             if (context.Source is ICharacter character)
             {
-                var guardBuff = new GuardBuff(1); // 1턴 지속
+                // 가드 아이콘 로드 (ScriptableObject에서)
+                Sprite guardIcon = null;
+                var guardEffectSO = Resources.Load<Game.SkillCardSystem.Effect.GuardEffectSO>("Data/SkillCard/SkillEffect/GuardEffect");
+                if (guardEffectSO != null)
+                {
+                    guardIcon = guardEffectSO.GetIcon();
+                    GameLogger.LogInfo($"[GuardEffectCommand] 가드 아이콘 로드 성공: {guardIcon?.name ?? "null"}", GameLogger.LogCategory.Combat);
+                }
+                else
+                {
+                    GameLogger.LogWarning("[GuardEffectCommand] GuardEffectSO를 찾을 수 없습니다.", GameLogger.LogCategory.Combat);
+                }
+                
+                // 아이콘이 없으면 기본 아이콘 시도
+                if (guardIcon == null)
+                {
+                    guardIcon = Resources.Load<Sprite>("Image/UI (1)/UI/shield_icon");
+                    if (guardIcon != null)
+                    {
+                        GameLogger.LogInfo("[GuardEffectCommand] 대체 가드 아이콘 로드 성공", GameLogger.LogCategory.Combat);
+                    }
+                    else
+                    {
+                        GameLogger.LogWarning("[GuardEffectCommand] 대체 가드 아이콘도 찾을 수 없습니다.", GameLogger.LogCategory.Combat);
+                    }
+                }
+                
+                var guardBuff = new GuardBuff(1, guardIcon); // 아이콘과 함께 생성
                 character.RegisterPerTurnEffect(guardBuff);
                 // 즉시 보호 활성화: 다음 자신의 턴 시작 시 카운트가 0이 되면 해제됨
                 character.SetGuarded(true);
                 
-                GameLogger.LogInfo($"[GuardEffectCommand] {character.GetCharacterName()}에게 가드 버프 적용 (1턴 지속)", GameLogger.LogCategory.Combat);
+                GameLogger.LogInfo($"[GuardEffectCommand] {character.GetCharacterName()}에게 가드 버프 적용 (1턴 지속, 아이콘: {guardIcon?.name ?? "없음"})", GameLogger.LogCategory.Combat);
             }
             else
             {

@@ -167,8 +167,44 @@ namespace Game.CharacterSystem.Core
         /// <param name="amount">피해량</param>
         public override void TakeDamage(int amount)
         {
+            // 가드 상태 확인 (base.TakeDamage 호출 전에 미리 확인)
+            bool wasGuarded = IsGuarded();
+            
             base.TakeDamage(amount);
             UpdateUI();
+
+            // 가드로 차단된 경우 데미지 텍스트 표시하지 않음
+            if (wasGuarded)
+            {
+                GameLogger.LogInfo($"[{GetCharacterName()}] 가드로 데미지 차단됨 - 데미지 텍스트 표시 안함", GameLogger.LogCategory.Character);
+                return;
+            }
+
+            // 실제 데미지를 받은 경우에만 데미지 텍스트 표시
+            ShowDamageText(amount);
+        }
+
+        /// <summary>
+        /// 가드 무시 데미지 처리 후 UI 갱신
+        /// </summary>
+        /// <param name="amount">피해량</param>
+        public override void TakeDamageIgnoreGuard(int amount)
+        {
+            base.TakeDamageIgnoreGuard(amount);
+            UpdateUI();
+
+            // 가드 무시 데미지는 항상 데미지 텍스트 표시
+            ShowDamageText(amount);
+        }
+
+        /// <summary>
+        /// 데미지 텍스트를 표시합니다.
+        /// </summary>
+        /// <param name="amount">데미지량</param>
+        private void ShowDamageText(int amount)
+        {
+            // 데미지가 0이면 텍스트 표시하지 않음
+            if (amount <= 0) return;
 
             // 새로운 통합 UI 업데이트
             if (playerCharacterUIController != null)
@@ -176,6 +212,7 @@ namespace Game.CharacterSystem.Core
                 playerCharacterUIController.OnTakeDamage(amount);
             }
 
+            // 데미지 텍스트 표시
             if (damageTextPrefab != null && hpTextAnchor != null)
             {
                 var instance = Instantiate(damageTextPrefab);
