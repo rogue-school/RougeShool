@@ -1,41 +1,54 @@
 using UnityEngine;
 using UnityEngine.UI;
 using Game.CoreSystem.Interface;
+using Game.CoreSystem.Utility;
+using Game.CoreSystem.Save;
+using Game.CoreSystem.Manager;
 using Zenject;
 
 namespace Game.CoreSystem.UI
 {
     /// <summary>
-    /// 설정창 UI 컨트롤러
-    /// 설정창 프리팹에 붙이는 스크립트
+    /// 시스템 기능 전용 설정창 UI 컨트롤러
+    /// 이어하기, 진행도 초기화, 메인 메뉴, 게임 종료 기능 제공
     /// </summary>
     public class SettingsPanelController : MonoBehaviour
     {
         [Header("UI 요소")]
         [SerializeField] private Button closeButton;
-        [SerializeField] private Slider bgmSlider;
-        [SerializeField] private Slider sfxSlider;
+        [SerializeField] private Button continueButton;
         [SerializeField] private Button resetProgressButton;
         [SerializeField] private Button goToMainButton;
-        
-        // 의존성 주입
-        [Inject] private IAudioManager audioManager;
-        [Inject] private ISaveManager saveManager;
-        [Inject] private ISceneTransitionManager sceneTransitionManager;
-        [Inject] private SettingsManager settingsManager;
         [SerializeField] private Button exitGameButton;
+        
+        // 직접 참조 (DI 대신)
+        private ISaveManager saveManager;
+        private ISceneTransitionManager sceneTransitionManager;
+        private SettingsManager settingsManager;
         
         [Header("설정")]
         [SerializeField] private bool enableDebugLogging = false;
         
         private void Start()
         {
-            // 저장된 오디오 설정을 먼저 로드하여 반영
-            var (bgm, sfx) = saveManager.LoadAudioSettings(audioManager.BgmVolume, audioManager.SfxVolume);
-            audioManager.SetBGMVolume(bgm);
-            audioManager.SetSFXVolume(sfx);
-            
+            // 매니저들 찾기
+            FindManagers();
             InitializeUI();
+        }
+        
+        /// <summary>
+        /// 매니저들 찾기
+        /// </summary>
+        private void FindManagers()
+        {
+            saveManager = FindFirstObjectByType<SaveManager>();
+            sceneTransitionManager = FindFirstObjectByType<SceneTransitionManager>();
+            settingsManager = FindFirstObjectByType<SettingsManager>();
+            
+            if (enableDebugLogging)
+            {
+                GameLogger.LogInfo($"매니저 찾기 완료 - SaveManager: {saveManager != null}, SceneTransitionManager: {sceneTransitionManager != null}, SettingsManager: {settingsManager != null}", GameLogger.LogCategory.UI);
+            }
         }
         
         /// <summary>
@@ -47,6 +60,9 @@ namespace Game.CoreSystem.UI
             if (closeButton != null)
                 closeButton.onClick.AddListener(OnCloseButtonClicked);
             
+            if (continueButton != null)
+                continueButton.onClick.AddListener(OnContinueClicked);
+            
             if (resetProgressButton != null)
                 resetProgressButton.onClick.AddListener(OnResetProgressClicked);
             
@@ -56,61 +72,104 @@ namespace Game.CoreSystem.UI
             if (exitGameButton != null)
                 exitGameButton.onClick.AddListener(OnExitGameClicked);
             
-            // 슬라이더 초기값 설정
-            if (bgmSlider != null)
-            {
-                bgmSlider.value = audioManager.BgmVolume;
-                bgmSlider.onValueChanged.AddListener(OnBGMVolumeChanged);
-            }
-            
-            if (sfxSlider != null)
-            {
-                sfxSlider.value = audioManager.SfxVolume;
-                sfxSlider.onValueChanged.AddListener(OnSFXVolumeChanged);
-            }
-            
             if (enableDebugLogging)
             {
-                Debug.Log("[SettingsPanelController] 설정창 UI 초기화 완료");
+                GameLogger.LogInfo("시스템 설정창 UI 초기화 완료", GameLogger.LogCategory.UI);
             }
         }
         
         #region 이벤트 핸들러
         
+        /// <summary>
+        /// 설정창 닫기
+        /// </summary>
         private void OnCloseButtonClicked()
         {
             settingsManager.CloseSettings();
         }
         
-        private void OnBGMVolumeChanged(float volume)
+        /// <summary>
+        /// 이어하기 (계속 진행하기) - 창 닫기
+        /// </summary>
+        private void OnContinueClicked()
         {
-            audioManager.SetBGMVolume(volume);
-            saveManager.SaveAudioSettings(audioManager.BgmVolume, audioManager.SfxVolume);
+            try
+            {
+                if (enableDebugLogging)
+                {
+                    GameLogger.LogInfo("이어하기 - 창 닫기", GameLogger.LogCategory.UI);
+                }
+                
+                // 설정창 닫기 (게임 계속 진행)
+                settingsManager.CloseSettings();
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogError($"이어하기 실패: {ex.Message}", GameLogger.LogCategory.Error);
+            }
         }
         
-        private void OnSFXVolumeChanged(float volume)
-        {
-            audioManager.SetSFXVolume(volume);
-            saveManager.SaveAudioSettings(audioManager.BgmVolume, audioManager.SfxVolume);
-        }
-        
+        /// <summary>
+        /// 다시하기 (진행도 초기화 + 메인 메뉴로 돌아가기)
+        /// </summary>
         private async void OnResetProgressClicked()
         {
-            // SaveManager에 ResetSaveData 메서드가 없으므로 주석 처리
-            // saveManager.ResetSaveData();
-            await sceneTransitionManager.TransitionToMainScene();
-            settingsManager.CloseSettings();
+            try
+            {
+                GameLogger.LogInfo("다시하기 시작 - 세이브 데이터 삭제", GameLogger.LogCategory.UI);
+                
+                // 진행도 초기화 (세이브 데이터 삭제)
+                saveManager.ClearSave();
+                
+                // 메인 메뉴로 이동
+                await sceneTransitionManager.TransitionToMainScene();
+                
+                GameLogger.LogInfo("다시하기 완료", GameLogger.LogCategory.UI);
+                settingsManager.CloseSettings();
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogError($"다시하기 실패: {ex.Message}", GameLogger.LogCategory.Error);
+            }
         }
         
+        /// <summary>
+        /// 메인 메뉴로 돌아가기
+        /// </summary>
         private async void OnGoToMainClicked()
         {
-            await sceneTransitionManager.TransitionToMainScene();
-            settingsManager.CloseSettings();
+            try
+            {
+                GameLogger.LogInfo("메인 메뉴로 이동", GameLogger.LogCategory.UI);
+                
+                await sceneTransitionManager.TransitionToMainScene();
+                settingsManager.CloseSettings();
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogError($"메인 메뉴 이동 실패: {ex.Message}", GameLogger.LogCategory.Error);
+            }
         }
         
+        /// <summary>
+        /// 게임 종료
+        /// </summary>
         private void OnExitGameClicked()
         {
-            Application.Quit();
+            try
+            {
+                GameLogger.LogInfo("게임 종료", GameLogger.LogCategory.UI);
+                
+                // 현재 진행 상황 저장
+                saveManager.SaveCurrentScene();
+                
+                // 게임 종료
+                Application.Quit();
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogError($"게임 종료 실패: {ex.Message}", GameLogger.LogCategory.Error);
+            }
         }
         
         #endregion

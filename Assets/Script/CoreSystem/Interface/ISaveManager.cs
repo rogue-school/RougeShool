@@ -36,5 +36,15 @@ namespace Game.CoreSystem.Interface
         /// 자동 저장 실행
         /// </summary>
         Task TriggerAutoSave(string condition);
+        
+        /// <summary>
+        /// 저장된 씬 로드
+        /// </summary>
+        Task<bool> LoadSavedScene();
+        
+        /// <summary>
+        /// 저장 데이터 초기화
+        /// </summary>
+        void ClearSave();
     }
 }

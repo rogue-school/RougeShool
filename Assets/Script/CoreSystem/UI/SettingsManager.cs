@@ -21,7 +21,7 @@ namespace Game.CoreSystem.UI
         [SerializeField] private GameObject settingsPanelPrefab;
         
         [Header("설정창 관리")]
-        [SerializeField] private bool enableDebugLogging = false;
+        [SerializeField] private bool enableDebugLogging = true;
         
         // 현재 활성화된 설정창 인스턴스
         private GameObject currentSettingsPanel;
@@ -41,20 +41,27 @@ namespace Game.CoreSystem.UI
         public static event Action OnSettingsOpened;
         public static event Action OnSettingsClosed;
         
-        #region ICoreSystemInitializable 구현
+        private void Awake()
+        {
+            // 자동 초기화 시작
+            StartCoroutine(AutoInitialize());
+        }
         
-        public IEnumerator Initialize()
+        /// <summary>
+        /// 자동 초기화 (CoreSystemInitializer와 독립적으로)
+        /// </summary>
+        private IEnumerator AutoInitialize()
         {
             if (IsInitialized) yield break;
             
-            // 프리팹이 없으면 Resources에서 로드 (없어도 기능을 일시 비활성화하고 계속 진행)
+            // 프리팹이 없으면 Resources에서 로드
             if (settingsPanelPrefab == null)
             {
                 settingsPanelPrefab = Resources.Load<GameObject>("Prefab/SettingsPanel");
                 if (settingsPanelPrefab == null)
                 {
                     GameLogger.LogWarning("설정창 프리팹이 없어 설정 기능을 일시 비활성화합니다.", GameLogger.LogCategory.UI);
-                    // 프리팹 없이도 초기화는 완료로 간주하여 다른 시스템 진행을 막지 않음
+                    // 프리팹 없이도 초기화는 완료로 간주
                     IsInitialized = true;
                     yield break;
                 }
@@ -67,8 +74,19 @@ namespace Game.CoreSystem.UI
             
             if (enableDebugLogging)
             {
-                GameLogger.LogInfo("SettingsManager 초기화 완료", GameLogger.LogCategory.UI);
+                GameLogger.LogInfo("SettingsManager 자동 초기화 완료", GameLogger.LogCategory.UI);
             }
+        }
+        
+        #region ICoreSystemInitializable 구현
+        
+        public IEnumerator Initialize()
+        {
+            // 이미 자동 초기화가 완료되었으면 스킵
+            if (IsInitialized) yield break;
+            
+            // 자동 초기화와 동일한 로직 사용
+            yield return StartCoroutine(AutoInitialize());
         }
         
         public void OnInitializationFailed()
@@ -95,9 +113,10 @@ namespace Game.CoreSystem.UI
             {
                 if (enableDebugLogging)
                 {
-                    GameLogger.LogInfo("설정창이 이미 열려있습니다", GameLogger.LogCategory.UI);
+                    GameLogger.LogInfo("설정창이 이미 열려있습니다. 강제로 닫고 다시 엽니다.", GameLogger.LogCategory.UI);
                 }
-                return;
+                // 강제로 닫기
+                CloseSettings();
             }
             
             // 프리팹이 없으면 기능 비활성화
@@ -108,16 +127,33 @@ namespace Game.CoreSystem.UI
             }
 
             // 주입된 Canvas 사용(선택 주입). 없으면 탐색 시도
-            currentCanvas = mainCanvas != null ? mainCanvas : FindFirstObjectByType<Canvas>();
+            currentCanvas = mainCanvas != null ? mainCanvas : FindStageCanvas();
             if (currentCanvas == null)
             {
                 GameLogger.LogWarning("Canvas를 찾지 못해 설정창을 열 수 없습니다.", GameLogger.LogCategory.UI);
                 return;
             }
             
+            if (enableDebugLogging)
+            {
+                GameLogger.LogInfo($"설정창을 Canvas '{currentCanvas.name}'에 생성합니다.", GameLogger.LogCategory.UI);
+            }
+            
             // 설정창 생성
             currentSettingsPanel = Instantiate(settingsPanelPrefab, currentCanvas.transform);
             currentSettingsPanel.name = "SettingsPanel";
+            
+            // 설정창 강제 활성화
+            currentSettingsPanel.SetActive(true);
+            
+            // 설정창을 최상위로 이동 (Sibling Index 최대값으로 설정)
+            currentSettingsPanel.transform.SetAsLastSibling();
+            
+            // 설정창 활성화 확인
+            if (enableDebugLogging)
+            {
+                GameLogger.LogInfo($"설정창 생성 완료. 활성화 상태: {currentSettingsPanel.activeInHierarchy}", GameLogger.LogCategory.UI);
+            }
             
             // 설정창 초기화
             InitializeSettingsPanel();
@@ -185,11 +221,31 @@ namespace Game.CoreSystem.UI
         {
             if (currentSettingsPanel == null) return;
             
-            // 설정창의 버튼들 찾기 및 이벤트 연결
+            // SettingsPanelController 찾기
+            var settingsController = currentSettingsPanel.GetComponent<SettingsPanelController>();
+            if (settingsController == null)
+            {
+                // SettingsPanelController가 없으면 추가
+                settingsController = currentSettingsPanel.AddComponent<SettingsPanelController>();
+                
+                if (enableDebugLogging)
+                {
+                    GameLogger.LogInfo("SettingsPanelController가 없어서 추가했습니다.", GameLogger.LogCategory.UI);
+                }
+            }
+            
+            // 간단한 닫기 버튼 연결 (fallback)
             var closeButton = currentSettingsPanel.GetComponentInChildren<Button>();
             if (closeButton != null)
             {
+                // 기존 이벤트 제거 후 새로 연결
+                closeButton.onClick.RemoveAllListeners();
                 closeButton.onClick.AddListener(CloseSettings);
+                
+                if (enableDebugLogging)
+                {
+                    GameLogger.LogInfo($"닫기 버튼 연결 완료: {closeButton.name}", GameLogger.LogCategory.UI);
+                }
             }
             
             // 오디오 설정 초기화
@@ -197,6 +253,11 @@ namespace Game.CoreSystem.UI
             
             // 게임 설정 초기화
             InitializeGameSettings();
+            
+            if (enableDebugLogging)
+            {
+                GameLogger.LogInfo("설정창 초기화 완료", GameLogger.LogCategory.UI);
+            }
         }
         
         /// <summary>
@@ -294,6 +355,54 @@ namespace Game.CoreSystem.UI
         private void OnExitGameClicked()
         {
             Application.Quit();
+        }
+        
+        #endregion
+        
+        #region Canvas 찾기
+        
+        /// <summary>
+        /// 스테이지의 Canvas를 우선적으로 찾기
+        /// </summary>
+        private Canvas FindStageCanvas()
+        {
+            // 모든 Canvas 찾기
+            Canvas[] allCanvases = FindObjectsByType<Canvas>(FindObjectsSortMode.None);
+            
+            // 우선순위: 스테이지 Canvas > 일반 Canvas > CoreUI Canvas
+            foreach (Canvas canvas in allCanvases)
+            {
+                // DontDestroyOnLoad가 아닌 Canvas 우선 선택
+                if (!IsDontDestroyOnLoadCanvas(canvas))
+                {
+                    if (enableDebugLogging)
+                    {
+                        GameLogger.LogInfo($"스테이지 Canvas 발견: {canvas.name}", GameLogger.LogCategory.UI);
+                    }
+                    return canvas;
+                }
+            }
+            
+            // 스테이지 Canvas가 없으면 첫 번째 Canvas 사용
+            if (allCanvases.Length > 0)
+            {
+                if (enableDebugLogging)
+                {
+                    GameLogger.LogInfo($"스테이지 Canvas가 없어 첫 번째 Canvas 사용: {allCanvases[0].name}", GameLogger.LogCategory.UI);
+                }
+                return allCanvases[0];
+            }
+            
+            return null;
+        }
+        
+        /// <summary>
+        /// Canvas가 DontDestroyOnLoad인지 확인
+        /// </summary>
+        private bool IsDontDestroyOnLoadCanvas(Canvas canvas)
+        {
+            // DontDestroyOnLoad 오브젝트는 씬에 없고 DontDestroyOnLoad 씬에 있음
+            return canvas.gameObject.scene.name == "DontDestroyOnLoad";
         }
         
         #endregion

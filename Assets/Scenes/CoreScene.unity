@@ -1412,8 +1412,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 914033c6d3adbc946bb995155dac5ba1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  settingsPanelPrefab: {fileID: 0}
-  enableDebugLogging: 0
+  settingsPanelPrefab: {fileID: 3519743191409933958, guid: 0ba7dd7ded049c942a65cbcc6eba6332, type: 3}
+  enableDebugLogging: 1
 --- !u!1 &1117130368
 GameObject:
   m_ObjectHideFlags: 0

@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Threading.Tasks;
 using Game.CoreSystem.Interface;
+using Game.CoreSystem.UI;
 using Zenject;
 
 namespace Game.UISystem
@@ -24,7 +25,7 @@ namespace Game.UISystem
         
         // 의존성 주입
         [Inject] private IGameStateManager gameStateManager;
-        [Inject] private IAudioManager audioManager;
+        [Inject] private SettingsManager settingsManager;
         
         private void Start()
         {
@@ -92,8 +93,7 @@ namespace Game.UISystem
         private void OnSettingsButtonClicked()
         {
             Debug.Log("[MainSceneController] 설정창 열기");
-            if (settingsPanel != null)
-                settingsPanel.SetActive(true);
+            settingsManager.OpenSettings();
         }
         
         /// <summary>
@@ -116,19 +116,21 @@ namespace Game.UISystem
         }
         
         /// <summary>
-        /// BGM 볼륨 변경
+        /// BGM 볼륨 변경 (현재 사용하지 않음 - SettingsManager에서 처리)
         /// </summary>
         private void OnBGMVolumeChanged(float value)
         {
-            audioManager.SetBGMVolume(value);
+            // 오디오 설정은 SettingsManager에서 처리
+            Debug.Log($"[MainSceneController] BGM 볼륨 변경: {value}");
         }
         
         /// <summary>
-        /// SFX 볼륨 변경
+        /// SFX 볼륨 변경 (현재 사용하지 않음 - SettingsManager에서 처리)
         /// </summary>
         private void OnSFXVolumeChanged(float value)
         {
-            audioManager.SetSFXVolume(value);
+            // 오디오 설정은 SettingsManager에서 처리
+            Debug.Log($"[MainSceneController] SFX 볼륨 변경: {value}");
         }
     }
 }
