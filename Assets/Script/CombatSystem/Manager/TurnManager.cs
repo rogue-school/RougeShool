@@ -594,29 +594,30 @@ namespace Game.CombatSystem.Manager
         }
 
         /// <summary>
-        /// 턴 효과를 현재 턴의 주체에게만 1회 처리합니다.
+        /// 모든 캐릭터의 턴 효과를 처리합니다.
+        /// 턴 효과는 모든 캐릭터에게 동시에 적용되어야 합니다.
         /// </summary>
         private void ProcessAllCharacterTurnEffects()
         {
-            if (currentTurn == TurnType.Player)
+            // 모든 캐릭터의 턴 효과를 동시에 처리
+            var playerManager = FindFirstObjectByType<PlayerManager>();
+            var enemyManager = FindFirstObjectByType<EnemyManager>();
+            
+            var player = playerManager?.GetCharacter();
+            var enemy = enemyManager?.GetCharacter();
+            
+            // 플레이어 턴 효과 처리
+            if (player != null)
             {
-                var playerManager = FindFirstObjectByType<PlayerManager>();
-                var player = playerManager?.GetCharacter();
-                if (player != null)
-                {
-                    player.ProcessTurnEffects();
-                    GameLogger.LogInfo($"플레이어 캐릭터 턴 효과 처리: {player.GetCharacterName()}", GameLogger.LogCategory.Combat);
-                }
+                player.ProcessTurnEffects();
+                GameLogger.LogInfo($"플레이어 캐릭터 턴 효과 처리: {player.GetCharacterName()}", GameLogger.LogCategory.Combat);
             }
-            else // Enemy turn
+            
+            // 적 턴 효과 처리
+            if (enemy != null)
             {
-                var enemyManager = FindFirstObjectByType<EnemyManager>();
-                var enemy = enemyManager?.GetCharacter();
-                if (enemy != null)
-                {
-                    enemy.ProcessTurnEffects();
-                    GameLogger.LogInfo($"적 캐릭터 턴 효과 처리: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
-                }
+                enemy.ProcessTurnEffects();
+                GameLogger.LogInfo($"적 캐릭터 턴 효과 처리: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
             }
         }
         

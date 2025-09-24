@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Interface;
+using Game.CoreSystem.Utility;
 
 namespace Game.CharacterSystem.UI
 {
@@ -63,6 +64,13 @@ namespace Game.CharacterSystem.UI
         [Tooltip("테두리 강조 효과")]
         [SerializeField] private bool enableBorderHighlight = true;
 
+        [Header("버프/디버프 아이콘 (적 캐릭터용)")]
+        [Tooltip("버프/디버프 아이콘들을 담을 부모 오브젝트")]
+        [SerializeField] private Transform buffDebuffParent;
+        
+        [Tooltip("버프/디버프 아이콘 프리팹")]
+        [SerializeField] private GameObject buffDebuffIconPrefab;
+
         #endregion
 
         #region Private Fields
@@ -75,6 +83,9 @@ namespace Game.CharacterSystem.UI
 
         // 이벤트 구독 여부
         private bool isSubscribed = false;
+        
+        // 버프/디버프 아이콘 관리
+        private System.Collections.Generic.Dictionary<string, GameObject> activeBuffDebuffIcons = new();
 
         #endregion
 
@@ -148,6 +159,24 @@ namespace Game.CharacterSystem.UI
         /// </summary>
         public void Initialize(PlayerCharacter character)
         {
+            Initialize((ICharacter)character);
+        }
+
+        /// <summary>
+        /// 적 캐릭터 전용 초기화 (DisplayMode를 EnemyNormal으로 설정).
+        /// </summary>
+        public void Initialize(EnemyCharacter character)
+        {
+            if (character == null)
+            {
+                Debug.LogWarning("[HPBarController] Initialize(EnemyCharacter) - character가 null입니다.");
+                return;
+            }
+            
+            // 적 캐릭터용 표시 모드 설정
+            displayMode = DisplayMode.EnemyNormal;
+            showNumbers = false; // 적은 숫자 표시하지 않음
+            
             Initialize((ICharacter)character);
         }
 
@@ -380,6 +409,13 @@ namespace Game.CharacterSystem.UI
         {
             if (targetCharacter == null || isSubscribed) return;
             targetCharacter.OnHPChanged += OnTargetHpChanged;
+            
+            // 버프/디버프 이벤트도 구독 (적 캐릭터용)
+            if (targetCharacter is EnemyCharacter enemyCharacter)
+            {
+                enemyCharacter.OnBuffsChanged += OnBuffsChangedHandler;
+            }
+            
             isSubscribed = true;
         }
 
@@ -387,12 +423,126 @@ namespace Game.CharacterSystem.UI
         {
             if (targetCharacter == null || !isSubscribed) return;
             targetCharacter.OnHPChanged -= OnTargetHpChanged;
+            
+            // 버프/디버프 이벤트 구독 해제
+            if (targetCharacter is EnemyCharacter enemyCharacter)
+            {
+                enemyCharacter.OnBuffsChanged -= OnBuffsChangedHandler;
+            }
+            
             isSubscribed = false;
         }
 
         private void OnTargetHpChanged(int current, int max)
         {
             UpdateHPBar();
+        }
+        
+        private void OnBuffsChangedHandler(System.Collections.Generic.IReadOnlyList<Game.SkillCardSystem.Interface.IPerTurnEffect> effects)
+        {
+            UpdateBuffDebuffIcons(effects);
+        }
+
+        #endregion
+
+        #region 버프/디버프 시스템
+
+        /// <summary>
+        /// 버프/디버프 아이콘을 추가합니다.
+        /// </summary>
+        /// <param name="effectId">효과 ID</param>
+        /// <param name="iconSprite">아이콘 스프라이트</param>
+        /// <param name="isBuff">버프 여부 (true: 버프, false: 디버프)</param>
+        /// <param name="duration">지속 시간 (초, -1이면 영구)</param>
+        public void AddBuffDebuffIcon(string effectId, Sprite iconSprite, bool isBuff, float duration = -1f)
+        {
+            if (buffDebuffParent == null || buffDebuffIconPrefab == null) return;
+
+            // 이미 같은 효과가 있으면 제거
+            RemoveBuffDebuffIcon(effectId);
+
+            // 새 아이콘 생성
+            GameObject iconObj = Instantiate(buffDebuffIconPrefab, buffDebuffParent);
+            var iconImage = iconObj.GetComponent<Image>();
+            var iconText = iconObj.GetComponentInChildren<TextMeshProUGUI>();
+
+            if (iconImage != null)
+                iconImage.sprite = iconSprite;
+            
+            if (iconText != null && duration > 0)
+                iconText.text = duration.ToString("F0");
+
+            // 색상 설정 (버프: 파란색, 디버프: 빨간색)
+            if (iconImage != null)
+                iconImage.color = isBuff ? Color.blue : Color.red;
+
+            // 딕셔너리에 저장
+            activeBuffDebuffIcons[effectId] = iconObj;
+
+            GameLogger.LogInfo($"[HPBarController] {(isBuff ? "버프" : "디버프")} 아이콘 추가: {effectId}", GameLogger.LogCategory.Character);
+        }
+
+        /// <summary>
+        /// 버프/디버프 아이콘을 제거합니다.
+        /// </summary>
+        /// <param name="effectId">효과 ID</param>
+        public void RemoveBuffDebuffIcon(string effectId)
+        {
+            if (activeBuffDebuffIcons.TryGetValue(effectId, out GameObject iconObj))
+            {
+                Destroy(iconObj);
+                activeBuffDebuffIcons.Remove(effectId);
+                GameLogger.LogInfo($"[HPBarController] 버프/디버프 아이콘 제거: {effectId}", GameLogger.LogCategory.Character);
+            }
+        }
+
+        /// <summary>
+        /// 모든 버프/디버프 아이콘을 제거합니다.
+        /// </summary>
+        public void ClearAllBuffDebuffIcons()
+        {
+            foreach (var icon in activeBuffDebuffIcons.Values)
+            {
+                if (icon != null)
+                    Destroy(icon);
+            }
+            activeBuffDebuffIcons.Clear();
+            GameLogger.LogInfo("[HPBarController] 모든 버프/디버프 아이콘 제거", GameLogger.LogCategory.Character);
+        }
+
+        /// <summary>
+        /// 버프/디버프 효과 목록을 업데이트합니다.
+        /// </summary>
+        /// <param name="effects">효과 목록</param>
+        public void UpdateBuffDebuffIcons(System.Collections.Generic.IReadOnlyList<Game.SkillCardSystem.Interface.IPerTurnEffect> effects)
+        {
+            if (buffDebuffParent == null) return;
+            
+            // 모두 제거 후 다시 구성(간단/안전)
+            foreach (Transform child in buffDebuffParent)
+            {
+                if (Application.isPlaying) Destroy(child.gameObject); else DestroyImmediate(child.gameObject);
+            }
+
+            foreach (var e in effects)
+            {
+                if (e.Icon == null)
+                {
+                    GameLogger.LogWarning("[HPBarController] 효과 아이콘이 비어 있습니다. SO에 Sprite가 지정되었는지 확인하세요.", GameLogger.LogCategory.UI);
+                }
+                var slotObj = Instantiate(buffDebuffIconPrefab, buffDebuffParent);
+                var view = slotObj.GetComponent<BuffDebuffSlotView>();
+                if (view != null)
+                {
+                    view.SetData(e.Icon, e.RemainingTurns);
+                }
+                else
+                {
+                    // 최소 폴백: Image에 직접 아이콘만 지정
+                    var img = slotObj.GetComponent<Image>();
+                    if (img != null) img.sprite = e.Icon;
+                }
+            }
         }
 
         #endregion

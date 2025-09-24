@@ -2,6 +2,7 @@ using System;
 using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Data;
 using Game.CharacterSystem.Interface;
+using Game.CharacterSystem.UI;
 using Game.CombatSystem.UI;
 using Game.CombatSystem.Context;
 using Game.CombatSystem.Interface;
@@ -35,6 +36,9 @@ namespace Game.CharacterSystem.Core
         [SerializeField] private TextMeshProUGUI nameText;
         [SerializeField] private TextMeshProUGUI hpText;
         [SerializeField] private Image portraitImage;
+        
+        [Header("HP Bar Controller")]
+        [SerializeField] private HPBarController hpBarController;
 
         [Header("Damage Text UI")]
         [SerializeField] private Transform hpTextAnchor; // 데미지 텍스트 위치
@@ -132,6 +136,12 @@ namespace Game.CharacterSystem.Core
             SetMaxHP(data.MaxHP);
             ApplyPassiveEffects();
             RefreshUI();
+            
+            // HP 바 초기화 (적 캐릭터 전용)
+            if (hpBarController != null)
+            {
+                hpBarController.Initialize(this);
+            }
         }
 
         /// <summary>
@@ -208,6 +218,12 @@ namespace Game.CharacterSystem.Core
             if (portraitImage != null)
             {
                 portraitImage.sprite = CharacterData.Portrait;
+            }
+            
+            // HP 바 업데이트
+            if (hpBarController != null)
+            {
+                hpBarController.UpdateHPBar();
             }
         }
 
