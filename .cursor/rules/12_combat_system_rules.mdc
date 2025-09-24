@@ -31,35 +31,32 @@ CombatSystem은 새로운 5슬롯 시스템(1개 전투 슬롯 + 4개 대기 슬
 ## 🏗️ 폴더 구조 규칙
 ```
 CombatSystem/
-├── Core/             # 핵심 로직 (2개 파일)
-├── Manager/          # 매니저 클래스 (8개 파일) ← 3개에서 확장
-├── Interface/        # 인터페이스 (8개 파일) ← 22개에서 64% 감소
+├── Core/             # 핵심 로직 (4개 파일)
+├── Manager/          # 매니저 클래스 (3개 파일)
+├── Interface/        # 인터페이스 (8개 파일)
 ├── State/            # 상태 패턴 (6개 파일)
-├── Service/          # 서비스 클래스 (4개 파일) ← 3개에서 확장
+├── Service/          # 서비스 클래스 (3개 파일)
 ├── Data/             # 데이터 클래스 (1개 파일)
 ├── Event/            # 이벤트 시스템 (1개 파일)
-├── Utility/          # 유틸리티 (2개 파일)
+├── Utility/          # 유틸리티 (4개 파일)
 ├── Context/          # 컨텍스트 (2개 파일)
-├── DragDrop/         # 드래그 앤 드롭 (4개 파일)
+├── DragDrop/         # 드래그 앤 드롭 (2개 파일)
 ├── Initialization/   # 초기화 (1개 파일)
 └── UI/               # UI 관련 (1개 파일)
 ```
 
 ## 📁 주요 컴포넌트 규칙
 
-### Core 폴더 규칙 (2개 파일)
+### Core 폴더 규칙 (4개 파일)
 - **CombatInstaller.cs**: 전투 시스템 의존성 주입 설정
-- **CombatContext.cs**: 전투 컨텍스트
-
-### Manager 폴더 규칙 (8개 파일)
-- **CombatFlowManager.cs**: 전투 플로우 관리 (GameOverManager 통합)
-- **CombatExecutionManager.cs**: 전투 실행 관리
-- **CombatSlotManager.cs**: 전투 슬롯 매니저
-- **TurnManager.cs**: 턴 매니저 (TurnCardRegistry 통합)
 - **CombatStateFactory.cs**: 전투 상태 팩토리
 - **DefaultCombatState.cs**: 기본 전투 상태
 - **TurnStartButtonHandler.cs**: 턴 시작 버튼 핸들러
-- **SlotSelector.cs**: 슬롯 선택기
+
+### Manager 폴더 규칙 (3개 파일)
+- **CombatExecutionManager.cs**: 전투 실행 관리
+- **CombatFlowManager.cs**: 전투 플로우 관리(슬롯 관리 통합)
+- **TurnManager.cs**: 턴 매니저
 
 ### Interface 폴더 규칙 (8개 파일)
 - **ICombatTurnManager.cs**: 전투 턴 관리 인터페이스
@@ -72,38 +69,37 @@ CombatSystem/
 - **ICombatInitializerStep.cs**: 전투 초기화 단계 인터페이스
 
 ### State 폴더 규칙 (6개 파일)
-- **CombatFirstAttackState.cs**: 첫 번째 공격 상태
+- **CombatAttackState.cs**: 공격 상태
 - **CombatPlayerInputState.cs**: 플레이어 입력 상태
 - **CombatPrepareState.cs**: 준비 상태
 - **CombatResultState.cs**: 결과 상태
-- **CombatSecondAttackState.cs**: 두 번째 공격 상태
 - **CombatVictoryState.cs**: 승리 상태
+- **CombatGameOverState.cs**: 게임 오버 상태
 
-### Service 폴더 규칙 (4개 파일)
+### Service 폴더 규칙 (3개 파일)
 - **DefaultEnemySpawnValidator.cs**: 기본 적 스폰 검증기
 - **DefaultTurnStartConditionChecker.cs**: 기본 턴 시작 조건 검사기
 - **PlayerInputController.cs**: 플레이어 입력 컨트롤러
-- **CardExecutionContextProvider.cs**: 카드 실행 컨텍스트 제공자
 
 ### Data 폴더 규칙 (1개 파일)
 - **SlotOwner.cs**: 슬롯 소유자 열거형
 
 ### Event 폴더 규칙 (1개 파일)
-- **CombatEventSystem.cs**: 전투 이벤트 시스템
+- **CombatEvents.cs**: 전투 이벤트 시스템
 
-### Utility 폴더 규칙 (2개 파일)
-- **CardValidator.cs**: 카드 검증기
-- **CharacterDeathHandler.cs**: 캐릭터 사망 핸들러
+### Utility 폴더 규칙 (4개 파일)
+- **CardSlotHelper.cs**
+- **SlotSelector.cs**
+- **SlotValidator.cs**
+- **UnityMainThreadDispatcher.cs**
 
 ### Context 폴더 규칙 (2개 파일)
-- **CombatContext.cs**: 전투 컨텍스트
+- **DefaultCardExecutionContext.cs**: 기본 카드 실행 컨텍스트
 - **TurnContext.cs**: 턴 컨텍스트
 
-### DragDrop 폴더 규칙 (4개 파일)
+### DragDrop 폴더 규칙 (2개 파일)
 - **DefaultCardDropValidator.cs**: 기본 카드 드롭 검증기
-- **DefaultCardRegistrar.cs**: 기본 카드 등록기
-- **CardDropService.cs**: 카드 드롭 서비스
-- **CardDropToSlotHandler.cs**: 슬롯으로 카드 드롭 핸들러
+- **CardDropRegistrar.cs**: 카드 드롭 등록자
 
 ### Initialization 폴더 규칙 (1개 파일)
 - **SlotInitializationStep.cs**: 슬롯 초기화 단계

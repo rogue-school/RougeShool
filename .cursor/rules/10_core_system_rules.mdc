@@ -15,7 +15,7 @@ CoreSystem은 게임의 핵심 시스템들을 관리하는 중앙 집중식 시
 - **AnimationSystem 의존성 완전 제거**: 모든 AnimationSystem 관련 코드 제거 완료
 - **임시 애니메이션 비활성화**: 애니메이션 호출 부분을 Debug.Log로 대체하여 게임 로직 정상 동작
 - **Zenject DI 통합 완료**: 모든 CoreSystem 매니저가 의존성 주입으로 전환 완료
-- **싱글톤 제거 완료**: GameStateManager, SceneTransitionManager, AudioManager, SaveManager 등에서 싱글톤 패턴 제거 완료
+- **싱글톤 정비 진행**: 일부 매니저는 여전히 싱글톤 사용 중(SceneTransitionManager, AudioManager, SaveManager 등)
 - **자동 초기화 시스템**: ICoreSystemInitializable 인터페이스 기반 자동 초기화 구현 완료
 - **인터페이스 기반 설계**: 모든 매니저가 인터페이스를 구현하여 테스트 가능성 확보 완료
 - **컴파일 에러 해결**: 모든 CoreSystem 관련 컴파일 에러 해결 완료
@@ -28,7 +28,7 @@ CoreSystem은 게임의 핵심 시스템들을 관리하는 중앙 집중식 시
 ## 🏗️ 폴더 구조 규칙
 ```
 CoreSystem/
-├── Manager/          # 코어 매니저 (5개 파일)
+├── Manager/          # 코어 매니저 (7개 파일)
 ├── Audio/           # 오디오 관리 (3개 파일)
 ├── Save/            # 저장 관리 (1개 파일)
 ├── Utility/         # 코어 유틸리티 (7개 파일) ← 3개에서 확장
@@ -39,20 +39,22 @@ CoreSystem/
 
 ## 📁 주요 컴포넌트 규칙
 
-### Manager 폴더 규칙 (5개 파일)
+### Manager 폴더 규칙 (7개 파일)
 - **CoreSystemInitializer.cs**: 모든 코어 시스템 초기화
 - **GameStateManager.cs**: 게임 상태 관리
 - **MainSceneInstaller.cs**: 메인 씬 설치자
 - **PlayerCharacterSelectionManager.cs**: 플레이어 캐릭터 선택 관리
 - **SceneTransitionManager.cs**: 씬 전환 관리
+- **GameStartupController.cs**: 코어/전투 초기화 플로우 오케스트레이션
+- **BaseCoreManager.cs**: 코어 매니저 기본 클래스
 
 ### Audio 폴더 규칙 (3개 파일)
-- **AudioManager.cs**: 오디오 시스템 관리 (싱글톤)
+- **AudioManager.cs**: 오디오 시스템 관리 (싱글톤 유지, DI 병행 가능)
 - **AudioPoolManager.cs**: 오디오 풀링 관리
 - **AudioEventTrigger.cs**: 오디오 이벤트 트리거
 
 ### Save 폴더 규칙 (1개 파일)
-- **SaveManager.cs**: 저장 시스템 관리 (싱글톤)
+- **SaveManager.cs**: 저장 시스템 관리 (싱글톤 유지, ICoreSystemInitializable 구현)
 
 ### Utility 폴더 규칙 (7개 파일)
 - **CoroutineRunner.cs**: 코루틴 실행 관리

@@ -36,7 +36,7 @@ SkillCardSystem/
 │   ├── CardDropService.cs
 │   ├── CardDropToHandHandler.cs
 │   └── CardDropToSlotHandler.cs
-├── Effect/           # 효과 구현 (7개 파일)
+├── Effect/           # 효과 구현 (9개 파일)
 │   ├── BleedEffect.cs
 │   ├── BleedEffectCommand.cs
 │   ├── BleedEffectSO.cs
@@ -54,7 +54,7 @@ SkillCardSystem/
 │   └── SkillCardFactory.cs
 ├── Installer/        # DI 설치 (1개 파일)
 │   └── CardInstaller.cs
-├── Interface/        # 인터페이스 (15개 파일)
+├── Interface/        # 인터페이스 (14개 파일)
 │   ├── ICardCirculationSystem.cs
 │   ├── ICardEffect.cs
 │   ├── ICardEffectCommand.cs
@@ -70,7 +70,7 @@ SkillCardSystem/
 │   ├── ISkillCardFactory.cs
 │   ├── ISkillCardUI.cs
 │   └── SlotRegistry.cs
-├── Manager/          # 매니저 클래스 (3개 파일)
+├── Manager/          # 매니저 클래스 (4개 파일)
 │   ├── BaseSkillCardManager.cs
 │   ├── CardCirculationSystem.cs
 │   ├── PlayerDeckManager.cs
@@ -181,7 +181,7 @@ SkillCardSystem/
 - **PlayerSkillDeck.cs**: 플레이어 스킬 덱 (수량 기반 카드 엔트리 지원)
 - **EnemySkillDeck.cs**: 적 스킬 덱 (확률 기반 `EnemySkillDeck.CardEntry`, `GetRandomEntry()` 제공)
 
-### Effect 폴더 (7개 파일)
+### Effect 폴더 (9개 파일)
 - **BleedEffect.cs**: 출혈 효과
 - **BleedEffectCommand.cs**: 출혈 효과 명령
 - **BleedEffectSO.cs**: 출혈 효과 데이터
@@ -196,37 +196,42 @@ SkillCardSystem/
 - **CardEffectCommandFactory.cs**: 카드 효과 명령 팩토리
 - **SkillCardEntry.cs**: 스킬카드 엔트리 팩토리
 
-### Interface 폴더 (9개 파일)
+### Interface 폴더 (14개 파일)
 - **ISkillCard.cs**: 스킬카드 인터페이스
 - **IPerTurnEffect.cs**: 턴별 효과 인터페이스
 - **ISkillCardUI.cs**: 스킬카드 UI 인터페이스
 - **IPlayerHandManager.cs**: 플레이어 핸드 관리 인터페이스
-- **IEnemyHandManager.cs**: 적 핸드 관리 인터페이스
-- **ICardCirculationSystem.cs**: 카드 순환 시스템 인터페이스
-- **ICardDropValidator.cs**: 카드 드롭 검증 인터페이스
-- **ICardExecutionContext.cs**: 카드 실행 컨텍스트 인터페이스
 - **IPlayerDeckManager.cs**: 플레이어 덱 동적 관리 인터페이스
+- **ICardCirculationSystem.cs**: 카드 순환 시스템 인터페이스
+- **ICardExecutionContext.cs**: 카드 실행 컨텍스트 인터페이스
+- **ICardValidator.cs**: 카드 검증 인터페이스
+- **IHandCardSlot.cs**: 핸드 카드 슬롯 인터페이스
+- **ICombatCardSlot.cs**: 전투 카드 슬롯 인터페이스
+- **ICardEffect.cs**: 카드 효과 인터페이스
+- **ICardEffectCommand.cs**: 효과 명령 인터페이스
+- **ICardEffectCommandFactory.cs**: 효과 명령 팩토리 인터페이스
+- **ISkillCardFactory.cs**: 스킬카드 팩토리 인터페이스
 
 ### Runtime 폴더 (2개 파일)
 - **SkillCard.cs**: 통합 스킬카드 런타임 인스턴스 (일반 C# 클래스, ISkillCard 구현) ← MonoBehaviour 제거로 성능 최적화
-- **SkillCardDefinitionEditor.cs**: 스킬카드 정의 커스텀 에디터
+- **EnemySkillCardRuntime.cs**: 적 스킬카드 런타임 표현
 
 ### Manager 폴더 (4개 파일)
 - **PlayerHandManager.cs**: 플레이어 핸드 관리
-- **EnemyHandManager.cs**: 적 핸드 관리
 - **CardCirculationSystem.cs**: 카드 순환 시스템 (TurnBasedCardManager 통합)
 - **PlayerDeckManager.cs**: 플레이어 덱 동적 관리 (게임 중 덱 수정, 덱 크기 제한 제거)
+- **BaseSkillCardManager.cs**: 스킬카드 매니저 기본 클래스
 
 ### Service 폴더 (2개 파일)
 - **CardExecutionContextProvider.cs**: 카드 실행 컨텍스트 제공
-- **CardDropService.cs**: 카드 드롭 서비스 (PlayerCardReplacementHandler, CardPlacementService 통합)
+- **SkillCardRegistry.cs**: 스킬카드 정의 레지스트리/인덱스
 
 ### UI 폴더 (5개 파일)
 - **SkillCardUI.cs**: 스킬카드 UI(PLAYER_MARKER는 이름/설명/TMP 모두 비활성화, 루트 Image에 엠블럼 사용, 드래그/레이캐스트 비활성)
 - **SkillCardUIFactory.cs**: 스킬카드 UI 팩토리
 - **PlayerHandCardSlotUI.cs**: 플레이어 핸드 카드 슬롯 UI
 - **DeckEditorUI.cs**: 덱 편집 UI (게임 중 덱 구성 변경)
-- **SkillCardDefinitionEditor.cs**: 스킬카드 정의 커스텀 에디터
+- **CombatExecutionSlotUI.cs**: 전투 슬롯 UI
 
 ### DragDrop 폴더 (4개 파일)
 - **CardDragHandler.cs**: 카드 드래그 처리(DOTween 연출: 시작 확대/투명도, 이동 보간, 실패 복귀)

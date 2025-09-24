@@ -16,10 +16,11 @@ CoreSystem은 게임의 핵심 시스템들을 관리하는 중앙 집중식 시
 ## 🏗️ 폴더 구조 (실제 파일 수 기준)
 ```
 CoreSystem/
-├── Manager/          # 코어 매니저 (6개 파일)
+├── Manager/          # 코어 매니저 (7개 파일)
 │   ├── BaseCoreManager.cs
 │   ├── CoreSystemInitializer.cs
 │   ├── GameStateManager.cs
+│   ├── GameStartupController.cs
 │   ├── MainSceneInstaller.cs
 │   ├── PlayerCharacterSelectionManager.cs
 │   └── SceneTransitionManager.cs
@@ -87,10 +88,11 @@ CoreSystem/
 
 ## 📁 주요 컴포넌트
 
-### Manager 폴더 (6개 파일)
+### Manager 폴더 (7개 파일)
 - **BaseCoreManager.cs**: 코어 매니저 기본 클래스
 - **CoreSystemInitializer.cs**: 모든 코어 시스템 초기화
 - **GameStateManager.cs**: 게임 상태 관리
+- **GameStartupController.cs**: 게임 시작 시 코어/전투 초기화 흐름 조정
 - **MainSceneInstaller.cs**: 메인 씬 설치자
 - **PlayerCharacterSelectionManager.cs**: 플레이어 캐릭터 선택 관리
 - **SceneTransitionManager.cs**: 씬 전환 관리

@@ -70,8 +70,8 @@ UtilitySystem/
 // GameContext를 통한 플레이어 캐릭터 관리
 GameContext gameContext = new GameContext();
 PlayerCharacterData characterData = Resources.Load<PlayerCharacterData>("Characters/SwordCharacter");
-gameContext.SetPlayerCharacter(characterData);
-PlayerCharacterData currentPlayer = gameContext.GetPlayerCharacter();
+gameContext.SetSelectedCharacter(characterData);
+PlayerCharacterData currentPlayer = gameContext.SelectedCharacter;
 
 // DontDestroyOnLoadContainer를 통한 오브젝트 유지
 DontDestroyOnLoadContainer.Instance.RegisterObject(gameObject);

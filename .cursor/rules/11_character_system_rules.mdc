@@ -67,17 +67,16 @@ CharacterSystem/
 - **ICharacterAction.cs**: 캐릭터 행동 인터페이스
 - **ICharacterEffect.cs**: 캐릭터 효과 인터페이스
 
-### Manager 폴더 규칙 (3개 파일)
-- **PlayerManager.cs**: 플레이어 캐릭터 매니저 (PlayerResourceManager 통합)
+### Manager 폴더 규칙 (4개 파일)
+- **PlayerManager.cs**: 플레이어 캐릭터 매니저
 - **EnemyManager.cs**: 적 캐릭터 매니저
+- **EnemySpawnerManager.cs**: 적 스폰 매니저
 - **BaseCharacterManager.cs**: 캐릭터 매니저 기본 클래스
 
-### Initialization 폴더 규칙 (6개 파일)
+### Initialization 폴더 규칙 (4개 파일)
 - **EnemyCharacterInitializer.cs**: 적 캐릭터 초기화
-- **EnemyHandInitializer.cs**: 적 핸드 초기화
 - **EnemyInitializer.cs**: 적 초기화 통합 관리
-- **HandInitializer.cs**: 핸드 초기화 기본 클래스
-- **PlayerCharacterInitializer.cs**: 플레이어 캐릭터 초기화
+- **HandInitializer.cs**: 플레이어 핸드 초기화
 - **PlayerSkillCardInitializer.cs**: 플레이어 스킬카드 초기화
 
 ### UI 폴더 규칙 (5개 파일)

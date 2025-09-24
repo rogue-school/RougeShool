@@ -209,21 +209,14 @@ CharacterSystem/
 - **Reset()**: 매니저 상태 초기화
 - **적 핸드 매니저 관련 메서드 제거됨**: `GetEnemyHandManager()` 등 적 핸드 관련 기능 완전 제거
 
-### PlayerResourceManager 클래스
-- **Initialize(PlayerCharacterData characterData)**: 캐릭터 데이터로 초기화
-- **CanConsumeResource(int amount)**: 리소스 소모 가능 여부 확인
-- **ConsumeResource(int amount)**: 리소스 소모
-- **RestoreResource(int amount)**: 리소스 회복
-- **CurrentResource**: 현재 리소스 양 (프로퍼티)
-- **MaxResource**: 최대 리소스 양 (프로퍼티)
-- **ResourceName**: 리소스 이름 (프로퍼티)
+ 
 
 ### PlayerCharacterUIController 클래스 (업데이트)
 - **Initialize(PlayerCharacter character)**: 플레이어 캐릭터로 UI 초기화
 - **SetTarget(ICharacter character)**: 호환용, 내부에서 Initialize(PlayerCharacter) 위임
 - **SetCharacterEmblem(PlayerCharacterData data)**: 데이터 기반 문양 설정 (새로 추가)
 - **SetCharacterEmblemFallback(PlayerCharacterType type)**: 기본 문양 Fallback 시스템 (새로 추가)
-- **UpdateHPBar()/UpdateMPBar()**: 바/텍스트/색상 애니메이션 포함 업데이트
+- **UpdateHPBar()**: 바/텍스트/색상 애니메이션 포함 업데이트
 - **OnTakeDamage(int), OnHeal(int)**: 피격/회복 시 연출 훅
 - **Add/Remove/Clear BuffDebuffIcon**: 버프/디버프 아이콘 관리
 
@@ -254,10 +247,7 @@ CharacterSystem/
 - **GetSlotPosition()**: 슬롯 위치 정보 반환
 - **GetOwner()**: 슬롯 소유자 정보 반환
 
-### ICharacterSlotRegistry 인터페이스
-- **RegisterCharacterSlots(IEnumerable<ICharacterSlot> slots)**: 캐릭터 슬롯들 등록
-- **GetCharacterSlot(SlotOwner owner)**: 소유자별 캐릭터 슬롯 조회
-- **GetAllCharacterSlots()**: 모든 캐릭터 슬롯 조회
+ 
 
 ### PlayerCharacterData 클래스
 - **DisplayName**: 캐릭터 표시 이름 (프로퍼티)
@@ -303,9 +293,6 @@ uiController.Initialize(player);
 
 // HP 업데이트
 uiController.UpdateHP(player.CurrentHP, player.MaxHP);
-
-// 리소스 업데이트 (활 캐릭터의 경우)
-uiController.UpdateResource(resourceManager.CurrentResource, resourceManager.MaxResource);
 
 // 데미지 받을 때 UI 효과
 uiController.OnTakeDamage(10);
@@ -360,7 +347,7 @@ EnemyManager enemyManager = FindObjectOfType<EnemyManager>();
 enemyManager.RegisterEnemy(enemy);
 
 // 현재 적 캐릭터 조회
-IEnemyCharacter currentEnemy = enemyManager.GetCurrentEnemy();
+EnemyCharacter currentEnemy = enemyManager.GetCurrentEnemy();
 
 // 적 캐릭터 등록 해제
 enemyManager.UnregisterEnemy();
@@ -369,27 +356,9 @@ enemyManager.UnregisterEnemy();
 enemyManager.ClearEnemy();
 ```
 
-### 리소스 관리
+ 
 ```csharp
-// PlayerResourceManager를 통한 리소스 관리
-PlayerResourceManager resourceManager = FindObjectOfType<PlayerResourceManager>();
-
-// 캐릭터 데이터로 초기화
-resourceManager.Initialize(playerData);
-
-// 리소스 소모 가능 여부 확인
-if (resourceManager.CanConsumeResource(5))
-{
-    resourceManager.ConsumeResource(5);
-}
-
-// 리소스 회복
-resourceManager.RestoreResource(3);
-
-// 리소스 상태 조회
-int currentResource = resourceManager.CurrentResource;
-int maxResource = resourceManager.MaxResource;
-string resourceName = resourceManager.ResourceName;
+ 
 ```
 
 ### 적 스폰 관리
@@ -438,33 +407,18 @@ if (player.CharacterType == PlayerCharacterType.Sword)
 else if (player.CharacterType == PlayerCharacterType.Bow)
 {
     // 활 캐릭터 특수 기능 (화살 리소스 사용)
-    if (resourceManager.CanConsumeResource(1))
-    {
-        resourceManager.ConsumeResource(1);
-        player.BowAttack();
-    }
+    player.BowAttack();
 }
 else if (player.CharacterType == PlayerCharacterType.Staff)
 {
     // 지팡이 캐릭터 특수 기능 (마나 리소스 사용)
-    if (resourceManager.CanConsumeResource(2))
-    {
-        resourceManager.ConsumeResource(2);
-        player.StaffAttack();
-    }
+    player.StaffAttack();
 }
 ```
 
-### 초기화 시스템 연동
+ 
 ```csharp
-// ICombatInitializerStep을 통한 초기화
-PlayerCharacterInitializer playerInitializer = FindObjectOfType<PlayerCharacterInitializer>();
-
-// 초기화 순서 확인
-int order = playerInitializer.Order; // 낮을수록 먼저 실행
-
-// 초기화 실행 (CombatInitializer에서 자동 호출됨)
-playerInitializer.ExecuteInitialization();
+ 
 ```
 
 ## 🏗️ 아키텍처 패턴
@@ -477,12 +431,12 @@ playerInitializer.ExecuteInitialization();
 ### 2. 인터페이스 분리
 - **ICharacter**: 기본 캐릭터 기능
 - **ICharacterData**: 데이터 관련 기능
-- **ICharacterState**: 상태 관리 기능
+ 
 
 ### 3. 매니저 패턴
 - **PlayerManager**: 플레이어 캐릭터 관리
 - **EnemyManager**: 적 캐릭터 관리
-- **PlayerResourceManager**: 플레이어 리소스 관리
+ 
 
 ## 🔧 기술적 구현 세부사항
 
@@ -510,7 +464,6 @@ playerInitializer.ExecuteInitialization();
 ```mermaid
 graph TD
     A[PlayerManager] --> B[PlayerCharacter]
-    A --> C[PlayerResourceManager]
     
     D[EnemyManager] --> E[EnemyCharacter]
     D --> F[EnemyInitializer]
@@ -567,17 +520,12 @@ classDiagram
         +ExecuteAI() void
     }
     
-    class PlayerResourceManager {
-        -arrowCount: int
-        -manaCount: int
-        +ConsumeResource(type, amount) bool
-        +RestoreResource(type, amount) void
-    }
+    
     
     ICharacter <|.. CharacterBase
     CharacterBase <|-- PlayerCharacter
     CharacterBase <|-- EnemyCharacter
-    PlayerCharacter --> PlayerResourceManager
+    
 ```
 
 ### 시퀀스 다이어그램

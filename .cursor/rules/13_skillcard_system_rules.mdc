@@ -35,17 +35,17 @@ SkillCardSystem은 게임의 스킬카드 시스템을 관리하는 핵심 시�
 ```
 SkillCardSystem/
 ├── Data/             # 카드 데이터 (2개 파일)
-├── Deck/             # 덱 관리 (2개 파일) ← 3개에서 감소
-├── DragDrop/         # 드래그 앤 드롭 (4개 파일) ← 3개에서 확장
-├── Effect/           # 효과 구현 (7개 파일) ← 12개에서 제거된 효과들 반영
+├── Deck/             # 덱 관리 (2개 파일)
+├── DragDrop/         # 드래그 앤 드롭 (4개 파일)
+├── Effect/           # 효과 구현 (9개 파일)
 ├── Executor/         # 실행기 (1개 파일)
 ├── Factory/          # 팩토리 패턴 (3개 파일)
-├── Installer/        # DI 설치 (1개 파일) ← 폴더명 오타 수정
-├── Interface/        # 인터페이스 (15개 파일) ← 26개에서 40% 감소
-├── Manager/          # 매니저 클래스 (4개 파일) ← 3개에서 확장
-├── Runtime/          # 런타임 로직 (2개 파일) ← 1개에서 확장
-├── Service/          # 서비스 클래스 (2개 파일) ← 6개에서 통합
-├── Slot/             # 슬롯 시스템 (10개 파일) ← 11개에서 감소
+├── Installer/        # DI 설치 (1개 파일)
+├── Interface/        # 인터페이스 (14개 파일)
+├── Manager/          # 매니저 클래스 (4개 파일)
+├── Runtime/          # 런타임 로직 (2개 파일)
+├── Service/          # 서비스 클래스 (2개 파일)
+├── Slot/             # 슬롯 시스템 (9개 파일)
 ├── UI/               # UI 관련 (5개 파일)
 ├── Validator/        # 검증기 (2개 파일)
 └── Editor/           # 에디터 도구 (3개 파일)
@@ -61,7 +61,7 @@ SkillCardSystem/
 - **PlayerSkillDeck.cs**: 플레이어 스킬 덱 (수량 기반 카드 엔트리 지원, 덱 크기 제한 제거)
 - **EnemySkillDeck.cs**: 적 스킬 덱 (SkillCardDefinition 기반)
 
-### Effect 폴더 규칙 (7개 파일)
+### Effect 폴더 규칙 (9개 파일)
 - **BleedEffect.cs**: 출혈 효과
 - **BleedEffectCommand.cs**: 출혈 효과 명령
 - **BleedEffectSO.cs**: 출혈 효과 데이터
@@ -76,7 +76,7 @@ SkillCardSystem/
 - **CardEffectCommandFactory.cs**: 카드 효과 명령 팩토리
 - **SkillCardEntry.cs**: 스킬카드 엔트리 팩토리
 
-### Interface 폴더 규칙 (15개 파일)
+### Interface 폴더 규칙 (14개 파일)
 - **ISkillCard.cs**: 스킬카드 인터페이스
 - **IPerTurnEffect.cs**: 턴별 효과 인터페이스
 - **ISkillCardUI.cs**: 스킬카드 UI 인터페이스
@@ -93,23 +93,26 @@ SkillCardSystem/
 - **ISlotOwner.cs**: 슬롯 소유자 인터페이스
 - **ISkillCardDefinition.cs**: 스킬카드 정의 인터페이스
 
-### Runtime 폴더 규칙 (1개 파일)
-- **SkillCard.cs**: 통합 스킬카드 런타임 인스턴스 (MonoBehaviour, ISkillCard 구현)
+### Runtime 폴더 규칙 (2개 파일)
+- **SkillCard.cs**: 통합 스킬카드 런타임 인스턴스 (일반 C#, ISkillCard 구현)
+- **EnemySkillCardRuntime.cs**: 적 런타임 표현
 
 ### Manager 폴더 규칙 (4개 파일)
-- **PlayerHandManager.cs**: 플레이어 핸드 관리 (카드 배치 및 교체 기능 통합)
-- **EnemyHandManager.cs**: 적 핸드 관리
-- **CardCirculationSystem.cs**: 카드 순환 시스템 (턴 관리 기능 통합)
+- **PlayerHandManager.cs**: 플레이어 핸드 관리
+- **CardCirculationSystem.cs**: 카드 순환 시스템
 - **PlayerDeckManager.cs**: 플레이어 덱 관리
+- **BaseSkillCardManager.cs**: 스킬카드 매니저 기본 클래스
 
 ### Service 폴더 규칙 (2개 파일)
 - **CardExecutionContextProvider.cs**: 카드 실행 컨텍스트 제공
-- **DefaultCardRegistrar.cs**: 기본 카드 등록 서비스
+- **SkillCardRegistry.cs**: 카드 정의 인덱스/레지스트리
 
-### UI 폴더 규칙 (3개 파일)
+### UI 폴더 규칙 (5개 파일)
 - **SkillCardUI.cs**: 스킬카드 UI
 - **SkillCardUIFactory.cs**: 스킬카드 UI 팩토리
 - **PlayerHandCardSlotUI.cs**: 플레이어 핸드 카드 슬롯 UI
+- **DeckEditorUI.cs**: 덱 편집 UI
+- **CombatExecutionSlotUI.cs**: 전투 슬롯 UI
 
 ### DragDrop 폴더 규칙 (4개 파일)
 - **CardDragHandler.cs**: 카드 드래그 처리

@@ -50,14 +50,15 @@ StageSystem/
 
 ### Interface 폴더 (3개 파일)
 - **IStageManager.cs**: 스테이지 매니저 인터페이스
-- **IStageProgressController.cs**: 스테이지 진행 컨트롤러 인터페이스
-- **IStageDataFactory.cs**: 스테이지 데이터 팩토리 인터페이스
+- **IStagePhaseManager.cs**: 스테이지 단계 관리 인터페이스
+- **IStageRewardManager.cs**: 스테이지 보상 관리 인터페이스
 
 ### Factory 폴더 (1개 파일)
 - **StageDataFactory.cs**: 스테이지 데이터 생성 팩토리
 
-### Data 폴더 (2개 파일)
+### Data 폴더 (3개 파일)
 - **StageData.cs**: 스테이지 데이터 (ScriptableObject)
+- **StagePhaseState.cs**: 스테이지 단계 상태
 - **StageRewardData.cs**: 스테이지 보상 데이터
 
 ## 🎯 주요 기능

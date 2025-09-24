@@ -96,7 +96,7 @@ CombatSystem/
 │   ├── ICombatExecutionManager.cs
 │   ├── ICombatFlowManager.cs
 │   └── ICombatTurnManager.cs
-├── State/            # 상태 패턴 (5개 파일)
+├── State/            # 상태 패턴 (6개 파일)
 │   ├── CombatAttackState.cs
 │   ├── CombatGameOverState.cs
 │   ├── CombatPlayerInputState.cs
@@ -159,12 +159,12 @@ CombatSystem/
 - **ICombatTurnManager.cs**: 전투 턴 매니저 인터페이스
 
 ### State 폴더 (6개 파일)
-- **CombatAttackState.cs**: 첫 번째 공격 상태
+- **CombatAttackState.cs**: 공격 상태
 - **CombatPlayerInputState.cs**: 플레이어 입력 상태
 - **CombatPrepareState.cs**: 준비 상태
 - **CombatResultState.cs**: 결과 상태
-- **CombatSecondAttackState.cs**: 두 번째 공격 상태
 - **CombatVictoryState.cs**: 승리 상태
+- **CombatGameOverState.cs**: 게임 오버 상태
 
 ### Service 폴더 (3개 파일)
 - **DefaultEnemySpawnValidator.cs**: 기본 적 스폰 검증기
@@ -175,20 +175,20 @@ CombatSystem/
 - **SlotOwner.cs**: 슬롯 소유자 열거형
 
 ### Event 폴더 (1개 파일)
-- **CombatEventSystem.cs**: 전투 이벤트 시스템
+- **CombatEvents.cs**: 전투 이벤트 시스템
 
-### Utility 폴더 (5개 파일)
+### Utility 폴더 (4개 파일)
 - **CardSlotHelper.cs**: 카드 슬롯 헬퍼
 - **SlotSelector.cs**: 슬롯 선택기
 - **SlotValidator.cs**: 슬롯 검증기
 - **UnityMainThreadDispatcher.cs**: Unity 메인 스레드 디스패처
 
 ### Context 폴더 (2개 파일)
-- **CombatContext.cs**: 전투 컨텍스트
+- **DefaultCardExecutionContext.cs**: 기본 카드 실행 컨텍스트
 - **TurnContext.cs**: 턴 컨텍스트
 
 ### UI 폴더 (1개 파일)
-- **CombatUI.cs**: 전투 UI 컨트롤러
+- **DamageTextUI.cs**: 데미지 텍스트 UI
 
 ## 🎯 주요 기능
 
@@ -483,10 +483,7 @@ public class CustomCombatInstaller : MonoInstaller
 {
     public override void InstallBindings()
     {
-        Container.Bind<ICombatFlowCoordinator>().To<CombatFlowCoordinator>().AsSingle();
-        Container.Bind<ICombatTurnManager>().To<CombatTurnManager>().AsSingle();
-        Container.Bind<ICombatExecutorService>().To<CombatExecutorService>().AsSingle();
-        Container.Bind<ICombatPreparationService>().To<CombatPreparationService>().AsSingle();
+        // 실제 구현 클래스/인터페이스 매핑은 최신 코드 기준으로 문서 외부에서 관리됩니다.
     }
 }
 ```
