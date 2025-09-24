@@ -671,7 +671,7 @@ MonoBehaviour:
   halfHealthColor: {r: 1, g: 0.8, b: 0.2, a: 1}
   lowHealthColor: {r: 0.8, g: 0.2, b: 0.2, a: 1}
   animationSpeed: 2
-  displayMode: 1
+  displayMode: 2
   showNumbers: 1
   enableGlowEffect: 1
   glowIntensity: 1.5

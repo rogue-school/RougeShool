@@ -44,11 +44,7 @@ namespace Game.CharacterSystem.UI
         [Tooltip("HP 바 변화 애니메이션 속도")]
         [SerializeField] private float animationSpeed = 2f;
 
-        [Header("표시 모드")]
-        [Tooltip("플레이어/적 표시 모드")]
-        [SerializeField] private DisplayMode displayMode = DisplayMode.Player;
-        
-        [Tooltip("숫자 표기 사용(적 일반은 비권장)")]
+        [Tooltip("숫자 표기 사용")]
         [SerializeField] private bool showNumbers = true;
         
         [Header("Visual Effects")]
@@ -163,7 +159,7 @@ namespace Game.CharacterSystem.UI
         }
 
         /// <summary>
-        /// 적 캐릭터 전용 초기화 (DisplayMode를 EnemyNormal으로 설정).
+        /// 적 캐릭터 전용 초기화
         /// </summary>
         public void Initialize(EnemyCharacter character)
         {
@@ -172,10 +168,6 @@ namespace Game.CharacterSystem.UI
                 Debug.LogWarning("[HPBarController] Initialize(EnemyCharacter) - character가 null입니다.");
                 return;
             }
-            
-            // 적 캐릭터용 표시 모드 설정
-            displayMode = DisplayMode.EnemyNormal;
-            showNumbers = false; // 적은 숫자 표시하지 않음
             
             Initialize((ICharacter)character);
         }
@@ -280,14 +272,13 @@ namespace Game.CharacterSystem.UI
         private void UpdateHPText(int currentHP, int maxHP)
         {
             if (hpText == null) return;
-            if (!showNumbers && displayMode != DisplayMode.Player)
+            if (!showNumbers)
             {
                 hpText.text = string.Empty;
                 return;
             }
             hpText.text = $"{currentHP}/{maxHP}";
-            // 텍스트 색상도 HP 상태에 따라 변경
-            hpText.color = GetHealthColor((float)currentHP / maxHP);
+            // 텍스트 색상은 원래 색상 유지 (HP 상태에 따른 색상 변경 비활성화)
         }
 
         /// <summary>
@@ -548,13 +539,4 @@ namespace Game.CharacterSystem.UI
         #endregion
     }
 
-    /// <summary>
-    /// HP 바 표시 모드
-    /// </summary>
-    public enum DisplayMode
-    {
-        Player,
-        EnemyNormal,
-        EnemyBoss
-    }
 }
