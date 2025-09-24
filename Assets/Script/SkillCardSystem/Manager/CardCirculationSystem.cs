@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Data;
@@ -60,7 +61,17 @@ namespace Game.SkillCardSystem.Manager
                 playerDeck.Add(card);
             }
 
+            // 덱 구성 상세 로그
+            var cardGroups = playerDeck.GroupBy(c => c.CardDefinition).Select(g => new { 
+                CardName = g.Key.displayName, 
+                Count = g.Count() 
+            });
+            
             GameLogger.LogInfo($"카드 순환 시스템 초기화 완료: {playerDeck.Count}장", GameLogger.LogCategory.SkillCard);
+            foreach (var group in cardGroups)
+            {
+                GameLogger.LogInfo($"  - {group.CardName}: {group.Count}장", GameLogger.LogCategory.SkillCard);
+            }
         }
 
         public void Clear()
@@ -84,18 +95,37 @@ namespace Game.SkillCardSystem.Manager
                 return currentTurnCards;
             }
 
-            // 목표 장수만큼 랜덤하게 드로우 (중복 허용)
-            for (int i = 0; i < CardsPerTurn; i++)
+            // 사용 가능한 카드 수만큼만 드로우 (중복 방지)
+            int cardsToDraw = Mathf.Min(CardsPerTurn, playerDeck.Count);
+            
+            // 덱을 복사하여 셔플
+            var availableCards = new List<ISkillCard>(playerDeck);
+            
+            // Fisher-Yates 셔플 알고리즘
+            for (int i = availableCards.Count - 1; i > 0; i--)
             {
-                if (playerDeck.Count > 0)
-                {
-                    int randomIndex = Random.Range(0, playerDeck.Count);
-                    var card = playerDeck[randomIndex];
-                    currentTurnCards.Add(card);
-                }
+                int randomIndex = Random.Range(0, i + 1);
+                (availableCards[i], availableCards[randomIndex]) = (availableCards[randomIndex], availableCards[i]);
+            }
+            
+            // 앞에서부터 목표 장수만큼 드로우
+            for (int i = 0; i < cardsToDraw; i++)
+            {
+                currentTurnCards.Add(availableCards[i]);
             }
 
+            // 드로우된 카드 상세 로그
+            var drawnCardGroups = currentTurnCards.GroupBy(c => c.CardDefinition).Select(g => new { 
+                CardName = g.Key.displayName, 
+                Count = g.Count() 
+            });
+            
             GameLogger.LogInfo($"턴 드로우 완료: {currentTurnCards.Count}장 (덱: {playerDeck.Count}장)", GameLogger.LogCategory.SkillCard);
+            foreach (var group in drawnCardGroups)
+            {
+                GameLogger.LogInfo($"  - 드로우된 카드: {group.CardName} x{group.Count}", GameLogger.LogCategory.SkillCard);
+            }
+            
             return currentTurnCards;
         }
 
