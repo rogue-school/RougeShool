@@ -119,51 +119,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &23181612
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 23181614}
-  - component: {fileID: 23181613}
-  m_Layer: 0
-  m_Name: XButtonBow
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &23181613
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 23181612}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e317b9b442097204488b4f416d5b2e06, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  targetToHide: {fileID: 798379163}
---- !u!4 &23181614
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 23181612}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1169.8273, y: 436.94385, z: -3.4987025}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &48031846
 GameObject:
   m_ObjectHideFlags: 0
@@ -2036,7 +1991,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 23181613}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: Xbotton, Assembly-CSharp
         m_MethodName: HideTarget
         m_Mode: 1
@@ -3405,7 +3360,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1457000024}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: Xbotton, Assembly-CSharp
         m_MethodName: HideTarget
         m_Mode: 1
@@ -4282,7 +4237,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 988867191}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: Xbotton, Assembly-CSharp
         m_MethodName: HideTarget
         m_Mode: 1
@@ -4754,51 +4709,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   underline: {fileID: 1800577787}
   animationDuration: 0.4
---- !u!1 &988867189
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 988867190}
-  - component: {fileID: 988867191}
-  m_Layer: 0
-  m_Name: XButtonWand
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &988867190
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 988867189}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1169.8273, y: 436.94385, z: -3.4987025}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &988867191
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 988867189}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e317b9b442097204488b4f416d5b2e06, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  targetToHide: {fileID: 2106068440}
 --- !u!1 &992552327
 GameObject:
   m_ObjectHideFlags: 0
@@ -6695,50 +6605,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1335818451}
   m_CullTransparentMesh: 1
---- !u!1 &1357794140
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1357794142}
-  - component: {fileID: 1357794141}
-  m_Layer: 0
-  m_Name: GameEnd
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1357794141
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1357794140}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0f7c89248ab9cfd48a99d13e0085d56e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!4 &1357794142
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1357794140}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 877.5204, y: 413.72342, z: -2.9878118}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1407301160
 GameObject:
   m_ObjectHideFlags: 0
@@ -7051,7 +6917,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1357794141}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: ExitGame, Assembly-CSharp
         m_MethodName: QuitGame
         m_Mode: 1
@@ -7115,51 +6981,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   underline: {fileID: 1623157171}
   animationDuration: 0.4
---- !u!1 &1457000023
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1457000025}
-  - component: {fileID: 1457000024}
-  m_Layer: 0
-  m_Name: XButtonSword
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1457000024
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1457000023}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e317b9b442097204488b4f416d5b2e06, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  targetToHide: {fileID: 521038087}
---- !u!4 &1457000025
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1457000023}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 802.47046, y: 574.64514, z: -4.0159397}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1457818785
 GameObject:
   m_ObjectHideFlags: 0
@@ -8655,6 +8476,58 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1707962009}
   m_CullTransparentMesh: 1
+--- !u!1 &1777911910
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1777911912}
+  - component: {fileID: 1777911911}
+  m_Layer: 0
+  m_Name: MainSceneController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1777911911
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1777911910}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 330c7d64f33acd146b3f940cde63cdb7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  startButton: {fileID: 0}
+  continueButton: {fileID: 1267912207}
+  settingsButton: {fileID: 0}
+  exitButton: {fileID: 0}
+  settingsPanel: {fileID: 0}
+  bgmVolumeSlider: {fileID: 0}
+  sfxVolumeSlider: {fileID: 0}
+  closeSettingsButton: {fileID: 0}
+--- !u!4 &1777911912
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1777911910}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 960, y: 540, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1800577786
 GameObject:
   m_ObjectHideFlags: 0
@@ -9939,11 +9812,8 @@ SceneRoots:
   - {fileID: 1179944864}
   - {fileID: 1556385997}
   - {fileID: 849727745}
-  - {fileID: 1457000025}
-  - {fileID: 23181614}
-  - {fileID: 988867190}
-  - {fileID: 1357794142}
   - {fileID: 908512893}
   - {fileID: 997430857}
   - {fileID: 2014376387}
   - {fileID: 2115094122}
+  - {fileID: 1777911912}

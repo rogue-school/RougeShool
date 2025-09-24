@@ -43,6 +43,11 @@ namespace Game.CoreSystem.Interface
         Task<bool> LoadSavedScene();
         
         /// <summary>
+        /// 저장 파일 존재 여부 확인
+        /// </summary>
+        bool HasSaveFile();
+        
+        /// <summary>
         /// 저장 데이터 초기화
         /// </summary>
         void ClearSave();

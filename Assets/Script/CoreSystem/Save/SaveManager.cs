@@ -210,7 +210,29 @@ namespace Game.CoreSystem.Save
 		public bool HasSaveFile()
 		{
 			string filePath = Path.Combine(Application.persistentDataPath, saveFileName);
-			return File.Exists(filePath);
+			bool exists = File.Exists(filePath);
+			
+			Debug.Log($"[SaveManager] 저장 파일 확인:");
+			Debug.Log($"  - 파일 경로: {filePath}");
+			Debug.Log($"  - 파일 존재: {exists}");
+			Debug.Log($"  - 파일명: {saveFileName}");
+			
+			if (exists)
+			{
+				try
+				{
+					var fileInfo = new FileInfo(filePath);
+					Debug.Log($"  - 파일 크기: {fileInfo.Length} bytes");
+					Debug.Log($"  - 생성 시간: {fileInfo.CreationTime}");
+					Debug.Log($"  - 수정 시간: {fileInfo.LastWriteTime}");
+				}
+				catch (System.Exception ex)
+				{
+					Debug.LogWarning($"[SaveManager] 파일 정보 조회 실패: {ex.Message}");
+				}
+			}
+			
+			return exists;
 		}
 		
 		/// <summary>
