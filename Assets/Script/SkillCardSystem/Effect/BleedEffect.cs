@@ -44,7 +44,8 @@ namespace Game.SkillCardSystem.Effect
                 Debug.LogWarning("[BleedEffect] 대상이 null입니다. 출혈 효과 무시됨.");
                 return;
             }
-            target.TakeDamage(amount);
+            // 가드에 영향을 받지 않는 지속 피해로 처리
+            target.TakeDamageIgnoreGuard(amount);
             remainingTurns--;
 
             Debug.Log($"[BleedEffect] {target.GetCharacterName()} 출혈 피해: {amount} (남은 턴: {remainingTurns})");
