@@ -192,6 +192,25 @@ namespace Game.CharacterSystem.UI
         }
 
         /// <summary>
+        /// 부모 크기를 유지한 채, 이미지 비율만 보호하도록 AspectRatioFitter를 보장합니다.
+        /// SetNativeSize를 호출하지 않고, FitInParent로만 비율을 맞춥니다.
+        /// </summary>
+        private void EnsureAspectFit(Image targetImage, Sprite sprite)
+        {
+            if (targetImage == null) return;
+            var fitter = targetImage.GetComponent<UnityEngine.UI.AspectRatioFitter>();
+            if (fitter == null)
+            {
+                fitter = targetImage.gameObject.AddComponent<UnityEngine.UI.AspectRatioFitter>();
+            }
+            fitter.aspectMode = UnityEngine.UI.AspectRatioFitter.AspectMode.FitInParent;
+            if (sprite != null && sprite.rect.height > 0)
+            {
+                fitter.aspectRatio = sprite.rect.width / sprite.rect.height;
+            }
+        }
+
+        /// <summary>
         /// 플레이어 캐릭터와 연결하여 UI를 초기화합니다.
         /// </summary>
         /// <param name="character">연결할 플레이어 캐릭터</param>
@@ -355,9 +374,17 @@ namespace Game.CharacterSystem.UI
             if (characterNameText != null)
                 characterNameText.text = data.DisplayName;
             
-            // 캐릭터 초상화
-            if (characterPortrait != null && data.Portrait != null)
-                characterPortrait.sprite = data.Portrait;
+            // 캐릭터 초상화 (UI 전용 → 없으면 Portrait 폴백)
+            if (characterPortrait != null)
+            {
+                var uiPortrait = data.PlayerUIPortrait != null ? data.PlayerUIPortrait : data.Portrait;
+                if (uiPortrait != null)
+                {
+                    characterPortrait.sprite = uiPortrait;
+                    characterPortrait.preserveAspect = true; // 비율만 유지
+                    // RectTransform(위치/크기/앵커/피벗)은 변경하지 않음
+                }
+            }
             
             // 캐릭터 문양 (데이터에서 직접 설정)
             if (characterEmblem != null)

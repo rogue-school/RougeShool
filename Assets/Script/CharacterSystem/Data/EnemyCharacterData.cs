@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Game.SkillCardSystem.Deck;
 using Game.CharacterSystem.Interface;
+using UnityEngine.Audio;
 
 namespace Game.CharacterSystem.Data
 {
@@ -75,6 +76,15 @@ namespace Game.CharacterSystem.Data
         /// </summary>
         [field: SerializeField]
         public List<ScriptableObject> PassiveEffects { get; private set; }
+
+        #endregion
+
+        #region 오디오
+
+        [field: Header("오디오")]
+        [field: Tooltip("이 적 전투에서 사용할 전용 BGM (선택)")]
+        [field: SerializeField]
+        public AudioClip EnemyBGM { get; private set; }
 
         #endregion
     }

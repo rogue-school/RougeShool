@@ -101,7 +101,8 @@ progressController.OnEnemyDeath(enemyCharacter);
 // StageDataFactory를 통한 스테이지 데이터 생성
 EnemyCharacterData subBoss = Resources.Load<EnemyCharacterData>("Enemies/SubBoss");
 EnemyCharacterData boss = Resources.Load<EnemyCharacterData>("Enemies/Boss");
-StagePhaseData stageData = StageDataFactory.CreateBossRushStage(subBoss, boss, "보스 러시", 1);
+// 단계 구분 제거: 단일 적 시퀀스 기준
+// StagePhaseData/StageDataFactory 관련 예시 삭제 (실제 사용 안 함)
 
 // 보상 데이터 생성
 StageRewardData rewardData = StageDataFactory.CreateDefaultRewards(true, true, true);
@@ -134,27 +135,23 @@ sequenceDiagram
 ## 📊 주요 클래스 및 메서드
 
 ### StageManager 클래스
-- **StartSubBossPhase()**: 준보스 단계 시작
-- **StartBossPhase()**: 보스 단계 시작
+- (제거) 단계 구분 메서드: 모든 적은 동일 흐름으로 처리
 - **CompleteStage()**: 스테이지 완료
 - **FailStage()**: 스테이지 실패
-- **IsSubBossPhase()**: 준보스 단계 여부 확인
-- **IsBossPhase()**: 보스 단계 여부 확인
+- (제거) 단계 여부 확인 API
 - **IsStageCompleted()**: 스테이지 완료 여부 확인
 - **GetCurrentStageNumber()**: 현재 스테이지 번호 조회
-- **GiveSubBossRewards()**: 준보스 보상 지급
-- **GiveBossRewards()**: 보스 보상 지급
+- (제거) 단계별 보상 지급 → 스테이지 완료 시 단일 보상 정책
 - **GiveStageCompletionRewards()**: 스테이지 완료 보상 지급
 - **SetCurrentRewards(StageRewardData rewards)**: 현재 보상 데이터 설정
 - **GetCurrentRewards()**: 현재 보상 데이터 조회
 - **SpawnEnemyCardToWaitSlot4(IEnemyCharacter enemy)**: 적 카드를 WAIT_SLOT_4에 직접 생성 (신규)
 - **CurrentPhase**: 현재 스테이지 단계 (프로퍼티)
 - **ProgressState**: 현재 스테이지 진행 상태 (프로퍼티)
-- **IsSubBossDefeated**: 준보스 처치 여부 (프로퍼티)
-- **IsBossDefeated**: 보스 처치 여부 (프로퍼티)
+- (제거) 단계별 처치 상태 → 남은 적 유무로만 판단
 
 ### StageProgressController 클래스
-- **StartStage()**: 스테이지 시작 (준보스부터 시작)
+- **StartStage()**: 스테이지 시작 (적 리스트의 첫 번째부터 순차 진행)
 - **OnEnemyDeath(IEnemyCharacter enemy)**: 적 사망 시 호출
 
 ### StageDataFactory 클래스

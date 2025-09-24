@@ -12,6 +12,7 @@ using Game.StageSystem.Interface;
 using Zenject;
 using Game.CoreSystem.Utility;
 using DG.Tweening;
+using Game.CoreSystem.Audio;
 
 namespace Game.StageSystem.Manager
 {
@@ -160,6 +161,16 @@ namespace Game.StageSystem.Manager
                 }
 
                 RegisterEnemy(enemy);
+
+                // 적 전용 BGM이 설정되어 있으면 전환
+                if (data.EnemyBGM != null)
+                {
+                    var audioManager = FindFirstObjectByType<AudioManager>();
+                    if (audioManager != null)
+                    {
+                        audioManager.PlayBGM(data.EnemyBGM, true);
+                    }
+                }
                 currentEnemyIndex++;
                 
                 GameLogger.LogInfo($"적 생성 완료: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);

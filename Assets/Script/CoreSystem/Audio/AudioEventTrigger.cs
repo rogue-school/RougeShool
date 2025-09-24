@@ -73,23 +73,7 @@ namespace Game.CoreSystem.Audio
             audioManager?.PlayTurnCompleteSound();
         }
 
-        /// <summary>
-        /// 준보스 처치 사운드 트리거
-        /// </summary>
-        public void OnSubBossDefeated()
-        {
-            Debug.Log("[AudioEventTrigger] 준보스 처치 사운드 트리거");
-            audioManager?.PlaySubBossDefeatSound();
-        }
-
-        /// <summary>
-        /// 보스 처치 사운드 트리거
-        /// </summary>
-        public void OnBossDefeated()
-        {
-            Debug.Log("[AudioEventTrigger] 보스 처치 사운드 트리거");
-            audioManager?.PlayBossDefeatSound();
-        }
+        // 등급 구분 제거로 전부 공통 처치 사운드 사용
 
         /// <summary>
         /// 힐 사운드 트리거
@@ -367,8 +351,6 @@ namespace Game.CoreSystem.Audio
             OnSkillActivated();
             OnTurnStarted();
             OnTurnCompleted();
-            OnSubBossDefeated();
-            OnBossDefeated();
             OnHeal();
             OnShield();
             OnShuffle();

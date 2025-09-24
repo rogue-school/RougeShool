@@ -23,6 +23,7 @@ using Game.UtilitySystem.GameFlow;
 using Game.CoreSystem.Interface;
 using Game.StageSystem.Manager;
 using Game.StageSystem.Interface;
+using Game.StageSystem.State;
 using Game.SkillCardSystem.UI;
 using Game.CombatSystem.State;
 using Game.CombatSystem.Factory;
@@ -57,10 +58,12 @@ public class CombatInstaller : MonoInstaller
         
         // 최적화된 바인딩 순서 (의존성 순서 고려)
         BindCoreServices();          // 핵심 서비스 (의존성 없음)
+        BindAudioManager();          // 전역 오디오 시스템 바인딩 (BGM/SFX)
         BindFactories();            // 팩토리 (서비스 의존)
         BindSlotSystem();           // 슬롯 시스템 (팩토리 의존)
         BindIntegratedManagers();   // 통합 매니저 (모든 것 의존)
         BindUIPrefabs();            // UI 프리팹 (매니저 의존)
+        BindStageFlowStateMachine();// 스테이지 상태 머신(뼈대) 연결
         
         stopwatch.Stop();
         if (enablePerformanceLogging)
@@ -242,6 +245,35 @@ public class CombatInstaller : MonoInstaller
         GameLogger.LogInfo(" TurnManager 바인딩 완료");
         
         GameLogger.LogInfo(" CardDropService 및 의존성 바인딩 완료");
+    }
+
+    #endregion
+
+    #region Stage Flow (상태 머신)
+
+    private void BindStageFlowStateMachine()
+    {
+        // StageFlowStateMachine 컴포넌트를 보장
+        var existing = FindFirstObjectByType<StageFlowStateMachine>();
+        StageFlowStateMachine flow;
+        if (existing != null)
+        {
+            flow = existing;
+        }
+        else
+        {
+            flow = new GameObject("StageFlowStateMachine").AddComponent<StageFlowStateMachine>();
+        }
+
+        // StageManager를 찾아 초기화
+        var stageMgr = FindFirstObjectByType<StageManager>();
+        if (stageMgr != null)
+        {
+            flow.Initialize(stageMgr);
+        }
+
+        // DI는 필요 없으므로 컨테이너 바인딩은 생략
+        GameLogger.LogInfo(" StageFlowStateMachine 바인딩/초기화 완료");
     }
 
     #endregion

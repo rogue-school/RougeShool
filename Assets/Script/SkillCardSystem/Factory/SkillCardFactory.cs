@@ -6,6 +6,7 @@ using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Effect;
 using Game.CombatSystem.Interface;
 using Game.CoreSystem.Utility;
+using Game.CoreSystem.Interface;
 
 namespace Game.SkillCardSystem.Factory
 {
@@ -43,8 +44,13 @@ namespace Game.SkillCardSystem.Factory
                 throw new InvalidOperationException($"카드 '{definition.displayName}'은 적 전용입니다. 현재 소유자: {owner}");
             }
             
+            // 전역 오디오 매니저 주입 시도 (없으면 null 허용)
+            IAudioManager audio = null;
+            var audioMB = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            if (audioMB != null) audio = audioMB as IAudioManager;
+
             // 새로운 SkillCard 인스턴스 생성 (GameObject 없이)
-            var skillCard = new SkillCard(definition, owner, null); // audioManager는 나중에 주입
+            var skillCard = new SkillCard(definition, owner, audio);
             
             GameLogger.LogInfo($"[SkillCardFactory] 카드 생성 완료: {definition.displayName} (Owner: {owner})", GameLogger.LogCategory.SkillCard);
             

@@ -312,10 +312,10 @@ namespace Game.SkillCardSystem.Runtime
         {
             var presentation = definition.presentation;
             
-            // 사운드 재생 (즉시)
+            // 사운드 재생 (즉시, 풀링 우선)
             if (presentation.sfxClip != null)
             {
-                PlaySFX(presentation.sfxClip);
+                PlaySFXPooled(presentation.sfxClip);
             }
             
             // 비주얼 이펙트 생성 (즉시)
@@ -325,13 +325,11 @@ namespace Game.SkillCardSystem.Runtime
             }
         }
         
-        private void PlaySFX(AudioClip clip)
+        private void PlaySFXPooled(AudioClip clip)
         {
-            // AudioManager를 통한 사운드 재생
-            if (audioManager != null)
-            {
-                audioManager.PlaySFX(clip);
-            }
+            if (audioManager == null || clip == null) return;
+            // 전역 오디오 풀을 통한 재생으로 동시 재생/우선순위 대응
+            audioManager.PlaySFXWithPool(clip, 0.9f);
         }
         
         private void CreateVisualEffect(ICardExecutionContext context, CardPresentation presentation)

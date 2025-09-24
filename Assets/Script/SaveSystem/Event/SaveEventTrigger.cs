@@ -68,23 +68,7 @@ namespace Game.SaveSystem.Event
             autoSaveManager?.TriggerAutoSave("StageCompleted");
         }
 
-        /// <summary>
-        /// 준보스 처치 후 저장 트리거
-        /// </summary>
-        public void OnSubBossDefeated()
-        {
-            Debug.Log("[SaveEventTrigger] 준보스 처치 후 저장 트리거");
-            autoSaveManager?.TriggerAutoSave("SubBossDefeated");
-        }
-
-        /// <summary>
-        /// 보스 처치 후 저장 트리거
-        /// </summary>
-        public void OnBossDefeated()
-        {
-            Debug.Log("[SaveEventTrigger] 보스 처치 후 저장 트리거");
-            autoSaveManager?.TriggerAutoSave("BossDefeated");
-        }
+        // 등급 구분 제거: 적 처치 시에는 필요 시 OnEnemyDefeated를 사용하세요.
 
         #endregion
 

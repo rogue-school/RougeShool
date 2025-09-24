@@ -303,23 +303,7 @@ namespace Game.CoreSystem.Audio
             PlaySFXWithPool(clip, 0.7f);
         }
 
-        /// <summary>
-        /// 준보스 처치 사운드 재생
-        /// </summary>
-        public void PlaySubBossDefeatSound()
-        {
-            AudioClip clip = Resources.Load<AudioClip>("Sounds/ShootingSound/magic_02");
-            PlaySFXWithPool(clip, 1.0f);
-        }
-
-        /// <summary>
-        /// 보스 처치 사운드 재생
-        /// </summary>
-        public void PlayBossDefeatSound()
-        {
-            AudioClip clip = Resources.Load<AudioClip>("Sounds/ShootingSound/magic_03");
-            PlaySFXWithPool(clip, 1.0f);
-        }
+        // 등급 구분 제거: 적 처치 사운드는 공통 API로 사용합니다.
 
         #endregion
 

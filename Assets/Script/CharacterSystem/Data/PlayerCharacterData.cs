@@ -38,6 +38,14 @@ namespace Game.CharacterSystem.Data
         public Sprite Portrait { get; private set; }
 
         /// <summary>
+        /// UI 전용(플레이어 HUD/패널용) 초상화 이미지입니다.
+        /// 캐릭터 본체 스프라이트와 별개로, 비율/여백이 UI에 맞게 제작된 아트를 연결합니다.
+        /// 비어 있으면 Portrait를 사용합니다(폴백).
+        /// </summary>
+        [field: SerializeField]
+        public Sprite PlayerUIPortrait { get; private set; }
+
+        /// <summary>
         /// 캐릭터의 문양(앰블렘) 이미지입니다.
         /// </summary>
         [field: SerializeField]

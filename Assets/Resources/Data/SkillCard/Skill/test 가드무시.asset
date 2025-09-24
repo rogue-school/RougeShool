@@ -16,10 +16,10 @@ MonoBehaviour:
   displayName: "\uAC00\uB4DC\uBB34\uC2DC"
   displayNameKO: 
   description: 
-  artwork: {fileID: 4264714366617519430, guid: 00fe0d12d678fec4dae1b3dc98c7832e, type: 3}
+  artwork: {fileID: -2026546737313458883, guid: 75d2166a8e3d1ad4584ae3a5398bf5fb, type: 3}
   presentation:
-    sfxClip: {fileID: 0}
-    visualEffectPrefab: {fileID: 0}
+    sfxClip: {fileID: 8300000, guid: 578197a82d10739439cac71af01c712c, type: 3}
+    visualEffectPrefab: {fileID: 4294010189161640749, guid: 52b97149ba487c94bb0fba4d467003d0, type: 3}
   configuration:
     hasDamage: 1
     damageConfig:
