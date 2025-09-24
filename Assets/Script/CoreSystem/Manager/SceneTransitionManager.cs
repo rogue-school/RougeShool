@@ -6,6 +6,7 @@ using Game.UtilitySystem.GameFlow;
 using Game.CoreSystem.Interface;
 using Game.CoreSystem.Utility;
 using Game.CoreSystem.Audio;
+using Game.StageSystem.Manager;
 using Zenject;
 
 namespace Game.CoreSystem.Manager
@@ -112,6 +113,16 @@ namespace Game.CoreSystem.Manager
 		/// </summary>
 		public async Task TransitionToMainScene()
 		{
+			// 스테이지 매니저가 있으면 스테이지 BGM 정리
+			var stageManager = FindFirstObjectByType<StageManager>();
+			if (stageManager != null)
+			{
+				stageManager.CleanupStageBGM();
+			}
+			
+			// 기존 BGM 정지 (추가 안전장치)
+			StopCurrentBGM();
+			
 			await TransitionToScene(mainSceneName, TransitionType.Fade);
 			TryPlayBGMForScene(mainSceneName);
 		}
@@ -171,6 +182,18 @@ namespace Game.CoreSystem.Manager
 				// 전환 상태를 반드시 리셋
 				IsTransitioning = false;
 				Debug.Log($"[SceneTransitionManager] 씬 전환 완료: {sceneName}");
+			}
+		}
+		
+		/// <summary>
+		/// 현재 재생 중인 BGM 정지
+		/// </summary>
+		private void StopCurrentBGM()
+		{
+			if (audioManager != null)
+			{
+				audioManager.StopBGM();
+				Debug.Log("[SceneTransitionManager] 현재 BGM 정지 완료");
 			}
 		}
 		

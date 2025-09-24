@@ -196,6 +196,19 @@ namespace Game.StageSystem.Manager
         }
 
         /// <summary>
+        /// 스테이지 종료 시 BGM 정리 (씬 전환 전 호출)
+        /// </summary>
+        public void CleanupStageBGM()
+        {
+            var audioManager = FindFirstObjectByType<AudioManager>();
+            if (audioManager != null)
+            {
+                audioManager.StopBGM();
+                GameLogger.LogInfo("스테이지 BGM 정리 완료", GameLogger.LogCategory.Combat);
+            }
+        }
+
+        /// <summary>
         /// 적 캐릭터를 시스템에 등록합니다.
         /// </summary>
         private void RegisterEnemy(ICharacter enemy)
