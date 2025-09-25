@@ -10,6 +10,31 @@ namespace Game.SaveSystem.Data
     [System.Serializable]
     public class CompleteCardStateData
     {
+        #region 캐릭터 상태(플레이어/적)
+
+        [System.Serializable]
+        public class CharacterSnapshot
+        {
+            public string characterId; // 데이터ID 또는 런타임명
+            public int currentHP;
+            public int maxHP;
+            public bool isGuarded;
+            public List<BuffSnapshot> buffs = new();
+        }
+
+        [System.Serializable]
+        public class BuffSnapshot
+        {
+            public string effectId;
+            public int remainingTurns;
+            public bool isDebuff;
+        }
+
+        [Header("캐릭터 상태")]
+        public CharacterSnapshot player;
+        public CharacterSnapshot enemy;
+
+        #endregion
         #region 플레이어 핸드카드
 
         /// <summary>
@@ -25,15 +50,28 @@ namespace Game.SaveSystem.Data
         #region 전투 슬롯에 배치된 카드
 
         /// <summary>
-        /// 첫 번째 슬롯 카드 (FIRST)
+        /// (이전 호환) 첫 번째 슬롯 카드 (레거시)
         /// </summary>
         [Header("전투 슬롯 카드")]
         public CardSlotData firstSlotCard;
 
         /// <summary>
-        /// 두 번째 슬롯 카드 (SECOND)
+        /// (이전 호환) 두 번째 슬롯 카드 (레거시)
         /// </summary>
         public CardSlotData secondSlotCard;
+
+        /// <summary>
+        /// 배틀 슬롯 카드 (현행)
+        /// </summary>
+        public CardSlotData battleSlotCard;
+
+        /// <summary>
+        /// 대기 슬롯 1~4 (현행)
+        /// </summary>
+        public CardSlotData waitSlot1Card;
+        public CardSlotData waitSlot2Card;
+        public CardSlotData waitSlot3Card;
+        public CardSlotData waitSlot4Card;
 
         #endregion
 
@@ -64,6 +102,22 @@ namespace Game.SaveSystem.Data
         /// 턴 단계
         /// </summary>
         public string turnPhase;
+
+        #endregion
+
+        #region 플로우/스테이지
+
+        [Header("플로우/스테이지")]
+        public string combatPhase; // CombatFlowManager 페이즈명
+        public int stageNumber;    // StageManager 스테이지 번호
+
+        #endregion
+
+        #region 덱/RNG
+
+        [Header("덱/RNG")]
+        public List<string> remainingDeckCardIds = new();
+        public int rngSeed;
 
         #endregion
 
@@ -112,7 +166,8 @@ namespace Game.SaveSystem.Data
         /// </summary>
         public bool HasCombatSlotCards()
         {
-            return firstSlotCard != null || secondSlotCard != null;
+            return battleSlotCard != null || waitSlot1Card != null || waitSlot2Card != null || waitSlot3Card != null || waitSlot4Card != null
+                || firstSlotCard != null || secondSlotCard != null; // 레거시 호환
         }
 
         /// <summary>

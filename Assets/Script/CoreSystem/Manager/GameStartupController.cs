@@ -72,6 +72,15 @@ namespace Game.CoreSystem.Manager
 
         private void Start()
         {
+            // 이어하기 재개 플래그가 있으면 자동 셋업을 비활성화한다
+            if (PlayerPrefs.GetInt("RESUME_REQUESTED", 0) == 1)
+            {
+                autoStartGame = false;
+                // 한 번만 사용하고 지운다
+                PlayerPrefs.DeleteKey("RESUME_REQUESTED");
+                PlayerPrefs.Save();
+            }
+
             if (autoStartGame)
             {
                 StartCoroutine(InitializeGameSequence());

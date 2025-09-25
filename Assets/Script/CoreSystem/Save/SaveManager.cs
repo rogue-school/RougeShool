@@ -190,18 +190,28 @@ namespace Game.CoreSystem.Save
 			// 게임 상태 복원
 			gameStateManager.ChangeGameState(sceneData.gameState);
 			
-			// GameObject 정보 복원
-			foreach (var objData in sceneData.gameObjects)
-			{
-				var obj = GameObject.Find(objData.name);
-				if (obj != null)
-				{
-					obj.transform.position = objData.position;
-					obj.transform.rotation = objData.rotation;
-					obj.transform.localScale = objData.scale;
-					obj.SetActive(objData.active);
-				}
-			}
+            // GameObject 정보 복원 (UI 오브젝트는 제외하여 Canvas/RectTransform 비율 붕괴 방지)
+            foreach (var objData in sceneData.gameObjects)
+            {
+                var obj = GameObject.Find(objData.name);
+                if (obj == null)
+                {
+                    continue;
+                }
+
+                // UI 계층(RectTransform 보유) 객체는 트랜스폼 복원을 건너뛴다
+                if (obj.GetComponent<RectTransform>() != null || obj.GetComponentInParent<Canvas>() != null)
+                {
+                    // 활성 상태만 동기화(선택), 트랜스폼은 건너뜀
+                    obj.SetActive(objData.active);
+                    continue;
+                }
+
+                obj.transform.position = objData.position;
+                obj.transform.rotation = objData.rotation;
+                obj.transform.localScale = objData.scale;
+                obj.SetActive(objData.active);
+            }
 		}
 		
 		/// <summary>

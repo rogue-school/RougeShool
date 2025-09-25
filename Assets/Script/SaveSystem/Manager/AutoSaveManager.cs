@@ -6,6 +6,12 @@ using Game.SaveSystem.Interface;
 using Game.CoreSystem.Save;
 using Game.CoreSystem.Utility;
 using Zenject;
+using System.IO;
+using System.Threading.Tasks;
+using Game.CombatSystem;
+using Game.CombatSystem.Manager;
+using Game.StageSystem.Manager;
+using UnityEngine.SceneManagement;
 
 namespace Game.SaveSystem.Manager
 {
@@ -17,8 +23,8 @@ namespace Game.SaveSystem.Manager
     {
         #region 의존성 주입
 
-        [Inject] private ICardStateCollector cardStateCollector;
-        [Inject] private ICardStateRestorer cardStateRestorer;
+        [Inject(Optional = true)] private ICardStateCollector cardStateCollector;
+        [Inject(Optional = true)] private ICardStateRestorer cardStateRestorer;
         [Inject] private SaveManager saveManager;
 
         #endregion
@@ -26,8 +32,10 @@ namespace Game.SaveSystem.Manager
         #region AutoSaveManager 전용 설정
 
         [Header("자동 저장 설정")]
-        [Tooltip("자동 저장 활성화")]
+        [Tooltip("자동 저장 활성화(이벤트 기반)")]
         [SerializeField] private bool autoSaveEnabled = true;
+        [Tooltip("턴/스테이지 경계에서만 자동 저장(시간 기반 없음)")]
+        [SerializeField] private bool turnBasedAutosaveEnabled = true;
         [Tooltip("자동 저장 조건들")]
         [SerializeField] private List<AutoSaveCondition> autoSaveConditions = new();
 
@@ -38,6 +46,10 @@ namespace Game.SaveSystem.Manager
         private Dictionary<string, AutoSaveCondition> conditionMap = new();
         private bool isInitialized = false;
         // 초기화 상태는 베이스 클래스에서 관리
+        private TurnManager turnManager;
+        private StageManager stageManager;
+        private int lastSavedFrame = -1;
+        private string lastSavedTrigger = "";
 
         #endregion
 
@@ -65,6 +77,18 @@ namespace Game.SaveSystem.Manager
             // 매니저 상태 로깅
             LogManagerState();
 
+            // 카드게임 특성상 시간 기반 저장은 사용하지 않음. 턴/스테이지 이벤트 기반만 선택적으로 활성화
+            if (turnBasedAutosaveEnabled)
+            {
+                HookRuntimeDependencies();
+                SceneManager.sceneLoaded += OnSceneLoaded;
+                GameLogger.LogInfo("[AutoSaveManager] 턴/스테이지 이벤트 기반 자동 저장 활성화(씬 전환 대응)", GameLogger.LogCategory.Save);
+            }
+            else
+            {
+                GameLogger.LogInfo("[AutoSaveManager] 자동 저장 비활성화 상태로 시작합니다.", GameLogger.LogCategory.Save);
+            }
+
             yield return null;
         }
 
@@ -82,6 +106,120 @@ namespace Game.SaveSystem.Manager
             }
         }
 
+        private async void OnTurnChangedHandler(TurnManager.TurnType _)
+        {
+            if (!autoSaveEnabled) return;
+            if (!ShouldSave("TurnChanged")) return;
+            GameLogger.LogInfo("[AutoSaveManager] 턴 변경 트리거 감지 → 저장 시도(TurnChanged)", GameLogger.LogCategory.Save);
+            await TrySaveWithRetry("TurnChanged");
+        }
+
+        private async void OnStageCompletedHandler(Game.StageSystem.Data.StageData _)
+        {
+            if (!autoSaveEnabled) return;
+            if (!ShouldSave("StageCompleted")) return;
+            GameLogger.LogInfo("[AutoSaveManager] 스테이지 완료 트리거 감지 → 저장 시도(StageCompleted)", GameLogger.LogCategory.Save);
+            await SaveGameStateAsync("StageCompleted");
+        }
+
+        private async void OnTurnStarted()
+        {
+            if (!autoSaveEnabled) return;
+            if (!ShouldSave("TurnStart")) return;
+            GameLogger.LogInfo("[AutoSaveManager] 턴 시작 트리거 감지 → 저장 시도(TurnStart)", GameLogger.LogCategory.Save);
+            await SaveGameStateAsync("TurnStart");
+        }
+
+        private async void OnTurnEnded()
+        {
+            if (!autoSaveEnabled) return;
+            if (!ShouldSave("TurnEnd")) return;
+            GameLogger.LogInfo("[AutoSaveManager] 턴 종료 트리거 감지 → 저장 시도(TurnEnd)", GameLogger.LogCategory.Save);
+            await TrySaveWithRetry("TurnEnd");
+        }
+
+        private async Task TrySaveWithRetry(string trigger)
+        {
+            // 최대 30프레임(약 0.5초@60fps)까지 준비 완료 대기
+            for (int i = 0; i < 60; i++)
+            {
+                if (cardStateCollector is CardStateCollector c && c.IsRuntimeReady())
+                {
+                    await SaveGameStateAsync(trigger);
+                    return;
+                }
+                else if (cardStateCollector is CardStateCollector c2)
+                {
+                    // 첫 1회 이유 로깅
+                    if (i == 0)
+                    {
+                        c2.LogNotReadyReasons();
+                    }
+                }
+                await Task.Yield();
+            }
+            GameLogger.LogWarning("[AutoSaveManager] 저장 보류: 런타임 준비 미완료(타임아웃)", GameLogger.LogCategory.Save);
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (!turnBasedAutosaveEnabled) return;
+            HookRuntimeDependencies();
+            GameLogger.LogInfo($"[AutoSaveManager] 씬 로드 감지 → 저장 이벤트 재구독: {scene.name}", GameLogger.LogCategory.Save);
+        }
+
+        private void HookRuntimeDependencies()
+        {
+            // 이전 구독 해제
+            if (turnManager != null)
+            {
+                turnManager.OnTurnChanged -= OnTurnChangedHandler;
+            }
+            if (stageManager != null)
+            {
+                stageManager.OnStageCompleted -= OnStageCompletedHandler;
+            }
+
+            // 재탐색 및 구독
+            turnManager = UnityEngine.Object.FindFirstObjectByType<TurnManager>();
+            if (turnManager != null)
+            {
+                turnManager.OnTurnChanged += OnTurnChangedHandler;
+            }
+
+            stageManager = UnityEngine.Object.FindFirstObjectByType<StageManager>();
+            if (stageManager != null)
+            {
+                stageManager.OnStageCompleted += OnStageCompletedHandler;
+            }
+        }
+
+        private bool ShouldSave(string trigger)
+        {
+            int frame = Time.frameCount;
+            if (frame == lastSavedFrame && trigger == lastSavedTrigger)
+            {
+                return false;
+            }
+            lastSavedFrame = frame;
+            lastSavedTrigger = trigger;
+            return true;
+        }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+            if (turnManager != null)
+            {
+                turnManager.OnTurnChanged -= OnTurnChangedHandler;
+            }
+            if (stageManager != null)
+            {
+                stageManager.OnStageCompleted -= OnStageCompletedHandler;
+            }
+        }
+
         #endregion
 
         /// <summary>
@@ -94,11 +232,7 @@ namespace Game.SaveSystem.Manager
                 autoSaveConditions = new List<AutoSaveCondition>();
             }
 
-            // 기본 자동 저장 조건들 추가
-            if (autoSaveConditions.Count == 0)
-            {
-                AddDefaultAutoSaveConditions();
-            }
+            // 시간/주기 기반 자동 저장 조건은 추가하지 않습니다(이벤트 기반만 사용).
 
             // 조건 맵 생성
             conditionMap.Clear();
@@ -111,7 +245,7 @@ namespace Game.SaveSystem.Manager
             }
 
             isInitialized = true;
-            Debug.Log($"[AutoSaveManager] 자동 저장 조건 초기화 완료: {conditionMap.Count}개");
+            Debug.Log($"[AutoSaveManager] 자동 저장 조건 초기화 완료(비활성화): {conditionMap.Count}개");
         }
 
         /// <summary>
@@ -228,39 +362,43 @@ namespace Game.SaveSystem.Manager
         #region 수동 저장/로드
 
         /// <summary>
-        /// 수동으로 게임 상태를 저장합니다.
+        /// 수동으로 게임 상태를 저장합니다. (await 가능)
         /// </summary>
         /// <param name="saveName">저장 이름</param>
-        public async void SaveGameState(string saveName = "ManualSave")
+        public async Task<bool> SaveGameStateAsync(string saveName = "ManualSave")
         {
             try
             {
-                Debug.Log($"[AutoSaveManager] 수동 저장 시작: {saveName}");
+                GameLogger.LogInfo($"[AutoSaveManager] 수동 저장 시작: {saveName}", GameLogger.LogCategory.Save);
 
-                // 카드 상태 수집
                 var cardState = cardStateCollector.CollectCompleteCardState(saveName);
-                
-                if (!cardState.IsValid())
+                if (cardState == null || !cardState.IsValid())
                 {
-                    Debug.LogError("[AutoSaveManager] 수집된 카드 상태가 유효하지 않습니다.");
-                    return;
+                    GameLogger.LogError("[AutoSaveManager] 수집된 카드 상태가 유효하지 않습니다.", GameLogger.LogCategory.Save);
+                    return false;
                 }
 
-                // JSON으로 직렬화
                 string jsonData = JsonUtility.ToJson(cardState, true);
-                
-                // 파일로 저장
                 string fileName = $"ManualSave_{saveName}_{System.DateTime.Now:yyyyMMdd_HHmmss}.json";
                 string filePath = System.IO.Path.Combine(Application.persistentDataPath, fileName);
-                
+
                 await System.IO.File.WriteAllTextAsync(filePath, jsonData);
-                
-                Debug.Log($"[AutoSaveManager] 수동 저장 완료: {filePath}");
+                GameLogger.LogInfo($"[AutoSaveManager] 수동 저장 완료: {filePath}", GameLogger.LogCategory.Save);
+                return true;
             }
             catch (System.Exception ex)
             {
-                Debug.LogError($"[AutoSaveManager] 수동 저장 실패: {ex.Message}");
+                GameLogger.LogError($"[AutoSaveManager] 수동 저장 실패: {ex.Message}", GameLogger.LogCategory.Save);
+                return false;
             }
+        }
+
+        /// <summary>
+        /// 기존 시그니처(호환성): fire-and-forget 저장. 가능하면 SaveGameStateAsync를 사용하세요.
+        /// </summary>
+        public async void SaveGameState(string saveName = "ManualSave")
+        {
+            await SaveGameStateAsync(saveName);
         }
 
         /// <summary>
@@ -306,6 +444,71 @@ namespace Game.SaveSystem.Manager
             catch (System.Exception ex)
             {
                 Debug.LogError($"[AutoSaveManager] 게임 상태 로드 실패: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 가장 최근 자동/수동 저장 파일을 찾아 로드 및 복원합니다.
+        /// 셋업 과정을 우회하기 위해 전투 씬 진입 직후 호출하십시오.
+        /// </summary>
+        public async Task<bool> LoadLatestAutoSaveAsync()
+        {
+            try
+            {
+                string dir = Application.persistentDataPath;
+                if (!Directory.Exists(dir))
+                {
+                    GameLogger.LogWarning("[AutoSaveManager] 저장 디렉토리가 없습니다.", GameLogger.LogCategory.Save);
+                    return false;
+                }
+
+                // AutoSave_*.json, ManualSave_*.json 중 최신 파일 선택
+                var files = Directory.GetFiles(dir, "*.json", SearchOption.TopDirectoryOnly)
+                    .Where(p => Path.GetFileName(p).StartsWith("AutoSave_") || Path.GetFileName(p).StartsWith("ManualSave_"))
+                    .ToList();
+
+                if (files.Count == 0)
+                {
+                    GameLogger.LogWarning("[AutoSaveManager] 저장 파일이 없습니다.", GameLogger.LogCategory.Save);
+                    return false;
+                }
+
+                string latest = files
+                    .OrderByDescending(p => File.GetLastWriteTimeUtc(p))
+                    .First();
+
+                string jsonData = await File.ReadAllTextAsync(latest);
+                var cardState = JsonUtility.FromJson<CompleteCardStateData>(jsonData);
+                if (cardState == null || !cardState.IsValid())
+                {
+                    GameLogger.LogError("[AutoSaveManager] 최신 저장 데이터가 유효하지 않습니다.", GameLogger.LogCategory.Save);
+                    return false;
+                }
+
+                bool success = cardStateRestorer.RestoreCompleteCardState(cardState);
+
+                // 초기 셋업 우회: 전투 턴 매니저 셋업 완료 플래그 강제 설정
+                var turn = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
+                if (turn != null)
+                {
+                    turn._initialSlotSetupCompleted = true;
+                }
+
+                if (success)
+                {
+                    GameLogger.LogInfo($"[AutoSaveManager] 최신 저장 로드 완료: {Path.GetFileName(latest)}", GameLogger.LogCategory.Save);
+                }
+                else
+                {
+                    GameLogger.LogError("[AutoSaveManager] 최신 저장 로드 실패(복원 실패)", GameLogger.LogCategory.Save);
+                }
+
+                return success;
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogError($"[AutoSaveManager] 최신 저장 로드 실패: {ex.Message}", GameLogger.LogCategory.Save);
+                return false;
             }
         }
 

@@ -190,18 +190,33 @@ namespace Game.UISystem
                 }
                 
                 Debug.Log("[MainSceneController] 저장된 게임 로드 시작...");
-                
-                // 저장된 게임 로드
+
+                // 1) 저장된 씬 메타를 로드하여 대상 씬 이름을 얻는다.
+                //    현재 SaveManager.LoadSavedScene()은 활성 씬에 복원만 수행하므로
+                //    먼저 전환 매니저를 통해 저장된 씬으로 이동한 뒤 복원을 호출한다.
+                var (bgm, sfx) = saveManager.LoadAudioSettings();
+
+                // 기본 정책: 전투 진행 저장을 가정하고 StageScene으로 전환 후 복원
+                // 셋업 시퀀스 우회를 위해 StageScene 진입 전에 재개 플래그를 기록
+                PlayerPrefs.SetInt("RESUME_REQUESTED", 1);
+                PlayerPrefs.Save();
+                var sceneLoader = FindFirstObjectByType<Game.CoreSystem.Manager.SceneTransitionManager>();
+                if (sceneLoader == null)
+                {
+                    Debug.LogError("[MainSceneController] 씬 전환 매니저가 없습니다.");
+                    return;
+                }
+
+                await sceneLoader.TransitionToStageScene();
+
+                // 2) 씬 전환 완료 후 저장 복원 실행(셋업 패스 우회)
+                // 자동 저장은 비활성화되어 있으므로 전체 씬 저장 포맷을 사용
                 bool loadSuccess = await saveManager.LoadSavedScene();
-                
                 Debug.Log($"[MainSceneController] 게임 로드 결과: {loadSuccess}");
-                
+
                 if (loadSuccess)
                 {
                     Debug.Log("[MainSceneController] ✅ 게임 로드 성공!");
-                    Debug.Log("  - 로드된 씬으로 전환 로직 필요");
-                    // 로드 성공 시 적절한 씬으로 전환
-                    // TODO: 로드된 씬으로 전환 로직 추가
                 }
                 else
                 {

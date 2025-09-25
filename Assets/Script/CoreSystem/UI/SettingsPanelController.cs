@@ -160,9 +160,6 @@ namespace Game.CoreSystem.UI
             {
                 GameLogger.LogInfo("게임 종료", GameLogger.LogCategory.UI);
                 
-                // 현재 진행 상황 저장
-                saveManager.SaveCurrentScene();
-                
                 // 게임 종료
                 Application.Quit();
             }
