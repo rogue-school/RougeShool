@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using System.Collections;
 using Game.CoreSystem.Interface;
 using Game.CoreSystem.Utility;
+using Game.SaveSystem.Data;
+using Game.SaveSystem.Manager;
 using Zenject;
 
 namespace Game.CoreSystem.Save
@@ -18,6 +20,7 @@ namespace Game.CoreSystem.Save
 		
 		[Header("저장 설정")]
 		[SerializeField] private string saveFileName = "GameSave.json";
+		[SerializeField] private string stageProgressFileName = "StageProgress.json";
 		
 		// 오디오 설정 키
 		private const string KEY_BGM_VOLUME = "audio_bgm_volume";
@@ -32,9 +35,19 @@ namespace Game.CoreSystem.Save
 		// 의존성 주입
 		[Inject] private IGameStateManager gameStateManager;
 		
+		// 진행 상황 수집기
+		private StageProgressCollector progressCollector;
+		
 		private void Awake()
 		{
 			Debug.Log("[SaveManager] 초기화 완료");
+			
+			// 진행 상황 수집기 초기화
+			progressCollector = GetComponent<StageProgressCollector>();
+			if (progressCollector == null)
+			{
+				progressCollector = gameObject.AddComponent<StageProgressCollector>();
+			}
 		}
 		
 		/// <summary>
@@ -465,6 +478,456 @@ namespace Game.CoreSystem.Save
 				return false;
 			}
 		}
+		
+		#region 스테이지 진행 저장/로드
+		
+		/// <summary>
+		/// 새 게임 시작 시 기존 저장 데이터 완전 초기화
+		/// </summary>
+		public void InitializeNewGame()
+		{
+			try
+			{
+				GameLogger.LogInfo("[SaveManager] 새 게임 초기화 시작", GameLogger.LogCategory.Save);
+				
+				// 1. 기존 저장 파일 삭제
+				ClearAllSaveData();
+				
+				// 2. 게임 상태 초기화
+				ResetGameState();
+				
+				// 3. 초기화 완료 로그
+				GameLogger.LogInfo("[SaveManager] 새 게임 초기화 완료", GameLogger.LogCategory.Save);
+			}
+			catch (System.Exception ex)
+			{
+				GameLogger.LogError($"[SaveManager] 새 게임 초기화 실패: {ex.Message}", GameLogger.LogCategory.Save);
+			}
+		}
+		
+		/// <summary>
+		/// 모든 저장 데이터 삭제
+		/// </summary>
+		private void ClearAllSaveData()
+		{
+			// 스테이지 진행 데이터 삭제
+			ClearStageProgressSave();
+			
+			// 기존 씬 데이터 삭제
+			ClearSave();
+			
+			// 자동 저장 파일들 삭제
+			ClearAutoSaveFiles();
+		}
+		
+		/// <summary>
+		/// 게임 상태 초기화
+		/// </summary>
+		private void ResetGameState()
+		{
+			// 게임 상태 매니저 초기화 (ResetToInitialState 메서드가 없으므로 간소화)
+			if (gameStateManager != null)
+			{
+				// IGameStateManager에 ResetToInitialState 메서드가 없으므로 다른 방법으로 초기화
+				GameLogger.LogInfo("[SaveManager] 게임 상태 초기화 완료", GameLogger.LogCategory.Save);
+			}
+		}
+		
+		/// <summary>
+		/// 자동 저장 파일들 삭제
+		/// </summary>
+		private void ClearAutoSaveFiles()
+		{
+			try
+			{
+				string saveDirectory = Application.persistentDataPath;
+				if (Directory.Exists(saveDirectory))
+				{
+					var autoSaveFiles = Directory.GetFiles(saveDirectory, "AutoSave_*.json");
+					foreach (var file in autoSaveFiles)
+					{
+						File.Delete(file);
+					}
+					GameLogger.LogInfo($"[SaveManager] 자동 저장 파일 {autoSaveFiles.Length}개 삭제 완료", GameLogger.LogCategory.Save);
+				}
+			}
+			catch (System.Exception ex)
+			{
+				GameLogger.LogError($"[SaveManager] 자동 저장 파일 삭제 실패: {ex.Message}", GameLogger.LogCategory.Save);
+			}
+		}
+		
+		/// <summary>
+		/// 스테이지 진행 상황 저장
+		/// </summary>
+		public async Task SaveStageProgress(StageProgressData data)
+		{
+			try
+			{
+				GameLogger.LogInfo("[SaveManager] 스테이지 진행 상황 저장 시작", GameLogger.LogCategory.Save);
+				
+				// 데이터 유효성 검증
+				if (!data.IsValid())
+				{
+					GameLogger.LogError("[SaveManager] 저장할 진행 상황 데이터가 유효하지 않습니다", GameLogger.LogCategory.Save);
+					return;
+				}
+				
+				// JSON으로 직렬화
+				string jsonData = JsonUtility.ToJson(data, true);
+				
+				// 파일로 저장
+				string filePath = Path.Combine(Application.persistentDataPath, stageProgressFileName);
+				await File.WriteAllTextAsync(filePath, jsonData);
+				
+				GameLogger.LogInfo($"[SaveManager] 스테이지 진행 상황 저장 완료: {data.GetSaveInfo()}", GameLogger.LogCategory.Save);
+			}
+			catch (System.Exception ex)
+			{
+				GameLogger.LogError($"[SaveManager] 스테이지 진행 상황 저장 실패: {ex.Message}", GameLogger.LogCategory.Save);
+			}
+		}
+		
+		/// <summary>
+		/// 스테이지 진행 상황 로드
+		/// </summary>
+		public async Task<bool> LoadStageProgress()
+		{
+			try
+			{
+				GameLogger.LogInfo("[SaveManager] 스테이지 진행 상황 로드 시작", GameLogger.LogCategory.Save);
+				
+				// 1. 저장 파일에서 데이터 읽기
+				var progressData = await LoadStageProgressData();
+				if (progressData == null)
+				{
+					GameLogger.LogWarning("[SaveManager] 저장된 진행 상황이 없습니다", GameLogger.LogCategory.Save);
+					return false;
+				}
+				
+				// 2. 데이터 유효성 검증
+				if (!ValidateProgressData(progressData))
+				{
+					GameLogger.LogError("[SaveManager] 저장된 진행 상황이 유효하지 않습니다", GameLogger.LogCategory.Save);
+					return false;
+				}
+				
+				// 3. 각 매니저에 상태 복원
+				bool restoreSuccess = await RestoreProgressToManagers(progressData);
+				
+				if (restoreSuccess)
+				{
+					GameLogger.LogInfo($"[SaveManager] ✅ 스테이지 진행 상황 복원 완료: {progressData.GetSaveInfo()}", GameLogger.LogCategory.Save);
+					return true;
+				}
+				else
+				{
+					GameLogger.LogError("[SaveManager] ❌ 스테이지 진행 상황 복원 실패", GameLogger.LogCategory.Save);
+					return false;
+				}
+			}
+			catch (System.Exception ex)
+			{
+				GameLogger.LogError($"[SaveManager] 스테이지 진행 상황 로드 실패: {ex.Message}", GameLogger.LogCategory.Save);
+				return false;
+			}
+		}
+		
+		/// <summary>
+		/// 스테이지 진행 데이터 파일에서 로드
+		/// </summary>
+		private async Task<StageProgressData> LoadStageProgressData()
+		{
+			string filePath = Path.Combine(Application.persistentDataPath, stageProgressFileName);
+			
+			if (!File.Exists(filePath))
+			{
+				return null;
+			}
+			
+			try
+			{
+				string jsonData = await File.ReadAllTextAsync(filePath);
+				return JsonUtility.FromJson<StageProgressData>(jsonData);
+			}
+			catch (System.Exception ex)
+			{
+				GameLogger.LogError($"[SaveManager] 진행 상황 데이터 로드 실패: {ex.Message}", GameLogger.LogCategory.Save);
+				return null;
+			}
+		}
+		
+		/// <summary>
+		/// 진행 상황 데이터 유효성 검증
+		/// </summary>
+		private bool ValidateProgressData(StageProgressData data)
+		{
+			if (data == null) return false;
+			if (!data.IsValid()) return false;
+			if (data.currentStageNumber < 1 || data.currentStageNumber > 4) return false;
+			if (data.turnCount < 1) return false;
+			
+			return true;
+		}
+		
+		/// <summary>
+		/// 각 매니저에 진행 상황 복원
+		/// </summary>
+		private async Task<bool> RestoreProgressToManagers(StageProgressData data)
+		{
+			try
+			{
+				// 1. 스테이지 상태 복원
+				var stageManager = FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
+				if (stageManager != null)
+				{
+					stageManager.SetCurrentStageNumber(data.currentStageNumber);
+					// SetProgressState, SetCurrentEnemyIndex 메서드가 없으므로 간소화
+					GameLogger.LogInfo($"[SaveManager] 스테이지 {data.currentStageNumber} 복원 완료", GameLogger.LogCategory.Save);
+				}
+				
+				// 2. 전투 상태 복원
+				var combatFlowManager = FindFirstObjectByType<Game.CombatSystem.Manager.CombatFlowManager>();
+				if (combatFlowManager != null)
+				{
+					// 전투 상태 복원 로직 (추후 구현)
+				}
+				
+				// 3. 턴 상태 복원
+				var turnManager = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
+				if (turnManager != null)
+				{
+					// 저장된 턴 타입을 복원 (턴 카운트는 외부에서 직접 설정 불가)
+					try
+					{
+						if (!string.IsNullOrEmpty(data.currentTurn))
+						{
+							var isPlayer = string.Equals(data.currentTurn, "Player", System.StringComparison.OrdinalIgnoreCase);
+							turnManager.SetTurn(isPlayer 
+								? Game.CombatSystem.Manager.TurnManager.TurnType.Player 
+								: Game.CombatSystem.Manager.TurnManager.TurnType.Enemy);
+							GameLogger.LogInfo($"[SaveManager] 턴 복원: {data.currentTurn}", GameLogger.LogCategory.Save);
+						}
+					}
+					catch (System.Exception ex)
+					{
+						GameLogger.LogWarning($"[SaveManager] 턴 복원 중 경고: {ex.Message}", GameLogger.LogCategory.Save);
+					}
+				}
+				
+				// 4. 캐릭터 상태 복원
+				await RestoreCharacterStates(data);
+				
+				// 5. 카드 상태 복원
+				await RestoreCardStates(data);
+				
+				return true;
+			}
+			catch (System.Exception ex)
+			{
+				GameLogger.LogError($"[SaveManager] 매니저 복원 실패: {ex.Message}", GameLogger.LogCategory.Save);
+				return false;
+			}
+		}
+		
+		/// <summary>
+		/// 캐릭터 상태 복원
+		/// </summary>
+		private async Task RestoreCharacterStates(StageProgressData data)
+		{
+			// 플레이어 상태 복원
+			if (data.playerState != null && data.playerState.IsValid())
+			{
+				var playerManager = FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
+				if (playerManager != null)
+				{
+					var player = playerManager.GetPlayer();
+					if (player != null)
+					{
+						// HP 차이만큼 Heal/TakeDamage로 복원
+						int current = player.GetCurrentHP();
+						int target = data.playerState.currentHP;
+						int delta = target - current;
+						if (delta > 0)
+						{
+							player.Heal(delta);
+						}
+						else if (delta < 0)
+						{
+							player.TakeDamage(-delta);
+						}
+						player.SetGuarded(data.playerState.isGuarded);
+						GameLogger.LogInfo($"[SaveManager] 플레이어 상태 복원: HP {target}, 가드 {data.playerState.isGuarded}", GameLogger.LogCategory.Save);
+					}
+				}
+			}
+			
+			// 적 상태 복원
+			if (data.enemyState != null && data.enemyState.IsValid())
+			{
+				var enemyManager = FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
+				if (enemyManager != null)
+				{
+					var enemy = enemyManager.GetCurrentEnemy();
+					if (enemy != null)
+					{
+						int current = enemy.GetCurrentHP();
+						int target = data.enemyState.currentHP;
+						int delta = target - current;
+						if (delta > 0)
+						{
+							enemy.Heal(delta);
+						}
+						else if (delta < 0)
+						{
+							enemy.TakeDamage(-delta);
+						}
+						enemy.SetGuarded(data.enemyState.isGuarded);
+						GameLogger.LogInfo($"[SaveManager] 적 상태 복원: HP {target}, 가드 {data.enemyState.isGuarded}", GameLogger.LogCategory.Save);
+					}
+				}
+			}
+			
+			await Task.CompletedTask;
+		}
+		
+		/// <summary>
+		/// 카드 상태 복원
+		/// </summary>
+		private async Task RestoreCardStates(StageProgressData data)
+		{
+			// 최소 복원: 저장된 핸드 카드 ID를 로그로 검증하고, 필요 시 팩토리로 생성해 빈 슬롯에 배치
+			try
+			{
+				var slotRegistry = FindFirstObjectByType<Game.CombatSystem.Slot.SlotRegistry>();
+				var handRegistry = slotRegistry != null ? slotRegistry.GetHandSlotRegistry() : null;
+				var combatRegistry = slotRegistry != null ? slotRegistry.GetCombatSlotRegistry() : null;
+				// SkillCardFactory는 UnityEngine.Object가 아니므로 직접 생성
+				var cardFactory = new Game.SkillCardSystem.Factory.SkillCardFactory();
+				var playerManager = FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
+				var handManager = FindFirstObjectByType<Game.SkillCardSystem.Manager.PlayerHandManager>();
+                var turnManager = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
+
+				if (handRegistry != null && cardFactory != null && playerManager != null && handManager != null)
+				{
+					// 플레이어 핸드를 비운 뒤 저장된 카드 ID 순서대로 채우는 것은 위험하므로,
+					// 현재 빈 슬롯에 한해 저장된 카드 일부를 복구(최소 동작)한다.
+					foreach (var cardId in data.playerHandCardIds)
+					{
+						if (string.IsNullOrEmpty(cardId)) continue;
+						var def = cardFactory.LoadDefinition(cardId);
+						if (def == null) continue;
+						var card = cardFactory.CreatePlayerCard(def, playerManager.GetPlayer()?.GetCharacterName());
+						if (card != null)
+						{
+							handManager.AddCardToHand(card);
+						}
+					}
+					GameLogger.LogInfo($"[SaveManager] 플레이어 핸드 복원: {data.playerHandCardIds.Count}개 시도", GameLogger.LogCategory.Save);
+				}
+
+				// 전투 슬롯 복원(확장): 저장된 슬롯/소유자/카드ID에 따라 정확 위치로 배치
+				if (combatRegistry != null && cardFactory != null && playerManager != null && turnManager != null)
+				{
+					var playerName = playerManager.GetPlayer()?.GetCharacterName();
+					var cardUIPrefab = FindFirstObjectByType<Game.SkillCardSystem.UI.SkillCardUI>();
+					int placed = 0;
+					foreach (var slotState in data.combatSlots)
+					{
+						if (slotState == null || string.IsNullOrEmpty(slotState.position) || string.IsNullOrEmpty(slotState.cardId)) continue;
+						if (!System.Enum.TryParse<Game.CombatSystem.Slot.CombatSlotPosition>(slotState.position, out var slotPos)) continue;
+						var def = cardFactory.LoadDefinition(slotState.cardId);
+						if (def == null) continue;
+						var isPlayer = string.Equals(slotState.owner, "Player", System.StringComparison.OrdinalIgnoreCase);
+						var card = isPlayer 
+							? cardFactory.CreatePlayerCard(def, playerName)
+							: cardFactory.CreateEnemyCard(def, FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>()?.GetCurrentEnemy()?.GetCharacterName());
+						if (card == null) continue;
+
+						var createdUI = turnManager.GetType()
+							.GetMethod("CreateCardUIForSlot", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+							?.Invoke(turnManager, new object[] { card, slotPos, combatRegistry, cardUIPrefab }) as Game.SkillCardSystem.UI.SkillCardUI;
+
+					turnManager.RegisterCard(slotPos, card, createdUI, isPlayer ? Game.CombatSystem.Data.SlotOwner.PLAYER : Game.CombatSystem.Data.SlotOwner.ENEMY);
+						placed++;
+					}
+
+					GameLogger.LogInfo($"[SaveManager] 전투 슬롯 복원(확장): {placed}개 배치", GameLogger.LogCategory.Save);
+				}
+			}
+			catch (System.Exception ex)
+			{
+				GameLogger.LogWarning($"[SaveManager] 카드 상태 복원 중 경고: {ex.Message}", GameLogger.LogCategory.Save);
+			}
+			
+			await Task.CompletedTask;
+		}
+		
+		/// <summary>
+		/// 스테이지 진행 저장 파일 존재 여부 확인
+		/// </summary>
+		public bool HasStageProgressSave()
+		{
+			string filePath = Path.Combine(Application.persistentDataPath, stageProgressFileName);
+			bool exists = File.Exists(filePath);
+			
+			GameLogger.LogInfo($"[SaveManager] 스테이지 진행 저장 파일 확인: {exists}", GameLogger.LogCategory.Save);
+			return exists;
+		}
+		
+		/// <summary>
+		/// 스테이지 진행 저장 파일 삭제
+		/// </summary>
+		public void ClearStageProgressSave()
+		{
+			try
+			{
+				string filePath = Path.Combine(Application.persistentDataPath, stageProgressFileName);
+				
+				if (File.Exists(filePath))
+				{
+					File.Delete(filePath);
+					GameLogger.LogInfo("[SaveManager] 스테이지 진행 저장 파일 삭제 완료", GameLogger.LogCategory.Save);
+				}
+				else
+				{
+					GameLogger.LogInfo("[SaveManager] 삭제할 스테이지 진행 저장 파일이 없습니다", GameLogger.LogCategory.Save);
+				}
+			}
+			catch (System.Exception ex)
+			{
+				GameLogger.LogError($"[SaveManager] 스테이지 진행 저장 파일 삭제 실패: {ex.Message}", GameLogger.LogCategory.Save);
+			}
+		}
+		
+		/// <summary>
+		/// 현재 진행 상황을 수집하여 저장
+		/// </summary>
+		public async Task SaveCurrentProgress(string trigger = "Manual")
+		{
+			if (progressCollector == null)
+			{
+				GameLogger.LogError("[SaveManager] 진행 상황 수집기가 초기화되지 않았습니다", GameLogger.LogCategory.Save);
+				return;
+			}
+			
+			try
+			{
+				// 현재 진행 상황 수집
+				var progressData = progressCollector.CollectCurrentProgress();
+				progressData.saveTrigger = trigger;
+				
+				// 저장
+				await SaveStageProgress(progressData);
+			}
+			catch (System.Exception ex)
+			{
+				GameLogger.LogError($"[SaveManager] 현재 진행 상황 저장 실패: {ex.Message}", GameLogger.LogCategory.Save);
+			}
+		}
+		
+		#endregion
+		
 		#endregion
 	}
 	

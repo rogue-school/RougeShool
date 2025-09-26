@@ -20,7 +20,6 @@ using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Initialization;
 using Game.CoreSystem.Utility;
 using Game.SaveSystem.Manager;
-using Game.SaveSystem.Interface;
 using Game.UtilitySystem.GameFlow;
 using Game.CoreSystem.Interface;
 using Game.StageSystem.Manager;
@@ -170,27 +169,7 @@ public class CombatInstaller : MonoInstaller
             GameLogger.LogInfo(" CombatFlowManager 자동 생성 및 바인딩 완료");
         }
 
-            // SaveSystem 바인딩: ICardStateCollector / ICardStateRestorer / AutoSaveManager
-            var collector = FindFirstObjectByType<CardStateCollector>();
-            if (collector == null)
-            {
-                var go = new GameObject("CardStateCollector");
-                collector = go.AddComponent<CardStateCollector>();
-                Container.Inject(collector);
-                GameLogger.LogInfo(" CardStateCollector 자동 생성 및 주입 완료");
-            }
-            Container.Bind<ICardStateCollector>().FromInstance(collector).AsSingle();
-
-            var restorer = FindFirstObjectByType<CardStateRestorer>();
-            if (restorer == null)
-            {
-                var go = new GameObject("CardStateRestorer");
-                restorer = go.AddComponent<CardStateRestorer>();
-                Container.Inject(restorer);
-                GameLogger.LogInfo(" CardStateRestorer 자동 생성 및 주입 완료");
-            }
-            Container.Bind<ICardStateRestorer>().FromInstance(restorer).AsSingle();
-
+            // SaveSystem 바인딩: AutoSaveManager (CardStateCollector/Restorer 제거됨)
             var autoSave = FindFirstObjectByType<AutoSaveManager>();
             if (autoSave == null)
             {

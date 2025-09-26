@@ -51,5 +51,20 @@ namespace Game.CoreSystem.Interface
         /// 저장 데이터 초기화
         /// </summary>
         void ClearSave();
+        
+        /// <summary>
+        /// 새 게임 시작 시 기존 저장 데이터 완전 초기화
+        /// </summary>
+        void InitializeNewGame();
+        
+        /// <summary>
+        /// 스테이지 진행 저장 파일 존재 여부 확인
+        /// </summary>
+        bool HasStageProgressSave();
+        
+        /// <summary>
+        /// 스테이지 진행 상황 로드
+        /// </summary>
+        Task<bool> LoadStageProgress();
     }
 }

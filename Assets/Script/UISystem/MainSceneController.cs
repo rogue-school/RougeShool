@@ -107,13 +107,13 @@ namespace Game.UISystem
         {
             if (continueButton != null)
             {
-                // 저장 파일이 있는지 확인
-                bool hasSaveFile = saveManager?.HasSaveFile() ?? false;
-                continueButton.interactable = hasSaveFile;
+                // 스테이지 진행 저장 파일이 있는지 확인
+                bool hasStageProgressSave = saveManager?.HasStageProgressSave() ?? false;
+                continueButton.interactable = hasStageProgressSave;
                 
                 Debug.Log($"[MainSceneController] 이어하기 버튼 상태 업데이트:");
                 Debug.Log($"  - SaveManager 존재: {saveManager != null}");
-                Debug.Log($"  - 저장 파일 존재: {hasSaveFile}");
+                Debug.Log($"  - 스테이지 진행 저장 파일 존재: {hasStageProgressSave}");
                 Debug.Log($"  - 버튼 활성화: {continueButton.interactable}");
                 
                 // 버튼 텍스트도 업데이트 (선택사항)
@@ -121,7 +121,7 @@ namespace Game.UISystem
                 if (buttonText != null)
                 {
                     buttonText.text = "이어하기";
-                    buttonText.color = hasSaveFile ? Color.white : Color.gray;
+                    buttonText.color = hasStageProgressSave ? Color.white : Color.gray;
                 }
             }
             else
@@ -135,10 +135,25 @@ namespace Game.UISystem
         /// </summary>
         private void OnStartButtonClicked()
         {
-            Debug.Log("[MainSceneController] 게임 시작");
+            Debug.Log("[MainSceneController] 새 게임 시작");
             
-            // 캐릭터 선택 UI 활성화 (씬 전환은 캐릭터 선택 후에만 발생)
-            // TODO: 캐릭터 선택 UI 활성화 로직 추가
+            try
+            {
+                // 1. 기존 저장 데이터 완전 초기화
+                if (saveManager != null)
+                {
+                    saveManager.InitializeNewGame();
+                    Debug.Log("[MainSceneController] 기존 저장 데이터 초기화 완료");
+                }
+                
+                // 2. 캐릭터 선택 UI 활성화 (씬 전환은 캐릭터 선택 후에만 발생)
+                // TODO: 캐릭터 선택 UI 활성화 로직 추가
+                Debug.Log("[MainSceneController] 캐릭터 선택 UI 활성화 필요");
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"[MainSceneController] 새 게임 시작 실패: {ex.Message}");
+            }
         }
         
         /// <summary>
@@ -178,28 +193,27 @@ namespace Game.UISystem
             
             try
             {
-                Debug.Log("[MainSceneController] 저장 파일 존재 여부 재확인...");
-                bool hasSaveFile = saveManager.HasSaveFile();
-                Debug.Log($"  - 저장 파일 존재: {hasSaveFile}");
+                Debug.Log("[MainSceneController] 스테이지 진행 저장 파일 존재 여부 재확인...");
+                bool hasStageProgressSave = saveManager.HasStageProgressSave();
+                Debug.Log($"  - 스테이지 진행 저장 파일 존재: {hasStageProgressSave}");
                 
-                if (!hasSaveFile)
+                if (!hasStageProgressSave)
                 {
-                    Debug.LogWarning("[MainSceneController] ⚠️ 저장 파일이 존재하지 않습니다!");
+                    Debug.LogWarning("[MainSceneController] ⚠️ 스테이지 진행 저장 파일이 존재하지 않습니다!");
                     Debug.LogWarning("  - 버튼 상태와 실제 저장 파일 상태가 일치하지 않음");
                     return;
                 }
                 
-                Debug.Log("[MainSceneController] 저장된 게임 로드 시작...");
+                Debug.Log("[MainSceneController] 스테이지 진행 상황 로드 시작...");
 
-                // 1) 저장된 씬 메타를 로드하여 대상 씬 이름을 얻는다.
-                //    현재 SaveManager.LoadSavedScene()은 활성 씬에 복원만 수행하므로
-                //    먼저 전환 매니저를 통해 저장된 씬으로 이동한 뒤 복원을 호출한다.
+                // 1) 오디오 설정 로드
                 var (bgm, sfx) = saveManager.LoadAudioSettings();
 
-                // 기본 정책: 전투 진행 저장을 가정하고 StageScene으로 전환 후 복원
-                // 셋업 시퀀스 우회를 위해 StageScene 진입 전에 재개 플래그를 기록
+                // 2) 이어하기 재개 플래그 설정(초기 셋업 우회)
                 PlayerPrefs.SetInt("RESUME_REQUESTED", 1);
                 PlayerPrefs.Save();
+
+                // 3) 스테이지 씬으로 전환
                 var sceneLoader = FindFirstObjectByType<Game.CoreSystem.Manager.SceneTransitionManager>();
                 if (sceneLoader == null)
                 {
@@ -209,18 +223,17 @@ namespace Game.UISystem
 
                 await sceneLoader.TransitionToStageScene();
 
-                // 2) 씬 전환 완료 후 저장 복원 실행(셋업 패스 우회)
-                // 자동 저장은 비활성화되어 있으므로 전체 씬 저장 포맷을 사용
-                bool loadSuccess = await saveManager.LoadSavedScene();
-                Debug.Log($"[MainSceneController] 게임 로드 결과: {loadSuccess}");
+                // 4) 씬 전환 완료 후 스테이지 진행 상황 복원
+                bool loadSuccess = await saveManager.LoadStageProgress();
+                Debug.Log($"[MainSceneController] 스테이지 진행 상황 로드 결과: {loadSuccess}");
 
                 if (loadSuccess)
                 {
-                    Debug.Log("[MainSceneController] ✅ 게임 로드 성공!");
+                    Debug.Log("[MainSceneController] ✅ 스테이지 진행 상황 복원 성공!");
                 }
                 else
                 {
-                    Debug.LogWarning("[MainSceneController] ⚠️ 게임 로드 실패!");
+                    Debug.LogWarning("[MainSceneController] ⚠️ 스테이지 진행 상황 복원 실패!");
                     Debug.LogWarning("  - 새 게임으로 폴백");
                     // 로드 실패 시 새 게임 시작
                     OnStartButtonClicked();

@@ -108,7 +108,7 @@ namespace Game.CoreSystem
         private void BindCoreServices()
         {
             // AudioPoolManager는 AudioManager에 포함되어 있으므로 별도 바인딩 불필요
-            // CardStateCollector, CardStateRestorer는 SaveManager에 포함되어 있으므로 별도 바인딩 불필요
+            // CardStateCollector, CardStateRestorer는 제거되었고 SaveManager에 StageProgressCollector가 포함됨
         }
 
         #endregion
