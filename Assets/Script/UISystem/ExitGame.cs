@@ -4,7 +4,7 @@ public class ExitGame : MonoBehaviour
 {
     public void QuitGame()
     {
-        Debug.Log("О©╫О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫у╢о╢О©╫.");
-        Application.Quit(); // О©╫О©╫О©╫О©╫ О©╫О©╫ О©╫О©╫О©╫О©╫
+        Debug.Log("╟тюсю╩ а╬╥Агу╢о╢ы.");
+        Application.Quit(); // ╫га╕ ╬ш а╬╥А
     }
 }

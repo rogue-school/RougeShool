@@ -13,6 +13,8 @@ namespace EpicToonFX
 		public bool spawnWithoutLight = true;
 		public bool spawnWithoutSound = true;
 
+		int startPos = 15;
+		bool splitParticle = false;
 
 		void Start ()
 		{	
@@ -32,19 +34,17 @@ namespace EpicToonFX
 		IEnumerator EffectLoop()
 		{
 			GameObject effectPlayer = (GameObject) Instantiate(chosenEffect, transform.position, transform.rotation);
-			
-			var lightComponent = effectPlayer.GetComponent<Light>();
-			if (spawnWithoutLight && lightComponent)
+		
+			if(spawnWithoutLight = true && effectPlayer.GetComponent<Light>())
 			{
-				lightComponent.enabled = false;
+				effectPlayer.GetComponent<Light>().enabled = false;
 				//Destroy(gameObject.GetComponent<Light>());
-				
+
 			}
-			
-			var audioSource = effectPlayer.GetComponent<AudioSource>();
-			if (spawnWithoutSound && audioSource)
+		
+			if(spawnWithoutSound = true && effectPlayer.GetComponent<AudioSource>())
 			{
-				audioSource.enabled = false;
+				effectPlayer.GetComponent<AudioSource>().enabled = false;
 				//Destroy(gameObject.GetComponent<AudioSource>());
 			}
 				
