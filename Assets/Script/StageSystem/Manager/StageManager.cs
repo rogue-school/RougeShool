@@ -426,6 +426,42 @@ namespace Game.StageSystem.Manager
         }
         
         /// <summary>
+        /// 스테이지 진행 상태를 설정합니다. (저장 시스템용)
+        /// </summary>
+        /// <param name="state">설정할 진행 상태</param>
+        public void SetProgressState(StageProgressState state)
+        {
+            progressState = state;
+            OnProgressChanged?.Invoke(progressState);
+            GameLogger.LogInfo($"스테이지 진행 상태 설정: {state}", GameLogger.LogCategory.Combat);
+        }
+        
+        /// <summary>
+        /// 현재 적 인덱스를 설정합니다. (저장 시스템용)
+        /// </summary>
+        /// <param name="index">설정할 적 인덱스</param>
+        public void SetCurrentEnemyIndex(int index)
+        {
+            if (index < 0)
+            {
+                GameLogger.LogError($"잘못된 적 인덱스: {index}", GameLogger.LogCategory.Combat);
+                return;
+            }
+            
+            currentEnemyIndex = index;
+            GameLogger.LogInfo($"현재 적 인덱스 설정: {index}", GameLogger.LogCategory.Combat);
+        }
+        
+        /// <summary>
+        /// 현재 적 인덱스를 가져옵니다. (저장 시스템용)
+        /// </summary>
+        /// <returns>현재 적 인덱스</returns>
+        public int GetCurrentEnemyIndex()
+        {
+            return currentEnemyIndex;
+        }
+        
+        /// <summary>
         /// 다음 스테이지가 있는지 확인합니다.
         /// </summary>
         public bool HasNextStage()

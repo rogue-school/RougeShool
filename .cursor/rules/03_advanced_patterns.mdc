@@ -1,48 +1,58 @@
 ---
 alwaysApply: true
-description: "RougeShool 프로젝트에서 사용하는 고급 패턴과 전문 기법을 정의합니다. DOTween Pro 고급 패턴, Zenject DI 고급 바인딩, 문서화 표준, 성능 최적화 기법을 포함합니다."
+description: "AI-사용자 협업을 위한 핵심 패턴과 기법. Zenject DI 기본 패턴, DOTween Pro 사용법, 문서화 표준을 포함합니다."
 ---
-## 🔧 Zenject DI 고급 패턴
+# RougeShool 핵심 패턴 가이드 (Core Patterns Guide)
 
-### 📋 고급 바인딩 패턴
+> 목적: AI-사용자 협업을 위한 핵심 패턴과 기법. 실제 프로젝트에서 자주 사용하는 패턴만 포함.
 
-#### **1. 조건부 바인딩**
+## 🔧 Zenject DI 핵심 패턴
+
+### 기본 바인딩 패턴
 ```csharp
-// 게임 모드에 따른 다른 구현체 바인딩
-public class GameModeInstaller : MonoInstaller
+// 기본 싱글톤 바인딩 (Inspector 한글화 포함)
+public class CoreSystemInstaller : MonoInstaller<CoreSystemInstaller>
 {
-    [SerializeField] private GameMode currentGameMode;
+    [Header("오디오 시스템 설정")]
+    [Tooltip("오디오 매니저 인스턴스입니다")]
+    [SerializeField] private AudioManager audioManager;
     
     public override void InstallBindings()
     {
-        switch (currentGameMode)
-        {
-            case GameMode.SinglePlayer:
-                Container.Bind<ICombatManager>().To<SinglePlayerCombatManager>().AsSingle();
-                break;
-            case GameMode.MultiPlayer:
-                Container.Bind<ICombatManager>().To<MultiPlayerCombatManager>().AsSingle();
-                break;
-        }
+        Container.Bind<IAudioManager>().FromInstance(audioManager).AsSingle();
+        Container.Bind<ICoreSystemInitializable>().To<CoreSystemInitializer>().AsSingle();
+    }
+}
+
+// 의존성 주입 사용 (Inspector 한글화 포함)
+public class MyController : MonoBehaviour
+{
+    [Header("컨트롤러 설정")]
+    [Tooltip("사용할 오디오 매니저입니다")]
+    [Inject] private IAudioManager audioManager;
+    
+    [SerializeField] private AudioClip sfxClip;
+    
+    private void Start()
+    {
+        audioManager.PlaySFX(sfxClip);
     }
 }
 ```
 
-#### **2. 팩토리 패턴 고급 활용**
+### 팩토리 패턴 기본 활용
 ```csharp
-// 복잡한 객체 생성 팩토리
+// 간단한 팩토리 패턴
 public class SkillCardFactory
 {
-    private readonly DiContainer container;
     private readonly SkillCardDefinition[] cardDefinitions;
     
-    public SkillCardFactory(DiContainer container, SkillCardDefinition[] definitions)
+    public SkillCardFactory(SkillCardDefinition[] definitions)
     {
-        this.container = container;
         this.cardDefinitions = definitions;
     }
     
-    public SkillCard CreateCard(string cardId, SkillCardRarity rarity)
+    public SkillCard CreateCard(string cardId)
     {
         var definition = cardDefinitions.FirstOrDefault(d => d.CardId == cardId);
         if (definition == null)
@@ -51,17 +61,12 @@ public class SkillCardFactory
             return null;
         }
         
-        // Zenject를 통한 의존성 주입으로 카드 생성
-        return container.Instantiate<SkillCard>(new object[] { definition, rarity });
+        return new SkillCard(definition);
     }
 }
-
-// 바인딩
-Container.BindFactory<string, SkillCardRarity, SkillCard, SkillCardFactory.Factory>()
-         .FromFactory<SkillCardFactory>();
 ```
 
-#### **3. 스코프 관리 고급 패턴**
+### 스코프 관리
 ```csharp
 // 씬별 스코프 관리
 public class SceneScopeInstaller : MonoInstaller
@@ -73,26 +78,50 @@ public class SceneScopeInstaller : MonoInstaller
         
         // 전역 스코프 - 씬 전환 시에도 유지
         Container.Bind<IGlobalDataManager>().To<GlobalDataManager>().AsSingle().NonLazy();
-        
-        // 임시 스코프 - 명시적 해제 필요
-        Container.Bind<ITempDataManager>().To<TempDataManager>().AsTransient();
     }
 }
 ```
 
-### ⚠️ Zenject 사용 금지사항
+### ⚠️ Zenject 사용 주의사항
 - **절대 금지**: `Container.Bind<MonoBehaviour>()` - MonoBehaviour는 직접 바인딩 금지
 - **절대 금지**: 순환 의존성 생성
 - **주의**: `NonLazy()` 사용 시 초기화 순서 고려 필수
-- **주의**: `AsTransient()` 사용 시 메모리 누수 주의
 
----
+## 🎬 DOTween Pro 핵심 패턴
 
-## 📚 문서화 고급 패턴
+### 기본 애니메이션 패턴
+```csharp
+// 기본 이동 애니메이션
+transform.DOMove(targetPosition, duration)
+    .SetEase(Ease.OutQuad)
+    .OnComplete(() => GameLogger.LogInfo("이동 완료", GameLogger.LogCategory.UI));
 
-### 📋 XML 문서화 표준
+// 체인 애니메이션
+Sequence sequence = DOTween.Sequence();
+sequence.Append(transform.DOScale(Vector3.one * 1.2f, 0.3f).SetEase(Ease.OutBack))
+         .Append(transform.DOScale(Vector3.one, 0.2f).SetEase(Ease.InBack));
+```
 
-#### **1. 클래스 문서화**
+### UI 애니메이션 패턴
+```csharp
+// UI 페이드 인/아웃
+canvasGroup.DOFade(1f, 0.5f).SetEase(Ease.OutQuad);
+canvasGroup.DOFade(0f, 0.3f).SetEase(Ease.InQuad);
+
+// UI 스케일 애니메이션
+button.transform.DOScale(Vector3.one * 1.1f, 0.1f)
+    .SetLoops(2, LoopType.Yoyo)
+    .SetEase(Ease.InOutQuad);
+```
+
+### ⚠️ DOTween 사용 주의사항
+- **절대 금지**: `DOTween.KillAll()` 사용
+- **필수**: 애니메이션 완료 시 정리 코드 포함
+- **주의**: 무한 루프 애니메이션 방지
+
+## 📚 문서화 핵심 패턴
+
+### XML 문서화 표준
 ```csharp
 /// <summary>
 /// 전투 시스템의 핵심 매니저 클래스입니다.
@@ -102,158 +131,85 @@ public class SceneScopeInstaller : MonoInstaller
 /// 이 클래스는 새로운 5슬롯 시스템을 기반으로 동작합니다.
 /// 기존 4슬롯 시스템과의 호환성을 위해 레거시 메서드도 제공합니다.
 /// </remarks>
-/// <example>
-/// <code>
-/// var combatManager = FindObjectOfType&lt;CombatExecutionManager&gt;();
-/// combatManager.ExecuteCardInBattleSlot();
-/// combatManager.MoveSlotsForwardNew();
-/// </code>
-/// </example>
 public class CombatExecutionManager : MonoBehaviour, ICoreSystemInitializable
 {
-    // 구현...
+    /// <summary>
+    /// 전투 슬롯에서 카드를 실행합니다.
+    /// </summary>
+    /// <param name="slotPosition">실행할 슬롯 위치</param>
+    /// <param name="executeImmediately">즉시 실행 여부 (기본값: true)</param>
+    /// <returns>실행 성공 여부</returns>
+    /// <exception cref="System.InvalidOperationException">
+    /// 전투 페이즈가 아닐 때 발생
+    /// </exception>
+    public bool ExecuteCardInSlot(CombatSlotPosition slotPosition, bool executeImmediately = true)
+    {
+        // 구현...
+    }
 }
 ```
 
-#### **2. 메서드 문서화**
-```csharp
-/// <summary>
-/// 전투 슬롯에서 카드를 실행합니다.
-/// </summary>
-/// <param name="slotPosition">실행할 슬롯 위치</param>
-/// <param name="executeImmediately">즉시 실행 여부 (기본값: true)</param>
-/// <returns>실행 성공 여부</returns>
-/// <exception cref="System.InvalidOperationException">
-/// 전투 페이즈가 아닐 때 발생
-/// </exception>
-/// <example>
-/// <code>
-/// bool success = ExecuteCardInSlot(CombatSlotPosition.BATTLE_SLOT_1, true);
-/// if (success) {
-///     GameLogger.LogInfo("카드 실행 완료", GameLogger.LogCategory.Combat);
-/// }
-/// </code>
-/// </example>
-public bool ExecuteCardInSlot(CombatSlotPosition slotPosition, bool executeImmediately = true)
-{
-    // 구현...
-}
-```
-
-### 📋 주석 작성 표준
-
-#### **1. 복잡한 로직 주석**
+### 주석 작성 표준
 ```csharp
 // 새로운 5슬롯 시스템의 슬롯 이동 로직
 // 기존 4슬롯 시스템과의 호환성을 위해 별도 메서드로 분리
 private void MoveSlotsForwardNew()
 {
     // 1단계: 대기 슬롯에서 전투 슬롯으로 이동
-    // WAIT_SLOT_4 -> BATTLE_SLOT_1 (플레이어 우선)
     MoveCardFromWaitToBattle(CombatSlotPosition.WAIT_SLOT_4, CombatSlotPosition.BATTLE_SLOT_1);
     
     // 2단계: 나머지 슬롯들을 순차적으로 이동
-    // WAIT_SLOT_3 -> WAIT_SLOT_4, WAIT_SLOT_2 -> WAIT_SLOT_3, ...
     for (int i = 3; i >= 1; i--)
     {
-        var fromSlot = (CombatSlotPosition)(i + 3); // WAIT_SLOT_3, WAIT_SLOT_2, WAIT_SLOT_1
-        var toSlot = (CombatSlotPosition)(i + 4);   // WAIT_SLOT_4, WAIT_SLOT_3, WAIT_SLOT_2
+        var fromSlot = (CombatSlotPosition)(i + 3);
+        var toSlot = (CombatSlotPosition)(i + 4);
         MoveCardBetweenWaitSlots(fromSlot, toSlot);
     }
-    
-    // 3단계: 새로운 카드 드로우 (필요시)
-    if (ShouldDrawNewCard())
-    {
-        DrawCardToWaitSlot(CombatSlotPosition.WAIT_SLOT_1);
-    }
 }
 ```
 
-#### **2. 성능 최적화 주석**
+## ⚡ 성능 최적화 핵심 기법
+
+### 오브젝트 풀링 기본 패턴
 ```csharp
-// 성능 최적화: 오브젝트 풀링을 사용한 카드 생성
-// 매 프레임마다 새 카드를 생성하는 대신 재사용 가능한 카드 풀에서 가져옴
-private SkillCard GetCardFromPool()
+public class CardPool : MonoBehaviour
 {
-    // 풀에서 사용 가능한 카드 찾기
-    var availableCard = cardPool.FirstOrDefault(card => !card.gameObject.activeInHierarchy);
+    private Queue<SkillCard> availableCards = new Queue<SkillCard>();
+    private HashSet<SkillCard> activeCards = new HashSet<SkillCard>();
     
-    if (availableCard == null)
+    public SkillCard GetCard()
     {
-        // 풀이 부족한 경우에만 새로 생성 (최대 50개 제한)
-        if (cardPool.Count < 50)
+        SkillCard card;
+        if (availableCards.Count > 0)
         {
-            availableCard = CreateNewCard();
-            cardPool.Add(availableCard);
+            card = availableCards.Dequeue();
         }
         else
         {
-            GameLogger.LogWarning("카드 풀 한계 도달", GameLogger.LogCategory.Performance);
-            return null;
-        }
-    }
-    
-    return availableCard;
-}
-```
-
----
-
-## 🚀 성능 최적화 고급 기법
-
-### 📋 메모리 관리 패턴
-
-#### **1. 오브젝트 풀링 고급 활용**
-```csharp
-public class AdvancedObjectPool<T> where T : MonoBehaviour
-{
-    private Queue<T> pool = new Queue<T>();
-    private HashSet<T> activeObjects = new HashSet<T>();
-    private int maxPoolSize = 100;
-    
-    public T Get()
-    {
-        T obj;
-        if (pool.Count > 0)
-        {
-            obj = pool.Dequeue();
-        }
-        else
-        {
-            obj = CreateNewObject();
+            card = Instantiate(cardPrefab, transform);
         }
         
-        activeObjects.Add(obj);
-        obj.gameObject.SetActive(true);
-        return obj;
+        activeCards.Add(card);
+        card.gameObject.SetActive(true);
+        return card;
     }
     
-    public void Return(T obj)
+    public void ReturnCard(SkillCard card)
     {
-        if (activeObjects.Contains(obj))
+        if (activeCards.Remove(card))
         {
-            activeObjects.Remove(obj);
-            obj.gameObject.SetActive(false);
-            
-            if (pool.Count < maxPoolSize)
-            {
-                pool.Enqueue(obj);
-            }
-            else
-            {
-                Object.Destroy(obj.gameObject);
-            }
+            card.gameObject.SetActive(false);
+            availableCards.Enqueue(card);
         }
     }
 }
 ```
 
-#### **2. 캐싱 전략**
+### 캐싱 기본 전략
 ```csharp
 public class CachedDataManager : MonoBehaviour
 {
     private Dictionary<string, object> cache = new Dictionary<string, object>();
-    private float cacheExpiryTime = 300f; // 5분
     
     public T GetCachedData<T>(string key, Func<T> dataProvider)
     {
@@ -264,17 +220,7 @@ public class CachedDataManager : MonoBehaviour
         
         T data = dataProvider();
         cache[key] = data;
-        
-        // 캐시 만료 스케줄링
-        StartCoroutine(ExpireCacheAfterDelay(key));
-        
         return data;
-    }
-    
-    private IEnumerator ExpireCacheAfterDelay(string key)
-    {
-        yield return new WaitForSeconds(cacheExpiryTime);
-        cache.Remove(key);
     }
 }
 ```
@@ -285,22 +231,17 @@ public class CachedDataManager : MonoBehaviour
 - **주의**: 캐시 크기 제한 필수
 - **주의**: 메모리 누수 모니터링 필수
 
----
+## 🔍 디버깅 핵심 기법
 
-## 🔍 디버깅 고급 기법
-
-### 📋 로깅 전략
+### 로깅 전략
 ```csharp
-// 컨텍스트별 로깅 레벨 관리
+// 컨텍스트별 로깅
 public static class AdvancedLogging
 {
     public static void LogCombatAction(string action, params object[] parameters)
     {
-        if (GameLogger.IsLogLevelEnabled(GameLogger.LogCategory.Combat))
-        {
-            string message = string.Format(action, parameters);
-            GameLogger.LogInfo($"[전투] {message}", GameLogger.LogCategory.Combat);
-        }
+        string message = string.Format(action, parameters);
+        GameLogger.LogInfo($"[전투] {message}", GameLogger.LogCategory.Combat);
     }
     
     public static void LogPerformanceMetric(string operation, float duration)
@@ -313,16 +254,15 @@ public static class AdvancedLogging
 }
 ```
 
----
+## 📋 핵심 패턴 체크리스트
 
-## 📋 체크리스트
-
-### ✅ 고급 패턴 적용 체크리스트
+### ✅ 필수 적용 체크리스트
 - [ ] DOTween 애니메이션에 적절한 Ease 설정 적용
 - [ ] Zenject 바인딩에 적절한 스코프 설정
 - [ ] 복잡한 로직에 상세한 주석 작성
 - [ ] 성능 최적화 기법 적용 (풀링, 캐싱)
 - [ ] XML 문서화 완료
+- [ ] Unity Inspector 한글화 완료 (Header, Tooltip)
 - [ ] 디버깅 로그 적절히 설정
 - [ ] 메모리 누수 방지 코드 적용
 
@@ -333,3 +273,6 @@ public static class AdvancedLogging
 - [ ] 순환 의존성 없음
 - [ ] 매 프레임 FindObjectOfType 호출 없음
 - [ ] 무제한 오브젝트 생성 없음
+
+## 📝 변경 기록
+- 2025-01-27 | Maintainer | Unity Inspector 한글화 규칙 추가 및 체크리스트 강화 | 문서

@@ -253,6 +253,40 @@ namespace Game.CombatSystem.Manager
         }
         
         /// <summary>
+        /// 턴 상태를 복원합니다. (저장 시스템용)
+        /// </summary>
+        /// <param name="turnCount">복원할 턴 수</param>
+        /// <param name="turnType">복원할 턴 타입</param>
+        public void RestoreTurnState(int turnCount, TurnType turnType)
+        {
+            this.turnCount = turnCount;
+            this.currentTurn = turnType;
+            
+            OnTurnChanged?.Invoke(turnType);
+            OnTurnCountChanged?.Invoke(turnCount);
+            
+            var turnName = turnType == TurnType.Player ? "플레이어" : "적";
+            GameLogger.LogInfo($"턴 상태 복원: {turnName} 턴 (턴 {turnCount})", GameLogger.LogCategory.Combat);
+        }
+        
+        /// <summary>
+        /// 턴 수를 설정합니다. (저장 시스템용)
+        /// </summary>
+        /// <param name="count">설정할 턴 수</param>
+        public void SetTurnCount(int count)
+        {
+            if (count < 1)
+            {
+                GameLogger.LogError($"잘못된 턴 수: {count}", GameLogger.LogCategory.Combat);
+                return;
+            }
+            
+            turnCount = count;
+            OnTurnCountChanged?.Invoke(turnCount);
+            GameLogger.LogInfo($"턴 수 설정: {count}", GameLogger.LogCategory.Combat);
+        }
+        
+        /// <summary>
         /// 게임을 시작합니다.
         /// </summary>
         public void StartGame()

@@ -67,10 +67,10 @@ namespace Game.SaveSystem.Manager
             {
                 data.currentStageNumber = stageManager.GetCurrentStageNumber();
                 data.currentStageName = stageManager.GetCurrentStage()?.stageName ?? "Unknown";
-                data.progressState = Game.StageSystem.Data.StageProgressState.InProgress; // 기본값으로 설정
-                data.currentEnemyIndex = 0; // StageManager에 GetCurrentEnemyIndex 메서드가 없음
+                data.progressState = stageManager.ProgressState; // 실제 진행 상태 사용
+                data.currentEnemyIndex = stageManager.GetCurrentEnemyIndex(); // 실제 적 인덱스 사용
                 
-                GameLogger.LogInfo($"[StageProgressCollector] 스테이지 정보 수집: {data.currentStageName} (진행상태: {data.progressState})", GameLogger.LogCategory.Save);
+                GameLogger.LogInfo($"[StageProgressCollector] 스테이지 정보 수집: {data.currentStageName} (진행상태: {data.progressState}, 적인덱스: {data.currentEnemyIndex})", GameLogger.LogCategory.Save);
             }
             else
             {
@@ -86,10 +86,10 @@ namespace Game.SaveSystem.Manager
             var combatFlowManager = FindFirstObjectByType<CombatFlowManager>();
             if (combatFlowManager != null)
             {
-                data.combatFlowState = combatFlowManager.CurrentPhase.ToString();
                 data.isCombatActive = combatFlowManager.IsCombatActive;
+                data.combatFlowState = combatFlowManager.GetCurrentCombatState(); // 실제 플로우 상태 사용
                 
-                GameLogger.LogInfo($"[StageProgressCollector] 전투 상태 수집: {data.combatFlowState} (활성: {data.isCombatActive})", GameLogger.LogCategory.Save);
+                GameLogger.LogInfo($"[StageProgressCollector] 전투 상태 수집: 활성={data.isCombatActive}, 플로우={data.combatFlowState}", GameLogger.LogCategory.Save);
             }
             else
             {

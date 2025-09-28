@@ -682,31 +682,36 @@ namespace Game.CoreSystem.Save
 				if (stageManager != null)
 				{
 					stageManager.SetCurrentStageNumber(data.currentStageNumber);
-					// SetProgressState, SetCurrentEnemyIndex 메서드가 없으므로 간소화
-					GameLogger.LogInfo($"[SaveManager] 스테이지 {data.currentStageNumber} 복원 완료", GameLogger.LogCategory.Save);
+					stageManager.SetProgressState(data.progressState);
+					stageManager.SetCurrentEnemyIndex(data.currentEnemyIndex);
+					GameLogger.LogInfo($"[SaveManager] 스테이지 {data.currentStageNumber} 복원 완료 (진행상태: {data.progressState}, 적인덱스: {data.currentEnemyIndex})", GameLogger.LogCategory.Save);
 				}
 				
 				// 2. 전투 상태 복원
 				var combatFlowManager = FindFirstObjectByType<Game.CombatSystem.Manager.CombatFlowManager>();
 				if (combatFlowManager != null)
 				{
-					// 전투 상태 복원 로직 (추후 구현)
+					combatFlowManager.RestoreCombatState(data.combatFlowState);
+					combatFlowManager.SetCombatActive(data.isCombatActive);
+					GameLogger.LogInfo($"[SaveManager] 전투 상태 복원 완료 (플로우: {data.combatFlowState}, 활성: {data.isCombatActive})", GameLogger.LogCategory.Save);
 				}
 				
 				// 3. 턴 상태 복원
 				var turnManager = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
 				if (turnManager != null)
 				{
-					// 저장된 턴 타입을 복원 (턴 카운트는 외부에서 직접 설정 불가)
 					try
 					{
 						if (!string.IsNullOrEmpty(data.currentTurn))
 						{
 							var isPlayer = string.Equals(data.currentTurn, "Player", System.StringComparison.OrdinalIgnoreCase);
-							turnManager.SetTurn(isPlayer 
+							var turnType = isPlayer 
 								? Game.CombatSystem.Manager.TurnManager.TurnType.Player 
-								: Game.CombatSystem.Manager.TurnManager.TurnType.Enemy);
-							GameLogger.LogInfo($"[SaveManager] 턴 복원: {data.currentTurn}", GameLogger.LogCategory.Save);
+								: Game.CombatSystem.Manager.TurnManager.TurnType.Enemy;
+							
+							// 턴 상태 완전 복원
+							turnManager.RestoreTurnState(data.turnCount, turnType);
+							GameLogger.LogInfo($"[SaveManager] 턴 상태 복원 완료: {data.currentTurn} 턴 (턴 {data.turnCount})", GameLogger.LogCategory.Save);
 						}
 					}
 					catch (System.Exception ex)
