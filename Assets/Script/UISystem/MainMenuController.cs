@@ -26,21 +26,16 @@ namespace Game.UISystem
         #region 의존성 주입
         
         [Inject] private IGameStateManager gameStateManager;
-        [Inject] private SettingsManager settingsManager;
         [Inject] private ISaveManager saveManager;
         [Inject] private IPlayerCharacterSelectionManager playerCharacterSelectionManager;
         
-        [Header("선택 캐릭터 공유 데이터")]
-        [Tooltip("메인 로비/씬 간 선택 캐릭터를 공유하는 SO")]
-        [SerializeField] private SelectedCharacterSO selectedCharacterSO;
+        // 선택 캐릭터 공유 SO 제거됨
         
         #endregion
         
         #region Inspector 필드
         
         [Header("메인 메뉴")]
-        [Tooltip("게임 타이틀 텍스트")]
-        [SerializeField] private TextMeshProUGUI gameTitleText;
         
         [Tooltip("메인 메뉴 루트 패널 (버튼 등이 들어있는 상위 오브젝트)")]
         [SerializeField] private GameObject mainMenuPanel;
@@ -64,11 +59,7 @@ namespace Game.UISystem
         [Tooltip("캐릭터 카드 컨테이너")]
         [SerializeField] private Transform characterCardContainer;
         
-        [Tooltip("캐릭터 카드 프리팹")]
-        [SerializeField] private GameObject characterCardPrefab;
-        
-        [Tooltip("선택 하이라이트")]
-        [SerializeField] private GameObject selectionHighlight;
+        // 캐릭터 카드 프리팹/선택 하이라이트 제거됨
         
         [Header("게임 시작")]
         [Tooltip("게임 시작 패널")]
@@ -77,14 +68,11 @@ namespace Game.UISystem
         [Tooltip("선택된 캐릭터 이미지")]
         [SerializeField] private Image selectedCharacterImage;
         
-        [Tooltip("선택된 캐릭터 엠블럼 이미지")]
-        [SerializeField] private Image selectedCharacterEmblemImage;
+        // 선택된 캐릭터 엠블럼 이미지 제거됨
 
-        [Tooltip("선택된 캐릭터의 스킬 아이콘 이미지들 (3개)")]
-        [SerializeField] private Image[] selectedCharacterSkillIcons = new Image[3];
+        // 선택된 캐릭터 스킬 아이콘 배열 제거됨
 
-        [Tooltip("선택된 캐릭터 이름")]
-        [SerializeField] private TextMeshProUGUI selectedCharacterName;
+        // 선택된 캐릭터 이름 텍스트 제거됨
         
         [Tooltip("선택된 캐릭터 설명")]
         [SerializeField] private TextMeshProUGUI selectedCharacterDescription;
@@ -110,13 +98,7 @@ namespace Game.UISystem
         [Tooltip("지팡이 캐릭터 선택 버튼")]
         [SerializeField] private Button staffButton;
 
-        [Header("버튼별 프리뷰 SO (GameStartPanel 표시용)")]
-        [Tooltip("검 캐릭터 프리뷰 SO (엠블럼/설명/스킬3")]
-        [SerializeField] private SelectedCharacterSO swordPreviewSO;
-        [Tooltip("활 캐릭터 프리뷰 SO")]
-        [SerializeField] private SelectedCharacterSO bowPreviewSO;
-        [Tooltip("지팡이 캐릭터 프리뷰 SO")]
-        [SerializeField] private SelectedCharacterSO staffPreviewSO;
+        // 프리뷰 SO 제거됨
 
         [Header("버튼별 실제 게임용 캐릭터 데이터")]
         [Tooltip("검 캐릭터 데이터(실제 게임에서 사용)")]
@@ -130,11 +112,7 @@ namespace Game.UISystem
         [Tooltip("크레딧 패널")]
         [SerializeField] private GameObject creditsPanel;
         
-        [Tooltip("크레딧 제목")]
-        [SerializeField] private TextMeshProUGUI creditsTitle;
-        
-        [Tooltip("크레딧 내용")]
-        [SerializeField] private TextMeshProUGUI creditsContent;
+        // 크레딧 제목/내용 필드 제거됨 (패널만 토글)
         
         [Tooltip("메인 메뉴로 버튼")]
         [SerializeField] private Button backToMenuButton;
@@ -184,8 +162,7 @@ namespace Game.UISystem
             if (mainMenuPanel == null) GameLogger.LogWarning("[MainMenuController] 메인 메뉴 패널이 연결되지 않았습니다 (겹침 발생 가능)", GameLogger.LogCategory.UI);
             if (swordButton == null || bowButton == null || staffButton == null)
                 GameLogger.LogWarning("[MainMenuController] 고정 캐릭터 버튼(검/활/지팡이) 중 일부가 비었습니다", GameLogger.LogCategory.UI);
-            if (swordPreviewSO == null || bowPreviewSO == null || staffPreviewSO == null)
-                GameLogger.LogWarning("[MainMenuController] 프리뷰 SO(검/활/지팡이) 중 일부가 비었습니다", GameLogger.LogCategory.UI);
+            // 프리뷰 SO 제거됨
             if (swordCharacter == null || bowCharacter == null || staffCharacter == null)
                 GameLogger.LogWarning("[MainMenuController] 실제 게임용 캐릭터 데이터(검/활/지팡이) 중 일부가 비었습니다", GameLogger.LogCategory.UI);
         }
@@ -195,12 +172,12 @@ namespace Game.UISystem
         /// </summary>
         private void BindFixedCharacterButtons()
         {
-            BindFixed(swordButton, swordPreviewSO, swordCharacter, "검");
-            BindFixed(bowButton, bowPreviewSO, bowCharacter, "활");
-            BindFixed(staffButton, staffPreviewSO, staffCharacter, "지팡이");
+            BindFixed(swordButton, swordCharacter);
+            BindFixed(bowButton, bowCharacter);
+            BindFixed(staffButton, staffCharacter);
         }
 
-        private void BindFixed(Button button, SelectedCharacterSO previewSO, PlayerCharacterData gameCharacter, string label)
+        private void BindFixed(Button button, PlayerCharacterData gameCharacter)
         {
             if (button == null)
             {
@@ -209,8 +186,6 @@ namespace Game.UISystem
             button.onClick.RemoveAllListeners();
             button.onClick.AddListener(() =>
             {
-                // 프리뷰 SO를 SelectedCharacterSO에 복사 저장하고, 시작용 캐릭터를 보관
-                ApplyPreviewSOToSelected(previewSO, label);
                 pendingStartCharacter = gameCharacter;
                 // 실제 시작에 사용될 캐릭터를 선택 상태로도 보관하여 Start 버튼 가드 통과
                 selectedCharacter = gameCharacter;
@@ -249,7 +224,7 @@ namespace Game.UISystem
             if (reselectCharacterButton != null)
                 reselectCharacterButton.onClick.AddListener(OnReselectCharacterButtonClicked);
             
-            // 크레딧 패널 버튼 이벤트 연결
+            // 크레딧 패널 버튼 이벤트 연결 (크레딧 제목/내용 필드 사용 안 함)
             if (backToMenuButton != null)
                 backToMenuButton.onClick.AddListener(OnBackToMenuButtonClicked);
             
@@ -263,6 +238,15 @@ namespace Game.UISystem
             if (creditsPanel != null)
                 creditsPanel.SetActive(false);
             // 설정 패널 제거됨
+
+            // 메인 메뉴 버튼들에 언더라인 호버 효과 연결
+            TryBindUnderlineHover(newGameButton);
+            TryBindUnderlineHover(continueButton);
+            TryBindUnderlineHover(creditsButton);
+            TryBindUnderlineHover(exitButton);
+            TryBindUnderlineHover(startGameButton);
+            TryBindUnderlineHover(reselectCharacterButton);
+            TryBindUnderlineHover(backToMenuButton);
         }
         
         /// <summary>
@@ -306,20 +290,6 @@ namespace Game.UISystem
             }
             characterCards.Clear();
 
-            if (characterCardPrefab != null)
-            {
-                // 프리팹이 연결된 경우: 프리팹 기준으로 생성
-                for (int i = 0; i < availableCharacters.Length; i++)
-                {
-                    var characterData = availableCharacters[i];
-                    var cardObject = Instantiate(characterCardPrefab, characterCardContainer);
-                    characterCards.Add(cardObject);
-
-                    // 카드 설정
-                    SetupCharacterCard(cardObject, characterData, i);
-                }
-            }
-            else
             {
                 // 프리팹이 없을 때: 컨테이너의 기존 자식들을 활용하여 이벤트 바인딩 및 데이터 반영
                 GameLogger.LogInfo("[MainMenuController] 카드 프리팹이 비어 있어 컨테이너 자식 오브젝트를 활용합니다", GameLogger.LogCategory.UI);
@@ -417,11 +387,7 @@ namespace Game.UISystem
         /// </summary>
         private void PlayInitialAnimation()
         {
-            // 애니메이션 제거: 즉시 표시 상태로 설정
-            if (gameTitleText != null)
-            {
-                gameTitleText.transform.localScale = Vector3.one;
-            }
+            // 타이틀 텍스트 제거됨
             var buttons = new Button[] { newGameButton, continueButton, creditsButton, exitButton };
             for (int i = 0; i < buttons.Length; i++)
             {
@@ -583,11 +549,9 @@ namespace Game.UISystem
             }
             
             selectedCharacter = availableCharacters[characterIndex];
-            TryUpdateSelectedCharacterSOFrom(selectedCharacter);
             GameLogger.LogInfo($"[MainMenuController] 캐릭터 선택: {selectedCharacter.DisplayName}", GameLogger.LogCategory.UI);
             
             // SO에 요약 반영 및 시작용 캐릭터 후보 보관
-            TryUpdateSelectedCharacterSOFrom(selectedCharacter);
             pendingStartCharacter = selectedCharacter;
             // 선택된 캐릭터 정보 업데이트 및 전환
             UpdateSelectedCharacterInfo();
@@ -611,7 +575,6 @@ namespace Game.UISystem
             }
 
             selectedCharacter = character;
-            TryUpdateSelectedCharacterSOFrom(selectedCharacter);
             pendingStartCharacter = selectedCharacter;
             GameLogger.LogInfo($"[MainMenuController] 외부에서 캐릭터 선택: {selectedCharacter.DisplayName}", GameLogger.LogCategory.UI);
 
@@ -624,38 +587,7 @@ namespace Game.UISystem
             ShowGameStartPanel();
         }
 
-        /// <summary>
-        /// PlayerCharacterData에서 SelectedCharacterSO 요약 정보를 구성해 저장합니다.
-        /// </summary>
-        private void TryUpdateSelectedCharacterSOFrom(PlayerCharacterData character)
-        {
-            if (selectedCharacterSO == null || character == null)
-                return;
-
-            // 설명은 기존 방식 사용
-            string desc = GetCharacterDescription(character.CharacterType);
-
-            // 스킬 3개 추출
-            var skills = new List<Game.SkillCardSystem.Data.SkillCardDefinition>();
-            try
-            {
-                if (character.SkillDeck != null)
-                {
-                    var entries = character.SkillDeck.GetAllCardEntries();
-                    foreach (var e in entries)
-                    {
-                        if (e?.cardDefinition != null)
-                        {
-                            skills.Add(e.cardDefinition);
-                            if (skills.Count >= 3) break;
-                        }
-                    }
-                }
-            }
-            catch { }
-
-            selectedCharacterSO.Set(character.Emblem, desc, skills.ToArray());
-        }
+        // SelectedCharacterSO 연동 메서드 제거됨
         
         /// <summary>
         /// 게임 시작 버튼 클릭
@@ -739,125 +671,16 @@ namespace Game.UISystem
         /// </summary>
         private void UpdateSelectedCharacterInfo()
         {
-            // SO 기반으로 GameStartPanel을 채움 (없으면 PlayerCharacterData로 폴백)
-            bool usedSO = false;
-            if (selectedCharacterSO != null)
+            // GameStartPanel은 PlayerCharacterData만 사용 (SO 미사용)
+            if (selectedCharacter != null)
             {
-                // 이름/설명/이미지 세팅
-                if (selectedCharacterName != null)
-                    selectedCharacterName.text = selectedCharacter != null ? selectedCharacter.DisplayName : selectedCharacterName.text;
-
                 if (selectedCharacterDescription != null)
-                    selectedCharacterDescription.text = !string.IsNullOrEmpty(selectedCharacterSO.Description)
-                        ? selectedCharacterSO.Description
-                        : (selectedCharacter != null ? GetCharacterDescription(selectedCharacter.CharacterType) : selectedCharacterDescription.text);
-
-                if (selectedCharacterEmblemImage != null)
-                {
-                    if (selectedCharacterSO.Emblem != null)
-                    {
-                        selectedCharacterEmblemImage.sprite = selectedCharacterSO.Emblem;
-                        selectedCharacterEmblemImage.enabled = true;
-                    }
-                    else
-                    {
-                        selectedCharacterEmblemImage.enabled = false;
-                    }
-                }
-
-                if (selectedCharacterImage != null && selectedCharacter?.Portrait != null)
-                    selectedCharacterImage.sprite = selectedCharacter.Portrait;
-
-                // 아이콘 3개: SO.SkillCards 우선
-                try
-                {
-                    if (selectedCharacterSkillIcons != null && selectedCharacterSkillIcons.Length > 0)
-                    {
-                        int filled = 0;
-                        for (int i = 0; i < selectedCharacterSkillIcons.Length; i++)
-                        {
-                            if (selectedCharacterSkillIcons[i] != null)
-                                selectedCharacterSkillIcons[i].enabled = false;
-                        }
-                        if (selectedCharacterSO.SkillCards != null)
-                        {
-                            foreach (var def in selectedCharacterSO.SkillCards)
-                            {
-                                if (def == null) continue;
-                                if (filled >= selectedCharacterSkillIcons.Length) break;
-                                var icon = def.artwork;
-                                if (icon != null)
-                                {
-                                    selectedCharacterSkillIcons[filled].sprite = icon;
-                                    selectedCharacterSkillIcons[filled].enabled = true;
-                                    filled++;
-                                }
-                            }
-                        }
-                    }
-                }
-                catch { }
-
-                usedSO = true;
-            }
-
-            if (!usedSO && selectedCharacter != null)
-            {
-                if (selectedCharacterName != null)
-                    selectedCharacterName.text = selectedCharacter.DisplayName;
-                if (selectedCharacterDescription != null)
-                    selectedCharacterDescription.text = GetCharacterDescription(selectedCharacter.CharacterType);
+                    selectedCharacterDescription.text = selectedCharacter.Description ?? string.Empty; // PlayerCharacterData의 Description 사용
                 if (selectedCharacterImage != null && selectedCharacter.Portrait != null)
                     selectedCharacterImage.sprite = selectedCharacter.Portrait;
-                if (selectedCharacterEmblemImage != null)
-                {
-                    if (selectedCharacter.Emblem != null)
-                    {
-                        selectedCharacterEmblemImage.sprite = selectedCharacter.Emblem;
-                        selectedCharacterEmblemImage.enabled = true;
-                    }
-                    else selectedCharacterEmblemImage.enabled = false;
-                }
             }
 
-            // 대표 스킬 3개 아이콘 설정
-            try
-            {
-                if (!usedSO && selectedCharacter != null && selectedCharacter.SkillDeck != null && selectedCharacterSkillIcons != null && selectedCharacterSkillIcons.Length > 0)
-                {
-                    var entries = selectedCharacter.SkillDeck.GetAllCardEntries();
-                    int filled = 0;
-                    for (int i = 0; i < selectedCharacterSkillIcons.Length; i++)
-                    {
-                        if (selectedCharacterSkillIcons[i] == null) continue;
-                        selectedCharacterSkillIcons[i].enabled = false;
-                    }
-
-                    foreach (var entry in entries)
-                    {
-                        if (entry == null || entry.cardDefinition == null) continue;
-                        if (filled >= selectedCharacterSkillIcons.Length) break;
-
-                        var icon = entry.cardDefinition.artwork;
-                        if (icon != null)
-                        {
-                            selectedCharacterSkillIcons[filled].sprite = icon;
-                            selectedCharacterSkillIcons[filled].enabled = true;
-                            filled++;
-                        }
-                    }
-
-                    // 부족하면 비활성화 유지
-                    if (filled < selectedCharacterSkillIcons.Length)
-                    {
-                        GameLogger.LogWarning($"[MainMenuController] 대표 스킬 아이콘이 {filled}개만 설정되었습니다", GameLogger.LogCategory.UI);
-                    }
-                }
-            }
-            catch (System.Exception ex)
-            {
-                GameLogger.LogError($"[MainMenuController] 스킬 아이콘 설정 실패: {ex.Message}", GameLogger.LogCategory.Error);
-            }
+            // 대표 스킬 아이콘 UI 제거됨
 
             // 시작 버튼 라벨 "입학하기"로 설정
             if (startGameButton != null)
@@ -866,9 +689,11 @@ namespace Game.UISystem
                 if (label != null) label.text = "입학하기";
             }
 
-            // 실제 카드 프리팹을 이용한 미리보기 생성 (SO 우선)
+            // 실제 카드 프리팹을 이용한 미리보기 생성 (PlayerCharacterData 기반)
             UpdateSkillCardPreviews();
         }
+
+        // 스킬 아이콘 보조 메서드 제거됨
 
         /// <summary>
         /// 선택된 캐릭터의 대표 스킬 3개를 실제 카드 UI 프리팹으로 미리보기 생성
@@ -890,25 +715,17 @@ namespace Game.UISystem
                 }
             }
 
-            // 대표 스킬 3개까지 생성
-            var defs = selectedCharacterSO != null && selectedCharacterSO.SkillCards != null && selectedCharacterSO.SkillCards.Length > 0
-                ? selectedCharacterSO.SkillCards
-                : null;
-
-            if (defs == null)
+            // PlayerCharacterData의 덱에서 추출
+            if (selectedCharacter == null || selectedCharacter.SkillDeck == null) return;
+            var entries = selectedCharacter.SkillDeck.GetAllCardEntries();
+            if (entries == null || entries.Count == 0) return;
+            var defs = new Game.SkillCardSystem.Data.SkillCardDefinition[Mathf.Min(3, entries.Count)];
+            int idx = 0;
+            foreach (var e in entries)
             {
-                // 폴백: PlayerCharacterData의 덱에서 추출
-                if (selectedCharacter == null || selectedCharacter.SkillDeck == null) return;
-                var entries = selectedCharacter.SkillDeck.GetAllCardEntries();
-                if (entries == null || entries.Count == 0) return;
-                defs = new Game.SkillCardSystem.Data.SkillCardDefinition[Mathf.Min(3, entries.Count)];
-                int idx = 0;
-                foreach (var e in entries)
-                {
-                    if (e?.cardDefinition == null) continue;
-                    defs[idx++] = e.cardDefinition;
-                    if (idx >= defs.Length) break;
-                }
+                if (e?.cardDefinition == null) continue;
+                defs[idx++] = e.cardDefinition;
+                if (idx >= defs.Length) break;
             }
 
             var factory = new SkillCardFactory();
@@ -967,56 +784,34 @@ namespace Game.UISystem
             }
         }
 
-        private void ApplyPreviewSOToSelected(SelectedCharacterSO previewSO, string label)
+        // 프리뷰 SO 사용 제거됨
+
+        // 버튼 하위의 'Underline'을 찾아 UnderlineHoverEffect를 보장합니다.
+        private void TryBindUnderlineHover(Button button)
         {
-            if (selectedCharacterSO == null)
+            if (button == null) return;
+            var effect = button.GetComponent<Game.UISystem.UnderlineHoverEffect>();
+            if (effect == null)
             {
-                GameLogger.LogWarning("[MainMenuController] SelectedCharacterSO가 할당되지 않았습니다", GameLogger.LogCategory.UI);
-                return;
+                effect = button.gameObject.AddComponent<Game.UISystem.UnderlineHoverEffect>();
             }
-            if (previewSO == null)
+            var t = button.transform.Find("Underline");
+            if (t != null)
             {
-                GameLogger.LogWarning($"[MainMenuController] {label} 프리뷰 SO가 비어 있어 기본값으로 표시합니다", GameLogger.LogCategory.UI);
-                // 비어 있으면 초기화만
-                selectedCharacterSO.Clear();
-                return;
+                var rect = t as RectTransform;
+                effect.SetUnderline(rect);
             }
-            selectedCharacterSO.Set(previewSO.Emblem, previewSO.Description, previewSO.SkillCards);
         }
         
         /// <summary>
         /// 선택 하이라이트 업데이트
         /// </summary>
-        private void UpdateSelectionHighlight(int characterIndex)
-        {
-            if (selectionHighlight != null && characterIndex < characterCards.Count)
-            {
-                var selectedCard = characterCards[characterIndex];
-                if (selectedCard != null)
-                {
-                    selectionHighlight.transform.position = selectedCard.transform.position;
-                    selectionHighlight.SetActive(true);
-                }
-            }
-        }
+        private void UpdateSelectionHighlight(int characterIndex) { }
         
         /// <summary>
         /// 캐릭터 타입에 따른 설명 반환
         /// </summary>
-        private string GetCharacterDescription(PlayerCharacterType characterType)
-        {
-            switch (characterType)
-            {
-                case PlayerCharacterType.Sword:
-                    return "근접 전투의 달인\n강력한 공격력과 방어력을 가진 검사";
-                case PlayerCharacterType.Bow:
-                    return "원거리 공격의 전문가\n화살을 이용한 정밀한 공격";
-                case PlayerCharacterType.Staff:
-                    return "마법의 지배자\n마나를 이용한 강력한 마법 공격";
-                default:
-                    return "알 수 없는 캐릭터 타입";
-            }
-        }
+        // 타입별 하드코딩 설명 제거됨
         
         #endregion
     }

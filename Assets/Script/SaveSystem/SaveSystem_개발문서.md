@@ -19,61 +19,43 @@ SaveSystem은 게임의 저장/로드 기능을 관리하는 시스템입니다.
 ## 🏗️ 폴더 구조 (실제 파일 수 기준)
 ```
 SaveSystem/
-├── Manager/           # 저장 매니저 (4개 파일)
+├── Manager/           # 저장 매니저 (2개 파일)
 │   ├── AutoSaveManager.cs
-│   ├── BaseSaveManager.cs
-│   ├── CardStateCollector.cs
-│   └── CardStateRestorer.cs
-├── Interface/         # 저장 인터페이스 (3개 파일)
-│   ├── IAutoSaveManager.cs
-│   ├── ICardStateCollector.cs
-│   └── ICardStateRestorer.cs
-├── Data/              # 저장 데이터 (3개 파일)
-│   ├── AutoSaveCondition.cs
+│   └── StageProgressCollector.cs
+├── Installer/         # DI 설치 (1개 파일)
+│   └── SaveSystemInstaller.cs
+├── Data/              # 저장 데이터 (2개 파일)
 │   ├── CardSlotData.cs
-│   └── CompleteCardStateData.cs
-├── Event/             # 저장 이벤트 (1개 파일)
-│   └── SaveEventTrigger.cs
+│   └── StageProgressData.cs
 └── SaveSystem_개발문서.md
 ```
 
 ## 스크립트 목록(1:1 매핑)
-- SaveSystem/Manager/CardStateRestorer.cs
-- SaveSystem/Manager/CardStateCollector.cs
 - SaveSystem/Manager/AutoSaveManager.cs
-- SaveSystem/Manager/BaseSaveManager.cs
-- SaveSystem/Interface/IAutoSaveManager.cs
-- SaveSystem/Interface/ICardStateRestorer.cs
-- SaveSystem/Interface/ICardStateCollector.cs
-- SaveSystem/Data/CompleteCardStateData.cs
-- SaveSystem/Event/SaveEventTrigger.cs
+- SaveSystem/Manager/StageProgressCollector.cs
+- SaveSystem/Installer/SaveSystemInstaller.cs
+- SaveSystem/Data/StageProgressData.cs
 - SaveSystem/Data/CardSlotData.cs
-- SaveSystem/Data/AutoSaveCondition.cs
 
 ## 📁 실제 구현 위치
 ```
 CoreSystem/Save/
-└── SaveManager.cs     # 실제 저장 매니저 구현 (확장됨)
+└── SaveManager.cs     # 전역 저장 매니저(코어 통합)
 
-SaveSystem/ (새로운 구조)
+SaveSystem/
 ├── Manager/
-│   ├── AutoSaveManager.cs       # 자동 저장 매니저
-│   ├── CardStateCollector.cs    # 카드 상태 수집
-│   └── CardStateRestorer.cs     # 카드 상태 복원
-├── Interface/
-│   ├── ICardStateCollector.cs   # 카드 상태 수집 인터페이스
-│   └── ICardStateRestorer.cs    # 카드 상태 복원 인터페이스
-├── Data/
-│   ├── AutoSaveCondition.cs     # 자동 저장 조건
-│   ├── CardSlotData.cs          # 카드 슬롯 데이터
-│   └── CompleteCardStateData.cs # 완전한 카드 상태 데이터
-└── Event/
-    └── SaveEventTrigger.cs      # 저장 이벤트 트리거
+│   ├── AutoSaveManager.cs       # 자동 저장 트리거/진입점
+│   └── StageProgressCollector.cs# 스테이지 진행 데이터 수집
+├── Installer/
+│   └── SaveSystemInstaller.cs   # DI 바인딩
+└── Data/
+    ├── CardSlotData.cs          # 슬롯 저장 최소 구조
+    └── StageProgressData.cs     # 스테이지 진행도 저장
 ```
 
 ## 📊 SaveManager.cs 분석
 
-### 주요 기능 (리팩토링 후)
+### 주요 기능 (코어 통합 후)
 - **슬레이 더 스파이어 방식**: 턴 기반 자동 저장 시스템
 - **완전한 카드 상태**: 플레이어/적 핸드, 전투 슬롯, 카드 순환 상태 저장
 - **자동 저장 조건**: 특정 게임 이벤트 시 자동 저장
@@ -81,118 +63,45 @@ SaveSystem/ (새로운 구조)
 - **JSON 기반 저장**: JsonUtility를 활용한 데이터 직렬화
 - **데이터 검증**: 저장된 데이터의 유효성 검증
 
-### 주요 메서드 (실제 구현)
-- `SaveGameState()`: 게임 상태 저장 (신규)
-- `LoadGameState()`: 게임 상태 로드 (신규)
-- `AutoSave()`: 자동 저장 (신규)
-- `SaveCardState()`: 카드 상태 저장 (신규)
-- `RestoreCardState()`: 카드 상태 복원 (신규)
-- `SaveSceneData(string sceneName)`: 씬 데이터 저장 (유지)
-- `LoadSceneData(string sceneName)`: 씬 데이터 로드 (유지)
-- `SaveToFile(string fileName, string data)`: 파일로 저장 (유지)
-- `LoadFromFile(string fileName)`: 파일에서 로드 (유지)
+### 주요 메서드 (대표)
+- `SaveGameState()`: 게임 상태 저장
+- `LoadGameState()`: 게임 상태 로드
+- `AutoSave()`: 자동 저장
+- `SaveSceneData(string sceneName)`: 씬 데이터 저장
+- `LoadSceneData(string sceneName)`: 씬 데이터 로드
+- `SaveToFile(string fileName, string data)`: 파일로 저장
+- `LoadFromFile(string fileName)`: 파일에서 로드
 
 ## 📊 주요 클래스 및 메서드
 
 ### AutoSaveManager 클래스
-- **TriggerAutoSave(string conditionName)**: 특정 조건으로 자동 저장 트리거
-- **SaveGameState(string saveName)**: 수동 게임 상태 저장 (async)
+- **TriggerAutoSave(string reasonTag)**: 지정된 원인 태그로 자동 저장 트리거
+- **SaveGameState(string saveName)**: 게임 상태 저장 (async)
 - **LoadGameState(string filePath)**: 저장된 게임 상태 로드 (async)
-- **AddAutoSaveCondition(string name, AutoSaveTrigger trigger, string description)**: 자동 저장 조건 추가
-- **RemoveAutoSaveCondition(string name)**: 자동 저장 조건 제거
-- **UpdateAutoSaveCondition(string name, bool enabled)**: 자동 저장 조건 업데이트
-- **InitializeAutoSaveConditions()**: 자동 저장 조건 초기화
-- **AddDefaultAutoSaveConditions()**: 기본 자동 저장 조건 추가
-- **IsAutoSaveEnabled**: 자동 저장 활성화 여부 (프로퍼티)
 
-### SaveEventTrigger 클래스
-- **OnInitialQueueSetupCompleted()**: 전투/대기 슬롯 초기 셋업 완료 시
-- **OnTurnChanged()**: 턴 전환 직후
-- **OnCardExecutionCompleted()**: 배틀 슬롯 카드 실행 완료 직후
-- **OnStageCompleted()**: 스테이지 완료 후
-- **OnStageFailed()**: 스테이지 실패 후
-- **OnCombatStart()**: 전투 시작 시
-- **OnCombatEnd()**: 전투 종료 시
+### StageProgressCollector 클래스
+- **Collect()**: 현재 스테이지 진행도 수집
+- **Apply(StageProgressData data)**: 진행도 복원
 
-### CompleteCardStateData 클래스
-- **playerHandSlots**: 플레이어 핸드카드 슬롯 목록 (프로퍼티)
-- **firstSlotCard**: 첫 번째 전투 슬롯 카드 (프로퍼티)
-- **secondSlotCard**: 두 번째 전투 슬롯 카드 (프로퍼티)
-- **unusedStorageCards**: 미사용 카드 저장소 (프로퍼티) - 보관함 시스템 제거됨
-- **usedStorageCards**: 사용된 카드 저장소 (프로퍼티) - 보관함 시스템 제거됨
-- **isPlayerFirst**: 플레이어 선공 여부 (프로퍼티)
-- **IsValid()**: 데이터 유효성 검증
-- **GetSaveTime()**: 저장 시간 반환
-- **SetSaveTime()**: 저장 시간 설정
-- **적 핸드 관련 필드 제거됨**: `enemyHandSlots` 필드 제거, 적 카드는 대기 슬롯에서 직접 관리
+### SaveSystemInstaller 클래스
+- **InstallBindings()**: AutoSaveManager, StageProgressCollector 바인딩
 
-### AutoSaveCondition 클래스
-- **conditionName**: 조건 이름 (프로퍼티)
-- **trigger**: 저장 트리거 타입 (프로퍼티)
-- **isEnabled**: 활성화 여부 (프로퍼티)
-- **description**: 조건 설명 (프로퍼티)
-- **IsValid()**: 조건 유효성 검증
-- **ToString()**: 조건 정보를 문자열로 반환
-
-### AutoSaveTrigger 열거형
-- **Manual**: 수동 저장
-- **TurnComplete**: 턴 완료 시
-- **StageComplete**: 스테이지 완료 시
-- **CombatStart**: 전투 시작 시
-- **CombatEnd**: 전투 종료 시
-- **EnemyCardPlaced**: 적 카드 배치 시
-- **BeforeTurnStart**: 턴 시작 전
-- **DuringTurnExecution**: 턴 실행 중
-
-### 데이터 구조 (리팩토링 후)
+### 데이터 구조 (요약)
 ```csharp
 [System.Serializable]
-public class CompleteCardStateData
+public class StageProgressData
 {
-    public PlayerHandData playerHand;           // 플레이어 핸드 상태
-    public CombatSlotData combatSlots;          // 전투/대기 슬롯 상태
-    public CardCirculationData circulation;     // 카드 순환 상태
-    public GameStateData gameState;             // 게임 상태(턴/큐 메타)
-    public string saveTime;                     // 저장 시간
+    public int currentStageIndex;
+    public bool isStageCompleted;
 }
 
 [System.Serializable]
-public class PlayerHandData
+public class CardSlotData
 {
-    public List<string> cardIds;              // 카드 ID 목록
-    public List<Vector2> cardPositions;       // 카드 위치
-}
-
-[System.Serializable]
-public class CombatSlotData
-{
-    public string battleSlotCardId;            // 배틀 슬롯 카드ID (또는 PLAYER_MARKER)
-    public SlotOwner battleSlotOwner;          // 배틀 슬롯 소유자
-    public string wait1CardId;                 // 대기 1 슬롯 카드ID
-    public SlotOwner wait1Owner;               // 대기 1 슬롯 소유자
-    public string wait2CardId;                 // 대기 2 슬롯 카드ID
-    public SlotOwner wait2Owner;               // 대기 2 슬롯 소유자
-    public string wait3CardId;                 // 대기 3 슬롯 카드ID
-    public SlotOwner wait3Owner;               // 대기 3 슬롯 소유자
-    public string wait4CardId;                 // 대기 4 슬롯 카드ID
-    public SlotOwner wait4Owner;               // 대기 4 슬롯 소유자
-}
-
-[System.Serializable]
-public class CardCirculationData
-{
-    public List<string> unusedCards;          // 사용하지 않은 카드들
-    public List<string> usedCards;            // 사용된 카드들
-}
-
-[System.Serializable]
-public class GameStateData
-{
-    public int turnCount;                     // 현재 턴 수(1부터 증가)
-    public string currentTurn;                // "Player" 또는 "Enemy"
-    public bool nextSpawnIsPlayer;            // 대기4 교대 스폰 여부
-    public bool initialQueueSetupCompleted;   // 초기 큐 셋업 완료 여부
-    public string flowState;                  // CombatFlowManager 메타 상태
+    public string battleSlotCardId;
+    public SlotOwner battleSlotOwner;
+    public string wait4CardId;
+    public SlotOwner wait4Owner;
 }
 ```
 
@@ -257,18 +166,15 @@ saveEventTrigger.OnCombatEnd();              // 전투 종료 시
 
 ### 데이터 구조 사용법
 ```csharp
-// CompleteCardStateData 생성 및 사용
-CompleteCardStateData cardState = new CompleteCardStateData();
-
-// 플레이어 핸드카드 설정
-cardState.playerHand = new PlayerHandData
+// StageProgressData 사용 예
+StageProgressData progress = new StageProgressData
 {
-    cardIds = new List<string> { "player_card_001", "player_card_002", "player_card_003" },
-    cardPositions = new List<Vector2> { Vector2.zero, new Vector2(100, 0), new Vector2(200, 0) }
+    currentStageIndex = 1,
+    isStageCompleted = false
 };
 
-// 전투/대기 슬롯 카드 설정
-cardState.combatSlots = new CombatSlotData
+// 전투/대기 슬롯 카드 최소 저장 예
+CardSlotData slots = new CardSlotData
 {
     battleSlotCardId = "PLAYER_MARKER",
     battleSlotOwner = SlotOwner.PLAYER,
@@ -283,21 +189,8 @@ cardState.circulation = new CardCirculationData
     usedCards = new List<string> { "player_skill_001" }
 };
 
-// 턴 상태 설정
-cardState.gameState = new GameStateData
-{
-    turnCount = 1,
-    currentTurn = "Player",
-    nextSpawnIsPlayer = false,
-    initialQueueSetupCompleted = true,
-    flowState = "InCombat"
-};
-
-// 데이터 유효성 검증
-if (cardState.IsValid())
-{
-    Debug.Log("카드 상태 데이터가 유효합니다.");
-}
+// 저장 호출 예
+await AutoSaveManagerInstance.SaveGameState("ManualSave");
 ```
 
 ### AutoSaveCondition 관리

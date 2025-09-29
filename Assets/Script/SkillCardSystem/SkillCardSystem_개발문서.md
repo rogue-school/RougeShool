@@ -54,7 +54,7 @@ SkillCardSystem/
 │   └── SkillCardFactory.cs
 ├── Installer/        # DI 설치 (1개 파일)
 │   └── CardInstaller.cs
-├── Interface/        # 인터페이스 (14개 파일)
+├── Interface/        # 인터페이스 (15개 파일)
 │   ├── ICardCirculationSystem.cs
 │   ├── ICardEffect.cs
 │   ├── ICardEffectCommand.cs
@@ -200,6 +200,7 @@ SkillCardSystem/
 - **ISkillCard.cs**: 스킬카드 인터페이스
 - **IPerTurnEffect.cs**: 턴별 효과 인터페이스
 - **ISkillCardUI.cs**: 스킬카드 UI 인터페이스
+- **SlotRegistry.cs**: 슬롯 레지스트리 인터페이스(문서에 위치 표시 보정)
 - **IPlayerHandManager.cs**: 플레이어 핸드 관리 인터페이스
 - **IPlayerDeckManager.cs**: 플레이어 덱 동적 관리 인터페이스
 - **ICardCirculationSystem.cs**: 카드 순환 시스템 인터페이스

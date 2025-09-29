@@ -51,6 +51,13 @@ namespace Game.CharacterSystem.Data
         [field: SerializeField]
         public Sprite Emblem { get; private set; }
 
+        /// <summary>
+        /// 로비/프리뷰 등에서 표시할 캐릭터 설명입니다.
+        /// 실제 전투 로직과 무관한 순수 UI 텍스트입니다.
+        /// </summary>
+        [field: SerializeField, TextArea(2, 4)]
+        public string Description { get; private set; }
+
         #endregion
 
         #region 리소스 시스템

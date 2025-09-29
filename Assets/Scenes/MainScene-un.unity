@@ -266,8 +266,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1434b1fd41308c34782a2d53708cfcf1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  underlineHeight: 2
+  bottomOffset: 4
+  underlineColor: {r: 0.42, g: 0.75, b: 1, a: 1}
+  expandDuration: 0.2
+  collapseDuration: 0.15
+  expandEase: 6
+  collapseEase: 5
   underline: {fileID: 1644917161}
-  animationDuration: 0.4
 --- !u!1 &48520235
 GameObject:
   m_ObjectHideFlags: 0
@@ -2829,8 +2835,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1434b1fd41308c34782a2d53708cfcf1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  underlineHeight: 2
+  bottomOffset: 4
+  underlineColor: {r: 0.42, g: 0.75, b: 1, a: 1}
+  expandDuration: 0.2
+  collapseDuration: 0.15
+  expandEase: 6
+  collapseEase: 5
   underline: {fileID: 147102536}
-  animationDuration: 0.4
 --- !u!1 &519671822
 GameObject:
   m_ObjectHideFlags: 0
@@ -2998,7 +3010,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &521038088
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4707,8 +4719,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1434b1fd41308c34782a2d53708cfcf1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  underlineHeight: 2
+  bottomOffset: 4
+  underlineColor: {r: 0.42, g: 0.75, b: 1, a: 1}
+  expandDuration: 0.2
+  collapseDuration: 0.15
+  expandEase: 6
+  collapseEase: 5
   underline: {fileID: 1800577787}
-  animationDuration: 0.4
 --- !u!1 &992552327
 GameObject:
   m_ObjectHideFlags: 0
@@ -6100,8 +6118,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1434b1fd41308c34782a2d53708cfcf1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  underlineHeight: 2
+  bottomOffset: 4
+  underlineColor: {r: 0.42, g: 0.75, b: 1, a: 1}
+  expandDuration: 0.2
+  collapseDuration: 0.15
+  expandEase: 6
+  collapseEase: 5
   underline: {fileID: 519671823}
-  animationDuration: 0.4
 --- !u!1 &1277982328
 GameObject:
   m_ObjectHideFlags: 0
@@ -6830,8 +6854,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1434b1fd41308c34782a2d53708cfcf1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  underlineHeight: 2
+  bottomOffset: 4
+  underlineColor: {r: 0.42, g: 0.75, b: 1, a: 1}
+  expandDuration: 0.2
+  collapseDuration: 0.15
+  expandEase: 6
+  collapseEase: 5
   underline: {fileID: 219699540}
-  animationDuration: 0.4
 --- !u!1 &1419157722
 GameObject:
   m_ObjectHideFlags: 0
@@ -6979,8 +7009,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1434b1fd41308c34782a2d53708cfcf1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  underlineHeight: 2
+  bottomOffset: 4
+  underlineColor: {r: 0.42, g: 0.75, b: 1, a: 1}
+  expandDuration: 0.2
+  collapseDuration: 0.15
+  expandEase: 6
+  collapseEase: 5
   underline: {fileID: 1623157171}
-  animationDuration: 0.4
 --- !u!1 &1457818785
 GameObject:
   m_ObjectHideFlags: 0
@@ -8520,8 +8556,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1d67a4954bcd0984b959c2ca75de544f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  selectedCharacterSO: {fileID: 0}
   gameTitleText: {fileID: 0}
+  mainMenuPanel: {fileID: 0}
   newGameButton: {fileID: 0}
   continueButton: {fileID: 1267912207}
   creditsButton: {fileID: 0}
@@ -8546,9 +8582,6 @@ MonoBehaviour:
   swordButton: {fileID: 0}
   bowButton: {fileID: 0}
   staffButton: {fileID: 0}
-  swordPreviewSO: {fileID: 0}
-  bowPreviewSO: {fileID: 0}
-  staffPreviewSO: {fileID: 0}
   swordCharacter: {fileID: 0}
   bowCharacter: {fileID: 0}
   staffCharacter: {fileID: 0}
@@ -9411,8 +9444,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1434b1fd41308c34782a2d53708cfcf1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  underlineHeight: 2
+  bottomOffset: 4
+  underlineColor: {r: 0.42, g: 0.75, b: 1, a: 1}
+  expandDuration: 0.2
+  collapseDuration: 0.15
+  expandEase: 6
+  collapseEase: 5
   underline: {fileID: 1287462785}
-  animationDuration: 0.4
 --- !u!1 &2042933567
 GameObject:
   m_ObjectHideFlags: 0

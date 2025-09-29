@@ -217,18 +217,9 @@ CombatSystem/
 - **4슬롯 시스템**: 기존 시스템과의 호환성 유지
 - **점진적 마이그레이션**: 새로운 시스템으로 점진적 전환
 
-## 📊 주요 클래스 및 메서드
+## 📊 주요 클래스 및 메서드 (현행 코드 기준)
 
-### CombatFlowCoordinator 클래스
-- **StartCombat()**: 전투 시작
-- **PrepareCombat()**: 전투 준비
-- **ExecuteCombatPhase()**: 전투 페이즈 실행
-- **HandleCombatResult()**: 전투 결과 처리
-- **EnablePlayerInput()**: 플레이어 입력 활성화
-- **DisablePlayerInput()**: 플레이어 입력 비활성화
-- **IsEnemyFirst**: 적 선공 여부 (프로퍼티)
-
-### CombatTurnManager 클래스
+### TurnManager 클래스
 - **Initialize()**: 턴 매니저 초기화
 - **SetState(ICombatTurnState state)**: 상태 설정
 - **CanProceedToNextTurn()**: 다음 턴 진행 가능 여부
@@ -248,7 +239,7 @@ CombatSystem/
 - **CompleteTurn()**: 턴 완료 처리
 - **CanProceedTurn()**: 턴 진행 가능 여부 확인
 
-### CombatExecutorService 클래스
+### CombatExecutionManager 클래스
 - **ExecuteCombatPhase()**: 전체 전투 페이즈 실행 (코루틴)
 - **PerformAttack(CombatSlotPosition position)**: 지정 슬롯 공격 실행 (코루틴, 레거시: `SLOT_1`)
 - **ExecuteCard(ISkillCard card, CombatSlotPosition position)**: 카드 실행
@@ -264,42 +255,22 @@ CombatSystem/
 - **HasCardInBattleSlot()**: 전투슬롯에 카드 존재 여부 확인
 - **GetCardInBattleSlot()**: 전투슬롯의 카드 반환
 
-### CombatPreparationService 클래스
+### CombatFlowManager 클래스
 - **PrepareCombat()**: 전투 준비 (코루틴)
-- **SpawnEnemy()**: 적 스폰
-- **SetupPlayerCards()**: 플레이어 카드 설정
+- **NotifyVictory()**: 승리 통지 및 리워드/전환 흐름
 - **InitializeTurnSystem()**: 턴 시스템 초기화
-- **RegisterCombatSlots()**: 전투 슬롯 등록
 
-### CombatSlotManager 클래스
-- **AutoBindSlots()**: 슬롯 자동 바인딩 (레거시 4슬롯 시스템)
-- **GetCombatSlot()**: 슬롯 반환
-- **IsSlotEmpty()**: 슬롯 비어있음 여부 확인
-- **ClearAllSlots()**: 모든 슬롯 초기화
+// CombatSlotManager는 현행 코드에 존재하지 않으며 CombatFlowManager로 통합됨
 
-#### 새로운 5슬롯 시스템 메서드
-- **AutoBindSlotsNew()**: 새로운 5슬롯 시스템 자동 바인딩
-- **ValidateSlotCountNew()**: 새로운 시스템 슬롯 개수 검증
-- **HasCardInBattleSlot()**: 전투슬롯에 카드 존재 여부 확인
-- **GetCardInBattleSlot()**: 전투슬롯의 카드 반환
-- **HasCardInWaitSlot()**: 대기슬롯에 카드 존재 여부 확인
-- **GetCardInWaitSlot()**: 대기슬롯의 카드 반환
-- **ClearAllSlotsNew()**: 새로운 시스템 모든 슬롯 초기화
-- **DebugSlotsStatusNew()**: 새로운 시스템 슬롯 상태 디버그 출력
+// CombatStartupManager는 현행 코드에 없음
 
-### CombatStartupManager 클래스
-- **FindInitializerSteps()**: 초기화 스텝 수집
-- **ExecuteInitializationSteps()**: 초기화 스텝 실행 (코루틴)
-- **EnablePlayerInput()**: 플레이어 입력 활성화
-- **OnInitializationComplete()**: 초기화 완료 처리
-
-### ICombatTurnState 인터페이스
+### DefaultCombatState/ICombatTurnState
 - **ExecuteState()**: 상태 실행
 - **CanTransitionTo(ICombatTurnState nextState)**: 상태 전환 가능 여부
 - **OnEnter()**: 상태 진입 시 호출
 - **OnExit()**: 상태 종료 시 호출
 
-### ICombatFlowCoordinator 인터페이스
+// ICombatFlowCoordinator는 현행 코드에 없음
 - **StartCombat()**: 전투 시작
 - **PrepareCombat()**: 전투 준비
 - **ExecuteCombatPhase()**: 전투 페이즈 실행
@@ -483,7 +454,7 @@ public class CustomCombatInstaller : MonoInstaller
 {
     public override void InstallBindings()
     {
-        // 실제 구현 클래스/인터페이스 매핑은 최신 코드 기준으로 문서 외부에서 관리됩니다.
+        // 실제 구현 클래스/인터페이스 매핑은 코드와 동일하게 유지
     }
 }
 ```
@@ -522,41 +493,35 @@ public class CustomCombatInstaller : MonoInstaller
 - **메모리 누수 방지**: 이벤트 구독 해제, 상태 참조 해제
 - **프로파일링**: 전투 중 메모리 사용량 모니터링
 
-## 🏗️ 시스템 아키텍처
+## 🏗️ 시스템 아키텍처 (정리)
 
 ### 의존성 다이어그램
 ```mermaid
 graph TD
-    A[CombatFlowCoordinator] --> B[CombatTurnManager]
-    A --> C[CombatSlotManager]
-    A --> D[CombatExecutorService]
+    B[TurnManager] --> D[CombatExecutionManager]
     
     B --> E[TurnCardRegistry]
     C --> F[CombatSlotPosition]
     D --> G[CardValidator]
     
-    H[CombatStateMachine] --> I[CombatFirstAttackState]
-    H --> J[CombatSecondAttackState]
+    H[CombatStateMachine] --> I[CombatAttackState]
     H --> K[CombatPlayerInputState]
     H --> L[CombatResultState]
     
-    A --> H
-    
-    style A fill:#ff9999
     style H fill:#ffcc99
     style B fill:#99ccff
-    style C fill:#99ccff
     style D fill:#99ccff
 ```
 
 ### 클래스 다이어그램
 ```mermaid
 classDiagram
-    class ICombatState {
+    class ICombatTurnState {
         <<interface>>
-        +Enter() void
-        +Exit() void
-        +Update() void
+        +ExecuteState() void
+        +CanTransitionTo(ICombatTurnState) bool
+        +OnEnter() void
+        +OnExit() void
     }
     
     class CombatStateMachine {
@@ -566,23 +531,13 @@ classDiagram
         +GetCurrentState() ICombatState
     }
     
-    class CombatFlowCoordinator {
-        -turnManager: CombatTurnManager
-        -slotManager: CombatSlotManager
-        -stateMachine: CombatStateMachine
-        +StartCombat(stageData) void
-        +ProcessTurn() void
-    }
-    
-    class CombatTurnManager {
+    class TurnManager {
         -currentTurn: int
-        -turnOrder: List~ICharacter~
-        +NextTurn() void
-        +GetCurrentCharacter() ICharacter
+        +SwitchTurn() void
     }
     
     ICombatState <|.. CombatAttackState
-    ICombatState <|.. CombatSecondAttackState
+    
     ICombatState <|.. CombatPlayerInputState
     CombatStateMachine --> ICombatState
     CombatFlowCoordinator --> CombatStateMachine

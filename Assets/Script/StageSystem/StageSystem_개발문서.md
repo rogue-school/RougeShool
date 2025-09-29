@@ -18,29 +18,27 @@ StageSystem/
 ├── Manager/          # 스테이지 매니저 (2개 파일)
 │   ├── StageManager.cs
 │   └── StageProgressController.cs
-├── Interface/        # 스테이지 인터페이스 (3개 파일)
+├── Interface/        # 스테이지 인터페이스 (2개 파일)
 │   ├── IStageManager.cs
-│   ├── IStagePhaseManager.cs
 │   └── IStageRewardManager.cs
-├── Factory/          # 스테이지 팩토리 (1개 파일)
-│   └── StageDataFactory.cs
+├── State/            # 스테이트 (1개 파일)
+│   └── StageFlowStateMachine.cs
 ├── Data/             # 스테이지 데이터 (3개 파일)
 │   ├── StageData.cs
-│   ├── StagePhaseState.cs
+│   ├── StageProgressState.cs
 │   └── StageRewardData.cs
 └── StageSystem_개발문서.md
 ```
 
 ## 스크립트 목록(1:1 매핑)
 - StageSystem/Manager/StageManager.cs
-- StageSystem/Factory/StageDataFactory.cs
-- StageSystem/Data/StageData.cs
-- StageSystem/Interface/IStageManager.cs
 - StageSystem/Manager/StageProgressController.cs
-- StageSystem/Data/StagePhaseState.cs
+- StageSystem/Interface/IStageManager.cs
 - StageSystem/Interface/IStageRewardManager.cs
+- StageSystem/State/StageFlowStateMachine.cs
+- StageSystem/Data/StageData.cs
+- StageSystem/Data/StageProgressState.cs
 - StageSystem/Data/StageRewardData.cs
-- StageSystem/Interface/IStagePhaseManager.cs
 
 ## 📁 주요 컴포넌트
 
@@ -53,12 +51,12 @@ StageSystem/
 - **IStagePhaseManager.cs**: 스테이지 단계 관리 인터페이스
 - **IStageRewardManager.cs**: 스테이지 보상 관리 인터페이스
 
-### Factory 폴더 (1개 파일)
-- **StageDataFactory.cs**: 스테이지 데이터 생성 팩토리
+### State 폴더 (1개 파일)
+- **StageFlowStateMachine.cs**: 스테이지 플로우 상태 머신
 
 ### Data 폴더 (3개 파일)
 - **StageData.cs**: 스테이지 데이터 (ScriptableObject)
-- **StagePhaseState.cs**: 스테이지 단계 상태
+- **StageProgressState.cs**: 스테이지 진행 상태
 - **StageRewardData.cs**: 스테이지 보상 데이터
 
 ## 🎯 주요 기능

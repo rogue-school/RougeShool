@@ -6,7 +6,7 @@ UISystem은 게임의 사용자 인터페이스를 관리하는 시스템입니�
 ## 🏗️ 폴더 구조 (현재 상태)
 ```
 UISystem/
-├── MainSceneController.cs      # 메인 씬 컨트롤러
+├── MainMenuController.cs       # 메인 메뉴 컨트롤러
 ├── SettingsUIController.cs     # 설정 UI 컨트롤러
 ├── WeaponSelector.cs           # 무기 선택기
 ├── PanelManager.cs             # 패널 매니저
@@ -23,7 +23,7 @@ UISystem/
 - UISystem/BaseUIController.cs
 - UISystem/SettingsUIController.cs
 - UISystem/Newgame.cs
-- UISystem/MainSceneController.cs
+- UISystem/MainMenuController.cs
 - UISystem/Xbutton.cs
 - UISystem/play.cs
 - UISystem/WeaponSelector.cs
@@ -33,7 +33,7 @@ UISystem/
 ## 📁 주요 컴포넌트 (현재 상태)
 
 ### 현재 구현된 파일들
-- **MainSceneController.cs**: 메인 씬 컨트롤러 (4.1KB, 129줄)
+- **MainMenuController.cs**: 메인 메뉴 컨트롤러 (43KB, 1024줄)
 - **SettingsUIController.cs**: 설정 UI 컨트롤러 (3.1KB, 116줄)
 - **WeaponSelector.cs**: 무기 선택기 (289B, 15줄)
 - **PanelManager.cs**: 패널 매니저 (586B, 23줄)
@@ -45,10 +45,10 @@ UISystem/
 
 ## 🎯 주요 기능 (현재 구현 상태)
 
-### 1. 메인 씬 컨트롤러
-- **씬 관리**: 메인 씬의 전체적인 관리
-- **UI 조정**: 메인 씬 내 UI 요소들 조정
-- **이벤트 처리**: 메인 씬 관련 이벤트 처리
+### 1. 메인 메뉴 컨트롤러
+- **씬/메뉴 관리**: 메인 메뉴 화면 전반 제어
+- **UI 조정**: 메뉴 UI 요소 초기화/전환
+- **이벤트 처리**: 버튼/패널 이벤트 처리
 
 ### 2. 설정 UI
 - **게임 설정**: 게임 관련 설정 관리

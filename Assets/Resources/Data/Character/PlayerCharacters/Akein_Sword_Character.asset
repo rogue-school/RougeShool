@@ -18,6 +18,9 @@ MonoBehaviour:
   <Portrait>k__BackingField: {fileID: 9077598460039830238, guid: 87dab22ae8665ac4fb4f3cd54c1c91f5, type: 3}
   <PlayerUIPortrait>k__BackingField: {fileID: 6111465266690084320, guid: f99d558af8f4a794690914664f4195ac, type: 3}
   <Emblem>k__BackingField: {fileID: -527084588220949327, guid: 210b3b55bbd652d44af15cb0ec1134ac, type: 3}
+  <Description>k__BackingField: "\uAC80\uC740 \uD50C\uB808\uC774 \uBC29\uBC95\uC774
+    \uB9E4\uC6B0 \uAC04\uB2E8\uD558\uC5EC, \uAC8C\uC784\uC744 \uCC98\uC74C \uC811\uD558\uC2DC\uB294
+    \uC720\uC800\uAC00 \uC4F0\uAE30 \uC801\uD569\uD55C \uBB34\uAE30\uC785\uB2C8\uB2E4."
   <MaxResource>k__BackingField: 0
   <ResourceName>k__BackingField: 
   <SkillDeck>k__BackingField: {fileID: 11400000, guid: 01a1f3cd905df2e439aedf79636eaf13, type: 2}

@@ -31,12 +31,11 @@ CoreSystem/
 │   └── AudioSystem_개발문서.md
 ├── Save/            # 저장 관리 (1개 파일)
 │   └── SaveManager.cs
-├── Utility/         # 코어 유틸리티 (7개 파일)
+├── Utility/         # 코어 유틸리티 (6개 파일)
 │   ├── ComponentInteractionOptimizer.cs
 │   ├── ComponentRoleManager.cs
 │   ├── CoroutineRunner.cs
 │   ├── DIOptimizationUtility.cs
-│   ├── DIPerformanceTester.cs
 │   ├── GameLogger.cs
 │   └── ICoroutineRunner.cs
 ├── UI/              # 코어 UI (4개 파일)
@@ -62,7 +61,7 @@ CoreSystem/
 - CoreSystem/CoreSystemInstaller.cs
 - CoreSystem/Manager/BaseCoreManager.cs
 - CoreSystem/Utility/ComponentInteractionOptimizer.cs
-- CoreSystem/Utility/DIPerformanceTester.cs
+// DIPerformanceTester.cs는 프로젝트에 존재하지 않음(문서에서 제거)
 - CoreSystem/Utility/DIOptimizationUtility.cs
 - CoreSystem/Utility/GameLogger.cs
 - CoreSystem/Manager/SceneTransitionManager.cs
