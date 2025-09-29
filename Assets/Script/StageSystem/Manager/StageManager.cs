@@ -110,11 +110,22 @@ namespace Game.StageSystem.Manager
         /// </summary>
         private System.Collections.IEnumerator AutoLoadSavedProgress()
         {
+            // 메인 로비에서 새 게임 요청 플래그가 설정된 경우 저장 복원 우회
+            if (PlayerPrefs.GetInt("NEW_GAME_REQUESTED", 0) == 1)
+            {
+                GameLogger.LogInfo("[StageManager] NEW_GAME_REQUESTED 플래그 감지 - 기본 스테이지 로드", GameLogger.LogCategory.Save);
+                PlayerPrefs.SetInt("NEW_GAME_REQUESTED", 0);
+                PlayerPrefs.Save();
+                LoadDefaultStage();
+                yield break;
+            }
+
             // SaveManager 찾기
             var saveManager = FindFirstObjectByType<Game.CoreSystem.Save.SaveManager>();
             if (saveManager == null)
             {
-                GameLogger.LogWarning("[StageManager] SaveManager를 찾을 수 없습니다", GameLogger.LogCategory.Save);
+                GameLogger.LogWarning("[StageManager] SaveManager를 찾을 수 없습니다 - 기본 스테이지 로드로 진행", GameLogger.LogCategory.Save);
+                LoadDefaultStage();
                 yield break;
             }
             
