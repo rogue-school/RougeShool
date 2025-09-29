@@ -2558,7 +2558,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   selectedCharacterSO: {fileID: 11400000, guid: 398730927a340ca4abd1ccc73d8b6bc0, type: 2}
   gameTitleText: {fileID: 0}
-  mainMenuPanel: {fileID: 0}
+  mainMenuPanel: {fileID: 1283274557}
   newGameButton: {fileID: 1577627004}
   continueButton: {fileID: 1050804161}
   creditsButton: {fileID: 1061424570}
