@@ -113,6 +113,12 @@ namespace Game.CoreSystem.Manager
 		/// </summary>
 		public async Task TransitionToMainScene()
 		{
+			// 현재 씬이 StageScene이면 진행 상황 저장
+			if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == stageSceneName)
+			{
+				await SaveProgressFromStageScene();
+			}
+			
 			// 스테이지 매니저가 있으면 스테이지 BGM 정리
 			var stageManager = FindFirstObjectByType<StageManager>();
 			if (stageManager != null)
@@ -350,6 +356,91 @@ namespace Game.CoreSystem.Manager
 			// 동기적으로 씬 로드 (기존 SceneLoader와 호환성을 위해)
 			SceneManager.LoadScene(sceneName);
 		}
+		
+		#region 데이터 보존 기능
+		
+		/// <summary>
+		/// 씬 전환 전 현재 진행 상황 저장
+		/// </summary>
+		private async Task SaveCurrentProgressBeforeTransition()
+		{
+			try
+			{
+				var saveManager = FindFirstObjectByType<Game.CoreSystem.Save.SaveManager>();
+				if (saveManager != null)
+				{
+					await saveManager.SaveCurrentProgress("SceneTransition");
+					GameLogger.LogInfo("[SceneTransitionManager] 씬 전환 전 진행 상황 저장 완료", GameLogger.LogCategory.Save);
+				}
+				else
+				{
+					GameLogger.LogWarning("[SceneTransitionManager] SaveManager를 찾을 수 없습니다", GameLogger.LogCategory.Save);
+				}
+			}
+			catch (System.Exception ex)
+			{
+				GameLogger.LogError($"[SceneTransitionManager] 전환 전 저장 실패: {ex.Message}", GameLogger.LogCategory.Error);
+			}
+		}
+		
+		/// <summary>
+		/// 씬 전환 후 저장된 진행 상황 로드
+		/// </summary>
+		private async Task LoadProgressAfterTransition()
+		{
+			try
+			{
+				// 씬 로드 완료 후 잠시 대기 (매니저들이 초기화될 시간 확보)
+				await Task.Delay(100);
+				
+				var saveManager = FindFirstObjectByType<Game.CoreSystem.Save.SaveManager>();
+				if (saveManager != null && saveManager.HasStageProgressSave())
+				{
+					bool loadSuccess = await saveManager.LoadStageProgress();
+					if (loadSuccess)
+					{
+						GameLogger.LogInfo("[SceneTransitionManager] 씬 전환 후 진행 상황 로드 완료", GameLogger.LogCategory.Save);
+					}
+					else
+					{
+						GameLogger.LogWarning("[SceneTransitionManager] 진행 상황 로드 실패", GameLogger.LogCategory.Save);
+					}
+				}
+				else
+				{
+					GameLogger.LogInfo("[SceneTransitionManager] 저장된 진행 상황이 없습니다", GameLogger.LogCategory.Save);
+				}
+			}
+			catch (System.Exception ex)
+			{
+				GameLogger.LogError($"[SceneTransitionManager] 전환 후 로드 실패: {ex.Message}", GameLogger.LogCategory.Error);
+			}
+		}
+		
+		/// <summary>
+		/// StageScene에서 다른 씬으로 전환할 때 진행 상황 저장
+		/// </summary>
+		private async Task SaveProgressFromStageScene()
+		{
+			try
+			{
+				var stageManager = FindFirstObjectByType<StageManager>();
+				if (stageManager != null)
+				{
+					await stageManager.SaveProgressBeforeSceneTransition();
+				}
+				else
+				{
+					GameLogger.LogWarning("[SceneTransitionManager] StageManager를 찾을 수 없습니다", GameLogger.LogCategory.Save);
+				}
+			}
+			catch (System.Exception ex)
+			{
+				GameLogger.LogError($"[SceneTransitionManager] StageScene에서 저장 실패: {ex.Message}", GameLogger.LogCategory.Error);
+			}
+		}
+		
+		#endregion
 		
 		#region 베이스 클래스 구현
 

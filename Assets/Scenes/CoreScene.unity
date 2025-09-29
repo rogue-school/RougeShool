@@ -370,7 +370,6 @@ MonoBehaviour:
   _scriptableObjectInstallers: []
   _monoInstallers:
   - {fileID: 1396837153}
-  - {fileID: 1935855618}
   _installerPrefabs: []
   _autoRun: 1
   OnPreInstall:
@@ -1509,7 +1508,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1124059153
 Transform:
   m_ObjectHideFlags: 0
@@ -1588,7 +1587,7 @@ MonoBehaviour:
   persistAcrossScenes: 1
   initializeWithoutRequiredReferences: 1
   currentGameState: 0
-  selectedCharacter: {fileID: 0}
+  selectedCharacter: {fileID: 11400000, guid: 09c242a71ef51f7479baa0e5ae122d6c, type: 2}
 --- !u!1 &1343503450
 GameObject:
   m_ObjectHideFlags: 0
@@ -2548,7 +2547,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1935855618
 MonoBehaviour:
   m_ObjectHideFlags: 0

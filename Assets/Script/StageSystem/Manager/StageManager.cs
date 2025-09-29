@@ -101,8 +101,69 @@ namespace Game.StageSystem.Manager
         /// </summary>
         private void Start()
         {
-            // GameStartupController에서 수동으로 시작하므로 자동 시작 제거
-            // 기본 스테이지만 로드하고 시작은 GameStartupController에서 처리
+            // 저장된 진행 상황이 있으면 자동 로드
+            StartCoroutine(AutoLoadSavedProgress());
+        }
+        
+        /// <summary>
+        /// 저장된 진행 상황을 자동으로 로드합니다.
+        /// </summary>
+        private System.Collections.IEnumerator AutoLoadSavedProgress()
+        {
+            // SaveManager 찾기
+            var saveManager = FindFirstObjectByType<Game.CoreSystem.Save.SaveManager>();
+            if (saveManager == null)
+            {
+                GameLogger.LogWarning("[StageManager] SaveManager를 찾을 수 없습니다", GameLogger.LogCategory.Save);
+                yield break;
+            }
+            
+            // 새 게임인지 확인
+            if (saveManager.IsNewGame())
+            {
+                GameLogger.LogInfo("[StageManager] 새 게임 시작 - 저장된 데이터 로드 건너뛰기", GameLogger.LogCategory.Save);
+                
+                // 새 게임 플래그 해제
+                saveManager.ClearNewGameFlag();
+                
+                // 기본 스테이지 로드
+                LoadDefaultStage();
+                yield break;
+            }
+            
+            // 저장된 진행 상황이 있는지 확인
+            if (saveManager.HasStageProgressSave())
+            {
+                GameLogger.LogInfo("[StageManager] 저장된 진행 상황 발견, 자동 로드 시작", GameLogger.LogCategory.Save);
+                
+                // 비동기 로드를 코루틴으로 변환
+                var loadTask = saveManager.LoadStageProgress();
+                yield return new WaitUntil(() => loadTask.IsCompleted);
+                
+                if (loadTask.Result)
+                {
+                    GameLogger.LogInfo("[StageManager] 저장된 진행 상황 자동 로드 완료", GameLogger.LogCategory.Save);
+                }
+                else
+                {
+                    GameLogger.LogWarning("[StageManager] 저장된 진행 상황 로드 실패", GameLogger.LogCategory.Save);
+                    // 로드 실패 시 기본 스테이지 로드
+                    LoadDefaultStage();
+                }
+            }
+            else
+            {
+                GameLogger.LogInfo("[StageManager] 저장된 진행 상황이 없습니다. 기본 스테이지를 시작합니다", GameLogger.LogCategory.Save);
+                // 저장된 데이터가 없으면 기본 스테이지 로드
+                LoadDefaultStage();
+            }
+        }
+        
+        /// <summary>
+        /// 기본 스테이지를 로드합니다.
+        /// </summary>
+        private void LoadDefaultStage()
+        {
             if (LoadStage(1))
             {
                 GameLogger.LogInfo("기본 스테이지 로드 완료 - GameStartupController에서 시작 대기", GameLogger.LogCategory.Combat);
@@ -110,6 +171,30 @@ namespace Game.StageSystem.Manager
             else
             {
                 GameLogger.LogError("기본 스테이지 로드 실패", GameLogger.LogCategory.Combat);
+            }
+        }
+        
+        /// <summary>
+        /// 다른 씬으로 전환하기 전에 현재 진행 상황을 저장합니다.
+        /// </summary>
+        public async Task SaveProgressBeforeSceneTransition()
+        {
+            try
+            {
+                var saveManager = FindFirstObjectByType<Game.CoreSystem.Save.SaveManager>();
+                if (saveManager != null)
+                {
+                    await saveManager.SaveCurrentProgress("SceneTransition");
+                    GameLogger.LogInfo("[StageManager] 씬 전환 전 진행 상황 저장 완료", GameLogger.LogCategory.Save);
+                }
+                else
+                {
+                    GameLogger.LogWarning("[StageManager] SaveManager를 찾을 수 없습니다", GameLogger.LogCategory.Save);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogError($"[StageManager] 씬 전환 전 저장 실패: {ex.Message}", GameLogger.LogCategory.Error);
             }
         }
 

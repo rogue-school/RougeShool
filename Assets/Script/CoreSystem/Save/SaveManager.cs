@@ -362,11 +362,58 @@ namespace Game.CoreSystem.Save
 				Directory.CreateDirectory(saveDirectory);
 			}
 			
+			// 다른 매니저들이 초기화될 때까지 대기
+			yield return StartCoroutine(WaitForOtherManagers());
+			
 			// 초기화 완료
 			IsInitialized = true;
 			
 			GameLogger.LogInfo("SaveManager 초기화 완료", GameLogger.LogCategory.UI);
 			yield return null;
+		}
+		
+		/// <summary>
+		/// 다른 매니저들이 초기화될 때까지 대기
+		/// </summary>
+		private IEnumerator WaitForOtherManagers()
+		{
+			int maxWaitFrames = 60; // 최대 1초 대기 (60fps 기준)
+			int currentFrame = 0;
+			
+			while (currentFrame < maxWaitFrames)
+			{
+				// 필요한 매니저들이 준비되었는지 확인
+				if (AreRequiredManagersReady())
+				{
+					GameLogger.LogInfo("필요한 매니저들이 준비되었습니다", GameLogger.LogCategory.Save);
+					yield break;
+				}
+				
+				currentFrame++;
+				yield return null;
+			}
+			
+			GameLogger.LogWarning("매니저 대기 시간 초과, 현재 상태로 진행합니다", GameLogger.LogCategory.Save);
+		}
+		
+		/// <summary>
+		/// 필요한 매니저들이 준비되었는지 확인
+		/// </summary>
+		private bool AreRequiredManagersReady()
+		{
+			// StageManager 확인
+			var stageManager = FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
+			if (stageManager == null) return false;
+			
+			// TurnManager 확인
+			var turnManager = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
+			if (turnManager == null) return false;
+			
+			// CombatFlowManager 확인
+			var combatFlowManager = FindFirstObjectByType<Game.CombatSystem.Manager.CombatFlowManager>();
+			if (combatFlowManager == null) return false;
+			
+			return true;
 		}
 		
 		/// <summary>
@@ -496,13 +543,35 @@ namespace Game.CoreSystem.Save
 				// 2. 게임 상태 초기화
 				ResetGameState();
 				
-				// 3. 초기화 완료 로그
+				// 3. 새 게임 플래그 설정
+				PlayerPrefs.SetInt("IS_NEW_GAME", 1);
+				PlayerPrefs.Save();
+				
+				// 4. 초기화 완료 로그
 				GameLogger.LogInfo("[SaveManager] 새 게임 초기화 완료", GameLogger.LogCategory.Save);
 			}
 			catch (System.Exception ex)
 			{
 				GameLogger.LogError($"[SaveManager] 새 게임 초기화 실패: {ex.Message}", GameLogger.LogCategory.Save);
 			}
+		}
+		
+		/// <summary>
+		/// 새 게임인지 확인합니다.
+		/// </summary>
+		public bool IsNewGame()
+		{
+			return PlayerPrefs.GetInt("IS_NEW_GAME", 0) == 1;
+		}
+		
+		/// <summary>
+		/// 새 게임 플래그를 해제합니다. (게임 시작 후 호출)
+		/// </summary>
+		public void ClearNewGameFlag()
+		{
+			PlayerPrefs.DeleteKey("IS_NEW_GAME");
+			PlayerPrefs.Save();
+			GameLogger.LogInfo("[SaveManager] 새 게임 플래그 해제", GameLogger.LogCategory.Save);
 		}
 		
 		/// <summary>
@@ -677,8 +746,8 @@ namespace Game.CoreSystem.Save
 		{
 			try
 			{
-				// 1. 스테이지 상태 복원
-				var stageManager = FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
+				// 1. 스테이지 상태 복원 (재시도 로직 포함)
+				var stageManager = FindManagerWithRetry<Game.StageSystem.Manager.StageManager>();
 				if (stageManager != null)
 				{
 					stageManager.SetCurrentStageNumber(data.currentStageNumber);
@@ -686,18 +755,28 @@ namespace Game.CoreSystem.Save
 					stageManager.SetCurrentEnemyIndex(data.currentEnemyIndex);
 					GameLogger.LogInfo($"[SaveManager] 스테이지 {data.currentStageNumber} 복원 완료 (진행상태: {data.progressState}, 적인덱스: {data.currentEnemyIndex})", GameLogger.LogCategory.Save);
 				}
+				else
+				{
+					GameLogger.LogError("[SaveManager] StageManager를 찾을 수 없습니다", GameLogger.LogCategory.Error);
+					return false;
+				}
 				
-				// 2. 전투 상태 복원
-				var combatFlowManager = FindFirstObjectByType<Game.CombatSystem.Manager.CombatFlowManager>();
+				// 2. 전투 상태 복원 (재시도 로직 포함)
+				var combatFlowManager = FindManagerWithRetry<Game.CombatSystem.Manager.CombatFlowManager>();
 				if (combatFlowManager != null)
 				{
 					combatFlowManager.RestoreCombatState(data.combatFlowState);
 					combatFlowManager.SetCombatActive(data.isCombatActive);
 					GameLogger.LogInfo($"[SaveManager] 전투 상태 복원 완료 (플로우: {data.combatFlowState}, 활성: {data.isCombatActive})", GameLogger.LogCategory.Save);
 				}
+				else
+				{
+					GameLogger.LogError("[SaveManager] CombatFlowManager를 찾을 수 없습니다", GameLogger.LogCategory.Error);
+					return false;
+				}
 				
-				// 3. 턴 상태 복원
-				var turnManager = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
+				// 3. 턴 상태 복원 (재시도 로직 포함)
+				var turnManager = FindManagerWithRetry<Game.CombatSystem.Manager.TurnManager>();
 				if (turnManager != null)
 				{
 					try
@@ -719,6 +798,11 @@ namespace Game.CoreSystem.Save
 						GameLogger.LogWarning($"[SaveManager] 턴 복원 중 경고: {ex.Message}", GameLogger.LogCategory.Save);
 					}
 				}
+				else
+				{
+					GameLogger.LogError("[SaveManager] TurnManager를 찾을 수 없습니다", GameLogger.LogCategory.Error);
+					return false;
+				}
 				
 				// 4. 캐릭터 상태 복원
 				await RestoreCharacterStates(data);
@@ -726,11 +810,103 @@ namespace Game.CoreSystem.Save
 				// 5. 카드 상태 복원
 				await RestoreCardStates(data);
 				
+				// 6. 데이터 동기화 검증
+				if (!ValidateLoadedData(data))
+				{
+					GameLogger.LogWarning("[SaveManager] 로드된 데이터 검증 실패", GameLogger.LogCategory.Save);
+					return false;
+				}
+				
 				return true;
 			}
 			catch (System.Exception ex)
 			{
 				GameLogger.LogError($"[SaveManager] 매니저 복원 실패: {ex.Message}", GameLogger.LogCategory.Save);
+				return false;
+			}
+		}
+		
+		/// <summary>
+		/// 매니저를 재시도 로직으로 찾기
+		/// </summary>
+		private T FindManagerWithRetry<T>(int maxRetries = 3) where T : MonoBehaviour
+		{
+			for (int i = 0; i < maxRetries; i++)
+			{
+				var manager = FindFirstObjectByType<T>();
+				if (manager != null) return manager;
+				
+				// 잠시 대기 후 재시도
+				System.Threading.Thread.Sleep(100);
+			}
+			
+			GameLogger.LogError($"매니저를 찾을 수 없습니다: {typeof(T).Name}", GameLogger.LogCategory.Error);
+			return null;
+		}
+		
+		/// <summary>
+		/// 로드된 데이터의 일관성 검증
+		/// </summary>
+		private bool ValidateLoadedData(StageProgressData data)
+		{
+			try
+			{
+				// 현재 게임 상태와 저장된 데이터 비교
+				var stageManager = FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
+				if (stageManager != null)
+				{
+					var currentStage = stageManager.GetCurrentStageNumber();
+					if (currentStage != data.currentStageNumber)
+					{
+						GameLogger.LogWarning($"스테이지 불일치: 저장={data.currentStageNumber}, 현재={currentStage}", GameLogger.LogCategory.Save);
+						return false;
+					}
+					
+					var currentEnemyIndex = stageManager.GetCurrentEnemyIndex();
+					if (currentEnemyIndex != data.currentEnemyIndex)
+					{
+						GameLogger.LogWarning($"적 인덱스 불일치: 저장={data.currentEnemyIndex}, 현재={currentEnemyIndex}", GameLogger.LogCategory.Save);
+						return false;
+					}
+				}
+				
+				// 턴 매니저 상태 검증
+				var turnManager = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
+				if (turnManager != null)
+				{
+					var currentTurnCount = turnManager.GetTurnCount();
+					if (currentTurnCount != data.turnCount)
+					{
+						GameLogger.LogWarning($"턴 수 불일치: 저장={data.turnCount}, 현재={currentTurnCount}", GameLogger.LogCategory.Save);
+						return false;
+					}
+				}
+				
+				// 플레이어 상태 검증
+				if (data.playerState != null && data.playerState.IsValid())
+				{
+					var playerManager = FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
+					if (playerManager != null)
+					{
+						var player = playerManager.GetPlayer();
+						if (player != null)
+						{
+							var currentHP = player.GetCurrentHP();
+							if (currentHP != data.playerState.currentHP)
+							{
+								GameLogger.LogWarning($"플레이어 HP 불일치: 저장={data.playerState.currentHP}, 현재={currentHP}", GameLogger.LogCategory.Save);
+								return false;
+							}
+						}
+					}
+				}
+				
+				GameLogger.LogInfo("[SaveManager] 데이터 동기화 검증 완료", GameLogger.LogCategory.Save);
+				return true;
+			}
+			catch (System.Exception ex)
+			{
+				GameLogger.LogError($"[SaveManager] 데이터 검증 중 오류: {ex.Message}", GameLogger.LogCategory.Error);
 				return false;
 			}
 		}
