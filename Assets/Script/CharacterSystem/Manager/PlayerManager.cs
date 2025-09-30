@@ -40,6 +40,10 @@ namespace Game.CharacterSystem.Manager
         private IGameStateManager gameStateManager;
         private PlayerCharacterData cachedSelectedCharacter;
 
+        // FindObjectOfType 캐싱
+        private Game.CharacterSystem.UI.PlayerCharacterUIController cachedPlayerUI;
+        private GameStateManager cachedGameStateManager;
+
         #endregion
 
         #region Events
@@ -63,6 +67,34 @@ namespace Game.CharacterSystem.Manager
         {
             this.handManager = handManager;
             this.gameStateManager = gameStateManager;
+        }
+
+        #endregion
+
+        #region 캐싱 헬퍼 메서드
+
+        /// <summary>
+        /// PlayerCharacterUIController 캐시 가져오기 (지연 초기화)
+        /// </summary>
+        private Game.CharacterSystem.UI.PlayerCharacterUIController GetCachedPlayerUI()
+        {
+            if (cachedPlayerUI == null)
+            {
+                cachedPlayerUI = FindFirstObjectByType<Game.CharacterSystem.UI.PlayerCharacterUIController>();
+            }
+            return cachedPlayerUI;
+        }
+
+        /// <summary>
+        /// GameStateManager 캐시 가져오기 (지연 초기화)
+        /// </summary>
+        private GameStateManager GetCachedGameStateManager()
+        {
+            if (cachedGameStateManager == null)
+            {
+                cachedGameStateManager = FindFirstObjectByType<GameStateManager>();
+            }
+            return cachedGameStateManager;
         }
 
         #endregion
@@ -98,7 +130,7 @@ namespace Game.CharacterSystem.Manager
             // 자동 연결이 활성화되어 있으면 씬에서 찾기
             if (autoConnectUI)
             {
-                var foundUI = FindFirstObjectByType<Game.CharacterSystem.UI.PlayerCharacterUIController>();
+                var foundUI = GetCachedPlayerUI();
                 if (foundUI != null)
                 {
                     playerUI = foundUI;
@@ -147,8 +179,8 @@ namespace Game.CharacterSystem.Manager
                 return gameStateManager;
             }
 
-            // 2. 씬에서 직접 찾기
-            var foundManager = FindFirstObjectByType<GameStateManager>();
+            // 2. 씬에서 직접 찾기 (캐싱 사용)
+            var foundManager = GetCachedGameStateManager();
             if (foundManager != null)
             {
                 return foundManager;

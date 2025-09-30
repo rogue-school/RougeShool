@@ -126,6 +126,19 @@ namespace Game.CharacterSystem.Core
             OnGuarded(amount);
         }
 
+        /// <summary>
+        /// 지정된 타입의 턴 효과가 적용되어 있는지 확인합니다.
+        /// </summary>
+        public bool HasEffect<T>() where T : IPerTurnEffect
+        {
+            for (int i = 0; i < perTurnEffects.Count; i++)
+            {
+                var effect = perTurnEffects[i];
+                if (effect != null && effect is T) return true;
+            }
+            return false;
+        }
+
         /// <summary>체력을 회복시킵니다</summary>
         /// <param name="amount">회복량</param>
         public virtual void Heal(int amount)
@@ -222,11 +235,22 @@ namespace Game.CharacterSystem.Core
         /// <param name="effect">턴 효과 인스턴스</param>
         public virtual void RegisterPerTurnEffect(IPerTurnEffect effect)
         {
-            if (!perTurnEffects.Contains(effect))
+            if (effect == null)
             {
-                perTurnEffects.Add(effect);
-                OnBuffsChanged?.Invoke(perTurnEffects.AsReadOnly());
+                GameLogger.LogError($"[{GetCharacterDataName()}] null 효과는 등록할 수 없습니다", GameLogger.LogCategory.Error);
+                return;
             }
+
+            // 동일 타입 효과가 이미 존재하면 중첩하지 않고 교체(지속시간/수치 초기화 목적)
+            var existing = perTurnEffects.Find(e => e != null && e.GetType() == effect.GetType());
+            if (existing != null)
+            {
+                perTurnEffects.Remove(existing);
+                GameLogger.LogInfo($"[{GetCharacterDataName()}] 상태이상 재적용: {effect.GetType().Name} → 기존 효과 제거 후 새 효과로 갱신(지속시간 초기화)", GameLogger.LogCategory.Character);
+            }
+
+            perTurnEffects.Add(effect);
+            OnBuffsChanged?.Invoke(perTurnEffects.AsReadOnly());
         }
 
         /// <summary>상태이상 효과 등록 (가드 상태 확인)</summary>
@@ -238,6 +262,14 @@ namespace Game.CharacterSystem.Core
             if (isGuarded)
             {
                 GameLogger.LogInfo($"[{GetCharacterDataName()}] 가드로 상태이상 효과 차단: {effect.GetType().Name}", GameLogger.LogCategory.Character);
+                return false;
+            }
+
+            // 반격/가드 활성 중에는 디버프만 차단 (버프는 허용)
+            bool isDebuff = effect is Game.SkillCardSystem.Interface.IStatusEffectDebuff;
+            if (isDebuff && (isGuarded || HasEffect<Game.SkillCardSystem.Effect.CounterBuff>()))
+            {
+                GameLogger.LogInfo($"[{GetCharacterDataName()}] 보호 상태로 디버프 차단: {effect.GetType().Name}", GameLogger.LogCategory.Character);
                 return false;
             }
 

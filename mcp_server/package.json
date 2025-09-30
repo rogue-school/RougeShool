@@ -1,7 +1,7 @@
 {
   "name": "rougeshool-mcp-server",
-  "version": "2.0.0",
-  "description": "Clean and Optimized MCP Server for RougeShool Unity Project",
+  "version": "2.1.0",
+  "description": "Enhanced MCP Server for RougeShool Unity Project with caching, improved analysis, and circular dependency detection",
   "main": "index.js",
   "type": "module",
   "scripts": {

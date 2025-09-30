@@ -66,14 +66,19 @@ namespace Game.StageSystem.Manager
         private int currentEnemyIndex = 0;
         private bool isSpawning = false;
         private bool isStageCompleted = false;
-        
+
         // 스테이지 진행 상태
         private StageProgressState progressState = StageProgressState.NotStarted;
-        
+
         // 다중 스테이지 관리
         private StageData currentStage;
         private int totalStagesCompleted = 0;
         private bool isGameCompleted = false;
+
+        // FindObjectOfType 캐싱
+        private Game.CoreSystem.Save.SaveManager cachedSaveManager;
+        private EnemyManager cachedEnemyManager;
+        private AudioManager cachedAudioManager;
 
         #endregion
 
@@ -90,6 +95,46 @@ namespace Game.StageSystem.Manager
         
         /// <summary>스테이지 전환 시 호출되는 이벤트</summary>
         public event Action<StageData, StageData> OnStageTransition;
+
+        #endregion
+
+        #region 캐싱 헬퍼 메서드
+
+        /// <summary>
+        /// SaveManager 캐시 가져오기 (지연 초기화)
+        /// </summary>
+        private Game.CoreSystem.Save.SaveManager GetCachedSaveManager()
+        {
+            if (cachedSaveManager == null)
+            {
+                cachedSaveManager = FindFirstObjectByType<Game.CoreSystem.Save.SaveManager>();
+            }
+            return cachedSaveManager;
+        }
+
+        /// <summary>
+        /// EnemyManager 캐시 가져오기 (지연 초기화)
+        /// </summary>
+        private EnemyManager GetCachedEnemyManager()
+        {
+            if (cachedEnemyManager == null)
+            {
+                cachedEnemyManager = FindFirstObjectByType<EnemyManager>();
+            }
+            return cachedEnemyManager;
+        }
+
+        /// <summary>
+        /// AudioManager 캐시 가져오기 (지연 초기화)
+        /// </summary>
+        private AudioManager GetCachedAudioManager()
+        {
+            if (cachedAudioManager == null)
+            {
+                cachedAudioManager = FindFirstObjectByType<AudioManager>();
+            }
+            return cachedAudioManager;
+        }
 
         #endregion
 
@@ -120,8 +165,8 @@ namespace Game.StageSystem.Manager
                 yield break;
             }
 
-            // SaveManager 찾기
-            var saveManager = FindFirstObjectByType<Game.CoreSystem.Save.SaveManager>();
+            // SaveManager 찾기 (캐싱 사용)
+            var saveManager = GetCachedSaveManager();
             if (saveManager == null)
             {
                 GameLogger.LogWarning("[StageManager] SaveManager를 찾을 수 없습니다 - 기본 스테이지 로드로 진행", GameLogger.LogCategory.Save);
@@ -192,7 +237,7 @@ namespace Game.StageSystem.Manager
         {
             try
             {
-                var saveManager = FindFirstObjectByType<Game.CoreSystem.Save.SaveManager>();
+                var saveManager = GetCachedSaveManager();
                 if (saveManager != null)
                 {
                     await saveManager.SaveCurrentProgress("SceneTransition");
@@ -231,7 +276,7 @@ namespace Game.StageSystem.Manager
                 return false;
             }
 
-            var enemyManager = FindFirstObjectByType<EnemyManager>();
+            var enemyManager = GetCachedEnemyManager();
             if (enemyManager?.GetEnemy() != null)
             {
                 GameLogger.LogWarning("이미 적이 존재합니다", GameLogger.LogCategory.Combat);
@@ -261,7 +306,7 @@ namespace Game.StageSystem.Manager
                 // 적 전용 BGM이 설정되어 있으면 전환
                 if (data.EnemyBGM != null)
                 {
-                    var audioManager = FindFirstObjectByType<AudioManager>();
+                    var audioManager = GetCachedAudioManager();
                     if (audioManager != null)
                     {
                         audioManager.PlayBGM(data.EnemyBGM, true);
@@ -296,7 +341,7 @@ namespace Game.StageSystem.Manager
         /// </summary>
         public void CleanupStageBGM()
         {
-            var audioManager = FindFirstObjectByType<AudioManager>();
+            var audioManager = GetCachedAudioManager();
             if (audioManager != null)
             {
                 audioManager.StopBGM();
@@ -309,7 +354,7 @@ namespace Game.StageSystem.Manager
         /// </summary>
         private void RegisterEnemy(ICharacter enemy)
         {
-            var enemyManager = FindFirstObjectByType<EnemyManager>();
+            var enemyManager = GetCachedEnemyManager();
             enemyManager?.RegisterEnemy(enemy);
             
             // 적 캐릭터에 사망 리스너 설정

@@ -127,12 +127,89 @@ namespace Game.CombatSystem.Manager
         public int TurnCount => turnCount;
         public bool IsGameActive => isGameActive;
         public float RemainingTurnTime => remainingTurnTime;
-        
+
         // ITurnManager 인터페이스 구현 - 이벤트
         public event Action<TurnType> OnTurnChanged;
         public event Action<int> OnTurnCountChanged;
         public event Action OnGameStarted;
         public event Action OnGameEnded;
+
+        // FindObjectOfType 캐싱
+        private Game.SkillCardSystem.Manager.PlayerHandManager cachedPlayerHandManager;
+        private PlayerManager cachedPlayerManager;
+        private EnemyManager cachedEnemyManager;
+        private CombatExecutionManager cachedCombatExecutionManager;
+
+        // Resources.Load 캐싱
+        private Game.SkillCardSystem.UI.SkillCardUI cachedCardUIPrefab;
+
+        #region 캐싱 헬퍼 메서드
+
+        /// <summary>
+        /// PlayerHandManager 캐시 가져오기 (지연 초기화)
+        /// </summary>
+        private Game.SkillCardSystem.Manager.PlayerHandManager GetCachedPlayerHandManager()
+        {
+            if (cachedPlayerHandManager == null)
+            {
+                cachedPlayerHandManager = FindFirstObjectByType<Game.SkillCardSystem.Manager.PlayerHandManager>();
+            }
+            return cachedPlayerHandManager;
+        }
+
+        /// <summary>
+        /// PlayerManager 캐시 가져오기 (지연 초기화)
+        /// </summary>
+        private PlayerManager GetCachedPlayerManager()
+        {
+            if (cachedPlayerManager == null)
+            {
+                cachedPlayerManager = FindFirstObjectByType<PlayerManager>();
+            }
+            return cachedPlayerManager;
+        }
+
+        /// <summary>
+        /// EnemyManager 캐시 가져오기 (지연 초기화)
+        /// </summary>
+        private EnemyManager GetCachedEnemyManager()
+        {
+            if (cachedEnemyManager == null)
+            {
+                cachedEnemyManager = FindFirstObjectByType<EnemyManager>();
+            }
+            return cachedEnemyManager;
+        }
+
+        /// <summary>
+        /// CombatExecutionManager 캐시 가져오기 (지연 초기화)
+        /// </summary>
+        private CombatExecutionManager GetCachedCombatExecutionManager()
+        {
+            if (cachedCombatExecutionManager == null)
+            {
+                cachedCombatExecutionManager = FindFirstObjectByType<CombatExecutionManager>();
+            }
+            return cachedCombatExecutionManager;
+        }
+
+        /// <summary>
+        /// SkillCardUI 프리팹 캐시 가져오기 (지연 초기화)
+        /// </summary>
+        private Game.SkillCardSystem.UI.SkillCardUI GetCachedCardUIPrefab()
+        {
+            if (cachedCardUIPrefab == null)
+            {
+                cachedCardUIPrefab = Resources.Load<Game.SkillCardSystem.UI.SkillCardUI>("Prefab/SkillCard");
+                if (cachedCardUIPrefab == null)
+                {
+                    GameLogger.LogError("SkillCardUI 프리팹을 찾을 수 없습니다: Prefab/SkillCard", GameLogger.LogCategory.Error);
+                }
+            }
+            return cachedCardUIPrefab;
+        }
+
+        #endregion
 
         /// <summary>
         /// 턴을 초기화합니다.
@@ -141,7 +218,7 @@ namespace Game.CombatSystem.Manager
         {
             currentTurn = turnSettings.startingTurn;
             turnCount = turnSettings.initialTurnCount;
-            
+
             if (debugSettings.enableTurnLogging)
             {
                 GameLogger.LogInfo($"턴 관리자 초기화 완료 ({currentTurn} 턴 시작)", GameLogger.LogCategory.Combat);
@@ -202,7 +279,7 @@ namespace Game.CombatSystem.Manager
 			// 적 턴 시작 전 플레이어 핸드 정리
 			if (currentTurn == TurnType.Enemy)
 			{
-				var handMgr = FindFirstObjectByType<Game.SkillCardSystem.Manager.PlayerHandManager>();
+				var handMgr = GetCachedPlayerHandManager();
 				if (handMgr != null)
 				{
 					handMgr.ClearAll();
@@ -634,19 +711,19 @@ namespace Game.CombatSystem.Manager
         private void ProcessAllCharacterTurnEffects()
         {
             // 모든 캐릭터의 턴 효과를 동시에 처리
-            var playerManager = FindFirstObjectByType<PlayerManager>();
-            var enemyManager = FindFirstObjectByType<EnemyManager>();
-            
+            var playerManager = GetCachedPlayerManager();
+            var enemyManager = GetCachedEnemyManager();
+
             var player = playerManager?.GetCharacter();
             var enemy = enemyManager?.GetCharacter();
-            
+
             // 플레이어 턴 효과 처리
             if (player != null)
             {
                 player.ProcessTurnEffects();
                 GameLogger.LogInfo($"플레이어 캐릭터 턴 효과 처리: {player.GetCharacterName()}", GameLogger.LogCategory.Combat);
             }
-            
+
             // 적 턴 효과 처리
             if (enemy != null)
             {
@@ -678,7 +755,7 @@ namespace Game.CombatSystem.Manager
 			// 전진/보충이 끝났으므로, 플레이어 턴이면 이제 손패 생성
 			if (currentTurn == TurnType.Player && !_handGeneratedForTurn)
 			{
-				var handMgr = FindFirstObjectByType<Game.SkillCardSystem.Manager.PlayerHandManager>();
+				var handMgr = GetCachedPlayerHandManager();
 				if (handMgr != null)
 				{
 					_handGeneratedForTurn = true;
@@ -704,8 +781,8 @@ namespace Game.CombatSystem.Manager
                 yield break;
             }
 
-            // 프리팹 로드
-            var cardUIPrefab = Resources.Load<Game.SkillCardSystem.UI.SkillCardUI>("Prefab/SkillCard");
+            // 프리팹 로드 (캐시 사용)
+            var cardUIPrefab = GetCachedCardUIPrefab();
             if (cardUIPrefab == null)
             {
                 GameLogger.LogWarning($"{FormatLogTag()} [Refill] SkillCardUI 프리팹을 찾지 못함", GameLogger.LogCategory.Combat);
@@ -729,7 +806,7 @@ namespace Game.CombatSystem.Manager
             else
             {
                 // 적 카드 생성 (캐시된 덱 우선)
-                var enemyManager = FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
+                var enemyManager = GetCachedEnemyManager();
                 var enemy = enemyManager?.GetCharacter();
                 var runtimeData = enemy?.CharacterData as Game.CharacterSystem.Data.EnemyCharacterData;
                 var runtimeName = enemy?.GetCharacterName() ?? "Enemy";
@@ -806,8 +883,8 @@ namespace Game.CombatSystem.Manager
 
             var factory = new Game.SkillCardSystem.Factory.SkillCardFactory();
 
-            // SkillCardUI 프리팁 로드
-            var cardUIPrefab = Resources.Load<Game.SkillCardSystem.UI.SkillCardUI>("Prefab/SkillCard");
+            // SkillCardUI 프리팁 로드 (캐시 사용)
+            var cardUIPrefab = GetCachedCardUIPrefab();
             if (cardUIPrefab == null)
             {
                 GameLogger.LogWarning("SkillCardUI 프리팹을 찾을 수 없습니다. UI 없이 데이터만 등록합니다.", GameLogger.LogCategory.Combat);
@@ -1007,7 +1084,7 @@ namespace Game.CombatSystem.Manager
                 if (canAutoExecute && !_scheduledEnemyExec.Contains(card))
                 {
                     _scheduledEnemyExec.Add(card);
-                    var executionManager = FindFirstObjectByType<CombatExecutionManager>();
+                    var executionManager = GetCachedCombatExecutionManager();
                     if (executionManager != null)
                     {
                         // 안전을 위해 한 프레임 대기 후 실행(레이아웃/보충/전진 반영 시간 확보)
@@ -1050,7 +1127,7 @@ namespace Game.CombatSystem.Manager
             {
                 if (_scheduledEnemyExec.Contains(card)) return;
                 _scheduledEnemyExec.Add(card);
-                var exec = FindFirstObjectByType<CombatExecutionManager>();
+                var exec = GetCachedCombatExecutionManager();
                 if (exec != null)
                 {
                     GameLogger.LogInfo($"{FormatLogTag()} 배틀 슬롯 적 카드 자동 실행 트리거: {card.GetCardName()}", GameLogger.LogCategory.Combat);
@@ -1104,7 +1181,7 @@ namespace Game.CombatSystem.Manager
             try
             {
                 // 플레이어 매니저에서 플레이어 정보 가져오기
-                var playerManager = FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
+                var playerManager = GetCachedPlayerManager();
                 if (playerManager?.GetCharacter() == null)
                 {
                     GameLogger.LogWarning("플레이어 매니저 또는 플레이어 캐릭터를 찾을 수 없습니다.", GameLogger.LogCategory.Combat);

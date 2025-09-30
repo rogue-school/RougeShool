@@ -34,14 +34,24 @@ namespace Game.CoreSystem.Save
 		
 		// 의존성 주입
 		[Inject] private IGameStateManager gameStateManager;
-		
+
 		// 진행 상황 수집기
 		private StageProgressCollector progressCollector;
+
+		// FindObjectOfType 캐싱
+		private Game.StageSystem.Manager.StageManager cachedStageManager;
+		private Game.CombatSystem.Manager.TurnManager cachedTurnManager;
+		private Game.CombatSystem.Manager.CombatFlowManager cachedCombatFlowManager;
+		private Game.CharacterSystem.Manager.PlayerManager cachedPlayerManager;
+		private Game.CharacterSystem.Manager.EnemyManager cachedEnemyManager;
+		private Game.CombatSystem.Slot.SlotRegistry cachedSlotRegistry;
+		private Game.SkillCardSystem.Manager.PlayerHandManager cachedPlayerHandManager;
+		private Game.SkillCardSystem.UI.SkillCardUI cachedCardUIPrefab;
 		
 		private void Awake()
 		{
-			Debug.Log("[SaveManager] 초기화 완료");
-			
+			GameLogger.LogInfo("[SaveManager] 초기화 완료", GameLogger.LogCategory.Save);
+
 			// 진행 상황 수집기 초기화
 			progressCollector = GetComponent<StageProgressCollector>();
 			if (progressCollector == null)
@@ -49,6 +59,106 @@ namespace Game.CoreSystem.Save
 				progressCollector = gameObject.AddComponent<StageProgressCollector>();
 			}
 		}
+
+		#region FindObjectOfType 캐싱 헬퍼
+
+		/// <summary>
+		/// StageManager 캐시 가져오기 (지연 초기화)
+		/// </summary>
+		private Game.StageSystem.Manager.StageManager GetCachedStageManager()
+		{
+			if (cachedStageManager == null)
+			{
+				cachedStageManager = FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
+			}
+			return cachedStageManager;
+		}
+
+		/// <summary>
+		/// TurnManager 캐시 가져오기 (지연 초기화)
+		/// </summary>
+		private Game.CombatSystem.Manager.TurnManager GetCachedTurnManager()
+		{
+			if (cachedTurnManager == null)
+			{
+				cachedTurnManager = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
+			}
+			return cachedTurnManager;
+		}
+
+		/// <summary>
+		/// CombatFlowManager 캐시 가져오기 (지연 초기화)
+		/// </summary>
+		private Game.CombatSystem.Manager.CombatFlowManager GetCachedCombatFlowManager()
+		{
+			if (cachedCombatFlowManager == null)
+			{
+				cachedCombatFlowManager = FindFirstObjectByType<Game.CombatSystem.Manager.CombatFlowManager>();
+			}
+			return cachedCombatFlowManager;
+		}
+
+		/// <summary>
+		/// PlayerManager 캐시 가져오기 (지연 초기화)
+		/// </summary>
+		private Game.CharacterSystem.Manager.PlayerManager GetCachedPlayerManager()
+		{
+			if (cachedPlayerManager == null)
+			{
+				cachedPlayerManager = FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
+			}
+			return cachedPlayerManager;
+		}
+
+		/// <summary>
+		/// EnemyManager 캐시 가져오기 (지연 초기화)
+		/// </summary>
+		private Game.CharacterSystem.Manager.EnemyManager GetCachedEnemyManager()
+		{
+			if (cachedEnemyManager == null)
+			{
+				cachedEnemyManager = FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
+			}
+			return cachedEnemyManager;
+		}
+
+		/// <summary>
+		/// SlotRegistry 캐시 가져오기 (지연 초기화)
+		/// </summary>
+		private Game.CombatSystem.Slot.SlotRegistry GetCachedSlotRegistry()
+		{
+			if (cachedSlotRegistry == null)
+			{
+				cachedSlotRegistry = FindFirstObjectByType<Game.CombatSystem.Slot.SlotRegistry>();
+			}
+			return cachedSlotRegistry;
+		}
+
+		/// <summary>
+		/// PlayerHandManager 캐시 가져오기 (지연 초기화)
+		/// </summary>
+		private Game.SkillCardSystem.Manager.PlayerHandManager GetCachedPlayerHandManager()
+		{
+			if (cachedPlayerHandManager == null)
+			{
+				cachedPlayerHandManager = FindFirstObjectByType<Game.SkillCardSystem.Manager.PlayerHandManager>();
+			}
+			return cachedPlayerHandManager;
+		}
+
+		/// <summary>
+		/// SkillCardUI 프리팹 캐시 가져오기 (지연 초기화)
+		/// </summary>
+		private Game.SkillCardSystem.UI.SkillCardUI GetCachedCardUIPrefab()
+		{
+			if (cachedCardUIPrefab == null)
+			{
+				cachedCardUIPrefab = FindFirstObjectByType<Game.SkillCardSystem.UI.SkillCardUI>();
+			}
+			return cachedCardUIPrefab;
+		}
+
+		#endregion
 		
 		/// <summary>
 		/// 오디오 설정 저장
@@ -78,23 +188,23 @@ namespace Game.CoreSystem.Save
 		{
 			try
 			{
-				Debug.Log("[SaveManager] 씬 저장 시작");
-				
+				GameLogger.LogInfo("[SaveManager] 씬 저장 시작", GameLogger.LogCategory.Save);
+
 				// 현재 씬의 모든 데이터 수집
 				var sceneData = CollectSceneData();
-				
+
 				// JSON으로 직렬화
 				string jsonData = JsonUtility.ToJson(sceneData, true);
-				
+
 				// 파일로 저장
 				string filePath = Path.Combine(Application.persistentDataPath, saveFileName);
 				await File.WriteAllTextAsync(filePath, jsonData);
-				
-				Debug.Log($"[SaveManager] 씬 저장 완료: {filePath}");
+
+				GameLogger.LogInfo($"[SaveManager] 씬 저장 완료: {filePath}", GameLogger.LogCategory.Save);
 			}
 			catch (System.Exception ex)
 			{
-				Debug.LogError($"[SaveManager] 씬 저장 실패: {ex.Message}");
+				GameLogger.LogError($"[SaveManager] 씬 저장 실패: {ex.Message}", GameLogger.LogCategory.Error);
 			}
 		}
 		
@@ -105,31 +215,31 @@ namespace Game.CoreSystem.Save
 		{
 			try
 			{
-				Debug.Log("[SaveManager] 씬 로드 시작");
-				
+				GameLogger.LogInfo("[SaveManager] 씬 로드 시작", GameLogger.LogCategory.Save);
+
 				string filePath = Path.Combine(Application.persistentDataPath, saveFileName);
-				
+
 				if (!File.Exists(filePath))
 				{
-					Debug.LogWarning("[SaveManager] 저장 파일이 존재하지 않습니다");
+					GameLogger.LogWarning("[SaveManager] 저장 파일이 존재하지 않습니다", GameLogger.LogCategory.Save);
 					return false;
 				}
-				
+
 				// 파일에서 데이터 읽기
 				string jsonData = await File.ReadAllTextAsync(filePath);
-				
+
 				// JSON 역직렬화
 				var sceneData = JsonUtility.FromJson<SceneSaveData>(jsonData);
-				
+
 				// 씬 데이터 복원
 				RestoreSceneData(sceneData);
-				
-				Debug.Log("[SaveManager] 씬 로드 완료");
+
+				GameLogger.LogInfo("[SaveManager] 씬 로드 완료", GameLogger.LogCategory.Save);
 				return true;
 			}
 			catch (System.Exception ex)
 			{
-				Debug.LogError($"[SaveManager] 씬 로드 실패: {ex.Message}");
+				GameLogger.LogError($"[SaveManager] 씬 로드 실패: {ex.Message}", GameLogger.LogCategory.Error);
 				return false;
 			}
 		}
@@ -142,20 +252,20 @@ namespace Game.CoreSystem.Save
 			try
 			{
 				string filePath = Path.Combine(Application.persistentDataPath, saveFileName);
-				
+
 				if (File.Exists(filePath))
 				{
 					File.Delete(filePath);
-					Debug.Log("[SaveManager] 세이브 초기화 완료");
+					GameLogger.LogInfo("[SaveManager] 세이브 초기화 완료", GameLogger.LogCategory.Save);
 				}
 				else
 				{
-					Debug.Log("[SaveManager] 삭제할 세이브 파일이 없습니다");
+					GameLogger.LogInfo("[SaveManager] 삭제할 세이브 파일이 없습니다", GameLogger.LogCategory.Save);
 				}
 			}
 			catch (System.Exception ex)
 			{
-				Debug.LogError($"[SaveManager] 세이브 초기화 실패: {ex.Message}");
+				GameLogger.LogError($"[SaveManager] 세이브 초기화 실패: {ex.Message}", GameLogger.LogCategory.Error);
 			}
 		}
 		
@@ -234,27 +344,27 @@ namespace Game.CoreSystem.Save
 		{
 			string filePath = Path.Combine(Application.persistentDataPath, saveFileName);
 			bool exists = File.Exists(filePath);
-			
-			Debug.Log($"[SaveManager] 저장 파일 확인:");
-			Debug.Log($"  - 파일 경로: {filePath}");
-			Debug.Log($"  - 파일 존재: {exists}");
-			Debug.Log($"  - 파일명: {saveFileName}");
-			
+
+			GameLogger.LogInfo($"[SaveManager] 저장 파일 확인:", GameLogger.LogCategory.Save);
+			GameLogger.LogInfo($"  - 파일 경로: {filePath}", GameLogger.LogCategory.Save);
+			GameLogger.LogInfo($"  - 파일 존재: {exists}", GameLogger.LogCategory.Save);
+			GameLogger.LogInfo($"  - 파일명: {saveFileName}", GameLogger.LogCategory.Save);
+
 			if (exists)
 			{
 				try
 				{
 					var fileInfo = new FileInfo(filePath);
-					Debug.Log($"  - 파일 크기: {fileInfo.Length} bytes");
-					Debug.Log($"  - 생성 시간: {fileInfo.CreationTime}");
-					Debug.Log($"  - 수정 시간: {fileInfo.LastWriteTime}");
+					GameLogger.LogInfo($"  - 파일 크기: {fileInfo.Length} bytes", GameLogger.LogCategory.Save);
+					GameLogger.LogInfo($"  - 생성 시간: {fileInfo.CreationTime}", GameLogger.LogCategory.Save);
+					GameLogger.LogInfo($"  - 수정 시간: {fileInfo.LastWriteTime}", GameLogger.LogCategory.Save);
 				}
 				catch (System.Exception ex)
 				{
-					Debug.LogWarning($"[SaveManager] 파일 정보 조회 실패: {ex.Message}");
+					GameLogger.LogWarning($"[SaveManager] 파일 정보 조회 실패: {ex.Message}", GameLogger.LogCategory.Save);
 				}
 			}
-			
+
 			return exists;
 		}
 		
@@ -265,23 +375,23 @@ namespace Game.CoreSystem.Save
 		{
 			try
 			{
-				Debug.Log($"[SaveManager] 게임 상태 저장 시작: {saveName}");
-				
+				GameLogger.LogInfo($"[SaveManager] 게임 상태 저장 시작: {saveName}", GameLogger.LogCategory.Save);
+
 				// 현재 씬의 모든 데이터 수집
 				var sceneData = CollectSceneData();
-				
+
 				// JSON으로 직렬화
 				string jsonData = JsonUtility.ToJson(sceneData, true);
-				
+
 				// 파일로 저장
 				string filePath = Path.Combine(Application.persistentDataPath, $"{saveName}.json");
 				await File.WriteAllTextAsync(filePath, jsonData);
-				
-				Debug.Log($"[SaveManager] 게임 상태 저장 완료: {filePath}");
+
+				GameLogger.LogInfo($"[SaveManager] 게임 상태 저장 완료: {filePath}", GameLogger.LogCategory.Save);
 			}
 			catch (System.Exception ex)
 			{
-				Debug.LogError($"[SaveManager] 게임 상태 저장 실패: {ex.Message}");
+				GameLogger.LogError($"[SaveManager] 게임 상태 저장 실패: {ex.Message}", GameLogger.LogCategory.Error);
 			}
 		}
 		
@@ -292,30 +402,30 @@ namespace Game.CoreSystem.Save
 		{
 			try
 			{
-				Debug.Log($"[SaveManager] 게임 상태 로드 시작: {saveName}");
-				
+				GameLogger.LogInfo($"[SaveManager] 게임 상태 로드 시작: {saveName}", GameLogger.LogCategory.Save);
+
 				string filePath = Path.Combine(Application.persistentDataPath, $"{saveName}.json");
-				
+
 				if (!File.Exists(filePath))
 				{
-					Debug.LogWarning($"[SaveManager] 저장 파일이 존재하지 않습니다: {filePath}");
+					GameLogger.LogWarning($"[SaveManager] 저장 파일이 존재하지 않습니다: {filePath}", GameLogger.LogCategory.Save);
 					return;
 				}
-				
+
 				// 파일에서 데이터 읽기
 				string jsonData = await File.ReadAllTextAsync(filePath);
-				
+
 				// JSON 역직렬화
 				var sceneData = JsonUtility.FromJson<SceneSaveData>(jsonData);
-				
+
 				// 씬 데이터 복원
 				RestoreSceneData(sceneData);
-				
-				Debug.Log($"[SaveManager] 게임 상태 로드 완료: {saveName}");
+
+				GameLogger.LogInfo($"[SaveManager] 게임 상태 로드 완료: {saveName}", GameLogger.LogCategory.Save);
 			}
 			catch (System.Exception ex)
 			{
-				Debug.LogError($"[SaveManager] 게임 상태 로드 실패: {ex.Message}");
+				GameLogger.LogError($"[SaveManager] 게임 상태 로드 실패: {ex.Message}", GameLogger.LogCategory.Error);
 			}
 		}
 		
@@ -326,24 +436,24 @@ namespace Game.CoreSystem.Save
 		{
 			try
 			{
-				Debug.Log($"[SaveManager] 자동 저장 실행: {condition}");
-				
+				GameLogger.LogInfo($"[SaveManager] 자동 저장 실행: {condition}", GameLogger.LogCategory.Save);
+
 				// 현재 씬의 모든 데이터 수집
 				var sceneData = CollectSceneData();
-				
+
 				// JSON으로 직렬화
 				string jsonData = JsonUtility.ToJson(sceneData, true);
-				
+
 				// 자동 저장 파일로 저장
 				string timestamp = System.DateTime.Now.ToString("yyyyMMdd_HHmmss");
 				string filePath = Path.Combine(Application.persistentDataPath, $"AutoSave_{condition}_{timestamp}.json");
 				await File.WriteAllTextAsync(filePath, jsonData);
-				
-				Debug.Log($"[SaveManager] 자동 저장 완료: {filePath}");
+
+				GameLogger.LogInfo($"[SaveManager] 자동 저장 완료: {filePath}", GameLogger.LogCategory.Save);
 			}
 			catch (System.Exception ex)
 			{
-				Debug.LogError($"[SaveManager] 자동 저장 실패: {ex.Message}");
+				GameLogger.LogError($"[SaveManager] 자동 저장 실패: {ex.Message}", GameLogger.LogCategory.Error);
 			}
 		}
 		
@@ -402,17 +512,17 @@ namespace Game.CoreSystem.Save
 		private bool AreRequiredManagersReady()
 		{
 			// StageManager 확인
-			var stageManager = FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
+			var stageManager = GetCachedStageManager();
 			if (stageManager == null) return false;
-			
+
 			// TurnManager 확인
-			var turnManager = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
+			var turnManager = GetCachedTurnManager();
 			if (turnManager == null) return false;
-			
+
 			// CombatFlowManager 확인
-			var combatFlowManager = FindFirstObjectByType<Game.CombatSystem.Manager.CombatFlowManager>();
+			var combatFlowManager = GetCachedCombatFlowManager();
 			if (combatFlowManager == null) return false;
-			
+
 			return true;
 		}
 		
@@ -747,7 +857,7 @@ namespace Game.CoreSystem.Save
 			try
 			{
 				// 1. 스테이지 상태 복원 (재시도 로직 포함)
-				var stageManager = FindManagerWithRetry<Game.StageSystem.Manager.StageManager>();
+				var stageManager = GetCachedStageManager();
 				if (stageManager != null)
 				{
 					stageManager.SetCurrentStageNumber(data.currentStageNumber);
@@ -762,7 +872,7 @@ namespace Game.CoreSystem.Save
 				}
 				
 				// 2. 전투 상태 복원 (재시도 로직 포함)
-				var combatFlowManager = FindManagerWithRetry<Game.CombatSystem.Manager.CombatFlowManager>();
+				var combatFlowManager = GetCachedCombatFlowManager();
 				if (combatFlowManager != null)
 				{
 					combatFlowManager.RestoreCombatState(data.combatFlowState);
@@ -776,7 +886,7 @@ namespace Game.CoreSystem.Save
 				}
 				
 				// 3. 턴 상태 복원 (재시도 로직 포함)
-				var turnManager = FindManagerWithRetry<Game.CombatSystem.Manager.TurnManager>();
+				var turnManager = GetCachedTurnManager();
 				if (turnManager != null)
 				{
 					try
@@ -852,7 +962,7 @@ namespace Game.CoreSystem.Save
 			try
 			{
 				// 현재 게임 상태와 저장된 데이터 비교
-				var stageManager = FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
+				var stageManager = GetCachedStageManager();
 				if (stageManager != null)
 				{
 					var currentStage = stageManager.GetCurrentStageNumber();
@@ -871,7 +981,7 @@ namespace Game.CoreSystem.Save
 				}
 				
 				// 턴 매니저 상태 검증
-				var turnManager = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
+				var turnManager = GetCachedTurnManager();
 				if (turnManager != null)
 				{
 					var currentTurnCount = turnManager.GetTurnCount();
@@ -885,7 +995,7 @@ namespace Game.CoreSystem.Save
 				// 플레이어 상태 검증
 				if (data.playerState != null && data.playerState.IsValid())
 				{
-					var playerManager = FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
+					var playerManager = GetCachedPlayerManager();
 					if (playerManager != null)
 					{
 						var player = playerManager.GetPlayer();
@@ -919,7 +1029,7 @@ namespace Game.CoreSystem.Save
 			// 플레이어 상태 복원
 			if (data.playerState != null && data.playerState.IsValid())
 			{
-				var playerManager = FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
+				var playerManager = GetCachedPlayerManager();
 				if (playerManager != null)
 				{
 					var player = playerManager.GetPlayer();
@@ -946,7 +1056,7 @@ namespace Game.CoreSystem.Save
 			// 적 상태 복원
 			if (data.enemyState != null && data.enemyState.IsValid())
 			{
-				var enemyManager = FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
+				var enemyManager = GetCachedEnemyManager();
 				if (enemyManager != null)
 				{
 					var enemy = enemyManager.GetCurrentEnemy();
@@ -980,14 +1090,14 @@ namespace Game.CoreSystem.Save
 			// 최소 복원: 저장된 핸드 카드 ID를 로그로 검증하고, 필요 시 팩토리로 생성해 빈 슬롯에 배치
 			try
 			{
-				var slotRegistry = FindFirstObjectByType<Game.CombatSystem.Slot.SlotRegistry>();
+				var slotRegistry = GetCachedSlotRegistry();
 				var handRegistry = slotRegistry != null ? slotRegistry.GetHandSlotRegistry() : null;
 				var combatRegistry = slotRegistry != null ? slotRegistry.GetCombatSlotRegistry() : null;
 				// SkillCardFactory는 UnityEngine.Object가 아니므로 직접 생성
 				var cardFactory = new Game.SkillCardSystem.Factory.SkillCardFactory();
-				var playerManager = FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
-				var handManager = FindFirstObjectByType<Game.SkillCardSystem.Manager.PlayerHandManager>();
-                var turnManager = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
+				var playerManager = GetCachedPlayerManager();
+				var handManager = GetCachedPlayerHandManager();
+				var turnManager = GetCachedTurnManager();
 
 				if (handRegistry != null && cardFactory != null && playerManager != null && handManager != null)
 				{
@@ -1010,8 +1120,9 @@ namespace Game.CoreSystem.Save
 				// 전투 슬롯 복원(확장): 저장된 슬롯/소유자/카드ID에 따라 정확 위치로 배치
 				if (combatRegistry != null && cardFactory != null && playerManager != null && turnManager != null)
 				{
-					var playerName = playerManager.GetPlayer()?.GetCharacterName();
-					var cardUIPrefab = FindFirstObjectByType<Game.SkillCardSystem.UI.SkillCardUI>();
+                    var playerName = playerManager.GetPlayer()?.GetCharacterName();
+                    // 프리팹 변수 중복 선언을 방지하고 캐시된 접근자를 사용
+                    var cardUIPrefab = GetCachedCardUIPrefab();
 					int placed = 0;
 					foreach (var slotState in data.combatSlots)
 					{
@@ -1020,9 +1131,9 @@ namespace Game.CoreSystem.Save
 						var def = cardFactory.LoadDefinition(slotState.cardId);
 						if (def == null) continue;
 						var isPlayer = string.Equals(slotState.owner, "Player", System.StringComparison.OrdinalIgnoreCase);
-						var card = isPlayer 
+                        var card = isPlayer
 							? cardFactory.CreatePlayerCard(def, playerName)
-							: cardFactory.CreateEnemyCard(def, FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>()?.GetCurrentEnemy()?.GetCharacterName());
+							: cardFactory.CreateEnemyCard(def, GetCachedEnemyManager()?.GetCurrentEnemy()?.GetCharacterName());
 						if (card == null) continue;
 
 						var createdUI = turnManager.GetType()

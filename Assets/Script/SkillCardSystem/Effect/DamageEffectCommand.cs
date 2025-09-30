@@ -54,6 +54,23 @@ namespace Game.SkillCardSystem.Effect
             var target = context.Target;
             var source = context.Source;
             var totalDamage = 0;
+
+            // 1) 공격력 스택 버프 확인(시전자 기준) → 추가 피해량 = 스택 수
+            int attackBonus = 0;
+            if (context.Card is IAttackPowerStackProvider stackProvider)
+            {
+                attackBonus = stackProvider.GetAttackPowerStack();
+            }
+            int effectiveDamage = damageAmount + attackBonus;
+
+            // 반격 버프 처리: 대상이 CounterBuff 보유 시, 들어오는 피해의 절반만 받고 나머지 절반을 공격자에게 반사
+            // 정수 절삭/올림 규칙: 들어오는 피해를 ceil(절반)은 수신, floor(절반)은 반사
+            // 단일 히트/다단 히트 모두 동일 규칙 적용
+            bool targetHasCounter = false;
+            if (target is Game.CharacterSystem.Core.CharacterBase cb)
+            {
+                targetHasCounter = cb.HasEffect<CounterBuff>();
+            }
             
             // 다단 히트 처리 (시간 간격을 두고 공격)
             if (hits > 1)
@@ -73,7 +90,21 @@ namespace Game.SkillCardSystem.Effect
             else
             {
                 // 단일 히트는 즉시 실행
-                ExecuteImmediateDamage(target, hits);
+                if (targetHasCounter && source != null)
+                {
+                    int receive = Mathf.CeilToInt(effectiveDamage * 0.5f);
+                    int reflect = effectiveDamage - receive; // floor
+                    ApplyDamageCustom(target, receive);
+                    if (reflect > 0)
+                    {
+                        source.TakeDamageIgnoreGuard(reflect);
+                        Debug.Log($"[DamageEffectCommand] 반격: 대상 {receive} 수신, 공격자 {reflect} 반사");
+                    }
+                }
+                else
+                {
+                    ApplyDamageCustom(target, effectiveDamage);
+                }
             }
             
             Debug.Log($"[DamageEffectCommand] {source?.GetCharacterName()} → {target.GetCharacterName()} 총 데미지: {totalDamage} (공격 횟수: {hits})");
@@ -131,7 +162,21 @@ namespace Game.SkillCardSystem.Effect
         private System.Collections.IEnumerator ExecuteMultiHitDamage(ICardExecutionContext context, int hitCount)
         {
             var target = context.Target;
+            var source = context.Source;
+            bool targetHasCounter = false;
+            if (target is Game.CharacterSystem.Core.CharacterBase cb)
+            {
+                targetHasCounter = cb.HasEffect<CounterBuff>();
+            }
             var totalDamage = 0;
+
+            // 시전자 공격력 보너스 재계산
+            int attackBonus = 0;
+            if (context.Card is IAttackPowerStackProvider stackProvider)
+            {
+                attackBonus = stackProvider.GetAttackPowerStack();
+            }
+            int perHitDamage = damageAmount + attackBonus;
             
             for (int i = 0; i < hitCount; i++)
             {
@@ -142,9 +187,20 @@ namespace Game.SkillCardSystem.Effect
                     break;
                 }
                 
-                // 데미지 적용
-                ApplyDamage(target);
-                totalDamage += damageAmount;
+                // 데미지 적용 (반격 고려)
+                if (targetHasCounter && source != null)
+                {
+                    int receive = Mathf.CeilToInt(perHitDamage * 0.5f);
+                    int reflect = perHitDamage - receive;
+                    ApplyDamageCustom(target, receive);
+                    if (reflect > 0) source.TakeDamageIgnoreGuard(reflect);
+                    Debug.Log($"[DamageEffectCommand] 반격(멀티히트) step {i+1}: 대상 {receive}, 반사 {reflect}");
+                }
+                else
+                {
+                    ApplyDamageCustom(target, perHitDamage);
+                }
+                totalDamage += perHitDamage;
                 
                 Debug.Log($"[DamageEffectCommand] 다단 히트 {i + 1}/{hitCount}: {damageAmount} 데미지");
                 
@@ -196,6 +252,29 @@ namespace Game.SkillCardSystem.Effect
                 // 일반 데미지: 가드 체크 포함
                 target.TakeDamage(damageAmount);
                 Debug.Log($"[DamageEffectCommand] 일반 데미지: {damageAmount}");
+            }
+        }
+
+        /// <summary>
+        /// 특정 수치로 즉시 데미지를 적용합니다.
+        /// </summary>
+        private void ApplyDamageCustom(ICharacter target, int value)
+        {
+            PlayHitSound();
+            if (ignoreGuard)
+            {
+                if (target is CharacterBase characterBase)
+                {
+                    characterBase.TakeDamageIgnoreGuard(value);
+                }
+                else
+                {
+                    target.TakeDamage(value);
+                }
+            }
+            else
+            {
+                target.TakeDamage(value);
             }
         }
         

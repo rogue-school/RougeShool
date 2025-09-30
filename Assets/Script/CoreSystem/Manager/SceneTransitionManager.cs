@@ -8,6 +8,7 @@ using Game.CoreSystem.Utility;
 using Game.CoreSystem.Audio;
 using Game.StageSystem.Manager;
 using Zenject;
+using DG.Tweening;
 
 namespace Game.CoreSystem.Manager
 {
@@ -53,9 +54,13 @@ namespace Game.CoreSystem.Manager
 		public System.Action<string> OnSceneTransitionEnd { get; set; }
 
 		private AudioEventTrigger cachedAudioEventTrigger;
-		
+
 		// 의존성 주입
 		private IAudioManager audioManager;
+
+		// FindObjectOfType 캐싱
+		private StageManager cachedStageManager;
+		private Game.CoreSystem.Save.SaveManager cachedSaveManager;
 		
 		[Inject]
 		public void Construct(IAudioManager audioManager)
@@ -97,7 +102,43 @@ namespace Game.CoreSystem.Manager
 				transitionCanvas.blocksRaycasts = false;
 			}
 			
-			Debug.Log("[SceneTransitionManager] 초기화 완료");
+			GameLogger.LogInfo("SceneTransitionManager 초기화 완료", GameLogger.LogCategory.UI);
+		}
+
+		/// <summary>
+		/// StageManager 캐시 가져오기 (지연 초기화)
+		/// </summary>
+		private StageManager GetCachedStageManager()
+		{
+			if (cachedStageManager == null)
+			{
+				cachedStageManager = FindFirstObjectByType<StageManager>();
+			}
+			return cachedStageManager;
+		}
+
+		/// <summary>
+		/// SaveManager 캐시 가져오기 (지연 초기화)
+		/// </summary>
+		private Game.CoreSystem.Save.SaveManager GetCachedSaveManager()
+		{
+			if (cachedSaveManager == null)
+			{
+				cachedSaveManager = FindFirstObjectByType<Game.CoreSystem.Save.SaveManager>();
+			}
+			return cachedSaveManager;
+		}
+
+		/// <summary>
+		/// AudioEventTrigger 캐시 가져오기 (지연 초기화)
+		/// </summary>
+		private AudioEventTrigger GetCachedAudioEventTrigger()
+		{
+			if (cachedAudioEventTrigger == null)
+			{
+				cachedAudioEventTrigger = FindFirstObjectByType<AudioEventTrigger>();
+			}
+			return cachedAudioEventTrigger;
 		}
 		
 		/// <summary>
@@ -118,17 +159,17 @@ namespace Game.CoreSystem.Manager
 			{
 				await SaveProgressFromStageScene();
 			}
-			
+
 			// 스테이지 매니저가 있으면 스테이지 BGM 정리
-			var stageManager = FindFirstObjectByType<StageManager>();
+			var stageManager = GetCachedStageManager();
 			if (stageManager != null)
 			{
 				stageManager.CleanupStageBGM();
 			}
-			
+
 			// 기존 BGM 정지 (추가 안전장치)
 			StopCurrentBGM();
-			
+
 			await TransitionToScene(mainSceneName, TransitionType.Fade);
 			TryPlayBGMForScene(mainSceneName);
 		}
@@ -162,32 +203,41 @@ namespace Game.CoreSystem.Manager
 		/// <summary>
 		/// 씬 전환 실행 (페이드 효과 비활성화)
 		/// </summary>
+		/// <param name="sceneName">전환할 씬 이름</param>
+		/// <param name="transitionType">전환 효과 타입</param>
+		/// <exception cref="System.ArgumentNullException">sceneName이 null이거나 비어있을 경우</exception>
 		public async Task TransitionToScene(string sceneName, TransitionType transitionType)
 		{
+			if (string.IsNullOrEmpty(sceneName))
+			{
+				GameLogger.LogError("씬 이름이 null이거나 비어있습니다", GameLogger.LogCategory.Error);
+				throw new System.ArgumentNullException(nameof(sceneName));
+			}
+
 			// 중복 호출 방지
 			if (IsTransitioning)
 			{
-				Debug.LogWarning($"[SceneTransitionManager] 이미 씬 전환이 진행 중입니다. 요청 무시: {sceneName}");
+				GameLogger.LogWarning($"이미 씬 전환이 진행 중입니다. 요청 무시: {sceneName}", GameLogger.LogCategory.UI);
 				return;
 			}
-			
-			Debug.Log($"[SceneTransitionManager] 씬 전환 시작: {sceneName}");
-			
+
+			GameLogger.LogInfo($"씬 전환 시작: {sceneName}", GameLogger.LogCategory.UI);
+
 			IsTransitioning = true; // 전환 시작
 			OnSceneTransitionStart?.Invoke(sceneName);
-			
+
 			try
 			{
 				// 페이드 효과 비활성화 - 바로 씬 로딩
 				await LoadSceneAsync(sceneName);
-				
+
 				OnSceneTransitionEnd?.Invoke(sceneName);
 			}
 			finally
 			{
 				// 전환 상태를 반드시 리셋
 				IsTransitioning = false;
-				Debug.Log($"[SceneTransitionManager] 씬 전환 완료: {sceneName}");
+				GameLogger.LogInfo($"씬 전환 완료: {sceneName}", GameLogger.LogCategory.UI);
 			}
 		}
 		
@@ -199,32 +249,31 @@ namespace Game.CoreSystem.Manager
 			if (audioManager != null)
 			{
 				audioManager.StopBGM();
-				Debug.Log("[SceneTransitionManager] 현재 BGM 정지 완료");
+				GameLogger.LogInfo("현재 BGM 정지 완료", GameLogger.LogCategory.Audio);
 			}
 		}
 		
 		/// <summary>
 		/// BGM 트리거: 씬 이름 기준으로 적절한 BGM 재생 시도
 		/// </summary>
+		/// <param name="sceneName">씬 이름</param>
 		private void TryPlayBGMForScene(string sceneName)
 		{
 			if (string.IsNullOrEmpty(sceneName)) return;
-			if (cachedAudioEventTrigger == null)
-			{
-				cachedAudioEventTrigger = FindFirstObjectByType<AudioEventTrigger>();
-			}
-			if (cachedAudioEventTrigger == null) return;
-			
+
+			var audioEventTrigger = GetCachedAudioEventTrigger();
+			if (audioEventTrigger == null) return;
+
 			switch (sceneName)
 			{
 				case var s when s == mainSceneName:
-					cachedAudioEventTrigger.OnMainMenuBGM();
+					audioEventTrigger.OnMainMenuBGM();
 					break;
 				case var s when s == battleSceneName:
-					cachedAudioEventTrigger.OnBattleBGM();
+					audioEventTrigger.OnBattleBGM();
 					break;
 				case var s when s == stageSceneName:
-					cachedAudioEventTrigger.OnMainMenuBGM();
+					audioEventTrigger.OnMainMenuBGM();
 					break;
 				default:
 					// 리소스 경로 규칙이 있을 경우 OnSceneBGM으로 대체 가능
@@ -321,28 +370,29 @@ namespace Game.CoreSystem.Manager
 			}
 		}
 		
+		/// <summary>
+		/// 페이드 전환 (DOTween 사용)
+		/// </summary>
+		/// <param name="fadeIn">페이드 인 여부 (true: 밝아짐, false: 어두워짐)</param>
 		private async Task FadeTransition(bool fadeIn)
 		{
-			if (transitionCanvas == null) return;
-			
-			float startAlpha = fadeIn ? 0f : 1f; // fadeIn이면 투명에서 시작, 아니면 불투명에서 시작
-			float endAlpha = fadeIn ? 1f : 0f;   // fadeIn이면 불투명으로 끝, 아니면 투명으로 끝
-			
-			transitionCanvas.alpha = startAlpha;
-			
-			float elapsedTime = 0f;
-			while (elapsedTime < transitionDuration)
+			if (transitionCanvas == null)
 			{
-				elapsedTime += Time.deltaTime;
-				float progress = elapsedTime / transitionDuration;
-				float curveValue = transitionCurve.Evaluate(progress);
-				
-				transitionCanvas.alpha = Mathf.Lerp(startAlpha, endAlpha, curveValue);
-				
-				await Task.Yield();
+				GameLogger.LogWarning("전환 캔버스가 없습니다", GameLogger.LogCategory.UI);
+				return;
 			}
-			
-			transitionCanvas.alpha = endAlpha;
+
+			float startAlpha = fadeIn ? 1f : 0f; // fadeIn이면 불투명에서 시작 (화면 가려진 상태), 아니면 투명에서 시작
+			float endAlpha = fadeIn ? 0f : 1f;   // fadeIn이면 투명으로 끝 (화면 보이는 상태), 아니면 불투명으로 끝
+
+			transitionCanvas.alpha = startAlpha;
+
+			// DOTween 사용
+			await transitionCanvas.DOFade(endAlpha, transitionDuration)
+				.SetEase(Ease.InOutQuad)
+				.AsyncWaitForCompletion();
+
+			GameLogger.LogInfo($"페이드 전환 완료: {(fadeIn ? "페이드 인" : "페이드 아웃")}", GameLogger.LogCategory.UI);
 		}
 		
 		private async Task SlideTransition(bool slideIn)
@@ -366,23 +416,23 @@ namespace Game.CoreSystem.Manager
 		{
 			try
 			{
-				var saveManager = FindFirstObjectByType<Game.CoreSystem.Save.SaveManager>();
+				var saveManager = GetCachedSaveManager();
 				if (saveManager != null)
 				{
 					await saveManager.SaveCurrentProgress("SceneTransition");
-					GameLogger.LogInfo("[SceneTransitionManager] 씬 전환 전 진행 상황 저장 완료", GameLogger.LogCategory.Save);
+					GameLogger.LogInfo("씬 전환 전 진행 상황 저장 완료", GameLogger.LogCategory.Save);
 				}
 				else
 				{
-					GameLogger.LogWarning("[SceneTransitionManager] SaveManager를 찾을 수 없습니다", GameLogger.LogCategory.Save);
+					GameLogger.LogWarning("SaveManager를 찾을 수 없습니다", GameLogger.LogCategory.Save);
 				}
 			}
 			catch (System.Exception ex)
 			{
-				GameLogger.LogError($"[SceneTransitionManager] 전환 전 저장 실패: {ex.Message}", GameLogger.LogCategory.Error);
+				GameLogger.LogError($"전환 전 저장 실패: {ex.Message}", GameLogger.LogCategory.Error);
 			}
 		}
-		
+
 		/// <summary>
 		/// 씬 전환 후 저장된 진행 상황 로드
 		/// </summary>
@@ -392,31 +442,31 @@ namespace Game.CoreSystem.Manager
 			{
 				// 씬 로드 완료 후 잠시 대기 (매니저들이 초기화될 시간 확보)
 				await Task.Delay(100);
-				
-				var saveManager = FindFirstObjectByType<Game.CoreSystem.Save.SaveManager>();
+
+				var saveManager = GetCachedSaveManager();
 				if (saveManager != null && saveManager.HasStageProgressSave())
 				{
 					bool loadSuccess = await saveManager.LoadStageProgress();
 					if (loadSuccess)
 					{
-						GameLogger.LogInfo("[SceneTransitionManager] 씬 전환 후 진행 상황 로드 완료", GameLogger.LogCategory.Save);
+						GameLogger.LogInfo("씬 전환 후 진행 상황 로드 완료", GameLogger.LogCategory.Save);
 					}
 					else
 					{
-						GameLogger.LogWarning("[SceneTransitionManager] 진행 상황 로드 실패", GameLogger.LogCategory.Save);
+						GameLogger.LogWarning("진행 상황 로드 실패", GameLogger.LogCategory.Save);
 					}
 				}
 				else
 				{
-					GameLogger.LogInfo("[SceneTransitionManager] 저장된 진행 상황이 없습니다", GameLogger.LogCategory.Save);
+					GameLogger.LogInfo("저장된 진행 상황이 없습니다", GameLogger.LogCategory.Save);
 				}
 			}
 			catch (System.Exception ex)
 			{
-				GameLogger.LogError($"[SceneTransitionManager] 전환 후 로드 실패: {ex.Message}", GameLogger.LogCategory.Error);
+				GameLogger.LogError($"전환 후 로드 실패: {ex.Message}", GameLogger.LogCategory.Error);
 			}
 		}
-		
+
 		/// <summary>
 		/// StageScene에서 다른 씬으로 전환할 때 진행 상황 저장
 		/// </summary>
@@ -424,19 +474,19 @@ namespace Game.CoreSystem.Manager
 		{
 			try
 			{
-				var stageManager = FindFirstObjectByType<StageManager>();
+				var stageManager = GetCachedStageManager();
 				if (stageManager != null)
 				{
 					await stageManager.SaveProgressBeforeSceneTransition();
 				}
 				else
 				{
-					GameLogger.LogWarning("[SceneTransitionManager] StageManager를 찾을 수 없습니다", GameLogger.LogCategory.Save);
+					GameLogger.LogWarning("StageManager를 찾을 수 없습니다", GameLogger.LogCategory.Save);
 				}
 			}
 			catch (System.Exception ex)
 			{
-				GameLogger.LogError($"[SceneTransitionManager] StageScene에서 저장 실패: {ex.Message}", GameLogger.LogCategory.Error);
+				GameLogger.LogError($"StageScene에서 저장 실패: {ex.Message}", GameLogger.LogCategory.Error);
 			}
 		}
 		

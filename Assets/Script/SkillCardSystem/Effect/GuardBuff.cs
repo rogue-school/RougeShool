@@ -7,7 +7,7 @@ namespace Game.SkillCardSystem.Effect
     /// 가드 버프 효과 클래스입니다.
     /// 1턴 동안 모든 데미지와 상태이상을 차단합니다.
     /// </summary>
-    public class GuardBuff : IPerTurnEffect
+    public class GuardBuff : IStatusEffectBuff
     {
         /// <summary>남은 턴 수</summary>
         public int RemainingTurns { get; private set; }

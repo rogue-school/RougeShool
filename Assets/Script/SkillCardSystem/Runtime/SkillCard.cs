@@ -22,13 +22,16 @@ namespace Game.SkillCardSystem.Runtime
     /// 카드 실행, 연출 처리, 효과 관리를 담당합니다.
     /// MonoBehaviour 제거로 성능 최적화 완료.
     /// </summary>
-    public class SkillCard : ISkillCard
+    public class SkillCard : ISkillCard, IAttackPowerStackProvider
     {
         #region 필드
         
         private SkillCardDefinition definition;
         private Owner owner;
         private List<ICardEffectCommand> effectCommands = new();
+        // 카드별 공격력 스택
+        private int attackPowerStacks = 0;
+        private const int MaxAttackPowerStacks = 5;
         
         private Dictionary<SkillCardSlotPosition, SkillCardSlotPosition> handSlotMap = new();
         private Dictionary<CombatSlotPosition, CombatSlotPosition> combatSlotMap = new();
@@ -391,6 +394,18 @@ namespace Game.SkillCardSystem.Runtime
         {
             effectCommands.Add(command);
             SetupEffectCommands(); // 재정렬
+        }
+
+        #endregion
+
+        #region === IAttackPowerStackProvider 구현 ===
+
+        public int GetAttackPowerStack() => attackPowerStacks;
+
+        public void IncrementAttackPowerStack(int max)
+        {
+            int limit = max > 0 ? max : MaxAttackPowerStacks;
+            if (attackPowerStacks < limit) attackPowerStacks++;
         }
         
         #endregion

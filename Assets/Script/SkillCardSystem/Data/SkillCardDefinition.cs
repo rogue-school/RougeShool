@@ -169,6 +169,10 @@ namespace Game.SkillCardSystem.Data
         
         [Tooltip("출혈 지속 시간")]
         public int bleedDuration = 0;
+
+        [Header("반격 효과 설정")]
+        [Tooltip("반격 지속 턴 수")]
+        public int counterDuration = 1;
         
         [Header("치유 효과 설정")]
         [Tooltip("치유량")]

@@ -57,6 +57,10 @@ namespace Game.CombatSystem.Manager
         private bool isInitialized = false;
         private Queue<ExecutionCommand> executionQueue = new Queue<ExecutionCommand>();
 
+        // FindObjectOfType 캐싱
+        private Game.SkillCardSystem.Manager.PlayerHandManager cachedPlayerHandManager;
+        private ICombatFlowManager cachedCombatFlowManager;
+
         #endregion
 
         #region 이벤트
@@ -84,7 +88,33 @@ namespace Game.CombatSystem.Manager
 
         #endregion
 
-        #region 초기화
+        #region 초기화 및 캐싱
+
+        /// <summary>
+        /// PlayerHandManager 캐시 가져오기 (지연 초기화)
+        /// </summary>
+        private Game.SkillCardSystem.Manager.PlayerHandManager GetCachedPlayerHandManager()
+        {
+            if (cachedPlayerHandManager == null)
+            {
+                cachedPlayerHandManager = FindFirstObjectByType<Game.SkillCardSystem.Manager.PlayerHandManager>();
+            }
+            return cachedPlayerHandManager;
+        }
+
+        /// <summary>
+        /// CombatFlowManager 캐시 가져오기 (지연 초기화)
+        /// </summary>
+        private ICombatFlowManager GetCachedCombatFlowManager()
+        {
+            if (cachedCombatFlowManager == null)
+            {
+                // 인터페이스는 UnityEngine.Object가 아니므로 구체 타입으로 조회 후 인터페이스로 캐스팅
+                var concrete = FindFirstObjectByType<CombatFlowManager>();
+                cachedCombatFlowManager = concrete as ICombatFlowManager;
+            }
+            return cachedCombatFlowManager;
+        }
 
         private IEnumerator InitializeExecution()
         {
@@ -192,9 +222,16 @@ namespace Game.CombatSystem.Manager
                     if (card.IsFromPlayer())
                     {
                         // 플레이어 핸드에서 해당 카드 제거
-                        var handMgr = FindFirstObjectByType<Game.SkillCardSystem.Manager.PlayerHandManager>();
-                        handMgr?.RemoveCard(card);
-                        GameLogger.LogInfo($"플레이어 핸드에서 카드 제거: {FormatCardTag(card)}", GameLogger.LogCategory.SkillCard);
+                        var handMgr = GetCachedPlayerHandManager();
+                        if (handMgr != null)
+                        {
+                            handMgr.RemoveCard(card);
+                            GameLogger.LogInfo($"플레이어 핸드에서 카드 제거: {FormatCardTag(card)}", GameLogger.LogCategory.SkillCard);
+                        }
+                        else
+                        {
+                            GameLogger.LogWarning("PlayerHandManager를 찾을 수 없습니다", GameLogger.LogCategory.Combat);
+                        }
                     }
 
                     // 배틀 슬롯 정리 (UI 포함)

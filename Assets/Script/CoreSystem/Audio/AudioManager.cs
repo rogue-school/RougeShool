@@ -25,20 +25,23 @@ namespace Game.CoreSystem.Audio
         [SerializeField] private float bgmVolume = 0.7f;
         [SerializeField] private float sfxVolume = 1.0f;
         [SerializeField] private float fadeTime = 1.0f;  // 페이드 시간
-        
+
         // 인터페이스 프로퍼티
         public float BgmVolume => bgmVolume;
         public float SfxVolume => sfxVolume;
-        
+
         // 현재 재생 중인 BGM
         private AudioClip currentBGM;
         private bool isFading = false;
-        
+
         // 초기화 상태
         public bool IsInitialized { get; private set; } = false;
-        
+
         // 의존성 주입
         private ISaveManager saveManager;
+
+        // Resources.Load 캐싱
+        private Dictionary<string, AudioClip> audioClipCache = new Dictionary<string, AudioClip>();
         
         [Inject]
         public void Construct(ISaveManager saveManager)
@@ -78,12 +81,47 @@ namespace Game.CoreSystem.Audio
                 audioPoolManager = gameObject.AddComponent<AudioPoolManager>();
             }
             
-            Debug.Log("[AudioManager] 오디오 시스템 초기화 완료 (풀링 포함)");
+            GameLogger.LogInfo("오디오 시스템 초기화 완료 (풀링 포함)", GameLogger.LogCategory.Audio);
         }
-        
+
+        /// <summary>
+        /// Resources에서 AudioClip 로드 (캐싱 적용)
+        /// </summary>
+        /// <param name="resourcePath">Resources 폴더 내 경로</param>
+        /// <returns>로드된 AudioClip (실패 시 null)</returns>
+        private AudioClip LoadAudioClipCached(string resourcePath)
+        {
+            if (string.IsNullOrEmpty(resourcePath))
+            {
+                GameLogger.LogError("AudioClip 경로가 null이거나 비어있습니다", GameLogger.LogCategory.Error);
+                return null;
+            }
+
+            if (audioClipCache.TryGetValue(resourcePath, out AudioClip cachedClip))
+            {
+                return cachedClip;
+            }
+
+            AudioClip clip = Resources.Load<AudioClip>(resourcePath);
+            if (clip != null)
+            {
+                audioClipCache[resourcePath] = clip;
+                GameLogger.LogInfo($"AudioClip 캐싱 완료: {resourcePath}", GameLogger.LogCategory.Audio);
+            }
+            else
+            {
+                GameLogger.LogWarning($"AudioClip을 찾을 수 없음: {resourcePath}", GameLogger.LogCategory.Audio);
+            }
+
+            return clip;
+        }
+
         /// <summary>
         /// 배경음악 재생 (페이드 효과 포함)
         /// </summary>
+        /// <param name="bgmClip">재생할 BGM 클립</param>
+        /// <param name="fadeIn">페이드 인 효과 사용 여부</param>
+        /// <exception cref="System.ArgumentNullException">bgmClip이 null일 경우</exception>
         public void PlayBGM(AudioClip bgmClip, bool fadeIn = true)
         {
             if (bgmClip == null) return;
@@ -102,8 +140,8 @@ namespace Game.CoreSystem.Audio
                 bgmSource.Play();
                 currentBGM = bgmClip;
             }
-            
-            Debug.Log($"[AudioManager] 배경음악 재생: {bgmClip.name}");
+
+            GameLogger.LogInfo($"배경음악 재생: {bgmClip.name}", GameLogger.LogCategory.Audio);
         }
         
         /// <summary>
@@ -167,54 +205,75 @@ namespace Game.CoreSystem.Audio
         /// <summary>
         /// 효과음 재생 (기존 방식 - 단순한 SFX용)
         /// </summary>
+        /// <param name="sfxClip">재생할 SFX 클립</param>
+        /// <exception cref="System.ArgumentNullException">sfxClip이 null일 경우</exception>
         public void PlaySFX(AudioClip sfxClip)
         {
-            if (sfxClip == null) return;
-            
+            if (sfxClip == null)
+            {
+                GameLogger.LogWarning("재생할 SFX 클립이 null입니다", GameLogger.LogCategory.Audio);
+                return;
+            }
+
             sfxSource.PlayOneShot(sfxClip, sfxVolume);
-            
-            Debug.Log($"[AudioManager] 효과음 재생: {sfxClip.name}");
+            GameLogger.LogInfo($"효과음 재생: {sfxClip.name}", GameLogger.LogCategory.Audio);
         }
 
         /// <summary>
         /// 효과음 재생 (풀링 방식 - 전투/UI 사운드용)
         /// </summary>
+        /// <param name="sfxClip">재생할 SFX 클립</param>
+        /// <param name="volume">볼륨 (기본값: 1.0)</param>
+        /// <param name="priority">우선순위 (기본값: 5)</param>
+        /// <exception cref="System.ArgumentNullException">sfxClip이 null일 경우</exception>
         public void PlaySFXWithPool(AudioClip sfxClip, float volume = 1.0f, int priority = 5)
         {
-            if (sfxClip == null || audioPoolManager == null) return;
-            
+            if (sfxClip == null)
+            {
+                GameLogger.LogWarning("재생할 SFX 클립이 null입니다", GameLogger.LogCategory.Audio);
+                return;
+            }
+
+            if (audioPoolManager == null)
+            {
+                GameLogger.LogError("오디오 풀 매니저가 초기화되지 않았습니다", GameLogger.LogCategory.Error);
+                return;
+            }
+
             audioPoolManager.PlaySound(sfxClip, volume, priority);
-            
-            Debug.Log($"[AudioManager] 풀링 효과음 재생: {sfxClip.name}");
+            GameLogger.LogInfo($"풀링 효과음 재생: {sfxClip.name}", GameLogger.LogCategory.Audio);
         }
         
         /// <summary>
         /// BGM 볼륨 설정
         /// </summary>
+        /// <param name="volume">볼륨 값 (0.0 ~ 1.0)</param>
         public void SetBGMVolume(float volume)
         {
             bgmVolume = Mathf.Clamp01(volume);
             bgmSource.volume = bgmVolume;
-            Debug.Log($"[AudioManager] BGM 볼륨 설정: {bgmVolume}");
+            GameLogger.LogInfo($"BGM 볼륨 설정: {bgmVolume}", GameLogger.LogCategory.Audio);
         }
-        
+
         /// <summary>
         /// SFX 볼륨 설정
         /// </summary>
+        /// <param name="volume">볼륨 값 (0.0 ~ 1.0)</param>
         public void SetSFXVolume(float volume)
         {
             sfxVolume = Mathf.Clamp01(volume);
-            Debug.Log($"[AudioManager] SFX 볼륨 설정: {sfxVolume}");
+            GameLogger.LogInfo($"SFX 볼륨 설정: {sfxVolume}", GameLogger.LogCategory.Audio);
         }
-        
+
         /// <summary>
         /// 마스터 볼륨 설정
         /// </summary>
+        /// <param name="volume">볼륨 값 (0.0 ~ 1.0)</param>
         public void SetMasterVolume(float volume)
         {
             float masterVolume = Mathf.Clamp01(volume);
             AudioListener.volume = masterVolume;
-            Debug.Log($"[AudioManager] 마스터 볼륨 설정: {masterVolume}");
+            GameLogger.LogInfo($"마스터 볼륨 설정: {masterVolume}", GameLogger.LogCategory.Audio);
         }
         
         /// <summary>
@@ -263,8 +322,8 @@ namespace Game.CoreSystem.Audio
         /// </summary>
         public void PlayCardUseSound()
         {
-            AudioClip clip = Resources.Load<AudioClip>("Sounds/ShootingSound/card");
-            PlaySFXWithPool(clip, 0.8f);
+            AudioClip clip = LoadAudioClipCached("Sounds/ShootingSound/card");
+            if (clip != null) PlaySFXWithPool(clip, 0.8f);
         }
 
         /// <summary>
@@ -272,8 +331,8 @@ namespace Game.CoreSystem.Audio
         /// </summary>
         public void PlayEnemyDefeatSound()
         {
-            AudioClip clip = Resources.Load<AudioClip>("Sounds/ShootingSound/magic_01");
-            PlaySFXWithPool(clip, 1.0f);
+            AudioClip clip = LoadAudioClipCached("Sounds/ShootingSound/magic_01");
+            if (clip != null) PlaySFXWithPool(clip, 1.0f);
         }
 
         /// <summary>
@@ -281,8 +340,8 @@ namespace Game.CoreSystem.Audio
         /// </summary>
         public void PlaySkillActivationSound()
         {
-            AudioClip clip = Resources.Load<AudioClip>("Sounds/ShootingSound/laser_01");
-            PlaySFXWithPool(clip, 0.9f);
+            AudioClip clip = LoadAudioClipCached("Sounds/ShootingSound/laser_01");
+            if (clip != null) PlaySFXWithPool(clip, 0.9f);
         }
 
         /// <summary>
@@ -290,8 +349,8 @@ namespace Game.CoreSystem.Audio
         /// </summary>
         public void PlayTurnStartSound()
         {
-            AudioClip clip = Resources.Load<AudioClip>("Sounds/ShootingSound/electronic_01");
-            PlaySFXWithPool(clip, 0.7f);
+            AudioClip clip = LoadAudioClipCached("Sounds/ShootingSound/electronic_01");
+            if (clip != null) PlaySFXWithPool(clip, 0.7f);
         }
 
         /// <summary>
@@ -299,8 +358,8 @@ namespace Game.CoreSystem.Audio
         /// </summary>
         public void PlayTurnCompleteSound()
         {
-            AudioClip clip = Resources.Load<AudioClip>("Sounds/ShootingSound/electronic_02");
-            PlaySFXWithPool(clip, 0.7f);
+            AudioClip clip = LoadAudioClipCached("Sounds/ShootingSound/electronic_02");
+            if (clip != null) PlaySFXWithPool(clip, 0.7f);
         }
 
         // 등급 구분 제거: 적 처치 사운드는 공통 API로 사용합니다.
@@ -314,8 +373,8 @@ namespace Game.CoreSystem.Audio
         /// </summary>
         public void PlayButtonClickSound()
         {
-            AudioClip clip = Resources.Load<AudioClip>("Sounds/ShootingSound/electronic_01");
-            PlaySFXWithPool(clip, 0.5f);
+            AudioClip clip = LoadAudioClipCached("Sounds/ShootingSound/electronic_01");
+            if (clip != null) PlaySFXWithPool(clip, 0.5f);
         }
 
         /// <summary>
@@ -323,8 +382,8 @@ namespace Game.CoreSystem.Audio
         /// </summary>
         public void PlayCardDragSound()
         {
-            AudioClip clip = Resources.Load<AudioClip>("Sounds/ShootingSound/card");
-            PlaySFXWithPool(clip, 0.6f);
+            AudioClip clip = LoadAudioClipCached("Sounds/ShootingSound/card");
+            if (clip != null) PlaySFXWithPool(clip, 0.6f);
         }
 
         /// <summary>
@@ -332,8 +391,8 @@ namespace Game.CoreSystem.Audio
         /// </summary>
         public void PlayCardDropSound()
         {
-            AudioClip clip = Resources.Load<AudioClip>("Sounds/ShootingSound/card");
-            PlaySFXWithPool(clip, 0.8f);
+            AudioClip clip = LoadAudioClipCached("Sounds/ShootingSound/card");
+            if (clip != null) PlaySFXWithPool(clip, 0.8f);
         }
 
         /// <summary>
@@ -341,8 +400,8 @@ namespace Game.CoreSystem.Audio
         /// </summary>
         public void PlayMenuOpenSound()
         {
-            AudioClip clip = Resources.Load<AudioClip>("Sounds/ShootingSound/electronic_01");
-            PlaySFXWithPool(clip, 0.6f);
+            AudioClip clip = LoadAudioClipCached("Sounds/ShootingSound/electronic_01");
+            if (clip != null) PlaySFXWithPool(clip, 0.6f);
         }
 
         /// <summary>
@@ -350,8 +409,8 @@ namespace Game.CoreSystem.Audio
         /// </summary>
         public void PlayMenuCloseSound()
         {
-            AudioClip clip = Resources.Load<AudioClip>("Sounds/ShootingSound/electronic_02");
-            PlaySFXWithPool(clip, 0.6f);
+            AudioClip clip = LoadAudioClipCached("Sounds/ShootingSound/electronic_02");
+            if (clip != null) PlaySFXWithPool(clip, 0.6f);
         }
 
         /// <summary>
@@ -359,8 +418,8 @@ namespace Game.CoreSystem.Audio
         /// </summary>
         public void PlayHealSound()
         {
-            AudioClip clip = Resources.Load<AudioClip>("Sounds/ShootingSound/heal");
-            PlaySFXWithPool(clip, 0.8f);
+            AudioClip clip = LoadAudioClipCached("Sounds/ShootingSound/heal");
+            if (clip != null) PlaySFXWithPool(clip, 0.8f);
         }
 
         /// <summary>
@@ -368,8 +427,8 @@ namespace Game.CoreSystem.Audio
         /// </summary>
         public void PlayShieldSound()
         {
-            AudioClip clip = Resources.Load<AudioClip>("Sounds/ShootingSound/방패");
-            PlaySFXWithPool(clip, 0.7f);
+            AudioClip clip = LoadAudioClipCached("Sounds/ShootingSound/방패");
+            if (clip != null) PlaySFXWithPool(clip, 0.7f);
         }
 
         /// <summary>
@@ -377,8 +436,8 @@ namespace Game.CoreSystem.Audio
         /// </summary>
         public void PlayShuffleSound()
         {
-            AudioClip clip = Resources.Load<AudioClip>("Sounds/ShootingSound/셔플");
-            PlaySFXWithPool(clip, 0.8f);
+            AudioClip clip = LoadAudioClipCached("Sounds/ShootingSound/셔플");
+            if (clip != null) PlaySFXWithPool(clip, 0.8f);
         }
 
         #endregion

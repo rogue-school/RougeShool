@@ -8,7 +8,7 @@ namespace Game.SkillCardSystem.Effect
     /// <summary>
     /// 일정 턴 동안 대상에게 매 턴 피해를 입히는 출혈 효과입니다.
     /// </summary>
-    public class BleedEffect : IPerTurnEffect
+    public class BleedEffect : IStatusEffectDebuff
     {
         private readonly int amount;
         private int remainingTurns;
