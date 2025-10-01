@@ -220,12 +220,12 @@ namespace Game.SkillCardSystem.Editor
                 settings.stackIncreasePerUse = EditorGUILayout.IntField("카드 사용 시 증가할 스택 수", settings.stackIncreasePerUse);
                 settings.maxStacks = EditorGUILayout.IntField("최대 스택 수 (0 = 무제한)", settings.maxStacks);
             }
+            else if (effectSO is HealEffectSO)
+            {
+                EditorGUILayout.LabelField("치유 효과 설정", EditorStyles.boldLabel);
+                settings.healAmount = EditorGUILayout.IntField("치유량", settings.healAmount);
+            }
             // TODO: 향후 추가될 EffectSO 타입들을 위한 예약 공간
-            // else if (effectSO is HealEffectSO)
-            // {
-            //     EditorGUILayout.LabelField("치유 효과 설정", EditorStyles.boldLabel);
-            //     settings.healAmount = EditorGUILayout.IntField("치유량", settings.healAmount);
-            // }
             // else if (effectSO is DrawEffectSO)
             // {
             //     EditorGUILayout.LabelField("드로우 효과 설정", EditorStyles.boldLabel);

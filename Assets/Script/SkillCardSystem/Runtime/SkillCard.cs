@@ -174,6 +174,18 @@ namespace Game.SkillCardSystem.Runtime
                                 continue;
                             }
                         }
+                        
+                        // 치유 효과의 커스텀 설정을 반영
+                        if (effectConfig.effectSO is HealEffectSO)
+                        {
+                            if (effectConfig.useCustomSettings && customSettings != null)
+                            {
+                                // 커스텀 치유 설정 사용
+                                var healCommand = new HealEffectCommand(customSettings);
+                                effectCommands.Add(healCommand);
+                                continue;
+                            }
+                        }
 
                         // 기타 효과는 기존 로직(파워 계산 후 SO에서 생성)
                         var power = GetEffectPower(effectConfig.effectSO);
