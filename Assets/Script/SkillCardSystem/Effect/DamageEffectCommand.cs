@@ -5,6 +5,7 @@ using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Core;
 using Game.CoreSystem.Audio;
 using Game.CoreSystem.Interface;
+using Game.CoreSystem.Utility;
 using Zenject;
 
 namespace Game.SkillCardSystem.Effect
@@ -59,7 +60,22 @@ namespace Game.SkillCardSystem.Effect
             int attackBonus = 0;
             if (context.Card is IAttackPowerStackProvider stackProvider)
             {
-                attackBonus = stackProvider.GetAttackPowerStack();
+                int currentStacks = stackProvider.GetAttackPowerStack();
+                
+                // 방식 1: 선형 증가 (현재 방식)
+                attackBonus = currentStacks;
+                
+                // 방식 2: 배수 증가 (주석 해제하여 사용 가능)
+                // attackBonus = damageAmount * currentStacks;
+                
+                // 방식 3: 지수적 증가 (주석 해제하여 사용 가능)
+                // attackBonus = damageAmount * (int)Mathf.Pow(2, currentStacks) - damageAmount;
+                
+                // 방식 4: 제곱 증가 (주석 해제하여 사용 가능)
+                // attackBonus = currentStacks * currentStacks;
+                
+                GameLogger.LogInfo($"[DamageEffectCommand] 스택 기반 데미지 계산 - 기본: {damageAmount}, 스택: {currentStacks}, 보너스: {attackBonus}", 
+                    GameLogger.LogCategory.Combat);
             }
             int effectiveDamage = damageAmount + attackBonus;
 
@@ -95,15 +111,18 @@ namespace Game.SkillCardSystem.Effect
                     int receive = Mathf.CeilToInt(effectiveDamage * 0.5f);
                     int reflect = effectiveDamage - receive; // floor
                     ApplyDamageCustom(target, receive);
+                    totalDamage += receive;
                     if (reflect > 0)
                     {
                         source.TakeDamageIgnoreGuard(reflect);
+                        totalDamage += reflect;
                         Debug.Log($"[DamageEffectCommand] 반격: 대상 {receive} 수신, 공격자 {reflect} 반사");
                     }
                 }
                 else
                 {
                     ApplyDamageCustom(target, effectiveDamage);
+                    totalDamage += effectiveDamage;
                 }
             }
             
@@ -193,16 +212,21 @@ namespace Game.SkillCardSystem.Effect
                     int receive = Mathf.CeilToInt(perHitDamage * 0.5f);
                     int reflect = perHitDamage - receive;
                     ApplyDamageCustom(target, receive);
-                    if (reflect > 0) source.TakeDamageIgnoreGuard(reflect);
+                    totalDamage += receive;
+                    if (reflect > 0) 
+                    {
+                        source.TakeDamageIgnoreGuard(reflect);
+                        totalDamage += reflect;
+                    }
                     Debug.Log($"[DamageEffectCommand] 반격(멀티히트) step {i+1}: 대상 {receive}, 반사 {reflect}");
                 }
                 else
                 {
                     ApplyDamageCustom(target, perHitDamage);
+                    totalDamage += perHitDamage;
                 }
-                totalDamage += perHitDamage;
                 
-                Debug.Log($"[DamageEffectCommand] 다단 히트 {i + 1}/{hitCount}: {damageAmount} 데미지");
+                Debug.Log($"[DamageEffectCommand] 다단 히트 {i + 1}/{hitCount}: {perHitDamage} 데미지 (총 누적: {totalDamage})");
                 
                 // 마지막 히트가 아니면 대기
                 if (i < hitCount - 1)
@@ -223,13 +247,20 @@ namespace Game.SkillCardSystem.Effect
         {
             var totalDamage = 0;
             
+            // 스택 기반 데미지 계산
+            int attackBonus = 0;
+            // Note: ExecuteImmediateDamage는 context가 없으므로 스택 계산이 제한적입니다.
+            // 이 메서드는 주로 MonoBehaviour가 아닌 경우에 사용되므로 스택은 0으로 가정합니다.
+            
+            int perHitDamage = damageAmount + attackBonus;
+            
             for (int i = 0; i < hitCount; i++)
             {
-                ApplyDamage(target);
-                totalDamage += damageAmount;
+                ApplyDamageCustom(target, perHitDamage);
+                totalDamage += perHitDamage;
             }
             
-            Debug.Log($"[DamageEffectCommand] 즉시 데미지 적용 - 총 데미지: {totalDamage}");
+            Debug.Log($"[DamageEffectCommand] 즉시 데미지 적용 - 총 데미지: {totalDamage} (히트: {hitCount})");
         }
         
         /// <summary>

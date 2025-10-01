@@ -40,12 +40,51 @@ namespace Game.SkillCardSystem.Data
         [Tooltip("카드 구성 설정")]
         public CardConfiguration configuration = new();
         
+        [Header("런타임 상태 (디버그용)")]
+        [Tooltip("현재 공격력 스택 수")]
+        [SerializeField] private int currentAttackPowerStacks = 0;
+        
         // 기존 시스템 호환성을 위한 메서드들
         public List<SkillCardEffectSO> CreateEffects()
         {
             return configuration.hasEffects ? 
                 configuration.effects.ConvertAll(e => e.effectSO) : 
                 new List<SkillCardEffectSO>();
+        }
+        
+        /// <summary>
+        /// 현재 공격력 스택 수를 반환합니다.
+        /// </summary>
+        /// <returns>현재 스택 수</returns>
+        public int GetAttackPowerStacks()
+        {
+            return currentAttackPowerStacks;
+        }
+        
+        /// <summary>
+        /// 공격력 스택을 증가시킵니다.
+        /// </summary>
+        /// <param name="maxStacks">최대 스택 수</param>
+        public void IncrementAttackPowerStacks(int maxStacks = 5)
+        {
+            if (currentAttackPowerStacks < maxStacks)
+            {
+                currentAttackPowerStacks++;
+                Debug.Log($"[SkillCardDefinition] '{displayName}' 스택 증가: {currentAttackPowerStacks}/{maxStacks}");
+            }
+            else
+            {
+                Debug.Log($"[SkillCardDefinition] '{displayName}' 최대 스택 도달: {currentAttackPowerStacks}/{maxStacks}");
+            }
+        }
+        
+        /// <summary>
+        /// 공격력 스택을 초기화합니다.
+        /// </summary>
+        public void ResetAttackPowerStacks()
+        {
+            currentAttackPowerStacks = 0;
+            Debug.Log($"[SkillCardDefinition] '{displayName}' 스택 초기화");
         }
         
         public SkillCardDefinition Definition => this;
@@ -174,6 +213,10 @@ namespace Game.SkillCardSystem.Data
         [Tooltip("반격 지속 턴 수")]
         public int counterDuration = 1;
         
+        [Header("가드 효과 설정")]
+        [Tooltip("가드 지속 턴 수")]
+        public int guardDuration = 1;
+        
         [Header("치유 효과 설정")]
         [Tooltip("치유량")]
         public int healAmount = 0;
@@ -185,6 +228,17 @@ namespace Game.SkillCardSystem.Data
         [Header("리소스 효과 설정")]
         [Tooltip("리소스 변화량")]
         public int resourceDelta = 0;
+        
+        [Header("카드 사용 스택 효과 설정")]
+        [Tooltip("카드 사용 시 증가할 스택 수")]
+        public int stackIncreasePerUse = 1;
+        
+        [Tooltip("최대 스택 수 (0 = 무제한)")]
+        public int maxStacks = 5;
+        
+        [Tooltip("감지할 카드 ID (비어있으면 모든 카드)")]
+        public string targetCardId = "";
+        
     }
 
     /// <summary>

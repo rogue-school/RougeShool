@@ -36,8 +36,14 @@ MonoBehaviour:
         ignoreGuard: 0
         bleedAmount: 1
         bleedDuration: 3
+        counterDuration: 1
+        guardDuration: 1
         healAmount: 0
         drawCount: 0
         resourceDelta: 0
+        stackIncreasePerUse: 1
+        maxStacks: 5
+        targetCardId: 
       executionOrder: 0
     ownerPolicy: 0
+  currentAttackPowerStacks: 0

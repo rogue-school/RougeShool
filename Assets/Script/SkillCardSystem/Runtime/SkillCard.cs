@@ -29,8 +29,6 @@ namespace Game.SkillCardSystem.Runtime
         private SkillCardDefinition definition;
         private Owner owner;
         private List<ICardEffectCommand> effectCommands = new();
-        // 카드별 공격력 스택
-        private int attackPowerStacks = 0;
         private const int MaxAttackPowerStacks = 5;
         
         private Dictionary<SkillCardSlotPosition, SkillCardSlotPosition> handSlotMap = new();
@@ -115,6 +113,64 @@ namespace Game.SkillCardSystem.Runtime
                                     effectConfig.effectSO.GetIcon()
                                 );
                                 effectCommands.Add(bleedCommand);
+                                continue;
+                            }
+                        }
+                        
+                        // 카드 사용 스택 효과의 커스텀 설정을 반영
+                        if (effectConfig.effectSO is CardUseStackEffectSO cardUseStackEffect)
+                        {
+                            if (effectConfig.useCustomSettings && customSettings != null)
+                            {
+                                // 커스텀 카드 사용 스택 설정 사용
+                                var cardUseStackCommand = cardUseStackEffect.CreateEffectCommand(customSettings);
+                                if (cardUseStackCommand != null)
+                                {
+                                    effectCommands.Add(cardUseStackCommand);
+                                    continue;  // ← 중요: continue 추가!
+                                }
+                            }
+                        }
+                        
+                        // 반격 효과의 커스텀 설정을 반영
+                        if (effectConfig.effectSO is CounterEffectSO)
+                        {
+                            if (effectConfig.useCustomSettings && customSettings != null)
+                            {
+                                // 커스텀 반격 지속 시간 사용
+                                var counterCommand = new CounterEffectCommand(
+                                    customSettings.counterDuration,
+                                    effectConfig.effectSO.GetIcon()
+                                );
+                                effectCommands.Add(counterCommand);
+                                continue;
+                            }
+                        }
+                        
+                        // 가드 효과의 커스텀 설정을 반영
+                        if (effectConfig.effectSO is GuardEffectSO)
+                        {
+                            if (effectConfig.useCustomSettings && customSettings != null)
+                            {
+                                // 커스텀 가드 지속 시간 사용
+                                var guardCommand = new GuardEffectCommand(customSettings.guardDuration);
+                                effectCommands.Add(guardCommand);
+                                continue;
+                            }
+                        }
+                        
+                        // 데미지 효과의 커스텀 설정을 반영
+                        if (effectConfig.effectSO is DamageEffectSO)
+                        {
+                            if (effectConfig.useCustomSettings && customSettings != null)
+                            {
+                                // 커스텀 데미지 설정 사용
+                                var damageCommand = new DamageEffectCommand(
+                                    customSettings.damageAmount,
+                                    customSettings.damageHits,
+                                    customSettings.ignoreGuard
+                                );
+                                effectCommands.Add(damageCommand);
                                 continue;
                             }
                         }
@@ -400,12 +456,12 @@ namespace Game.SkillCardSystem.Runtime
 
         #region === IAttackPowerStackProvider 구현 ===
 
-        public int GetAttackPowerStack() => attackPowerStacks;
+        public int GetAttackPowerStack() => definition.GetAttackPowerStacks();
 
         public void IncrementAttackPowerStack(int max)
         {
             int limit = max > 0 ? max : MaxAttackPowerStacks;
-            if (attackPowerStacks < limit) attackPowerStacks++;
+            definition.IncrementAttackPowerStacks(limit);
         }
         
         #endregion

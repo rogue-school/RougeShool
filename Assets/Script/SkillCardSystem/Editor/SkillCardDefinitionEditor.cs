@@ -204,21 +204,32 @@ namespace Game.SkillCardSystem.Editor
                 settings.bleedAmount = EditorGUILayout.IntField("출혈량", settings.bleedAmount);
                 settings.bleedDuration = EditorGUILayout.IntField("출혈 지속 시간", settings.bleedDuration);
             }
+            else if (effectSO is CounterEffectSO)
+            {
+                EditorGUILayout.LabelField("반격 효과 설정", EditorStyles.boldLabel);
+                settings.counterDuration = EditorGUILayout.IntField("반격 지속 턴 수", settings.counterDuration);
+            }
             else if (effectSO is GuardEffectSO)
             {
                 EditorGUILayout.LabelField("가드 효과 설정", EditorStyles.boldLabel);
-                EditorGUILayout.HelpBox("가드 효과는 단순히 가드 상태를 켜고 끄는 기능입니다.", MessageType.Info);
+                settings.guardDuration = EditorGUILayout.IntField("가드 지속 턴 수", settings.guardDuration);
+            }
+            else if (effectSO is CardUseStackEffectSO)
+            {
+                EditorGUILayout.LabelField("카드 사용 스택 효과 설정", EditorStyles.boldLabel);
+                settings.stackIncreasePerUse = EditorGUILayout.IntField("카드 사용 시 증가할 스택 수", settings.stackIncreasePerUse);
+                settings.maxStacks = EditorGUILayout.IntField("최대 스택 수 (0 = 무제한)", settings.maxStacks);
             }
             // TODO: 향후 추가될 EffectSO 타입들을 위한 예약 공간
             // else if (effectSO is HealEffectSO)
             // {
             //     EditorGUILayout.LabelField("치유 효과 설정", EditorStyles.boldLabel);
-            //     settings.healAmount = EditorGUILayout.IntField("Heal Amount", settings.healAmount);
+            //     settings.healAmount = EditorGUILayout.IntField("치유량", settings.healAmount);
             // }
             // else if (effectSO is DrawEffectSO)
             // {
             //     EditorGUILayout.LabelField("드로우 효과 설정", EditorStyles.boldLabel);
-            //     settings.drawCount = EditorGUILayout.IntField("Draw Count", settings.drawCount);
+            //     settings.drawCount = EditorGUILayout.IntField("드로우 수", settings.drawCount);
             // }
             // else if (effectSO is ResourceEffectSO)
             // {

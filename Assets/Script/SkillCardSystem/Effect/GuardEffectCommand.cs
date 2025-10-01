@@ -8,13 +8,24 @@ namespace Game.SkillCardSystem.Effect
 {
     /// <summary>
     /// 가드 효과를 적용하는 커맨드 클래스입니다.
-    /// 캐릭터에게 1턴 동안 가드 버프를 적용합니다.
+    /// 캐릭터에게 지정된 턴 동안 가드 버프를 적용합니다.
     /// </summary>
     public class GuardEffectCommand : ICardEffectCommand
     {
+        private readonly int duration;
+        
+        /// <summary>
+        /// 가드 효과 커맨드 생성자
+        /// </summary>
+        /// <param name="duration">가드 지속 턴 수 (기본값: 1)</param>
+        public GuardEffectCommand(int duration = 1)
+        {
+            this.duration = duration;
+        }
+        
         /// <summary>
         /// 가드 효과를 실행합니다.
-        /// 캐릭터에게 1턴 동안 가드 버프를 적용합니다.
+        /// 캐릭터에게 지정된 턴 동안 가드 버프를 적용합니다.
         /// </summary>
         /// <param name="context">카드 실행 컨텍스트</param>
         /// <param name="turnManager">전투 턴 매니저</param>
@@ -56,12 +67,12 @@ namespace Game.SkillCardSystem.Effect
                     }
                 }
                 
-                var guardBuff = new GuardBuff(1, guardIcon); // 아이콘과 함께 생성
+                var guardBuff = new GuardBuff(duration, guardIcon); // 커스텀 지속 시간과 아이콘으로 생성
                 character.RegisterPerTurnEffect(guardBuff);
                 // 즉시 보호 활성화: 다음 자신의 턴 시작 시 카운트가 0이 되면 해제됨
                 character.SetGuarded(true);
                 
-                GameLogger.LogInfo($"[GuardEffectCommand] {character.GetCharacterName()}에게 가드 버프 적용 (1턴 지속, 아이콘: {guardIcon?.name ?? "없음"})", GameLogger.LogCategory.Combat);
+                GameLogger.LogInfo($"[GuardEffectCommand] {character.GetCharacterName()}에게 가드 버프 적용 ({duration}턴 지속, 아이콘: {guardIcon?.name ?? "없음"})", GameLogger.LogCategory.Combat);
             }
             else
             {

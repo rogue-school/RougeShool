@@ -27,5 +27,23 @@ MonoBehaviour:
       hits: 1
       ignoreGuard: 0
     hasEffects: 0
-    effects: []
+    effects:
+    - effectSO: {fileID: 0}
+      useCustomSettings: 0
+      customSettings:
+        damageAmount: 0
+        damageHits: 1
+        ignoreGuard: 0
+        bleedAmount: 0
+        bleedDuration: 0
+        counterDuration: 1
+        guardDuration: 1
+        healAmount: 0
+        drawCount: 0
+        resourceDelta: 0
+        stackIncreasePerUse: 1
+        maxStacks: 5
+        targetCardId: 
+      executionOrder: 0
     ownerPolicy: 0
+  currentAttackPowerStacks: 0
