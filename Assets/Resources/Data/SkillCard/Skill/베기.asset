@@ -10,22 +10,23 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 63917f595383ae84bafad72d7862ecd5, type: 3}
-  m_Name: "test \uAC00\uB4DC\uBB34\uC2DC"
+  m_Name: "\uBCA0\uAE30"
   m_EditorClassIdentifier: 
-  cardId: "\uAC00\uB4DC\uBB34\uC2DC"
-  displayName: "\uAC00\uB4DC\uBB34\uC2DC"
+  cardId: "\uBCA0\uAE30"
+  displayName: "\uBCA0\uAE30"
   displayNameKO: 
   description: 
-  artwork: {fileID: -2026546737313458883, guid: 75d2166a8e3d1ad4584ae3a5398bf5fb, type: 3}
+  artwork: {fileID: -8255787894389226003, guid: b5ce5f5447383b348a798e6d691b9bcb, type: 3}
   presentation:
-    sfxClip: {fileID: 8300000, guid: 578197a82d10739439cac71af01c712c, type: 3}
-    visualEffectPrefab: {fileID: 4294010189161640749, guid: 52b97149ba487c94bb0fba4d467003d0, type: 3}
+    sfxClip: {fileID: 0}
+    visualEffectPrefab: {fileID: 0}
   configuration:
     hasDamage: 1
     damageConfig:
-      baseDamage: 2
+      baseDamage: 1
       hits: 1
-      ignoreGuard: 1
+      ignoreGuard: 0
     hasEffects: 0
     effects: []
     ownerPolicy: 0
+  currentAttackPowerStacks: 0

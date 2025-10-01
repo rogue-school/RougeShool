@@ -145,7 +145,8 @@ namespace Game.SkillCardSystem.Editor
             EditorGUI.indentLevel++;
             config.baseDamage = EditorGUILayout.IntField("기본 데미지", config.baseDamage);
             config.hits = EditorGUILayout.IntField("공격 횟수", config.hits);
-            config.ignoreGuard = EditorGUILayout.Toggle("가드 무시", config.ignoreGuard);
+            config.ignoreGuard = EditorGUILayout.Toggle("방어 무효화", config.ignoreGuard);
+            config.ignoreCounter = EditorGUILayout.Toggle("반격 무효화", config.ignoreCounter);
             EditorGUI.indentLevel--;
         }
         
@@ -196,7 +197,8 @@ namespace Game.SkillCardSystem.Editor
                 EditorGUILayout.LabelField("데미지 효과 설정", EditorStyles.boldLabel);
                 settings.damageAmount = EditorGUILayout.IntField("데미지량", settings.damageAmount);
                 settings.damageHits = EditorGUILayout.IntField("공격 횟수", settings.damageHits);
-                settings.ignoreGuard = EditorGUILayout.Toggle("가드 무시", settings.ignoreGuard);
+                settings.ignoreGuard = EditorGUILayout.Toggle("방어 무효화", settings.ignoreGuard);
+                settings.ignoreCounter = EditorGUILayout.Toggle("반격 무효화", settings.ignoreCounter);
             }
             else if (effectSO is BleedEffectSO)
             {
@@ -213,6 +215,11 @@ namespace Game.SkillCardSystem.Editor
             {
                 EditorGUILayout.LabelField("가드 효과 설정", EditorStyles.boldLabel);
                 settings.guardDuration = EditorGUILayout.IntField("가드 지속 턴 수", settings.guardDuration);
+            }
+            else if (effectSO is StunEffectSO)
+            {
+                EditorGUILayout.LabelField("스턴 효과 설정", EditorStyles.boldLabel);
+                settings.stunDuration = EditorGUILayout.IntField("스턴 지속 턴 수", settings.stunDuration);
             }
             else if (effectSO is CardUseStackEffectSO)
             {

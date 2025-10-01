@@ -10,32 +10,32 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 63917f595383ae84bafad72d7862ecd5, type: 3}
-  m_Name: "test \uCD9C\uD608"
+  m_Name: "\uBC29\uC5B4"
   m_EditorClassIdentifier: 
-  cardId: "\uCD9C\uD608"
-  displayName: "\uCD9C\uD608"
+  cardId: "\uBC29\uC5B4"
+  displayName: "\uBC29\uC5B4"
   displayNameKO: 
   description: 
-  artwork: {fileID: 3703626461721088364, guid: bf48ed00129e48643ba09be27a302b6f, type: 3}
+  artwork: {fileID: 6247231596762095836, guid: f790689235b622144ae280121877ca09, type: 3}
   presentation:
-    sfxClip: {fileID: 8300000, guid: 4253dec50304f5049a8bf709dcd3f393, type: 3}
-    visualEffectPrefab: {fileID: 4294010189161640749, guid: 52b97149ba487c94bb0fba4d467003d0, type: 3}
+    sfxClip: {fileID: 0}
+    visualEffectPrefab: {fileID: 0}
   configuration:
     hasDamage: 0
     damageConfig:
-      baseDamage: 1
+      baseDamage: 0
       hits: 1
       ignoreGuard: 0
     hasEffects: 1
     effects:
-    - effectSO: {fileID: 11400000, guid: e81a4128331244f4b84ccd5f0dbe8c62, type: 2}
+    - effectSO: {fileID: 11400000, guid: c2a4b772e4e133d4495e0147c4676449, type: 2}
       useCustomSettings: 1
       customSettings:
         damageAmount: 0
         damageHits: 1
         ignoreGuard: 0
-        bleedAmount: 1
-        bleedDuration: 3
+        bleedAmount: 0
+        bleedDuration: 0
         counterDuration: 1
         guardDuration: 1
         healAmount: 0

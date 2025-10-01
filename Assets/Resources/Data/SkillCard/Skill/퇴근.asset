@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 63917f595383ae84bafad72d7862ecd5, type: 3}
-  m_Name: "test \uBC18\uACA9"
+  m_Name: "\uD1F4\uADFC"
   m_EditorClassIdentifier: 
-  cardId: "\uBC18\uACA9"
-  displayName: "\uBC18\uACA9"
+  cardId: "\uD1F4\uADFC"
+  displayName: "\uD1F4\uADFC"
   displayNameKO: 
   description: 
-  artwork: {fileID: 800228030009884433, guid: b356eacdde8e73c499c1596378f2b392, type: 3}
+  artwork: {fileID: -4334128287016464269, guid: 463e4b460b09de44091d4ab4f0de7d5c, type: 3}
   presentation:
     sfxClip: {fileID: 0}
     visualEffectPrefab: {fileID: 0}
@@ -28,7 +28,7 @@ MonoBehaviour:
       ignoreGuard: 0
     hasEffects: 1
     effects:
-    - effectSO: {fileID: 11400000, guid: 30dd2fcde2b71ec48bc92f56a7874ef6, type: 2}
+    - effectSO: {fileID: 11400000, guid: 1b5b9b412fc46ed45a64f9660268fd30, type: 2}
       useCustomSettings: 1
       customSettings:
         damageAmount: 0
@@ -37,11 +37,13 @@ MonoBehaviour:
         bleedAmount: 0
         bleedDuration: 0
         counterDuration: 1
-        healAmount: 0
+        guardDuration: 1
+        healAmount: 3
         drawCount: 0
         resourceDelta: 0
         stackIncreasePerUse: 1
         maxStacks: 5
         targetCardId: 
-      executionOrder: 1
+      executionOrder: 0
     ownerPolicy: 0
+  currentAttackPowerStacks: 0

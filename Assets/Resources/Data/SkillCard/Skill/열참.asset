@@ -10,35 +10,38 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 63917f595383ae84bafad72d7862ecd5, type: 3}
-  m_Name: "test \uD68C\uBCF5"
+  m_Name: "\uC5F4\uCC38"
   m_EditorClassIdentifier: 
-  cardId: "\uD68C\uBCF5"
-  displayName: "\uD68C\uBCF5"
+  cardId: "\uC5F4\uCC38"
+  displayName: "\uC5F4\uCC38"
   displayNameKO: 
   description: 
-  artwork: {fileID: 147353212943988270, guid: a894782fb08c943469d0ce1a2a65b3ad, type: 3}
+  artwork: {fileID: 21300000, guid: 77073b26145e9a5458d4f1f7f39aaec1, type: 3}
   presentation:
     sfxClip: {fileID: 0}
     visualEffectPrefab: {fileID: 0}
   configuration:
-    hasDamage: 0
+    hasDamage: 1
     damageConfig:
-      baseDamage: 0
+      baseDamage: 1
       hits: 1
-      ignoreGuard: 0
+      ignoreGuard: 1
+      ignoreCounter: 1
     hasEffects: 1
     effects:
-    - effectSO: {fileID: 11400000, guid: 1b5b9b412fc46ed45a64f9660268fd30, type: 2}
+    - effectSO: {fileID: 11400000, guid: e81a4128331244f4b84ccd5f0dbe8c62, type: 2}
       useCustomSettings: 1
       customSettings:
         damageAmount: 0
         damageHits: 1
         ignoreGuard: 0
-        bleedAmount: 0
-        bleedDuration: 0
+        ignoreCounter: 0
+        bleedAmount: 1
+        bleedDuration: 3
         counterDuration: 1
         guardDuration: 1
-        healAmount: 3
+        stunDuration: 1
+        healAmount: 0
         drawCount: 0
         resourceDelta: 0
         stackIncreasePerUse: 1

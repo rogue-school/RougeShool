@@ -13,13 +13,17 @@ MonoBehaviour:
   m_Name: Akein_Sword_Deck
   m_EditorClassIdentifier: 
   cardEntries:
-  - cardDefinition: {fileID: 11400000, guid: db4ec80b64ceb784a89c55789870b5e6, type: 2}
+  - cardDefinition: {fileID: 11400000, guid: 3d223c84e3f302d44a3898d59476bc0d, type: 2}
     quantity: 1
-  - cardDefinition: {fileID: 11400000, guid: 464c0a777cf5f9a42b27596b2e45163a, type: 2}
+  - cardDefinition: {fileID: 11400000, guid: 4a24e3a1761bce042b4cb403dc4601c4, type: 2}
     quantity: 1
-  - cardDefinition: {fileID: 11400000, guid: 8f4cc4f7be7afaf4086ead461f38b31d, type: 2}
+  - cardDefinition: {fileID: 11400000, guid: 04abc0b37ae55144b9dd46479b287a04, type: 2}
     quantity: 1
-  - cardDefinition: {fileID: 11400000, guid: ce592d3db90baf448919b9148d74006f, type: 2}
+  - cardDefinition: {fileID: 11400000, guid: eb3a49d8d06fef145b6d11fa3594d1c7, type: 2}
     quantity: 1
-  - cardDefinition: {fileID: 11400000, guid: 90c199e28bb5948429f0268a26395a84, type: 2}
+  - cardDefinition: {fileID: 11400000, guid: c5921eae76219584398aaa75d7a34171, type: 2}
+    quantity: 1
+  - cardDefinition: {fileID: 11400000, guid: ba4ed920ca6f56a4db4470228c4d2c4d, type: 2}
+    quantity: 1
+  - cardDefinition: {fileID: 11400000, guid: c5921eae76219584398aaa75d7a34171, type: 2}
     quantity: 1

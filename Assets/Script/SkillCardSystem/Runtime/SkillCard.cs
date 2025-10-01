@@ -14,6 +14,7 @@ using Game.CharacterSystem.Interface;
 using Game.CoreSystem.Interface;
 using Zenject;
 using Game.CharacterSystem.Core;
+using Game.SkillCardSystem.Effect;
 
 namespace Game.SkillCardSystem.Runtime
 {
@@ -87,7 +88,8 @@ namespace Game.SkillCardSystem.Runtime
                 var damageCommand = new DamageEffectCommand(
                     damageConfig.baseDamage,
                     damageConfig.hits,
-                    damageConfig.ignoreGuard
+                    damageConfig.ignoreGuard,
+                    damageConfig.ignoreCounter
                 );
                 effectCommands.Add(damageCommand);
             }
@@ -158,6 +160,17 @@ namespace Game.SkillCardSystem.Runtime
                                 continue;
                             }
                         }
+
+                        // 스턴 효과의 커스텀 설정을 반영
+                        if (effectConfig.effectSO is StunEffectSO)
+                        {
+                            if (effectConfig.useCustomSettings && customSettings != null)
+                            {
+                                var stunCommand = new StunEffectCommand(customSettings.stunDuration, effectConfig.effectSO.GetIcon());
+                                effectCommands.Add(stunCommand);
+                                continue;
+                            }
+                        }
                         
                         // 데미지 효과의 커스텀 설정을 반영
                         if (effectConfig.effectSO is DamageEffectSO)
@@ -168,7 +181,8 @@ namespace Game.SkillCardSystem.Runtime
                                 var damageCommand = new DamageEffectCommand(
                                     customSettings.damageAmount,
                                     customSettings.damageHits,
-                                    customSettings.ignoreGuard
+                                    customSettings.ignoreGuard,
+                                    customSettings.ignoreCounter
                                 );
                                 effectCommands.Add(damageCommand);
                                 continue;
@@ -346,6 +360,13 @@ namespace Game.SkillCardSystem.Runtime
                 return;
             }
             
+            // 스턴 상태면 스킬 사용 불가
+            if ((context.Source as CharacterBase).HasEffect<StunDebuff>())
+            {
+                GameLogger.LogInfo($"[SkillCard] 스턴 상태로 스킬 사용 불가: {context.Source.GetCharacterName()}", GameLogger.LogCategory.SkillCard);
+                return;
+            }
+
             if (targetChar.IsDead())
             {
                 GameLogger.LogWarning("[SkillCard] 대상자가 이미 사망했습니다.", GameLogger.LogCategory.SkillCard);

@@ -159,8 +159,11 @@ namespace Game.SkillCardSystem.Data
         [Tooltip("공격 횟수")]
         public int hits = 1;
         
-        [Tooltip("가드 무시 여부")]
+        [Tooltip("방어 무효화 여부")]
         public bool ignoreGuard = false;
+
+        [Tooltip("반격 버프 무효화 여부")]
+        public bool ignoreCounter = false;
     }
 
     /// <summary>
@@ -198,8 +201,11 @@ namespace Game.SkillCardSystem.Data
         [Tooltip("공격 횟수")]
         public int damageHits = 1;
         
-        [Tooltip("가드 무시")]
+        [Tooltip("방어 무효화")]
         public bool ignoreGuard = false;
+
+        [Tooltip("반격 무효화")]
+        public bool ignoreCounter = false;
         
         
         [Header("출혈 효과 설정")]
@@ -217,6 +223,10 @@ namespace Game.SkillCardSystem.Data
         [Tooltip("가드 지속 턴 수")]
         public int guardDuration = 1;
         
+        [Header("스턴 효과 설정")]
+        [Tooltip("스턴 지속 턴 수")]
+        public int stunDuration = 1;
+
         [Header("치유 효과 설정")]
         [Tooltip("치유량")]
         public int healAmount = 0;

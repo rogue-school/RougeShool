@@ -19,6 +19,7 @@ namespace Game.SkillCardSystem.Effect
         private int damageAmount;
         private int hits;
         private bool ignoreGuard;
+        private bool ignoreCounter;
         private readonly IAudioManager audioManager;
         
         public DamageEffectCommand(IAudioManager audioManager)
@@ -32,11 +33,12 @@ namespace Game.SkillCardSystem.Effect
         /// <param name="damageAmount">데미지량</param>
         /// <param name="hits">공격 횟수</param>
         /// <param name="ignoreGuard">가드 무시 여부</param>
-        public DamageEffectCommand(int damageAmount, int hits = 1, bool ignoreGuard = false)
+        public DamageEffectCommand(int damageAmount, int hits = 1, bool ignoreGuard = false, bool ignoreCounter = false)
         {
             this.damageAmount = damageAmount;
             this.hits = hits;
             this.ignoreGuard = ignoreGuard;
+            this.ignoreCounter = ignoreCounter;
         }
         
         /// <summary>
@@ -86,6 +88,10 @@ namespace Game.SkillCardSystem.Effect
             if (target is Game.CharacterSystem.Core.CharacterBase cb)
             {
                 targetHasCounter = cb.HasEffect<CounterBuff>();
+            }
+            if (ignoreCounter)
+            {
+                targetHasCounter = false;
             }
             
             // 다단 히트 처리 (시간 간격을 두고 공격)

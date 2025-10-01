@@ -10,26 +10,26 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 63917f595383ae84bafad72d7862ecd5, type: 3}
-  m_Name: "test \uC77C\uBC18\uACF5\uACA9"
+  m_Name: "\uACFC\uB85C"
   m_EditorClassIdentifier: 
-  cardId: "\uC77C\uBC18\uACF5\uACA9"
-  displayName: "\uC77C\uBC18\uACF5\uACA9"
+  cardId: "\uACFC\uB85C"
+  displayName: "\uACFC\uB85C"
   displayNameKO: 
   description: 
-  artwork: {fileID: -8255787894389226003, guid: b5ce5f5447383b348a798e6d691b9bcb, type: 3}
+  artwork: {fileID: -5535041633674418719, guid: 6b7cfb3f6475faa46a756fb4199d49cf, type: 3}
   presentation:
-    sfxClip: {fileID: 8300000, guid: 578197a82d10739439cac71af01c712c, type: 3}
-    visualEffectPrefab: {fileID: 4294010189161640749, guid: 52b97149ba487c94bb0fba4d467003d0, type: 3}
+    sfxClip: {fileID: 0}
+    visualEffectPrefab: {fileID: 0}
   configuration:
     hasDamage: 1
     damageConfig:
-      baseDamage: 2
+      baseDamage: 1
       hits: 1
       ignoreGuard: 0
-    hasEffects: 0
+    hasEffects: 1
     effects:
-    - effectSO: {fileID: 0}
-      useCustomSettings: 0
+    - effectSO: {fileID: 11400000, guid: ddafea304eb1e3d41b6c440b606b01f4, type: 2}
+      useCustomSettings: 1
       customSettings:
         damageAmount: 0
         damageHits: 1
