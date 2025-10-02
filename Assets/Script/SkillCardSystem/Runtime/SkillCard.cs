@@ -188,15 +188,17 @@ namespace Game.SkillCardSystem.Runtime
                             }
                         }
                         
-                        // 치유 효과의 커스텀 설정을 반영
-                        if (effectConfig.effectSO is HealEffectSO)
+                        // 치유 효과의 커스텀 설정을 반영 (SO를 통해 생성하여 VFX 프리팹 전달 보장)
+                        if (effectConfig.effectSO is HealEffectSO healEffectSO)
                         {
                             if (effectConfig.useCustomSettings && customSettings != null)
                             {
-                                // 커스텀 치유 설정 사용
-                                var healCommand = new HealEffectCommand(customSettings);
-                                effectCommands.Add(healCommand);
-                                continue;
+                                var healCommand = healEffectSO.CreateEffectCommand(customSettings);
+                                if (healCommand != null)
+                                {
+                                    effectCommands.Add(healCommand);
+                                    continue;
+                                }
                             }
                         }
 

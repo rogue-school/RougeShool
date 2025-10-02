@@ -26,6 +26,7 @@ MonoBehaviour:
       baseDamage: 3
       hits: 1
       ignoreGuard: 1
+      ignoreCounter: 0
     hasEffects: 0
     effects: []
     ownerPolicy: 0

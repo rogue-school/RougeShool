@@ -26,6 +26,7 @@ MonoBehaviour:
       baseDamage: 0
       hits: 1
       ignoreGuard: 0
+      ignoreCounter: 0
     hasEffects: 1
     effects:
     - effectSO: {fileID: 11400000, guid: 30dd2fcde2b71ec48bc92f56a7874ef6, type: 2}
@@ -34,10 +35,12 @@ MonoBehaviour:
         damageAmount: 0
         damageHits: 1
         ignoreGuard: 0
+        ignoreCounter: 0
         bleedAmount: 0
         bleedDuration: 0
         counterDuration: 1
         guardDuration: 1
+        stunDuration: 1
         healAmount: 0
         drawCount: 0
         resourceDelta: 0

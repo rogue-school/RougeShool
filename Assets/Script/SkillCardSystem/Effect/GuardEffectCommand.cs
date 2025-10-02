@@ -13,14 +13,16 @@ namespace Game.SkillCardSystem.Effect
     public class GuardEffectCommand : ICardEffectCommand
     {
         private readonly int duration;
+        private readonly GameObject visualEffectPrefab;
         
         /// <summary>
         /// 가드 효과 커맨드 생성자
         /// </summary>
         /// <param name="duration">가드 지속 턴 수 (기본값: 1)</param>
-        public GuardEffectCommand(int duration = 1)
+        public GuardEffectCommand(int duration = 1, GameObject visualEffectPrefab = null)
         {
             this.duration = duration;
+            this.visualEffectPrefab = visualEffectPrefab;
         }
         
         /// <summary>
@@ -73,6 +75,9 @@ namespace Game.SkillCardSystem.Effect
                 character.SetGuarded(true);
                 
                 GameLogger.LogInfo($"[GuardEffectCommand] {character.GetCharacterName()}에게 가드 버프 적용 ({duration}턴 지속, 아이콘: {guardIcon?.name ?? "없음"})", GameLogger.LogCategory.Combat);
+
+                // 가드 비주얼 이펙트: 시전자 위치에 생성
+                TrySpawnEffectAtSource(context);
             }
             else
             {
@@ -97,6 +102,58 @@ namespace Game.SkillCardSystem.Effect
         public int GetCost()
         {
             return 0;
+        }
+
+        /// <summary>
+        /// 시전자 위치에 가드 비주얼 이펙트를 생성합니다.
+        /// </summary>
+        private void TrySpawnEffectAtSource(ICardExecutionContext context)
+        {
+            if (context?.Source == null)
+            {
+                GameLogger.LogWarning("[GuardEffectCommand] 시전자(Source)가 null입니다. 가드 VFX 생성을 건너뜁니다.", GameLogger.LogCategory.SkillCard);
+                return;
+            }
+            if (visualEffectPrefab == null)
+            {
+                GameLogger.LogWarning("[GuardEffectCommand] visualEffectPrefab이 지정되지 않았습니다. 가드 VFX 생성을 건너뜁니다.", GameLogger.LogCategory.SkillCard);
+                return;
+            }
+
+            var spawnPos = context.Source.Transform.position;
+            GameLogger.LogInfo($"[GuardEffectCommand] 가드 VFX 생성 시작 - 프리팹: {visualEffectPrefab.name}, 위치: {spawnPos}", GameLogger.LogCategory.SkillCard);
+
+            var instance = UnityEngine.Object.Instantiate(visualEffectPrefab, spawnPos, Quaternion.identity);
+            GameLogger.LogInfo($"[GuardEffectCommand] 가드 VFX 인스턴스 생성 완료: {instance.name}", GameLogger.LogCategory.SkillCard);
+
+            SetEffectLayer(instance);
+
+            UnityEngine.Object.Destroy(instance, 2.0f);
+            GameLogger.LogInfo("[GuardEffectCommand] 가드 VFX 2초 후 자동 제거 예약", GameLogger.LogCategory.SkillCard);
+        }
+
+        private static void SetEffectLayer(GameObject effectInstance)
+        {
+            if (effectInstance == null) return;
+            int rendererCount = 0;
+            int particleCount = 0;
+
+            var renderers = effectInstance.GetComponentsInChildren<Renderer>(true);
+            foreach (var r in renderers)
+            {
+                r.sortingLayerName = "Effects";
+                r.sortingOrder = 10;
+                rendererCount++;
+            }
+            var pss = effectInstance.GetComponentsInChildren<ParticleSystemRenderer>(true);
+            foreach (var pr in pss)
+            {
+                pr.sortingLayerName = "Effects";
+                pr.sortingOrder = 10;
+                particleCount++;
+            }
+
+            GameLogger.LogInfo($"[GuardEffectCommand] 가드 VFX 레이어 설정 완료 (Renderer: {rendererCount}, Particle: {particleCount})", GameLogger.LogCategory.SkillCard);
         }
     }
 }

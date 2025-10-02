@@ -18,6 +18,10 @@ namespace Game.SkillCardSystem.Effect
         [Tooltip("최대 치유량 (0 = 무제한)")]
         [SerializeField] private int maxHealAmount = 0;
 
+        [Header("비주얼 이펙트")]
+        [Tooltip("치유 시 시전자 위치에 표시할 비주얼 이펙트 프리팹")]
+        [SerializeField] private GameObject visualEffectPrefab;
+
         /// <summary>
         /// 효과 명령을 생성합니다.
         /// </summary>
@@ -25,7 +29,7 @@ namespace Game.SkillCardSystem.Effect
         /// <returns>치유 효과 명령</returns>
         public override ICardEffectCommand CreateEffectCommand(int power)
         {
-            return new HealEffectCommand(baseHealAmount + power, maxHealAmount);
+            return new HealEffectCommand(baseHealAmount + power, maxHealAmount, visualEffectPrefab);
         }
         
         /// <summary>
@@ -35,7 +39,7 @@ namespace Game.SkillCardSystem.Effect
         /// <returns>치유 효과 명령</returns>
         public ICardEffectCommand CreateEffectCommand(Game.SkillCardSystem.Data.EffectCustomSettings customSettings)
         {
-            return new HealEffectCommand(customSettings.healAmount, maxHealAmount);
+            return new HealEffectCommand(customSettings.healAmount, maxHealAmount, visualEffectPrefab);
         }
 
         /// <summary>

@@ -13,11 +13,13 @@ namespace Game.SkillCardSystem.Effect
     {
         private readonly int healAmount;
         private readonly int maxHealAmount;
+        private readonly GameObject visualEffectPrefab;
 
-        public HealEffectCommand(int healAmount, int maxHealAmount = 0)
+        public HealEffectCommand(int healAmount, int maxHealAmount = 0, GameObject visualEffectPrefab = null)
         {
             this.healAmount = healAmount;
             this.maxHealAmount = maxHealAmount;
+            this.visualEffectPrefab = visualEffectPrefab;
             
             GameLogger.LogInfo($"[HealEffectCommand] 생성됨 - 치유량: {healAmount}, 최대: {maxHealAmount}", 
                 GameLogger.LogCategory.SkillCard);
@@ -31,6 +33,7 @@ namespace Game.SkillCardSystem.Effect
         {
             this.healAmount = customSettings.healAmount;
             this.maxHealAmount = 0; // 커스텀 설정에서는 최대치 제한 없음
+            this.visualEffectPrefab = null;
             
             GameLogger.LogInfo($"[HealEffectCommand] 생성됨 (CustomSettings) - 치유량: {healAmount}", 
                 GameLogger.LogCategory.SkillCard);
@@ -84,6 +87,9 @@ namespace Game.SkillCardSystem.Effect
             
             GameLogger.LogInfo($"[HealEffectCommand] '{sourceName}' 체력 회복 완료 - 치유량: {actualHealAmount}, 체력: {currentHP} → {newHP}/{maxHP}", 
                 GameLogger.LogCategory.SkillCard);
+
+            // 시각적 이펙트: 시전자 위치에 생성
+            TrySpawnEffectAtSource(context);
         }
 
         /// <summary>
@@ -95,5 +101,60 @@ namespace Game.SkillCardSystem.Effect
         /// 효과 비용 (무료)
         /// </summary>
         public int GetCost() => 0;
+
+        /// <summary>
+        /// 시전자 위치에 힐 비주얼 이펙트를 생성합니다.
+        /// </summary>
+        private void TrySpawnEffectAtSource(ICardExecutionContext context)
+        {
+            if (context?.Source == null)
+            {
+                GameLogger.LogWarning("[HealEffectCommand] 시전자(Source)가 null입니다. 힐 VFX 생성을 건너뜁니다.", GameLogger.LogCategory.SkillCard);
+                return;
+            }
+            if (visualEffectPrefab == null)
+            {
+                GameLogger.LogWarning("[HealEffectCommand] visualEffectPrefab이 지정되지 않았습니다. 힐 VFX 생성을 건너뜁니다.", GameLogger.LogCategory.SkillCard);
+                return;
+            }
+
+            var spawnPos = context.Source.Transform.position;
+            GameLogger.LogInfo($"[HealEffectCommand] 힐 VFX 생성 시작 - 프리팹: {visualEffectPrefab.name}, 위치: {spawnPos}", GameLogger.LogCategory.SkillCard);
+
+            var instance = UnityEngine.Object.Instantiate(visualEffectPrefab, spawnPos, Quaternion.identity);
+            GameLogger.LogInfo($"[HealEffectCommand] 힐 VFX 인스턴스 생성 완료: {instance.name}", GameLogger.LogCategory.SkillCard);
+
+            SetEffectLayer(instance);
+
+            UnityEngine.Object.Destroy(instance, 2.0f);
+            GameLogger.LogInfo("[HealEffectCommand] 힐 VFX 2초 후 자동 제거 예약", GameLogger.LogCategory.SkillCard);
+        }
+
+        /// <summary>
+        /// 이펙트 렌더 순서를 UI 위로 설정합니다.
+        /// </summary>
+        private static void SetEffectLayer(GameObject effectInstance)
+        {
+            if (effectInstance == null) return;
+            int rendererCount = 0;
+            int particleCount = 0;
+
+            var renderers = effectInstance.GetComponentsInChildren<Renderer>(true);
+            foreach (var r in renderers)
+            {
+                r.sortingLayerName = "Effects";
+                r.sortingOrder = 10;
+                rendererCount++;
+            }
+            var pss = effectInstance.GetComponentsInChildren<ParticleSystemRenderer>(true);
+            foreach (var pr in pss)
+            {
+                pr.sortingLayerName = "Effects";
+                pr.sortingOrder = 10;
+                particleCount++;
+            }
+
+            GameLogger.LogInfo($"[HealEffectCommand] 힐 VFX 레이어 설정 완료 (Renderer: {rendererCount}, Particle: {particleCount})", GameLogger.LogCategory.SkillCard);
+        }
     }
 }

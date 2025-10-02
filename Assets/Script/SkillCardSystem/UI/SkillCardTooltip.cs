@@ -150,7 +150,7 @@ namespace Game.SkillCardSystem.UI
 
             rectTransform = GetComponent<RectTransform>();
             parentCanvas = GetComponentInParent<Canvas>();
-            
+
             if (parentCanvas != null)
             {
                 uiCamera = parentCanvas.worldCamera;
@@ -161,8 +161,7 @@ namespace Game.SkillCardSystem.UI
                 GameLogger.LogWarning("[SkillCardTooltip] 부모 캔버스를 찾을 수 없습니다", GameLogger.LogCategory.UI);
             }
 
-            // 동적 크기 조절 컴포넌트들 초기화
-            InitializeDynamicSizingComponents();
+            // 프리팹 구조를 존중하기 위해 레이아웃 컴포넌트 자동 추가 제거
 
             // 초기 상태 설정
             canvasGroup.alpha = 0f;
@@ -170,60 +169,6 @@ namespace Game.SkillCardSystem.UI
             canvasGroup.blocksRaycasts = false;
         }
 
-        /// <summary>
-        /// 동적 크기 조절을 위한 컴포넌트들을 초기화합니다.
-        /// 프리팹의 기존 설정을 존중하며 필요한 경우에만 추가합니다.
-        /// </summary>
-        private void InitializeDynamicSizingComponents()
-        {
-            // ContentSizeFitter 확인/추가 (프리팹에 없을 경우에만)
-            contentSizeFitter = GetComponent<ContentSizeFitter>();
-            if (contentSizeFitter == null)
-            {
-                contentSizeFitter = gameObject.AddComponent<ContentSizeFitter>();
-                contentSizeFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-                contentSizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-                GameLogger.LogInfo("[SkillCardTooltip] ContentSizeFitter 추가됨", GameLogger.LogCategory.UI);
-            }
-            else
-            {
-                GameLogger.LogInfo("[SkillCardTooltip] 기존 ContentSizeFitter 사용", GameLogger.LogCategory.UI);
-            }
-
-            // LayoutElement 확인/추가 (프리팹에 없을 경우에만)
-            layoutElement = GetComponent<LayoutElement>();
-            if (layoutElement == null)
-            {
-                layoutElement = gameObject.AddComponent<LayoutElement>();
-                // 최소값만 설정, 프리팹의 설정을 존중
-                layoutElement.minHeight = 100f;
-                GameLogger.LogInfo("[SkillCardTooltip] LayoutElement 추가됨", GameLogger.LogCategory.UI);
-            }
-            else
-            {
-                GameLogger.LogInfo("[SkillCardTooltip] 기존 LayoutElement 사용", GameLogger.LogCategory.UI);
-            }
-
-            // VerticalLayoutGroup 확인/추가 (프리팹에 없을 경우에만)
-            verticalLayoutGroup = GetComponent<VerticalLayoutGroup>();
-            if (verticalLayoutGroup == null)
-            {
-                verticalLayoutGroup = gameObject.AddComponent<VerticalLayoutGroup>();
-                verticalLayoutGroup.spacing = 8f;
-                verticalLayoutGroup.padding = new RectOffset(16, 16, 16, 16);
-                verticalLayoutGroup.childControlHeight = true;
-                verticalLayoutGroup.childControlWidth = false;
-                verticalLayoutGroup.childForceExpandHeight = false;
-                verticalLayoutGroup.childForceExpandWidth = false;
-                GameLogger.LogInfo("[SkillCardTooltip] VerticalLayoutGroup 추가됨", GameLogger.LogCategory.UI);
-            }
-            else
-            {
-                GameLogger.LogInfo("[SkillCardTooltip] 기존 VerticalLayoutGroup 사용", GameLogger.LogCategory.UI);
-            }
-
-            GameLogger.LogInfo("[SkillCardTooltip] 동적 크기 조절 컴포넌트 초기화 완료", GameLogger.LogCategory.UI);
-        }
 
         #endregion
 
@@ -252,24 +197,17 @@ namespace Game.SkillCardSystem.UI
         }
 
         /// <summary>
-        /// Layout 시스템이 적용된 후 툴팁을 표시합니다.
+        /// 툴팁을 표시합니다.
         /// </summary>
         /// <param name="cardPosition">스킬카드의 위치</param>
         private System.Collections.IEnumerator ShowTooltipWithLayout(Vector2 cardPosition)
         {
-            // Layout 시스템이 적용되도록 한 프레임 대기
+            // 프리팹 크기를 사용하므로 레이아웃 대기 불필요
             yield return null;
-            
-            // 첫 번째 크기 제한 적용
-            ApplyMaxSizeConstraints();
-            
-            // 추가 프레임 대기 후 다시 크기 제한 적용 (Layout 시스템이 완전히 적용되도록)
-            yield return null;
-            ApplyMaxSizeConstraints();
-            
-            // Layout이 적용된 후 실제 크기로 위치 재계산
+
+            // 툴팁 위치 계산
             UpdateTooltipPosition(cardPosition);
-            
+
             if (!isVisible)
             {
                 GameLogger.LogInfo($"[SkillCardTooltip] 툴팁 페이드 인 시작: {currentCard?.GetCardName()}", GameLogger.LogCategory.UI);
@@ -281,48 +219,6 @@ namespace Game.SkillCardSystem.UI
             }
         }
 
-        /// <summary>
-        /// 툴팁 크기를 프리팹 설정에 맞게 조절합니다.
-        /// 프리팹의 레이아웃 설정을 존중하며 최대 크기만 제한합니다.
-        /// </summary>
-        private void ApplyMaxSizeConstraints()
-        {
-            if (rectTransform == null) return;
-
-            // 더 엄격한 크기 제한 적용
-            const float maxWidth = 500f;  // 최대 너비 제한
-            const float maxHeight = 600f; // 최대 높이 제한 (더 작게)
-
-            Vector2 currentSize = rectTransform.sizeDelta;
-            bool sizeChanged = false;
-
-            // 너비 제한 적용
-            if (currentSize.x > maxWidth)
-            {
-                currentSize.x = maxWidth;
-                sizeChanged = true;
-                GameLogger.LogWarning($"[SkillCardTooltip] 너비 제한 적용: {rectTransform.sizeDelta.x} -> {maxWidth}", GameLogger.LogCategory.UI);
-            }
-
-            // 높이 제한 적용
-            if (currentSize.y > maxHeight)
-            {
-                currentSize.y = maxHeight;
-                sizeChanged = true;
-                GameLogger.LogWarning($"[SkillCardTooltip] 높이 제한 적용: {rectTransform.sizeDelta.y} -> {maxHeight}", GameLogger.LogCategory.UI);
-            }
-
-            // 크기가 변경되었으면 적용
-            if (sizeChanged)
-            {
-                rectTransform.sizeDelta = currentSize;
-                GameLogger.LogInfo($"[SkillCardTooltip] 크기 제한 적용 완료 - 최종 크기: {currentSize}", GameLogger.LogCategory.UI);
-            }
-            else
-            {
-                GameLogger.LogInfo($"[SkillCardTooltip] 프리팹 크기 유지 - 현재 크기: {currentSize}", GameLogger.LogCategory.UI);
-            }
-        }
 
         /// <summary>
         /// 툴팁을 숨깁니다.
@@ -529,34 +425,62 @@ namespace Game.SkillCardSystem.UI
 
         /// <summary>
         /// 툴팁 배경과 보더를 설정합니다.
+        /// 프리팹의 설정을 최대한 존중하며, 런타임 설정만 적용합니다.
         /// </summary>
         private void SetupTooltipBackground()
         {
             // 배경 이미지 설정
             if (backgroundImage != null)
             {
-                // 기본 배경 색상 설정 (어두운 반투명)
-                backgroundImage.color = new Color(0.1f, 0.1f, 0.1f, 0.95f);
-                
-                // 배경 이미지가 할당되지 않은 경우 기본 색상으로 설정
-                if (backgroundImage.sprite == null)
+                // 프리팹에 스프라이트가 있으면 그대로 사용
+                if (backgroundImage.sprite != null)
                 {
-                    // 기본 배경을 위한 단색 이미지 생성
+                    // 배경 색상 설정 (어두운 반투명) - 프리팹 이미지에 틴트 적용
+                    backgroundImage.color = new Color(0.1f, 0.1f, 0.1f, 0.95f);
+                    GameLogger.LogInfo("[SkillCardTooltip] 프리팹 배경 이미지 사용", GameLogger.LogCategory.UI);
+                }
+                else
+                {
+                    // 프리팹에 스프라이트가 없으면 기본 이미지 생성
                     CreateDefaultBackgroundSprite();
+                    backgroundImage.color = new Color(0.1f, 0.1f, 0.1f, 0.95f);
+                    GameLogger.LogInfo("[SkillCardTooltip] 기본 배경 이미지 생성", GameLogger.LogCategory.UI);
                 }
             }
 
             // 보더 이미지 설정
             if (borderImage != null)
             {
-                // 기본 보더 색상 설정 (금색 테두리)
-                borderImage.color = new Color(1f, 0.8f, 0.2f, 1f);
-                
-                // 보더 이미지가 할당되지 않은 경우 기본 색상으로 설정
-                if (borderImage.sprite == null)
+                // 프리팹에 스프라이트가 있으면 그대로 사용
+                if (borderImage.sprite != null)
                 {
-                    // 기본 보더를 위한 단색 이미지 생성
+                    // 보더 색상 설정 (금색 테두리)
+                    borderImage.color = new Color(1f, 0.8f, 0.2f, 1f);
+
+                    // 보더가 테두리만 보이도록 설정 (Fill Center 끄기)
+                    if (borderImage.type == Image.Type.Sliced)
+                    {
+                        borderImage.fillCenter = false;
+                        GameLogger.LogInfo("[SkillCardTooltip] 보더 Fill Center 비활성화 (테두리만 표시)", GameLogger.LogCategory.UI);
+                    }
+                    else
+                    {
+                        // Sliced가 아니면 Sliced로 변경
+                        borderImage.type = Image.Type.Sliced;
+                        borderImage.fillCenter = false;
+                        GameLogger.LogInfo("[SkillCardTooltip] 보더를 Sliced 타입으로 변경 및 Fill Center 비활성화", GameLogger.LogCategory.UI);
+                    }
+
+                    GameLogger.LogInfo("[SkillCardTooltip] 프리팹 보더 이미지 사용", GameLogger.LogCategory.UI);
+                }
+                else
+                {
+                    // 프리팹에 스프라이트가 없으면 기본 이미지 생성
                     CreateDefaultBorderSprite();
+                    borderImage.color = new Color(1f, 0.8f, 0.2f, 1f);
+                    borderImage.type = Image.Type.Sliced;
+                    borderImage.fillCenter = false;
+                    GameLogger.LogInfo("[SkillCardTooltip] 기본 보더 이미지 생성", GameLogger.LogCategory.UI);
                 }
             }
 
@@ -599,96 +523,14 @@ namespace Game.SkillCardSystem.UI
             borderImage.type = Image.Type.Sliced; // 9-slice 스타일로 설정
         }
 
-        /// <summary>
-        /// 카드 헤더의 레이아웃을 설정합니다.
-        /// 아이콘, 이름, 타입을 가로로 배치합니다.
-        /// </summary>
-        private void SetupCardHeaderLayout()
-        {
-            // 카드 아이콘의 부모 오브젝트를 찾아서 HorizontalLayoutGroup 설정
-            if (cardIconImage != null)
-            {
-                Transform headerParent = cardIconImage.transform.parent;
-                if (headerParent != null)
-                {
-                    // 기존 LayoutGroup 확인 (VerticalLayoutGroup이 있으면 제거)
-                    var existingVerticalLayoutGroup = headerParent.GetComponent<VerticalLayoutGroup>();
-                    if (existingVerticalLayoutGroup != null)
-                    {
-                        GameLogger.LogInfo("[SkillCardTooltip] 기존 VerticalLayoutGroup 제거 후 HorizontalLayoutGroup으로 교체", GameLogger.LogCategory.UI);
-                        DestroyImmediate(existingVerticalLayoutGroup);
-                    }
-
-                    // HorizontalLayoutGroup 확인/추가
-                    var horizontalLayoutGroup = headerParent.GetComponent<HorizontalLayoutGroup>();
-                    if (horizontalLayoutGroup == null)
-                    {
-                        horizontalLayoutGroup = headerParent.gameObject.AddComponent<HorizontalLayoutGroup>();
-                        horizontalLayoutGroup.spacing = 8f;
-                        horizontalLayoutGroup.padding = new RectOffset(0, 0, 0, 0);
-                        horizontalLayoutGroup.childControlWidth = false;
-                        horizontalLayoutGroup.childControlHeight = false;
-                        horizontalLayoutGroup.childForceExpandWidth = false;
-                        horizontalLayoutGroup.childForceExpandHeight = false;
-                        horizontalLayoutGroup.childAlignment = TextAnchor.MiddleLeft;
-                        
-                        GameLogger.LogInfo("[SkillCardTooltip] 카드 헤더에 HorizontalLayoutGroup 추가됨", GameLogger.LogCategory.UI);
-                    }
-                    else
-                    {
-                        GameLogger.LogInfo("[SkillCardTooltip] 카드 헤더의 기존 HorizontalLayoutGroup 사용", GameLogger.LogCategory.UI);
-                    }
-
-                    // ContentSizeFitter도 추가 (헤더 크기 자동 조절)
-                    var contentSizeFitter = headerParent.GetComponent<ContentSizeFitter>();
-                    if (contentSizeFitter == null)
-                    {
-                        contentSizeFitter = headerParent.gameObject.AddComponent<ContentSizeFitter>();
-                        contentSizeFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-                        contentSizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-                        
-                        GameLogger.LogInfo("[SkillCardTooltip] 카드 헤더에 ContentSizeFitter 추가됨", GameLogger.LogCategory.UI);
-                    }
-                }
-            }
-
-            // 카드 이름과 타입을 세로로 배치하는 컨테이너 설정
-            if (cardNameText != null && cardTypeText != null)
-            {
-                // 이름과 타입의 부모가 같다면 VerticalLayoutGroup 설정
-                if (cardNameText.transform.parent == cardTypeText.transform.parent)
-                {
-                    Transform textParent = cardNameText.transform.parent;
-                    if (textParent != null)
-                    {
-                        var verticalLayoutGroup = textParent.GetComponent<VerticalLayoutGroup>();
-                        if (verticalLayoutGroup == null)
-                        {
-                            verticalLayoutGroup = textParent.gameObject.AddComponent<VerticalLayoutGroup>();
-                            verticalLayoutGroup.spacing = 2f;
-                            verticalLayoutGroup.padding = new RectOffset(0, 0, 0, 0);
-                            verticalLayoutGroup.childControlWidth = false;
-                            verticalLayoutGroup.childControlHeight = false;
-                            verticalLayoutGroup.childForceExpandWidth = false;
-                            verticalLayoutGroup.childForceExpandHeight = false;
-                            verticalLayoutGroup.childAlignment = TextAnchor.MiddleLeft;
-                            
-                            GameLogger.LogInfo("[SkillCardTooltip] 텍스트 컨테이너에 VerticalLayoutGroup 추가됨", GameLogger.LogCategory.UI);
-                        }
-                    }
-                }
-            }
-        }
 
         /// <summary>
         /// 카드 헤더를 업데이트합니다. (아이콘 + 이름 + 타입)
+        /// 프리팹 구조를 존중하며 텍스트와 이미지만 업데이트합니다.
         /// </summary>
         /// <param name="definition">카드 정의</param>
         private void UpdateCardHeader(SkillCardDefinition definition)
         {
-            // 카드 헤더 레이아웃 설정 (가로 배치)
-            SetupCardHeaderLayout();
-
             // 카드 아이콘 설정
             if (cardIconImage != null)
             {
@@ -709,8 +551,8 @@ namespace Game.SkillCardSystem.UI
             // 카드 이름
             if (cardNameText != null)
             {
-                string displayName = !string.IsNullOrEmpty(definition.displayNameKO) 
-                    ? definition.displayNameKO 
+                string displayName = !string.IsNullOrEmpty(definition.displayNameKO)
+                    ? definition.displayNameKO
                     : definition.displayName;
                 cardNameText.text = displayName;
             }
@@ -784,6 +626,10 @@ namespace Game.SkillCardSystem.UI
                     descriptionText.gameObject.SetActive(false);
                 }
             }
+            else
+            {
+                GameLogger.LogWarning("[SkillCardTooltip] descriptionText가 프리팹에 할당되지 않았습니다", GameLogger.LogCategory.UI);
+            }
         }
 
         /// <summary>
@@ -835,7 +681,17 @@ namespace Game.SkillCardSystem.UI
         /// <param name="definition">카드 정의</param>
         private void UpdateEffectsInfo(SkillCardDefinition definition)
         {
-            if (effectsContainer == null || effectItemPrefab == null) return;
+            if (effectsContainer == null)
+            {
+                GameLogger.LogWarning("[SkillCardTooltip] effectsContainer가 프리팹에 할당되지 않았습니다", GameLogger.LogCategory.UI);
+                return;
+            }
+
+            if (effectItemPrefab == null)
+            {
+                GameLogger.LogWarning("[SkillCardTooltip] effectItemPrefab이 프리팹에 할당되지 않았습니다", GameLogger.LogCategory.UI);
+                return;
+            }
 
             // 기존 효과 아이템들 제거
             foreach (Transform child in effectsContainer)
@@ -1073,57 +929,70 @@ namespace Game.SkillCardSystem.UI
             var canvasRect = parentCanvas.GetComponent<RectTransform>().rect;
             var tooltipRect = rectTransform.rect;
 
-            // 툴팁의 실제 크기 계산
-            float tooltipWidth = tooltipRect.width;
-            float tooltipHeight = tooltipRect.height;
+            // 툴팁의 실제 크기 (프리팹 크기: 600x600)
+            float tooltipWidth = Mathf.Abs(tooltipRect.width);
+            float tooltipHeight = Mathf.Abs(tooltipRect.height);
 
-            // 스킬카드 크기 (일반적인 카드 크기 가정)
-            float cardWidth = 120f; // 실제 카드 크기에 맞게 조정 필요
+            // 툴팁의 Pivot 고려 (프리팹 기본값: 0.5, 0.5)
+            Vector2 tooltipPivot = rectTransform.pivot;
 
-            // 화면 경계에서의 여유 공간 계산
-            float rightSpace = canvasRect.width - cardLocalPoint.x;
-            float leftSpace = cardLocalPoint.x;
-            float topSpace = canvasRect.height - cardLocalPoint.y;
-            float bottomSpace = cardLocalPoint.y;
+            // 스킬카드 크기 (실제 카드 크기, 기본값 150)
+            float cardWidth = 150f;
 
-            // 툴팁을 오른쪽에 표시할 수 있는지 확인
-            bool canShowRight = rightSpace >= tooltipWidth + mouseOffsetX;
-            // 툴팁을 왼쪽에 표시할 수 있는지 확인
-            bool canShowLeft = leftSpace >= tooltipWidth + mouseOffsetX;
+            // 캔버스의 실제 경계 (Canvas 중앙이 0,0인 좌표계)
+            float canvasLeft = canvasRect.xMin;
+            float canvasRight = canvasRect.xMax;
+            float canvasTop = canvasRect.yMax;
+            float canvasBottom = canvasRect.yMin;
+
+            // 카드 위치 기준 여유 공간 계산
+            float rightSpace = canvasRight - (cardLocalPoint.x + cardWidth * 0.5f);
+            float leftSpace = (cardLocalPoint.x - cardWidth * 0.5f) - canvasLeft;
+
+            // 툴팁이 들어갈 공간이 있는지 확인
+            float tooltipRequiredWidth = tooltipWidth * (1f - tooltipPivot.x) + mouseOffsetX;
+            bool canShowRight = rightSpace >= tooltipRequiredWidth;
+            bool canShowLeft = leftSpace >= tooltipRequiredWidth;
 
             Vector2 tooltipPosition = cardLocalPoint;
 
-            // 수평 위치 결정 (오른쪽 우선, 공간이 부족하면 왼쪽)
+            // 수평 위치 결정 (오른쪽 우선)
             if (canShowRight)
             {
-                // 스킬카드 오른쪽에 배치
-                tooltipPosition.x = cardLocalPoint.x + cardWidth * 0.5f + tooltipWidth * 0.5f + mouseOffsetX;
+                // 카드 오른쪽 끝 + 오프셋 + 툴팁 왼쪽 끝까지 거리
+                tooltipPosition.x = cardLocalPoint.x + (cardWidth * 0.5f) + mouseOffsetX + (tooltipWidth * tooltipPivot.x);
+                GameLogger.LogInfo($"[SkillCardTooltip] 툴팁을 카드 오른쪽에 배치", GameLogger.LogCategory.UI);
             }
             else if (canShowLeft)
             {
-                // 스킬카드 왼쪽에 배치
-                tooltipPosition.x = cardLocalPoint.x - cardWidth * 0.5f - tooltipWidth * 0.5f - mouseOffsetX;
+                // 카드 왼쪽 끝 - 오프셋 - 툴팁 오른쪽 끝까지 거리
+                tooltipPosition.x = cardLocalPoint.x - (cardWidth * 0.5f) - mouseOffsetX - (tooltipWidth * (1f - tooltipPivot.x));
+                GameLogger.LogInfo($"[SkillCardTooltip] 툴팁을 카드 왼쪽에 배치", GameLogger.LogCategory.UI);
             }
             else
             {
-                // 양쪽 모두 공간이 부족하면 화면 중앙에 배치
-                tooltipPosition.x = canvasRect.width * 0.5f;
+                // 공간 부족 시 카드와 겹쳐서 오른쪽에 배치
+                tooltipPosition.x = cardLocalPoint.x + cardWidth * 0.5f + 10f;
+                GameLogger.LogWarning($"[SkillCardTooltip] 공간 부족으로 카드와 겹쳐서 배치", GameLogger.LogCategory.UI);
             }
 
-            // 수직 위치는 스킬카드와 같은 높이로 맞춤
+            // 수직 위치는 카드 중심과 맞춤
             tooltipPosition.y = cardLocalPoint.y;
 
-            // 수직 위치가 화면을 벗어나면 조정
-            if (tooltipPosition.y + tooltipHeight * 0.5f > canvasRect.height)
+            // 수직 경계 체크 및 조정
+            float tooltipTop = tooltipPosition.y + tooltipHeight * (1f - tooltipPivot.y);
+            float tooltipBottom = tooltipPosition.y - tooltipHeight * tooltipPivot.y;
+
+            if (tooltipTop > canvasTop)
             {
-                tooltipPosition.y = canvasRect.height - tooltipHeight * 0.5f;
+                tooltipPosition.y = canvasTop - tooltipHeight * (1f - tooltipPivot.y);
             }
-            else if (tooltipPosition.y - tooltipHeight * 0.5f < 0)
+            else if (tooltipBottom < canvasBottom)
             {
-                tooltipPosition.y = tooltipHeight * 0.5f;
+                tooltipPosition.y = canvasBottom + tooltipHeight * tooltipPivot.y;
             }
 
-            GameLogger.LogInfo($"[SkillCardTooltip] 카드 기준 위치 계산 - 카드: {cardLocalPoint}, 툴팁 크기: {tooltipWidth}x{tooltipHeight}, 최종 위치: {tooltipPosition}", GameLogger.LogCategory.UI);
+            GameLogger.LogInfo($"[SkillCardTooltip] 위치 계산 완료 - 카드: {cardLocalPoint}, 툴팁: {tooltipPosition}, 크기: {tooltipWidth}x{tooltipHeight}", GameLogger.LogCategory.UI);
 
             return tooltipPosition;
         }

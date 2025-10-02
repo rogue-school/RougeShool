@@ -17,3 +17,4 @@ MonoBehaviour:
   effectIcon: {fileID: 0}
   baseHealAmount: 5
   maxHealAmount: 0
+  visualEffectPrefab: {fileID: 1730494339451064891, guid: 1a23dbabcd192db4e8db74db74b88d61, type: 3}

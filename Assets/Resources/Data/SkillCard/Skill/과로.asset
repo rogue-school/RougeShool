@@ -19,13 +19,14 @@ MonoBehaviour:
   artwork: {fileID: -5535041633674418719, guid: 6b7cfb3f6475faa46a756fb4199d49cf, type: 3}
   presentation:
     sfxClip: {fileID: 0}
-    visualEffectPrefab: {fileID: 0}
+    visualEffectPrefab: {fileID: 1483328599454796084, guid: 127df09e106e94744bbe0c65c1395868, type: 3}
   configuration:
     hasDamage: 1
     damageConfig:
       baseDamage: 1
       hits: 1
       ignoreGuard: 0
+      ignoreCounter: 0
     hasEffects: 1
     effects:
     - effectSO: {fileID: 11400000, guid: ddafea304eb1e3d41b6c440b606b01f4, type: 2}
@@ -34,10 +35,12 @@ MonoBehaviour:
         damageAmount: 0
         damageHits: 1
         ignoreGuard: 0
+        ignoreCounter: 0
         bleedAmount: 0
         bleedDuration: 0
         counterDuration: 1
         guardDuration: 1
+        stunDuration: 1
         healAmount: 0
         drawCount: 0
         resourceDelta: 0

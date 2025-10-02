@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cards:
   - definition: {fileID: 11400000, guid: 2496493c25382484c9ef8f7f971ceac7, type: 2}
-    probability: 0.4
+    probability: 0.1
   - definition: {fileID: 11400000, guid: ea654114ed62db6418dd8378272169d2, type: 2}
-    probability: 0.1
+    probability: 0.9
   - definition: {fileID: 11400000, guid: 9565892daf720e84f884f043cad1b85a, type: 2}
-    probability: 0.4
+    probability: 0.05
   - definition: {fileID: 11400000, guid: 485938abdf62a64419a0efb58b0517a3, type: 2}
-    probability: 0.1
+    probability: 0.05

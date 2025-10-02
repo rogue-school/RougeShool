@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: "\uB9E4\uC9C1\uBBF8\uC0AC\uC77C"
   m_EditorClassIdentifier: 
   cardId: "\uB9E4\uC9C1\uBBF8\uC0AC\uC77C"
-  displayName: "\uB9E4\uC9C0\uBBF8\uC0AC\uC77C"
+  displayName: "\uB9E4\uC9C1\uBBF8\uC0AC\uC77C"
   displayNameKO: 
   description: 
   artwork: {fileID: -1680108082211704276, guid: 895e0b405b3d20a4182ef539798c62e9, type: 3}
@@ -26,6 +26,7 @@ MonoBehaviour:
       baseDamage: 3
       hits: 1
       ignoreGuard: 0
+      ignoreCounter: 0
     hasEffects: 0
     effects: []
     ownerPolicy: 0

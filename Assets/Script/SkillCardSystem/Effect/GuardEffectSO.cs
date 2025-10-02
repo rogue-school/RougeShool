@@ -12,6 +12,9 @@ namespace Game.SkillCardSystem.Effect
     [CreateAssetMenu(fileName = "GuardEffect", menuName = "SkillEffects/GuardEffect")]
     public class GuardEffectSO : SkillCardEffectSO
     {
+        [Header("비주얼 이펙트")]
+        [Tooltip("가드 사용 시 시전자 위치에 표시할 비주얼 이펙트 프리팹")]
+        [SerializeField] private GameObject visualEffectPrefab;
         /// <summary>
         /// 이펙트 실행 커맨드를 생성합니다. 
         /// 단순한 가드 상태 부여 커맨드를 반환합니다.
@@ -19,7 +22,7 @@ namespace Game.SkillCardSystem.Effect
         /// <param name="power">커맨드에 사용될 수치 (무시됨)</param>
         public override ICardEffectCommand CreateEffectCommand(int power)
         {
-            return new GuardEffectCommand();
+            return new GuardEffectCommand(1, visualEffectPrefab);
         }
 
         /// <summary>
