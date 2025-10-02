@@ -9,10 +9,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 64380f296141239479933a21b43232d2, type: 3}
-  m_Name: StunEffect
+  m_Script: {fileID: 11500000, guid: 71c2981000762b44782f8774c28b8d06, type: 3}
+  m_Name: "\uACFC\uC81C\uC8FC\uAE30"
   m_EditorClassIdentifier: 
   effectName: 
   description: 
-  effectIcon: {fileID: -1680108082211704276, guid: 895e0b405b3d20a4182ef539798c62e9, type: 3}
-  duration: 1
+  effectIcon: {fileID: 7832670618722326518, guid: bf089c220952e544e9926814b11b4de6, type: 3}
+  bleedAmount: 0
+  duration: 0
+  legacyIcon: {fileID: 0}

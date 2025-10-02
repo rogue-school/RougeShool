@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 861458062e34fcd4685dff11b945e1b9, type: 3}
-  m_Name: ENEMY_002_Slime
+  m_Name: "\uBE44\uC624\uB124"
   m_EditorClassIdentifier: 
-  <DisplayName>k__BackingField: 
-  <MaxHP>k__BackingField: 32
-  <Portrait>k__BackingField: {fileID: -1883461940335079187, guid: 38f2b0a7d468c03478fdf15e6da37b58, type: 3}
+  <DisplayName>k__BackingField: "\uBE44\uC694\uB124"
+  <MaxHP>k__BackingField: 23
+  <Portrait>k__BackingField: {fileID: -3497099482240395334, guid: fe52cdc804695d34f8bea3b0cc12b56f, type: 3}
   <Prefab>k__BackingField: {fileID: 7769799778275336730, guid: 2c6e844c91775424681f573a6951211e, type: 3}
-  <EnemyDeck>k__BackingField: {fileID: 11400000, guid: 5ae3f55aa1bd8fe47bd08c32133073da, type: 2}
+  <EnemyDeck>k__BackingField: {fileID: 11400000, guid: a5cd4db6d0443454b978aeee07e80ec0, type: 2}
   <PassiveEffects>k__BackingField: []
-  <EnemyBGM>k__BackingField: {fileID: 8300000, guid: 61c9c9fa7b46ec2488e45fc6d8994156, type: 3}
+  <EnemyBGM>k__BackingField: {fileID: 8300000, guid: 490835071371f334da6efc1e3a1518fc, type: 3}

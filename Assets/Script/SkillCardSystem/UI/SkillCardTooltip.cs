@@ -437,6 +437,7 @@ namespace Game.SkillCardSystem.UI
                 {
                     // 배경 색상 설정 (어두운 반투명) - 프리팹 이미지에 틴트 적용
                     backgroundImage.color = new Color(0.1f, 0.1f, 0.1f, 0.95f);
+                    backgroundImage.gameObject.SetActive(true); // 활성화 확인
                     GameLogger.LogInfo("[SkillCardTooltip] 프리팹 배경 이미지 사용", GameLogger.LogCategory.UI);
                 }
                 else
@@ -444,6 +445,7 @@ namespace Game.SkillCardSystem.UI
                     // 프리팹에 스프라이트가 없으면 기본 이미지 생성
                     CreateDefaultBackgroundSprite();
                     backgroundImage.color = new Color(0.1f, 0.1f, 0.1f, 0.95f);
+                    backgroundImage.gameObject.SetActive(true);
                     GameLogger.LogInfo("[SkillCardTooltip] 기본 배경 이미지 생성", GameLogger.LogCategory.UI);
                 }
             }
@@ -451,6 +453,9 @@ namespace Game.SkillCardSystem.UI
             // 보더 이미지 설정
             if (borderImage != null)
             {
+                // 보더 활성화 (프리팹에서 비활성화되어 있을 수 있음)
+                borderImage.gameObject.SetActive(true);
+
                 // 프리팹에 스프라이트가 있으면 그대로 사용
                 if (borderImage.sprite != null)
                 {
