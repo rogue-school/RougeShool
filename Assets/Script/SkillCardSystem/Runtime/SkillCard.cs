@@ -14,7 +14,6 @@ using Game.CharacterSystem.Interface;
 using Game.CoreSystem.Interface;
 using Zenject;
 using Game.CharacterSystem.Core;
-using Game.SkillCardSystem.Effect;
 
 namespace Game.SkillCardSystem.Runtime
 {
@@ -251,10 +250,6 @@ namespace Game.SkillCardSystem.Runtime
         public string GetCardName() => definition?.displayName ?? "[Unnamed Card]";
         public string GetDescription() => definition?.description ?? "[No Description]";
         public Sprite GetArtwork() => definition?.artwork;
-        public int GetCoolTime() => 0; // 쿨타임 제거됨
-        public int GetMaxCoolTime() => 0;
-        public int GetCurrentCoolTime() => 0;
-        public void SetCurrentCoolTime(int value) { } // 쿨타임 제거됨
         
         public int GetEffectPower(SkillCardEffectSO effect)
         {

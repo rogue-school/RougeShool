@@ -2,7 +2,7 @@ namespace Game.SkillCardSystem.Interface
 {
     /// <summary>
     /// 스킬 카드 UI를 제어하는 인터페이스입니다.
-    /// 카드와 연결하고, 쿨타임 등 시각적 정보를 갱신합니다.
+    /// 카드와 연결하고 시각적 정보를 갱신합니다.
     /// </summary>
     public interface ISkillCardUI
     {

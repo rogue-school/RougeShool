@@ -10,8 +10,7 @@ namespace Game.SkillCardSystem.Validator
     /// 기본 스킬 카드 실행 유효성 검사기입니다.
     /// - 카드가 존재하는지
     /// - 실행 컨텍스트가 유효한지
-    /// - 대상이 생존해 있는지
-    /// - 쿨타임이 완료되었는지 확인합니다.
+    /// - 대상이 생존해 있는지 확인합니다.
     /// </summary>
     public class DefaultCardExecutionValidator : ICardValidator
     {

@@ -7,6 +7,7 @@ using Game.CoreSystem.Audio;
 using Game.CoreSystem.Save;
 using Game.CombatSystem.Utility;
 using Game.CombatSystem.Interface;
+using Game.SkillCardSystem.Manager;
 using System.Linq;
 using System.Collections.Generic;
 
@@ -26,6 +27,7 @@ namespace Game.CoreSystem
         [SerializeField] private SaveManager saveManager;
         [SerializeField] private CoroutineRunner coroutineRunner;
         [SerializeField] private PlayerCharacterSelectionManager playerCharacterSelectionManager;
+        [SerializeField] private SkillCardTooltipManager skillCardTooltipManager;
 
         [Header("DI 최적화 설정")]
 #pragma warning disable CS0414 // 사용하지 않는 필드 경고 억제 (향후 사용 예정)
@@ -67,7 +69,8 @@ namespace Game.CoreSystem
                 (gameStateManager, "GameStateManager", typeof(IGameStateManager)),
                 (audioManager, "AudioManager", typeof(IAudioManager)),
                 (saveManager, "SaveManager", typeof(ISaveManager)),
-                (playerCharacterSelectionManager, "PlayerCharacterSelectionManager", typeof(IPlayerCharacterSelectionManager))
+                (playerCharacterSelectionManager, "PlayerCharacterSelectionManager", typeof(IPlayerCharacterSelectionManager)),
+                (skillCardTooltipManager, "SkillCardTooltipManager", null)
             };
 
             foreach (var (instance, name, interfaceType) in managers)
@@ -152,7 +155,8 @@ namespace Game.CoreSystem
                 typeof(GameStateManager),
                 typeof(AudioManager),
                 typeof(SaveManager),
-                typeof(PlayerCharacterSelectionManager)
+                typeof(PlayerCharacterSelectionManager),
+                typeof(SkillCardTooltipManager)
             };
             
             // 아직 바인딩되지 않은 ICoreSystemInitializable 컴포넌트만 바인딩

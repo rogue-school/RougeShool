@@ -68,11 +68,6 @@ namespace Game.SaveSystem.Data
         public bool isUsed;
 
         /// <summary>
-        /// 쿨다운 시간
-        /// </summary>
-        public int coolDownTime;
-
-        /// <summary>
         /// 카드가 활성화되어 있는지 여부
         /// </summary>
         public bool isActive;
@@ -95,7 +90,6 @@ namespace Game.SaveSystem.Data
             slotOwner = "";
             slotName = "";
             isUsed = false;
-            coolDownTime = 0;
             isActive = true;
         }
 
@@ -118,7 +112,6 @@ namespace Game.SaveSystem.Data
             slotOwner = "";
             slotName = "";
             isUsed = false;
-            coolDownTime = 0;
             isActive = true;
         }
 

@@ -115,24 +115,5 @@ namespace Game.SkillCardSystem.Interface
         ICharacter GetTarget(ICardExecutionContext context);
 
         #endregion
-
-        #region 쿨타임
-
-        /// <summary>
-        /// 카드의 최대 쿨타임을 반환합니다.
-        /// </summary>
-        int GetMaxCoolTime();
-
-        /// <summary>
-        /// 카드의 현재 쿨타임을 반환합니다.
-        /// </summary>
-        int GetCurrentCoolTime();
-
-        /// <summary>
-        /// 현재 쿨타임 값을 설정합니다.
-        /// </summary>
-        void SetCurrentCoolTime(int value);
-
-        #endregion
     }
 }

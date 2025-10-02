@@ -318,8 +318,6 @@ if (registry.TryGet("fireball", out SkillCardDefinition fireballDef))
 // PlayerSkillCardRuntime을 통한 카드 실행
 PlayerSkillCardRuntime playerCard = new PlayerSkillCardRuntime(cardData, effects);
 playerCard.ExecuteSkill(sourceCharacter, targetCharacter);
-playerCard.StartCooldown();
-playerCard.ReduceCooldown();
 ```
 
 ## 📊 주요 클래스 및 메서드
@@ -356,15 +354,10 @@ playerCard.ReduceCooldown();
 ### PlayerSkillCardRuntime 클래스
 - **ExecuteSkill(ICharacter source, ICharacter target)**: 소스와 타겟으로 카드 실행
 - **ExecuteCardAutomatically(ICardExecutionContext context)**: 컨텍스트 기반 자동 실행
-- **StartCooldown()**: 쿨타임 시작
-- **ReduceCooldown()**: 쿨타임 감소
 - **SetHandSlot(SkillCardSlotPosition slot)**: 핸드 슬롯 설정
 - **GetHandSlot()**: 핸드 슬롯 조회
 - **SetCombatSlot(CombatSlotPosition slot)**: 전투 슬롯 설정
 - **GetCombatSlot()**: 전투 슬롯 조회
-- **GetMaxCoolTime()**: 최대 쿨타임 조회
-- **GetCurrentCoolTime()**: 현재 쿨타임 조회
-- **SetCurrentCoolTime(int value)**: 현재 쿨타임 설정
 
 ### 데이터 클래스
 - **SkillCardDefinition**: 통합 카드 정의 ScriptableObject (cardId, displayName, description, artwork, presentation, configuration)

@@ -64,6 +64,12 @@ namespace Game.CombatSystem.DragDrop
         /// </summary>
 		public void OnBeginDrag(PointerEventData eventData)
         {
+            // 좌클릭만 허용 (우클릭은 툴팁 고정용)
+            if (eventData.button != PointerEventData.InputButton.Left)
+            {
+                return;
+            }
+
             if (!CanDrag()) return;
 
             OriginalWorldPosition = transform.position;
@@ -75,6 +81,13 @@ namespace Game.CombatSystem.DragDrop
 
             transform.SetParent(canvas.transform, true);
             
+            // SkillCardUI에 드래그 시작 알림
+            var skillCardUI = GetComponent<SkillCardUI>();
+            if (skillCardUI != null)
+            {
+                skillCardUI.OnDragStart();
+            }
+            
             // 드래그 시작 애니메이션 호출
             PlayDragStartAnimation();
         }
@@ -84,6 +97,12 @@ namespace Game.CombatSystem.DragDrop
         /// </summary>
 		public void OnDrag(PointerEventData eventData)
         {
+            // 좌클릭만 허용
+            if (eventData.button != PointerEventData.InputButton.Left)
+            {
+                return;
+            }
+
             if (!CanDrag()) return;
 
 			if (RectTransformUtility.ScreenPointToWorldPointInRectangle(
@@ -103,6 +122,12 @@ namespace Game.CombatSystem.DragDrop
         /// </summary>
         public void OnEndDrag(PointerEventData eventData)
         {
+            // 좌클릭만 허용
+            if (eventData.button != PointerEventData.InputButton.Left)
+            {
+                return;
+            }
+
             if (!CanDrag())
             {
                 ResetToOrigin(GetComponent<SkillCardUI>());
@@ -124,10 +149,17 @@ namespace Game.CombatSystem.DragDrop
 
             bool dropFailed = !droppedSuccessfully || !validDropTargetFound;
             
+            // SkillCardUI에 드래그 종료 알림 (성공/실패 관계없이)
+            var skillCardUI = GetComponent<SkillCardUI>();
+            if (skillCardUI != null)
+            {
+                skillCardUI.OnDragEnd();
+            }
+            
             if (dropFailed)
             {
                 // 드롭 실패 시 원래 자리로 돌아가는 애니메이션 실행
-                ResetToOrigin(GetComponent<SkillCardUI>());
+                ResetToOrigin(skillCardUI);
                 // 상호작용 복원은 PlayDropFailAnimation에서 처리됨
             }
             else

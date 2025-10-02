@@ -14,7 +14,7 @@ namespace Game.SkillCardSystem.Runtime
 {
     /// <summary>
     /// 런타임에서 실행되는 적 전용 스킬 카드 클래스입니다.
-    /// 카드 데이터, 이펙트 목록, 쿨타임 및 슬롯 정보를 포함하며,
+    /// 카드 데이터, 이펙트 목록 및 슬롯 정보를 포함하며,
     /// 카드 실행 시 ICardExecutionContext를 통해 동작합니다.
     /// </summary>
     public class EnemySkillCardRuntime : ISkillCard
@@ -27,8 +27,6 @@ namespace Game.SkillCardSystem.Runtime
 
         private SkillCardSlotPosition? handSlot;
         private CombatSlotPosition? combatSlot;
-
-        private int currentCoolTime = 0;
 
         /// <summary>
         /// 생성자: 카드 정의를 주입받아 초기화합니다.
@@ -46,7 +44,6 @@ namespace Game.SkillCardSystem.Runtime
         public string GetCardName() => CardDefinition?.displayName ?? "[Unnamed Enemy Card]";
         public string GetDescription() => CardDefinition?.description ?? "[No Description]";
         public Sprite GetArtwork() => CardDefinition?.artwork;
-        public int GetCoolTime() => 0; // 쿨타임 제거됨
         public int GetEffectPower(SkillCardEffectSO effect) => CardDefinition?.configuration.hasDamage == true ? CardDefinition.configuration.damageConfig.baseDamage : 0;
         public List<SkillCardEffectSO> CreateEffects() => new List<SkillCardEffectSO>(effects);
 
@@ -62,14 +59,6 @@ namespace Game.SkillCardSystem.Runtime
 
         public void SetCombatSlot(CombatSlotPosition slot) => combatSlot = slot;
         public CombatSlotPosition? GetCombatSlot() => combatSlot;
-
-        #endregion
-
-        #region 쿨타임 관리
-
-        public int GetMaxCoolTime() => 0; // 쿨타임 제거됨
-        public int GetCurrentCoolTime() => currentCoolTime;
-        public void SetCurrentCoolTime(int value) => currentCoolTime = Mathf.Max(0, value);
 
         #endregion
 
@@ -119,8 +108,6 @@ namespace Game.SkillCardSystem.Runtime
                     Debug.LogWarning($"[EnemySkillCardRuntime] {GetCardName()} - 효과 명령 생성 실패: {effect?.name}");
                 }
             }
-
-            SetCurrentCoolTime(GetMaxCoolTime()); // 쿨타임 리셋
         }
 
         #endregion

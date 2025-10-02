@@ -67,9 +67,7 @@ namespace Game.CombatSystem.Service
                 return false;
             }
 
-            // 3. 쿨타임 검사는 기획상 사용하지 않음 (항상 통과)
-
-            // 4. 드롭 유효성 검사 (새로운 아키텍처에서는 단순화)
+            // 3. 드롭 유효성 검사 (새로운 아키텍처에서는 단순화)
             if (!CanDropCard(card, slot))
             {
                 message = "카드 드롭 조건을 만족하지 않습니다.";
@@ -77,7 +75,7 @@ namespace Game.CombatSystem.Service
                 return false;
             }
 
-            // 5. 슬롯에 카드 배치 및 UI 스냅
+            // 4. 슬롯에 카드 배치 및 UI 스냅
             GameLogger.LogInfo($"[CardDropService] 카드 드롭 성공: {card.CardDefinition?.CardName ?? "Unknown"}", GameLogger.LogCategory.SkillCard);
 
             var combatSlot = slot as ICombatCardSlot;
