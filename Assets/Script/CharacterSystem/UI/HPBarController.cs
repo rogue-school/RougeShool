@@ -4,6 +4,7 @@ using TMPro;
 using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Interface;
 using Game.CoreSystem.Utility;
+using DG.Tweening;
 
 namespace Game.CharacterSystem.UI
 {
@@ -73,15 +74,15 @@ namespace Game.CharacterSystem.UI
 
         private ICharacter targetCharacter;
         private float targetFillAmount;
-        private bool isAnimating = false;
         private Color originalGlowColor;
         private Color originalBorderColor;
 
-        // 이벤트 구독 여부
         private bool isSubscribed = false;
-        
-        // 버프/디버프 아이콘 관리
+
         private System.Collections.Generic.Dictionary<string, GameObject> activeBuffDebuffIcons = new();
+
+        private Tween hpBarTween;
+        private Tween glowTween;
 
         #endregion
 
@@ -102,29 +103,14 @@ namespace Game.CharacterSystem.UI
         private void OnDisable()
         {
             Unsubscribe();
+            hpBarTween?.Kill();
+            glowTween?.Kill();
         }
 
-        private void Update()
+        private void OnDestroy()
         {
-            // HP 바 애니메이션 처리
-            if (isAnimating && hpBarFill != null)
-            {
-                hpBarFill.fillAmount = Mathf.Lerp(hpBarFill.fillAmount, targetFillAmount, 
-                    animationSpeed * Time.deltaTime);
-                
-                // 애니메이션 완료 체크
-                if (Mathf.Abs(hpBarFill.fillAmount - targetFillAmount) < 0.01f)
-                {
-                    hpBarFill.fillAmount = targetFillAmount;
-                    isAnimating = false;
-                }
-            }
-            
-            // 글로우 효과 애니메이션
-            if (enableGlowEffect && hpBarGlow != null)
-            {
-                UpdateGlowEffect();
-            }
+            hpBarTween?.Kill();
+            glowTween?.Kill();
         }
 
         #endregion
@@ -148,6 +134,7 @@ namespace Game.CharacterSystem.UI
 
             Subscribe();
             UpdateHPBar();
+            StartGlowEffect();
         }
 
         /// <summary>
@@ -189,14 +176,15 @@ namespace Game.CharacterSystem.UI
             if (maxHP <= 0) return;
 
             float hpRatio = (float)currentHP / maxHP;
-            
-            // HP 바 채움 비율 설정 (애니메이션과 함께)
-            targetFillAmount = hpRatio;
-            isAnimating = true;
 
-            // HP 비율에 따른 색상 변화
+            targetFillAmount = hpRatio;
+
             Color targetColor = GetHealthColor(hpRatio);
             hpBarFill.color = targetColor;
+
+            hpBarTween?.Kill();
+            hpBarTween = hpBarFill.DOFillAmount(hpRatio, 1f / animationSpeed)
+                .SetEase(Ease.OutQuad);
             
             // 시각적 효과 업데이트
             UpdateVisualEffects(hpRatio, targetColor);
@@ -309,17 +297,28 @@ namespace Game.CharacterSystem.UI
         }
 
         /// <summary>
-        /// 글로우 효과를 애니메이션합니다.
+        /// 글로우 효과를 시작합니다.
         /// </summary>
-        private void UpdateGlowEffect()
+        private void StartGlowEffect()
         {
-            if (hpBarGlow == null) return;
-            
-            // 부드러운 글로우 펄스 효과
-            float pulse = Mathf.Sin(Time.time * 2f) * 0.1f + 0.9f;
+            if (!enableGlowEffect || hpBarGlow == null) return;
+
+            glowTween?.Kill();
+
             Color currentGlowColor = hpBarGlow.color;
-            currentGlowColor.a = glowColor.a * pulse * glowIntensity;
-            hpBarGlow.color = currentGlowColor;
+            float baseAlpha = glowColor.a * glowIntensity;
+
+            glowTween = DOTween.Sequence()
+                .Append(DOTween.To(() => currentGlowColor.a, x => {
+                    currentGlowColor.a = x;
+                    hpBarGlow.color = currentGlowColor;
+                }, baseAlpha * 0.8f, 1f))
+                .Append(DOTween.To(() => currentGlowColor.a, x => {
+                    currentGlowColor.a = x;
+                    hpBarGlow.color = currentGlowColor;
+                }, baseAlpha * 1.2f, 1f))
+                .SetLoops(-1, LoopType.Yoyo)
+                .SetEase(Ease.InOutSine);
         }
 
         #endregion
@@ -348,10 +347,9 @@ namespace Game.CharacterSystem.UI
 
             float hpRatio = (float)currentHP / maxHP;
             
-            // 즉시 업데이트 (애니메이션 없이)
+            hpBarTween?.Kill();
             hpBarFill.fillAmount = hpRatio;
             targetFillAmount = hpRatio;
-            isAnimating = false;
 
             // 색상 업데이트
             Color healthColor = GetHealthColor(hpRatio);

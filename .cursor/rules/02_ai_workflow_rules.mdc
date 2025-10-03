@@ -1,168 +1,159 @@
 ---
 alwaysApply: true
-description: "AI-사용자 협업을 위한 코드 생성 워크플로우. 기존 코드 분석, 코드 재사용, 품질 검증 과정을 포함합니다."
+description: "AI code generation workflow: existing code analysis, reusability evaluation, quality verification"
 ---
-# RougeShool 워크플로우 규칙 (Workflow Rules)
 
-> 목적: 코드를 생성할 때 따라야 할 구체적인 워크플로우와 품질 검증 절차를 정의.
+# RougeShool AI Workflow Rules
 
-## 🔄 필수 작업 워크플로우
+## 🔄 Required Workflow
 
-### 1. 코드 생성 전 필수 단계
-```markdown
-🚨 절대 건너뛰기 금지: 기존 코드 검토 없이 새 코드 생성
+### Step 1: Code Analysis (NEVER SKIP)
+```
+🚨 FORBIDDEN: Generate new code without reviewing existing code
+✅ REQUIRED: Complete existing code review before generation
 
-단계 1: 기존 코드 검색 및 분석
-├── codebase_search로 유사 기능 광역 검색
-├── grep으로 정확한 매칭 확인
-└── read_file로 기존 코드 상세 분석
-
-단계 2: 코드 재사용 가능성 평가
-├── 기존 클래스, 메서드, 패턴 식별
-├── 재사용 가능한 코드 활용 방안 도출
-└── 최적의 재사용 전략 결정
-
-단계 3: 충돌 예측 및 방지
-├── 네이밍, 인터페이스, 의존성 충돌 검사
-├── 기존 코드와의 일관성 확인
-└── 충돌 방지 방안 수립
+Workflow:
+1. codebase_search → Find similar functionality
+2. grep → Verify exact matches
+3. read_file → Analyze existing code in detail
+4. Evaluate reuse strategy
+5. Only create new code if absolutely necessary
 ```
 
-### 2. 코드 생성 중 필수 사항
-```markdown
-✅ 필수 구현 사항:
-├── 예외 처리 (null 체크, 유효성 검증)
-├── 한국어 로깅 (GameLogger 사용)
-├── XML 문서화 (public API)
-├── 기존 코드와의 일관성 유지
-└── 프로젝트 아키텍처 패턴 준수
+### Step 2: During Code Generation
+```
+✅ Required Implementation:
+├── Exception handling (null checks, validation)
+├── Korean logging (GameLogger)
+├── XML documentation (public APIs)
+├── Consistency with existing code
+└── Follow project architecture patterns
 ```
 
-### 3. 코드 생성 후 필수 검증
-```markdown
-🔍 품질 검증 체크리스트:
-├── read_lints로 컴파일 경고/오류 0 확인
-├── 기존 코드와의 일관성 확인
-├── 예외 처리 구현 확인
-├── 한국어 로깅 구현 확인
-└── XML 문서화 완료 확인
+### Step 3: Post-Generation Verification
+```
+🔍 Quality Verification Checklist:
+├── read_lints → 0 warnings, 0 errors
+├── Consistency with existing code
+├── Exception handling implemented
+├── Korean logging implemented
+└── XML documentation complete
 ```
 
-## 🛠️ 도구 사용 규칙
+## 🛠️ Tool Usage Rules
 
-### 탐색 도구 사용 순서
-```markdown
-1. codebase_search (광역 탐색)
-   ├── 의미 기반 코드 검색
-   ├── 유사 기능 찾기
-   └── 관련 시스템 파악
+### Search Tools (Ordered)
+```
+1. codebase_search (broad search)
+   ├── Semantic code search
+   ├── Find similar functionality
+   └── Identify related systems
 
-2. grep (정확한 매칭)
-   ├── 정확한 심볼/문자열 검색
-   ├── 특정 패턴 찾기
-   └── 정확한 위치 확인
+2. grep (exact matching)
+   ├── Exact symbol/string search
+   ├── Find specific patterns
+   └── Verify exact locations
 
-3. read_file (상세 분석)
-   ├── 코드 컨텍스트 파악
-   ├── 구현 세부사항 확인
-   └── 의존성 관계 분석
+3. read_file (detailed analysis)
+   ├── Understand code context
+   ├── Check implementation details
+   └── Analyze dependencies
 ```
 
-### 편집 도구 사용 규칙
-```markdown
-소규모 편집: search_replace
-├── 단일 파일의 작은 변경
-├── 명확한 전후 맥락으로 최소 변경
-└── 정확한 위치에 코드 삽입/수정
+### Edit Tools
+```
+Small edits: search_replace
+├── Single file changes
+├── Minimal changes with clear context
+└── Precise code insertion/modification
 
-다중 편집: MultiEdit
-├── 여러 파일 동시 수정
-├── 관련된 여러 위치 수정
-└── 일관성 있는 변경 적용
+Multiple edits: MultiEdit
+├── Multiple files simultaneously
+├── Related changes across files
+└── Consistent changes applied
 ```
 
-### 병렬화 규칙
-```markdown
-독립 작업 병렬 실행:
-├── 독립 검색/읽기 작업 2건 이상
-├── 동시 실행으로 효율성 극대화
-└── 응답 시간 단축
+### Parallelization
+```
+Independent operations:
+├── 2+ independent search/read tasks
+├── Execute in parallel for efficiency
+└── Reduce response time
 ```
 
-## 📋 품질 검증 절차
+## 📋 Quality Verification
 
-### 컴파일 검증
-```markdown
-필수 확인 사항:
-├── 컴파일 경고 0
-├── 컴파일 오류 0
-├── 린터 경고 0
-└── 런타임 오류 0
+### Compilation Verification
+```
+Required checks:
+├── 0 compilation warnings
+├── 0 compilation errors
+├── 0 linter warnings
+└── 0 runtime errors
 ```
 
-### 코드 품질 검증
-```markdown
-필수 확인 사항:
-├── 예외 처리 구현 완료
-├── 한국어 로깅 구현 완료
-├── XML 문서화 완료
-├── 기존 코드와의 일관성 확인
-└── 프로젝트 아키텍처 패턴 준수
+### Code Quality Verification
+```
+Required checks:
+├── Exception handling complete
+├── Korean logging complete
+├── XML documentation complete
+├── Consistency with existing code
+└── Architecture patterns followed
 ```
 
-### 성능 검증
-```markdown
-권장 확인 사항:
-├── Update() 최소화
-├── 메모리 할당 최소화
-├── DOTween Pro 사용
-└── Zenject DI 활용
+### Performance Verification
+```
+Recommended checks:
+├── Minimize Update() usage
+├── Minimize memory allocation
+├── Use DOTween Pro
+└── Apply Zenject DI
 ```
 
-## 🚫 절대 금지사항
+## 🚫 Strict Prohibitions
 
-### 코드 생성 금지
-```markdown
-절대 생성하지 말 것:
-├── 예시 코드 (사용자 명시적 요청 시에만)
-├── 더미 데이터
-├── 중복 기능
-├── AnimationSystem 관련 코드
-├── 특정 게임 참조 주석 (예: "슬레이 더 스파이어 방식", "League of Legends 스타일")
-├── AI 생성 코드 언급 (예: "AI가 생성한", "AI 생성")
-└── 설명용 불완전한 코드
+### Code Generation Prohibitions
+```
+NEVER generate:
+├── Example code (only when explicitly requested)
+├── Dummy data
+├── Duplicate functionality
+├── AnimationSystem-related code
+├── Game-specific reference comments (e.g., "Slay the Spire style")
+├── AI-generated code mentions (e.g., "AI generated")
+├── Change notification comments (e.g., "수정됨", "FIXED", "ADDED", "Modified here")
+├── Explanatory comments for user (e.g., "이 부분을 수정했습니다", "성능 개선을 위해 변경")
+└── Incomplete explanatory code
 ```
 
-### 작업 순서 위반 금지
-```markdown
-절대 건너뛰지 말 것:
-├── 기존 코드 검토 단계
-├── 재사용 가능성 평가 단계
-├── 품질 검증 단계
-└── 컴파일 검증 단계
+### Workflow Violations
+```
+NEVER skip:
+├── Existing code review step
+├── Reusability evaluation step
+├── Quality verification step
+└── Compilation verification step
 ```
 
-## ✅ 성공 기준
+## ✅ Success Criteria
 
-### 코드 생성 성공 기준
-```markdown
-성공 조건:
-├── 기존 코드 재사용/확장 우선 적용
-├── 컴파일 경고/오류 0
-├── 예외 처리 완비
-├── 한국어 로깅 구현
-├── XML 문서화 완료
-└── 기존 코드와의 일관성 유지
+### Code Generation Success
+```
+Success conditions:
+├── Existing code reused/extended first
+├── 0 compilation warnings/errors
+├── Complete exception handling
+├── Korean logging implemented
+├── XML documentation complete
+└── Consistency with existing code maintained
 ```
 
-### 워크플로우 성공 기준
-```markdown
-성공 조건:
-├── 모든 필수 단계 완료
-├── 모든 필수 검증 통과
-├── 모든 금지사항 준수
-└── 모든 성공 기준 충족
+### Workflow Success
 ```
-
-## 📝 변경 기록
-- 2025-01-27 | Maintainer | 불필요한 주석 최소화 및 한글화 개선 | 문서
+Success conditions:
+├── All required steps completed
+├── All required verifications passed
+├── All prohibitions followed
+└── All success criteria met
+```

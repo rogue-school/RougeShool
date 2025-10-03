@@ -905,21 +905,20 @@ namespace Game.SkillCardSystem.UI
 
             // 스킬카드 위치를 캔버스 로컬 좌표로 변환
             Vector2 cardLocalPoint;
+            Camera cameraToUse = (parentCanvas.renderMode == RenderMode.ScreenSpaceOverlay) ? null : uiCamera;
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 parentCanvas.transform as RectTransform,
                 cardPosition,
-                uiCamera,
+                cameraToUse,
                 out cardLocalPoint);
 
             // 스킬카드 기준으로 툴팁 위치 계산
             Vector2 tooltipPosition = CalculateTooltipPositionRelativeToCard(cardLocalPoint);
-            
+
             // 화면 경계 내로 제한
             tooltipPosition = ClampToScreenBounds(tooltipPosition);
 
             rectTransform.localPosition = tooltipPosition;
-            
-            GameLogger.LogInfo($"[SkillCardTooltip] 스킬카드 기준 위치 계산 - 카드: {cardLocalPoint}, 툴팁: {tooltipPosition}", GameLogger.LogCategory.UI);
         }
 
         /// <summary>
@@ -964,21 +963,15 @@ namespace Game.SkillCardSystem.UI
             // 수평 위치 결정 (오른쪽 우선)
             if (canShowRight)
             {
-                // 카드 오른쪽 끝 + 오프셋 + 툴팁 왼쪽 끝까지 거리
                 tooltipPosition.x = cardLocalPoint.x + (cardWidth * 0.5f) + mouseOffsetX + (tooltipWidth * tooltipPivot.x);
-                GameLogger.LogInfo($"[SkillCardTooltip] 툴팁을 카드 오른쪽에 배치", GameLogger.LogCategory.UI);
             }
             else if (canShowLeft)
             {
-                // 카드 왼쪽 끝 - 오프셋 - 툴팁 오른쪽 끝까지 거리
                 tooltipPosition.x = cardLocalPoint.x - (cardWidth * 0.5f) - mouseOffsetX - (tooltipWidth * (1f - tooltipPivot.x));
-                GameLogger.LogInfo($"[SkillCardTooltip] 툴팁을 카드 왼쪽에 배치", GameLogger.LogCategory.UI);
             }
             else
             {
-                // 공간 부족 시 카드와 겹쳐서 오른쪽에 배치
                 tooltipPosition.x = cardLocalPoint.x + cardWidth * 0.5f + 10f;
-                GameLogger.LogWarning($"[SkillCardTooltip] 공간 부족으로 카드와 겹쳐서 배치", GameLogger.LogCategory.UI);
             }
 
             // 수직 위치는 카드 중심과 맞춤
@@ -996,8 +989,6 @@ namespace Game.SkillCardSystem.UI
             {
                 tooltipPosition.y = canvasBottom + tooltipHeight * tooltipPivot.y;
             }
-
-            GameLogger.LogInfo($"[SkillCardTooltip] 위치 계산 완료 - 카드: {cardLocalPoint}, 툴팁: {tooltipPosition}, 크기: {tooltipWidth}x{tooltipHeight}", GameLogger.LogCategory.UI);
 
             return tooltipPosition;
         }

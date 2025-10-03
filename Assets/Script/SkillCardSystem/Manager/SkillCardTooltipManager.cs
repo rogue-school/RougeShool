@@ -42,14 +42,16 @@ namespace Game.SkillCardSystem.Manager
         private Canvas tooltipCanvas;
         private ISkillCard hoveredCard;
         private Vector2 lastMousePosition;
-        
+
         private float showTimer;
         private float hideTimer;
         private bool isShowingTooltip;
         private bool isHidingTooltip;
-        
+
         private Camera uiCamera;
         private EventSystem eventSystem;
+
+        private System.Collections.Generic.Dictionary<ISkillCard, RectTransform> cardUICache = new();
 
         #endregion
 
@@ -371,6 +373,33 @@ namespace Game.SkillCardSystem.Manager
         #region Public Methods
 
         /// <summary>
+        /// 카드 UI를 등록합니다.
+        /// </summary>
+        /// <param name="card">카드 데이터</param>
+        /// <param name="cardTransform">카드 UI의 RectTransform</param>
+        public void RegisterCardUI(ISkillCard card, RectTransform cardTransform)
+        {
+            if (card == null || cardTransform == null) return;
+
+            cardUICache[card] = cardTransform;
+            GameLogger.LogInfo($"[SkillCardTooltipManager] 카드 UI 등록: {card.GetCardName()}", GameLogger.LogCategory.UI);
+        }
+
+        /// <summary>
+        /// 카드 UI 등록을 해제합니다.
+        /// </summary>
+        /// <param name="card">카드 데이터</param>
+        public void UnregisterCardUI(ISkillCard card)
+        {
+            if (card == null) return;
+
+            if (cardUICache.Remove(card))
+            {
+                GameLogger.LogInfo($"[SkillCardTooltipManager] 카드 UI 등록 해제: {card.GetCardName()}", GameLogger.LogCategory.UI);
+            }
+        }
+
+        /// <summary>
         /// 카드에 마우스가 진입했을 때 호출됩니다.
         /// </summary>
         /// <param name="card">호버된 카드</param>
@@ -548,36 +577,41 @@ namespace Game.SkillCardSystem.Manager
 
         /// <summary>
         /// 현재 호버된 카드의 위치를 가져옵니다.
-        /// SkillCardUI에서 직접 위치 정보를 받아옵니다.
+        /// 캐시된 RectTransform에서 위치 정보를 가져옵니다.
         /// </summary>
         /// <returns>카드의 스크린 위치</returns>
         private Vector2 GetCurrentCardPosition()
         {
             if (hoveredCard == null) return Vector2.zero;
 
-            // SkillCardUI 컴포넌트를 찾아서 카드 위치 가져오기
-            // FindObjectsByType 대신 더 효율적인 방법 사용
-            var skillCardUIs = FindObjectsByType<Game.SkillCardSystem.UI.SkillCardUI>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-            
-            foreach (var skillCardUI in skillCardUIs)
+            if (cardUICache.TryGetValue(hoveredCard, out RectTransform cardRect))
             {
-                if (skillCardUI.GetCard() == hoveredCard)
+                if (cardRect != null)
                 {
-                    // 카드의 스크린 위치 가져오기
-                    RectTransform cardRect = skillCardUI.GetComponent<RectTransform>();
-                    if (cardRect != null)
+                    Vector2 screenPosition;
+
+                    if (tooltipCanvas != null && tooltipCanvas.renderMode == RenderMode.ScreenSpaceOverlay)
                     {
-                        // 월드 좌표를 스크린 좌표로 변환
-                        Vector3 worldPosition = cardRect.position;
-                        Vector2 screenPosition = RectTransformUtility.WorldToScreenPoint(uiCamera, worldPosition);
-                        
-                        GameLogger.LogInfo($"[SkillCardTooltipManager] 카드 위치 계산 - 월드: {worldPosition}, 스크린: {screenPosition}", GameLogger.LogCategory.UI);
-                        return screenPosition;
+                        screenPosition = cardRect.position;
                     }
+                    else
+                    {
+                        screenPosition = RectTransformUtility.WorldToScreenPoint(uiCamera, cardRect.position);
+                    }
+
+                    return screenPosition;
+                }
+                else
+                {
+                    cardUICache.Remove(hoveredCard);
+                    GameLogger.LogWarning("[SkillCardTooltipManager] 캐시된 RectTransform이 파괴됨. 캐시에서 제거", GameLogger.LogCategory.UI);
                 }
             }
+            else
+            {
+                GameLogger.LogWarning($"[SkillCardTooltipManager] 카드 UI가 캐시에 등록되지 않음: {hoveredCard.GetCardName()}", GameLogger.LogCategory.UI);
+            }
 
-            GameLogger.LogWarning("[SkillCardTooltipManager] 호버된 카드의 SkillCardUI를 찾을 수 없습니다", GameLogger.LogCategory.UI);
             return Vector2.zero;
         }
 

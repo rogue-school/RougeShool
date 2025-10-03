@@ -1093,8 +1093,8 @@ namespace Game.CoreSystem.Save
 				var slotRegistry = GetCachedSlotRegistry();
 				var handRegistry = slotRegistry != null ? slotRegistry.GetHandSlotRegistry() : null;
 				var combatRegistry = slotRegistry != null ? slotRegistry.GetCombatSlotRegistry() : null;
-				// SkillCardFactory는 UnityEngine.Object가 아니므로 직접 생성
-				var cardFactory = new Game.SkillCardSystem.Factory.SkillCardFactory();
+				var audioMgr = FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+				var cardFactory = new Game.SkillCardSystem.Factory.SkillCardFactory(audioMgr);
 				var playerManager = GetCachedPlayerManager();
 				var handManager = GetCachedPlayerHandManager();
 				var turnManager = GetCachedTurnManager();

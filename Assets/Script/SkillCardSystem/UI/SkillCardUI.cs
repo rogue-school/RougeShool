@@ -95,6 +95,21 @@ namespace Game.SkillCardSystem.UI
             // DI를 통해 tooltipManager가 자동으로 주입됨
         }
 
+        private void OnEnable()
+        {
+            RegisterToTooltipManager();
+        }
+
+        private void OnDisable()
+        {
+            UnregisterFromTooltipManager();
+        }
+
+        private void OnDestroy()
+        {
+            UnregisterFromTooltipManager();
+        }
+
         #endregion
 
         #region Public Methods
@@ -115,6 +130,11 @@ namespace Game.SkillCardSystem.UI
         /// <param name="newCard">연결할 카드 인스턴스</param>
         public void SetCard(ISkillCard newCard)
         {
+            if (card != null)
+            {
+                UnregisterFromTooltipManager();
+            }
+
             card = newCard;
 
             if (card == null)
@@ -122,6 +142,8 @@ namespace Game.SkillCardSystem.UI
                 Debug.LogWarning("[SkillCardUI] 설정할 카드가 null입니다.");
                 return;
             }
+
+            RegisterToTooltipManager();
 
             // 플레이어 마커 카드인 경우: 자식 UI를 사용하지 않고 부모 이미지에 엠블럼만 표시
             bool isPlayerMarker = card.CardDefinition?.cardId == "PLAYER_MARKER";
@@ -284,6 +306,9 @@ namespace Game.SkillCardSystem.UI
 
             // 모든 카드 타입에 대해 툴팁 표시 허용 (플레이어, 적, 선택 화면 등)
             GameLogger.LogInfo($"[SkillCardUI] 모든 카드 타입 툴팁 허용: {card.GetCardName()} (소유자: {card.GetOwner()})", GameLogger.LogCategory.UI);
+
+            // 카드가 등록되지 않았으면 등록
+            RegisterToTooltipManager();
 
             isHovering = true;
 
@@ -582,11 +607,43 @@ namespace Game.SkillCardSystem.UI
         public void OnDragEnd()
         {
             isDragging = false;
-            
+
             // 드래그 종료 후 여전히 호버 중이면 툴팁 다시 표시
             if (isHovering && enableTooltip && tooltipManager != null && card != null)
             {
                 tooltipCoroutine = StartCoroutine(ShowTooltipDelayed());
+            }
+        }
+
+        #endregion
+
+        #region Tooltip Manager Registration
+
+        /// <summary>
+        /// 툴팁 매니저에 카드 UI를 등록합니다.
+        /// </summary>
+        private void RegisterToTooltipManager()
+        {
+            var currentTooltipManager = GetTooltipManager();
+            if (currentTooltipManager != null && card != null)
+            {
+                RectTransform rectTransform = GetComponent<RectTransform>();
+                if (rectTransform != null)
+                {
+                    currentTooltipManager.RegisterCardUI(card, rectTransform);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 툴팁 매니저에서 카드 UI 등록을 해제합니다.
+        /// </summary>
+        private void UnregisterFromTooltipManager()
+        {
+            var currentTooltipManager = GetTooltipManager();
+            if (currentTooltipManager != null && card != null)
+            {
+                currentTooltipManager.UnregisterCardUI(card);
             }
         }
 

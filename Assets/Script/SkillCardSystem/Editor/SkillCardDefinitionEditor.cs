@@ -280,7 +280,8 @@ namespace Game.SkillCardSystem.Editor
         
         private void ValidateCard()
         {
-            var factory = new Game.SkillCardSystem.Factory.SkillCardFactory();
+            var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            var factory = new Game.SkillCardSystem.Factory.SkillCardFactory(audioManager);
             bool isValid = factory.ValidateDefinition(card);
             
             if (isValid)

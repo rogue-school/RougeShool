@@ -1,6 +1,6 @@
 ---
-alwaysApply: true
-description: "AI-사용자 협업을 위한 시스템별 핵심 사용법. CoreSystem, CombatSystem, CharacterSystem, SaveSystem의 실제 사용 패턴을 포함합니다."
+alwaysApply: false
+description: "System-specific usage guide: CoreSystem, CombatSystem, CharacterSystem, SaveSystem patterns (reference when needed)"
 ---
 # RougeShool 시스템별 핵심 가이드 (System-Specific Guide)
 

@@ -52,11 +52,11 @@ namespace Game.CharacterSystem.UI
         private float duration = -1f; // -1이면 영구
         private float remainingTime;
         private bool isPermanent;
-        
-        // 애니메이션 관련
+
         private Tween fadeTween;
         private Tween scaleTween;
         private Tween pulseTween;
+        private Tween durationTween;
 
         #endregion
 
@@ -67,17 +67,12 @@ namespace Game.CharacterSystem.UI
             InitializeIcon();
         }
 
-        private void Update()
-        {
-            UpdateDuration();
-        }
-
         private void OnDestroy()
         {
-            // DOTween 정리
             fadeTween?.Kill();
             scaleTween?.Kill();
             pulseTween?.Kill();
+            durationTween?.Kill();
         }
 
         #endregion
@@ -125,8 +120,12 @@ namespace Game.CharacterSystem.UI
             // 지속 시간 텍스트 설정
             UpdateDurationText();
 
-            // 페이드 인 애니메이션
             FadeIn();
+
+            if (!isPermanent)
+            {
+                StartDurationTimer();
+            }
 
             Debug.Log($"[BuffDebuffIcon] {(isBuff ? "버프" : "디버프")} 아이콘 설정: {effectId}, 지속시간: {(isPermanent ? "영구" : duration.ToString("F1") + "초")}");
         }
@@ -159,30 +158,23 @@ namespace Game.CharacterSystem.UI
         #region 지속 시간 관리
 
         /// <summary>
-        /// 지속 시간을 업데이트합니다.
+        /// DOTween을 사용하여 지속 시간 타이머를 시작합니다.
         /// </summary>
-        private void UpdateDuration()
+        private void StartDurationTimer()
         {
-            if (isPermanent) return;
+            durationTween?.Kill();
 
-            remainingTime -= Time.deltaTime;
-            
-            if (remainingTime <= 0)
-            {
-                // 지속 시간 만료
-                OnDurationExpired();
-            }
-            else
-            {
-                // 지속 시간 텍스트 업데이트
+            durationTween = DOTween.To(() => remainingTime, x => {
+                remainingTime = x;
                 UpdateDurationText();
-                
-                // 임박 시 경고 효과
-                if (remainingTime <= 5f)
+
+                if (remainingTime <= 5f && remainingTime > 0)
                 {
                     ShowExpirationWarning();
                 }
-            }
+            }, 0f, duration)
+            .SetEase(Ease.Linear)
+            .OnComplete(OnDurationExpired);
         }
 
         /// <summary>
@@ -344,8 +336,11 @@ namespace Game.CharacterSystem.UI
             if (isPermanent) return;
 
             remainingTime += additionalTime;
-            UpdateDurationText();
-            
+            duration += additionalTime;
+
+            durationTween?.Kill();
+            StartDurationTimer();
+
             Debug.Log($"[BuffDebuffIcon] 지속 시간 연장: {effectId}, +{additionalTime}초");
         }
 
@@ -356,6 +351,7 @@ namespace Game.CharacterSystem.UI
         {
             if (isPermanent) return;
 
+            durationTween?.Kill();
             remainingTime = 0f;
             OnDurationExpired();
         }

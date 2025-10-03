@@ -728,7 +728,8 @@ namespace Game.UISystem
                 if (idx >= defs.Length) break;
             }
 
-            var factory = new SkillCardFactory();
+            var audioManager = FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            var factory = new SkillCardFactory(audioManager);
             int created = 0;
             foreach (var def in defs)
             {

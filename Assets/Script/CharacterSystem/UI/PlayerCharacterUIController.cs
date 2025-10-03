@@ -116,11 +116,6 @@ namespace Game.CharacterSystem.UI
             InitializeUI();
         }
 
-        private void Update()
-        {
-            // 실시간 업데이트는 필요에 따라 호출
-        }
-
         private void OnDestroy()
         {
             // DOTween 정리

@@ -1,0 +1,41 @@
+# RougeShool Unity Development Rules
+
+## Core Principles (SOLID)
+- **Single Responsibility**: One class, one reason to change
+- **Open-Closed**: Open for extension, closed for modification
+- **Dependency Inversion**: Depend on interfaces, not concrete classes
+
+## Unity Architecture
+- **DI Pattern**: Use Zenject DI (NO singleton pattern)
+- **Animation**: DOTween Pro only (AnimationSystem is deprecated)
+- **Event-Driven**: NO Update() method - use event-based approach
+- **Performance**: Object pooling required, GC pressure < 1KB/frame
+
+## Korean Localization Standard
+- All comments, logs, Inspector labels in Korean
+- Required attributes: `[Header("전투 설정")]`, `[Tooltip("플레이어 체력")]`
+- XML documentation in Korean for public APIs
+
+## Code Quality
+- Null safety: All public methods must validate parameters
+- Exception handling: Try-catch with GameLogger.LogError
+- Logging: Use GameLogger with appropriate categories
+
+## Strict Prohibitions
+- ❌ AnimationSystem references
+- ❌ Singleton pattern (use Zenject)
+- ❌ Update() methods
+- ❌ FindObjectOfType in Update/FixedUpdate
+- ❌ Duplicate functionality
+- ❌ Example/dummy code generation
+- ❌ Game-specific reference comments (e.g., "Slay the Spire style", "League of Legends system")
+- ❌ AI-related comments (e.g., "AI generated", "Created by AI", "AI助手生成")
+- ❌ Implementation hints in comments (e.g., "TODO: implement later", "This is just a placeholder")
+- ❌ Change notification comments (e.g., "수정됨", "추가됨", "변경됨", "FIXED", "ADDED", "CHANGED", "Modified", "Updated here")
+- ❌ Explanatory comments for user (e.g., "이 부분을 수정했습니다", "여기에 null 체크 추가", "성능 개선을 위해 변경")
+
+## Workflow (AI Code Generation)
+1. Search existing code first (codebase_search → grep → read_file)
+2. Evaluate reusability before creating new code
+3. Verify compilation (0 warnings, 0 errors)
+4. Ensure Korean logging and XML documentation

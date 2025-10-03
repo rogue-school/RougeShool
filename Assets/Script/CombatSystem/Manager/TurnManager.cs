@@ -812,7 +812,8 @@ namespace Game.CombatSystem.Manager
                 var runtimeName = enemy?.GetCharacterName() ?? "Enemy";
                 var enemyData = _cachedEnemyData ?? runtimeData;
                 var enemyName = string.IsNullOrEmpty(_cachedEnemyName) ? runtimeName : _cachedEnemyName;
-                var factory = new Game.SkillCardSystem.Factory.SkillCardFactory();
+                var audioMgr = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+                var factory = new Game.SkillCardSystem.Factory.SkillCardFactory(audioMgr);
 
                 Game.SkillCardSystem.Deck.EnemySkillDeck.CardEntry entry = null;
                 if (enemyData?.EnemyDeck != null)
@@ -881,7 +882,8 @@ namespace Game.CombatSystem.Manager
                 yield break;
             }
 
-            var factory = new Game.SkillCardSystem.Factory.SkillCardFactory();
+            var audioMgr = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            var factory = new Game.SkillCardSystem.Factory.SkillCardFactory(audioMgr);
 
             // SkillCardUI 프리팁 로드 (캐시 사용)
             var cardUIPrefab = GetCachedCardUIPrefab();

@@ -15,13 +15,15 @@ namespace Game.SaveSystem.Manager
 {
     /// <summary>
     /// 자동 저장 매니저 (간소화 버전)
-    /// 슬레이 더 스파이어 방식: 특정 이벤트 발생 시 자동 저장
+    /// 이벤트 기반 자동 저장: 턴 종료, 스테이지 전환 시 자동 저장
     /// </summary>
     public class AutoSaveManager : MonoBehaviour
     {
         #region 의존성 주입
 
         [Inject] private SaveManager saveManager;
+        [Inject(Optional = true)] private TurnManager turnManager;
+        [Inject(Optional = true)] private StageManager stageManager;
 
         #endregion
 
@@ -38,8 +40,6 @@ namespace Game.SaveSystem.Manager
         #region 내부 상태
 
         private bool isInitialized = false;
-        private TurnManager turnManager;
-        private StageManager stageManager;
         private int lastSavedFrame = -1;
         private string lastSavedTrigger = "";
 
@@ -55,10 +55,6 @@ namespace Game.SaveSystem.Manager
         private System.Collections.IEnumerator Initialize()
         {
             GameLogger.LogInfo("[AutoSaveManager] 초기화 시작", GameLogger.LogCategory.Save);
-
-            // 매니저 참조 찾기
-            turnManager = FindFirstObjectByType<TurnManager>();
-            stageManager = FindFirstObjectByType<StageManager>();
 
             // 이벤트 연결
             if (turnBasedAutosaveEnabled && autoSaveEnabled)
@@ -192,13 +188,8 @@ namespace Game.SaveSystem.Manager
 
         private System.Collections.IEnumerator ReinitializeForScene()
         {
-            yield return new WaitForSeconds(0.1f); // 씬 로드 완료 대기
+            yield return new WaitForSeconds(0.1f);
 
-            // 매니저 재찾기
-            turnManager = FindFirstObjectByType<TurnManager>();
-            stageManager = FindFirstObjectByType<StageManager>();
-
-            // 이벤트 재연결
             HookRuntimeDependencies();
 
             GameLogger.LogInfo("[AutoSaveManager] 스테이지 씬용 재초기화 완료", GameLogger.LogCategory.Save);
