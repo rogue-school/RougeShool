@@ -149,18 +149,18 @@ namespace Game.CombatSystem.State
                 return false;
             }
 
-            // 소환된 적이 활성화되어 있는지 확인
-            if (stageManager.IsSummonedEnemyActive())
-            {
-                LogStateTransition("소환된 적 활성화 감지 - 즉시 CombatInitState로 전환");
-                
-                // 소환/복귀 처리를 위한 CombatInitState로 전환
-                var combatInitState = new CombatInitState();
-                combatInitState.SetSummonMode(true);
-                
-                RequestTransition(context, combatInitState);
-                return true;
-            }
+            // 소환된 적이 활성화되어 있는지 확인 (이제 StageManager에서 직접 처리하므로 제거)
+            // if (stageManager.IsSummonedEnemyActive())
+            // {
+            //     LogStateTransition("소환된 적 활성화 감지 - 즉시 CombatInitState로 전환");
+            //     
+            //     // 소환/복귀 처리를 위한 CombatInitState로 전환
+            //     var combatInitState = new CombatInitState();
+            //     combatInitState.SetSummonMode(true);
+            //     
+            //     RequestTransition(context, combatInitState);
+            //     return true;
+            // }
 
             return false;
         }

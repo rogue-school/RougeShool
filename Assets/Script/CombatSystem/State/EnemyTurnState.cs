@@ -39,6 +39,17 @@ namespace Game.CombatSystem.State
             // 턴별 효과 처리 (가드, 출혈, 반격, 기절 등)
             ProcessTurnEffects(context);
 
+            // 턴별 효과 처리 후 적이 사망했는지 확인
+            if (context.EnemyManager != null)
+            {
+                var currentEnemy = context.EnemyManager.GetCharacter();
+                if (currentEnemy == null || currentEnemy.IsDead())
+                {
+                    LogStateTransition("턴별 효과 처리 후 적 사망 감지 - 카드 실행 건너뜀");
+                    return;
+                }
+            }
+
             // 플레이어 손패 정리 (적 턴에는 플레이어가 카드를 낼 수 없음)
             if (context.HandManager != null)
             {

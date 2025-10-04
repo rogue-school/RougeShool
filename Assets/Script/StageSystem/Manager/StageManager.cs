@@ -1060,18 +1060,28 @@ namespace Game.StageSystem.Manager
                     GameLogger.LogInfo($"[소환] 소환 완료: {targetEnemy.DisplayName}", GameLogger.LogCategory.Combat);
                 }
 
-                // 4단계: 소환 완료 후 상태 초기화
+                // 4단계: 소환 완료 후 CombatInitState로 전환
                 if (!isRestore)
                 {
-                    // 소환 완료 후에는 일반 로직으로 처리
-                    isSummonedEnemyActive = false;
-                    GameLogger.LogInfo("[소환] 소환 완료 - 일반 로직으로 전환", GameLogger.LogCategory.Combat);
+                    // 소환 완료 후 CombatInitState로 전환 (소환 모드)
+                    var combatInitState = new Game.CombatSystem.State.CombatInitState();
+                    combatInitState.SetSummonMode(true);
+                    combatInitState.SkipSlotSetup(); // 이미 슬롯이 설정되었으므로 건너뜀
+                    
+                    // 상태 머신에 전환 요청
+                    stateMachine.ChangeState(combatInitState);
+                    GameLogger.LogInfo("[소환] 소환 완료 - CombatInitState로 전환", GameLogger.LogCategory.Combat);
                 }
                 else
                 {
-                    // 복귀 완료 후에는 일반 로직으로 처리
-                    isSummonedEnemyActive = false;
-                    GameLogger.LogInfo("[소환] 복귀 완료 - 일반 로직으로 전환", GameLogger.LogCategory.Combat);
+                    // 복귀 완료 후 CombatInitState로 전환 (일반 모드)
+                    var combatInitState = new Game.CombatSystem.State.CombatInitState();
+                    combatInitState.SetSummonMode(false);
+                    combatInitState.SkipSlotSetup(); // 이미 슬롯이 설정되었으므로 건너뜀
+                    
+                    // 상태 머신에 전환 요청
+                    stateMachine.ChangeState(combatInitState);
+                    GameLogger.LogInfo("[소환] 복귀 완료 - CombatInitState로 전환", GameLogger.LogCategory.Combat);
                 }
             }
             catch (System.Exception ex)

@@ -142,39 +142,8 @@ namespace Game.CombatSystem.State
             // 슬롯 셋업 코루틴이 완료될 때까지 대기
             if (_isSummonMode)
             {
-                // 소환 모드: EnemyManager를 통해 현재 활성화된 적의 데이터 사용
-                var stageManager = UnityEngine.Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
-                if (stageManager != null)
-                {
-                    var enemyManager = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
-                    var currentEnemy = enemyManager?.GetEnemy();
-                    
-                    if (currentEnemy != null)
-                    {
-                        var enemyData = currentEnemy.CharacterData as Game.CharacterSystem.Data.EnemyCharacterData;
-                        var enemyName = currentEnemy.GetCharacterName();
-                        
-                        if (enemyData != null)
-                        {
-                            yield return context.StateMachine.StartCoroutine(
-                                context.SlotMovement.SetupInitialEnemyQueueRoutine(enemyData, enemyName)
-                            );
-                            LogStateTransition($"소환 모드 슬롯 셋업 완료: {enemyName}");
-                        }
-                        else
-                        {
-                            LogError("소환된 적 데이터를 가져올 수 없습니다");
-                        }
-                    }
-                    else
-                    {
-                        LogError("소환된 적을 찾을 수 없습니다");
-                    }
-                }
-                else
-                {
-                    LogError("StageManager를 찾을 수 없습니다");
-                }
+                // 소환 모드: StageManager에서 이미 슬롯 설정이 완료되었으므로 건너뜀
+                LogStateTransition("소환 모드 - 슬롯 설정 건너뜀 (이미 완료됨)");
             }
             else
             {
