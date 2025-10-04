@@ -87,6 +87,7 @@ namespace Game.CombatSystem.State
 
         /// <summary>
         /// 전투 초기화 코루틴
+        /// 소환/복귀와 일반 전투를 일관성 있게 처리
         /// </summary>
         private IEnumerator InitializeCombat(CombatStateContext context)
         {
@@ -125,18 +126,88 @@ namespace Game.CombatSystem.State
                 // 이는 소환/복귀 시 플레이어가 먼저 행동할 수 있도록 함
                 context.SlotMovement.SetSummonMode(true);
                 LogStateTransition("소환/복귀 모드 - 자동 실행 억제 설정");
+                
+                // 소환/복귀 모드에서는 플레이어 핸드 명시적 초기화
+                if (context.HandManager != null)
+                {
+                    context.HandManager.ClearAll();
+                    LogStateTransition("소환/복귀 모드 - 플레이어 핸드 초기화 완료");
+                }
             }
 
             // 슬롯 셋업이 완료될 때까지 대기 (중요!)
             // SetupInitialEnemyQueueRoutine이 완전히 끝날 때까지 기다림
             LogStateTransition("슬롯 셋업 완료 대기 중...");
             
+            // 슬롯 셋업 코루틴이 완료될 때까지 대기
+            if (_isSummonMode)
+            {
+                // 소환 모드: EnemyManager를 통해 현재 활성화된 적의 데이터 사용
+                var stageManager = UnityEngine.Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
+                if (stageManager != null)
+                {
+                    var enemyManager = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
+                    var currentEnemy = enemyManager?.GetEnemy();
+                    
+                    if (currentEnemy != null)
+                    {
+                        var enemyData = currentEnemy.CharacterData as Game.CharacterSystem.Data.EnemyCharacterData;
+                        var enemyName = currentEnemy.GetCharacterName();
+                        
+                        if (enemyData != null)
+                        {
+                            yield return context.StateMachine.StartCoroutine(
+                                context.SlotMovement.SetupInitialEnemyQueueRoutine(enemyData, enemyName)
+                            );
+                            LogStateTransition($"소환 모드 슬롯 셋업 완료: {enemyName}");
+                        }
+                        else
+                        {
+                            LogError("소환된 적 데이터를 가져올 수 없습니다");
+                        }
+                    }
+                    else
+                    {
+                        LogError("소환된 적을 찾을 수 없습니다");
+                    }
+                }
+                else
+                {
+                    LogError("StageManager를 찾을 수 없습니다");
+                }
+            }
+            else
+            {
+                // 일반 모드: 이미 전달받은 적 데이터 사용
+                if (_enemyData != null && !string.IsNullOrEmpty(_enemyName))
+                {
+                    yield return context.StateMachine.StartCoroutine(
+                        context.SlotMovement.SetupInitialEnemyQueueRoutine(_enemyData, _enemyName)
+                    );
+                    LogStateTransition($"일반 모드 슬롯 셋업 완료: {_enemyName}");
+                }
+                else
+                {
+                    LogError("일반 모드에서 적 데이터가 없습니다");
+                }
+            }
+            
             // 추가 초기화 대기 시간 (UI 안정화 등)
             yield return new WaitForSeconds(0.2f);
 
-            // 플레이어 턴으로 시작
-            LogStateTransition("플레이어 턴으로 전환");
-            StartPlayerTurn(context);
+            // 소환 모드인 경우와 일반 모드인 경우 구분
+            if (_isSummonMode)
+            {
+                // 소환 모드: 소환된 적이 준비되면 적 턴으로 시작
+                LogStateTransition("소환 모드 - 적 턴으로 전환");
+                StartEnemyTurn(context);
+            }
+            else
+            {
+                // 일반 모드: 플레이어 턴으로 시작
+                LogStateTransition("일반 모드 - 플레이어 턴으로 전환");
+                StartPlayerTurn(context);
+            }
         }
 
         /// <summary>
@@ -229,6 +300,17 @@ namespace Game.CombatSystem.State
 
             var playerTurnState = new PlayerTurnState();
             RequestTransition(context, playerTurnState);
+        }
+
+        /// <summary>
+        /// 적 턴 시작 (소환 모드용)
+        /// </summary>
+        private void StartEnemyTurn(CombatStateContext context)
+        {
+            LogStateTransition("적 턴으로 전환");
+
+            var enemyTurnState = new EnemyTurnState();
+            RequestTransition(context, enemyTurnState);
         }
     }
 }

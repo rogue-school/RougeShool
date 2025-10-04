@@ -77,7 +77,17 @@ namespace Game.CharacterSystem.Effect
             {
                 hasTriggered = true;
                 GameLogger.LogInfo($"[SummonEffectSO] {character.GetCharacterName()} 소환 발동! 현재 체력: {currentHP}/{maxHP} ({currentRatio:P0}), 대상: {activeSummonTarget.DisplayName}", GameLogger.LogCategory.Character);
-                OnSummonTriggered?.Invoke(activeSummonTarget, currentHP);
+                
+                // 소환 트리거를 다음 프레임으로 지연 처리 (적 사망 애니메이션과 동기화)
+                if (character is MonoBehaviour characterMono)
+                {
+                    characterMono.StartCoroutine(DelayedSummonTrigger(activeSummonTarget, currentHP));
+                }
+                else
+                {
+                    // MonoBehaviour가 아닌 경우 즉시 처리
+                    OnSummonTriggered?.Invoke(activeSummonTarget, currentHP);
+                }
             }
         }
 
@@ -93,6 +103,18 @@ namespace Game.CharacterSystem.Effect
         public void ResetTrigger()
         {
             hasTriggered = false;
+        }
+
+        /// <summary>
+        /// 소환 트리거를 지연 처리하는 코루틴
+        /// </summary>
+        private System.Collections.IEnumerator DelayedSummonTrigger(EnemyCharacterData summonTarget, int currentHP)
+        {
+            // 한 프레임 대기 (적 사망 애니메이션과 동기화)
+            yield return null;
+            
+            // 소환 트리거 실행
+            OnSummonTriggered?.Invoke(summonTarget, currentHP);
         }
 
         public EnemyCharacterData GetSummonTarget() => activeSummonTarget ?? defaultSummonTarget;

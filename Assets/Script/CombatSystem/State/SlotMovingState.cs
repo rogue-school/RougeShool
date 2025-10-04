@@ -150,12 +150,20 @@ namespace Game.CombatSystem.State
         /// - 플레이어 턴 마커 → PlayerTurnState
         /// - 적 스킬카드 → EnemyTurnState
         /// - 빈 슬롯 → PlayerTurnState (기본값)
+        /// 소환/복귀 체크도 포함
         /// </summary>
         private void ProceedToNextTurn(CombatStateContext context)
         {
             if (context?.SlotRegistry == null)
             {
                 LogError("SlotRegistry가 null입니다");
+                return;
+            }
+
+            // 소환/복귀 체크 (일반 사망 로직과 통합)
+            if (CheckForSummonOrReturn(context))
+            {
+                LogStateTransition("소환/복귀 감지 - 일반 사망 로직으로 처리");
                 return;
             }
 
@@ -198,6 +206,34 @@ namespace Game.CombatSystem.State
                 var playerTurnState = new PlayerTurnState();
                 RequestTransition(context, playerTurnState);
             }
+        }
+
+        /// <summary>
+        /// 소환/복귀 체크 (일반 사망 로직과 통합)
+        /// </summary>
+        private bool CheckForSummonOrReturn(CombatStateContext context)
+        {
+            // StageManager에서 소환/복귀 상태 확인
+            var stageManager = UnityEngine.Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
+            if (stageManager == null)
+            {
+                return false;
+            }
+
+            // 소환된 적이 활성화되어 있는지 확인
+            if (stageManager.IsSummonedEnemyActive())
+            {
+                LogStateTransition("소환된 적 활성화 감지 - 소환/복귀 로직 처리");
+                
+                // 소환/복귀 처리를 위한 CombatInitState로 전환
+                var combatInitState = new CombatInitState();
+                combatInitState.SetSummonMode(true);
+                
+                RequestTransition(context, combatInitState);
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>

@@ -460,8 +460,8 @@ namespace Game.CombatSystem.Manager
             _suppressAutoRefill = false;
             _suppressAutoExecution = false;
 
-            // 소환 모드 리셋
-            _isSummonMode = false;
+            // 소환 모드는 리셋하지 않음 (CombatInitState에서 설정됨)
+            // _isSummonMode = false; // 제거
 
             // 다음 생성 주체 리셋
             _nextSpawnIsPlayer = true;
