@@ -54,7 +54,7 @@ namespace Game.SkillCardSystem.Factory
             
             var skillCard = new SkillCard(definition, owner, audioManager);
             
-            GameLogger.LogInfo($"[SkillCardFactory] 카드 생성 완료: {definition.displayName} (Owner: {owner})", GameLogger.LogCategory.SkillCard);
+            // GameLogger.LogInfo($"[SkillCardFactory] 카드 생성 완료: {definition.displayName} (Owner: {owner})", GameLogger.LogCategory.SkillCard);
             
             return skillCard;
         }
@@ -114,7 +114,7 @@ namespace Game.SkillCardSystem.Factory
             
             if (card != null && !string.IsNullOrEmpty(ownerCharacterName))
             {
-                GameLogger.LogInfo($"[SkillCardFactory] 적 카드 생성: {definition.displayName} (Character: {ownerCharacterName})", GameLogger.LogCategory.SkillCard);
+                // GameLogger.LogInfo($"[SkillCardFactory] 적 카드 생성: {definition.displayName} (Character: {ownerCharacterName})", GameLogger.LogCategory.SkillCard);
             }
             
             return card;

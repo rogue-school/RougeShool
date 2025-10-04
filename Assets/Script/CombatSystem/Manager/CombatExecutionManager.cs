@@ -125,7 +125,7 @@ namespace Game.CombatSystem.Manager
 
             if (enableDebugLogging)
             {
-                GameLogger.LogInfo("실행 시스템 초기화 중...", GameLogger.LogCategory.Combat);
+                // GameLogger.LogInfo("실행 시스템 초기화 중...", GameLogger.LogCategory.Combat);
             }
 
             // 의존성 검증
@@ -143,7 +143,7 @@ namespace Game.CombatSystem.Manager
 
             if (enableDebugLogging)
             {
-                GameLogger.LogInfo("실행 시스템 초기화 완료", GameLogger.LogCategory.Combat);
+                // GameLogger.LogInfo("실행 시스템 초기화 완료", GameLogger.LogCategory.Combat);
             }
         }
 
@@ -193,7 +193,7 @@ namespace Game.CombatSystem.Manager
 
             if (enableDebugLogging)
             {
-                GameLogger.LogInfo($"카드 실행 시작: {FormatCardTag(card)} at {slotPosition}", GameLogger.LogCategory.Combat);
+                // GameLogger.LogInfo($"카드 실행 시작: {FormatCardTag(card)} at {slotPosition}", GameLogger.LogCategory.Combat);
             }
 
             // 실행 지연
@@ -214,37 +214,41 @@ namespace Game.CombatSystem.Manager
             // 실행 완료 이벤트 발생
             OnExecutionCompleted?.Invoke(result);
 
-            // 실행 후 처리: 배틀 슬롯에서 사용된 카드는 소유자와 무관하게 정리 및 다음 턴 진행
+            // 실행 후 처리: 배틀 슬롯에서 사용된 카드는 소유자와 무관하게 정리
+            // (상태 머신이 있으면 턴 진행은 상태 머신이 담당)
             if (card != null && slotPosition == CombatSlotPosition.BATTLE_SLOT)
             {
                 try
                 {
                     if (card.IsFromPlayer())
                     {
-                        // 플레이어 핸드에서 해당 카드 제거
+                        // 플레이어 핸드에서 해당 카드 제거 (실행 완료 후)
                         var handMgr = GetCachedPlayerHandManager();
                         if (handMgr != null)
                         {
                             handMgr.RemoveCard(card);
-                            GameLogger.LogInfo($"플레이어 핸드에서 카드 제거: {FormatCardTag(card)}", GameLogger.LogCategory.SkillCard);
+                            GameLogger.LogInfo($"플레이어 카드 실행 완료 - 핸드에서 제거: {FormatCardTag(card)}", GameLogger.LogCategory.SkillCard);
                         }
                         else
                         {
-                            GameLogger.LogWarning("PlayerHandManager를 찾을 수 없습니다", GameLogger.LogCategory.Combat);
+                            GameLogger.LogWarning("PlayerHandManager를 찾을 수 없습니다 - 플레이어 카드 핸드 제거 실패", GameLogger.LogCategory.Combat);
                         }
+                    }
+                    else
+                    {
+                        // 적 카드는 핸드에 없으므로 로그만 출력
+                        GameLogger.LogInfo($"적 카드 실행 완료: {FormatCardTag(card)}", GameLogger.LogCategory.Combat);
                     }
 
                     // 배틀 슬롯 정리 (UI 포함)
                     turnManager?.ClearSlot(CombatSlotPosition.BATTLE_SLOT);
-                    GameLogger.LogInfo("배틀 슬롯 정리 완료 (카드 제거)", GameLogger.LogCategory.Combat);
+                    GameLogger.LogInfo("배틀 슬롯 정리 완료", GameLogger.LogCategory.Combat);
 
-                    // 다음 턴 진행 → TurnManager가 비어있는 배틀 슬롯을 감지해 큐 전진(1칸) 및 대기4 보충을 수행
-                    turnManager?.ProceedToNextTurn();
-                    GameLogger.LogInfo("다음 턴 진행", GameLogger.LogCategory.Combat);
+                    // 턴 진행은 상태 패턴(CombatStateMachine)이 담당
                 }
                 catch (System.Exception ex)
                 {
-                    GameLogger.LogWarning($"실행 후 처리 중 예외: {ex.Message}", GameLogger.LogCategory.Combat);
+                    GameLogger.LogError($"카드 실행 후 처리 중 예외: {ex.Message}", GameLogger.LogCategory.Error);
                 }
             }
 

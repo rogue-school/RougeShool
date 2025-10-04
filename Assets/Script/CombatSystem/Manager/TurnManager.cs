@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Game.CombatSystem.Data;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
+using Game.CombatSystem.State;
 using Game.CoreSystem.Utility;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.UI;
@@ -18,23 +19,12 @@ namespace Game.CombatSystem.Manager
     /// <summary>
     /// 싱글게임용 턴 관리자 (Zenject DI)
     /// 전투의 턴 순서와 상태를 관리합니다.
+    /// CombatStateMachine과 통합되어 동작합니다.
     /// </summary>
     public class TurnManager : MonoBehaviour, ICombatTurnManager
     {
-        // 초기 전투/대기 슬롯 셋업 완료 신호
-        public bool _initialSlotSetupCompleted = false;
-        public event Action OnInitialSlotSetupCompleted;
-
-        /// <summary>
-        /// 초기 전투/대기 슬롯 셋업 완료까지 대기하는 코루틴을 반환합니다.
-        /// </summary>
-        public System.Collections.IEnumerator WaitForInitialQueueSetup()
-        {
-            while (!_initialSlotSetupCompleted)
-            {
-                yield return null;
-            }
-        }
+        // 초기 전투/대기 슬롯 셋업 완료 신호 (내부용)
+        private bool _initialSlotSetupCompleted = false;
         #region 초기화 (Zenject DI)
 
         private void Awake()
@@ -249,57 +239,6 @@ namespace Game.CombatSystem.Manager
         /// <returns>적 턴이면 true</returns>
         public bool IsEnemyTurn() => currentTurn == TurnType.Enemy;
 
-        /// <summary>
-        /// 턴을 전환합니다.
-        /// </summary>
-        public void SwitchTurn()
-        {
-            // 턴 타입 전환 먼저 수행
-            currentTurn = currentTurn == TurnType.Player ? TurnType.Enemy : TurnType.Player;
-            turnCount++;
-            _handGeneratedForTurn = false; // 새 턴 시작 - 손패 생성 플래그 리셋
-            
-            // 전환 즉시 로그 (가독성 개선)
-            if (debugSettings.enableTurnLogging)
-            {
-                var turnNameLog = currentTurn == TurnType.Player ? "플레이어" : "적";
-                GameLogger.LogInfo($"턴 전환: {turnNameLog} 턴 (턴 {turnCount})", GameLogger.LogCategory.Combat);
-            }
-
-            // 턴 변경 이벤트 통지
-            if (turnEvents.enableTurnChangeEvents)
-            {
-                OnTurnChanged?.Invoke(currentTurn);
-                OnTurnCountChanged?.Invoke(turnCount);
-            }
-            
-            // 새 턴 시작 효과 처리 (시작 턴 효과가 먼저 적용되도록 위치 이동)
-            ProcessAllCharacterTurnEffects();
-
-			// 적 턴 시작 전 플레이어 핸드 정리
-			if (currentTurn == TurnType.Enemy)
-			{
-				var handMgr = GetCachedPlayerHandManager();
-				if (handMgr != null)
-				{
-					handMgr.ClearAll();
-					GameLogger.LogInfo("플레이어 핸드 정리 (적 턴 시작 전)", GameLogger.LogCategory.SkillCard);
-				}
-			}
-
-            // 플레이어 턴 손패 생성은 슬롯 전진/보충이 끝난 뒤에 수행 (AdvanceQueueAtTurnStartRoutine 끝부분에서 수행)
-
-			// 새 턴 시작 시 배틀 슬롯이 비어있다면 대기열 전진
-			StartCoroutine(AdvanceQueueAtTurnStartRoutine());
-        }
-
-        /// <summary>
-        /// 다음 턴으로 진행합니다. (SwitchTurn의 별칭)
-        /// </summary>
-        public void NextTurn()
-        {
-            SwitchTurn();
-        }
 
         /// <summary>
         /// 턴을 리셋합니다.
@@ -327,6 +266,32 @@ namespace Game.CombatSystem.Manager
             
             var turnName = turnType == TurnType.Player ? "플레이어" : "적";
             GameLogger.LogInfo($"턴 설정: {turnName} 턴 (턴 {turnCount})", GameLogger.LogCategory.Combat);
+        }
+
+        /// <summary>
+        /// 특정 턴으로 설정하고 턴 수를 증가시킵니다.
+        /// 상태 패턴에서 턴 전환 시 사용합니다.
+        /// </summary>
+        /// <param name="turnType">설정할 턴 타입</param>
+        public void SetTurnAndIncrement(TurnType turnType)
+        {
+            // 턴 타입이 실제로 변경될 때만 턴 수 증가
+            if (currentTurn != turnType)
+            {
+                turnCount++;
+                
+                // 턴 변경 이벤트 통지
+                if (turnEvents.enableTurnChangeEvents)
+                {
+                    OnTurnCountChanged?.Invoke(turnCount);
+                }
+            }
+            
+            currentTurn = turnType;
+            OnTurnChanged?.Invoke(turnType);
+            
+            var turnName = turnType == TurnType.Player ? "플레이어" : "적";
+            GameLogger.LogInfo($"턴 설정 및 증가: {turnName} 턴 (턴 {turnCount})", GameLogger.LogCategory.Combat);
         }
         
         /// <summary>
@@ -433,14 +398,23 @@ namespace Game.CombatSystem.Manager
 
         // 내부 전진/생성 제어 플래그
         private bool _isAdvancingQueue = false;
-        private bool _nextSpawnIsPlayer = false; // 대기4 교대 스폰 제어 (false=적, true=플레이어 마커)
+        private bool _nextSpawnIsPlayer = false; // 대기4 교대 스폰 제어 (false=적, true=플레이어 마커) - 1:1 교대
         private readonly System.Collections.Generic.HashSet<Game.SkillCardSystem.Interface.ISkillCard> _scheduledEnemyExec = new();
         private bool _suppressAutoRefill = false; // 초기 셋업 등 특정 구간에서 자동 보충 억제
         private bool _suppressAutoExecution = false; // 초기 셋업 중 자동 실행 억제
-        private bool _handGeneratedForTurn = false; // 해당 턴에서 손패 생성 여부
         // 초기 셋업 시 사용한 적 덱/이름 캐시 (보충 시 동일 소스 사용 보장)
         private Game.CharacterSystem.Data.EnemyCharacterData _cachedEnemyData;
         private string _cachedEnemyName;
+
+        /// <summary>
+        /// 적 캐시를 초기화합니다. 적이 교체될 때 호출되어야 합니다.
+        /// </summary>
+        public void ClearEnemyCache()
+        {
+            _cachedEnemyData = null;
+            _cachedEnemyName = null;
+            GameLogger.LogInfo("[TurnManager] 적 캐시 초기화 완료", GameLogger.LogCategory.Combat);
+        }
 
         #region 디버그
 
@@ -528,7 +502,7 @@ namespace Game.CombatSystem.Manager
                     if (_cardUIs.TryGetValue(slot, out var ui) && ui != null)
                     {
                         DestroyImmediate(ui.gameObject);
-                        GameLogger.LogInfo($"슬롯 UI 제거: {slotName}", GameLogger.LogCategory.Combat);
+                        // GameLogger.LogInfo($"슬롯 UI 제거: {slotName}", GameLogger.LogCategory.Combat);
                     }
                 }
 
@@ -537,6 +511,36 @@ namespace Game.CombatSystem.Manager
                 _cardUIs.Remove(slot);
                 OnCardStateChanged?.Invoke();
             }
+        }
+        
+        /// <summary>
+        /// 모든 슬롯을 완전히 정리합니다 (데이터 + UI)
+        /// 적 처치 시 플레이어 핸드와 모든 슬롯을 정리할 때 사용됩니다.
+        /// </summary>
+        public void ClearAllSlots()
+        {
+            var allSlots = new List<CombatSlotPosition>(_cards.Keys);
+            
+            foreach (var slot in allSlots)
+            {
+                // UI 제거
+                if (_cardUIs.TryGetValue(slot, out var ui) && ui != null)
+                {
+                    if (ui is MonoBehaviour uiMb)
+                    {
+                        Destroy(uiMb.gameObject);
+                        GameLogger.LogInfo($"[TurnManager] 슬롯 UI 제거: {slot}", GameLogger.LogCategory.Combat);
+                    }
+                }
+                _cardUIs.Remove(slot);
+            }
+
+            // 데이터 제거
+            _cards.Clear();
+            _reservedEnemySlot = null;
+            OnCardStateChanged?.Invoke();
+
+            GameLogger.LogInfo($"[TurnManager] 모든 슬롯 정리 완료: {allSlots.Count}개 슬롯", GameLogger.LogCategory.Combat);
         }
         
         /// <summary>
@@ -550,7 +554,7 @@ namespace Game.CombatSystem.Manager
         }
         
         /// <summary>
-        /// 적 카드만 제거하고 플레이어 카드 보존
+        /// 적 카드만 제거하고 플레이어 카드 보존 (UI 포함)
         /// </summary>
         public void ClearEnemyCardsOnly()
         {
@@ -563,10 +567,29 @@ namespace Game.CombatSystem.Manager
             }
 
             foreach (var key in toRemove)
+            {
+                // UI 제거
+                if (_cardUIs.TryGetValue(key, out var ui) && ui != null)
+                {
+                    if (ui is MonoBehaviour uiMb)
+                    {
+                        Destroy(uiMb.gameObject);
+                        GameLogger.LogInfo($"[TurnManager] 적 카드 UI 제거: 슬롯 {key}", GameLogger.LogCategory.Combat);
+                    }
+                }
+                _cardUIs.Remove(key);
+
+                // 데이터 제거
                 _cards.Remove(key);
+            }
 
             _reservedEnemySlot = null;
             OnCardStateChanged?.Invoke();
+
+            if (toRemove.Count > 0)
+            {
+                GameLogger.LogInfo($"[TurnManager] 적 카드 {toRemove.Count}개 제거 완료 (UI 포함)", GameLogger.LogCategory.Combat);
+            }
         }
         
         /// <summary>
@@ -707,8 +730,9 @@ namespace Game.CombatSystem.Manager
         /// <summary>
         /// 모든 캐릭터의 턴 효과를 처리합니다.
         /// 턴 효과는 모든 캐릭터에게 동시에 적용되어야 합니다.
+        /// 상태 패턴에서 호출할 수 있도록 public으로 변경
         /// </summary>
-        private void ProcessAllCharacterTurnEffects()
+        public void ProcessAllCharacterTurnEffects()
         {
             // 모든 캐릭터의 턴 효과를 동시에 처리
             var playerManager = GetCachedPlayerManager();
@@ -728,41 +752,26 @@ namespace Game.CombatSystem.Manager
             if (enemy != null)
             {
                 enemy.ProcessTurnEffects();
-                GameLogger.LogInfo($"적 캐릭터 턴 효과 처리: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
+                // GameLogger.LogInfo($"적 캐릭터 턴 효과 처리: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
             }
         }
         
         /// <summary>
-        /// 다음 턴을 진행합니다.
+        /// 슬롯 전진 루틴 (상태 패턴에서 호출)
+        /// 배틀 슬롯이 비어있으면 대기 슬롯을 앞으로 이동시킵니다.
         /// </summary>
-        public void ProceedToNextTurn()
-        {
-            // 다음 턴 전환만 수행하고, 전진은 SwitchTurn → AdvanceQueueAtTurnStartRoutine에서 단일 경로로 처리
-            NextTurn();
-        }
-
-        // 즉시 전진 루틴 제거: 전진은 항상 턴 시작 루틴에서만 수행
-
-		private System.Collections.IEnumerator AdvanceQueueAtTurnStartRoutine()
+		public System.Collections.IEnumerator AdvanceQueueAtTurnStartRoutine()
 		{
-			// 턴 전환 직후 한 프레임 대기(이벤트/UI 정리 후)
+			// 한 프레임 대기
 			yield return null;
+
+			// 배틀 슬롯이 비어있으면 슬롯 이동
 			if (!HasCardInSlot(CombatSlotPosition.BATTLE_SLOT))
 			{
                 yield return MoveAllSlotsForwardRoutine();
 			}
 
-			// 전진/보충이 끝났으므로, 플레이어 턴이면 이제 손패 생성
-			if (currentTurn == TurnType.Player && !_handGeneratedForTurn)
-			{
-				var handMgr = GetCachedPlayerHandManager();
-				if (handMgr != null)
-				{
-					_handGeneratedForTurn = true;
-					GameLogger.LogInfo("플레이어 턴 - 전진/보충 완료 후 손패 생성", GameLogger.LogCategory.SkillCard);
-					handMgr.GenerateInitialHand();
-				}
-			}
+			GameLogger.LogInfo("슬롯 전진 완료", GameLogger.LogCategory.Combat);
         }
 
         /// <summary>
@@ -789,7 +798,7 @@ namespace Game.CombatSystem.Manager
                 yield break;
             }
 
-            // 플레이어 마커 ↔ 적 카드 교대 생성
+            // 패턴: 플레이어 마커 1개 ↔ 적 카드 1개 (1:1 교대)
             if (_nextSpawnIsPlayer)
             {
                 var marker = CreatePlayerMarker();
@@ -840,7 +849,7 @@ namespace Game.CombatSystem.Manager
                 }
             }
 
-            // 다음 생성 주체 토글
+            // 다음 생성 주체 토글 (1:1 교대)
             _nextSpawnIsPlayer = !_nextSpawnIsPlayer;
         }
         
@@ -860,21 +869,12 @@ namespace Game.CombatSystem.Manager
             GameLogger.LogInfo($"적 카드 등록 완료: {card.CardDefinition?.CardName ?? "Unknown"} → WAIT_SLOT_4", GameLogger.LogCategory.Combat);
         }
 
-        /// <summary>
-        /// 초기 적 카드 큐를 설정합니다. (GameStartupController에서 리플렉션으로 호출)
-        /// 실제 게임 플레이처럼 대기4에서 카드 생성하고 이동하면서 순차적으로 채웁니다.
-        /// </summary>
-        /// <param name="enemyData">적 캐릭터 데이터</param>
-        /// <param name="enemyName">적 이름</param>
-        public void SetupInitialEnemyQueue(Game.CharacterSystem.Data.EnemyCharacterData enemyData, string enemyName)
-        {
-            StartCoroutine(SetupInitialEnemyQueueRoutine(enemyData, enemyName));
-        }
 
         /// <summary>
         /// 코루틴: 동적 셋업을 단계별로 순차 진행
+        /// CombatInitState에서 호출합니다.
         /// </summary>
-        private System.Collections.IEnumerator SetupInitialEnemyQueueRoutine(Game.CharacterSystem.Data.EnemyCharacterData enemyData, string enemyName)
+        public System.Collections.IEnumerator SetupInitialEnemyQueueRoutine(Game.CharacterSystem.Data.EnemyCharacterData enemyData, string enemyName)
         {
             if (enemyData?.EnemyDeck == null)
             {
@@ -905,10 +905,15 @@ namespace Game.CombatSystem.Manager
             _cachedEnemyData = enemyData;
             _cachedEnemyName = enemyName;
 
-            bool isPlayerTurn = true; // 플레이어부터 시작
+            // 초기 셋업: 플레이어 마커 ↔ 적 카드 (1:1 교대, 총 5개)
+            // 패턴: 플레이어 → 적 → 플레이어 → 적 → 플레이어
+            _nextSpawnIsPlayer = true;
+            bool isPlayerTurn = true;
 
             for (int i = 0; i < 5; i++)
             {
+                GameLogger.LogInfo($"[초기셋업] {i+1}/5 - {(isPlayerTurn ? "플레이어 마커" : "적 카드")}", GameLogger.LogCategory.Combat);
+
                 if (isPlayerTurn)
                 {
                     var marker = CreatePlayerMarker();
@@ -929,19 +934,24 @@ namespace Game.CombatSystem.Manager
                     }
                 }
 
+                // 1:1 교대
                 isPlayerTurn = !isPlayerTurn;
             }
 
-            GameLogger.LogInfo("동적 슬롯 셋업 완료", GameLogger.LogCategory.Combat);
+            GameLogger.LogInfo("동적 슬롯 셋업 완료 - 패턴: 플레이어 → 적 → 플레이어 → 적 → 플레이어 (1:1 교대)", GameLogger.LogCategory.Combat);
             _initialSlotSetupCompleted = true;
-            OnInitialSlotSetupCompleted?.Invoke();
 
-            // 이동/애니메이션이 모두 끝날 때까지 대기 후 해제
+            // 이동/애니메이션이 모두 끝날 때까지 대기
             while (_isAdvancingQueue)
             {
                 yield return null;
             }
             yield return null;
+
+            // 초기 셋업 완료 후 다음 생성 주체 설정
+            // 마지막이 플레이어 마커였으므로 다음은 적 카드
+            _nextSpawnIsPlayer = false;
+            
             // 초기 셋업 종료 후 자동 보충/자동 실행 활성화
             _suppressAutoRefill = false;
             _suppressAutoExecution = false;
@@ -1076,27 +1086,11 @@ namespace Game.CombatSystem.Manager
             
             GameLogger.LogInfo($"{FormatLogTag()} 카드 이동: {card.GetCardName()} ({fromSlot} → {toSlot})", GameLogger.LogCategory.Combat);
 
-            // 적 카드가 배틀 슬롯으로 이동했을 때 자동 실행 (초기 셋업 중 억제 + 단일 경로 보장)
+            // 적 카드가 배틀 슬롯으로 이동했을 때 로그만 출력
+            // 실제 실행은 SlotMovingState에서 처리
             if (toSlot == CombatSlotPosition.BATTLE_SLOT && !card.IsFromPlayer())
             {
-                // 게이트 조건
-                bool canAutoExecute = !_suppressAutoExecution && _initialSlotSetupCompleted && !_isAdvancingQueue && currentTurn == TurnType.Enemy;
-                GameLogger.LogInfo($"{FormatLogTag()} [AutoExec-Check] to=BATTLE, owner=ENEMY, can={canAutoExecute}, suppress={_suppressAutoExecution}, setupDone={_initialSlotSetupCompleted}, advancing={_isAdvancingQueue}, turn={currentTurn}", GameLogger.LogCategory.Combat);
-
-                if (canAutoExecute && !_scheduledEnemyExec.Contains(card))
-                {
-                    _scheduledEnemyExec.Add(card);
-                    var executionManager = GetCachedCombatExecutionManager();
-                    if (executionManager != null)
-                    {
-                        // 안전을 위해 한 프레임 대기 후 실행(레이아웃/보충/전진 반영 시간 확보)
-                        StartCoroutine(ExecuteEnemyCardNextFrame(executionManager, card, toSlot));
-                    }
-                }
-                else if (!canAutoExecute)
-                {
-                    GameLogger.LogInfo($"{FormatLogTag()} [AutoExec-Skip] 게이트 조건 불충족으로 자동 실행 스킵", GameLogger.LogCategory.Combat);
-                }
+                GameLogger.LogInfo($"{FormatLogTag()} 적 카드 배틀 슬롯 도달: {card.GetCardName()} (SlotMovingState에서 자동 실행됨)", GameLogger.LogCategory.Combat);
             }
         }
 
@@ -1215,7 +1209,7 @@ namespace Game.CombatSystem.Manager
                 // SkillCard 런타임 인스턴스 생성
                 var markerCard = new Game.SkillCardSystem.Runtime.SkillCard(markerDefinition, Game.SkillCardSystem.Data.Owner.Player, null);
 
-                GameLogger.LogInfo("플레이어 마커 카드 생성 완료", GameLogger.LogCategory.Combat);
+                // GameLogger.LogInfo("플레이어 마커 카드 생성 완료", GameLogger.LogCategory.Combat);
                 return markerCard;
             }
             catch (System.Exception e)
@@ -1291,7 +1285,7 @@ namespace Game.CombatSystem.Manager
                 
                 if (cardUI != null)
                 {
-                    GameLogger.LogInfo($"카드 UI 생성 완료: {card.GetCardName()} → {slotPosition} ({slotName})", GameLogger.LogCategory.Combat);
+                    // GameLogger.LogInfo($"카드 UI 생성 완료: {card.GetCardName()} → {slotPosition} ({slotName})", GameLogger.LogCategory.Combat);
                 }
                 else
                 {

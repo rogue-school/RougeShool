@@ -66,16 +66,16 @@ namespace Game.CharacterSystem.Data
 
         #endregion
 
-        #region 패시브 이펙트
+        #region 캐릭터 이펙트
 
-        [field: Header("패시브 이펙트")]
+        [field: Header("캐릭터 이펙트")]
 
         /// <summary>
-        /// 전투 시작 시 적용되는 패시브 효과 리스트입니다.
-        /// 각 이펙트는 ScriptableObject 형태이며, ICardEffect 등으로 캐스팅하여 사용됩니다.
+        /// 캐릭터 이펙트 목록입니다.
+        /// 각 이펙트는 개별 설정을 가질 수 있습니다.
         /// </summary>
         [field: SerializeField]
-        public List<ScriptableObject> PassiveEffects { get; private set; }
+        public List<CharacterEffectEntry> CharacterEffects { get; private set; } = new List<CharacterEffectEntry>();
 
         #endregion
 

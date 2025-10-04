@@ -48,6 +48,7 @@ namespace Game.SkillCardSystem.Effect
                 {
                     RemainingTurns--;
                     target.SetGuarded(!IsExpired);
+                    Game.CoreSystem.Utility.GameLogger.LogInfo($"[GuardBuff] {target.GetCharacterName()} 가드 버프 턴 감소 (남은 턴: {RemainingTurns})", Game.CoreSystem.Utility.GameLogger.LogCategory.SkillCard);
                 }
             }
             else
@@ -58,6 +59,7 @@ namespace Game.SkillCardSystem.Effect
                 {
                     RemainingTurns--;
                     target.SetGuarded(!IsExpired);
+                    Game.CoreSystem.Utility.GameLogger.LogInfo($"[GuardBuff] {target.GetCharacterName()} 가드 버프 턴 감소 (남은 턴: {RemainingTurns})", Game.CoreSystem.Utility.GameLogger.LogCategory.SkillCard);
                 }
             }
         }

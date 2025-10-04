@@ -34,6 +34,26 @@ namespace Game.SkillCardSystem.Manager
 
         #endregion
 
+        #region Public Methods
+
+        /// <summary>
+        /// PlayerDeckManager로부터 카드 인스턴스를 받아 CardCirculationSystem을 초기화합니다.
+        /// </summary>
+        public void InitializeDeck(System.Collections.Generic.List<ISkillCard> cardInstances)
+        {
+            if (circulationSystem != null)
+            {
+                circulationSystem.Initialize(cardInstances);
+                GameLogger.LogInfo($"[PlayerHandManager] CardCirculationSystem 초기화: {cardInstances.Count}장", GameLogger.LogCategory.SkillCard);
+            }
+            else
+            {
+                GameLogger.LogWarning("[PlayerHandManager] CardCirculationSystem이 null - 초기화 실패", GameLogger.LogCategory.SkillCard);
+            }
+        }
+
+        #endregion
+
         #region IPlayerHandManager 구현
 
         /// <summary>
@@ -51,7 +71,7 @@ namespace Game.SkillCardSystem.Manager
         /// </summary>
         public void GenerateInitialHand()
         {
-            GameLogger.LogInfo("초기 손패 생성", GameLogger.LogCategory.SkillCard);
+            // GameLogger.LogInfo("초기 손패 생성", GameLogger.LogCategory.SkillCard);
 
             // 의존성 상세 진단
             if (currentPlayer == null)
@@ -127,7 +147,7 @@ namespace Game.SkillCardSystem.Manager
                 if (card != null && slot != null)
                 {
                     slot.AttachCard(card, cardUIPrefab);
-                    GameLogger.LogInfo($"핸드에 카드 추가: {card.GetCardName()} (슬롯 {slot.GetSlotPosition()})", GameLogger.LogCategory.SkillCard);
+                    // GameLogger.LogInfo($"핸드에 카드 추가: {card.GetCardName()} (슬롯 {slot.GetSlotPosition()})", GameLogger.LogCategory.SkillCard);
                 }
             }
         }
@@ -246,6 +266,7 @@ namespace Game.SkillCardSystem.Manager
 
         /// <summary>
         /// 카드를 제거합니다.
+        /// 플레이어 카드가 전투 슬롯에서 실행된 후 핸드에서 제거할 때 사용됩니다.
         /// </summary>
         /// <param name="card">제거할 카드</param>
         public void RemoveCard(ISkillCard card)
@@ -253,6 +274,13 @@ namespace Game.SkillCardSystem.Manager
             if (card == null)
             {
                 GameLogger.LogWarning("제거할 카드가 null입니다.", GameLogger.LogCategory.SkillCard);
+                return;
+            }
+
+            // 플레이어 카드인지 확인
+            if (!card.IsFromPlayer())
+            {
+                GameLogger.LogWarning($"플레이어 핸드에서 적 카드를 제거하려고 시도: {card.GetCardName()}", GameLogger.LogCategory.SkillCard);
                 return;
             }
 
@@ -265,13 +293,13 @@ namespace Game.SkillCardSystem.Manager
                     if (slot.GetCard() == card)
                     {
                         slot.Clear();
-                        GameLogger.LogInfo($"카드 제거: {card.GetCardName()}", GameLogger.LogCategory.SkillCard);
+                        GameLogger.LogInfo($"플레이어 핸드에서 카드 제거 완료: {card.GetCardName()}", GameLogger.LogCategory.SkillCard);
                         return;
                     }
                 }
             }
 
-            GameLogger.LogWarning($"카드를 찾을 수 없습니다: {card.GetCardName()}", GameLogger.LogCategory.SkillCard);
+            GameLogger.LogWarning($"핸드에서 카드를 찾을 수 없습니다: {card.GetCardName()}", GameLogger.LogCategory.SkillCard);
         }
 
         /// <summary>
@@ -280,7 +308,7 @@ namespace Game.SkillCardSystem.Manager
         /// <param name="enable">활성화 여부</param>
         public void EnableInput(bool enable)
         {
-            GameLogger.LogInfo($"입력 활성화: {enable}", GameLogger.LogCategory.SkillCard);
+            // GameLogger.LogInfo($"입력 활성화: {enable}", GameLogger.LogCategory.SkillCard);
             // TODO: 실제 입력 활성화/비활성화 로직 구현
         }
 
@@ -297,7 +325,7 @@ namespace Game.SkillCardSystem.Manager
                     slot.Clear();
                 }
             }
-            GameLogger.LogInfo("모든 핸드 카드 제거", GameLogger.LogCategory.SkillCard);
+            // GameLogger.LogInfo("모든 핸드 카드 제거", GameLogger.LogCategory.SkillCard);
         }
 
         /// <summary>
@@ -315,7 +343,7 @@ namespace Game.SkillCardSystem.Manager
 
         private void Awake()
         {
-            GameLogger.LogInfo("PlayerHandManager 초기화", GameLogger.LogCategory.SkillCard);
+            // GameLogger.LogInfo("PlayerHandManager 초기화", GameLogger.LogCategory.SkillCard);
         }
 
         #endregion

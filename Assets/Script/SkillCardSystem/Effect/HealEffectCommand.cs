@@ -21,8 +21,8 @@ namespace Game.SkillCardSystem.Effect
             this.maxHealAmount = maxHealAmount;
             this.visualEffectPrefab = visualEffectPrefab;
             
-            GameLogger.LogInfo($"[HealEffectCommand] 생성됨 - 치유량: {healAmount}, 최대: {maxHealAmount}", 
-                GameLogger.LogCategory.SkillCard);
+            // GameLogger.LogInfo($"[HealEffectCommand] 생성됨 - 치유량: {healAmount}, 최대: {maxHealAmount}", 
+            //    GameLogger.LogCategory.SkillCard);
         }
         
         /// <summary>
@@ -35,8 +35,8 @@ namespace Game.SkillCardSystem.Effect
             this.maxHealAmount = 0; // 커스텀 설정에서는 최대치 제한 없음
             this.visualEffectPrefab = null;
             
-            GameLogger.LogInfo($"[HealEffectCommand] 생성됨 (CustomSettings) - 치유량: {healAmount}", 
-                GameLogger.LogCategory.SkillCard);
+            // GameLogger.LogInfo($"[HealEffectCommand] 생성됨 (CustomSettings) - 치유량: {healAmount}", 
+            //    GameLogger.LogCategory.SkillCard);
         }
 
         public void Execute(ICardExecutionContext context, ICombatTurnManager turnManager)

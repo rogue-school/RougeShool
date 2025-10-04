@@ -48,6 +48,9 @@ namespace Game.CharacterSystem.Core
         private System.Action<ICharacter> onDeathCallback;
         private bool isDead = false;
 
+        private System.Collections.Generic.List<ICharacterEffect> characterEffects = new System.Collections.Generic.List<ICharacterEffect>();
+        public event System.Action<EnemyCharacterData, int> OnSummonRequested;
+
         /// <summary>
         /// 적 캐릭터의 데이터 (스크립터블 오브젝트)
         /// </summary>
@@ -159,21 +162,21 @@ namespace Game.CharacterSystem.Core
         /// <param name="amount">피해량</param>
         public override void TakeDamage(int amount)
         {
-            // 가드 상태 확인 (base.TakeDamage 호출 전에 미리 확인)
             bool wasGuarded = IsGuarded();
-            
+            int previousHP = GetCurrentHP();
+
             base.TakeDamage(amount);
+            int currentHP = GetCurrentHP();
             RefreshUI();
 
-            // 가드로 차단된 경우 데미지 텍스트 표시하지 않음
             if (wasGuarded)
             {
                 GameLogger.LogInfo($"[{GetCharacterName()}] 가드로 데미지 차단됨 - 데미지 텍스트 표시 안함", GameLogger.LogCategory.Character);
                 return;
             }
 
-            // 실제 데미지를 받은 경우에만 데미지 텍스트 표시
             ShowDamageText(amount);
+            NotifyHealthChanged(previousHP, currentHP);
 
             if (IsDead() && !isDead)
             {
@@ -187,11 +190,14 @@ namespace Game.CharacterSystem.Core
         /// <param name="amount">피해량</param>
         public override void TakeDamageIgnoreGuard(int amount)
         {
+            int previousHP = GetCurrentHP();
+
             base.TakeDamageIgnoreGuard(amount);
+            int currentHP = GetCurrentHP();
             RefreshUI();
 
-            // 가드 무시 데미지는 항상 데미지 텍스트 표시
             ShowDamageText(amount);
+            NotifyHealthChanged(previousHP, currentHP);
 
             if (IsDead() && !isDead)
             {
@@ -269,19 +275,37 @@ namespace Game.CharacterSystem.Core
         }
 
         /// <summary>
-        /// 캐릭터에 설정된 패시브 효과를 즉시 적용합니다.
+        /// 캐릭터에 설정된 이펙트를 적용합니다.
         /// </summary>
         private void ApplyPassiveEffects()
         {
-            if (CharacterData?.PassiveEffects == null) return;
+            if (CharacterData?.CharacterEffects == null) return;
 
-            foreach (var effect in CharacterData.PassiveEffects)
+            characterEffects.Clear();
+
+            foreach (var entry in CharacterData.CharacterEffects)
             {
-                if (effect is ICardEffect cardEffect)
+                if (entry.effectSO == null) continue;
+
+                characterEffects.Add(entry.effectSO);
+
+                // 커스텀 설정 사용 여부에 따라 초기화
+                if (entry.useCustomSettings && entry.effectSO is Effect.SummonEffectSO summonEffectWithCustom)
                 {
-                    var context = new DefaultCardExecutionContext(null, this, this);
-                    cardEffect.ApplyEffect(context, 0);
+                    summonEffectWithCustom.InitializeWithCustomSettings(this, entry.customSettings);
+                    summonEffectWithCustom.OnSummonTriggered += HandleSummonTriggered;
                 }
+                else
+                {
+                    entry.effectSO.Initialize(this);
+
+                    if (entry.effectSO is Effect.SummonEffectSO summonEffect)
+                    {
+                        summonEffect.OnSummonTriggered += HandleSummonTriggered;
+                    }
+                }
+
+                GameLogger.LogInfo($"[{GetCharacterName()}] 캐릭터 이펙트 적용: {entry.effectSO.GetEffectName()} (커스텀: {entry.useCustomSettings})", GameLogger.LogCategory.Character);
             }
         }
 
@@ -380,6 +404,42 @@ namespace Game.CharacterSystem.Core
         protected override void OnDamaged(int amount)
         {
             CombatEvents.RaiseEnemyCharacterDamaged(CharacterData, this.gameObject, amount);
+        }
+
+        #endregion
+
+        #region 캐릭터 이펙트 시스템
+
+        private void NotifyHealthChanged(int previousHP, int currentHP)
+        {
+            foreach (var effect in characterEffects)
+            {
+                effect.OnHealthChanged(this, previousHP, currentHP);
+            }
+        }
+
+        private void HandleSummonTriggered(EnemyCharacterData summonTarget, int currentHP)
+        {
+            GameLogger.LogInfo($"[{GetCharacterName()}] 소환 요청 전달: {summonTarget.DisplayName}, 현재 체력: {currentHP}", GameLogger.LogCategory.Character);
+            OnSummonRequested?.Invoke(summonTarget, currentHP);
+        }
+
+        private void CleanupEffects()
+        {
+            foreach (var effect in characterEffects)
+            {
+                if (effect is Effect.SummonEffectSO summonEffect)
+                {
+                    summonEffect.OnSummonTriggered -= HandleSummonTriggered;
+                }
+                effect.Cleanup(this);
+            }
+            characterEffects.Clear();
+        }
+
+        private void OnDestroy()
+        {
+            CleanupEffects();
         }
 
         #endregion

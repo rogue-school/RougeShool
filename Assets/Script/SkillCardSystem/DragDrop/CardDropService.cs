@@ -8,6 +8,7 @@ using Game.CombatSystem.Slot;
 using Game.CombatSystem.Utility;
 using Game.CombatSystem.Manager;
 using Game.CombatSystem.DragDrop;
+using Game.CombatSystem.State;
 using DG.Tweening;
 
 namespace Game.CombatSystem.Service
@@ -15,6 +16,7 @@ namespace Game.CombatSystem.Service
     /// <summary>
     /// 카드 드롭 처리 서비스.
     /// 슬롯 드롭 유효성 검사, 기존 카드 교체, 전투 레지스트리 등록을 담당합니다.
+    /// 상태 머신을 통해 드롭 허가 여부를 확인합니다.
     /// </summary>
     public class CardDropService
     {
@@ -22,6 +24,7 @@ namespace Game.CombatSystem.Service
         private readonly CardDropRegistrar registrar;
         private readonly TurnManager turnManager;
         private readonly CombatExecutionManager executionManager;
+        private CombatStateMachine stateMachine;
 
         /// <summary>
         /// 생성자. 필요한 의존성을 주입합니다.
@@ -36,6 +39,24 @@ namespace Game.CombatSystem.Service
             this.registrar = registrar;
             this.turnManager = turnManager;
             this.executionManager = executionManager;
+
+            // CombatStateMachine 찾기 (지연 초기화)
+            FindStateMachine();
+        }
+
+        /// <summary>
+        /// CombatStateMachine을 찾습니다 (지연 초기화)
+        /// </summary>
+        private void FindStateMachine()
+        {
+            if (stateMachine == null)
+            {
+                stateMachine = Object.FindFirstObjectByType<CombatStateMachine>();
+                if (stateMachine != null)
+                {
+                    GameLogger.LogInfo("[CardDropService] CombatStateMachine 연결 완료", GameLogger.LogCategory.Combat);
+                }
+            }
         }
 
         /// <summary>
@@ -51,8 +72,30 @@ namespace Game.CombatSystem.Service
         {
             message = "";
 
-            // 1. 플레이어 입력 턴 여부 확인
-            if (!turnManager.IsPlayerTurn())
+            // 상태 머신 확인 (지연 초기화)
+            if (stateMachine == null)
+            {
+                FindStateMachine();
+            }
+
+            // 0. 상태 머신 검증 - 플레이어 카드 드래그 허용 여부 확인
+            if (stateMachine != null)
+            {
+                if (!stateMachine.CanPlayerDragCard())
+                {
+                    message = "현재 상태에서 카드 배치가 허용되지 않습니다.";
+                    GameLogger.LogWarning($"[CardDropService] {message} (상태: {stateMachine.GetCurrentState()?.StateName ?? "None"})", GameLogger.LogCategory.SkillCard);
+                    return false;
+                }
+            }
+            else
+            {
+                // 상태 머신이 없으면 기존 방식으로 폴백
+                GameLogger.LogWarning("[CardDropService] CombatStateMachine을 찾을 수 없음 - 기존 방식으로 검증", GameLogger.LogCategory.SkillCard);
+            }
+
+            // 1. 플레이어 입력 턴 여부 확인 (기존 방식 - 폴백)
+            if (stateMachine == null && !turnManager.IsPlayerTurn())
             {
                 message = "플레이어 입력 턴이 아닙니다.";
                 GameLogger.LogWarning($"[CardDropService] {message}", GameLogger.LogCategory.SkillCard);
@@ -76,7 +119,7 @@ namespace Game.CombatSystem.Service
             }
 
             // 4. 슬롯에 카드 배치 및 UI 스냅
-            GameLogger.LogInfo($"[CardDropService] 카드 드롭 성공: {card.CardDefinition?.CardName ?? "Unknown"}", GameLogger.LogCategory.SkillCard);
+            // GameLogger.LogInfo($"[CardDropService] 카드 드롭 성공: {card.CardDefinition?.CardName ?? "Unknown"}", GameLogger.LogCategory.SkillCard);
 
             var combatSlot = slot as ICombatCardSlot;
             if (combatSlot != null)
@@ -101,15 +144,32 @@ namespace Game.CombatSystem.Service
                         uiRect.SetParent(target, false);
                         uiRect.anchoredPosition = Vector2.zero;
                         uiRect.localScale = Vector3.one;
-                        
-                        // 카드 배치 완료 후 실행 처리
-                        TriggerCardExecution(card, slotPosition);
+
+                        // 상태 머신이 있으면 상태 머신에게 카드 배치 알림 (상태 머신이 실행 처리)
+                        // 상태 머신이 없으면 기존 방식으로 실행
+                        if (stateMachine != null)
+                        {
+                            stateMachine.OnPlayerCardPlaced(card, slotPosition);
+                        }
+                        else
+                        {
+                            TriggerCardExecution(card, slotPosition);
+                        }
                     });
                 }
                 else
                 {
-                    // UI 이동이 불가능한 경우 즉시 실행
-                    TriggerCardExecution(card, slotPosition);
+                    // UI 이동이 불가능한 경우
+                    // 상태 머신이 있으면 상태 머신에게 카드 배치 알림
+                    // 상태 머신이 없으면 기존 방식으로 실행
+                    if (stateMachine != null)
+                    {
+                        stateMachine.OnPlayerCardPlaced(card, slotPosition);
+                    }
+                    else
+                    {
+                        TriggerCardExecution(card, slotPosition);
+                    }
                 }
                 return true;
             }
@@ -134,7 +194,7 @@ namespace Game.CombatSystem.Service
             // 배틀 슬롯에 배치된 경우 즉시 실행
             if (slotPosition == CombatSlotPosition.BATTLE_SLOT)
             {
-                GameLogger.LogInfo($"[CardDropService] 배틀 슬롯 카드 즉시 실행: {card.GetCardName()}", GameLogger.LogCategory.SkillCard);
+                // GameLogger.LogInfo($"[CardDropService] 배틀 슬롯 카드 즉시 실행: {card.GetCardName()}", GameLogger.LogCategory.SkillCard);
                 executionManager.ExecuteCardImmediately(card, slotPosition);
             }
             else

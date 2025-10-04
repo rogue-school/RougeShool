@@ -41,14 +41,15 @@ namespace Game.SkillCardSystem.Effect
         {
             if (target == null)
             {
-                Debug.LogWarning("[BleedEffect] 대상이 null입니다. 출혈 효과 무시됨.");
+                Game.CoreSystem.Utility.GameLogger.LogWarning("[BleedEffect] 대상이 null입니다. 출혈 효과 무시됨.", Game.CoreSystem.Utility.GameLogger.LogCategory.SkillCard);
                 return;
             }
+            
             // 가드에 영향을 받지 않는 지속 피해로 처리
             target.TakeDamageIgnoreGuard(amount);
             remainingTurns--;
 
-            Debug.Log($"[BleedEffect] {target.GetCharacterName()} 출혈 피해: {amount} (남은 턴: {remainingTurns})");
+            Game.CoreSystem.Utility.GameLogger.LogInfo($"[BleedEffect] {target.GetCharacterName()} 출혈 피해: {amount} (남은 턴: {remainingTurns})", Game.CoreSystem.Utility.GameLogger.LogCategory.SkillCard);
         }
     }
 }

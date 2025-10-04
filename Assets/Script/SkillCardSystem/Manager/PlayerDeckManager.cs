@@ -28,10 +28,11 @@ namespace Game.SkillCardSystem.Manager
         #endregion
         
         #region 의존성 주입 (DI로 자동 해결)
-        
+
         [Inject] private PlayerManager playerManager;
         [InjectOptional] private SaveManager saveManager;
-        
+        [InjectOptional] private ISkillCardFactory cardFactory;
+
         #endregion
         
         #region 핵심 필드
@@ -126,18 +127,21 @@ namespace Game.SkillCardSystem.Manager
                 currentDeck = new List<PlayerSkillDeck.CardEntry>();
                 return;
             }
-            
+
             // CharacterData가 PlayerCharacterData인지 확인
             if (player.CharacterData is PlayerCharacterData playerData)
             {
                 if (playerData.SkillDeck != null)
                 {
                     currentDeck = new List<PlayerSkillDeck.CardEntry>(playerData.SkillDeck.GetAllCardEntries());
-                    
+
                     if (enableDebugLogging)
                     {
                         GameLogger.LogInfo($"덱 초기화 완료: {playerData.DisplayName}의 덱 ({currentDeck.Count}종류, {GetTotalCardCount()}장)", GameLogger.LogCategory.SkillCard);
                     }
+
+                    // CardCirculationSystem 초기화
+                    InitializeCirculationSystem();
                 }
                 else
                 {
@@ -149,6 +153,65 @@ namespace Game.SkillCardSystem.Manager
             {
                 currentDeck = new List<PlayerSkillDeck.CardEntry>();
                 GameLogger.LogWarning($"플레이어 캐릭터의 CharacterData가 PlayerCharacterData가 아닙니다. 타입: {player.CharacterData?.GetType().Name ?? "null"}", GameLogger.LogCategory.SkillCard);
+            }
+        }
+
+        /// <summary>
+        /// CardCirculationSystem을 초기화합니다.
+        /// </summary>
+        private void InitializeCirculationSystem()
+        {
+            // 순환 참조 방지: FindFirstObjectByType으로 찾기
+            var circulationSystem = FindFirstObjectByType<MonoBehaviour>()?.GetComponent<ICardCirculationSystem>();
+
+            // 또는 PlayerHandManager를 통해 접근
+            var handManager = FindFirstObjectByType<PlayerHandManager>();
+            if (handManager != null)
+            {
+                // PlayerHandManager가 CardCirculationSystem을 가지고 있음
+                // 리플렉션 또는 public 메서드를 통해 접근 가능
+                GameLogger.LogInfo("PlayerHandManager를 통해 CardCirculationSystem 초기화 예정", GameLogger.LogCategory.SkillCard);
+            }
+
+            if (cardFactory == null)
+            {
+                GameLogger.LogWarning("SkillCardFactory를 찾을 수 없습니다 - 순환 시스템 초기화 건너뜀", GameLogger.LogCategory.SkillCard);
+                return;
+            }
+
+            // 덱의 모든 카드 정의를 ISkillCard 인스턴스로 변환
+            var cardInstances = new List<ISkillCard>();
+            foreach (var entry in currentDeck)
+            {
+                for (int i = 0; i < entry.quantity; i++)
+                {
+                    var cardInstance = cardFactory.CreatePlayerCard(entry.cardDefinition);
+                    if (cardInstance != null)
+                    {
+                        cardInstances.Add(cardInstance);
+                    }
+                }
+            }
+
+            // PlayerHandManager를 통해 간접적으로 초기화
+            if (handManager != null && cardInstances.Count > 0)
+            {
+                // PlayerHandManager에 초기화 메서드가 있다면 호출
+                StartCoroutine(DelayedInitializeCirculation(cardInstances));
+            }
+        }
+
+        private System.Collections.IEnumerator DelayedInitializeCirculation(List<ISkillCard> cardInstances)
+        {
+            // 프레임 대기하여 모든 DI 완료 후 초기화
+            yield return new WaitForEndOfFrame();
+
+            var handManager = FindFirstObjectByType<PlayerHandManager>();
+            if (handManager != null)
+            {
+                // PlayerHandManager의 InitializeCirculationSystem 메서드 호출
+                handManager.InitializeDeck(cardInstances);
+                GameLogger.LogInfo($"CardCirculationSystem 초기화 완료: {cardInstances.Count}장", GameLogger.LogCategory.SkillCard);
             }
         }
         

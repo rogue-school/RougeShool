@@ -97,12 +97,12 @@ namespace Game.SkillCardSystem.Manager
         /// </summary>
         public System.Collections.IEnumerator Initialize()
         {
-            GameLogger.LogInfo($"[SkillCardTooltipManager] 초기화 시작 - 현재 상태: IsInitialized={IsInitialized}", GameLogger.LogCategory.UI);
+            // GameLogger.LogInfo($"[SkillCardTooltipManager] 초기화 시작 - 현재 상태: IsInitialized={IsInitialized}", GameLogger.LogCategory.UI);
             
             yield return InitializeTooltipSystem();
             
             IsInitialized = true;
-            GameLogger.LogInfo($"[SkillCardTooltipManager] 초기화 완료 - IsInitialized={IsInitialized}, currentTooltip={currentTooltip != null}", GameLogger.LogCategory.UI);
+            // GameLogger.LogInfo($"[SkillCardTooltipManager] 초기화 완료 - IsInitialized={IsInitialized}, currentTooltip={currentTooltip != null}", GameLogger.LogCategory.UI);
         }
 
         /// <summary>
@@ -173,7 +173,7 @@ namespace Game.SkillCardSystem.Manager
             
             if (tooltipPrefab != null)
             {
-                GameLogger.LogInfo("Resources에서 SkillCardTooltip 프리팹을 찾았습니다", GameLogger.LogCategory.UI);
+                // GameLogger.LogInfo("Resources에서 SkillCardTooltip 프리팹을 찾았습니다", GameLogger.LogCategory.UI);
                 return;
             }
 
@@ -209,7 +209,7 @@ namespace Game.SkillCardSystem.Manager
             {
                 // 기존 캔버스 설정 업데이트
                 ConfigureCanvas(tooltipCanvas);
-                GameLogger.LogInfo($"현재 씬의 UI 캔버스 사용: {tooltipCanvas.name}", GameLogger.LogCategory.UI);
+                // GameLogger.LogInfo($"현재 씬의 UI 캔버스 사용: {tooltipCanvas.name}", GameLogger.LogCategory.UI);
             }
         }
 
@@ -230,7 +230,7 @@ namespace Game.SkillCardSystem.Manager
                     // Screen Space - Overlay 캔버스 우선
                     if (canvas.renderMode == RenderMode.ScreenSpaceOverlay)
                     {
-                        GameLogger.LogInfo($"Screen Space - Overlay 캔버스 발견: {canvas.name}", GameLogger.LogCategory.UI);
+                        // GameLogger.LogInfo($"Screen Space - Overlay 캔버스 발견: {canvas.name}", GameLogger.LogCategory.UI);
                         return canvas;
                     }
                 }
@@ -241,7 +241,7 @@ namespace Game.SkillCardSystem.Manager
             {
                 if (canvas.gameObject.scene.name != "DontDestroyOnLoad")
                 {
-                    GameLogger.LogInfo($"현재 씬의 캔버스 발견: {canvas.name} (RenderMode: {canvas.renderMode})", GameLogger.LogCategory.UI);
+                    // GameLogger.LogInfo($"현재 씬의 캔버스 발견: {canvas.name} (RenderMode: {canvas.renderMode})", GameLogger.LogCategory.UI);
                     return canvas;
                 }
             }
@@ -275,7 +275,7 @@ namespace Game.SkillCardSystem.Manager
                 // 캔버스 설정 (메인 캔버스보다 높은 Sort Order)
                 ConfigureCanvas(tooltipCanvas);
                 
-                GameLogger.LogInfo($"메인 캔버스의 자식으로 툴팁 캔버스 생성: {canvasName}", GameLogger.LogCategory.UI);
+                // GameLogger.LogInfo($"메인 캔버스의 자식으로 툴팁 캔버스 생성: {canvasName}", GameLogger.LogCategory.UI);
             }
             else
             {
@@ -286,7 +286,7 @@ namespace Game.SkillCardSystem.Manager
                 
                 ConfigureCanvas(tooltipCanvas);
                 
-                GameLogger.LogInfo($"독립적인 툴팁 캔버스 생성: {canvasName}", GameLogger.LogCategory.UI);
+                // GameLogger.LogInfo($"독립적인 툴팁 캔버스 생성: {canvasName}", GameLogger.LogCategory.UI);
             }
         }
 
@@ -316,7 +316,7 @@ namespace Game.SkillCardSystem.Manager
                 raycaster = canvas.gameObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
             }
             
-            GameLogger.LogInfo($"캔버스 설정 완료: Sort Order {canvasSortOrder}", GameLogger.LogCategory.UI);
+            // GameLogger.LogInfo($"캔버스 설정 완료: Sort Order {canvasSortOrder}", GameLogger.LogCategory.UI);
         }
 
         /// <summary>
@@ -325,12 +325,12 @@ namespace Game.SkillCardSystem.Manager
         /// </summary>
         private void CreateTooltipInstance()
         {
-            GameLogger.LogInfo($"[SkillCardTooltipManager] CreateTooltipInstance 시작 - currentTooltip: {currentTooltip != null}, tooltipPrefab: {tooltipPrefab != null}, tooltipCanvas: {tooltipCanvas != null}", GameLogger.LogCategory.UI);
+            // GameLogger.LogInfo($"[SkillCardTooltipManager] CreateTooltipInstance 시작 - currentTooltip: {currentTooltip != null}, tooltipPrefab: {tooltipPrefab != null}, tooltipCanvas: {tooltipCanvas != null}", GameLogger.LogCategory.UI);
             
             // 기존 툴팁이 있으면 제거 (단일 인스턴스 방식에서 변경)
             if (currentTooltip != null)
             {
-                GameLogger.LogInfo("[SkillCardTooltipManager] 기존 툴팁 제거", GameLogger.LogCategory.UI);
+                // GameLogger.LogInfo("[SkillCardTooltipManager] 기존 툴팁 제거", GameLogger.LogCategory.UI);
                 DestroyImmediate(currentTooltip.gameObject);
                 currentTooltip = null;
             }
@@ -360,7 +360,7 @@ namespace Game.SkillCardSystem.Manager
                 // 초기에는 비활성화
                 currentTooltip.gameObject.SetActive(false);
 
-                GameLogger.LogInfo("툴팁 인스턴스 생성 완료 (비활성화 상태)", GameLogger.LogCategory.UI);
+                // GameLogger.LogInfo("툴팁 인스턴스 생성 완료 (비활성화 상태)", GameLogger.LogCategory.UI);
             }
             catch (System.Exception ex)
             {
@@ -380,9 +380,7 @@ namespace Game.SkillCardSystem.Manager
         public void RegisterCardUI(ISkillCard card, RectTransform cardTransform)
         {
             if (card == null || cardTransform == null) return;
-
             cardUICache[card] = cardTransform;
-            GameLogger.LogInfo($"[SkillCardTooltipManager] 카드 UI 등록: {card.GetCardName()}", GameLogger.LogCategory.UI);
         }
 
         /// <summary>
@@ -392,11 +390,7 @@ namespace Game.SkillCardSystem.Manager
         public void UnregisterCardUI(ISkillCard card)
         {
             if (card == null) return;
-
-            if (cardUICache.Remove(card))
-            {
-                GameLogger.LogInfo($"[SkillCardTooltipManager] 카드 UI 등록 해제: {card.GetCardName()}", GameLogger.LogCategory.UI);
-            }
+            cardUICache.Remove(card);
         }
 
         /// <summary>
@@ -405,27 +399,17 @@ namespace Game.SkillCardSystem.Manager
         /// <param name="card">호버된 카드</param>
         public void OnCardHoverEnter(ISkillCard card)
         {
-            GameLogger.LogInfo($"[SkillCardTooltipManager] OnCardHoverEnter 호출됨 - card: {card?.GetCardName()}, IsInitialized: {IsInitialized}, currentTooltip: {currentTooltip != null}", GameLogger.LogCategory.UI);
-            
-            if (card == null)
-            {
-                GameLogger.LogWarning("[SkillCardTooltipManager] card가 null입니다.", GameLogger.LogCategory.UI);
-                return;
-            }
-            
+            if (card == null) return;
+
             // 초기화가 완료되지 않았다면 강제로 초기화 시도
             if (!IsInitialized)
             {
-                GameLogger.LogWarning("[SkillCardTooltipManager] 아직 초기화되지 않았습니다. 강제 초기화를 시도합니다.", GameLogger.LogCategory.UI);
+                GameLogger.LogWarning("[툴팁] 초기화 안됨 - 강제 초기화 시도", GameLogger.LogCategory.UI);
                 StartCoroutine(ForceInitialize());
                 return;
             }
-            
-            if (currentTooltip == null)
-            {
-                GameLogger.LogWarning("[SkillCardTooltipManager] currentTooltip이 null입니다.", GameLogger.LogCategory.UI);
-                return;
-            }
+
+            if (currentTooltip == null) return;
 
             hoveredCard = card;
             isHidingTooltip = false;
@@ -435,10 +419,7 @@ namespace Game.SkillCardSystem.Manager
             {
                 isShowingTooltip = true;
                 showTimer = 0f;
-                GameLogger.LogInfo($"[SkillCardTooltipManager] 툴팁 표시 타이머 시작: {card.GetCardName()}", GameLogger.LogCategory.UI);
             }
-
-            GameLogger.LogInfo($"카드 호버 시작: {card.GetCardName()}", GameLogger.LogCategory.UI);
         }
 
         /// <summary>
@@ -448,12 +429,9 @@ namespace Game.SkillCardSystem.Manager
         {
             if (hoveredCard == null) return;
 
-            GameLogger.LogInfo($"카드 호버 종료: {hoveredCard.GetCardName()}", GameLogger.LogCategory.UI);
-            
             // 고정된 툴팁이 있으면 호버 종료 시에도 툴팁을 유지
             if (currentTooltip != null && currentTooltip.IsFixed)
             {
-                GameLogger.LogInfo("[SkillCardTooltipManager] 툴팁이 고정되어 있어 호버 종료 시에도 툴팁 유지", GameLogger.LogCategory.UI);
                 hoveredCard = null;
                 isShowingTooltip = false;
                 showTimer = 0f;
@@ -493,12 +471,12 @@ namespace Game.SkillCardSystem.Manager
         /// </summary>
         private System.Collections.IEnumerator ForceInitialize()
         {
-            GameLogger.LogInfo("[SkillCardTooltipManager] 강제 초기화 시작", GameLogger.LogCategory.UI);
+            // GameLogger.LogInfo("[SkillCardTooltipManager] 강제 초기화 시작", GameLogger.LogCategory.UI);
             
             yield return InitializeTooltipSystem();
             
             IsInitialized = true;
-            GameLogger.LogInfo($"[SkillCardTooltipManager] 강제 초기화 완료 - IsInitialized={IsInitialized}, currentTooltip={currentTooltip != null}", GameLogger.LogCategory.UI);
+            // GameLogger.LogInfo($"[SkillCardTooltipManager] 강제 초기화 완료 - IsInitialized={IsInitialized}, currentTooltip={currentTooltip != null}", GameLogger.LogCategory.UI);
         }
 
         /// <summary>
@@ -507,18 +485,18 @@ namespace Game.SkillCardSystem.Manager
         [System.Diagnostics.Conditional("UNITY_EDITOR")]
         public void DebugTooltipSystem()
         {
-            GameLogger.LogInfo($"[SkillCardTooltipManager] 디버그 정보:", GameLogger.LogCategory.UI);
-            GameLogger.LogInfo($"  - IsInitialized: {IsInitialized}", GameLogger.LogCategory.UI);
-            GameLogger.LogInfo($"  - tooltipPrefab: {tooltipPrefab != null}", GameLogger.LogCategory.UI);
-            GameLogger.LogInfo($"  - tooltipCanvas: {tooltipCanvas != null}", GameLogger.LogCategory.UI);
-            GameLogger.LogInfo($"  - currentTooltip: {currentTooltip != null}", GameLogger.LogCategory.UI);
-            GameLogger.LogInfo($"  - hoveredCard: {hoveredCard?.GetCardName()}", GameLogger.LogCategory.UI);
-            GameLogger.LogInfo($"  - isShowingTooltip: {isShowingTooltip}", GameLogger.LogCategory.UI);
-            GameLogger.LogInfo($"  - isHidingTooltip: {isHidingTooltip}", GameLogger.LogCategory.UI);
-            GameLogger.LogInfo($"  - showTimer: {showTimer:F2}", GameLogger.LogCategory.UI);
-            GameLogger.LogInfo($"  - hideTimer: {hideTimer:F2}", GameLogger.LogCategory.UI);
-            GameLogger.LogInfo($"  - showDelay: {showDelay}", GameLogger.LogCategory.UI);
-            GameLogger.LogInfo($"  - hideDelay: {hideDelay}", GameLogger.LogCategory.UI);
+            // GameLogger.LogInfo($"[SkillCardTooltipManager] 디버그 정보:", GameLogger.LogCategory.UI);
+            // GameLogger.LogInfo($"  - IsInitialized: {IsInitialized}", GameLogger.LogCategory.UI);
+            // GameLogger.LogInfo($"  - tooltipPrefab: {tooltipPrefab != null}", GameLogger.LogCategory.UI);
+            // GameLogger.LogInfo($"  - tooltipCanvas: {tooltipCanvas != null}", GameLogger.LogCategory.UI);
+            // GameLogger.LogInfo($"  - currentTooltip: {currentTooltip != null}", GameLogger.LogCategory.UI);
+            // GameLogger.LogInfo($"  - hoveredCard: {hoveredCard?.GetCardName()}", GameLogger.LogCategory.UI);
+            // GameLogger.LogInfo($"  - isShowingTooltip: {isShowingTooltip}", GameLogger.LogCategory.UI);
+            // GameLogger.LogInfo($"  - isHidingTooltip: {isHidingTooltip}", GameLogger.LogCategory.UI);
+            // GameLogger.LogInfo($"  - showTimer: {showTimer:F2}", GameLogger.LogCategory.UI);
+            // GameLogger.LogInfo($"  - hideTimer: {hideTimer:F2}", GameLogger.LogCategory.UI);
+            // GameLogger.LogInfo($"  - showDelay: {showDelay}", GameLogger.LogCategory.UI);
+            // GameLogger.LogInfo($"  - hideDelay: {hideDelay}", GameLogger.LogCategory.UI);
         }
 
         #endregion
@@ -545,7 +523,7 @@ namespace Game.SkillCardSystem.Manager
                 showTimer += Time.deltaTime;
                 if (showTimer >= showDelay)
                 {
-                    GameLogger.LogInfo($"[SkillCardTooltipManager] 툴팁 표시 타이머 완료 - showTimer: {showTimer:F2}, showDelay: {showDelay}", GameLogger.LogCategory.UI);
+                    // GameLogger.LogInfo($"[SkillCardTooltipManager] 툴팁 표시 타이머 완료 - showTimer: {showTimer:F2}, showDelay: {showDelay}", GameLogger.LogCategory.UI);
                     ShowTooltip();
                     isShowingTooltip = false;
                 }
@@ -557,7 +535,7 @@ namespace Game.SkillCardSystem.Manager
                 hideTimer += Time.deltaTime;
                 if (hideTimer >= hideDelay)
                 {
-                    GameLogger.LogInfo($"[SkillCardTooltipManager] 툴팁 숨김 타이머 완료 - hideTimer: {hideTimer:F2}, hideDelay: {hideDelay}", GameLogger.LogCategory.UI);
+                    // GameLogger.LogInfo($"[SkillCardTooltipManager] 툴팁 숨김 타이머 완료 - hideTimer: {hideTimer:F2}, hideDelay: {hideDelay}", GameLogger.LogCategory.UI);
                     HideTooltip();
                     isHidingTooltip = false;
                 }
@@ -624,7 +602,7 @@ namespace Game.SkillCardSystem.Manager
         /// </summary>
         public void ShowTooltip()
         {
-            GameLogger.LogInfo($"[SkillCardTooltipManager] ShowTooltip 호출됨 - currentTooltip: {currentTooltip != null}, hoveredCard: {hoveredCard?.GetCardName()}", GameLogger.LogCategory.UI);
+            // GameLogger.LogInfo($"[SkillCardTooltipManager] ShowTooltip 호출됨 - currentTooltip: {currentTooltip != null}, hoveredCard: {hoveredCard?.GetCardName()}", GameLogger.LogCategory.UI);
             
             if (currentTooltip == null)
             {
@@ -651,7 +629,7 @@ namespace Game.SkillCardSystem.Manager
                 if (cardPosition != Vector2.zero)
                 {
                     currentTooltip.ShowTooltip(hoveredCard, cardPosition);
-                    GameLogger.LogInfo($"툴팁 표시: {hoveredCard.GetCardName()} at {cardPosition}", GameLogger.LogCategory.UI);
+                    // GameLogger.LogInfo($"툴팁 표시: {hoveredCard.GetCardName()} at {cardPosition}", GameLogger.LogCategory.UI);
                 }
                 else
                 {
@@ -669,7 +647,7 @@ namespace Game.SkillCardSystem.Manager
         /// </summary>
         public void HideTooltip()
         {
-            GameLogger.LogInfo($"[SkillCardTooltipManager] HideTooltip 호출됨 - currentTooltip: {currentTooltip != null}", GameLogger.LogCategory.UI);
+            // GameLogger.LogInfo($"[SkillCardTooltipManager] HideTooltip 호출됨 - currentTooltip: {currentTooltip != null}", GameLogger.LogCategory.UI);
             
             if (currentTooltip == null) return;
 
@@ -679,11 +657,11 @@ namespace Game.SkillCardSystem.Manager
                 if (!currentTooltip.IsFixed)
                 {
                     currentTooltip.HideTooltip();
-                    GameLogger.LogInfo("툴팁 숨김 완료", GameLogger.LogCategory.UI);
+                    // GameLogger.LogInfo("툴팁 숨김 완료", GameLogger.LogCategory.UI);
                 }
                 else
                 {
-                    GameLogger.LogInfo("툴팁이 고정되어 있어 숨기지 않음", GameLogger.LogCategory.UI);
+                    // GameLogger.LogInfo("툴팁이 고정되어 있어 숨기지 않음", GameLogger.LogCategory.UI);
                 }
             }
             catch (System.Exception ex)
@@ -722,7 +700,7 @@ namespace Game.SkillCardSystem.Manager
         {
             if (tooltipCanvas != null && tooltipCanvas.gameObject.scene.name != "DontDestroyOnLoad")
             {
-                GameLogger.LogInfo($"씬 전환으로 인한 툴팁 캔버스 정리: {tooltipCanvas.name}", GameLogger.LogCategory.UI);
+                // GameLogger.LogInfo($"씬 전환으로 인한 툴팁 캔버스 정리: {tooltipCanvas.name}", GameLogger.LogCategory.UI);
                 
                 if (currentTooltip != null)
                 {

@@ -152,19 +152,21 @@ namespace Game.CharacterSystem.Manager
         /// </summary>
         protected override System.Collections.IEnumerator InitializeCharacterManager()
         {
-            // GameStartupController에서 수동으로 캐릭터 생성을 관리하므로 자동 생성 제거
             yield return new WaitForEndOfFrame();
-            
-            // 캐릭터 데이터 확인만 수행
+
+            // 캐릭터 데이터 확인
             var selectedData = GetSelectedCharacterData();
-            
+
             if (selectedData != null)
             {
-                GameLogger.LogInfo($"선택된 캐릭터 확인: {selectedData.DisplayName} - GameStartupController에서 생성 대기", GameLogger.LogCategory.Character);
+                GameLogger.LogInfo($"선택된 캐릭터: {selectedData.DisplayName} - 플레이어 캐릭터 생성 시작", GameLogger.LogCategory.Character);
+
+                // 플레이어 캐릭터 자동 생성
+                CreateAndRegisterCharacter();
             }
             else
             {
-                GameLogger.LogWarning("선택된 캐릭터 데이터가 없습니다. GameStartupController에서 처리됩니다.", GameLogger.LogCategory.Character);
+                GameLogger.LogWarning("선택된 캐릭터 데이터가 없습니다.", GameLogger.LogCategory.Character);
             }
         }
 

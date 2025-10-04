@@ -277,52 +277,20 @@ namespace Game.SkillCardSystem.UI
         public void OnPointerEnter(PointerEventData eventData)
         {
             var currentTooltipManager = GetTooltipManager();
-            GameLogger.LogInfo($"[SkillCardUI] OnPointerEnter 호출됨 - enableTooltip: {enableTooltip}, tooltipManager: {currentTooltipManager != null}, card: {card != null}, isPlayerCard: {card?.IsFromPlayer()}, isHovering: {isHovering}", GameLogger.LogCategory.UI);
 
-            if (!enableTooltip)
+            if (!enableTooltip || currentTooltipManager == null || card == null || isHovering)
             {
-                GameLogger.LogWarning("[SkillCardUI] 툴팁이 비활성화되어 있습니다.", GameLogger.LogCategory.UI);
                 return;
             }
-
-            if (currentTooltipManager == null)
-            {
-                GameLogger.LogWarning("[SkillCardUI] tooltipManager를 찾을 수 없습니다.", GameLogger.LogCategory.UI);
-                return;
-            }
-
-            if (card == null)
-            {
-                GameLogger.LogWarning("[SkillCardUI] card가 null입니다.", GameLogger.LogCategory.UI);
-                return;
-            }
-
-            // 이미 호버 중이면 무시
-            if (isHovering)
-            {
-                GameLogger.LogInfo("[SkillCardUI] 이미 호버 중이므로 무시", GameLogger.LogCategory.UI);
-                return;
-            }
-
-            // 모든 카드 타입에 대해 툴팁 표시 허용 (플레이어, 적, 선택 화면 등)
-            GameLogger.LogInfo($"[SkillCardUI] 모든 카드 타입 툴팁 허용: {card.GetCardName()} (소유자: {card.GetOwner()})", GameLogger.LogCategory.UI);
 
             // 카드가 등록되지 않았으면 등록
             RegisterToTooltipManager();
 
             isHovering = true;
 
-            // 고정된 툴팁이 있으면 일반 호버 무시
-            if (isTooltipFixed)
+            // 고정된 툴팁이나 드래그 중이면 무시
+            if (isTooltipFixed || (isDragging && hideTooltipOnDrag))
             {
-                GameLogger.LogInfo("[SkillCardUI] 툴팁이 이미 고정되어 있어 호버 무시", GameLogger.LogCategory.UI);
-                return;
-            }
-
-            // 드래그 중이면 툴팁 표시하지 않음
-            if (isDragging && hideTooltipOnDrag)
-            {
-                GameLogger.LogInfo("[SkillCardUI] 드래그 중이어서 툴팁 표시하지 않음", GameLogger.LogCategory.UI);
                 return;
             }
 
@@ -332,8 +300,6 @@ namespace Game.SkillCardSystem.UI
                 StopCoroutine(tooltipCoroutine);
             }
             tooltipCoroutine = StartCoroutine(ShowTooltipDelayed());
-
-            GameLogger.LogInfo($"카드 호버 시작: {card.GetCardName()}", GameLogger.LogCategory.UI);
         }
 
         /// <summary>
@@ -343,18 +309,9 @@ namespace Game.SkillCardSystem.UI
         public void OnPointerExit(PointerEventData eventData)
         {
             var currentTooltipManager = GetTooltipManager();
-            GameLogger.LogInfo($"[SkillCardUI] OnPointerExit 호출됨 - enableTooltip: {enableTooltip}, tooltipManager: {currentTooltipManager != null}, isHovering: {isHovering}", GameLogger.LogCategory.UI);
 
-            if (!enableTooltip || currentTooltipManager == null)
+            if (!enableTooltip || currentTooltipManager == null || !isHovering)
             {
-                GameLogger.LogInfo("[SkillCardUI] 툴팁 비활성화 또는 매니저 없음으로 종료", GameLogger.LogCategory.UI);
-                return;
-            }
-
-            // 호버 중이 아니면 무시
-            if (!isHovering)
-            {
-                GameLogger.LogInfo("[SkillCardUI] 호버 중이 아니므로 무시", GameLogger.LogCategory.UI);
                 return;
             }
 
@@ -370,14 +327,11 @@ namespace Game.SkillCardSystem.UI
             // 고정된 툴팁이 있으면 호버 종료 시에도 툴팁을 유지
             if (isTooltipFixed)
             {
-                GameLogger.LogInfo("[SkillCardUI] 툴팁이 고정되어 있어 호버 종료 시에도 툴팁 유지", GameLogger.LogCategory.UI);
                 return;
             }
 
             // 툴팁 숨김
             currentTooltipManager.OnCardHoverExit();
-
-            GameLogger.LogInfo($"카드 호버 종료: {card?.GetCardName()}", GameLogger.LogCategory.UI);
         }
 
         /// <summary>
@@ -408,7 +362,7 @@ namespace Game.SkillCardSystem.UI
             }
             
             // 모든 카드 타입에 대해 툴팁 클릭 허용 (플레이어, 적, 선택 화면 등)
-            GameLogger.LogInfo($"[SkillCardUI] 모든 카드 타입 클릭 허용: {card.GetCardName()} (소유자: {card.GetOwner()})", GameLogger.LogCategory.UI);
+            // 클릭 허용
 
             // 우클릭: 툴팁 고정/해제 토글
             if (eventData.button == PointerEventData.InputButton.Right)
@@ -436,7 +390,7 @@ namespace Game.SkillCardSystem.UI
         /// </summary>
         private System.Collections.IEnumerator ShowTooltipDelayed()
         {
-            GameLogger.LogInfo($"[SkillCardUI] ShowTooltipDelayed 시작 - 지연 시간: {tooltipDelay}초", GameLogger.LogCategory.UI);
+            // 툴팁 지연 시작
             yield return new WaitForSeconds(tooltipDelay);
             
             // 지연 후에도 여전히 호버 중이고 드래그 중이 아니면 툴팁 표시
@@ -445,7 +399,7 @@ namespace Game.SkillCardSystem.UI
                 var currentTooltipManager = GetTooltipManager();
                 if (currentTooltipManager != null && card != null)
                 {
-                    GameLogger.LogInfo($"[SkillCardUI] 툴팁 표시 요청: {card.GetCardName()}", GameLogger.LogCategory.UI);
+                    // 툴팁 표시
                     currentTooltipManager.OnCardHoverEnter(card);
                 }
                 else
@@ -455,7 +409,7 @@ namespace Game.SkillCardSystem.UI
             }
             else
             {
-                GameLogger.LogInfo($"[SkillCardUI] 툴팁 표시 취소 - isHovering: {isHovering}, isDragging: {isDragging}", GameLogger.LogCategory.UI);
+                // 툴팁 표시 취소
             }
         }
 
@@ -523,7 +477,7 @@ namespace Game.SkillCardSystem.UI
             if (currentTooltipManager != null && currentTooltipManager.CurrentTooltip != null)
             {
                 currentTooltipManager.CurrentTooltip.FixTooltip();
-                GameLogger.LogInfo("[SkillCardUI] 툴팁 위치 고정 완료", GameLogger.LogCategory.UI);
+                // 툴팁 고정
             }
         }
 

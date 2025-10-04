@@ -35,6 +35,7 @@ namespace Game.SkillCardSystem.Effect
                 if (turnManager != null && turnManager.IsPlayerTurn())
                 {
                     RemainingTurns--;
+                    Game.CoreSystem.Utility.GameLogger.LogInfo($"[CounterBuff] {target.GetCharacterName()} 반격 버프 턴 감소 (남은 턴: {RemainingTurns})", Game.CoreSystem.Utility.GameLogger.LogCategory.SkillCard);
                 }
             }
             else
@@ -42,6 +43,7 @@ namespace Game.SkillCardSystem.Effect
                 if (turnManager != null && turnManager.IsEnemyTurn())
                 {
                     RemainingTurns--;
+                    Game.CoreSystem.Utility.GameLogger.LogInfo($"[CounterBuff] {target.GetCharacterName()} 반격 버프 턴 감소 (남은 턴: {RemainingTurns})", Game.CoreSystem.Utility.GameLogger.LogCategory.SkillCard);
                 }
             }
         }

@@ -182,11 +182,24 @@ namespace Game.CombatSystem.DragDrop
         #region 내부 메서드
 
         /// <summary>
-        /// 드래그 가능 여부 확인 (입력 차단 상태인지 확인)
+        /// 드래그 가능 여부 확인 (플레이어 카드만 드래그 가능)
         /// </summary>
         private bool CanDrag()
         {
-            return true; // CombatSlotManager 제거됨 - 항상 드래그 가능
+            var skillCardUI = GetComponent<SkillCardUI>();
+            if (skillCardUI == null)
+            {
+                return false;
+            }
+
+            var card = skillCardUI.GetCard();
+            if (card == null)
+            {
+                return false;
+            }
+
+            // 플레이어 카드만 드래그 가능
+            return card.IsFromPlayer();
         }
 
         /// <summary>

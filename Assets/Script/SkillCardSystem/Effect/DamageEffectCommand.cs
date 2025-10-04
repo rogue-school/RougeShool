@@ -76,8 +76,8 @@ namespace Game.SkillCardSystem.Effect
                 // 방식 4: 제곱 증가 (주석 해제하여 사용 가능)
                 // attackBonus = currentStacks * currentStacks;
                 
-                GameLogger.LogInfo($"[DamageEffectCommand] 스택 기반 데미지 계산 - 기본: {damageAmount}, 스택: {currentStacks}, 보너스: {attackBonus}", 
-                    GameLogger.LogCategory.Combat);
+                // GameLogger.LogInfo($"[DamageEffectCommand] 스택 기반 데미지 계산 - 기본: {damageAmount}, 스택: {currentStacks}, 보너스: {attackBonus}", 
+                //    GameLogger.LogCategory.Combat);
             }
             int effectiveDamage = damageAmount + attackBonus;
 

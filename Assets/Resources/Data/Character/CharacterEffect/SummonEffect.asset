@@ -9,11 +9,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9cff11d00aca1ae41bcbc7a920f29d7e, type: 3}
-  m_Name: ENEMY_002_Slime
+  m_Script: {fileID: 11500000, guid: 5a9c739d4e9a9a9408292eb093749246, type: 3}
+  m_Name: SummonEffect
   m_EditorClassIdentifier: 
-  cards:
-  - definition: {fileID: 0}
-    probability: 0.7
-  - definition: {fileID: 0}
-    probability: 0.3
+  effectName: 
+  description: 
+  effectIcon: {fileID: 0}
+  healthThreshold: 0.5
+  summonTarget: {fileID: 0}

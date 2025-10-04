@@ -60,8 +60,7 @@ namespace Game.CombatSystem.Manager
         [Tooltip("턴 기반 전투 활성화")]
         [SerializeField] private bool enableTurnBasedCombat = true;
 
-        [Tooltip("자동 턴 진행")]
-        [SerializeField] private bool autoProgressTurn = false;
+        // autoProgressTurn 제거됨 (상태 패턴에서 자동으로 처리)
 
         #endregion
 
@@ -495,25 +494,21 @@ namespace Game.CombatSystem.Manager
                 return;
             }
 
-            if (turnManager != null)
-            {
-                turnManager.NextTurn();
-            }
+            // 레거시: 상태 패턴으로 전환되어 자동으로 턴 진행됨
+            // if (turnManager != null)
+            // {
+            //     turnManager.NextTurn(); // 제거됨
+            // }
 
-            // 자동 턴 진행이 활성화된 경우 다음 턴도 자동으로 진행
-            if (autoProgressTurn && turnManager != null)
-            {
-                StartCoroutine(AutoProgressNextTurn());
-            }
+            GameLogger.LogWarning("[CombatFlowManager] 레거시 - 상태 패턴에서 자동으로 턴 진행됨", GameLogger.LogCategory.Combat);
         }
 
         private System.Collections.IEnumerator AutoProgressNextTurn()
         {
             yield return new WaitForSeconds(1.0f); // 1초 대기
-            if (isCombatActive && enableTurnBasedCombat)
-            {
-                turnManager.NextTurn();
-            }
+            // 레거시: 상태 패턴으로 전환
+            GameLogger.LogWarning("[CombatFlowManager] AutoProgressNextTurn - 레거시 기능", GameLogger.LogCategory.Combat);
+            yield break;
         }
 
         #endregion

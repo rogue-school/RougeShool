@@ -85,9 +85,9 @@ namespace Game.CombatSystem.Core
                 return;
             }
 
-            // 새로운 아키텍처에서는 단순히 턴을 진행
-            turnManager?.NextTurn();
-            GameLogger.LogInfo("[TurnStartButtonHandler] 턴 진행 요청", GameLogger.LogCategory.Combat);
+            // 레거시: 상태 패턴으로 전환되어 이 버튼은 사용되지 않음
+            // turnManager?.NextTurn(); // 제거됨
+            GameLogger.LogWarning("[TurnStartButtonHandler] 레거시 버튼 - 상태 패턴에서 자동으로 턴 진행됨", GameLogger.LogCategory.Combat);
         }
 
         #endregion

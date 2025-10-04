@@ -31,6 +31,7 @@ namespace Game.SkillCardSystem.Effect
         {
             if (target == null) return;
             RemainingTurns--;
+            Game.CoreSystem.Utility.GameLogger.LogInfo($"[StunDebuff] {target.GetCharacterName()} 기절 디버프 턴 감소 (남은 턴: {RemainingTurns})", Game.CoreSystem.Utility.GameLogger.LogCategory.SkillCard);
         }
     }
 }

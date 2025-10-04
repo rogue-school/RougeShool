@@ -120,10 +120,10 @@ namespace Game.SkillCardSystem.Manager
                 Count = g.Count() 
             });
             
-            GameLogger.LogInfo($"턴 드로우 완료: {currentTurnCards.Count}장 (덱: {playerDeck.Count}장)", GameLogger.LogCategory.SkillCard);
+            // GameLogger.LogInfo($"턴 드로우 완료: {currentTurnCards.Count}장 (덱: {playerDeck.Count}장)", GameLogger.LogCategory.SkillCard);
             foreach (var group in drawnCardGroups)
             {
-                GameLogger.LogInfo($"  - 드로우된 카드: {group.CardName} x{group.Count}", GameLogger.LogCategory.SkillCard);
+                // GameLogger.LogInfo($"  - 드로우된 카드: {group.CardName} x{group.Count}", GameLogger.LogCategory.SkillCard);
             }
             
             return currentTurnCards;

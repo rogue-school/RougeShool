@@ -64,6 +64,7 @@ public class CombatInstaller : MonoInstaller
         BindSlotSystem();           // 슬롯 시스템 (팩토리 의존)
         BindIntegratedManagers();   // 통합 매니저 (모든 것 의존)
         BindUIPrefabs();            // UI 프리팹 (매니저 의존)
+        BindCombatStateMachine();   // 전투 상태 머신 (새로운 시스템)
         BindStageFlowStateMachine();// 스테이지 상태 머신(뼈대) 연결
         
         stopwatch.Stop();
@@ -119,23 +120,7 @@ public class CombatInstaller : MonoInstaller
             GameLogger.LogInfo(" EnemyManager 자동 생성 및 바인딩 완료");
         }
 
-        // GameStartupController 바인딩 - 씬에 있으면 사용, 없으면 자동 생성
-        var gameStartupController = FindFirstObjectByType<GameStartupController>();
-        if (gameStartupController != null)
-        {
-            Container.Bind<GameStartupController>().FromInstance(gameStartupController).AsSingle();
-            GameLogger.LogInfo(" GameStartupController 바인딩 완료 (씬에서 찾기)");
-        }
-        else
-        {
-            // GameStartupController가 없으면 자동 생성
-            var gameStartupControllerGO = new GameObject("GameStartupController");
-            gameStartupController = gameStartupControllerGO.AddComponent<GameStartupController>();
-            Container.Bind<GameStartupController>().FromInstance(gameStartupController).AsSingle();
-            // 자동 생성된 컴포넌트에 의존성 주입
-            Container.Inject(gameStartupController);
-            GameLogger.LogInfo(" GameStartupController 자동 생성 및 바인딩 완료");
-        }
+        // GameStartupController는 삭제됨 (상태 패턴으로 전환)
 
         // CombatExecutionManager 바인딩 - PlayerManager와 EnemyManager 이후에 바인딩 (CombatFlowManager보다 먼저)
         var combatExecutionManager = FindFirstObjectByType<CombatExecutionManager>();
@@ -261,6 +246,41 @@ public class CombatInstaller : MonoInstaller
         GameLogger.LogInfo(" TurnManager 바인딩 완료");
         
         GameLogger.LogInfo(" CardDropService 및 의존성 바인딩 완료");
+    }
+
+    #endregion
+
+    #region Combat State Machine (전투 상태 머신)
+
+    /// <summary>
+    /// 전투 상태 머신 바인딩 및 초기화
+    /// </summary>
+    private void BindCombatStateMachine()
+    {
+        // CombatStateMachine 컴포넌트를 보장
+        var existing = FindFirstObjectByType<CombatStateMachine>();
+        CombatStateMachine stateMachine;
+
+        if (existing != null)
+        {
+            stateMachine = existing;
+            GameLogger.LogInfo(" CombatStateMachine 발견 (씬에서 찾기)", GameLogger.LogCategory.Combat);
+        }
+        else
+        {
+            // 자동 생성
+            var stateMachineGO = new GameObject("CombatStateMachine");
+            stateMachine = stateMachineGO.AddComponent<CombatStateMachine>();
+            GameLogger.LogInfo(" CombatStateMachine 자동 생성 완료", GameLogger.LogCategory.Combat);
+        }
+
+        // Zenject 바인딩
+        Container.Bind<CombatStateMachine>().FromInstance(stateMachine).AsSingle();
+
+        // 의존성 주입 (Inject 어트리뷰트로 자동 주입됨)
+        Container.Inject(stateMachine);
+
+        GameLogger.LogInfo(" CombatStateMachine 바인딩/초기화 완료", GameLogger.LogCategory.Combat);
     }
 
     #endregion

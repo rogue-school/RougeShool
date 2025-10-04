@@ -782,7 +782,6 @@ Transform:
   - {fileID: 1580337930}
   - {fileID: 1538624262}
   - {fileID: 1629137751}
-  - {fileID: 1087778665}
   - {fileID: 1358596431}
   - {fileID: 612402064}
   - {fileID: 724551098}
@@ -2267,7 +2266,6 @@ MonoBehaviour:
   enableDebugLogging: 1
   initialPhase: 1
   enableTurnBasedCombat: 1
-  autoProgressTurn: 0
   gameOverUI: {fileID: 0}
 --- !u!1 &724854807
 GameObject:
@@ -3171,52 +3169,6 @@ Transform:
   - {fileID: 913835108}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1087778664
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1087778665}
-  - component: {fileID: 1087778666}
-  m_Layer: 0
-  m_Name: GameStartupController
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1087778665
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1087778664}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 206878164}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1087778666
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1087778664}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4cedb60b31a1ae94eba9e46580a54e8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  autoStartGame: 1
-  setupDelayBetweenSteps: 0.1
 --- !u!1 &1104012757
 GameObject:
   m_ObjectHideFlags: 0
@@ -3671,7 +3623,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2f1f1573d21fdcb49b53f8010fc92b70, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _initialSlotSetupCompleted: 0
   turnSettings:
     startingTurn: 0
     initialTurnCount: 1
@@ -4047,7 +3998,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1529888835
 RectTransform:
   m_ObjectHideFlags: 0

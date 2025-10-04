@@ -154,7 +154,7 @@ namespace Game.SkillCardSystem.UI
             if (parentCanvas != null)
             {
                 uiCamera = parentCanvas.worldCamera;
-                GameLogger.LogInfo($"[SkillCardTooltip] 부모 캔버스 설정: {parentCanvas.name} (씬: {parentCanvas.gameObject.scene.name})", GameLogger.LogCategory.UI);
+                // GameLogger.LogInfo($"[SkillCardTooltip] 부모 캔버스 설정: {parentCanvas.name} (씬: {parentCanvas.gameObject.scene.name})", GameLogger.LogCategory.UI);
             }
             else
             {

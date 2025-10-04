@@ -109,12 +109,6 @@ namespace Game.CombatSystem.Interface
         bool IsEnemyTurn();
 
         /// <summary>
-        /// 다음 턴을 진행합니다.
-        /// 1번 슬롯의 카드를 실행하고 슬롯을 이동시킵니다.
-        /// </summary>
-        void ProceedToNextTurn();
-
-        /// <summary>
         /// 4번 슬롯에 새로운 적 카드를 등록합니다.
         /// </summary>
         /// <param name="card">등록할 적 스킬카드</param>

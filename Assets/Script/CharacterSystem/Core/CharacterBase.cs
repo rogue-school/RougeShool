@@ -219,10 +219,24 @@ namespace Game.CharacterSystem.Core
                 GameLogger.LogError($"[{GetCharacterName()}] 잘못된 최대 체력: {value}", GameLogger.LogCategory.Character);
                 throw new ArgumentException($"최대 체력은 양수여야 합니다. 입력값: {value}", nameof(value));
             }
-            
+
             maxHP = value;
             currentHP = maxHP;
             OnHPChanged?.Invoke(currentHP, maxHP);
+        }
+
+        /// <summary>현재 체력을 직접 설정합니다 (최대 체력을 초과할 수 없음)</summary>
+        /// <param name="value">설정할 체력 값</param>
+        public virtual void SetCurrentHP(int value)
+        {
+            int newHP = Mathf.Clamp(value, 0, maxHP);
+
+            if (currentHP != newHP)
+            {
+                currentHP = newHP;
+                OnHPChanged?.Invoke(currentHP, maxHP);
+                GameLogger.LogInfo($"[{GetCharacterName()}] 체력 설정: {currentHP}/{maxHP}", GameLogger.LogCategory.Character);
+            }
         }
 
         #endregion
