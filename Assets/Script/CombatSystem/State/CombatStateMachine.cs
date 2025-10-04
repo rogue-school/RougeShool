@@ -398,6 +398,33 @@ namespace Game.CombatSystem.State
         }
 
         /// <summary>
+        /// StageManager에서 다음 적 생성 완료를 알릴 때 호출되는 공개 메서드
+        /// </summary>
+        public void OnNextEnemySpawned()
+        {
+            GameLogger.LogInfo(
+                "[CombatStateMachine] StageManager로부터 다음 적 생성 완료 알림 수신",
+                GameLogger.LogCategory.Combat);
+
+            // EnemyDefeatedState에서만 처리
+            if (_currentState is EnemyDefeatedState enemyDefeatedState)
+            {
+                GameLogger.LogInfo(
+                    "[CombatStateMachine] EnemyDefeatedState에서 다음 적 생성 완료 처리",
+                    GameLogger.LogCategory.Combat);
+                
+                // EnemyDefeatedState의 다음 적 확인 로직을 트리거
+                enemyDefeatedState.OnNextEnemyReady();
+            }
+            else
+            {
+                GameLogger.LogWarning(
+                    $"[CombatStateMachine] 다음 적 생성 완료 알림 - 현재 상태가 EnemyDefeatedState가 아님: {_currentState?.StateName ?? "None"}",
+                    GameLogger.LogCategory.Combat);
+            }
+        }
+
+        /// <summary>
         /// 플레이어가 사망했을 때 호출
         /// </summary>
         private void OnPlayerDeath()

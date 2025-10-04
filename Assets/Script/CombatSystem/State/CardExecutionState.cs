@@ -117,6 +117,14 @@ namespace Game.CombatSystem.State
         {
             LogStateTransition($"실행 결과: {(result.isSuccess ? "성공" : "실패")} - {result.resultMessage}");
 
+            // 적이 죽어서 EnemyDefeatedState로 전환된 경우에는 상태 전환을 하지 않음
+            // CombatStateMachine에서 이미 적절한 상태로 전환했을 것임
+            if (context?.StateMachine?.GetCurrentState() is EnemyDefeatedState)
+            {
+                LogStateTransition("적 사망으로 EnemyDefeatedState 전환됨 - 추가 상태 전환 건너뜀");
+                return;
+            }
+
             // 슬롯 이동 상태로 전환
             var slotMovingState = new SlotMovingState();
             RequestTransition(context, slotMovingState);

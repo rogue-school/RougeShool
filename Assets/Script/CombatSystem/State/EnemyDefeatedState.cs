@@ -20,6 +20,8 @@ namespace Game.CombatSystem.State
         public override bool AllowTurnSwitch => false;
 
         private MonoBehaviour _coroutineRunner;
+        private CombatStateContext _context;
+        private bool _isWaitingForNextEnemy = false;
 
         public override void OnEnter(CombatStateContext context)
         {
@@ -30,6 +32,9 @@ namespace Game.CombatSystem.State
                 LogError("컨텍스트 또는 매니저 검증 실패");
                 return;
             }
+
+            // 컨텍스트 저장
+            _context = context;
 
             LogStateTransition("적 처치 - 정리 시작");
 
@@ -56,6 +61,27 @@ namespace Game.CombatSystem.State
         }
 
         /// <summary>
+        /// StageManager에서 다음 적 생성 완료를 알릴 때 호출되는 메서드
+        /// </summary>
+        public void OnNextEnemyReady()
+        {
+            LogStateTransition("다음 적 생성 완료 - 상태 전환 시작");
+            
+            // 대기 플래그 해제
+            _isWaitingForNextEnemy = false;
+            
+            // 컨텍스트가 유효한지 확인
+            if (_context == null || !_context.ValidateManagers())
+            {
+                LogError("컨텍스트 또는 매니저 검증 실패 - 상태 전환 건너뜀");
+                return;
+            }
+
+            // 다음 적 확인 및 상태 전환
+            CheckNextEnemy(_context);
+        }
+
+        /// <summary>
         /// 정리 작업 후 다음 단계로 진행하는 코루틴
         /// </summary>
         private IEnumerator CleanupAndProceed(CombatStateContext context)
@@ -66,8 +92,17 @@ namespace Game.CombatSystem.State
             // 정리 애니메이션/효과를 위한 대기
             yield return new WaitForSeconds(0.3f);
 
-            // 다음 적 확인 및 진행
-            CheckNextEnemy(context);
+            // StageManager가 다음 적을 생성할 때까지 실제로 대기
+            LogStateTransition("StageManager의 다음 적 생성 완료를 대기 중");
+            _isWaitingForNextEnemy = true;
+
+            // OnNextEnemyReady()가 호출될 때까지 무한 대기
+            while (_isWaitingForNextEnemy)
+            {
+                yield return null; // 한 프레임씩 대기
+            }
+
+            LogStateTransition("다음 적 생성 완료 - 대기 종료");
         }
 
         /// <summary>
@@ -94,37 +129,43 @@ namespace Game.CombatSystem.State
 
         /// <summary>
         /// 다음 적이 있는지 확인하고 적절한 상태로 전환
-        /// 새로운 로직: 새로운 적 셋업 후 플레이어 턴으로 진입
+        /// 올바른 로직: 새로운 적 생성 후 CombatInitState로 전환하여 초기화 수행
         /// </summary>
         private void CheckNextEnemy(CombatStateContext context)
         {
-            LogStateTransition("새로운 적 셋업 시작");
+            LogStateTransition("다음 적 확인 및 상태 전환");
 
-            // 현재 적의 데이터를 가져와서 CombatInitState에 전달
+            // StageManager가 다음 적을 생성했는지 확인
             var enemyManager = context.EnemyManager;
             if (enemyManager != null)
             {
                 var currentEnemy = enemyManager.GetCharacter();
-                if (currentEnemy != null && currentEnemy is Game.CharacterSystem.Core.EnemyCharacter enemyChar)
+                if (currentEnemy != null && !currentEnemy.IsDead())
                 {
-                    var enemyData = enemyChar.CharacterData;
-                    if (enemyData != null)
+                    // 새로운 적이 생성되었음 - CombatInitState로 전환하여 초기화 수행
+                    LogStateTransition($"새로운 적 감지: {currentEnemy.GetCharacterName()} - 전투 초기화로 전환");
+                    
+                    var initState = new CombatInitState();
+                    
+                    // 적 데이터를 CombatInitState에 전달
+                    if (currentEnemy is Game.CharacterSystem.Core.EnemyCharacter enemyChar)
                     {
-                        LogStateTransition($"새로운 적 데이터로 초기화: {currentEnemy.GetCharacterName()}");
-                        
-                        // 새로운 적 셋업을 위한 초기화 상태로 전환
-                        var initState = new CombatInitState();
-                        initState.SetEnemyData(enemyData, currentEnemy.GetCharacterName());
-                        RequestTransition(context, initState);
-                        return;
+                        var enemyData = enemyChar.CharacterData;
+                        if (enemyData != null)
+                        {
+                            initState.SetEnemyData(enemyData, currentEnemy.GetCharacterName());
+                        }
                     }
+                    
+                    RequestTransition(context, initState);
+                    return;
                 }
             }
 
-            // 적 데이터를 가져올 수 없는 경우 기본 초기화
-            LogStateTransition("적 데이터 없음 - 기본 초기화");
-            var defaultInitState = new CombatInitState();
-            RequestTransition(context, defaultInitState);
+            // 새로운 적이 없는 경우 - 전투 종료 처리 (승리)
+            LogStateTransition("새로운 적 없음 - 전투 승리!");
+            var battleEndState = new BattleEndState(true); // 승리
+            RequestTransition(context, battleEndState);
         }
     }
 }

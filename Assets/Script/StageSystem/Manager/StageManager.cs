@@ -322,14 +322,15 @@ namespace Game.StageSystem.Manager
 
                 GameLogger.LogInfo($"[StageManager] 적 생성 완료: {enemy.GetCharacterName()} (인덱스 증가: {currentEnemyIndex - 1} → {currentEnemyIndex})", GameLogger.LogCategory.Combat);
                 
-                // 첫 번째 적이 생성되면 CombatStateMachine 시작
-                if (currentEnemyIndex == 1)
+                // CombatStateMachine에 적 생성 완료 알림
+                var combatStateMachine = FindFirstObjectByType<Game.CombatSystem.State.CombatStateMachine>();
+                if (combatStateMachine != null)
                 {
-                    GameLogger.LogInfo($"[StageManager] 첫 번째 적 생성 완료 - CombatStateMachine 시작: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
-                    
-                    var combatStateMachine = FindFirstObjectByType<Game.CombatSystem.State.CombatStateMachine>();
-                    if (combatStateMachine != null)
+                    if (currentEnemyIndex == 1)
                     {
+                        // 첫 번째 적이 생성되면 CombatStateMachine 시작
+                        GameLogger.LogInfo($"[StageManager] 첫 번째 적 생성 완료 - CombatStateMachine 시작: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
+                        
                         // 적 데이터를 가져와서 StartCombat에 전달
                         if (enemy is Game.CharacterSystem.Core.EnemyCharacter enemyChar)
                         {
@@ -353,8 +354,14 @@ namespace Game.StageSystem.Manager
                     }
                     else
                     {
-                        GameLogger.LogWarning("[StageManager] CombatStateMachine을 찾을 수 없습니다", GameLogger.LogCategory.Combat);
+                        // 다음 적이 생성되면 CombatStateMachine에 알림
+                        GameLogger.LogInfo($"[StageManager] 다음 적 생성 완료 - CombatStateMachine에 알림: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
+                        combatStateMachine.OnNextEnemySpawned();
                     }
+                }
+                else
+                {
+                    GameLogger.LogWarning("[StageManager] CombatStateMachine을 찾을 수 없습니다", GameLogger.LogCategory.Combat);
                 }
                 
                 return true;
