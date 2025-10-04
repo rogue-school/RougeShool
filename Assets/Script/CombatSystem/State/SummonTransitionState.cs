@@ -109,27 +109,42 @@ namespace Game.CombatSystem.State
         private System.Collections.IEnumerator CleanupCurrentEnemy(CombatStateContext context)
         {
             var enemyManager = context.EnemyManager;
-            var turnManager = context.TurnManager;
+            var slotRegistry = context.SlotRegistry;
+            var slotMovement = context.SlotMovement;
 
             // 기존 적 제거
             var currentEnemy = enemyManager?.GetCharacter();
             if (currentEnemy != null)
             {
                 enemyManager.UnregisterEnemy();
-                
+
                 if (currentEnemy is Game.CharacterSystem.Core.EnemyCharacter enemyChar)
                 {
                     Object.Destroy(enemyChar.gameObject);
                 }
-                
+
                 LogStateTransition($"기존 적 제거 완료: {currentEnemy.GetCharacterName()}");
             }
 
-            // 모든 슬롯 정리
-            if (turnManager != null)
+            // 플레이어 핸드 카드 제거
+            if (context.HandManager != null)
             {
-                turnManager.ClearWaitSlots();
+                context.HandManager.ClearAll();
+                LogStateTransition("플레이어 핸드 카드 제거 완료");
+            }
+
+            // 모든 슬롯 정리 (새 인터페이스 사용)
+            if (slotRegistry != null)
+            {
+                slotRegistry.ClearAllSlots();
                 LogStateTransition("전투/대기 슬롯 정리 완료");
+            }
+
+            // 적 캐시 정리
+            if (slotMovement != null)
+            {
+                slotMovement.ClearEnemyCache();
+                LogStateTransition("적 캐시 정리 완료");
             }
 
             // 정리 완료 대기
@@ -186,10 +201,10 @@ namespace Game.CombatSystem.State
         /// </summary>
         private System.Collections.IEnumerator SetupNewEnemySlots(CombatStateContext context, ICharacter newEnemy)
         {
-            var turnManager = context.TurnManager;
-            if (turnManager == null)
+            var slotMovement = context.SlotMovement;
+            if (slotMovement == null)
             {
-                LogError("TurnManager를 찾을 수 없습니다");
+                LogError("SlotMovement를 찾을 수 없습니다");
                 yield break;
             }
 
@@ -201,8 +216,10 @@ namespace Game.CombatSystem.State
                 var enemyData = enemyChar.CharacterData as Game.CharacterSystem.Data.EnemyCharacterData;
                 if (enemyData != null)
                 {
-                    // 적의 초기 슬롯 설정 (CombatInitState와 동일한 로직)
-                    yield return turnManager.SetupInitialEnemyQueueRoutine(enemyData, newEnemy.GetCharacterName());
+                    // 적의 초기 슬롯 설정 (SlotMovementController 사용)
+                    yield return context.StateMachine.StartCoroutine(
+                        slotMovement.SetupInitialEnemyQueueRoutine(enemyData, newEnemy.GetCharacterName())
+                    );
                     LogStateTransition($"적 초기 슬롯 설정 완료: {newEnemy.GetCharacterName()}");
                 }
             }
