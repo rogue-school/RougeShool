@@ -92,6 +92,7 @@ namespace Game.CombatSystem.State
             _currentState?.OnUpdate(_context);
 
             // 캐릭터 사망 확인 (전투 중에만)
+            // 소환 확인은 제거 - 특정 상태에서만 체크하도록 변경
             if (_currentState != null && _context?.IsInitialized == true)
             {
                 CheckCharacterDeath();
@@ -128,6 +129,55 @@ namespace Game.CombatSystem.State
                 if (player != null && player.IsDead())
                 {
                     OnPlayerDeath();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 소환 트리거 확인 (턴 전환 시점에만 호출)
+        /// 매 프레임 체크하지 않고 안전한 시점에만 체크
+        /// </summary>
+        public void CheckSummonTriggerAtSafePoint()
+        {
+            // BattleEndState나 EnemyDefeatedState에서는 체크하지 않음
+            if (_currentState is BattleEndState || _currentState is EnemyDefeatedState || _currentState is SummonState || _currentState is SummonReturnState)
+            {
+                GameLogger.LogInfo(
+                    $"[CombatStateMachine] 소환 체크 건너뜀 - 현재 상태: {_currentState.StateName}",
+                    GameLogger.LogCategory.Combat);
+                return;
+            }
+
+            // 적이 있고 살아있을 때만 체크
+            if (enemyManager != null)
+            {
+                var enemy = enemyManager.GetCharacter();
+                if (enemy != null && !enemy.IsDead())
+                {
+                    // StageManager에서 소환 플래그 확인
+                    var stageManager = FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
+                    if (stageManager != null && stageManager.IsSummonedEnemyActive())
+                    {
+                        GameLogger.LogInfo(
+                            "[CombatStateMachine] 소환 트리거 감지 - SummonState로 전환",
+                            GameLogger.LogCategory.Combat);
+
+                        // SummonState로 전환
+                        var summonData = stageManager.GetSummonTarget();
+                        var originalHP = stageManager.GetOriginalEnemyHP();
+
+                        if (summonData != null)
+                        {
+                            var summonState = new SummonState(summonData, originalHP);
+                            ChangeState(summonState);
+                        }
+                        else
+                        {
+                            GameLogger.LogError(
+                                "[CombatStateMachine] 소환 대상 데이터가 없습니다",
+                                GameLogger.LogCategory.Error);
+                        }
+                    }
                 }
             }
         }

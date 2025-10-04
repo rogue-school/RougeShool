@@ -94,89 +94,80 @@ namespace Game.CombatSystem.State
             // 초기화 수행
             PerformInitialization(context);
 
-            // 적 데이터가 있고 슬롯 설정을 건너뛰지 않는 경우에만 초기 슬롯 셋업 수행
+            // 소환/복귀 모드 처리
+            if (_isSummonMode)
+            {
+                LogStateTransition("소환/복귀 모드 - 슬롯 및 핸드 정리");
+
+                // 슬롯 및 핸드 정리
+                yield return context.StateMachine.StartCoroutine(CleanupForSummon(context));
+
+                // 소환 모드 설정
+                if (context.SlotMovement != null)
+                {
+                    context.SlotMovement.SetSummonMode(true);
+                    LogStateTransition("소환 모드 플래그 설정");
+                }
+            }
+
+            // 적 데이터가 있으면 슬롯 셋업
             if (_enemyData != null && context.SlotMovement != null && !_skipSlotSetup)
             {
-                LogStateTransition($"적 데이터로 초기 슬롯 셋업 시작: {_enemyName}");
+                LogStateTransition($"초기 슬롯 셋업 시작: {_enemyName}");
 
-                // 소환/복귀 모드라도 일반 초기 슬롯 셋업 사용 (처음 전투와 동일한 로직)
-                // 자동 실행 억제는 SetupInitialEnemyQueueRoutine 내부에서 처리됨
                 yield return context.StateMachine.StartCoroutine(
                     context.SlotMovement.SetupInitialEnemyQueueRoutine(_enemyData, _enemyName)
                 );
-                
-                if (_isSummonMode)
-                {
-                    LogStateTransition("소환/복귀 모드 슬롯 셋업 완료 (일반 로직 사용)");
-                }
-                else
-                {
-                    LogStateTransition("초기 슬롯 셋업 완료");
-                }
+
+                LogStateTransition($"초기 슬롯 셋업 완료: {_enemyName}");
             }
             else if (_skipSlotSetup)
             {
                 LogStateTransition("슬롯 설정 건너뜀 (이미 설정됨)");
             }
 
-            // 소환/복귀 모드인 경우 자동 실행 억제 설정
-            if (_isSummonMode && context.SlotMovement != null)
-            {
-                // SlotMovementController의 소환 모드 설정
-                // 이는 소환/복귀 시 플레이어가 먼저 행동할 수 있도록 함
-                context.SlotMovement.SetSummonMode(true);
-                LogStateTransition("소환/복귀 모드 - 자동 실행 억제 설정");
-                
-                // 소환/복귀 모드에서는 플레이어 핸드 명시적 초기화
-                if (context.HandManager != null)
-                {
-                    context.HandManager.ClearAll();
-                    LogStateTransition("소환/복귀 모드 - 플레이어 핸드 초기화 완료");
-                }
-            }
-
-            // 슬롯 셋업이 완료될 때까지 대기 (중요!)
-            // SetupInitialEnemyQueueRoutine이 완전히 끝날 때까지 기다림
-            LogStateTransition("슬롯 셋업 완료 대기 중...");
-            
-            // 슬롯 셋업 코루틴이 완료될 때까지 대기
-            if (_isSummonMode)
-            {
-                // 소환 모드: StageManager에서 이미 슬롯 설정이 완료되었으므로 건너뜀
-                LogStateTransition("소환 모드 - 슬롯 설정 건너뜀 (이미 완료됨)");
-            }
-            else
-            {
-                // 일반 모드: 이미 전달받은 적 데이터 사용
-                if (_enemyData != null && !string.IsNullOrEmpty(_enemyName))
-                {
-                    yield return context.StateMachine.StartCoroutine(
-                        context.SlotMovement.SetupInitialEnemyQueueRoutine(_enemyData, _enemyName)
-                    );
-                    LogStateTransition($"일반 모드 슬롯 셋업 완료: {_enemyName}");
-                }
-                else
-                {
-                    LogError("일반 모드에서 적 데이터가 없습니다");
-                }
-            }
-            
             // 추가 초기화 대기 시간 (UI 안정화 등)
             yield return new WaitForSeconds(0.2f);
 
-            // 소환 모드인 경우와 일반 모드인 경우 구분
-            if (_isSummonMode)
+            // 플레이어 턴으로 전환
+            LogStateTransition($"{(_isSummonMode ? "소환 모드" : "일반 모드")} - 플레이어 턴으로 전환");
+            StartPlayerTurn(context);
+        }
+
+        /// <summary>
+        /// 소환을 위한 정리 작업
+        /// </summary>
+        private IEnumerator CleanupForSummon(CombatStateContext context)
+        {
+            // 플레이어 핸드 카드 제거
+            if (context.HandManager != null)
             {
-                // 소환 모드: 소환된 적이 준비되면 적 턴으로 시작
-                LogStateTransition("소환 모드 - 적 턴으로 전환");
-                StartEnemyTurn(context);
+                context.HandManager.ClearAll();
+                LogStateTransition("플레이어 핸드 카드 제거 완료");
             }
-            else
+
+            // 전투/대기 슬롯 정리
+            if (context.SlotRegistry != null)
             {
-                // 일반 모드: 플레이어 턴으로 시작
-                LogStateTransition("일반 모드 - 플레이어 턴으로 전환");
-                StartPlayerTurn(context);
+                context.SlotRegistry.ClearAllSlots();
+                LogStateTransition("전투/대기 슬롯 정리 완료");
             }
+
+            // 적 캐시 초기화
+            if (context.SlotMovement != null)
+            {
+                context.SlotMovement.ClearEnemyCache();
+                LogStateTransition("적 캐시 초기화 완료");
+            }
+
+            // 슬롯 상태 리셋
+            if (context.SlotMovement != null)
+            {
+                context.SlotMovement.ResetSlotStates();
+                LogStateTransition("슬롯 상태 리셋 완료");
+            }
+
+            yield return null;
         }
 
         /// <summary>

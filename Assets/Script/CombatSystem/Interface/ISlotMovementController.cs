@@ -52,6 +52,16 @@ namespace Game.CombatSystem.Interface
         void SetSummonMode(bool isSummonMode);
 
         /// <summary>
+        /// 소환 모드를 해제합니다 (PlayerTurnState 진입 시 호출)
+        /// </summary>
+        void ClearSummonMode();
+
+        /// <summary>
+        /// 현재 소환/복귀 모드 상태를 반환합니다.
+        /// </summary>
+        bool IsSummonMode { get; }
+
+        /// <summary>
         /// 슬롯 이동 중인지 확인합니다.
         /// </summary>
         bool IsAdvancingQueue { get; }

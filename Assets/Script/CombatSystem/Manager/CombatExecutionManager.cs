@@ -262,6 +262,14 @@ namespace Game.CombatSystem.Manager
 
         private ExecutionResult ExecuteCard(ISkillCard card, CombatSlotPosition slotPosition)
         {
+            // 소환 진행 중인지 확인
+            var stageManager = FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
+            if (stageManager != null && stageManager.IsSummonInProgress)
+            {
+                GameLogger.LogWarning("소환 진행 중 - 카드 실행 건너뜀", GameLogger.LogCategory.Combat);
+                return new ExecutionResult(false, null, "소환 진행 중");
+            }
+
             // 소스와 타겟 캐릭터 결정 (카드 소유자 기준)
             ICharacter sourceCharacter = GetSourceCharacter(card);
             ICharacter targetCharacter = GetTargetCharacter(card);

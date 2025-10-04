@@ -66,6 +66,7 @@ namespace Game.StageSystem.Manager
         private int currentEnemyIndex = 0;
         private bool isSpawning = false;
         private bool isStageCompleted = false;
+        private bool isSummonInProgress = false;
 
         // 스테이지 진행 상태
         private StageProgressState progressState = StageProgressState.NotStarted;
@@ -408,7 +409,7 @@ namespace Game.StageSystem.Manager
             {
                 // SetDeathListener는 TODO 상태이므로 SetDeathCallback 사용
                 concreteEnemy.SetDeathCallback(OnEnemyDeath);
-                concreteEnemy.OnSummonRequested += HandleSummonRequest;
+                // OnSummonRequested 이벤트는 더 이상 사용하지 않음 (상태 패턴으로 처리)
             }
 
             GameLogger.LogInfo($"적 등록 완료: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
@@ -426,7 +427,7 @@ namespace Game.StageSystem.Manager
             if (enemy is EnemyCharacter concreteEnemy)
             {
                 concreteEnemy.SetDeathCallback(OnSummonedEnemyDeath);
-                concreteEnemy.OnSummonRequested += HandleSummonRequest;
+                // OnSummonRequested 이벤트는 더 이상 사용하지 않음 (상태 패턴으로 처리)
             }
 
             GameLogger.LogInfo($"소환된 적 등록 완료: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
@@ -989,29 +990,13 @@ namespace Game.StageSystem.Manager
 
         private EnemyCharacterData originalEnemyData;
         private int originalEnemyHP;
+        private EnemyCharacterData summonTargetData;
         private bool isSummonedEnemyActive = false;
 
         private void HandleSummonRequest(EnemyCharacterData summonTarget, int currentHP)
         {
-            GameLogger.LogInfo($"[소환] {summonTarget.DisplayName} 소환 시작 (원본 HP: {currentHP})", GameLogger.LogCategory.Combat);
-
-            var currentEnemy = enemyManager?.GetEnemy();
-            if (currentEnemy == null)
-            {
-                GameLogger.LogWarning("[소환] 실패 - 현재 적 없음", GameLogger.LogCategory.Combat);
-                return;
-            }
-
-            if (currentEnemy is EnemyCharacter concreteEnemy)
-            {
-                // 원본 적 정보 저장
-                originalEnemyData = concreteEnemy.CharacterData as EnemyCharacterData;
-                originalEnemyHP = currentHP;
-                isSummonedEnemyActive = true;
-
-                // 소환 전환 상태로 이동
-                _ = TransitionToSummonState(summonTarget, false);
-            }
+            // 이 메서드는 더 이상 사용되지 않습니다 (상태 패턴으로 처리됨)
+            GameLogger.LogWarning("[StageManager] HandleSummonRequest는 더 이상 사용되지 않습니다", GameLogger.LogCategory.Combat);
         }
 
         /// <summary>
@@ -1019,11 +1004,22 @@ namespace Game.StageSystem.Manager
         /// </summary>
         private async Task TransitionToSummonState(EnemyCharacterData targetEnemy, bool isRestore)
         {
+            // CombatStateMachine을 더 안정적으로 찾기
             var stateMachine = FindFirstObjectByType<Game.CombatSystem.State.CombatStateMachine>();
             if (stateMachine == null)
             {
-                GameLogger.LogError("[소환] CombatStateMachine을 찾을 수 없습니다", GameLogger.LogCategory.Combat);
-                return;
+                // 대안: GameObject.Find 사용
+                var stateMachineGO = GameObject.Find("CombatStateMachine");
+                if (stateMachineGO != null)
+                {
+                    stateMachine = stateMachineGO.GetComponent<Game.CombatSystem.State.CombatStateMachine>();
+                }
+                
+                if (stateMachine == null)
+                {
+                    GameLogger.LogError("[소환] CombatStateMachine을 찾을 수 없습니다 - 소환 중단", GameLogger.LogCategory.Combat);
+                    return;
+                }
             }
 
             try
@@ -1060,35 +1056,32 @@ namespace Game.StageSystem.Manager
                     GameLogger.LogInfo($"[소환] 소환 완료: {targetEnemy.DisplayName}", GameLogger.LogCategory.Combat);
                 }
 
-                // 4단계: 소환 완료 후 CombatInitState로 전환
+                // 4단계: 소환 완료 - CombatInitState가 자동으로 감지하여 처리
                 if (!isRestore)
                 {
-                    // 소환 완료 후 CombatInitState로 전환 (소환 모드)
-                    var combatInitState = new Game.CombatSystem.State.CombatInitState();
-                    combatInitState.SetSummonMode(true);
-                    combatInitState.SkipSlotSetup(); // 이미 슬롯이 설정되었으므로 건너뜀
-                    
-                    // 상태 머신에 전환 요청
-                    stateMachine.ChangeState(combatInitState);
-                    GameLogger.LogInfo("[소환] 소환 완료 - CombatInitState로 전환", GameLogger.LogCategory.Combat);
+                    GameLogger.LogInfo("[소환] 소환 완료 - CombatInitState가 자동으로 슬롯 설정을 처리합니다", GameLogger.LogCategory.Combat);
                 }
                 else
                 {
-                    // 복귀 완료 후 CombatInitState로 전환 (일반 모드)
-                    var combatInitState = new Game.CombatSystem.State.CombatInitState();
-                    combatInitState.SetSummonMode(false);
-                    combatInitState.SkipSlotSetup(); // 이미 슬롯이 설정되었으므로 건너뜀
-                    
-                    // 상태 머신에 전환 요청
-                    stateMachine.ChangeState(combatInitState);
-                    GameLogger.LogInfo("[소환] 복귀 완료 - CombatInitState로 전환", GameLogger.LogCategory.Combat);
+                    GameLogger.LogInfo("[소환] 복귀 완료 - CombatInitState가 자동으로 슬롯 설정을 처리합니다", GameLogger.LogCategory.Combat);
                 }
+                
+                // 소환 진행 완료 플래그 해제
+                isSummonInProgress = false;
             }
             catch (System.Exception ex)
             {
                 GameLogger.LogError($"[소환] 처리 중 오류: {ex.Message}", GameLogger.LogCategory.Combat);
+                // 예외 발생 시에도 소환 진행 플래그 해제
+                isSummonInProgress = false;
             }
         }
+
+        /// <summary>
+        /// 현재 소환이 진행 중인지 확인합니다.
+        /// </summary>
+        public bool IsSummonInProgress => isSummonInProgress;
+
 
         /// <summary>
         /// 기존 적 제거 및 슬롯 정리
@@ -1176,6 +1169,78 @@ namespace Game.StageSystem.Manager
             ...
         }
         */
+
+        /// <summary>
+        /// 소환된 적 활성화 상태를 설정합니다 (상태 패턴에서 사용)
+        /// </summary>
+        public void SetSummonedEnemyActive(bool active)
+        {
+            isSummonedEnemyActive = active;
+            GameLogger.LogInfo($"[StageManager] 소환된 적 활성화 상태 설정: {active}", GameLogger.LogCategory.Combat);
+        }
+
+        /// <summary>
+        /// 원본 적 데이터를 반환합니다 (상태 패턴에서 사용)
+        /// </summary>
+        public EnemyCharacterData GetOriginalEnemyData()
+        {
+            return originalEnemyData;
+        }
+
+        /// <summary>
+        /// 원본 적 HP를 반환합니다 (상태 패턴에서 사용)
+        /// </summary>
+        public int GetOriginalEnemyHP()
+        {
+            return originalEnemyHP;
+        }
+
+        /// <summary>
+        /// 원본 적 데이터를 설정합니다 (상태 패턴에서 사용)
+        /// </summary>
+        public void SetOriginalEnemyData(EnemyCharacterData data)
+        {
+            originalEnemyData = data;
+            GameLogger.LogInfo($"[StageManager] 원본 적 데이터 설정: {data?.DisplayName}", GameLogger.LogCategory.Combat);
+        }
+
+        /// <summary>
+        /// 원본 적 HP를 설정합니다 (상태 패턴에서 사용)
+        /// </summary>
+        public void SetOriginalEnemyHP(int hp)
+        {
+            originalEnemyHP = hp;
+            GameLogger.LogInfo($"[StageManager] 원본 적 HP 설정: {hp}", GameLogger.LogCategory.Combat);
+        }
+
+        /// <summary>
+        /// 소환 대상을 설정합니다 (상태 패턴에서 사용)
+        /// </summary>
+        public void SetSummonTarget(EnemyCharacterData target)
+        {
+            summonTargetData = target;
+            GameLogger.LogInfo($"[StageManager] 소환 대상 설정: {target?.DisplayName}", GameLogger.LogCategory.Combat);
+        }
+
+        /// <summary>
+        /// 소환 대상 데이터를 반환합니다
+        /// </summary>
+        public EnemyCharacterData GetSummonTarget()
+        {
+            return summonTargetData;
+        }
+
+        /// <summary>
+        /// 소환 관련 데이터 초기화
+        /// </summary>
+        public void ClearSummonData()
+        {
+            originalEnemyData = null;
+            originalEnemyHP = 0;
+            summonTargetData = null;
+            isSummonedEnemyActive = false;
+            GameLogger.LogInfo("[StageManager] 소환 데이터 초기화 완료", GameLogger.LogCategory.Combat);
+        }
 
         #endregion
 

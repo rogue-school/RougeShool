@@ -73,21 +73,17 @@ namespace Game.CharacterSystem.Effect
             float currentRatio = (float)currentHP / maxHP;
             float previousRatio = (float)previousHP / maxHP;
 
-            if (previousRatio > activeHealthThreshold && currentRatio <= activeHealthThreshold && currentHP > 0)
+            if (previousRatio > activeHealthThreshold && currentRatio <= activeHealthThreshold && currentHP > 0 && !hasTriggered)
             {
                 hasTriggered = true;
                 GameLogger.LogInfo($"[SummonEffectSO] {character.GetCharacterName()} 소환 발동! 현재 체력: {currentHP}/{maxHP} ({currentRatio:P0}), 대상: {activeSummonTarget.DisplayName}", GameLogger.LogCategory.Character);
                 
-                // 소환 트리거를 다음 프레임으로 지연 처리 (적 사망 애니메이션과 동기화)
-                if (character is MonoBehaviour characterMono)
-                {
-                    characterMono.StartCoroutine(DelayedSummonTrigger(activeSummonTarget, currentHP));
-                }
-                else
-                {
-                    // MonoBehaviour가 아닌 경우 즉시 처리
-                    OnSummonTriggered?.Invoke(activeSummonTarget, currentHP);
-                }
+                // 즉시 소환 트리거 (CombatStateMachine에서 즉시 감지하여 처리)
+                OnSummonTriggered?.Invoke(activeSummonTarget, currentHP);
+            }
+            else if (hasTriggered)
+            {
+                GameLogger.LogInfo($"[SummonEffectSO] {character.GetCharacterName()} 소환 이펙트는 이미 발동됨 - 무시", GameLogger.LogCategory.Character);
             }
         }
 
@@ -103,18 +99,6 @@ namespace Game.CharacterSystem.Effect
         public void ResetTrigger()
         {
             hasTriggered = false;
-        }
-
-        /// <summary>
-        /// 소환 트리거를 지연 처리하는 코루틴
-        /// </summary>
-        private System.Collections.IEnumerator DelayedSummonTrigger(EnemyCharacterData summonTarget, int currentHP)
-        {
-            // 한 프레임 대기 (적 사망 애니메이션과 동기화)
-            yield return null;
-            
-            // 소환 트리거 실행
-            OnSummonTriggered?.Invoke(summonTarget, currentHP);
         }
 
         public EnemyCharacterData GetSummonTarget() => activeSummonTarget ?? defaultSummonTarget;

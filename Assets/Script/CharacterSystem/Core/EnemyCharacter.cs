@@ -49,7 +49,6 @@ namespace Game.CharacterSystem.Core
         private bool isDead = false;
 
         private System.Collections.Generic.List<ICharacterEffect> characterEffects = new System.Collections.Generic.List<ICharacterEffect>();
-        public event System.Action<EnemyCharacterData, int> OnSummonRequested;
 
         /// <summary>
         /// 적 캐릭터의 데이터 (스크립터블 오브젝트)
@@ -169,6 +168,9 @@ namespace Game.CharacterSystem.Core
             int currentHP = GetCurrentHP();
             RefreshUI();
 
+            // 소환 이펙트는 가드 상태와 관계없이 항상 체크
+            NotifyHealthChanged(previousHP, currentHP);
+
             if (wasGuarded)
             {
                 GameLogger.LogInfo($"[{GetCharacterName()}] 가드로 데미지 차단됨 - 데미지 텍스트 표시 안함", GameLogger.LogCategory.Character);
@@ -176,7 +178,6 @@ namespace Game.CharacterSystem.Core
             }
 
             ShowDamageText(amount);
-            NotifyHealthChanged(previousHP, currentHP);
 
             if (IsDead() && !isDead)
             {
@@ -299,9 +300,10 @@ namespace Game.CharacterSystem.Core
                 {
                     entry.effectSO.Initialize(this);
 
-                    if (entry.effectSO is Effect.SummonEffectSO summonEffect)
+                    // SummonEffectSO 지원
+                    if (entry.effectSO is Effect.SummonEffectSO summonEffectSO)
                     {
-                        summonEffect.OnSummonTriggered += HandleSummonTriggered;
+                        summonEffectSO.OnSummonTriggered += HandleSummonTriggered;
                     }
                 }
 
@@ -412,8 +414,11 @@ namespace Game.CharacterSystem.Core
 
         private void NotifyHealthChanged(int previousHP, int currentHP)
         {
+            GameLogger.LogInfo($"[{GetCharacterName()}] 체력 변경 알림: {previousHP} → {currentHP} (이펙트 수: {characterEffects.Count})", GameLogger.LogCategory.Character);
+            
             foreach (var effect in characterEffects)
             {
+                GameLogger.LogInfo($"[{GetCharacterName()}] 이펙트 체력 변경 처리: {effect.GetEffectName()}", GameLogger.LogCategory.Character);
                 effect.OnHealthChanged(this, previousHP, currentHP);
             }
         }
@@ -421,16 +426,35 @@ namespace Game.CharacterSystem.Core
         private void HandleSummonTriggered(EnemyCharacterData summonTarget, int currentHP)
         {
             GameLogger.LogInfo($"[{GetCharacterName()}] 소환 요청 전달: {summonTarget.DisplayName}, 현재 체력: {currentHP}", GameLogger.LogCategory.Character);
-            OnSummonRequested?.Invoke(summonTarget, currentHP);
+            
+            // StageManager에 소환 요청 전달 (상태 패턴에서 처리)
+            var stageManager = UnityEngine.Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
+            if (stageManager != null)
+            {
+                // 원본 적 정보 저장
+                stageManager.SetOriginalEnemyData(CharacterData as EnemyCharacterData);
+                stageManager.SetOriginalEnemyHP(currentHP);
+                stageManager.SetSummonTarget(summonTarget);
+                
+                // 소환 상태 플래그 설정
+                stageManager.SetSummonedEnemyActive(true);
+                
+                GameLogger.LogInfo($"[{GetCharacterName()}] StageManager에 소환 요청 전달 완료", GameLogger.LogCategory.Character);
+            }
+            else
+            {
+                GameLogger.LogError($"[{GetCharacterName()}] StageManager를 찾을 수 없습니다", GameLogger.LogCategory.Character);
+            }
         }
 
         private void CleanupEffects()
         {
             foreach (var effect in characterEffects)
             {
-                if (effect is Effect.SummonEffectSO summonEffect)
+                // SummonEffectSO 지원
+                if (effect is Effect.SummonEffectSO summonEffectSO)
                 {
-                    summonEffect.OnSummonTriggered -= HandleSummonTriggered;
+                    summonEffectSO.OnSummonTriggered -= HandleSummonTriggered;
                 }
                 effect.Cleanup(this);
             }

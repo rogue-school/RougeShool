@@ -91,6 +91,9 @@ namespace Game.CombatSystem.State
                 yield return new WaitForSeconds(0.5f);
             }
 
+            // 슬롯 이동 완료 플래그 해제
+            _isMoving = false;
+            
             // 다음 턴으로 전환
             LogStateTransition("다음 턴으로 전환 시작");
             ProceedToNextTurn(context);
@@ -163,7 +166,7 @@ namespace Game.CombatSystem.State
             // 소환/복귀 체크 (일반 사망 로직과 통합)
             if (CheckForSummonOrReturn(context))
             {
-                LogStateTransition("소환/복귀 감지 - 일반 사망 로직으로 처리");
+                LogStateTransition("소환/복귀 처리 완료 - 상태 전환 대기");
                 return;
             }
 
@@ -209,27 +212,18 @@ namespace Game.CombatSystem.State
         }
 
         /// <summary>
-        /// 소환/복귀 체크 (일반 사망 로직과 통합)
+        /// 소환/복귀 체크 (안전한 시점에만 체크)
         /// </summary>
         private bool CheckForSummonOrReturn(CombatStateContext context)
         {
-            // StageManager에서 소환/복귀 상태 확인
-            var stageManager = UnityEngine.Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
-            if (stageManager == null)
-            {
-                return false;
-            }
+            // CombatStateMachine의 안전한 체크 메서드 사용
+            context.StateMachine?.CheckSummonTriggerAtSafePoint();
 
-            // 소환된 적이 활성화되어 있는지 확인
-            if (stageManager.IsSummonedEnemyActive())
+            // 소환 상태로 전환되었는지 확인
+            var currentState = context.StateMachine?.GetCurrentState();
+            if (currentState is SummonState || currentState is SummonReturnState)
             {
-                LogStateTransition("소환된 적 활성화 감지 - 소환/복귀 로직 처리");
-                
-                // 소환/복귀 처리를 위한 CombatInitState로 전환
-                var combatInitState = new CombatInitState();
-                combatInitState.SetSummonMode(true);
-                
-                RequestTransition(context, combatInitState);
+                LogStateTransition("소환/복귀 상태 전환 감지");
                 return true;
             }
 

@@ -29,6 +29,9 @@ namespace Game.CombatSystem.State
 
             LogStateTransition("플레이어 턴 시작");
 
+            // 소환 트리거 체크 (안전한 시점)
+            context.StateMachine?.CheckSummonTriggerAtSafePoint();
+
             // 플레이어 턴 설정 (TurnController 사용)
             if (context.TurnController != null)
             {
@@ -38,7 +41,17 @@ namespace Game.CombatSystem.State
             // 턴별 효과 처리 (가드, 출혈, 반격, 기절 등)
             ProcessTurnEffects(context);
 
-            // 플레이어 손패 생성
+            // 소환 모드 확인 및 해제
+            bool isSummonMode = context.SlotMovement?.IsSummonMode ?? false;
+
+            if (isSummonMode)
+            {
+                LogStateTransition("소환 모드 감지 - 소환 모드 해제 후 핸드 생성");
+                // 소환 모드 해제
+                context.SlotMovement?.ClearSummonMode();
+            }
+
+            // 플레이어 손패 생성 (소환 모드 여부와 관계없이 항상 생성)
             if (context.HandManager != null)
             {
                 context.HandManager.GenerateInitialHand();

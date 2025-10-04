@@ -460,13 +460,23 @@ namespace Game.CombatSystem.Manager
             _suppressAutoRefill = false;
             _suppressAutoExecution = false;
 
-            // 소환 모드는 리셋하지 않음 (CombatInitState에서 설정됨)
-            // _isSummonMode = false; // 제거
-
             // 다음 생성 주체 리셋
             _nextSpawnIsPlayer = true;
 
             GameLogger.LogInfo("슬롯 상태 리셋 완료", GameLogger.LogCategory.Combat);
+        }
+
+        /// <summary>
+        /// 소환 모드를 해제합니다 (PlayerTurnState 진입 시 호출)
+        /// </summary>
+        public void ClearSummonMode()
+        {
+            if (_isSummonMode)
+            {
+                _isSummonMode = false;
+                _suppressAutoExecution = false;
+                GameLogger.LogInfo("소환 모드 해제 - 일반 전투로 전환", GameLogger.LogCategory.Combat);
+            }
         }
 
         /// <summary>
@@ -477,6 +487,11 @@ namespace Game.CombatSystem.Manager
             _isSummonMode = isSummonMode;
             GameLogger.LogInfo($"소환 모드 설정: {isSummonMode}", GameLogger.LogCategory.Combat);
         }
+
+        /// <summary>
+        /// 현재 소환/복귀 모드 상태를 반환합니다
+        /// </summary>
+        public bool IsSummonMode => _isSummonMode;
 
         #endregion
 
