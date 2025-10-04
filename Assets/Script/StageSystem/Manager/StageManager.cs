@@ -959,12 +959,21 @@ namespace Game.StageSystem.Manager
             return stageSettings.allStages ?? new List<StageData>();
         }
 
+        /// <summary>
+        /// 현재 활성화된 적이 소환된 적인지 확인
+        /// </summary>
+        public bool IsSummonedEnemyActive()
+        {
+            return isSummonedEnemyActive;
+        }
+
         #endregion
 
         #region 소환 시스템
 
         private EnemyCharacter originalEnemy;
         private int originalEnemyHP;
+        private bool isSummonedEnemyActive = false;
 
         private async void HandleSummonRequest(EnemyCharacterData summonTarget, int currentHP)
         {
@@ -1012,6 +1021,7 @@ namespace Game.StageSystem.Manager
                 }
 
                 RegisterSummonedEnemy(summonedEnemy);
+                isSummonedEnemyActive = true; // 소환된 적 활성화 플래그 설정
                 
                 // 소환된 적 등록 후 전투 시작
                 if (summonedEnemy is EnemyCharacter enemyChar)
@@ -1021,11 +1031,14 @@ namespace Game.StageSystem.Manager
                     {
                         GameLogger.LogInfo($"[StageManager] 소환된 적을 위한 전투 시작: {summonedEnemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
 
-                        // CombatStateMachine으로 전투 시작 (적 데이터 전달)
+                        // 소환된 적을 위한 전투 초기화 (CombatInitState로 전환)
                         var stateMachine = FindFirstObjectByType<Game.CombatSystem.State.CombatStateMachine>();
                         if (stateMachine != null)
                         {
-                            stateMachine.StartCombat(enemyData, summonedEnemy.GetCharacterName());
+                            // 소환된 적을 위한 초기화 상태로 전환
+                            var initState = new Game.CombatSystem.State.CombatInitState();
+                            initState.SetEnemyData(enemyData, summonedEnemy.GetCharacterName());
+                            stateMachine.ForceChangeState(initState);
                         }
                         else
                         {
@@ -1077,6 +1090,7 @@ namespace Game.StageSystem.Manager
                     }
 
                     RegisterEnemy(restoredEnemy);
+                    isSummonedEnemyActive = false; // 소환된 적 비활성화 플래그 해제
                     
                     // 원본 적 복귀 후 전투 시작
                     if (restoredEnemy is EnemyCharacter enemyChar)
@@ -1086,11 +1100,14 @@ namespace Game.StageSystem.Manager
                         {
                             GameLogger.LogInfo($"[StageManager] 복귀된 적을 위한 전투 시작: {restoredEnemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
 
-                            // CombatStateMachine으로 전투 시작 (적 데이터 전달)
+                            // 원본 적 복귀를 위한 전투 초기화 (CombatInitState로 전환)
                             var stateMachine = FindFirstObjectByType<Game.CombatSystem.State.CombatStateMachine>();
                             if (stateMachine != null)
                             {
-                                stateMachine.StartCombat(enemyData, restoredEnemy.GetCharacterName());
+                                // 원본 적을 위한 초기화 상태로 전환
+                                var initState = new Game.CombatSystem.State.CombatInitState();
+                                initState.SetEnemyData(enemyData, restoredEnemy.GetCharacterName());
+                                stateMachine.ForceChangeState(initState);
                             }
                             else
                             {

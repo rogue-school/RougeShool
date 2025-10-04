@@ -255,6 +255,43 @@ namespace Game.CombatSystem.State
         }
 
         /// <summary>
+        /// 상태를 강제로 변경합니다 (소환/복귀 시 사용)
+        /// </summary>
+        /// <param name="newState">새로운 상태</param>
+        public void ForceChangeState(ICombatState newState)
+        {
+            if (newState == null)
+            {
+                GameLogger.LogError(
+                    "[CombatStateMachine] null 상태로 전환할 수 없습니다",
+                    GameLogger.LogCategory.Error);
+                return;
+            }
+
+            GameLogger.LogInfo(
+                $"[CombatStateMachine] 강제 상태 전환: {_currentState?.StateName ?? "None"} → {newState.StateName}",
+                GameLogger.LogCategory.Combat);
+
+            var previousState = _currentState;
+
+            // 이전 상태 종료
+            if (_currentState != null)
+            {
+                _currentState.OnExit(_context);
+            }
+
+            // 새 상태로 전환
+            _currentState = newState;
+            currentStateName = _currentState.StateName;
+
+            // 새 상태 시작
+            _currentState.OnEnter(_context);
+
+            // 이벤트 발생
+            OnStateChanged?.Invoke(previousState, _currentState);
+        }
+
+        /// <summary>
         /// 전투를 종료합니다
         /// </summary>
         public void EndCombat(bool isVictory)
@@ -370,7 +407,17 @@ namespace Game.CombatSystem.State
                 "[CombatStateMachine] 적 사망 감지",
                 GameLogger.LogCategory.Combat);
 
-            // 적 처치 상태로 전환
+            // 소환된 적인지 확인
+            var stageManager = FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
+            if (stageManager != null && stageManager.IsSummonedEnemyActive())
+            {
+                GameLogger.LogInfo(
+                    "[CombatStateMachine] 소환된 적 사망 - EnemyDefeatedState로 전환하지 않음 (원본 적 복귀 처리)",
+                    GameLogger.LogCategory.Combat);
+                return; // 소환된 적이 죽으면 StageManager에서 원본 적 복귀 처리
+            }
+
+            // 일반 적 사망 시 적 처치 상태로 전환
             var enemyDefeatedState = new EnemyDefeatedState();
             ChangeState(enemyDefeatedState);
         }
