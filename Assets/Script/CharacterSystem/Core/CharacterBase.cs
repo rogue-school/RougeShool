@@ -295,6 +295,12 @@ namespace Game.CharacterSystem.Core
         /// <summary>등록된 턴 효과를 처리합니다 (만료된 효과 제거 포함)</summary>
         public virtual void ProcessTurnEffects()
         {
+            // GameObject가 비활성화 상태면 턴 효과 처리 안 함
+            if (!gameObject.activeInHierarchy)
+            {
+                return;
+            }
+
             foreach (var effect in perTurnEffects.ToArray())
             {
                 effect.OnTurnStart(this);

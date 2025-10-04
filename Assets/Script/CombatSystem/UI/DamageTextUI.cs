@@ -27,6 +27,13 @@ namespace Game.CombatSystem.UI
         /// <param name="prefix">접두사 (+ 또는 -)</param>
         public void Show(int amount, Color color, string prefix = "")
         {
+            // GameObject가 비활성화 상태면 Coroutine 시작 불가
+            if (!gameObject.activeInHierarchy)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
             if (damageText != null)
             {
                 damageText.text = $"{prefix}{amount}";
