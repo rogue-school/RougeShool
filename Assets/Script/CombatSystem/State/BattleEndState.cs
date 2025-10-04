@@ -57,10 +57,10 @@ namespace Game.CombatSystem.State
         /// </summary>
         private void HandleVictory(CombatStateContext context)
         {
-            // 게임 종료
-            if (context.TurnManager != null)
+            // 게임 종료 (TurnController 사용)
+            if (context.TurnController != null)
             {
-                context.TurnManager.EndGame();
+                context.TurnController.EndGame();
             }
 
             // 승리 이벤트 발생 (UI, 보상 등)
@@ -74,10 +74,10 @@ namespace Game.CombatSystem.State
         /// </summary>
         private void HandleDefeat(CombatStateContext context)
         {
-            // 게임 종료
-            if (context.TurnManager != null)
+            // 게임 종료 (TurnController 사용)
+            if (context.TurnController != null)
             {
-                context.TurnManager.EndGame();
+                context.TurnController.EndGame();
             }
 
             // 패배 이벤트 발생 (UI, 재시작 옵션 등)

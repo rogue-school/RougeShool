@@ -400,7 +400,7 @@ namespace Game.StageSystem.Manager
         /// <summary>
         /// 적 캐릭터를 시스템에 등록합니다.
         /// </summary>
-        private void RegisterEnemy(ICharacter enemy)
+        public void RegisterEnemy(ICharacter enemy)
         {
             enemyManager?.RegisterEnemy(enemy);
 
@@ -418,15 +418,14 @@ namespace Game.StageSystem.Manager
         /// 소환된 적 캐릭터를 시스템에 등록합니다.
         /// 일반 적과 달리 사망 콜백을 덮어쓰지 않습니다.
         /// </summary>
-        private void RegisterSummonedEnemy(ICharacter enemy)
+        public void RegisterSummonedEnemy(ICharacter enemy)
         {
             enemyManager?.RegisterEnemy(enemy);
 
-            // 소환된 적은 이미 SetDeathCallback이 설정되어 있으므로
-            // SetDeathListener를 호출하지 않습니다.
-            // 대신 소환 이벤트만 등록합니다.
+            // 소환된 적은 소환 사망 콜백을 설정합니다
             if (enemy is EnemyCharacter concreteEnemy)
             {
+                concreteEnemy.SetDeathCallback(OnSummonedEnemyDeath);
                 concreteEnemy.OnSummonRequested += HandleSummonRequest;
             }
 
@@ -440,11 +439,12 @@ namespace Game.StageSystem.Manager
         {
             GameLogger.LogInfo($"[StageManager] 적 처치: {enemy.GetCharacterName()} (현재 인덱스: {currentEnemyIndex})", GameLogger.LogCategory.Combat);
 
-            // 소환된 적인지 확인 (원본 적이 저장되어 있는지로 판단)
-            if (originalEnemy != null)
+            // 소환된 적인지 확인 (원본 적 데이터가 저장되어 있는지로 판단)
+            if (originalEnemyData != null)
             {
-                GameLogger.LogInfo($"[StageManager] 소환된 적 사망 감지 - 원본 복귀 시작: {originalEnemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
-                _ = RestoreOriginalEnemy();
+                GameLogger.LogInfo($"[StageManager] 소환된 적 사망 감지 - 원본 복귀 시작: {originalEnemyData.DisplayName}", GameLogger.LogCategory.Combat);
+                // 소환된 적 사망 콜백 호출
+                OnSummonedEnemyDeath(enemy);
                 return; // 소환된 적은 일반적인 적 처치 로직을 건너뜀
             }
 
@@ -560,6 +560,22 @@ namespace Game.StageSystem.Manager
         /// 적 캐릭터를 생성합니다.
         /// </summary>
         private async Task<ICharacter> CreateEnemyAsync(EnemyCharacterData data)
+        {
+            return await CreateEnemyInternalAsync(data);
+        }
+
+        /// <summary>
+        /// 소환 시스템용 적 캐릭터 생성 (public 접근)
+        /// </summary>
+        public async Task<ICharacter> CreateEnemyForSummonAsync(EnemyCharacterData data)
+        {
+            return await CreateEnemyInternalAsync(data);
+        }
+
+        /// <summary>
+        /// 적 캐릭터를 생성합니다 (내부 구현)
+        /// </summary>
+        private async Task<ICharacter> CreateEnemyInternalAsync(EnemyCharacterData data)
         {
             if (data?.Prefab == null)
             {
@@ -971,11 +987,11 @@ namespace Game.StageSystem.Manager
 
         #region 소환 시스템
 
-        private EnemyCharacter originalEnemy;
+        private EnemyCharacterData originalEnemyData;
         private int originalEnemyHP;
         private bool isSummonedEnemyActive = false;
 
-        private async void HandleSummonRequest(EnemyCharacterData summonTarget, int currentHP)
+        private void HandleSummonRequest(EnemyCharacterData summonTarget, int currentHP)
         {
             GameLogger.LogInfo($"[소환] {summonTarget.DisplayName} 소환 시작 (원본 HP: {currentHP})", GameLogger.LogCategory.Combat);
 
@@ -988,207 +1004,83 @@ namespace Game.StageSystem.Manager
 
             if (currentEnemy is EnemyCharacter concreteEnemy)
             {
-                originalEnemy = concreteEnemy;
+                // 원본 적 정보 저장
+                originalEnemyData = concreteEnemy.CharacterData as EnemyCharacterData;
                 originalEnemyHP = currentHP;
-                await ReplaceEnemyWithSummon(summonTarget);
+                isSummonedEnemyActive = true;
+
+                // 소환 전환 상태로 이동
+                TransitionToSummonState(summonTarget, false);
             }
         }
 
-        private async Task ReplaceEnemyWithSummon(EnemyCharacterData summonTarget)
+        /// <summary>
+        /// 소환/복귀 전환 상태로 이동
+        /// </summary>
+        private void TransitionToSummonState(EnemyCharacterData targetEnemy, bool isRestore)
         {
-            var currentEnemy = enemyManager?.GetEnemy();
-            if (currentEnemy == null) return;
-
-            // 이전 적 제거
-            enemyManager.UnregisterEnemy();
-            if (currentEnemy is EnemyCharacter concreteEnemy)
+            var stateMachine = FindFirstObjectByType<Game.CombatSystem.State.CombatStateMachine>();
+            if (stateMachine == null)
             {
-                concreteEnemy.OnSummonRequested -= HandleSummonRequest;
-                Destroy(concreteEnemy.gameObject);
+                GameLogger.LogError("[소환] CombatStateMachine을 찾을 수 없습니다", GameLogger.LogCategory.Combat);
+                return;
             }
 
-            // 슬롯 초기화 및 소환
-            await ClearPlayerHandsAndSlots();
-
-            var summonedEnemy = await CreateEnemyAsync(summonTarget);
-            if (summonedEnemy != null)
+            var summonState = new Game.CombatSystem.State.SummonTransitionState();
+            
+            if (isRestore)
             {
-                // 소환된 적 사망 시 원본 복귀 콜백 설정
-                if (summonedEnemy is EnemyCharacter summonedConcrete)
-                {
-                    GameLogger.LogInfo($"[소환] {summonTarget.DisplayName} 사망 콜백 설정", GameLogger.LogCategory.Combat);
-                    summonedConcrete.SetDeathCallback(OnSummonedEnemyDeath);
-                }
-
-                RegisterSummonedEnemy(summonedEnemy);
-                isSummonedEnemyActive = true; // 소환된 적 활성화 플래그 설정
-                
-                // 소환된 적 등록 후 전투 시작
-                if (summonedEnemy is EnemyCharacter enemyChar)
-                {
-                    var enemyData = enemyChar.CharacterData as Game.CharacterSystem.Data.EnemyCharacterData;
-                    if (enemyData != null)
-                    {
-                        GameLogger.LogInfo($"[StageManager] 소환된 적을 위한 전투 시작: {summonedEnemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
-
-                        // 소환된 적을 위한 전투 초기화 (CombatInitState로 전환)
-                        var stateMachine = FindFirstObjectByType<Game.CombatSystem.State.CombatStateMachine>();
-                        if (stateMachine != null)
-                        {
-                            // 소환된 적을 위한 초기화 상태로 전환
-                            var initState = new Game.CombatSystem.State.CombatInitState();
-                            initState.SetEnemyData(enemyData, summonedEnemy.GetCharacterName());
-                            stateMachine.ForceChangeState(initState);
-                        }
-                        else
-                        {
-                            GameLogger.LogWarning($"[StageManager] CombatStateMachine을 찾을 수 없습니다", GameLogger.LogCategory.Combat);
-                        }
-                    }
-                    else
-                    {
-                        GameLogger.LogWarning($"[StageManager] 소환된 적 데이터를 가져올 수 없습니다: {summonedEnemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
-                    }
-                }
-                
-                GameLogger.LogInfo($"[소환] {summonTarget.DisplayName} 완료", GameLogger.LogCategory.Combat);
+                // 복귀 모드 설정
+                summonState.SetupRestore(targetEnemy, originalEnemyHP);
+                GameLogger.LogInfo($"[소환] 복귀 전환 상태로 이동: {targetEnemy.DisplayName} (HP: {originalEnemyHP})", GameLogger.LogCategory.Combat);
+            }
+            else
+            {
+                // 소환 모드 설정
+                summonState.SetupSummon(targetEnemy);
+                GameLogger.LogInfo($"[소환] 소환 전환 상태로 이동: {targetEnemy.DisplayName}", GameLogger.LogCategory.Combat);
             }
 
-            await RedrawPlayerHands();
+            stateMachine.ForceChangeState(summonState);
         }
 
         private void OnSummonedEnemyDeath(ICharacter summonedEnemy)
         {
-            GameLogger.LogInfo($"[소환] {summonedEnemy.GetCharacterName()} 사망 → {originalEnemy?.GetCharacterName()} 복귀 (HP: {originalEnemyHP})", GameLogger.LogCategory.Combat);
-            _ = RestoreOriginalEnemy();
+            GameLogger.LogInfo($"[소환] {summonedEnemy.GetCharacterName()} 사망 → {originalEnemyData?.DisplayName} 복귀 (HP: {originalEnemyHP})", GameLogger.LogCategory.Combat);
+            
+            if (originalEnemyData != null)
+            {
+                // 복귀 전환 상태로 이동
+                TransitionToSummonState(originalEnemyData, true);
+                
+                // 원본 적 복귀 완료 후 소환 변수 초기화
+                originalEnemyData = null;
+                originalEnemyHP = 0;
+                isSummonedEnemyActive = false;
+            }
+            else
+            {
+                GameLogger.LogWarning("[소환] 원본 적 데이터가 없어서 복귀할 수 없습니다.", GameLogger.LogCategory.Combat);
+            }
         }
 
+        // 더 이상 사용하지 않음 - SummonTransitionState가 처리
+        /*
         private async Task RestoreOriginalEnemy()
         {
-            // 소환된 적 제거
-            var currentEnemy = enemyManager?.GetEnemy();
-            if (currentEnemy != null)
-            {
-                enemyManager.UnregisterEnemy();
-                if (currentEnemy is EnemyCharacter concrete)
-                {
-                    Destroy(concrete.gameObject);
-                }
-            }
-
-            // 슬롯 초기화 및 원본 복귀
-            await ClearPlayerHandsAndSlots();
-
-            if (originalEnemy != null && originalEnemy.CharacterData != null)
-            {
-                var restoredEnemy = await CreateEnemyAsync(originalEnemy.CharacterData);
-                if (restoredEnemy != null)
-                {
-                    if (restoredEnemy is CharacterBase characterBase)
-                    {
-                        characterBase.SetCurrentHP(originalEnemyHP);
-                    }
-
-                    RegisterEnemy(restoredEnemy);
-                    isSummonedEnemyActive = false; // 소환된 적 비활성화 플래그 해제
-                    
-                    // 원본 적 복귀 후 전투 시작
-                    if (restoredEnemy is EnemyCharacter enemyChar)
-                    {
-                        var enemyData = enemyChar.CharacterData as Game.CharacterSystem.Data.EnemyCharacterData;
-                        if (enemyData != null)
-                        {
-                            GameLogger.LogInfo($"[StageManager] 복귀된 적을 위한 전투 시작: {restoredEnemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
-
-                            // 원본 적 복귀를 위한 전투 초기화 (CombatInitState로 전환)
-                            var stateMachine = FindFirstObjectByType<Game.CombatSystem.State.CombatStateMachine>();
-                            if (stateMachine != null)
-                            {
-                                // 원본 적을 위한 초기화 상태로 전환
-                                var initState = new Game.CombatSystem.State.CombatInitState();
-                                initState.SetEnemyData(enemyData, restoredEnemy.GetCharacterName());
-                                stateMachine.ForceChangeState(initState);
-                            }
-                            else
-                            {
-                                GameLogger.LogWarning($"[StageManager] CombatStateMachine을 찾을 수 없습니다", GameLogger.LogCategory.Combat);
-                            }
-                        }
-                        else
-                        {
-                            GameLogger.LogWarning($"[StageManager] 복귀된 적 데이터를 가져올 수 없습니다: {restoredEnemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
-                        }
-                    }
-                    
-                    GameLogger.LogInfo($"[소환] {restoredEnemy.GetCharacterName()} 복귀 완료", GameLogger.LogCategory.Combat);
-                }
-            }
-
-            await RedrawPlayerHands();
-
-            // 원본 적 복귀 완료 후 소환 관련 변수 초기화
-            originalEnemy = null;
-            originalEnemyHP = 0;
-            GameLogger.LogInfo($"[소환] 원본 적 복귀 완료 및 소환 변수 초기화", GameLogger.LogCategory.Combat);
+            ...
         }
 
         private async Task ClearPlayerHandsAndSlots()
         {
-            GameLogger.LogInfo($"[StageManager] 소환 시 모든 슬롯 정리 시작 (플레이어 턴 마커 + 적 카드)", GameLogger.LogCategory.Combat);
-
-            // 플레이어 핸드 정리
-            if (playerHandManager != null)
-            {
-                playerHandManager.ClearAll();
-                GameLogger.LogInfo("[StageManager] 플레이어 핸드 정리 완료", GameLogger.LogCategory.Combat);
-            }
-            else
-            {
-                GameLogger.LogWarning("[StageManager] PlayerHandManager 없음", GameLogger.LogCategory.Combat);
-            }
-
-            // TurnManager를 통해 모든 슬롯 정리 (데이터 + UI)
-            if (turnManager != null)
-            {
-                if (turnManager is Game.CombatSystem.Manager.TurnManager tm)
-                {
-                    // 적 캐시 초기화
-                    tm.ClearEnemyCache();
-
-                    // 모든 슬롯 정리 (플레이어 턴 마커 + 적 카드 모두 제거)
-                    var allSlots = new System.Collections.Generic.List<Game.CombatSystem.Slot.CombatSlotPosition>
-                    {
-                        Game.CombatSystem.Slot.CombatSlotPosition.BATTLE_SLOT,
-                        Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_1,
-                        Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_2,
-                        Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_3,
-                        Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_4
-                    };
-
-                    foreach (var slot in allSlots)
-                    {
-                        tm.ClearSlot(slot);
-                    }
-
-                    GameLogger.LogInfo($"[StageManager] 소환 시 모든 슬롯 정리 완료", GameLogger.LogCategory.Combat);
-                }
-            }
-            else
-            {
-                GameLogger.LogWarning($"[StageManager] TurnManager를 찾을 수 없습니다", GameLogger.LogCategory.Combat);
-            }
-
-            await Task.Yield();
+            ...
         }
 
-        private async Task RedrawPlayerHands()
+        private async Task ClearSummonedEnemyCards()
         {
-            // 손패 생성은 PlayerTurnState에서 처리하므로 여기서는 제거
-            // 플레이어 턴일 때만 손패가 생성되도록 변경
-            GameLogger.LogInfo("[핸드] 손패 생성은 PlayerTurnState에서 처리됨", GameLogger.LogCategory.Combat);
-
-            await Task.Yield();
+            ...
         }
+        */
 
         #endregion
 

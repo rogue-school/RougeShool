@@ -69,21 +69,21 @@ namespace Game.CombatSystem.State
 
             _isMoving = true;
 
-            // TurnManager의 슬롯 전진 처리 호출
-            if (context?.TurnManager != null)
+            // SlotMovementController의 슬롯 전진 처리 호출
+            if (context?.SlotMovement != null)
             {
-                LogStateTransition("TurnManager 슬롯 전진 시작");
+                LogStateTransition("SlotMovementController 슬롯 전진 시작");
 
-                // TurnManager의 AdvanceSlots 메서드 호출 (슬롯 이동)
-                yield return context.TurnManager.StartCoroutine(
-                    context.TurnManager.AdvanceQueueAtTurnStartRoutine()
+                // SlotMovementController의 MoveAllSlotsForward 메서드 호출 (슬롯 이동)
+                yield return context.StateMachine.StartCoroutine(
+                    context.SlotMovement.MoveAllSlotsForwardRoutine()
                 );
 
                 LogStateTransition("슬롯 이동 완료");
             }
             else
             {
-                LogWarning("TurnManager가 null - 슬롯 이동 건너뜀");
+                LogWarning("SlotMovement가 null - 슬롯 이동 건너뜀");
                 yield return new WaitForSeconds(0.5f);
             }
 
@@ -100,14 +100,14 @@ namespace Game.CombatSystem.State
         /// </summary>
         private void ProceedToNextTurn(CombatStateContext context)
         {
-            if (context?.TurnManager == null)
+            if (context?.SlotRegistry == null)
             {
-                LogError("TurnManager가 null입니다");
+                LogError("SlotRegistry가 null입니다");
                 return;
             }
 
-            // 배틀 슬롯의 카드 확인
-            var battleCard = context.TurnManager.GetCardInSlot(Slot.CombatSlotPosition.BATTLE_SLOT);
+            // 배틀 슬롯의 카드 확인 (SlotRegistry 사용)
+            var battleCard = context.SlotRegistry.GetCardInSlot(Slot.CombatSlotPosition.BATTLE_SLOT);
             
             if (battleCard == null)
             {

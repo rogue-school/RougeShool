@@ -1,6 +1,7 @@
 using UnityEngine;
 using Game.CharacterSystem.Manager;
 using Game.CombatSystem.Manager;
+using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Manager;
 
 namespace Game.CombatSystem.State
@@ -11,12 +12,17 @@ namespace Game.CombatSystem.State
     /// </summary>
     public class CombatStateContext
     {
-        // 핵심 매니저들
+        // 핵심 매니저들 (레거시)
         public CombatExecutionManager ExecutionManager { get; set; }
         public TurnManager TurnManager { get; set; }
         public PlayerManager PlayerManager { get; set; }
         public EnemyManager EnemyManager { get; set; }
         public PlayerHandManager HandManager { get; set; }
+
+        // 새로운 분리된 인터페이스들 (리팩토링)
+        public ITurnController TurnController { get; set; }
+        public ICardSlotRegistry SlotRegistry { get; set; }
+        public ISlotMovementController SlotMovement { get; set; }
 
         // 상태 머신 참조
         public CombatStateMachine StateMachine { get; set; }
@@ -30,7 +36,7 @@ namespace Game.CombatSystem.State
         public bool IsPaused { get; set; }
 
         /// <summary>
-        /// 컨텍스트 초기화
+        /// 컨텍스트 초기화 (레거시 + 새로운 인터페이스)
         /// </summary>
         public void Initialize(
             CombatStateMachine stateMachine,
@@ -38,19 +44,30 @@ namespace Game.CombatSystem.State
             TurnManager turnManager,
             PlayerManager playerManager,
             EnemyManager enemyManager,
-            PlayerHandManager handManager)
+            PlayerHandManager handManager,
+            ITurnController turnController,
+            ICardSlotRegistry slotRegistry,
+            ISlotMovementController slotMovement)
         {
             StateMachine = stateMachine;
+
+            // 레거시 매니저
             ExecutionManager = executionManager;
             TurnManager = turnManager;
             PlayerManager = playerManager;
             EnemyManager = enemyManager;
             HandManager = handManager;
+
+            // 새로운 분리된 인터페이스들
+            TurnController = turnController;
+            SlotRegistry = slotRegistry;
+            SlotMovement = slotMovement;
+
             IsInitialized = true;
             IsPaused = false;
 
             Game.CoreSystem.Utility.GameLogger.LogInfo(
-                "[CombatStateContext] 컨텍스트 초기화 완료",
+                "[CombatStateContext] 컨텍스트 초기화 완료 (레거시 + 리팩토링)",
                 Game.CoreSystem.Utility.GameLogger.LogCategory.Combat);
         }
 

@@ -23,6 +23,7 @@ namespace Game.CombatSystem.State
         private MonoBehaviour _coroutineRunner;
         private Game.CharacterSystem.Data.EnemyCharacterData _enemyData;
         private string _enemyName;
+        private bool _skipSlotSetup = false;
 
         public override void OnEnter(CombatStateContext context)
         {
@@ -68,6 +69,14 @@ namespace Game.CombatSystem.State
         }
 
         /// <summary>
+        /// 슬롯 설정을 건너뛰도록 설정합니다 (소환 전환 후 사용)
+        /// </summary>
+        public void SkipSlotSetup()
+        {
+            _skipSlotSetup = true;
+        }
+
+        /// <summary>
         /// 전투 초기화 코루틴
         /// </summary>
         private IEnumerator InitializeCombat(CombatStateContext context)
@@ -75,17 +84,21 @@ namespace Game.CombatSystem.State
             // 초기화 수행
             PerformInitialization(context);
 
-            // 적 데이터가 있으면 초기 슬롯 셋업 수행
-            if (_enemyData != null && context.TurnManager != null)
+            // 적 데이터가 있고 슬롯 설정을 건너뛰지 않는 경우에만 초기 슬롯 셋업 수행
+            if (_enemyData != null && context.SlotMovement != null && !_skipSlotSetup)
             {
                 LogStateTransition($"적 데이터로 초기 슬롯 셋업 시작: {_enemyName}");
 
-                // TurnManager를 통해 초기 슬롯 셋업
-                yield return context.TurnManager.StartCoroutine(
-                    context.TurnManager.SetupInitialEnemyQueueRoutine(_enemyData, _enemyName)
+                // SlotMovementController를 통해 초기 슬롯 셋업
+                yield return context.StateMachine.StartCoroutine(
+                    context.SlotMovement.SetupInitialEnemyQueueRoutine(_enemyData, _enemyName)
                 );
 
                 LogStateTransition("초기 슬롯 셋업 완료");
+            }
+            else if (_skipSlotSetup)
+            {
+                LogStateTransition("슬롯 설정 건너뜀 (이미 설정됨)");
             }
 
             // 추가 초기화 대기 시간 (UI 안정화 등)
@@ -100,17 +113,17 @@ namespace Game.CombatSystem.State
         /// </summary>
         private void PerformInitialization(CombatStateContext context)
         {
-            // 게임 시작
-            if (context.TurnManager != null)
+            // 게임 시작 (TurnController 사용)
+            if (context.TurnController != null)
             {
-                context.TurnManager.StartGame();
+                context.TurnController.StartGame();
                 LogStateTransition("게임 시작");
             }
 
-            // 턴 리셋
-            if (context.TurnManager != null)
+            // 턴 리셋 (TurnController 사용)
+            if (context.TurnController != null)
             {
-                context.TurnManager.ResetTurn();
+                context.TurnController.ResetTurn();
                 LogStateTransition("턴 리셋");
             }
 

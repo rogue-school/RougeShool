@@ -30,8 +30,11 @@ namespace Game.CombatSystem.State
 
             LogStateTransition("적 턴 시작");
 
-            // 적 턴 설정
-            context.TurnManager?.SetTurnAndIncrement(Manager.TurnManager.TurnType.Enemy);
+            // 적 턴 설정 (TurnController 사용)
+            if (context.TurnController != null)
+            {
+                context.TurnController.SetTurnAndIncrement(Interface.TurnType.Enemy);
+            }
 
             // 턴별 효과 처리 (가드, 출혈, 반격, 기절 등)
             ProcessTurnEffects(context);
@@ -58,14 +61,14 @@ namespace Game.CombatSystem.State
         /// </summary>
         private void ProcessTurnEffects(CombatStateContext context)
         {
-            if (context?.TurnManager == null)
+            if (context?.TurnController == null)
             {
-                LogWarning("TurnManager가 null - 턴별 효과 처리 건너뜀");
+                LogWarning("TurnController가 null - 턴별 효과 처리 건너뜀");
                 return;
             }
 
-            // TurnManager의 ProcessAllCharacterTurnEffects 메서드 호출
-            context.TurnManager.ProcessAllCharacterTurnEffects();
+            // TurnController의 ProcessAllCharacterTurnEffects 메서드 호출
+            context.TurnController.ProcessAllCharacterTurnEffects();
             LogStateTransition("턴별 효과 처리 완료 (가드, 출혈, 반격, 기절 등)");
         }
 
@@ -75,13 +78,13 @@ namespace Game.CombatSystem.State
         /// </summary>
         private void CheckAndExecuteEnemyCard(CombatStateContext context)
         {
-            if (context?.TurnManager == null)
+            if (context?.SlotRegistry == null)
             {
-                LogError("TurnManager가 null입니다");
+                LogError("SlotRegistry가 null입니다");
                 return;
             }
 
-            var battleCard = context.TurnManager.GetCardInSlot(
+            var battleCard = context.SlotRegistry.GetCardInSlot(
                 Game.CombatSystem.Slot.CombatSlotPosition.BATTLE_SLOT);
 
             // 배틀 슬롯 상태 확인

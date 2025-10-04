@@ -3,6 +3,7 @@ using System;
 using Game.CoreSystem.Utility;
 using Game.CharacterSystem.Manager;
 using Game.CombatSystem.Manager;
+using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Manager;
 using Zenject;
 
@@ -22,6 +23,11 @@ namespace Game.CombatSystem.State
         [Inject] private TurnManager turnManager;
         [Inject] private PlayerManager playerManager;
         [Inject] private EnemyManager enemyManager;
+
+        // 새로운 분리된 인터페이스들 (리팩토링)
+        [Inject] private ITurnController turnController;
+        [Inject] private ICardSlotRegistry slotRegistry;
+        [Inject] private ISlotMovementController slotMovement;
 
         // PlayerHandManager는 Optional (씬에 없을 수 있음)
         private PlayerHandManager handManager;
@@ -144,14 +150,17 @@ namespace Game.CombatSystem.State
         /// </summary>
         private void DelayedInitialize()
         {
-            // 컨텍스트 초기화
+            // 컨텍스트 초기화 (레거시 + 리팩토링된 인터페이스)
             _context.Initialize(
                 this,
                 executionManager,
                 turnManager,
                 playerManager,
                 enemyManager,
-                handManager);
+                handManager,
+                turnController,
+                slotRegistry,
+                slotMovement);
 
             // 매니저 검증
             if (!_context.ValidateManagers())
@@ -165,7 +174,7 @@ namespace Game.CombatSystem.State
             if (enableDebugLogging)
             {
                 GameLogger.LogInfo(
-                    "[CombatStateMachine] 초기화 완료",
+                    "[CombatStateMachine] 초기화 완료 (레거시 + 리팩토링)",
                     GameLogger.LogCategory.Combat);
             }
 

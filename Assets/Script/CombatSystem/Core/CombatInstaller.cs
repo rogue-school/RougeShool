@@ -193,8 +193,8 @@ public class CombatInstaller : MonoInstaller
     private void BindFactories()
     {
         
-        // SkillCardFactory 바인딩
-        Container.Bind<ISkillCardFactory>().To<SkillCardFactory>().AsSingle();
+        // SkillCardFactory 바인딩 (인터페이스와 구체 클래스 동시 바인딩)
+        Container.BindInterfacesAndSelfTo<SkillCardFactory>().AsSingle();
         GameLogger.LogInfo(" SkillCardFactory 바인딩 완료");
         
         // CardCirculationSystem 바인딩
@@ -244,7 +244,17 @@ public class CombatInstaller : MonoInstaller
         Container.BindInterfacesAndSelfTo<TurnManager>()
             .FromNewComponentOnNewGameObject().AsSingle();
         GameLogger.LogInfo(" TurnManager 바인딩 완료");
-        
+
+        // 새로운 리팩토링된 클래스들 바인딩
+        Container.Bind<ITurnController>().To<TurnController>().AsSingle();
+        GameLogger.LogInfo(" TurnController 바인딩 완료");
+
+        Container.Bind<ICardSlotRegistry>().To<CardSlotRegistry>().AsSingle();
+        GameLogger.LogInfo(" CardSlotRegistry 바인딩 완료");
+
+        Container.Bind<ISlotMovementController>().To<SlotMovementController>().AsSingle();
+        GameLogger.LogInfo(" SlotMovementController 바인딩 완료");
+
         GameLogger.LogInfo(" CardDropService 및 의존성 바인딩 완료");
     }
 

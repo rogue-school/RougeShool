@@ -135,14 +135,14 @@ namespace Game.CombatSystem.State
         /// </summary>
         private void ReturnToTurnState(CombatStateContext context)
         {
-            if (context?.TurnManager == null)
+            if (context?.TurnController == null)
             {
-                LogError("TurnManager가 null이어서 복귀할 수 없습니다");
+                LogError("TurnController가 null이어서 복귀할 수 없습니다");
                 return;
             }
 
             // 현재 턴 타입에 따라 적절한 상태로 복귀
-            if (context.TurnManager.IsPlayerTurn())
+            if (context.TurnController.CurrentTurn == Interface.TurnType.Player)
             {
                 var playerTurnState = new PlayerTurnState();
                 RequestTransition(context, playerTurnState);

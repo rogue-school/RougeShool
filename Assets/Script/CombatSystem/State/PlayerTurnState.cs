@@ -29,8 +29,11 @@ namespace Game.CombatSystem.State
 
             LogStateTransition("플레이어 턴 시작");
 
-            // 플레이어 턴 설정
-            context.TurnManager.SetTurnAndIncrement(Manager.TurnManager.TurnType.Player);
+            // 플레이어 턴 설정 (TurnController 사용)
+            if (context.TurnController != null)
+            {
+                context.TurnController.SetTurnAndIncrement(Interface.TurnType.Player);
+            }
 
             // 턴별 효과 처리 (가드, 출혈, 반격, 기절 등)
             ProcessTurnEffects(context);
@@ -60,14 +63,14 @@ namespace Game.CombatSystem.State
         /// </summary>
         private void ProcessTurnEffects(CombatStateContext context)
         {
-            if (context?.TurnManager == null)
+            if (context?.TurnController == null)
             {
-                LogWarning("TurnManager가 null - 턴별 효과 처리 건너뜀");
+                LogWarning("TurnController가 null - 턴별 효과 처리 건너뜀");
                 return;
             }
 
-            // TurnManager의 ProcessAllCharacterTurnEffects 메서드 호출
-            context.TurnManager.ProcessAllCharacterTurnEffects();
+            // TurnController의 ProcessAllCharacterTurnEffects 메서드 호출
+            context.TurnController.ProcessAllCharacterTurnEffects();
             LogStateTransition("턴별 효과 처리 완료 (가드, 출혈, 반격, 기절 등)");
         }
 
