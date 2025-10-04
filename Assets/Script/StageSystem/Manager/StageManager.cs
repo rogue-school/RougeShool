@@ -1010,14 +1010,14 @@ namespace Game.StageSystem.Manager
                 isSummonedEnemyActive = true;
 
                 // 소환 전환 상태로 이동
-                TransitionToSummonState(summonTarget, false);
+                _ = TransitionToSummonState(summonTarget, false);
             }
         }
 
         /// <summary>
-        /// 소환/복귀 전환 상태로 이동
+        /// 소환/복귀 전환 처리
         /// </summary>
-        private void TransitionToSummonState(EnemyCharacterData targetEnemy, bool isRestore)
+        private async Task TransitionToSummonState(EnemyCharacterData targetEnemy, bool isRestore)
         {
             var stateMachine = FindFirstObjectByType<Game.CombatSystem.State.CombatStateMachine>();
             if (stateMachine == null)
@@ -1026,22 +1026,87 @@ namespace Game.StageSystem.Manager
                 return;
             }
 
-            var summonState = new Game.CombatSystem.State.SummonTransitionState();
-            
-            if (isRestore)
+            try
             {
-                // 복귀 모드 설정
-                summonState.SetupRestore(targetEnemy, originalEnemyHP);
-                GameLogger.LogInfo($"[소환] 복귀 전환 상태로 이동: {targetEnemy.DisplayName} (HP: {originalEnemyHP})", GameLogger.LogCategory.Combat);
+                // 1단계: 기존 적 제거 및 슬롯 정리
+                await CleanupCurrentEnemy();
+                
+                // 2단계: 새로운 적 생성
+                var newEnemy = await CreateEnemyForSummonAsync(targetEnemy);
+                if (newEnemy == null)
+                {
+                    GameLogger.LogError("[소환] 적 생성 실패", GameLogger.LogCategory.Combat);
+                    return;
+                }
+
+                // 3단계: 적 등록
+                if (isRestore)
+                {
+                    RegisterEnemy(newEnemy);
+                    GameLogger.LogInfo($"[소환] 복귀 완료: {targetEnemy.DisplayName} (HP: {originalEnemyHP})", GameLogger.LogCategory.Combat);
+                }
+                else
+                {
+                    RegisterSummonedEnemy(newEnemy);
+                    GameLogger.LogInfo($"[소환] 소환 완료: {targetEnemy.DisplayName}", GameLogger.LogCategory.Combat);
+                }
+
+                // 4단계: CombatInitState로 슬롯 설정 및 플레이어 턴 진입
+                var combatInitState = new Game.CombatSystem.State.CombatInitState();
+                combatInitState.SetEnemyData(targetEnemy, targetEnemy.DisplayName);
+                combatInitState.SetSummonMode(true); // 소환/복귀 모드 활성화
+                
+                stateMachine.ForceChangeState(combatInitState);
             }
-            else
+            catch (System.Exception ex)
             {
-                // 소환 모드 설정
-                summonState.SetupSummon(targetEnemy);
-                GameLogger.LogInfo($"[소환] 소환 전환 상태로 이동: {targetEnemy.DisplayName}", GameLogger.LogCategory.Combat);
+                GameLogger.LogError($"[소환] 처리 중 오류: {ex.Message}", GameLogger.LogCategory.Combat);
+            }
+        }
+
+        /// <summary>
+        /// 기존 적 제거 및 슬롯 정리
+        /// </summary>
+        private async System.Threading.Tasks.Task CleanupCurrentEnemy()
+        {
+            // 기존 적 제거
+            var currentEnemy = enemyManager?.GetEnemy();
+            if (currentEnemy != null)
+            {
+                enemyManager.UnregisterEnemy();
+                if (currentEnemy is EnemyCharacter enemyChar)
+                {
+                    UnityEngine.Object.Destroy(enemyChar.gameObject);
+                }
+                GameLogger.LogInfo($"[소환] 기존 적 제거 완료: {currentEnemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
             }
 
-            stateMachine.ForceChangeState(summonState);
+            // 플레이어 핸드 카드 제거
+            var handManager = FindFirstObjectByType<Game.SkillCardSystem.Manager.PlayerHandManager>();
+            if (handManager != null)
+            {
+                handManager.ClearAll();
+                GameLogger.LogInfo("[소환] 플레이어 핸드 카드 제거 완료", GameLogger.LogCategory.Combat);
+            }
+
+            // 모든 슬롯 정리
+            var turnManager = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
+            if (turnManager != null)
+            {
+                turnManager.ClearAllSlots();
+                GameLogger.LogInfo("[소환] 전투/대기 슬롯 정리 완료", GameLogger.LogCategory.Combat);
+            }
+
+            // 적 캐시 정리 및 슬롯 상태 리셋 (TurnManager를 통해 접근)
+            if (turnManager != null)
+            {
+                turnManager.ClearEnemyCache();
+                turnManager.ResetSlotStates();
+                GameLogger.LogInfo("[소환] 적 캐시 정리 및 슬롯 상태 리셋 완료", GameLogger.LogCategory.Combat);
+            }
+
+            // 정리 완료 대기
+            await System.Threading.Tasks.Task.Delay(300);
         }
 
         private void OnSummonedEnemyDeath(ICharacter summonedEnemy)
@@ -1051,7 +1116,7 @@ namespace Game.StageSystem.Manager
             if (originalEnemyData != null)
             {
                 // 복귀 전환 상태로 이동
-                TransitionToSummonState(originalEnemyData, true);
+                _ = TransitionToSummonState(originalEnemyData, true);
                 
                 // 원본 적 복귀 완료 후 소환 변수 초기화
                 originalEnemyData = null;

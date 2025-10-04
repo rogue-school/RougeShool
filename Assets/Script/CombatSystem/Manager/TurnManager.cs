@@ -260,6 +260,11 @@ namespace Game.CombatSystem.Manager
             _slotMovement?.ClearEnemyCache();
         }
 
+        public void ResetSlotStates()
+        {
+            _slotMovement?.ResetSlotStates();
+        }
+
         #endregion
 
         #region ICombatTurnManager 구현 - 레거시 메서드

@@ -44,6 +44,7 @@ namespace Game.CombatSystem.Manager
         private readonly HashSet<ISkillCard> _scheduledEnemyExec = new();
         private bool _suppressAutoRefill = false;
         private bool _suppressAutoExecution = false;
+        private bool _isSummonMode = false; // 소환/복귀 모드 여부
 
         // 적 캐시
         private EnemyCharacterData _cachedEnemyData;
@@ -282,6 +283,7 @@ namespace Game.CombatSystem.Manager
 
         #endregion
 
+
         #region 초기 셋업
 
         public IEnumerator SetupInitialEnemyQueueRoutine(EnemyCharacterData enemyData, string enemyName)
@@ -372,8 +374,18 @@ namespace Game.CombatSystem.Manager
 
             // 초기 셋업 종료 후 자동 보충/자동 실행 활성화
             _suppressAutoRefill = false;
-            _suppressAutoExecution = false;
+            
+            // 소환 모드가 아닌 경우에만 자동 실행 활성화
+            if (!_isSummonMode)
+            {
+                _suppressAutoExecution = false;
+            }
+            else
+            {
+                GameLogger.LogInfo("소환/복귀 모드 - 자동 실행 억제 유지", GameLogger.LogCategory.Combat);
+            }
         }
+
 
         private IEnumerator PlaceCardInWaitSlot4AndMoveRoutine(ISkillCard card, SlotOwner owner, SkillCardUI cardUIPrefab)
         {
@@ -383,9 +395,11 @@ namespace Game.CombatSystem.Manager
                 yield break;
             }
 
-            // 1. 대기4에 카드 배치 (중복 방지)
-            if (_registry.GetCardInSlot(CombatSlotPosition.WAIT_SLOT_4) != null)
+            // 1. 대기4에 카드 배치
+            // 초기 셋업 중에는 중복 방지 로직을 우회하고 슬롯 이동을 통해 처리
+            if (_initialSlotSetupCompleted && _registry.GetCardInSlot(CombatSlotPosition.WAIT_SLOT_4) != null)
             {
+                // 일반적인 경우에만 중복 방지
                 yield break;
             }
 
@@ -400,7 +414,7 @@ namespace Game.CombatSystem.Manager
                 yield return spawnTween.WaitForCompletion();
             }
 
-            // 2. 배틀슬롯이 비어있으면 모든 카드를 앞으로 이동
+            // 2. 슬롯 이동 처리
             yield return null;
             if (!_registry.HasCardInSlot(CombatSlotPosition.BATTLE_SLOT))
             {
@@ -446,10 +460,22 @@ namespace Game.CombatSystem.Manager
             _suppressAutoRefill = false;
             _suppressAutoExecution = false;
 
+            // 소환 모드 리셋
+            _isSummonMode = false;
+
             // 다음 생성 주체 리셋
             _nextSpawnIsPlayer = true;
 
             GameLogger.LogInfo("슬롯 상태 리셋 완료", GameLogger.LogCategory.Combat);
+        }
+
+        /// <summary>
+        /// 소환/복귀 모드를 설정합니다
+        /// </summary>
+        public void SetSummonMode(bool isSummonMode)
+        {
+            _isSummonMode = isSummonMode;
+            GameLogger.LogInfo($"소환 모드 설정: {isSummonMode}", GameLogger.LogCategory.Combat);
         }
 
         #endregion

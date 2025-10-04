@@ -224,7 +224,96 @@ namespace Game.CombatSystem.State
         }
 
         /// <summary>
-        /// 상태를 변경합니다
+        /// 안전한 상태 변경 (완료 검증 포함)
+        /// 모든 비동기 작업과 검증이 완료된 후에만 상태 전환
+        /// </summary>
+        /// <param name="newState">새로운 상태</param>
+        public void ChangeStateSafe(ICombatState newState)
+        {
+            if (newState == null)
+            {
+                GameLogger.LogError(
+                    "[CombatStateMachine] null 상태로 전환할 수 없습니다",
+                    GameLogger.LogCategory.Error);
+                return;
+            }
+
+            // 현재 상태가 있으면 완료 검증 및 대기
+            if (_currentState != null)
+            {
+                // 1단계: 전환 가능 여부 검증
+                if (!_currentState.CanTransitionToNextState(_context))
+                {
+                    GameLogger.LogWarning(
+                        $"[CombatStateMachine] {_currentState.StateName}에서 전환 불가능",
+                        GameLogger.LogCategory.Combat);
+                    return;
+                }
+
+                // 2단계: 완료 대기 코루틴 시작
+                StartCoroutine(WaitAndChangeState(newState));
+            }
+            else
+            {
+                // 현재 상태가 없으면 즉시 전환
+                ChangeStateImmediate(newState);
+            }
+        }
+
+        /// <summary>
+        /// 완료 대기 후 상태 변경 코루틴
+        /// </summary>
+        private System.Collections.IEnumerator WaitAndChangeState(ICombatState newState)
+        {
+            GameLogger.LogInfo(
+                $"[CombatStateMachine] {_currentState.StateName} 완료 대기 시작",
+                GameLogger.LogCategory.Combat);
+
+            // 현재 상태의 완료 대기
+            yield return _currentState.WaitForCompletion(_context);
+
+            GameLogger.LogInfo(
+                $"[CombatStateMachine] {_currentState.StateName} 완료 확인됨 - 상태 전환 시작",
+                GameLogger.LogCategory.Combat);
+
+            // 상태 전환 실행
+            ChangeStateImmediate(newState);
+        }
+
+        /// <summary>
+        /// 즉시 상태 변경 (내부용)
+        /// </summary>
+        private void ChangeStateImmediate(ICombatState newState)
+        {
+            var previousState = _currentState;
+
+            // 이전 상태 종료
+            if (_currentState != null)
+            {
+                _currentState.OnExit(_context);
+            }
+
+            // 새 상태로 전환
+            _currentState = newState;
+            currentStateName = _currentState.StateName;
+
+            // 새 상태 시작
+            _currentState.OnEnter(_context);
+
+            // 이벤트 발생
+            OnStateChanged?.Invoke(previousState, _currentState);
+
+            if (enableDebugLogging)
+            {
+                var prevName = previousState?.StateName ?? "None";
+                GameLogger.LogInfo(
+                    $"[CombatStateMachine] 상태 전환: {prevName} → {_currentState.StateName}",
+                    GameLogger.LogCategory.Combat);
+            }
+        }
+
+        /// <summary>
+        /// 상태를 변경합니다 (기존 메서드 - 호환성 유지)
         /// </summary>
         public void ChangeState(ICombatState newState)
         {

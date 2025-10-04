@@ -46,6 +46,12 @@ namespace Game.CombatSystem.Interface
         void ResetSlotStates();
 
         /// <summary>
+        /// 소환/복귀 모드를 설정합니다
+        /// </summary>
+        /// <param name="isSummonMode">소환 모드 여부</param>
+        void SetSummonMode(bool isSummonMode);
+
+        /// <summary>
         /// 슬롯 이동 중인지 확인합니다.
         /// </summary>
         bool IsAdvancingQueue { get; }

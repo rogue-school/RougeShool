@@ -42,7 +42,51 @@ namespace Game.CombatSystem.State
         }
 
         /// <summary>
-        /// 다른 상태로 전환 요청
+        /// 상태 전환 전 완료 검증 (기본 구현)
+        /// 파생 클래스에서 override하여 구체적인 검증 로직 구현
+        /// </summary>
+        public virtual bool CanTransitionToNextState(CombatStateContext context)
+        {
+            // 기본적으로는 항상 전환 가능
+            // 파생 클래스에서 구체적인 검증 로직을 구현해야 함
+            LogStateTransition($"[검증] {StateName} 전환 가능 여부 확인");
+            return true;
+        }
+
+        /// <summary>
+        /// 상태 완료 대기 (기본 구현)
+        /// 파생 클래스에서 override하여 비동기 작업 완료까지 대기
+        /// </summary>
+        public virtual System.Collections.IEnumerator WaitForCompletion(CombatStateContext context)
+        {
+            LogStateTransition($"[대기] {StateName} 완료 대기 중...");
+            
+            // 기본적으로는 짧은 대기 시간
+            yield return new WaitForSeconds(0.1f);
+            
+            LogStateTransition($"[완료] {StateName} 완료 확인");
+        }
+
+        /// <summary>
+        /// 다른 상태로 전환 요청 (안전한 전환)
+        /// 모든 검증과 완료 대기를 거쳐서 상태 전환
+        /// </summary>
+        protected void RequestTransitionSafe(CombatStateContext context, ICombatState nextState)
+        {
+            if (context?.StateMachine != null)
+            {
+                context.StateMachine.ChangeStateSafe(nextState);
+            }
+            else
+            {
+                GameLogger.LogError(
+                    $"[{StateName}] 안전한 상태 전환 실패 - StateMachine이 null입니다",
+                    GameLogger.LogCategory.Error);
+            }
+        }
+
+        /// <summary>
+        /// 다른 상태로 전환 요청 (기존 메서드 - 호환성 유지)
         /// </summary>
         protected void RequestTransition(CombatStateContext context, ICombatState nextState)
         {

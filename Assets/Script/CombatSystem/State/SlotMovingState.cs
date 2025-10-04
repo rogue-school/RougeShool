@@ -80,6 +80,10 @@ namespace Game.CombatSystem.State
                 );
 
                 LogStateTransition("슬롯 이동 완료");
+                
+                // 슬롯 이동 애니메이션이 완전히 끝날 때까지 대기
+                LogStateTransition("슬롯 이동 애니메이션 완료 대기 중...");
+                yield return new WaitForSeconds(0.1f); // 애니메이션 완료를 위한 추가 대기
             }
             else
             {
@@ -88,7 +92,56 @@ namespace Game.CombatSystem.State
             }
 
             // 다음 턴으로 전환
+            LogStateTransition("다음 턴으로 전환 시작");
             ProceedToNextTurn(context);
+        }
+
+        /// <summary>
+        /// 상태 전환 전 완료 검증
+        /// 슬롯 이동과 모든 애니메이션이 완료되었는지 확인
+        /// </summary>
+        public override bool CanTransitionToNextState(CombatStateContext context)
+        {
+            LogStateTransition($"[검증] {StateName} 전환 가능 여부 확인");
+
+            // 1. 슬롯 이동 완료 검증
+            if (_isMoving)
+            {
+                LogWarning("[검증] 슬롯 이동이 아직 진행 중 - 전환 불가능");
+                return false;
+            }
+
+            // 2. 컨텍스트 검증
+            if (context?.SlotRegistry == null)
+            {
+                LogError("[검증] SlotRegistry가 null - 전환 불가능");
+                return false;
+            }
+
+            LogStateTransition("[검증] 슬롯 이동 완료 확인 - 전환 가능");
+            return true;
+        }
+
+        /// <summary>
+        /// 상태 완료 대기
+        /// 슬롯 이동과 모든 애니메이션이 완료될 때까지 대기
+        /// </summary>
+        public override System.Collections.IEnumerator WaitForCompletion(CombatStateContext context)
+        {
+            LogStateTransition($"[대기] {StateName} 완료 대기 시작");
+
+            // 1. 슬롯 이동 완료 대기
+            LogStateTransition("[대기] 슬롯 이동 완료 대기 중...");
+            while (_isMoving)
+            {
+                yield return null;
+            }
+
+            // 2. 애니메이션 완료 대기
+            LogStateTransition("[대기] 슬롯 이동 애니메이션 완료 대기 중...");
+            yield return new WaitForSeconds(0.1f);
+
+            LogStateTransition($"[완료] {StateName} 모든 작업 완료 확인");
         }
 
         /// <summary>

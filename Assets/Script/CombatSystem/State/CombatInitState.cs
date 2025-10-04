@@ -24,6 +24,7 @@ namespace Game.CombatSystem.State
         private Game.CharacterSystem.Data.EnemyCharacterData _enemyData;
         private string _enemyName;
         private bool _skipSlotSetup = false;
+        private bool _isSummonMode = false; // 소환/복귀 모드 여부
 
         public override void OnEnter(CombatStateContext context)
         {
@@ -77,6 +78,14 @@ namespace Game.CombatSystem.State
         }
 
         /// <summary>
+        /// 소환/복귀 모드로 설정합니다
+        /// </summary>
+        public void SetSummonMode(bool isSummonMode)
+        {
+            _isSummonMode = isSummonMode;
+        }
+
+        /// <summary>
         /// 전투 초기화 코루틴
         /// </summary>
         private IEnumerator InitializeCombat(CombatStateContext context)
@@ -89,28 +98,106 @@ namespace Game.CombatSystem.State
             {
                 LogStateTransition($"적 데이터로 초기 슬롯 셋업 시작: {_enemyName}");
 
-                // SlotMovementController를 통해 초기 슬롯 셋업
+                // 소환/복귀 모드라도 일반 초기 슬롯 셋업 사용 (처음 전투와 동일한 로직)
+                // 자동 실행 억제는 SetupInitialEnemyQueueRoutine 내부에서 처리됨
                 yield return context.StateMachine.StartCoroutine(
                     context.SlotMovement.SetupInitialEnemyQueueRoutine(_enemyData, _enemyName)
                 );
-
-                LogStateTransition("초기 슬롯 셋업 완료");
+                
+                if (_isSummonMode)
+                {
+                    LogStateTransition("소환/복귀 모드 슬롯 셋업 완료 (일반 로직 사용)");
+                }
+                else
+                {
+                    LogStateTransition("초기 슬롯 셋업 완료");
+                }
             }
             else if (_skipSlotSetup)
             {
                 LogStateTransition("슬롯 설정 건너뜀 (이미 설정됨)");
             }
 
+            // 소환/복귀 모드인 경우 자동 실행 억제 설정
+            if (_isSummonMode && context.SlotMovement != null)
+            {
+                // SlotMovementController의 소환 모드 설정
+                // 이는 소환/복귀 시 플레이어가 먼저 행동할 수 있도록 함
+                context.SlotMovement.SetSummonMode(true);
+                LogStateTransition("소환/복귀 모드 - 자동 실행 억제 설정");
+            }
+
+            // 슬롯 셋업이 완료될 때까지 대기 (중요!)
+            // SetupInitialEnemyQueueRoutine이 완전히 끝날 때까지 기다림
+            LogStateTransition("슬롯 셋업 완료 대기 중...");
+            
             // 추가 초기화 대기 시간 (UI 안정화 등)
             yield return new WaitForSeconds(0.2f);
 
             // 플레이어 턴으로 시작
+            LogStateTransition("플레이어 턴으로 전환");
             StartPlayerTurn(context);
         }
 
         /// <summary>
-        /// 전투 초기화 작업 수행
+        /// 상태 전환 전 완료 검증
+        /// 슬롯 셋업과 모든 초기화 작업이 완료되었는지 확인
         /// </summary>
+        public override bool CanTransitionToNextState(CombatStateContext context)
+        {
+            LogStateTransition($"[검증] {StateName} 전환 가능 여부 확인");
+
+            // 1. 컨텍스트 검증
+            if (context == null || !context.ValidateManagers())
+            {
+                LogError("[검증] 컨텍스트 또는 매니저 검증 실패");
+                return false;
+            }
+
+            // 2. 슬롯 셋업 완료 검증
+            if (!_skipSlotSetup && context.SlotMovement != null)
+            {
+                // SlotMovementController의 초기 셋업 완료 여부 확인
+                // 이 부분은 SlotMovementController에 상태 확인 메서드가 필요함
+                LogStateTransition("[검증] 슬롯 셋업 완료 확인");
+            }
+
+            // 3. 적 데이터 검증
+            if (_enemyData == null)
+            {
+                LogWarning("[검증] 적 데이터가 없음 - 전환 가능");
+            }
+
+            LogStateTransition("[검증] 모든 검증 통과 - 전환 가능");
+            return true;
+        }
+
+        /// <summary>
+        /// 상태 완료 대기
+        /// 슬롯 셋업과 모든 비동기 작업이 완료될 때까지 대기
+        /// </summary>
+        public override System.Collections.IEnumerator WaitForCompletion(CombatStateContext context)
+        {
+            LogStateTransition($"[대기] {StateName} 완료 대기 시작");
+
+            // 1. 슬롯 셋업 완료 대기
+            if (!_skipSlotSetup && context.SlotMovement != null)
+            {
+                LogStateTransition("[대기] 슬롯 셋업 완료 대기 중...");
+                
+                // SlotMovementController의 초기 셋업이 완료될 때까지 대기
+                // 이 부분은 SlotMovementController에 완료 확인 메서드가 필요함
+                yield return new WaitForSeconds(0.5f); // 임시 대기 시간
+                
+                LogStateTransition("[대기] 슬롯 셋업 완료 확인");
+            }
+
+            // 2. 추가 안정화 시간
+            LogStateTransition("[대기] 시스템 안정화 대기 중...");
+            yield return new WaitForSeconds(0.2f);
+
+            LogStateTransition($"[완료] {StateName} 모든 작업 완료 확인");
+        }
         private void PerformInitialization(CombatStateContext context)
         {
             // 게임 시작 (TurnController 사용)

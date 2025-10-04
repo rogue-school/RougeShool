@@ -33,6 +33,21 @@ namespace Game.CombatSystem.State
         void OnExit(CombatStateContext context);
 
         /// <summary>
+        /// 상태 전환 전 완료 검증
+        /// 모든 비동기 작업과 로직이 완료되었는지 확인
+        /// </summary>
+        /// <param name="context">전투 컨텍스트</param>
+        /// <returns>전환 가능 여부</returns>
+        bool CanTransitionToNextState(CombatStateContext context);
+
+        /// <summary>
+        /// 상태 완료 대기 (비동기 작업 완료까지 대기)
+        /// </summary>
+        /// <param name="context">전투 컨텍스트</param>
+        /// <returns>완료 대기 코루틴</returns>
+        System.Collections.IEnumerator WaitForCompletion(CombatStateContext context);
+
+        /// <summary>
         /// 플레이어 카드 드래그 가능 여부
         /// </summary>
         bool AllowPlayerCardDrag { get; }
