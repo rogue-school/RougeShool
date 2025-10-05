@@ -1,0 +1,346 @@
+---
+alwaysApply: true
+description: "Naming conventions for classes, methods, variables, files, and folders"
+---
+
+# RougeShool Naming Conventions
+
+## 📝 C# Naming Rules
+
+### Classes and Interfaces
+```csharp
+// ✅ Classes: PascalCase
+public class CardProcessor { }
+public class PlayerCharacterController { }
+
+// ✅ Interfaces: I-prefix + PascalCase
+public interface ICardValidator { }
+public interface IPlayerCharacter { }
+
+// ✅ Abstract classes: PascalCase (no prefix)
+public abstract class CardEffect { }
+public abstract class CharacterBase { }
+
+// ✅ ScriptableObjects: PascalCase + Data suffix
+public class PlayerCharacterData : ScriptableObject { }
+public class SkillCardDefinition : ScriptableObject { }
+```
+
+### Methods
+```csharp
+// ✅ Public methods: PascalCase
+public void ExecuteCard() { }
+public bool CanPlayCard() { }
+
+// ✅ Private methods: PascalCase
+private void ProcessCardEffect() { }
+private void UpdateHealthUI() { }
+
+// ✅ Event handlers: On + EventName
+private void OnCardPlayed() { }
+private void OnPlayerDeath() { }
+```
+
+### Variables and Fields
+```csharp
+// ✅ Public fields: PascalCase
+public int MaxHealth = 100;
+public string CharacterName = "플레이어";
+
+// ✅ Private fields: _camelCase (underscore prefix)
+private int _currentHealth;
+private string _characterId;
+
+// ⚠️ SerializeField: _camelCase (private로 유지)
+[Header("전투 설정")]
+[SerializeField] private int _maxHealth = 100;
+[SerializeField] private float _attackDamage = 10f;
+
+// ✅ Local variables: camelCase
+public void ProcessCard()
+{
+    int cardCost = 5;
+    string cardName = "파이어볼";
+}
+
+// ✅ Constants: UPPER_SNAKE_CASE
+public const int MAX_CARDS_IN_HAND = 10;
+private const float DEFAULT_ATTACK_DAMAGE = 10.0f;
+
+// ✅ Properties: PascalCase
+public int CurrentHealth { get; private set; }
+public string CharacterName { get; set; }
+```
+
+### Parameters
+```csharp
+// ✅ Method parameters: camelCase
+public void Initialize(int maxHealth, string characterName)
+{
+    _maxHealth = maxHealth;
+    _characterName = characterName;
+}
+
+// ✅ Constructor parameters: camelCase
+[Inject]
+public CardProcessor(ICardValidator cardValidator, ILogger logger)
+{
+    _cardValidator = cardValidator;
+    _logger = logger;
+}
+```
+
+### Enums
+```csharp
+// ✅ Enum type: PascalCase
+public enum CombatPhase
+{
+    Setup,    // ✅ Values: PascalCase
+    Battle,
+    End
+}
+
+public enum CardType
+{
+    Attack,
+    Defense,
+    Skill,
+    Ultimate
+}
+```
+
+### Events
+```csharp
+// ✅ Events: PascalCase (명사형)
+public event Action<int> HealthChanged;
+public event Action PlayerDeath;
+public event Action<ISkillCard> CardPlayed;
+
+// ✅ Event invocation
+private void TakeDamage(int damage)
+{
+    _currentHealth -= damage;
+    HealthChanged?.Invoke(_currentHealth);
+}
+```
+
+## 📁 File Naming
+
+### C# Scripts
+```
+✅ ClassName.cs
+   PlayerCharacter.cs
+   ICardValidator.cs
+   CardProcessor.cs
+
+❌ Bad examples:
+   playerCharacter.cs
+   card_processor.cs
+   ICardValidator.CS
+```
+
+### ScriptableObject Assets
+```
+✅ PascalCase + descriptive name
+   PlayerCharacterData_Knight.asset
+   SkillCardDefinition_Fireball.asset
+   EnemyCharacterData_Goblin.asset
+```
+
+### Unity Scenes
+```
+✅ PascalCase
+   MainMenu.unity
+   BattleScene.unity
+   GameOverScene.unity
+```
+
+### Prefabs
+```
+✅ PascalCase + descriptive
+   PlayerCharacter_Knight.prefab
+   EnemyCharacter_Goblin.prefab
+   SkillCard_UI.prefab
+```
+
+### Sprites and Images
+```
+✅ snake_case
+   player_idle_01.png
+   enemy_attack_02.png
+   card_background.png
+```
+
+### Audio Files
+```
+✅ snake_case + category
+   bgm_main_theme.mp3
+   sfx_button_click.wav
+   sfx_card_use.wav
+```
+
+## 🏷️ Korean Naming Rules
+
+### Inspector Fields
+```csharp
+// ✅ All Korean with proper spacing
+[Header("캐릭터 기본 설정")]
+[SerializeField] private int _maxHealth = 100;
+
+[Tooltip("플레이어의 최대 체력입니다")]
+[SerializeField] private int _playerMaxHealth;
+
+[Header("전투 설정")]
+[Tooltip("카드 사용 시 소모되는 마나")]
+[SerializeField] private int _manaCost = 3;
+```
+
+### Logs and Messages
+```csharp
+// ✅ All user-facing text in Korean
+GameLogger.LogInfo("카드 사용 완료", GameLogger.LogCategory.UI);
+GameLogger.LogError("캐릭터가 null입니다", GameLogger.LogCategory.Error);
+GameLogger.LogWarning("리소스가 부족합니다", GameLogger.LogCategory.Character);
+
+// ✅ Exception messages in Korean
+throw new ArgumentNullException(nameof(card), "카드가 null입니다");
+throw new InvalidOperationException("캐릭터가 초기화되지 않았습니다");
+```
+
+### XML Documentation
+```csharp
+/// <summary>
+/// 카드를 실행하고 효과를 적용합니다
+/// </summary>
+/// <param name="card">실행할 카드</param>
+/// <param name="target">대상 캐릭터</param>
+/// <returns>실행 성공 여부</returns>
+public bool ExecuteCard(ISkillCard card, ICharacter target)
+{
+    // Implementation
+}
+```
+
+## 🚫 Naming Anti-Patterns
+
+### ❌ Hungarian Notation
+```csharp
+// ❌ DON'T
+int iPlayerHealth;
+string strPlayerName;
+bool bIsAlive;
+
+// ✅ DO
+int playerHealth;
+string playerName;
+bool isAlive;
+```
+
+### ❌ Abbreviations
+```csharp
+// ❌ DON'T
+public class ChrCtrl { }
+public void ProcCd() { }
+private int _hp;
+
+// ✅ DO
+public class CharacterController { }
+public void ProcessCard() { }
+private int _health;
+```
+
+### ❌ Magic Numbers
+```csharp
+// ❌ DON'T
+if (cards.Count > 10)
+{
+    // What does 10 mean?
+}
+
+// ✅ DO
+private const int MAX_CARDS_IN_HAND = 10;
+
+if (cards.Count > MAX_CARDS_IN_HAND)
+{
+    // Clear and self-documenting
+}
+```
+
+### ❌ Generic Names
+```csharp
+// ❌ DON'T
+public class Manager { }
+public class Helper { }
+public void DoSomething() { }
+
+// ✅ DO
+public class CardManager { }
+public class ValidationHelper { }
+public void ExecuteCardEffect() { }
+```
+
+## ✅ Best Practices
+
+### Boolean Variables
+```csharp
+// ✅ Use is/has/can prefix
+private bool _isAlive;
+private bool _hasShield;
+private bool _canAttack;
+
+public bool IsInitialized { get; private set; }
+public bool CanPlayCard { get; }
+```
+
+### Collection Variables
+```csharp
+// ✅ Plural names
+private List<ISkillCard> _cards;
+private Queue<ISkillCard> _availableCards;
+private Dictionary<string, ICharacter> _characters;
+```
+
+### Unity-specific
+```csharp
+// ✅ Component references
+[SerializeField] private Transform _spawnPoint;
+[SerializeField] private Animator _animator;
+[SerializeField] private SpriteRenderer _spriteRenderer;
+
+// ✅ Cached components (use Get prefix)
+private Transform _cachedTransform;
+
+private void Awake()
+{
+    _cachedTransform = transform;
+}
+```
+
+### Zenject Injection
+```csharp
+// ✅ Injected dependencies
+[Inject] private ICardValidator _cardValidator;
+[Inject] private IAudioManager _audioManager;
+[Inject] private IPlayerCharacter _playerCharacter;
+```
+
+## 📋 Quick Reference Table
+
+| 항목 | 규칙 | 예시 |
+|------|------|------|
+| Class | PascalCase | `CardProcessor` |
+| Interface | I + PascalCase | `ICardValidator` |
+| Method | PascalCase | `ExecuteCard()` |
+| Public Field | PascalCase | `MaxHealth` |
+| Private Field | _camelCase | `_currentHealth` |
+| Local Variable | camelCase | `cardCost` |
+| Constant | UPPER_SNAKE_CASE | `MAX_CARDS` |
+| Property | PascalCase | `CurrentHealth` |
+| Enum Type | PascalCase | `CombatPhase` |
+| Enum Value | PascalCase | `Setup` |
+| Event | PascalCase | `HealthChanged` |
+| Parameter | camelCase | `maxHealth` |
+| File Name | ClassName.cs | `CardProcessor.cs` |
+| Prefab | PascalCase | `PlayerCharacter.prefab` |
+| Sprite | snake_case | `player_idle.png` |
+| Audio | snake_case | `sfx_button.wav` |

@@ -32,120 +32,187 @@ public class MySystem : MonoBehaviour, ICoreSystemInitializable
 
 ### 씬 전환 (SceneTransitionManager)
 ```csharp
-// 비동기 씬 전환
-await SceneTransitionManager.Instance.TransitionToBattleScene();
-await SceneTransitionManager.Instance.TransitionToMainScene();
-
-// 전환 상태 확인
-if (SceneTransitionManager.Instance.IsTransitioning)
+public class MySceneController : MonoBehaviour
 {
-    GameLogger.LogWarning("씬 전환 중입니다", GameLogger.LogCategory.UI);
+    [Inject] private SceneTransitionManager sceneTransitionManager;
+
+    public async void LoadBattleScene()
+    {
+        // 비동기 씬 전환
+        await sceneTransitionManager.TransitionToBattleScene();
+    }
+
+    public void CheckTransitionState()
+    {
+        // 전환 상태 확인
+        if (sceneTransitionManager.IsTransitioning)
+        {
+            GameLogger.LogWarning("씬 전환 중입니다", GameLogger.LogCategory.UI);
+        }
+    }
 }
 ```
 
 ### 오디오 시스템 (AudioManager)
 ```csharp
-// BGM 재생 (페이드 인 옵션)
-AudioClip bgmClip = Resources.Load<AudioClip>("Sounds/BGM/MainTheme");
-AudioManager.Instance.PlayBGM(bgmClip, true);
+public class AudioController : MonoBehaviour
+{
+    [Inject] private IAudioManager audioManager;
 
-// SFX 재생
-AudioClip buttonClick = Resources.Load<AudioClip>("Sounds/SFX/ButtonClick");
-AudioManager.Instance.PlaySFX(buttonClick);
+    public void PlayBackgroundMusic()
+    {
+        // BGM 재생 (페이드 인 옵션)
+        AudioClip bgmClip = Resources.Load<AudioClip>("Sounds/BGM/MainTheme");
+        audioManager.PlayBGM(bgmClip, true);
+    }
 
-// SFX 재생 (풀링 사용)
-AudioManager.Instance.PlaySFXWithPool(cardUseClip, 1.0f, 8);
+    public void PlayButtonSound()
+    {
+        // SFX 재생
+        AudioClip buttonClick = Resources.Load<AudioClip>("Sounds/SFX/ButtonClick");
+        audioManager.PlaySFX(buttonClick);
+
+        // SFX 재생 (풀링 사용)
+        audioManager.PlaySFXWithPool(buttonClick, 1.0f, 8);
+    }
+}
 ```
 
 ### 저장 시스템 (SaveManager)
 ```csharp
-// 자동 저장 시스템
-await SaveManager.Instance.SaveCurrentScene();
+public class SaveController : MonoBehaviour
+{
+    [Inject] private ISaveManager saveManager;
 
-// 오디오 설정 저장/로드
-SaveManager.Instance.SaveAudioSettings(0.6f, 1.0f);
-var (bgm, sfx) = SaveManager.Instance.LoadAudioSettings(0.7f, 1.0f);
+    public async void SaveGame()
+    {
+        // 자동 저장 시스템
+        await saveManager.SaveCurrentScene();
+    }
+
+    public void SaveAudioPreferences()
+    {
+        // 오디오 설정 저장/로드
+        saveManager.SaveAudioSettings(0.6f, 1.0f);
+        var (bgm, sfx) = saveManager.LoadAudioSettings(0.7f, 1.0f);
+    }
+}
 ```
 
 ## ⚔️ CombatSystem 핵심 사용법
 
 ### 새로운 5슬롯 시스템 (현재 구현)
 ```csharp
-// TurnManager를 통한 턴 관리
-TurnManager turnManager = FindObjectOfType<TurnManager>();
+public class CombatController : MonoBehaviour
+{
+    [Inject] private TurnManager turnManager;
+    [Inject] private CombatExecutionManager executionManager;
 
-// 셋업 페이즈 시작
-turnManager.StartSetupPhase();
+    public void StartCombat()
+    {
+        // 셋업 페이즈 시작
+        turnManager.StartSetupPhase();
 
-// 셋업 단계별 카드 배치 (플레이어 우선)
-turnManager.ProceedSetupStep(CombatSlotPosition.WAIT_SLOT_4, SlotOwner.Player);
-turnManager.ProceedSetupStep(CombatSlotPosition.WAIT_SLOT_3, SlotOwner.Player);
-turnManager.ProceedSetupStep(CombatSlotPosition.WAIT_SLOT_4, SlotOwner.Enemy);
+        // 셋업 단계별 카드 배치 (플레이어 우선)
+        turnManager.ProceedSetupStep(CombatSlotPosition.WAIT_SLOT_4, SlotOwner.Player);
+        turnManager.ProceedSetupStep(CombatSlotPosition.WAIT_SLOT_3, SlotOwner.Player);
+        turnManager.ProceedSetupStep(CombatSlotPosition.WAIT_SLOT_4, SlotOwner.Enemy);
 
-// 셋업 완료 후 전투 페이즈로 전환
-turnManager.CompleteSetup();
+        // 셋업 완료 후 전투 페이즈로 전환
+        turnManager.CompleteSetup();
+    }
 
-// 현재 페이즈 확인
-CombatPhase currentPhase = turnManager.GetCurrentPhase(); // Setup, Battle, End
+    public void ExecuteTurn()
+    {
+        // 현재 페이즈 확인
+        CombatPhase currentPhase = turnManager.GetCurrentPhase(); // Setup, Battle, End
 
-// 전투 슬롯에서 카드 실행
-CombatExecutionManager executor = FindObjectOfType<CombatExecutionManager>();
-executor.ExecuteCardInBattleSlot();
+        // 전투 슬롯에서 카드 실행
+        executionManager.ExecuteCardInBattleSlot();
 
-// 슬롯 이동 (새로운 시스템)
-executor.MoveSlotsForwardNew();
+        // 슬롯 이동 (새로운 시스템)
+        executionManager.MoveSlotsForwardNew();
 
-// 턴 완료 (전투 슬롯에서 카드 사용 시에만)
-turnManager.CompleteTurn();
+        // 턴 완료 (전투 슬롯에서 카드 사용 시에만)
+        turnManager.CompleteTurn();
 
-// 현재 턴 타입 확인 (새로운 시스템)
-TurnType currentTurn = turnManager.GetCurrentTurnTypeNew(); // Player 또는 Enemy
+        // 현재 턴 타입 확인 (새로운 시스템)
+        TurnType currentTurn = turnManager.GetCurrentTurnTypeNew(); // Player 또는 Enemy
+    }
+}
 ```
 
 ### 레거시 4슬롯 시스템 (호환성 유지)
 ```csharp
-// 현재 턴 판정 (1번 슬롯 기준)
-var turnType = turnManager.GetCurrentTurnType(); // Player 또는 Enemy
+public class LegacyCombatController : MonoBehaviour
+{
+    [Inject] private TurnManager turnManager;
+    [Inject] private CombatExecutionManager executionManager;
 
-// 플레이어가 1번 슬롯에 카드를 올리는 순간 즉시 실행
-CombatExecutionManager executor = FindObjectOfType<CombatExecutionManager>();
-executor.ExecuteImmediately(playerCard, CombatSlotPosition.SLOT_1);
+    public void ExecutePlayerCard(ISkillCard playerCard)
+    {
+        // 현재 턴 판정 (1번 슬롯 기준)
+        var turnType = turnManager.GetCurrentTurnType(); // Player 또는 Enemy
 
-// 실행 종료 후 내부적으로 슬롯 이동(2→1, 3→2, 4→3) → 1번이 적 카드라면 즉시 적 실행
+        // 플레이어가 1번 슬롯에 카드를 올리는 순간 즉시 실행
+        executionManager.ExecuteImmediately(playerCard, CombatSlotPosition.SLOT_1);
 
-// 적 카드 예약(필요 시)
-turnManager.RegisterEnemyCardInSlot4(enemyCardDefinition);
+        // 실행 종료 후 내부적으로 슬롯 이동(2→1, 3→2, 4→3) → 1번이 적 카드라면 즉시 적 실행
+    }
 
-// 가드 효과 적용(다음 적 카드 1장 무효화)
-turnManager.ApplyGuardEffect();
+    public void RegisterEnemyCard(SkillCardDefinition enemyCardDefinition)
+    {
+        // 적 카드 예약(필요 시)
+        turnManager.RegisterEnemyCardInSlot4(enemyCardDefinition);
+    }
+
+    public void ApplyGuard()
+    {
+        // 가드 효과 적용(다음 적 카드 1장 무효화)
+        turnManager.ApplyGuardEffect();
+    }
+}
 ```
 
 ## 👤 CharacterSystem 핵심 사용법
 
 ### 플레이어 캐릭터 관리 (PlayerCharacter + PlayerResourceManager)
 ```csharp
-// 캐릭터 생성 및 초기화
-PlayerCharacter player = Instantiate(playerPrefab);
-player.Initialize(playerData);
-
-// 리소스 관리 (화살/마나)
-PlayerResourceManager resourceManager = FindObjectOfType<PlayerResourceManager>();
-resourceManager.Initialize(playerData);
-
-// 리소스 소모 가능 여부 확인
-if (resourceManager.CanConsumeResource(5))
+public class PlayerController : MonoBehaviour
 {
-    resourceManager.ConsumeResource(5);
-    GameLogger.LogInfo($"리소스 소모: {resourceManager.ResourceName} 5개", GameLogger.LogCategory.Character);
+    [Inject] private IPlayerCharacter playerCharacter;
+    [Inject] private IPlayerResourceManager resourceManager;
+
+    public void InitializePlayer(PlayerCharacterData playerData)
+    {
+        // 캐릭터 초기화
+        playerCharacter.Initialize(playerData);
+
+        // 리소스 관리 (화살/마나)
+        resourceManager.Initialize(playerData);
+    }
+
+    public void UseSkill(int resourceCost)
+    {
+        // 리소스 소모 가능 여부 확인
+        if (resourceManager.CanConsumeResource(resourceCost))
+        {
+            resourceManager.ConsumeResource(resourceCost);
+            GameLogger.LogInfo($"리소스 소모: {resourceManager.ResourceName} {resourceCost}개", GameLogger.LogCategory.Character);
+        }
+    }
+
+    public void RecoverResource(int amount)
+    {
+        // 리소스 회복
+        resourceManager.RestoreResource(amount);
+
+        // 리소스 상태 조회
+        int currentResource = resourceManager.CurrentResource;
+        int maxResource = resourceManager.MaxResource;
+        string resourceName = resourceManager.ResourceName;
+    }
 }
-
-// 리소스 회복
-resourceManager.RestoreResource(3);
-
-// 리소스 상태 조회
-int currentResource = resourceManager.CurrentResource;
-int maxResource = resourceManager.MaxResource;
-string resourceName = resourceManager.ResourceName;
 ```
 
 ### 새로운 플레이어 UI 시스템 (모던 스타일)
@@ -175,27 +242,38 @@ uiController.ClearAllBuffDebuffIcons();
 
 ### 적 캐릭터 관리 (EnemyManager + EnemySpawnerManager)
 ```csharp
-// EnemyManager를 통한 적 캐릭터 관리
-EnemyManager enemyManager = FindObjectOfType<EnemyManager>();
-
-// 적 캐릭터 등록
-enemyManager.RegisterEnemy(enemy);
-
-// 현재 적 캐릭터 조회
-IEnemyCharacter currentEnemy = enemyManager.GetCurrentEnemy();
-
-// 적 캐릭터 등록 해제
-enemyManager.UnregisterEnemy();
-
-// 적 캐릭터 초기화
-enemyManager.ClearEnemy();
-
-// EnemySpawnerManager를 통한 적 스폰
-EnemySpawnerManager spawnerManager = FindObjectOfType<EnemySpawnerManager>();
-var spawnResult = spawnerManager.SpawnEnemy(enemyData);
-if (spawnResult.IsSuccess)
+public class EnemyController : MonoBehaviour
 {
-    GameLogger.LogInfo($"적 스폰 성공: {spawnResult.Enemy.CharacterName}", GameLogger.LogCategory.Character);
+    [Inject] private IEnemyManager enemyManager;
+    [Inject] private IEnemySpawnerManager spawnerManager;
+
+    public void SpawnEnemy(EnemyCharacterData enemyData)
+    {
+        // EnemySpawnerManager를 통한 적 스폰
+        var spawnResult = spawnerManager.SpawnEnemy(enemyData);
+        if (spawnResult.IsSuccess)
+        {
+            GameLogger.LogInfo($"적 스폰 성공: {spawnResult.Enemy.CharacterName}", GameLogger.LogCategory.Character);
+
+            // 적 캐릭터 등록
+            enemyManager.RegisterEnemy(spawnResult.Enemy);
+        }
+    }
+
+    public void GetCurrentEnemy()
+    {
+        // 현재 적 캐릭터 조회
+        IEnemyCharacter currentEnemy = enemyManager.GetCurrentEnemy();
+    }
+
+    public void ClearCurrentEnemy()
+    {
+        // 적 캐릭터 등록 해제
+        enemyManager.UnregisterEnemy();
+
+        // 적 캐릭터 초기화
+        enemyManager.ClearEnemy();
+    }
 }
 ```
 
@@ -216,32 +294,59 @@ ISkillCard enemyCard = factory.CreateFromDefinition(definition, Owner.Enemy, "�
 
 ### 카드 순환 시스템
 ```csharp
-CardCirculationSystem circulationSystem = FindObjectOfType<CardCirculationSystem>();
-circulationSystem.Initialize(initialCards);
-List<ISkillCard> drawnCards = circulationSystem.DrawCardsForTurn();
-circulationSystem.MoveCardToUsedStorage(usedCard);
+public class CardManager : MonoBehaviour
+{
+    [Inject] private ICardCirculationSystem circulationSystem;
+
+    public void InitializeCards(List<ISkillCard> initialCards)
+    {
+        circulationSystem.Initialize(initialCards);
+    }
+
+    public void DrawCards()
+    {
+        List<ISkillCard> drawnCards = circulationSystem.DrawCardsForTurn();
+    }
+
+    public void UseCard(ISkillCard usedCard)
+    {
+        circulationSystem.MoveCardToUsedStorage(usedCard);
+    }
+}
 ```
 
 ## 💾 SaveSystem 핵심 사용법
 
 ### 자동 저장 시스템
 ```csharp
-// AutoSaveManager를 통한 자동 저장
-AutoSaveManager autoSaveManager = FindObjectOfType<AutoSaveManager>();
+public class GameSaveController : MonoBehaviour
+{
+    [Inject] private IAutoSaveManager autoSaveManager;
+    [Inject] private ISaveEventTrigger saveEventTrigger;
 
-// 특정 조건으로 자동 저장 트리거
-autoSaveManager.TriggerAutoSave("TurnCompleted");
-autoSaveManager.TriggerAutoSave("EnemyCardPlaced");
+    public void TriggerAutoSave(string eventType)
+    {
+        // 특정 조건으로 자동 저장 트리거
+        autoSaveManager.TriggerAutoSave(eventType);
+    }
 
-// 수동 저장
-await autoSaveManager.SaveGameState("ManualSave");
-```
+    public async void ManualSave()
+    {
+        // 수동 저장
+        await autoSaveManager.SaveGameState("ManualSave");
+    }
 
-### 이벤트 기반 저장
-```csharp
-SaveEventTrigger saveEventTrigger = FindObjectOfType<SaveEventTrigger>();
-saveEventTrigger.OnTurnCompleted();
-saveEventTrigger.OnStageCompleted();
+    public void OnTurnComplete()
+    {
+        // 이벤트 기반 저장
+        saveEventTrigger.OnTurnCompleted();
+    }
+
+    public void OnStageComplete()
+    {
+        saveEventTrigger.OnStageCompleted();
+    }
+}
 ```
 
 ## ⚠️ 주의사항 및 금지사항

@@ -15,19 +15,19 @@ description: "Quality gates and performance standards: SOLID verification, optim
 - [ ] **Dependency Inversion (DIP)**: Depend on abstractions, not concrete classes
 
 ### 2. Code Quality
-- [ ] **Null safety**: All public methods validate parameters
-- [ ] **Complexity limits**: Cyclomatic complexity ≤ 5, Cognitive complexity ≤ 7
+- [ ] **Null safety**: All public methods validate parameters (또는 nullable reference types 사용)
+- [ ] **Complexity limits**: Cyclomatic complexity ≤ 10, Cognitive complexity ≤ 15
 - [ ] **Testability**: All external dependencies managed via DI
 - [ ] **Korean standard**: All user messages, logs, docs in Korean
 - [ ] **Inspector localization**: Header, Tooltip, field names in Korean
 - [ ] **XML documentation**: Complete documentation for public APIs
 
 ### 3. Unity Performance
-- [ ] **Memory management**: < 1KB allocation per frame, minimize GC pressure
+- [ ] **Memory management**: Profiler로 주기적 GC 측정, 핫패스에서 allocation 최소화
 - [ ] **Rendering**: < 100 draw calls, batching applied
-- [ ] **Script optimization**: NO Update(), event-based required
+- [ ] **Script optimization**: 가능한 이벤트 기반, Update() 사용 시 주석으로 이유 명시
 - [ ] **Object pooling**: Applied to frequently created/destroyed objects
-- [ ] **Caching strategy**: Repeated calculations cached (max 5s TTL)
+- [ ] **Caching strategy**: Repeated calculations cached (적절한 TTL 설정)
 
 ### 4. Project-Specific
 - [ ] **Zenject DI**: Proper bindings and scopes, no circular dependencies
@@ -108,13 +108,19 @@ public class CardPool : MonoBehaviour
 
 ## 🎯 Quality Targets
 
-### Quantitative Targets
-- **Code coverage**: Minimum 90%
-- **Cyclomatic complexity**: Maximum 5 per method
-- **Memory usage**: Maximum 200MB per scene
+### Quantitative Targets (플랫폼별)
+#### PC 타겟
+- **Code coverage**: Minimum 70% (핵심 로직 80%)
+- **Cyclomatic complexity**: Maximum 10 per method
+- **Memory usage**: Maximum 300MB per scene
 - **Frame rate**: Minimum 60fps maintained
 - **Loading time**: Scene transition < 2s
-- **GC pressure**: < 1KB allocation per frame
+- **GC pressure**: Profiler로 측정, 핫패스에서 최소화
+
+#### Mobile 타겟 (선택적)
+- **Memory usage**: Maximum 150MB per scene
+- **Frame rate**: Minimum 30fps maintained
+- **Loading time**: Scene transition < 3s
 
 ### Qualitative Targets
 - **Architecture consistency**: 100% SOLID compliance

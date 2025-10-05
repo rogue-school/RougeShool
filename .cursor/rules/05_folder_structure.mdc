@@ -1,0 +1,402 @@
+---
+alwaysApply: false
+description: "Project folder structure and organization guidelines"
+---
+
+# RougeShool Folder Structure
+
+## 📁 Assets Root Structure
+
+```
+Assets/
+├── Editor/                      # Unity Editor 확장 스크립트
+├── Plugins/                     # 서드파티 플러그인
+│   ├── Demigiant/              # DOTween Pro
+│   ├── MaterialsEffect/        # 이펙트 에셋
+│   ├── Zenject/                # Zenject DI
+│   └── ETFX/                   # 이펙트 에셋
+├── Resources/                   # 런타임 로드 리소스
+│   ├── Data/                   # ScriptableObject 데이터
+│   ├── Effect/                 # 이펙트 프리팹
+│   ├── Font/                   # 폰트 파일
+│   ├── Image/                  # UI/게임 이미지
+│   ├── Prefab/                 # 게임 오브젝트 프리팹
+│   └── Sound/                  # 오디오 파일
+├── Scenes/                      # Unity 씬 파일
+├── Script/                      # 모든 C# 스크립트
+│   ├── CharacterSystem/        # 캐릭터 시스템
+│   ├── CombatSystem/           # 전투 시스템
+│   ├── CoreSystem/             # 핵심 시스템
+│   ├── SaveSystem/             # 저장/로드 시스템
+│   ├── SkillCardSystem/        # 스킬 카드 시스템
+│   ├── UISystem/               # UI 시스템
+│   └── Utility/                # 공통 유틸리티
+├── Settings/                    # 프로젝트 설정
+├── Textures/                    # 텍스처/스프라이트
+└── TextMesh Pro/               # TextMesh Pro 리소스
+```
+
+## 🗂️ Script Folder Detailed Structure
+
+### Core Pattern (각 시스템 공통)
+```
+Script/{SystemName}/
+├── Core/                       # 핵심 로직 클래스
+│   └── {System}Core.cs
+├── Data/                       # ScriptableObject 데이터 정의
+│   └── {Entity}Data.cs
+├── Interface/                  # 인터페이스 정의
+│   └── I{Component}.cs
+├── Manager/                    # 매니저 클래스
+│   └── {System}Manager.cs
+├── Factory/                    # 팩토리 패턴 (필요시)
+│   └── {Entity}Factory.cs
+├── Service/                    # 서비스 레이어 (필요시)
+│   └── {System}Service.cs
+├── UI/                         # UI 컴포넌트
+│   └── {System}UI.cs
+└── Utility/                    # 시스템별 유틸리티
+    └── {System}Helper.cs
+```
+
+### CharacterSystem Example
+```
+Script/CharacterSystem/
+├── Core/
+│   ├── PlayerCharacter.cs
+│   ├── EnemyCharacter.cs
+│   └── CharacterBase.cs
+├── Data/
+│   ├── PlayerCharacterData.cs
+│   ├── EnemyCharacterData.cs
+│   └── CharacterStats.cs
+├── Interface/
+│   ├── IPlayerCharacter.cs
+│   ├── IEnemyCharacter.cs
+│   └── ICharacterStats.cs
+├── Manager/
+│   ├── EnemyManager.cs
+│   ├── EnemySpawnerManager.cs
+│   └── PlayerResourceManager.cs
+├── UI/
+│   ├── PlayerCharacterUIController.cs
+│   ├── HealthBarUI.cs
+│   └── BuffDebuffIconUI.cs
+├── Effect/
+│   └── CharacterEffectHandler.cs
+└── Initialization/
+    └── CharacterInitializer.cs
+```
+
+### CombatSystem Example
+```
+Script/CombatSystem/
+├── Core/
+│   ├── TurnManager.cs
+│   └── CombatExecutionManager.cs
+├── Data/
+│   ├── CombatSlotData.cs
+│   └── CombatPhaseData.cs
+├── Interface/
+│   ├── ITurnManager.cs
+│   └── ICombatExecutor.cs
+├── Manager/
+│   └── CombatSlotManager.cs
+├── State/
+│   ├── CombatSetupState.cs
+│   ├── CombatBattleState.cs
+│   └── CombatEndState.cs
+├── Event/
+│   ├── CombatEventManager.cs
+│   └── CombatEvents.cs
+├── UI/
+│   ├── CombatSlotUI.cs
+│   └── TurnIndicatorUI.cs
+└── DragDrop/
+    └── CardDragDropHandler.cs
+```
+
+### SkillCardSystem Example
+```
+Script/SkillCardSystem/
+├── Core/
+│   ├── SkillCard.cs
+│   └── CardEffect.cs
+├── Data/
+│   ├── SkillCardDefinition.cs
+│   └── CardEffectData.cs
+├── Interface/
+│   ├── ISkillCard.cs
+│   └── ICardEffect.cs
+├── Factory/
+│   └── SkillCardFactory.cs
+├── Manager/
+│   ├── CardCirculationSystem.cs
+│   └── CardPoolManager.cs
+└── UI/
+    ├── CardUI.cs
+    └── CardHandUI.cs
+```
+
+### CoreSystem Example
+```
+Script/CoreSystem/
+├── Audio/
+│   ├── AudioManager.cs
+│   └── IAudioManager.cs
+├── Scene/
+│   ├── SceneTransitionManager.cs
+│   └── ISceneTransitionManager.cs
+├── Initialization/
+│   ├── GameInitializer.cs
+│   └── CoreSystemInitializer.cs
+├── Installer/
+│   ├── CoreSystemInstaller.cs
+│   ├── GameplayInstaller.cs
+│   └── UIInstaller.cs
+└── Logger/
+    └── GameLogger.cs
+```
+
+## 📦 Resources Folder Structure
+
+```
+Resources/
+├── Data/
+│   ├── Character/
+│   │   ├── Player/
+│   │   │   ├── PlayerCharacterData_Knight.asset
+│   │   │   └── PlayerCharacterData_Archer.asset
+│   │   └── Enemy/
+│   │       ├── EnemyCharacterData_Goblin.asset
+│   │       └── EnemyCharacterData_Dragon.asset
+│   └── SkillCard/
+│       ├── Attack/
+│       │   ├── SkillCardDefinition_Fireball.asset
+│       │   └── SkillCardDefinition_Slash.asset
+│       ├── Defense/
+│       │   └── SkillCardDefinition_Shield.asset
+│       └── Support/
+│           └── SkillCardDefinition_Heal.asset
+├── Effect/
+│   ├── SkillEffect/
+│   │   ├── FireballEffect.prefab
+│   │   └── SlashEffect.prefab
+│   └── CharacterEffect/
+│       ├── LevelUpEffect.prefab
+│       └── DeathEffect.prefab
+├── Font/
+│   └── DOS/
+│       └── DOSGothic.ttf
+├── Image/
+│   ├── UI/
+│   │   ├── Button/
+│   │   │   ├── btn_normal.png
+│   │   │   └── btn_pressed.png
+│   │   ├── Card/
+│   │   │   ├── card_frame.png
+│   │   │   └── card_background.png
+│   │   └── Icon/
+│   │       ├── icon_health.png
+│   │       └── icon_mana.png
+│   ├── Character/
+│   │   ├── Player/
+│   │   │   └── player_knight.png
+│   │   └── Enemy/
+│   │       └── enemy_goblin.png
+│   └── Effect/
+│       ├── fireball_01.png
+│       └── slash_01.png
+├── Prefab/
+│   ├── Character/
+│   │   ├── PlayerCharacter_Knight.prefab
+│   │   └── EnemyCharacter_Goblin.prefab
+│   ├── UI/
+│   │   ├── SkillCard_UI.prefab
+│   │   └── HealthBar_UI.prefab
+│   └── Effect/
+│       └── DamageText.prefab
+└── Sound/
+    ├── BGM/
+    │   ├── bgm_main_theme.mp3
+    │   └── bgm_battle.mp3
+    └── SFX/
+        ├── sfx_button_click.wav
+        ├── sfx_card_use.wav
+        └── sfx_attack.wav
+```
+
+## 🎬 Scenes Folder Structure
+
+```
+Scenes/
+├── MainMenu.unity              # 메인 메뉴 씬
+├── BattleScene.unity           # 전투 씬
+├── GameOverScene.unity         # 게임 오버 씬
+├── LoadingScene.unity          # 로딩 씬
+└── Test/                       # 테스트 씬 (버전 관리 제외 가능)
+    ├── CharacterTest.unity
+    ├── CombatTest.unity
+    └── UITest.unity
+```
+
+## 🎨 Textures Folder Structure
+
+```
+Textures/
+├── Character/
+│   ├── player_idle_01.png
+│   ├── player_attack_01.png
+│   └── enemy_goblin.png
+├── Environment/
+│   ├── background_forest.png
+│   └── tile_ground.png
+└── VFX/
+    ├── fire_particle.png
+    └── slash_trail.png
+```
+
+## 🔧 Editor Folder
+
+```
+Editor/
+├── CustomInspector/
+│   ├── CharacterDataEditor.cs
+│   └── SkillCardDefinitionEditor.cs
+├── Tools/
+│   ├── ScriptableObjectCreator.cs
+│   └── PrefabBatchProcessor.cs
+└── Menu/
+    └── CustomMenuItems.cs
+```
+
+## 📋 Naming and Organization Rules
+
+### 1. File Placement Rules
+```
+✅ Script files (.cs)
+   → Assets/Script/{SystemName}/{Category}/
+
+✅ ScriptableObject definitions (.cs)
+   → Assets/Script/{SystemName}/Data/
+
+✅ ScriptableObject assets (.asset)
+   → Assets/Resources/Data/{Category}/
+
+✅ Prefabs (.prefab)
+   → Assets/Resources/Prefab/{Category}/
+
+✅ Scenes (.unity)
+   → Assets/Scenes/
+```
+
+### 2. Folder Naming
+```
+✅ PascalCase for all folders
+   CharacterSystem/
+   SkillCardSystem/
+   CoreSystem/
+
+✅ Category folders in English
+   Data/
+   Manager/
+   Interface/
+   UI/
+```
+
+### 3. System Separation
+```
+각 시스템은 독립적으로 구성:
+├── {SystemName}/
+    ├── Core/           # 핵심 로직
+    ├── Data/           # 데이터 정의
+    ├── Interface/      # 인터페이스
+    ├── Manager/        # 매니저
+    └── UI/             # UI 컴포넌트
+
+순환 참조 금지: SystemA → SystemB → SystemA (❌)
+```
+
+### 4. Resources Optimization
+```
+⚠️ Resources 폴더 사용 최소화
+   - 런타임 로드가 필요한 것만 배치
+   - AssetBundle 고려 (대규모 프로젝트)
+   - Addressables 시스템 검토 (Unity 2019+)
+
+✅ Resources 대신 사용 가능:
+   - ScriptableObject references (Inspector 할당)
+   - AssetDatabase (에디터)
+   - Addressables (런타임)
+```
+
+## 🚫 Anti-Patterns
+
+### ❌ Bad Structure
+```
+Assets/
+├── Scripts/                    # ❌ 모든 스크립트 한 폴더에
+│   ├── PlayerCharacter.cs
+│   ├── EnemyManager.cs
+│   ├── CardUI.cs
+│   └── ... (100+ files)
+├── AllPrefabs/                 # ❌ 모든 프리팹 한 폴더에
+└── Images/                     # ❌ 모든 이미지 한 폴더에
+```
+
+### ❌ Bad Naming
+```
+Assets/Script/
+├── Stuff/                      # ❌ 모호한 이름
+├── Temp/                       # ❌ 임시 폴더 (삭제 필요)
+├── New Folder/                 # ❌ 기본 이름
+└── 123/                        # ❌ 숫자 이름
+```
+
+### ❌ Bad Organization
+```
+Assets/Resources/
+├── PlayerData.asset            # ❌ 카테고리 없음
+├── EnemyData.asset
+├── Card1.asset                 # ❌ 의미 없는 이름
+└── test123.prefab              # ❌ 테스트 파일
+```
+
+## ✅ Best Practices
+
+### 1. System-First Organization
+```
+✅ 시스템별로 먼저 분류
+Script/
+├── CharacterSystem/    # 캐릭터 관련 모든 것
+├── CombatSystem/       # 전투 관련 모든 것
+└── SkillCardSystem/    # 카드 관련 모든 것
+```
+
+### 2. Consistent Depth
+```
+✅ 폴더 깊이 3-4 레벨 유지
+Assets/Script/CharacterSystem/Data/PlayerCharacterData.cs (4 levels) ✅
+Assets/Script/A/B/C/D/E/F/File.cs (7+ levels) ❌
+```
+
+### 3. Clear Separation
+```
+✅ 코드와 데이터 분리
+Script/CharacterSystem/Data/PlayerCharacterData.cs     (definition)
+Resources/Data/Character/Player/PlayerData_Knight.asset (instance)
+```
+
+### 4. Version Control
+```
+✅ .gitignore 설정
+Library/
+Temp/
+Logs/
+*.csproj
+*.sln
+
+⚠️ Resources 최적화
+   - 큰 파일은 LFS 사용
+   - 불필요한 에셋 주기적 정리
+```
