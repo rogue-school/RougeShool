@@ -115,12 +115,6 @@ namespace Game.CharacterSystem.Interface
         /// <returns>가드 상태면 true</returns>
         bool IsGuarded();
 
-        /// <summary>
-        /// 가드 수치를 증가시킵니다.
-        /// </summary>
-        /// <param name="amount">가드 증가량</param>
-        void GainGuard(int amount);
-
         #endregion
 
         #region 턴 효과

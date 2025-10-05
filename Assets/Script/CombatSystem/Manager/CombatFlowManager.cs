@@ -383,6 +383,55 @@ namespace Game.CombatSystem.Manager
             StartCoroutine(EndCombatCoroutine());
         }
 
+        /// <summary>
+        /// 다음 턴으로 진행
+        /// </summary>
+        public void ProgressTurn()
+        {
+            if (!isInitialized)
+            {
+                GameLogger.LogWarning("전투 시스템이 초기화되지 않았습니다.", GameLogger.LogCategory.Combat);
+                return;
+            }
+
+            if (!isCombatActive)
+            {
+                GameLogger.LogWarning("전투가 활성화되어 있지 않습니다.", GameLogger.LogCategory.Combat);
+                return;
+            }
+
+            // 사용되지 않는 경고 방지: 턴 기반 모드일 때만 진행
+            if (!enableTurnBasedCombat)
+            {
+                GameLogger.LogWarning("턴 기반 전투가 비활성화되어 있어 진행하지 않습니다.", GameLogger.LogCategory.Combat);
+                return;
+            }
+
+            if (turnManager == null)
+            {
+                GameLogger.LogError("TurnManager가 주입되지 않았습니다.", GameLogger.LogCategory.Error);
+                return;
+            }
+
+            // 슬롯 큐 전진 → 턴 효과 처리 → 턴 전환
+            StartCoroutine(ProgressTurnCoroutine());
+        }
+
+        private IEnumerator ProgressTurnCoroutine()
+        {
+            // 1) 배틀 슬롯이 비어 있으면 대기열을 전진시킵니다
+            yield return turnManager.AdvanceQueueAtTurnStartRoutine();
+
+            // 2) 모든 캐릭터의 턴 효과 처리
+            turnManager.ProcessAllCharacterTurnEffects();
+
+            // 3) 턴 전환: 플레이어 ↔ 적
+            var next = turnManager.IsPlayerTurn()
+                ? TurnManager.TurnType.Enemy
+                : TurnManager.TurnType.Player;
+            turnManager.SetTurnAndIncrement(next);
+        }
+
         private IEnumerator EndCombatCoroutine()
         {
             if (enableDebugLogging)
@@ -408,9 +457,6 @@ namespace Game.CombatSystem.Manager
 
         private IEnumerator CleanupCombat()
         {
-            // 슬롯 정리 (직접 구현)
-            ClearAllSlots();
-
             // 턴 매니저 정리
             if (turnManager != null)
             {
@@ -477,39 +523,6 @@ namespace Game.CombatSystem.Manager
             OnCombatPhaseChanged?.Invoke(newPhase);
         }
 
-        /// <summary>
-        /// 다음 턴으로 진행
-        /// </summary>
-        public void ProgressTurn()
-        {
-            if (!isCombatActive)
-            {
-                GameLogger.LogWarning("전투가 진행 중이 아닙니다.", GameLogger.LogCategory.Combat);
-                return;
-            }
-
-            if (!enableTurnBasedCombat)
-            {
-                GameLogger.LogWarning("턴 기반 전투가 비활성화되어 있습니다.", GameLogger.LogCategory.Combat);
-                return;
-            }
-
-            // 레거시: 상태 패턴으로 전환되어 자동으로 턴 진행됨
-            // if (turnManager != null)
-            // {
-            //     turnManager.NextTurn(); // 제거됨
-            // }
-
-            GameLogger.LogWarning("[CombatFlowManager] 레거시 - 상태 패턴에서 자동으로 턴 진행됨", GameLogger.LogCategory.Combat);
-        }
-
-        private System.Collections.IEnumerator AutoProgressNextTurn()
-        {
-            yield return new WaitForSeconds(1.0f); // 1초 대기
-            // 레거시: 상태 패턴으로 전환
-            GameLogger.LogWarning("[CombatFlowManager] AutoProgressNextTurn - 레거시 기능", GameLogger.LogCategory.Combat);
-            yield break;
-        }
 
         #endregion
 
@@ -570,37 +583,6 @@ namespace Game.CombatSystem.Manager
             {
                 GameLogger.LogInfo("CombatFlowManager 리셋 완료", GameLogger.LogCategory.Combat);
             }
-        }
-
-        #endregion
-
-        #region 슬롯 관리 (CombatSlotManager 기능 통합)
-
-        /// <summary>
-        /// 모든 슬롯을 비웁니다.
-        /// </summary>
-        public void ClearAllSlots()
-        {
-            // 슬롯 정리 로직 (필요시 구현)
-            GameLogger.LogInfo("모든 슬롯 초기화 완료", GameLogger.LogCategory.Combat);
-        }
-
-        /// <summary>
-        /// 슬롯 이동 (새로운 5슬롯 시스템)
-        /// </summary>
-        public void MoveSlotsForwardNew()
-        {
-            // 5슬롯 시스템: 1→2→3→4→5→제거
-            GameLogger.LogInfo("5슬롯 시스템으로 슬롯 이동 완료", GameLogger.LogCategory.Combat);
-        }
-
-        /// <summary>
-        /// 슬롯 이동 (레거시 4슬롯 시스템)
-        /// </summary>
-        public void MoveSlotsForward()
-        {
-            // 4슬롯 시스템: 1→2→3→4→제거
-            GameLogger.LogInfo("4슬롯 시스템으로 슬롯 이동 완료", GameLogger.LogCategory.Combat);
         }
 
         #endregion

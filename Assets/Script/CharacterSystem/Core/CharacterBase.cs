@@ -30,10 +30,7 @@ namespace Game.CharacterSystem.Core
         /// <summary>캐릭터의 현재 체력</summary>
         protected int currentHP;
 
-        /// <summary>캐릭터의 현재 가드 수치</summary>
-        protected int currentGuard;
-
-        /// <summary>현재 가드 상태 여부</summary>
+        /// <summary>현재 가드 상태 여부 (GuardBuff에 의해 관리됨)</summary>
         protected bool isGuarded = false;
 
         /// <summary>턴마다 적용되는 효과 리스트</summary>
@@ -107,23 +104,6 @@ namespace Game.CharacterSystem.Core
             isGuarded = value;
             GameLogger.LogInfo($"[{GetCharacterName()}] 가드 상태: {isGuarded}", GameLogger.LogCategory.Character);
             OnGuardStateChanged?.Invoke(isGuarded);
-        }
-
-        /// <summary>가드 수치 증가</summary>
-        /// <param name="amount">증가량</param>
-        public virtual void GainGuard(int amount)
-        {
-            if (amount < 0)
-            {
-                GameLogger.LogError($"[{GetCharacterName()}] 잘못된 가드 증가량: {amount}", GameLogger.LogCategory.Character);
-                throw new ArgumentException($"가드 증가량은 음수일 수 없습니다. 입력값: {amount}", nameof(amount));
-            }
-            
-            currentGuard += amount;
-            GameLogger.LogInfo($"[{GetCharacterName()}] 가드 +{amount} → 현재 가드: {currentGuard}", GameLogger.LogCategory.Character);
-
-            // 가드 이벤트 발행은 자식 클래스에서 처리
-            OnGuarded(amount);
         }
 
         /// <summary>
@@ -241,9 +221,7 @@ namespace Game.CharacterSystem.Core
 
         #endregion
 
-        #region UI 및 효과 관리
-
-        // 레거시 CharacterUIController 제거됨
+        #region 효과 관리
 
         /// <summary>턴 효과 등록</summary>
         /// <param name="effect">턴 효과 인스턴스</param>
@@ -301,17 +279,34 @@ namespace Game.CharacterSystem.Core
                 return;
             }
 
-            foreach (var effect in perTurnEffects.ToArray())
+            // 역순 순회로 GC 없이 안전하게 제거
+            for (int i = perTurnEffects.Count - 1; i >= 0; i--)
             {
+                var effect = perTurnEffects[i];
                 effect.OnTurnStart(this);
 
                 if (effect.IsExpired)
                 {
-                    perTurnEffects.Remove(effect);
+                    perTurnEffects.RemoveAt(i);
                 }
             }
             // 매 턴 UI가 남은 턴 수를 갱신할 수 있도록 전체 리스트를 통지
             OnBuffsChanged?.Invoke(perTurnEffects.AsReadOnly());
+        }
+
+        #endregion
+
+        #region Unity 생명주기
+
+        /// <summary>
+        /// 오브젝트 파괴 시 이벤트 구독 해제 (메모리 누수 방지)
+        /// </summary>
+        protected virtual void OnDestroy()
+        {
+            // 모든 이벤트 구독 해제
+            OnHPChanged = null;
+            OnGuardStateChanged = null;
+            OnBuffsChanged = null;
         }
 
         #endregion

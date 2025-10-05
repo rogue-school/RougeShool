@@ -91,76 +91,7 @@ namespace Game.SkillCardSystem.Executor
                 audioManager?.PlaySFX(clip);
             }
 
-            // 카드 비주얼 이펙트 재생
-            var vfx = card.CardDefinition?.VisualEffectPrefab;
-            if (vfx != null)
-            {
-                GameLogger.LogInfo($"[CardExecutor] 이펙트 프리팹 발견: {vfx.name}", GameLogger.LogCategory.SkillCard);
-                
-                // 힐/가드 계열은 시전자(Source) 위치에서 출력하도록 우선 처리
-                bool spawnAtSource = false;
-                try
-                {
-                    // 이펙트 SO 타입으로 판단 (HealEffectSO, GuardEffectSO 포함 시 시전자 기준)
-                    for (int i = 0; i < effects.Count; i++)
-                    {
-                        var effectSo = effects[i];
-                        if (effectSo is HealEffectSO || effectSo is GuardEffectSO)
-                        {
-                            spawnAtSource = true;
-                            break;
-                        }
-                    }
-                }
-                catch (System.Exception ex)
-                {
-                    GameLogger.LogWarning($"[CardExecutor] 이펙트 유형 판별 중 오류: {ex.Message}", GameLogger.LogCategory.SkillCard);
-                }
-
-                ICharacter spawnCharacter = spawnAtSource ? context?.Source : context?.Target;
-                if (spawnCharacter == null)
-                {
-                    // 폴백: 소스가 비어 있으면 타겟, 타겟도 없으면 소스
-                    spawnCharacter = context?.Target ?? context?.Source;
-                }
-
-                if (spawnCharacter != null)
-                {
-                    Vector3 spawnPos = GetCenterWorldPosition(spawnCharacter.Transform);
-                    GameLogger.LogInfo($"[CardExecutor] 이펙트 생성 위치: {spawnPos}", GameLogger.LogCategory.SkillCard);
-
-                    // VFXManager를 통한 이펙트 생성 (Object Pooling)
-                    if (vfxManager != null)
-                    {
-                        var instance = vfxManager.PlayEffect(vfx, spawnPos);
-                        if (instance != null)
-                        {
-                            SetEffectLayer(instance);
-                            GameLogger.LogInfo($"[CardExecutor] VFXManager로 이펙트 재생: {instance.name}", GameLogger.LogCategory.SkillCard);
-                        }
-                    }
-                    else
-                    {
-                        // Fallback: VFXManager가 없으면 기존 방식 사용
-                        var instance = GameObject.Instantiate(vfx, spawnPos, Quaternion.identity);
-                        GameLogger.LogInfo($"[CardExecutor] 이펙트 인스턴스 생성 완료: {instance.name}", GameLogger.LogCategory.SkillCard);
-
-                        SetEffectLayer(instance);
-
-                        // 이펙트는 프리팹 자체에서 자동 제거되도록 설정하거나 기본 지속 시간 사용
-                        GameObject.Destroy(instance, 2.0f); // 기본 2초 지속
-                        GameLogger.LogInfo($"[CardExecutor] 이펙트 2초 후 자동 제거 예약", GameLogger.LogCategory.SkillCard);
-                    }
-                }
-                else
-                {
-                    GameLogger.LogWarning($"[CardExecutor] 시전자/대상 모두 null입니다. 이펙트를 생성할 수 없습니다.", GameLogger.LogCategory.SkillCard);
-                }
-            }
-            else
-            {
-                GameLogger.LogInfo($"[CardExecutor] '{card.GetCardName()}'에 이펙트 프리팹이 설정되지 않았습니다.", GameLogger.LogCategory.SkillCard);
-            }
+            // VFX 스폰은 각 EffectCommand가 책임집니다 (CardExecutor는 관여하지 않음)
         }
         
         /// <summary>
@@ -283,6 +214,39 @@ namespace Game.SkillCardSystem.Executor
 
             // 3) 마지막 폴백: Transform.position
             return t.position;
+        }
+
+        /// <summary>
+        /// 포트레잇(Image/RectTransform/SpriteRenderer)을 기준으로 시각적 중앙 좌표를 계산합니다.
+        /// Guard/Heal 같은 자기 대상 버프 이펙트 정렬에 사용됩니다.
+        /// </summary>
+        private static Vector3 GetPortraitCenterWorldPosition(Transform root)
+        {
+            if (root == null) return Vector3.zero;
+
+            // 1) Portrait Image 우선
+            var portraitImage = FindPortraitImage(root);
+            if (portraitImage != null && portraitImage.rectTransform != null)
+            {
+                return GetRectTransformCenterInEffectsCamera(portraitImage.rectTransform);
+            }
+
+            // 2) RectTransform 폴백
+            var anyRect = root.GetComponentInChildren<RectTransform>(true);
+            if (anyRect != null)
+            {
+                return GetRectTransformCenterInEffectsCamera(anyRect);
+            }
+
+            // 3) SpriteRenderer 폴백
+            var sprite = root.GetComponentInChildren<SpriteRenderer>(true);
+            if (sprite != null)
+            {
+                return sprite.bounds.center;
+            }
+
+            // 4) 최종 폴백
+            return root.position;
         }
 
         /// <summary>

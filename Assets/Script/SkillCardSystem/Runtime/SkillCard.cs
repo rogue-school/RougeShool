@@ -30,12 +30,13 @@ namespace Game.SkillCardSystem.Runtime
         private Owner owner;
         private List<ICardEffectCommand> effectCommands = new();
         private const int MaxAttackPowerStacks = 5;
-        
+
         private Dictionary<SkillCardSlotPosition, SkillCardSlotPosition> handSlotMap = new();
         private Dictionary<CombatSlotPosition, CombatSlotPosition> combatSlotMap = new();
-        
+
         // 의존성 주입 (생성자에서 주입)
         private IAudioManager audioManager;
+        private static EffectCommandFactory effectFactory = new();
         
         #endregion
         
@@ -74,165 +75,77 @@ namespace Game.SkillCardSystem.Runtime
         }
         
         /// <summary>
-        /// 효과 명령들을 설정합니다.
+        /// 효과 명령들을 설정합니다. (Strategy 패턴 적용)
         /// </summary>
         private void SetupEffectCommands()
         {
             effectCommands.Clear();
-            
-            // 데미지 구성이 있으면 데미지 명령 추가 (단, 출혈 효과가 있으면 제외)
-            if (definition.configuration.hasDamage)
-            {
-                // 출혈 효과가 있는지 확인
-                bool hasBleedEffect = false;
-                if (definition.configuration.hasEffects)
-                {
-                    foreach (var effectConfig in definition.configuration.effects)
-                    {
-                        if (effectConfig.effectSO is BleedEffectSO)
-                        {
-                            hasBleedEffect = true;
-                            break;
-                        }
-                    }
-                }
-                
-                // 출혈 효과가 없을 때만 즉시 데미지 추가
-                if (!hasBleedEffect)
-                {
-                    var damageConfig = definition.configuration.damageConfig;
-                    var damageCommand = new DamageEffectCommand(
-                        damageConfig.baseDamage,
-                        damageConfig.hits,
-                        damageConfig.ignoreGuard,
-                        damageConfig.ignoreCounter
-                    );
-                    effectCommands.Add(damageCommand);
-                }
-            }
-            
-            // 효과 구성이 있으면 효과 명령들 추가
+
+            // 데미지 구성 처리 (출혈 효과가 없을 때만)
+            AddDamageCommandIfNeeded();
+
+            // 효과 구성 처리 (Strategy 패턴 사용)
             if (definition.configuration.hasEffects)
             {
                 foreach (var effectConfig in definition.configuration.effects)
                 {
-                    if (effectConfig.effectSO != null)
+                    if (effectConfig.effectSO == null) continue;
+
+                    var command = effectFactory.CreateCommand(effectConfig);
+                    if (command != null)
                     {
-                        var customSettings = effectConfig.useCustomSettings ? effectConfig.customSettings : null;
-
-                        // 출혈 효과의 커스텀 설정(수치/지속)을 반영
-                        if (effectConfig.effectSO is BleedEffectSO)
-                        {
-                            if (effectConfig.useCustomSettings && customSettings != null)
-                            {
-                                // 커스텀 출혈 수치/지속 사용
-                                var bleedCommand = new BleedEffectCommand(
-                                    customSettings.bleedAmount,
-                                    customSettings.bleedDuration,
-                                    effectConfig.effectSO.GetIcon()
-                                );
-                                effectCommands.Add(bleedCommand);
-                                continue;
-                            }
-                        }
-                        
-                        // 카드 사용 스택 효과의 커스텀 설정을 반영
-                        if (effectConfig.effectSO is CardUseStackEffectSO cardUseStackEffect)
-                        {
-                            if (effectConfig.useCustomSettings && customSettings != null)
-                            {
-                                // 커스텀 카드 사용 스택 설정 사용
-                                var cardUseStackCommand = cardUseStackEffect.CreateEffectCommand(customSettings);
-                                if (cardUseStackCommand != null)
-                                {
-                                    effectCommands.Add(cardUseStackCommand);
-                                    continue;  // ← 중요: continue 추가!
-                                }
-                            }
-                        }
-                        
-                        // 반격 효과의 커스텀 설정을 반영
-                        if (effectConfig.effectSO is CounterEffectSO)
-                        {
-                            if (effectConfig.useCustomSettings && customSettings != null)
-                            {
-                                // 커스텀 반격 지속 시간 사용
-                                var counterCommand = new CounterEffectCommand(
-                                    customSettings.counterDuration,
-                                    effectConfig.effectSO.GetIcon()
-                                );
-                                effectCommands.Add(counterCommand);
-                                continue;
-                            }
-                        }
-                        
-                        // 가드 효과의 커스텀 설정을 반영 (SO를 통해 생성하여 VFX 프리팹 전달 보장)
-                        if (effectConfig.effectSO is GuardEffectSO guardEffectSO)
-                        {
-                            if (effectConfig.useCustomSettings && customSettings != null)
-                            {
-                                // 커스텀 가드 지속 시간 사용하되 VFX 프리팹은 SO에서 가져오기
-                                var guardCommand = new GuardEffectCommand(customSettings.guardDuration, guardEffectSO.visualEffectPrefab);
-                                effectCommands.Add(guardCommand);
-                                continue;
-                            }
-                        }
-
-                        // 스턴 효과의 커스텀 설정을 반영
-                        if (effectConfig.effectSO is StunEffectSO)
-                        {
-                            if (effectConfig.useCustomSettings && customSettings != null)
-                            {
-                                var stunCommand = new StunEffectCommand(customSettings.stunDuration, effectConfig.effectSO.GetIcon());
-                                effectCommands.Add(stunCommand);
-                                continue;
-                            }
-                        }
-                        
-                        // 데미지 효과의 커스텀 설정을 반영
-                        if (effectConfig.effectSO is DamageEffectSO)
-                        {
-                            if (effectConfig.useCustomSettings && customSettings != null)
-                            {
-                                // 커스텀 데미지 설정 사용
-                                var damageCommand = new DamageEffectCommand(
-                                    customSettings.damageAmount,
-                                    customSettings.damageHits,
-                                    customSettings.ignoreGuard,
-                                    customSettings.ignoreCounter
-                                );
-                                effectCommands.Add(damageCommand);
-                                continue;
-                            }
-                        }
-                        
-                        // 치유 효과의 커스텀 설정을 반영 (SO를 통해 생성하여 VFX 프리팹 전달 보장)
-                        if (effectConfig.effectSO is HealEffectSO healEffectSO)
-                        {
-                            if (effectConfig.useCustomSettings && customSettings != null)
-                            {
-                                var healCommand = healEffectSO.CreateEffectCommand(customSettings);
-                                if (healCommand != null)
-                                {
-                                    effectCommands.Add(healCommand);
-                                    continue;
-                                }
-                            }
-                        }
-
-                        // 기타 효과는 기존 로직(파워 계산 후 SO에서 생성)
-                        var power = GetEffectPower(effectConfig.effectSO);
-                        var command = effectConfig.effectSO.CreateEffectCommand(power);
-                        if (command != null)
-                        {
-                            effectCommands.Add(command);
-                        }
+                        effectCommands.Add(command);
                     }
                 }
             }
-            
+
             // 실행 순서로 정렬
-            effectCommands.Sort((a, b) => 
+            SortCommandsByExecutionOrder();
+        }
+
+        /// <summary>
+        /// 필요 시 데미지 명령을 추가합니다.
+        /// </summary>
+        private void AddDamageCommandIfNeeded()
+        {
+            if (!definition.configuration.hasDamage) return;
+
+            // 출혈 효과가 있으면 즉시 데미지 추가하지 않음
+            if (HasBleedEffect()) return;
+
+            var damageConfig = definition.configuration.damageConfig;
+            var damageCommand = new DamageEffectCommand(
+                damageConfig.baseDamage,
+                damageConfig.hits,
+                damageConfig.ignoreGuard,
+                damageConfig.ignoreCounter
+            );
+            effectCommands.Add(damageCommand);
+        }
+
+        /// <summary>
+        /// 출혈 효과가 있는지 확인합니다.
+        /// </summary>
+        private bool HasBleedEffect()
+        {
+            if (!definition.configuration.hasEffects) return false;
+
+            foreach (var effectConfig in definition.configuration.effects)
+            {
+                if (effectConfig.effectSO is BleedEffectSO)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 명령들을 실행 순서로 정렬합니다.
+        /// </summary>
+        private void SortCommandsByExecutionOrder()
+        {
+            effectCommands.Sort((a, b) =>
             {
                 var orderA = GetExecutionOrder(a);
                 var orderB = GetExecutionOrder(b);

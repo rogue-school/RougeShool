@@ -476,8 +476,9 @@ namespace Game.CharacterSystem.Core
             characterEffects.Clear();
         }
 
-        private void OnDestroy()
+        protected override void OnDestroy()
         {
+            base.OnDestroy();
             CleanupEffects();
         }
 

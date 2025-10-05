@@ -185,6 +185,13 @@ namespace Game.SkillCardSystem.Effect
         {
             if (root == null) return Vector3.zero;
 
+            // 0) 디자이너 지정 앵커 우선 (정밀 제어용)
+            var explicitAnchor = FindExplicitVfxAnchor(root);
+            if (explicitAnchor != null)
+            {
+                return explicitAnchor.position;
+            }
+
             // 1) Portrait Image 우선
             var portraitImage = FindPortraitImage(root);
             if (portraitImage != null && portraitImage.rectTransform != null)
@@ -225,6 +232,15 @@ namespace Game.SkillCardSystem.Effect
             }
             // 폴백: 첫 번째 Image
             return images[0];
+        }
+
+        // 디자이너가 배치하는 선택적 VFX 앵커를 찾습니다.
+        // 우선순위: "VFXAnchor" → "PortraitVFXAnchor"
+        private static Transform FindExplicitVfxAnchor(Transform root)
+        {
+            var a = root.Find("VFXAnchor");
+            if (a != null) return a;
+            return root.Find("PortraitVFXAnchor");
         }
 
         private static Vector3 GetRectTransformCenterWorld(RectTransform rt)

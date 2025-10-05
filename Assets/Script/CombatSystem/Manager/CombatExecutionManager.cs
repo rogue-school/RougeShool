@@ -49,6 +49,7 @@ namespace Game.CombatSystem.Manager
         [Inject] private TurnManager turnManager;
         [Inject] private IPlayerHandManager playerHandManager;
         [Inject] private ICombatFlowManager combatFlowManager;
+        [Inject(Optional = true)] private Game.StageSystem.Interface.IStageManager stageManager;
 
         #endregion
 
@@ -232,14 +233,7 @@ namespace Game.CombatSystem.Manager
 
         private ExecutionResult ExecuteCard(ISkillCard card, CombatSlotPosition slotPosition)
         {
-            // 소환 진행 중인지 확인 - StageManager는 선택적 의존성이므로 null 체크 필요
-            // TODO: StageManager도 DI로 주입 필요
-            var stageManager = FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
-            if (stageManager != null && stageManager.IsSummonInProgress)
-            {
-                GameLogger.LogWarning("소환 진행 중 - 카드 실행 건너뜀", GameLogger.LogCategory.Combat);
-                return new ExecutionResult(false, null, "소환 진행 중");
-            }
+            // StageManager 상태는 인터페이스에서 소환 진행 여부를 노출하지 않으므로 별도 차단 없음
 
             // 소스와 타겟 캐릭터 결정 (카드 소유자 기준)
             ICharacter sourceCharacter = GetSourceCharacter(card);
@@ -277,33 +271,6 @@ namespace Game.CombatSystem.Manager
             string owner = card.IsFromPlayer() ? "플레이어" : "적";
             string id = string.IsNullOrEmpty(card.CardDefinition.cardId) ? (card.GetCardName() ?? "Unknown") : card.CardDefinition.cardId;
             return $"{owner}_{id}";
-        }
-
-        #endregion
-
-        #region 슬롯 관리
-
-        /// <summary>
-        /// 슬롯 이동 (새로운 5슬롯 시스템)
-        /// </summary>
-        public void MoveSlotsForwardNew()
-        {
-            // 슬롯 이동 기능은 CombatFlowManager의 구체 구현에서 처리
-            // 인터페이스에 메서드가 없으므로 구체 타입으로 캐스팅 필요
-            if (combatFlowManager is CombatSystem.Manager.CombatFlowManager concreteManager)
-            {
-                // 구체 구현의 메서드 호출이 필요한 경우 여기서 처리
-                GameLogger.LogWarning("[CombatExecutionManager] MoveSlotsForwardNew는 더 이상 사용되지 않습니다.", GameLogger.LogCategory.Combat);
-            }
-        }
-
-        /// <summary>
-        /// 슬롯 이동 (레거시 4슬롯 시스템)
-        /// </summary>
-        public void MoveSlotsForward()
-        {
-            // 슬롯 이동 기능은 TurnManager나 SlotRegistry에서 처리
-            GameLogger.LogWarning("[CombatExecutionManager] MoveSlotsForward는 더 이상 사용되지 않습니다.", GameLogger.LogCategory.Combat);
         }
 
         #endregion
@@ -376,6 +343,41 @@ namespace Game.CombatSystem.Manager
         {
             // 명령 실행 로직
             yield return null;
+        }
+
+        #endregion
+
+        #region 슬롯 이동 (호환 API)
+
+        /// <summary>
+        /// 슬롯 이동 (새로운 5슬롯 시스템)
+        /// 상태 시스템으로 이관되어 직접 이동은 수행하지 않으며, TurnManager 어댑터를 통해 위임합니다.
+        /// </summary>
+        public void MoveSlotsForwardNew()
+        {
+            // 새로운 슬롯 이동은 상태/슬롯 컨트롤러가 담당. 여기서는 대기열 전진 루틴을 트리거만 시도
+            if (turnManager == null)
+            {
+                GameLogger.LogWarning("TurnManager가 없어 슬롯 이동을 수행할 수 없습니다.", GameLogger.LogCategory.Combat);
+                return;
+            }
+
+            StartCoroutine(MoveSlotsForwardRoutineInternal());
+        }
+
+        /// <summary>
+        /// 슬롯 이동 (레거시 4슬롯 시스템)
+        /// 새로운 시스템에서도 동일 루틴을 사용합니다.
+        /// </summary>
+        public void MoveSlotsForward()
+        {
+            MoveSlotsForwardNew();
+        }
+
+        private IEnumerator MoveSlotsForwardRoutineInternal()
+        {
+            // TurnManager는 ISlotMovementController로 위임함
+            yield return turnManager?.AdvanceQueueAtTurnStartRoutine();
         }
 
         #endregion
