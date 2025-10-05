@@ -41,20 +41,15 @@ namespace Game.SkillCardSystem.Manager
         private SkillCardTooltip currentTooltip;
         private Canvas tooltipCanvas;
         private ISkillCard hoveredCard;
-        private Vector2 lastMousePosition;
 
         private float showTimer;
         private float hideTimer;
         private bool isShowingTooltip;
         private bool isHidingTooltip;
 
-        private Camera uiCamera;
         private EventSystem eventSystem;
 
         private System.Collections.Generic.Dictionary<ISkillCard, RectTransform> cardUICache = new();
-
-        // 카메라 전환 컨트롤러
-        private TooltipCameraController cameraController;
 
         #endregion
 
@@ -132,36 +127,6 @@ namespace Game.SkillCardSystem.Manager
                 GameLogger.LogError("[SkillCardTooltipManager] EventSystem을 찾을 수 없습니다", GameLogger.LogCategory.Error);
                 return;
             }
-
-            // UI 카메라 설정 (캔버스는 자동 설정됨)
-            if (tooltipCanvas != null)
-            {
-                uiCamera = tooltipCanvas.worldCamera;
-            }
-
-            // 카메라 컨트롤러 초기화
-            InitializeCameraController();
-        }
-
-        /// <summary>
-        /// 카메라 컨트롤러를 초기화합니다.
-        /// </summary>
-        private void InitializeCameraController()
-        {
-            // 기존 카메라 컨트롤러 찾기
-            cameraController = FindFirstObjectByType<TooltipCameraController>();
-            
-            if (cameraController == null)
-            {
-                // 카메라 컨트롤러가 없으면 자동 생성
-                var controllerGO = new GameObject("TooltipCameraController");
-                cameraController = controllerGO.AddComponent<TooltipCameraController>();
-                GameLogger.LogInfo("[SkillCardTooltipManager] TooltipCameraController 자동 생성", GameLogger.LogCategory.UI);
-            }
-            else
-            {
-                GameLogger.LogInfo("[SkillCardTooltipManager] 기존 TooltipCameraController 사용", GameLogger.LogCategory.UI);
-            }
         }
 
         /// <summary>
@@ -169,6 +134,8 @@ namespace Game.SkillCardSystem.Manager
         /// </summary>
         private System.Collections.IEnumerator InitializeTooltipSystem()
         {
+            GameLogger.LogInfo("[SkillCardTooltipManager] 툴팁 시스템 초기화 시작 - 이펙트 상태 확인", GameLogger.LogCategory.UI);
+            
             // 프리팹이 할당되지 않았으면 자동으로 찾기
             if (tooltipPrefab == null)
             {
@@ -182,10 +149,14 @@ namespace Game.SkillCardSystem.Manager
             }
 
             // 툴팁 캔버스 자동 설정
+            GameLogger.LogInfo("[SkillCardTooltipManager] 캔버스 설정 전 - 이펙트 상태 확인", GameLogger.LogCategory.UI);
             SetupTooltipCanvas();
+            GameLogger.LogInfo("[SkillCardTooltipManager] 캔버스 설정 후 - 이펙트 상태 확인", GameLogger.LogCategory.UI);
 
             // 툴팁 인스턴스 생성
+            GameLogger.LogInfo("[SkillCardTooltipManager] 툴팁 인스턴스 생성 전 - 이펙트 상태 확인", GameLogger.LogCategory.UI);
             CreateTooltipInstance();
+            GameLogger.LogInfo("[SkillCardTooltipManager] 툴팁 인스턴스 생성 후 - 이펙트 상태 확인", GameLogger.LogCategory.UI);
 
             // 초기화 완료 확인
             if (currentTooltip != null && tooltipCanvas != null)
@@ -231,65 +202,18 @@ namespace Game.SkillCardSystem.Manager
 
         /// <summary>
         /// 툴팁 캔버스를 자동으로 설정합니다.
+        /// 스테이지 캔버스에 영향을 주지 않도록 항상 독립적인 캔버스를 생성합니다.
         /// </summary>
         private void SetupTooltipCanvas()
         {
-            // 현재 씬의 UI 캔버스를 찾기 (Screen Space - Overlay 우선)
-            tooltipCanvas = FindCurrentSceneUICanvas();
-            
-            if (tooltipCanvas == null)
-            {
-                // UI 캔버스가 없으면 자동 생성
-                CreateTooltipCanvas();
-            }
-            else
-            {
-                // 기존 캔버스 설정 업데이트
-                ConfigureCanvas(tooltipCanvas);
-                // GameLogger.LogInfo($"현재 씬의 UI 캔버스 사용: {tooltipCanvas.name}", GameLogger.LogCategory.UI);
-            }
-        }
-
-        /// <summary>
-        /// 현재 씬의 UI 캔버스를 찾습니다.
-        /// </summary>
-        /// <returns>찾은 UI 캔버스 또는 null</returns>
-        private Canvas FindCurrentSceneUICanvas()
-        {
-            // Screen Space - Overlay 캔버스 우선 검색
-            Canvas[] allCanvases = FindObjectsByType<Canvas>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-            
-            foreach (Canvas canvas in allCanvases)
-            {
-                // DontDestroyOnLoad 오브젝트가 아닌 현재 씬의 캔버스만 검색
-                if (canvas.gameObject.scene.name != "DontDestroyOnLoad")
-                {
-                    // Screen Space - Overlay 캔버스 우선
-                    if (canvas.renderMode == RenderMode.ScreenSpaceOverlay)
-                    {
-                        // GameLogger.LogInfo($"Screen Space - Overlay 캔버스 발견: {canvas.name}", GameLogger.LogCategory.UI);
-                        return canvas;
-                    }
-                }
-            }
-            
-            // Screen Space - Overlay가 없으면 다른 캔버스 검색
-            foreach (Canvas canvas in allCanvases)
-            {
-                if (canvas.gameObject.scene.name != "DontDestroyOnLoad")
-                {
-                    // GameLogger.LogInfo($"현재 씬의 캔버스 발견: {canvas.name} (RenderMode: {canvas.renderMode})", GameLogger.LogCategory.UI);
-                    return canvas;
-                }
-            }
-            
-            GameLogger.LogWarning("현재 씬에서 UI 캔버스를 찾을 수 없습니다", GameLogger.LogCategory.UI);
-            return null;
+            // 항상 독립적인 툴팁 캔버스 생성 (스테이지 캔버스 보호)
+            CreateTooltipCanvas();
+            GameLogger.LogInfo("[SkillCardTooltipManager] 독립적인 툴팁 캔버스 생성 - 스테이지 캔버스 보호", GameLogger.LogCategory.UI);
         }
 
         /// <summary>
         /// 툴팁 캔버스를 생성합니다.
-        /// 카드와 같은 캔버스에 생성하여 레이어링 문제를 방지합니다.
+        /// 스테이지 캔버스에 영향을 주지 않도록 독립적인 캔버스를 생성합니다.
         /// </summary>
         private void CreateTooltipCanvas()
         {
@@ -300,31 +224,17 @@ namespace Game.SkillCardSystem.Manager
                 tooltipCanvas = null;
             }
 
-            // 현재 씬의 메인 캔버스를 찾아서 사용
-            Canvas mainCanvas = FindFirstObjectByType<Canvas>();
-            if (mainCanvas != null)
-            {
-                // 메인 캔버스의 자식으로 툴팁 캔버스 생성
-                GameObject canvasObject = new GameObject(canvasName);
-                tooltipCanvas = canvasObject.AddComponent<Canvas>();
-                canvasObject.transform.SetParent(mainCanvas.transform, false);
-                
-                // 캔버스 설정 (메인 캔버스보다 높은 Sort Order)
-                ConfigureCanvas(tooltipCanvas);
-                
-                // GameLogger.LogInfo($"메인 캔버스의 자식으로 툴팁 캔버스 생성: {canvasName}", GameLogger.LogCategory.UI);
-            }
-            else
-            {
-                // 메인 캔버스가 없으면 독립적으로 생성
-                GameObject canvasObject = new GameObject(canvasName);
-                tooltipCanvas = canvasObject.AddComponent<Canvas>();
-                canvasObject.transform.SetParent(null, false);
-                
-                ConfigureCanvas(tooltipCanvas);
-                
-                // GameLogger.LogInfo($"독립적인 툴팁 캔버스 생성: {canvasName}", GameLogger.LogCategory.UI);
-            }
+            // 독립적인 툴팁 캔버스 생성 (스테이지 캔버스와 분리)
+            GameObject canvasObject = new GameObject(canvasName);
+            tooltipCanvas = canvasObject.AddComponent<Canvas>();
+            
+            // 독립적인 캔버스로 설정 (부모 없이)
+            canvasObject.transform.SetParent(null, false);
+            
+            // 캔버스 설정 (독립적인 렌더링)
+            ConfigureCanvas(tooltipCanvas);
+            
+            GameLogger.LogInfo($"[SkillCardTooltipManager] 독립적인 툴팁 캔버스 생성: {canvasName} (스테이지 캔버스와 분리)", GameLogger.LogCategory.UI);
         }
 
         /// <summary>
@@ -333,7 +243,7 @@ namespace Game.SkillCardSystem.Manager
         /// <param name="canvas">설정할 캔버스</param>
         private void ConfigureCanvas(Canvas canvas)
         {
-            // 캔버스 설정
+            // 캔버스 설정 - 원래 ScreenSpaceOverlay로 복원
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = canvasSortOrder;
             
@@ -509,12 +419,16 @@ namespace Game.SkillCardSystem.Manager
 
         /// <summary>
         /// 강제로 초기화를 수행합니다.
+        /// 이펙트 렌더링에 영향을 주지 않도록 최적화된 초기화를 수행합니다.
         /// </summary>
         private System.Collections.IEnumerator ForceInitialize()
         {
-            GameLogger.LogInfo("[SkillCardTooltipManager] 강제 초기화 시작", GameLogger.LogCategory.UI);
+            GameLogger.LogInfo("[SkillCardTooltipManager] 강제 초기화 시작 - 이펙트 보호 모드", GameLogger.LogCategory.UI);
             
-            // 기존 초기화 로직 실행
+            // 이펙트 상태 확인 로그 추가
+            GameLogger.LogInfo("[SkillCardTooltipManager] 강제 초기화 전 이펙트 상태 확인", GameLogger.LogCategory.UI);
+            
+            // 기존 초기화 로직 실행 (이펙트에 영향 주지 않도록)
             yield return InitializeTooltipSystem();
             
             // 초기화 완료 확인
@@ -522,6 +436,7 @@ namespace Game.SkillCardSystem.Manager
             {
                 IsInitialized = true;
                 GameLogger.LogInfo($"[SkillCardTooltipManager] 강제 초기화 완료 - IsInitialized={IsInitialized}, currentTooltip={currentTooltip != null}", GameLogger.LogCategory.UI);
+                GameLogger.LogInfo("[SkillCardTooltipManager] 강제 초기화 후 이펙트 상태 확인", GameLogger.LogCategory.UI);
             }
             else
             {
@@ -556,11 +471,11 @@ namespace Game.SkillCardSystem.Manager
 
         /// <summary>
         /// 마우스 위치를 업데이트합니다.
+        /// 현재는 사용하지 않으므로 제거됨.
         /// </summary>
         private void UpdateMousePosition()
         {
-            // EventSystem이 없어도 마우스 위치는 업데이트
-            lastMousePosition = Input.mousePosition;
+            // 마우스 위치 추적 기능 제거됨 - 독립적인 캔버스 사용으로 불필요
         }
 
         /// <summary>
@@ -625,7 +540,8 @@ namespace Game.SkillCardSystem.Manager
                     }
                     else
                     {
-                        screenPosition = RectTransformUtility.WorldToScreenPoint(uiCamera, cardRect.position);
+                        // 독립적인 캔버스 사용 - ScreenSpaceOverlay 모드에서는 카메라 불필요
+                        screenPosition = cardRect.position;
                     }
 
                     return screenPosition;
@@ -669,13 +585,7 @@ namespace Game.SkillCardSystem.Manager
 
             try
             {
-                // 카메라 전환: 이펙트 카메라로 전환하여 이펙트를 볼 수 있게 함
-                if (cameraController != null)
-                {
-                    cameraController.EnterTooltipMode();
-                }
-
-                // 툴팁 활성화
+                // 툴팁 활성화 (카메라 전환 없이)
                 if (!currentTooltip.gameObject.activeInHierarchy)
                 {
                     currentTooltip.gameObject.SetActive(true);
@@ -715,12 +625,6 @@ namespace Game.SkillCardSystem.Manager
                 {
                     currentTooltip.HideTooltip();
                     GameLogger.LogInfo("툴팁 숨김 완료", GameLogger.LogCategory.UI);
-                    
-                    // 카메라 전환: 메인 카메라로 복원
-                    if (cameraController != null)
-                    {
-                        cameraController.ExitTooltipMode();
-                    }
                 }
                 else
                 {

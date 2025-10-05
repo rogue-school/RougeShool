@@ -88,8 +88,6 @@ namespace Game.SkillCardSystem.UI
 
         private CanvasGroup canvasGroup;
         private RectTransform rectTransform;
-        private Canvas parentCanvas;
-        private Camera uiCamera;
         
         private Tween fadeTween;
         private bool isVisible = false;
@@ -139,6 +137,7 @@ namespace Game.SkillCardSystem.UI
 
         /// <summary>
         /// 컴포넌트들을 초기화합니다.
+        /// 독립적인 툴팁 캔버스를 사용하므로 부모 캔버스 참조를 제거합니다.
         /// </summary>
         private void InitializeComponents()
         {
@@ -149,17 +148,10 @@ namespace Game.SkillCardSystem.UI
             }
 
             rectTransform = GetComponent<RectTransform>();
-            parentCanvas = GetComponentInParent<Canvas>();
-
-            if (parentCanvas != null)
-            {
-                uiCamera = parentCanvas.worldCamera;
-                // GameLogger.LogInfo($"[SkillCardTooltip] 부모 캔버스 설정: {parentCanvas.name} (씬: {parentCanvas.gameObject.scene.name})", GameLogger.LogCategory.UI);
-            }
-            else
-            {
-                GameLogger.LogWarning("[SkillCardTooltip] 부모 캔버스를 찾을 수 없습니다", GameLogger.LogCategory.UI);
-            }
+            
+            // 독립적인 툴팁 캔버스 사용
+            
+            GameLogger.LogInfo("[SkillCardTooltip] 독립적인 툴팁 캔버스 사용 - 부모 캔버스 참조 제거", GameLogger.LogCategory.UI);
 
             // 프리팹 구조를 존중하기 위해 레이아웃 컴포넌트 자동 추가 제거
 
@@ -894,7 +886,7 @@ namespace Game.SkillCardSystem.UI
         /// <param name="cardPosition">스킬카드의 위치</param>
         private void UpdateTooltipPosition(Vector2 cardPosition)
         {
-            if (rectTransform == null || parentCanvas == null) return;
+            if (rectTransform == null) return;
 
             // 고정된 툴팁은 위치를 업데이트하지 않음
             if (isFixed)
@@ -905,9 +897,9 @@ namespace Game.SkillCardSystem.UI
 
             // 스킬카드 위치를 캔버스 로컬 좌표로 변환
             Vector2 cardLocalPoint;
-            Camera cameraToUse = (parentCanvas.renderMode == RenderMode.ScreenSpaceOverlay) ? null : uiCamera;
+            Camera cameraToUse = null; // ScreenSpaceOverlay 모드 사용
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                parentCanvas.transform as RectTransform,
+                rectTransform.parent as RectTransform, // 부모 RectTransform 사용
                 cardPosition,
                 cameraToUse,
                 out cardLocalPoint);
@@ -928,9 +920,9 @@ namespace Game.SkillCardSystem.UI
         /// <returns>툴팁의 로컬 좌표</returns>
         private Vector2 CalculateTooltipPositionRelativeToCard(Vector2 cardLocalPoint)
         {
-            if (parentCanvas == null) return cardLocalPoint;
+            if (rectTransform == null) return cardLocalPoint;
 
-            var canvasRect = parentCanvas.GetComponent<RectTransform>().rect;
+            var canvasRect = rectTransform.parent.GetComponent<RectTransform>().rect;
             var tooltipRect = rectTransform.rect;
 
             // 툴팁의 실제 크기 (프리팹 크기: 600x600)
@@ -1001,9 +993,9 @@ namespace Game.SkillCardSystem.UI
         /// <returns>오프셋이 적용된 좌표</returns>
         private Vector2 ApplySmartOffset(Vector2 localPoint, Vector2 mousePosition)
         {
-            if (parentCanvas == null) return localPoint;
+            if (rectTransform == null) return localPoint;
 
-            var canvasRect = parentCanvas.GetComponent<RectTransform>().rect;
+            var canvasRect = rectTransform.parent.GetComponent<RectTransform>().rect;
             var tooltipRect = rectTransform.rect;
 
             // 툴팁의 실제 크기 계산 (Layout 시스템이 적용된 후)
@@ -1073,9 +1065,9 @@ namespace Game.SkillCardSystem.UI
         /// <returns>제한된 위치</returns>
         private Vector2 ClampToScreenBounds(Vector2 position)
         {
-            if (parentCanvas == null) return position;
+            if (rectTransform == null) return position;
 
-            var canvasRect = parentCanvas.GetComponent<RectTransform>().rect;
+            var canvasRect = rectTransform.parent.GetComponent<RectTransform>().rect;
             var tooltipRect = rectTransform.rect;
 
             // X축 제한
@@ -1268,10 +1260,10 @@ namespace Game.SkillCardSystem.UI
         /// <param name="triggerPosition">트리거된 UI 요소의 위치</param>
         private void CreateSubTooltip(EffectData effectData, Vector2 triggerPosition)
         {
-            if (subTooltipPrefab == null || parentCanvas == null) return;
+            if (subTooltipPrefab == null) return;
 
             // 서브 툴팁 생성
-            currentSubTooltip = Instantiate(subTooltipPrefab, parentCanvas.transform);
+            currentSubTooltip = Instantiate(subTooltipPrefab, rectTransform.parent);
             
             // 서브 툴팁 컴포넌트 설정
             var subTooltipComponent = currentSubTooltip.GetComponent<SubTooltipComponent>();
@@ -1336,8 +1328,6 @@ namespace Game.SkillCardSystem.UI
 
             private CanvasGroup canvasGroup;
             private RectTransform rectTransform;
-            private Canvas parentCanvas;
-            private Camera uiCamera;
             private Tween fadeTween;
 
             /// <summary>
@@ -1367,12 +1357,7 @@ namespace Game.SkillCardSystem.UI
                 }
 
                 rectTransform = GetComponent<RectTransform>();
-                parentCanvas = GetComponentInParent<Canvas>();
-                
-                if (parentCanvas != null)
-                {
-                    uiCamera = parentCanvas.worldCamera;
-                }
+                // 독립적인 캔버스 사용
 
                 // 초기 상태 설정
                 canvasGroup.alpha = 0f;
@@ -1559,14 +1544,14 @@ namespace Game.SkillCardSystem.UI
             /// <param name="triggerPosition">트리거된 UI 요소의 위치</param>
             private void UpdatePosition(Vector2 triggerPosition)
             {
-                if (rectTransform == null || parentCanvas == null) return;
+                if (rectTransform == null) return;
 
                 // 트리거 위치를 캔버스 로컬 좌표로 변환
                 Vector2 localPoint;
                 RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    parentCanvas.transform as RectTransform,
+                    rectTransform.parent as RectTransform, // 부모 RectTransform 사용
                     triggerPosition,
-                    uiCamera,
+                    null, // ScreenSpaceOverlay 모드에서는 카메라 불필요
                     out localPoint);
 
                 // 서브 툴팁을 메인 툴팁의 오른쪽에 배치
@@ -1585,9 +1570,9 @@ namespace Game.SkillCardSystem.UI
             /// <returns>제한된 위치</returns>
             private Vector2 ClampToScreenBounds(Vector2 position)
             {
-                if (parentCanvas == null) return position;
+                if (rectTransform == null) return position;
 
-                var canvasRect = parentCanvas.GetComponent<RectTransform>().rect;
+                var canvasRect = rectTransform.parent.GetComponent<RectTransform>().rect;
                 var tooltipRect = rectTransform.rect;
 
                 // 툴팁의 피벗이 중앙(0.5, 0.5)이라고 가정

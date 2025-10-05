@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 8692525994025078156}
   - component: {fileID: 526178239447942093}
   - component: {fileID: 4786667246106433299}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: up
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -27,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 3260626789342890588}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.7071068, z: 0.7071068, w: 0}
-  m_LocalPosition: {x: 859.36, y: 918.08057, z: -0}
+  m_LocalPosition: {x: 0, y: 0, z: -0}
   m_LocalScale: {x: 1.5000001, y: 1.5, z: 1.5}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -4867,8 +4867,8 @@ ParticleSystemRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: -1189648105
-  m_SortingLayer: 2
+  m_SortingLayerID: 1068465481
+  m_SortingLayer: 1
   m_SortingOrder: 0
   m_RenderMode: 0
   m_MeshDistribution: 0
@@ -4913,7 +4913,7 @@ GameObject:
   - component: {fileID: 1776566186070539968}
   - component: {fileID: 7410973840583700664}
   - component: {fileID: 4772256667062715102}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: MagicDust
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -9767,8 +9767,8 @@ ParticleSystemRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: -1189648105
-  m_SortingLayer: 2
+  m_SortingLayerID: 1068465481
+  m_SortingLayer: 1
   m_SortingOrder: 0
   m_RenderMode: 0
   m_MeshDistribution: 0
@@ -9813,7 +9813,7 @@ GameObject:
   - component: {fileID: 23251243063602567}
   - component: {fileID: 5242340065085383023}
   - component: {fileID: 1127981807672699228}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: CenterGlow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -14658,8 +14658,8 @@ ParticleSystemRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: -1189648105
-  m_SortingLayer: 2
+  m_SortingLayerID: 1068465481
+  m_SortingLayer: 1
   m_SortingOrder: 0
   m_RenderMode: 0
   m_MeshDistribution: 0

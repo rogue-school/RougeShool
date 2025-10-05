@@ -166,13 +166,13 @@ namespace Game.SkillCardSystem.Runtime
                             }
                         }
                         
-                        // 가드 효과의 커스텀 설정을 반영
-                        if (effectConfig.effectSO is GuardEffectSO)
+                        // 가드 효과의 커스텀 설정을 반영 (SO를 통해 생성하여 VFX 프리팹 전달 보장)
+                        if (effectConfig.effectSO is GuardEffectSO guardEffectSO)
                         {
                             if (effectConfig.useCustomSettings && customSettings != null)
                             {
-                                // 커스텀 가드 지속 시간 사용
-                                var guardCommand = new GuardEffectCommand(customSettings.guardDuration);
+                                // 커스텀 가드 지속 시간 사용하되 VFX 프리팹은 SO에서 가져오기
+                                var guardCommand = new GuardEffectCommand(customSettings.guardDuration, guardEffectSO.visualEffectPrefab);
                                 effectCommands.Add(guardCommand);
                                 continue;
                             }

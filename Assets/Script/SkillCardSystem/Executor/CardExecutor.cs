@@ -235,14 +235,58 @@ namespace Game.SkillCardSystem.Executor
 
         /// <summary>
         /// 이펙트를 투영할 카메라를 반환합니다. 우선순위: 이름 "EffectsCamera" → Camera.main → 첫 번째 활성 카메라
+        /// 이펙트 카메라가 없어도 메인 카메라에서 이펙트가 보이도록 보장합니다.
         /// </summary>
         private static Camera GetEffectsCamera()
         {
             var go = GameObject.Find("EffectsCamera");
             if (go != null && go.TryGetComponent<Camera>(out var camByName)) return camByName;
-            if (Camera.main != null) return Camera.main;
+            
+            // 이펙트 카메라가 없으면 메인 카메라 사용 (폴백)
+            if (Camera.main != null) 
+            {
+                // 메인 카메라가 Effects 레이어를 렌더링하도록 보장
+                EnsureMainCameraRendersEffects(Camera.main);
+                return Camera.main;
+            }
+            
             var cams = GameObject.FindObjectsByType<Camera>(FindObjectsSortMode.None);
-            return cams != null && cams.Length > 0 ? cams[0] : null;
+            if (cams != null && cams.Length > 0)
+            {
+                // 첫 번째 카메라도 Effects 레이어를 렌더링하도록 보장
+                EnsureMainCameraRendersEffects(cams[0]);
+                return cams[0];
+            }
+            
+            return null;
+        }
+        
+        /// <summary>
+        /// 메인 카메라가 Effects 레이어를 렌더링하도록 보장합니다.
+        /// </summary>
+        private static void EnsureMainCameraRendersEffects(Camera camera)
+        {
+            if (camera == null) return;
+            
+            // Effects 레이어가 포함되도록 Culling Mask 설정
+            int effectsLayer = LayerMask.NameToLayer("Effects");
+            if (effectsLayer != -1)
+            {
+                // 현재 Culling Mask에 Effects 레이어 추가
+                int currentMask = camera.cullingMask;
+                int effectsLayerMask = 1 << effectsLayer;
+                
+                if ((currentMask & effectsLayerMask) == 0)
+                {
+                    camera.cullingMask = currentMask | effectsLayerMask;
+                    GameLogger.LogInfo($"[CardExecutor] {camera.name}에 Effects 레이어 추가: {camera.cullingMask}", GameLogger.LogCategory.SkillCard);
+                }
+            }
+            else
+            {
+                GameLogger.LogWarning("[CardExecutor] Effects 레이어를 찾을 수 없습니다. 모든 레이어를 렌더링합니다.", GameLogger.LogCategory.SkillCard);
+                camera.cullingMask = -1; // 모든 레이어 렌더링
+            }
         }
     }
 }
