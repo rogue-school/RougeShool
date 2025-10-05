@@ -11,6 +11,7 @@ using Game.CoreSystem.Utility;
 using Game.SkillCardSystem.Effect; // Heal/Guard 식별을 위해 추가
 using Game.VFXSystem.Manager;
 using Zenject;
+using UnityEngine.UI;
 
 namespace Game.SkillCardSystem.Executor
 {
@@ -210,27 +211,120 @@ namespace Game.SkillCardSystem.Executor
 
         /// <summary>
         /// 주어진 트랜스폼의 시각적 중앙 월드 좌표를 반환합니다.
-        /// RectTransform이면 WorldCorners 기반 중앙, 아니면 Transform.position을 사용합니다.
+        /// RectTransform/SpriteRenderer가 있으면 그 시각적 중심을 사용하고,
+        /// 없으면 Transform.position을 사용합니다.
         /// </summary>
         private static Vector3 GetCenterWorldPosition(Transform t)
         {
             if (t == null) return Vector3.zero;
+
+            // 0) 우선 정확하게 'Portrait' 라는 이름의 Image를 찾는다
+            var portraitImage = FindPortraitImage(t);
+            if (portraitImage != null)
+            {
+                return GetRectTransformCenterInEffectsCamera(portraitImage.rectTransform);
+            }
+
+            // 1) 우선 자식들 중 포트레잇 후보를 탐색하여 중앙을 계산
+            //    - 이름 힌트("Portrait", "PortraitRoot", "CharacterPortrait")
+            //    - 전용 컴포넌트 이름(있다면) "CharacterPortrait"
+            //    - SpriteRenderer가 있으면 bounds.center 사용
+            //    - RectTransform이 있으면 월드 코너 중앙 사용
+            Transform portraitTransform = null;
+
+            // 이름 기반 탐색
+            portraitTransform = t.Find("Portrait") ?? t.Find("PortraitRoot") ?? t.Find("CharacterPortrait");
+
+            // 전용 컴포넌트 이름 기반 탐색 (리플렉션 비용을 피하기 위해 GetComponent(string) 대신 TryGetComponent를 순회로 대체)
+            if (portraitTransform == null)
+            {
+                // SpriteRenderer 우선 탐색
+                var sprite = t.GetComponentInChildren<SpriteRenderer>(true);
+                if (sprite != null)
+                {
+                    return sprite.bounds.center;
+                }
+            }
+
+            // RectTransform 우선 탐색
+            if (portraitTransform == null)
+            {
+                var firstRect = t.GetComponentInChildren<RectTransform>(true);
+                if (firstRect != null)
+                {
+                    return GetRectTransformCenterInEffectsCamera(firstRect);
+                }
+            }
+
+            // 명시적 포트레잇 트랜스폼이 있으면 해당 중앙 반환
+            if (portraitTransform != null)
+            {
+                var portraitRect = portraitTransform as RectTransform;
+                if (portraitRect != null)
+                {
+                    return GetRectTransformCenterInEffectsCamera(portraitRect);
+                }
+
+                var childSprite = portraitTransform.GetComponentInChildren<SpriteRenderer>(true);
+                if (childSprite != null)
+                {
+                    return childSprite.bounds.center;
+                }
+
+                // 일반 트랜스폼이면 그 위치 사용
+                return portraitTransform.position;
+            }
+
+            // 2) 현재 트랜스폼이 RectTransform이면 중앙 계산
             if (t is RectTransform rt)
             {
-                var corners = new Vector3[4];
-                rt.GetWorldCorners(corners);
-                var centerWorld = (corners[0] + corners[2]) * 0.5f;
-
-                // 이펙트 카메라 기준 z를 일치시켜 투영 오류 방지
-                var effectsCam = GetEffectsCamera();
-                if (effectsCam == null) return centerWorld;
-
-                // 1) 현재 월드 중심을 이펙트 카메라의 스크린 좌표로 투영
-                var screenByEffects = effectsCam.WorldToScreenPoint(centerWorld);
-                // 2) 동일 x,y, 동일 z로 역투영 → 해당 카메라의 깊이 평면에 정확히 위치
-                return effectsCam.ScreenToWorldPoint(screenByEffects);
+                return GetRectTransformCenterInEffectsCamera(rt);
             }
+
+            // 3) 마지막 폴백: Transform.position
             return t.position;
+        }
+
+        /// <summary>
+        /// 캐릭터 하위에서 이름이 'Portrait' 인 Image를 우선적으로 찾고,
+        /// 없으면 첫 번째 Image를 반환합니다.
+        /// </summary>
+        private static Image FindPortraitImage(Transform root)
+        {
+            if (root == null) return null;
+            Image[] images = root.GetComponentsInChildren<Image>(true);
+            if (images == null || images.Length == 0) return null;
+
+            // 정확한 이름 우선
+            for (int i = 0; i < images.Length; i++)
+            {
+                if (images[i] != null && images[i].gameObject != null && images[i].gameObject.name == "Portrait")
+                {
+                    return images[i];
+                }
+            }
+
+            // 폴백: 첫 번째 Image 사용 (대부분 포트레잇이 유일)
+            return images[0];
+        }
+
+        /// <summary>
+        /// RectTransform의 월드 코너 중앙을 이펙트 카메라 깊이에 맞춰 보정하여 반환합니다.
+        /// </summary>
+        private static Vector3 GetRectTransformCenterInEffectsCamera(RectTransform rt)
+        {
+            if (rt == null) return Vector3.zero;
+
+            // 시각적 표시 영역 기준의 정확한 중앙 계산 (피벗/앵커/PreserveAspect 무관)
+            var bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(rt, rt);
+            Vector3 localCenter = bounds.center; // rt 로컬 좌표의 중앙
+            Vector3 centerWorld = rt.TransformPoint(localCenter);
+
+            var effectsCam = GetEffectsCamera();
+            if (effectsCam == null) return centerWorld;
+
+            var screenByEffects = effectsCam.WorldToScreenPoint(centerWorld);
+            return effectsCam.ScreenToWorldPoint(screenByEffects);
         }
 
         /// <summary>

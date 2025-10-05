@@ -4,6 +4,8 @@ using Game.SkillCardSystem.Interface;
 using Game.CharacterSystem.Interface;
 using Game.CoreSystem.Utility;
 using Game.VFXSystem.Manager;
+using System;
+using UnityEngine.UI;
 
 namespace Game.SkillCardSystem.Effect
 {
@@ -125,7 +127,8 @@ namespace Game.SkillCardSystem.Effect
                 return;
             }
 
-            var spawnPos = context.Source.Transform.position;
+            // 포트레잇 이미지의 정확한 중앙에서 스폰되도록 계산
+            var spawnPos = GetPortraitCenterWorldPosition(context.Source.Transform);
             GameLogger.LogInfo($"[GuardEffectCommand] 가드 VFX 생성 시작 - 프리팹: {visualEffectPrefab.name}, 위치: {spawnPos}", GameLogger.LogCategory.SkillCard);
 
             // VFXManager를 통한 이펙트 생성 (Object Pooling)
@@ -149,6 +152,65 @@ namespace Game.SkillCardSystem.Effect
                 UnityEngine.Object.Destroy(instance, 2.0f);
                 GameLogger.LogInfo("[GuardEffectCommand] 가드 VFX 2초 후 자동 제거 예약", GameLogger.LogCategory.SkillCard);
             }
+        }
+
+        /// <summary>
+        /// 캐릭터 트랜스폼 하위의 포트레잇 Image 중심(시각적 중심)을 월드 좌표로 계산합니다.
+        /// 이름이 'Portrait'인 Image를 우선 사용하고, 없으면 첫 번째 Image를 사용합니다.
+        /// Image가 없으면 RectTransform/SpriteRenderer/Transform 순으로 폴백합니다.
+        /// </summary>
+        private static Vector3 GetPortraitCenterWorldPosition(Transform root)
+        {
+            if (root == null) return Vector3.zero;
+
+            // 1) Portrait Image 우선
+            var portraitImage = FindPortraitImage(root);
+            if (portraitImage != null && portraitImage.rectTransform != null)
+            {
+                return GetRectTransformCenterWorld(portraitImage.rectTransform);
+            }
+
+            // 2) RectTransform 폴백
+            var anyRect = root.GetComponentInChildren<RectTransform>(true);
+            if (anyRect != null)
+            {
+                return GetRectTransformCenterWorld(anyRect);
+            }
+
+            // 3) SpriteRenderer 폴백
+            var sprite = root.GetComponentInChildren<SpriteRenderer>(true);
+            if (sprite != null)
+            {
+                return sprite.bounds.center;
+            }
+
+            // 4) 최종 폴백
+            return root.position;
+        }
+
+        private static Image FindPortraitImage(Transform root)
+        {
+            var images = root.GetComponentsInChildren<Image>(true);
+            if (images == null || images.Length == 0) return null;
+
+            // 정확한 이름 우선
+            for (int i = 0; i < images.Length; i++)
+            {
+                if (images[i] != null && images[i].gameObject != null && images[i].gameObject.name == "Portrait")
+                {
+                    return images[i];
+                }
+            }
+            // 폴백: 첫 번째 Image
+            return images[0];
+        }
+
+        private static Vector3 GetRectTransformCenterWorld(RectTransform rt)
+        {
+            if (rt == null) return Vector3.zero;
+            var bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(rt, rt);
+            var localCenter = bounds.center;
+            return rt.TransformPoint(localCenter);
         }
 
         private static void SetEffectLayer(GameObject effectInstance)

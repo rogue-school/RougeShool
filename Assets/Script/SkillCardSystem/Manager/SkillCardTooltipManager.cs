@@ -41,6 +41,8 @@ namespace Game.SkillCardSystem.Manager
         private SkillCardTooltip currentTooltip;
         private Canvas tooltipCanvas;
         private ISkillCard hoveredCard;
+        private ISkillCard pendingCard; // 초기화 대기 중 첫 호버 카드 저장
+        private bool pendingShow; // 초기화 완료 즉시 표시 플래그
 
         private float showTimer;
         private float hideTimer;
@@ -348,10 +350,12 @@ namespace Game.SkillCardSystem.Manager
         {
             if (card == null) return;
 
-            // 초기화가 완료되지 않았다면 즉시 초기화 시도
+            // 초기화가 완료되지 않았다면 즉시 초기화 시도 후 첫 호버를 기억하여 바로 표시
             if (!IsInitialized)
             {
-                GameLogger.LogInfo("[툴팁] 초기화 안됨 - 즉시 초기화 시도", GameLogger.LogCategory.UI);
+                GameLogger.LogInfo("[툴팁] 초기화 안됨 - 즉시 초기화 시도 (첫 호버 카드 보존)", GameLogger.LogCategory.UI);
+                pendingCard = card;
+                pendingShow = true;
                 StartCoroutine(ForceInitialize());
                 return;
             }
@@ -392,6 +396,10 @@ namespace Game.SkillCardSystem.Manager
             hoveredCard = null;
             isShowingTooltip = false;
             showTimer = 0f;
+
+            // 초기화 대기 중이던 첫 호버도 해제
+            pendingCard = null;
+            pendingShow = false;
 
             if (!isHidingTooltip)
             {
@@ -437,6 +445,42 @@ namespace Game.SkillCardSystem.Manager
                 IsInitialized = true;
                 GameLogger.LogInfo($"[SkillCardTooltipManager] 강제 초기화 완료 - IsInitialized={IsInitialized}, currentTooltip={currentTooltip != null}", GameLogger.LogCategory.UI);
                 GameLogger.LogInfo("[SkillCardTooltipManager] 강제 초기화 후 이펙트 상태 확인", GameLogger.LogCategory.UI);
+
+                // 첫 호버 즉시 표시 처리
+                if (pendingShow && pendingCard != null)
+                {
+                    try
+                    {
+                        hoveredCard = pendingCard;
+                        pendingCard = null;
+                        pendingShow = false;
+
+                        isHidingTooltip = false;
+                        hideTimer = 0f;
+                        isShowingTooltip = false;
+                        showTimer = 0f;
+
+                        if (!currentTooltip.gameObject.activeInHierarchy)
+                        {
+                            currentTooltip.gameObject.SetActive(true);
+                        }
+
+                        Vector2 cardPosition = GetCurrentCardPosition();
+                        if (cardPosition != Vector2.zero)
+                        {
+                            currentTooltip.ShowTooltip(hoveredCard, cardPosition);
+                            GameLogger.LogInfo($"[툴팁] 초기화 직후 즉시 표시: {hoveredCard.GetCardName()} at {cardPosition}", GameLogger.LogCategory.UI);
+                        }
+                        else
+                        {
+                            GameLogger.LogWarning("[툴팁] 초기화 직후 카드 위치를 찾을 수 없습니다.", GameLogger.LogCategory.UI);
+                        }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        GameLogger.LogError($"[툴팁] 초기화 직후 표시 중 오류: {ex.Message}", GameLogger.LogCategory.Error);
+                    }
+                }
             }
             else
             {
