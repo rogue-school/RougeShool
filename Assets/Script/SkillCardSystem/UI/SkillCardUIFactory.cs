@@ -105,10 +105,10 @@ namespace Game.SkillCardSystem.UI
                 }
             }
 
-            // === Raycast 설정: 플레이어 카드는 클릭 가능, 적 카드는 클릭 불가 ===
+            // === Raycast 설정: 모든 카드에서 레이캐스트 허용 (툴팁을 위해) ===
             foreach (var img in instance.GetComponentsInChildren<UnityEngine.UI.Image>())
             {
-                img.raycastTarget = card.IsFromPlayer();
+                img.raycastTarget = true; // 모든 카드에서 툴팁을 위해 레이캐스트 허용
             }
 
             return instance;

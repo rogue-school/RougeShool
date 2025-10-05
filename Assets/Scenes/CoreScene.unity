@@ -315,7 +315,6 @@ Transform:
   m_Children:
   - {fileID: 2125065709}
   - {fileID: 750615467}
-  - {fileID: 1117130369}
   - {fileID: 437189774}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -659,6 +658,7 @@ Transform:
   m_Children:
   - {fileID: 1429379592}
   - {fileID: 1571402830}
+  - {fileID: 1117130369}
   m_Father: {fileID: 288834489}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &469556108
@@ -1583,7 +1583,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 789670092}
-  m_Father: {fileID: 288834489}
+  m_Father: {fileID: 437189774}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1124059152
 GameObject:
@@ -1790,10 +1790,10 @@ MonoBehaviour:
   sceneTransitionManager: {fileID: 922812240}
   audioManager: {fileID: 1938332464}
   saveManager: {fileID: 1124059154}
+  settingsManager: {fileID: 0}
   coroutineRunner: {fileID: 789670093}
   playerCharacterSelectionManager: {fileID: 80656796}
   skillCardTooltipManager: {fileID: 1069046947}
-  tooltipClickManager: {fileID: 0}
   enableLazyInitialization: 1
   enableCircularDependencyCheck: 1
   enablePerformanceLogging: 0

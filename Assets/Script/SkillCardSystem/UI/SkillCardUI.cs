@@ -229,7 +229,7 @@ namespace Game.SkillCardSystem.UI
             if (canvasGroup != null)
             {
                 // 드래그는 플레이어 카드만 가능하지만, 툴팁을 위한 레이캐스트는 모든 카드에서 활성화
-                canvasGroup.interactable = isPlayerCard;
+                canvasGroup.interactable = true; // 모든 카드에서 상호작용 허용 (툴팁을 위해)
                 canvasGroup.blocksRaycasts = true; // 모든 카드에서 레이캐스트 허용 (툴팁을 위해)
             }
             if (TryGetComponent(out Game.CombatSystem.DragDrop.CardDragHandler dragHandler))

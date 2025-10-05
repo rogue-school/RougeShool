@@ -633,7 +633,7 @@ namespace Game.SkillCardSystem.UI
             }
             else
             {
-                GameLogger.LogWarning("[SkillCardTooltip] descriptionText가 프리팹에 할당되지 않았습니다", GameLogger.LogCategory.UI);
+                GameLogger.LogInfo("[SkillCardTooltip] descriptionText가 프리팹에 할당되지 않았습니다 - 선택적 컴포넌트", GameLogger.LogCategory.UI);
             }
         }
 
@@ -688,7 +688,7 @@ namespace Game.SkillCardSystem.UI
         {
             if (effectsContainer == null)
             {
-                GameLogger.LogWarning("[SkillCardTooltip] effectsContainer가 프리팹에 할당되지 않았습니다", GameLogger.LogCategory.UI);
+                GameLogger.LogInfo("[SkillCardTooltip] effectsContainer가 프리팹에 할당되지 않았습니다 - 선택적 컴포넌트", GameLogger.LogCategory.UI);
                 return;
             }
 
