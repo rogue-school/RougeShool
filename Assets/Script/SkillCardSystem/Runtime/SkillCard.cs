@@ -80,17 +80,35 @@ namespace Game.SkillCardSystem.Runtime
         {
             effectCommands.Clear();
             
-            // 데미지 구성이 있으면 데미지 명령 추가
+            // 데미지 구성이 있으면 데미지 명령 추가 (단, 출혈 효과가 있으면 제외)
             if (definition.configuration.hasDamage)
             {
-                var damageConfig = definition.configuration.damageConfig;
-                var damageCommand = new DamageEffectCommand(
-                    damageConfig.baseDamage,
-                    damageConfig.hits,
-                    damageConfig.ignoreGuard,
-                    damageConfig.ignoreCounter
-                );
-                effectCommands.Add(damageCommand);
+                // 출혈 효과가 있는지 확인
+                bool hasBleedEffect = false;
+                if (definition.configuration.hasEffects)
+                {
+                    foreach (var effectConfig in definition.configuration.effects)
+                    {
+                        if (effectConfig.effectSO is BleedEffectSO)
+                        {
+                            hasBleedEffect = true;
+                            break;
+                        }
+                    }
+                }
+                
+                // 출혈 효과가 없을 때만 즉시 데미지 추가
+                if (!hasBleedEffect)
+                {
+                    var damageConfig = definition.configuration.damageConfig;
+                    var damageCommand = new DamageEffectCommand(
+                        damageConfig.baseDamage,
+                        damageConfig.hits,
+                        damageConfig.ignoreGuard,
+                        damageConfig.ignoreCounter
+                    );
+                    effectCommands.Add(damageCommand);
+                }
             }
             
             // 효과 구성이 있으면 효과 명령들 추가

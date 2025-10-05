@@ -69,6 +69,14 @@ namespace Game.CombatSystem.State
 
             _isMoving = true;
 
+            // 소환/복귀 체크 (슬롯 이동 전에 즉시 체크)
+            if (CheckForSummonOrReturn(context))
+            {
+                LogStateTransition("소환/복귀 감지 - 슬롯 이동 중단하고 즉시 상태 전환");
+                _isMoving = false;
+                yield break;
+            }
+
             // SlotMovementController의 슬롯 전진 처리 호출
             if (context?.SlotMovement != null)
             {
@@ -212,21 +220,36 @@ namespace Game.CombatSystem.State
         }
 
         /// <summary>
-        /// 소환/복귀 체크 (안전한 시점에만 체크)
+        /// 소환/복귀 체크 (즉시 체크하여 상태 전환)
         /// </summary>
         private bool CheckForSummonOrReturn(CombatStateContext context)
         {
-            // CombatStateMachine의 안전한 체크 메서드 사용
-            context.StateMachine?.CheckSummonTriggerAtSafePoint();
+            LogStateTransition("소환/복귀 트리거 즉시 체크 시작");
 
-            // 소환 상태로 전환되었는지 확인
-            var currentState = context.StateMachine?.GetCurrentState();
-            if (currentState is SummonState || currentState is SummonReturnState)
+            // StageManager에서 소환 플래그 직접 확인
+            var stageManager = UnityEngine.Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
+            if (stageManager != null && stageManager.IsSummonedEnemyActive())
             {
-                LogStateTransition("소환/복귀 상태 전환 감지");
-                return true;
+                LogStateTransition("소환 트리거 감지 - 즉시 SummonState로 전환");
+                
+                // 소환 데이터 가져오기
+                var summonData = stageManager.GetSummonTarget();
+                var originalHP = stageManager.GetOriginalEnemyHP();
+
+                if (summonData != null)
+                {
+                    // 즉시 SummonState로 전환
+                    var summonState = new SummonState(summonData, originalHP);
+                    RequestTransition(context, summonState);
+                    return true;
+                }
+                else
+                {
+                    LogError("소환 대상 데이터가 없습니다");
+                }
             }
 
+            LogStateTransition("소환 트리거 없음 - 정상 진행");
             return false;
         }
 

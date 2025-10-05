@@ -99,7 +99,7 @@ namespace Game.CombatSystem.State
             {
                 LogStateTransition("소환/복귀 모드 - 슬롯 및 핸드 정리");
 
-                // 슬롯 및 핸드 정리
+                // 슬롯 및 핸드 정리 (중복 정리 방지를 위해 조건부 실행)
                 yield return context.StateMachine.StartCoroutine(CleanupForSummon(context));
 
                 // 소환 모드 설정
@@ -139,33 +139,59 @@ namespace Game.CombatSystem.State
         /// </summary>
         private IEnumerator CleanupForSummon(CombatStateContext context)
         {
-            // 플레이어 핸드 카드 제거
+            LogStateTransition("=== 소환/복귀 모드 정리 시작 ===");
+
+            // 1. 플레이어 핸드 카드 제거
             if (context.HandManager != null)
             {
+                LogStateTransition("플레이어 핸드 카드 제거 시작");
                 context.HandManager.ClearAll();
                 LogStateTransition("플레이어 핸드 카드 제거 완료");
             }
+            else
+            {
+                LogStateTransition("HandManager가 null입니다 - 핸드 정리 건너뜀");
+            }
 
-            // 전투/대기 슬롯 정리
+            // 2. 전투/대기 슬롯 정리
             if (context.SlotRegistry != null)
             {
+                LogStateTransition("전투/대기 슬롯 정리 시작");
                 context.SlotRegistry.ClearAllSlots();
                 LogStateTransition("전투/대기 슬롯 정리 완료");
             }
+            else
+            {
+                LogStateTransition("SlotRegistry가 null입니다 - 슬롯 정리 건너뜀");
+            }
 
-            // 적 캐시 초기화
+            // 3. 적 캐시 초기화
             if (context.SlotMovement != null)
             {
+                LogStateTransition("적 캐시 초기화 시작");
                 context.SlotMovement.ClearEnemyCache();
                 LogStateTransition("적 캐시 초기화 완료");
             }
+            else
+            {
+                LogStateTransition("SlotMovement가 null입니다 - 캐시 초기화 건너뜀");
+            }
 
-            // 슬롯 상태 리셋
+            // 4. 슬롯 상태 리셋
             if (context.SlotMovement != null)
             {
+                LogStateTransition("슬롯 상태 리셋 시작");
                 context.SlotMovement.ResetSlotStates();
                 LogStateTransition("슬롯 상태 리셋 완료");
             }
+            else
+            {
+                LogStateTransition("SlotMovement가 null입니다 - 상태 리셋 건너뜀");
+            }
+
+            // 5. 추가 안정화 대기
+            yield return new WaitForSeconds(0.1f);
+            LogStateTransition("=== 소환/복귀 모드 정리 완료 ===");
 
             yield return null;
         }

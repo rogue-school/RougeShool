@@ -81,22 +81,34 @@ namespace Game.SkillCardSystem.UI
                 cg = instance.gameObject.AddComponent<UnityEngine.CanvasGroup>();
             }
 
-            // CardDragHandler가 없으면 추가
-            if (!instance.TryGetComponent<CardDragHandler>(out var dragHandler))
+            // CardDragHandler는 플레이어 카드에만 추가 (적 카드는 드래그 불가)
+            if (card.IsFromPlayer())
             {
-                dragHandler = instance.gameObject.AddComponent<CardDragHandler>();
+                if (!instance.TryGetComponent<CardDragHandler>(out var dragHandler))
+                {
+                    dragHandler = instance.gameObject.AddComponent<CardDragHandler>();
+                }
+
+                if (dragHandler != null)
+                {
+                    // CombatSlotManager 제거됨 - Inject 메서드 호출 제거
+                    dragHandler.Inject();
+                }
+            }
+            else
+            {
+                // 적 카드의 경우 기존 CardDragHandler 제거 (있다면)
+                var existingDragHandler = instance.GetComponent<CardDragHandler>();
+                if (existingDragHandler != null)
+                {
+                    Object.DestroyImmediate(existingDragHandler);
+                }
             }
 
-            if (dragHandler != null)
-            {
-                // CombatSlotManager 제거됨 - Inject 메서드 호출 제거
-                dragHandler.Inject();
-            }
-
-            // === Raycast 설정: 기본적으로 클릭 가능해야 함 ===
+            // === Raycast 설정: 플레이어 카드는 클릭 가능, 적 카드는 클릭 불가 ===
             foreach (var img in instance.GetComponentsInChildren<UnityEngine.UI.Image>())
             {
-                img.raycastTarget = true;
+                img.raycastTarget = card.IsFromPlayer();
             }
 
             return instance;
