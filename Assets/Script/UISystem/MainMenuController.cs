@@ -24,13 +24,15 @@ namespace Game.UISystem
     public class MainMenuController : MonoBehaviour
     {
         #region 의존성 주입
-        
+
         [Inject] private IGameStateManager gameStateManager;
         [Inject] private ISaveManager saveManager;
         [Inject] private IPlayerCharacterSelectionManager playerCharacterSelectionManager;
-        
+        [Inject(Optional = true)] private ISceneTransitionManager sceneTransitionManager;
+        [Inject(Optional = true)] private Game.CoreSystem.Audio.AudioManager audioManager;
+
         // 선택 캐릭터 공유 SO 제거됨
-        
+
         #endregion
         
         #region Inspector 필드
@@ -145,6 +147,9 @@ namespace Game.UISystem
             
             // 초기 애니메이션
             PlayInitialAnimation();
+            
+            // DI 주입 상태 확인
+            GameLogger.LogInfo($"[MainMenuController] DI 주입 상태 - SceneTransitionManager: {(sceneTransitionManager != null ? "성공" : "실패")}", GameLogger.LogCategory.UI);
             
             GameLogger.LogInfo("[MainMenuController] 초기화 완료", GameLogger.LogCategory.UI);
         }
@@ -474,12 +479,11 @@ namespace Game.UISystem
                 // 이어하기 플래그 설정
                 PlayerPrefs.SetInt("RESUME_REQUESTED", 1);
                 PlayerPrefs.Save();
-                
-                // 스테이지 씬으로 전환
-                var sceneLoader = FindFirstObjectByType<Game.CoreSystem.Manager.SceneTransitionManager>();
-                if (sceneLoader != null)
+
+                // 스테이지 씬으로 전환 (DI 주입)
+                if (sceneTransitionManager != null)
                 {
-                    await sceneLoader.TransitionToStageScene();
+                    await sceneTransitionManager.TransitionToStageScene();
                     
                     // 스테이지 진행 상황 복원
                     bool loadSuccess = await saveManager.LoadStageProgress();
@@ -617,17 +621,32 @@ namespace Game.UISystem
                 // 선택된 캐릭터 정보 저장 (폴백용)
                 PlayerPrefs.SetString("SELECTED_CHARACTER_TYPE", startCharacter.CharacterType.ToString());
                 PlayerPrefs.Save();
+
+                // 스테이지 씬으로 전환 (DI 주입 또는 직접 찾기)
+                ISceneTransitionManager transitionManager = sceneTransitionManager;
                 
-                // 스테이지 씬으로 전환
-                var sceneLoader = FindFirstObjectByType<Game.CoreSystem.Manager.SceneTransitionManager>();
-                if (sceneLoader != null)
+                if (transitionManager == null)
                 {
-                    await sceneLoader.TransitionToStageScene();
+                    GameLogger.LogWarning("[MainMenuController] DI 주입된 SceneTransitionManager가 null입니다. 직접 찾아서 사용합니다.", GameLogger.LogCategory.UI);
+                    
+                    // 직접 찾아서 사용
+                    var foundTransitionManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Manager.SceneTransitionManager>();
+                    if (foundTransitionManager != null)
+                    {
+                        transitionManager = foundTransitionManager;
+                        GameLogger.LogInfo($"[MainMenuController] SceneTransitionManager를 직접 찾았습니다. 이름: {foundTransitionManager.name}", GameLogger.LogCategory.UI);
+                    }
+                }
+                
+                if (transitionManager != null)
+                {
+                    GameLogger.LogInfo("[MainMenuController] SceneTransitionManager 발견됨, 스테이지 씬으로 전환 시작", GameLogger.LogCategory.UI);
+                    await transitionManager.TransitionToStageScene();
                     GameLogger.LogInfo("[MainMenuController] 스테이지 씬으로 전환 완료", GameLogger.LogCategory.UI);
                 }
                 else
                 {
-                    GameLogger.LogError("[MainMenuController] 씬 전환 매니저를 찾을 수 없습니다!", GameLogger.LogCategory.Error);
+                    GameLogger.LogError("[MainMenuController] SceneTransitionManager를 찾을 수 없습니다!", GameLogger.LogCategory.Error);
                 }
             }
             catch (System.Exception ex)
@@ -728,7 +747,7 @@ namespace Game.UISystem
                 if (idx >= defs.Length) break;
             }
 
-            var audioManager = FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            // AudioManager DI 주입 사용
             var factory = new SkillCardFactory(audioManager);
             int created = 0;
             foreach (var def in defs)

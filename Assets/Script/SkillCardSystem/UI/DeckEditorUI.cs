@@ -8,6 +8,7 @@ using Game.SkillCardSystem.Data;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Deck;
 using Game.CoreSystem.Utility;
+using Game.VFXSystem.Pool;
 
 namespace Game.SkillCardSystem.UI
 {
@@ -48,6 +49,11 @@ namespace Game.SkillCardSystem.UI
         private List<SkillCardDefinition> availableCards = new();
         private SkillCardDefinition selectedCard;
 
+        // Object Pooling
+        private GenericUIPool<CardEntryUI> cardEntryPool;
+        private GenericUIPool<AvailableCardUI> availableCardPool;
+        private Transform poolContainer;
+
         #endregion
 
         #region 의존성 주입
@@ -64,9 +70,42 @@ namespace Game.SkillCardSystem.UI
 
         private void Start()
         {
+            InitializePools();
             InitializeUI();
             LoadAvailableCards();
             RefreshDeckDisplay();
+        }
+
+        private void InitializePools()
+        {
+            // 풀 컨테이너 생성
+            poolContainer = new GameObject("DeckEditorUI_PoolContainer").transform;
+            poolContainer.SetParent(transform);
+            poolContainer.gameObject.SetActive(false);
+
+            // CardEntry 풀 초기화
+            if (cardEntryPrefab != null)
+            {
+                cardEntryPool = new GenericUIPool<CardEntryUI>(
+                    cardEntryPrefab,
+                    poolContainer,
+                    initialSize: 10,
+                    maxSize: 50,
+                    poolName: "CardEntryPool"
+                );
+            }
+
+            // AvailableCard 풀 초기화
+            if (availableCardPrefab != null)
+            {
+                availableCardPool = new GenericUIPool<AvailableCardUI>(
+                    availableCardPrefab,
+                    poolContainer,
+                    initialSize: 20,
+                    maxSize: 100,
+                    poolName: "AvailableCardPool"
+                );
+            }
         }
 
         private void OnEnable()
@@ -144,10 +183,18 @@ namespace Game.SkillCardSystem.UI
         {
             if (cardListParent == null) return;
 
-            // 기존 카드 엔트리 UI 제거
-            foreach (Transform child in cardListParent)
+            // 기존 카드 엔트리 UI를 풀에 반환 (Object Pooling)
+            if (cardEntryPool != null)
             {
-                Destroy(child.gameObject);
+                cardEntryPool.ReturnAll();
+            }
+            else
+            {
+                // Fallback: 풀이 없으면 Destroy
+                foreach (Transform child in cardListParent)
+                {
+                    Destroy(child.gameObject);
+                }
             }
 
             // 새 카드 엔트리 UI 생성
@@ -162,11 +209,19 @@ namespace Game.SkillCardSystem.UI
 
         private void CreateCardEntryUI(PlayerSkillDeck.CardEntry entry)
         {
-            if (cardEntryPrefab == null) return;
+            // Object Pooling 사용
+            CardEntryUI cardEntryUI = null;
+            if (cardEntryPool != null)
+            {
+                cardEntryUI = cardEntryPool.Get(cardListParent);
+            }
+            else if (cardEntryPrefab != null)
+            {
+                // Fallback
+                var cardEntryObj = Instantiate(cardEntryPrefab, cardListParent);
+                cardEntryUI = cardEntryObj.GetComponent<CardEntryUI>();
+            }
 
-            var cardEntryObj = Instantiate(cardEntryPrefab, cardListParent);
-            var cardEntryUI = cardEntryObj.GetComponent<CardEntryUI>();
-            
             if (cardEntryUI != null)
             {
                 cardEntryUI.Setup(entry, OnCardQuantityChanged, OnRemoveCardClicked);
@@ -187,20 +242,37 @@ namespace Game.SkillCardSystem.UI
 
         private void PopulateAvailableCards()
         {
-            if (availableCardsParent == null || availableCardPrefab == null) return;
+            if (availableCardsParent == null) return;
 
-            // 기존 카드 UI 제거
-            foreach (Transform child in availableCardsParent)
+            // 기존 카드 UI를 풀에 반환 (Object Pooling)
+            if (availableCardPool != null)
             {
-                Destroy(child.gameObject);
+                availableCardPool.ReturnAll();
+            }
+            else
+            {
+                // Fallback: 풀이 없으면 Destroy
+                foreach (Transform child in availableCardsParent)
+                {
+                    Destroy(child.gameObject);
+                }
             }
 
-            // 사용 가능한 카드 UI 생성
+            // 사용 가능한 카드 UI 생성 (Object Pooling)
             foreach (var card in availableCards)
             {
-                var cardObj = Instantiate(availableCardPrefab, availableCardsParent);
-                var cardUI = cardObj.GetComponent<AvailableCardUI>();
-                
+                AvailableCardUI cardUI = null;
+                if (availableCardPool != null)
+                {
+                    cardUI = availableCardPool.Get(availableCardsParent);
+                }
+                else if (availableCardPrefab != null)
+                {
+                    // Fallback
+                    var cardObj = Instantiate(availableCardPrefab, availableCardsParent);
+                    cardUI = cardObj.GetComponent<AvailableCardUI>();
+                }
+
                 if (cardUI != null)
                 {
                     cardUI.Setup(card, OnCardSelected);

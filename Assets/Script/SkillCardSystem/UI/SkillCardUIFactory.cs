@@ -3,6 +3,7 @@ using Game.SkillCardSystem.Interface;
 using Game.CoreSystem.Utility;
 using Game.CombatSystem.DragDrop;
 using Game.CombatSystem.Manager;
+using Game.VFXSystem.Manager;
 
 namespace Game.SkillCardSystem.UI
 {
@@ -18,26 +19,48 @@ namespace Game.SkillCardSystem.UI
         /// <param name="parent">UI를 배치할 부모 트랜스폼</param>
         /// <param name="card">연결할 카드 데이터</param>
         /// <param name="animationFacade">애니메이션 파사드</param>
+        /// <param name="vfxManager">VFX 매니저 (선택적, Object Pooling용)</param>
         /// <returns>초기화된 SkillCardUI 인스턴스</returns>
         public static SkillCardUI CreateUI(
             SkillCardUI prefab,
             Transform parent,
             ISkillCard card,
-            object animationFacade)
+            object animationFacade,
+            VFXManager vfxManager = null)
         {
             // === 유효성 검사 ===
-            if (prefab == null || parent == null || card == null)
+            if (parent == null || card == null)
             {
                 GameLogger.LogError("[SkillCardUIFactory] 카드 UI 생성 실패 - null 인자 존재", GameLogger.LogCategory.SkillCard);
                 return null;
             }
 
-            // === 프리팹 인스턴스 생성 ===
-            var instance = Object.Instantiate(prefab, parent, false);
+            // === 프리팹 인스턴스 생성 (VFXManager 풀링 우선) ===
+            SkillCardUI instance = null;
+            if (vfxManager != null)
+            {
+                instance = vfxManager.GetSkillCardUI(parent);
+                if (instance != null)
+                {
+                    GameLogger.LogInfo("[SkillCardUIFactory] VFXManager 풀에서 카드 UI 재사용", GameLogger.LogCategory.SkillCard);
+                }
+            }
+
+            // Fallback: VFXManager가 없거나 풀이 비었으면 기존 방식 사용
             if (instance == null)
             {
-                GameLogger.LogError("[SkillCardUIFactory] 프리팹 인스턴스화 실패", GameLogger.LogCategory.SkillCard);
-                return null;
+                if (prefab == null)
+                {
+                    GameLogger.LogError("[SkillCardUIFactory] 프리팹과 VFXManager 모두 null입니다.", GameLogger.LogCategory.SkillCard);
+                    return null;
+                }
+
+                instance = Object.Instantiate(prefab, parent, false);
+                if (instance == null)
+                {
+                    GameLogger.LogError("[SkillCardUIFactory] 프리팹 인스턴스화 실패", GameLogger.LogCategory.SkillCard);
+                    return null;
+                }
             }
 
             // === 카드 데이터 설정 ===

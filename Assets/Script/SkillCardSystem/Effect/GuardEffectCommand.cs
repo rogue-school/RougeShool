@@ -3,6 +3,7 @@ using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Interface;
 using Game.CharacterSystem.Interface;
 using Game.CoreSystem.Utility;
+using Game.VFXSystem.Manager;
 
 namespace Game.SkillCardSystem.Effect
 {
@@ -14,15 +15,19 @@ namespace Game.SkillCardSystem.Effect
     {
         private readonly int duration;
         private readonly GameObject visualEffectPrefab;
-        
+        private readonly VFXManager vfxManager;
+
         /// <summary>
         /// 가드 효과 커맨드 생성자
         /// </summary>
         /// <param name="duration">가드 지속 턴 수 (기본값: 1)</param>
-        public GuardEffectCommand(int duration = 1, GameObject visualEffectPrefab = null)
+        /// <param name="visualEffectPrefab">VFX 프리팹 (선택적)</param>
+        /// <param name="vfxManager">VFX 매니저 (선택적)</param>
+        public GuardEffectCommand(int duration = 1, GameObject visualEffectPrefab = null, VFXManager vfxManager = null)
         {
             this.duration = duration;
             this.visualEffectPrefab = visualEffectPrefab;
+            this.vfxManager = vfxManager;
         }
         
         /// <summary>
@@ -123,13 +128,27 @@ namespace Game.SkillCardSystem.Effect
             var spawnPos = context.Source.Transform.position;
             GameLogger.LogInfo($"[GuardEffectCommand] 가드 VFX 생성 시작 - 프리팹: {visualEffectPrefab.name}, 위치: {spawnPos}", GameLogger.LogCategory.SkillCard);
 
-            var instance = UnityEngine.Object.Instantiate(visualEffectPrefab, spawnPos, Quaternion.identity);
-            GameLogger.LogInfo($"[GuardEffectCommand] 가드 VFX 인스턴스 생성 완료: {instance.name}", GameLogger.LogCategory.SkillCard);
+            // VFXManager를 통한 이펙트 생성 (Object Pooling)
+            if (vfxManager != null)
+            {
+                var instance = vfxManager.PlayEffect(visualEffectPrefab, spawnPos);
+                if (instance != null)
+                {
+                    SetEffectLayer(instance);
+                    GameLogger.LogInfo($"[GuardEffectCommand] VFXManager로 가드 VFX 재생: {instance.name}", GameLogger.LogCategory.SkillCard);
+                }
+            }
+            else
+            {
+                // Fallback: VFXManager가 없으면 기존 방식 사용
+                var instance = UnityEngine.Object.Instantiate(visualEffectPrefab, spawnPos, Quaternion.identity);
+                GameLogger.LogInfo($"[GuardEffectCommand] 가드 VFX 인스턴스 생성 완료: {instance.name}", GameLogger.LogCategory.SkillCard);
 
-            SetEffectLayer(instance);
+                SetEffectLayer(instance);
 
-            UnityEngine.Object.Destroy(instance, 2.0f);
-            GameLogger.LogInfo("[GuardEffectCommand] 가드 VFX 2초 후 자동 제거 예약", GameLogger.LogCategory.SkillCard);
+                UnityEngine.Object.Destroy(instance, 2.0f);
+                GameLogger.LogInfo("[GuardEffectCommand] 가드 VFX 2초 후 자동 제거 예약", GameLogger.LogCategory.SkillCard);
+            }
         }
 
         private static void SetEffectLayer(GameObject effectInstance)

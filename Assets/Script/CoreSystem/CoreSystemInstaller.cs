@@ -2,6 +2,7 @@ using UnityEngine;
 using Zenject;
 using Game.CoreSystem.Manager;
 using Game.CoreSystem.Interface;
+using Game.CoreSystem.UI;
 using Game.CoreSystem.Utility;
 using Game.CoreSystem.Audio;
 using Game.CoreSystem.Save;
@@ -25,6 +26,7 @@ namespace Game.CoreSystem
         [SerializeField] private SceneTransitionManager sceneTransitionManager;
         [SerializeField] private AudioManager audioManager;
         [SerializeField] private SaveManager saveManager;
+        [SerializeField] private SettingsManager settingsManager;
         [SerializeField] private CoroutineRunner coroutineRunner;
         [SerializeField] private PlayerCharacterSelectionManager playerCharacterSelectionManager;
         [SerializeField] private SkillCardTooltipManager skillCardTooltipManager;
@@ -69,6 +71,7 @@ namespace Game.CoreSystem
                 (gameStateManager, "GameStateManager", typeof(IGameStateManager)),
                 (audioManager, "AudioManager", typeof(IAudioManager)),
                 (saveManager, "SaveManager", typeof(ISaveManager)),
+                (settingsManager, "SettingsManager", null),
                 (playerCharacterSelectionManager, "PlayerCharacterSelectionManager", typeof(IPlayerCharacterSelectionManager)),
                 (skillCardTooltipManager, "SkillCardTooltipManager", null)
             };

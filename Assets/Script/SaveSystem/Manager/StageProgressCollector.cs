@@ -9,6 +9,7 @@ using Game.CharacterSystem.Manager;
 using Game.CharacterSystem.Interface;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Manager;
+using Zenject;
 
 namespace Game.SaveSystem.Manager
 {
@@ -17,6 +18,17 @@ namespace Game.SaveSystem.Manager
     /// </summary>
     public class StageProgressCollector : MonoBehaviour
     {
+        #region 의존성 주입
+
+        [Inject(Optional = true)] private StageManager stageManager;
+        [Inject(Optional = true)] private CombatFlowManager combatFlowManager;
+        [Inject(Optional = true)] private TurnManager turnManager;
+        [Inject(Optional = true)] private PlayerManager playerManager;
+        [Inject(Optional = true)] private EnemyManager enemyManager;
+        [Inject(Optional = true)] private Game.CombatSystem.Slot.SlotRegistry slotRegistry;
+
+        #endregion
+
         #region 데이터 수집 메서드
         
         /// <summary>
@@ -62,7 +74,7 @@ namespace Game.SaveSystem.Manager
         /// </summary>
         private void CollectStageInfo(StageProgressData data)
         {
-            var stageManager = FindFirstObjectByType<StageManager>();
+            // DI 주입된 stageManager 사용
             if (stageManager != null)
             {
                 data.currentStageNumber = stageManager.GetCurrentStageNumber();
@@ -83,7 +95,7 @@ namespace Game.SaveSystem.Manager
         /// </summary>
         private void CollectCombatState(StageProgressData data)
         {
-            var combatFlowManager = FindFirstObjectByType<CombatFlowManager>();
+            // DI 주입된 combatFlowManager 사용
             if (combatFlowManager != null)
             {
                 data.isCombatActive = combatFlowManager.IsCombatActive;
@@ -102,7 +114,7 @@ namespace Game.SaveSystem.Manager
         /// </summary>
         private void CollectTurnInfo(StageProgressData data)
         {
-            var turnManager = FindFirstObjectByType<TurnManager>();
+            // DI 주입된 turnManager 사용
             if (turnManager != null)
             {
                 data.turnCount = turnManager.GetTurnCount();
@@ -139,7 +151,7 @@ namespace Game.SaveSystem.Manager
             {
                 if (characterType == "Player")
                 {
-                    var playerManager = FindFirstObjectByType<PlayerManager>();
+                    // DI 주입된 playerManager 사용
                     if (playerManager != null)
                     {
                         var player = playerManager.GetPlayer();
@@ -159,7 +171,7 @@ namespace Game.SaveSystem.Manager
                 }
                 else if (characterType == "Enemy")
                 {
-                    var enemyManager = FindFirstObjectByType<EnemyManager>();
+                    // DI 주입된 enemyManager 사용
                     if (enemyManager != null)
                     {
                         var enemy = enemyManager.GetCurrentEnemy();
@@ -207,8 +219,7 @@ namespace Game.SaveSystem.Manager
             
             try
             {
-                // HandSlotRegistry를 통해 현재 플레이어 핸드 슬롯의 카드를 수집
-                var slotRegistry = FindFirstObjectByType<Game.CombatSystem.Slot.SlotRegistry>();
+                // HandSlotRegistry를 통해 현재 플레이어 핸드 슬롯의 카드를 수집 (DI 주입)
                 var handRegistry = slotRegistry != null ? slotRegistry.GetHandSlotRegistry() : null;
                 if (handRegistry != null)
                 {
@@ -241,7 +252,7 @@ namespace Game.SaveSystem.Manager
             var result = new List<SlotCardState>();
             try
             {
-                var slotRegistry = FindFirstObjectByType<Game.CombatSystem.Slot.SlotRegistry>();
+                // DI 주입된 slotRegistry 사용
                 var combatRegistry = slotRegistry != null ? slotRegistry.GetCombatSlotRegistry() : null;
                 if (combatRegistry != null)
                 {

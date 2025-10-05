@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Game.CoreSystem.UI;
 using Game.CoreSystem.Utility;
+using Zenject;
 
 namespace Game.StageSystem.UI
 {
@@ -16,35 +17,17 @@ namespace Game.StageSystem.UI
         
         [Header("설정")]
         [SerializeField] private bool enableDebugLogging = true;
-        
-        // SettingsManager 직접 참조
-        private SettingsManager settingsManager;
-        
+
+        // SettingsManager DI 주입
+        [Inject(Optional = true)] private SettingsManager settingsManager;
+
         private void Start()
         {
-            // SettingsManager 찾기
-            FindSettingsManager();
             InitializeUI();
-        }
-        
-        /// <summary>
-        /// SettingsManager 찾기
-        /// </summary>
-        private void FindSettingsManager()
-        {
-            // CoreScene에서 SettingsManager 찾기
-            settingsManager = FindFirstObjectByType<SettingsManager>();
-            
-            if (settingsManager == null)
+
+            if (settingsManager == null && enableDebugLogging)
             {
-                GameLogger.LogError("SettingsManager를 찾을 수 없습니다. CoreScene이 로드되었는지 확인하세요.", GameLogger.LogCategory.Error);
-            }
-            else
-            {
-                if (enableDebugLogging)
-                {
-                    GameLogger.LogInfo("SettingsManager 찾기 성공", GameLogger.LogCategory.UI);
-                }
+                GameLogger.LogWarning("SettingsManager가 주입되지 않았습니다.", GameLogger.LogCategory.UI);
             }
         }
         

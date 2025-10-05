@@ -40,9 +40,8 @@ namespace Game.CharacterSystem.Manager
         private IGameStateManager gameStateManager;
         private PlayerCharacterData cachedSelectedCharacter;
 
-        // FindObjectOfType 캐싱
-        private Game.CharacterSystem.UI.PlayerCharacterUIController cachedPlayerUI;
-        private GameStateManager cachedGameStateManager;
+        // UI 컨트롤러 (선택적 의존성)
+        private Game.CharacterSystem.UI.PlayerCharacterUIController playerCharacterUIController;
 
         #endregion
 
@@ -63,38 +62,12 @@ namespace Game.CharacterSystem.Manager
         [Inject]
         public void Construct(
             IPlayerHandManager handManager = null,
-            IGameStateManager gameStateManager = null)
+            IGameStateManager gameStateManager = null,
+            [InjectOptional] Game.CharacterSystem.UI.PlayerCharacterUIController playerUI = null)
         {
             this.handManager = handManager;
             this.gameStateManager = gameStateManager;
-        }
-
-        #endregion
-
-        #region 캐싱 헬퍼 메서드
-
-        /// <summary>
-        /// PlayerCharacterUIController 캐시 가져오기 (지연 초기화)
-        /// </summary>
-        private Game.CharacterSystem.UI.PlayerCharacterUIController GetCachedPlayerUI()
-        {
-            if (cachedPlayerUI == null)
-            {
-                cachedPlayerUI = FindFirstObjectByType<Game.CharacterSystem.UI.PlayerCharacterUIController>();
-            }
-            return cachedPlayerUI;
-        }
-
-        /// <summary>
-        /// GameStateManager 캐시 가져오기 (지연 초기화)
-        /// </summary>
-        private GameStateManager GetCachedGameStateManager()
-        {
-            if (cachedGameStateManager == null)
-            {
-                cachedGameStateManager = FindFirstObjectByType<GameStateManager>();
-            }
-            return cachedGameStateManager;
+            this.playerCharacterUIController = playerUI;
         }
 
         #endregion
@@ -119,7 +92,7 @@ namespace Game.CharacterSystem.Manager
 
         /// <summary>
         /// 플레이어 UI 컨트롤러를 반환합니다.
-        /// 씬에 통합된 UI를 자동으로 찾아 연결합니다.
+        /// DI로 주입된 UI를 사용합니다.
         /// </summary>
         protected override MonoBehaviour GetUIController()
         {
@@ -127,19 +100,15 @@ namespace Game.CharacterSystem.Manager
             if (playerUI != null)
                 return playerUI;
 
-            // 자동 연결이 활성화되어 있으면 씬에서 찾기
-            if (autoConnectUI)
+            // DI로 주입된 UI 사용
+            if (autoConnectUI && playerCharacterUIController != null)
             {
-                var foundUI = GetCachedPlayerUI();
-                if (foundUI != null)
-                {
-                    playerUI = foundUI;
-                    GameLogger.LogInfo("씬에서 PlayerCharacterUIController를 자동으로 찾아 연결했습니다.", GameLogger.LogCategory.Character);
-                    return playerUI;
-                }
+                playerUI = playerCharacterUIController;
+                GameLogger.LogInfo("DI로 주입된 PlayerCharacterUIController를 사용합니다.", GameLogger.LogCategory.Character);
+                return playerUI;
             }
 
-            GameLogger.LogWarning("PlayerCharacterUIController를 찾을 수 없습니다. 씬에 UI가 있는지 확인해주세요.", GameLogger.LogCategory.Character);
+            GameLogger.LogWarning("PlayerCharacterUIController를 찾을 수 없습니다. DI 설정을 확인해주세요.", GameLogger.LogCategory.Character);
             return null;
         }
 
@@ -175,31 +144,13 @@ namespace Game.CharacterSystem.Manager
         /// </summary>
         private IGameStateManager FindGameStateManager()
         {
-            // 1. DI로 주입된 매니저 사용
+            // DI로 주입된 매니저 사용
             if (gameStateManager != null)
             {
                 return gameStateManager;
             }
 
-            // 2. 씬에서 직접 찾기 (캐싱 사용)
-            var foundManager = GetCachedGameStateManager();
-            if (foundManager != null)
-            {
-                return foundManager;
-            }
-
-            // 3. 모든 GameObject에서 찾기
-            var allObjects = FindObjectsByType<GameObject>(FindObjectsSortMode.None);
-            foreach (var obj in allObjects)
-            {
-                var manager = obj.GetComponent<GameStateManager>();
-                if (manager != null)
-                {
-                    return manager;
-                }
-            }
-
-            GameLogger.LogWarning("GameStateManager를 찾을 수 없습니다.", GameLogger.LogCategory.Character);
+            GameLogger.LogWarning("GameStateManager가 주입되지 않았습니다. DI 설정을 확인해주세요.", GameLogger.LogCategory.Character);
             return null;
         }
 
@@ -488,99 +439,60 @@ namespace Game.CharacterSystem.Manager
 
         #endregion
         
-        #region 리소스 관리 (PlayerResourceManager 통합)
-        
-        private int currentResource;
-        private int maxResource;
-        private string resourceName;
-        
+        #region 리소스 관리 (PlayerResourceManager로 위임)
+
+        private PlayerResourceManager resourceManager = new PlayerResourceManager();
+
         /// <summary>현재 리소스</summary>
-        public int CurrentResource => currentResource;
-        
+        public int CurrentResource => resourceManager.CurrentResource;
+
         /// <summary>최대 리소스</summary>
-        public int MaxResource => maxResource;
-        
+        public int MaxResource => resourceManager.MaxResource;
+
         /// <summary>리소스 이름</summary>
-        public string ResourceName => resourceName;
-        
+        public string ResourceName => resourceManager.ResourceName;
+
+        /// <summary>리소스 변경 이벤트</summary>
+        public event System.Action<int, int> OnResourceChanged
+        {
+            add => resourceManager.OnResourceChanged += value;
+            remove => resourceManager.OnResourceChanged -= value;
+        }
+
         /// <summary>
         /// 리소스를 소모합니다.
         /// </summary>
         /// <param name="amount">소모할 양</param>
         /// <returns>소모 성공 여부</returns>
-        public bool ConsumeResource(int amount)
-        {
-            if (amount < 0)
-            {
-                GameLogger.LogWarning("음수 리소스 소모는 불가능합니다.", GameLogger.LogCategory.Character);
-                return false;
-            }
+        public bool ConsumeResource(int amount) => resourceManager.ConsumeResource(amount);
 
-            if (currentResource < amount)
-            {
-                GameLogger.LogWarning($"리소스 부족: {currentResource}/{maxResource} (필요: {amount})", GameLogger.LogCategory.Character);
-                return false;
-            }
-
-            currentResource -= amount;
-            GameLogger.LogInfo($"리소스 소모: {amount} (남은 양: {currentResource}/{maxResource})", GameLogger.LogCategory.Character);
-            return true;
-        }
-        
         /// <summary>
         /// 리소스를 회복합니다.
         /// </summary>
         /// <param name="amount">회복할 양</param>
-        public void RestoreResource(int amount)
-        {
-            if (amount < 0)
-            {
-                GameLogger.LogWarning("음수 리소스 회복은 불가능합니다.", GameLogger.LogCategory.Character);
-                return;
-            }
+        public void RestoreResource(int amount) => resourceManager.RestoreResource(amount);
 
-            currentResource = Mathf.Min(currentResource + amount, maxResource);
-            GameLogger.LogInfo($"리소스 회복: {amount} (현재 양: {currentResource}/{maxResource})", GameLogger.LogCategory.Character);
-        }
-        
         /// <summary>
         /// 리소스를 최대치로 회복합니다.
         /// </summary>
-        public void RestoreToMax()
-        {
-            currentResource = maxResource;
-            GameLogger.LogInfo($"리소스 최대치 회복: {currentResource}/{maxResource}", GameLogger.LogCategory.Character);
-        }
-        
+        public void RestoreToMax() => resourceManager.RestoreResourceToMax();
+
         /// <summary>
         /// 충분한 리소스가 있는지 확인합니다.
         /// </summary>
         /// <param name="amount">확인할 양</param>
         /// <returns>충분한 리소스 여부</returns>
-        public bool HasEnoughResource(int amount)
-        {
-            return currentResource >= amount;
-        }
-        
+        public bool HasEnoughResource(int amount) => resourceManager.HasEnoughResource(amount);
+
         /// <summary>
         /// 리소스를 초기화합니다.
         /// </summary>
         /// <param name="characterData">캐릭터 데이터</param>
         private void InitializeResource(PlayerCharacterData characterData)
         {
-            if (characterData == null)
-            {
-                GameLogger.LogError("캐릭터 데이터가 null입니다.", GameLogger.LogCategory.Character);
-                return;
-            }
-
-            maxResource = characterData.MaxResource;
-            resourceName = characterData.ResourceName;
-            currentResource = maxResource; // 시작 시 최대치로 설정
-
-            GameLogger.LogInfo($"{characterData.DisplayName} 리소스 초기화: {resourceName} {currentResource}/{maxResource}", GameLogger.LogCategory.Character);
+            resourceManager.Initialize(characterData);
         }
-        
+
         #endregion
         
         #region 캐릭터 초기화 (PlayerCharacterInitializer 통합)

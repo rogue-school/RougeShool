@@ -31,6 +31,7 @@ namespace Game.CharacterSystem.Manager
         #region 의존성
 
         [Inject] private CharacterSlotRegistry slotRegistry;
+        [Inject] private EnemyManager enemyManager;
 
         #endregion
 
@@ -58,17 +59,13 @@ namespace Game.CharacterSystem.Manager
         #region 적 스폰 메서드
 
         /// <summary>
-        /// 지정된 데이터 기반으로 적을 스폰하고 슬롯에 배치합니다.
+        /// 지정된 데이터 기반으로 적을 스폰하고 슬롯에 배치합니다. (비동기)
         /// </summary>
         /// <param name="data">적 캐릭터 데이터</param>
-        /// <returns>적 스폰 결과</returns>
-        public EnemySpawnResult SpawnEnemy(EnemyCharacterData data)
+        /// <param name="onComplete">스폰 완료 콜백</param>
+        public void SpawnEnemy(EnemyCharacterData data, System.Action<EnemySpawnResult> onComplete)
         {
-            EnemySpawnResult result = null;
-            bool done = false;
-            StartCoroutine(SpawnEnemyWithAnimation(data, r => { result = r; done = true; }));
-            while (!done) { } // 동기 방식이므로 실제 게임에서는 코루틴 사용 권장
-            return result;
+            StartCoroutine(SpawnEnemyWithAnimation(data, onComplete));
         }
 
         /// <summary>
@@ -137,11 +134,10 @@ namespace Game.CharacterSystem.Manager
 
             // 3. 슬롯/매니저 등록
             slot.SetCharacter(enemy);
-            
-            // 새로운 싱글톤 시스템과의 호환성을 위한 매니저 등록
-            var manager = FindFirstObjectByType<EnemyManager>();
-            manager?.RegisterEnemy(enemy);
-            
+
+            // DI로 주입된 매니저 사용
+            enemyManager?.RegisterEnemy(enemy);
+
             spawnedEnemies.Add(enemy);
 
             // 다음 적 스폰 이벤트 발행

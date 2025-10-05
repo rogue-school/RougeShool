@@ -336,7 +336,7 @@ namespace Game.CharacterSystem.Core
         /// <param name="data">설정할 캐릭터 데이터</param>
         public virtual void SetCharacterData(object data)
         {
-            // TODO: 자식 클래스에서 구현
+            // 자식 클래스에서 override하여 구현
         }
 
         /// <summary>
@@ -345,7 +345,7 @@ namespace Game.CharacterSystem.Core
         /// <param name="handManager">주입할 핸드 매니저</param>
         public virtual void InjectHandManager(object handManager)
         {
-            // TODO: 자식 클래스에서 구현
+            // 자식 클래스에서 override하여 구현
         }
 
         #endregion

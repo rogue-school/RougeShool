@@ -426,13 +426,13 @@ namespace Game.SkillCardSystem.Runtime
             var target = context.Target;
             var targetTransform = (target as MonoBehaviour)?.transform;
             if (targetTransform == null) return;
-            
-            // 대상 위치에 이펙트 생성
-            // TODO: MonoBehaviour가 아니므로 Instantiate 사용 불가, 다른 방법으로 이펙트 생성 필요
-            // var effectInstance = Instantiate(presentation.visualEffectPrefab, targetTransform.position, Quaternion.identity);
-            
-            // 이펙트는 기본적으로 자동 제거되도록 설정 (이펙트 프리팹에서 처리)
-            // 필요시 이펙트 프리팹에 자동 제거 컴포넌트 추가
+
+            // VFX 매니저를 통한 이펙트 생성 (Object Pooling 적용)
+            var vfxManager = UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
+            if (vfxManager != null && presentation.visualEffectPrefab != null)
+            {
+                vfxManager.PlayEffect(presentation.visualEffectPrefab, targetTransform.position);
+            }
         }
         
         #endregion

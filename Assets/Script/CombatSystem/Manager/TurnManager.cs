@@ -28,6 +28,18 @@ namespace Game.CombatSystem.Manager
         private ICardSlotRegistry _slotRegistry;
         private ISlotMovementController _slotMovement;
 
+        // 이벤트 핸들러 참조 저장 (구독 해제를 위함)
+        private readonly System.Collections.Generic.Dictionary<Action<TurnType>, Action<Interface.TurnType>> _turnChangedHandlers
+            = new System.Collections.Generic.Dictionary<Action<TurnType>, Action<Interface.TurnType>>();
+        private readonly System.Collections.Generic.HashSet<Action<int>> _turnCountChangedHandlers
+            = new System.Collections.Generic.HashSet<Action<int>>();
+        private readonly System.Collections.Generic.HashSet<Action> _gameStartedHandlers
+            = new System.Collections.Generic.HashSet<Action>();
+        private readonly System.Collections.Generic.HashSet<Action> _gameEndedHandlers
+            = new System.Collections.Generic.HashSet<Action>();
+        private readonly System.Collections.Generic.HashSet<Action> _cardStateChangedHandlers
+            = new System.Collections.Generic.HashSet<Action>();
+
         [Inject]
         public void Construct(
             ITurnController turnController,
@@ -51,6 +63,12 @@ namespace Game.CombatSystem.Manager
             GameLogger.LogInfo("TurnManager (Adapter) Awake 호출", GameLogger.LogCategory.Combat);
         }
 
+        private void OnDestroy()
+        {
+            // 모든 이벤트 핸들러 정리 (메모리 누수 방지)
+            ClearAllEventHandlers();
+        }
+
         #endregion
 
         #region ICombatTurnManager 구현 - 턴 관리 (Delegate to TurnController)
@@ -64,48 +82,82 @@ namespace Game.CombatSystem.Manager
         {
             add
             {
-                if (_turnController != null)
+                if (_turnController != null && value != null)
                 {
-                    _turnController.OnTurnChanged += (newTurn) => value?.Invoke(ConvertToLegacyTurnType(newTurn));
+                    // 래핑 핸들러 생성 및 저장
+                    Action<Interface.TurnType> wrappedHandler = (newTurn) => value.Invoke(ConvertToLegacyTurnType(newTurn));
+                    _turnChangedHandlers[value] = wrappedHandler;
+                    _turnController.OnTurnChanged += wrappedHandler;
                 }
             }
-            remove { /* 구현 생략 */ }
+            remove
+            {
+                if (_turnController != null && value != null && _turnChangedHandlers.TryGetValue(value, out var wrappedHandler))
+                {
+                    _turnController.OnTurnChanged -= wrappedHandler;
+                    _turnChangedHandlers.Remove(value);
+                }
+            }
         }
 
         public event Action<int> OnTurnCountChanged
         {
             add
             {
-                if (_turnController != null)
+                if (_turnController != null && value != null)
                 {
+                    _turnCountChangedHandlers.Add(value);
                     _turnController.OnTurnCountChanged += value;
                 }
             }
-            remove { /* 구현 생략 */ }
+            remove
+            {
+                if (_turnController != null && value != null && _turnCountChangedHandlers.Contains(value))
+                {
+                    _turnController.OnTurnCountChanged -= value;
+                    _turnCountChangedHandlers.Remove(value);
+                }
+            }
         }
 
         public event Action OnGameStarted
         {
             add
             {
-                if (_turnController != null)
+                if (_turnController != null && value != null)
                 {
+                    _gameStartedHandlers.Add(value);
                     _turnController.OnGameStarted += value;
                 }
             }
-            remove { /* 구현 생략 */ }
+            remove
+            {
+                if (_turnController != null && value != null && _gameStartedHandlers.Contains(value))
+                {
+                    _turnController.OnGameStarted -= value;
+                    _gameStartedHandlers.Remove(value);
+                }
+            }
         }
 
         public event Action OnGameEnded
         {
             add
             {
-                if (_turnController != null)
+                if (_turnController != null && value != null)
                 {
+                    _gameEndedHandlers.Add(value);
                     _turnController.OnGameEnded += value;
                 }
             }
-            remove { /* 구현 생략 */ }
+            remove
+            {
+                if (_turnController != null && value != null && _gameEndedHandlers.Contains(value))
+                {
+                    _turnController.OnGameEnded -= value;
+                    _gameEndedHandlers.Remove(value);
+                }
+            }
         }
 
         public TurnType GetCurrentTurnType() => CurrentTurn;
@@ -167,12 +219,20 @@ namespace Game.CombatSystem.Manager
         {
             add
             {
-                if (_slotRegistry != null)
+                if (_slotRegistry != null && value != null)
                 {
+                    _cardStateChangedHandlers.Add(value);
                     _slotRegistry.OnCardStateChanged += value;
                 }
             }
-            remove { /* 구현 생략 */ }
+            remove
+            {
+                if (_slotRegistry != null && value != null && _cardStateChangedHandlers.Contains(value))
+                {
+                    _slotRegistry.OnCardStateChanged -= value;
+                    _cardStateChangedHandlers.Remove(value);
+                }
+            }
         }
 
         public void RegisterCard(CombatSlotPosition position, ISkillCard card, SkillCardUI ui, SlotOwner owner)
@@ -366,6 +426,68 @@ namespace Game.CombatSystem.Manager
         {
             Player,
             Enemy
+        }
+
+        #endregion
+
+        #region 이벤트 정리
+
+        /// <summary>
+        /// 모든 이벤트 핸들러를 정리합니다 (메모리 누수 방지)
+        /// </summary>
+        private void ClearAllEventHandlers()
+        {
+            // OnTurnChanged 핸들러 정리
+            if (_turnController != null)
+            {
+                foreach (var kvp in _turnChangedHandlers)
+                {
+                    _turnController.OnTurnChanged -= kvp.Value;
+                }
+            }
+            _turnChangedHandlers.Clear();
+
+            // OnTurnCountChanged 핸들러 정리
+            if (_turnController != null)
+            {
+                foreach (var handler in _turnCountChangedHandlers)
+                {
+                    _turnController.OnTurnCountChanged -= handler;
+                }
+            }
+            _turnCountChangedHandlers.Clear();
+
+            // OnGameStarted 핸들러 정리
+            if (_turnController != null)
+            {
+                foreach (var handler in _gameStartedHandlers)
+                {
+                    _turnController.OnGameStarted -= handler;
+                }
+            }
+            _gameStartedHandlers.Clear();
+
+            // OnGameEnded 핸들러 정리
+            if (_turnController != null)
+            {
+                foreach (var handler in _gameEndedHandlers)
+                {
+                    _turnController.OnGameEnded -= handler;
+                }
+            }
+            _gameEndedHandlers.Clear();
+
+            // OnCardStateChanged 핸들러 정리
+            if (_slotRegistry != null)
+            {
+                foreach (var handler in _cardStateChangedHandlers)
+                {
+                    _slotRegistry.OnCardStateChanged -= handler;
+                }
+            }
+            _cardStateChangedHandlers.Clear();
+
+            GameLogger.LogInfo("TurnManager 이벤트 핸들러 정리 완료", GameLogger.LogCategory.Combat);
         }
 
         #endregion

@@ -9,6 +9,7 @@ using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Core;
 using Game.CoreSystem.Utility;
 using Game.SkillCardSystem.Effect; // Heal/Guard 식별을 위해 추가
+using Game.VFXSystem.Manager;
 using Zenject;
 
 namespace Game.SkillCardSystem.Executor
@@ -22,6 +23,7 @@ namespace Game.SkillCardSystem.Executor
         private readonly ICardEffectCommandFactory commandFactory;
         private readonly ICardValidator validator;
         private readonly IAudioManager audioManager;
+        private readonly VFXManager vfxManager;
 
         /// <summary>
         /// CardExecutor 생성자.
@@ -29,14 +31,17 @@ namespace Game.SkillCardSystem.Executor
         /// <param name="commandFactory">카드 이펙트 커맨드 생성 팩토리</param>
         /// <param name="validator">카드 실행 유효성 검사기</param>
         /// <param name="audioManager">오디오 매니저</param>
+        /// <param name="vfxManager">VFX 매니저 (선택적)</param>
         public CardExecutor(
             ICardEffectCommandFactory commandFactory,
             ICardValidator validator,
-            IAudioManager audioManager)
+            IAudioManager audioManager,
+            VFXManager vfxManager = null)
         {
             this.commandFactory = commandFactory;
             this.validator = validator;
             this.audioManager = audioManager;
+            this.vfxManager = vfxManager;
         }
 
         /// <summary>
@@ -122,16 +127,29 @@ namespace Game.SkillCardSystem.Executor
                 {
                     Vector3 spawnPos = GetCenterWorldPosition(spawnCharacter.Transform);
                     GameLogger.LogInfo($"[CardExecutor] 이펙트 생성 위치: {spawnPos}", GameLogger.LogCategory.SkillCard);
-                    
-                    var instance = GameObject.Instantiate(vfx, spawnPos, Quaternion.identity);
-                    GameLogger.LogInfo($"[CardExecutor] 이펙트 인스턴스 생성 완료: {instance.name}", GameLogger.LogCategory.SkillCard);
-                    
-                    // 이펙트가 UI 위에 표시되도록 레이어 설정
-                    SetEffectLayer(instance);
-                    
-                    // 이펙트는 프리팹 자체에서 자동 제거되도록 설정하거나 기본 지속 시간 사용
-                    GameObject.Destroy(instance, 2.0f); // 기본 2초 지속
-                    GameLogger.LogInfo($"[CardExecutor] 이펙트 2초 후 자동 제거 예약", GameLogger.LogCategory.SkillCard);
+
+                    // VFXManager를 통한 이펙트 생성 (Object Pooling)
+                    if (vfxManager != null)
+                    {
+                        var instance = vfxManager.PlayEffect(vfx, spawnPos);
+                        if (instance != null)
+                        {
+                            SetEffectLayer(instance);
+                            GameLogger.LogInfo($"[CardExecutor] VFXManager로 이펙트 재생: {instance.name}", GameLogger.LogCategory.SkillCard);
+                        }
+                    }
+                    else
+                    {
+                        // Fallback: VFXManager가 없으면 기존 방식 사용
+                        var instance = GameObject.Instantiate(vfx, spawnPos, Quaternion.identity);
+                        GameLogger.LogInfo($"[CardExecutor] 이펙트 인스턴스 생성 완료: {instance.name}", GameLogger.LogCategory.SkillCard);
+
+                        SetEffectLayer(instance);
+
+                        // 이펙트는 프리팹 자체에서 자동 제거되도록 설정하거나 기본 지속 시간 사용
+                        GameObject.Destroy(instance, 2.0f); // 기본 2초 지속
+                        GameLogger.LogInfo($"[CardExecutor] 이펙트 2초 후 자동 제거 예약", GameLogger.LogCategory.SkillCard);
+                    }
                 }
                 else
                 {

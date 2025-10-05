@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using Game.CharacterSystem.Interface;
 using Game.SkillCardSystem.Interface;
+using Game.VFXSystem.Manager;
+using Zenject;
 
 namespace Game.CharacterSystem.UI
 {
@@ -21,6 +23,9 @@ namespace Game.CharacterSystem.UI
         [SerializeField] private GameObject buffIconPrefab; // 선택 사항
 
         private ICharacter target;
+
+        [Inject(Optional = true)] private VFXManager vfxManager;
+        private List<GameObject> activeBuffIcons = new List<GameObject>();
 
         private void OnDisable()
         {
@@ -64,18 +69,43 @@ namespace Game.CharacterSystem.UI
         {
             if (buffContainer == null) return;
 
-            for (int i = buffContainer.childCount - 1; i >= 0; i--)
+            // 기존 버프 아이콘 모두 풀에 반환 (Object Pooling)
+            foreach (var icon in activeBuffIcons)
             {
-                var child = buffContainer.GetChild(i);
-                if (Application.isPlaying) Destroy(child.gameObject); else DestroyImmediate(child.gameObject);
+                if (icon != null)
+                {
+                    if (vfxManager != null)
+                    {
+                        vfxManager.ReturnBuffIcon(icon);
+                    }
+                    else
+                    {
+                        if (Application.isPlaying) Destroy(icon); else DestroyImmediate(icon);
+                    }
+                }
             }
+            activeBuffIcons.Clear();
 
             if (effects == null || effects.Count == 0) return;
-            if (buffIconPrefab == null) return;
 
+            // 새 버프 아이콘 생성 (VFXManager 풀링)
             foreach (var _ in effects)
             {
-                Instantiate(buffIconPrefab, buffContainer);
+                GameObject icon = null;
+                if (vfxManager != null)
+                {
+                    icon = vfxManager.GetBuffIcon(buffContainer);
+                }
+                else if (buffIconPrefab != null)
+                {
+                    // Fallback
+                    icon = Instantiate(buffIconPrefab, buffContainer);
+                }
+
+                if (icon != null)
+                {
+                    activeBuffIcons.Add(icon);
+                }
             }
         }
     }

@@ -3,6 +3,7 @@ using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Interface;
 using Game.CharacterSystem.Interface;
 using Game.CoreSystem.Utility;
+using Game.VFXSystem.Manager;
 
 namespace Game.SkillCardSystem.Effect
 {
@@ -14,12 +15,14 @@ namespace Game.SkillCardSystem.Effect
         private readonly int healAmount;
         private readonly int maxHealAmount;
         private readonly GameObject visualEffectPrefab;
+        private readonly VFXManager vfxManager;
 
-        public HealEffectCommand(int healAmount, int maxHealAmount = 0, GameObject visualEffectPrefab = null)
+        public HealEffectCommand(int healAmount, int maxHealAmount = 0, GameObject visualEffectPrefab = null, VFXManager vfxManager = null)
         {
             this.healAmount = healAmount;
             this.maxHealAmount = maxHealAmount;
             this.visualEffectPrefab = visualEffectPrefab;
+            this.vfxManager = vfxManager;
             
             // GameLogger.LogInfo($"[HealEffectCommand] 생성됨 - 치유량: {healAmount}, 최대: {maxHealAmount}", 
             //    GameLogger.LogCategory.SkillCard);
@@ -121,12 +124,26 @@ namespace Game.SkillCardSystem.Effect
             var spawnPos = context.Source.Transform.position;
             GameLogger.LogInfo($"[HealEffectCommand] 힐 VFX 생성 시작 - 프리팹: {visualEffectPrefab.name}, 위치: {spawnPos}", GameLogger.LogCategory.SkillCard);
 
-            var instance = UnityEngine.Object.Instantiate(visualEffectPrefab, spawnPos, Quaternion.identity);
-            GameLogger.LogInfo($"[HealEffectCommand] 힐 VFX 인스턴스 생성 완료: {instance.name}", GameLogger.LogCategory.SkillCard);
+            // VFXManager를 통한 이펙트 생성 (Object Pooling)
+            if (vfxManager != null)
+            {
+                var instance = vfxManager.PlayEffect(visualEffectPrefab, spawnPos);
+                if (instance != null)
+                {
+                    SetEffectLayer(instance);
+                    GameLogger.LogInfo($"[HealEffectCommand] VFXManager로 힐 VFX 재생: {instance.name}", GameLogger.LogCategory.SkillCard);
+                }
+            }
+            else
+            {
+                // Fallback: VFXManager가 없으면 기존 방식 사용
+                var instance = UnityEngine.Object.Instantiate(visualEffectPrefab, spawnPos, Quaternion.identity);
+                GameLogger.LogInfo($"[HealEffectCommand] 힐 VFX 인스턴스 생성 완료: {instance.name}", GameLogger.LogCategory.SkillCard);
 
-            SetEffectLayer(instance);
+                SetEffectLayer(instance);
 
-            UnityEngine.Object.Destroy(instance, 2.0f);
+                UnityEngine.Object.Destroy(instance, 2.0f);
+            }
             GameLogger.LogInfo("[HealEffectCommand] 힐 VFX 2초 후 자동 제거 예약", GameLogger.LogCategory.SkillCard);
         }
 

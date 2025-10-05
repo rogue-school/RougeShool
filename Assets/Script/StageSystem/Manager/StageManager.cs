@@ -83,6 +83,8 @@ namespace Game.StageSystem.Manager
         [Zenject.Inject(Optional = true)] private Game.CombatSystem.Slot.CombatSlotRegistry combatSlotRegistry;
         [Zenject.Inject(Optional = true)] private Game.CombatSystem.Interface.ICombatTurnManager turnManager;
         [Zenject.Inject(Optional = true)] private Game.CharacterSystem.Manager.PlayerManager playerManager;
+        [Zenject.Inject(Optional = true)] private Game.CombatSystem.State.CombatStateMachine combatStateMachine;
+        [Zenject.Inject(Optional = true)] private Game.SkillCardSystem.Manager.PlayerHandManager playerHandManagerConcrete;
 
         private bool isWaitingForPlayer = false;
 
@@ -322,9 +324,8 @@ namespace Game.StageSystem.Manager
                 currentEnemyIndex++;
 
                 GameLogger.LogInfo($"[StageManager] 적 생성 완료: {enemy.GetCharacterName()} (인덱스 증가: {currentEnemyIndex - 1} → {currentEnemyIndex})", GameLogger.LogCategory.Combat);
-                
-                // CombatStateMachine에 적 생성 완료 알림
-                var combatStateMachine = FindFirstObjectByType<Game.CombatSystem.State.CombatStateMachine>();
+
+                // CombatStateMachine에 적 생성 완료 알림 (DI 주입)
                 if (combatStateMachine != null)
                 {
                     if (currentEnemyIndex == 1)
@@ -450,8 +451,7 @@ namespace Game.StageSystem.Manager
             }
 
             // 일반 적 처치 로직
-            // CombatStateMachine에 적 사망 알림 (적 제거 전에 알려야 함)
-            var combatStateMachine = FindFirstObjectByType<Game.CombatSystem.State.CombatStateMachine>();
+            // CombatStateMachine에 적 사망 알림 (적 제거 전에 알려야 함, DI 주입)
             if (combatStateMachine != null)
             {
                 GameLogger.LogInfo($"[StageManager] CombatStateMachine에 적 사망 알림", GameLogger.LogCategory.Combat);
@@ -1004,22 +1004,11 @@ namespace Game.StageSystem.Manager
         /// </summary>
         private async Task TransitionToSummonState(EnemyCharacterData targetEnemy, bool isRestore)
         {
-            // CombatStateMachine을 더 안정적으로 찾기
-            var stateMachine = FindFirstObjectByType<Game.CombatSystem.State.CombatStateMachine>();
-            if (stateMachine == null)
+            // CombatStateMachine 확인 (DI 주입)
+            if (combatStateMachine == null)
             {
-                // 대안: GameObject.Find 사용
-                var stateMachineGO = GameObject.Find("CombatStateMachine");
-                if (stateMachineGO != null)
-                {
-                    stateMachine = stateMachineGO.GetComponent<Game.CombatSystem.State.CombatStateMachine>();
-                }
-                
-                if (stateMachine == null)
-                {
-                    GameLogger.LogError("[소환] CombatStateMachine을 찾을 수 없습니다 - 소환 중단", GameLogger.LogCategory.Combat);
-                    return;
-                }
+                GameLogger.LogError("[소환] CombatStateMachine이 주입되지 않았습니다 - 소환 중단", GameLogger.LogCategory.Combat);
+                return;
             }
 
             try
@@ -1102,25 +1091,20 @@ namespace Game.StageSystem.Manager
                 GameLogger.LogInfo($"[소환] 기존 적 제거 완료: {currentEnemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
             }
 
-            // 플레이어 핸드 카드 제거
-            var handManager = FindFirstObjectByType<Game.SkillCardSystem.Manager.PlayerHandManager>();
-            if (handManager != null)
+            // 플레이어 핸드 카드 제거 (DI 주입)
+            if (playerHandManagerConcrete != null)
             {
-                handManager.ClearAll();
+                playerHandManagerConcrete.ClearAll();
                 GameLogger.LogInfo("[소환] 플레이어 핸드 카드 제거 완료", GameLogger.LogCategory.Combat);
             }
 
-            // 모든 슬롯 정리
-            var turnManager = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
+            // 모든 슬롯 정리 (DI 주입)
             if (turnManager != null)
             {
                 turnManager.ClearAllSlots();
                 GameLogger.LogInfo("[소환] 전투/대기 슬롯 정리 완료", GameLogger.LogCategory.Combat);
-            }
 
-            // 적 캐시 정리 및 슬롯 상태 리셋 (TurnManager를 통해 접근)
-            if (turnManager != null)
-            {
+                // 적 캐시 정리 및 슬롯 상태 리셋
                 turnManager.ClearEnemyCache();
                 turnManager.ResetSlotStates();
                 GameLogger.LogInfo("[소환] 적 캐시 정리 및 슬롯 상태 리셋 완료", GameLogger.LogCategory.Combat);

@@ -174,5 +174,24 @@ namespace Game.CombatSystem.Interface
         event Action OnGameEnded;
         
         #endregion
+        
+        #region 슬롯 관리 메서드
+        
+        /// <summary>
+        /// 모든 슬롯을 완전히 정리합니다.
+        /// </summary>
+        void ClearAllSlots();
+        
+        /// <summary>
+        /// 적 캐시를 초기화합니다. 적이 교체될 때 호출되어야 합니다.
+        /// </summary>
+        void ClearEnemyCache();
+        
+        /// <summary>
+        /// 슬롯 상태를 완전히 리셋합니다 (소환 전환 시 사용)
+        /// </summary>
+        void ResetSlotStates();
+        
+        #endregion
     }
 }

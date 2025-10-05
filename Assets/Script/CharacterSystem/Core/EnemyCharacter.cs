@@ -10,9 +10,11 @@ using Game.CombatSystem;
 using Game.SkillCardSystem.Deck;
 using Game.SkillCardSystem.Interface;
 using Game.CoreSystem.Utility;
+using Game.VFXSystem.Manager;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine;
+using Zenject;
 
 namespace Game.CharacterSystem.Core
 {
@@ -49,6 +51,8 @@ namespace Game.CharacterSystem.Core
         private bool isDead = false;
 
         private System.Collections.Generic.List<ICharacterEffect> characterEffects = new System.Collections.Generic.List<ICharacterEffect>();
+
+        [Inject(Optional = true)] private VFXManager vfxManager;
 
         /// <summary>
         /// 적 캐릭터의 데이터 (스크립터블 오브젝트)
@@ -215,9 +219,14 @@ namespace Game.CharacterSystem.Core
             // 데미지가 0이면 텍스트 표시하지 않음
             if (amount <= 0) return;
 
-            // 데미지 텍스트 표시
-            if (damageTextPrefab != null && hpTextAnchor != null)
+            // 데미지 텍스트 표시 (VFXManager를 통한 Object Pooling)
+            if (vfxManager != null && hpTextAnchor != null)
             {
+                vfxManager.ShowDamageText(amount, hpTextAnchor.position, hpTextAnchor);
+            }
+            else if (damageTextPrefab != null && hpTextAnchor != null)
+            {
+                // Fallback: VFXManager가 없으면 기존 방식 사용
                 var instance = Instantiate(damageTextPrefab);
                 instance.transform.SetParent(hpTextAnchor, false);
 
@@ -235,8 +244,14 @@ namespace Game.CharacterSystem.Core
             base.Heal(amount);
             RefreshUI();
 
-            if (damageTextPrefab != null && hpTextAnchor != null)
+            // 회복 텍스트 표시 (VFXManager를 통한 Object Pooling)
+            if (vfxManager != null && hpTextAnchor != null)
             {
+                vfxManager.ShowDamageText(amount, hpTextAnchor.position, hpTextAnchor);
+            }
+            else if (damageTextPrefab != null && hpTextAnchor != null)
+            {
+                // Fallback: VFXManager가 없으면 기존 방식 사용
                 var instance = Instantiate(damageTextPrefab);
                 instance.transform.SetParent(hpTextAnchor, false);
 

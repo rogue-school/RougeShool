@@ -13,15 +13,16 @@ using Game.CombatSystem.Utility;
 using Game.CharacterSystem.Manager;
 using Game.SkillCardSystem.Factory;
 using Game.SkillCardSystem.Validator;
+using Game.CoreSystem.Interface;
+using Game.CoreSystem.UI;
 using Game.CoreSystem.Manager;
+using Game.CoreSystem.Utility;
 using Game.SkillCardSystem.Manager;
 using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Initialization;
-using Game.CoreSystem.Utility;
 using Game.SaveSystem.Manager;
 using Game.UtilitySystem.GameFlow;
-using Game.CoreSystem.Interface;
 using Game.StageSystem.Manager;
 using Game.StageSystem.Interface;
 using Game.StageSystem.State;
@@ -287,8 +288,8 @@ public class CombatInstaller : MonoInstaller
         // Zenject 바인딩
         Container.Bind<CombatStateMachine>().FromInstance(stateMachine).AsSingle();
 
-        // 의존성 주입 (Inject 어트리뷰트로 자동 주입됨)
-        Container.Inject(stateMachine);
+        // 의존성 주입 예약 (설치 완료 후 자동 주입됨)
+        Container.QueueForInject(stateMachine);
 
         GameLogger.LogInfo(" CombatStateMachine 바인딩/초기화 완료", GameLogger.LogCategory.Combat);
     }
@@ -438,6 +439,29 @@ public class CombatInstaller : MonoInstaller
             {
                 GameLogger.LogInfo($"{interfaceType.Name} 바인딩 완료", GameLogger.LogCategory.Combat);
             }
+        }
+
+        // 코어 시스템 매니저들 바인딩 (DontDestroyOnLoad로 전역에서 찾기)
+        var gameStateManager = FindFirstObjectByType<GameStateManager>(FindObjectsInactive.Include);
+        if (gameStateManager != null)
+        {
+            Container.Bind<IGameStateManager>().FromInstance(gameStateManager).AsSingle();
+            GameLogger.LogInfo(" GameStateManager 바인딩 완료 (전역에서 찾기)", GameLogger.LogCategory.Combat);
+        }
+        else
+        {
+            GameLogger.LogWarning(" GameStateManager를 찾을 수 없습니다!", GameLogger.LogCategory.Combat);
+        }
+
+        var settingsManager = FindFirstObjectByType<SettingsManager>(FindObjectsInactive.Include);
+        if (settingsManager != null)
+        {
+            Container.Bind<SettingsManager>().FromInstance(settingsManager).AsSingle();
+            GameLogger.LogInfo(" SettingsManager 바인딩 완료 (전역에서 찾기)", GameLogger.LogCategory.Combat);
+        }
+        else
+        {
+            GameLogger.LogWarning(" SettingsManager를 찾을 수 없습니다!", GameLogger.LogCategory.Combat);
         }
 
         // 특별한 경우들

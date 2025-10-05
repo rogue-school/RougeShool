@@ -46,8 +46,9 @@ namespace Game.CombatSystem.Manager
 
         [Inject] private PlayerManager playerManager;
         [Inject] private EnemyManager enemyManager;
-        // CombatSlotManager 제거됨 - 슬롯 관리 기능을 CombatFlowManager로 이전
         [Inject] private TurnManager turnManager;
+        [Inject] private IPlayerHandManager playerHandManager;
+        [Inject] private ICombatFlowManager combatFlowManager;
 
         #endregion
 
@@ -56,10 +57,6 @@ namespace Game.CombatSystem.Manager
         private bool isExecuting = false;
         private bool isInitialized = false;
         private Queue<ExecutionCommand> executionQueue = new Queue<ExecutionCommand>();
-
-        // FindObjectOfType 캐싱
-        private Game.SkillCardSystem.Manager.PlayerHandManager cachedPlayerHandManager;
-        private ICombatFlowManager cachedCombatFlowManager;
 
         #endregion
 
@@ -88,33 +85,7 @@ namespace Game.CombatSystem.Manager
 
         #endregion
 
-        #region 초기화 및 캐싱
-
-        /// <summary>
-        /// PlayerHandManager 캐시 가져오기 (지연 초기화)
-        /// </summary>
-        private Game.SkillCardSystem.Manager.PlayerHandManager GetCachedPlayerHandManager()
-        {
-            if (cachedPlayerHandManager == null)
-            {
-                cachedPlayerHandManager = FindFirstObjectByType<Game.SkillCardSystem.Manager.PlayerHandManager>();
-            }
-            return cachedPlayerHandManager;
-        }
-
-        /// <summary>
-        /// CombatFlowManager 캐시 가져오기 (지연 초기화)
-        /// </summary>
-        private ICombatFlowManager GetCachedCombatFlowManager()
-        {
-            if (cachedCombatFlowManager == null)
-            {
-                // 인터페이스는 UnityEngine.Object가 아니므로 구체 타입으로 조회 후 인터페이스로 캐스팅
-                var concrete = FindFirstObjectByType<CombatFlowManager>();
-                cachedCombatFlowManager = concrete as ICombatFlowManager;
-            }
-            return cachedCombatFlowManager;
-        }
+        #region 초기화
 
         private IEnumerator InitializeExecution()
         {
@@ -223,15 +194,14 @@ namespace Game.CombatSystem.Manager
                     if (card.IsFromPlayer())
                     {
                         // 플레이어 핸드에서 해당 카드 제거 (실행 완료 후)
-                        var handMgr = GetCachedPlayerHandManager();
-                        if (handMgr != null)
+                        if (playerHandManager != null)
                         {
-                            handMgr.RemoveCard(card);
+                            playerHandManager.RemoveCard(card);
                             GameLogger.LogInfo($"플레이어 카드 실행 완료 - 핸드에서 제거: {FormatCardTag(card)}", GameLogger.LogCategory.SkillCard);
                         }
                         else
                         {
-                            GameLogger.LogWarning("PlayerHandManager를 찾을 수 없습니다 - 플레이어 카드 핸드 제거 실패", GameLogger.LogCategory.Combat);
+                            GameLogger.LogWarning("PlayerHandManager가 주입되지 않았습니다 - 플레이어 카드 핸드 제거 실패", GameLogger.LogCategory.Combat);
                         }
                     }
                     else
@@ -262,7 +232,8 @@ namespace Game.CombatSystem.Manager
 
         private ExecutionResult ExecuteCard(ISkillCard card, CombatSlotPosition slotPosition)
         {
-            // 소환 진행 중인지 확인
+            // 소환 진행 중인지 확인 - StageManager는 선택적 의존성이므로 null 체크 필요
+            // TODO: StageManager도 DI로 주입 필요
             var stageManager = FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
             if (stageManager != null && stageManager.IsSummonInProgress)
             {
@@ -317,9 +288,13 @@ namespace Game.CombatSystem.Manager
         /// </summary>
         public void MoveSlotsForwardNew()
         {
-            // CombatFlowManager의 슬롯 관리 기능 사용
-            var combatFlowManager = FindFirstObjectByType<CombatFlowManager>();
-            combatFlowManager?.MoveSlotsForwardNew();
+            // 슬롯 이동 기능은 CombatFlowManager의 구체 구현에서 처리
+            // 인터페이스에 메서드가 없으므로 구체 타입으로 캐스팅 필요
+            if (combatFlowManager is CombatSystem.Manager.CombatFlowManager concreteManager)
+            {
+                // 구체 구현의 메서드 호출이 필요한 경우 여기서 처리
+                GameLogger.LogWarning("[CombatExecutionManager] MoveSlotsForwardNew는 더 이상 사용되지 않습니다.", GameLogger.LogCategory.Combat);
+            }
         }
 
         /// <summary>
@@ -327,9 +302,8 @@ namespace Game.CombatSystem.Manager
         /// </summary>
         public void MoveSlotsForward()
         {
-            // CombatFlowManager의 슬롯 관리 기능 사용
-            var combatFlowManager = FindFirstObjectByType<CombatFlowManager>();
-            combatFlowManager?.MoveSlotsForward();
+            // 슬롯 이동 기능은 TurnManager나 SlotRegistry에서 처리
+            GameLogger.LogWarning("[CombatExecutionManager] MoveSlotsForward는 더 이상 사용되지 않습니다.", GameLogger.LogCategory.Combat);
         }
 
         #endregion

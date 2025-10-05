@@ -4,7 +4,9 @@ using TMPro;
 using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Interface;
 using Game.CoreSystem.Utility;
+using Game.VFXSystem.Manager;
 using DG.Tweening;
+using Zenject;
 
 namespace Game.CharacterSystem.UI
 {
@@ -83,6 +85,8 @@ namespace Game.CharacterSystem.UI
 
         private Tween hpBarTween;
         private Tween glowTween;
+
+        [Inject(Optional = true)] private VFXManager vfxManager;
 
         #endregion
 
@@ -445,13 +449,25 @@ namespace Game.CharacterSystem.UI
         /// <param name="duration">지속 시간 (초, -1이면 영구)</param>
         public void AddBuffDebuffIcon(string effectId, Sprite iconSprite, bool isBuff, float duration = -1f)
         {
-            if (buffDebuffParent == null || buffDebuffIconPrefab == null) return;
+            if (buffDebuffParent == null) return;
 
             // 이미 같은 효과가 있으면 제거
             RemoveBuffDebuffIcon(effectId);
 
-            // 새 아이콘 생성
-            GameObject iconObj = Instantiate(buffDebuffIconPrefab, buffDebuffParent);
+            // VFXManager를 통한 아이콘 생성 (Object Pooling)
+            GameObject iconObj = null;
+            if (vfxManager != null)
+            {
+                iconObj = vfxManager.GetBuffIcon(buffDebuffParent);
+            }
+            else if (buffDebuffIconPrefab != null)
+            {
+                // Fallback: VFXManager가 없으면 기존 방식 사용
+                iconObj = Instantiate(buffDebuffIconPrefab, buffDebuffParent);
+            }
+
+            if (iconObj == null) return;
+
             var iconImage = iconObj.GetComponent<Image>();
             var iconText = iconObj.GetComponentInChildren<TextMeshProUGUI>();
 
@@ -479,7 +495,17 @@ namespace Game.CharacterSystem.UI
         {
             if (activeBuffDebuffIcons.TryGetValue(effectId, out GameObject iconObj))
             {
-                Destroy(iconObj);
+                // VFXManager를 통한 풀 반환 (Object Pooling)
+                if (vfxManager != null)
+                {
+                    vfxManager.ReturnBuffIcon(iconObj);
+                }
+                else
+                {
+                    // Fallback: VFXManager가 없으면 기존 방식 사용
+                    Destroy(iconObj);
+                }
+
                 activeBuffDebuffIcons.Remove(effectId);
                 GameLogger.LogInfo($"[HPBarController] 버프/디버프 아이콘 제거: {effectId}", GameLogger.LogCategory.Character);
             }
@@ -493,7 +519,17 @@ namespace Game.CharacterSystem.UI
             foreach (var icon in activeBuffDebuffIcons.Values)
             {
                 if (icon != null)
-                    Destroy(icon);
+                {
+                    // VFXManager를 통한 풀 반환 (Object Pooling)
+                    if (vfxManager != null)
+                    {
+                        vfxManager.ReturnBuffIcon(icon);
+                    }
+                    else
+                    {
+                        Destroy(icon);
+                    }
+                }
             }
             activeBuffDebuffIcons.Clear();
             GameLogger.LogInfo("[HPBarController] 모든 버프/디버프 아이콘 제거", GameLogger.LogCategory.Character);
