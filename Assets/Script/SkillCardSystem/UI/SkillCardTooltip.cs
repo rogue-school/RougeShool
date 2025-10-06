@@ -6,6 +6,7 @@ using UnityEngine.EventSystems;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Data;
 using Game.CoreSystem.Utility;
+using Game.SkillCardSystem.UI.Mappers;
 
 namespace Game.SkillCardSystem.UI
 {
@@ -21,8 +22,8 @@ namespace Game.SkillCardSystem.UI
         [Tooltip("툴팁 배경 이미지")]
         [SerializeField] private Image backgroundImage;
         
-        [Tooltip("툴팁 테두리 이미지")]
-        [SerializeField] private Image borderImage;
+        // Border 제거: 프리팹/코드에서 사용하지 않음
+        // [SerializeField] private Image borderImage;
 
         [Header("카드 헤더")]
         [Tooltip("카드 아이콘")]
@@ -82,6 +83,120 @@ namespace Game.SkillCardSystem.UI
         [Tooltip("서브 툴팁 표시 지연 시간")]
         [SerializeField] private float subTooltipDelay = 0.2f;
 
+        [Tooltip("서브 툴팁 스택 간격(px)")]
+        [SerializeField] private float subTooltipStackSpacing = 12f;
+
+        [Tooltip("서브 툴팁 최대 스택 수(0이면 무제한)")]
+        [SerializeField] private int subTooltipMaxStack = 4;
+
+        [Header("디버그 옵션")]
+        [Tooltip("런타임에 배경/보더 설정을 상세 출력하고 이상 시 폴백을 적용합니다")]
+        [SerializeField] private bool enableVisualDebugValidation = false;
+
+		[Header("배치 옵션")]
+
+        [Tooltip("상세 로깅 출력 여부")]
+        [SerializeField] private bool verboseLogging = false;
+
+        [Header("레이아웃 옵션")]
+        [Tooltip("콘텐츠가 비어 있어도 보장할 최소 높이(px)")]
+        [SerializeField] private float minLayoutHeight = 240f;
+
+        [Tooltip("선호 폭(px). 0이면 프리팹 값 유지")]
+        [SerializeField] private float preferredLayoutWidth = 0f;
+
+		[Header("정렬 옵션")]
+		[Tooltip("카드와 툴팁 사이의 가로 간격(px). 겹치지 않도록 충분한 간격")]
+		[SerializeField] private float alignPaddingX = 10f;
+
+		[Tooltip("카드 아래 모서리에 대한 세로 밀착 간격(px). 0이면 완전 밀착")]
+		[SerializeField] private float alignPaddingY = 0f;
+
+		// 내부 캐시
+		private RectTransform _contentRoot;
+		private LayoutElement _layoutElement;
+		private ContentSizeFitter _contentSizeFitter;
+
+		private static Transform FindChildByName(Transform parent, string name)
+		{
+			if (parent == null || string.IsNullOrEmpty(name)) return null;
+			for (int i = 0; i < parent.childCount; i++)
+			{
+				var child = parent.GetChild(i);
+				if (child.name == name) return child;
+			}
+			return null;
+		}
+
+		private void EnsurePrefabStructure()
+		{
+			// Background/Border 자동 바인딩 시도
+			if (backgroundImage == null)
+			{
+				var bgTr = FindChildByName(transform, "Background");
+				if (bgTr != null) backgroundImage = bgTr.GetComponent<Image>();
+			}
+            // Border 자동 바인딩 제거
+
+			// ContentRoot 확보(없으면 생성)
+			var existing = FindChildByName(transform, "ContentRoot");
+			if (existing == null)
+			{
+				var go = new GameObject("ContentRoot", typeof(RectTransform));
+				var rt = go.GetComponent<RectTransform>();
+				rt.SetParent(transform, false);
+				rt.anchorMin = new Vector2(0f, 0f);
+				rt.anchorMax = new Vector2(1f, 1f);
+				rt.offsetMin = Vector2.zero;
+				rt.offsetMax = Vector2.zero;
+				_contentRoot = rt;
+			}
+			else
+			{
+				_contentRoot = existing as RectTransform;
+			}
+
+			// ContentRoot 레이아웃 보장
+			var vlg = _contentRoot.GetComponent<VerticalLayoutGroup>();
+			if (vlg == null) vlg = _contentRoot.gameObject.AddComponent<VerticalLayoutGroup>();
+			vlg.padding = new RectOffset(12, 12, 10, 10);
+			vlg.spacing = 6f;
+			vlg.childControlHeight = true;
+			vlg.childForceExpandHeight = false;
+
+			var crFitter = _contentRoot.GetComponent<ContentSizeFitter>();
+			if (crFitter == null) crFitter = _contentRoot.gameObject.AddComponent<ContentSizeFitter>();
+			crFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+			crFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+			// 루트 레이아웃 보장
+			_layoutElement = GetComponent<LayoutElement>();
+			if (_layoutElement == null) _layoutElement = gameObject.AddComponent<LayoutElement>();
+			if (_layoutElement.minHeight < minLayoutHeight) _layoutElement.minHeight = minLayoutHeight;
+			if (preferredLayoutWidth > 0f) _layoutElement.preferredWidth = preferredLayoutWidth;
+
+			_contentSizeFitter = GetComponent<ContentSizeFitter>();
+			if (_contentSizeFitter == null) _contentSizeFitter = gameObject.AddComponent<ContentSizeFitter>();
+			_contentSizeFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+			_contentSizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+			// Background/Border RectTransform 스트레치 보정
+			if (backgroundImage != null)
+			{
+				var bgRt = backgroundImage.rectTransform;
+				bgRt.anchorMin = new Vector2(0f, 0f);
+				bgRt.anchorMax = new Vector2(1f, 1f);
+				bgRt.offsetMin = Vector2.zero;
+				bgRt.offsetMax = Vector2.zero;
+			}
+            // Border 스트레치 보정 제거
+
+			if (enableVisualDebugValidation)
+			{
+				GameLogger.LogInfo("[SkillCardTooltip] Prefab 구조 검증/보정 완료", GameLogger.LogCategory.UI);
+			}
+		}
+
         #endregion
 
         #region Private Fields
@@ -92,6 +207,7 @@ namespace Game.SkillCardSystem.UI
         private Tween fadeTween;
         private bool isVisible = false;
         private ISkillCard currentCard;
+        private RectTransform currentCardRectTransform; // 현재 카드의 RectTransform (크기 계산용)
         
         // 툴팁 고정 관련
         private bool isFixed = false;
@@ -105,6 +221,8 @@ namespace Game.SkillCardSystem.UI
         
         // 서브 툴팁 관련
         private GameObject currentSubTooltip;
+        private readonly System.Collections.Generic.List<GameObject> stackedSubTooltips = new System.Collections.Generic.List<GameObject>();
+        private readonly System.Collections.Generic.Dictionary<EffectData, GameObject> effectToSubTooltip = new System.Collections.Generic.Dictionary<EffectData, GameObject>();
         private EffectData currentHoveredEffect;
         private System.Collections.IEnumerator subTooltipCoroutine;
 
@@ -139,8 +257,9 @@ namespace Game.SkillCardSystem.UI
         /// 컴포넌트들을 초기화합니다.
         /// 독립적인 툴팁 캔버스를 사용하므로 부모 캔버스 참조를 제거합니다.
         /// </summary>
-        private void InitializeComponents()
+		private void InitializeComponents()
         {
+			EnsurePrefabStructure();
             canvasGroup = GetComponent<CanvasGroup>();
             if (canvasGroup == null)
             {
@@ -149,11 +268,29 @@ namespace Game.SkillCardSystem.UI
 
             rectTransform = GetComponent<RectTransform>();
             
-            // 독립적인 툴팁 캔버스 사용
-            
-            GameLogger.LogInfo("[SkillCardTooltip] 독립적인 툴팁 캔버스 사용 - 부모 캔버스 참조 제거", GameLogger.LogCategory.UI);
+            // 레이아웃 컴포넌트 확보: 폭은 프리팹의 LayoutElement가 주도, 높이는 ContentSizeFitter로 자동
+            layoutElement = GetComponent<LayoutElement>();
+            if (layoutElement == null)
+            {
+                layoutElement = gameObject.AddComponent<LayoutElement>();
+            }
+            contentSizeFitter = GetComponent<ContentSizeFitter>();
+            if (contentSizeFitter == null)
+            {
+                contentSizeFitter = gameObject.AddComponent<ContentSizeFitter>();
+            }
+            contentSizeFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            contentSizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-            // 프리팹 구조를 존중하기 위해 레이아웃 컴포넌트 자동 추가 제거
+            // 최소/선호 레이아웃 값 적용(프리팹 값 보존 우선)
+            if (layoutElement.minHeight < minLayoutHeight)
+            {
+                layoutElement.minHeight = minLayoutHeight;
+            }
+            if (preferredLayoutWidth > 0f)
+            {
+                layoutElement.preferredWidth = preferredLayoutWidth;
+            }
 
             // 초기 상태 설정
             canvasGroup.alpha = 0f;
@@ -171,9 +308,13 @@ namespace Game.SkillCardSystem.UI
         /// </summary>
         /// <param name="card">표시할 카드</param>
         /// <param name="cardPosition">스킬카드의 위치</param>
-        public void ShowTooltip(ISkillCard card, Vector2 cardPosition)
+        /// <param name="cardRectTransform">카드의 RectTransform (크기 계산용)</param>
+        public void ShowTooltip(ISkillCard card, Vector2 cardPosition, RectTransform cardRectTransform = null)
         {
-            GameLogger.LogInfo($"[SkillCardTooltip] ShowTooltip 호출됨 - card: {card?.GetCardName()}, cardPosition: {cardPosition}, isVisible: {isVisible}", GameLogger.LogCategory.UI);
+            if (verboseLogging)
+            {
+                GameLogger.LogInfo($"[SkillCardTooltip] ShowTooltip 호출됨 - card: {card?.GetCardName()}, cardPosition: {cardPosition}, isVisible: {isVisible}", GameLogger.LogCategory.UI);
+            }
             
             if (card == null)
             {
@@ -182,6 +323,7 @@ namespace Game.SkillCardSystem.UI
             }
 
             currentCard = card;
+            currentCardRectTransform = cardRectTransform; // 카드 RectTransform 저장
             UpdateTooltipContent(card);
             
             // Layout 시스템이 적용되도록 한 프레임 대기 후 위치 계산
@@ -202,7 +344,10 @@ namespace Game.SkillCardSystem.UI
 
             if (!isVisible)
             {
-                GameLogger.LogInfo($"[SkillCardTooltip] 툴팁 페이드 인 시작: {currentCard?.GetCardName()}", GameLogger.LogCategory.UI);
+                if (verboseLogging)
+                {
+                    GameLogger.LogInfo($"[SkillCardTooltip] 툴팁 페이드 인 시작: {currentCard?.GetCardName()}", GameLogger.LogCategory.UI);
+                }
                 FadeIn();
             }
             else
@@ -220,7 +365,7 @@ namespace Game.SkillCardSystem.UI
             if (isVisible)
             {
                 // 서브 툴팁도 함께 숨김 (임시 비활성화)
-                // HideSubTooltip();
+                HideSubTooltip();
                 FadeOut();
             }
         }
@@ -352,7 +497,7 @@ namespace Game.SkillCardSystem.UI
             {
                 if (currentEffectData == null || parentTooltip == null) return;
 
-                GameLogger.LogInfo($"[EffectItemComponent] OnPointerEnter: {currentEffectData.name} (서브 툴팁 비활성화됨)", GameLogger.LogCategory.UI);
+                GameLogger.LogInfo($"[EffectItemComponent] OnPointerEnter: {currentEffectData.name}", GameLogger.LogCategory.UI);
                 
                 // 이름 텍스트 강조
                 if (nameText != null)
@@ -360,8 +505,8 @@ namespace Game.SkillCardSystem.UI
                     nameText.color = highlightNameColor;
                 }
 
-                // 서브 툴팁 표시 (임시 비활성화)
-                // parentTooltip.ShowSubTooltip(currentEffectData, eventData.position);
+                // 서브 툴팁 표시 (메인 툴팁의 오른쪽에 정렬)
+                parentTooltip.ShowSubTooltip(currentEffectData, eventData.position);
             }
 
             /// <summary>
@@ -372,7 +517,7 @@ namespace Game.SkillCardSystem.UI
             {
                 if (currentEffectData == null || parentTooltip == null) return;
 
-                GameLogger.LogInfo($"[EffectItemComponent] OnPointerExit: {currentEffectData.name} (서브 툴팁 비활성화됨)", GameLogger.LogCategory.UI);
+                GameLogger.LogInfo($"[EffectItemComponent] OnPointerExit: {currentEffectData.name}", GameLogger.LogCategory.UI);
                 
                 // 이름 텍스트 원래 색상으로 복원
                 if (nameText != null)
@@ -380,8 +525,8 @@ namespace Game.SkillCardSystem.UI
                     nameText.color = defaultNameColor;
                 }
 
-                // 서브 툴팁 숨김 (임시 비활성화)
-                // parentTooltip.HideSubTooltip();
+                // 서브 툴팁 숨김 (개별)
+                parentTooltip.HideSubTooltip(currentEffectData);
             }
         }
 
@@ -402,17 +547,20 @@ namespace Game.SkillCardSystem.UI
             // 툴팁 배경 및 보더 설정
             SetupTooltipBackground();
 
-            // 카드 헤더 업데이트 (아이콘 + 이름 + 타입)
+            // 카드 헤더(아이콘)만 갱신하고, 제목/타입/설명은 모델/빌더 경로로 통일
             UpdateCardHeader(definition);
-
-            // 카드 설명 업데이트
-            UpdateCardDescription(definition);
+            var model = SkillCardTooltipMapper.From(definition);
+            TooltipBuilder.BuildMain(model, this);
 
             // 카드 통계 업데이트 (아이콘 + 텍스트)
             UpdateCardStats(card, definition);
 
-            // 효과 정보 업데이트 (동적 생성)
-            UpdateEffectsInfo(definition);
+			// 효과 정보 업데이트 (동적 생성)
+			UpdateEffectsInfo(definition);
+
+			// 레이아웃 강제 갱신으로 0 높이 방지 및 후속 위치 계산 안정화
+			Canvas.ForceUpdateCanvases();
+			LayoutRebuilder.ForceRebuildLayoutImmediate(rectTransform);
         }
 
         /// <summary>
@@ -424,62 +572,36 @@ namespace Game.SkillCardSystem.UI
             // 배경 이미지 설정
             if (backgroundImage != null)
             {
-                // 프리팹에 스프라이트가 있으면 그대로 사용
-                if (backgroundImage.sprite != null)
+                bool hadSprite = backgroundImage.sprite != null;
+                if (enableVisualDebugValidation)
                 {
-                    // 배경 색상 설정 (어두운 반투명) - 프리팹 이미지에 틴트 적용
-                    backgroundImage.color = new Color(0.1f, 0.1f, 0.1f, 0.95f);
-                    backgroundImage.gameObject.SetActive(true); // 활성화 확인
-                    GameLogger.LogInfo("[SkillCardTooltip] 프리팹 배경 이미지 사용", GameLogger.LogCategory.UI);
+                    GameLogger.LogInfo($"[TooltipDBG] Background sprite={(hadSprite ? backgroundImage.sprite.name : "<none>")}, type={backgroundImage.type}, colorA={backgroundImage.color.a}", GameLogger.LogCategory.UI);
                 }
-                else
+
+                if (!hadSprite)
                 {
                     // 프리팹에 스프라이트가 없으면 기본 이미지 생성
                     CreateDefaultBackgroundSprite();
                     backgroundImage.color = new Color(0.1f, 0.1f, 0.1f, 0.95f);
                     backgroundImage.gameObject.SetActive(true);
-                    GameLogger.LogInfo("[SkillCardTooltip] 기본 배경 이미지 생성", GameLogger.LogCategory.UI);
-                }
-            }
-
-            // 보더 이미지 설정
-            if (borderImage != null)
-            {
-                // 보더 활성화 (프리팹에서 비활성화되어 있을 수 있음)
-                borderImage.gameObject.SetActive(true);
-
-                // 프리팹에 스프라이트가 있으면 그대로 사용
-                if (borderImage.sprite != null)
-                {
-                    // 보더 색상 설정 (금색 테두리)
-                    borderImage.color = new Color(1f, 0.8f, 0.2f, 1f);
-
-                    // 보더가 테두리만 보이도록 설정 (Fill Center 끄기)
-                    if (borderImage.type == Image.Type.Sliced)
-                    {
-                        borderImage.fillCenter = false;
-                        GameLogger.LogInfo("[SkillCardTooltip] 보더 Fill Center 비활성화 (테두리만 표시)", GameLogger.LogCategory.UI);
-                    }
-                    else
-                    {
-                        // Sliced가 아니면 Sliced로 변경
-                        borderImage.type = Image.Type.Sliced;
-                        borderImage.fillCenter = false;
-                        GameLogger.LogInfo("[SkillCardTooltip] 보더를 Sliced 타입으로 변경 및 Fill Center 비활성화", GameLogger.LogCategory.UI);
-                    }
-
-                    GameLogger.LogInfo("[SkillCardTooltip] 프리팹 보더 이미지 사용", GameLogger.LogCategory.UI);
+                    if (enableVisualDebugValidation)
+                        GameLogger.LogInfo("[TooltipDBG] Background fallback: created 1x1 sprite", GameLogger.LogCategory.UI);
                 }
                 else
                 {
-                    // 프리팹에 스프라이트가 없으면 기본 이미지 생성
-                    CreateDefaultBorderSprite();
-                    borderImage.color = new Color(1f, 0.8f, 0.2f, 1f);
-                    borderImage.type = Image.Type.Sliced;
-                    borderImage.fillCenter = false;
-                    GameLogger.LogInfo("[SkillCardTooltip] 기본 보더 이미지 생성", GameLogger.LogCategory.UI);
+                    // 통합 스프라이트(배경+보더)를 배경으로 쓰는 경우: FillCenter 유지
+                    backgroundImage.type = Image.Type.Sliced;
+                    if (backgroundImage.color.a < 0.05f)
+                    {
+                        backgroundImage.color = new Color(0.1f, 0.1f, 0.1f, 0.95f);
+                        if (enableVisualDebugValidation)
+                            GameLogger.LogInfo("[TooltipDBG] Background alpha was ~0 → set to 0.95", GameLogger.LogCategory.UI);
+                    }
+                    backgroundImage.gameObject.SetActive(true);
                 }
             }
+
+            // Border 설정 로직 제거
 
             GameLogger.LogInfo("[SkillCardTooltip] 툴팁 배경 및 보더 설정 완료", GameLogger.LogCategory.UI);
         }
@@ -505,20 +627,7 @@ namespace Game.SkillCardSystem.UI
         /// <summary>
         /// 기본 보더 스프라이트를 생성합니다.
         /// </summary>
-        private void CreateDefaultBorderSprite()
-        {
-            if (borderImage == null) return;
-
-            // 1x1 픽셀의 흰색 텍스처 생성
-            Texture2D texture = new Texture2D(1, 1);
-            texture.SetPixel(0, 0, Color.white);
-            texture.Apply();
-
-            // 스프라이트 생성 및 할당
-            Sprite sprite = Sprite.Create(texture, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f));
-            borderImage.sprite = sprite;
-            borderImage.type = Image.Type.Sliced; // 9-slice 스타일로 설정
-        }
+        // Border 생성 로직 제거
 
 
         /// <summary>
@@ -699,11 +808,19 @@ namespace Game.SkillCardSystem.UI
                     DestroyImmediate(child.gameObject);
             }
 
-            // 새로운 효과 아이템들 생성
+            // 새로운 효과 아이템들 생성(효과가 없으면 컨테이너 비활성)
             var effects = GetCardEffects(definition);
-            foreach (var effect in effects)
+            if (effects.Count == 0)
             {
-                CreateEffectItem(effect);
+                effectsContainer.gameObject.SetActive(false);
+            }
+            else
+            {
+                effectsContainer.gameObject.SetActive(true);
+                foreach (var effect in effects)
+                {
+                    CreateEffectItem(effect);
+                }
             }
         }
 
@@ -897,9 +1014,18 @@ namespace Game.SkillCardSystem.UI
 
             // 스킬카드 위치를 캔버스 로컬 좌표로 변환
             Vector2 cardLocalPoint;
-            Camera cameraToUse = null; // ScreenSpaceOverlay 모드 사용
+            // 툴팁이 속한 캔버스의 카메라 사용(Overlay면 null)
+            Camera cameraToUse = null;
+            var parentCanvas = rectTransform.GetComponentInParent<Canvas>();
+            if (parentCanvas != null && parentCanvas.renderMode != RenderMode.ScreenSpaceOverlay)
+            {
+                cameraToUse = parentCanvas.worldCamera;
+            }
+            var targetParent = rectTransform.parent as RectTransform;
+            if (targetParent == null) targetParent = rectTransform; // 방어적 처리
+
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                rectTransform.parent as RectTransform, // 부모 RectTransform 사용
+                targetParent, // 부모 RectTransform 기준 로컬 좌표로 변환
                 cardPosition,
                 cameraToUse,
                 out cardLocalPoint);
@@ -908,7 +1034,7 @@ namespace Game.SkillCardSystem.UI
             Vector2 tooltipPosition = CalculateTooltipPositionRelativeToCard(cardLocalPoint);
 
             // 화면 경계 내로 제한
-            tooltipPosition = ClampToScreenBounds(tooltipPosition);
+            tooltipPosition = ClampToScreenBounds(tooltipPosition, targetParent);
 
             rectTransform.localPosition = tooltipPosition;
         }
@@ -925,15 +1051,13 @@ namespace Game.SkillCardSystem.UI
             var canvasRect = rectTransform.parent.GetComponent<RectTransform>().rect;
             var tooltipRect = rectTransform.rect;
 
-            // 툴팁의 실제 크기 (프리팹 크기: 600x600)
+            // 툴팁의 실제 크기
             float tooltipWidth = Mathf.Abs(tooltipRect.width);
             float tooltipHeight = Mathf.Abs(tooltipRect.height);
 
-            // 툴팁의 Pivot 고려 (프리팹 기본값: 0.5, 0.5)
+            // 요구: 카드 오른쪽에 붙고, 카드 하단과 툴팁 하단이 일자 → Pivot을 좌하단(0,0)
+            rectTransform.pivot = new Vector2(0f, 0f);
             Vector2 tooltipPivot = rectTransform.pivot;
-
-            // 스킬카드 크기 (실제 카드 크기, 기본값 150)
-            float cardWidth = 150f;
 
             // 캔버스의 실제 경계 (Canvas 중앙이 0,0인 좌표계)
             float canvasLeft = canvasRect.xMin;
@@ -941,46 +1065,49 @@ namespace Game.SkillCardSystem.UI
             float canvasTop = canvasRect.yMax;
             float canvasBottom = canvasRect.yMin;
 
-            // 카드 위치 기준 여유 공간 계산
-            float rightSpace = canvasRight - (cardLocalPoint.x + cardWidth * 0.5f);
-            float leftSpace = (cardLocalPoint.x - cardWidth * 0.5f) - canvasLeft;
+            // cardLocalPoint는 카드 좌하단 포인트이므로 카드 폭을 고려하여 우측 경계 계산
+            float cardWidth = 100f; // 기본값
+            if (currentCardRectTransform != null)
+            {
+                cardWidth = Mathf.Abs(currentCardRectTransform.rect.width);
+            }
+            float cardRightEdge = cardLocalPoint.x + cardWidth;
+            
+            float rightSpace = canvasRight - cardRightEdge;
+            float leftSpace = cardLocalPoint.x - canvasLeft;
 
-            // 툴팁이 들어갈 공간이 있는지 확인
-            float tooltipRequiredWidth = tooltipWidth * (1f - tooltipPivot.x) + mouseOffsetX;
+            // 툴팁이 들어갈 공간이 있는지 확인 (간격 포함)
+            float tooltipRequiredWidth = tooltipWidth + alignPaddingX;
             bool canShowRight = rightSpace >= tooltipRequiredWidth;
             bool canShowLeft = leftSpace >= tooltipRequiredWidth;
 
             Vector2 tooltipPosition = cardLocalPoint;
 
-            // 수평 위치 결정 (오른쪽 우선)
+            // 수평 위치 결정 (오른쪽 우선, 부족 시 왼쪽 폴백)
             if (canShowRight)
             {
-                tooltipPosition.x = cardLocalPoint.x + (cardWidth * 0.5f) + mouseOffsetX + (tooltipWidth * tooltipPivot.x);
+                // 카드 우측 경계에서 간격을 두고 배치
+                tooltipPosition.x = cardRightEdge + alignPaddingX;
             }
             else if (canShowLeft)
             {
-                tooltipPosition.x = cardLocalPoint.x - (cardWidth * 0.5f) - mouseOffsetX - (tooltipWidth * (1f - tooltipPivot.x));
+                // 좌측 폴백: 카드 좌측에 간격을 두고 배치
+                tooltipPosition.x = cardLocalPoint.x - alignPaddingX - tooltipWidth;
             }
             else
             {
-                tooltipPosition.x = cardLocalPoint.x + cardWidth * 0.5f + 10f;
+                // 양쪽 모두 부족하면 화면 중앙 쪽으로 보정 (하단 정렬 유지)
+                var parentRect = rectTransform.parent as RectTransform;
+                tooltipPosition.x = Mathf.Clamp(cardLocalPoint.x, parentRect.rect.xMin, parentRect.rect.xMax - tooltipWidth);
             }
 
-            // 수직 위치는 카드 중심과 맞춤
-            tooltipPosition.y = cardLocalPoint.y;
+            // 수직 정렬: 카드 하단과 툴팁 하단을 일치 (Pivot.y=0)
+            tooltipPosition.y = cardLocalPoint.y + alignPaddingY;
 
-            // 수직 경계 체크 및 조정
-            float tooltipTop = tooltipPosition.y + tooltipHeight * (1f - tooltipPivot.y);
-            float tooltipBottom = tooltipPosition.y - tooltipHeight * tooltipPivot.y;
+            // 툴팁을 최상단으로 이동 (다른 UI 요소 위에 표시)
+            rectTransform.SetAsLastSibling();
 
-            if (tooltipTop > canvasTop)
-            {
-                tooltipPosition.y = canvasTop - tooltipHeight * (1f - tooltipPivot.y);
-            }
-            else if (tooltipBottom < canvasBottom)
-            {
-                tooltipPosition.y = canvasBottom + tooltipHeight * tooltipPivot.y;
-            }
+            // 수직 경계는 요청사항에 따라 하단 정렬을 유지하고 변경하지 않습니다
 
             return tooltipPosition;
         }
@@ -1063,31 +1190,30 @@ namespace Game.SkillCardSystem.UI
         /// </summary>
         /// <param name="position">원본 위치</param>
         /// <returns>제한된 위치</returns>
-        private Vector2 ClampToScreenBounds(Vector2 position)
+        private Vector2 ClampToScreenBounds(Vector2 position, RectTransform targetParent)
         {
             if (rectTransform == null) return position;
 
-            var canvasRect = rectTransform.parent.GetComponent<RectTransform>().rect;
+            var parentRectTransform = targetParent != null ? targetParent : (rectTransform.parent as RectTransform);
+            if (parentRectTransform == null) parentRectTransform = rectTransform;
+
+            var canvasRect = parentRectTransform.rect;
             var tooltipRect = rectTransform.rect;
 
-            // X축 제한
-            if (position.x + tooltipRect.width > canvasRect.width)
-            {
-                position.x = canvasRect.width - tooltipRect.width - mouseOffsetX;
-            }
-            if (position.x < canvasRect.x)
-            {
-                position.x = canvasRect.x + mouseOffsetX;
-            }
+            // 좌우 경계만 클램프 (하단 정렬 유지)
+            float minX = canvasRect.xMin;
+            float maxX = canvasRect.xMax;
 
-            // Y축 제한
-            if (position.y - tooltipRect.height < canvasRect.y)
+            float tooltipLeft = position.x; // pivot.x = 0
+            float tooltipRight = position.x + tooltipRect.width;
+
+            if (tooltipRight > maxX)
             {
-                position.y = canvasRect.y + tooltipRect.height + mouseOffsetY;
+                position.x = maxX - tooltipRect.width;
             }
-            if (position.y > canvasRect.height)
+            if (position.x < minX)
             {
-                position.y = canvasRect.height - mouseOffsetY;
+                position.x = minX;
             }
 
             return position;
@@ -1114,7 +1240,10 @@ namespace Game.SkillCardSystem.UI
             fadeTween = canvasGroup.DOFade(1f, fadeInDuration)
                 .SetEase(fadeEase)
                 .OnComplete(() => {
-                    GameLogger.LogInfo("툴팁 표시 완료", GameLogger.LogCategory.UI);
+                    if (verboseLogging)
+                    {
+                        GameLogger.LogInfo("툴팁 표시 완료", GameLogger.LogCategory.UI);
+                    }
                 });
         }
 
@@ -1211,7 +1340,7 @@ namespace Game.SkillCardSystem.UI
             }
 
             // 지연된 서브 툴팁 표시
-            subTooltipCoroutine = ShowSubTooltipDelayed(effectData, triggerPosition);
+            subTooltipCoroutine = ShowSubTooltipDelayed(effectData, AlignPositionToRightEdge(triggerPosition));
             StartCoroutine(subTooltipCoroutine);
         }
 
@@ -1229,14 +1358,43 @@ namespace Game.SkillCardSystem.UI
                 subTooltipCoroutine = null;
             }
 
-            // 서브 툴팁 숨김
+            // 서브 툴팁 숨김 (스택 포함)
             if (currentSubTooltip != null)
             {
                 Destroy(currentSubTooltip);
                 currentSubTooltip = null;
             }
+            if (stackedSubTooltips.Count > 0)
+            {
+                foreach (var go in stackedSubTooltips)
+                {
+                    if (go != null) Destroy(go);
+                }
+                stackedSubTooltips.Clear();
+            }
+            if (effectToSubTooltip.Count > 0)
+            {
+                effectToSubTooltip.Clear();
+            }
             
             currentHoveredEffect = null;
+        }
+
+        /// <summary>
+        /// 특정 효과의 서브 툴팁만 숨깁니다.
+        /// </summary>
+        public void HideSubTooltip(EffectData effect)
+        {
+            if (effect == null) return;
+            if (effectToSubTooltip.TryGetValue(effect, out var go) && go != null)
+            {
+                stackedSubTooltips.Remove(go);
+                Destroy(go);
+            }
+            effectToSubTooltip.Remove(effect);
+            // 현재 표시 참조 정리
+            if (currentSubTooltip == go) currentSubTooltip = null;
+            RepositionSubTooltipStack();
         }
 
         /// <summary>
@@ -1262,17 +1420,93 @@ namespace Game.SkillCardSystem.UI
         {
             if (subTooltipPrefab == null) return;
 
-            // 서브 툴팁 생성
-            currentSubTooltip = Instantiate(subTooltipPrefab, rectTransform.parent);
+            // 서브 툴팁 생성 (스택)
+            var newSub = Instantiate(subTooltipPrefab, rectTransform.parent);
+            stackedSubTooltips.Add(newSub);
+            currentSubTooltip = newSub;
+            effectToSubTooltip[effectData] = newSub;
+
+            // 최대 스택 초과 시 가장 오래된 것 제거
+            if (subTooltipMaxStack > 0 && stackedSubTooltips.Count > subTooltipMaxStack)
+            {
+                var oldest = stackedSubTooltips[0];
+                stackedSubTooltips.RemoveAt(0);
+                // dict에서 해당 항목 제거
+                EffectData keyToRemove = null;
+                foreach (var kv in effectToSubTooltip)
+                {
+                    if (kv.Value == oldest) { keyToRemove = kv.Key; break; }
+                }
+                if (keyToRemove != null) effectToSubTooltip.Remove(keyToRemove);
+                if (oldest != null) Destroy(oldest);
+            }
             
             // 서브 툴팁 컴포넌트 설정
-            var subTooltipComponent = currentSubTooltip.GetComponent<SubTooltipComponent>();
+            var subTooltipComponent = newSub.GetComponent<SubTooltipComponent>();
             if (subTooltipComponent != null)
             {
+                // 모델 기반 채움 후 표시
+                var model = Game.SkillCardSystem.UI.Mappers.EffectTooltipMapper.From(effectData);
                 subTooltipComponent.SetupSubTooltip(effectData, triggerPosition);
+                TooltipBuilder.BuildSub(model, subTooltipComponent);
             }
-
+            
+            // 스택 정렬(우상단에서 아래로)
+            RepositionSubTooltipStack();
             GameLogger.LogInfo($"[SkillCardTooltip] 서브 툴팁 생성 완료: {effectData.name}", GameLogger.LogCategory.UI);
+        }
+
+        private void RepositionSubTooltipStack()
+        {
+            if (rectTransform == null || stackedSubTooltips.Count == 0) return;
+            // 메인 툴팁 우상단 로컬 포인트 계산
+            var r = rectTransform.rect;
+            Vector3 localTopRight = new Vector3(r.width * (1f - rectTransform.pivot.x), r.height * (1f - rectTransform.pivot.y), 0f);
+            Vector3 worldTopRight = rectTransform.TransformPoint(localTopRight);
+            Vector2 baseScreen = RectTransformUtility.WorldToScreenPoint(null, worldTopRight);
+
+            float yOffset = 0f;
+            for (int i = 0; i < stackedSubTooltips.Count; i++)
+            {
+                var go = stackedSubTooltips[i];
+                if (go == null) continue;
+                var comp = go.GetComponent<SubTooltipComponent>();
+                if (comp == null) continue;
+
+                // 각 서브 툴팁을 메인 우상단에서 아래로 간격 배치
+                var screen = new Vector2(baseScreen.x + 20f, baseScreen.y - yOffset);
+                comp.UpdatePosition(screen);
+
+                // 다음 아이템 간격 계산: 현재 툴팁 높이를 이용
+                var rt = go.GetComponent<RectTransform>();
+                float h = rt != null ? Mathf.Abs(rt.rect.height) : 60f;
+                yOffset += h + subTooltipStackSpacing;
+            }
+        }
+        /// <summary>
+        /// 메인 툴팁의 오른쪽 가장자리 기준으로 서브 툴팁 시작 위치를 정렬합니다.
+        /// </summary>
+        private Vector2 AlignPositionToRightEdge(Vector2 eventScreenPos)
+        {
+            if (rectTransform == null) return eventScreenPos;
+
+            // 메인 툴팁의 우측 가장자리 스크린 좌표를 계산
+            var parentRect = rectTransform.parent as RectTransform;
+            if (parentRect == null) return eventScreenPos;
+
+            var r = rectTransform.rect;
+            var p = rectTransform.pivot;
+            // 메인 툴팁의 우상단 기준으로 정렬
+            Vector3 worldTopRight = rectTransform.TransformPoint(new Vector3(r.width * (1f - p.x), r.height * (1f - p.y), 0f));
+            Vector2 rightEdgeScreen = RectTransformUtility.WorldToScreenPoint(null, worldTopRight);
+
+            // 약간의 오프셋을 더해 서브 툴팁이 겹치지 않게 함
+            rightEdgeScreen.x += 20f;
+
+            // 수직 정렬: 메인 툴팁 상단 경계에 맞춤
+            // rightEdgeScreen.y는 이미 상단 경계를 가리킴
+
+            return rightEdgeScreen;
         }
 
         #endregion
@@ -1299,8 +1533,8 @@ namespace Game.SkillCardSystem.UI
             [Tooltip("서브 툴팁 배경 이미지")]
             [SerializeField] private Image backgroundImage;
             
-            [Tooltip("서브 툴팁 테두리 이미지")]
-            [SerializeField] private Image borderImage;
+            // Border 제거: 서브 툴팁에서도 사용하지 않음
+            // [SerializeField] private Image borderImage;
 
             [Header("효과 상세 정보")]
             [Tooltip("효과 이름 텍스트")]
@@ -1439,18 +1673,7 @@ namespace Game.SkillCardSystem.UI
                     }
                 }
 
-                // 보더 이미지 설정
-                if (borderImage != null)
-                {
-                    // 서브 툴팁 보더 색상 설정 (밝은 파란색 테두리)
-                    borderImage.color = new Color(0.4f, 0.6f, 1f, 1f);
-                    
-                    // 보더 이미지가 할당되지 않은 경우 기본 색상으로 설정
-                    if (borderImage.sprite == null)
-                    {
-                        CreateDefaultSubTooltipBorderSprite();
-                    }
-                }
+                // Border 설정 제거
 
                 GameLogger.LogInfo("[SubTooltipComponent] 서브 툴팁 배경 및 보더 설정 완료", GameLogger.LogCategory.UI);
             }
@@ -1476,20 +1699,7 @@ namespace Game.SkillCardSystem.UI
             /// <summary>
             /// 서브 툴팁 기본 보더 스프라이트를 생성합니다.
             /// </summary>
-            private void CreateDefaultSubTooltipBorderSprite()
-            {
-                if (borderImage == null) return;
-
-                // 1x1 픽셀의 흰색 텍스처 생성
-                Texture2D texture = new Texture2D(1, 1);
-                texture.SetPixel(0, 0, Color.white);
-                texture.Apply();
-
-                // 스프라이트 생성 및 할당
-                Sprite sprite = Sprite.Create(texture, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f));
-                borderImage.sprite = sprite;
-                borderImage.type = Image.Type.Sliced; // 9-slice 스타일로 설정
-            }
+            // Border 생성 제거
 
             /// <summary>
             /// 서브 툴팁 내용을 업데이트합니다.
@@ -1542,7 +1752,7 @@ namespace Game.SkillCardSystem.UI
             /// 서브 툴팁 위치를 업데이트합니다.
             /// </summary>
             /// <param name="triggerPosition">트리거된 UI 요소의 위치</param>
-            private void UpdatePosition(Vector2 triggerPosition)
+            public void UpdatePosition(Vector2 triggerPosition)
             {
                 if (rectTransform == null) return;
 

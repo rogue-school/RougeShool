@@ -9,6 +9,7 @@ using Game.CoreSystem.Save;
 using Game.CombatSystem.Utility;
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Manager;
+using Game.CharacterSystem.Manager;
 using System.Linq;
 using System.Collections.Generic;
 
@@ -30,6 +31,7 @@ namespace Game.CoreSystem
         [SerializeField] private CoroutineRunner coroutineRunner;
         [SerializeField] private PlayerCharacterSelectionManager playerCharacterSelectionManager;
         [SerializeField] private SkillCardTooltipManager skillCardTooltipManager;
+        [SerializeField] private BuffDebuffTooltipManager buffDebuffTooltipManager;
 
         [Header("DI 최적화 설정")]
 #pragma warning disable CS0414 // 사용하지 않는 필드 경고 억제 (향후 사용 예정)
@@ -73,7 +75,8 @@ namespace Game.CoreSystem
                 (saveManager, "SaveManager", typeof(ISaveManager)),
                 (settingsManager, "SettingsManager", null),
                 (playerCharacterSelectionManager, "PlayerCharacterSelectionManager", typeof(IPlayerCharacterSelectionManager)),
-                (skillCardTooltipManager, "SkillCardTooltipManager", null)
+                (skillCardTooltipManager, "SkillCardTooltipManager", null),
+                (buffDebuffTooltipManager, "BuffDebuffTooltipManager", null)
             };
 
             foreach (var (instance, name, interfaceType) in managers)

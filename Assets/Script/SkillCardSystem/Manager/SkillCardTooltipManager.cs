@@ -27,22 +27,18 @@ namespace Game.SkillCardSystem.Manager
         [Tooltip("툴팁 숨김 지연 시간 (초)")]
         [SerializeField] private float hideDelay = 0.1f;
 
-        [Header("캔버스 설정")]
-        [Tooltip("캔버스 Sort Order (자동 생성 시 사용)")]
-        [SerializeField] private int canvasSortOrder = 1000;
-        
-        [Tooltip("캔버스 이름 (자동 검색 시 사용)")]
-        [SerializeField] private string canvasName = "TooltipCanvas";
+        // TooltipLayer 제거: 캔버스 루트에 직접 붙입니다
 
         #endregion
 
         #region Private Fields
 
         private SkillCardTooltip currentTooltip;
-        private Canvas tooltipCanvas;
+        private RectTransform tooltipLayer; // 현재 선택된 캔버스의 루트 RectTransform
         private ISkillCard hoveredCard;
         private ISkillCard pendingCard; // 초기화 대기 중 첫 호버 카드 저장
         private bool pendingShow; // 초기화 완료 즉시 표시 플래그
+        private RectTransform currentTargetRect; // 실제 대상 RectTransform
 
         private float showTimer;
         private float hideTimer;
@@ -150,25 +146,13 @@ namespace Game.SkillCardSystem.Manager
                 yield break;
             }
 
-            // 툴팁 캔버스 자동 설정
-            GameLogger.LogInfo("[SkillCardTooltipManager] 캔버스 설정 전 - 이펙트 상태 확인", GameLogger.LogCategory.UI);
-            SetupTooltipCanvas();
-            GameLogger.LogInfo("[SkillCardTooltipManager] 캔버스 설정 후 - 이펙트 상태 확인", GameLogger.LogCategory.UI);
+            // TooltipLayer는 카드의 실제 캔버스 기준으로 런타임에 보장합니다
 
-            // 툴팁 인스턴스 생성
-            GameLogger.LogInfo("[SkillCardTooltipManager] 툴팁 인스턴스 생성 전 - 이펙트 상태 확인", GameLogger.LogCategory.UI);
-            CreateTooltipInstance();
-            GameLogger.LogInfo("[SkillCardTooltipManager] 툴팁 인스턴스 생성 후 - 이펙트 상태 확인", GameLogger.LogCategory.UI);
+            // 인스턴스는 첫 표시 시점에 생성 (대상 캔버스 보장)
+            GameLogger.LogInfo("[SkillCardTooltipManager] 툴팁 인스턴스는 첫 표시 시 생성", GameLogger.LogCategory.UI);
 
-            // 초기화 완료 확인
-            if (currentTooltip != null && tooltipCanvas != null)
-            {
-                GameLogger.LogInfo("[SkillCardTooltipManager] 툴팁 시스템 초기화 완료", GameLogger.LogCategory.UI);
-            }
-            else
-            {
-                GameLogger.LogError("[SkillCardTooltipManager] 툴팁 시스템 초기화 실패", GameLogger.LogCategory.Error);
-            }
+			// 초기화 완료 확인 (툴팁은 첫 사용 시 생성)
+			GameLogger.LogInfo("[SkillCardTooltipManager] 툴팁 시스템 초기화 완료", GameLogger.LogCategory.UI);
 
             yield return null;
         }
@@ -202,71 +186,18 @@ namespace Game.SkillCardSystem.Manager
                               "2. Inspector에서 Tooltip Prefab 필드에 직접 할당", GameLogger.LogCategory.Error);
         }
 
-        /// <summary>
-        /// 툴팁 캔버스를 자동으로 설정합니다.
-        /// 스테이지 캔버스에 영향을 주지 않도록 항상 독립적인 캔버스를 생성합니다.
-        /// </summary>
-        private void SetupTooltipCanvas()
+        private void SetupTooltipLayer()
         {
-            // 항상 독립적인 툴팁 캔버스 생성 (스테이지 캔버스 보호)
-            CreateTooltipCanvas();
-            GameLogger.LogInfo("[SkillCardTooltipManager] 독립적인 툴팁 캔버스 생성 - 스테이지 캔버스 보호", GameLogger.LogCategory.UI);
+            var stageCanvas = GetPreferredCanvas();
+            if (stageCanvas == null)
+            {
+                GameLogger.LogError("[SkillCardTooltipManager] Stage Canvas를 찾을 수 없습니다", GameLogger.LogCategory.Error);
+                return;
+            }
+            tooltipLayer = stageCanvas.GetComponent<RectTransform>();
         }
 
-        /// <summary>
-        /// 툴팁 캔버스를 생성합니다.
-        /// 스테이지 캔버스에 영향을 주지 않도록 독립적인 캔버스를 생성합니다.
-        /// </summary>
-        private void CreateTooltipCanvas()
-        {
-            // 기존 캔버스가 있으면 제거
-            if (tooltipCanvas != null)
-            {
-                DestroyImmediate(tooltipCanvas.gameObject);
-                tooltipCanvas = null;
-            }
-
-            // 독립적인 툴팁 캔버스 생성 (스테이지 캔버스와 분리)
-            GameObject canvasObject = new GameObject(canvasName);
-            tooltipCanvas = canvasObject.AddComponent<Canvas>();
-            
-            // 독립적인 캔버스로 설정 (부모 없이)
-            canvasObject.transform.SetParent(null, false);
-            
-            // 캔버스 설정 (독립적인 렌더링)
-            ConfigureCanvas(tooltipCanvas);
-            
-            GameLogger.LogInfo($"[SkillCardTooltipManager] 독립적인 툴팁 캔버스 생성: {canvasName} (스테이지 캔버스와 분리)", GameLogger.LogCategory.UI);
-        }
-
-        /// <summary>
-        /// 캔버스를 설정합니다.
-        /// </summary>
-        /// <param name="canvas">설정할 캔버스</param>
-        private void ConfigureCanvas(Canvas canvas)
-        {
-            // 캔버스 설정 - 원래 ScreenSpaceOverlay로 복원
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = canvasSortOrder;
-            
-            // CanvasScaler 추가
-            var scaler = canvas.gameObject.GetComponent<UnityEngine.UI.CanvasScaler>();
-            if (scaler == null)
-            {
-                scaler = canvas.gameObject.AddComponent<UnityEngine.UI.CanvasScaler>();
-            }
-            scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920, 1080);
-            
-            // GraphicRaycaster 추가
-            var raycaster = canvas.gameObject.GetComponent<UnityEngine.UI.GraphicRaycaster>();
-            if (raycaster == null)
-            {
-                raycaster = canvas.gameObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
-            }
-            
-            // GameLogger.LogInfo($"캔버스 설정 완료: Sort Order {canvasSortOrder}", GameLogger.LogCategory.UI);
-        }
+        // 독립 캔버스 생성/설정 로직 제거 (스테이지 캔버스의 TooltipLayer 사용)
 
         /// <summary>
         /// 툴팁 인스턴스를 생성합니다.
@@ -274,7 +205,7 @@ namespace Game.SkillCardSystem.Manager
         /// </summary>
         private void CreateTooltipInstance()
         {
-            // GameLogger.LogInfo($"[SkillCardTooltipManager] CreateTooltipInstance 시작 - currentTooltip: {currentTooltip != null}, tooltipPrefab: {tooltipPrefab != null}, tooltipCanvas: {tooltipCanvas != null}", GameLogger.LogCategory.UI);
+            // GameLogger.LogInfo($"[SkillCardTooltipManager] CreateTooltipInstance 시작 - currentTooltip: {currentTooltip != null}, tooltipPrefab: {tooltipPrefab != null}", GameLogger.LogCategory.UI);
             
             // 기존 툴팁이 있으면 제거 (단일 인스턴스 방식에서 변경)
             if (currentTooltip != null)
@@ -290,24 +221,29 @@ namespace Game.SkillCardSystem.Manager
                 return;
             }
             
-            if (tooltipCanvas == null)
-            {
-                GameLogger.LogError("[SkillCardTooltipManager] tooltipCanvas가 null입니다", GameLogger.LogCategory.Error);
-                return;
-            }
+            // tooltipLayer는 아래에서 선택된 Canvas의 루트를 사용하므로 선행 검사 불필요
 
             try
             {
-                // 툴팁을 비활성화 상태로 생성 (필요할 때만 활성화)
-                currentTooltip = Instantiate(tooltipPrefab, tooltipCanvas.transform);
+                // 요청: 툴팁을 캔버스 최상위에 생성 (다른 UI 요소 위에 표시)
+                Transform parentForTooltip = GetCanvasOfCurrentTarget()?.transform;
+
+                if (parentForTooltip == null)
+                {
+                    GameLogger.LogError("[SkillCardTooltipManager] 툴팁 부모를 찾지 못했습니다 (캔버스)", GameLogger.LogCategory.Error);
+                    return;
+                }
+
+                currentTooltip = Instantiate(tooltipPrefab, parentForTooltip);
                 if (currentTooltip == null)
                 {
                     GameLogger.LogError("[SkillCardTooltipManager] 툴팁 인스턴스 생성 실패", GameLogger.LogCategory.Error);
                     return;
                 }
 
-                // 초기에는 비활성화
+                // 초기에는 비활성화하고 캔버스 최상단으로 정렬
                 currentTooltip.gameObject.SetActive(false);
+                currentTooltip.transform.SetAsLastSibling();
 
                 // GameLogger.LogInfo("툴팁 인스턴스 생성 완료 (비활성화 상태)", GameLogger.LogCategory.UI);
             }
@@ -360,13 +296,15 @@ namespace Game.SkillCardSystem.Manager
                 return;
             }
 
-            if (currentTooltip == null) 
-            {
-                GameLogger.LogWarning("[툴팁] currentTooltip이 null입니다", GameLogger.LogCategory.UI);
-                return;
-            }
+			// 인스턴스는 ShowTooltip 시점에 생성되므로 여기서는 존재 여부를 강제하지 않습니다
 
             hoveredCard = card;
+            // 실제 대상 RectTransform을 즉시 캐시(없으면 null)
+            currentTargetRect = null;
+            if (cardUICache.TryGetValue(card, out var rt) && rt != null)
+            {
+                currentTargetRect = rt;
+            }
             isHidingTooltip = false;
             hideTimer = 0f;
 
@@ -436,11 +374,11 @@ namespace Game.SkillCardSystem.Manager
             // 이펙트 상태 확인 로그 추가
             GameLogger.LogInfo("[SkillCardTooltipManager] 강제 초기화 전 이펙트 상태 확인", GameLogger.LogCategory.UI);
             
-            // 기존 초기화 로직 실행 (이펙트에 영향 주지 않도록)
+			// 기존 초기화 로직 실행 (이펙트에 영향 주지 않도록)
             yield return InitializeTooltipSystem();
-            
-            // 초기화 완료 확인
-            if (currentTooltip != null && tooltipCanvas != null)
+			
+			// 초기화 완료 확인 (인스턴스는 첫 표시 시 생성)
+			if (tooltipPrefab != null)
             {
                 IsInitialized = true;
                 GameLogger.LogInfo($"[SkillCardTooltipManager] 강제 초기화 완료 - IsInitialized={IsInitialized}, currentTooltip={currentTooltip != null}", GameLogger.LogCategory.UI);
@@ -460,21 +398,15 @@ namespace Game.SkillCardSystem.Manager
                         isShowingTooltip = false;
                         showTimer = 0f;
 
-                        if (!currentTooltip.gameObject.activeInHierarchy)
+                        // 강제 초기화 이후에도 부모 RectTransform을 확실히 캐시
+                        currentTargetRect = null;
+                        if (hoveredCard != null && cardUICache.TryGetValue(hoveredCard, out var cachedRt) && cachedRt != null)
                         {
-                            currentTooltip.gameObject.SetActive(true);
+                            currentTargetRect = cachedRt;
                         }
 
-                        Vector2 cardPosition = GetCurrentCardPosition();
-                        if (cardPosition != Vector2.zero)
-                        {
-                            currentTooltip.ShowTooltip(hoveredCard, cardPosition);
-                            GameLogger.LogInfo($"[툴팁] 초기화 직후 즉시 표시: {hoveredCard.GetCardName()} at {cardPosition}", GameLogger.LogCategory.UI);
-                        }
-                        else
-                        {
-                            GameLogger.LogWarning("[툴팁] 초기화 직후 카드 위치를 찾을 수 없습니다.", GameLogger.LogCategory.UI);
-                        }
+                        // 표준 경로로 표시하여 인스턴스 생성/부모 배치 포함
+                        ShowTooltip();
                     }
                     catch (System.Exception ex)
                     {
@@ -498,7 +430,6 @@ namespace Game.SkillCardSystem.Manager
             // GameLogger.LogInfo($"[SkillCardTooltipManager] 디버그 정보:", GameLogger.LogCategory.UI);
             // GameLogger.LogInfo($"  - IsInitialized: {IsInitialized}", GameLogger.LogCategory.UI);
             // GameLogger.LogInfo($"  - tooltipPrefab: {tooltipPrefab != null}", GameLogger.LogCategory.UI);
-            // GameLogger.LogInfo($"  - tooltipCanvas: {tooltipCanvas != null}", GameLogger.LogCategory.UI);
             // GameLogger.LogInfo($"  - currentTooltip: {currentTooltip != null}", GameLogger.LogCategory.UI);
             // GameLogger.LogInfo($"  - hoveredCard: {hoveredCard?.GetCardName()}", GameLogger.LogCategory.UI);
             // GameLogger.LogInfo($"  - isShowingTooltip: {isShowingTooltip}", GameLogger.LogCategory.UI);
@@ -572,37 +503,67 @@ namespace Game.SkillCardSystem.Manager
         {
             if (hoveredCard == null) return Vector2.zero;
 
-            if (cardUICache.TryGetValue(hoveredCard, out RectTransform cardRect))
+            // 우선 현재 타깃 Rect를 사용하고, 없으면 캐시 조회
+            RectTransform cardRect = currentTargetRect;
+            if (cardRect == null)
             {
-                if (cardRect != null)
-                {
-                    Vector2 screenPosition;
-
-                    if (tooltipCanvas != null && tooltipCanvas.renderMode == RenderMode.ScreenSpaceOverlay)
-                    {
-                        screenPosition = cardRect.position;
-                    }
-                    else
-                    {
-                        // 독립적인 캔버스 사용 - ScreenSpaceOverlay 모드에서는 카메라 불필요
-                        screenPosition = cardRect.position;
-                    }
-
-                    return screenPosition;
-                }
-                else
-                {
-                    cardUICache.Remove(hoveredCard);
-                    GameLogger.LogWarning("[SkillCardTooltipManager] 캐시된 RectTransform이 파괴됨. 캐시에서 제거", GameLogger.LogCategory.UI);
-                }
+                cardUICache.TryGetValue(hoveredCard, out cardRect);
             }
-            else
+            if (cardRect != null)
             {
-                GameLogger.LogWarning($"[SkillCardTooltipManager] 카드 UI가 캐시에 등록되지 않음: {hoveredCard.GetCardName()}", GameLogger.LogCategory.UI);
+                // 카드가 속한 캔버스와 카메라를 확인
+                var sourceCanvas = cardRect.GetComponentInParent<Canvas>();
+                Camera cam = null;
+                if (sourceCanvas != null && sourceCanvas.renderMode != RenderMode.ScreenSpaceOverlay)
+                {
+                    cam = sourceCanvas.worldCamera;
+                }
+
+                // 카드의 왼쪽-아래 모서리를 계산: GetWorldCorners 사용 (하단 정렬용)
+                Vector3[] corners = new Vector3[4];
+                cardRect.GetWorldCorners(corners); // 0:BL, 1:TL, 2:TR, 3:BR
+                Vector3 bottomLeftWorld = corners[0]; // BL = Bottom Left
+                Vector2 screenBL = RectTransformUtility.WorldToScreenPoint(cam, bottomLeftWorld);
+                return screenBL;
             }
+            GameLogger.LogWarning($"[SkillCardTooltipManager] 카드 UI Rect를 찾지 못함: {hoveredCard.GetCardName()}", GameLogger.LogCategory.UI);
 
             return Vector2.zero;
         }
+
+        private Canvas GetCanvasOfCurrentTarget()
+        {
+            if (currentTargetRect != null)
+            {
+                var c = currentTargetRect.GetComponentInParent<Canvas>();
+                if (c != null) return c;
+            }
+            // 폴백: 씬의 첫 Canvas
+            return FindFirstObjectByType<Canvas>();
+        }
+
+        private Canvas GetPreferredCanvas()
+        {
+            // DontDestroyOnLoad에 있는 Canvas는 제외하고, 현재 씬의 최상위 Canvas를 선택
+            var allCanvases = FindObjectsByType<Canvas>(FindObjectsSortMode.None);
+            Canvas best = null;
+            foreach (var c in allCanvases)
+            {
+                if (c == null) continue;
+                var sceneName = c.gameObject.scene.name;
+                if (string.Equals(sceneName, "DontDestroyOnLoad")) continue;
+                // 대상 Rect가 이 캔버스 하위라면 즉시 채택
+                if (currentTargetRect != null && currentTargetRect.IsChildOf(c.transform))
+                {
+                    return c;
+                }
+                // 첫 유효 Canvas 기억
+                if (best == null) best = c;
+            }
+            return best != null ? best : GetCanvasOfCurrentTarget();
+        }
+
+        // TooltipLayer 제거: 캔버스 루트 RectTransform을 사용하므로 별도 보장 메서드 불필요
 
         #endregion
 
@@ -615,10 +576,30 @@ namespace Game.SkillCardSystem.Manager
         {
             GameLogger.LogInfo($"[SkillCardTooltipManager] ShowTooltip 호출됨 - currentTooltip: {currentTooltip != null}, hoveredCard: {hoveredCard?.GetCardName()}", GameLogger.LogCategory.UI);
             
+            // 부모 확정을 위해 현재 타깃 RectTransform을 우선 보장
+            if (hoveredCard != null && currentTargetRect == null)
+            {
+                if (cardUICache.TryGetValue(hoveredCard, out var cachedRt) && cachedRt != null)
+                {
+                    currentTargetRect = cachedRt;
+                }
+            }
+
+            // 첫 표시 시점에 툴팁 생성 (대상 캔버스/부모 확정 후)
             if (currentTooltip == null)
             {
-                GameLogger.LogWarning("[SkillCardTooltipManager] currentTooltip이 null입니다.", GameLogger.LogCategory.UI);
-                return;
+                CreateTooltipInstance();
+                if (currentTooltip == null) return;
+            }
+            else
+            {
+                // 기존 인스턴스를 캔버스 최상위로 이동 (다른 UI 요소 위에 표시)
+                var canvas = GetCanvasOfCurrentTarget();
+                if (canvas != null && currentTooltip.transform.parent != canvas.transform)
+                {
+                    currentTooltip.transform.SetParent(canvas.transform, false);
+                    currentTooltip.transform.SetAsLastSibling();
+                }
             }
             
             if (hoveredCard == null)
@@ -639,7 +620,7 @@ namespace Game.SkillCardSystem.Manager
                 Vector2 cardPosition = GetCurrentCardPosition();
                 if (cardPosition != Vector2.zero)
                 {
-                    currentTooltip.ShowTooltip(hoveredCard, cardPosition);
+                    currentTooltip.ShowTooltip(hoveredCard, cardPosition, currentTargetRect);
                     GameLogger.LogInfo($"툴팁 표시: {hoveredCard.GetCardName()} at {cardPosition}", GameLogger.LogCategory.UI);
                 }
                 else
@@ -700,28 +681,11 @@ namespace Game.SkillCardSystem.Manager
         {
             if (pauseStatus)
             {
-                CleanupTooltipCanvas();
+                // 동일 캔버스 사용: 별도 정리 불필요
             }
         }
 
-        /// <summary>
-        /// 툴팁 캔버스를 정리합니다.
-        /// </summary>
-        private void CleanupTooltipCanvas()
-        {
-            if (tooltipCanvas != null && tooltipCanvas.gameObject.scene.name != "DontDestroyOnLoad")
-            {
-                // GameLogger.LogInfo($"씬 전환으로 인한 툴팁 캔버스 정리: {tooltipCanvas.name}", GameLogger.LogCategory.UI);
-                
-                if (currentTooltip != null)
-                {
-                    Destroy(currentTooltip.gameObject);
-                    currentTooltip = null;
-                }
-                
-                tooltipCanvas = null;
-            }
-        }
+        // 독립 캔버스 사용 제거로 정리 로직 삭제
 
         #endregion
     }
