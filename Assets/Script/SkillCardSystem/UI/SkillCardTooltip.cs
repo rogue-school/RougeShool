@@ -59,6 +59,13 @@ namespace Game.SkillCardSystem.UI
         [Tooltip("효과 아이템 프리팹")]
         [SerializeField] private GameObject effectItemPrefab;
 
+        [Header("동작 옵션")]
+        [Tooltip("카드 데이터 기반 자동 설명을 사용합니다 (수동 설명이 없을 때 권장)")]
+        [SerializeField] private bool useAutoDescription = true;
+
+        [Tooltip("수동 설명(definition.description)이 있을 경우 자동 설명보다 우선합니다")]
+        [SerializeField] private bool preferManualDescription = true;
+
         [Header("애니메이션 설정")]
         [Tooltip("페이드 인 시간")]
         [SerializeField] private float fadeInDuration = 0.2f;
@@ -547,16 +554,39 @@ namespace Game.SkillCardSystem.UI
             // 툴팁 배경 및 보더 설정
             SetupTooltipBackground();
 
-            // 카드 헤더(아이콘)만 갱신하고, 제목/타입/설명은 모델/빌더 경로로 통일
+            // 카드 헤더(아이콘/이름)만 갱신, 타입 비활성 처리
             UpdateCardHeader(definition);
-            var model = SkillCardTooltipMapper.From(definition);
-            TooltipBuilder.BuildMain(model, this);
+            // 설명: 수동 설명 우선, 없으면 자동 설명
+            if (descriptionText != null)
+            {
+                string manual = definition.description;
+                if (preferManualDescription && !string.IsNullOrWhiteSpace(manual))
+                {
+                    descriptionText.text = manual.Trim();
+                }
+                else if (useAutoDescription)
+                {
+                    descriptionText.text = BuildAutoDescription(definition);
+                }
+                else
+                {
+                    descriptionText.text = string.Empty;
+                }
+            }
 
-            // 카드 통계 업데이트 (아이콘 + 텍스트)
-            UpdateCardStats(card, definition);
+            // 통계 UI는 사용하지 않으므로 비활성화
+            if (damageText != null) damageText.gameObject.SetActive(false);
+            if (damageIconImage != null) damageIconImage.gameObject.SetActive(false);
+            if (resourceCostText != null) resourceCostText.gameObject.SetActive(false);
+            if (resourceIconImage != null) resourceIconImage.gameObject.SetActive(false);
 
-			// 효과 정보 업데이트 (동적 생성)
+			// 효과 정보 업데이트 (동적 생성). 없으면 컨테이너 숨김
 			UpdateEffectsInfo(definition);
+            if (effectsContainer != null)
+            {
+                bool hasAnyEffect = HasAnyEffect(definition);
+                effectsContainer.gameObject.SetActive(hasAnyEffect);
+            }
 
 			// 레이아웃 강제 갱신으로 0 높이 방지 및 후속 위치 계산 안정화
 			Canvas.ForceUpdateCanvases();
@@ -637,45 +667,21 @@ namespace Game.SkillCardSystem.UI
         /// <param name="definition">카드 정의</param>
         private void UpdateCardHeader(SkillCardDefinition definition)
         {
-            // 카드 아이콘 설정
+            if (definition == null) return;
             if (cardIconImage != null)
             {
-                // 실제 카드 아이콘이 있다면 설정, 없으면 기본 아이콘 생성
-                if (definition.artwork != null)
-                {
-                    cardIconImage.sprite = definition.artwork;
-                    cardIconImage.color = Color.white;
-                }
-                else
-                {
-                    // 기본 카드 아이콘 생성
-                    CreateDefaultCardIcon();
-                }
-                cardIconImage.gameObject.SetActive(true);
+                cardIconImage.sprite = definition.artwork;
+                cardIconImage.gameObject.SetActive(definition.artwork != null);
             }
-
-            // 카드 이름
             if (cardNameText != null)
             {
-                string displayName = !string.IsNullOrEmpty(definition.displayNameKO)
-                    ? definition.displayNameKO
-                    : definition.displayName;
-                cardNameText.text = displayName;
+                var title = string.IsNullOrEmpty(definition.displayNameKO) ? definition.displayName : definition.displayNameKO;
+                cardNameText.text = title;
             }
-
-            // 카드 타입
+            // 타입 텍스트는 사용하지 않음
             if (cardTypeText != null)
             {
-                string cardType = GetCardTypeString(definition);
-                if (!string.IsNullOrEmpty(cardType))
-                {
-                    cardTypeText.text = cardType;
-                    cardTypeText.gameObject.SetActive(true);
-                }
-                else
-                {
-                    cardTypeText.gameObject.SetActive(false);
-                }
+                cardTypeText.gameObject.SetActive(false);
             }
         }
 
@@ -1847,6 +1853,87 @@ namespace Game.SkillCardSystem.UI
                     fadeTween.Kill();
                 }
             }
+        }
+
+        /// <summary>
+        /// 자동 설명을 생성합니다 (가드/출혈/데미지 조합).
+        /// </summary>
+        private string BuildAutoDescription(SkillCardDefinition definition)
+        {
+            if (definition?.configuration == null) return "";
+            var config = definition.configuration;
+
+            // 직접 데미지
+            int baseDamage = 0;
+            if (config.hasDamage && config.damageConfig != null)
+            {
+                baseDamage = Mathf.Max(0, config.damageConfig.baseDamage);
+            }
+
+            // 효과 스캔 (커스텀 설정 우선)
+            int bleedAmount = 0; int bleedDuration = 0; int guardDuration = 0;
+            if (config.hasEffects && config.effects != null)
+            {
+                foreach (var e in config.effects)
+                {
+                    if (e == null) continue;
+                    var cs = (e.useCustomSettings ? e.customSettings : null);
+                    if (cs != null)
+                    {
+                        // 출혈
+                        if (cs.bleedAmount > 0 && cs.bleedDuration > 0)
+                        {
+                            bleedAmount = cs.bleedAmount;
+                            bleedDuration = cs.bleedDuration;
+                        }
+                        // 가드
+                        if (cs.guardDuration > 0)
+                        {
+                            guardDuration = cs.guardDuration;
+                        }
+                    }
+                }
+            }
+
+            // 문구 규칙
+            // 가드만 존재
+            if (guardDuration > 0 && bleedDuration == 0 && baseDamage == 0)
+            {
+                return $"{guardDuration}턴 동안 가드 효과를 부여합니다.";
+            }
+
+            // 출혈만 존재 (직접 데미지 없음)
+            if (bleedDuration > 0 && bleedAmount > 0 && baseDamage == 0)
+            {
+                return $"{bleedDuration}턴 동안 {bleedAmount}의 데미지를 줍니다.";
+            }
+
+            // 출혈 + 직접 데미지
+            if (bleedDuration > 0 && bleedAmount > 0 && baseDamage > 0)
+            {
+                return $"{baseDamage}의 데미지를 줍니다. {bleedDuration}턴 동안 {bleedAmount}의 데미지를 주는 출혈 이펙트를 부여합니다.";
+            }
+
+            // 직접 데미지만 존재
+            if (baseDamage > 0)
+            {
+                return $"{baseDamage}의 데미지를 줍니다.";
+            }
+
+            // 가드만 (수치 미상) 혹은 기타
+            if (guardDuration > 0)
+            {
+                return "가드 효과를 부여합니다.";
+            }
+
+            // 효과 없음 → 기본 문구
+            return "기본 효과를 사용합니다.";
+        }
+
+        private bool HasAnyEffect(SkillCardDefinition definition)
+        {
+            var config = definition?.configuration;
+            return config != null && config.hasEffects && config.effects != null && config.effects.Count > 0;
         }
     }
 }
