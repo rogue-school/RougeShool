@@ -6,6 +6,7 @@ using Game.CharacterSystem.Core;
 using Game.CoreSystem.Audio;
 using Game.CoreSystem.Interface;
 using Game.CoreSystem.Utility;
+using Game.ItemSystem.Interface;
 using Zenject;
 
 namespace Game.SkillCardSystem.Effect
@@ -21,10 +22,12 @@ namespace Game.SkillCardSystem.Effect
         private bool ignoreGuard;
         private bool ignoreCounter;
         private readonly IAudioManager audioManager;
+        private readonly IItemService itemService;
         
-        public DamageEffectCommand(IAudioManager audioManager)
+        public DamageEffectCommand(IAudioManager audioManager, IItemService itemService)
         {
             this.audioManager = audioManager;
+            this.itemService = itemService;
         }
         
         /// <summary>
@@ -39,6 +42,8 @@ namespace Game.SkillCardSystem.Effect
             this.hits = hits;
             this.ignoreGuard = ignoreGuard;
             this.ignoreCounter = ignoreCounter;
+            this.audioManager = null; // 의존성 주입이 아닌 경우
+            this.itemService = null; // 의존성 주입이 아닌 경우
         }
         
         /// <summary>
@@ -79,7 +84,15 @@ namespace Game.SkillCardSystem.Effect
                 // GameLogger.LogInfo($"[DamageEffectCommand] 스택 기반 데미지 계산 - 기본: {damageAmount}, 스택: {currentStacks}, 보너스: {attackBonus}", 
                 //    GameLogger.LogCategory.Combat);
             }
-            int effectiveDamage = damageAmount + attackBonus;
+            // 2) 성급 시스템 데미지 보너스 확인
+            int starBonus = 0;
+            if (itemService != null && context.Card != null)
+            {
+                string skillId = context.Card.GetCardName(); // 스킬 이름을 ID로 사용
+                starBonus = itemService.GetSkillDamageBonus(skillId);
+            }
+            
+            int effectiveDamage = damageAmount + attackBonus + starBonus;
 
             // 반격 버프 처리: 대상이 CounterBuff 보유 시, 들어오는 피해의 절반만 받고 나머지 절반을 공격자에게 반사
             // 정수 절삭/올림 규칙: 들어오는 피해를 ceil(절반)은 수신, floor(절반)은 반사
@@ -201,7 +214,16 @@ namespace Game.SkillCardSystem.Effect
             {
                 attackBonus = stackProvider.GetAttackPowerStack();
             }
-            int perHitDamage = damageAmount + attackBonus;
+            
+            // 성급 시스템 데미지 보너스 확인
+            int starBonus = 0;
+            if (itemService != null && context.Card != null)
+            {
+                string skillId = context.Card.GetCardName();
+                starBonus = itemService.GetSkillDamageBonus(skillId);
+            }
+            
+            int perHitDamage = damageAmount + attackBonus + starBonus;
             
             for (int i = 0; i < hitCount; i++)
             {
@@ -258,6 +280,7 @@ namespace Game.SkillCardSystem.Effect
             // Note: ExecuteImmediateDamage는 context가 없으므로 스택 계산이 제한적입니다.
             // 이 메서드는 주로 MonoBehaviour가 아닌 경우에 사용되므로 스택은 0으로 가정합니다.
             
+            // 성급 시스템 데미지 보너스는 context가 없으므로 적용하지 않음
             int perHitDamage = damageAmount + attackBonus;
             
             for (int i = 0; i < hitCount; i++)
