@@ -20,7 +20,17 @@ MonoBehaviour:
     sfxClip: {fileID: 0}
     visualEffectPrefab: {fileID: 0}
   effectConfiguration:
-    effects: []
+    effects:
+    - effectSO: {fileID: 11400000, guid: 6ee40127bbb1cc542a239046e3e7e675, type: 2}
+      useCustomSettings: 1
+      customSettings:
+        rid: 8488197037359104083
+      executionOrder: 0
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 8488197037359104083
+      type: {class: TimeStopEffectCustomSettings, ns: Game.ItemSystem.Data, asm: Assembly-CSharp}
+      data:
+        sealCount: 1
+        duration: 1

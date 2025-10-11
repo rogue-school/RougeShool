@@ -12,15 +12,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d10d2d327137db7439e30c5872e2329a, type: 3}
   m_Name: "005_\uC6B4\uBA85\uC758 \uC8FC\uC0AC\uC704"
   m_EditorClassIdentifier: 
-  itemId: 
-  displayName: 
+  itemId: 005
+  displayName: "\uC6B4\uBA85\uC758 \uC8FC\uC0AC\uC704"
   description: 
   icon: {fileID: 0}
   presentation:
     sfxClip: {fileID: 0}
     visualEffectPrefab: {fileID: 0}
   effectConfiguration:
-    effects: []
+    effects:
+    - effectSO: {fileID: 11400000, guid: 181ed4f4edeae2a40b77059fb104b6e2, type: 2}
+      useCustomSettings: 1
+      customSettings:
+        rid: 8488197037359104084
+      executionOrder: 0
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 8488197037359104084
+      type: {class: DiceOfFateEffectCustomSettings, ns: Game.ItemSystem.Data, asm: Assembly-CSharp}
+      data:
+        changeCount: 1
+        duration: 1

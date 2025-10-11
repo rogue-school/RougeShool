@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d10d2d327137db7439e30c5872e2329a, type: 3}
   m_Name: "002_\uACF5\uACA9\uB825 \uBB3C\uC57D"
   m_EditorClassIdentifier: 
-  itemId: activeitem
-  displayName: 
+  itemId: 002
+  displayName: "\uACF5\uACA9\uB825 \uBB3C\uC57D"
   description: 
   icon: {fileID: 0}
   presentation:
@@ -21,13 +21,16 @@ MonoBehaviour:
     visualEffectPrefab: {fileID: 0}
   effectConfiguration:
     effects:
-    - effectSO: {fileID: 11400000, guid: f1c53a621995de34c958769972222c3a, type: 2}
-      useCustomSettings: 0
+    - effectSO: {fileID: 11400000, guid: 9cb727b99d484454a93efca0b3c4f7a4, type: 2}
+      useCustomSettings: 1
       customSettings:
-        rid: -2
+        rid: 8488197037359104071
       executionOrder: 0
   references:
     version: 2
     RefIds:
-    - rid: -2
-      type: {class: , ns: , asm: }
+    - rid: 8488197037359104071
+      type: {class: AttackBuffEffectCustomSettings, ns: Game.ItemSystem.Data, asm: Assembly-CSharp}
+      data:
+        buffAmount: 3
+        duration: 1

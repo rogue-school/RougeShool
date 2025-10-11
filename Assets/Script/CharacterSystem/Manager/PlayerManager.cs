@@ -258,12 +258,24 @@ namespace Game.CharacterSystem.Manager
 			{
 				entrance.OnComplete(() =>
 				{
+					// 입장 연출 완료 후 대기 애니메이션 재생
+					if (character is PlayerCharacter playerCharacter)
+					{
+						playerCharacter.PlayIdleAnimation();
+					}
+					
 					OnPlayerCharacterReady?.Invoke(character);
 					GameLogger.LogInfo($"플레이어 캐릭터 생성/입장 완료: {character.GetCharacterName()}", GameLogger.LogCategory.Character);
 				});
 			}
 			else
 			{
+				// 연출 없이 생성된 경우 즉시 대기 애니메이션 재생
+				if (character is PlayerCharacter playerCharacter)
+				{
+					playerCharacter.PlayIdleAnimation();
+				}
+				
 				OnPlayerCharacterReady?.Invoke(character);
 				GameLogger.LogInfo($"플레이어 캐릭터 생성 완료(연출 없음): {character.GetCharacterName()}", GameLogger.LogCategory.Character);
 			}

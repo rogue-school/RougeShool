@@ -12,15 +12,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d10d2d327137db7439e30c5872e2329a, type: 3}
   m_Name: "003_\uAD11\uB300 \uBB3C\uC57D"
   m_EditorClassIdentifier: 
-  itemId: 
-  displayName: 
+  itemId: 003
+  displayName: "\uAD11\uB300 \uBB3C\uC57D"
   description: 
   icon: {fileID: 0}
   presentation:
     sfxClip: {fileID: 0}
     visualEffectPrefab: {fileID: 0}
   effectConfiguration:
-    effects: []
+    effects:
+    - effectSO: {fileID: 11400000, guid: 1c1a65d6c48ec364b96722d31c0a7b8b, type: 2}
+      useCustomSettings: 1
+      customSettings:
+        rid: 8488197037359104082
+      executionOrder: 0
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 8488197037359104082
+      type: {class: ClownPotionEffectCustomSettings, ns: Game.ItemSystem.Data, asm: Assembly-CSharp}
+      data:
+        healChance: 50
+        healAmount: 5
+        damageAmount: 5

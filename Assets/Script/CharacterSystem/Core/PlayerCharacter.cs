@@ -48,6 +48,10 @@ namespace Game.CharacterSystem.Core
         [Header("새로운 통합 UI")]
         [SerializeField] private PlayerCharacterUIController playerCharacterUIController;
 
+        [Header("애니메이션 설정")]
+        [Tooltip("플레이어 캐릭터 애니메이터")]
+        [SerializeField] private Animator playerAnimator;
+
 
         #endregion
 
@@ -67,6 +71,12 @@ namespace Game.CharacterSystem.Core
         /// </summary>
         private void Awake()
         {
+            // 애니메이터 자동 검색 (수동 설정이 없는 경우)
+            if (playerAnimator == null)
+            {
+                playerAnimator = GetComponent<Animator>();
+            }
+            
             if (PlayerCharacterData != null)
             {
                 this.gameObject.name = PlayerCharacterData.name;
@@ -414,6 +424,145 @@ namespace Game.CharacterSystem.Core
         protected override void OnDamaged(int amount)
         {
             CombatEvents.RaisePlayerCharacterDamaged(PlayerCharacterData, this.gameObject, amount);
+            
+            // 피격 애니메이션 재생
+            PlayHitAnimation();
+        }
+
+        #endregion
+
+        #region 애니메이션 제어
+
+        /// <summary>
+        /// 대기 애니메이션을 재생합니다.
+        /// </summary>
+        public void PlayIdleAnimation()
+        {
+            GameLogger.LogInfo($"[PlayIdleAnimation] 호출됨 - playerAnimator: {(playerAnimator != null ? "존재" : "null")}", GameLogger.LogCategory.Character);
+            
+            if (playerAnimator != null)
+            {
+                // Animator 상태 확인
+                var currentState = playerAnimator.GetCurrentAnimatorStateInfo(0);
+                GameLogger.LogInfo($"[PlayIdleAnimation] 현재 상태: {currentState.shortNameHash}, 정규화 시간: {currentState.normalizedTime}", GameLogger.LogCategory.Character);
+                
+                // 방법 1: Trigger 사용
+                try
+                {
+                    playerAnimator.SetTrigger("Idle");
+                    GameLogger.LogInfo("[PlayIdleAnimation] Idle 트리거 설정 완료", GameLogger.LogCategory.Character);
+                    
+                    // 강제로 애니메이션 재시작 (포트레이트 애니메이션용)
+                    playerAnimator.Play(currentState.shortNameHash, 0, 0f);
+                    GameLogger.LogInfo("[PlayIdleAnimation] 애니메이션 강제 재시작 완료", GameLogger.LogCategory.Character);
+                }
+                catch (System.Exception ex)
+                {
+                    GameLogger.LogWarning($"[PlayIdleAnimation] Trigger 실패: {ex.Message}", GameLogger.LogCategory.Character);
+                    
+                    // 방법 2: 직접 애니메이션 재생 (대안)
+                    try
+                    {
+                        playerAnimator.Play("Player_idle_1", 0, 0f);
+                        GameLogger.LogInfo("[PlayIdleAnimation] 직접 애니메이션 재생 완료", GameLogger.LogCategory.Character);
+                    }
+                    catch (System.Exception ex2)
+                    {
+                        GameLogger.LogError($"[PlayIdleAnimation] 직접 재생도 실패: {ex2.Message}", GameLogger.LogCategory.Character);
+                    }
+                }
+            }
+            else
+            {
+                GameLogger.LogWarning("[PlayIdleAnimation] 플레이어 애니메이터가 설정되지 않았습니다.", GameLogger.LogCategory.Character);
+            }
+        }
+
+        /// <summary>
+        /// 피격 애니메이션을 재생합니다.
+        /// </summary>
+        public void PlayHitAnimation()
+        {
+            if (playerAnimator != null)
+            {
+                // Hit 트리거 활성화
+                playerAnimator.SetTrigger("Hit");
+                GameLogger.LogInfo("플레이어 피격 애니메이션 재생", GameLogger.LogCategory.Character);
+            }
+            else
+            {
+                GameLogger.LogWarning("플레이어 애니메이터가 설정되지 않았습니다.", GameLogger.LogCategory.Character);
+            }
+        }
+
+        /// <summary>
+        /// 공격 애니메이션을 재생합니다.
+        /// </summary>
+        public void PlayAttackAnimation()
+        {
+            if (playerAnimator != null)
+            {
+                // Attack 트리거 활성화
+                playerAnimator.SetTrigger("Attack");
+                GameLogger.LogInfo("플레이어 공격 애니메이션 재생", GameLogger.LogCategory.Character);
+            }
+            else
+            {
+                GameLogger.LogWarning("플레이어 애니메이터가 설정되지 않았습니다.", GameLogger.LogCategory.Character);
+            }
+        }
+
+        /// <summary>
+        /// 등장 애니메이션을 재생합니다.
+        /// </summary>
+        public void PlayAppearedAnimation()
+        {
+            if (playerAnimator != null)
+            {
+                // Appeared 트리거 활성화
+                playerAnimator.SetTrigger("Appeared");
+                GameLogger.LogInfo("플레이어 등장 애니메이션 재생", GameLogger.LogCategory.Character);
+            }
+            else
+            {
+                GameLogger.LogWarning("플레이어 애니메이터가 설정되지 않았습니다.", GameLogger.LogCategory.Character);
+            }
+        }
+
+        /// <summary>
+        /// 애니메이션 상태를 확인합니다.
+        /// </summary>
+        /// <param name="stateName">확인할 애니메이션 상태 이름</param>
+        /// <returns>해당 상태가 재생 중이면 true</returns>
+        public bool IsAnimationPlaying(string stateName)
+        {
+            if (playerAnimator == null) return false;
+            
+            return playerAnimator.GetCurrentAnimatorStateInfo(0).IsName(stateName);
+        }
+
+        /// <summary>
+        /// 현재 애니메이션의 진행률을 반환합니다.
+        /// </summary>
+        /// <returns>0.0 ~ 1.0 사이의 진행률</returns>
+        public float GetCurrentAnimationProgress()
+        {
+            if (playerAnimator == null) return 0f;
+            
+            return playerAnimator.GetCurrentAnimatorStateInfo(0).normalizedTime;
+        }
+
+        /// <summary>
+        /// 애니메이션 강제 재시작 (테스트용)
+        /// </summary>
+        public void ForceRestartAnimation()
+        {
+            if (playerAnimator != null)
+            {
+                var currentState = playerAnimator.GetCurrentAnimatorStateInfo(0);
+                playerAnimator.Play(currentState.shortNameHash, 0, 0f);
+                GameLogger.LogInfo($"[ForceRestartAnimation] 애니메이션 강제 재시작: {currentState.shortNameHash}", GameLogger.LogCategory.Character);
+            }
         }
 
         #endregion

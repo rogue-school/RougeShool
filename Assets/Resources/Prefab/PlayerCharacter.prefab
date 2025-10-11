@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 7108402241666552278}
   - component: {fileID: 6515069228709645013}
   - component: {fileID: -4247973713695969958}
+  - component: {fileID: 2651981875607032260}
   m_Layer: 5
   m_Name: PlayerCharacter
   m_TagString: Untagged
@@ -57,6 +58,7 @@ MonoBehaviour:
   damageTextPrefab: {fileID: 6781140808306196491, guid: e5df9cbbbb6c8344787434930ac5ec5b, type: 3}
   hpBarController: {fileID: 0}
   playerCharacterUIController: {fileID: 0}
+  playerAnimator: {fileID: 2651981875607032260}
 --- !u!225 &-4247973713695969958
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -68,7 +70,29 @@ CanvasGroup:
   m_Alpha: 1
   m_Interactable: 1
   m_BlocksRaycasts: 1
-  m_IgnoreParentGroups: 0
+  m_IgnoreParentGroups: 1
+--- !u!95 &2651981875607032260
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3064394028095851597}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 2e4304f975bd654488c6cee20c9bceeb, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &3350064613874653868
 GameObject:
   m_ObjectHideFlags: 0
