@@ -1,0 +1,489 @@
+---
+alwaysApply: false
+description: "Code quality standards reference: Magic numbers prohibition, #region usage, optional dependencies, constants organization (reference when reviewing code quality)"
+---
+
+# RougeShool Code Quality Standards
+
+## 🚫 Magic Numbers Prohibition
+
+### ❌ FORBIDDEN: Magic Numbers
+
+```csharp
+// ❌ BAD: What does 3 mean?
+if (skillStarRank < 3)
+{
+    skillStarRank++;
+}
+
+// ❌ BAD: What does 4 mean?
+private ActiveItemSlotData[] activeSlots = new ActiveItemSlotData[4];
+
+// ❌ BAD: What do these numbers mean?
+if (damage > 100 && health < 20)
+{
+    // Critical state?
+}
+```
+
+### ✅ REQUIRED: Named Constants
+
+```csharp
+// ✅ GOOD: Clear intent
+private const int MAX_STAR_RANK = 3;
+private const int ACTIVE_SLOT_COUNT = 4;
+
+if (skillStarRank < MAX_STAR_RANK)
+{
+    skillStarRank++;
+}
+
+// ✅ GOOD: Self-documenting
+private const int CRITICAL_DAMAGE_THRESHOLD = 100;
+private const int LOW_HEALTH_THRESHOLD = 20;
+
+if (damage > CRITICAL_DAMAGE_THRESHOLD && health < LOW_HEALTH_THRESHOLD)
+{
+    // Critical state - clearly understood
+}
+```
+
+### Exceptions: Allowed Numbers
+
+```csharp
+// ✅ OK: Mathematical constants
+float radius = diameter / 2;
+int percentage = value * 100;
+
+// ✅ OK: Array indices (0, 1, 2...)
+var firstItem = items[0];
+var secondItem = items[1];
+
+// ✅ OK: Boolean values (0, 1, -1 for comparisons)
+if (result == -1) // -1 is standard convention for "not found"
+{
+    return null;
+}
+
+// ✅ OK: Unity specific (Time.deltaTime, Vector3.zero, etc.)
+transform.position += velocity * Time.deltaTime;
+```
+
+### Constant Naming Convention
+
+```csharp
+// ✅ CORRECT: UPPER_SNAKE_CASE for constants
+private const int MAX_CARDS_IN_HAND = 10;
+private const float DEFAULT_SPEED = 5.0f;
+private const string SAVE_FILE_NAME = "GameData.json";
+
+// ✅ CORRECT: Readonly static fields
+private static readonly Vector3 DEFAULT_SPAWN_POSITION = new Vector3(0, 0, 0);
+private static readonly Color CRITICAL_HP_COLOR = Color.red;
+```
+
+---
+
+## 📁 #region Usage Guide (Required)
+
+### ✅ REQUIRED: Consistent Region Structure
+
+```csharp
+public class ItemService : MonoBehaviour
+{
+    #region Constants
+
+    private const int ACTIVE_SLOT_COUNT = 4;
+    private const int MAX_STAR_RANK = 3;
+
+    #endregion
+
+    #region Fields
+
+    [SerializeField] private Transform spawnPoint;
+    private Dictionary<string, int> skillStarRanks;
+
+    #endregion
+
+    #region Dependency Injection
+
+    [Inject] private ICharacter playerCharacter;
+    [Inject] private IAudioManager audioManager;
+
+    #endregion
+
+    #region Events
+
+    public event Action<int> OnItemUsed;
+    public event Action<string> OnSkillUpgraded;
+
+    #endregion
+
+    #region Unity Lifecycle
+
+    private void Awake() { }
+    private void Start() { }
+    private void OnEnable() { }
+    private void OnDisable() { }
+    private void OnDestroy() { }
+
+    #endregion
+
+    #region Initialization
+
+    public void Initialize() { }
+    private void InitializeSlots() { }
+
+    #endregion
+
+    #region Interface Implementation
+
+    // IItemService implementation
+    public bool UseActiveItem(int slotIndex) { }
+    public bool AddActiveItem(ActiveItemDefinition item) { }
+
+    #endregion
+
+    #region Public API
+
+    public void DoSomething() { }
+    public int GetValue() { }
+
+    #endregion
+
+    #region Utility
+
+    private bool IsValidSlotIndex(int index) { }
+    private int FindEmptySlot() { }
+
+    #endregion
+}
+```
+
+### Standard Region Order
+
+```
+1. Constants
+2. Fields
+3. Dependency Injection
+4. Events
+5. Properties
+6. Unity Lifecycle
+7. Initialization
+8. Interface Implementation
+9. Public API
+10. Private Methods
+11. Utility
+12. Event Handlers
+```
+
+### ❌ FORBIDDEN: Region Anti-Patterns
+
+```csharp
+// ❌ DON'T use meaningless regions
+#region Methods
+    public void Method1() { }
+    public void Method2() { }
+    public void Method3() { }
+#endregion
+
+// ❌ DON'T nest regions
+#region Outer
+    #region Inner  // ❌ No nesting
+    #endregion
+#endregion
+
+// ❌ DON'T use regions in small classes
+public class SimpleClass  // Only 50 lines
+{
+    #region Fields  // ❌ Unnecessary
+    private int value;
+    #endregion
+}
+```
+
+---
+
+## 🔧 Optional Dependencies Pattern
+
+### ✅ REQUIRED: [Inject(Optional = true)]
+
+```csharp
+// ✅ CORRECT: Optional dependency with graceful degradation
+public class ItemService : MonoBehaviour
+{
+    [Inject] private ICharacter playerCharacter; // Required
+    [Inject] private IAudioManager audioManager; // Required
+    [Inject(Optional = true)] private IVFXManager vfxManager; // Optional
+
+    public void UseItem()
+    {
+        // Required - throw if null
+        if (playerCharacter == null)
+            throw new InvalidOperationException("PlayerCharacter not injected");
+
+        // Optional - graceful degradation
+        if (vfxManager != null)
+        {
+            vfxManager.PlayEffect(effectPrefab, position);
+        }
+        else
+        {
+            GameLogger.LogWarning("VFXManager not available, skipping visual effects", GameLogger.LogCategory.Core);
+        }
+    }
+}
+```
+
+### When to Use Optional Injection
+
+```
+✅ USE Optional for:
+├── VFX systems (not essential for gameplay)
+├── Analytics/Telemetry (unnecessary during development)
+├── Debug tools (removable in production)
+└── Platform-specific features (only supported on some platforms)
+
+❌ DON'T USE Optional for:
+├── Core game logic components
+├── Character system
+├── Combat system
+└── Save/Load system
+```
+
+### Optional Dependency Patterns
+
+```csharp
+// ✅ PATTERN: Check before use
+[Inject(Optional = true)] private IAnalytics analytics;
+
+public void TrackEvent(string eventName)
+{
+    if (analytics != null)
+    {
+        analytics.Track(eventName);
+    }
+    // Silently skip if not available
+}
+
+// ✅ PATTERN: Null-conditional operator
+[Inject(Optional = true)] private IVFXManager vfxManager;
+
+public void PlayEffect(GameObject prefab, Vector3 position)
+{
+    vfxManager?.PlayEffect(prefab, position);
+}
+```
+
+---
+
+## 📊 Constants Organization
+
+### ✅ GOOD: Grouped Constants
+
+```csharp
+public class CombatSystem : MonoBehaviour
+{
+    #region Combat Constants
+
+    private const int MAX_COMBO_COUNT = 10;
+    private const float COMBO_TIMEOUT = 2.0f;
+    private const int CRITICAL_HIT_MULTIPLIER = 2;
+
+    #endregion
+
+    #region Slot Constants
+
+    private const int BATTLE_SLOT_INDEX = 0;
+    private const int WAIT_SLOT_COUNT = 4;
+    private const int TOTAL_SLOT_COUNT = 5;
+
+    #endregion
+
+    #region Animation Constants
+
+    private const float ATTACK_ANIMATION_DURATION = 0.5f;
+    private const float DAMAGE_POPUP_DURATION = 1.0f;
+
+    #endregion
+}
+```
+
+### ✅ BETTER: Const Class
+
+```csharp
+// ✅ RECOMMENDED: Global constants in separate class
+public static class GameConstants
+{
+    public static class Combat
+    {
+        public const int MAX_COMBO_COUNT = 10;
+        public const float COMBO_TIMEOUT = 2.0f;
+        public const int CRITICAL_HIT_MULTIPLIER = 2;
+    }
+
+    public static class Slots
+    {
+        public const int BATTLE_SLOT_INDEX = 0;
+        public const int WAIT_SLOT_COUNT = 4;
+        public const int TOTAL_SLOT_COUNT = 5;
+    }
+
+    public static class Animation
+    {
+        public const float ATTACK_DURATION = 0.5f;
+        public const float DAMAGE_POPUP_DURATION = 1.0f;
+    }
+}
+
+// Usage
+if (comboCount >= GameConstants.Combat.MAX_COMBO_COUNT)
+{
+    // Clear and self-documenting
+}
+```
+
+---
+
+## 🎯 Validation Patterns
+
+### ✅ REQUIRED: Validation Methods
+
+```csharp
+// ✅ GOOD: Extract validation to separate methods
+private bool IsValidSlotIndex(int slotIndex)
+{
+    return slotIndex >= 0 && slotIndex < ACTIVE_SLOT_COUNT;
+}
+
+private bool IsValidStarRank(int starRank)
+{
+    return starRank >= 0 && starRank <= MAX_STAR_RANK;
+}
+
+// Usage
+if (!IsValidSlotIndex(slotIndex))
+{
+    GameLogger.LogError($"Invalid slot index: {slotIndex}", GameLogger.LogCategory.Core);
+    return false;
+}
+```
+
+### ❌ FORBIDDEN: Inline Magic Number Validation
+
+```csharp
+// ❌ BAD: Magic numbers in validation
+if (slotIndex < 0 || slotIndex >= 4) // What is 4?
+{
+    return false;
+}
+
+// ❌ BAD: Repeated validation logic
+if (slotIndex < 0 || slotIndex >= ACTIVE_SLOT_COUNT)
+{
+    // ...
+}
+
+if (otherIndex < 0 || otherIndex >= ACTIVE_SLOT_COUNT) // Duplicate
+{
+    // ...
+}
+```
+
+---
+
+## 📝 Documentation with Constants
+
+### ✅ GOOD: Self-Documenting Code
+
+```csharp
+// ✅ GOOD: Constants make code self-documenting
+private const int MAX_STAR_RANK = 3;
+private const int MIN_STAR_RANK = 0;
+private const int STAR_RANK_INCREMENT = 1;
+
+/// <summary>
+/// 스킬의 성급을 증가시킵니다.
+/// </summary>
+/// <param name="skillId">스킬 ID</param>
+/// <returns>증가 성공 여부</returns>
+public bool UpgradeSkillStarRank(string skillId)
+{
+    if (!skillStarRanks.ContainsKey(skillId))
+    {
+        skillStarRanks[skillId] = MIN_STAR_RANK;
+    }
+
+    if (skillStarRanks[skillId] < MAX_STAR_RANK)
+    {
+        skillStarRanks[skillId] += STAR_RANK_INCREMENT;
+        GameLogger.LogInfo($"Skill star rank increased: {skillId} → ★{skillStarRanks[skillId]}", GameLogger.LogCategory.Core);
+        return true;
+    }
+
+    GameLogger.LogInfo($"Skill {skillId} already at max star rank (★{MAX_STAR_RANK})", GameLogger.LogCategory.Core);
+    return false;
+}
+```
+
+---
+
+## 🔍 Code Review Checklist
+
+```
+✅ BEFORE committing code, verify:
+├── [ ] No magic numbers (all replaced with named constants)
+├── [ ] #region structure is consistent
+├── [ ] Optional dependencies use [Inject(Optional = true)]
+├── [ ] Constants follow UPPER_SNAKE_CASE
+├── [ ] Validation methods extract repeated checks
+├── [ ] Self-documenting code with constants
+└── [ ] No duplicate validation logic
+```
+
+---
+
+## 📊 Quality Metrics
+
+```
+Code Quality Score:
+├── Magic Numbers: 0 (none allowed)
+├── Region Organization: Consistent
+├── Constant Naming: UPPER_SNAKE_CASE
+├── Optional Dependencies: Properly handled
+└── Validation: Extracted to methods
+```
+
+---
+
+## 🎯 Examples from Real Code
+
+### Before (Current Code - Good but can improve)
+
+```csharp
+// Current code
+private ActiveItemSlotData[] activeSlots = new ActiveItemSlotData[4];
+
+if (skillStarRanks[skillId] < 3)
+{
+    skillStarRanks[skillId]++;
+}
+```
+
+### After (Improved)
+
+```csharp
+// Improved code
+private const int ACTIVE_SLOT_COUNT = 4;
+private const int MAX_STAR_RANK = 3;
+private const int STAR_RANK_INCREMENT = 1;
+
+private ActiveItemSlotData[] activeSlots = new ActiveItemSlotData[ACTIVE_SLOT_COUNT];
+
+if (skillStarRanks[skillId] < MAX_STAR_RANK)
+{
+    skillStarRanks[skillId] += STAR_RANK_INCREMENT;
+}
+```
+
+**Result: Code is more readable, maintainable, and has fewer bugs!**
