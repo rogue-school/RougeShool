@@ -16,8 +16,202 @@ Workflow:
 1. codebase_search → Find similar functionality
 2. grep → Verify exact matches
 3. read_file → Analyze existing code in detail
-4. Evaluate reuse strategy
+4. Evaluate reuse strategy (MODIFY existing > CREATE new)
 5. Only create new code if absolutely necessary
+```
+
+### Step 1.5: Reuse Decision Matrix (MANDATORY)
+```
+🎯 AI MUST respond with this checklist BEFORE generating any code:
+
+EXISTING CODE ANALYSIS:
+├── [ ] Found similar functionality? (YES/NO)
+│   ├── YES → File path: _______
+│   └── NO → Searched patterns: _______
+├── [ ] Unused/Dead code detected in target file? (YES/NO)
+│   ├── YES → List unused methods/fields: _______
+│   └── NO → File is clean
+├── [ ] Can existing code be modified? (MODIFY/EXTEND/NEW)
+│   ├── MODIFY → Use Edit tool on existing file
+│   ├── EXTEND → Inherit/compose existing class
+│   └── NEW → Justify why existing code cannot be reused
+└── [ ] Modification impact analysis completed?
+    ├── Files affected: _______
+    ├── Breaking changes: (YES/NO)
+    └── Risk level: (LOW/MEDIUM/HIGH)
+
+DECISION:
+Action: [MODIFY existing file | EXTEND existing class | CREATE new file]
+Justification: _______________________
+Cleanup Plan: [Remove unused code before adding new] OR [Keep all code]
+
+⚠️ IF "CREATE new file" is selected:
+   MUST explain why existing code cannot be MODIFIED or EXTENDED
+
+⚠️ IF unused/dead code is detected:
+   MUST propose cleanup plan BEFORE adding new code
+   Example: "Remove unused method X, Y before adding new feature Z"
+```
+
+### Anti-Pattern Examples: Creating New Code Instead of Modifying
+
+#### ❌ FORBIDDEN PATTERN #1: Creating New System
+```
+User: "적 캐릭터에 독 데미지 추가해줘"
+
+❌ WRONG AI Response:
+"새로운 PoisonDamageSystem.cs를 만들겠습니다"
+→ 기존 EnemyCharacter.cs를 확인하지 않음
+→ 중복 기능 생성
+→ 시스템 복잡도 증가
+```
+
+#### ✅ CORRECT PATTERN #1: Modifying Existing File
+```
+User: "적 캐릭터에 독 데미지 추가해줘"
+
+✅ CORRECT AI Response:
+"EXISTING CODE ANALYSIS:
+├── [x] Found: CharacterSystem/Core/EnemyCharacter.cs
+├── [x] Can MODIFY: TakeDamage() 메서드 확장 가능
+└── [x] Impact: LOW (단일 클래스 내 메서드 추가)
+
+DECISION: MODIFY existing file
+Action: EnemyCharacter.cs에 ApplyPoisonDamage() 메서드 추가
+Files to modify:
+- Assets/Script/CharacterSystem/Core/EnemyCharacter.cs (메서드 추가)
+- Assets/Script/CharacterSystem/Interface/ICharacter.cs (인터페이스 확장)"
+```
+
+#### ❌ FORBIDDEN PATTERN #2: Creating New Manager
+```
+User: "아이템 착용 기능 추가해줘"
+
+❌ WRONG AI Response:
+"새로운 EquipmentManager.cs를 만들겠습니다"
+→ 기존 ItemManager가 있는지 확인 안함
+→ 중복 매니저 생성
+```
+
+#### ✅ CORRECT PATTERN #2: Extending Existing Manager
+```
+User: "아이템 착용 기능 추가해줘"
+
+✅ CORRECT AI Response:
+"EXISTING CODE ANALYSIS:
+├── [x] Found: ItemSystem/Manager/ItemManager.cs
+├── [x] Can MODIFY: EquipItem() 메서드 추가 가능
+└── [x] Impact: MEDIUM (ItemManager + UI 연동 필요)
+
+DECISION: MODIFY existing file
+Action: ItemManager.cs에 착용 로직 추가
+Files to modify:
+- Assets/Script/ItemSystem/Manager/ItemManager.cs (EquipItem 메서드 추가)
+- Assets/Script/ItemSystem/Data/ItemData.cs (장착 슬롯 정보 추가)"
+```
+
+#### ❌ FORBIDDEN PATTERN #3: Creating Duplicate Utility
+```
+User: "카드 유효성 검사 추가해줘"
+
+❌ WRONG AI Response:
+"새로운 CardValidationHelper.cs를 만들겠습니다"
+→ 기존 CardValidator.cs 무시
+→ 같은 기능의 클래스 중복 생성
+```
+
+#### ✅ CORRECT PATTERN #3: Reusing Existing Utility
+```
+User: "카드 유효성 검사 추가해줘"
+
+✅ CORRECT AI Response:
+"EXISTING CODE ANALYSIS:
+├── [x] Found: CharacterSystem/Utility/CardValidator.cs
+├── [x] Can EXTEND: 새 검증 메서드 추가 가능
+└── [x] Impact: LOW (기존 인터페이스 유지)
+
+DECISION: MODIFY existing file
+Action: CardValidator.cs에 새 검증 로직 추가
+Files to modify:
+- Assets/Script/CharacterSystem/Utility/CardValidator.cs"
+```
+
+#### ✅ CORRECT PATTERN #4: Cleanup Unused Code Before Adding New
+```
+User: "EnemyManager에 새로운 상태 관리 기능 추가해줘"
+
+✅ CORRECT AI Response:
+"EXISTING CODE ANALYSIS:
+├── [x] Found: CharacterSystem/Manager/EnemyManager.cs
+├── [x] Unused code detected:
+│   ├── OldStateMethod() - 0 references (grep confirmed)
+│   ├── tempDebugField - debug field
+│   └── LegacyUpdateState() - commented out
+├── [x] Can MODIFY: 기존 파일 수정 가능
+└── [x] Impact: MEDIUM (상태 관리 로직 추가)
+
+DECISION: MODIFY existing file
+Cleanup Plan:
+1. Remove OldStateMethod(), LegacyUpdateState()
+2. Remove tempDebugField
+3. Then add new state management
+
+Files to modify:
+- Assets/Script/CharacterSystem/Manager/EnemyManager.cs (cleanup + add)"
+```
+
+#### ❌ FORBIDDEN PATTERN #4: Adding New Code Without Cleanup
+```
+User: "EnemyManager에 새로운 상태 관리 기능 추가해줘"
+
+❌ WRONG AI Response:
+"EXISTING CODE ANALYSIS:
+├── [x] Found: CharacterSystem/Manager/EnemyManager.cs
+├── [ ] Unused code? (SKIPPED)
+└── [x] Can MODIFY
+
+DECISION: MODIFY existing file
+Action: AddNewStateManager() 추가"
+
+→ 사용하지 않는 코드 확인 안함
+→ 코드베이스 비대화
+→ 유지보수성 저하
+```
+
+### Step 1.75: Unused Code Detection (MANDATORY WHEN MODIFYING FILES)
+```
+🎯 BEFORE modifying any existing file, AI MUST check for unused code:
+
+DETECTION METHOD:
+1. grep for method/field references across codebase
+2. Count references (0 = unused)
+3. Check for commented-out code blocks
+4. Identify debug/temp/test code in production
+
+COMMON UNUSED CODE PATTERNS:
+├── Methods with 0 grep references
+├── Private fields never accessed
+├── Commented-out blocks (// or /* */)
+├── Debug code (DebugXXX, TempXXX, TestXXX prefixes)
+├── "TODO: Remove" comments
+└── Duplicate methods
+
+CLEANUP PRIORITY:
+HIGH (Remove immediately before adding new):
+├── Commented-out code
+├── Debug/Temp/Test code
+├── Methods with 0 references
+└── "TODO: Remove" marked code
+
+MEDIUM (Ask user before removing):
+├── Public methods with 0 references (might be API)
+├── Interface implementations (might be required)
+└── Virtual/Abstract overrides
+
+LOW (Keep):
+├── Abstract methods (used by inheritance)
+├── Interface definitions (used by DI)
+└── Public API methods (external usage unknown)
 ```
 
 ### Step 2: During Code Generation
@@ -60,17 +254,22 @@ Workflow:
    └── Analyze dependencies
 ```
 
-### Edit Tools
+### Edit Tools Priority
 ```
-Small edits: search_replace
-├── Single file changes
-├── Minimal changes with clear context
-└── Precise code insertion/modification
+PRIORITY 1: Edit (modify existing files)
+├── Use Edit tool for existing files
+├── Preserve existing structure
+└── Add/modify specific sections
 
-Multiple edits: MultiEdit
-├── Multiple files simultaneously
-├── Related changes across files
-└── Consistent changes applied
+PRIORITY 2: Extend (inherit/compose)
+├── Create derived class if needed
+├── Implement interface
+└── Use composition pattern
+
+PRIORITY 3: Write (create new files)
+├── ONLY if existing code cannot be reused
+├── MUST justify why EDIT/EXTEND not possible
+└── Document relationship with existing code
 ```
 
 ### Parallelization
@@ -124,7 +323,13 @@ NEVER generate:
 ├── AI-generated code mentions (e.g., "AI generated")
 ├── Change notification comments (e.g., "수정됨", "FIXED", "ADDED", "Modified here")
 ├── Explanatory comments for user (e.g., "이 부분을 수정했습니다", "성능 개선을 위해 변경")
-└── Incomplete explanatory code
+├── Incomplete explanatory code
+├── New files when existing files can be modified
+└── Test code (*Tests.cs files) - UNLESS user explicitly requests
+    ├── "테스트 코드 만들어줘"
+    ├── "유닛 테스트 작성해줘"
+    ├── "테스트 추가해줘"
+    └── "TDD로 개발해줘"
 ```
 
 ### Workflow Violations
@@ -132,8 +337,25 @@ NEVER generate:
 NEVER skip:
 ├── Existing code review step
 ├── Reusability evaluation step
+├── Reuse Decision Matrix (Step 1.5)
 ├── Quality verification step
 └── Compilation verification step
+```
+
+### File Creation Violations
+```
+🚨 FORBIDDEN: Creating new files without justification
+
+BEFORE creating ANY new file, AI MUST:
+1. Search for existing similar files (codebase_search + grep)
+2. Read and analyze existing files (read_file)
+3. Evaluate modification possibility
+4. Fill Reuse Decision Matrix
+5. Justify why EDIT/EXTEND is not possible
+
+IF AI creates new file WITHOUT completing steps 1-5:
+→ REJECT the response
+→ Require AI to restart from Step 1
 ```
 
 ## ✅ Success Criteria
@@ -155,5 +377,47 @@ Success conditions:
 ├── All required steps completed
 ├── All required verifications passed
 ├── All prohibitions followed
+├── Reuse Decision Matrix filled
 └── All success criteria met
+```
+
+## 📊 Code Modification Priority
+
+### Decision Tree for Code Changes
+```
+User Request
+    ↓
+Step 1: Search existing code
+    ├── Found? → YES
+    │   ↓
+    │   Can modify existing file?
+    │   ├── YES → USE EDIT TOOL ✅ (PRIORITY 1)
+    │   └── NO → Can extend (inherit/compose)?
+    │       ├── YES → CREATE DERIVED CLASS ✅ (PRIORITY 2)
+    │       └── NO → Justify & CREATE NEW ⚠️ (PRIORITY 3)
+    └── Found? → NO
+        ↓
+        Search again with different patterns
+        └── Still not found? → CREATE NEW ✅ (Justified)
+```
+
+### Modification Impact Levels
+```
+LOW Impact (Always safe to modify):
+├── Adding new methods to existing class
+├── Adding new properties
+├── Adding new enum values
+└── Adding new private fields
+
+MEDIUM Impact (Requires careful review):
+├── Modifying existing method signatures
+├── Changing public properties
+├── Modifying interfaces
+└── Changing constructor parameters
+
+HIGH Impact (Requires explicit user approval):
+├── Deleting existing methods
+├── Changing inheritance hierarchy
+├── Breaking API compatibility
+└── Modifying core system architecture
 ```

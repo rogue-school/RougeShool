@@ -1,0 +1,258 @@
+---
+alwaysApply: false
+description: "Testing standards reference (DO NOT generate test code automatically)"
+---
+
+# RougeShool Testing Standards
+
+## 🚨 CRITICAL: Test Code Generation Policy
+
+```
+❌ FORBIDDEN: AI는 테스트 코드를 자동으로 생성하지 않습니다
+
+REASON:
+- 1인 개발 프로젝트 (빠른 프로토타이핑 우선)
+- 테스트 코드는 필요 시 사용자가 직접 요청
+
+UNLESS user explicitly says:
+- "테스트 코드 만들어줘"
+- "유닛 테스트 작성해줘"
+- "테스트 추가해줘"
+- "TDD로 개발해줘"
+
+→ DO NOT generate any test files
+→ DO NOT suggest creating tests
+→ DO NOT mention testing in responses
+→ DO NOT create *Tests.cs files
+```
+
+---
+
+## 📚 Reference Only: Testing Standards (참고용)
+
+> ⚠️ 아래 내용은 **참고용**입니다.
+> 사용자가 명시적으로 요청하지 않는 한 테스트 코드를 생성하지 마세요.
+
+## 📋 Test Coverage Requirements (참고용)
+
+### Coverage Targets by System
+```
+REQUIRED Coverage (Must test):
+├── Core Logic (CharacterSystem, CombatSystem): 80%+
+├── Managers: 70%+
+├── Validators/Utilities: 90%+
+└── UI Controllers: 50%+ (MonoBehaviour dependencies)
+
+OPTIONAL Coverage (Test if critical):
+├── Data classes (ScriptableObjects): 30%
+├── Simple DTOs/POCOs: 20%
+└── Unity lifecycle methods: 20%
+```
+
+## 🧪 Unit Test Structure (참고용)
+
+### Test File Organization
+```
+Tests/
+├── EditMode/                    # Editor tests (no Play mode)
+│   ├── CharacterSystem/
+│   │   ├── CardValidatorTests.cs
+│   │   └── CharacterBaseTests.cs
+│   ├── CombatSystem/
+│   │   └── TurnManagerTests.cs
+│   └── Utilities/
+│       └── GameLoggerTests.cs
+└── PlayMode/                    # Runtime tests (with Unity)
+    ├── Integration/
+    │   ├── CombatFlowTests.cs
+    │   └── CardExecutionTests.cs
+    └── Performance/
+        └── PoolingPerformanceTests.cs
+```
+
+### Naming Convention
+```csharp
+// ✅ PATTERN: MethodName_Scenario_ExpectedBehavior
+
+[Test]
+public void CanPlayCard_NullCard_ReturnsFalse()
+{
+    // Arrange
+    var validator = new CardValidator();
+
+    // Act
+    bool result = validator.CanPlayCard(null, mockPlayer);
+
+    // Assert
+    Assert.IsFalse(result);
+}
+
+[Test]
+public void TakeDamage_NegativeDamage_ThrowsArgumentException()
+{
+    // Arrange
+    var character = CreateTestCharacter();
+
+    // Act & Assert
+    Assert.Throws<ArgumentException>(() => character.TakeDamage(-10));
+}
+```
+
+## 🔧 Zenject Test Environment (참고용)
+
+### Setting Up DI Container for Tests
+
+```csharp
+using NUnit.Framework;
+using Zenject;
+using UnityEngine;
+
+public class CardProcessorTests
+{
+    private DiContainer container;
+    private ICardValidator mockValidator;
+    private CardProcessor cardProcessor;
+
+    [SetUp]
+    public void Setup()
+    {
+        // Create DI container for tests
+        container = new DiContainer();
+
+        // Bind mock dependencies
+        mockValidator = new MockCardValidator();
+        container.Bind<ICardValidator>().FromInstance(mockValidator).AsSingle();
+
+        // Resolve system under test
+        cardProcessor = container.Resolve<CardProcessor>();
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        container = null;
+        cardProcessor = null;
+    }
+
+    [Test]
+    public void ProcessCard_ValidCard_ReturnsTrue()
+    {
+        // Arrange
+        var card = CreateValidCard();
+
+        // Act
+        bool result = cardProcessor.ProcessCard(card);
+
+        // Assert
+        Assert.IsTrue(result);
+    }
+}
+```
+
+### Mocking Zenject Dependencies
+
+```csharp
+// ✅ CORRECT: Use interfaces for mocking
+
+// Production code
+public class CombatManager
+{
+    private readonly ITurnManager turnManager;
+    private readonly ICardValidator validator;
+
+    [Inject]
+    public CombatManager(ITurnManager turnManager, ICardValidator validator)
+    {
+        this.turnManager = turnManager;
+        this.validator = validator;
+    }
+}
+
+// Test code
+public class CombatManagerTests
+{
+    private DiContainer container;
+    private MockTurnManager mockTurnManager;
+    private MockCardValidator mockValidator;
+
+    [SetUp]
+    public void Setup()
+    {
+        container = new DiContainer();
+
+        // Bind mocks
+        mockTurnManager = new MockTurnManager();
+        mockValidator = new MockCardValidator();
+
+        container.Bind<ITurnManager>().FromInstance(mockTurnManager).AsSingle();
+        container.Bind<ICardValidator>().FromInstance(mockValidator).AsSingle();
+    }
+
+    [Test]
+    public void StartCombat_ValidState_InitializesTurnManager()
+    {
+        // Arrange
+        var combatManager = container.Resolve<CombatManager>();
+
+        // Act
+        combatManager.StartCombat();
+
+        // Assert
+        Assert.IsTrue(mockTurnManager.WasInitialized);
+    }
+}
+
+// Simple mock implementation
+public class MockTurnManager : ITurnManager
+{
+    public bool WasInitialized { get; private set; }
+
+    public void Initialize()
+    {
+        WasInitialized = true;
+    }
+
+    // Implement other ITurnManager methods as needed
+}
+```
+
+## 🎯 Test Categories (참고용)
+
+### Category Attributes
+```csharp
+using NUnit.Framework;
+
+// Fast tests (< 1ms)
+[Test]
+[Category("Fast")]
+public void Validator_SimpleCheck_ReturnsQuickly()
+{
+    // Test code
+}
+
+// Integration tests (slower)
+[Test]
+[Category("Integration")]
+public void CombatFlow_FullRound_CompletesSuccessfully()
+{
+    // Test code
+}
+
+// Performance tests
+[Test]
+[Category("Performance")]
+public void ObjectPool_1000Allocations_UnderThreshold()
+{
+    // Test code
+}
+```
+
+## 📚 Additional Resources (참고용)
+
+```
+✅ RECOMMENDED Reading:
+├── Unity Test Framework Documentation
+├── Zenject Testing Guide
+├── NUnit Best Practices
+└── Test-Driven Development (TDD) for Unity
+```
