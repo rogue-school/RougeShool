@@ -65,6 +65,7 @@ namespace Game.SkillCardSystem.Manager
         private void Awake()
         {
             InitializeComponents();
+            // 프리팹은 Inspector로 지정되며, 선택적으로 DI로 주입 가능합니다.
         }
 
         private void Update()
@@ -134,12 +135,6 @@ namespace Game.SkillCardSystem.Manager
         {
             GameLogger.LogInfo("[SkillCardTooltipManager] 툴팁 시스템 초기화 시작 - 이펙트 상태 확인", GameLogger.LogCategory.UI);
             
-            // 프리팹이 할당되지 않았으면 자동으로 찾기
-            if (tooltipPrefab == null)
-            {
-                FindTooltipPrefab();
-            }
-
             if (tooltipPrefab == null)
             {
                 GameLogger.LogError("[SkillCardTooltipManager] 툴팁 프리팹을 찾을 수 없습니다. Resources 폴더에 SkillCardTooltip 프리팹을 배치해주세요.", GameLogger.LogCategory.Error);
@@ -157,38 +152,11 @@ namespace Game.SkillCardSystem.Manager
             yield return null;
         }
 
-        /// <summary>
-        /// 툴팁 프리팹을 자동으로 찾습니다.
-        /// </summary>
-        private void FindTooltipPrefab()
-        {
-            // Resources 폴더에서 프리팹 찾기
-            tooltipPrefab = Resources.Load<SkillCardTooltip>("SkillCardTooltip");
-            
-            if (tooltipPrefab != null)
-            {
-                // GameLogger.LogInfo("Resources에서 SkillCardTooltip 프리팹을 찾았습니다", GameLogger.LogCategory.UI);
-                return;
-            }
-
-            // 씬에서 기존 인스턴스 찾기
-            var existingTooltip = FindFirstObjectByType<SkillCardTooltip>();
-            if (existingTooltip != null)
-            {
-                // 기존 인스턴스를 프리팹으로 사용 (개발 중 임시 방법)
-                GameLogger.LogWarning("기존 SkillCardTooltip 인스턴스를 프리팹으로 사용합니다. 프리팹을 Resources에 배치하는 것을 권장합니다.", GameLogger.LogCategory.UI);
-                tooltipPrefab = existingTooltip;
-                return;
-            }
-
-            GameLogger.LogError("SkillCardTooltip 프리팹을 찾을 수 없습니다. 다음 중 하나를 수행해주세요:\n" +
-                              "1. Resources/SkillCardTooltip.prefab 파일 생성\n" +
-                              "2. Inspector에서 Tooltip Prefab 필드에 직접 할당", GameLogger.LogCategory.Error);
-        }
+        // 자동 탐색 로직 제거 (금지된 API 사용 방지). 프리팹은 DI 또는 인스펙터로만 지정합니다.
 
         private void SetupTooltipLayer()
         {
-            var stageCanvas = GetPreferredCanvas();
+            var stageCanvas = GetCanvasOfCurrentTarget();
             if (stageCanvas == null)
             {
                 GameLogger.LogError("[SkillCardTooltipManager] Stage Canvas를 찾을 수 없습니다", GameLogger.LogCategory.Error);
@@ -533,35 +501,11 @@ namespace Game.SkillCardSystem.Manager
 
         private Canvas GetCanvasOfCurrentTarget()
         {
-            if (currentTargetRect != null)
-            {
-                var c = currentTargetRect.GetComponentInParent<Canvas>();
-                if (c != null) return c;
-            }
-            // 폴백: 씬의 첫 Canvas
-            return FindFirstObjectByType<Canvas>();
+            if (currentTargetRect == null) return null;
+            return currentTargetRect.GetComponentInParent<Canvas>();
         }
 
-        private Canvas GetPreferredCanvas()
-        {
-            // DontDestroyOnLoad에 있는 Canvas는 제외하고, 현재 씬의 최상위 Canvas를 선택
-            var allCanvases = FindObjectsByType<Canvas>(FindObjectsSortMode.None);
-            Canvas best = null;
-            foreach (var c in allCanvases)
-            {
-                if (c == null) continue;
-                var sceneName = c.gameObject.scene.name;
-                if (string.Equals(sceneName, "DontDestroyOnLoad")) continue;
-                // 대상 Rect가 이 캔버스 하위라면 즉시 채택
-                if (currentTargetRect != null && currentTargetRect.IsChildOf(c.transform))
-                {
-                    return c;
-                }
-                // 첫 유효 Canvas 기억
-                if (best == null) best = c;
-            }
-            return best != null ? best : GetCanvasOfCurrentTarget();
-        }
+        // 캔버스 자동 탐색 제거. 대상 카드의 부모 캔버스만 사용합니다.
 
         // TooltipLayer 제거: 캔버스 루트 RectTransform을 사용하므로 별도 보장 메서드 불필요
 

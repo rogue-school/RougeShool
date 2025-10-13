@@ -27,12 +27,11 @@ namespace Game.CombatSystem.Manager
         #region 의존성
 
         private readonly ICardSlotRegistry _registry;
-        private readonly SkillCardFactory _cardFactory;
+        private readonly Game.SkillCardSystem.Interface.ISkillCardFactory _cardFactory;
         private readonly PlayerManager _playerManager;
         private readonly EnemyManager _enemyManager;
-        private readonly CombatExecutionManager _executionManager;
+        private readonly ICombatExecutionManager _executionManager;
         private readonly ITurnController _turnController;
-        private readonly MonoBehaviour _coroutineRunner; // 코루틴 실행용
 
         #endregion
 
@@ -67,12 +66,11 @@ namespace Game.CombatSystem.Manager
         [Inject]
         public SlotMovementController(
             ICardSlotRegistry registry,
-            SkillCardFactory cardFactory,
+            Game.SkillCardSystem.Interface.ISkillCardFactory cardFactory,
             PlayerManager playerManager,
             EnemyManager enemyManager,
-            CombatExecutionManager executionManager,
-            ITurnController turnController,
-            [InjectOptional] MonoBehaviour coroutineRunner)
+            ICombatExecutionManager executionManager,
+            ITurnController turnController)
         {
             _registry = registry;
             _cardFactory = cardFactory;
@@ -80,7 +78,6 @@ namespace Game.CombatSystem.Manager
             _enemyManager = enemyManager;
             _executionManager = executionManager;
             _turnController = turnController;
-            _coroutineRunner = coroutineRunner ?? GameObject.FindFirstObjectByType<TurnManager>();
         }
 
         #endregion
