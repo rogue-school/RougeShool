@@ -1,6 +1,7 @@
 using UnityEngine;
 using Game.ItemSystem.Interface;
 using Game.ItemSystem.Data;
+using Game.CoreSystem.Utility;
 
 namespace Game.ItemSystem.Effect
 {
@@ -39,12 +40,12 @@ namespace Game.ItemSystem.Effect
         {
             if (context?.User == null || context.User.IsDead())
             {
-                Debug.LogWarning("[TimeStopEffectSO] 사용자가 null이거나 사망 상태입니다. 시간 정지 실패.");
+                GameLogger.LogWarning("[TimeStopEffectSO] 사용자가 null이거나 사망 상태입니다. 시간 정지 실패.", GameLogger.LogCategory.Core);
                 return;
             }
 
             // TODO: 실제 시간 정지 시스템과 연동
-            Debug.Log($"[TimeStopEffectSO] 시간 정지 효과: 다음 적 카드 {value}장 봉인");
+            GameLogger.LogInfo($"[TimeStopEffectSO] 시간 정지 효과: 다음 적 카드 {value}장 봉인", GameLogger.LogCategory.Core);
         }
 
         protected override void OnValidate()

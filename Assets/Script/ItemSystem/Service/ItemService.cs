@@ -37,6 +37,7 @@ namespace Game.ItemSystem.Service
         // 의존성 주입
         [Inject] private ICharacter playerCharacter;
         [Inject] private IAudioManager audioManager;
+        [Inject(Optional = true)] private IVFXManager vfxManager;
 
         #endregion
 
@@ -96,7 +97,7 @@ namespace Game.ItemSystem.Service
             }
 
             // 아이템 런타임 인스턴스 생성 및 사용
-            var activeItem = new ActiveItem(slot.item, audioManager);
+            var activeItem = new ActiveItem(slot.item, audioManager, vfxManager);
             bool success = activeItem.UseItem(playerCharacter, playerCharacter);
 
             if (success)

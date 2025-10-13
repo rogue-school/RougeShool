@@ -1,5 +1,6 @@
 using UnityEngine;
 using Game.ItemSystem.Interface;
+using Game.CoreSystem.Utility;
 
 namespace Game.ItemSystem.Effect
 {
@@ -22,7 +23,7 @@ namespace Game.ItemSystem.Effect
         {
             if (context?.User == null || context.User.IsDead())
             {
-                Debug.LogWarning("[HealEffectSO] 사용자가 null이거나 사망 상태입니다. 회복 적용 실패.");
+                GameLogger.LogWarning("[HealEffectSO] 사용자가 null이거나 사망 상태입니다. 회복 적용 실패.", GameLogger.LogCategory.Core);
                 return;
             }
 
@@ -33,7 +34,7 @@ namespace Game.ItemSystem.Effect
             if (actualHeal > 0)
             {
                 context.User.Heal(actualHeal);
-                Debug.Log($"[HealEffectSO] 체력 회복: {actualHeal} (현재: {currentHP + actualHeal}/{maxHP})");
+                GameLogger.LogInfo($"[HealEffectSO] 체력 회복: {actualHeal} (현재: {currentHP + actualHeal}/{maxHP})", GameLogger.LogCategory.Core);
             }
         }
 

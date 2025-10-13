@@ -1,5 +1,6 @@
 using UnityEngine;
 using Game.ItemSystem.Interface;
+using Game.CoreSystem.Utility;
 
 namespace Game.ItemSystem.Effect
 {
@@ -22,12 +23,12 @@ namespace Game.ItemSystem.Effect
         {
             if (context?.User == null || context.User.IsDead())
             {
-                Debug.LogWarning("[ShieldBreakerEffectSO] 사용자가 null이거나 사망 상태입니다. 실드 브레이커 실패.");
+                GameLogger.LogWarning("[ShieldBreakerEffectSO] 사용자가 null이거나 사망 상태입니다. 실드 브레이커 실패.", GameLogger.LogCategory.Core);
                 return;
             }
 
             // TODO: 실제 실드 브레이커 시스템과 연동
-            Debug.Log($"[ShieldBreakerEffectSO] 실드 브레이커 효과: 방어/반격 무시 ({duration}턴)");
+            GameLogger.LogInfo($"[ShieldBreakerEffectSO] 실드 브레이커 효과: 방어/반격 무시 ({duration}턴)", GameLogger.LogCategory.Core);
         }
 
         protected override void OnValidate()

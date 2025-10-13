@@ -1,5 +1,6 @@
 using UnityEngine;
 using Game.ItemSystem.Interface;
+using Game.CoreSystem.Utility;
 
 namespace Game.ItemSystem.Effect
 {
@@ -25,12 +26,12 @@ namespace Game.ItemSystem.Effect
         {
             if (context?.User == null || context.User.IsDead())
             {
-                Debug.LogWarning("[AttackBuffEffectSO] 사용자가 null이거나 사망 상태입니다. 버프 적용 실패.");
+                GameLogger.LogWarning("[AttackBuffEffectSO] 사용자가 null이거나 사망 상태입니다. 버프 적용 실패.", GameLogger.LogCategory.Core);
                 return;
             }
 
             // TODO: 실제 버프 시스템과 연동
-            Debug.Log($"[AttackBuffEffectSO] 공격력 버프 적용: +{value} ({duration}턴)");
+            GameLogger.LogInfo($"[AttackBuffEffectSO] 공격력 버프 적용: +{value} ({duration}턴)", GameLogger.LogCategory.Core);
         }
 
         protected override void OnValidate()

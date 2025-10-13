@@ -1,6 +1,7 @@
 using UnityEngine;
 using Game.ItemSystem.Interface;
 using Game.ItemSystem.Data;
+using Game.CoreSystem.Utility;
 
 namespace Game.ItemSystem.Effect
 {
@@ -39,12 +40,12 @@ namespace Game.ItemSystem.Effect
         {
             if (context?.User == null || context.User.IsDead())
             {
-                Debug.LogWarning("[DiceOfFateEffectSO] 사용자가 null이거나 사망 상태입니다. 운명의 주사위 실패.");
+                GameLogger.LogWarning("[DiceOfFateEffectSO] 사용자가 null이거나 사망 상태입니다. 운명의 주사위 실패.", GameLogger.LogCategory.Core);
                 return;
             }
 
             // TODO: 실제 운명의 주사위 시스템과 연동
-            Debug.Log($"[DiceOfFateEffectSO] 운명의 주사위 효과: 다음 적 스킬 {value}개를 무작위로 변경");
+            GameLogger.LogInfo($"[DiceOfFateEffectSO] 운명의 주사위 효과: 다음 적 스킬 {value}개를 무작위로 변경", GameLogger.LogCategory.Core);
         }
 
         protected override void OnValidate()

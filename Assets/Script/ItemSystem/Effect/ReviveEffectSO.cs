@@ -1,5 +1,6 @@
 using UnityEngine;
 using Game.ItemSystem.Interface;
+using Game.CoreSystem.Utility;
 
 namespace Game.ItemSystem.Effect
 {
@@ -18,13 +19,13 @@ namespace Game.ItemSystem.Effect
         {
             if (context?.User == null)
             {
-                Debug.LogWarning("[ReviveEffectSO] 사용자가 null입니다. 부활 실패.");
+                GameLogger.LogWarning("[ReviveEffectSO] 사용자가 null입니다. 부활 실패.", GameLogger.LogCategory.Core);
                 return;
             }
 
             if (!context.User.IsDead())
             {
-                Debug.Log("[ReviveEffectSO] 사용자가 이미 살아있습니다.");
+                GameLogger.LogInfo("[ReviveEffectSO] 사용자가 이미 살아있습니다.", GameLogger.LogCategory.Core);
                 return;
             }
 
@@ -33,7 +34,7 @@ namespace Game.ItemSystem.Effect
             context.User.Heal(maxHP);
             
             // TODO: 디버프 제거 시스템과 연동
-            Debug.Log($"[ReviveEffectSO] 부활 완료: 체력 {maxHP}으로 회복, 모든 디버프 제거");
+            GameLogger.LogInfo($"[ReviveEffectSO] 부활 완료: 체력 {maxHP}으로 회복, 모든 디버프 제거", GameLogger.LogCategory.Core);
         }
     }
 }

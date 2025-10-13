@@ -1,6 +1,7 @@
 using UnityEngine;
 using Game.ItemSystem.Interface;
 using Game.ItemSystem.Data;
+using Game.CoreSystem.Utility;
 
 namespace Game.ItemSystem.Effect
 {
@@ -43,7 +44,7 @@ namespace Game.ItemSystem.Effect
         {
             if (context?.User == null || context.User.IsDead())
             {
-                Debug.LogWarning("[ClownPotionEffectSO] 사용자가 null이거나 사망 상태입니다. 효과 적용 실패.");
+                GameLogger.LogWarning("[ClownPotionEffectSO] 사용자가 null이거나 사망 상태입니다. 효과 적용 실패.", GameLogger.LogCategory.Core);
                 return;
             }
 
@@ -54,12 +55,12 @@ namespace Game.ItemSystem.Effect
             if (isHeal)
             {
                 context.User.Heal(effectAmount);
-                Debug.Log($"[ClownPotionEffectSO] 광대 물약 효과: 체력 회복 +{effectAmount}");
+                GameLogger.LogInfo($"[ClownPotionEffectSO] 광대 물약 효과: 체력 회복 +{effectAmount}", GameLogger.LogCategory.Core);
             }
             else
             {
                 context.User.TakeDamage(effectAmount);
-                Debug.Log($"[ClownPotionEffectSO] 광대 물약 효과: 데미지 -{effectAmount}");
+                GameLogger.LogInfo($"[ClownPotionEffectSO] 광대 물약 효과: 데미지 -{effectAmount}", GameLogger.LogCategory.Core);
             }
         }
 
