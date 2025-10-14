@@ -34,8 +34,8 @@ namespace Game.ItemSystem.Service
         private Dictionary<string, int> skillStarRanks = new Dictionary<string, int>();
         private Dictionary<string, PassiveItemDefinition> passiveItemDefinitions = new Dictionary<string, PassiveItemDefinition>();
 
-        // 의존성 주입
-        [Inject] private ICharacter playerCharacter;
+        // 의존성 주입 (플레이어는 코어 씬에서는 아직 없을 수 있으므로 Optional)
+        [Inject(Optional = true)] private ICharacter playerCharacter;
         [Inject] private IAudioManager audioManager;
         [Inject(Optional = true)] private IVFXManager vfxManager;
 
@@ -93,6 +93,12 @@ namespace Game.ItemSystem.Service
             if (slot.isEmpty || slot.item == null)
             {
                 GameLogger.LogWarning($"슬롯 {slotIndex}이 비어있습니다", GameLogger.LogCategory.Core);
+                return false;
+            }
+
+            if (playerCharacter == null)
+            {
+                GameLogger.LogWarning("플레이어 캐릭터가 아직 초기화되지 않았습니다. 아이템 사용을 건너뜁니다", GameLogger.LogCategory.Core);
                 return false;
             }
 

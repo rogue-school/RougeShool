@@ -20,6 +20,7 @@ namespace Game.ItemSystem.Runtime
 
 		[SerializeField] private bool _isOpen;
 		[SerializeField] private ActiveItemDefinition[] _candidates;
+		[SerializeField] private PassiveItemDefinition[] _passiveCandidates;
 		private bool _hasTakenOnceWhenThreeOfFour;
 
 		private void OnEnable()
@@ -45,10 +46,19 @@ namespace Game.ItemSystem.Runtime
 		public void Open(ActiveItemDefinition[] candidates)
 		{
 			_candidates = candidates;
+			_passiveCandidates = null;
 			_isOpen = true;
 			_hasTakenOnceWhenThreeOfFour = false;
 			RefreshButtons();
 			GameLogger.LogInfo($"[Reward] 보상 {(_candidates?.Length ?? 0)}개 표시", GameLogger.LogCategory.UI);
+		}
+
+		public void OpenPassive(PassiveItemDefinition[] candidates)
+		{
+			_passiveCandidates = candidates;
+			_candidates = null;
+			_isOpen = true;
+			GameLogger.LogInfo($"[Reward] 패시브 보상 {(_passiveCandidates?.Length ?? 0)}개 표시", GameLogger.LogCategory.UI);
 		}
 
 		/// <summary>
@@ -63,6 +73,32 @@ namespace Game.ItemSystem.Runtime
 			}
 			var actives = _rewardGenerator.GenerateActive(enemyCfg, playerProfile, profile, stageIndex, runSeed);
 			Open(actives);
+		}
+
+		public void OpenGeneratedPassive(EnemyRewardConfig enemyCfg, PlayerRewardProfile playerProfile, RewardProfile profile, int stageIndex, int runSeed)
+		{
+			if (_rewardGenerator == null)
+			{
+				GameLogger.LogWarning("[Reward] RewardGenerator가 주입되지 않았습니다", GameLogger.LogCategory.UI);
+				return;
+			}
+			var passives = _rewardGenerator.GeneratePassive(enemyCfg, playerProfile, profile, stageIndex, runSeed);
+			OpenPassive(passives);
+		}
+
+		public void OpenGeneratedCombined(EnemyRewardConfig enemyCfg, PlayerRewardProfile playerProfile, RewardProfile profile, int stageIndex, int runSeed)
+		{
+			if (_rewardGenerator == null)
+			{
+				GameLogger.LogWarning("[Reward] RewardGenerator가 주입되지 않았습니다", GameLogger.LogCategory.UI);
+				return;
+			}
+			_candidates = _rewardGenerator.GenerateActive(enemyCfg, playerProfile, profile, stageIndex, runSeed);
+			_passiveCandidates = _rewardGenerator.GeneratePassive(enemyCfg, playerProfile, profile, stageIndex, runSeed);
+			_isOpen = true;
+			_hasTakenOnceWhenThreeOfFour = false;
+			RefreshButtons();
+			GameLogger.LogInfo($"[Reward] 액티브 {(_candidates?.Length ?? 0)}개 + 패시브 {(_passiveCandidates?.Length ?? 0)}개 표시", GameLogger.LogCategory.UI);
 		}
 
 		public void Close()

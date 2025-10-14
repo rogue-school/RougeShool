@@ -34,6 +34,9 @@ using Game.UtilitySystem;
 using Game.CoreSystem.Save;
 using Game.CoreSystem.Audio;
 using Game.SkillCardSystem.Runtime;
+using Game.ItemSystem.Interface;
+using Game.ItemSystem.Service;
+using Game.ItemSystem.Service.Reward;
  
 
 /// <summary>
@@ -67,6 +70,7 @@ public class CombatInstaller : MonoInstaller
         BindUIPrefabs();            // UI 프리팹 (매니저 의존)
         BindCombatStateMachine();   // 전투 상태 머신 (새로운 시스템)
         BindStageFlowStateMachine();// 스테이지 상태 머신(뼈대) 연결
+        BindItemSystemServices();    // 아이템 시스템 (전역 미바인딩 대비 보강)
         
         stopwatch.Stop();
         if (enablePerformanceLogging)
@@ -185,6 +189,29 @@ public class CombatInstaller : MonoInstaller
         else
         {
             GameLogger.LogWarning(" SkillCardUI 프리팹이 설정되지 않았습니다.");
+        }
+    }
+
+    /// <summary>
+    /// 아이템 시스템 서비스 바인딩 (코어 전역 바인딩 누락 대비 안전망)
+    /// </summary>
+    private void BindItemSystemServices()
+    {
+        // IItemService: 전역에서 찾고 없으면 생성
+        var itemService = FindFirstObjectByType<ItemService>(FindObjectsInactive.Include);
+        if (itemService == null)
+        {
+            var go = new GameObject("ItemService");
+            DontDestroyOnLoad(go);
+            itemService = go.AddComponent<ItemService>();
+            GameLogger.LogInfo(" ItemService 자동 생성 및 전역 고정");
+        }
+        Container.Bind<IItemService>().FromInstance(itemService).AsSingle();
+
+        // IRewardGenerator: 순수 서비스 싱글톤 (중복 바인딩 방지)
+        if (!Container.HasBinding<IRewardGenerator>())
+        {
+            Container.Bind<IRewardGenerator>().To<RewardGenerator>().AsSingle();
         }
     }
 

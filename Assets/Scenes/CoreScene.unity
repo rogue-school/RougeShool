@@ -1252,6 +1252,50 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dc391f8b4ae49224bb9604b95f91fac3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &802587233
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 802587234}
+  - component: {fileID: 802587235}
+  m_Layer: 0
+  m_Name: ItemService
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &802587234
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 802587233}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2125065709}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &802587235
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 802587233}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9876c1d85d55ef94f8f74ece74576389, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &913249146
 GameObject:
   m_ObjectHideFlags: 0
@@ -1505,8 +1549,6 @@ MonoBehaviour:
   tooltipPrefab: {fileID: 4666529147020379979, guid: 89dc10c258d326f41847df14968cd3aa, type: 3}
   showDelay: 0.5
   hideDelay: 0.1
-  canvasSortOrder: 1000
-  canvasName: TooltipCanvas
 --- !u!1 &1104247995
 GameObject:
   m_ObjectHideFlags: 0
@@ -1794,7 +1836,8 @@ MonoBehaviour:
   coroutineRunner: {fileID: 789670093}
   playerCharacterSelectionManager: {fileID: 80656796}
   skillCardTooltipManager: {fileID: 1069046947}
-  enableLazyInitialization: 1
+  buffDebuffTooltipManager: {fileID: 0}
+  enableLazyInitialization: 0
   enableCircularDependencyCheck: 1
   enablePerformanceLogging: 0
 --- !u!4 &1396837154
@@ -2760,6 +2803,7 @@ Transform:
   - {fileID: 1765808455}
   - {fileID: 1069046946}
   - {fileID: 286090016}
+  - {fileID: 802587234}
   m_Father: {fileID: 288834489}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807

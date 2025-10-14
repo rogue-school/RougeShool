@@ -123,6 +123,7 @@ namespace Game.SkillCardSystem.UI
 		private RectTransform _contentRoot;
 		private LayoutElement _layoutElement;
 		private ContentSizeFitter _contentSizeFitter;
+        private int _lastAttackPowerStack = -1;
 
 		private static Transform FindChildByName(Transform parent, string name)
 		{
@@ -332,6 +333,8 @@ namespace Game.SkillCardSystem.UI
             currentCard = card;
             currentCardRectTransform = cardRectTransform; // 카드 RectTransform 저장
             UpdateTooltipContent(card);
+            // 스택 기반 효과 변화 감지를 위해 현재 스택을 기록
+            _lastAttackPowerStack = (card is Game.SkillCardSystem.Interface.IAttackPowerStackProvider sp) ? sp.GetAttackPowerStack() : -1;
             
             // Layout 시스템이 적용되도록 한 프레임 대기 후 위치 계산
             StartCoroutine(ShowTooltipWithLayout(cardPosition));
@@ -385,6 +388,16 @@ namespace Game.SkillCardSystem.UI
         {
             if (isVisible)
             {
+                // 스택 변화가 있으면 콘텐츠 갱신
+                if (currentCard is Game.SkillCardSystem.Interface.IAttackPowerStackProvider sp)
+                {
+                    int cur = sp.GetAttackPowerStack();
+                    if (cur != _lastAttackPowerStack)
+                    {
+                        _lastAttackPowerStack = cur;
+                        UpdateTooltipContent(currentCard);
+                    }
+                }
                 UpdateTooltipPosition(mousePosition);
             }
         }
@@ -566,7 +579,9 @@ namespace Game.SkillCardSystem.UI
                 }
                 else if (useAutoDescription)
                 {
-                    descriptionText.text = BuildAutoDescription(definition);
+                    // Mapper 기반 규칙+프리뷰 문구 사용
+                    var model = SkillCardTooltipMapper.From(definition);
+                    descriptionText.text = model?.DescriptionRichText ?? string.Empty;
                 }
                 else
                 {

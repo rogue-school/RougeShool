@@ -12,6 +12,9 @@ using Game.SkillCardSystem.Manager;
 using Game.CharacterSystem.Manager;
 using System.Linq;
 using System.Collections.Generic;
+using Game.ItemSystem.Interface;
+using Game.ItemSystem.Service;
+using Game.ItemSystem.Service.Reward;
 
 namespace Game.CoreSystem
 {
@@ -118,6 +121,19 @@ namespace Game.CoreSystem
         {
             // AudioPoolManager는 AudioManager에 포함되어 있으므로 별도 바인딩 불필요
             // CardStateCollector, CardStateRestorer는 제거되었고 SaveManager에 StageProgressCollector가 포함됨
+
+            // ItemSystem 전역 바인딩
+            // IItemService: 전역 싱글톤으로 생성(없으면 새 GO 생성)
+            Container.Bind<IItemService>()
+                .To<ItemService>()
+                .FromNewComponentOnNewGameObject()
+                .AsSingle()
+                .NonLazy();
+
+            // IRewardGenerator: 순수 서비스 싱글톤
+            Container.Bind<IRewardGenerator>()
+                .To<RewardGenerator>()
+                .AsSingle();
         }
 
         #endregion

@@ -13,6 +13,7 @@ using Zenject;
 using Game.CoreSystem.Utility;
 using DG.Tweening;
 using Game.CoreSystem.Audio;
+using Game.ItemSystem.Runtime;
 
 namespace Game.StageSystem.Manager
 {
@@ -87,6 +88,9 @@ namespace Game.StageSystem.Manager
         [Zenject.Inject(Optional = true)] private Game.SkillCardSystem.Manager.PlayerHandManager playerHandManagerConcrete;
 
         private bool isWaitingForPlayer = false;
+
+        [Header("🎁 보상 UI 브리지 (선택)")]
+        [SerializeField] private RewardOnEnemyDeath rewardBridge;
 
         #endregion
 
@@ -460,6 +464,16 @@ namespace Game.StageSystem.Manager
 
             // 적 처치 이벤트 발생
             OnEnemyDefeated?.Invoke(enemy);
+
+            // 보상 UI 열기 (설정된 경우)
+            if (rewardBridge != null)
+            {
+                rewardBridge.OnEnemyKilled();
+                if (debugSettings != null && debugSettings.showRewardInfo)
+                {
+                    GameLogger.LogInfo("[StageManager] 적 처치 → 보상 UI 오픈 요청", GameLogger.LogCategory.UI);
+                }
+            }
 
             // 적을 enemyManager에서 제거
             if (enemyManager != null)

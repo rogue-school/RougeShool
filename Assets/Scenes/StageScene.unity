@@ -449,6 +449,54 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 87409927}
   m_CullTransparentMesh: 1
+--- !u!1 &90509925
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 90509926}
+  - component: {fileID: 90509927}
+  m_Layer: 0
+  m_Name: RewardPanelController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &90509926
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 90509925}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -5.20378, y: -0.32124105, z: -0.00807294}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 206878164}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &90509927
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 90509925}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f352ec92ac1552149bff95a38f149e54, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _isOpen: 1
+  _candidates: []
+  _passiveCandidates:
+  - {fileID: 0}
 --- !u!1 &140985747
 GameObject:
   m_ObjectHideFlags: 0
@@ -785,6 +833,8 @@ Transform:
   - {fileID: 1358596431}
   - {fileID: 612402064}
   - {fileID: 724551098}
+  - {fileID: 1788458138}
+  - {fileID: 90509926}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &212382548
@@ -4149,9 +4199,10 @@ MonoBehaviour:
     - {fileID: 11400000, guid: ebcb895c197bd934c92f968aea234a27, type: 2}
   debugSettings:
     enableStageLogging: 1
-    showEnemyStatus: 0
-    showRewardInfo: 0
-    showProgressStatus: 0
+    showEnemyStatus: 1
+    showRewardInfo: 1
+    showProgressStatus: 1
+  rewardBridge: {fileID: 1788458139}
 --- !u!1 &1580337929
 GameObject:
   m_ObjectHideFlags: 0
@@ -4561,6 +4612,60 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1767043438}
   m_CullTransparentMesh: 1
+--- !u!1 &1788458137
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1788458138}
+  - component: {fileID: 1788458139}
+  m_Layer: 0
+  m_Name: RewardOnEnemyDeath
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1788458138
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1788458137}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -5.20378, y: -0.32124105, z: -0.00807294}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 206878164}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1788458139
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1788458137}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c6d29c64047ab348a10010bb84dac27, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enemyRewardConfig: {fileID: 11400000, guid: 0b6f3851b36fadc4a908da049d8f5bab, type: 2}
+  playerRewardProfile: {fileID: 0}
+  swordPlayerRewardProfile: {fileID: 0}
+  bowPlayerRewardProfile: {fileID: 0}
+  staffPlayerRewardProfile: {fileID: 0}
+  rewardProfile: {fileID: 0}
+  rewardPanel: {fileID: 90509927}
+  displayMode: 2
+  stageIndex: 0
+  runSeed: 0
 --- !u!1 &1814860799
 GameObject:
   m_ObjectHideFlags: 0
