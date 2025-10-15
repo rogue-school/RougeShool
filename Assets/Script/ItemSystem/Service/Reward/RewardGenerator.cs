@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 using Game.ItemSystem.Data;
 using Game.ItemSystem.Data.Reward;
 using Game.CoreSystem.Utility;
@@ -8,23 +9,42 @@ namespace Game.ItemSystem.Service.Reward
 {
 	public class RewardGenerator : IRewardGenerator
 	{
-		public ActiveItemDefinition[] GenerateActive(EnemyRewardConfig enemy, PlayerRewardProfile player, RewardProfile profile, int stageIndex, int runSeed)
+	public ActiveItemDefinition[] GenerateActive(EnemyRewardConfig enemy, PlayerRewardProfile player, int stageIndex, int runSeed)
+	{
+		// 기본값 처리로 설정 누락 방지
+		if (enemy == null)
 		{
-			var pool = MergePools(enemy?.activePools);
-			var candidates = FilterByStage(pool, stageIndex);
-			candidates = FilterByPlayer(candidates, player, passive:false);
-			AdjustWeightsByTags(candidates, player);
-			return SampleActive(candidates, Math.Max(0, enemy?.activeCount ?? 0), profile, stageIndex, runSeed);
+			GameLogger.LogWarning("[RewardGenerator] EnemyRewardConfig가 null입니다. 기본 보상을 생성합니다.", GameLogger.LogCategory.UI);
+			return GenerateDefaultActiveReward();
 		}
 
-		public PassiveItemDefinition[] GeneratePassive(EnemyRewardConfig enemy, PlayerRewardProfile player, RewardProfile profile, int stageIndex, int runSeed)
+		if (player == null)
 		{
-			var pool = MergePools(enemy?.passivePools);
-			var candidates = FilterByStage(pool, stageIndex);
-			candidates = FilterByPlayer(candidates, player, passive:true);
-			AdjustWeightsByTags(candidates, player);
-			return SamplePassive(candidates, Math.Max(0, enemy?.passiveCount ?? 0), profile, stageIndex, runSeed);
+			GameLogger.LogInfo("[RewardGenerator] PlayerRewardProfile이 null입니다. 필터링 없이 진행합니다.", GameLogger.LogCategory.UI);
 		}
+
+		var pool = MergePools(enemy.activePools);
+		var candidates = FilterByStage(pool, stageIndex);
+		candidates = FilterByPlayer(candidates, player, passive: false);
+		AdjustWeightsByTags(candidates, player);
+		return SampleActive(candidates, Math.Max(1, enemy.activeCount), stageIndex, runSeed);
+	}
+
+	public PassiveItemDefinition[] GeneratePassive(EnemyRewardConfig enemy, PlayerRewardProfile player, int stageIndex, int runSeed)
+	{
+		// 기본값 처리로 설정 누락 방지
+		if (enemy == null)
+		{
+			GameLogger.LogWarning("[RewardGenerator] EnemyRewardConfig가 null입니다. 기본 패시브 보상을 생성합니다.", GameLogger.LogCategory.UI);
+			return GenerateDefaultPassiveReward();
+		}
+
+		var pool = MergePools(enemy.passivePools);
+		var candidates = FilterByStage(pool, stageIndex);
+		candidates = FilterByPlayer(candidates, player, passive: true);
+		AdjustWeightsByTags(candidates, player);
+		return SamplePassive(candidates, Math.Max(0, enemy.passiveCount), stageIndex, runSeed);
+	}
 
 		private List<RewardPool.WeightedEntry> MergePools(RewardPool[] pools)
 		{
@@ -57,17 +77,27 @@ namespace Game.ItemSystem.Service.Reward
 			foreach (var e in src)
 			{
 				if (e.item == null) continue;
-				// 아이템 블랙리스트
-				if (prof.bannedItems != null && Array.Exists(prof.bannedItems, i => i == e.item)) continue;
-				// 아이템 화이트리스트 체크(있으면 필수)
-				if (prof.allowedItems != null && prof.allowedItems.Length > 0 && !Array.Exists(prof.allowedItems, i => i == e.item)) continue;
+				
+				// 아이템 타입별 금지 확인
+				bool isBanned = false;
+				if (passive && e.item is PassiveItemDefinition passiveItem)
+				{
+					isBanned = prof.IsPassiveItemBanned(passiveItem);
+				}
+				else if (!passive && e.item is ActiveItemDefinition activeItem)
+				{
+					isBanned = prof.IsActiveItemBanned(activeItem);
+				}
+				
+				if (isBanned) continue;
+				
 				// 태그 필터
 				if (!PassTagFilters(e.tags, prof.allowedTags, prof.bannedTags)) continue;
 				// 패시브 전용 필터
 				if (passive && !PassTagFilters(e.tags, prof.allowedPassiveTags, prof.bannedPassiveTags)) continue;
 				dst.Add(e);
 			}
-			return dst;
+			return dst.Count > 0 ? dst : src; // 필터링 결과가 비어있으면 원본 반환
 		}
 
 		private bool PassTagFilters(string[] itemTags, string[] allowed, string[] banned)
@@ -104,17 +134,17 @@ namespace Game.ItemSystem.Service.Reward
 			}
 		}
 
-		private ActiveItemDefinition[] SampleActive(List<RewardPool.WeightedEntry> list, int count, RewardProfile profile, int stage, int runSeed)
+		private ActiveItemDefinition[] SampleActive(List<RewardPool.WeightedEntry> list, int count, int stage, int runSeed)
 		{
-			var rng = new System.Random(BuildSeed(profile, stage, runSeed, 1));
+			var rng = new System.Random(BuildSeed(DefaultRewardPolicy.SeedPolicy, stage, runSeed, 1));
 			var picked = new List<ActiveItemDefinition>();
 			var used = new HashSet<ItemDefinition>();
 			for (int i = 0; i < count; i++)
 			{
-				var e = WeightedPick(list, rng, used, profile);
+				var e = WeightedPick(list, rng, used, DefaultRewardPolicy.DuplicatePolicy);
 				if (e == null || e.item is not ActiveItemDefinition a) break;
 				picked.Add(a);
-				if (profile.duplicatePolicy == RewardDuplicatePolicy.RerollOnDuplicate || e.uniquePerRun)
+				if (DefaultRewardPolicy.DuplicatePolicy == RewardDuplicatePolicy.RerollOnDuplicate || e.uniquePerRun)
 				{
 					used.Add(e.item);
 				}
@@ -122,17 +152,17 @@ namespace Game.ItemSystem.Service.Reward
 			return picked.ToArray();
 		}
 
-		private PassiveItemDefinition[] SamplePassive(List<RewardPool.WeightedEntry> list, int count, RewardProfile profile, int stage, int runSeed)
+		private PassiveItemDefinition[] SamplePassive(List<RewardPool.WeightedEntry> list, int count, int stage, int runSeed)
 		{
-			var rng = new System.Random(BuildSeed(profile, stage, runSeed, 2));
+			var rng = new System.Random(BuildSeed(DefaultRewardPolicy.SeedPolicy, stage, runSeed, 2));
 			var picked = new List<PassiveItemDefinition>();
 			var used = new HashSet<ItemDefinition>();
 			for (int i = 0; i < count; i++)
 			{
-				var e = WeightedPick(list, rng, used, profile);
+				var e = WeightedPick(list, rng, used, DefaultRewardPolicy.DuplicatePolicy);
 				if (e == null || e.item is not PassiveItemDefinition p) break;
 				picked.Add(p);
-				if (profile.duplicatePolicy == RewardDuplicatePolicy.RerollOnDuplicate || e.uniquePerRun)
+				if (DefaultRewardPolicy.DuplicatePolicy == RewardDuplicatePolicy.RerollOnDuplicate || e.uniquePerRun)
 				{
 					used.Add(e.item);
 				}
@@ -140,7 +170,7 @@ namespace Game.ItemSystem.Service.Reward
 			return picked.ToArray();
 		}
 
-		private RewardPool.WeightedEntry WeightedPick(List<RewardPool.WeightedEntry> list, System.Random rng, HashSet<ItemDefinition> used, RewardProfile profile)
+		private RewardPool.WeightedEntry WeightedPick(List<RewardPool.WeightedEntry> list, System.Random rng, HashSet<ItemDefinition> used, RewardDuplicatePolicy duplicatePolicy)
 		{
 			int total = 0;
 			for (int i = 0; i < list.Count; i++)
@@ -163,15 +193,15 @@ namespace Game.ItemSystem.Service.Reward
 			return null;
 		}
 
-		private int BuildSeed(RewardProfile profile, int stage, int runSeed, int salt)
+		private int BuildSeed(RewardSeedPolicy seedPolicy, int stage, int runSeed, int salt)
 		{
-			return profile.seedPolicy switch
-			{
-				RewardSeedPolicy.PerRun => HashCombine(runSeed, salt),
-				RewardSeedPolicy.PerStage => HashCombine(runSeed, stage, salt),
-				RewardSeedPolicy.PerEnemy => HashCombine(runSeed, stage, Environment.TickCount, salt),
-				_ => HashCombine(runSeed, stage, salt)
-			};
+		return seedPolicy switch
+		{
+			RewardSeedPolicy.PerRun => HashCombine(runSeed, salt),
+			RewardSeedPolicy.PerStage => HashCombine(runSeed, stage, salt),
+			RewardSeedPolicy.PerEnemy => HashCombine(runSeed, stage, Environment.TickCount, salt),
+			_ => HashCombine(runSeed, stage, salt)
+		};
 		}
 
 		private int HashCombine(params int[] values)
@@ -182,6 +212,56 @@ namespace Game.ItemSystem.Service.Reward
 				for (int i = 0; i < values.Length; i++) h = h * 31 + values[i];
 				return h;
 			}
+		}
+
+		/// <summary>
+		/// 설정이 누락된 경우 사용할 기본 액티브 보상을 생성합니다.
+		/// </summary>
+		private ActiveItemDefinition[] GenerateDefaultActiveReward()
+		{
+			// Resources 폴더에서 모든 액티브 아이템을 찾아서 랜덤 선택
+			var allActiveItems = Resources.LoadAll<ActiveItemDefinition>("Data/Item");
+			
+			if (allActiveItems.Length == 0)
+			{
+				GameLogger.LogError("[RewardGenerator] Resources에서 액티브 아이템을 찾을 수 없습니다.", GameLogger.LogCategory.UI);
+				return new ActiveItemDefinition[0];
+			}
+
+			// 기본적으로 3개 아이템 제공
+			var selectedCount = Math.Min(3, allActiveItems.Length);
+			var selected = new List<ActiveItemDefinition>();
+			
+			for (int i = 0; i < selectedCount; i++)
+			{
+				var randomIndex = UnityEngine.Random.Range(0, allActiveItems.Length);
+				selected.Add(allActiveItems[randomIndex]);
+			}
+
+			GameLogger.LogInfo($"[RewardGenerator] 기본 액티브 보상 생성: {selected.Count}개", GameLogger.LogCategory.UI);
+			return selected.ToArray();
+		}
+
+		/// <summary>
+		/// 설정이 누락된 경우 사용할 기본 패시브 보상을 생성합니다.
+		/// </summary>
+		private PassiveItemDefinition[] GenerateDefaultPassiveReward()
+		{
+			// Resources 폴더에서 모든 패시브 아이템을 찾아서 랜덤 선택
+			var allPassiveItems = Resources.LoadAll<PassiveItemDefinition>("Data/Item");
+			
+			if (allPassiveItems.Length == 0)
+			{
+				GameLogger.LogInfo("[RewardGenerator] Resources에서 패시브 아이템을 찾을 수 없습니다. 빈 배열을 반환합니다.", GameLogger.LogCategory.UI);
+				return new PassiveItemDefinition[0];
+			}
+
+			// 기본적으로 1개 아이템 제공
+			var randomIndex = UnityEngine.Random.Range(0, allPassiveItems.Length);
+			var selected = new PassiveItemDefinition[] { allPassiveItems[randomIndex] };
+
+			GameLogger.LogInfo($"[RewardGenerator] 기본 패시브 보상 생성: {selected.Length}개", GameLogger.LogCategory.UI);
+			return selected;
 		}
 	}
 }

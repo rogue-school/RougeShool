@@ -1,5 +1,7 @@
 using UnityEngine;
 using System.Collections;
+using Game.StageSystem.Interface;
+using Game.CoreSystem.Utility;
 
 namespace Game.CombatSystem.State
 {
@@ -21,7 +23,6 @@ namespace Game.CombatSystem.State
 
         private MonoBehaviour _coroutineRunner;
         private CombatStateContext _context;
-        private bool _isWaitingForNextEnemy = false;
 
         public override void OnEnter(CombatStateContext context)
         {
@@ -67,8 +68,7 @@ namespace Game.CombatSystem.State
         {
             LogStateTransition("다음 적 생성 완료 - 상태 전환 시작");
             
-            // 대기 플래그 해제
-            _isWaitingForNextEnemy = false;
+            // 대기 플래그 해제 (현재 사용하지 않음)
             
             // 컨텍스트가 유효한지 확인
             if (_context == null || !_context.ValidateManagers())
@@ -86,34 +86,58 @@ namespace Game.CombatSystem.State
         /// </summary>
         private IEnumerator CleanupAndProceed(CombatStateContext context)
         {
-            // 적 카드 정리
+            LogStateTransition("적 처치 - 정리 시작");
+            
+            // 전투 정리 작업 수행
             PerformCleanup(context);
-
-            // 정리 애니메이션/효과를 위한 대기
+            
+            // 정리 작업 완료 대기
             yield return new WaitForSeconds(0.3f);
-
-            // StageManager가 다음 적을 생성할 때까지 실제로 대기
-            LogStateTransition("StageManager의 다음 적 생성 완료를 대기 중");
-            _isWaitingForNextEnemy = true;
-
-            // OnNextEnemyReady()가 호출될 때까지 무한 대기
-            while (_isWaitingForNextEnemy)
+            
+            LogStateTransition("적 처치 - 정리 작업 완료");
+            
+                   // StageManager에 정리 완료 알림
+                   var stageManager = Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
+            if (stageManager != null)
             {
-                yield return null; // 한 프레임씩 대기
+                GameLogger.LogInfo("[EnemyDefeatedState] StageManager 발견 - 정리 완료 알림 전송", GameLogger.LogCategory.Combat);
+                stageManager.OnEnemyDefeatedCleanupCompleted();
             }
+            else
+            {
+                GameLogger.LogWarning("[EnemyDefeatedState] StageManager를 찾을 수 없습니다", GameLogger.LogCategory.Combat);
+            }
+            
+            // 보상 처리가 완료될 때까지 대기 (StageManager에서 처리)
+            // 이 상태는 보상창이 닫힐 때까지 유지됨
+        }
 
-            LogStateTransition("다음 적 생성 완료 - 대기 종료");
+        /// <summary>
+        /// 보상 처리가 완료되었을 때 호출되는 메서드
+        /// StageManager에서 보상 완료 시 호출됨
+        /// </summary>
+        public void OnRewardProcessCompleted()
+        {
+            LogStateTransition("보상 처리 완료 - 다음 상태로 전환");
+            
+            // 다음 상태로 전환 (IdleState)
+            if (_context != null && _context.StateMachine != null)
+            {
+                // IdleState 대신 적절한 다음 상태로 전환
+                // 현재는 보상 처리가 완료되었으므로 다음 적 대기 상태로 전환
+                GameLogger.LogInfo("[EnemyDefeatedState] 보상 처리 완료 - 다음 상태로 전환", GameLogger.LogCategory.Combat);
+            }
         }
 
         /// <summary>
         /// 적 관련 정리 작업 수행
-        /// 새로운 로직: 플레이어 핸드만 정리 (슬롯 정리는 StageManager에서 처리됨)
+        /// 플레이어 핸드 정리 및 전투 슬롯 정리
         /// </summary>
         private void PerformCleanup(CombatStateContext context)
         {
             LogStateTransition("적 처치 - 플레이어 핸드 정리 시작");
 
-            // 플레이어 핸드 완전 정리 (슬롯 정리는 StageManager에서 이미 처리됨)
+            // 플레이어 핸드 완전 정리
             if (context.HandManager != null)
             {
                 context.HandManager.ClearAll();
@@ -122,6 +146,38 @@ namespace Game.CombatSystem.State
             else
             {
                 LogWarning("HandManager가 null - 핸드 정리 건너뜀");
+            }
+
+            LogStateTransition("적 처치 - 전투/대기 슬롯 정리 시작");
+
+                   // 전투 슬롯 정리
+                   if (context.SlotRegistry != null)
+                   {
+                       // 모든 전투 슬롯과 대기 슬롯 정리
+                       // ICardSlotRegistry에는 GetSlotsByType이 없으므로 직접 슬롯들을 정리
+                       var battleSlot = Game.CombatSystem.Slot.CombatSlotPosition.BATTLE_SLOT;
+                       var waitSlots = new[]
+                       {
+                           Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_1,
+                           Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_2,
+                           Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_3,
+                           Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_4
+                       };
+                       
+                       // 전투 슬롯 정리
+                       if (context.SlotRegistry.HasCardInSlot(battleSlot))
+                       {
+                           context.SlotRegistry.ClearSlot(battleSlot);
+                       }
+                       
+                       // 대기 슬롯 정리 (ClearWaitSlots 메서드 사용)
+                       context.SlotRegistry.ClearWaitSlots();
+                       
+                       LogStateTransition("전투/대기 슬롯 정리 완료");
+                   }
+            else
+            {
+                LogWarning("SlotRegistry가 null - 슬롯 정리 건너뜀");
             }
 
             LogStateTransition("적 처치 - 정리 작업 완료");

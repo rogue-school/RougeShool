@@ -75,5 +75,10 @@ namespace Game.StageSystem.Interface
         /// </summary>
         /// <returns>성공 시 true</returns>
         bool ProgressToNextStage();
+
+        /// <summary>
+        /// EnemyDefeatedState의 정리 작업이 완료되었을 때 호출되는 메서드
+        /// </summary>
+        void OnEnemyDefeatedCleanupCompleted();
     }
 }

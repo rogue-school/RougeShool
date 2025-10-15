@@ -11,10 +11,9 @@ namespace Game.ItemSystem.Editor
 		[MenuItem("Tools/ItemSystem/Validate Reward Assets")]
 		public static void ValidateRewards()
 		{
-			var pools = AssetDatabase.FindAssets("t:RewardPool").Select(AssetDatabase.GUIDToAssetPath).Select(AssetDatabase.LoadAssetAtPath<RewardPool>).ToArray();
-			var players = AssetDatabase.FindAssets("t:PlayerRewardProfile").Select(AssetDatabase.GUIDToAssetPath).Select(AssetDatabase.LoadAssetAtPath<PlayerRewardProfile>).ToArray();
-			var enemies = AssetDatabase.FindAssets("t:EnemyRewardConfig").Select(AssetDatabase.GUIDToAssetPath).Select(AssetDatabase.LoadAssetAtPath<EnemyRewardConfig>).ToArray();
-			var profiles = AssetDatabase.FindAssets("t:RewardProfile").Select(AssetDatabase.GUIDToAssetPath).Select(AssetDatabase.LoadAssetAtPath<RewardProfile>).ToArray();
+		var pools = AssetDatabase.FindAssets("t:RewardPool").Select(AssetDatabase.GUIDToAssetPath).Select(AssetDatabase.LoadAssetAtPath<RewardPool>).ToArray();
+		var players = AssetDatabase.FindAssets("t:PlayerRewardProfile").Select(AssetDatabase.GUIDToAssetPath).Select(AssetDatabase.LoadAssetAtPath<PlayerRewardProfile>).ToArray();
+		var enemies = AssetDatabase.FindAssets("t:EnemyRewardConfig").Select(AssetDatabase.GUIDToAssetPath).Select(AssetDatabase.LoadAssetAtPath<EnemyRewardConfig>).ToArray();
 
 			int issues = 0;
 			// Pool checks
@@ -30,13 +29,27 @@ namespace Game.ItemSystem.Editor
 				}
 			}
 
-			// Player profile checks
-			foreach (var prof in players)
+		// Player profile checks
+		foreach (var prof in players)
+		{
+			if (prof == null) continue;
+			
+			// 태그 가중치 중복 확인
+			var dupTags = prof.tagWeightAdjust.GroupBy(t => t.tag).Where(g => g.Count() > 1).ToArray();
+			if (dupTags.Length > 0) { Debug.LogWarning($"[RewardValidate] PlayerProfile {prof.name} duplicate tag weights: {string.Join(",", dupTags.Select(d=>d.Key))}"); issues++; }
+			
+			// 금지된 액티브 아이템 확인
+			foreach (var bannedItem in prof.bannedActiveItems)
 			{
-				if (prof == null) continue;
-				var dupTags = prof.tagWeightAdjust.GroupBy(t => t.tag).Where(g => g.Count() > 1).ToArray();
-				if (dupTags.Length > 0) { Debug.LogWarning($"[RewardValidate] PlayerProfile {prof.name} duplicate tag weights: {string.Join(",", dupTags.Select(d=>d.Key))}"); issues++; }
+				if (bannedItem == null) { Debug.LogWarning($"[RewardValidate] PlayerProfile {prof.name} null banned active item"); issues++; }
 			}
+			
+			// 금지된 패시브 아이템 확인
+			foreach (var bannedItem in prof.bannedPassiveItems)
+			{
+				if (bannedItem == null) { Debug.LogWarning($"[RewardValidate] PlayerProfile {prof.name} null banned passive item"); issues++; }
+			}
+		}
 
 			// Enemy config checks
 			foreach (var ec in enemies)

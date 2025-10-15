@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Keep_the_existing_color_scheme_from_previous_desig-1759326884423_0: -7463224937018079252
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

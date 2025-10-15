@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 003
   displayName: "\uAD11\uB300 \uBB3C\uC57D"
   description: 
-  icon: {fileID: 0}
+  icon: {fileID: -3363208979199713331, guid: 516dcb14aa36a2642bea103a438925a2, type: 3}
   presentation:
     sfxClip: {fileID: 0}
     visualEffectPrefab: {fileID: 0}

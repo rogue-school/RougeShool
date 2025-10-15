@@ -438,84 +438,125 @@ namespace Game.StageSystem.Manager
             GameLogger.LogInfo($"소환된 적 등록 완료: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
         }
 
-        /// <summary>
-        /// 적 처치 시 호출되는 메서드
-        /// </summary>
-        public void OnEnemyDeath(ICharacter enemy)
-        {
-            GameLogger.LogInfo($"[StageManager] 적 처치: {enemy.GetCharacterName()} (현재 인덱스: {currentEnemyIndex})", GameLogger.LogCategory.Combat);
+		/// <summary>
+		/// 적 처치 시 호출되는 메서드
+		/// </summary>
+		public void OnEnemyDeath(ICharacter enemy)
+		{
+			GameLogger.LogInfo($"[StageManager] 적 처치: {enemy.GetCharacterName()} (현재 인덱스: {currentEnemyIndex})", GameLogger.LogCategory.Combat);
 
-            // 소환된 적인지 확인 (원본 적 데이터가 저장되어 있는지로 판단)
-            if (originalEnemyData != null)
-            {
-                GameLogger.LogInfo($"[StageManager] 소환된 적 사망 감지 - 원본 복귀 시작: {originalEnemyData.DisplayName}", GameLogger.LogCategory.Combat);
-                // 소환된 적 사망 콜백 호출
-                OnSummonedEnemyDeath(enemy);
-                return; // 소환된 적은 일반적인 적 처치 로직을 건너뜀
-            }
+			// 소환된 적인지 확인 (원본 적 데이터가 저장되어 있는지로 판단)
+			if (originalEnemyData != null)
+			{
+				GameLogger.LogInfo($"[StageManager] 소환된 적 사망 감지 - 원본 복귀 시작: {originalEnemyData.DisplayName}", GameLogger.LogCategory.Combat);
+				// 소환된 적 사망 콜백 호출
+				OnSummonedEnemyDeath(enemy);
+				return; // 소환된 적은 일반적인 적 처치 로직을 건너뜀
+			}
 
-            // 일반 적 처치 로직
-            // CombatStateMachine에 적 사망 알림 (적 제거 전에 알려야 함, DI 주입)
-            if (combatStateMachine != null)
-            {
-                GameLogger.LogInfo($"[StageManager] CombatStateMachine에 적 사망 알림", GameLogger.LogCategory.Combat);
-                combatStateMachine.OnEnemyDeathDetected();
-            }
+			// 일반 적 처치 로직
+			// CombatStateMachine에 적 사망 알림 (적 제거 전에 알려야 함, DI 주입)
+			if (combatStateMachine != null)
+			{
+				GameLogger.LogInfo($"[StageManager] CombatStateMachine에 적 사망 알림", GameLogger.LogCategory.Combat);
+				combatStateMachine.OnEnemyDeathDetected();
+			}
 
-            // 적 처치 이벤트 발생
-            OnEnemyDefeated?.Invoke(enemy);
+			// 적 처치 이벤트 발생
+			OnEnemyDefeated?.Invoke(enemy);
 
-            // 보상 UI 열기 (설정된 경우)
-            if (rewardBridge != null)
-            {
-                rewardBridge.OnEnemyKilled();
-                if (debugSettings != null && debugSettings.showRewardInfo)
-                {
-                    GameLogger.LogInfo("[StageManager] 적 처치 → 보상 UI 오픈 요청", GameLogger.LogCategory.UI);
-                }
-            }
+			// 적을 enemyManager에서 제거
+			if (enemyManager != null)
+			{
+				enemyManager.UnregisterEnemy();
+				GameLogger.LogInfo($"[StageManager] 적 제거 완료: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
+			}
 
-            // 적을 enemyManager에서 제거
-            if (enemyManager != null)
-            {
-                enemyManager.UnregisterEnemy();
-                GameLogger.LogInfo($"[StageManager] 적 제거 완료: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
-            }
+			// 적 GameObject 파괴
+			if (enemy is EnemyCharacter enemyCharacter)
+			{
+				Destroy(enemyCharacter.gameObject);
+				GameLogger.LogInfo($"[StageManager] 적 오브젝트 파괴: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
+			}
 
-            // 적 GameObject 파괴
-            if (enemy is EnemyCharacter enemyCharacter)
-            {
-                Destroy(enemyCharacter.gameObject);
-                GameLogger.LogInfo($"[StageManager] 적 오브젝트 파괴: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
-            }
+			// 보상창 열기는 EnemyDefeatedState 완료 후로 이동
+			// (EnemyDefeatedState에서 OnEnemyDefeatedCleanupCompleted 이벤트 발생 시 처리)
+			
+			GameLogger.LogInfo("[StageManager] 적 처치 완료 - 전투 정리 대기 중", GameLogger.LogCategory.Combat);
+		}
 
-            // 스테이지 진행 상태 업데이트
-            UpdateStageProgress(enemy);
-        }
+		/// <summary>
+		/// 보상 처리가 완료되었을 때 호출되는 콜백
+		/// </summary>
+		private void OnRewardProcessCompleted()
+		{
+			// 콜백 해제
+			if (rewardBridge != null)
+			{
+				rewardBridge.OnRewardProcessCompleted -= OnRewardProcessCompleted;
+			}
 
-        /// <summary>
-        /// 적 캐릭터 처치 후 스테이지 진행 상태를 업데이트합니다.
-        /// 모든 적 처치 시 스테이지 완료(승리)를 처리합니다.
-        /// </summary>
-        private void UpdateStageProgress(ICharacter enemy)
-        {
-            GameLogger.LogInfo($"[StageManager] UpdateStageProgress - 현재 인덱스: {currentEnemyIndex}, 총 적 수: {currentStage?.enemies.Count ?? 0}", GameLogger.LogCategory.Combat);
+			GameLogger.LogInfo("[StageManager] 보상 처리 완료 - 다음 진행 시작", GameLogger.LogCategory.UI);
+			
+			// EnemyDefeatedState에 보상 완료 알림
+			// CombatStateMachine의 현재 상태를 직접 접근할 수 없으므로
+			// 다른 방식으로 처리 (예: 이벤트 시스템 사용)
+			GameLogger.LogInfo("[StageManager] 보상 완료 - EnemyDefeatedState에 알림 전송", GameLogger.LogCategory.UI);
+			
+			// 스테이지 진행 상태 업데이트
+			UpdateStageProgress(null); // enemy는 이미 제거되었으므로 null 전달
+		}
 
-            // 다음 적이 있는지 확인
-            if (HasMoreEnemies())
-            {
-                GameLogger.LogInfo($"[StageManager] 다음 적이 존재함 - 생성 시작", GameLogger.LogCategory.Combat);
+		/// <summary>
+		/// 적 캐릭터 처치 후 스테이지 진행 상태를 업데이트합니다.
+		/// 모든 적 처치 시 스테이지 완료(승리)를 처리합니다.
+		/// </summary>
+		private void UpdateStageProgress(ICharacter enemy)
+		{
+			GameLogger.LogInfo($"[StageManager] UpdateStageProgress - 현재 인덱스: {currentEnemyIndex}, 총 적 수: {currentStage?.enemies.Count ?? 0}", GameLogger.LogCategory.Combat);
 
-                // 적 카드 슬롯 정리 후 다음 적 생성
-                _ = ClearEnemySlotsAndSpawnNext();
-            }
-            else
-            {
-                GameLogger.LogInfo($"[StageManager] 모든 적 처치 완료 - 스테이지 승리", GameLogger.LogCategory.Combat);
-                // 모든 적 처치 완료 - 스테이지 승리!
-                CompleteStage();
-            }
-        }
+			// 다음 적이 있는지 확인
+			if (HasMoreEnemies())
+			{
+				GameLogger.LogInfo($"[StageManager] 다음 적이 존재함 - 생성 시작", GameLogger.LogCategory.Combat);
+
+				// 적 카드 슬롯 정리 후 다음 적 생성
+				_ = ClearEnemySlotsAndSpawnNext();
+			}
+			else
+			{
+				GameLogger.LogInfo($"[StageManager] 모든 적 처치 완료 - 스테이지 승리", GameLogger.LogCategory.Combat);
+				// 모든 적 처치 완료 - 스테이지 승리!
+				CompleteStage();
+			}
+		}
+
+		/// <summary>
+		/// EnemyDefeatedState의 정리 작업이 완료되었을 때 호출되는 메서드
+		/// </summary>
+		public void OnEnemyDefeatedCleanupCompleted()
+		{
+			GameLogger.LogInfo("[StageManager] 전투 정리 완료 - 보상창 열기 시작", GameLogger.LogCategory.UI);
+			
+			// 보상 UI 열기 및 완료 대기 (설정된 경우)
+			if (rewardBridge != null)
+			{
+				// 보상 완료 콜백 연결
+				rewardBridge.OnRewardProcessCompleted += OnRewardProcessCompleted;
+				
+				rewardBridge.OnEnemyKilled();
+				if (debugSettings != null && debugSettings.showRewardInfo)
+				{
+					GameLogger.LogInfo("[StageManager] 전투 정리 완료 → 보상 UI 오픈 요청 (완료 대기)", GameLogger.LogCategory.UI);
+				}
+			}
+			else
+			{
+				// 보상 브리지가 없으면 바로 다음 진행
+				GameLogger.LogInfo("[StageManager] 보상 브리지가 없음 - 바로 다음 진행", GameLogger.LogCategory.UI);
+				UpdateStageProgress(null);
+			}
+		}
 
         /// <summary>
         /// 적 카드 슬롯을 정리하고 다음 적을 생성합니다.

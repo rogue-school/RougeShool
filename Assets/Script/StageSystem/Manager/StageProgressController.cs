@@ -18,7 +18,6 @@ namespace Game.StageSystem.Manager
         #region 의존성 주입
 
         [Inject] private IStageManager stageManager;
-        [Inject] private IStageRewardManager rewardManager;
         [Inject] private EnemyManager enemyManager;
 
         #endregion
@@ -67,9 +66,6 @@ namespace Game.StageSystem.Manager
             if (enemy == null) return;
 
             GameLogger.LogInfo($"[StageProgressController] 적 사망: {enemy.CharacterName}", GameLogger.LogCategory.Core);
-
-            // 적 처치 보상 지급
-            rewardManager.GiveEnemyDefeatRewards();
             
             // StageManager에서 다음 적 생성 또는 스테이지 완료 처리
             // (StageManager.UpdateStageProgress에서 자동으로 처리됨)

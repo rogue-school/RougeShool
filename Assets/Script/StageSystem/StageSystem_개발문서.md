@@ -12,21 +12,19 @@ StageSystem은 게임의 스테이지 진행을 관리하는 시스템입니다.
 - **타입 안전성 강화**: `ICharacterData`를 `EnemyCharacterData`로 캐스팅하여 안전한 프로퍼티 접근
 - **의존성 주입 확장**: `ITurnCardRegistry`, `ISkillCardFactory` 의존성 추가
 
-## 🏗️ 폴더 구조 (실제 파일 수 기준)
+## 📁 폴더 구조 (실제 파일 수 기준)
 ```
 StageSystem/
 ├── Manager/          # 스테이지 매니저 (2개 파일)
 │   ├── StageManager.cs
 │   └── StageProgressController.cs
-├── Interface/        # 스테이지 인터페이스 (2개 파일)
-│   ├── IStageManager.cs
-│   └── IStageRewardManager.cs
+├── Interface/        # 스테이지 인터페이스 (1개 파일)
+│   └── IStageManager.cs
 ├── State/            # 스테이트 (1개 파일)
 │   └── StageFlowStateMachine.cs
-├── Data/             # 스테이지 데이터 (3개 파일)
+├── Data/             # 스테이지 데이터 (2개 파일)
 │   ├── StageData.cs
-│   ├── StageProgressState.cs
-│   └── StageRewardData.cs
+│   └── StageProgressState.cs
 └── StageSystem_개발문서.md
 ```
 
@@ -34,11 +32,9 @@ StageSystem/
 - StageSystem/Manager/StageManager.cs
 - StageSystem/Manager/StageProgressController.cs
 - StageSystem/Interface/IStageManager.cs
-- StageSystem/Interface/IStageRewardManager.cs
 - StageSystem/State/StageFlowStateMachine.cs
 - StageSystem/Data/StageData.cs
 - StageSystem/Data/StageProgressState.cs
-- StageSystem/Data/StageRewardData.cs
 
 ## 📁 주요 컴포넌트
 
@@ -46,18 +42,15 @@ StageSystem/
 - **StageManager.cs**: 스테이지 전체 관리
 - **StageProgressController.cs**: 스테이지 진행 관리
 
-### Interface 폴더 (3개 파일)
+### Interface 폴더 (1개 파일)
 - **IStageManager.cs**: 스테이지 매니저 인터페이스
-- **IStagePhaseManager.cs**: 스테이지 단계 관리 인터페이스
-- **IStageRewardManager.cs**: 스테이지 보상 관리 인터페이스
 
 ### State 폴더 (1개 파일)
 - **StageFlowStateMachine.cs**: 스테이지 플로우 상태 머신
 
-### Data 폴더 (3개 파일)
+### Data 폴더 (2개 파일)
 - **StageData.cs**: 스테이지 데이터 (ScriptableObject)
 - **StageProgressState.cs**: 스테이지 진행 상태
-- **StageRewardData.cs**: 스테이지 보상 데이터
 
 ## 🎯 주요 기능
 
@@ -72,9 +65,8 @@ StageSystem/
 - **스테이지 전환**: 스테이지 간 전환 처리
 
 ### 3. 보상 시스템
-- **스테이지 완료 보상**: 스테이지 완료 시 보상 지급
-- **보상 데이터**: ScriptableObject 기반 보상 설정
-- **보상 적용**: 보상 지급 및 적용
+- **ItemSystem 연계**: 적 처치 시 ItemSystem의 RewardOnEnemyDeath를 통한 보상 지급
+- **보상 브리지**: StageManager의 rewardBridge를 통해 보상 UI 연동
 
 ### 4. 진행 관리
 - **적 처치 추적**: 적 처치 시 진행 상황 업데이트
@@ -102,12 +94,11 @@ EnemyCharacterData boss = Resources.Load<EnemyCharacterData>("Enemies/Boss");
 // 단계 구분 제거: 단일 적 시퀀스 기준
 // StagePhaseData/StageDataFactory 관련 예시 삭제 (실제 사용 안 함)
 
-// 보상 데이터 생성
-StageRewardData rewardData = StageDataFactory.CreateDefaultRewards(true, true, true);
-stageManager.SetCurrentRewards(rewardData);
-stageManager.GiveSubBossRewards();
-stageManager.GiveBossRewards();
-stageManager.GiveStageCompletionRewards();
+// 보상 데이터 생성 (ItemSystem 사용)
+// StageManager의 rewardBridge를 통해 자동으로 보상 지급
+stageManager.StartSubBossPhase();
+stageManager.StartBossPhase();
+stageManager.CompleteStage();
 ```
 
 ### 전투 플로우 연계
@@ -139,30 +130,23 @@ sequenceDiagram
 - (제거) 단계 여부 확인 API
 - **IsStageCompleted()**: 스테이지 완료 여부 확인
 - **GetCurrentStageNumber()**: 현재 스테이지 번호 조회
-- (제거) 단계별 보상 지급 → 스테이지 완료 시 단일 보상 정책
-- **GiveStageCompletionRewards()**: 스테이지 완료 보상 지급
-- **SetCurrentRewards(StageRewardData rewards)**: 현재 보상 데이터 설정
-- **GetCurrentRewards()**: 현재 보상 데이터 조회
 - **SpawnEnemyCardToWaitSlot4(IEnemyCharacter enemy)**: 적 카드를 WAIT_SLOT_4에 직접 생성 (신규)
 - **CurrentPhase**: 현재 스테이지 단계 (프로퍼티)
 - **ProgressState**: 현재 스테이지 진행 상태 (프로퍼티)
-- (제거) 단계별 처치 상태 → 남은 적 유무로만 판단
 
 ### StageProgressController 클래스
 - **StartStage()**: 스테이지 시작 (적 리스트의 첫 번째부터 순차 진행)
 - **OnEnemyDeath(IEnemyCharacter enemy)**: 적 사망 시 호출
 
 ### StageDataFactory 클래스
-- **CreateDefaultRewards(bool hasSubBossRewards, bool hasBossRewards, bool hasCompletionRewards)**: 기본 보상 데이터 생성
+- **CreateDefaultRewards()**: 기본 보상 데이터 생성 (ItemSystem 연계용)
 
 ### 데이터 클래스
 - **StagePhaseState**: 스테이지 단계 상태 열거형 (None, SubBoss, Boss, Completed)
 - **StageProgressState**: 스테이지 진행 상태 열거형 (NotStarted, SubBossBattle, BossBattle, Completed, Failed)
-- **StageRewardData**: 스테이지 보상 데이터 (RewardItem, RewardCurrency)
 
 ### 인터페이스
-- **IStagePhaseManager**: 스테이지 단계별 관리 인터페이스
-- **IStageRewardManager**: 스테이지 보상 관리 인터페이스
+- **IStageManager**: 스테이지 매니저 인터페이스
 
 ## 🏗️ 아키텍처 패턴
 

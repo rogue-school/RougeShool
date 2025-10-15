@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Classroom_Professor_Turngun_0: 3463621159735484410
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -39,12 +39,6 @@ namespace Game.SkillCardSystem.Interface
         #region 보상 관리
 
         /// <summary>
-        /// 적 캐릭터 처치 보상 카드를 지급합니다.
-        /// </summary>
-        /// <param name="rewardData">보상 데이터</param>
-        void GiveEnemyDefeatCardRewards(Game.StageSystem.Data.StageRewardData rewardData);
-
-        /// <summary>
         /// 특정 카드를 보상으로 지급합니다.
         /// </summary>
         /// <param name="cardDefinition">지급할 카드 정의</param>

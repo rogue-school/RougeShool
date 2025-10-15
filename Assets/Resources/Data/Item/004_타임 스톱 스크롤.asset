@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: 004
   displayName: "\uD0C0\uC784 \uC2A4\uD1B1 \uC2A4\uD06C\uB864"
   description: 
-  icon: {fileID: 0}
+  icon: {fileID: -4334128287016464269, guid: 463e4b460b09de44091d4ab4f0de7d5c, type: 3}
   presentation:
     sfxClip: {fileID: 0}
     visualEffectPrefab: {fileID: 0}

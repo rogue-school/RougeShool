@@ -135,40 +135,6 @@ namespace Game.SkillCardSystem.Manager
         #region 보상 관리
 
         /// <summary>
-        /// 적 캐릭터 처치 보상 카드를 지급합니다.
-        /// </summary>
-        /// <param name="rewardData">보상 데이터</param>
-        public void GiveEnemyDefeatCardRewards(StageRewardData rewardData)
-        {
-            if (rewardData == null)
-            {
-                GameLogger.LogWarning("보상 데이터가 null입니다.", GameLogger.LogCategory.SkillCard);
-                return;
-            }
-
-            // 적 처치 보상 카드 지급
-            foreach (var cardReward in rewardData.EnemyDefeatCards)
-            {
-                if (cardReward.cardDefinition != null)
-                {
-                    bool success = playerDeckManager.AddCardToDeck(cardReward.cardDefinition, cardReward.quantity);
-                    if (success)
-                    {
-                        GameLogger.LogInfo($"적 처치 카드 보상 지급: {cardReward.cardDefinition.displayName} x{cardReward.quantity}", GameLogger.LogCategory.SkillCard);
-                    }
-                    else
-                    {
-                        GameLogger.LogWarning($"적 처치 카드 보상 지급 실패: {cardReward.cardDefinition.displayName}", GameLogger.LogCategory.SkillCard);
-                    }
-                }
-                else
-                {
-                    GameLogger.LogWarning("카드 정의가 null인 보상이 있습니다.", GameLogger.LogCategory.SkillCard);
-                }
-            }
-        }
-
-        /// <summary>
         /// 특정 카드를 보상으로 지급합니다.
         /// </summary>
         /// <param name="cardDefinition">지급할 카드 정의</param>

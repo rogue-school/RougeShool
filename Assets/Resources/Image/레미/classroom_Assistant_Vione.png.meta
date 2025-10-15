@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      classroom_Assistant_Vione_0: -3497099482240395334
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
