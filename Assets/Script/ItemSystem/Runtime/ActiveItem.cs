@@ -67,23 +67,44 @@ namespace Game.ItemSystem.Runtime
 		{
 			effectCommands.Clear();
 
+			GameLogger.LogInfo($"[ActiveItem] 효과 명령 설정 시작: {definition.DisplayName}", GameLogger.LogCategory.Core);
+
 			// 효과 구성 처리
 			if (definition.effectConfiguration.effects.Count > 0)
 			{
+				GameLogger.LogInfo($"[ActiveItem] 효과 개수: {definition.effectConfiguration.effects.Count}", GameLogger.LogCategory.Core);
+				
 				foreach (var effectConfig in definition.effectConfiguration.effects)
 				{
-					if (effectConfig.effectSO == null) continue;
+					if (effectConfig.effectSO == null) 
+					{
+						GameLogger.LogWarning("[ActiveItem] effectSO가 null입니다", GameLogger.LogCategory.Core);
+						continue;
+					}
+
+					GameLogger.LogInfo($"[ActiveItem] 효과 처리 중: {effectConfig.effectSO.name}", GameLogger.LogCategory.Core);
 
 					var command = effectFactory.CreateCommand(effectConfig);
 					if (command != null)
 					{
 						effectCommands.Add(command);
+						GameLogger.LogInfo($"[ActiveItem] 효과 명령 생성 성공: {effectConfig.effectSO.name}", GameLogger.LogCategory.Core);
+					}
+					else
+					{
+						GameLogger.LogError($"[ActiveItem] 효과 명령 생성 실패: {effectConfig.effectSO.name}", GameLogger.LogCategory.Core);
 					}
 				}
+			}
+			else
+			{
+				GameLogger.LogWarning("[ActiveItem] 효과가 설정되지 않았습니다", GameLogger.LogCategory.Core);
 			}
 
 			// 실행 순서로 정렬
 			SortCommandsByExecutionOrder();
+			
+			GameLogger.LogInfo($"[ActiveItem] 효과 명령 설정 완료: {effectCommands.Count}개", GameLogger.LogCategory.Core);
 		}
 		
 		/// <summary>
@@ -219,16 +240,26 @@ namespace Game.ItemSystem.Runtime
 		/// <param name="context">사용 컨텍스트</param>
 		private bool ExecuteEffects(IItemUseContext context)
 		{
+			GameLogger.LogInfo($"[ActiveItem] 효과 실행 시작: {effectCommands.Count}개 명령", GameLogger.LogCategory.Core);
+			
 			bool allSuccess = true;
 			
 			foreach (var command in effectCommands)
 			{
+				GameLogger.LogInfo($"[ActiveItem] 효과 명령 실행: {command.GetType().Name}", GameLogger.LogCategory.Core);
+				
 				if (!command.Execute(context))
 				{
+					GameLogger.LogError($"[ActiveItem] 효과 명령 실행 실패: {command.GetType().Name}", GameLogger.LogCategory.Core);
 					allSuccess = false;
+				}
+				else
+				{
+					GameLogger.LogInfo($"[ActiveItem] 효과 명령 실행 성공: {command.GetType().Name}", GameLogger.LogCategory.Core);
 				}
 			}
 			
+			GameLogger.LogInfo($"[ActiveItem] 효과 실행 완료: {(allSuccess ? "성공" : "실패")}", GameLogger.LogCategory.Core);
 			return allSuccess;
 		}
 		

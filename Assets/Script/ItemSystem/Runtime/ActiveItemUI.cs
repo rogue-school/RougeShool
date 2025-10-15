@@ -12,18 +12,16 @@ namespace Game.ItemSystem.Runtime
     /// </summary>
     public class ActiveItemUI : MonoBehaviour
     {
-        #region UI 참조
+    #region UI 참조
 
-        [Header("아이템 UI 구성 요소")]
-        [SerializeField] private Image itemIcon;
-        [SerializeField] private TextMeshProUGUI itemName;
-        [SerializeField] private TextMeshProUGUI itemDescription;
+    [Header("아이템 UI 구성 요소")]
+    [SerializeField] private Image itemIcon;
 
-        #endregion
+    #endregion
 
         #region 상태
 
-        private ActiveItemDefinition currentItem;
+        [SerializeField] private ActiveItemDefinition currentItem;
         private int slotIndex = -1;
 
         #endregion
@@ -60,8 +58,18 @@ namespace Game.ItemSystem.Runtime
                 itemIcon = GetComponent<Image>();
                 if (itemIcon == null)
                 {
-                    GameLogger.LogWarning("[ActiveItemUI] Image 컴포넌트를 찾을 수 없습니다!", GameLogger.LogCategory.UI);
+                    // Image 컴포넌트가 없으면 자동으로 추가
+                    itemIcon = gameObject.AddComponent<Image>();
+                    GameLogger.LogInfo("[ActiveItemUI] Image 컴포넌트를 자동으로 추가했습니다", GameLogger.LogCategory.UI);
                 }
+            }
+
+            // Button의 Target Graphic을 Image로 설정
+            var button = GetComponent<Button>();
+            if (button != null && button.targetGraphic != itemIcon)
+            {
+                button.targetGraphic = itemIcon;
+                GameLogger.LogInfo("[ActiveItemUI] Button의 Target Graphic을 Image로 설정했습니다", GameLogger.LogCategory.UI);
             }
 
             GameLogger.LogInfo("[ActiveItemUI] 아이템 UI 초기화 완료", GameLogger.LogCategory.UI);
@@ -73,15 +81,18 @@ namespace Game.ItemSystem.Runtime
         private void SetupButtonEvent()
         {
             var button = GetComponent<Button>();
+            if (button == null)
+            {
+                // Button 컴포넌트가 없으면 자동으로 추가
+                button = gameObject.AddComponent<Button>();
+                GameLogger.LogInfo("[ActiveItemUI] Button 컴포넌트를 자동으로 추가했습니다", GameLogger.LogCategory.UI);
+            }
+
             if (button != null)
             {
                 button.onClick.RemoveAllListeners();
                 button.onClick.AddListener(OnButtonClicked);
                 GameLogger.LogInfo("[ActiveItemUI] 버튼 이벤트 설정 완료", GameLogger.LogCategory.UI);
-            }
-            else
-            {
-                GameLogger.LogWarning("[ActiveItemUI] Button 컴포넌트를 찾을 수 없습니다!", GameLogger.LogCategory.UI);
             }
         }
 
@@ -130,16 +141,6 @@ namespace Game.ItemSystem.Runtime
                     itemIcon.sprite = null;
                     itemIcon.color = Color.gray;
                 }
-
-                if (itemName != null)
-                {
-                    itemName.text = "";
-                }
-
-                if (itemDescription != null)
-                {
-                    itemDescription.text = "";
-                }
                 
                 GameLogger.LogInfo($"[ActiveItemUI] 슬롯 {slotIndex} 빈 상태로 설정", GameLogger.LogCategory.UI);
                 return;
@@ -150,18 +151,6 @@ namespace Game.ItemSystem.Runtime
             {
                 itemIcon.sprite = currentItem.Icon;
                 itemIcon.color = Color.white;
-            }
-
-            // 아이템 이름 업데이트
-            if (itemName != null)
-            {
-                itemName.text = currentItem.DisplayName;
-            }
-
-            // 아이템 설명 업데이트
-            if (itemDescription != null)
-            {
-                itemDescription.text = currentItem.Description;
             }
             
             GameLogger.LogInfo($"[ActiveItemUI] 아이템 UI 업데이트: {currentItem.DisplayName} @ 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
@@ -208,7 +197,7 @@ namespace Game.ItemSystem.Runtime
         }
 
         /// <summary>
-        /// 아이템 정보를 반환합니다.
+        /// 아이템 정보를 반환합니다. (툴팁용)
         /// </summary>
         /// <returns>아이템 정보 문자열</returns>
         public string GetItemInfo()
@@ -217,6 +206,127 @@ namespace Game.ItemSystem.Runtime
                 return "[빈 아이템]";
 
             return $"{currentItem.DisplayName}\n{currentItem.Description}";
+        }
+
+        /// <summary>
+        /// 현재 아이템의 ActiveItemDefinition을 반환합니다.
+        /// </summary>
+        /// <returns>ActiveItemDefinition 또는 null</returns>
+        public ActiveItemDefinition GetItemDefinition()
+        {
+            return currentItem;
+        }
+
+        /// <summary>
+        /// 아이템의 효과 정보를 반환합니다.
+        /// </summary>
+        /// <returns>효과 정보 문자열</returns>
+        public string GetEffectInfo()
+        {
+            if (currentItem == null)
+                return "효과 없음";
+
+            var effectInfo = new System.Text.StringBuilder();
+            effectInfo.AppendLine("효과:");
+            
+            foreach (var effectConfig in currentItem.EffectConfiguration.effects)
+            {
+                if (effectConfig.effectSO != null)
+                {
+                    effectInfo.AppendLine($"- {effectConfig.effectSO.name}");
+                    
+                    // 커스텀 설정이 있으면 추가 정보 표시
+                    if (effectConfig.useCustomSettings && effectConfig.customSettings != null)
+                    {
+                        if (effectConfig.customSettings is HealEffectCustomSettings healSettings)
+                        {
+                            effectInfo.AppendLine($"  회복량: {healSettings.healAmount}");
+                        }
+                        else if (effectConfig.customSettings is AttackBuffEffectCustomSettings buffSettings)
+                        {
+                            effectInfo.AppendLine($"  버프량: {buffSettings.buffAmount}, 지속시간: {buffSettings.duration}");
+                        }
+                        else if (effectConfig.customSettings is TimeStopEffectCustomSettings timeSettings)
+                        {
+                            effectInfo.AppendLine($"  봉인 수: {timeSettings.sealCount}, 지속시간: {timeSettings.duration}");
+                        }
+                        else if (effectConfig.customSettings is DiceOfFateEffectCustomSettings diceSettings)
+                        {
+                            effectInfo.AppendLine($"  변경 수: {diceSettings.changeCount}, 지속시간: {diceSettings.duration}");
+                        }
+                        else if (effectConfig.customSettings is ClownPotionEffectCustomSettings clownSettings)
+                        {
+                            effectInfo.AppendLine($"  회복확률: {clownSettings.healChance}%, 회복량: {clownSettings.healAmount}, 데미지: {clownSettings.damageAmount}");
+                        }
+                        else if (effectConfig.customSettings is RerollEffectCustomSettings rerollSettings)
+                        {
+                            effectInfo.AppendLine($"  리롤 수: {rerollSettings.rerollCount}");
+                        }
+                        else if (effectConfig.customSettings is ShieldBreakerEffectCustomSettings shieldSettings)
+                        {
+                            effectInfo.AppendLine($"  지속시간: {shieldSettings.duration}");
+                        }
+                    }
+                }
+            }
+            
+            return effectInfo.ToString();
+        }
+
+        /// <summary>
+        /// 아이템의 연출 정보를 반환합니다.
+        /// </summary>
+        /// <returns>연출 정보 문자열</returns>
+        public string GetPresentationInfo()
+        {
+            if (currentItem == null)
+                return "연출 없음";
+
+            var presentationInfo = new System.Text.StringBuilder();
+            presentationInfo.AppendLine("연출:");
+            
+            if (currentItem.Presentation.sfxClip != null)
+            {
+                presentationInfo.AppendLine($"- 사운드: {currentItem.Presentation.sfxClip.name}");
+            }
+            else
+            {
+                presentationInfo.AppendLine("- 사운드: 없음");
+            }
+            
+            if (currentItem.Presentation.visualEffectPrefab != null)
+            {
+                presentationInfo.AppendLine($"- 이펙트: {currentItem.Presentation.visualEffectPrefab.name}");
+            }
+            else
+            {
+                presentationInfo.AppendLine("- 이펙트: 없음");
+            }
+            
+            return presentationInfo.ToString();
+        }
+
+        /// <summary>
+        /// 아이템의 모든 정보를 반환합니다. (디버그용)
+        /// </summary>
+        /// <returns>완전한 아이템 정보 문자열</returns>
+        public string GetFullItemInfo()
+        {
+            if (currentItem == null)
+                return "[빈 아이템]";
+
+            var fullInfo = new System.Text.StringBuilder();
+            fullInfo.AppendLine($"=== {currentItem.DisplayName} ===");
+            fullInfo.AppendLine($"ID: {currentItem.ItemId}");
+            fullInfo.AppendLine($"설명: {currentItem.Description}");
+            fullInfo.AppendLine($"타입: {currentItem.Type}");
+            fullInfo.AppendLine($"아이콘: {(currentItem.Icon != null ? currentItem.Icon.name : "없음")}");
+            fullInfo.AppendLine();
+            fullInfo.Append(GetEffectInfo());
+            fullInfo.AppendLine();
+            fullInfo.Append(GetPresentationInfo());
+            
+            return fullInfo.ToString();
         }
 
         #endregion

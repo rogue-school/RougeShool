@@ -142,6 +142,10 @@ namespace Game.ItemSystem.Runtime
 			{
 				// 아이템 프리팹 생성
 				var itemInstance = Instantiate(itemPrefab, slotTransforms[slotIndex]);
+				
+				// GameObject 이름을 아이템의 displayName으로 설정
+				itemInstance.gameObject.name = item.DisplayName;
+				
 				itemInstance.SetSlotIndex(slotIndex);
 				itemInstance.SetItem(item);
 				
@@ -155,6 +159,10 @@ namespace Game.ItemSystem.Runtime
 			{
 				// 기존 아이템 프리팹 업데이트
 				itemUIs[slotIndex].SetItem(item);
+				
+				// GameObject 이름도 업데이트
+				itemUIs[slotIndex].gameObject.name = item.DisplayName;
+				
 				GameLogger.LogInfo($"[Inventory] 아이템 프리팹 업데이트: {item.DisplayName} @ 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
 			}
 		}

@@ -799,7 +799,6 @@ GameObject:
   - component: {fileID: 212382549}
   - component: {fileID: 212382552}
   - component: {fileID: 212382551}
-  - component: {fileID: 212382553}
   m_Layer: 5
   m_Name: ItemSlot3
   m_TagString: Untagged
@@ -864,34 +863,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 212382548}
   m_CullTransparentMesh: 1
---- !u!114 &212382553
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 212382548}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2695ce03fcb08814aa328cdd4349c28d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  itemIcon: {fileID: 0}
-  slotButton: {fileID: 0}
-  emptySlotSprite: {fileID: 0}
-  emptySlotColor:
-    r: 0.5
-    g: 0.5
-    b: 0.5
-    a: 1
-  normalColor:
-    r: 1
-    g: 1
-    b: 1
-    a: 1
-  slotIndex: -1
-  currentItem: {fileID: 0}
-  isEmpty: 1
 --- !u!1 &233269043
 GameObject:
   m_ObjectHideFlags: 0
@@ -1529,7 +1500,6 @@ GameObject:
   - component: {fileID: 416086295}
   - component: {fileID: 416086298}
   - component: {fileID: 416086297}
-  - component: {fileID: 416086299}
   m_Layer: 5
   m_Name: ItemSlot4
   m_TagString: Untagged
@@ -1594,34 +1564,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 416086294}
   m_CullTransparentMesh: 1
---- !u!114 &416086299
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 416086294}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2695ce03fcb08814aa328cdd4349c28d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  itemIcon: {fileID: 0}
-  slotButton: {fileID: 0}
-  emptySlotSprite: {fileID: 0}
-  emptySlotColor:
-    r: 0.5
-    g: 0.5
-    b: 0.5
-    a: 1
-  normalColor:
-    r: 1
-    g: 1
-    b: 1
-    a: 1
-  slotIndex: -1
-  currentItem: {fileID: 0}
-  isEmpty: 1
 --- !u!1 &611750851
 GameObject:
   m_ObjectHideFlags: 0
@@ -4032,7 +3974,6 @@ GameObject:
   - component: {fileID: 1710305649}
   - component: {fileID: 1710305652}
   - component: {fileID: 1710305651}
-  - component: {fileID: 1710305653}
   m_Layer: 5
   m_Name: ItemSlot2
   m_TagString: Untagged
@@ -4097,34 +4038,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1710305648}
   m_CullTransparentMesh: 1
---- !u!114 &1710305653
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1710305648}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2695ce03fcb08814aa328cdd4349c28d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  itemIcon: {fileID: 0}
-  slotButton: {fileID: 0}
-  emptySlotSprite: {fileID: 0}
-  emptySlotColor:
-    r: 0.5
-    g: 0.5
-    b: 0.5
-    a: 1
-  normalColor:
-    r: 1
-    g: 1
-    b: 1
-    a: 1
-  slotIndex: -1
-  currentItem: {fileID: 0}
-  isEmpty: 1
 --- !u!1 &1788458137
 GameObject:
   m_ObjectHideFlags: 0
@@ -4325,7 +4238,6 @@ GameObject:
   - component: {fileID: 1905711408}
   - component: {fileID: 1905711411}
   - component: {fileID: 1905711410}
-  - component: {fileID: 1905711412}
   m_Layer: 5
   m_Name: ItemSlot1
   m_TagString: Untagged
@@ -4390,34 +4302,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1905711407}
   m_CullTransparentMesh: 1
---- !u!114 &1905711412
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1905711407}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2695ce03fcb08814aa328cdd4349c28d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  itemIcon: {fileID: 0}
-  slotButton: {fileID: 0}
-  emptySlotSprite: {fileID: 0}
-  emptySlotColor:
-    r: 0.5
-    g: 0.5
-    b: 0.5
-    a: 1
-  normalColor:
-    r: 1
-    g: 1
-    b: 1
-    a: 1
-  slotIndex: -1
-  currentItem: {fileID: 0}
-  isEmpty: 1
 --- !u!1 &1906814150
 GameObject:
   m_ObjectHideFlags: 0

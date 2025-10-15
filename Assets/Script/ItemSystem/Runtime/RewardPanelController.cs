@@ -225,6 +225,9 @@ namespace Game.ItemSystem.Runtime
 			GameLogger.LogInfo($"[Reward] 가져오기 요청: {item.DisplayName} → {(ok ? "성공" : "실패")}", GameLogger.LogCategory.UI);
 			if (ok)
 			{
+				// 아이템을 성공적으로 가져간 경우 해당 슬롯 제거
+				RemoveSlot(candidateIndex);
+				
 				// 3/4에서 첫 1회 가져오면 제한 걸기
 				if (GetInventoryCount() == 4)
 				{
@@ -232,6 +235,55 @@ namespace Game.ItemSystem.Runtime
 				}
 				UpdateSlotStates();
 			}
+		}
+
+		/// <summary>
+		/// 특정 인덱스의 슬롯을 제거합니다.
+		/// </summary>
+		/// <param name="slotIndex">제거할 슬롯 인덱스</param>
+		private void RemoveSlot(int slotIndex)
+		{
+			if (activeSlots == null || slotIndex < 0 || slotIndex >= activeSlots.Count)
+			{
+				GameLogger.LogWarning($"[Reward] 잘못된 슬롯 인덱스: {slotIndex}", GameLogger.LogCategory.UI);
+				return;
+			}
+
+			var slotToRemove = activeSlots[slotIndex];
+			if (slotToRemove != null)
+			{
+				// 슬롯 UI 제거
+				Destroy(slotToRemove.gameObject);
+				GameLogger.LogInfo($"[Reward] 슬롯 {slotIndex} 제거됨", GameLogger.LogCategory.UI);
+			}
+
+			// 배열에서 해당 슬롯 제거
+			activeSlots.RemoveAt(slotIndex);
+			
+			// 후보 배열에서도 제거
+			if (_candidates != null && slotIndex < _candidates.Length)
+			{
+				var newCandidates = new ActiveItemDefinition[_candidates.Length - 1];
+				for (int i = 0, j = 0; i < _candidates.Length; i++)
+				{
+					if (i != slotIndex)
+					{
+						newCandidates[j++] = _candidates[i];
+					}
+				}
+				_candidates = newCandidates;
+			}
+
+			// 남은 슬롯들의 인덱스 재설정
+			for (int i = 0; i < activeSlots.Count; i++)
+			{
+				if (activeSlots[i] != null)
+				{
+					activeSlots[i].SetSlotIndex(i);
+				}
+			}
+
+			GameLogger.LogInfo($"[Reward] 슬롯 {slotIndex} 완전히 제거됨 (남은 슬롯 인덱스 재설정 완료)", GameLogger.LogCategory.UI);
 		}
 
 		private bool CanTakeMore()

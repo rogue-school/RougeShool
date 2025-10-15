@@ -94,6 +94,16 @@ namespace Game.ItemSystem.Runtime
         }
 
         /// <summary>
+        /// 슬롯의 인덱스만 변경합니다.
+        /// </summary>
+        /// <param name="index">새로운 인덱스</param>
+        public void SetSlotIndex(int index)
+        {
+            slotIndex = index;
+            GameLogger.LogInfo($"[RewardSlotUI] 슬롯 인덱스 변경: {index}", GameLogger.LogCategory.UI);
+        }
+
+        /// <summary>
         /// 슬롯 UI를 업데이트합니다.
         /// </summary>
         private void UpdateSlotUI()
