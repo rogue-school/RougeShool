@@ -16,14 +16,14 @@ MonoBehaviour:
   displayName: "\uB9E4\uC9C1\uBBF8\uC0AC\uC77C"
   displayNameKO: 
   description: 
-  artwork: {fileID: -1680108082211704276, guid: 895e0b405b3d20a4182ef539798c62e9, type: 3}
+  artwork: {fileID: 1728824439020360423, guid: 1988118f2f0dd2649a9ae761b2c765d4, type: 3}
   presentation:
     sfxClip: {fileID: 0}
     visualEffectPrefab: {fileID: 0}
   configuration:
     hasDamage: 1
     damageConfig:
-      baseDamage: 3
+      baseDamage: 4
       hits: 1
       ignoreGuard: 0
       ignoreCounter: 0

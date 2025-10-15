@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: "\uACFC\uB85C"
   displayNameKO: 
   description: 
-  artwork: {fileID: -5535041633674418719, guid: 6b7cfb3f6475faa46a756fb4199d49cf, type: 3}
+  artwork: {fileID: 5030028871813081814, guid: 6cf510084cade6548830306658f9116f, type: 3}
   presentation:
     sfxClip: {fileID: 0}
     visualEffectPrefab: {fileID: 1483328599454796084, guid: 127df09e106e94744bbe0c65c1395868, type: 3}

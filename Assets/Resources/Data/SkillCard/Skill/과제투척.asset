@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63917f595383ae84bafad72d7862ecd5, type: 3}
+  m_Name: "\uACFC\uC81C\uD22C\uCC99"
+  m_EditorClassIdentifier: 
+  cardId: "\uACFC\uC81C\uD22C\uCC99"
+  displayName: "\uACFC\uC81C\uD22C\uCC99"
+  displayNameKO: 
+  description: 
+  artwork: {fileID: 3117375893231175489, guid: 22a3ef197a9268848888f26a08decab9, type: 3}
+  presentation:
+    sfxClip: {fileID: 0}
+    visualEffectPrefab: {fileID: 0}
+  configuration:
+    hasDamage: 0
+    damageConfig:
+      baseDamage: 0
+      hits: 1
+      ignoreGuard: 0
+      ignoreCounter: 0
+    hasEffects: 1
+    effects:
+    - effectSO: {fileID: 11400000, guid: a505d75f25929a4458ce3256973f828f, type: 2}
+      useCustomSettings: 1
+      customSettings:
+        damageAmount: 0
+        damageHits: 1
+        ignoreGuard: 0
+        ignoreCounter: 0
+        bleedAmount: 1
+        bleedDuration: 5
+        counterDuration: 1
+        guardDuration: 1
+        stunDuration: 1
+        healAmount: 0
+        drawCount: 0
+        resourceDelta: 0
+        stackIncreasePerUse: 1
+        maxStacks: 5
+        targetCardId: 
+      executionOrder: 0
+    ownerPolicy: 0
+  currentAttackPowerStacks: 0

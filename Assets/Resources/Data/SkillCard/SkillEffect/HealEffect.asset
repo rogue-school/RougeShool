@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   effectName: 
   description: 
-  effectIcon: {fileID: 0}
+  effectIcon: {fileID: 3266114987532570557, guid: 8f16522edadc5c54b8457af0ebfe232a, type: 3}
   baseHealAmount: 5
   maxHealAmount: 0
   visualEffectPrefab: {fileID: 1730494339451064891, guid: 1a23dbabcd192db4e8db74db74b88d61, type: 3}

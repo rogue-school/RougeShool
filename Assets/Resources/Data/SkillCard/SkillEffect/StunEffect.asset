@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   effectName: 
   description: 
-  effectIcon: {fileID: -1680108082211704276, guid: 895e0b405b3d20a4182ef539798c62e9, type: 3}
+  effectIcon: {fileID: -8332125718833699075, guid: 58a9a20cd55737a4cae568bb80877a0f, type: 3}
   duration: 1
