@@ -487,7 +487,7 @@ namespace Game.CharacterSystem.Core
             {
                 // Hit 트리거 활성화
                 playerAnimator.SetTrigger("Hit");
-                GameLogger.LogInfo("플레이어 피격 애니메이션 재생", GameLogger.LogCategory.Character);
+                GameLogger.LogInfo("플레 gameObject.ani이어 피격 애니메이션 재생", GameLogger.LogCategory.Character);
             }
             else
             {
