@@ -8,6 +8,7 @@ using Game.ItemSystem.Effect;
 using Game.ItemSystem.Interface;
 using Game.ItemSystem.Runtime;
 using Game.CharacterSystem.Interface;
+using Game.CharacterSystem.Manager;
 using Zenject;
 
 namespace Game.ItemSystem.Service
@@ -34,8 +35,8 @@ namespace Game.ItemSystem.Service
         private Dictionary<string, int> skillStarRanks = new Dictionary<string, int>();
         private Dictionary<string, PassiveItemDefinition> passiveItemDefinitions = new Dictionary<string, PassiveItemDefinition>();
 
-        // 의존성 주입 (플레이어는 코어 씬에서는 아직 없을 수 있으므로 Optional)
-        [Inject(Optional = true)] private ICharacter playerCharacter;
+        // 의존성 주입
+        [Inject(Optional = true)] private PlayerManager playerManager;
         [Inject] private IAudioManager audioManager;
         [Inject(Optional = true)] private IVFXManager vfxManager;
 
@@ -55,6 +56,25 @@ namespace Game.ItemSystem.Service
         private void Awake()
         {
             InitializeActiveSlots();
+        }
+
+        #endregion
+
+        #region 플레이어 캐릭터 관리
+
+        /// <summary>
+        /// PlayerManager를 통해 플레이어 캐릭터를 가져옵니다.
+        /// </summary>
+        /// <returns>플레이어 캐릭터 또는 null</returns>
+        private ICharacter GetPlayerCharacter()
+        {
+            if (playerManager == null)
+            {
+                GameLogger.LogWarning("PlayerManager가 주입되지 않았습니다", GameLogger.LogCategory.Core);
+                return null;
+            }
+
+            return playerManager.GetCharacter();
         }
 
         #endregion
@@ -96,6 +116,8 @@ namespace Game.ItemSystem.Service
                 return false;
             }
 
+            // PlayerManager를 통해 플레이어 캐릭터 가져오기
+            var playerCharacter = GetPlayerCharacter();
             if (playerCharacter == null)
             {
                 GameLogger.LogWarning("플레이어 캐릭터가 아직 초기화되지 않았습니다. 아이템 사용을 건너뜁니다", GameLogger.LogCategory.Core);

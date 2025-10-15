@@ -43,16 +43,28 @@ namespace Game.ItemSystem.Runtime
 
 		private void OnEnable()
 		{
-			_itemService.OnActiveItemAdded += HandleInventoryChanged;
-			_itemService.OnActiveItemRemoved += HandleInventoryChangedSlot;
-			_itemService.OnActiveItemUsed += HandleInventoryUsed;
+			// _itemService가 null이면 이벤트 구독 건너뛰기
+			if (_itemService != null)
+			{
+				_itemService.OnActiveItemAdded += HandleInventoryChanged;
+				_itemService.OnActiveItemRemoved += HandleInventoryChangedSlot;
+				_itemService.OnActiveItemUsed += HandleInventoryUsed;
+			}
+			else
+			{
+				GameLogger.LogWarning("[RewardPanel] _itemService가 null입니다. 이벤트 구독을 건너뜁니다.", GameLogger.LogCategory.UI);
+			}
 		}
 
 		private void OnDisable()
 		{
-			_itemService.OnActiveItemAdded -= HandleInventoryChanged;
-			_itemService.OnActiveItemRemoved -= HandleInventoryChangedSlot;
-			_itemService.OnActiveItemUsed -= HandleInventoryUsed;
+			// _itemService가 null이면 이벤트 해제 건너뛰기
+			if (_itemService != null)
+			{
+				_itemService.OnActiveItemAdded -= HandleInventoryChanged;
+				_itemService.OnActiveItemRemoved -= HandleInventoryChangedSlot;
+				_itemService.OnActiveItemUsed -= HandleInventoryUsed;
+			}
 		}
 
 	private void Start()
@@ -201,6 +213,14 @@ namespace Game.ItemSystem.Runtime
 			}
 
 			var item = _candidates[candidateIndex];
+			
+			// _itemService가 null이면 아이템 추가 실패
+			if (_itemService == null)
+			{
+				GameLogger.LogError($"[Reward] _itemService가 null입니다. 아이템 '{item.DisplayName}' 추가 실패", GameLogger.LogCategory.UI);
+				return;
+			}
+
 			bool ok = _itemService.AddActiveItem(item);
 			GameLogger.LogInfo($"[Reward] 가져오기 요청: {item.DisplayName} → {(ok ? "성공" : "실패")}", GameLogger.LogCategory.UI);
 			if (ok)
@@ -216,6 +236,13 @@ namespace Game.ItemSystem.Runtime
 
 		private bool CanTakeMore()
 		{
+			// _itemService가 null이면 기본적으로 true 반환
+			if (_itemService == null)
+			{
+				GameLogger.LogWarning("[RewardPanel] _itemService가 null입니다. 아이템 선택을 허용합니다.", GameLogger.LogCategory.UI);
+				return true;
+			}
+
 			if (_itemService.IsActiveInventoryFull()) return false; // 4/4 불가
 			int count = GetInventoryCount();
 			if (count == 3 && _hasTakenOnceWhenThreeOfFour) return false; // 3/4에서 1회만
@@ -224,6 +251,12 @@ namespace Game.ItemSystem.Runtime
 
 		private int GetInventoryCount()
 		{
+			// _itemService가 null이면 0 반환
+			if (_itemService == null)
+			{
+				return 0;
+			}
+
 			var slots = _itemService.GetActiveSlots();
 			int c = 0;
 			for (int i = 0; i < slots.Length; i++) if (!slots[i].isEmpty && slots[i].item != null) c++;

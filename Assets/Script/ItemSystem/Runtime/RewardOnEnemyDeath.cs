@@ -2,6 +2,7 @@ using UnityEngine;
 using Zenject;
 using Game.ItemSystem.Data.Reward;
 using Game.ItemSystem.Service.Reward;
+using Game.ItemSystem.Interface;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Data;
 using Game.CharacterSystem.Manager;
@@ -46,6 +47,7 @@ namespace Game.ItemSystem.Runtime
 
 	[Inject(Optional = true)] private IRewardGenerator _generator;
 	[Inject(Optional = true)] private PlayerManager _playerManager;
+	[Inject(Optional = true)] private IItemService _itemService;
 
 	/// <summary>
 	/// 보상 처리가 완료되었을 때 발생하는 이벤트
@@ -87,6 +89,23 @@ namespace Game.ItemSystem.Runtime
 			// 보상 패널 프리팹을 동적으로 생성
 			var rewardPanelInstance = Instantiate(rewardPanelPrefab, rewardPanelParent);
 			GameLogger.LogInfo($"[RewardOnEnemyDeath] 보상 패널 인스턴스 생성 완료 - activeSelf: {rewardPanelInstance.gameObject.activeSelf}", GameLogger.LogCategory.UI);
+
+			// Zenject DI 수동 주입 (프리팹 생성 시 DI가 자동으로 작동하지 않음)
+			if (_generator != null)
+			{
+				// IRewardGenerator 주입
+				var rewardGeneratorField = typeof(RewardPanelController).GetField("_rewardGenerator", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+				rewardGeneratorField?.SetValue(rewardPanelInstance, _generator);
+				GameLogger.LogInfo("[RewardOnEnemyDeath] IRewardGenerator 수동 주입 완료", GameLogger.LogCategory.UI);
+			}
+
+			if (_itemService != null)
+			{
+				// IItemService 주입
+				var itemServiceField = typeof(RewardPanelController).GetField("_itemService", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+				itemServiceField?.SetValue(rewardPanelInstance, _itemService);
+				GameLogger.LogInfo("[RewardOnEnemyDeath] IItemService 수동 주입 완료", GameLogger.LogCategory.UI);
+			}
 
 			// 보상 패널 닫힘 이벤트 연결
 			rewardPanelInstance.OnRewardPanelClosed += () => OnRewardPanelClosed(rewardPanelInstance);
