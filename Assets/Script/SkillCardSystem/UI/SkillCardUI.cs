@@ -520,6 +520,15 @@ namespace Game.SkillCardSystem.UI
         }
 
         /// <summary>
+        /// 툴팁이 고정되어 있는지 확인합니다.
+        /// </summary>
+        /// <returns>툴팁이 고정되어 있으면 true</returns>
+        public bool IsTooltipFixed()
+        {
+            return isTooltipFixed;
+        }
+
+        /// <summary>
         /// 툴팁 고정 상태의 시각적 표시를 업데이트합니다.
         /// </summary>
         /// <param name="isFixed">고정 상태 여부</param>

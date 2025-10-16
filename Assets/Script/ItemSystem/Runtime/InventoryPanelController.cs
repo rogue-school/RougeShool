@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using Game.ItemSystem.Interface;
 using Game.ItemSystem.Data;
 using Zenject;
@@ -11,7 +12,7 @@ namespace Game.ItemSystem.Runtime
 	/// 액티브 인벤토리 4슬롯 UI와 상호작용을 중개합니다.
 	/// 기존 슬롯 UI를 관리하고, 아이템 프리팹을 동적으로 생성/제거합니다.
 	/// </summary>
-	public class InventoryPanelController : MonoBehaviour
+	public class InventoryPanelController : MonoBehaviour, IPointerClickHandler
 	{
 		[Inject] private IItemService _itemService;
 
@@ -31,6 +32,15 @@ namespace Game.ItemSystem.Runtime
 		private void Start()
 		{
 			InitializeInventory();
+		}
+
+		private void Update()
+		{
+			// ESC 키로 액션 버튼들 숨기기
+			if (Input.GetKeyDown(KeyCode.Escape))
+			{
+				HideAllActionPopups();
+			}
 		}
 
 		private void OnEnable()
@@ -81,19 +91,32 @@ namespace Game.ItemSystem.Runtime
 		/// <param name="slotIndex">클릭된 슬롯 인덱스</param>
 		private void OnItemClicked(int slotIndex)
 		{
+			GameLogger.LogInfo($"[Inventory] OnItemClicked 호출됨 - 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
+			
 			var slots = _itemService.GetActiveSlots();
 			if (slotIndex >= 0 && slotIndex < slots.Length)
 			{
 				var slot = slots[slotIndex];
 				if (!slot.isEmpty && slot.item != null)
 				{
-					// 아이템 사용
-					OnClickUse(slotIndex);
+					GameLogger.LogInfo($"[Inventory] 아이템 클릭 처리 시작: {slot.item.DisplayName} @ 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
+					
+					// 다른 아이템의 액션 팝업들 닫기
+					HideAllActionPopups();
+					
+					// 클릭된 아이템의 액션 팝업은 ActiveItemUI에서 자동으로 표시됨
+					GameLogger.LogInfo($"[Inventory] 액션 팝업 표시 완료: 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
+					
+					GameLogger.LogInfo($"[Inventory] 아이템 클릭: {slot.item.DisplayName} @ 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
 				}
 				else
 				{
 					GameLogger.LogInfo($"[Inventory] 빈 슬롯 클릭: {slotIndex}", GameLogger.LogCategory.UI);
 				}
+			}
+			else
+			{
+				GameLogger.LogError($"[Inventory] 잘못된 슬롯 인덱스: {slotIndex}", GameLogger.LogCategory.UI);
 			}
 		}
 
@@ -151,6 +174,10 @@ namespace Game.ItemSystem.Runtime
 				
 				// 클릭 이벤트 연결
 				itemInstance.OnItemClicked += OnItemClicked;
+				itemInstance.OnUseButtonClicked += OnClickUse;
+				itemInstance.OnDiscardButtonClicked += OnClickDiscard;
+				
+				GameLogger.LogInfo($"[Inventory] 이벤트 연결 완료: {item.DisplayName} @ 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
 				
 				itemUIs[slotIndex] = itemInstance;
 				GameLogger.LogInfo($"[Inventory] 아이템 프리팹 생성: {item.DisplayName} @ 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
@@ -175,7 +202,11 @@ namespace Game.ItemSystem.Runtime
 		{
 			if (itemUIs[slotIndex] != null)
 			{
+				// 이벤트 해제
 				itemUIs[slotIndex].OnItemClicked -= OnItemClicked;
+				itemUIs[slotIndex].OnUseButtonClicked -= OnClickUse;
+				itemUIs[slotIndex].OnDiscardButtonClicked -= OnClickDiscard;
+				
 				Destroy(itemUIs[slotIndex].gameObject);
 				itemUIs[slotIndex] = null;
 				GameLogger.LogInfo($"[Inventory] 아이템 프리팹 제거: 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
@@ -191,9 +222,27 @@ namespace Game.ItemSystem.Runtime
 			{
 				if (itemUIs[i] != null)
 				{
+					// 이벤트 해제
 					itemUIs[i].OnItemClicked -= OnItemClicked;
+					itemUIs[i].OnUseButtonClicked -= OnClickUse;
+					itemUIs[i].OnDiscardButtonClicked -= OnClickDiscard;
+					
 					Destroy(itemUIs[i].gameObject);
 					itemUIs[i] = null;
+				}
+			}
+		}
+
+		/// <summary>
+		/// 모든 아이템의 액션 팝업들을 닫습니다.
+		/// </summary>
+		private void HideAllActionPopups()
+		{
+			for (int i = 0; i < itemUIs.Length; i++)
+			{
+				if (itemUIs[i] != null)
+				{
+					itemUIs[i].CloseActionPopupExternal();
 				}
 			}
 		}
@@ -236,6 +285,29 @@ namespace Game.ItemSystem.Runtime
 		{
 			GameLogger.LogInfo($"[Inventory] 사용 이벤트: {def.DisplayName} @ {slotIndex}", GameLogger.LogCategory.UI);
 			RefreshSlots();
+		}
+
+		#endregion
+
+		#region 외부 클릭 감지
+
+		/// <summary>
+		/// 포인터 클릭 이벤트를 처리합니다.
+		/// </summary>
+		/// <param name="eventData">포인터 이벤트 데이터</param>
+		public void OnPointerClick(PointerEventData eventData)
+		{
+			// 클릭된 오브젝트가 인벤토리 패널 자체인지 확인
+			if (eventData.pointerCurrentRaycast.gameObject == gameObject)
+			{
+				// 인벤토리 패널 자체를 클릭한 경우에만 액션 팝업들 닫기
+				HideAllActionPopups();
+				GameLogger.LogInfo("[Inventory] 인벤토리 패널 자체 클릭 - 액션 팝업들 숨김", GameLogger.LogCategory.UI);
+			}
+			else
+			{
+				GameLogger.LogInfo($"[Inventory] 인벤토리 패널 내부 오브젝트 클릭: {eventData.pointerCurrentRaycast.gameObject?.name}", GameLogger.LogCategory.UI);
+			}
 		}
 
 		#endregion

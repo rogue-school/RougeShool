@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.EventSystems;
 using Game.ItemSystem.Data;
 using Game.ItemSystem.Utility;
 using Game.CoreSystem.Utility;
@@ -11,12 +12,15 @@ namespace Game.ItemSystem.Runtime
     /// 개별 액티브 아이템 UI를 관리하는 컴포넌트입니다.
     /// 아이템 아이콘, 이름, 설명을 표시하는 역할만 담당합니다.
     /// </summary>
-    public class ActiveItemUI : MonoBehaviour
+    public class ActiveItemUI : MonoBehaviour, IPointerClickHandler
     {
     #region UI 참조
 
     [Header("아이템 UI 구성 요소")]
     [SerializeField] private Image itemIcon;
+
+    [Header("액션 팝업 프리팹")]
+    [SerializeField] private GameObject actionPopupPrefab;
 
     #endregion
 
@@ -24,6 +28,7 @@ namespace Game.ItemSystem.Runtime
 
         [SerializeField] private ActiveItemDefinition currentItem;
         private int slotIndex = -1;
+        private ActionPopupUI currentPopup;
 
         #endregion
 
@@ -34,14 +39,44 @@ namespace Game.ItemSystem.Runtime
         /// </summary>
         public event System.Action<int> OnItemClicked;
 
+        /// <summary>
+        /// 사용 버튼이 클릭되었을 때 발생하는 이벤트
+        /// </summary>
+        public event System.Action<int> OnUseButtonClicked;
+
+        /// <summary>
+        /// 버리기 버튼이 클릭되었을 때 발생하는 이벤트
+        /// </summary>
+        public event System.Action<int> OnDiscardButtonClicked;
+
         #endregion
 
         #region Unity 생명주기
 
         private void Start()
         {
+            GameLogger.LogInfo($"[ActiveItemUI] Start() 호출됨 - GameObject: {gameObject.name}", GameLogger.LogCategory.UI);
+            
+            // 디버깅: 컴포넌트 상태 확인
+            var image = GetComponent<Image>();
+            var button = GetComponent<Button>();
+            var canvasGroup = GetComponent<CanvasGroup>();
+            
+            GameLogger.LogInfo($"[ActiveItemUI] 컴포넌트 상태 - Image: {image != null}, Button: {button != null}, CanvasGroup: {canvasGroup != null}", GameLogger.LogCategory.UI);
+            
+            if (image != null)
+            {
+                GameLogger.LogInfo($"[ActiveItemUI] Image 상태 - RaycastTarget: {image.raycastTarget}, Enabled: {image.enabled}", GameLogger.LogCategory.UI);
+            }
+            
+            if (canvasGroup != null)
+            {
+                GameLogger.LogInfo($"[ActiveItemUI] CanvasGroup 상태 - Interactable: {canvasGroup.interactable}, BlocksRaycasts: {canvasGroup.blocksRaycasts}", GameLogger.LogCategory.UI);
+            }
+            
             InitializeItemUI();
             SetupButtonEvent();
+            GameLogger.LogInfo($"[ActiveItemUI] Start() 완료 - GameObject: {gameObject.name}", GameLogger.LogCategory.UI);
         }
 
         #endregion
@@ -53,15 +88,27 @@ namespace Game.ItemSystem.Runtime
         /// </summary>
         private void InitializeItemUI()
         {
-            // 아이템 아이콘이 할당되지 않았으면 자동으로 찾기
+            // 아이템 아이콘이 할당되지 않았으면 자식에서 찾기
             if (itemIcon == null)
             {
-                itemIcon = GetComponent<Image>();
+                // 먼저 자식 Button에서 Image 찾기
+                var buttonChild = transform.Find("Button");
+                if (buttonChild != null)
+                {
+                    itemIcon = buttonChild.GetComponent<Image>();
+                    GameLogger.LogInfo("[ActiveItemUI] 자식 Button에서 Image 컴포넌트를 찾았습니다", GameLogger.LogCategory.UI);
+                }
+                
+                // 자식에서 못 찾으면 자신에게서 찾기
                 if (itemIcon == null)
                 {
-                    // Image 컴포넌트가 없으면 자동으로 추가
-                    itemIcon = gameObject.AddComponent<Image>();
-                    GameLogger.LogInfo("[ActiveItemUI] Image 컴포넌트를 자동으로 추가했습니다", GameLogger.LogCategory.UI);
+                    itemIcon = GetComponent<Image>();
+                    if (itemIcon == null)
+                    {
+                        // Image 컴포넌트가 없으면 자동으로 추가
+                        itemIcon = gameObject.AddComponent<Image>();
+                        GameLogger.LogInfo("[ActiveItemUI] Image 컴포넌트를 자동으로 추가했습니다", GameLogger.LogCategory.UI);
+                    }
                 }
             }
 
@@ -77,24 +124,119 @@ namespace Game.ItemSystem.Runtime
         }
 
         /// <summary>
-        /// 버튼 이벤트를 설정합니다.
+        /// 클릭 이벤트를 설정합니다. (Image + IPointerClickHandler 사용)
         /// </summary>
         private void SetupButtonEvent()
         {
-            var button = GetComponent<Button>();
-            if (button == null)
+            // Image 컴포넌트가 Raycast Target을 활성화해야 클릭 감지 가능
+            if (itemIcon != null)
             {
-                // Button 컴포넌트가 없으면 자동으로 추가
-                button = gameObject.AddComponent<Button>();
-                GameLogger.LogInfo("[ActiveItemUI] Button 컴포넌트를 자동으로 추가했습니다", GameLogger.LogCategory.UI);
+                itemIcon.raycastTarget = true;
+                GameLogger.LogInfo("[ActiveItemUI] Image의 Raycast Target 활성화", GameLogger.LogCategory.UI);
             }
 
-            if (button != null)
+            // 자식 Button의 Button 컴포넌트 제거 (Image만 사용)
+            var childButton = transform.Find("Button")?.GetComponent<Button>();
+            if (childButton != null)
             {
-                button.onClick.RemoveAllListeners();
-                button.onClick.AddListener(OnButtonClicked);
-                GameLogger.LogInfo("[ActiveItemUI] 버튼 이벤트 설정 완료", GameLogger.LogCategory.UI);
+                GameLogger.LogInfo("[ActiveItemUI] 자식 Button 컴포넌트 제거 - Image만 사용", GameLogger.LogCategory.UI);
+                DestroyImmediate(childButton);
             }
+
+            GameLogger.LogInfo("[ActiveItemUI] IPointerClickHandler 설정 완료", GameLogger.LogCategory.UI);
+        }
+
+        /// <summary>
+        /// 액션 팝업을 생성하고 표시합니다.
+        /// </summary>
+        private void ShowActionPopup()
+        {
+            // 기존 팝업이 있으면 제거
+            CloseActionPopup();
+
+            if (actionPopupPrefab == null)
+            {
+                GameLogger.LogError("[ActiveItemUI] actionPopupPrefab이 설정되지 않았습니다!", GameLogger.LogCategory.UI);
+                return;
+            }
+
+            if (currentItem == null)
+            {
+                GameLogger.LogWarning("[ActiveItemUI] 현재 아이템이 null입니다!", GameLogger.LogCategory.UI);
+                return;
+            }
+
+            // 팝업 생성
+            GameObject popupInstance = Instantiate(actionPopupPrefab, transform);
+            currentPopup = popupInstance.GetComponent<ActionPopupUI>();
+
+            if (currentPopup == null)
+            {
+                GameLogger.LogError("[ActiveItemUI] ActionPopupUI 컴포넌트를 찾을 수 없습니다!", GameLogger.LogCategory.UI);
+                Destroy(popupInstance);
+                return;
+            }
+
+            // 팝업 위치 설정 (아이템 아이콘 위쪽에 표시)
+            RectTransform rectTransform = GetComponent<RectTransform>();
+            Vector2 popupPosition = rectTransform.anchoredPosition + Vector2.up * 60f; // 앵커드 포지션 사용
+
+            // 팝업 설정
+            currentPopup.SetupPopup(slotIndex, currentItem, popupPosition);
+
+            // 이벤트 연결
+            currentPopup.OnUseButtonClicked += HandleUseButtonClicked;
+            currentPopup.OnDiscardButtonClicked += HandleDiscardButtonClicked;
+            currentPopup.OnPopupClosed += HandlePopupClosed;
+
+            GameLogger.LogInfo($"[ActiveItemUI] 액션 팝업 표시: {currentItem.DisplayName} @ 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
+        }
+
+        /// <summary>
+        /// 액션 팝업을 닫습니다.
+        /// </summary>
+        private void CloseActionPopup()
+        {
+            if (currentPopup != null)
+            {
+                // 이벤트 해제
+                currentPopup.OnUseButtonClicked -= HandleUseButtonClicked;
+                currentPopup.OnDiscardButtonClicked -= HandleDiscardButtonClicked;
+                currentPopup.OnPopupClosed -= HandlePopupClosed;
+
+                // 팝업 제거
+                Destroy(currentPopup.gameObject);
+                currentPopup = null;
+
+                GameLogger.LogInfo($"[ActiveItemUI] 액션 팝업 닫힘: 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
+            }
+        }
+
+        /// <summary>
+        /// 사용 버튼이 클릭되었을 때 호출됩니다.
+        /// </summary>
+        private void HandleUseButtonClicked(int slotIndex)
+        {
+            OnUseButtonClicked?.Invoke(slotIndex);
+            GameLogger.LogInfo($"[ActiveItemUI] 사용 버튼 클릭: 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
+        }
+
+        /// <summary>
+        /// 버리기 버튼이 클릭되었을 때 호출됩니다.
+        /// </summary>
+        private void HandleDiscardButtonClicked(int slotIndex)
+        {
+            OnDiscardButtonClicked?.Invoke(slotIndex);
+            GameLogger.LogInfo($"[ActiveItemUI] 버리기 버튼 클릭: 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
+        }
+
+        /// <summary>
+        /// 팝업이 닫혔을 때 호출됩니다.
+        /// </summary>
+        private void HandlePopupClosed()
+        {
+            currentPopup = null;
+            GameLogger.LogInfo($"[ActiveItemUI] 팝업 닫힘 이벤트 처리: 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
         }
 
         #endregion
@@ -148,12 +290,32 @@ namespace Game.ItemSystem.Runtime
         }
 
         /// <summary>
-        /// 버튼이 클릭되었을 때 호출됩니다.
+        /// 포인터 클릭 이벤트를 처리합니다. (IPointerClickHandler 구현)
         /// </summary>
-        private void OnButtonClicked()
+        /// <param name="eventData">포인터 이벤트 데이터</param>
+        public void OnPointerClick(PointerEventData eventData)
         {
-            OnItemClicked?.Invoke(slotIndex);
-            GameLogger.LogInfo($"[ActiveItemUI] 아이템 클릭: 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
+            GameLogger.LogInfo($"[ActiveItemUI] OnPointerClick 호출됨 - 버튼: {eventData.button}, 슬롯 {slotIndex}, 아이템: {(currentItem != null ? currentItem.DisplayName : "null")}", GameLogger.LogCategory.UI);
+            
+            // 좌클릭만 처리
+            if (eventData.button == PointerEventData.InputButton.Left)
+            {
+                if (OnItemClicked != null)
+                {
+                    OnItemClicked.Invoke(slotIndex);
+                    GameLogger.LogInfo($"[ActiveItemUI] OnItemClicked 이벤트 발생: 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
+                }
+                else
+                {
+                    GameLogger.LogWarning($"[ActiveItemUI] OnItemClicked 이벤트가 null입니다! 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
+                }
+
+                // 아이템이 있으면 액션 팝업 표시
+                if (currentItem != null)
+                {
+                    ShowActionPopup();
+                }
+            }
         }
 
         #endregion
@@ -179,12 +341,11 @@ namespace Game.ItemSystem.Runtime
         }
 
         /// <summary>
-        /// 슬롯 인덱스를 반환합니다.
+        /// 액션 팝업을 닫습니다. (외부에서 호출 가능)
         /// </summary>
-        /// <returns>슬롯 인덱스</returns>
-        public int GetSlotIndex()
+        public void CloseActionPopupExternal()
         {
-            return slotIndex;
+            CloseActionPopup();
         }
 
         /// <summary>

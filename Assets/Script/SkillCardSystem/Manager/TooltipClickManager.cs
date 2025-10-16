@@ -54,6 +54,12 @@ namespace Game.SkillCardSystem.Manager
         /// </summary>
         private void HandleGlobalLeftClick()
         {
+            // 고정된 툴팁이 있는지 먼저 확인
+            if (!HasFixedTooltips())
+            {
+                return; // 고정된 툴팁이 없으면 아무것도 하지 않음
+            }
+
             // 클릭된 오브젝트 확인
             var clickedObject = GetClickedObject();
             
@@ -106,6 +112,25 @@ namespace Game.SkillCardSystem.Manager
         }
 
         /// <summary>
+        /// 고정된 툴팁이 있는지 확인합니다.
+        /// </summary>
+        private bool HasFixedTooltips()
+        {
+            // 모든 SkillCardUI 컴포넌트를 찾아서 고정된 툴팁이 있는지 확인
+            var skillCardUIs = FindObjectsByType<SkillCardUI>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            
+            foreach (var skillCardUI in skillCardUIs)
+            {
+                if (skillCardUI.IsTooltipFixed())
+                {
+                    return true; // 고정된 툴팁이 하나라도 있으면 true
+                }
+            }
+
+            return false; // 고정된 툴팁이 없으면 false
+        }
+
+        /// <summary>
         /// 모든 고정된 툴팁을 해제합니다.
         /// </summary>
         private void ReleaseAllFixedTooltips()
@@ -113,14 +138,19 @@ namespace Game.SkillCardSystem.Manager
             // 모든 SkillCardUI 컴포넌트를 찾아서 고정된 툴팁 해제
             var skillCardUIs = FindObjectsByType<SkillCardUI>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             
+            int releasedCount = 0;
             foreach (var skillCardUI in skillCardUIs)
             {
-                skillCardUI.ForceReleaseTooltip();
+                if (skillCardUI.IsTooltipFixed())
+                {
+                    skillCardUI.ForceReleaseTooltip();
+                    releasedCount++;
+                }
             }
 
-            if (skillCardUIs.Length > 0)
+            if (releasedCount > 0)
             {
-                GameLogger.LogInfo($"전역 클릭으로 {skillCardUIs.Length}개의 고정된 툴팁 해제", GameLogger.LogCategory.UI);
+                GameLogger.LogInfo($"전역 클릭으로 {releasedCount}개의 고정된 툴팁 해제", GameLogger.LogCategory.UI);
             }
         }
 
