@@ -53,7 +53,6 @@ namespace Game.ItemSystem.Runtime
         private void Start()
         {
             SetupButtons();
-            GameLogger.LogInfo($"[ActionPopupUI] 팝업 초기화 완료 - 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
         }
 
         #endregion
@@ -95,8 +94,6 @@ namespace Game.ItemSystem.Runtime
 
             // 팝업 활성화
             gameObject.SetActive(true);
-
-            GameLogger.LogInfo($"[ActionPopupUI] 팝업 설정 완료: {item?.DisplayName} @ 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
         }
 
         /// <summary>
@@ -116,7 +113,6 @@ namespace Game.ItemSystem.Runtime
                 discardButton.onClick.AddListener(HandleDiscardButtonClicked);
             }
 
-            GameLogger.LogInfo("[ActionPopupUI] 버튼 이벤트 설정 완료", GameLogger.LogCategory.UI);
         }
 
         #endregion
@@ -130,7 +126,6 @@ namespace Game.ItemSystem.Runtime
         {
             OnUseButtonClicked?.Invoke(slotIndex);
             ClosePopup();
-            GameLogger.LogInfo($"[ActionPopupUI] 사용 버튼 클릭: 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
         }
 
         /// <summary>
@@ -140,7 +135,6 @@ namespace Game.ItemSystem.Runtime
         {
             OnDiscardButtonClicked?.Invoke(slotIndex);
             ClosePopup();
-            GameLogger.LogInfo($"[ActionPopupUI] 버리기 버튼 클릭: 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
         }
 
         #endregion
@@ -154,7 +148,6 @@ namespace Game.ItemSystem.Runtime
         {
             OnPopupClosed?.Invoke();
             Destroy(gameObject);
-            GameLogger.LogInfo($"[ActionPopupUI] 팝업 닫힘: 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
         }
 
         /// <summary>

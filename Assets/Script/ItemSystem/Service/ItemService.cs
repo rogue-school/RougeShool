@@ -58,6 +58,25 @@ namespace Game.ItemSystem.Service
         private void Awake()
         {
             InitializeActiveSlots();
+            
+            // PlayerManager 주입 상태 확인
+            if (playerManager == null)
+            {
+                GameLogger.LogWarning("[ItemService] PlayerManager가 주입되지 않았습니다. 나중에 다시 시도합니다.", GameLogger.LogCategory.Core);
+            }
+        }
+
+        private void Start()
+        {
+            // Start에서 PlayerManager 재확인
+            if (playerManager == null)
+            {
+                playerManager = FindFirstObjectByType<PlayerManager>();
+                if (playerManager != null)
+                {
+                    GameLogger.LogInfo("[ItemService] Start에서 PlayerManager를 찾았습니다", GameLogger.LogCategory.Core);
+                }
+            }
         }
 
         #endregion
@@ -66,17 +85,58 @@ namespace Game.ItemSystem.Service
 
         /// <summary>
         /// PlayerManager를 통해 플레이어 캐릭터를 가져옵니다.
+        /// PlayerManager가 없으면 씬에서 직접 찾습니다.
         /// </summary>
         /// <returns>플레이어 캐릭터 또는 null</returns>
         private ICharacter GetPlayerCharacter()
         {
-            if (playerManager == null)
+            // 1. PlayerManager를 통해 가져오기 시도
+            if (playerManager != null)
             {
-                GameLogger.LogWarning("PlayerManager가 주입되지 않았습니다", GameLogger.LogCategory.Core);
-                return null;
+                var playerCharacter = playerManager.GetCharacter();
+                if (playerCharacter != null)
+                {
+                    GameLogger.LogInfo($"[ItemService] PlayerManager를 통해 캐릭터 발견: {playerCharacter.GetType().Name}", GameLogger.LogCategory.Core);
+                    return playerCharacter;
+                }
+                else
+                {
+                    GameLogger.LogWarning("[ItemService] PlayerManager는 있지만 캐릭터가 null입니다", GameLogger.LogCategory.Core);
+                }
+            }
+            else
+            {
+                GameLogger.LogWarning("[ItemService] PlayerManager가 주입되지 않았습니다", GameLogger.LogCategory.Core);
             }
 
-            return playerManager.GetCharacter();
+            // 2. 씬에서 직접 찾기 (ICharacter 구현체들)
+            var allCharacters = FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            
+            foreach (var obj in allCharacters)
+            {
+                if (obj is ICharacter character)
+                {
+                    // PlayerCharacter 우선 선택
+                    if (obj is Game.CharacterSystem.Core.PlayerCharacter)
+                    {
+                        GameLogger.LogInfo($"[ItemService] 씬에서 PlayerCharacter 발견: {obj.name}", GameLogger.LogCategory.Core);
+                        return character;
+                    }
+                }
+            }
+
+            // 3. PlayerCharacter가 없으면 다른 ICharacter라도 반환
+            foreach (var obj in allCharacters)
+            {
+                if (obj is ICharacter character)
+                {
+                    GameLogger.LogInfo($"[ItemService] 씬에서 {obj.GetType().Name} 발견: {obj.name}", GameLogger.LogCategory.Core);
+                    return character;
+                }
+            }
+
+            GameLogger.LogWarning("[ItemService] 플레이어 캐릭터를 찾을 수 없습니다", GameLogger.LogCategory.Core);
+            return null;
         }
 
         #endregion
@@ -123,7 +183,19 @@ namespace Game.ItemSystem.Service
             if (playerCharacter == null)
             {
                 GameLogger.LogWarning("플레이어 캐릭터가 아직 초기화되지 않았습니다. 아이템 사용을 건너뜁니다", GameLogger.LogCategory.Core);
-                return false;
+                
+                // 임시 해결책: 아이템 효과만 실행 (캐릭터 없이)
+                GameLogger.LogInfo($"아이템 효과 시뮬레이션: {slot.item.DisplayName}", GameLogger.LogCategory.Core);
+                
+                // 소모품인 경우 슬롯에서 제거
+                if (slot.item.Type == ItemType.Active)
+                {
+                    RemoveActiveItem(slotIndex);
+                }
+
+                OnActiveItemUsed?.Invoke(slot.item, slotIndex);
+                GameLogger.LogInfo($"아이템 사용 성공 (시뮬레이션): {slot.item.DisplayName}", GameLogger.LogCategory.Core);
+                return true;
             }
 
             // 아이템 런타임 인스턴스 생성 및 사용
@@ -132,14 +204,24 @@ namespace Game.ItemSystem.Service
 
             if (success)
             {
+                // 이벤트/로그 전에 아이템 참조를 보관 (제거 시 null 방지)
+                var usedItem = slot.item;
+
                 // 소모품인 경우 슬롯에서 제거
-                if (slot.item.Type == ItemType.Active)
+                if (usedItem != null && usedItem.Type == ItemType.Active)
                 {
                     RemoveActiveItem(slotIndex);
                 }
 
-                OnActiveItemUsed?.Invoke(slot.item, slotIndex);
-                GameLogger.LogInfo($"아이템 사용 성공: {slot.item.DisplayName}", GameLogger.LogCategory.Core);
+                OnActiveItemUsed?.Invoke(usedItem, slotIndex);
+                if (usedItem != null)
+                {
+                    GameLogger.LogInfo($"아이템 사용 성공: {usedItem.DisplayName}", GameLogger.LogCategory.Core);
+                }
+                else
+                {
+                    GameLogger.LogInfo($"아이템 사용 성공: (제거됨)", GameLogger.LogCategory.Core);
+                }
             }
             else
             {

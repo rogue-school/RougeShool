@@ -5,6 +5,7 @@ using UnityEngine.EventSystems;
 using Game.ItemSystem.Data;
 using Game.ItemSystem.Utility;
 using Game.CoreSystem.Utility;
+using Zenject;
 
 namespace Game.ItemSystem.Runtime
 {
@@ -29,6 +30,9 @@ namespace Game.ItemSystem.Runtime
         [SerializeField] private ActiveItemDefinition currentItem;
         private int slotIndex = -1;
         private ActionPopupUI currentPopup;
+
+        // 의존성 주입
+        [Inject(Optional = true)] private Game.CombatSystem.Manager.TurnManager turnManager;
 
         #endregion
 
@@ -177,6 +181,24 @@ namespace Game.ItemSystem.Runtime
                 return;
             }
 
+            // 레이어 정렬: 슬롯/팝업을 맨 앞으로 올려 가림 방지
+            transform.SetAsLastSibling();
+            currentPopup.transform.SetAsLastSibling();
+
+            // 팝업 전용 Canvas 설정(상단 렌더링 보장)
+            var popupCanvas = currentPopup.GetComponent<Canvas>();
+            if (popupCanvas == null)
+            {
+                popupCanvas = currentPopup.gameObject.AddComponent<Canvas>();
+            }
+            popupCanvas.overrideSorting = true;
+            popupCanvas.sortingOrder = 1000; // 인벤토리 내 최상단 보장
+
+            if (currentPopup.GetComponent<UnityEngine.UI.GraphicRaycaster>() == null)
+            {
+                currentPopup.gameObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+            }
+
             // 팝업 위치 설정 (아이템 아이콘 위쪽에 표시)
             RectTransform rectTransform = GetComponent<RectTransform>();
             Vector2 popupPosition = rectTransform.anchoredPosition + Vector2.up * 60f; // 앵커드 포지션 사용
@@ -295,19 +317,19 @@ namespace Game.ItemSystem.Runtime
         /// <param name="eventData">포인터 이벤트 데이터</param>
         public void OnPointerClick(PointerEventData eventData)
         {
-            GameLogger.LogInfo($"[ActiveItemUI] OnPointerClick 호출됨 - 버튼: {eventData.button}, 슬롯 {slotIndex}, 아이템: {(currentItem != null ? currentItem.DisplayName : "null")}", GameLogger.LogCategory.UI);
-            
             // 좌클릭만 처리
             if (eventData.button == PointerEventData.InputButton.Left)
             {
+                // 플레이어 턴인지 확인
+                if (!IsPlayerTurn())
+                {
+                    GameLogger.LogInfo($"[ActiveItemUI] 적 턴 중이므로 아이템 사용 불가: {currentItem?.DisplayName ?? "알 수 없음"}", GameLogger.LogCategory.UI);
+                    return;
+                }
+
                 if (OnItemClicked != null)
                 {
                     OnItemClicked.Invoke(slotIndex);
-                    GameLogger.LogInfo($"[ActiveItemUI] OnItemClicked 이벤트 발생: 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
-                }
-                else
-                {
-                    GameLogger.LogWarning($"[ActiveItemUI] OnItemClicked 이벤트가 null입니다! 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
                 }
 
                 // 아이템이 있으면 액션 팝업 표시
@@ -316,6 +338,29 @@ namespace Game.ItemSystem.Runtime
                     ShowActionPopup();
                 }
             }
+        }
+
+        /// <summary>
+        /// 현재 플레이어 턴인지 확인합니다.
+        /// </summary>
+        /// <returns>플레이어 턴이면 true, 아니면 false</returns>
+        private bool IsPlayerTurn()
+        {
+            if (turnManager != null)
+            {
+                return turnManager.IsPlayerTurn();
+            }
+            
+            // TurnManager가 없으면 씬에서 직접 찾기
+            var foundTurnManager = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
+            if (foundTurnManager != null)
+            {
+                return foundTurnManager.IsPlayerTurn();
+            }
+            
+            // TurnManager를 찾을 수 없으면 기본적으로 플레이어 턴으로 간주
+            GameLogger.LogWarning("[ActiveItemUI] TurnManager를 찾을 수 없습니다. 플레이어 턴으로 간주합니다.", GameLogger.LogCategory.UI);
+            return true;
         }
 
         #endregion
@@ -346,6 +391,15 @@ namespace Game.ItemSystem.Runtime
         public void CloseActionPopupExternal()
         {
             CloseActionPopup();
+        }
+
+        /// <summary>
+        /// 현재 팝업이 열려있는지 확인합니다.
+        /// </summary>
+        /// <returns>팝업이 열려있으면 true, 아니면 false</returns>
+        public bool HasOpenPopup()
+        {
+            return currentPopup != null && currentPopup.gameObject.activeInHierarchy;
         }
 
         /// <summary>

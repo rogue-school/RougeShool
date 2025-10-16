@@ -35,6 +35,9 @@ namespace Game.CoreSystem
         [SerializeField] private PlayerCharacterSelectionManager playerCharacterSelectionManager;
         [SerializeField] private SkillCardTooltipManager skillCardTooltipManager;
         [SerializeField] private BuffDebuffTooltipManager buffDebuffTooltipManager;
+        
+        [Header("CharacterSystem 매니저들")]
+        [SerializeField] private PlayerManager playerManager;
 
         [Header("DI 최적화 설정")]
 #pragma warning disable CS0414 // 사용하지 않는 필드 경고 억제 (향후 사용 예정)
@@ -79,7 +82,8 @@ namespace Game.CoreSystem
                 (settingsManager, "SettingsManager", null),
                 (playerCharacterSelectionManager, "PlayerCharacterSelectionManager", typeof(IPlayerCharacterSelectionManager)),
                 (skillCardTooltipManager, "SkillCardTooltipManager", null),
-                (buffDebuffTooltipManager, "BuffDebuffTooltipManager", null)
+                (buffDebuffTooltipManager, "BuffDebuffTooltipManager", null),
+                (playerManager, "PlayerManager", null)
             };
 
             foreach (var (instance, name, interfaceType) in managers)
@@ -178,7 +182,8 @@ namespace Game.CoreSystem
                 typeof(AudioManager),
                 typeof(SaveManager),
                 typeof(PlayerCharacterSelectionManager),
-                typeof(SkillCardTooltipManager)
+                typeof(SkillCardTooltipManager),
+                typeof(PlayerManager)
             };
             
             // 아직 바인딩되지 않은 ICoreSystemInitializable 컴포넌트만 바인딩

@@ -36,10 +36,12 @@ namespace Game.ItemSystem.Runtime
 
 		private void Update()
 		{
-			// ESC 키로 액션 버튼들 숨기기
-			if (Input.GetKeyDown(KeyCode.Escape))
+			// ESC 닫기 기능 제거 (요청)
+
+			// 마우스 클릭으로 팝업 외부 클릭 감지
+			if (Input.GetMouseButtonDown(0))
 			{
-				HideAllActionPopups();
+				HandleGlobalClick();
 			}
 		}
 
@@ -91,22 +93,16 @@ namespace Game.ItemSystem.Runtime
 		/// <param name="slotIndex">클릭된 슬롯 인덱스</param>
 		private void OnItemClicked(int slotIndex)
 		{
-			GameLogger.LogInfo($"[Inventory] OnItemClicked 호출됨 - 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
-			
 			var slots = _itemService.GetActiveSlots();
 			if (slotIndex >= 0 && slotIndex < slots.Length)
 			{
 				var slot = slots[slotIndex];
 				if (!slot.isEmpty && slot.item != null)
 				{
-					GameLogger.LogInfo($"[Inventory] 아이템 클릭 처리 시작: {slot.item.DisplayName} @ 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
-					
 					// 다른 아이템의 액션 팝업들 닫기
 					HideAllActionPopups();
 					
 					// 클릭된 아이템의 액션 팝업은 ActiveItemUI에서 자동으로 표시됨
-					GameLogger.LogInfo($"[Inventory] 액션 팝업 표시 완료: 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
-					
 					GameLogger.LogInfo($"[Inventory] 아이템 클릭: {slot.item.DisplayName} @ 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
 				}
 				else
@@ -283,8 +279,68 @@ namespace Game.ItemSystem.Runtime
 
 		private void HandleItemUsed(ActiveItemDefinition def, int slotIndex)
 		{
-			GameLogger.LogInfo($"[Inventory] 사용 이벤트: {def.DisplayName} @ {slotIndex}", GameLogger.LogCategory.UI);
+			if (def != null)
+			{
+				GameLogger.LogInfo($"[Inventory] 사용 이벤트: {def.DisplayName} @ {slotIndex}", GameLogger.LogCategory.UI);
+			}
+			else
+			{
+				GameLogger.LogInfo($"[Inventory] 사용 이벤트: 아이템 제거됨 @ {slotIndex}", GameLogger.LogCategory.UI);
+			}
 			RefreshSlots();
+		}
+
+		/// <summary>
+		/// 전역 클릭을 처리하여 팝업 외부 클릭 시 팝업을 닫습니다.
+		/// </summary>
+		private void HandleGlobalClick()
+		{
+			// 현재 열린 팝업이 있는지 확인
+			bool hasOpenPopup = false;
+			for (int i = 0; i < itemUIs.Length; i++)
+			{
+				if (itemUIs[i] != null && itemUIs[i].HasOpenPopup())
+				{
+					hasOpenPopup = true;
+					break;
+				}
+			}
+
+			if (!hasOpenPopup)
+			{
+				return; // 열린 팝업이 없으면 아무것도 하지 않음
+			}
+
+			// 클릭된 오브젝트 확인
+			var eventData = new UnityEngine.EventSystems.PointerEventData(UnityEngine.EventSystems.EventSystem.current);
+			eventData.position = Input.mousePosition;
+
+			var results = new System.Collections.Generic.List<UnityEngine.EventSystems.RaycastResult>();
+			UnityEngine.EventSystems.EventSystem.current.RaycastAll(eventData, results);
+
+			// 클릭된 오브젝트가 팝업이나 아이템 UI가 아닌 경우 팝업 닫기
+			bool clickedOnPopupOrItem = false;
+			foreach (var result in results)
+			{
+				var clickedObject = result.gameObject;
+				
+				// ActionPopupUI나 ActiveItemUI인지 확인
+				if (clickedObject.GetComponent<ActionPopupUI>() != null ||
+					clickedObject.GetComponent<ActiveItemUI>() != null ||
+					clickedObject.GetComponentInParent<ActionPopupUI>() != null ||
+					clickedObject.GetComponentInParent<ActiveItemUI>() != null)
+				{
+					clickedOnPopupOrItem = true;
+					break;
+				}
+			}
+
+			// 팝업이나 아이템 UI가 아닌 곳을 클릭한 경우 모든 팝업 닫기
+			if (!clickedOnPopupOrItem)
+			{
+				HideAllActionPopups();
+				GameLogger.LogInfo("[Inventory] 팝업 외부 클릭으로 모든 팝업 닫기", GameLogger.LogCategory.UI);
+			}
 		}
 
 		#endregion
