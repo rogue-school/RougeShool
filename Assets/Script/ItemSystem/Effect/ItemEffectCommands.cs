@@ -2,29 +2,24 @@ using UnityEngine;
 using Game.ItemSystem.Interface;
 using Game.CharacterSystem.Interface;
 using Game.CoreSystem.Utility;
+using Game.ItemSystem.Utility;
 
 namespace Game.ItemSystem.Effect
 {
     /// <summary>
     /// 체력 회복 효과 커맨드입니다.
     /// </summary>
-    public class HealEffectCommand : IItemEffectCommand
+    public class HealEffectCommand : BaseItemEffectCommand
     {
-        private int healAmount;
+        private readonly int healAmount;
 
-        public HealEffectCommand(int healAmount)
+        public HealEffectCommand(int healAmount) : base("체력 회복")
         {
             this.healAmount = healAmount;
         }
 
-        public bool Execute(IItemUseContext context)
+        protected override bool ExecuteInternal(IItemUseContext context)
         {
-            if (context?.User == null || context.User.IsDead())
-            {
-                GameLogger.LogError("체력 회복 실패: 사용자가 null이거나 사망 상태입니다", GameLogger.LogCategory.Core);
-                return false;
-            }
-
             int currentHP = context.User.GetCurrentHP();
             int maxHP = context.User.GetMaxHP();
             int actualHeal = Mathf.Min(healAmount, maxHP - currentHP);
@@ -46,25 +41,19 @@ namespace Game.ItemSystem.Effect
     /// <summary>
     /// 공격력 버프 효과 커맨드입니다.
     /// </summary>
-    public class AttackBuffEffectCommand : IItemEffectCommand
+    public class AttackBuffEffectCommand : BaseItemEffectCommand
     {
-        private int buffAmount;
-        private int duration;
+        private readonly int buffAmount;
+        private readonly int duration;
 
-        public AttackBuffEffectCommand(int buffAmount, int duration = 1)
+        public AttackBuffEffectCommand(int buffAmount, int duration = 1) : base("공격력 버프")
         {
             this.buffAmount = buffAmount;
             this.duration = duration;
         }
 
-        public bool Execute(IItemUseContext context)
+        protected override bool ExecuteInternal(IItemUseContext context)
         {
-            if (context?.User == null || context.User.IsDead())
-            {
-                GameLogger.LogError("공격력 버프 실패: 사용자가 null이거나 사망 상태입니다", GameLogger.LogCategory.Core);
-                return false;
-            }
-
             // TODO: 실제 버프 시스템과 연동
             GameLogger.LogInfo($"공격력 버프 적용: +{buffAmount} ({duration}턴)", GameLogger.LogCategory.Core);
             return true;

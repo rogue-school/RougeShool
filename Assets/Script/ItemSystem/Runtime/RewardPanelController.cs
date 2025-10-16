@@ -439,27 +439,9 @@ namespace Game.ItemSystem.Runtime
 		/// </summary>
 		private void OpenDefaultReward()
 		{
-			// Resources 폴더에서 모든 액티브 아이템을 찾아서 랜덤 선택
-			var allActiveItems = Resources.LoadAll<ActiveItemDefinition>("Data/Item");
-			
-			if (allActiveItems.Length == 0)
-			{
-				GameLogger.LogError("[RewardPanel] Resources에서 액티브 아이템을 찾을 수 없습니다.", GameLogger.LogCategory.UI);
-				return;
-			}
-
-			// 기본적으로 3개 아이템 제공
-			var selectedCount = Math.Min(3, allActiveItems.Length);
-			var selected = new List<ActiveItemDefinition>();
-			
-			for (int i = 0; i < selectedCount; i++)
-			{
-				var randomIndex = UnityEngine.Random.Range(0, allActiveItems.Length);
-				selected.Add(allActiveItems[randomIndex]);
-			}
-
-			GameLogger.LogInfo($"[RewardPanel] 기본 액티브 보상 생성: {selected.Count}개", GameLogger.LogCategory.UI);
-			Open(selected.ToArray());
+			// DefaultRewardService를 사용하여 중복 코드 제거
+			var rewards = Game.ItemSystem.Service.DefaultRewardService.GenerateDefaultActiveReward();
+			Open(rewards);
 		}
 
 		/// <summary>
@@ -467,21 +449,9 @@ namespace Game.ItemSystem.Runtime
 		/// </summary>
 		private void OpenDefaultPassiveReward()
 		{
-			// Resources 폴더에서 모든 패시브 아이템을 찾아서 랜덤 선택
-			var allPassiveItems = Resources.LoadAll<PassiveItemDefinition>("Data/Item");
-			
-			if (allPassiveItems.Length == 0)
-			{
-				GameLogger.LogInfo("[RewardPanel] Resources에서 패시브 아이템을 찾을 수 없습니다.", GameLogger.LogCategory.UI);
-				return;
-			}
-
-			// 기본적으로 1개 아이템 제공
-			var randomIndex = UnityEngine.Random.Range(0, allPassiveItems.Length);
-			var selected = new PassiveItemDefinition[] { allPassiveItems[randomIndex] };
-
-			GameLogger.LogInfo($"[RewardPanel] 기본 패시브 보상 생성: {selected.Length}개", GameLogger.LogCategory.UI);
-			OpenPassive(selected);
+			// DefaultRewardService를 사용하여 중복 코드 제거
+			var rewards = Game.ItemSystem.Service.DefaultRewardService.GenerateDefaultPassiveReward();
+			OpenPassive(rewards);
 		}
 	}
 }

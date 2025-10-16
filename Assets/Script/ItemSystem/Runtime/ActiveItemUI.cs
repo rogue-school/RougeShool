@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Game.ItemSystem.Data;
+using Game.ItemSystem.Utility;
 using Game.CoreSystem.Utility;
 
 namespace Game.ItemSystem.Runtime
@@ -135,24 +136,14 @@ namespace Game.ItemSystem.Runtime
         {
             if (currentItem == null)
             {
-                // 빈 슬롯 상태
-                if (itemIcon != null)
-                {
-                    itemIcon.sprite = null;
-                    itemIcon.color = Color.gray;
-                }
-                
+                // UIUpdateHelper를 사용하여 빈 슬롯 설정
+                UIUpdateHelper.SetEmptySlot(itemIcon, null, null);
                 GameLogger.LogInfo($"[ActiveItemUI] 슬롯 {slotIndex} 빈 상태로 설정", GameLogger.LogCategory.UI);
                 return;
             }
 
-            // 아이템 아이콘 업데이트
-            if (itemIcon != null)
-            {
-                itemIcon.sprite = currentItem.Icon;
-                itemIcon.color = Color.white;
-            }
-            
+            // UIUpdateHelper를 사용하여 아이템 UI 업데이트
+            UIUpdateHelper.UpdateItemSlotUI(itemIcon, null, null, currentItem);
             GameLogger.LogInfo($"[ActiveItemUI] 아이템 UI 업데이트: {currentItem.DisplayName} @ 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
         }
 
@@ -226,51 +217,8 @@ namespace Game.ItemSystem.Runtime
             if (currentItem == null)
                 return "효과 없음";
 
-            var effectInfo = new System.Text.StringBuilder();
-            effectInfo.AppendLine("효과:");
-            
-            foreach (var effectConfig in currentItem.EffectConfiguration.effects)
-            {
-                if (effectConfig.effectSO != null)
-                {
-                    effectInfo.AppendLine($"- {effectConfig.effectSO.name}");
-                    
-                    // 커스텀 설정이 있으면 추가 정보 표시
-                    if (effectConfig.useCustomSettings && effectConfig.customSettings != null)
-                    {
-                        if (effectConfig.customSettings is HealEffectCustomSettings healSettings)
-                        {
-                            effectInfo.AppendLine($"  회복량: {healSettings.healAmount}");
-                        }
-                        else if (effectConfig.customSettings is AttackBuffEffectCustomSettings buffSettings)
-                        {
-                            effectInfo.AppendLine($"  버프량: {buffSettings.buffAmount}, 지속시간: {buffSettings.duration}");
-                        }
-                        else if (effectConfig.customSettings is TimeStopEffectCustomSettings timeSettings)
-                        {
-                            effectInfo.AppendLine($"  봉인 수: {timeSettings.sealCount}, 지속시간: {timeSettings.duration}");
-                        }
-                        else if (effectConfig.customSettings is DiceOfFateEffectCustomSettings diceSettings)
-                        {
-                            effectInfo.AppendLine($"  변경 수: {diceSettings.changeCount}, 지속시간: {diceSettings.duration}");
-                        }
-                        else if (effectConfig.customSettings is ClownPotionEffectCustomSettings clownSettings)
-                        {
-                            effectInfo.AppendLine($"  회복확률: {clownSettings.healChance}%, 회복량: {clownSettings.healAmount}, 데미지: {clownSettings.damageAmount}");
-                        }
-                        else if (effectConfig.customSettings is RerollEffectCustomSettings rerollSettings)
-                        {
-                            effectInfo.AppendLine($"  리롤 수: {rerollSettings.rerollCount}");
-                        }
-                        else if (effectConfig.customSettings is ShieldBreakerEffectCustomSettings shieldSettings)
-                        {
-                            effectInfo.AppendLine($"  지속시간: {shieldSettings.duration}");
-                        }
-                    }
-                }
-            }
-            
-            return effectInfo.ToString();
+            // UIUpdateHelper를 사용하여 효과 정보 생성
+            return UIUpdateHelper.GenerateItemInfo(currentItem, true);
         }
 
         /// <summary>

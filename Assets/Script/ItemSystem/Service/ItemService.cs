@@ -7,6 +7,8 @@ using Game.ItemSystem.Data;
 using Game.ItemSystem.Effect;
 using Game.ItemSystem.Interface;
 using Game.ItemSystem.Runtime;
+using Game.ItemSystem.Constants;
+using Game.ItemSystem.Utility;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Manager;
 using Zenject;
@@ -21,7 +23,7 @@ namespace Game.ItemSystem.Service
     {
         #region 상수
 
-        private const int ACTIVE_SLOT_COUNT = 4;
+        private const int ACTIVE_SLOT_COUNT = ItemConstants.ACTIVE_SLOT_COUNT;
 
         #endregion
 
@@ -250,7 +252,7 @@ namespace Game.ItemSystem.Service
                 skillStarRanks[skillId] = 0;
             }
 
-            if (skillStarRanks[skillId] < 3)
+            if (skillStarRanks[skillId] < ItemConstants.MAX_STAR_RANK)
             {
                 skillStarRanks[skillId]++;
                 OnSkillStarUpgraded?.Invoke(skillId, skillStarRanks[skillId]);

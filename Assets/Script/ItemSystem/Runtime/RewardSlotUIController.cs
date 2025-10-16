@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Game.ItemSystem.Data;
+using Game.ItemSystem.Utility;
 using Game.CoreSystem.Utility;
 
 namespace Game.ItemSystem.Runtime
@@ -110,24 +111,8 @@ namespace Game.ItemSystem.Runtime
         {
             if (currentItem == null) return;
 
-            // 아이템 아이콘 설정
-            if (itemIcon != null)
-            {
-                itemIcon.sprite = currentItem.Icon;
-                itemIcon.color = normalColor;
-            }
-
-            // 아이템 이름 설정
-            if (itemNameText != null)
-            {
-                itemNameText.text = currentItem.DisplayName;
-            }
-
-            // 아이템 설명 설정
-            if (itemDescriptionText != null)
-            {
-                itemDescriptionText.text = currentItem.Description;
-            }
+            // UIUpdateHelper를 사용하여 슬롯 UI 업데이트
+            UIUpdateHelper.UpdateItemSlotUI(itemIcon, itemNameText, itemDescriptionText, currentItem, normalColor);
         }
 
         #endregion
@@ -191,22 +176,8 @@ namespace Game.ItemSystem.Runtime
             slotIndex = -1;
             isInteractable = true;
 
-            // UI 초기화
-            if (itemIcon != null)
-            {
-                itemIcon.sprite = null;
-                itemIcon.color = normalColor;
-            }
-
-            if (itemNameText != null)
-            {
-                itemNameText.text = "";
-            }
-
-            if (itemDescriptionText != null)
-            {
-                itemDescriptionText.text = "";
-            }
+            // UIUpdateHelper를 사용하여 슬롯 리셋
+            UIUpdateHelper.SetEmptySlot(itemIcon, itemNameText, itemDescriptionText, normalColor);
 
             if (slotButton != null)
             {
