@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d10d2d327137db7439e30c5872e2329a, type: 3}
+  m_Name: "006_\uC5ED\uD589\uC758 \uBAA8\uB798\uC2DC\uACC4"
+  m_EditorClassIdentifier: 
+  itemId: 
+  displayName: 
+  description: 
+  icon: {fileID: 0}
+  presentation:
+    sfxClip: {fileID: 0}
+    visualEffectPrefab: {fileID: 0}
+  effectConfiguration:
+    effects: []
+  references:
+    version: 2
+    RefIds: []

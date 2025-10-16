@@ -149,16 +149,16 @@ namespace Game.ItemSystem.Utility
                     info.AppendLine($"  버프량: {buffSettings.buffAmount}, 지속시간: {buffSettings.duration}");
                     break;
                 case Data.TimeStopEffectCustomSettings timeSettings:
-                    info.AppendLine($"  봉인 수: {timeSettings.sealCount}, 지속시간: {timeSettings.duration}");
+                    info.AppendLine($"  봉인 수: {timeSettings.sealCount}");
                     break;
                 case Data.DiceOfFateEffectCustomSettings diceSettings:
-                    info.AppendLine($"  변경 수: {diceSettings.changeCount}, 지속시간: {diceSettings.duration}");
+                    info.AppendLine($"  변경 수: {diceSettings.changeCount}");
                     break;
                 case Data.ClownPotionEffectCustomSettings clownSettings:
                     info.AppendLine($"  회복확률: {clownSettings.healChance}%, 회복량: {clownSettings.healAmount}, 데미지: {clownSettings.damageAmount}");
                     break;
                 case Data.RerollEffectCustomSettings rerollSettings:
-                    info.AppendLine($"  리롤 수: {rerollSettings.rerollCount}");
+                    info.AppendLine($"  리롤: 핸드 전체");
                     break;
                 case Data.ShieldBreakerEffectCustomSettings shieldSettings:
                     info.AppendLine($"  지속시간: {shieldSettings.duration}");

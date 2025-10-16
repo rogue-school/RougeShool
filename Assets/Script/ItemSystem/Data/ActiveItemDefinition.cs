@@ -71,22 +71,20 @@ namespace Game.ItemSystem.Data
         protected override void OnValidate()
         {
             base.OnValidate();
-            
-            // 각 효과 설정에서 효과 SO가 변경되었는지 확인하고 적절한 커스텀 설정 생성
+
             foreach (var effectConfig in effectConfiguration.effects)
             {
                 if (effectConfig.effectSO != null && effectConfig.useCustomSettings)
                 {
-                    // 현재 설정이 효과 타입과 맞지 않으면 새로 생성
                     bool needsUpdate = false;
-                    
+
                     if (effectConfig.effectSO is HealEffectSO && !(effectConfig.customSettings is HealEffectCustomSettings))
                         needsUpdate = true;
                     else if (effectConfig.effectSO is AttackBuffEffectSO && !(effectConfig.customSettings is AttackBuffEffectCustomSettings))
                         needsUpdate = true;
                     else if (effectConfig.effectSO is ClownPotionEffectSO && !(effectConfig.customSettings is ClownPotionEffectCustomSettings))
                         needsUpdate = true;
-                    else if (effectConfig.effectSO is RerollEffectSO && !(effectConfig.customSettings is RerollEffectCustomSettings))
+                    else if (effectConfig.effectSO is RerollEffectSO && effectConfig.customSettings != null)
                         needsUpdate = true;
                     else if (effectConfig.effectSO is ShieldBreakerEffectSO && !(effectConfig.customSettings is ShieldBreakerEffectCustomSettings))
                         needsUpdate = true;
@@ -95,8 +93,8 @@ namespace Game.ItemSystem.Data
                     else if (effectConfig.effectSO is DiceOfFateEffectSO && !(effectConfig.customSettings is DiceOfFateEffectCustomSettings))
                         needsUpdate = true;
                     else if (effectConfig.effectSO is ReviveEffectSO && effectConfig.customSettings != null)
-                        needsUpdate = true; // ReviveEffectSO는 설정이 필요 없음
-                    
+                        needsUpdate = true;
+
                     if (needsUpdate)
                     {
                         effectConfig.OnEffectSOChanged();
@@ -179,7 +177,7 @@ namespace Game.ItemSystem.Data
             }
             else if (effectSO is RerollEffectSO)
             {
-                customSettings = new RerollEffectCustomSettings();
+                customSettings = null;
             }
             else if (effectSO is ShieldBreakerEffectSO)
             {
@@ -195,7 +193,7 @@ namespace Game.ItemSystem.Data
             }
             else if (effectSO is ReviveEffectSO)
             {
-                customSettings = null; // 설정이 필요 없는 효과
+                customSettings = null;
             }
             else
             {
@@ -233,11 +231,10 @@ namespace Game.ItemSystem.Data
         [Header("버프 효과 설정")]
         [Tooltip("버프량")]
         public int buffAmount = 0;
-        
-        [Tooltip("지속 시간")]
+
+        [Tooltip("지속 시간 (턴)")]
         public int duration = 1;
     }
-
 
     /// <summary>
     /// 광대 물약 랜덤 효과의 커스텀 설정입니다.
@@ -247,11 +244,12 @@ namespace Game.ItemSystem.Data
     {
         [Header("랜덤 효과 설정")]
         [Tooltip("회복 효과가 발생할 확률 (0~100%)")]
+        [Range(0, 100)]
         public int healChance = 50;
-        
+
         [Tooltip("회복할 체력량")]
         public int healAmount = 5;
-        
+
         [Tooltip("입힐 데미지량")]
         public int damageAmount = 5;
     }
@@ -263,11 +261,9 @@ namespace Game.ItemSystem.Data
     public class TimeStopEffectCustomSettings : ItemEffectCustomSettings
     {
         [Header("시간 정지 설정")]
-        [Tooltip("봉인할 적 카드 수 (기본값: 1)")]
+        [Tooltip("봉인할 적 카드 수")]
         public int sealCount = 1;
-        
-        [Tooltip("봉인 지속 시간 (턴 수)")]
-        public int duration = 1;
+
     }
 
     /// <summary>
@@ -277,22 +273,9 @@ namespace Game.ItemSystem.Data
     public class DiceOfFateEffectCustomSettings : ItemEffectCustomSettings
     {
         [Header("운명의 주사위 설정")]
-        [Tooltip("변경할 적 스킬 수 (기본값: 1)")]
+        [Tooltip("변경할 적 스킬 수")]
         public int changeCount = 1;
-        
-        [Tooltip("변경 지속 시간 (턴 수)")]
-        public int duration = 1;
-    }
 
-    /// <summary>
-    /// 리롤 효과의 커스텀 설정입니다.
-    /// </summary>
-    [System.Serializable]
-    public class RerollEffectCustomSettings : ItemEffectCustomSettings
-    {
-        [Header("리롤 효과 설정")]
-        [Tooltip("리롤 수")]
-        public int rerollCount = 0;
     }
 
     /// <summary>
@@ -302,7 +285,21 @@ namespace Game.ItemSystem.Data
     public class ShieldBreakerEffectCustomSettings : ItemEffectCustomSettings
     {
         [Header("실드 브레이커 효과 설정")]
-        [Tooltip("지속 시간")]
+        [Tooltip("지속 시간 (턴)")]
         public int duration = 1;
+    }
+
+    // 리롤과 부활은 커스텀 설정이 필요 없으므로 클래스 자체를 제거하거나
+    // 비워둘 수 있습니다. 하지만 기존 코드 호환성을 위해 남겨둡니다.
+
+    /// <summary>
+    /// 리롤 효과의 커스텀 설정입니다.
+    /// 참고: 리롤은 핸드 전체(3장)를 교체하므로 실제로는 설정이 불필요합니다.
+    /// </summary>
+    [System.Serializable]
+    public class RerollEffectCustomSettings : ItemEffectCustomSettings
+    {
+        // 핸드 크기가 고정이므로 설정 불필요
+        // 호환성을 위해 클래스는 유지하되 필드는 비움
     }
 }

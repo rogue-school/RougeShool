@@ -77,16 +77,13 @@ namespace Game.ItemSystem.Runtime
         {
             if (effectSO is HealEffectSO && settings is HealEffectCustomSettings healSettings)
                 return healSettings.healAmount;
-            
+
             if (effectSO is AttackBuffEffectSO && settings is AttackBuffEffectCustomSettings buffSettings)
                 return buffSettings.buffAmount;
-            
-            if (effectSO is RerollEffectSO && settings is RerollEffectCustomSettings rerollSettings)
-                return rerollSettings.rerollCount;
-            
+
             if (effectSO is ShieldBreakerEffectSO && settings is ShieldBreakerEffectCustomSettings shieldSettings)
                 return shieldSettings.duration;
-            
+
             return 0;
         }
     }

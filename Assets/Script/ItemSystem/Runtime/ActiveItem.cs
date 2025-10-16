@@ -165,25 +165,22 @@ namespace Game.ItemSystem.Runtime
 			
 			return 0;
 		}
-		
-		private int GetCustomEffectPower(ItemEffectCustomSettings settings, ItemEffectSO effect)
-		{
-			if (effect is HealEffectSO && settings is HealEffectCustomSettings healSettings)
-				return healSettings.healAmount;
-			
-			if (effect is AttackBuffEffectSO && settings is AttackBuffEffectCustomSettings buffSettings)
-				return buffSettings.buffAmount;
-			
-			if (effect is RerollEffectSO && settings is RerollEffectCustomSettings rerollSettings)
-				return rerollSettings.rerollCount;
-			
-			if (effect is ShieldBreakerEffectSO && settings is ShieldBreakerEffectCustomSettings shieldSettings)
-				return shieldSettings.duration;
-			
-			return 0;
-		}
-		
-		public List<ItemEffectSO> CreateEffects()
+
+        private int GetCustomEffectPower(ItemEffectCustomSettings settings, ItemEffectSO effect)
+        {
+            if (effect is HealEffectSO && settings is HealEffectCustomSettings healSettings)
+                return healSettings.healAmount;
+
+            if (effect is AttackBuffEffectSO && settings is AttackBuffEffectCustomSettings buffSettings)
+                return buffSettings.buffAmount;
+
+            if (effect is ShieldBreakerEffectSO && settings is ShieldBreakerEffectCustomSettings shieldSettings)
+                return shieldSettings.duration;
+
+            return 0;
+        }
+
+        public List<ItemEffectSO> CreateEffects()
 		{
 			var effects = new List<ItemEffectSO>();
 			
