@@ -146,6 +146,21 @@ namespace Game.CoreSystem.UI
             // 설정창 강제 활성화
             currentSettingsPanel.SetActive(true);
             
+            // 프리팹에 Canvas가 없으면 자동으로 추가하고 최상단 정렬을 보장
+            var settingsCanvas = currentSettingsPanel.GetComponent<Canvas>();
+            if (settingsCanvas == null)
+            {
+                settingsCanvas = currentSettingsPanel.AddComponent<Canvas>();
+            }
+            settingsCanvas.overrideSorting = true;
+            settingsCanvas.sortingOrder = 5000; // 다른 UI 위로 고정
+
+            // 클릭을 위해 GraphicRaycaster 보장
+            if (currentSettingsPanel.GetComponent<UnityEngine.UI.GraphicRaycaster>() == null)
+            {
+                currentSettingsPanel.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+            }
+
             // 설정창을 최상위로 이동 (Sibling Index 최대값으로 설정)
             currentSettingsPanel.transform.SetAsLastSibling();
             
