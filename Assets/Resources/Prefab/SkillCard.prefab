@@ -59,6 +59,8 @@ MonoBehaviour:
   damageText: {fileID: 0}
   descriptionText: {fileID: 0}
   cardArtImage: {fileID: 8351446843463734416}
+  playerCardBackground: {fileID: 6799611311789664058, guid: 648d583137cc2814fbf981765bfaa35f, type: 3}
+  enemyCardBackground: {fileID: 3507824087956637167, guid: 57c20cbf6ed031b48bd55a65b4141d21, type: 3}
   canvasGroup: {fileID: 8920084187647182881}
   enableTooltip: 1
   tooltipDelay: 0.5

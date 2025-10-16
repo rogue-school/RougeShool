@@ -106,11 +106,11 @@ namespace Game.SkillCardSystem.UI
         [SerializeField] private bool verboseLogging = false;
 
         [Header("레이아웃 옵션")]
-        [Tooltip("콘텐츠가 비어 있어도 보장할 최소 높이(px)")]
-        [SerializeField] private float minLayoutHeight = 240f;
+        [Tooltip("최소 높이(px) - 0이면 텍스트 내용에 맞게 자동 조절")]
+        [SerializeField] private float minLayoutHeight = 0f;
 
-        [Tooltip("선호 폭(px). 0이면 프리팹 값 유지")]
-        [SerializeField] private float preferredLayoutWidth = 0f;
+        [Tooltip("선호 폭(px) - 고정 너비로 설정")]
+        [SerializeField] private float preferredLayoutWidth = 300f;
 
 		[Header("정렬 옵션")]
 		[Tooltip("카드와 툴팁 사이의 가로 간격(px). 겹치지 않도록 충분한 간격")]
@@ -180,7 +180,7 @@ namespace Game.SkillCardSystem.UI
 			// 루트 레이아웃 보장
 			_layoutElement = GetComponent<LayoutElement>();
 			if (_layoutElement == null) _layoutElement = gameObject.AddComponent<LayoutElement>();
-			if (_layoutElement.minHeight < minLayoutHeight) _layoutElement.minHeight = minLayoutHeight;
+			if (minLayoutHeight > 0f && _layoutElement.minHeight < minLayoutHeight) _layoutElement.minHeight = minLayoutHeight;
 			if (preferredLayoutWidth > 0f) _layoutElement.preferredWidth = preferredLayoutWidth;
 
 			_contentSizeFitter = GetComponent<ContentSizeFitter>();
@@ -291,7 +291,7 @@ namespace Game.SkillCardSystem.UI
             contentSizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             // 최소/선호 레이아웃 값 적용(프리팹 값 보존 우선)
-            if (layoutElement.minHeight < minLayoutHeight)
+            if (minLayoutHeight > 0f && layoutElement.minHeight < minLayoutHeight)
             {
                 layoutElement.minHeight = minLayoutHeight;
             }

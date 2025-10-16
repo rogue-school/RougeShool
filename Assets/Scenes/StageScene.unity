@@ -800,7 +800,7 @@ GameObject:
   - component: {fileID: 212382552}
   - component: {fileID: 212382551}
   m_Layer: 5
-  m_Name: ItemSlot3
+  m_Name: InventorySlot3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -969,7 +969,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &237540141
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1431,7 +1431,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &398268031
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1501,7 +1501,7 @@ GameObject:
   - component: {fileID: 416086298}
   - component: {fileID: 416086297}
   m_Layer: 5
-  m_Name: ItemSlot4
+  m_Name: InventorySlot4
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3975,7 +3975,7 @@ GameObject:
   - component: {fileID: 1710305652}
   - component: {fileID: 1710305651}
   m_Layer: 5
-  m_Name: ItemSlot2
+  m_Name: InventorySlot2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4239,7 +4239,7 @@ GameObject:
   - component: {fileID: 1905711411}
   - component: {fileID: 1905711410}
   m_Layer: 5
-  m_Name: ItemSlot1
+  m_Name: InventorySlot1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

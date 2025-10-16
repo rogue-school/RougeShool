@@ -93,6 +93,7 @@ MonoBehaviour:
   iconImage: {fileID: 9126797865627375945}
   turnText: {fileID: 6342859401275806798}
   autoHideOnZeroTurn: 1
+  tooltipDelay: 0.2
 --- !u!1 &5201928433154578705
 GameObject:
   m_ObjectHideFlags: 0
@@ -242,8 +243,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4278190080
-  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
+    rgba: 4278190335
+  m_fontColor: {r: 1, g: 0, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:

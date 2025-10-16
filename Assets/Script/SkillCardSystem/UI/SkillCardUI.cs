@@ -25,6 +25,12 @@ namespace Game.SkillCardSystem.UI
         [SerializeField] private TextMeshProUGUI descriptionText;   // 선택사항: 설명 표시
         [SerializeField] private Image cardArtImage;               // 필수: 카드 아트워크
 
+        [Header("카드 배경 이미지")]
+        [Tooltip("플레이어 카드 배경 이미지")]
+        [SerializeField] private Sprite playerCardBackground;
+        [Tooltip("적 카드 배경 이미지")]
+        [SerializeField] private Sprite enemyCardBackground;
+
         [Header("UI 그룹")]
         [SerializeField] private CanvasGroup canvasGroup;
 
@@ -145,7 +151,7 @@ namespace Game.SkillCardSystem.UI
 
             RegisterToTooltipManager();
 
-            // 플레이어 마커 카드인 경우: 자식 UI를 사용하지 않고 부모 이미지에 엠블럼만 표시
+            // 플레이어 마커 카드인 경우: 완전히 보이지 않게 처리
             bool isPlayerMarker = card.CardDefinition?.cardId == "PLAYER_MARKER";
             if (isPlayerMarker)
             {
@@ -155,16 +161,12 @@ namespace Game.SkillCardSystem.UI
                 if (descriptionText != null) descriptionText.gameObject.SetActive(false);
                 if (cardArtImage != null) cardArtImage.gameObject.SetActive(false);
 
-                // 부모(Image) 컴포넌트에 엠블럼 연결
+                // 부모(Image) 컴포넌트 완전히 숨김 처리
                 var rootImage = GetComponent<UnityEngine.UI.Image>();
                 if (rootImage != null)
                 {
-                    var emblem = card.GetArtwork();
-                    if (emblem != null)
-                    {
-                        rootImage.sprite = emblem;
-                    }
-                    // 마커는 상호작용/레이캐스트가 불필요
+                    // 투명하게 만들어서 보이지 않게 함
+                    rootImage.color = new Color(1f, 1f, 1f, 0f);
                     rootImage.raycastTarget = false;
                 }
 
@@ -173,6 +175,7 @@ namespace Game.SkillCardSystem.UI
                 {
                     canvasGroup.interactable = false;
                     canvasGroup.blocksRaycasts = false;
+                    canvasGroup.alpha = 0f; // 완전히 투명하게 설정
                 }
                 if (TryGetComponent(out Game.CombatSystem.DragDrop.CardDragHandler dragHandlerForMarker))
                 {
@@ -223,6 +226,9 @@ namespace Game.SkillCardSystem.UI
                     Debug.LogWarning("[SkillCardUI] 카드 아트워크가 null입니다. 기본 이미지를 설정해주세요.");
                 }
             }
+
+            // 카드 배경 이미지 설정 (플레이어/적 구분)
+            SetCardBackgroundImage(card);
 
             // 소유자에 따라 드래그/상호작용 제어 (드래그는 플레이어만, 툴팁은 모든 카드)
             bool isPlayerCard = card.IsFromPlayer();
@@ -598,6 +604,37 @@ namespace Game.SkillCardSystem.UI
             if (currentTooltipManager != null && card != null)
             {
                 currentTooltipManager.UnregisterCardUI(card);
+            }
+        }
+
+        /// <summary>
+        /// 카드의 소유자에 따라 배경 이미지를 설정합니다.
+        /// </summary>
+        /// <param name="card">설정할 카드</param>
+        private void SetCardBackgroundImage(ISkillCard card)
+        {
+            if (card == null) return;
+
+            // 루트 Image 컴포넌트 가져오기 (카드 배경)
+            var rootImage = GetComponent<UnityEngine.UI.Image>();
+            if (rootImage == null)
+            {
+                Debug.LogWarning("[SkillCardUI] 루트 Image 컴포넌트를 찾을 수 없습니다.");
+                return;
+            }
+
+            // 카드 소유자에 따라 배경 이미지 설정
+            bool isPlayerCard = card.IsFromPlayer();
+            Sprite backgroundSprite = isPlayerCard ? playerCardBackground : enemyCardBackground;
+
+            if (backgroundSprite != null)
+            {
+                rootImage.sprite = backgroundSprite;
+                GameLogger.LogInfo($"[SkillCardUI] 카드 배경 설정: {(isPlayerCard ? "플레이어" : "적")} 카드", GameLogger.LogCategory.UI);
+            }
+            else
+            {
+                GameLogger.LogWarning($"[SkillCardUI] {(isPlayerCard ? "플레이어" : "적")} 카드 배경 이미지가 설정되지 않았습니다.", GameLogger.LogCategory.UI);
             }
         }
 
