@@ -1,3 +1,4 @@
+
 using UnityEngine;
 using Game.ItemSystem.Interface;
 using Game.CharacterSystem.Interface;
@@ -60,33 +61,27 @@ namespace Game.ItemSystem.Effect
         }
     }
 
-
     /// <summary>
     /// 광대 물약 랜덤 효과 커맨드입니다.
     /// </summary>
-    public class ClownPotionEffectCommand : IItemEffectCommand
+    public class ClownPotionEffectCommand : BaseItemEffectCommand
     {
         private int healChance;
         private int healAmount;
         private int damageAmount;
 
         public ClownPotionEffectCommand(int healChance = 50, int healAmount = 5, int damageAmount = 5)
+            : base("광대 물약")
         {
             this.healChance = Mathf.Clamp(healChance, 0, 100);
             this.healAmount = healAmount;
             this.damageAmount = damageAmount;
         }
 
-        public bool Execute(IItemUseContext context)
+        protected override bool ExecuteInternal(IItemUseContext context)
         {
-            if (context?.User == null || context.User.IsDead())
-            {
-                GameLogger.LogError("광대 물약 실패: 사용자가 null이거나 사망 상태입니다", GameLogger.LogCategory.Core);
-                return false;
-            }
-
             bool isHeal = UnityEngine.Random.Range(0, 100) < healChance;
-            
+
             if (isHeal)
             {
                 context.User.Heal(healAmount);
@@ -97,7 +92,7 @@ namespace Game.ItemSystem.Effect
                 context.User.TakeDamage(damageAmount);
                 GameLogger.LogInfo($"광대 물약 효과: 데미지 -{damageAmount} (확률: {100 - healChance}%)", GameLogger.LogCategory.Core);
             }
-            
+
             return true;
         }
     }
@@ -105,26 +100,28 @@ namespace Game.ItemSystem.Effect
     /// <summary>
     /// 부활 효과 커맨드입니다.
     /// </summary>
-    public class ReviveEffectCommand : IItemEffectCommand
+    public class ReviveEffectCommand : BaseItemEffectCommand
     {
-        public bool Execute(IItemUseContext context)
+        public ReviveEffectCommand() : base("부활")
         {
-            if (context?.User == null)
-            {
-                GameLogger.LogError("부활 실패: 사용자가 null입니다", GameLogger.LogCategory.Core);
-                return false;
-            }
+        }
 
+        protected override bool ValidateAdditionalConditions(IItemUseContext context)
+        {
             if (!context.User.IsDead())
             {
                 GameLogger.LogInfo("사용자가 이미 살아있습니다", GameLogger.LogCategory.Core);
                 return false;
             }
+            return true;
+        }
 
+        protected override bool ExecuteInternal(IItemUseContext context)
+        {
             // 최대 체력으로 부활
             int maxHP = context.User.GetMaxHP();
             context.User.Heal(maxHP);
-            
+
             // TODO: 디버프 제거 시스템과 연동
             GameLogger.LogInfo($"부활 완료: 체력 {maxHP}으로 회복, 모든 디버프 제거", GameLogger.LogCategory.Core);
             return true;
@@ -135,23 +132,17 @@ namespace Game.ItemSystem.Effect
     /// 시간 정지 효과 커맨드입니다.
     /// 다음 턴에 사용될 적 카드를 봉인시킵니다.
     /// </summary>
-    public class TimeStopEffectCommand : IItemEffectCommand
+    public class TimeStopEffectCommand : BaseItemEffectCommand
     {
         private int sealCount;
 
-        public TimeStopEffectCommand(int sealCount = 1)
+        public TimeStopEffectCommand(int sealCount = 1) : base("시간 정지")
         {
             this.sealCount = Mathf.Max(1, sealCount);
         }
 
-        public bool Execute(IItemUseContext context)
+        protected override bool ExecuteInternal(IItemUseContext context)
         {
-            if (context?.User == null || context.User.IsDead())
-            {
-                GameLogger.LogError("시간 정지 실패: 사용자가 null이거나 사망 상태입니다", GameLogger.LogCategory.Core);
-                return false;
-            }
-
             // TODO: 실제 시간 정지 시스템과 연동
             GameLogger.LogInfo($"시간 정지 효과: 다음 적 카드 {sealCount}장 봉인", GameLogger.LogCategory.Core);
             return true;
@@ -162,23 +153,17 @@ namespace Game.ItemSystem.Effect
     /// 운명의 주사위 효과 커맨드입니다.
     /// 다음 턴 적이 사용 예정인 스킬을 무작위로 변경시킵니다.
     /// </summary>
-    public class DiceOfFateEffectCommand : IItemEffectCommand
+    public class DiceOfFateEffectCommand : BaseItemEffectCommand
     {
         private int changeCount;
 
-        public DiceOfFateEffectCommand(int changeCount = 1)
+        public DiceOfFateEffectCommand(int changeCount = 1) : base("운명의 주사위")
         {
             this.changeCount = Mathf.Max(1, changeCount);
         }
 
-        public bool Execute(IItemUseContext context)
+        protected override bool ExecuteInternal(IItemUseContext context)
         {
-            if (context?.User == null || context.User.IsDead())
-            {
-                GameLogger.LogError("운명의 주사위 실패: 사용자가 null이거나 사망 상태입니다", GameLogger.LogCategory.Core);
-                return false;
-            }
-
             // TODO: 실제 운명의 주사위 시스템과 연동
             GameLogger.LogInfo($"운명의 주사위 효과: 다음 적 스킬 {changeCount}개를 무작위로 변경", GameLogger.LogCategory.Core);
             return true;
@@ -188,23 +173,17 @@ namespace Game.ItemSystem.Effect
     /// <summary>
     /// 리롤 효과 커맨드입니다.
     /// </summary>
-    public class RerollEffectCommand : IItemEffectCommand
+    public class RerollEffectCommand : BaseItemEffectCommand
     {
         private int rerollCount;
 
-        public RerollEffectCommand(int rerollCount)
+        public RerollEffectCommand(int rerollCount) : base("리롤")
         {
             this.rerollCount = rerollCount;
         }
 
-        public bool Execute(IItemUseContext context)
+        protected override bool ExecuteInternal(IItemUseContext context)
         {
-            if (context?.User == null || context.User.IsDead())
-            {
-                GameLogger.LogError("리롤 실패: 사용자가 null이거나 사망 상태입니다", GameLogger.LogCategory.Core);
-                return false;
-            }
-
             // TODO: 실제 리롤 시스템과 연동
             GameLogger.LogInfo($"리롤 효과: 카드 {rerollCount}장 다시 드로우", GameLogger.LogCategory.Core);
             return true;
@@ -213,28 +192,21 @@ namespace Game.ItemSystem.Effect
 
     /// <summary>
     /// 실드 브레이커 효과 커맨드입니다.
-    /// </summary>
-    public class ShieldBreakerEffectCommand : IItemEffectCommand
+        /// </summary>
+    public class ShieldBreakerEffectCommand : BaseItemEffectCommand
     {
         private int duration;
 
-        public ShieldBreakerEffectCommand(int duration = 1)
+        public ShieldBreakerEffectCommand(int duration = 1) : base("실드 브레이커")
         {
             this.duration = duration;
         }
 
-        public bool Execute(IItemUseContext context)
+        protected override bool ExecuteInternal(IItemUseContext context)
         {
-            if (context?.User == null || context.User.IsDead())
-            {
-                GameLogger.LogError("실드 브레이커 실패: 사용자가 null이거나 사망 상태입니다", GameLogger.LogCategory.Core);
-                return false;
-            }
-
             // TODO: 실제 실드 브레이커 시스템과 연동
             GameLogger.LogInfo($"실드 브레이커 효과: 방어/반격 무시 ({duration}턴)", GameLogger.LogCategory.Core);
             return true;
         }
     }
 }
-

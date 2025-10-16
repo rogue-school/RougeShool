@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63917f595383ae84bafad72d7862ecd5, type: 3}
+  m_Name: "\uC77C\uC12C"
+  m_EditorClassIdentifier: 
+  cardId: "\uC77C\uC12C"
+  displayName: "\uC77C\uC12C"
+  displayNameKO: 
+  description: 
+  artwork: {fileID: -635304477047082008, guid: d80c2c5d019a4f44bab1c3ec58cbfe12, type: 3}
+  presentation:
+    sfxClip: {fileID: 0}
+    visualEffectPrefab: {fileID: 0}
+  configuration:
+    hasDamage: 1
+    damageConfig:
+      baseDamage: 4
+      hits: 1
+      ignoreGuard: 1
+      ignoreCounter: 1
+    hasEffects: 0
+    effects: []
+    ownerPolicy: 0
+  currentAttackPowerStacks: 0
