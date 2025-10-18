@@ -1,8 +1,8 @@
-using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
 using Game.CoreSystem.Utility;
 using Game.ItemSystem.Data;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
 
 namespace Game.ItemSystem.Runtime
 {
@@ -26,6 +26,7 @@ namespace Game.ItemSystem.Runtime
 
         private int slotIndex = -1;
         private ActiveItemDefinition currentItem;
+        private Game.CombatSystem.Manager.TurnManager turnManager;
 
         #endregion
 
@@ -53,6 +54,12 @@ namespace Game.ItemSystem.Runtime
         private void Start()
         {
             SetupButtons();
+            SubscribeToTurnChanges();
+        }
+
+        private void OnDestroy()
+        {
+            UnsubscribeFromTurnChanges();
         }
 
         #endregion
@@ -121,17 +128,10 @@ namespace Game.ItemSystem.Runtime
 
         /// <summary>
         /// 사용 버튼이 클릭되었을 때 호출됩니다.
+        /// ItemService에서 턴 체크를 하므로 여기서는 생략합니다.
         /// </summary>
         private void HandleUseButtonClicked()
         {
-            // 플레이어 턴인지 확인
-            if (!IsPlayerTurn())
-            {
-                GameLogger.LogInfo($"[ActionPopupUI] 적 턴 중이므로 아이템 사용 불가: {currentItem?.DisplayName ?? "알 수 없음"}", GameLogger.LogCategory.UI);
-                ClosePopup();
-                return;
-            }
-
             OnUseButtonClicked?.Invoke(slotIndex);
             ClosePopup();
         }
@@ -147,24 +147,44 @@ namespace Game.ItemSystem.Runtime
 
         #endregion
 
-        #region 유틸리티
+        #region 턴 변경 감지
 
         /// <summary>
-        /// 현재 플레이어 턴인지 확인합니다.
+        /// 턴 변경 이벤트를 구독합니다.
         /// </summary>
-        /// <returns>플레이어 턴이면 true, 아니면 false</returns>
-        private bool IsPlayerTurn()
+        private void SubscribeToTurnChanges()
         {
-            // TurnManager를 씬에서 직접 찾기
-            var turnManager = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
+            turnManager = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
             if (turnManager != null)
             {
-                return turnManager.IsPlayerTurn();
+                turnManager.OnTurnChanged += HandleTurnChanged;
+                GameLogger.LogInfo("[ActionPopupUI] 턴 변경 이벤트 구독 완료", GameLogger.LogCategory.UI);
             }
-            
-            // TurnManager를 찾을 수 없으면 안전하게 false 반환 (아이템 사용 차단)
-            GameLogger.LogWarning("[ActionPopupUI] TurnManager를 찾을 수 없습니다. 아이템 사용을 차단합니다.", GameLogger.LogCategory.UI);
-            return false;
+            else
+            {
+                GameLogger.LogWarning("[ActionPopupUI] TurnManager를 찾을 수 없습니다", GameLogger.LogCategory.UI);
+            }
+        }
+
+        /// <summary>
+        /// 턴 변경 이벤트 구독을 해제합니다.
+        /// </summary>
+        private void UnsubscribeFromTurnChanges()
+        {
+            if (turnManager != null)
+            {
+                turnManager.OnTurnChanged -= HandleTurnChanged;
+                GameLogger.LogInfo("[ActionPopupUI] 턴 변경 이벤트 구독 해제", GameLogger.LogCategory.UI);
+            }
+        }
+
+        /// <summary>
+        /// 턴이 변경되면 팝업을 자동으로 닫습니다.
+        /// </summary>
+        private void HandleTurnChanged(Game.CombatSystem.Manager.TurnManager.TurnType newTurn)
+        {
+            GameLogger.LogWarning($"[ActionPopupUI] ⚠️ 턴 변경 감지 ({newTurn}) - 팝업 강제 닫기", GameLogger.LogCategory.UI);
+            ClosePopup();
         }
 
         #endregion

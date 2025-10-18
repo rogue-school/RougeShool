@@ -29,9 +29,13 @@ namespace Game.ItemSystem.Runtime
 	// 동적으로 생성된 아이템들
 	private ActiveItemUI[] itemUIs = new ActiveItemUI[4];
 
+	// 턴 매니저
+	private Game.CombatSystem.Manager.TurnManager turnManager;
+
 		private void Start()
 		{
 			InitializeInventory();
+			SubscribeToTurnChanges();
 		}
 
 		private void Update()
@@ -58,7 +62,9 @@ namespace Game.ItemSystem.Runtime
 			_itemService.OnActiveItemAdded -= HandleItemAdded;
 			_itemService.OnActiveItemRemoved -= HandleItemRemoved;
 			_itemService.OnActiveItemUsed -= HandleItemUsed;
-			
+
+			UnsubscribeFromTurnChanges();
+
 			// 아이템 프리팹들 정리
 			ClearAllItemPrefabs();
 		}
@@ -341,6 +347,39 @@ namespace Game.ItemSystem.Runtime
 				HideAllActionPopups();
 				GameLogger.LogInfo("[Inventory] 팝업 외부 클릭으로 모든 팝업 닫기", GameLogger.LogCategory.UI);
 			}
+		}
+
+		/// <summary>
+		/// 턴 변경 이벤트를 구독합니다.
+		/// </summary>
+		private void SubscribeToTurnChanges()
+		{
+			turnManager = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
+			if (turnManager != null)
+			{
+				turnManager.OnTurnChanged += HandleTurnChanged;
+				GameLogger.LogInfo("[InventoryPanel] 턴 변경 이벤트 구독 완료", GameLogger.LogCategory.UI);
+			}
+		}
+
+		/// <summary>
+		/// 턴 변경 이벤트 구독을 해제합니다.
+		/// </summary>
+		private void UnsubscribeFromTurnChanges()
+		{
+			if (turnManager != null)
+			{
+				turnManager.OnTurnChanged -= HandleTurnChanged;
+			}
+		}
+
+		/// <summary>
+		/// 턴이 변경되면 모든 팝업을 닫습니다.
+		/// </summary>
+		private void HandleTurnChanged(Game.CombatSystem.Manager.TurnManager.TurnType newTurn)
+		{
+			GameLogger.LogWarning($"[InventoryPanel] ⚠️ 턴 변경 감지 ({newTurn}) - 모든 팝업 강제 닫기", GameLogger.LogCategory.UI);
+			HideAllActionPopups();
 		}
 
 		#endregion

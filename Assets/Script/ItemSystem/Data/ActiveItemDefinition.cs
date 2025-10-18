@@ -2,9 +2,25 @@ using System.Collections.Generic;
 using UnityEngine;
 using Game.CoreSystem.Utility;
 using Game.ItemSystem.Effect;
+using Game.ItemSystem.Interface;
 
 namespace Game.ItemSystem.Data
 {
+    /// <summary>
+    /// 아이템 타겟 타입을 정의합니다.
+    /// </summary>
+    public enum ItemTargetType
+    {
+        /// <summary>자신에게 사용 (회복, 버프 등)</summary>
+        Self,
+
+        /// <summary>적에게 사용 (디버프, 방해 효과 등)</summary>
+        Enemy,
+
+        /// <summary>양쪽 모두에게 적용 (특수 아이템)</summary>
+        Both
+    }
+
     /// <summary>
     /// 액티브 아이템 정의 ScriptableObject입니다.
     /// 사용 가능한 아이템의 데이터를 정의합니다.
@@ -12,10 +28,18 @@ namespace Game.ItemSystem.Data
     [CreateAssetMenu(fileName = "ActiveItem", menuName = "ItemSystem/ActiveItemDefinition")]
     public class ActiveItemDefinition : ItemDefinition
     {
+        [Header("아이템 타겟 설정")]
+        [Tooltip("아이템의 대상 타입 (Self: 자신, Enemy: 적, Both: 양쪽)")]
+        public ItemTargetType targetType = ItemTargetType.Self;
+
+        [Header("지속 효과 설정")]
+        [Tooltip("아이템 효과의 턴 감소 정책 (Immediate: 즉시, EveryTurn: 매 턴, TargetTurnOnly: 대상 턴만)")]
+        public ItemEffectTurnPolicy turnPolicy = ItemEffectTurnPolicy.Immediate;
+
         [Header("연출 구성")]
         [Tooltip("아이템 연출 설정")]
         public ItemPresentation presentation = new();
-        
+
         [Header("효과 구성")]
         [Tooltip("아이템 효과 설정")]
         public ItemEffectConfiguration effectConfiguration = new();

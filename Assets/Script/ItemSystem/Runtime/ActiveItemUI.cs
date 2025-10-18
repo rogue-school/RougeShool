@@ -1,10 +1,9 @@
-using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
-using UnityEngine.EventSystems;
+using Game.CoreSystem.Utility;
 using Game.ItemSystem.Data;
 using Game.ItemSystem.Utility;
-using Game.CoreSystem.Utility;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 using Zenject;
 
 namespace Game.ItemSystem.Runtime
@@ -15,15 +14,15 @@ namespace Game.ItemSystem.Runtime
     /// </summary>
     public class ActiveItemUI : MonoBehaviour, IPointerClickHandler
     {
-    #region UI 참조
+        #region UI 참조
 
-    [Header("아이템 UI 구성 요소")]
-    [SerializeField] private Image itemIcon;
+        [Header("아이템 UI 구성 요소")]
+        [SerializeField] private Image itemIcon;
 
-    [Header("액션 팝업 프리팹")]
-    [SerializeField] private GameObject actionPopupPrefab;
+        [Header("액션 팝업 프리팹")]
+        [SerializeField] private GameObject actionPopupPrefab;
 
-    #endregion
+        #endregion
 
         #region 상태
 
@@ -60,24 +59,24 @@ namespace Game.ItemSystem.Runtime
         private void Start()
         {
             GameLogger.LogInfo($"[ActiveItemUI] Start() 호출됨 - GameObject: {gameObject.name}", GameLogger.LogCategory.UI);
-            
+
             // 디버깅: 컴포넌트 상태 확인
             var image = GetComponent<Image>();
             var button = GetComponent<Button>();
             var canvasGroup = GetComponent<CanvasGroup>();
-            
+
             GameLogger.LogInfo($"[ActiveItemUI] 컴포넌트 상태 - Image: {image != null}, Button: {button != null}, CanvasGroup: {canvasGroup != null}", GameLogger.LogCategory.UI);
-            
+
             if (image != null)
             {
                 GameLogger.LogInfo($"[ActiveItemUI] Image 상태 - RaycastTarget: {image.raycastTarget}, Enabled: {image.enabled}", GameLogger.LogCategory.UI);
             }
-            
+
             if (canvasGroup != null)
             {
                 GameLogger.LogInfo($"[ActiveItemUI] CanvasGroup 상태 - Interactable: {canvasGroup.interactable}, BlocksRaycasts: {canvasGroup.blocksRaycasts}", GameLogger.LogCategory.UI);
             }
-            
+
             InitializeItemUI();
             SetupButtonEvent();
             GameLogger.LogInfo($"[ActiveItemUI] Start() 완료 - GameObject: {gameObject.name}", GameLogger.LogCategory.UI);
@@ -102,7 +101,7 @@ namespace Game.ItemSystem.Runtime
                     itemIcon = buttonChild.GetComponent<Image>();
                     GameLogger.LogInfo("[ActiveItemUI] 자식 Button에서 Image 컴포넌트를 찾았습니다", GameLogger.LogCategory.UI);
                 }
-                
+
                 // 자식에서 못 찾으면 자신에게서 찾기
                 if (itemIcon == null)
                 {
@@ -152,9 +151,17 @@ namespace Game.ItemSystem.Runtime
 
         /// <summary>
         /// 액션 팝업을 생성하고 표시합니다.
+        /// ⚠️ 이 메서드는 반드시 플레이어 턴에만 호출되어야 합니다.
         /// </summary>
         private void ShowActionPopup()
         {
+            // ⭐ 2차 방어 - 팝업 생성 전 한 번 더 턴 체크
+            if (!IsPlayerTurn())
+            {
+                GameLogger.LogError("[ActiveItemUI] ❌ ShowActionPopup 호출 실패: 플레이어 턴이 아닙니다!", GameLogger.LogCategory.UI);
+                return;
+            }
+
             // 기존 팝업이 있으면 제거
             CloseActionPopup();
 
@@ -313,6 +320,7 @@ namespace Game.ItemSystem.Runtime
 
         /// <summary>
         /// 포인터 클릭 이벤트를 처리합니다. (IPointerClickHandler 구현)
+        /// 플레이어 턴에만 팝업을 표시합니다.
         /// </summary>
         /// <param name="eventData">포인터 이벤트 데이터</param>
         public void OnPointerClick(PointerEventData eventData)
@@ -320,23 +328,29 @@ namespace Game.ItemSystem.Runtime
             // 좌클릭만 처리
             if (eventData.button == PointerEventData.InputButton.Left)
             {
-                // 플레이어 턴인지 확인
+                // ⭐ 강제 턴 체크 - 플레이어 턴이 아니면 팝업 자체를 열지 않음
                 if (!IsPlayerTurn())
                 {
-                    GameLogger.LogInfo($"[ActiveItemUI] 적 턴 중이므로 아이템 사용 불가: {currentItem?.DisplayName ?? "알 수 없음"}", GameLogger.LogCategory.UI);
+                    GameLogger.LogWarning($"[ActiveItemUI] ❌ 적 턴 중이므로 아이템 팝업을 열 수 없습니다: {currentItem?.DisplayName ?? "알 수 없음"}", GameLogger.LogCategory.UI);
+                    return; // 팝업 자체를 열지 않음
+                }
+
+                // 아이템이 없으면 무시
+                if (currentItem == null)
+                {
+                    GameLogger.LogInfo($"[ActiveItemUI] 슬롯 {slotIndex}에 아이템이 없습니다", GameLogger.LogCategory.UI);
                     return;
                 }
 
+                // 이벤트 발송
                 if (OnItemClicked != null)
                 {
                     OnItemClicked.Invoke(slotIndex);
                 }
 
-                // 아이템이 있으면 액션 팝업 표시
-                if (currentItem != null)
-                {
-                    ShowActionPopup();
-                }
+                // 플레이어 턴에만 액션 팝업 표시
+                GameLogger.LogInfo($"[ActiveItemUI] ✅ 플레이어 턴 확인 완료 - 팝업 표시: {currentItem.DisplayName}", GameLogger.LogCategory.UI);
+                ShowActionPopup();
             }
         }
 
@@ -350,14 +364,14 @@ namespace Game.ItemSystem.Runtime
             {
                 return turnManager.IsPlayerTurn();
             }
-            
+
             // TurnManager가 없으면 씬에서 직접 찾기
             var foundTurnManager = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
             if (foundTurnManager != null)
             {
                 return foundTurnManager.IsPlayerTurn();
             }
-            
+
             // TurnManager를 찾을 수 없으면 안전하게 false 반환 (아이템 사용 차단)
             GameLogger.LogWarning("[ActiveItemUI] TurnManager를 찾을 수 없습니다. 아이템 사용을 차단합니다.", GameLogger.LogCategory.UI);
             return false;
@@ -447,7 +461,7 @@ namespace Game.ItemSystem.Runtime
 
             var presentationInfo = new System.Text.StringBuilder();
             presentationInfo.AppendLine("연출:");
-            
+
             if (currentItem.Presentation.sfxClip != null)
             {
                 presentationInfo.AppendLine($"- 사운드: {currentItem.Presentation.sfxClip.name}");
@@ -456,7 +470,7 @@ namespace Game.ItemSystem.Runtime
             {
                 presentationInfo.AppendLine("- 사운드: 없음");
             }
-            
+
             if (currentItem.Presentation.visualEffectPrefab != null)
             {
                 presentationInfo.AppendLine($"- 이펙트: {currentItem.Presentation.visualEffectPrefab.name}");
@@ -465,7 +479,7 @@ namespace Game.ItemSystem.Runtime
             {
                 presentationInfo.AppendLine("- 이펙트: 없음");
             }
-            
+
             return presentationInfo.ToString();
         }
 
@@ -488,7 +502,7 @@ namespace Game.ItemSystem.Runtime
             fullInfo.Append(GetEffectInfo());
             fullInfo.AppendLine();
             fullInfo.Append(GetPresentationInfo());
-            
+
             return fullInfo.ToString();
         }
 

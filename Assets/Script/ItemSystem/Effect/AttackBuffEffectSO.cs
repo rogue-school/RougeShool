@@ -19,7 +19,10 @@ namespace Game.ItemSystem.Effect
 
         public override IItemEffectCommand CreateEffectCommand(int power)
         {
-            return new AttackBuffEffectCommand(buffAmount + power, duration);
+            // power 파라미터가 이미 최종 buffAmount입니다 (CustomSettings에서 가져옴)
+            // SO의 buffAmount는 기본값일 뿐, 중복 더하기하면 안 됩니다!
+            int finalBuffAmount = power > 0 ? power : buffAmount; // power가 있으면 사용, 없으면 기본값
+            return new AttackBuffEffectCommand(finalBuffAmount, duration);
         }
 
         public override void ApplyEffect(IItemUseContext context, int value)

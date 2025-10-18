@@ -1,14 +1,11 @@
 
-using UnityEngine;
-using Game.ItemSystem.Interface;
-using Game.CharacterSystem.Interface;
-using Game.CoreSystem.Utility;
-using Game.ItemSystem.Utility;
-using Game.CombatSystem.Slot;
 using Game.CombatSystem.Data;
-using Game.SkillCardSystem.Slot;
+using Game.CombatSystem.Slot;
+using Game.CoreSystem.Utility;
+using Game.ItemSystem.Interface;
 using Game.SkillCardSystem.Interface;
-using Game.CombatSystem.Interface;
+using Game.SkillCardSystem.Slot;
+using UnityEngine;
 using Zenject;
 
 namespace Game.ItemSystem.Effect
@@ -61,20 +58,23 @@ namespace Game.ItemSystem.Effect
 
         protected override bool ExecuteInternal(IItemUseContext context)
         {
+            // 아이템 정의를 ActiveItemDefinition으로 캐스팅
+            var activeItemDef = context.ItemDefinition as Game.ItemSystem.Data.ActiveItemDefinition;
+            var turnPolicy = activeItemDef?.turnPolicy ?? Interface.ItemEffectTurnPolicy.TargetTurnOnly;
+            var itemIcon = context.ItemDefinition?.Icon;
+
             // 공격력 버프 효과 생성 및 적용
-            var attackBuffEffect = new AttackPowerBuffEffect(buffAmount, duration);
+            var attackBuffEffect = new AttackPowerBuffEffect(buffAmount, duration, turnPolicy, itemIcon);
             context.User.RegisterPerTurnEffect(attackBuffEffect);
-            
+
             // UI에 버프 아이콘 표시 (아이템 이미지 사용)
             if (context.User is Game.CharacterSystem.Core.PlayerCharacter playerCharacter)
             {
-                // 아이템 이미지를 버프 아이콘으로 사용
-                var itemIcon = context.ItemDefinition?.Icon;
                 GameLogger.LogInfo($"공격력 물약 아이콘: {itemIcon?.name ?? "null"}, 아이템: {context.ItemDefinition?.DisplayName ?? "null"}", GameLogger.LogCategory.Core);
                 playerCharacter.AddBuffDebuffIcon("AttackPowerBuff", itemIcon, true, duration);
             }
-            
-            GameLogger.LogInfo($"공격력 버프 적용: +{buffAmount} ({duration}턴)", GameLogger.LogCategory.Core);
+
+            GameLogger.LogInfo($"공격력 버프 적용: +{buffAmount} ({duration}턴, 정책: {turnPolicy})", GameLogger.LogCategory.Core);
             return true;
         }
     }
@@ -145,7 +145,7 @@ namespace Game.ItemSystem.Effect
             {
                 var buffs = characterBase.GetBuffs();
                 var debuffsToRemove = new System.Collections.Generic.List<Game.SkillCardSystem.Interface.IPerTurnEffect>();
-                
+
                 foreach (var effect in buffs)
                 {
                     // 디버프 효과들만 제거 (버프는 유지)
@@ -154,7 +154,7 @@ namespace Game.ItemSystem.Effect
                         debuffsToRemove.Add(effect);
                     }
                 }
-                
+
                 foreach (var debuff in debuffsToRemove)
                 {
                     // CharacterBase에서 디버프 제거 메서드가 있다면 사용
@@ -183,34 +183,38 @@ namespace Game.ItemSystem.Effect
 
         protected override bool ExecuteInternal(IItemUseContext context)
         {
-            // 적에게 스턴 디버프 적용 (아이템 이미지 사용)
-            // 턴 순서 문제 해결: 2턴으로 설정하여 적 턴에 스턴이 유지되도록 함
             var itemIcon = context.ItemDefinition?.Icon;
-            GameLogger.LogInfo($"타임 스톱 스크롤 시작: 대상={context.Target?.GetCharacterName()}, 아이콘={itemIcon?.name ?? "null"}", GameLogger.LogCategory.Core);
-            
-            // 턴 순서 문제 해결을 위해 2턴으로 설정
-            // 1턴: 플레이어 턴에서 적용
-            // 2턴: 적 턴에서 스턴 유지 (적 행동 차단)
-            var stunDebuff = new Game.SkillCardSystem.Effect.StunDebuff(2, itemIcon);
-            bool success = context.Target.RegisterStatusEffect(stunDebuff);
-            
-            GameLogger.LogInfo($"스턴 디버프 등록 결과: {success}, 남은 턴: {stunDebuff.RemainingTurns}", GameLogger.LogCategory.Core);
-            
+
+            // 적 캐릭터를 직접 찾기 (context.Target 무시)
+            var enemyManager = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
+            if (enemyManager == null)
+            {
+                GameLogger.LogError($"[TimeStopEffect] EnemyManager를 찾을 수 없습니다", GameLogger.LogCategory.Core);
+                return false;
+            }
+
+            var enemyCharacter = enemyManager.GetCurrentEnemy();
+            if (enemyCharacter == null)
+            {
+                GameLogger.LogError($"[TimeStopEffect] 현재 적 캐릭터를 찾을 수 없습니다", GameLogger.LogCategory.Core);
+                return false;
+            }
+
+            GameLogger.LogInfo($"[TimeStopEffect] 적 캐릭터 발견: {enemyCharacter.GetCharacterName()}, 플레이어인가={enemyCharacter.IsPlayerControlled()}", GameLogger.LogCategory.Core);
+
+            // StunDebuff는 매 턴 감소하므로 1턴으로 설정
+            // EveryTurn 정책: 플레이어 턴(적용) → 적 턴(감소하며 스턴 유지) → 만료
+            var stunDebuff = new Game.SkillCardSystem.Effect.StunDebuff(1, itemIcon);
+            bool success = enemyCharacter.RegisterStatusEffect(stunDebuff);
+
             if (success)
             {
-                // UI에 디버프 아이콘 표시 (적에게 적용)
-                if (context.Target is Game.CharacterSystem.Core.EnemyCharacter enemyCharacter)
-                {
-                    // 적 캐릭터에도 버프/디버프 아이콘 시스템이 있다면 사용
-                    // enemyCharacter.AddBuffDebuffIcon("TimeStopStun", itemIcon, false, 2);
-                }
-                
-                GameLogger.LogInfo($"타임 스톱 스크롤 적용 완료: {context.Target.GetCharacterName()}에게 2턴 스턴 (적 턴 차단)", GameLogger.LogCategory.Core);
+                GameLogger.LogInfo($"[TimeStopEffect] 타임 스톱 스크롤 적용 완료: {enemyCharacter.GetCharacterName()}에게 1턴 스턴", GameLogger.LogCategory.Core);
                 return true;
             }
             else
             {
-                GameLogger.LogWarning($"타임 스톱 스크롤 적용 실패: {context.Target.GetCharacterName()}이 보호 상태", GameLogger.LogCategory.Core);
+                GameLogger.LogWarning($"[TimeStopEffect] 타임 스톱 스크롤 적용 실패: {enemyCharacter.GetCharacterName()}이 보호 상태", GameLogger.LogCategory.Core);
                 return false;
             }
         }
@@ -231,44 +235,20 @@ namespace Game.ItemSystem.Effect
 
         protected override bool ExecuteInternal(IItemUseContext context)
         {
-            // Zenject DI Container를 통해 필요한 서비스들에 접근
-            var diContainer = ProjectContext.Instance?.Container;
-            if (diContainer == null)
-            {
-                GameLogger.LogError("Zenject DI Container를 찾을 수 없습니다", GameLogger.LogCategory.Core);
-                return false;
-            }
-
             // SlotRegistry를 통해 CombatSlotRegistry 접근
             var slotRegistry = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.Slot.SlotRegistry>();
             if (slotRegistry == null)
             {
-                GameLogger.LogError("SlotRegistry를 찾을 수 없습니다", GameLogger.LogCategory.Core);
+                GameLogger.LogWarning("[DiceOfFate] SlotRegistry를 찾을 수 없습니다. 전투 씬이 아닌 것으로 보입니다", GameLogger.LogCategory.Core);
                 return false;
             }
 
-            // SlotRegistry에서 CombatSlotRegistry 가져오기 (리플렉션 사용)
-            var combatSlotRegistryField = typeof(Game.CombatSystem.Slot.SlotRegistry).GetField("combatSlotRegistry", 
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            
-            if (combatSlotRegistryField == null)
-            {
-                GameLogger.LogError("SlotRegistry에서 combatSlotRegistry 필드를 찾을 수 없습니다", GameLogger.LogCategory.Core);
-                return false;
-            }
-
-            var combatSlotRegistry = combatSlotRegistryField.GetValue(slotRegistry) as Game.CombatSystem.Slot.CombatSlotRegistry;
+            // SlotRegistry에서 CombatSlotRegistry 가져오기 (public 메서드 사용)
+            var combatSlotRegistry = slotRegistry.GetCombatSlotRegistry();
             if (combatSlotRegistry == null)
             {
-                GameLogger.LogError("CombatSlotRegistry를 SlotRegistry에서 가져올 수 없습니다", GameLogger.LogCategory.Core);
+                GameLogger.LogWarning("[DiceOfFate] CombatSlotRegistry를 찾을 수 없습니다", GameLogger.LogCategory.Core);
                 return false;
-            }
-
-            // SkillCardFactory도 DI Container를 통해 가져오기
-            var skillCardFactory = diContainer.TryResolve<ISkillCardFactory>();
-            if (skillCardFactory == null)
-            {
-                GameLogger.LogWarning("ISkillCardFactory를 DI Container에서 찾을 수 없습니다. 임시 구현으로 진행합니다", GameLogger.LogCategory.Core);
             }
 
             // 대기 슬롯에서 적의 가장 앞 순서 카드 찾기
@@ -338,10 +318,10 @@ namespace Game.ItemSystem.Effect
 
             // 새 카드 생성 및 배치 (임시로 로그만 출력)
             GameLogger.LogInfo($"운명의 주사위 적용 예정: 적의 {targetSlot} 카드 {targetCard.GetCardName()} → {randomEntry.definition.displayName}", GameLogger.LogCategory.Core);
-            
+
             // TODO: SkillCardFactory를 통해 새 카드 생성 및 배치
             // 현재는 임시 구현으로 로그만 출력
-            
+
             return true;
         }
     }
@@ -377,7 +357,7 @@ namespace Game.ItemSystem.Effect
 
             // 현재 핸드의 카드 수 확인
             int currentHandCount = 0;
-            var handSlots = new[] { 
+            var handSlots = new[] {
                 SkillCardSlotPosition.PLAYER_SLOT_1,
                 SkillCardSlotPosition.PLAYER_SLOT_2,
                 SkillCardSlotPosition.PLAYER_SLOT_3
@@ -411,7 +391,7 @@ namespace Game.ItemSystem.Effect
 
     /// <summary>
     /// 실드 브레이커 효과 커맨드입니다.
-        /// </summary>
+    /// </summary>
     public class ShieldBreakerEffectCommand : BaseItemEffectCommand
     {
         private int duration;
@@ -423,26 +403,40 @@ namespace Game.ItemSystem.Effect
 
         protected override bool ExecuteInternal(IItemUseContext context)
         {
-            // 실드 브레이커 디버프 효과 생성 및 적용 (아이템 이미지 사용)
+            // 아이템 정의를 ActiveItemDefinition으로 캐스팅
+            var activeItemDef = context.ItemDefinition as Game.ItemSystem.Data.ActiveItemDefinition;
+            var turnPolicy = activeItemDef?.turnPolicy ?? Interface.ItemEffectTurnPolicy.EveryTurn;
             var itemIcon = context.ItemDefinition?.Icon;
-            var shieldBreakerEffect = new ShieldBreakerDebuffEffect(duration, itemIcon);
-            bool success = context.Target.RegisterStatusEffect(shieldBreakerEffect);
-            
+
+            // 적 캐릭터를 직접 찾기 (context.Target 무시)
+            var enemyManager = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
+            if (enemyManager == null)
+            {
+                GameLogger.LogError($"[ShieldBreakerEffect] EnemyManager를 찾을 수 없습니다", GameLogger.LogCategory.Core);
+                return false;
+            }
+
+            var enemyCharacter = enemyManager.GetCurrentEnemy();
+            if (enemyCharacter == null)
+            {
+                GameLogger.LogError($"[ShieldBreakerEffect] 현재 적 캐릭터를 찾을 수 없습니다", GameLogger.LogCategory.Core);
+                return false;
+            }
+
+            GameLogger.LogInfo($"[ShieldBreakerEffect] 적 캐릭터 발견: {enemyCharacter.GetCharacterName()}, 정책={turnPolicy}", GameLogger.LogCategory.Core);
+
+            // 실드 브레이커 디버프 효과 생성 및 적용
+            var shieldBreakerEffect = new ShieldBreakerDebuffEffect(duration, turnPolicy, itemIcon);
+            bool success = enemyCharacter.RegisterStatusEffect(shieldBreakerEffect);
+
             if (success)
             {
-                // UI에 디버프 아이콘 표시
-                if (context.Target is Game.CharacterSystem.Core.EnemyCharacter enemyCharacter)
-                {
-                    // 적 캐릭터에도 버프/디버프 아이콘 시스템이 있다면 사용
-                    // enemyCharacter.AddBuffDebuffIcon("ShieldBreaker", itemIcon, false, duration);
-                }
-                
-                GameLogger.LogInfo($"실드 브레이커 적용: {context.Target.GetCharacterName()}에게 {duration}턴 디버프", GameLogger.LogCategory.Core);
+                GameLogger.LogInfo($"[ShieldBreakerEffect] 실드 브레이커 적용 완료: {enemyCharacter.GetCharacterName()}에게 {duration}턴 디버프 (정책: {turnPolicy})", GameLogger.LogCategory.Core);
                 return true;
             }
             else
             {
-                GameLogger.LogWarning($"실드 브레이커 적용 실패: {context.Target.GetCharacterName()}이 보호 상태", GameLogger.LogCategory.Core);
+                GameLogger.LogWarning($"[ShieldBreakerEffect] 실드 브레이커 적용 실패: {enemyCharacter.GetCharacterName()}이 보호 상태", GameLogger.LogCategory.Core);
                 return false;
             }
         }

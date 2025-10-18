@@ -12,10 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d10d2d327137db7439e30c5872e2329a, type: 3}
   m_Name: "008_\uBD80\uD65C\uC758 \uC9D5\uD45C"
   m_EditorClassIdentifier: 
-  itemId: "008_\uBD80\uD65C\uC758_\uC9D5\uD45C"
+  itemId: 008
   displayName: "\uBD80\uD65C\uC758 \uC9D5\uD45C"
   description: 
   icon: {fileID: 8470695689447518132, guid: 49e04e00586ed84478377eb1c657bb6a, type: 3}
+  targetType: 0
+  turnPolicy: 0
   presentation:
     sfxClip: {fileID: 0}
     visualEffectPrefab: {fileID: 0}

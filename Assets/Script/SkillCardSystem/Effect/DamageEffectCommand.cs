@@ -1,13 +1,11 @@
-using UnityEngine;
-using Game.SkillCardSystem.Interface;
-using Game.CombatSystem.Interface;
-using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Core;
-using Game.CoreSystem.Audio;
+using Game.CharacterSystem.Interface;
+using Game.CombatSystem.Interface;
 using Game.CoreSystem.Interface;
 using Game.CoreSystem.Utility;
 using Game.ItemSystem.Interface;
-using Zenject;
+using Game.SkillCardSystem.Interface;
+using UnityEngine;
 
 namespace Game.SkillCardSystem.Effect
 {
@@ -23,13 +21,13 @@ namespace Game.SkillCardSystem.Effect
         private bool ignoreCounter;
         private readonly IAudioManager audioManager;
         private readonly IItemService itemService;
-        
+
         public DamageEffectCommand(IAudioManager audioManager, IItemService itemService)
         {
             this.audioManager = audioManager;
             this.itemService = itemService;
         }
-        
+
         /// <summary>
         /// 데미지 효과 명령을 생성합니다.
         /// </summary>
@@ -45,7 +43,7 @@ namespace Game.SkillCardSystem.Effect
             this.audioManager = null; // 의존성 주입이 아닌 경우
             this.itemService = null; // 의존성 주입이 아닌 경우
         }
-        
+
         /// <summary>
         /// 데미지 효과를 실행합니다.
         /// </summary>
@@ -58,7 +56,7 @@ namespace Game.SkillCardSystem.Effect
                 Debug.LogWarning("[DamageEffectCommand] 대상이 null입니다. 데미지 적용 실패.");
                 return;
             }
-            
+
             var target = context.Target;
             var source = context.Source;
             var totalDamage = 0;
@@ -68,38 +66,46 @@ namespace Game.SkillCardSystem.Effect
             if (context.Card is IAttackPowerStackProvider stackProvider)
             {
                 int currentStacks = stackProvider.GetAttackPowerStack();
-                
+
                 // 방식 1: 선형 증가 (현재 방식)
                 attackBonus = currentStacks;
-                
+
                 // 방식 2: 배수 증가 (주석 해제하여 사용 가능)
                 // attackBonus = damageAmount * currentStacks;
-                
+
                 // 방식 3: 지수적 증가 (주석 해제하여 사용 가능)
                 // attackBonus = damageAmount * (int)Mathf.Pow(2, currentStacks) - damageAmount;
-                
+
                 // 방식 4: 제곱 증가 (주석 해제하여 사용 가능)
                 // attackBonus = currentStacks * currentStacks;
-                
+
                 // GameLogger.LogInfo($"[DamageEffectCommand] 스택 기반 데미지 계산 - 기본: {damageAmount}, 스택: {currentStacks}, 보너스: {attackBonus}", 
                 //    GameLogger.LogCategory.Combat);
             }
-            
+
             // 1.5) 아이템 공격력 버프 확인(시전자 기준)
             int itemAttackBonus = 0;
             if (source is Game.CharacterSystem.Core.CharacterBase characterBase)
             {
                 // AttackPowerBuffEffect가 있는지 확인하고 보너스 적용
                 var attackBuffEffects = characterBase.GetBuffs();
+                int buffCount = 0;
                 foreach (var effect in attackBuffEffects)
                 {
                     if (effect is Game.ItemSystem.Effect.AttackPowerBuffEffect attackBuff)
                     {
-                        itemAttackBonus += attackBuff.GetAttackPowerBonus();
+                        int bonus = attackBuff.GetAttackPowerBonus();
+                        itemAttackBonus += bonus;
+                        buffCount++;
+                        GameLogger.LogInfo($"[DamageCalc] 🔍 AttackPowerBuffEffect #{buffCount} 발견: +{bonus}, 누적: {itemAttackBonus}", GameLogger.LogCategory.Combat);
                     }
                 }
+                if (buffCount > 0)
+                {
+                    GameLogger.LogInfo($"[DamageCalc] 🔍 총 {buffCount}개의 공격력 버프 발견, 합계: +{itemAttackBonus}", GameLogger.LogCategory.Combat);
+                }
             }
-            
+
             // 2) 성급 시스템 데미지 보너스 확인
             int starBonus = 0;
             if (itemService != null && context.Card != null)
@@ -107,8 +113,11 @@ namespace Game.SkillCardSystem.Effect
                 string skillId = context.Card.GetCardName(); // 스킬 이름을 ID로 사용
                 starBonus = itemService.GetSkillDamageBonus(skillId);
             }
-            
+
             int effectiveDamage = damageAmount + attackBonus + itemAttackBonus + starBonus;
+
+            // 🔍 디버그: 최종 데미지 계산 상세 로그
+            GameLogger.LogInfo($"[DamageCalc] 💥 기본:{damageAmount} + 스택:{attackBonus} + 아이템:{itemAttackBonus} + 성급:{starBonus} = 최종:{effectiveDamage}", GameLogger.LogCategory.Combat);
 
             // 반격 버프 처리: 대상이 CounterBuff 보유 시, 들어오는 피해의 절반만 받고 나머지 절반을 공격자에게 반사
             // 정수 절삭/올림 규칙: 들어오는 피해를 ceil(절반)은 수신, floor(절반)은 반사
@@ -122,7 +131,7 @@ namespace Game.SkillCardSystem.Effect
             {
                 targetHasCounter = false;
             }
-            
+
             // 실드 브레이커 디버프 확인: 공격자가 실드 브레이커 효과를 가지고 있으면 반격 무시
             bool hasShieldBreaker = false;
             if (source is Game.CharacterSystem.Core.CharacterBase sourceCharacter)
@@ -137,13 +146,13 @@ namespace Game.SkillCardSystem.Effect
                     }
                 }
             }
-            
+
             if (hasShieldBreaker)
             {
                 targetHasCounter = false;
                 GameLogger.LogInfo($"[DamageEffectCommand] 실드 브레이커 효과로 반격 무시", GameLogger.LogCategory.Combat);
             }
-            
+
             // 다단 히트 처리 (시간 간격을 두고 공격)
             if (hits > 1)
             {
@@ -181,10 +190,10 @@ namespace Game.SkillCardSystem.Effect
                     totalDamage += effectiveDamage;
                 }
             }
-            
+
             Debug.Log($"[DamageEffectCommand] {source?.GetCharacterName()} → {target.GetCharacterName()} 총 데미지: {totalDamage} (공격 횟수: {hits})");
         }
-        
+
         /// <summary>
         /// 효과 실행 가능 여부를 확인합니다.
         /// </summary>
@@ -193,15 +202,15 @@ namespace Game.SkillCardSystem.Effect
         public bool CanExecute(ICardExecutionContext context)
         {
             if (context?.Target == null) return false;
-            
+
             var target = context.Target;
-            
+
             // 대상이 이미 사망했으면 실행 불가
             if (target.IsDead()) return false;
-            
+
             return true;
         }
-        
+
         /// <summary>
         /// 효과의 비용을 반환합니다.
         /// </summary>
@@ -210,25 +219,25 @@ namespace Game.SkillCardSystem.Effect
         {
             return 0; // 데미지 효과는 비용 없음
         }
-        
+
         /// <summary>
         /// 데미지량을 반환합니다.
         /// </summary>
         /// <returns>데미지량</returns>
         public int GetDamageAmount() => damageAmount;
-        
+
         /// <summary>
         /// 공격 횟수를 반환합니다.
         /// </summary>
         /// <returns>공격 횟수</returns>
         public int GetHits() => hits;
-        
+
         /// <summary>
         /// 가드 무시 여부를 반환합니다.
         /// </summary>
         /// <returns>가드 무시 여부</returns>
         public bool IsIgnoreGuard() => ignoreGuard;
-        
+
         /// <summary>
         /// 다단 히트 데미지를 시간 간격을 두고 실행합니다.
         /// </summary>
@@ -243,7 +252,7 @@ namespace Game.SkillCardSystem.Effect
             {
                 targetHasCounter = cb.HasEffect<CounterBuff>();
             }
-            
+
             // 실드 브레이커 디버프 확인: 공격자가 실드 브레이커 효과를 가지고 있으면 반격 무시
             bool hasShieldBreaker = false;
             if (source is Game.CharacterSystem.Core.CharacterBase sourceCharacter)
@@ -258,13 +267,13 @@ namespace Game.SkillCardSystem.Effect
                     }
                 }
             }
-            
+
             if (hasShieldBreaker)
             {
                 targetHasCounter = false;
                 GameLogger.LogInfo($"[DamageEffectCommand] 다단 히트에서 실드 브레이커 효과로 반격 무시", GameLogger.LogCategory.Combat);
             }
-            
+
             var totalDamage = 0;
 
             // 시전자 공격력 보너스 재계산
@@ -273,7 +282,7 @@ namespace Game.SkillCardSystem.Effect
             {
                 attackBonus = stackProvider.GetAttackPowerStack();
             }
-            
+
             // 아이템 공격력 버프 확인
             int itemAttackBonus = 0;
             if (source is Game.CharacterSystem.Core.CharacterBase characterBase)
@@ -287,7 +296,7 @@ namespace Game.SkillCardSystem.Effect
                     }
                 }
             }
-            
+
             // 성급 시스템 데미지 보너스 확인
             int starBonus = 0;
             if (itemService != null && context.Card != null)
@@ -295,9 +304,9 @@ namespace Game.SkillCardSystem.Effect
                 string skillId = context.Card.GetCardName();
                 starBonus = itemService.GetSkillDamageBonus(skillId);
             }
-            
+
             int perHitDamage = damageAmount + attackBonus + itemAttackBonus + starBonus;
-            
+
             for (int i = 0; i < hitCount; i++)
             {
                 // 대상이 사망했으면 중단
@@ -306,7 +315,7 @@ namespace Game.SkillCardSystem.Effect
                     Debug.Log($"[DamageEffectCommand] 대상이 사망하여 다단 히트 중단 (히트: {i}/{hitCount})");
                     break;
                 }
-                
+
                 // 데미지 적용 (반격 고려)
                 if (targetHasCounter && source != null)
                 {
@@ -314,31 +323,31 @@ namespace Game.SkillCardSystem.Effect
                     int reflect = perHitDamage - receive;
                     ApplyDamageCustom(target, receive);
                     totalDamage += receive;
-                    if (reflect > 0) 
+                    if (reflect > 0)
                     {
                         source.TakeDamageIgnoreGuard(reflect);
                         totalDamage += reflect;
                     }
-                    Debug.Log($"[DamageEffectCommand] 반격(멀티히트) step {i+1}: 대상 {receive}, 반사 {reflect}");
+                    Debug.Log($"[DamageEffectCommand] 반격(멀티히트) step {i + 1}: 대상 {receive}, 반사 {reflect}");
                 }
                 else
                 {
                     ApplyDamageCustom(target, perHitDamage);
                     totalDamage += perHitDamage;
                 }
-                
+
                 Debug.Log($"[DamageEffectCommand] 다단 히트 {i + 1}/{hitCount}: {perHitDamage} 데미지 (총 누적: {totalDamage})");
-                
+
                 // 마지막 히트가 아니면 대기
                 if (i < hitCount - 1)
                 {
                     yield return new WaitForSeconds(0.15f); // 0.15초 간격
                 }
             }
-            
+
             Debug.Log($"[DamageEffectCommand] 다단 히트 완료 - 총 데미지: {totalDamage}");
         }
-        
+
         /// <summary>
         /// 즉시 데미지를 적용합니다 (단일 히트 또는 MonoBehaviour가 아닌 경우).
         /// </summary>
@@ -347,24 +356,24 @@ namespace Game.SkillCardSystem.Effect
         private void ExecuteImmediateDamage(ICharacter target, int hitCount)
         {
             var totalDamage = 0;
-            
+
             // 스택 기반 데미지 계산
             int attackBonus = 0;
             // Note: ExecuteImmediateDamage는 context가 없으므로 스택 계산이 제한적입니다.
             // 이 메서드는 주로 MonoBehaviour가 아닌 경우에 사용되므로 스택은 0으로 가정합니다.
-            
+
             // 성급 시스템 데미지 보너스는 context가 없으므로 적용하지 않음
             int perHitDamage = damageAmount + attackBonus;
-            
+
             for (int i = 0; i < hitCount; i++)
             {
                 ApplyDamageCustom(target, perHitDamage);
                 totalDamage += perHitDamage;
             }
-            
+
             Debug.Log($"[DamageEffectCommand] 즉시 데미지 적용 - 총 데미지: {totalDamage} (히트: {hitCount})");
         }
-        
+
         /// <summary>
         /// 데미지를 대상에게 적용합니다.
         /// </summary>
@@ -373,7 +382,7 @@ namespace Game.SkillCardSystem.Effect
         {
             // 사운드 재생 (다단 히트마다)
             PlayHitSound();
-            
+
             if (ignoreGuard)
             {
                 // 가드 무시: TakeDamage를 우회하고 직접 체력 감소
@@ -410,7 +419,7 @@ namespace Game.SkillCardSystem.Effect
                 target.TakeDamage(value);
             }
         }
-        
+
         /// <summary>
         /// 가드를 무시하고 직접 데미지를 적용합니다.
         /// </summary>
@@ -419,7 +428,7 @@ namespace Game.SkillCardSystem.Effect
         private void ApplyDamageDirectly(ICharacter target, int damage)
         {
             if (damage <= 0) return;
-            
+
             // CharacterBase의 가드 무시 데미지 메서드 사용
             if (target is CharacterBase characterBase)
             {
@@ -432,7 +441,7 @@ namespace Game.SkillCardSystem.Effect
                 target.TakeDamage(damage);
             }
         }
-        
+
         /// <summary>
         /// 히트 사운드를 재생합니다.
         /// </summary>
@@ -447,6 +456,6 @@ namespace Game.SkillCardSystem.Effect
                 Debug.Log($"[DamageEffectCommand] 히트 사운드 재생");
             }
         }
-        
+
     }
 }

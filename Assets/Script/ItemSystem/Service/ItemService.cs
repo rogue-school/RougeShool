@@ -1,16 +1,14 @@
+using Game.CharacterSystem.Interface;
+using Game.CharacterSystem.Manager;
+using Game.CoreSystem.Interface;
+using Game.CoreSystem.Utility;
+using Game.ItemSystem.Constants;
+using Game.ItemSystem.Data;
+using Game.ItemSystem.Interface;
+using Game.ItemSystem.Runtime;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using Game.CoreSystem.Utility;
-using Game.CoreSystem.Interface;
-using Game.ItemSystem.Data;
-using Game.ItemSystem.Effect;
-using Game.ItemSystem.Interface;
-using Game.ItemSystem.Runtime;
-using Game.ItemSystem.Constants;
-using Game.ItemSystem.Utility;
-using Game.CharacterSystem.Interface;
-using Game.CharacterSystem.Manager;
 using Zenject;
 
 namespace Game.ItemSystem.Service
@@ -58,7 +56,7 @@ namespace Game.ItemSystem.Service
         private void Awake()
         {
             InitializeActiveSlots();
-            
+
             // PlayerManager 주입 상태 확인
             if (playerManager == null)
             {
@@ -111,7 +109,7 @@ namespace Game.ItemSystem.Service
 
             // 2. 씬에서 직접 찾기 (ICharacter 구현체들)
             var allCharacters = FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            
+
             foreach (var obj in allCharacters)
             {
                 if (obj is ICharacter character)
@@ -183,10 +181,10 @@ namespace Game.ItemSystem.Service
             if (playerCharacter == null)
             {
                 GameLogger.LogWarning("플레이어 캐릭터가 아직 초기화되지 않았습니다. 아이템 사용을 건너뜁니다", GameLogger.LogCategory.Core);
-                
+
                 // 임시 해결책: 아이템 효과만 실행 (캐릭터 없이)
                 GameLogger.LogInfo($"아이템 효과 시뮬레이션: {slot.item.DisplayName}", GameLogger.LogCategory.Core);
-                
+
                 // 소모품인 경우 슬롯에서 제거
                 if (slot.item.Type == ItemType.Active)
                 {
@@ -198,30 +196,28 @@ namespace Game.ItemSystem.Service
                 return true;
             }
 
-            // 일부 아이템은 플레이어 턴에만 사용 가능
-            if (RequiresPlayerTurn(slot.item) && !IsPlayerTurn())
+            // 모든 아이템은 플레이어 턴에만 사용 가능
+            if (!IsPlayerTurn())
             {
                 GameLogger.LogWarning($"{slot.item.DisplayName}은 플레이어 턴에만 사용할 수 있습니다", GameLogger.LogCategory.Core);
                 return false;
             }
 
-            // 부활의 증표는 죽었을 때만 사용 가능
-            if (slot.item.DisplayName.Contains("부활의 증표"))
+            // 부활 아이템은 죽었을 때만 사용 가능 (특수 조건)
+            if (slot.item.DisplayName.Contains("부활") && !playerCharacter.IsDead())
             {
-                if (!playerCharacter.IsDead())
-                {
-                    GameLogger.LogWarning("부활의 증표는 죽었을 때만 사용할 수 있습니다", GameLogger.LogCategory.Core);
-                    return false;
-                }
+                GameLogger.LogWarning($"{slot.item.DisplayName}은 죽었을 때만 사용할 수 있습니다", GameLogger.LogCategory.Core);
+                return false;
             }
 
             // 아이템 런타임 인스턴스 생성 및 사용
             var activeItem = new ActiveItem(slot.item, audioManager, vfxManager);
-            
-            // 타임스톱 스크롤은 적에게 적용되어야 함
+
+            // 데이터 기반 타겟 결정
+            GameLogger.LogInfo($"[ItemService] 아이템 타겟 결정 시작: {slot.item.DisplayName}, 타겟타입={slot.item.targetType}", GameLogger.LogCategory.Core);
             var targetCharacter = DetermineItemTarget(slot.item, playerCharacter);
-            GameLogger.LogInfo($"아이템 사용 대상 결정: {slot.item.DisplayName} → {targetCharacter?.GetCharacterName()}", GameLogger.LogCategory.Core);
-            
+            GameLogger.LogInfo($"[ItemService] 아이템 사용 대상 최종 결정: {slot.item.DisplayName} → {targetCharacter?.GetCharacterName()}, 플레이어인가={targetCharacter?.IsPlayerControlled()}", GameLogger.LogCategory.Core);
+
             bool success = activeItem.UseItem(playerCharacter, targetCharacter);
 
             if (success)
@@ -392,7 +388,7 @@ namespace Game.ItemSystem.Service
             // 스킬별 직접 보너스
             foreach (var passiveItem in passiveItemDefinitions.Values)
             {
-                if (passiveItem.IsSkillDamageBonus && 
+                if (passiveItem.IsSkillDamageBonus &&
                     passiveItem.TargetSkillId == skillId)
                 {
                     totalBonus += passiveItem.SkillDamageBonus;
@@ -431,21 +427,6 @@ namespace Game.ItemSystem.Service
         #region 아이템 사용 조건 확인
 
         /// <summary>
-        /// 아이템이 플레이어 턴에만 사용 가능한지 확인합니다.
-        /// </summary>
-        /// <param name="item">확인할 아이템</param>
-        /// <returns>플레이어 턴 제한 여부</returns>
-        private bool RequiresPlayerTurn(ActiveItemDefinition item)
-        {
-            // 대부분의 아이템은 플레이어 턴에만 사용 가능
-            // 부활의 증표는 예외 (죽었을 때 자동 발동)
-            if (item.DisplayName.Contains("부활의 증표"))
-                return false;
-                
-            return true; // 기본적으로 플레이어 턴에만 사용 가능
-        }
-
-        /// <summary>
         /// 현재 플레이어 턴인지 확인합니다.
         /// </summary>
         /// <returns>플레이어 턴 여부</returns>
@@ -455,11 +436,10 @@ namespace Game.ItemSystem.Service
             var turnManager = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
             if (turnManager == null)
             {
-                GameLogger.LogWarning("TurnManager를 찾을 수 없습니다. 아이템 사용을 허용합니다", GameLogger.LogCategory.Core);
-                return true; // TurnManager가 없으면 기본적으로 허용
+                GameLogger.LogWarning("TurnManager를 찾을 수 없습니다. 아이템 사용을 차단합니다", GameLogger.LogCategory.Core);
+                return false; // TurnManager가 없으면 안전하게 차단
             }
 
-            // TurnManager에서 현재 턴이 플레이어인지 확인
             return turnManager.IsPlayerTurn();
         }
 
@@ -468,33 +448,49 @@ namespace Game.ItemSystem.Service
         #region 아이템 대상 결정
 
         /// <summary>
-        /// 아이템의 대상 캐릭터를 결정합니다.
+        /// 아이템의 대상 캐릭터를 데이터 기반으로 결정합니다.
         /// </summary>
         /// <param name="item">아이템 정의</param>
         /// <param name="playerCharacter">플레이어 캐릭터</param>
         /// <returns>대상 캐릭터</returns>
         private ICharacter DetermineItemTarget(ActiveItemDefinition item, ICharacter playerCharacter)
         {
-            // 타임스톱 스크롤, 실드 브레이커는 적에게 적용
-            if (item.DisplayName.Contains("타임 스톱") || item.DisplayName.Contains("실드 브레이커"))
+            GameLogger.LogInfo($"[ItemService.DetermineItemTarget] 타겟 결정 로직 시작: 아이템={item.DisplayName}, 타겟타입={item.targetType}", GameLogger.LogCategory.Core);
+
+            switch (item.targetType)
             {
-                var enemyManager = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
-                var enemyCharacter = enemyManager?.GetCurrentEnemy();
-                
-                if (enemyCharacter != null)
-                {
-                    GameLogger.LogInfo($"아이템 대상: 적 캐릭터 ({enemyCharacter.GetCharacterName()})", GameLogger.LogCategory.Core);
-                    return enemyCharacter;
-                }
-                else
-                {
-                    GameLogger.LogWarning("적 캐릭터를 찾을 수 없어 플레이어를 대상으로 설정합니다", GameLogger.LogCategory.Core);
+                case ItemTargetType.Self:
+                    // 플레이어 자신에게 사용
+                    GameLogger.LogInfo($"[ItemService.DetermineItemTarget] Self 타입 → 플레이어 ({playerCharacter?.GetCharacterName()})", GameLogger.LogCategory.Core);
                     return playerCharacter;
-                }
+
+                case ItemTargetType.Enemy:
+                    // 적에게 사용
+                    var enemyManager = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
+                    GameLogger.LogInfo($"[ItemService.DetermineItemTarget] Enemy 타입 → EnemyManager 찾기 결과={enemyManager != null}", GameLogger.LogCategory.Core);
+
+                    var enemyCharacter = enemyManager?.GetCurrentEnemy();
+                    GameLogger.LogInfo($"[ItemService.DetermineItemTarget] 현재 적 캐릭터={enemyCharacter?.GetCharacterName() ?? "null"}, 플레이어인가={enemyCharacter?.IsPlayerControlled()}", GameLogger.LogCategory.Core);
+
+                    if (enemyCharacter != null)
+                    {
+                        return enemyCharacter;
+                    }
+                    else
+                    {
+                        GameLogger.LogWarning("[ItemService.DetermineItemTarget] 적 캐릭터를 찾을 수 없어 플레이어를 대상으로 설정합니다", GameLogger.LogCategory.Core);
+                        return playerCharacter;
+                    }
+
+                case ItemTargetType.Both:
+                    // 양쪽 모두 (특수 처리 필요 시 확장 가능)
+                    GameLogger.LogInfo("[ItemService.DetermineItemTarget] Both 타입 → 플레이어 우선", GameLogger.LogCategory.Core);
+                    return playerCharacter;
+
+                default:
+                    GameLogger.LogWarning($"[ItemService.DetermineItemTarget] 알 수 없는 타겟 타입: {item.targetType}, 기본값(Self) 사용", GameLogger.LogCategory.Core);
+                    return playerCharacter;
             }
-            
-            // 기본적으로 플레이어가 대상
-            return playerCharacter;
         }
 
         #endregion
