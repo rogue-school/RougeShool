@@ -713,6 +713,15 @@ namespace Game.CombatSystem.Manager
             return $"[T{_turnController.TurnCount}-{turnName}-F{Time.frameCount}]";
         }
 
+        /// <summary>
+        /// CardSlotRegistry 인스턴스를 반환합니다
+        /// </summary>
+        /// <returns>CardSlotRegistry 인스턴스</returns>
+        public ICardSlotRegistry GetCardSlotRegistry()
+        {
+            return _registry;
+        }
+
         #endregion
     }
 }

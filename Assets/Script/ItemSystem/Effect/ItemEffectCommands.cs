@@ -358,21 +358,44 @@ namespace Game.ItemSystem.Effect
                 return;
             }
 
-            // 1단계: 기존 카드 UI 재사용 (권장 방식)
-            var existingCardUI = slot.GetCardUI() as Game.SkillCardSystem.UI.SkillCardUI;
-            if (existingCardUI != null)
+            var oldCardName = slot.GetCard()?.GetCardName() ?? "null";
+            GameLogger.LogInfo($"[DiceOfFate] 카드 교체 시작 - Position: {slot.Position}, 기존: {oldCardName} → 신규: {newCard.GetCardName()}", GameLogger.LogCategory.Core);
+            
+            // 1단계: 슬롯의 currentCard를 먼저 업데이트
+            slot.SetCard(newCard);
+            GameLogger.LogInfo($"[DiceOfFate] 슬롯 currentCard 업데이트 완료: {slot.GetCard()?.GetCardName()}", GameLogger.LogCategory.Core);
+            
+            // 2단계: CardSlotRegistry도 업데이트 (중요!)
+            UpdateCardSlotRegistry(slot.Position, newCard);
+            
+            // 3단계: 자식 오브젝트에서 카드 UI 찾기
+            var childCardUI = slot.transform.GetComponentInChildren<Game.SkillCardSystem.UI.SkillCardUI>();
+            if (childCardUI != null)
             {
-                GameLogger.LogInfo($"[DiceOfFate] 기존 카드 UI 재사용: {existingCardUI.GetCard()?.GetCardName()} → {newCard.GetCardName()}", GameLogger.LogCategory.Core);
+                GameLogger.LogInfo($"[DiceOfFate] 자식에서 카드 UI 발견: {childCardUI.GetCard()?.GetCardName()}", GameLogger.LogCategory.Core);
                 
-                // 카드 데이터만 교체 (GameObject 생성/삭제 없음)
-                existingCardUI.SetCard(newCard);
-                slot.SetCard(newCard);
+                // 카드 UI의 데이터도 업데이트
+                childCardUI.SetCard(newCard);
+                slot.SetCardUI(childCardUI); // 연결 복구
                 
-                GameLogger.LogInfo("[DiceOfFate] 카드 데이터 교체 완료", GameLogger.LogCategory.Core);
+                GameLogger.LogInfo($"[DiceOfFate] 카드 UI 데이터 업데이트 완료: {childCardUI.GetCard()?.GetCardName()}", GameLogger.LogCategory.Core);
                 return;
             }
 
-            // 2단계: 새 카드 UI 생성 (fallback)
+            // 4단계: GetCardUI() 시도 (대안)
+            var existingCardUI = slot.GetCardUI() as Game.SkillCardSystem.UI.SkillCardUI;
+            if (existingCardUI != null)
+            {
+                GameLogger.LogInfo($"[DiceOfFate] GetCardUI()로 카드 UI 발견: {existingCardUI.GetCard()?.GetCardName()}", GameLogger.LogCategory.Core);
+                
+                // 카드 UI의 데이터도 업데이트
+                existingCardUI.SetCard(newCard);
+                
+                GameLogger.LogInfo($"[DiceOfFate] 카드 UI 데이터 업데이트 완료: {existingCardUI.GetCard()?.GetCardName()}", GameLogger.LogCategory.Core);
+                return;
+            }
+
+            // 5단계: 새 카드 UI 생성 (최후의 수단)
             GameLogger.LogWarning("[DiceOfFate] 기존 카드 UI를 찾을 수 없어 새로 생성합니다", GameLogger.LogCategory.Core);
             
             var prefab = Resources.Load<Game.SkillCardSystem.UI.SkillCardUI>("Prefab/SkillCard");
@@ -385,7 +408,6 @@ namespace Game.ItemSystem.Effect
             var newCardUI = Game.SkillCardSystem.UI.SkillCardUIFactory.CreateUI(prefab, slot.transform, newCard, null, null);
             if (newCardUI != null)
             {
-                slot.SetCard(newCard);
                 slot.SetCardUI(newCardUI);
                 GameLogger.LogInfo("[DiceOfFate] 새 카드 UI 생성 및 배치 완료", GameLogger.LogCategory.Core);
             }
@@ -393,6 +415,41 @@ namespace Game.ItemSystem.Effect
             {
                 GameLogger.LogError("[DiceOfFate] 새 카드 UI 생성 실패", GameLogger.LogCategory.Core);
             }
+            
+            // 최종 검증
+            var finalCardName = slot.GetCard()?.GetCardName() ?? "null";
+            GameLogger.LogInfo($"[DiceOfFate] 최종 검증 - 슬롯 카드: {finalCardName}, 예상: {newCard.GetCardName()}", GameLogger.LogCategory.Core);
+        }
+
+        /// <summary>
+        /// CardSlotRegistry의 카드 데이터를 업데이트합니다
+        /// </summary>
+        /// <param name="position">슬롯 위치</param>
+        /// <param name="newCard">새로운 카드</param>
+        private void UpdateCardSlotRegistry(Game.CombatSystem.Slot.CombatSlotPosition position, Game.SkillCardSystem.Interface.ISkillCard newCard)
+        {
+            // SceneContext를 통해 ICardSlotRegistry 직접 접근
+            var sceneContext = UnityEngine.Object.FindFirstObjectByType<Zenject.SceneContext>();
+            if (sceneContext == null)
+            {
+                GameLogger.LogError("[DiceOfFate] SceneContext를 찾을 수 없습니다", GameLogger.LogCategory.Core);
+                return;
+            }
+
+            var cardSlotRegistry = sceneContext.Container.TryResolve<Game.CombatSystem.Interface.ICardSlotRegistry>();
+            if (cardSlotRegistry == null)
+            {
+                GameLogger.LogError("[DiceOfFate] ICardSlotRegistry를 DI 컨테이너에서 찾을 수 없습니다", GameLogger.LogCategory.Core);
+                return;
+            }
+
+            // 기존 카드 UI 가져오기
+            var existingUI = cardSlotRegistry.GetCardUIInSlot(position);
+            
+            // CardSlotRegistry에 새 카드 등록
+            cardSlotRegistry.RegisterCard(position, newCard, existingUI, Game.CombatSystem.Data.SlotOwner.ENEMY);
+            
+            GameLogger.LogInfo($"[DiceOfFate] CardSlotRegistry 업데이트 완료: {position} = {newCard.GetCardName()}", GameLogger.LogCategory.Core);
         }
     }
 
