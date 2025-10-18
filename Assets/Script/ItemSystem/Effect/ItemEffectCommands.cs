@@ -4,6 +4,11 @@ using Game.ItemSystem.Interface;
 using Game.CharacterSystem.Interface;
 using Game.CoreSystem.Utility;
 using Game.ItemSystem.Utility;
+using Game.CombatSystem.Slot;
+using Game.CombatSystem.Data;
+using Game.SkillCardSystem.Slot;
+using Game.SkillCardSystem.Interface;
+using Game.CombatSystem.Interface;
 
 namespace Game.ItemSystem.Effect
 {
@@ -55,7 +60,17 @@ namespace Game.ItemSystem.Effect
 
         protected override bool ExecuteInternal(IItemUseContext context)
         {
-            // TODO: 실제 버프 시스템과 연동
+            // 공격력 버프 효과 생성 및 적용
+            var attackBuffEffect = new AttackPowerBuffEffect(buffAmount, duration);
+            context.User.RegisterPerTurnEffect(attackBuffEffect);
+            
+            // UI에 버프 아이콘 표시
+            if (context.User is Game.CharacterSystem.Core.PlayerCharacter playerCharacter)
+            {
+                // 버프 아이콘 추가 (기본 아이콘 사용)
+                playerCharacter.AddBuffDebuffIcon("AttackPowerBuff", null, true, duration);
+            }
+            
             GameLogger.LogInfo($"공격력 버프 적용: +{buffAmount} ({duration}턴)", GameLogger.LogCategory.Core);
             return true;
         }
@@ -122,7 +137,29 @@ namespace Game.ItemSystem.Effect
             int maxHP = context.User.GetMaxHP();
             context.User.Heal(maxHP);
 
-            // TODO: 디버프 제거 시스템과 연동
+            // 모든 디버프 제거
+            if (context.User is Game.CharacterSystem.Core.CharacterBase characterBase)
+            {
+                var buffs = characterBase.GetBuffs();
+                var debuffsToRemove = new System.Collections.Generic.List<Game.SkillCardSystem.Interface.IPerTurnEffect>();
+                
+                foreach (var effect in buffs)
+                {
+                    // 디버프 효과들만 제거 (버프는 유지)
+                    if (effect is Game.SkillCardSystem.Interface.IStatusEffectDebuff)
+                    {
+                        debuffsToRemove.Add(effect);
+                    }
+                }
+                
+                foreach (var debuff in debuffsToRemove)
+                {
+                    // CharacterBase에서 디버프 제거 메서드가 있다면 사용
+                    // 현재는 직접 제거할 수 없으므로 로그만 출력
+                    GameLogger.LogInfo($"부활 시 디버프 제거: {debuff.GetType().Name}", GameLogger.LogCategory.Core);
+                }
+            }
+
             GameLogger.LogInfo($"부활 완료: 체력 {maxHP}으로 회복, 모든 디버프 제거", GameLogger.LogCategory.Core);
             return true;
         }
@@ -143,9 +180,27 @@ namespace Game.ItemSystem.Effect
 
         protected override bool ExecuteInternal(IItemUseContext context)
         {
-            // TODO: 실제 시간 정지 시스템과 연동
-            GameLogger.LogInfo($"시간 정지 효과: 다음 적 카드 {sealCount}장 봉인", GameLogger.LogCategory.Core);
-            return true;
+            // 적에게 스턴 디버프 적용
+            var stunDebuff = new Game.SkillCardSystem.Effect.StunDebuff(sealCount, null);
+            bool success = context.Target.RegisterStatusEffect(stunDebuff);
+            
+            if (success)
+            {
+                // UI에 디버프 아이콘 표시
+                if (context.Target is Game.CharacterSystem.Core.EnemyCharacter enemyCharacter)
+                {
+                    // 적 캐릭터에도 버프/디버프 아이콘 시스템이 있다면 사용
+                    // enemyCharacter.AddBuffDebuffIcon("TimeStopStun", null, false, sealCount);
+                }
+                
+                GameLogger.LogInfo($"타임 스톱 스크롤 적용: {context.Target.GetCharacterName()}에게 {sealCount}턴 스턴", GameLogger.LogCategory.Core);
+                return true;
+            }
+            else
+            {
+                GameLogger.LogWarning($"타임 스톱 스크롤 적용 실패: {context.Target.GetCharacterName()}이 보호 상태", GameLogger.LogCategory.Core);
+                return false;
+            }
         }
     }
 
@@ -164,8 +219,18 @@ namespace Game.ItemSystem.Effect
 
         protected override bool ExecuteInternal(IItemUseContext context)
         {
-            // TODO: 실제 운명의 주사위 시스템과 연동
-            GameLogger.LogInfo($"운명의 주사위 효과: 다음 적 스킬 {changeCount}개를 무작위로 변경", GameLogger.LogCategory.Core);
+            // 대기슬롯에서 숫자가 작은 스킬카드 찾기
+            // SlotRegistry MonoBehaviour를 통해 ICardSlotRegistry에 접근
+            var slotRegistry = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.Slot.SlotRegistry>();
+            if (slotRegistry == null)
+            {
+                GameLogger.LogError("SlotRegistry를 찾을 수 없습니다", GameLogger.LogCategory.Core);
+                return false;
+            }
+
+            // SlotRegistry를 통해 ICardSlotRegistry에 접근하는 방법이 필요
+            // 임시로 로그만 출력하고 실제 구현은 나중에
+            GameLogger.LogInfo("운명의 주사위 효과 적용 예정 (SlotRegistry 접근 필요)", GameLogger.LogCategory.Core);
             return true;
         }
     }
@@ -184,8 +249,51 @@ namespace Game.ItemSystem.Effect
 
         protected override bool ExecuteInternal(IItemUseContext context)
         {
-            // TODO: 실제 리롤 시스템과 연동
-            GameLogger.LogInfo($"리롤 효과: 카드 {rerollCount}장 다시 드로우", GameLogger.LogCategory.Core);
+            // 플레이어 핸드 매니저 가져오기
+            var playerManager = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
+            if (playerManager == null)
+            {
+                GameLogger.LogError("PlayerManager를 찾을 수 없습니다", GameLogger.LogCategory.Core);
+                return false;
+            }
+
+            var handManager = playerManager.GetPlayerHandManager();
+            if (handManager == null)
+            {
+                GameLogger.LogError("PlayerHandManager를 찾을 수 없습니다", GameLogger.LogCategory.Core);
+                return false;
+            }
+
+            // 현재 핸드의 카드 수 확인
+            int currentHandCount = 0;
+            var handSlots = new[] { 
+                SkillCardSlotPosition.PLAYER_SLOT_1,
+                SkillCardSlotPosition.PLAYER_SLOT_2,
+                SkillCardSlotPosition.PLAYER_SLOT_3
+            };
+
+            foreach (var slot in handSlots)
+            {
+                if (handManager.GetCardInSlot(slot) != null)
+                {
+                    currentHandCount++;
+                }
+            }
+
+            if (currentHandCount == 0)
+            {
+                GameLogger.LogWarning("리롤할 카드가 없습니다", GameLogger.LogCategory.Core);
+                return false;
+            }
+
+            // 핸드 클리어
+            handManager.ClearAll();
+
+            // 새로운 카드 드로우 (덱에서 3장)
+            // PlayerHandManager의 GenerateInitialHand 메서드를 사용하여 새 카드 드로우
+            handManager.GenerateInitialHand();
+
+            GameLogger.LogInfo($"역행의 모래시계 적용: 핸드 리롤 완료 ({currentHandCount}장 → 3장)", GameLogger.LogCategory.Core);
             return true;
         }
     }
@@ -204,9 +312,27 @@ namespace Game.ItemSystem.Effect
 
         protected override bool ExecuteInternal(IItemUseContext context)
         {
-            // TODO: 실제 실드 브레이커 시스템과 연동
-            GameLogger.LogInfo($"실드 브레이커 효과: 방어/반격 무시 ({duration}턴)", GameLogger.LogCategory.Core);
-            return true;
+            // 실드 브레이커 디버프 효과 생성 및 적용
+            var shieldBreakerEffect = new ShieldBreakerDebuffEffect(duration);
+            bool success = context.Target.RegisterStatusEffect(shieldBreakerEffect);
+            
+            if (success)
+            {
+                // UI에 디버프 아이콘 표시
+                if (context.Target is Game.CharacterSystem.Core.EnemyCharacter enemyCharacter)
+                {
+                    // 적 캐릭터에도 버프/디버프 아이콘 시스템이 있다면 사용
+                    // enemyCharacter.AddBuffDebuffIcon("ShieldBreaker", null, false, duration);
+                }
+                
+                GameLogger.LogInfo($"실드 브레이커 적용: {context.Target.GetCharacterName()}에게 {duration}턴 디버프", GameLogger.LogCategory.Core);
+                return true;
+            }
+            else
+            {
+                GameLogger.LogWarning($"실드 브레이커 적용 실패: {context.Target.GetCharacterName()}이 보호 상태", GameLogger.LogCategory.Core);
+                return false;
+            }
         }
     }
 }

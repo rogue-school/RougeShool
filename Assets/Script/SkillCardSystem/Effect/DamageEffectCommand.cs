@@ -84,6 +84,22 @@ namespace Game.SkillCardSystem.Effect
                 // GameLogger.LogInfo($"[DamageEffectCommand] 스택 기반 데미지 계산 - 기본: {damageAmount}, 스택: {currentStacks}, 보너스: {attackBonus}", 
                 //    GameLogger.LogCategory.Combat);
             }
+            
+            // 1.5) 아이템 공격력 버프 확인(시전자 기준)
+            int itemAttackBonus = 0;
+            if (source is Game.CharacterSystem.Core.CharacterBase characterBase)
+            {
+                // AttackPowerBuffEffect가 있는지 확인하고 보너스 적용
+                var attackBuffEffects = characterBase.GetBuffs();
+                foreach (var effect in attackBuffEffects)
+                {
+                    if (effect is Game.ItemSystem.Effect.AttackPowerBuffEffect attackBuff)
+                    {
+                        itemAttackBonus += attackBuff.GetAttackPowerBonus();
+                    }
+                }
+            }
+            
             // 2) 성급 시스템 데미지 보너스 확인
             int starBonus = 0;
             if (itemService != null && context.Card != null)
@@ -92,7 +108,7 @@ namespace Game.SkillCardSystem.Effect
                 starBonus = itemService.GetSkillDamageBonus(skillId);
             }
             
-            int effectiveDamage = damageAmount + attackBonus + starBonus;
+            int effectiveDamage = damageAmount + attackBonus + itemAttackBonus + starBonus;
 
             // 반격 버프 처리: 대상이 CounterBuff 보유 시, 들어오는 피해의 절반만 받고 나머지 절반을 공격자에게 반사
             // 정수 절삭/올림 규칙: 들어오는 피해를 ceil(절반)은 수신, floor(절반)은 반사
@@ -105,6 +121,27 @@ namespace Game.SkillCardSystem.Effect
             if (ignoreCounter)
             {
                 targetHasCounter = false;
+            }
+            
+            // 실드 브레이커 디버프 확인: 공격자가 실드 브레이커 효과를 가지고 있으면 반격 무시
+            bool hasShieldBreaker = false;
+            if (source is Game.CharacterSystem.Core.CharacterBase sourceCharacter)
+            {
+                var buffs = sourceCharacter.GetBuffs();
+                foreach (var effect in buffs)
+                {
+                    if (effect is Game.ItemSystem.Effect.ShieldBreakerDebuffEffect shieldBreaker)
+                    {
+                        hasShieldBreaker = shieldBreaker.IsShieldBreakerActive();
+                        break;
+                    }
+                }
+            }
+            
+            if (hasShieldBreaker)
+            {
+                targetHasCounter = false;
+                GameLogger.LogInfo($"[DamageEffectCommand] 실드 브레이커 효과로 반격 무시", GameLogger.LogCategory.Combat);
             }
             
             // 다단 히트 처리 (시간 간격을 두고 공격)
@@ -206,6 +243,28 @@ namespace Game.SkillCardSystem.Effect
             {
                 targetHasCounter = cb.HasEffect<CounterBuff>();
             }
+            
+            // 실드 브레이커 디버프 확인: 공격자가 실드 브레이커 효과를 가지고 있으면 반격 무시
+            bool hasShieldBreaker = false;
+            if (source is Game.CharacterSystem.Core.CharacterBase sourceCharacter)
+            {
+                var buffs = sourceCharacter.GetBuffs();
+                foreach (var effect in buffs)
+                {
+                    if (effect is Game.ItemSystem.Effect.ShieldBreakerDebuffEffect shieldBreaker)
+                    {
+                        hasShieldBreaker = shieldBreaker.IsShieldBreakerActive();
+                        break;
+                    }
+                }
+            }
+            
+            if (hasShieldBreaker)
+            {
+                targetHasCounter = false;
+                GameLogger.LogInfo($"[DamageEffectCommand] 다단 히트에서 실드 브레이커 효과로 반격 무시", GameLogger.LogCategory.Combat);
+            }
+            
             var totalDamage = 0;
 
             // 시전자 공격력 보너스 재계산
@@ -213,6 +272,20 @@ namespace Game.SkillCardSystem.Effect
             if (context.Card is IAttackPowerStackProvider stackProvider)
             {
                 attackBonus = stackProvider.GetAttackPowerStack();
+            }
+            
+            // 아이템 공격력 버프 확인
+            int itemAttackBonus = 0;
+            if (source is Game.CharacterSystem.Core.CharacterBase characterBase)
+            {
+                var attackBuffEffects = characterBase.GetBuffs();
+                foreach (var effect in attackBuffEffects)
+                {
+                    if (effect is Game.ItemSystem.Effect.AttackPowerBuffEffect attackBuff)
+                    {
+                        itemAttackBonus += attackBuff.GetAttackPowerBonus();
+                    }
+                }
             }
             
             // 성급 시스템 데미지 보너스 확인
@@ -223,7 +296,7 @@ namespace Game.SkillCardSystem.Effect
                 starBonus = itemService.GetSkillDamageBonus(skillId);
             }
             
-            int perHitDamage = damageAmount + attackBonus + starBonus;
+            int perHitDamage = damageAmount + attackBonus + itemAttackBonus + starBonus;
             
             for (int i = 0; i < hitCount; i++)
             {

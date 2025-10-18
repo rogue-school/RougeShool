@@ -12,15 +12,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d10d2d327137db7439e30c5872e2329a, type: 3}
   m_Name: "007_\uC2E4\uB4DC \uBE0C\uB808\uC774\uCEE4"
   m_EditorClassIdentifier: 
-  itemId: 
-  displayName: 
+  itemId: "007_\uC2E4\uB4DC_\uBE0C\uB808\uC774\uCEE4"
+  displayName: "\uC2E4\uB4DC \uBE0C\uB808\uC774\uCEE4"
   description: 
-  icon: {fileID: 0}
+  icon: {fileID: -4549066492914507374, guid: 7ac1eb112e2b0044aa3a7e010b54eea9, type: 3}
   presentation:
     sfxClip: {fileID: 0}
     visualEffectPrefab: {fileID: 0}
   effectConfiguration:
-    effects: []
+    effects:
+    - effectSO: {fileID: 11400000, guid: 01fceeadcde3cf24fa0606d9a55f186d, type: 2}
+      useCustomSettings: 0
+      customSettings:
+        rid: -2
+      executionOrder: 0
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
