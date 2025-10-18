@@ -198,9 +198,31 @@ namespace Game.ItemSystem.Service
                 return true;
             }
 
+            // 일부 아이템은 플레이어 턴에만 사용 가능
+            if (RequiresPlayerTurn(slot.item) && !IsPlayerTurn())
+            {
+                GameLogger.LogWarning($"{slot.item.DisplayName}은 플레이어 턴에만 사용할 수 있습니다", GameLogger.LogCategory.Core);
+                return false;
+            }
+
+            // 부활의 증표는 죽었을 때만 사용 가능
+            if (slot.item.DisplayName.Contains("부활의 증표"))
+            {
+                if (!playerCharacter.IsDead())
+                {
+                    GameLogger.LogWarning("부활의 증표는 죽었을 때만 사용할 수 있습니다", GameLogger.LogCategory.Core);
+                    return false;
+                }
+            }
+
             // 아이템 런타임 인스턴스 생성 및 사용
             var activeItem = new ActiveItem(slot.item, audioManager, vfxManager);
-            bool success = activeItem.UseItem(playerCharacter, playerCharacter);
+            
+            // 타임스톱 스크롤은 적에게 적용되어야 함
+            var targetCharacter = DetermineItemTarget(slot.item, playerCharacter);
+            GameLogger.LogInfo($"아이템 사용 대상 결정: {slot.item.DisplayName} → {targetCharacter?.GetCharacterName()}", GameLogger.LogCategory.Core);
+            
+            bool success = activeItem.UseItem(playerCharacter, targetCharacter);
 
             if (success)
             {
@@ -402,6 +424,77 @@ namespace Game.ItemSystem.Service
         public Dictionary<string, int> GetAllSkillStarRanks()
         {
             return new Dictionary<string, int>(skillStarRanks);
+        }
+
+        #endregion
+
+        #region 아이템 사용 조건 확인
+
+        /// <summary>
+        /// 아이템이 플레이어 턴에만 사용 가능한지 확인합니다.
+        /// </summary>
+        /// <param name="item">확인할 아이템</param>
+        /// <returns>플레이어 턴 제한 여부</returns>
+        private bool RequiresPlayerTurn(ActiveItemDefinition item)
+        {
+            // 대부분의 아이템은 플레이어 턴에만 사용 가능
+            // 부활의 증표는 예외 (죽었을 때 자동 발동)
+            if (item.DisplayName.Contains("부활의 증표"))
+                return false;
+                
+            return true; // 기본적으로 플레이어 턴에만 사용 가능
+        }
+
+        /// <summary>
+        /// 현재 플레이어 턴인지 확인합니다.
+        /// </summary>
+        /// <returns>플레이어 턴 여부</returns>
+        private bool IsPlayerTurn()
+        {
+            // TurnManager를 통해 현재 턴 확인
+            var turnManager = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
+            if (turnManager == null)
+            {
+                GameLogger.LogWarning("TurnManager를 찾을 수 없습니다. 아이템 사용을 허용합니다", GameLogger.LogCategory.Core);
+                return true; // TurnManager가 없으면 기본적으로 허용
+            }
+
+            // TurnManager에서 현재 턴이 플레이어인지 확인
+            return turnManager.IsPlayerTurn();
+        }
+
+        #endregion
+
+        #region 아이템 대상 결정
+
+        /// <summary>
+        /// 아이템의 대상 캐릭터를 결정합니다.
+        /// </summary>
+        /// <param name="item">아이템 정의</param>
+        /// <param name="playerCharacter">플레이어 캐릭터</param>
+        /// <returns>대상 캐릭터</returns>
+        private ICharacter DetermineItemTarget(ActiveItemDefinition item, ICharacter playerCharacter)
+        {
+            // 타임스톱 스크롤, 실드 브레이커는 적에게 적용
+            if (item.DisplayName.Contains("타임 스톱") || item.DisplayName.Contains("실드 브레이커"))
+            {
+                var enemyManager = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
+                var enemyCharacter = enemyManager?.GetCurrentEnemy();
+                
+                if (enemyCharacter != null)
+                {
+                    GameLogger.LogInfo($"아이템 대상: 적 캐릭터 ({enemyCharacter.GetCharacterName()})", GameLogger.LogCategory.Core);
+                    return enemyCharacter;
+                }
+                else
+                {
+                    GameLogger.LogWarning("적 캐릭터를 찾을 수 없어 플레이어를 대상으로 설정합니다", GameLogger.LogCategory.Core);
+                    return playerCharacter;
+                }
+            }
+            
+            // 기본적으로 플레이어가 대상
+            return playerCharacter;
         }
 
         #endregion

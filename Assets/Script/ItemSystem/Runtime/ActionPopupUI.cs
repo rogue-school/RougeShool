@@ -124,6 +124,14 @@ namespace Game.ItemSystem.Runtime
         /// </summary>
         private void HandleUseButtonClicked()
         {
+            // 플레이어 턴인지 확인
+            if (!IsPlayerTurn())
+            {
+                GameLogger.LogInfo($"[ActionPopupUI] 적 턴 중이므로 아이템 사용 불가: {currentItem?.DisplayName ?? "알 수 없음"}", GameLogger.LogCategory.UI);
+                ClosePopup();
+                return;
+            }
+
             OnUseButtonClicked?.Invoke(slotIndex);
             ClosePopup();
         }
@@ -135,6 +143,28 @@ namespace Game.ItemSystem.Runtime
         {
             OnDiscardButtonClicked?.Invoke(slotIndex);
             ClosePopup();
+        }
+
+        #endregion
+
+        #region 유틸리티
+
+        /// <summary>
+        /// 현재 플레이어 턴인지 확인합니다.
+        /// </summary>
+        /// <returns>플레이어 턴이면 true, 아니면 false</returns>
+        private bool IsPlayerTurn()
+        {
+            // TurnManager를 씬에서 직접 찾기
+            var turnManager = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
+            if (turnManager != null)
+            {
+                return turnManager.IsPlayerTurn();
+            }
+            
+            // TurnManager를 찾을 수 없으면 안전하게 false 반환 (아이템 사용 차단)
+            GameLogger.LogWarning("[ActionPopupUI] TurnManager를 찾을 수 없습니다. 아이템 사용을 차단합니다.", GameLogger.LogCategory.UI);
+            return false;
         }
 
         #endregion

@@ -358,9 +358,9 @@ namespace Game.ItemSystem.Runtime
                 return foundTurnManager.IsPlayerTurn();
             }
             
-            // TurnManager를 찾을 수 없으면 기본적으로 플레이어 턴으로 간주
-            GameLogger.LogWarning("[ActiveItemUI] TurnManager를 찾을 수 없습니다. 플레이어 턴으로 간주합니다.", GameLogger.LogCategory.UI);
-            return true;
+            // TurnManager를 찾을 수 없으면 안전하게 false 반환 (아이템 사용 차단)
+            GameLogger.LogWarning("[ActiveItemUI] TurnManager를 찾을 수 없습니다. 아이템 사용을 차단합니다.", GameLogger.LogCategory.UI);
+            return false;
         }
 
         #endregion
