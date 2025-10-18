@@ -12,7 +12,7 @@ namespace Game.ItemSystem.Effect
     {
         [Header("실드 브레이커 설정")]
         [Tooltip("지속 시간 (턴)")]
-        [SerializeField] private int duration = 1;
+        [SerializeField] private int duration = 2;
 
         public override IItemEffectCommand CreateEffectCommand(int power)
         {

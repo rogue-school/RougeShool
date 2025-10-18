@@ -310,7 +310,7 @@ namespace Game.ItemSystem.Data
     {
         [Header("실드 브레이커 효과 설정")]
         [Tooltip("지속 시간 (턴)")]
-        public int duration = 1;
+        public int duration = 2;
     }
 
     // 리롤과 부활은 커스텀 설정이 필요 없으므로 클래스 자체를 제거하거나

@@ -356,25 +356,59 @@ namespace Game.ItemSystem.Runtime
 
         /// <summary>
         /// 현재 플레이어 턴인지 확인합니다.
+        /// 턴 상태와 전투 상태를 모두 확인하여 완전한 플레이어 턴에서만 사용 가능하도록 합니다.
         /// </summary>
-        /// <returns>플레이어 턴이면 true, 아니면 false</returns>
+        /// <returns>완전한 플레이어 턴이면 true, 아니면 false</returns>
         private bool IsPlayerTurn()
         {
+            // 1단계: TurnManager 턴 상태 확인
+            bool isTurnPlayerTurn = false;
             if (turnManager != null)
             {
-                return turnManager.IsPlayerTurn();
+                isTurnPlayerTurn = turnManager.IsPlayerTurn();
             }
-
-            // TurnManager가 없으면 씬에서 직접 찾기
-            var foundTurnManager = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
-            if (foundTurnManager != null)
+            else
             {
-                return foundTurnManager.IsPlayerTurn();
+                // TurnManager가 없으면 씬에서 직접 찾기
+                var foundTurnManager = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
+                if (foundTurnManager != null)
+                {
+                    isTurnPlayerTurn = foundTurnManager.IsPlayerTurn();
+                }
+                else
+                {
+                    // TurnManager를 찾을 수 없으면 안전하게 false 반환 (아이템 사용 차단)
+                    GameLogger.LogWarning("[ActiveItemUI] TurnManager를 찾을 수 없습니다. 아이템 사용을 차단합니다.", GameLogger.LogCategory.UI);
+                    return false;
+                }
             }
 
-            // TurnManager를 찾을 수 없으면 안전하게 false 반환 (아이템 사용 차단)
-            GameLogger.LogWarning("[ActiveItemUI] TurnManager를 찾을 수 없습니다. 아이템 사용을 차단합니다.", GameLogger.LogCategory.UI);
-            return false;
+            // 2단계: CombatStateMachine 전투 상태 확인
+            var combatStateMachine = FindFirstObjectByType<Game.CombatSystem.State.CombatStateMachine>();
+            if (combatStateMachine == null)
+            {
+                GameLogger.LogWarning("[ActiveItemUI] CombatStateMachine을 찾을 수 없습니다. 아이템 사용을 차단합니다.", GameLogger.LogCategory.UI);
+                return false;
+            }
+
+            var currentState = combatStateMachine.GetCurrentState();
+            if (currentState == null)
+            {
+                GameLogger.LogWarning("[ActiveItemUI] 현재 전투 상태가 없습니다. 아이템 사용을 차단합니다.", GameLogger.LogCategory.UI);
+                return false;
+            }
+
+            // 3단계: 완전한 플레이어 턴 상태인지 확인
+            bool isCompletePlayerTurn = isTurnPlayerTurn && 
+                                       currentState is Game.CombatSystem.State.PlayerTurnState &&
+                                       currentState.AllowPlayerCardDrag;
+
+            if (!isCompletePlayerTurn)
+            {
+                GameLogger.LogInfo($"[ActiveItemUI] 아이템 사용 불가 - 턴상태: {isTurnPlayerTurn}, 전투상태: {currentState.StateName}, 드래그허용: {currentState.AllowPlayerCardDrag}", GameLogger.LogCategory.UI);
+            }
+
+            return isCompletePlayerTurn;
         }
 
         #endregion

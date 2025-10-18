@@ -25,8 +25,26 @@ namespace Game.CharacterSystem.Core
     public class EnemyCharacter : CharacterBase, ICharacter
     {
         [Header("Character Data")]
-        [field: SerializeField]
-        public new EnemyCharacterData CharacterData { get; private set; }
+        [SerializeField]
+        private EnemyCharacterData _characterData;
+        
+        public new EnemyCharacterData CharacterData 
+        { 
+            get => _characterData;
+            private set 
+            {
+                var oldValue = _characterData;
+                _characterData = value;
+                
+                // CharacterData 변경 추적
+                if (oldValue != value)
+                {
+                    var oldName = oldValue?.DisplayName ?? "null";
+                    var newName = value?.DisplayName ?? "null";
+                    GameLogger.LogInfo($"[EnemyCharacter] CharacterData 변경: {oldName} → {newName} (스택: {System.Environment.StackTrace.Split('\n')[1].Trim()})", GameLogger.LogCategory.Character);
+                }
+            }
+        }
 
         // CharacterData 프로퍼티
         public ICharacterData CharacterDataInterface => CharacterData;
@@ -136,6 +154,8 @@ namespace Game.CharacterSystem.Core
                 throw new ArgumentNullException(nameof(data), "적 캐릭터 데이터는 null일 수 없습니다.");
             }
 
+            GameLogger.LogInfo($"[EnemyCharacter] Initialize 시작: {data.DisplayName} (스택: {System.Environment.StackTrace.Split('\n')[1].Trim()})", GameLogger.LogCategory.Character);
+            
             CharacterData = data;
             skillDeck = data.EnemyDeck;
 
@@ -148,6 +168,8 @@ namespace Game.CharacterSystem.Core
             {
                 hpBarController.Initialize(this);
             }
+            
+            GameLogger.LogInfo($"[EnemyCharacter] Initialize 완료: {data.DisplayName}, CharacterData: {CharacterData?.DisplayName ?? "null"}", GameLogger.LogCategory.Character);
         }
 
         /// <summary>
@@ -384,9 +406,13 @@ namespace Game.CharacterSystem.Core
                 throw new ArgumentNullException(nameof(data), "적 캐릭터 데이터는 null일 수 없습니다.");
             }
             
+            GameLogger.LogInfo($"[EnemyCharacter] SetCharacterData 호출: {data.DisplayName} (스택: {System.Environment.StackTrace.Split('\n')[1].Trim()})", GameLogger.LogCategory.Character);
+            
             CharacterData = data;
             this.gameObject.name = CharacterData.name;
             Initialize(data);
+            
+            GameLogger.LogInfo($"[EnemyCharacter] SetCharacterData 완료: {data.DisplayName}, CharacterData: {CharacterData?.DisplayName ?? "null"}", GameLogger.LogCategory.Character);
         }
 
         /// <summary>

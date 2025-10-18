@@ -202,14 +202,15 @@ namespace Game.ItemSystem.Effect
 
             GameLogger.LogInfo($"[TimeStopEffect] 적 캐릭터 발견: {enemyCharacter.GetCharacterName()}, 플레이어인가={enemyCharacter.IsPlayerControlled()}", GameLogger.LogCategory.Core);
 
-            // StunDebuff는 매 턴 감소하므로 1턴으로 설정
-            // EveryTurn 정책: 플레이어 턴(적용) → 적 턴(감소하며 스턴 유지) → 만료
-            var stunDebuff = new Game.SkillCardSystem.Effect.StunDebuff(1, itemIcon);
+            // StunDebuff는 매 턴 감소하므로 2턴으로 설정
+            // EveryTurn 정책: 플레이어 턴(적용) → 적 턴(감소하며 스턴 유지) → 다음 플레이어 턴(만료)
+            // 이렇게 하면 적 턴 전체를 차단할 수 있습니다
+            var stunDebuff = new Game.SkillCardSystem.Effect.StunDebuff(2, itemIcon);
             bool success = enemyCharacter.RegisterStatusEffect(stunDebuff);
 
             if (success)
             {
-                GameLogger.LogInfo($"[TimeStopEffect] 타임 스톱 스크롤 적용 완료: {enemyCharacter.GetCharacterName()}에게 1턴 스턴", GameLogger.LogCategory.Core);
+                GameLogger.LogInfo($"[TimeStopEffect] 타임 스톱 스크롤 적용 완료: {enemyCharacter.GetCharacterName()}에게 2턴 스턴 (다음 적 턴 완전 차단)", GameLogger.LogCategory.Core);
                 return true;
             }
             else
@@ -233,96 +234,165 @@ namespace Game.ItemSystem.Effect
             this.changeCount = Mathf.Max(1, changeCount);
         }
 
+        /// <summary>
+        /// 운명의 주사위 효과를 실행합니다
+        /// 목적: 다음 턴에 사용될 적의 스킬카드를 랜덤하게 교체
+        /// </summary>
         protected override bool ExecuteInternal(IItemUseContext context)
         {
-            // SlotRegistry를 통해 CombatSlotRegistry 접근
-            var slotRegistry = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.Slot.SlotRegistry>();
-            if (slotRegistry == null)
+            GameLogger.LogInfo("[DiceOfFate] 운명의 주사위 효과 실행 시작", GameLogger.LogCategory.Core);
+
+            // 1단계: WAIT_SLOT_1 찾기 (다음 턴에 사용될 적 카드)
+            var targetSlot = FindWaitSlot1();
+            if (targetSlot == null)
             {
-                GameLogger.LogWarning("[DiceOfFate] SlotRegistry를 찾을 수 없습니다. 전투 씬이 아닌 것으로 보입니다", GameLogger.LogCategory.Core);
+                GameLogger.LogError("[DiceOfFate] WAIT_SLOT_1을 찾을 수 없습니다", GameLogger.LogCategory.Core);
                 return false;
             }
 
-            // SlotRegistry에서 CombatSlotRegistry 가져오기 (public 메서드 사용)
-            var combatSlotRegistry = slotRegistry.GetCombatSlotRegistry();
-            if (combatSlotRegistry == null)
+            // 2단계: 기존 적 카드 확인
+            var existingCard = GetEnemyCardFromSlot(targetSlot);
+            if (existingCard == null)
             {
-                GameLogger.LogWarning("[DiceOfFate] CombatSlotRegistry를 찾을 수 없습니다", GameLogger.LogCategory.Core);
+                GameLogger.LogError("[DiceOfFate] WAIT_SLOT_1에 적 카드가 없습니다", GameLogger.LogCategory.Core);
                 return false;
             }
 
-            // 대기 슬롯에서 적의 가장 앞 순서 카드 찾기
-            var waitSlots = new[] { CombatSlotPosition.WAIT_SLOT_1, CombatSlotPosition.WAIT_SLOT_2, CombatSlotPosition.WAIT_SLOT_3, CombatSlotPosition.WAIT_SLOT_4 };
-            ISkillCard targetCard = null;
-            CombatSlotPosition targetSlot = CombatSlotPosition.WAIT_SLOT_1;
+            GameLogger.LogInfo($"[DiceOfFate] 교체 대상 카드: {existingCard.GetCardName()}", GameLogger.LogCategory.Core);
 
-            // WAIT_SLOT_1부터 순서대로 확인하여 적의 첫 번째 카드 찾기
-            foreach (var slot in waitSlots)
+            // 3단계: 새 적 카드 생성
+            var newCard = CreateRandomEnemyCard();
+            if (newCard == null)
             {
-                var combatSlot = combatSlotRegistry.GetCombatSlot(slot);
-                if (combatSlot != null)
+                GameLogger.LogError("[DiceOfFate] 새 적 카드 생성에 실패했습니다", GameLogger.LogCategory.Core);
+                return false;
+            }
+
+            // 4단계: 카드 데이터 교체 (GameObject 생성/삭제 없음)
+            ReplaceCardInSlot(targetSlot, newCard);
+
+            GameLogger.LogInfo($"[DiceOfFate] 운명의 주사위 적용 완료: {existingCard.GetCardName()} → {newCard.GetCardName()}", GameLogger.LogCategory.Core);
+            return true;
+        }
+
+        private Game.CombatSystem.UI.CombatExecutionSlotUI FindWaitSlot1()
+        {
+            var combatSlots = UnityEngine.Object.FindObjectsByType<Game.CombatSystem.UI.CombatExecutionSlotUI>(FindObjectsSortMode.None);
+            return System.Array.Find(combatSlots, s => s.Position == CombatSlotPosition.WAIT_SLOT_1);
+        }
+
+        private Game.SkillCardSystem.Interface.ISkillCard GetEnemyCardFromSlot(Game.CombatSystem.UI.CombatExecutionSlotUI slot)
+        {
+            var card = slot.GetCard();
+            if (card != null && card.GetOwner() == SlotOwner.ENEMY)
+            {
+                return card;
+            }
+
+            // 자식에서 찾기
+            var cardUI = slot.transform.GetComponentInChildren<Game.SkillCardSystem.UI.SkillCardUI>();
+            if (cardUI != null)
+            {
+                var childCard = cardUI.GetCard();
+                if (childCard != null && childCard.GetOwner() == SlotOwner.ENEMY)
                 {
-                    var card = combatSlot.GetCard();
-                    if (card != null && card.GetOwner() == SlotOwner.ENEMY)
-                    {
-                        targetCard = card;
-                        targetSlot = slot;
-                        GameLogger.LogInfo($"적의 대기 카드 발견: {slot} - {card.GetCardName()}", GameLogger.LogCategory.Core);
-                        break; // 가장 앞 순서의 카드를 찾았으므로 중단
-                    }
+                    return childCard;
                 }
             }
 
-            if (targetCard == null)
-            {
-                GameLogger.LogWarning("대기 슬롯에서 적의 카드를 찾을 수 없습니다", GameLogger.LogCategory.Core);
-                return false;
-            }
+            return null;
+        }
 
-            // 적 덱에서 랜덤 카드 선택
+        private Game.SkillCardSystem.Interface.ISkillCard CreateRandomEnemyCard()
+        {
             var enemyManager = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
-            if (enemyManager == null)
+            if (enemyManager?.GetCurrentEnemy() is not Game.CharacterSystem.Core.EnemyCharacter enemyCharacter)
             {
-                GameLogger.LogError("EnemyManager를 찾을 수 없습니다", GameLogger.LogCategory.Core);
-                return false;
+                GameLogger.LogError("[DiceOfFate] EnemyCharacter를 찾을 수 없습니다", GameLogger.LogCategory.Core);
+                return null;
             }
 
-            var currentEnemy = enemyManager.GetCurrentEnemy();
-            if (currentEnemy == null)
-            {
-                GameLogger.LogError("현재 적 캐릭터를 찾을 수 없습니다", GameLogger.LogCategory.Core);
-                return false;
-            }
-
-            // 적 캐릭터의 데이터에서 스킬 덱 접근
-            var enemyData = currentEnemy.CharacterData as Game.CharacterSystem.Data.EnemyCharacterData;
+            var enemyData = enemyCharacter.CharacterData;
             if (enemyData?.EnemyDeck == null)
             {
-                GameLogger.LogError("적 스킬 덱을 찾을 수 없습니다", GameLogger.LogCategory.Core);
-                return false;
+                GameLogger.LogError("[DiceOfFate] 적 스킬 덱을 찾을 수 없습니다", GameLogger.LogCategory.Core);
+                return null;
             }
 
             var randomEntry = enemyData.EnemyDeck.GetRandomEntry();
             if (randomEntry == null)
             {
-                GameLogger.LogError("적 스킬 덱에서 랜덤 카드를 선택할 수 없습니다", GameLogger.LogCategory.Core);
-                return false;
+                GameLogger.LogError("[DiceOfFate] 적 스킬 덱에서 랜덤 카드를 선택할 수 없습니다", GameLogger.LogCategory.Core);
+                return null;
             }
 
-            // 기존 카드 제거
-            var targetCombatSlot = combatSlotRegistry.GetCombatSlot(targetSlot);
-            if (targetCombatSlot != null)
+            // 직접 SkillCardFactory 인스턴스 생성 (DI 없이)
+            var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            if (audioManager == null)
             {
-                targetCombatSlot.ClearAll();
+                GameLogger.LogError("[DiceOfFate] AudioManager를 찾을 수 없습니다", GameLogger.LogCategory.Core);
+                return null;
+            }
+            
+            var skillCardFactory = new Game.SkillCardSystem.Factory.SkillCardFactory(audioManager);
+            var newCard = skillCardFactory.CreateEnemyCard(randomEntry.definition, enemyCharacter.GetCharacterName());
+            
+            if (newCard != null)
+            {
+                GameLogger.LogInfo($"[DiceOfFate] 새 카드 생성 완료: {newCard.GetCardName()}", GameLogger.LogCategory.Core);
+            }
+            
+            return newCard;
+        }
+
+        /// <summary>
+        /// 슬롯의 카드를 새로운 카드로 교체합니다 (데이터 교체 방식)
+        /// </summary>
+        /// <param name="slot">대상 슬롯</param>
+        /// <param name="newCard">새로운 카드 데이터</param>
+        private void ReplaceCardInSlot(Game.CombatSystem.UI.CombatExecutionSlotUI slot, Game.SkillCardSystem.Interface.ISkillCard newCard)
+        {
+            if (slot == null || newCard == null)
+            {
+                GameLogger.LogError("[DiceOfFate] 슬롯 또는 새 카드가 null입니다", GameLogger.LogCategory.Core);
+                return;
             }
 
-            // 새 카드 생성 및 배치 (임시로 로그만 출력)
-            GameLogger.LogInfo($"운명의 주사위 적용 예정: 적의 {targetSlot} 카드 {targetCard.GetCardName()} → {randomEntry.definition.displayName}", GameLogger.LogCategory.Core);
+            // 1단계: 기존 카드 UI 재사용 (권장 방식)
+            var existingCardUI = slot.GetCardUI() as Game.SkillCardSystem.UI.SkillCardUI;
+            if (existingCardUI != null)
+            {
+                GameLogger.LogInfo($"[DiceOfFate] 기존 카드 UI 재사용: {existingCardUI.GetCard()?.GetCardName()} → {newCard.GetCardName()}", GameLogger.LogCategory.Core);
+                
+                // 카드 데이터만 교체 (GameObject 생성/삭제 없음)
+                existingCardUI.SetCard(newCard);
+                slot.SetCard(newCard);
+                
+                GameLogger.LogInfo("[DiceOfFate] 카드 데이터 교체 완료", GameLogger.LogCategory.Core);
+                return;
+            }
 
-            // TODO: SkillCardFactory를 통해 새 카드 생성 및 배치
-            // 현재는 임시 구현으로 로그만 출력
+            // 2단계: 새 카드 UI 생성 (fallback)
+            GameLogger.LogWarning("[DiceOfFate] 기존 카드 UI를 찾을 수 없어 새로 생성합니다", GameLogger.LogCategory.Core);
+            
+            var prefab = Resources.Load<Game.SkillCardSystem.UI.SkillCardUI>("Prefab/SkillCard");
+            if (prefab == null)
+            {
+                GameLogger.LogError("[DiceOfFate] SkillCardUI 프리팹을 찾을 수 없습니다", GameLogger.LogCategory.Core);
+                return;
+            }
 
-            return true;
+            var newCardUI = Game.SkillCardSystem.UI.SkillCardUIFactory.CreateUI(prefab, slot.transform, newCard, null, null);
+            if (newCardUI != null)
+            {
+                slot.SetCard(newCard);
+                slot.SetCardUI(newCardUI);
+                GameLogger.LogInfo("[DiceOfFate] 새 카드 UI 생성 및 배치 완료", GameLogger.LogCategory.Core);
+            }
+            else
+            {
+                GameLogger.LogError("[DiceOfFate] 새 카드 UI 생성 실패", GameLogger.LogCategory.Core);
+            }
         }
     }
 
@@ -396,7 +466,7 @@ namespace Game.ItemSystem.Effect
     {
         private int duration;
 
-        public ShieldBreakerEffectCommand(int duration = 1) : base("실드 브레이커")
+        public ShieldBreakerEffectCommand(int duration = 2) : base("실드 브레이커")
         {
             this.duration = duration;
         }
