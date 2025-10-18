@@ -16,6 +16,8 @@ MonoBehaviour:
   displayName: "\uC6B4\uBA85\uC758 \uC8FC\uC0AC\uC704"
   description: 
   icon: {fileID: -775860301928526015, guid: 10b9222de4c2f81449cf1723b834730b, type: 3}
+  targetType: 1
+  turnPolicy: 0
   presentation:
     sfxClip: {fileID: 0}
     visualEffectPrefab: {fileID: 0}
@@ -33,4 +35,3 @@ MonoBehaviour:
       type: {class: DiceOfFateEffectCustomSettings, ns: Game.ItemSystem.Data, asm: Assembly-CSharp}
       data:
         changeCount: 1
-        duration: 1

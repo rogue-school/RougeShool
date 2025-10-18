@@ -216,9 +216,20 @@ namespace Game.ItemSystem.Runtime
 		/// <param name="context">사용 컨텍스트</param>
 		public bool ExecuteItemAutomatically(IItemUseContext context)
 		{
-			if (context?.User == null || context.User.IsDead())
+			if (context?.User == null)
 			{
-				GameLogger.LogWarning("[ActiveItem] 사용자가 null이거나 사망 상태입니다", GameLogger.LogCategory.Core);
+				GameLogger.LogWarning("[ActiveItem] 사용자가 null입니다", GameLogger.LogCategory.Core);
+				return false;
+			}
+
+			// 부활 아이템이 아닌 경우 사망 상태 체크
+			bool isReviveItem = definition.DisplayName.Contains("부활") || 
+			                   definition.DisplayName.Contains("Revive") ||
+			                   definition.DisplayName.Contains("징표");
+			
+			if (!isReviveItem && context.User.IsDead())
+			{
+				GameLogger.LogWarning("[ActiveItem] 사용자가 사망 상태입니다", GameLogger.LogCategory.Core);
 				return false;
 			}
 			

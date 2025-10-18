@@ -16,6 +16,8 @@ MonoBehaviour:
   displayName: "\uD0C0\uC784 \uC2A4\uD1B1 \uC2A4\uD06C\uB864"
   description: 
   icon: {fileID: 8933749813396638541, guid: b00db80c164406045a26f3629ea98a3c, type: 3}
+  targetType: 1
+  turnPolicy: 1
   presentation:
     sfxClip: {fileID: 0}
     visualEffectPrefab: {fileID: 0}
@@ -33,4 +35,3 @@ MonoBehaviour:
       type: {class: TimeStopEffectCustomSettings, ns: Game.ItemSystem.Data, asm: Assembly-CSharp}
       data:
         sealCount: 1
-        duration: 1

@@ -23,7 +23,7 @@ MonoBehaviour:
     visualEffectPrefab: {fileID: 0}
   effectConfiguration:
     effects:
-    - effectSO: {fileID: 11400000, guid: b5af9dcc55a601d4293071c29191d1f5, type: 2}
+    - effectSO: {fileID: 11400000, guid: 97791d5c006bfab4fad36b7c18502ece, type: 2}
       useCustomSettings: 0
       customSettings:
         rid: -2

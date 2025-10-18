@@ -26,7 +26,7 @@ namespace Game.ItemSystem.Effect
         /// </summary>
         /// <param name="context">사용 컨텍스트</param>
         /// <returns>실행 성공 여부</returns>
-        public bool Execute(IItemUseContext context)
+        public virtual bool Execute(IItemUseContext context)
         {
             if (!ItemEffectValidator.ValidateUser(context, operationName))
                 return false;

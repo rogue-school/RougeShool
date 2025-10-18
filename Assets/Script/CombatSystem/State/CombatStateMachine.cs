@@ -628,8 +628,107 @@ namespace Game.CombatSystem.State
                 "[CombatStateMachine] 플레이어 사망 감지",
                 GameLogger.LogCategory.Combat);
 
-            // 패배 상태로 전환
+            // 부활 아이템이 있는지 확인
+            if (TryAutoRevive())
+            {
+                GameLogger.LogInfo("[CombatStateMachine] 부활 아이템 사용으로 부활 성공", GameLogger.LogCategory.Combat);
+                return; // 부활했으므로 게임 계속
+            }
+
+            // 부활 아이템이 없거나 사용 실패 시 패배 상태로 전환
             EndCombat(false);
+        }
+
+        /// <summary>
+        /// 자동 부활을 시도합니다.
+        /// </summary>
+        /// <returns>부활 성공 여부</returns>
+        private bool TryAutoRevive()
+        {
+            try
+            {
+                // ItemService 찾기
+                var itemService = FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
+                if (itemService == null)
+                {
+                    GameLogger.LogWarning("[CombatStateMachine] ItemService를 찾을 수 없습니다", GameLogger.LogCategory.Combat);
+                    return false;
+                }
+
+                // 플레이어 캐릭터 가져오기
+                var playerCharacter = playerManager?.GetCharacter();
+                if (playerCharacter == null)
+                {
+                    GameLogger.LogWarning("[CombatStateMachine] 플레이어 캐릭터를 찾을 수 없습니다", GameLogger.LogCategory.Combat);
+                    return false;
+                }
+
+                // 부활 아이템 찾기
+                var reviveItemSlot = FindReviveItemSlot(itemService);
+                if (reviveItemSlot == -1)
+                {
+                    GameLogger.LogInfo("[CombatStateMachine] 부활 아이템이 없습니다", GameLogger.LogCategory.Combat);
+                    return false;
+                }
+
+                GameLogger.LogInfo($"[CombatStateMachine] 부활 아이템 발견: 슬롯 {reviveItemSlot}", GameLogger.LogCategory.Combat);
+
+                // 부활 아이템 사용
+                bool success = itemService.UseActiveItem(reviveItemSlot);
+                
+                if (success)
+                {
+                    GameLogger.LogInfo("[CombatStateMachine] 부활 아이템 사용 성공", GameLogger.LogCategory.Combat);
+                    return true;
+                }
+                else
+                {
+                    GameLogger.LogWarning("[CombatStateMachine] 부활 아이템 사용 실패", GameLogger.LogCategory.Combat);
+                    return false;
+                }
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogError($"[CombatStateMachine] 자동 부활 중 오류 발생: {ex.Message}", GameLogger.LogCategory.Combat);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 부활 아이템이 있는 슬롯을 찾습니다.
+        /// </summary>
+        /// <param name="itemService">아이템 서비스</param>
+        /// <returns>부활 아이템 슬롯 인덱스, 없으면 -1</returns>
+        private int FindReviveItemSlot(Game.ItemSystem.Service.ItemService itemService)
+        {
+            // ItemService의 activeSlots에 접근하기 위해 리플렉션 사용
+            var activeSlotsField = typeof(Game.ItemSystem.Service.ItemService).GetField("activeSlots", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            
+            if (activeSlotsField != null)
+            {
+                var activeSlots = activeSlotsField.GetValue(itemService) as Game.ItemSystem.Interface.ActiveItemSlotData[];
+                
+                if (activeSlots != null)
+                {
+                    for (int i = 0; i < activeSlots.Length; i++)
+                    {
+                        var slot = activeSlots[i];
+                        if (!slot.isEmpty && slot.item != null)
+                        {
+                            // 부활 관련 아이템인지 확인
+                            if (slot.item.DisplayName.Contains("부활") || 
+                                slot.item.DisplayName.Contains("Revive") ||
+                                slot.item.DisplayName.Contains("징표"))
+                            {
+                                return i;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return -1;
         }
 
         #endregion

@@ -196,15 +196,19 @@ namespace Game.ItemSystem.Service
                 return true;
             }
 
-            // 모든 아이템은 플레이어 턴에만 사용 가능
-            if (!IsPlayerTurn())
+            // 모든 아이템은 플레이어 턴에만 사용 가능 (부활 아이템 제외)
+            bool isReviveItem = slot.item.DisplayName.Contains("부활") || 
+                               slot.item.DisplayName.Contains("Revive") ||
+                               slot.item.DisplayName.Contains("징표");
+            
+            if (!IsPlayerTurn() && !isReviveItem)
             {
                 GameLogger.LogWarning($"{slot.item.DisplayName}은 플레이어 턴에만 사용할 수 있습니다", GameLogger.LogCategory.Core);
                 return false;
             }
 
             // 부활 아이템은 죽었을 때만 사용 가능 (특수 조건)
-            if (slot.item.DisplayName.Contains("부활") && !playerCharacter.IsDead())
+            if (isReviveItem && !playerCharacter.IsDead())
             {
                 GameLogger.LogWarning($"{slot.item.DisplayName}은 죽었을 때만 사용할 수 있습니다", GameLogger.LogCategory.Core);
                 return false;

@@ -36,8 +36,8 @@ namespace Game.ItemSystem.Effect
             }
             else
             {
-                GameLogger.LogInfo("체력이 이미 최대입니다", GameLogger.LogCategory.Core);
-                return false;
+                GameLogger.LogInfo("체력이 이미 최대입니다 - 아이템 사용은 성공으로 처리", GameLogger.LogCategory.Core);
+                return true; // 체력이 최대여도 아이템 사용은 성공으로 처리
             }
         }
     }
@@ -122,6 +122,29 @@ namespace Game.ItemSystem.Effect
     {
         public ReviveEffectCommand() : base("부활")
         {
+        }
+
+        /// <summary>
+        /// 부활 아이템은 사망한 사용자도 사용할 수 있도록 Execute 메서드를 오버라이드
+        /// </summary>
+        public override bool Execute(IItemUseContext context)
+        {
+            // 부활 아이템은 사망한 사용자도 허용 (null 체크만 수행)
+            if (context?.User == null)
+            {
+                GameLogger.LogError("부활 실패: 사용자가 null입니다", GameLogger.LogCategory.Core);
+                return false;
+            }
+
+            try
+            {
+                return ExecuteInternal(context);
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogError($"[부활] 효과 실행 중 오류 발생: {ex.Message}", GameLogger.LogCategory.Core);
+                return false;
+            }
         }
 
         protected override bool ValidateAdditionalConditions(IItemUseContext context)
@@ -552,20 +575,81 @@ namespace Game.ItemSystem.Effect
 
             GameLogger.LogInfo($"[ShieldBreakerEffect] 적 캐릭터 발견: {enemyCharacter.GetCharacterName()}, 정책={turnPolicy}", GameLogger.LogCategory.Core);
 
-            // 실드 브레이커 디버프 효과 생성 및 적용
-            var shieldBreakerEffect = new ShieldBreakerDebuffEffect(duration, turnPolicy, itemIcon);
-            bool success = enemyCharacter.RegisterStatusEffect(shieldBreakerEffect);
-
-            if (success)
+            // 실드 브레이커 효과: 적의 가드 버프를 즉시 제거
+            var guardBuffRemoved = RemoveGuardBuff(enemyCharacter);
+            
+            if (guardBuffRemoved)
             {
-                GameLogger.LogInfo($"[ShieldBreakerEffect] 실드 브레이커 적용 완료: {enemyCharacter.GetCharacterName()}에게 {duration}턴 디버프 (정책: {turnPolicy})", GameLogger.LogCategory.Core);
+                GameLogger.LogInfo($"[ShieldBreakerEffect] 실드 브레이커 적용 완료: {enemyCharacter.GetCharacterName()}의 가드 버프 제거", GameLogger.LogCategory.Core);
                 return true;
             }
             else
             {
-                GameLogger.LogWarning($"[ShieldBreakerEffect] 실드 브레이커 적용 실패: {enemyCharacter.GetCharacterName()}이 보호 상태", GameLogger.LogCategory.Core);
+                GameLogger.LogInfo($"[ShieldBreakerEffect] 실드 브레이커 적용 완료: {enemyCharacter.GetCharacterName()}에게 가드 버프가 없음", GameLogger.LogCategory.Core);
+                return true; // 가드가 없어도 성공으로 처리
+            }
+        }
+
+        /// <summary>
+        /// 적의 가드 버프를 제거합니다
+        /// </summary>
+        /// <param name="enemyCharacter">대상 적 캐릭터</param>
+        /// <returns>가드 버프가 제거되었으면 true, 없었으면 false</returns>
+        private bool RemoveGuardBuff(Game.CharacterSystem.Interface.ICharacter enemyCharacter)
+        {
+            if (enemyCharacter == null)
+            {
+                GameLogger.LogError("[ShieldBreakerEffect] 적 캐릭터가 null입니다", GameLogger.LogCategory.Core);
                 return false;
             }
+
+            // CharacterBase로 캐스팅하여 perTurnEffects에 접근
+            if (enemyCharacter is Game.CharacterSystem.Core.CharacterBase characterBase)
+            {
+                // 리플렉션을 사용하여 perTurnEffects 필드에 접근
+                var perTurnEffectsField = typeof(Game.CharacterSystem.Core.CharacterBase).GetField("perTurnEffects", 
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                
+                if (perTurnEffectsField != null)
+                {
+                    var perTurnEffects = perTurnEffectsField.GetValue(characterBase) as System.Collections.Generic.List<Game.SkillCardSystem.Interface.IPerTurnEffect>;
+                    
+                    if (perTurnEffects != null)
+                    {
+                        // GuardBuff 타입의 효과를 찾아서 제거
+                        var guardBuff = perTurnEffects.Find(effect => effect is Game.SkillCardSystem.Effect.GuardBuff);
+                        
+                        if (guardBuff != null)
+                        {
+                            perTurnEffects.Remove(guardBuff);
+                            
+                            // 가드 상태를 false로 설정
+                            characterBase.SetGuarded(false);
+                            
+                            // UI 업데이트를 위한 이벤트 발생
+                            var onBuffsChangedField = typeof(Game.CharacterSystem.Core.CharacterBase).GetField("OnBuffsChanged", 
+                                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                            
+                            if (onBuffsChangedField != null)
+                            {
+                                var onBuffsChanged = onBuffsChangedField.GetValue(characterBase) as System.Action<System.Collections.Generic.IReadOnlyList<Game.SkillCardSystem.Interface.IPerTurnEffect>>;
+                                onBuffsChanged?.Invoke(perTurnEffects.AsReadOnly());
+                            }
+                            
+                            GameLogger.LogInfo($"[ShieldBreakerEffect] 가드 버프 제거 완료: {enemyCharacter.GetCharacterName()}", GameLogger.LogCategory.Core);
+                            return true;
+                        }
+                        else
+                        {
+                            GameLogger.LogInfo($"[ShieldBreakerEffect] 가드 버프가 없음: {enemyCharacter.GetCharacterName()}", GameLogger.LogCategory.Core);
+                            return false;
+                        }
+                    }
+                }
+            }
+            
+            GameLogger.LogWarning($"[ShieldBreakerEffect] 가드 버프 제거 실패: {enemyCharacter.GetCharacterName()}", GameLogger.LogCategory.Core);
+            return false;
         }
     }
 }
