@@ -35,13 +35,11 @@ namespace Game.SkillCardSystem.UI.Mappers
                     var hits = Mathf.Max(1, config.damageConfig.hits);
                     if (hits <= 1)
                     {
-                        ruleLines.Add($"대상에게 피해 {dmg}를 줍니다.");
-                        previewLines.Add($"예상 피해(기본): {dmg}");
+                        ruleLines.Add($"피해 {dmg}를 줍니다.");
                     }
                     else
                     {
                         ruleLines.Add($"피해 {dmg}를 {hits}번 줍니다.");
-                        previewLines.Add($"총 예상 피해(기본): {dmg * hits} (각 {dmg} × {hits})");
                     }
                     if (config.damageConfig.ignoreGuard)
                     {
@@ -73,13 +71,11 @@ namespace Game.SkillCardSystem.UI.Mappers
                             var hits = Mathf.Max(1, cs.damageHits);
                             if (hits <= 1)
                             {
-                                ruleLines.Add($"대상에게 피해 {dmg}를 줍니다.");
-                                previewLines.Add($"예상 피해(기본): {dmg}");
+                                ruleLines.Add($"피해 {dmg}를 줍니다.");
                             }
                             else
                             {
                                 ruleLines.Add($"피해 {dmg}를 {hits}번 줍니다.");
-                                previewLines.Add($"총 예상 피해(기본): {dmg * hits} (각 {dmg} × {hits})");
                             }
                         }
 
@@ -87,7 +83,7 @@ namespace Game.SkillCardSystem.UI.Mappers
                         {
                             if (cs != null && cs.bleedAmount > 0)
                             {
-                                ruleLines.Add($"출혈 {cs.bleedAmount} (지속 {cs.bleedDuration}턴). 턴 종료마다 피해 {cs.bleedAmount}.");
+                                ruleLines.Add($"{cs.bleedAmount}의 피해를 {cs.bleedDuration}턴 동안 입히는 출혈을 부여합니다.");
                             }
                             model.Effects.Add(new TooltipModel.EffectRow
                             {
@@ -201,11 +197,307 @@ namespace Game.SkillCardSystem.UI.Mappers
             return model;
         }
 
+        /// <summary>
+        /// 스택 정보를 포함하여 SkillCardDefinition을 TooltipModel로 변환합니다.
+        /// </summary>
+        /// <param name="def">카드 정의</param>
+        /// <param name="currentStacks">현재 스택 수</param>
+        /// <param name="playerCharacter">플레이어 캐릭터 (공격력 버프 확인용)</param>
+        /// <returns>툴팁 모델</returns>
+        public static TooltipModel FromWithStacks(SkillCardDefinition def, int currentStacks = 0, Game.CharacterSystem.Interface.ICharacter playerCharacter = null)
+        {
+            var model = new TooltipModel();
+            if (def == null) return model;
+
+            model.Title = string.IsNullOrEmpty(def.displayNameKO) ? def.displayName : def.displayNameKO;
+            model.CardType = GetTypeText(def);
+            var ruleLines = new System.Collections.Generic.List<string>();
+            var previewLines = new System.Collections.Generic.List<string>();
+            if (!string.IsNullOrEmpty(def.description))
+            {
+                ruleLines.Add(def.description);
+            }
+            model.Icon = def.artwork;
+
+            // 효과 요약(간단) 채우기 - 스택 기반 실제 데미지 표시
+            var config = def.configuration;
+            if (config != null)
+            {
+                if (config.hasDamage && config.damageConfig != null)
+                {
+                    var baseDmg = config.damageConfig.baseDamage;
+                    
+                    // 공격력 물약 버프 계산
+                    int attackPotionBonus = 0;
+                    if (playerCharacter != null)
+                    {
+                        attackPotionBonus = GetAttackPotionBonus(playerCharacter);
+                    }
+                    
+                    var actualDmg = CalculateActualDamage(baseDmg, currentStacks, attackPotionBonus);
+                    var hits = Mathf.Max(1, config.damageConfig.hits);
+                    
+                    if (hits <= 1)
+                    {
+                        if (currentStacks > 0 || attackPotionBonus > 0)
+                        {
+                            string bonusText = "";
+                            if (currentStacks > 0 && attackPotionBonus > 0)
+                            {
+                                bonusText = $" (기본 피해 {baseDmg} + 스택 {currentStacks} + 공격력 물약 {attackPotionBonus})";
+                            }
+                            else if (currentStacks > 0)
+                            {
+                                bonusText = $" (기본 피해 {baseDmg} + 스택 {currentStacks})";
+                            }
+                            else if (attackPotionBonus > 0)
+                            {
+                                bonusText = $" (기본 피해 {baseDmg} + 공격력 물약 {attackPotionBonus})";
+                            }
+                            
+                            ruleLines.Add($"피해 {actualDmg}를 줍니다.\n{bonusText}");
+                        }
+                        else
+                        {
+                            ruleLines.Add($"피해 {actualDmg}를 줍니다.");
+                        }
+                    }
+                    else
+                    {
+                        var totalActualDmg = actualDmg * hits;
+                        var totalBaseDmg = baseDmg * hits;
+                        if (currentStacks > 0 || attackPotionBonus > 0)
+                        {
+                            string bonusText = "";
+                            if (currentStacks > 0 && attackPotionBonus > 0)
+                            {
+                                bonusText = $" (기본 피해 {baseDmg} + 스택 {currentStacks} + 공격력 물약 {attackPotionBonus})";
+                            }
+                            else if (currentStacks > 0)
+                            {
+                                bonusText = $" (기본 피해 {baseDmg} + 스택 {currentStacks})";
+                            }
+                            else if (attackPotionBonus > 0)
+                            {
+                                bonusText = $" (기본 피해 {baseDmg} + 공격력 물약 {attackPotionBonus})";
+                            }
+                            
+                            ruleLines.Add($"피해 {actualDmg}를 {hits}번 줍니다.\n{bonusText}");
+                        }
+                        else
+                        {
+                            ruleLines.Add($"피해 {actualDmg}를 {hits}번 줍니다.");
+                        }
+                    }
+                    
+                    if (config.damageConfig.ignoreGuard)
+                    {
+                        ruleLines.Add("가드를 무시합니다.");
+                    }
+                    if (config.damageConfig.ignoreCounter)
+                    {
+                        ruleLines.Add("반격을 무시합니다.");
+                    }
+
+                    string effectDescription;
+                    if (currentStacks > 0 && attackPotionBonus > 0)
+                    {
+                        effectDescription = $"현재 {actualDmg} (기본 피해 {baseDmg} + 스택 {currentStacks} + 공격력 물약 {attackPotionBonus})";
+                    }
+                    else if (currentStacks > 0)
+                    {
+                        effectDescription = $"현재 {actualDmg} (기본 피해 {baseDmg} + 스택 {currentStacks})";
+                    }
+                    else if (attackPotionBonus > 0)
+                    {
+                        effectDescription = $"현재 {actualDmg} (기본 피해 {baseDmg} + 공격력 물약 {attackPotionBonus})";
+                    }
+                    else
+                    {
+                        effectDescription = $"기본 {actualDmg}";
+                    }
+                    
+                    model.Effects.Add(new TooltipModel.EffectRow
+                    {
+                        Name = "데미지",
+                        Description = effectDescription,
+                        Color = UnityEngine.Color.red
+                    });
+                }
+
+                // 기타 효과들은 기존과 동일하게 처리
+                if (config.hasEffects && config.effects != null)
+                {
+                    foreach (var effectConfig in config.effects)
+                    {
+                        var so = effectConfig.effectSO;
+                        var cs = effectConfig.useCustomSettings ? effectConfig.customSettings : null;
+
+                        if (so is BleedEffectSO)
+                        {
+                            if (cs != null && cs.bleedAmount > 0)
+                            {
+                                ruleLines.Add($"{cs.bleedAmount}의 피해를 {cs.bleedDuration}턴 동안 입히는 출혈을 부여합니다.");
+                            }
+                            model.Effects.Add(new TooltipModel.EffectRow
+                            {
+                                Name = "출혈",
+                                Description = cs != null ? $"{cs.bleedAmount}, {cs.bleedDuration}턴" : "적용",
+                                Color = UnityEngine.Color.red
+                            });
+                        }
+
+                        if (so is HealEffectSO)
+                        {
+                            if (cs != null && cs.healAmount > 0)
+                            {
+                                ruleLines.Add($"체력을 {cs.healAmount} 회복합니다.");
+                            }
+                            model.Effects.Add(new TooltipModel.EffectRow
+                            {
+                                Name = "치유",
+                                Description = cs != null ? $"{cs.healAmount}" : "회복",
+                                Color = UnityEngine.Color.green
+                            });
+                        }
+
+                        if (so is GuardEffectSO)
+                        {
+                            ruleLines.Add("가드 1을 얻습니다.");
+                            model.Effects.Add(new TooltipModel.EffectRow
+                            {
+                                Name = "가드",
+                                Description = "+1",
+                                Color = UnityEngine.Color.blue
+                            });
+                        }
+
+                        if (so is StunEffectSO)
+                        {
+                            if (cs != null && cs.stunDuration > 0)
+                            {
+                                ruleLines.Add($"대상을 {cs.stunDuration}턴 동안 기절시킵니다.");
+                            }
+                            else
+                            {
+                                ruleLines.Add("대상을 기절시킵니다.");
+                            }
+                            model.Effects.Add(new TooltipModel.EffectRow
+                            {
+                                Name = "스턴",
+                                Description = cs != null && cs.stunDuration > 0 ? $"{cs.stunDuration}턴" : "적용",
+                                Color = UnityEngine.Color.red
+                            });
+                        }
+
+                        if (so is CounterEffectSO)
+                        {
+                            if (cs != null && cs.counterDuration > 0)
+                            {
+                                ruleLines.Add($"{cs.counterDuration}턴 동안 공격받으면 즉시 반격합니다.");
+                            }
+                            else
+                            {
+                                ruleLines.Add("공격받으면 즉시 반격합니다.");
+                            }
+                            model.Effects.Add(new TooltipModel.EffectRow
+                            {
+                                Name = "반격",
+                                Description = cs != null && cs.counterDuration > 0 ? $"{cs.counterDuration}턴" : "적용",
+                                Color = UnityEngine.Color.yellow
+                            });
+                        }
+
+                        if (so is CardUseStackEffectSO)
+                        {
+                            if (cs != null && cs.stackIncreasePerUse > 0)
+                            {
+                                var inc = cs.stackIncreasePerUse;
+                                var max = cs.maxStacks;
+                                ruleLines.Add(max > 0 ? $"사용 시 스택 {inc} 증가합니다(최대 {max})." : $"사용 시 스택 {inc} 증가합니다.");
+                            }
+                            model.Effects.Add(new TooltipModel.EffectRow
+                            {
+                                Name = "스택",
+                                Description = cs != null && cs.stackIncreasePerUse > 0 ? $"+{cs.stackIncreasePerUse}" : "+스택",
+                                Color = new Color(0.8f, 0.8f, 1f)
+                            });
+                        }
+
+                        if (cs != null && cs.resourceDelta != 0)
+                        {
+                            var text = cs.resourceDelta > 0 ? "획득" : "소모";
+                            ruleLines.Add($"자원 {text}: {Mathf.Abs(cs.resourceDelta)}");
+                            model.Effects.Add(new TooltipModel.EffectRow
+                            {
+                                Name = "자원",
+                                Description = $"{text} {Mathf.Abs(cs.resourceDelta)}",
+                                Color = cs.resourceDelta > 0 ? UnityEngine.Color.green : UnityEngine.Color.red
+                            });
+                        }
+                    }
+                }
+            }
+            
+            var sb = new System.Text.StringBuilder();
+            for (int i = 0; i < ruleLines.Count; i++)
+            {
+                if (!string.IsNullOrWhiteSpace(ruleLines[i])) sb.AppendLine(ruleLines[i]);
+            }
+            for (int i = 0; i < previewLines.Count; i++)
+            {
+                if (!string.IsNullOrWhiteSpace(previewLines[i])) sb.AppendLine(previewLines[i]);
+            }
+            model.DescriptionRichText = SimpleRich.EmphasizeNumbers(sb.ToString().TrimEnd());
+            return model;
+        }
+
+        /// <summary>
+        /// 카드 타입 텍스트를 반환합니다.
+        /// </summary>
+        /// <param name="def">카드 정의</param>
+        /// <returns>카드 타입 문자열</returns>
         private static string GetTypeText(SkillCardDefinition def)
         {
             if (def?.configuration?.hasDamage == true) return "공격 카드";
             if (def?.configuration?.hasEffects == true) return "효과 카드";
             return "기본 카드";
+        }
+
+        /// <summary>
+        /// 공격력 물약 버프 보너스를 계산합니다.
+        /// </summary>
+        /// <param name="playerCharacter">플레이어 캐릭터</param>
+        /// <returns>공격력 물약 보너스</returns>
+        private static int GetAttackPotionBonus(Game.CharacterSystem.Interface.ICharacter playerCharacter)
+        {
+            if (playerCharacter == null) return 0;
+            
+            int totalBonus = 0;
+            var buffs = playerCharacter.GetBuffs();
+            
+            foreach (var effect in buffs)
+            {
+                if (effect is Game.ItemSystem.Effect.AttackPowerBuffEffect attackBuff)
+                {
+                    totalBonus += attackBuff.GetAttackPowerBonus();
+                }
+            }
+            
+            return totalBonus;
+        }
+
+        /// <summary>
+        /// 스택 기반 실제 데미지를 계산합니다.
+        /// </summary>
+        /// <param name="baseDamage">기본 데미지</param>
+        /// <param name="currentStacks">현재 스택 수</param>
+        /// <param name="attackPotionBonus">공격력 물약 보너스</param>
+        /// <returns>실제 적용 데미지</returns>
+        private static int CalculateActualDamage(int baseDamage, int currentStacks, int attackPotionBonus = 0)
+        {
+            // 선형 증가: 기본 데미지 + 스택 수 + 공격력 물약 보너스
+            return baseDamage + currentStacks + attackPotionBonus;
         }
     }
     

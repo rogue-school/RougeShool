@@ -16,6 +16,8 @@ MonoBehaviour:
   displayName: "\uACF5\uACA9\uB825 \uBB3C\uC57D"
   description: 
   icon: {fileID: 606631214649944254, guid: 87fa5e53c998ffe4bb5742cce6e1f3e1, type: 3}
+  targetType: 0
+  turnPolicy: 1
   presentation:
     sfxClip: {fileID: 0}
     visualEffectPrefab: {fileID: 0}

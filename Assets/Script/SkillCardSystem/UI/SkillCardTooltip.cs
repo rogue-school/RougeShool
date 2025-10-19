@@ -579,8 +579,30 @@ namespace Game.SkillCardSystem.UI
                 }
                 else if (useAutoDescription)
                 {
-                    // Mapper 기반 규칙+프리뷰 문구 사용
-                    var model = SkillCardTooltipMapper.From(definition);
+                    // 스택 기반 매퍼 사용 (실제 적용 데미지 표시)
+                    int currentStacks = 0;
+                    if (card is Game.SkillCardSystem.Interface.IAttackPowerStackProvider stackProvider)
+                    {
+                        currentStacks = stackProvider.GetAttackPowerStack();
+                    }
+                    
+                    // 플레이어 캐릭터 가져오기 (공격력 물약 버프 확인용)
+                    Game.CharacterSystem.Interface.ICharacter playerCharacter = null;
+                    if (card != null && card.IsFromPlayer())
+                    {
+                        // 플레이어 카드인 경우에만 공격력 물약 버프 확인
+                        var playerManager = FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
+                        if (playerManager != null)
+                        {
+                            var character = playerManager.GetCharacter();
+                            if (character != null && character.IsPlayerControlled())
+                            {
+                                playerCharacter = character;
+                            }
+                        }
+                    }
+                    
+                    var model = SkillCardTooltipMapper.FromWithStacks(definition, currentStacks, playerCharacter);
                     descriptionText.text = model?.DescriptionRichText ?? string.Empty;
                 }
                 else
@@ -881,13 +903,62 @@ namespace Game.SkillCardSystem.UI
 
             var config = definition.configuration;
 
-            // 데미지 효과
+            // 데미지 효과 (스택 기반 실제 데미지 표시)
             if (config.hasDamage)
             {
+                int currentStacks = 0;
+                if (currentCard is Game.SkillCardSystem.Interface.IAttackPowerStackProvider stackProvider)
+                {
+                    currentStacks = stackProvider.GetAttackPowerStack();
+                }
+                
+                // 공격력 물약 버프 계산 (플레이어 카드만)
+                int attackPotionBonus = 0;
+                if (currentCard != null && currentCard.IsFromPlayer())
+                {
+                    var playerManager = FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
+                    if (playerManager != null)
+                    {
+                        var character = playerManager.GetCharacter();
+                        if (character != null && character.IsPlayerControlled())
+                        {
+                            var buffs = character.GetBuffs();
+                            foreach (var effect in buffs)
+                            {
+                                if (effect is Game.ItemSystem.Effect.AttackPowerBuffEffect attackBuff)
+                                {
+                                    attackPotionBonus += attackBuff.GetAttackPowerBonus();
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                var baseDmg = config.damageConfig.baseDamage;
+                var actualDmg = baseDmg + currentStacks + attackPotionBonus; // 선형 증가
+                
+                string description;
+                if (currentStacks > 0 && attackPotionBonus > 0)
+                {
+                    description = $"현재 데미지: {actualDmg} (기본 {baseDmg} + 스택 {currentStacks} + 물약 {attackPotionBonus})";
+                }
+                else if (currentStacks > 0)
+                {
+                    description = $"현재 데미지: {actualDmg} (기본 {baseDmg} + 스택 {currentStacks})";
+                }
+                else if (attackPotionBonus > 0)
+                {
+                    description = $"현재 데미지: {actualDmg} (기본 {baseDmg} + 물약 {attackPotionBonus})";
+                }
+                else
+                {
+                    description = $"기본 데미지: {actualDmg}";
+                }
+                
                 effects.Add(new EffectData
                 {
                     name = "데미지",
-                    description = $"기본 데미지: {config.damageConfig.baseDamage}",
+                    description = description,
                     iconColor = Color.red,
                     effectType = EffectType.Damage
                 });
