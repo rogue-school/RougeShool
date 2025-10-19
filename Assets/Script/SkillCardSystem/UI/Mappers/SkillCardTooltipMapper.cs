@@ -1,6 +1,7 @@
 using Game.SkillCardSystem.Data;
 using Game.SkillCardSystem.Effect;
 using UnityEngine;
+using Game.CoreSystem.Utility;
 
 namespace Game.SkillCardSystem.UI.Mappers
 {
@@ -83,7 +84,7 @@ namespace Game.SkillCardSystem.UI.Mappers
                         {
                             if (cs != null && cs.bleedAmount > 0)
                             {
-                                ruleLines.Add($"{cs.bleedAmount}의 피해를 {cs.bleedDuration}턴 동안 입히는 출혈을 부여합니다.");
+                                ruleLines.Add(KoreanTextHelper.FormatBleedEffectText(cs.bleedAmount, cs.bleedDuration));
                             }
                             model.Effects.Add(new TooltipModel.EffectRow
                             {
@@ -255,11 +256,11 @@ namespace Game.SkillCardSystem.UI.Mappers
                                 bonusText = $" (기본 피해 {baseDmg} + 공격력 물약 {attackPotionBonus})";
                             }
                             
-                            ruleLines.Add($"피해 {actualDmg}를 줍니다.\n{bonusText}");
+                            ruleLines.Add($"피해 {KoreanTextHelper.AddKoreanParticle(actualDmg, "을/를")} 줍니다.\n{bonusText}");
                         }
                         else
                         {
-                            ruleLines.Add($"피해 {actualDmg}를 줍니다.");
+                            ruleLines.Add($"피해 {KoreanTextHelper.AddKoreanParticle(actualDmg, "을/를")} 줍니다.");
                         }
                     }
                     else
@@ -282,11 +283,11 @@ namespace Game.SkillCardSystem.UI.Mappers
                                 bonusText = $" (기본 피해 {baseDmg} + 공격력 물약 {attackPotionBonus})";
                             }
                             
-                            ruleLines.Add($"피해 {actualDmg}를 {hits}번 줍니다.\n{bonusText}");
+                            ruleLines.Add($"피해 {KoreanTextHelper.AddKoreanParticle(actualDmg, "을/를")} {KoreanTextHelper.AddKoreanParticle(hits, "을/를")}번 줍니다.\n{bonusText}");
                         }
                         else
                         {
-                            ruleLines.Add($"피해 {actualDmg}를 {hits}번 줍니다.");
+                            ruleLines.Add($"피해 {KoreanTextHelper.AddKoreanParticle(actualDmg, "을/를")} {KoreanTextHelper.AddKoreanParticle(hits, "을/를")}번 줍니다.");
                         }
                     }
                     
@@ -337,7 +338,7 @@ namespace Game.SkillCardSystem.UI.Mappers
                         {
                             if (cs != null && cs.bleedAmount > 0)
                             {
-                                ruleLines.Add($"{cs.bleedAmount}의 피해를 {cs.bleedDuration}턴 동안 입히는 출혈을 부여합니다.");
+                                ruleLines.Add(KoreanTextHelper.FormatBleedEffectText(cs.bleedAmount, cs.bleedDuration));
                             }
                             model.Effects.Add(new TooltipModel.EffectRow
                             {
