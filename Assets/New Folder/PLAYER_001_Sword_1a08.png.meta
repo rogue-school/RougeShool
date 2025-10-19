@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 68c3dc53531d7864fbb38bab588b5e9e
+guid: 33cfebb1c1d000940953a1d18c726728
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 2008008203308357878
-    second: A_minimalist_and_refined_artwork_featuring_a_deep_-1758469135973_0
+      213: -7352976384811542374
+    second: PLAYER_001_Sword_1a08_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: A_minimalist_and_refined_artwork_featuring_a_deep_-1758469135973_0
+      name: PLAYER_001_Sword_1a08_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 1600
-        height: 400
+        x: 7
+        y: 82
+        width: 2166
+        height: 3423
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 6f8d34072d0eddb10800000000000000
-      internalID: 2008008203308357878
+      spriteID: a98d87d8feaf4f990800000000000000
+      internalID: -7352976384811542374
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      A_minimalist_and_refined_artwork_featuring_a_deep_-1758469135973_0: 2008008203308357878
+      PLAYER_001_Sword_1a08_0: -7352976384811542374
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

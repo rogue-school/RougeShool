@@ -147,7 +147,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      A_sophisticated_image_with_a_deep_black_background-1758469421615_0: 6924592837147115976
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
