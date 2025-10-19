@@ -21,7 +21,7 @@ MonoBehaviour:
   - effectSO: {fileID: 11400000, guid: 2e13356527d7b9441a73264d772ce306, type: 2}
     useCustomSettings: 1
     customSettings:
-      healthThreshold: 0.95
+      healthThreshold: 0.5
       summonTarget: {fileID: 11400000, guid: 108def2387b83ed419893e2db0906a67, type: 2}
     priority: 0
   <EnemyBGM>k__BackingField: {fileID: 8300000, guid: 61c9c9fa7b46ec2488e45fc6d8994156, type: 3}
