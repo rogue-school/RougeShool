@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   effectName: "\uCD9C\uD608"
   description: 
-  effectIcon: {fileID: -4798391138835998086, guid: 9709c3977c6ab00469f5c1eb776afb85, type: 3}
+  effectIcon: {fileID: 2717919221109400055, guid: 549774a4d5652684d93890dbb305fe2b, type: 3}
   bleedAmount: 0
   duration: 0
   legacyIcon: {fileID: 0}
