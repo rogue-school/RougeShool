@@ -43,6 +43,9 @@ namespace Game.CombatSystem.State
         [SerializeField] private bool enableDebugLogging = true;
         [SerializeField] private string currentStateName = "None";
 
+        // 부활 관련 플래그
+        private bool hasUsedReviveThisDeath = false;
+
         #endregion
 
         #region 이벤트
@@ -257,6 +260,9 @@ namespace Game.CombatSystem.State
                     GameLogger.LogCategory.Combat);
                 return;
             }
+
+            // 부활 플래그 리셋 (새 전투 시작)
+            hasUsedReviveThisDeath = false;
 
             GameLogger.LogInfo(
                 $"[CombatStateMachine] 전투 시작{(enemyData != null ? $" - 적: {enemyName}" : "")}",
@@ -628,10 +634,19 @@ namespace Game.CombatSystem.State
                 "[CombatStateMachine] 플레이어 사망 감지",
                 GameLogger.LogCategory.Combat);
 
+            // 이미 이번 사망에서 부활을 사용했다면 더 이상 부활하지 않음
+            if (hasUsedReviveThisDeath)
+            {
+                GameLogger.LogInfo("[CombatStateMachine] 이미 부활을 사용했으므로 게임 종료", GameLogger.LogCategory.Combat);
+                EndCombat(false);
+                return;
+            }
+
             // 부활 아이템이 있는지 확인
             if (TryAutoRevive())
             {
-                GameLogger.LogInfo("[CombatStateMachine] 부활 아이템 사용으로 부활 성공", GameLogger.LogCategory.Combat);
+                hasUsedReviveThisDeath = true; // 부활 사용 플래그 설정
+                GameLogger.LogInfo("[CombatStateMachine] 부활 아이템 사용으로 부활 성공 - 한 번만 부활됩니다", GameLogger.LogCategory.Combat);
                 return; // 부활했으므로 게임 계속
             }
 
@@ -663,7 +678,7 @@ namespace Game.CombatSystem.State
                     return false;
                 }
 
-                // 부활 아이템 찾기
+                // 부활 아이템 찾기 (모든 슬롯에서 첫 번째 부활 아이템만 사용)
                 var reviveItemSlot = FindReviveItemSlot(itemService);
                 if (reviveItemSlot == -1)
                 {
@@ -673,12 +688,12 @@ namespace Game.CombatSystem.State
 
                 GameLogger.LogInfo($"[CombatStateMachine] 부활 아이템 발견: 슬롯 {reviveItemSlot}", GameLogger.LogCategory.Combat);
 
-                // 부활 아이템 사용
+                // 부활 아이템 사용 (사용 후 자동으로 슬롯에서 제거됨)
                 bool success = itemService.UseActiveItem(reviveItemSlot);
                 
                 if (success)
                 {
-                    GameLogger.LogInfo("[CombatStateMachine] 부활 아이템 사용 성공", GameLogger.LogCategory.Combat);
+                    GameLogger.LogInfo("[CombatStateMachine] 부활 아이템 사용 성공 - 한 번만 부활됩니다", GameLogger.LogCategory.Combat);
                     return true;
                 }
                 else

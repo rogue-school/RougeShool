@@ -232,7 +232,9 @@ namespace Game.ItemSystem.Service
                 // 소모품인 경우 슬롯에서 제거
                 if (usedItem != null && usedItem.Type == ItemType.Active)
                 {
+                    GameLogger.LogInfo($"[ItemService] 아이템 제거 시작: {usedItem.DisplayName} (슬롯 {slotIndex})", GameLogger.LogCategory.Core);
                     RemoveActiveItem(slotIndex);
+                    GameLogger.LogInfo($"[ItemService] 아이템 제거 완료: {usedItem.DisplayName} (슬롯 {slotIndex})", GameLogger.LogCategory.Core);
                 }
 
                 OnActiveItemUsed?.Invoke(usedItem, slotIndex);
