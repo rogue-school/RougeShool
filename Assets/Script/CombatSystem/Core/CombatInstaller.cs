@@ -268,6 +268,24 @@ public class CombatInstaller : MonoInstaller
         // (Install 중 Resolve 방지, 의존성 순서 문제 예방)
         Container.Bind<CardDropService>().AsSingle();
         
+        // VFXManager 바인딩 - 씬에 있으면 사용, 없으면 자동 생성
+        var vfxManager = FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
+        if (vfxManager != null)
+        {
+            Container.Bind<Game.VFXSystem.Manager.VFXManager>().FromInstance(vfxManager).AsSingle();
+            GameLogger.LogInfo(" VFXManager 바인딩 완료 (씬에서 찾기)");
+        }
+        else
+        {
+            // VFXManager가 없으면 자동 생성
+            var vfxManagerGO = new GameObject("VFXManager");
+            vfxManager = vfxManagerGO.AddComponent<Game.VFXSystem.Manager.VFXManager>();
+            Container.Bind<Game.VFXSystem.Manager.VFXManager>().FromInstance(vfxManager).AsSingle();
+            // 자동 생성된 컴포넌트에 의존성 주입
+            Container.Inject(vfxManager);
+            GameLogger.LogInfo(" VFXManager 자동 생성 및 바인딩 완료");
+        }
+
         // TurnManager 바인딩 - 자동 생성으로 최적화
         Container.BindInterfacesAndSelfTo<TurnManager>()
             .FromNewComponentOnNewGameObject().AsSingle();

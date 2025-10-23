@@ -332,16 +332,28 @@ namespace Game.SkillCardSystem.Runtime
         {
             var presentation = definition.presentation;
             
+            GameLogger.LogInfo($"[SkillCard] 연출 시작: {definition.displayName}", GameLogger.LogCategory.SkillCard);
+            
             // 사운드 재생 (즉시, 풀링 우선)
             if (presentation.sfxClip != null)
             {
+                GameLogger.LogInfo($"[SkillCard] 사운드 재생: {presentation.sfxClip.name}", GameLogger.LogCategory.SkillCard);
                 PlaySFXPooled(presentation.sfxClip);
+            }
+            else
+            {
+                GameLogger.LogInfo("[SkillCard] 사운드 클립이 설정되지 않음", GameLogger.LogCategory.SkillCard);
             }
             
             // 비주얼 이펙트 생성 (즉시)
             if (presentation.visualEffectPrefab != null)
             {
+                GameLogger.LogInfo($"[SkillCard] 비주얼 이펙트 생성 시작: {presentation.visualEffectPrefab.name}", GameLogger.LogCategory.SkillCard);
                 CreateVisualEffect(context, presentation);
+            }
+            else
+            {
+                GameLogger.LogWarning("[SkillCard] 비주얼 이펙트 프리팹이 설정되지 않음", GameLogger.LogCategory.SkillCard);
             }
         }
         
@@ -356,13 +368,35 @@ namespace Game.SkillCardSystem.Runtime
         {
             var target = context.Target;
             var targetTransform = (target as MonoBehaviour)?.transform;
-            if (targetTransform == null) return;
-
-            // VFX 매니저를 통한 이펙트 생성 (Object Pooling 적용)
-            var vfxManager = UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
-            if (vfxManager != null && presentation.visualEffectPrefab != null)
+            
+            GameLogger.LogInfo($"[SkillCard] CreateVisualEffect 시작 - 대상: {target?.GetCharacterName()}", GameLogger.LogCategory.SkillCard);
+            
+            if (targetTransform == null)
             {
-                vfxManager.PlayEffect(presentation.visualEffectPrefab, targetTransform.position);
+                GameLogger.LogError("[SkillCard] 대상 Transform이 null입니다", GameLogger.LogCategory.SkillCard);
+                return;
+            }
+
+            // VFX 매니저를 통한 이펙트 생성
+            var vfxManager = UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
+            if (vfxManager != null)
+            {
+                GameLogger.LogInfo($"[SkillCard] VFXManager 발견됨 - 캐릭터 중심에서 이펙트 재생 시작", GameLogger.LogCategory.SkillCard);
+                
+                // 캐릭터의 시각적 중심에서 이펙트 재생
+                var effectInstance = vfxManager.PlayEffectAtCharacterCenter(presentation.visualEffectPrefab, targetTransform);
+                if (effectInstance != null)
+                {
+                    GameLogger.LogInfo($"[SkillCard] 이펙트 인스턴스 생성 성공: {effectInstance.name}", GameLogger.LogCategory.SkillCard);
+                }
+                else
+                {
+                    GameLogger.LogError("[SkillCard] 이펙트 인스턴스 생성 실패", GameLogger.LogCategory.SkillCard);
+                }
+            }
+            else
+            {
+                GameLogger.LogError("[SkillCard] VFXManager를 찾을 수 없습니다 - DI 바인딩 확인 필요", GameLogger.LogCategory.SkillCard);
             }
         }
         
