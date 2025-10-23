@@ -1837,6 +1837,7 @@ MonoBehaviour:
   playerCharacterSelectionManager: {fileID: 80656796}
   skillCardTooltipManager: {fileID: 1069046947}
   buffDebuffTooltipManager: {fileID: 0}
+  playerManager: {fileID: 0}
   enableLazyInitialization: 0
   enableCircularDependencyCheck: 1
   enablePerformanceLogging: 0
