@@ -42,26 +42,9 @@ namespace Game.ItemSystem.Effect
 
         public override void ApplyEffect(IItemUseContext context, int value)
         {
-            if (context?.User == null || context.User.IsDead())
-            {
-                GameLogger.LogWarning("[ClownPotionEffectSO] 사용자가 null이거나 사망 상태입니다. 효과 적용 실패.", GameLogger.LogCategory.Core);
-                return;
-            }
-
-            // 기본값 사용 (커스텀 설정이 없을 때)
-            bool isHeal = UnityEngine.Random.Range(0f, 1f) < 0.5f;
-            int effectAmount = defaultEffectAmount;
-            
-            if (isHeal)
-            {
-                context.User.Heal(effectAmount);
-                GameLogger.LogInfo($"[ClownPotionEffectSO] 광대 물약 효과: 체력 회복 +{effectAmount}", GameLogger.LogCategory.Core);
-            }
-            else
-            {
-                context.User.TakeDamage(effectAmount);
-                GameLogger.LogInfo($"[ClownPotionEffectSO] 광대 물약 효과: 데미지 -{effectAmount}", GameLogger.LogCategory.Core);
-            }
+            // ApplyEffect는 더 이상 사용되지 않습니다.
+            // 효과는 CreateEffectCommand로 생성된 ClownPotionEffectCommand에서 처리됩니다.
+            GameLogger.LogWarning("[ClownPotionEffectSO] ApplyEffect는 더 이상 사용되지 않습니다. ClownPotionEffectCommand를 사용하세요.", GameLogger.LogCategory.Core);
         }
 
         protected override void OnValidate()

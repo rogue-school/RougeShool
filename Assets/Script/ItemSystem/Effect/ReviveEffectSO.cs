@@ -17,24 +17,9 @@ namespace Game.ItemSystem.Effect
 
         public override void ApplyEffect(IItemUseContext context, int value)
         {
-            if (context?.User == null)
-            {
-                GameLogger.LogWarning("[ReviveEffectSO] 사용자가 null입니다. 부활 실패.", GameLogger.LogCategory.Core);
-                return;
-            }
-
-            if (!context.User.IsDead())
-            {
-                GameLogger.LogInfo("[ReviveEffectSO] 사용자가 이미 살아있습니다.", GameLogger.LogCategory.Core);
-                return;
-            }
-
-            // 최대 체력으로 부활
-            int maxHP = context.User.GetMaxHP();
-            context.User.Heal(maxHP);
-            
-            // TODO: 디버프 제거 시스템과 연동
-            GameLogger.LogInfo($"[ReviveEffectSO] 부활 완료: 체력 {maxHP}으로 회복, 모든 디버프 제거", GameLogger.LogCategory.Core);
+            // ApplyEffect는 더 이상 사용되지 않습니다.
+            // 효과는 CreateEffectCommand로 생성된 ReviveEffectCommand에서 처리됩니다.
+            GameLogger.LogWarning("[ReviveEffectSO] ApplyEffect는 더 이상 사용되지 않습니다. ReviveEffectCommand를 사용하세요.", GameLogger.LogCategory.Core);
         }
     }
 }

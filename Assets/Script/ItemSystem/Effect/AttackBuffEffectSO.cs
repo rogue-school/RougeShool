@@ -27,14 +27,9 @@ namespace Game.ItemSystem.Effect
 
         public override void ApplyEffect(IItemUseContext context, int value)
         {
-            if (context?.User == null || context.User.IsDead())
-            {
-                GameLogger.LogWarning("[AttackBuffEffectSO] 사용자가 null이거나 사망 상태입니다. 버프 적용 실패.", GameLogger.LogCategory.Core);
-                return;
-            }
-
-            // TODO: 실제 버프 시스템과 연동
-            GameLogger.LogInfo($"[AttackBuffEffectSO] 공격력 버프 적용: +{value} ({duration}턴)", GameLogger.LogCategory.Core);
+            // ApplyEffect는 더 이상 사용되지 않습니다.
+            // 효과는 CreateEffectCommand로 생성된 AttackBuffEffectCommand에서 처리됩니다.
+            GameLogger.LogWarning("[AttackBuffEffectSO] ApplyEffect는 더 이상 사용되지 않습니다. AttackBuffEffectCommand를 사용하세요.", GameLogger.LogCategory.Core);
         }
 
         protected override void OnValidate()

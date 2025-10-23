@@ -21,21 +21,9 @@ namespace Game.ItemSystem.Effect
 
         public override void ApplyEffect(IItemUseContext context, int value)
         {
-            if (context?.User == null || context.User.IsDead())
-            {
-                GameLogger.LogWarning("[HealEffectSO] 사용자가 null이거나 사망 상태입니다. 회복 적용 실패.", GameLogger.LogCategory.Core);
-                return;
-            }
-
-            int currentHP = context.User.GetCurrentHP();
-            int maxHP = context.User.GetMaxHP();
-            int actualHeal = Mathf.Min(value, maxHP - currentHP);
-
-            if (actualHeal > 0)
-            {
-                context.User.Heal(actualHeal);
-                GameLogger.LogInfo($"[HealEffectSO] 체력 회복: {actualHeal} (현재: {currentHP + actualHeal}/{maxHP})", GameLogger.LogCategory.Core);
-            }
+            // ApplyEffect는 더 이상 사용되지 않습니다.
+            // 효과는 CreateEffectCommand로 생성된 HealEffectCommand에서 처리됩니다.
+            GameLogger.LogWarning("[HealEffectSO] ApplyEffect는 더 이상 사용되지 않습니다. HealEffectCommand를 사용하세요.", GameLogger.LogCategory.Core);
         }
 
         protected override void OnValidate()
