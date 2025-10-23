@@ -116,10 +116,21 @@ namespace Game.CoreSystem.UI
         {
             try
             {
-                GameLogger.LogInfo("다시하기 시작 - 세이브 데이터 삭제", GameLogger.LogCategory.UI);
+                GameLogger.LogInfo("다시하기 시작 - 전체 게임 상태 초기화", GameLogger.LogCategory.UI);
                 
-                // 진행도 초기화 (세이브 데이터 삭제)
-                saveManager.ClearSave();
+                // 전체 게임 상태 초기화 (새게임과 동일한 로직)
+                if (saveManager != null)
+                {
+                    saveManager.InitializeNewGame();
+                    GameLogger.LogInfo("다시하기 - 게임 상태 초기화 완료", GameLogger.LogCategory.Save);
+                }
+                
+                // 새게임 플래그 설정 (스테이지에서 추가 초기화 수행)
+                PlayerPrefs.SetInt("NEW_GAME_REQUESTED", 1);
+                PlayerPrefs.SetInt("RESUME_REQUESTED", 0);
+                PlayerPrefs.SetInt("START_STAGE_NUMBER", 1);
+                PlayerPrefs.SetInt("START_ENEMY_INDEX", 0);
+                PlayerPrefs.Save();
                 
                 // 메인 메뉴로 이동
                 await sceneTransitionManager.TransitionToMainScene();

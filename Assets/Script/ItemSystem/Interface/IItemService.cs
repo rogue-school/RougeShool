@@ -75,6 +75,11 @@ namespace Game.ItemSystem.Interface
         /// <returns>스킬 ID → 성급 매핑</returns>
         Dictionary<string, int> GetAllSkillStarRanks();
 
+        /// <summary>
+        /// 새 게임을 위한 인벤토리 초기화
+        /// </summary>
+        void ResetInventoryForNewGame();
+
         #endregion
 
         #region 이벤트

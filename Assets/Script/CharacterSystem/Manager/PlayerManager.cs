@@ -206,6 +206,8 @@ namespace Game.CharacterSystem.Manager
         {
             if (currentCharacter != null)
             {
+                // 캐릭터가 이미 존재해도 스택 초기화는 실행 (새게임 시 필요)
+                InitializeSkillCardStacks();
                 InitializeHandManager();
                 return;
             }
@@ -243,6 +245,9 @@ namespace Game.CharacterSystem.Manager
             
             // 리소스 초기화
             InitializeResource(selectedData);
+            
+            // 스킬카드 스택 초기화 (새 캐릭터 생성 시)
+            InitializeSkillCardStacks();
             
             // 캐릭터 등록
             SetCharacter(character);
@@ -495,6 +500,30 @@ namespace Game.CharacterSystem.Manager
         /// <param name="amount">확인할 양</param>
         /// <returns>충분한 리소스 여부</returns>
         public bool HasEnoughResource(int amount) => resourceManager.HasEnoughResource(amount);
+
+        /// <summary>
+        /// 스킬카드 스택을 초기화합니다.
+        /// </summary>
+        private void InitializeSkillCardStacks()
+        {
+            try
+            {
+                var skillCardRegistry = FindFirstObjectByType<Game.SkillCardSystem.Service.SkillCardRegistry>();
+                if (skillCardRegistry != null)
+                {
+                    skillCardRegistry.ResetAllSkillCardStacks();
+                    GameLogger.LogInfo("[PlayerManager] 스킬카드 스택 초기화 완료", GameLogger.LogCategory.Character);
+                }
+                else
+                {
+                    GameLogger.LogWarning("[PlayerManager] SkillCardRegistry를 찾을 수 없습니다 - 스택 초기화 건너뜀", GameLogger.LogCategory.Character);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogError($"[PlayerManager] 스킬카드 스택 초기화 중 오류: {ex.Message}", GameLogger.LogCategory.Error);
+            }
+        }
 
         /// <summary>
         /// 리소스를 초기화합니다.

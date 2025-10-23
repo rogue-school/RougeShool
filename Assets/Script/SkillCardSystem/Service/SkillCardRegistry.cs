@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Game.SkillCardSystem.Data;
+using Game.CoreSystem.Utility;
 
 namespace Game.SkillCardSystem.Service
 {
@@ -45,6 +46,26 @@ namespace Game.SkillCardSystem.Service
         {
             if (definition == null || string.IsNullOrEmpty(definition.cardId)) return;
             idToDefinition[definition.cardId] = definition;
+        }
+
+        /// <summary>
+        /// 모든 스킬카드의 스택을 초기화합니다.
+        /// </summary>
+        public void ResetAllSkillCardStacks()
+        {
+            GameLogger.LogInfo("[SkillCardRegistry] 모든 스킬카드 스택 초기화 시작", GameLogger.LogCategory.SkillCard);
+            
+            int resetCount = 0;
+            foreach (var definition in idToDefinition.Values)
+            {
+                if (definition != null)
+                {
+                    definition.ResetAttackPowerStacks();
+                    resetCount++;
+                }
+            }
+            
+            GameLogger.LogInfo($"[SkillCardRegistry] {resetCount}개의 스킬카드 스택 초기화 완료", GameLogger.LogCategory.SkillCard);
         }
 
         public void Remove(string id)

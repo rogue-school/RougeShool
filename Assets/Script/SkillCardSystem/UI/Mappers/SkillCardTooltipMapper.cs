@@ -93,8 +93,6 @@ namespace Game.SkillCardSystem.UI.Mappers
                                 Color = UnityEngine.Color.red
                             });
                         }
-
-                        if (so is HealEffectSO)
                         {
                             if (cs != null && cs.healAmount > 0)
                             {
@@ -347,8 +345,6 @@ namespace Game.SkillCardSystem.UI.Mappers
                                 Color = UnityEngine.Color.red
                             });
                         }
-
-                        if (so is HealEffectSO)
                         {
                             if (cs != null && cs.healAmount > 0)
                             {

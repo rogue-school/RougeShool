@@ -704,12 +704,17 @@ namespace Game.CoreSystem.Save
 		/// </summary>
 		private void ResetGameState()
 		{
-			// 게임 상태 매니저 초기화 (ResetToInitialState 메서드가 없으므로 간소화)
+			GameLogger.LogInfo("[SaveManager] 게임 상태 초기화 시작", GameLogger.LogCategory.Save);
+			
+			// 게임 상태 매니저 초기화 (기존 로직 유지)
 			if (gameStateManager != null)
 			{
 				// IGameStateManager에 ResetToInitialState 메서드가 없으므로 다른 방법으로 초기화
-				GameLogger.LogInfo("[SaveManager] 게임 상태 초기화 완료", GameLogger.LogCategory.Save);
+				GameLogger.LogInfo("[SaveManager] 게임 상태 매니저 초기화 완료", GameLogger.LogCategory.Save);
 			}
+			
+			// 인벤토리와 스킬카드 스택 초기화는 StageManager에서 처리
+			GameLogger.LogInfo("[SaveManager] 게임 상태 초기화 완료 (인벤토리/스택 초기화는 StageManager에서 처리)", GameLogger.LogCategory.Save);
 		}
 		
 		/// <summary>

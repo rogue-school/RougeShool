@@ -179,7 +179,7 @@ namespace Game.CoreSystem.Utility
         /// <returns>포맷팅된 턴 텍스트</returns>
         public static string FormatTurnText(int turns)
         {
-            return $"{AddKoreanParticle(turns, "을/를")}턴 동안";
+            return $"{turns}턴 동안";
         }
 
         /// <summary>
@@ -224,10 +224,9 @@ namespace Game.CoreSystem.Utility
         /// <returns>포맷팅된 출혈 텍스트</returns>
         public static string FormatBleedEffectText(int damage, int turns)
         {
-            string damageText = AddKoreanParticle(damage, "을/를");
             string turnText = FormatTurnText(turns);
             
-            return $"{damageText} 피해를 {turnText} 입히는 출혈을 부여합니다";
+            return $"{damage} 피해를 {turnText} 입히는 출혈을 부여합니다";
         }
 
         #endregion

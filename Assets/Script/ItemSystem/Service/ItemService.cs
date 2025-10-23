@@ -527,6 +527,54 @@ namespace Game.ItemSystem.Service
             }
         }
 
+        /// <summary>
+        /// 새 게임을 위한 인벤토리 초기화
+        /// </summary>
+        public void ResetInventoryForNewGame()
+        {
+            GameLogger.LogInfo("[ItemService] 새 게임을 위한 인벤토리 초기화 시작", GameLogger.LogCategory.Core);
+            
+            // 액티브 슬롯 초기화
+            for (int i = 0; i < ACTIVE_SLOT_COUNT; i++)
+            {
+                activeSlots[i] = new ActiveItemSlotData();
+            }
+            
+            // 패시브 아이템 성급 초기화
+            skillStarRanks.Clear();
+            passiveItemDefinitions.Clear();
+            
+            // 인벤토리 UI 자식 오브젝트들 제거
+            ClearInventoryUI();
+            
+            GameLogger.LogInfo("[ItemService] 인벤토리 초기화 완료", GameLogger.LogCategory.Core);
+        }
+
+        /// <summary>
+        /// 인벤토리 UI의 자식 오브젝트들을 제거합니다.
+        /// </summary>
+        private void ClearInventoryUI()
+        {
+            try
+            {
+                // InventoryPanelController 찾기
+                var inventoryController = FindFirstObjectByType<Game.ItemSystem.Runtime.InventoryPanelController>();
+                if (inventoryController != null)
+                {
+                    inventoryController.ClearAllItemPrefabs();
+                    GameLogger.LogInfo("[ItemService] 인벤토리 UI 자식 오브젝트 제거 완료", GameLogger.LogCategory.Core);
+                }
+                else
+                {
+                    GameLogger.LogWarning("[ItemService] InventoryPanelController를 찾을 수 없습니다", GameLogger.LogCategory.Core);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogError($"[ItemService] 인벤토리 UI 정리 중 오류: {ex.Message}", GameLogger.LogCategory.Error);
+            }
+        }
+
         #endregion
 
         #region 유틸리티

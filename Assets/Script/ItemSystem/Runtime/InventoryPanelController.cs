@@ -218,7 +218,7 @@ namespace Game.ItemSystem.Runtime
 		/// <summary>
 		/// 모든 아이템 프리팹을 정리합니다.
 		/// </summary>
-		private void ClearAllItemPrefabs()
+		public void ClearAllItemPrefabs()
 		{
 			for (int i = 0; i < itemUIs.Length; i++)
 			{

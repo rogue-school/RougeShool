@@ -117,6 +117,23 @@ namespace Game.StageSystem.Manager
         /// </summary>
         private void Start()
         {
+            // 새게임 요청 플래그 확인 및 초기화
+            if (PlayerPrefs.GetInt("NEW_GAME_REQUESTED", 0) == 1)
+            {
+                GameLogger.LogInfo("[StageManager] 새게임 요청 감지 - 게임 상태 초기화 시작", GameLogger.LogCategory.Save);
+                InitializeGameStateForNewGame();
+                PlayerPrefs.SetInt("NEW_GAME_REQUESTED", 0);
+                PlayerPrefs.Save();
+                
+                // 새게임인 경우 기본 스테이지 로드
+                LoadDefaultStage();
+            }
+            else
+            {
+                // 저장된 진행 상황이 있으면 자동 로드
+                StartCoroutine(AutoLoadSavedProgress());
+            }
+
             // PlayerManager의 플레이어 준비 완료 이벤트 구독
             if (playerManager != null)
             {
@@ -127,9 +144,6 @@ namespace Game.StageSystem.Manager
             {
                 GameLogger.LogWarning("[StageManager] PlayerManager를 찾을 수 없습니다 - 플레이어 준비 대기 건너뜀", GameLogger.LogCategory.Combat);
             }
-
-            // 저장된 진행 상황이 있으면 자동 로드
-            StartCoroutine(AutoLoadSavedProgress());
         }
 
         private void OnDestroy()
@@ -139,6 +153,28 @@ namespace Game.StageSystem.Manager
             {
                 playerManager.OnPlayerCharacterReady -= OnPlayerReady;
             }
+        }
+
+        /// <summary>
+        /// 새게임을 위한 게임 상태 초기화
+        /// </summary>
+        private void InitializeGameStateForNewGame()
+        {
+            GameLogger.LogInfo("[StageManager] 새게임 상태 초기화 시작", GameLogger.LogCategory.Save);
+            
+            // 인벤토리 초기화 (스킬카드 스택은 캐릭터 생성 시 초기화됨)
+            var itemService = FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
+            if (itemService != null)
+            {
+                itemService.ResetInventoryForNewGame();
+                GameLogger.LogInfo("[StageManager] 인벤토리 초기화 완료", GameLogger.LogCategory.Save);
+            }
+            else
+            {
+                GameLogger.LogWarning("[StageManager] ItemService를 찾을 수 없습니다 - 인벤토리 초기화 건너뜀", GameLogger.LogCategory.Save);
+            }
+            
+            GameLogger.LogInfo("[StageManager] 새게임 상태 초기화 완료", GameLogger.LogCategory.Save);
         }
 
         /// <summary>
@@ -162,16 +198,6 @@ namespace Game.StageSystem.Manager
         /// </summary>
         private System.Collections.IEnumerator AutoLoadSavedProgress()
         {
-            // 메인 로비에서 새 게임 요청 플래그가 설정된 경우 저장 복원 우회
-            if (PlayerPrefs.GetInt("NEW_GAME_REQUESTED", 0) == 1)
-            {
-                GameLogger.LogInfo("[StageManager] NEW_GAME_REQUESTED 플래그 감지 - 기본 스테이지 로드", GameLogger.LogCategory.Save);
-                PlayerPrefs.SetInt("NEW_GAME_REQUESTED", 0);
-                PlayerPrefs.Save();
-                LoadDefaultStage();
-                yield break;
-            }
-
             if (saveManager == null)
             {
                 GameLogger.LogWarning("[StageManager] SaveManager를 찾을 수 없습니다 - 기본 스테이지 로드로 진행", GameLogger.LogCategory.Save);
