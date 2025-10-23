@@ -169,7 +169,46 @@ namespace Game.CharacterSystem.Core
                 hpBarController.Initialize(this);
             }
             
+            // 적 캐릭터 덱의 스킬카드 스택 초기화
+            InitializeEnemyDeckStacks();
+            
             GameLogger.LogInfo($"[EnemyCharacter] Initialize 완료: {data.DisplayName}, CharacterData: {CharacterData?.DisplayName ?? "null"}", GameLogger.LogCategory.Character);
+        }
+
+        /// <summary>
+        /// 적 캐릭터 덱의 스킬카드 스택을 초기화합니다.
+        /// </summary>
+        private void InitializeEnemyDeckStacks()
+        {
+            try
+            {
+                if (CharacterData?.EnemyDeck == null)
+                {
+                    GameLogger.LogWarning("[EnemyCharacter] EnemyDeck이 null입니다 - 스택 초기화 건너뜀", GameLogger.LogCategory.Character);
+                    return;
+                }
+
+                int resetCount = 0;
+                var deck = CharacterData.EnemyDeck;
+                
+                // EnemySkillDeck의 모든 카드 엔트리를 순회
+                var cardEntries = deck.GetAllCards();
+                foreach (var entry in cardEntries)
+                {
+                    if (entry?.definition != null)
+                    {
+                        entry.definition.ResetAttackPowerStacks();
+                        resetCount++;
+                        GameLogger.LogInfo($"[EnemyCharacter] 덱 카드 스택 초기화: {entry.definition.displayName}", GameLogger.LogCategory.Character);
+                    }
+                }
+                
+                GameLogger.LogInfo($"[EnemyCharacter] 적 덱 스택 초기화 완료: {resetCount}개 카드", GameLogger.LogCategory.Character);
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogError($"[EnemyCharacter] 적 덱 스택 초기화 중 오류: {ex.Message}", GameLogger.LogCategory.Error);
+            }
         }
 
         /// <summary>

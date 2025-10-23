@@ -46,6 +46,14 @@ namespace Game.SkillCardSystem.Effect
             // 현재 카드 정보 가져오기
             string currentCardName = context.Card.GetCardName();
             
+            // 데미지가 실제로 들어갔는지 확인
+            if (!WasDamageSuccessfullyApplied(context))
+            {
+                GameLogger.LogInfo($"[CardUseStackCommand] '{currentCardName}' 데미지가 차단됨 - 스택 증가 안함", 
+                    GameLogger.LogCategory.SkillCard);
+                return;
+            }
+            
             // 현재 카드가 IAttackPowerStackProvider를 구현하는지 확인
             if (context.Card is IAttackPowerStackProvider stackProvider)
             {
@@ -67,7 +75,7 @@ namespace Game.SkillCardSystem.Effect
 
                 int newStacks = stackProvider.GetAttackPowerStack();
                 
-                GameLogger.LogInfo($"[CardUseStackCommand] '{currentCardName}' 스택 증가 완료 - 증가량: +{stackIncreasePerUse}, 현재: {newStacks} (데미지는 hasDamage 시스템에서 처리됨)", 
+                GameLogger.LogInfo($"[CardUseStackCommand] '{currentCardName}' 스택 증가 완료 - 증가량: +{stackIncreasePerUse}, 현재: {newStacks} (데미지 성공 적용됨)", 
                     GameLogger.LogCategory.SkillCard);
             }
             else
@@ -75,6 +83,37 @@ namespace Game.SkillCardSystem.Effect
                 GameLogger.LogWarning($"[CardUseStackCommand] 카드 '{currentCardName}'가 IAttackPowerStackProvider를 구현하지 않습니다.", 
                     GameLogger.LogCategory.SkillCard);
             }
+        }
+
+        /// <summary>
+        /// 데미지가 실제로 성공적으로 적용되었는지 확인합니다.
+        /// </summary>
+        /// <param name="context">카드 실행 컨텍스트</param>
+        /// <returns>데미지가 성공적으로 적용되었으면 true</returns>
+        private bool WasDamageSuccessfullyApplied(ICardExecutionContext context)
+        {
+            if (context?.Target == null) return false;
+
+            var target = context.Target;
+            
+            // 대상이 가드 상태인지 확인
+            if (target.IsGuarded())
+            {
+                GameLogger.LogInfo($"[CardUseStackCommand] 대상 '{target.GetCharacterName()}'이 가드 상태 - 데미지 차단됨", 
+                    GameLogger.LogCategory.SkillCard);
+                return false;
+            }
+
+            // 대상이 이미 사망했는지 확인
+            if (target.IsDead())
+            {
+                GameLogger.LogInfo($"[CardUseStackCommand] 대상 '{target.GetCharacterName()}'이 이미 사망 - 데미지 적용 불가", 
+                    GameLogger.LogCategory.SkillCard);
+                return false;
+            }
+
+            // 데미지가 성공적으로 적용될 수 있음
+            return true;
         }
 
         /// <summary>
