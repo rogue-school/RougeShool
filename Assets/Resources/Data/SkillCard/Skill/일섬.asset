@@ -23,7 +23,7 @@ MonoBehaviour:
   configuration:
     hasDamage: 1
     damageConfig:
-      baseDamage: 4
+      baseDamage: 5
       hits: 1
       ignoreGuard: 1
       ignoreCounter: 1
