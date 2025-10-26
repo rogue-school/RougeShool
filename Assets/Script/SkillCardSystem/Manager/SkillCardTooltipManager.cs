@@ -6,6 +6,7 @@ using Game.CoreSystem.Utility;
 using Game.CoreSystem.Interface;
 using Zenject;
 using System.Collections;
+using Game.CharacterSystem.Manager;
 
 namespace Game.SkillCardSystem.Manager
 {
@@ -332,6 +333,28 @@ namespace Game.SkillCardSystem.Manager
         }
 
         /// <summary>
+        /// 다른 툴팁 매니저의 툴팁을 숨깁니다.
+        /// </summary>
+        private void HideOtherTooltips()
+        {
+            // 아이템 툴팁 숨김
+            var itemTooltipManager = Object.FindFirstObjectByType<Game.ItemSystem.Manager.ItemTooltipManager>();
+            if (itemTooltipManager != null)
+            {
+                itemTooltipManager.ForceHideTooltip();
+                GameLogger.LogInfo("[SkillCardTooltipManager] 다른 툴팁 숨김 (ItemTooltipManager)", GameLogger.LogCategory.UI);
+            }
+
+            // 버프/디버프 툴팁 숨김
+            var buffDebuffTooltipManager = Object.FindFirstObjectByType<BuffDebuffTooltipManager>();
+            if (buffDebuffTooltipManager != null)
+            {
+                buffDebuffTooltipManager.ForceHideTooltip();
+                GameLogger.LogInfo("[SkillCardTooltipManager] 다른 툴팁 숨김 (BuffDebuffTooltipManager)", GameLogger.LogCategory.UI);
+            }
+        }
+
+        /// <summary>
         /// 강제로 초기화를 수행합니다.
         /// 이펙트 렌더링에 영향을 주지 않도록 최적화된 초기화를 수행합니다.
         /// </summary>
@@ -519,6 +542,9 @@ namespace Game.SkillCardSystem.Manager
         public void ShowTooltip()
         {
             GameLogger.LogInfo($"[SkillCardTooltipManager] ShowTooltip 호출됨 - currentTooltip: {currentTooltip != null}, hoveredCard: {hoveredCard?.GetCardName()}", GameLogger.LogCategory.UI);
+            
+            // 다른 툴팁 매니저의 툴팁 숨김 (중복 방지)
+            HideOtherTooltips();
             
             // 부모 확정을 위해 현재 타깃 RectTransform을 우선 보장
             if (hoveredCard != null && currentTargetRect == null)

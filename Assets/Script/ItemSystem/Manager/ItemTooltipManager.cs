@@ -7,6 +7,8 @@ using Game.CoreSystem.Interface;
 using System.Collections;
 using TMPro;
 using UnityEngine.UI;
+using Game.SkillCardSystem.Manager;
+using Game.CharacterSystem.Manager;
 
 namespace Game.ItemSystem.Manager
 {
@@ -290,6 +292,28 @@ namespace Game.ItemSystem.Manager
         }
 
         /// <summary>
+        /// 다른 툴팁 매니저의 툴팁을 숨깁니다.
+        /// </summary>
+        private void HideOtherTooltips()
+        {
+            // 스킬카드 툴팁 숨김
+            var skillCardTooltipManager = Object.FindFirstObjectByType<SkillCardTooltipManager>();
+            if (skillCardTooltipManager != null)
+            {
+                skillCardTooltipManager.ForceHideTooltip();
+                GameLogger.LogInfo("[ItemTooltipManager] 다른 툴팁 숨김 (SkillCardTooltipManager)", GameLogger.LogCategory.UI);
+            }
+
+            // 버프/디버프 툴팁 숨김
+            var buffDebuffTooltipManager = Object.FindFirstObjectByType<BuffDebuffTooltipManager>();
+            if (buffDebuffTooltipManager != null)
+            {
+                buffDebuffTooltipManager.ForceHideTooltip();
+                GameLogger.LogInfo("[ItemTooltipManager] 다른 툴팁 숨김 (BuffDebuffTooltipManager)", GameLogger.LogCategory.UI);
+            }
+        }
+
+        /// <summary>
         /// 강제로 초기화를 수행합니다.
         /// </summary>
         private IEnumerator ForceInitialize()
@@ -423,6 +447,9 @@ namespace Game.ItemSystem.Manager
         /// </summary>
         public void ShowTooltip()
         {
+            // 다른 툴팁 매니저의 툴팁 숨김 (중복 방지)
+            HideOtherTooltips();
+
             if (currentTargetRect == null && hoveredItem != null)
             {
                 if (itemUICache.TryGetValue(hoveredItem, out var cachedRt) && cachedRt != null)

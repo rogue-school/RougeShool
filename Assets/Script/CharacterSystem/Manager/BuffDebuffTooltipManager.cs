@@ -461,6 +461,23 @@ namespace Game.CharacterSystem.Manager
         }
 
         /// <summary>
+        /// 툴팁을 강제로 숨깁니다.
+        /// </summary>
+        public void ForceHideTooltip()
+        {
+            if (currentTooltip != null)
+            {
+                currentTooltip.HideTooltip();
+            }
+
+            hoveredEffect = null;
+            isShowingTooltip = false;
+            isHidingTooltip = false;
+            showTimer = 0f;
+            hideTimer = 0f;
+        }
+
+        /// <summary>
         /// 현재 효과의 위치를 가져옵니다.
         /// </summary>
         /// <returns>효과 위치</returns>

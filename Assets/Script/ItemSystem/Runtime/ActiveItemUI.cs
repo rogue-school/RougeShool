@@ -302,6 +302,13 @@ namespace Game.ItemSystem.Runtime
         /// </summary>
         private void HandleUseButtonClicked(int slotIndex)
         {
+            // 아이템 툴팁 강제 숨김
+            if (tooltipManager != null)
+            {
+                tooltipManager.ForceHideTooltip();
+                GameLogger.LogInfo("[ActiveItemUI] 사용 버튼 클릭 - 아이템 툴팁 숨김", GameLogger.LogCategory.UI);
+            }
+
             OnUseButtonClicked?.Invoke(slotIndex);
             GameLogger.LogInfo($"[ActiveItemUI] 사용 버튼 클릭: 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
         }
@@ -311,6 +318,13 @@ namespace Game.ItemSystem.Runtime
         /// </summary>
         private void HandleDiscardButtonClicked(int slotIndex)
         {
+            // 아이템 툴팁 강제 숨김
+            if (tooltipManager != null)
+            {
+                tooltipManager.ForceHideTooltip();
+                GameLogger.LogInfo("[ActiveItemUI] 버리기 버튼 클릭 - 아이템 툴팁 숨김", GameLogger.LogCategory.UI);
+            }
+
             OnDiscardButtonClicked?.Invoke(slotIndex);
             GameLogger.LogInfo($"[ActiveItemUI] 버리기 버튼 클릭: 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
         }
