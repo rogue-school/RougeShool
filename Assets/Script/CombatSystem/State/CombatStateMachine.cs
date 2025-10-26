@@ -645,8 +645,12 @@ namespace Game.CombatSystem.State
             // 부활 아이템이 있는지 확인
             if (TryAutoRevive())
             {
-                hasUsedReviveThisDeath = true; // 부활 사용 플래그 설정
-                GameLogger.LogInfo("[CombatStateMachine] 부활 아이템 사용으로 부활 성공 - 한 번만 부활됩니다", GameLogger.LogCategory.Combat);
+                hasUsedReviveThisDeath = true; // 부활 사용 플래그 설정 (이번 사망에서만 사용)
+                GameLogger.LogInfo("[CombatStateMachine] 부활 아이템 사용으로 부활 성공", GameLogger.LogCategory.Combat);
+                
+                // 플레이어가 살아나는 것을 대기한 후 플래그 리셋
+                StartCoroutine(ResetReviveFlagAfterRevive());
+                
                 return; // 부활했으므로 게임 계속
             }
 
@@ -771,6 +775,23 @@ namespace Game.CombatSystem.State
                 GameLogger.LogInfo(
                     "[CombatStateMachine] 현재 상태 없음 (전투 시작 전)",
                     GameLogger.LogCategory.Combat);
+            }
+        }
+
+        /// <summary>
+        /// 부활 후 플래그를 리셋합니다 (다음 사망 시 다시 부활 가능하도록)
+        /// </summary>
+        private System.Collections.IEnumerator ResetReviveFlagAfterRevive()
+        {
+            // 플레이어가 부활하는 시간 대기
+            yield return new WaitForSeconds(0.5f);
+            
+            // 플레이어가 살아있는지 확인
+            var playerCharacter = playerManager?.GetCharacter();
+            if (playerCharacter != null && !playerCharacter.IsDead())
+            {
+                hasUsedReviveThisDeath = false; // 플래그 리셋 (다음 사망에서 다시 부활 가능)
+                GameLogger.LogInfo("[CombatStateMachine] 부활 플래그 리셋 완료 - 다음 사망에서도 부활 가능", GameLogger.LogCategory.Combat);
             }
         }
 

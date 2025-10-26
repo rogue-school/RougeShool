@@ -21,6 +21,9 @@ namespace Game.CombatSystem.DragDrop
         /// <summary>카드의 드래그 전 월드 위치</summary>
         public Vector3 OriginalWorldPosition { get; set; }
 
+        /// <summary>카드의 원래 형제 순서 (Index)</summary>
+        private int originalSiblingIndex;
+
         [HideInInspector]
         public bool droppedSuccessfully = false;
 
@@ -72,6 +75,9 @@ namespace Game.CombatSystem.DragDrop
 
             if (!CanDrag()) return;
 
+            // 원래 부모와 순서 저장
+            OriginalParent = transform.parent;
+            originalSiblingIndex = transform.GetSiblingIndex();
             OriginalWorldPosition = transform.position;
 			canvasGroup.alpha = 1f;
 			canvasGroup.blocksRaycasts = false;
@@ -79,7 +85,9 @@ namespace Game.CombatSystem.DragDrop
             foreach (var img in GetComponentsInChildren<Image>())
                 img.raycastTarget = false;
 
+            // 드래그 중에만 최상위로 올리기 (다른 UI 요소 위에 표시)
             transform.SetParent(canvas.transform, true);
+            transform.SetAsLastSibling();
             
             // SkillCardUI에 드래그 시작 알림
             var skillCardUI = GetComponent<SkillCardUI>();

@@ -136,26 +136,82 @@ namespace Game.CombatSystem.Service
                 var uiRect = ui.transform as RectTransform;
                 if (target != null && uiRect != null)
                 {
-                    // 월드 위치로 부드럽게 이동
-                    uiRect.SetParent(target.root, true); // 우선 월드 이동을 위해 루트 유지
+                    // 현재 부모에서 월드 좌표로 이동 (부모 변경 없이 월드 좌표만 변경)
                     var endWorld = target.position;
-                    uiRect.DOMove(endWorld, 0.15f).SetEase(Ease.OutQuad).OnComplete(() =>
+                    var currentCanvas = uiRect.GetComponentInParent<Canvas>();
+                    
+                    if (currentCanvas != null && currentCanvas.renderMode != RenderMode.ScreenSpaceOverlay)
                     {
-                        uiRect.SetParent(target, false);
-                        uiRect.anchoredPosition = Vector2.zero;
-                        uiRect.localScale = Vector3.one;
-
-                        // 상태 머신이 있으면 상태 머신에게 카드 배치 알림 (상태 머신이 실행 처리)
-                        // 상태 머신이 없으면 기존 방식으로 실행
-                        if (stateMachine != null)
+                        // 월드 좌표를 스크린 좌표로 변환
+                        Camera canvasCamera = currentCanvas.worldCamera;
+                        if (canvasCamera != null)
                         {
-                            stateMachine.OnPlayerCardPlaced(card, slotPosition);
+                            // 월드 좌표를 스크린 좌표로 변환
+                            Vector3 screenPos = canvasCamera.WorldToScreenPoint(endWorld);
+                            // 스크린 좌표를 로컬 좌표로 변환
+                            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                                uiRect.parent as RectTransform,
+                                screenPos,
+                                canvasCamera,
+                                out Vector2 localPos
+                            );
+                            // 로컬 좌표로 이동
+                            uiRect.DOLocalMove(localPos, 0.15f).SetEase(Ease.OutQuad).OnComplete(() =>
+                            {
+                                // 이동 완료 후 부모 변경
+                                uiRect.SetParent(target, false);
+                                uiRect.anchoredPosition = Vector2.zero;
+                                uiRect.localScale = Vector3.one;
+                                
+                                // 상태 머신이 있으면 상태 머신에게 카드 배치 알림 (상태 머신이 실행 처리)
+                                // 상태 머신이 없으면 기존 방식으로 실행
+                                if (stateMachine != null)
+                                {
+                                    stateMachine.OnPlayerCardPlaced(card, slotPosition);
+                                }
+                                else
+                                {
+                                    TriggerCardExecution(card, slotPosition);
+                                }
+                            });
                         }
                         else
                         {
-                            TriggerCardExecution(card, slotPosition);
+                            // 카메라가 없으면 직접 이동
+                            uiRect.DOMove(endWorld, 0.15f).SetEase(Ease.OutQuad).OnComplete(() =>
+                            {
+                                uiRect.SetParent(target, false);
+                                uiRect.anchoredPosition = Vector2.zero;
+                                uiRect.localScale = Vector3.one;
+                                if (stateMachine != null)
+                                {
+                                    stateMachine.OnPlayerCardPlaced(card, slotPosition);
+                                }
+                                else
+                                {
+                                    TriggerCardExecution(card, slotPosition);
+                                }
+                            });
                         }
-                    });
+                    }
+                    else
+                    {
+                        // Overlay 모드에서는 단순히 부모 변경만
+                        uiRect.DOMove(endWorld, 0.15f).SetEase(Ease.OutQuad).OnComplete(() =>
+                        {
+                            uiRect.SetParent(target, false);
+                            uiRect.anchoredPosition = Vector2.zero;
+                            uiRect.localScale = Vector3.one;
+                            if (stateMachine != null)
+                            {
+                                stateMachine.OnPlayerCardPlaced(card, slotPosition);
+                            }
+                            else
+                            {
+                                TriggerCardExecution(card, slotPosition);
+                            }
+                        });
+                    }
                 }
                 else
                 {

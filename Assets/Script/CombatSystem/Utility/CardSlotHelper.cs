@@ -24,7 +24,18 @@ namespace Game.CombatSystem.Utility
                 return;
             }
 
+            // 부모 변경
             cardUI.transform.SetParent(dragHandler.OriginalParent, false);
+            
+            // 원래 형제 순서로 복원 (리플렉션 사용)
+            var siblingIndexField = typeof(CardDragHandler).GetField("originalSiblingIndex", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            
+            if (siblingIndexField != null)
+            {
+                var originalIndex = (int)siblingIndexField.GetValue(dragHandler);
+                cardUI.transform.SetSiblingIndex(originalIndex);
+            }
 
             if (cardUI.TryGetComponent(out RectTransform rectTransform))
             {
