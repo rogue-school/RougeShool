@@ -207,17 +207,10 @@ namespace Game.ItemSystem.Runtime
 
         /// <summary>
         /// 액션 팝업을 생성하고 표시합니다.
-        /// ⚠️ 이 메서드는 반드시 플레이어 턴에만 호출되어야 합니다.
         /// </summary>
-        private void ShowActionPopup()
+        /// <param name="allowUse">사용 버튼 활성화 여부</param>
+        private void ShowActionPopup(bool allowUse = true)
         {
-            // ⭐ 2차 방어 - 팝업 생성 전 한 번 더 턴 체크
-            if (!IsPlayerTurn())
-            {
-                GameLogger.LogError("[ActiveItemUI] ❌ ShowActionPopup 호출 실패: 플레이어 턴이 아닙니다!", GameLogger.LogCategory.UI);
-                return;
-            }
-
             // 기존 팝업이 있으면 제거
             CloseActionPopup();
 
@@ -267,14 +260,14 @@ namespace Game.ItemSystem.Runtime
             Vector2 popupPosition = rectTransform.anchoredPosition + Vector2.up * 60f; // 앵커드 포지션 사용
 
             // 팝업 설정
-            currentPopup.SetupPopup(slotIndex, currentItem, popupPosition);
+            currentPopup.SetupPopup(slotIndex, currentItem, popupPosition, allowUse);
 
             // 이벤트 연결
             currentPopup.OnUseButtonClicked += HandleUseButtonClicked;
             currentPopup.OnDiscardButtonClicked += HandleDiscardButtonClicked;
             currentPopup.OnPopupClosed += HandlePopupClosed;
 
-            GameLogger.LogInfo($"[ActiveItemUI] 액션 팝업 표시: {currentItem.DisplayName} @ 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
+            GameLogger.LogInfo($"[ActiveItemUI] 액션 팝업 표시: {currentItem.DisplayName} @ 슬롯 {slotIndex} (사용 허용: {allowUse})", GameLogger.LogCategory.UI);
         }
 
         /// <summary>
@@ -408,13 +401,6 @@ namespace Game.ItemSystem.Runtime
             // 좌클릭만 처리
             if (eventData.button == PointerEventData.InputButton.Left)
             {
-                // ⭐ 강제 턴 체크 - 플레이어 턴이 아니면 팝업 자체를 열지 않음
-                if (!IsPlayerTurn())
-                {
-                    GameLogger.LogWarning($"[ActiveItemUI] ❌ 적 턴 중이므로 아이템 팝업을 열 수 없습니다: {currentItem?.DisplayName ?? "알 수 없음"}", GameLogger.LogCategory.UI);
-                    return; // 팝업 자체를 열지 않음
-                }
-
                 // 아이템이 없으면 무시
                 if (currentItem == null)
                 {
@@ -428,9 +414,17 @@ namespace Game.ItemSystem.Runtime
                     OnItemClicked.Invoke(slotIndex);
                 }
 
-                // 플레이어 턴에만 액션 팝업 표시
-                GameLogger.LogInfo($"[ActiveItemUI] ✅ 플레이어 턴 확인 완료 - 팝업 표시: {currentItem.DisplayName}", GameLogger.LogCategory.UI);
-                ShowActionPopup();
+                // 액션 팝업 표시 (적턴에도 팝업은 열림, 버튼 활성화는 팝업 내부에서 처리)
+                bool isPlayerTurn = IsPlayerTurn();
+                if (isPlayerTurn)
+                {
+                    GameLogger.LogInfo($"[ActiveItemUI] ✅ 플레이어 턴 - 팝업 표시: {currentItem.DisplayName}", GameLogger.LogCategory.UI);
+                }
+                else
+                {
+                    GameLogger.LogInfo($"[ActiveItemUI] ⚠️ 적 턴 - 팝업 표시 (사용 불가, 버리기만 가능): {currentItem.DisplayName}", GameLogger.LogCategory.UI);
+                }
+                ShowActionPopup(isPlayerTurn);
             }
         }
 

@@ -22,13 +22,23 @@ namespace Game.ItemSystem.Runtime
 		[Inject] private IItemService _itemService;
 		[Inject(Optional = true)] private IRewardGenerator _rewardGenerator; // 주입 시 자동 생성 지원
 
-		[Header("UI 구성 요소")]
-		[SerializeField] private GameObject itemSlotPrefab;
-		[SerializeField] private Transform itemSlotsContainer;
-		[SerializeField] private Button closeButton;
-		[SerializeField] private GameObject backgroundPanel;
+	[Header("UI 구성 요소")]
+	[SerializeField] private GameObject itemSlotPrefab;
+	[SerializeField] private Transform itemSlotsContainer;
+	[SerializeField] private Button closeButton;
+	[SerializeField] private GameObject backgroundPanel;
+	
+	[Tooltip("접기/펼치기 버튼")]
+	[SerializeField] private Button toggleButton;
+	
+	[Tooltip("패널 컨텐츠 (접기/펼치기 대상 - SlotContainer)")]
+	[SerializeField] private GameObject panelContent;
+	
+	[Tooltip("닫기 버튼 (접기 시 숨김)")]
+	[SerializeField] private GameObject closeButtonObject;
 
 	[SerializeField] private bool _isOpen;
+	[SerializeField] private bool _isContentVisible = true; // 컨텐츠 표시 여부
 	[SerializeField] private ActiveItemDefinition[] _candidates;
 	[SerializeField] private PassiveItemDefinition[] _passiveCandidates;
 	private bool _hasTakenOnceWhenThreeOfFour;
@@ -81,16 +91,37 @@ namespace Game.ItemSystem.Runtime
 		/// <summary>
 		/// UI를 초기화합니다.
 		/// </summary>
-		private void InitializeUI()
+	private void InitializeUI()
+	{
+		// 닫기 버튼 이벤트 연결
+		if (closeButton != null)
 		{
-			// 닫기 버튼 이벤트 연결
-			if (closeButton != null)
-			{
-				closeButton.onClick.AddListener(Close);
-			}
-
-			GameLogger.LogInfo("[RewardPanel] 보상 패널 UI 초기화 완료", GameLogger.LogCategory.UI);
+			closeButton.onClick.AddListener(Close);
 		}
+		
+		// 접기/펼치기 버튼 이벤트 연결 및 루트 밖으로 이동
+		if (toggleButton != null)
+		{
+			toggleButton.onClick.AddListener(ToggleContent);
+			
+			// 패널이 닫혀도 토글 버튼은 보이도록 부모를 캔버스로 변경
+			var canvas = GetComponentInParent<Canvas>();
+			if (canvas != null)
+			{
+				// ToggleButton을 캔버스의 직접 자식으로 이동
+				toggleButton.transform.SetParent(canvas.transform, true);
+				GameLogger.LogInfo("[RewardPanel] 토글 버튼을 캔버스 루트로 이동 완료", GameLogger.LogCategory.UI);
+			}
+			
+			GameLogger.LogInfo("[RewardPanel] 접기/펼치기 버튼 이벤트 연결 완료", GameLogger.LogCategory.UI);
+		}
+		else
+		{
+			GameLogger.LogWarning("[RewardPanel] toggleButton이 할당되지 않았습니다!", GameLogger.LogCategory.UI);
+		}
+
+		GameLogger.LogInfo("[RewardPanel] 보상 패널 UI 초기화 완료", GameLogger.LogCategory.UI);
+	}
 
 		public void Toggle()
 		{
@@ -98,21 +129,28 @@ namespace Game.ItemSystem.Runtime
 			GameLogger.LogInfo($"[Reward] 패널 {(_isOpen ? "열림" : "닫힘")}", GameLogger.LogCategory.UI);
 		}
 
-		public void Open(ActiveItemDefinition[] candidates)
+	public void Open(ActiveItemDefinition[] candidates)
+	{
+		_candidates = candidates;
+		_passiveCandidates = null;
+		_isOpen = true;
+		_hasTakenOnceWhenThreeOfFour = false;
+		
+		// UI 슬롯 생성
+		CreateItemSlots(candidates);
+		
+		// 패널 활성화
+		gameObject.SetActive(true);
+		
+		// 토글 버튼도 함께 활성화
+		if (toggleButton != null)
 		{
-			_candidates = candidates;
-			_passiveCandidates = null;
-			_isOpen = true;
-			_hasTakenOnceWhenThreeOfFour = false;
-			
-			// UI 슬롯 생성
-			CreateItemSlots(candidates);
-			
-			// 패널 활성화
-			gameObject.SetActive(true);
-			
-			GameLogger.LogInfo($"[Reward] 보상 {(_candidates?.Length ?? 0)}개 표시", GameLogger.LogCategory.UI);
+			toggleButton.gameObject.SetActive(true);
+			GameLogger.LogInfo("[RewardPanel] 토글 버튼 활성화", GameLogger.LogCategory.UI);
 		}
+		
+		GameLogger.LogInfo($"[Reward] 보상 {(_candidates?.Length ?? 0)}개 표시", GameLogger.LogCategory.UI);
+	}
 
 		public void OpenPassive(PassiveItemDefinition[] candidates)
 		{
@@ -190,9 +228,53 @@ namespace Game.ItemSystem.Runtime
 		gameObject.SetActive(false);
 		ClearAllSlots();
 		
+		// 토글 버튼도 함께 비활성화
+		if (toggleButton != null)
+		{
+			toggleButton.gameObject.SetActive(false);
+			GameLogger.LogInfo("[RewardPanel] 토글 버튼 비활성화", GameLogger.LogCategory.UI);
+		}
+		
 		// 보상 패널 완료 이벤트 발생
 		OnRewardPanelClosed?.Invoke();
 		GameLogger.LogInfo($"[RewardPanel] 패널 닫기 완료 - IsOpen: {_isOpen}, GameObject.activeSelf: {gameObject.activeSelf}", GameLogger.LogCategory.UI);
+	}
+	
+	/// <summary>
+	/// 패널 컨텐츠를 접기/펼치기합니다.
+	/// 패널은 유지하되 컨텐츠만 숨겨서 인벤토리 사용 가능하게 합니다.
+	/// </summary>
+	public void ToggleContent()
+	{
+		_isContentVisible = !_isContentVisible;
+		
+		// SlotContainer 숨기기/보이기
+		if (panelContent != null)
+		{
+			panelContent.SetActive(_isContentVisible);
+		}
+		else
+		{
+			GameLogger.LogWarning("[RewardPanel] panelContent가 할당되지 않았습니다!", GameLogger.LogCategory.UI);
+		}
+		
+		// 닫기 버튼도 함께 숨기기/보이기
+		if (closeButtonObject != null)
+		{
+			closeButtonObject.SetActive(_isContentVisible);
+		}
+		
+		// Title도 함께 숨기기/보이기 (선택)
+		if (backgroundPanel != null && backgroundPanel.transform.Find("Title") != null)
+		{
+			var titleObject = backgroundPanel.transform.Find("Title").gameObject;
+			if (titleObject != null)
+			{
+				titleObject.SetActive(_isContentVisible);
+			}
+		}
+		
+		GameLogger.LogInfo($"[RewardPanel] 컨텐츠 {(_isContentVisible ? "펼침" : "접힘")}", GameLogger.LogCategory.UI);
 	}
 
 		/// <summary>

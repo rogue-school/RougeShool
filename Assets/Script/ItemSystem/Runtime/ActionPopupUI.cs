@@ -72,7 +72,8 @@ namespace Game.ItemSystem.Runtime
         /// <param name="slotIndex">슬롯 인덱스</param>
         /// <param name="item">아이템 정보</param>
         /// <param name="targetPosition">팝업 표시 위치</param>
-        public void SetupPopup(int slotIndex, ActiveItemDefinition item, Vector2 targetPosition)
+        /// <param name="allowUse">사용 버튼 활성화 여부</param>
+        public void SetupPopup(int slotIndex, ActiveItemDefinition item, Vector2 targetPosition, bool allowUse = true)
         {
             this.slotIndex = slotIndex;
             this.currentItem = item;
@@ -86,6 +87,19 @@ namespace Game.ItemSystem.Runtime
             if (discardButtonText != null)
             {
                 discardButtonText.text = "버리기";
+            }
+
+            // 사용 버튼 활성화/비활성화
+            if (useButton != null)
+            {
+                useButton.interactable = allowUse;
+                GameLogger.LogInfo($"[ActionPopupUI] 사용 버튼 {(allowUse ? "활성화" : "비활성화")}", GameLogger.LogCategory.UI);
+            }
+
+            // 버리기 버튼은 항상 활성화
+            if (discardButton != null)
+            {
+                discardButton.interactable = true;
             }
 
             // 팝업 위치 설정 (RectTransform 사용)
