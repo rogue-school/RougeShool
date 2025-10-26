@@ -58,6 +58,19 @@ namespace Game.ItemSystem.Runtime
                 }
             }
 
+            // HealEffectSO도 특별한 처리가 필요합니다
+            if (effectConfig.effectSO is HealEffectSO healEffectSO)
+            {
+                if (effectConfig.useCustomSettings && effectConfig.customSettings is HealEffectCustomSettings healSettings)
+                {
+                    return healEffectSO.CreateEffectCommand(healSettings);
+                }
+                else
+                {
+                    return healEffectSO.CreateEffectCommand(0);
+                }
+            }
+
             int power = 0;
             if (effectConfig.useCustomSettings)
             {

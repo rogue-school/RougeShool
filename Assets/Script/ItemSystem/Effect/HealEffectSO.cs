@@ -1,5 +1,6 @@
 using UnityEngine;
 using Game.ItemSystem.Interface;
+using Game.ItemSystem.Data;
 using Game.CoreSystem.Utility;
 
 namespace Game.ItemSystem.Effect
@@ -16,7 +17,23 @@ namespace Game.ItemSystem.Effect
 
         public override IItemEffectCommand CreateEffectCommand(int power)
         {
-            return new HealEffectCommand(healAmount + power);
+            // power가 0이 아니면 power 값을 사용 (커스텀 설정값)
+            // power가 0이면 기본 healAmount 사용
+            int finalHealAmount = power > 0 ? power : healAmount;
+            return new HealEffectCommand(finalHealAmount);
+        }
+
+        /// <summary>
+        /// 커스텀 설정을 사용하여 효과 커맨드를 생성합니다.
+        /// </summary>
+        public IItemEffectCommand CreateEffectCommand(HealEffectCustomSettings customSettings)
+        {
+            if (customSettings == null)
+            {
+                return new HealEffectCommand(healAmount);
+            }
+
+            return new HealEffectCommand(customSettings.healAmount);
         }
 
         public override void ApplyEffect(IItemUseContext context, int value)
