@@ -1,4 +1,5 @@
 using UnityEngine;
+using Game.CoreSystem.Utility;
 
 namespace Game.CombatSystem.State
 {
@@ -83,7 +84,17 @@ namespace Game.CombatSystem.State
             // 패배 이벤트 발생 (UI, 재시작 옵션 등)
             LogStateTransition("패배 처리 완료");
 
-            // 여기서 게임 오버 화면 표시 등의 로직 추가 가능
+            // 게임 오버 UI 표시
+            var gameOverUI = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.UI.GameOverUI>();
+            if (gameOverUI != null)
+            {
+                gameOverUI.ShowGameOver();
+                LogStateTransition("게임 오버 UI 표시 완료");
+            }
+            else
+            {
+                LogError("GameOverUI를 찾을 수 없습니다");
+            }
         }
     }
 }
