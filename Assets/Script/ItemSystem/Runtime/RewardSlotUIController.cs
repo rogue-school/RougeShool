@@ -1,9 +1,11 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using TMPro;
 using Game.ItemSystem.Data;
 using Game.ItemSystem.Utility;
 using Game.CoreSystem.Utility;
+using Game.ItemSystem.Manager;
 
 namespace Game.ItemSystem.Runtime
 {
@@ -11,7 +13,7 @@ namespace Game.ItemSystem.Runtime
     /// 보상 슬롯 UI를 관리하는 컨트롤러입니다.
     /// 개별 아이템 슬롯의 표시와 선택을 처리합니다.
     /// </summary>
-    public class RewardSlotUIController : MonoBehaviour
+    public class RewardSlotUIController : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         #region UI 참조
 
@@ -23,7 +25,17 @@ namespace Game.ItemSystem.Runtime
 
         [Header("슬롯 설정")]
         [SerializeField] private Color normalColor = Color.white;
-
+        
+        [Header("툴팁용 Image (자동 할당)")]
+        [SerializeField] private Image backgroundImage;
+        
+        #endregion
+        
+        #region 툴팁 관련
+        
+        private ItemTooltipManager tooltipManager;
+        private RectTransform rectTransform;
+        
         #endregion
 
         #region 상태
@@ -48,6 +60,12 @@ namespace Game.ItemSystem.Runtime
         private void Start()
         {
             InitializeSlot();
+            FindTooltipManager();
+        }
+        
+        private void OnDestroy()
+        {
+            UnregisterFromTooltipManager();
         }
 
         #endregion
@@ -59,6 +77,25 @@ namespace Game.ItemSystem.Runtime
         /// </summary>
         private void InitializeSlot()
         {
+            // RectTransform 캐시
+            rectTransform = GetComponent<RectTransform>();
+            
+            // 배경 Image 찾기 (툴팁용)
+            if (backgroundImage == null)
+            {
+                backgroundImage = GetComponent<Image>();
+                if (backgroundImage != null)
+                {
+                    // raycastTarget 활성화해야 포인터 이벤트 감지
+                    backgroundImage.raycastTarget = true;
+                    GameLogger.LogInfo("[RewardSlotUI] 배경 Image 찾음 및 raycast 활성화", GameLogger.LogCategory.UI);
+                }
+                else
+                {
+                    GameLogger.LogWarning("[RewardSlotUI] Image 컴포넌트를 찾을 수 없습니다", GameLogger.LogCategory.UI);
+                }
+            }
+            
             // 슬롯 버튼 이벤트 연결
             if (slotButton != null)
             {
@@ -66,6 +103,40 @@ namespace Game.ItemSystem.Runtime
             }
 
             GameLogger.LogInfo("[RewardSlotUI] 슬롯 초기화 완료", GameLogger.LogCategory.UI);
+        }
+        
+        /// <summary>
+        /// 툴팁 매니저를 찾습니다.
+        /// </summary>
+        private void FindTooltipManager()
+        {
+            tooltipManager = Object.FindFirstObjectByType<ItemTooltipManager>();
+            if (tooltipManager == null)
+            {
+                GameLogger.LogWarning("[RewardSlotUI] ItemTooltipManager를 찾을 수 없습니다", GameLogger.LogCategory.UI);
+            }
+        }
+        
+        /// <summary>
+        /// 툴팁 매니저에 등록합니다.
+        /// </summary>
+        private void RegisterToTooltipManager()
+        {
+            if (tooltipManager == null || currentItem == null || rectTransform == null)
+                return;
+
+            tooltipManager.RegisterItemUI(currentItem, rectTransform);
+        }
+        
+        /// <summary>
+        /// 툴팁 매니저 등록을 해제합니다.
+        /// </summary>
+        private void UnregisterFromTooltipManager()
+        {
+            if (tooltipManager == null || currentItem == null)
+                return;
+
+            tooltipManager.UnregisterItemUI(currentItem);
         }
 
         #endregion
@@ -85,11 +156,20 @@ namespace Game.ItemSystem.Runtime
                 return;
             }
 
+            // 기존 아이템 등록 해제
+            if (currentItem != null)
+            {
+                UnregisterFromTooltipManager();
+            }
+            
             currentItem = item;
             slotIndex = index;
 
             // UI 업데이트
             UpdateSlotUI();
+            
+            // 툴팁 매니저에 등록
+            RegisterToTooltipManager();
 
             GameLogger.LogInfo($"[RewardSlotUI] 슬롯 설정 완료: {item.DisplayName} (인덱스: {index})", GameLogger.LogCategory.UI);
         }
@@ -206,6 +286,32 @@ namespace Game.ItemSystem.Runtime
         /// </summary>
         public bool IsInteractable => isInteractable;
 
+        #endregion
+        
+        #region 툴팁 호버 이벤트
+        
+        /// <summary>
+        /// 포인터가 오브젝트에 진입했을 때 호출됩니다.
+        /// </summary>
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            if (currentItem == null || tooltipManager == null)
+                return;
+            
+            tooltipManager.OnItemHoverEnter(currentItem);
+        }
+        
+        /// <summary>
+        /// 포인터가 오브젝트를 벗어났을 때 호출됩니다.
+        /// </summary>
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            if (tooltipManager == null)
+                return;
+            
+            tooltipManager.OnItemHoverExit();
+        }
+        
         #endregion
 
         #region 디버그

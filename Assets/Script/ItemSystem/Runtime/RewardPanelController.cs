@@ -483,38 +483,50 @@ namespace Game.ItemSystem.Runtime
 		private void HandleInventoryChanged(ActiveItemDefinition def, int slot)
 		{
 			// 인벤토리 변경 시 슬롯 상태 업데이트
+			GameLogger.LogInfo($"[RewardPanel] 인벤토리 변경 감지 - 추가: {def?.DisplayName ?? "null"} @ 슬롯 {slot}", GameLogger.LogCategory.UI);
 			UpdateSlotStates();
 		}
 
 		private void HandleInventoryChangedSlot(int slot)
 		{
 			// 버리기 후에는 3/4 제한 해제 가능
+			GameLogger.LogInfo($"[RewardPanel] 인벤토리 변경 감지 - 제거: 슬롯 {slot}", GameLogger.LogCategory.UI);
 			_hasTakenOnceWhenThreeOfFour = false;
 			UpdateSlotStates();
 		}
 
 		private void HandleInventoryUsed(ActiveItemDefinition def, int slot)
 		{
+			GameLogger.LogInfo($"[RewardPanel] 인벤토리 변경 감지 - 사용: {def?.DisplayName ?? "null"} @ 슬롯 {slot}", GameLogger.LogCategory.UI);
 			UpdateSlotStates();
 		}
 
 		/// <summary>
 		/// 슬롯 상태를 업데이트합니다 (버튼 활성화/비활성화).
 		/// </summary>
-		private void UpdateSlotStates()
+	private void UpdateSlotStates()
+	{
+		// GameObject가 비활성화 상태일 때만 건너뜀
+		// 패널이 닫혀도(_isOpen = false) 슬롯 상태는 업데이트됨 (토글 버튼으로 다시 열 수 있으므로)
+		if (!gameObject.activeSelf)
 		{
-			bool canTakeMore = CanTakeMore();
-			
-			foreach (var slot in activeSlots)
-			{
-				if (slot != null)
-				{
-					slot.SetInteractable(canTakeMore);
-				}
-			}
-			
-			GameLogger.LogInfo($"[RewardPanel] 슬롯 상태 업데이트: canTakeMore={canTakeMore}", GameLogger.LogCategory.UI);
+			GameLogger.LogInfo("[RewardPanel] GameObject가 비활성화 상태 - 슬롯 상태 업데이트 건너뜀", GameLogger.LogCategory.UI);
+			return;
 		}
+		
+		bool canTakeMore = CanTakeMore();
+		int inventoryCount = GetInventoryCount();
+		
+		GameLogger.LogInfo($"[RewardPanel] 슬롯 상태 업데이트: canTakeMore={canTakeMore}, inventoryCount={inventoryCount}, activeSlots.Count={activeSlots.Count}, _isOpen={_isOpen}", GameLogger.LogCategory.UI);
+		
+		foreach (var slot in activeSlots)
+		{
+			if (slot != null)
+			{
+				slot.SetInteractable(canTakeMore);
+			}
+		}
+	}
 
 		/// <summary>
 		/// 설정이 없을 때 사용할 기본 액티브 보상을 생성합니다.

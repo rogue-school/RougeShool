@@ -175,6 +175,10 @@ namespace Game.ItemSystem.Manager
                     GameLogger.LogError("[ItemTooltipManager] 툴팁 인스턴스 생성 실패", GameLogger.LogCategory.Error);
                     return;
                 }
+                
+                // 초기에는 비활성화하고 캔버스 최상단으로 정렬
+                tooltipInstance.gameObject.SetActive(false);
+                tooltipInstance.transform.SetAsLastSibling();
 
                 currentTooltip = tooltipInstance.GetComponent<ItemTooltip>();
                 if (currentTooltip == null)
@@ -469,8 +473,15 @@ namespace Game.ItemSystem.Manager
                 if (canvas != null && currentTooltip.transform.parent != canvas.transform)
                 {
                     currentTooltip.transform.SetParent(canvas.transform, false);
-                    currentTooltip.transform.SetAsLastSibling();
                 }
+                // 항상 최상단으로 이동 (RewardPanel 같은 다른 UI 뒤에 숨지 않도록)
+                currentTooltip.transform.SetAsLastSibling();
+            }
+            
+            // 툴팁이 항상 최상단에 렌더링되도록 보장
+            if (currentTooltip != null && currentTooltip.transform.parent != null)
+            {
+                currentTooltip.transform.SetAsLastSibling();
             }
             
             if (hoveredItem == null)
