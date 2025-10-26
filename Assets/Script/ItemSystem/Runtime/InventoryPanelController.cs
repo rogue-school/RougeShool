@@ -26,11 +26,21 @@ namespace Game.ItemSystem.Runtime
 	[SerializeField] private Sprite emptySlotSprite;
 	[SerializeField] private Color emptySlotColor = Color.gray;
 
+	[Header("패널 UI 설정")]
+	[Tooltip("인벤토리 패널 GameObject (접기/펼치기 대상)")]
+	[SerializeField] private GameObject panelContent;
+	
+	[Tooltip("접기/펼치기 버튼")]
+	[SerializeField] private UnityEngine.UI.Button toggleButton;
+
 	// 동적으로 생성된 아이템들
 	private ActiveItemUI[] itemUIs = new ActiveItemUI[4];
 
 	// 턴 매니저
 	private Game.CombatSystem.Manager.TurnManager turnManager;
+
+	// 패널 상태
+	private bool isPanelOpen = true;
 
 		private void Start()
 		{
@@ -87,6 +97,17 @@ namespace Game.ItemSystem.Runtime
 				{
 					GameLogger.LogError($"[Inventory] 슬롯 Transform {i}이 할당되지 않았습니다!", GameLogger.LogCategory.UI);
 				}
+			}
+
+			// 접기/펼치기 버튼 이벤트 연결
+			if (toggleButton != null)
+			{
+				toggleButton.onClick.AddListener(TogglePanel);
+				GameLogger.LogInfo("[Inventory] 접기/펼치기 버튼 이벤트 연결 완료", GameLogger.LogCategory.UI);
+			}
+			else
+			{
+				GameLogger.LogWarning("[Inventory] toggleButton이 할당되지 않았습니다!", GameLogger.LogCategory.UI);
 			}
 
 			// 시작 시에는 아이템 프리팹을 생성하지 않음 (빈 슬롯 상태)
@@ -402,6 +423,61 @@ namespace Game.ItemSystem.Runtime
 			else
 			{
 				GameLogger.LogInfo($"[Inventory] 인벤토리 패널 내부 오브젝트 클릭: {eventData.pointerCurrentRaycast.gameObject?.name}", GameLogger.LogCategory.UI);
+			}
+		}
+
+		#endregion
+
+		#region 패널 접기/펼치기
+
+		/// <summary>
+		/// 패널을 엽니다 (펼치기).
+		/// </summary>
+		public void OpenPanel()
+		{
+			if (panelContent == null)
+			{
+				GameLogger.LogError("[Inventory] panelContent가 설정되지 않았습니다!", GameLogger.LogCategory.UI);
+				return;
+			}
+
+			isPanelOpen = true;
+			panelContent.SetActive(true);
+			GameLogger.LogInfo("[Inventory] 패널 펼침", GameLogger.LogCategory.UI);
+		}
+
+		/// <summary>
+		/// 패널을 닫습니다 (접기).
+		/// </summary>
+		public void ClosePanel()
+		{
+			if (panelContent == null)
+			{
+				GameLogger.LogError("[Inventory] panelContent가 설정되지 않았습니다!", GameLogger.LogCategory.UI);
+				return;
+			}
+
+			isPanelOpen = false;
+			panelContent.SetActive(false);
+
+			// 패널을 닫을 때 모든 액션 팝업도 닫기
+			HideAllActionPopups();
+
+			GameLogger.LogInfo("[Inventory] 패널 접힘", GameLogger.LogCategory.UI);
+		}
+
+		/// <summary>
+		/// 패널을 토글합니다 (접기 ↔ 펼치기).
+		/// </summary>
+		public void TogglePanel()
+		{
+			if (isPanelOpen)
+			{
+				ClosePanel();
+			}
+			else
+			{
+				OpenPanel();
 			}
 		}
 

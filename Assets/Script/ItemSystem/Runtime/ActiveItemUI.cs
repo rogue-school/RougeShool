@@ -12,7 +12,7 @@ namespace Game.ItemSystem.Runtime
     /// 개별 액티브 아이템 UI를 관리하는 컴포넌트입니다.
     /// 아이템 아이콘, 이름, 설명을 표시하는 역할만 담당합니다.
     /// </summary>
-    public class ActiveItemUI : MonoBehaviour, IPointerClickHandler
+    public class ActiveItemUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
     {
         #region UI 참조
 
@@ -32,6 +32,10 @@ namespace Game.ItemSystem.Runtime
 
         // 의존성 주입
         [Inject(Optional = true)] private Game.CombatSystem.Manager.TurnManager turnManager;
+        
+        // 툴팁 매니저
+        private Game.ItemSystem.Manager.ItemTooltipManager tooltipManager;
+        private RectTransform rectTransform;
 
         #endregion
 
@@ -60,6 +64,12 @@ namespace Game.ItemSystem.Runtime
         {
             GameLogger.LogInfo($"[ActiveItemUI] Start() 호출됨 - GameObject: {gameObject.name}", GameLogger.LogCategory.UI);
 
+            // RectTransform 캐시
+            rectTransform = GetComponent<RectTransform>();
+
+            // 툴팁 매니저 찾기
+            FindTooltipManager();
+
             // 디버깅: 컴포넌트 상태 확인
             var image = GetComponent<Image>();
             var button = GetComponent<Button>();
@@ -79,7 +89,53 @@ namespace Game.ItemSystem.Runtime
 
             InitializeItemUI();
             SetupButtonEvent();
+            RegisterToTooltipManager();
             GameLogger.LogInfo($"[ActiveItemUI] Start() 완료 - GameObject: {gameObject.name}", GameLogger.LogCategory.UI);
+        }
+        
+        private void OnDestroy()
+        {
+            UnregisterFromTooltipManager();
+        }
+        
+        /// <summary>
+        /// 툴팁 매니저를 찾습니다.
+        /// </summary>
+        private void FindTooltipManager()
+        {
+            tooltipManager = FindFirstObjectByType<Game.ItemSystem.Manager.ItemTooltipManager>();
+            if (tooltipManager != null)
+            {
+                GameLogger.LogInfo("[ActiveItemUI] ItemTooltipManager 찾기 완료", GameLogger.LogCategory.UI);
+            }
+            else
+            {
+                GameLogger.LogWarning("[ActiveItemUI] ItemTooltipManager를 찾을 수 없습니다", GameLogger.LogCategory.UI);
+            }
+        }
+        
+        /// <summary>
+        /// 툴팁 매니저에 아이템을 등록합니다.
+        /// </summary>
+        private void RegisterToTooltipManager()
+        {
+            if (tooltipManager != null && currentItem != null && rectTransform != null)
+            {
+                tooltipManager.RegisterItemUI(currentItem, rectTransform);
+                GameLogger.LogInfo($"[ActiveItemUI] 툴팁 매니저에 등록: {currentItem.DisplayName}", GameLogger.LogCategory.UI);
+            }
+        }
+        
+        /// <summary>
+        /// 툴팁 매니저에서 아이템 등록을 해제합니다.
+        /// </summary>
+        private void UnregisterFromTooltipManager()
+        {
+            if (tooltipManager != null && currentItem != null)
+            {
+                tooltipManager.UnregisterItemUI(currentItem);
+                GameLogger.LogInfo($"[ActiveItemUI] 툴팁 매니저에서 등록 해제: {currentItem.DisplayName}", GameLogger.LogCategory.UI);
+            }
         }
 
         #endregion
@@ -287,8 +343,17 @@ namespace Game.ItemSystem.Runtime
         /// <param name="item">설정할 아이템</param>
         public void SetItem(ActiveItemDefinition item)
         {
+            // 기존 아이템 등록 해제
+            if (currentItem != null)
+            {
+                UnregisterFromTooltipManager();
+            }
+            
             currentItem = item;
             UpdateItemUI();
+            
+            // 새 아이템 등록
+            RegisterToTooltipManager();
         }
 
         /// <summary>
@@ -296,6 +361,7 @@ namespace Game.ItemSystem.Runtime
         /// </summary>
         public void SetEmpty()
         {
+            UnregisterFromTooltipManager();
             currentItem = null;
             UpdateItemUI();
         }
@@ -538,6 +604,32 @@ namespace Game.ItemSystem.Runtime
             fullInfo.Append(GetPresentationInfo());
 
             return fullInfo.ToString();
+        }
+
+        #endregion
+
+        #region 툴팁 호버 이벤트
+
+        /// <summary>
+        /// 포인터가 오브젝트에 진입했을 때 호출됩니다.
+        /// </summary>
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            if (currentItem == null || tooltipManager == null)
+                return;
+
+            tooltipManager.OnItemHoverEnter(currentItem);
+        }
+
+        /// <summary>
+        /// 포인터가 오브젝트를 벗어났을 때 호출됩니다.
+        /// </summary>
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            if (tooltipManager == null)
+                return;
+
+            tooltipManager.OnItemHoverExit();
         }
 
         #endregion

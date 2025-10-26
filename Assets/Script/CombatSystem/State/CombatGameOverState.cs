@@ -3,6 +3,7 @@ using System.Collections;
 using Game.CombatSystem.Manager;
 using Game.CharacterSystem.Manager;
 using Game.CoreSystem.Utility;
+using Game.CombatSystem.UI;
 
 namespace Game.CombatSystem.State
 {
@@ -77,13 +78,22 @@ namespace Game.CombatSystem.State
         {
             GameLogger.LogError("게임 오버 처리 중...", GameLogger.LogCategory.Combat);
             
-            // 게임 오버 애니메이션 및 UI 표시 (향후 구현)
+            // 게임 오버 애니메이션 대기
             yield return new WaitForSeconds(1.0f);
 
             if (CheckPlayerDeath())
             {
-                // 메인 화면으로 복귀 (향후 구현)
-                GameLogger.LogError("플레이어 사망 - 메인 화면으로 복귀", GameLogger.LogCategory.Combat);
+                // 게임 오버 UI 표시
+                var gameOverUI = Object.FindFirstObjectByType<Game.CombatSystem.UI.GameOverUI>();
+                if (gameOverUI != null)
+                {
+                    gameOverUI.ShowGameOver();
+                    GameLogger.LogInfo("게임 오버 UI 표시 완료", GameLogger.LogCategory.Combat);
+                }
+                else
+                {
+                    GameLogger.LogWarning("GameOverUI를 찾을 수 없습니다", GameLogger.LogCategory.Combat);
+                }
             }
             else
             {

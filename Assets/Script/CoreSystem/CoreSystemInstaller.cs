@@ -35,6 +35,7 @@ namespace Game.CoreSystem
         [SerializeField] private PlayerCharacterSelectionManager playerCharacterSelectionManager;
         [SerializeField] private SkillCardTooltipManager skillCardTooltipManager;
         [SerializeField] private BuffDebuffTooltipManager buffDebuffTooltipManager;
+        [SerializeField] private Game.ItemSystem.Manager.ItemTooltipManager itemTooltipManager;
         
         [Header("CharacterSystem 매니저들")]
         [SerializeField] private PlayerManager playerManager;
@@ -83,6 +84,7 @@ namespace Game.CoreSystem
                 (playerCharacterSelectionManager, "PlayerCharacterSelectionManager", typeof(IPlayerCharacterSelectionManager)),
                 (skillCardTooltipManager, "SkillCardTooltipManager", null),
                 (buffDebuffTooltipManager, "BuffDebuffTooltipManager", null),
+                (itemTooltipManager, "ItemTooltipManager", null),
                 (playerManager, "PlayerManager", null)
             };
 
@@ -183,6 +185,8 @@ namespace Game.CoreSystem
                 typeof(SaveManager),
                 typeof(PlayerCharacterSelectionManager),
                 typeof(SkillCardTooltipManager),
+                typeof(BuffDebuffTooltipManager),
+                typeof(Game.ItemSystem.Manager.ItemTooltipManager),
                 typeof(PlayerManager)
             };
             
