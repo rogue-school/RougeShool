@@ -21,10 +21,6 @@ namespace Game.StageSystem.Data
         
         [Space(10)]
         [Header("스테이지 설정")]
-        [Tooltip("스테이지 난이도")]
-        [Range(1, 5)]
-        public int difficulty = 1;
-        
         [Tooltip("스테이지 완료 시 다음 스테이지로 자동 진행")]
         public bool autoProgressToNext = true;
         

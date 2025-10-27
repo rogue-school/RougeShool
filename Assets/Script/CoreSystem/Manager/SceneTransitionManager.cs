@@ -273,7 +273,8 @@ namespace Game.CoreSystem.Manager
 					audioEventTrigger.OnBattleBGM();
 					break;
 				case var s when s == stageSceneName:
-					audioEventTrigger.OnMainMenuBGM();
+					// 스테이지 씬에서는 전투 BGM 재생 (적 전용 BGM은 적 생성 시 재생됨)
+					audioEventTrigger.OnBattleBGM();
 					break;
 				default:
 					// 리소스 경로 규칙이 있을 경우 OnSceneBGM으로 대체 가능

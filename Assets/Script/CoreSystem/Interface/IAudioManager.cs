@@ -1,4 +1,5 @@
 using UnityEngine;
+using Game.CharacterSystem.Data;
 
 namespace Game.CoreSystem.Interface
 {
@@ -51,5 +52,11 @@ namespace Game.CoreSystem.Interface
         /// 마스터 볼륨 설정
         /// </summary>
         void SetMasterVolume(float volume);
+        
+        /// <summary>
+        /// 적별 BGM 재생
+        /// </summary>
+        void PlayEnemyBGM(EnemyCharacterData enemyData);
     }
 }
+

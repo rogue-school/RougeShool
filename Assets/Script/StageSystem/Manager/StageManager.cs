@@ -79,7 +79,7 @@ namespace Game.StageSystem.Manager
 
         [Zenject.Inject(Optional = true)] private Game.CoreSystem.Save.SaveManager saveManager;
         [Zenject.Inject] private EnemyManager enemyManager;
-        [Zenject.Inject(Optional = true)] private AudioManager audioManager;
+        [Zenject.Inject(Optional = true)] private Game.CoreSystem.Interface.IAudioManager audioManager;
         [Zenject.Inject(Optional = true)] private Game.SkillCardSystem.Interface.IPlayerHandManager playerHandManager;
         [Zenject.Inject(Optional = true)] private Game.CombatSystem.Slot.CombatSlotRegistry combatSlotRegistry;
         [Zenject.Inject(Optional = true)] private Game.CombatSystem.Interface.ICombatTurnManager turnManager;
@@ -343,14 +343,17 @@ namespace Game.StageSystem.Manager
 
                 RegisterEnemy(enemy);
 
-                // 적 전용 BGM이 설정되어 있으면 전환
-                if (data.EnemyBGM != null)
+                // 적별 BGM 재생 (AudioManager에 위임)
+                if (audioManager != null)
                 {
-                    if (audioManager != null)
-                    {
-                        audioManager.PlayBGM(data.EnemyBGM, true);
-                    }
+                    GameLogger.LogInfo($"AudioManager 존재 - PlayEnemyBGM 호출: {data.DisplayName}", GameLogger.LogCategory.Audio);
+                    audioManager.PlayEnemyBGM(data);
                 }
+                else
+                {
+                    GameLogger.LogWarning("AudioManager가 null입니다 - BGM 재생 건너뜀", GameLogger.LogCategory.Audio);
+                }
+
                 currentEnemyIndex++;
 
                 GameLogger.LogInfo($"[StageManager] 적 생성 완료: {enemy.GetCharacterName()} (인덱스 증가: {currentEnemyIndex - 1} → {currentEnemyIndex})", GameLogger.LogCategory.Combat);
@@ -416,6 +419,8 @@ namespace Game.StageSystem.Manager
         {
             _ = SpawnNextEnemyAsync();
         }
+
+
 
         /// <summary>
         /// 스테이지 종료 시 BGM 정리 (씬 전환 전 호출)
@@ -955,6 +960,18 @@ namespace Game.StageSystem.Manager
             OnProgressChanged?.Invoke(progressState);
             
             GameLogger.LogInfo($"스테이지 시작: {currentStage.stageName} (스테이지 {currentStage.stageNumber})", GameLogger.LogCategory.Combat);
+            
+            // 첫 번째 적의 BGM 즉시 재생 (스테이지 시작 시)
+            if (audioManager != null && currentStage.enemies != null && currentStage.enemies.Count > 0)
+            {
+                var firstEnemyData = currentStage.enemies[0];
+                GameLogger.LogInfo($"첫 번째 적 BGM 재생 시작: {firstEnemyData.DisplayName}", GameLogger.LogCategory.Audio);
+                audioManager.PlayEnemyBGM(firstEnemyData);
+            }
+            else if (audioManager == null)
+            {
+                GameLogger.LogWarning("AudioManager가 null입니다 - 첫 적 BGM 재생 건너뜀", GameLogger.LogCategory.Audio);
+            }
             
             // 첫 번째 적 생성
             _ = SpawnNextEnemyAsync();

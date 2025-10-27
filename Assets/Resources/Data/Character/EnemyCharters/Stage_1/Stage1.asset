@@ -15,9 +15,7 @@ MonoBehaviour:
   stageNumber: 1
   stageName: "\uC2A4\uD14C\uC774\uC9C0 1"
   stageDescription: "\uC2A4\uD14C\uC774\uC9C0 \uC124\uBA85"
-  difficulty: 1
   autoProgressToNext: 1
   enemies:
   - {fileID: 11400000, guid: 108def2387b83ed419893e2db0906a67, type: 2}
   - {fileID: 11400000, guid: 8cadc1d0ca0290d459798eeaf8d20958, type: 2}
-  stageReward: {fileID: 0}
