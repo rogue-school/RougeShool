@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Game.ItemSystem.Interface;
@@ -36,6 +37,12 @@ namespace Game.ItemSystem.Runtime
 	
 	[Tooltip("닫기 버튼 (접기 시 숨김)")]
 	[SerializeField] private GameObject closeButtonObject;
+	
+	[Tooltip("인벤토리 가득 찼을 때 표시할 메시지 텍스트")]
+	[SerializeField] private TMPro.TextMeshProUGUI inventoryFullMessage;
+	
+	[Tooltip("메시지 표시 지속 시간(초)")]
+	[SerializeField] private float messageDisplayDuration = 2.0f;
 
 	[SerializeField] private bool _isOpen;
 	[SerializeField] private bool _isContentVisible = true; // 컨텐츠 표시 여부
@@ -50,36 +57,45 @@ namespace Game.ItemSystem.Runtime
 	/// </summary>
 	public event System.Action OnRewardPanelClosed;
 
-		private void OnEnable()
+	private void OnEnable()
+	{
+		GameLogger.LogInfo($"[RewardPanel] OnEnable() 호출 - GameObject.activeSelf: {gameObject.activeSelf}, activeInHierarchy: {gameObject.activeInHierarchy}", GameLogger.LogCategory.UI);
+		
+		// 메시지 초기화 (활성화될 때 메시지 숨기기)
+		if (inventoryFullMessage != null)
 		{
-			GameLogger.LogInfo($"[RewardPanel] OnEnable() 호출 - GameObject.activeSelf: {gameObject.activeSelf}, activeInHierarchy: {gameObject.activeInHierarchy}", GameLogger.LogCategory.UI);
-			
-			// _itemService가 null이면 이벤트 구독 건너뛰기
-			if (_itemService != null)
-			{
-				_itemService.OnActiveItemAdded += HandleInventoryChanged;
-				_itemService.OnActiveItemRemoved += HandleInventoryChangedSlot;
-				_itemService.OnActiveItemUsed += HandleInventoryUsed;
-				GameLogger.LogInfo("[RewardPanel] 이벤트 구독 완료: OnActiveItemAdded, OnActiveItemRemoved, OnActiveItemUsed", GameLogger.LogCategory.UI);
-			}
-			else
-			{
-				GameLogger.LogWarning("[RewardPanel] _itemService가 null입니다. 이벤트 구독을 건너뜁니다.", GameLogger.LogCategory.UI);
-			}
+			inventoryFullMessage.gameObject.SetActive(false);
 		}
+		
+		// _itemService가 null이면 이벤트 구독 건너뛰기
+		if (_itemService != null)
+		{
+			_itemService.OnActiveItemAdded += HandleInventoryChanged;
+			_itemService.OnActiveItemRemoved += HandleInventoryChangedSlot;
+			_itemService.OnActiveItemUsed += HandleInventoryUsed;
+			GameLogger.LogInfo("[RewardPanel] 이벤트 구독 완료: OnActiveItemAdded, OnActiveItemRemoved, OnActiveItemUsed", GameLogger.LogCategory.UI);
+		}
+		else
+		{
+			GameLogger.LogWarning("[RewardPanel] _itemService가 null입니다. 이벤트 구독을 건너뜁니다.", GameLogger.LogCategory.UI);
+		}
+	}
 
-		private void OnDisable()
+	private void OnDisable()
+	{
+		GameLogger.LogInfo("[RewardPanel] OnDisable() 호출 - 이벤트 구독 해제", GameLogger.LogCategory.UI);
+		
+		// 실행 중인 모든 코루틴 중지
+		StopAllCoroutines();
+		
+		// _itemService가 null이면 이벤트 해제 건너뛰기
+		if (_itemService != null)
 		{
-			GameLogger.LogInfo("[RewardPanel] OnDisable() 호출 - 이벤트 구독 해제", GameLogger.LogCategory.UI);
-			
-			// _itemService가 null이면 이벤트 해제 건너뛰기
-			if (_itemService != null)
-			{
-				_itemService.OnActiveItemAdded -= HandleInventoryChanged;
-				_itemService.OnActiveItemRemoved -= HandleInventoryChangedSlot;
-				_itemService.OnActiveItemUsed -= HandleInventoryUsed;
-			}
+			_itemService.OnActiveItemAdded -= HandleInventoryChanged;
+			_itemService.OnActiveItemRemoved -= HandleInventoryChangedSlot;
+			_itemService.OnActiveItemUsed -= HandleInventoryUsed;
 		}
+	}
 
 	private void Start()
 	{
@@ -139,6 +155,9 @@ namespace Game.ItemSystem.Runtime
 		_passiveCandidates = null;
 		_isOpen = true;
 
+		// 메시지 숨기기
+		HideInventoryFullMessage();
+
 		// UI 슬롯 생성
 		CreateItemSlots(candidates);
 
@@ -155,19 +174,22 @@ namespace Game.ItemSystem.Runtime
 		GameLogger.LogInfo($"[Reward] 보상 {(_candidates?.Length ?? 0)}개 표시", GameLogger.LogCategory.UI);
 	}
 
-		public void OpenPassive(PassiveItemDefinition[] candidates)
-		{
-			_passiveCandidates = candidates;
-			_candidates = null;
-			
-			// Is Open 상태에 따라 GameObject 활성화 관리
-			_isOpen = true;
-			gameObject.SetActive(true);
-			
-			// 패시브 아이템은 현재 UI 미지원 (추후 확장 가능)
-			GameLogger.LogInfo($"[RewardPanel] 패시브 패널 열기 완료 - IsOpen: {_isOpen}, GameObject.activeSelf: {gameObject.activeSelf}", GameLogger.LogCategory.UI);
-			GameLogger.LogInfo($"[Reward] 패시브 보상 {(_passiveCandidates?.Length ?? 0)}개 표시", GameLogger.LogCategory.UI);
-		}
+	public void OpenPassive(PassiveItemDefinition[] candidates)
+	{
+		_passiveCandidates = candidates;
+		_candidates = null;
+		
+		// 메시지 숨기기
+		HideInventoryFullMessage();
+		
+		// Is Open 상태에 따라 GameObject 활성화 관리
+		_isOpen = true;
+		gameObject.SetActive(true);
+		
+		// 패시브 아이템은 현재 UI 미지원 (추후 확장 가능)
+		GameLogger.LogInfo($"[RewardPanel] 패시브 패널 열기 완료 - IsOpen: {_isOpen}, GameObject.activeSelf: {gameObject.activeSelf}", GameLogger.LogCategory.UI);
+		GameLogger.LogInfo($"[Reward] 패시브 보상 {(_passiveCandidates?.Length ?? 0)}개 표시", GameLogger.LogCategory.UI);
+	}
 
 	/// <summary>
 	/// RewardGenerator를 사용해 보상 후보를 생성하여 패널을 엽니다.
@@ -212,6 +234,9 @@ namespace Game.ItemSystem.Runtime
 		_passiveCandidates = _rewardGenerator.GeneratePassive(enemyCfg, playerProfile, stageIndex, runSeed);
 		_isOpen = true;
 
+		// 메시지 숨기기
+		HideInventoryFullMessage();
+
 		// 액티브 아이템만 UI로 표시 (패시브는 추후 확장)
 		CreateItemSlots(_candidates);
 
@@ -229,6 +254,9 @@ namespace Game.ItemSystem.Runtime
 		_isOpen = false;
 		gameObject.SetActive(false);
 		ClearAllSlots();
+		
+		// 메시지 숨기기
+		HideInventoryFullMessage();
 		
 		// 토글 버튼도 함께 비활성화
 		if (toggleButton != null)
@@ -250,6 +278,9 @@ namespace Game.ItemSystem.Runtime
 	public void ToggleContent()
 	{
 		_isContentVisible = !_isContentVisible;
+		
+		// 메시지 숨기기 (접기/펼치기할 때 메시지 초기화)
+		HideInventoryFullMessage();
 		
 		// SlotContainer 숨기기/보이기 (GameObject 자체는 그대로 두고)
 		if (panelContent != null)
@@ -372,9 +403,54 @@ namespace Game.ItemSystem.Runtime
 	/// </summary>
 	private void ShowInventoryFullMessage()
 	{
-		// TODO: UI 텍스트 팝업 표시
-		// 예: "인벤토리가 가득 찼습니다! 아이템을 버려주세요."
 		GameLogger.LogWarning("[RewardPanel] 인벤토리가 가득 찼습니다!", GameLogger.LogCategory.UI);
+		
+		// 메시지 텍스트가 할당되어 있으면 표시
+		if (inventoryFullMessage != null)
+		{
+			inventoryFullMessage.text = "인벤토리가 가득 찼습니다!\n아이템을 버려주세요.";
+			inventoryFullMessage.gameObject.SetActive(true);
+			
+			// 자동으로 사라지게 하기 위해 코루틴 시작
+			StopCoroutine(HideMessageCoroutine());
+			StartCoroutine(HideMessageCoroutine());
+			
+			GameLogger.LogInfo("[RewardPanel] 인벤토리 가득 참 메시지 표시", GameLogger.LogCategory.UI);
+		}
+		else
+		{
+			GameLogger.LogWarning("[RewardPanel] inventoryFullMessage가 할당되지 않았습니다!", GameLogger.LogCategory.UI);
+		}
+	}
+	
+	/// <summary>
+	/// 메시지를 일정 시간 후 숨기는 코루틴
+	/// </summary>
+	private System.Collections.IEnumerator HideMessageCoroutine()
+	{
+		yield return new WaitForSeconds(messageDisplayDuration);
+		
+		if (inventoryFullMessage != null)
+		{
+			inventoryFullMessage.gameObject.SetActive(false);
+			GameLogger.LogInfo("[RewardPanel] 인벤토리 가득 참 메시지 숨김", GameLogger.LogCategory.UI);
+		}
+	}
+	
+	/// <summary>
+	/// 메시지를 즉시 숨깁니다.
+	/// </summary>
+	private void HideInventoryFullMessage()
+	{
+		// 실행 중인 코루틴 중지
+		StopAllCoroutines();
+		
+		// 메시지 숨기기
+		if (inventoryFullMessage != null)
+		{
+			inventoryFullMessage.gameObject.SetActive(false);
+			GameLogger.LogInfo("[RewardPanel] 인벤토리 가득 참 메시지 강제 숨김", GameLogger.LogCategory.UI);
+		}
 	}
 
 		private int GetInventoryCount()

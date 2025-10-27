@@ -110,9 +110,6 @@ namespace Game.SkillCardSystem.Runtime
         {
             if (!definition.configuration.hasDamage) return;
 
-            // 출혈 효과가 있으면 즉시 데미지 추가하지 않음
-            if (HasBleedEffect()) return;
-
             var damageConfig = definition.configuration.damageConfig;
             var damageCommand = new DamageEffectCommand(
                 damageConfig.baseDamage,
