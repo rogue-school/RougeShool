@@ -227,20 +227,29 @@ namespace Game.ItemSystem.Runtime
         /// <param name="interactable">상호작용 가능 여부</param>
         public void SetInteractable(bool interactable)
         {
+            GameLogger.LogInfo($"[RewardSlotUI] SetInteractable({interactable}) 호출 - item: {currentItem?.DisplayName ?? "null"}, button: {slotButton?.name ?? "null"}", GameLogger.LogCategory.UI);
+            
             isInteractable = interactable;
             
             if (slotButton != null)
             {
+                bool oldValue = slotButton.interactable;
                 slotButton.interactable = interactable;
+                GameLogger.LogInfo($"[RewardSlotUI] 버튼 interactable 변경: {oldValue} → {slotButton.interactable}", GameLogger.LogCategory.UI);
+            }
+            else
+            {
+                GameLogger.LogWarning("[RewardSlotUI] slotButton이 null입니다!", GameLogger.LogCategory.UI);
             }
 
             // 비활성화 시 색상 변경
             if (itemIcon != null)
             {
                 itemIcon.color = interactable ? normalColor : Color.gray;
+                GameLogger.LogInfo($"[RewardSlotUI] 아이콘 색상 변경: {(interactable ? "normal" : "gray")}", GameLogger.LogCategory.UI);
             }
 
-            GameLogger.LogInfo($"[RewardSlotUI] 슬롯 상호작용 상태 변경: {interactable}", GameLogger.LogCategory.UI);
+            GameLogger.LogInfo($"[RewardSlotUI] 슬롯 상호작용 상태 변경 완료: {interactable}", GameLogger.LogCategory.UI);
         }
 
         #endregion

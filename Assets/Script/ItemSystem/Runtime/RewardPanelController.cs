@@ -41,7 +41,6 @@ namespace Game.ItemSystem.Runtime
 	[SerializeField] private bool _isContentVisible = true; // 컨텐츠 표시 여부
 	[SerializeField] private ActiveItemDefinition[] _candidates;
 	[SerializeField] private PassiveItemDefinition[] _passiveCandidates;
-	private bool _hasTakenOnceWhenThreeOfFour;
 
 	// UI 슬롯 관리
 	private List<RewardSlotUIController> activeSlots = new List<RewardSlotUIController>();
@@ -53,12 +52,15 @@ namespace Game.ItemSystem.Runtime
 
 		private void OnEnable()
 		{
+			GameLogger.LogInfo($"[RewardPanel] OnEnable() 호출 - GameObject.activeSelf: {gameObject.activeSelf}, activeInHierarchy: {gameObject.activeInHierarchy}", GameLogger.LogCategory.UI);
+			
 			// _itemService가 null이면 이벤트 구독 건너뛰기
 			if (_itemService != null)
 			{
 				_itemService.OnActiveItemAdded += HandleInventoryChanged;
 				_itemService.OnActiveItemRemoved += HandleInventoryChangedSlot;
 				_itemService.OnActiveItemUsed += HandleInventoryUsed;
+				GameLogger.LogInfo("[RewardPanel] 이벤트 구독 완료: OnActiveItemAdded, OnActiveItemRemoved, OnActiveItemUsed", GameLogger.LogCategory.UI);
 			}
 			else
 			{
@@ -68,6 +70,8 @@ namespace Game.ItemSystem.Runtime
 
 		private void OnDisable()
 		{
+			GameLogger.LogInfo("[RewardPanel] OnDisable() 호출 - 이벤트 구독 해제", GameLogger.LogCategory.UI);
+			
 			// _itemService가 null이면 이벤트 해제 건너뛰기
 			if (_itemService != null)
 			{
@@ -134,21 +138,20 @@ namespace Game.ItemSystem.Runtime
 		_candidates = candidates;
 		_passiveCandidates = null;
 		_isOpen = true;
-		_hasTakenOnceWhenThreeOfFour = false;
-		
+
 		// UI 슬롯 생성
 		CreateItemSlots(candidates);
-		
+
 		// 패널 활성화
 		gameObject.SetActive(true);
-		
+
 		// 토글 버튼도 함께 활성화
 		if (toggleButton != null)
 		{
 			toggleButton.gameObject.SetActive(true);
 			GameLogger.LogInfo("[RewardPanel] 토글 버튼 활성화", GameLogger.LogCategory.UI);
 		}
-		
+
 		GameLogger.LogInfo($"[Reward] 보상 {(_candidates?.Length ?? 0)}개 표시", GameLogger.LogCategory.UI);
 	}
 
@@ -204,19 +207,18 @@ namespace Game.ItemSystem.Runtime
 			OpenDefaultReward();
 			return;
 		}
-		
+
 		_candidates = _rewardGenerator.GenerateActive(enemyCfg, playerProfile, stageIndex, runSeed);
 		_passiveCandidates = _rewardGenerator.GeneratePassive(enemyCfg, playerProfile, stageIndex, runSeed);
 		_isOpen = true;
-		_hasTakenOnceWhenThreeOfFour = false;
-		
+
 		// 액티브 아이템만 UI로 표시 (패시브는 추후 확장)
 		CreateItemSlots(_candidates);
-		
+
 		// Is Open 상태에 따라 GameObject 활성화 관리
 		_isOpen = true;
 		gameObject.SetActive(true);
-		
+
 		GameLogger.LogInfo($"[RewardPanel] 패널 열기 완료 - IsOpen: {_isOpen}, GameObject.activeSelf: {gameObject.activeSelf}", GameLogger.LogCategory.UI);
 		GameLogger.LogInfo($"[Reward] 액티브 {(_candidates?.Length ?? 0)}개 + 패시브 {(_passiveCandidates?.Length ?? 0)}개 표시", GameLogger.LogCategory.UI);
 	}
@@ -243,12 +245,13 @@ namespace Game.ItemSystem.Runtime
 	/// <summary>
 	/// 패널 컨텐츠를 접기/펼치기합니다.
 	/// 패널은 유지하되 컨텐츠만 숨겨서 인벤토리 사용 가능하게 합니다.
+	/// 주의: panelContent만 SetActive(false)를 하고 GameObject 자체는 활성화 상태를 유지합니다.
 	/// </summary>
 	public void ToggleContent()
 	{
 		_isContentVisible = !_isContentVisible;
 		
-		// SlotContainer 숨기기/보이기
+		// SlotContainer 숨기기/보이기 (GameObject 자체는 그대로 두고)
 		if (panelContent != null)
 		{
 			panelContent.SetActive(_isContentVisible);
@@ -288,18 +291,21 @@ namespace Game.ItemSystem.Runtime
 				return;
 			}
 
-			if (!CanTakeMore())
-			{
-				GameLogger.LogWarning("[Reward] 인벤토리 가득/제한으로 가져올 수 없음", GameLogger.LogCategory.UI);
-				return;
-			}
-
 			var item = _candidates[candidateIndex];
-			
+
 			// _itemService가 null이면 아이템 추가 실패
 			if (_itemService == null)
 			{
 				GameLogger.LogError($"[Reward] _itemService가 null입니다. 아이템 '{item.DisplayName}' 추가 실패", GameLogger.LogCategory.UI);
+				return;
+			}
+
+			// 인벤토리가 가득 찼는지 확인
+			if (_itemService.IsActiveInventoryFull())
+			{
+				GameLogger.LogWarning($"[Reward] 인벤토리가 가득 참 - {item.DisplayName} 가져올 수 없음", GameLogger.LogCategory.UI);
+				// TODO: UI에 "인벤토리가 가득 찼습니다!" 텍스트 표시
+				ShowInventoryFullMessage();
 				return;
 			}
 
@@ -309,13 +315,6 @@ namespace Game.ItemSystem.Runtime
 			{
 				// 아이템을 성공적으로 가져간 경우 해당 슬롯 제거
 				RemoveSlot(candidateIndex);
-				
-				// 3/4에서 첫 1회 가져오면 제한 걸기
-				if (GetInventoryCount() == 4)
-				{
-					_hasTakenOnceWhenThreeOfFour = true;
-				}
-				UpdateSlotStates();
 			}
 		}
 
@@ -368,20 +367,15 @@ namespace Game.ItemSystem.Runtime
 			GameLogger.LogInfo($"[Reward] 슬롯 {slotIndex} 완전히 제거됨 (남은 슬롯 인덱스 재설정 완료)", GameLogger.LogCategory.UI);
 		}
 
-		private bool CanTakeMore()
-		{
-			// _itemService가 null이면 기본적으로 true 반환
-			if (_itemService == null)
-			{
-				GameLogger.LogWarning("[RewardPanel] _itemService가 null입니다. 아이템 선택을 허용합니다.", GameLogger.LogCategory.UI);
-				return true;
-			}
-
-			if (_itemService.IsActiveInventoryFull()) return false; // 4/4 불가
-			int count = GetInventoryCount();
-			if (count == 3 && _hasTakenOnceWhenThreeOfFour) return false; // 3/4에서 1회만
-			return true;
-		}
+	/// <summary>
+	/// 인벤토리가 가득 찼을 때 메시지를 표시합니다.
+	/// </summary>
+	private void ShowInventoryFullMessage()
+	{
+		// TODO: UI 텍스트 팝업 표시
+		// 예: "인벤토리가 가득 찼습니다! 아이템을 버려주세요."
+		GameLogger.LogWarning("[RewardPanel] 인벤토리가 가득 찼습니다!", GameLogger.LogCategory.UI);
+	}
 
 		private int GetInventoryCount()
 		{
@@ -480,53 +474,24 @@ namespace Game.ItemSystem.Runtime
 			OnClickTake(slotIndex);
 		}
 
-		private void HandleInventoryChanged(ActiveItemDefinition def, int slot)
-		{
-			// 인벤토리 변경 시 슬롯 상태 업데이트
-			GameLogger.LogInfo($"[RewardPanel] 인벤토리 변경 감지 - 추가: {def?.DisplayName ?? "null"} @ 슬롯 {slot}", GameLogger.LogCategory.UI);
-			UpdateSlotStates();
-		}
-
-		private void HandleInventoryChangedSlot(int slot)
-		{
-			// 버리기 후에는 3/4 제한 해제 가능
-			GameLogger.LogInfo($"[RewardPanel] 인벤토리 변경 감지 - 제거: 슬롯 {slot}", GameLogger.LogCategory.UI);
-			_hasTakenOnceWhenThreeOfFour = false;
-			UpdateSlotStates();
-		}
-
-		private void HandleInventoryUsed(ActiveItemDefinition def, int slot)
-		{
-			GameLogger.LogInfo($"[RewardPanel] 인벤토리 변경 감지 - 사용: {def?.DisplayName ?? "null"} @ 슬롯 {slot}", GameLogger.LogCategory.UI);
-			UpdateSlotStates();
-		}
-
-		/// <summary>
-		/// 슬롯 상태를 업데이트합니다 (버튼 활성화/비활성화).
-		/// </summary>
-	private void UpdateSlotStates()
+	private void HandleInventoryChanged(ActiveItemDefinition def, int slot)
 	{
-		// GameObject가 비활성화 상태일 때만 건너뜀
-		// 패널이 닫혀도(_isOpen = false) 슬롯 상태는 업데이트됨 (토글 버튼으로 다시 열 수 있으므로)
-		if (!gameObject.activeSelf)
-		{
-			GameLogger.LogInfo("[RewardPanel] GameObject가 비활성화 상태 - 슬롯 상태 업데이트 건너뜀", GameLogger.LogCategory.UI);
-			return;
-		}
-		
-		bool canTakeMore = CanTakeMore();
-		int inventoryCount = GetInventoryCount();
-		
-		GameLogger.LogInfo($"[RewardPanel] 슬롯 상태 업데이트: canTakeMore={canTakeMore}, inventoryCount={inventoryCount}, activeSlots.Count={activeSlots.Count}, _isOpen={_isOpen}", GameLogger.LogCategory.UI);
-		
-		foreach (var slot in activeSlots)
-		{
-			if (slot != null)
-			{
-				slot.SetInteractable(canTakeMore);
-			}
-		}
+		// 인벤토리 변경 시 로그만 출력
+		GameLogger.LogInfo($"[RewardPanel] 인벤토리 변경 감지 - 추가: {def?.DisplayName ?? "null"} @ 슬롯 {slot}", GameLogger.LogCategory.UI);
 	}
+
+	private void HandleInventoryChangedSlot(int slot)
+	{
+		// 인벤토리 변경 시 로그만 출력
+		GameLogger.LogInfo($"[RewardPanel] 인벤토리 변경 감지 - 제거: 슬롯 {slot}", GameLogger.LogCategory.UI);
+	}
+
+	private void HandleInventoryUsed(ActiveItemDefinition def, int slot)
+	{
+		// 인벤토리 변경 시 로그만 출력
+		GameLogger.LogInfo($"[RewardPanel] 인벤토리 변경 감지 - 사용: {def?.DisplayName ?? "null"} @ 슬롯 {slot}", GameLogger.LogCategory.UI);
+	}
+
 
 		/// <summary>
 		/// 설정이 없을 때 사용할 기본 액티브 보상을 생성합니다.
