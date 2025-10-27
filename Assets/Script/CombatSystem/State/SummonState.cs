@@ -118,6 +118,10 @@ namespace Game.CombatSystem.State
                     LogStateTransition($"[소환 디버그] 원본 적 GameObject 이름: {enemyChar.gameObject.name}");
                     LogStateTransition($"[소환 디버그] StageManager의 원본 데이터: {originalEnemyData?.DisplayName ?? "null"}");
                     LogStateTransition($"[소환 디버그] CharacterData 참조 비교: {enemyChar.CharacterData == originalEnemyData}");
+                    
+                    // 데미지 텍스트 정리 (소환 전에 남아있는 텍스트 제거)
+                    enemyChar.ClearDamageTexts();
+                    LogStateTransition($"원본 적의 데미지 텍스트 정리 완료");
                 }
 
                 // EnemyManager에서 등록 해제 (하지만 GameObject는 유지)

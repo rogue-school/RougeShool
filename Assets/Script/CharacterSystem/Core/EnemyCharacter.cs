@@ -321,35 +321,54 @@ namespace Game.CharacterSystem.Core
             }
         }
 
-        /// <summary>
-        /// UI 텍스트 및 초상화 갱신
-        /// </summary>
-        private void RefreshUI()
-        {
-            if (CharacterData == null) return;
+	/// <summary>
+	/// UI 텍스트 및 초상화 갱신
+	/// </summary>
+	private void RefreshUI()
+	{
+		if (CharacterData == null) return;
 
-            if (nameText != null)
-            {
-                nameText.text = GetCharacterName();
-            }
+		if (nameText != null)
+		{
+			nameText.text = GetCharacterName();
+		}
 
-            if (hpText != null)
-            {
-                hpText.text = currentHP.ToString();
-                hpText.color = currentHP >= GetMaxHP() ? Color.white : Color.red;
-            }
+		if (hpText != null)
+		{
+			hpText.text = currentHP.ToString();
+			hpText.color = currentHP >= GetMaxHP() ? Color.white : Color.red;
+		}
 
-            if (portraitImage != null)
-            {
-                portraitImage.sprite = CharacterData.Portrait;
-            }
-            
-            // HP 바 업데이트
-            if (hpBarController != null)
-            {
-                hpBarController.UpdateHPBar();
-            }
-        }
+		if (portraitImage != null)
+		{
+			portraitImage.sprite = CharacterData.Portrait;
+		}
+		
+		// HP 바 업데이트
+		if (hpBarController != null)
+		{
+			hpBarController.UpdateHPBar();
+		}
+	}
+
+	/// <summary>
+	/// 데미지 텍스트를 모두 정리합니다.
+	/// </summary>
+	public void ClearDamageTexts()
+	{
+		if (hpTextAnchor == null) return;
+
+		// hpTextAnchor의 모든 자식 데미지 텍스트 제거
+		for (int i = hpTextAnchor.childCount - 1; i >= 0; i--)
+		{
+			Transform child = hpTextAnchor.GetChild(i);
+			if (child != null && child.GetComponent<CombatSystem.UI.DamageTextUI>() != null)
+			{
+				Destroy(child.gameObject);
+				GameLogger.LogInfo($"[{GetCharacterName()}] 데미지 텍스트 제거됨", GameLogger.LogCategory.Character);
+			}
+		}
+	}
 
         /// <summary>
         /// 캐릭터에 설정된 이펙트를 적용합니다.

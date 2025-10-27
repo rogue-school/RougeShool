@@ -69,12 +69,16 @@ namespace Game.CombatSystem.State
                 // EnemyManager에서 등록 해제
                 context.EnemyManager?.UnregisterCharacter();
 
-                // GameObject 비활성화
-                if (summonedEnemy is EnemyCharacter enemyChar)
-                {
-                    enemyChar.gameObject.SetActive(false);
-                    LogStateTransition($"소환된 적 GameObject 비활성화 완료: {enemyChar.GetCharacterName()}");
-                }
+                    // GameObject 비활성화
+                    if (summonedEnemy is EnemyCharacter enemyChar)
+                    {
+                        // 데미지 텍스트 정리 (소환된 적의 텍스트 제거)
+                        enemyChar.ClearDamageTexts();
+                        LogStateTransition($"소환된 적의 데미지 텍스트 정리 완료");
+                        
+                        enemyChar.gameObject.SetActive(false);
+                        LogStateTransition($"소환된 적 GameObject 비활성화 완료: {enemyChar.GetCharacterName()}");
+                    }
             }
 
             // 비활성화가 완전히 적용되도록 1프레임 대기
@@ -163,6 +167,10 @@ namespace Game.CombatSystem.State
                             // GameObject 재활성화
                             child.gameObject.SetActive(true);
                             LogStateTransition($"[복귀 디버그] ✓ 원본 적 재활성화 완료: {enemyChar.GetCharacterName()}");
+                            
+                            // 데미지 텍스트 정리 (원본 적 복귀 시 남아있는 텍스트 제거)
+                            enemyChar.ClearDamageTexts();
+                            LogStateTransition($"[복귀 디버그] ✓ 원본 적의 데미지 텍스트 정리 완료");
 
                             // HP 복원
                             if (originalHP > 0)
