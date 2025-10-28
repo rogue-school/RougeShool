@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 43ef31a44bc88cc44a9cad613ea9fbd8, type: 3}
-  m_Name: Akein_Sword_Character
+  m_Name: Akein_SwoAkein
   m_EditorClassIdentifier: 
   <DisplayName>k__BackingField: "\uC544\uCF00\uC778"
   <CharacterType>k__BackingField: 0

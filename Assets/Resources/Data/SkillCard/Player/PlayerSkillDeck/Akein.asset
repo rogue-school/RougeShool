@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ffc016728dd14b149a7f6697a7dde445, type: 3}
-  m_Name: Akein_Sword_Deck
+  m_Name: Akein
   m_EditorClassIdentifier: 
   cardEntries:
   - cardDefinition: {fileID: 11400000, guid: 3d223c84e3f302d44a3898d59476bc0d, type: 2}
