@@ -250,7 +250,7 @@ namespace Game.ItemSystem.Runtime
 		{
 			GameLogger.LogInfo($"[ActiveItem] 효과 실행 시작: {effectCommands.Count}개 명령", GameLogger.LogCategory.Core);
 			
-			bool allSuccess = true;
+			bool anyExecuted = false;
 			
 			foreach (var command in effectCommands)
 			{
@@ -259,16 +259,16 @@ namespace Game.ItemSystem.Runtime
 				if (!command.Execute(context))
 				{
 					GameLogger.LogError($"[ActiveItem] 효과 명령 실행 실패: {command.GetType().Name}", GameLogger.LogCategory.Core);
-					allSuccess = false;
 				}
 				else
 				{
 					GameLogger.LogInfo($"[ActiveItem] 효과 명령 실행 성공: {command.GetType().Name}", GameLogger.LogCategory.Core);
+					anyExecuted = true;
 				}
 			}
 			
-			GameLogger.LogInfo($"[ActiveItem] 효과 실행 완료: {(allSuccess ? "성공" : "실패")}", GameLogger.LogCategory.Core);
-			return allSuccess;
+			GameLogger.LogInfo($"[ActiveItem] 효과 실행 완료: 성공 (아이템은 가드/반격 여부와 무관하게 사용 처리)", GameLogger.LogCategory.Core);
+			return true;
 		}
 		
 		#endregion

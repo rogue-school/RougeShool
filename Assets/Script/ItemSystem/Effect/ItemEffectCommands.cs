@@ -229,18 +229,10 @@ namespace Game.ItemSystem.Effect
             // EveryTurn 정책: 플레이어 턴(적용) → 적 턴(감소하며 스턴 유지) → 다음 플레이어 턴(만료)
             // 이렇게 하면 적 턴 전체를 차단할 수 있습니다
             var stunDebuff = new Game.SkillCardSystem.Effect.StunDebuff(2, itemIcon);
-            bool success = enemyCharacter.RegisterStatusEffect(stunDebuff);
-
-            if (success)
-            {
-                GameLogger.LogInfo($"[TimeStopEffect] 타임 스톱 스크롤 적용 완료: {enemyCharacter.GetCharacterName()}에게 2턴 스턴 (다음 적 턴 완전 차단)", GameLogger.LogCategory.Core);
-                return true;
-            }
-            else
-            {
-                GameLogger.LogWarning($"[TimeStopEffect] 타임 스톱 스크롤 적용 실패: {enemyCharacter.GetCharacterName()}이 보호 상태", GameLogger.LogCategory.Core);
-                return false;
-            }
+            // 아이템 유래 상태이상은 가드를 무시하고 직접 등록 (RegisterPerTurnEffect 사용)
+            enemyCharacter.RegisterPerTurnEffect(stunDebuff);
+            GameLogger.LogInfo($"[TimeStopEffect] 타임 스톱 스크롤 적용: {enemyCharacter.GetCharacterName()}에게 2턴 스턴 (아이템은 가드 무시)", GameLogger.LogCategory.Core);
+            return true;
         }
     }
 
