@@ -250,7 +250,6 @@ namespace Game.ItemSystem.Runtime
 		{
 			GameLogger.LogInfo($"[ActiveItem] 효과 실행 시작: {effectCommands.Count}개 명령", GameLogger.LogCategory.Core);
 			
-			bool anyExecuted = false;
 			
 			foreach (var command in effectCommands)
 			{
@@ -263,7 +262,6 @@ namespace Game.ItemSystem.Runtime
 				else
 				{
 					GameLogger.LogInfo($"[ActiveItem] 효과 명령 실행 성공: {command.GetType().Name}", GameLogger.LogCategory.Core);
-					anyExecuted = true;
 				}
 			}
 			

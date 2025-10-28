@@ -538,7 +538,20 @@ namespace Game.UISystem
         private void OnExitButtonClicked()
         {
             GameLogger.LogInfo("[MainMenuController] 게임 종료", GameLogger.LogCategory.UI);
-            gameStateManager.ExitGame();
+
+            if (gameStateManager != null)
+            {
+                gameStateManager.ExitGame();
+                return;
+            }
+
+            GameLogger.LogWarning("[MainMenuController] GameStateManager가 null입니다. 직접 종료를 시도합니다.", GameLogger.LogCategory.UI);
+
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
         }
         
         /// <summary>
