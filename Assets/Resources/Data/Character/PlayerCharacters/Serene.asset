@@ -19,6 +19,6 @@ MonoBehaviour:
   <PlayerUIPortrait>k__BackingField: {fileID: 0}
   <Emblem>k__BackingField: {fileID: 0}
   <Description>k__BackingField: 
-  <MaxResource>k__BackingField: 0
-  <ResourceName>k__BackingField: 
+  <MaxResource>k__BackingField: 15
+  <ResourceName>k__BackingField: Arrow
   <SkillDeck>k__BackingField: {fileID: 0}
