@@ -626,7 +626,8 @@ namespace Game.ItemSystem.Runtime
             if (currentItem == null || tooltipManager == null)
                 return;
 
-            tooltipManager.OnItemHoverEnter(currentItem);
+            // 인벤토리 슬롯에서도 자신의 RectTransform을 명시 전달
+            tooltipManager.OnItemHoverEnter(currentItem, rectTransform);
         }
 
         /// <summary>

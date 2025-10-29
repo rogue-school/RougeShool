@@ -307,7 +307,8 @@ namespace Game.ItemSystem.Runtime
             if (currentItem == null || tooltipManager == null)
                 return;
             
-            tooltipManager.OnItemHoverEnter(currentItem);
+            // 보상창 슬롯의 RectTransform을 소스로 명시 전달하여 인벤토리 슬롯과 구분
+            tooltipManager.OnItemHoverEnter(currentItem, rectTransform);
         }
         
         /// <summary>

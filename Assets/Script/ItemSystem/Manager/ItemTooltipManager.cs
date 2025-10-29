@@ -30,6 +30,12 @@ namespace Game.ItemSystem.Manager
         [Tooltip("툴팁 숨김 지연 시간 (초)")]
         [SerializeField] private float hideDelay = 0.1f;
 
+        [Header("정렬 간격 설정")]
+        [Tooltip("아이템과 툴팁 사이의 가로 간격(px)")]
+        [SerializeField] private float alignPaddingX = 12f;
+        [Tooltip("아이템 하단과 툴팁 하단의 세로 오프셋(px). 0이면 하단 정렬")]
+        [SerializeField] private float alignPaddingY = 0f;
+
         #endregion
 
         #region Private Fields
@@ -230,6 +236,16 @@ namespace Game.ItemSystem.Manager
         /// <param name="item">호버된 아이템</param>
         public void OnItemHoverEnter(ActiveItemDefinition item)
         {
+            OnItemHoverEnter(item, null);
+        }
+
+        /// <summary>
+        /// 아이템에 마우스가 진입했을 때 호출됩니다. (호버 소스 Rect 우선)
+        /// </summary>
+        /// <param name="item">호버된 아이템</param>
+        /// <param name="sourceRect">호버를 발생시킨 UI의 RectTransform</param>
+        public void OnItemHoverEnter(ActiveItemDefinition item, RectTransform sourceRect)
+        {
             if (item == null) return;
 
             if (!IsInitialized)
@@ -242,11 +258,17 @@ namespace Game.ItemSystem.Manager
             }
 
             hoveredItem = item;
-            currentTargetRect = null;
-            if (itemUICache.TryGetValue(item, out var rt) && rt != null)
+            // 호버를 발생시킨 소스 Rect를 우선 사용
+            currentTargetRect = sourceRect;
+            if (currentTargetRect == null)
             {
-                currentTargetRect = rt;
+                // 폴백: 캐시된 Rect 사용
+                if (itemUICache.TryGetValue(item, out var rt) && rt != null)
+                {
+                    currentTargetRect = rt;
+                }
             }
+
             isHidingTooltip = false;
             hideTimer = 0f;
 
@@ -561,10 +583,56 @@ namespace Game.ItemSystem.Manager
                 cameraToUse,
                 out localPoint))
             {
-                // 아이템 기준으로 툴팁 위치 계산
-                Vector2 tooltipPosition = CalculateTooltipPositionRelativeToItem(localPoint);
+                // SkillCard과 동일한 정책: 우측 우선, 좌우 폴백, 하단 정렬
+                rectTransform.pivot = new Vector2(0f, 0f);
 
-                // 화면 경계 내로 제한
+                var canvasRect = targetParent.rect;
+                var tooltipRect = rectTransform.rect;
+
+                float tooltipWidth = Mathf.Abs(tooltipRect.width);
+
+                // 아이템 폭 계산 (기본값 100)
+                float itemWidth = 100f;
+                if (currentTargetRect != null)
+                {
+                    itemWidth = Mathf.Abs(currentTargetRect.rect.width);
+                }
+
+                float itemRightEdge = localPoint.x + itemWidth;
+
+                float canvasLeft = canvasRect.xMin;
+                float canvasRight = canvasRect.xMax;
+
+                float rightSpace = canvasRight - itemRightEdge;
+                float leftSpace = localPoint.x - canvasLeft;
+
+                float requiredWidth = tooltipWidth + alignPaddingX;
+                bool canShowRight = rightSpace >= requiredWidth;
+                bool canShowLeft = leftSpace >= requiredWidth;
+
+                Vector2 tooltipPosition = localPoint;
+
+                if (canShowRight)
+                {
+                    tooltipPosition.x = itemRightEdge + alignPaddingX;
+                }
+                else if (canShowLeft)
+                {
+                    tooltipPosition.x = localPoint.x - alignPaddingX - tooltipWidth;
+                }
+                else
+                {
+                    // 양쪽 모두 부족하면 중앙 쪽으로 클램프
+                    tooltipPosition.x = Mathf.Clamp(localPoint.x, canvasRect.xMin, canvasRect.xMax - tooltipWidth);
+                }
+
+                // 하단 정렬 유지 + 세로 오프셋
+                tooltipPosition.y = localPoint.y + alignPaddingY;
+
+                // 다른 UI 위에 표시
+                rectTransform.SetAsLastSibling();
+
+                // 좌우 경계 클램프
                 tooltipPosition = ClampToScreenBounds(tooltipPosition, targetParent);
 
                 rectTransform.localPosition = tooltipPosition;
@@ -578,20 +646,8 @@ namespace Game.ItemSystem.Manager
         /// <returns>툴팁의 로컬 좌표</returns>
         private Vector2 CalculateTooltipPositionRelativeToItem(Vector2 itemLocalPoint)
         {
-            if (currentTooltip == null) return itemLocalPoint;
-
-            var rectTransform = currentTooltip.GetComponent<RectTransform>();
-            if (rectTransform == null) return itemLocalPoint;
-
-            var tooltipRect = rectTransform.rect;
-
-            // 아이템의 오른쪽 위 모서리에 툴팁 배치
-            float offsetX = 10f; // 가로 간격
-            float offsetY = 0f;  // 세로 간격 (완전 밀착)
-
-            Vector2 tooltipPosition = itemLocalPoint + new Vector2(offsetX, tooltipRect.height + offsetY);
-
-            return tooltipPosition;
+            // 더 이상 사용하지 않음 (SkillCard 정책으로 대체)
+            return itemLocalPoint;
         }
 
         /// <summary>
@@ -604,24 +660,17 @@ namespace Game.ItemSystem.Manager
             var canvasRect = parentRect.rect;
             var tooltipRect = currentTooltip.GetComponent<RectTransform>().rect;
 
-            // X축 제한
-            if (position.x + tooltipRect.width > canvasRect.width / 2f)
-            {
-                position.x = canvasRect.width / 2f - tooltipRect.width;
-            }
-            if (position.x < -canvasRect.width / 2f)
-            {
-                position.x = -canvasRect.width / 2f;
-            }
+            // 좌우 경계만 클램프 (하단 정렬 유지, pivot.x=0)
+            float minX = canvasRect.xMin;
+            float maxX = canvasRect.xMax - tooltipRect.width;
 
-            // Y축 제한
-            if (position.y > canvasRect.height / 2f)
+            if (position.x < minX)
             {
-                position.y = canvasRect.height / 2f;
+                position.x = minX;
             }
-            if (position.y - tooltipRect.height < -canvasRect.height / 2f)
+            else if (position.x > maxX)
             {
-                position.y = -canvasRect.height / 2f + tooltipRect.height;
+                position.x = maxX;
             }
 
             return position;
