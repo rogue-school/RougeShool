@@ -51,6 +51,9 @@ namespace Game.ItemSystem.Manager
         private float hideTimer;
         private bool isShowingTooltip;
         private bool isHidingTooltip;
+        private bool isPinned; // 팝업 등으로 고정된 동안 숨기지 않음
+        private ActiveItemDefinition pinnedItem;
+        private RectTransform pinnedRect;
 
         private EventSystem eventSystem;
         private System.Collections.Generic.Dictionary<ActiveItemDefinition, RectTransform> itemUICache = new();
@@ -248,6 +251,12 @@ namespace Game.ItemSystem.Manager
         {
             if (item == null) return;
 
+            // 팝업으로 고정된 동안에는 다른 아이템으로 전환하지 않음
+            if (isPinned)
+            {
+                return;
+            }
+
             if (!IsInitialized)
             {
                 GameLogger.LogInfo("[ItemTooltipManager] 초기화 안됨 - 즉시 초기화 시도", GameLogger.LogCategory.UI);
@@ -286,6 +295,15 @@ namespace Game.ItemSystem.Manager
         {
             if (hoveredItem == null) return;
 
+            if (isPinned)
+            {
+                // 고정 상태에서는 숨김 타이머를 시작하지 않고 상태만 초기화
+                hoveredItem = null;
+                isShowingTooltip = false;
+                showTimer = 0f;
+                return;
+            }
+
             hoveredItem = null;
             isShowingTooltip = false;
             showTimer = 0f;
@@ -315,6 +333,9 @@ namespace Game.ItemSystem.Manager
             isHidingTooltip = false;
             showTimer = 0f;
             hideTimer = 0f;
+            isPinned = false;
+            pinnedItem = null;
+            pinnedRect = null;
         }
 
         /// <summary>
@@ -431,6 +452,22 @@ namespace Game.ItemSystem.Manager
         /// </summary>
         private Vector2 GetCurrentItemPosition()
         {
+            if (isPinned && pinnedRect != null)
+            {
+                // 고정된 Rect 기준으로 위치 계산
+                var sourceCanvas = pinnedRect.GetComponentInParent<Canvas>();
+                Camera cam = null;
+                if (sourceCanvas != null && sourceCanvas.renderMode != RenderMode.ScreenSpaceOverlay)
+                {
+                    cam = sourceCanvas.worldCamera;
+                }
+
+                Vector3[] cornersPinned = new Vector3[4];
+                pinnedRect.GetWorldCorners(cornersPinned);
+                Vector3 bottomLeftPinned = cornersPinned[0];
+                return RectTransformUtility.WorldToScreenPoint(cam, bottomLeftPinned);
+            }
+
             if (hoveredItem == null) return Vector2.zero;
 
             RectTransform itemRect = currentTargetRect;
@@ -545,6 +582,11 @@ namespace Game.ItemSystem.Manager
 
             try
             {
+                if (isPinned)
+                {
+                    GameLogger.LogInfo("[ItemTooltipManager] 툴팁 고정 상태 - 숨기지 않음", GameLogger.LogCategory.UI);
+                    return;
+                }
                 currentTooltip.Hide();
                 GameLogger.LogInfo("툴팁 숨김 완료", GameLogger.LogCategory.UI);
             }
@@ -552,6 +594,38 @@ namespace Game.ItemSystem.Manager
             {
                 GameLogger.LogError($"[ItemTooltipManager] 툴팁 숨김 중 오류 발생: {ex.Message}", GameLogger.LogCategory.Error);
             }
+        }
+
+        /// <summary>
+        /// 툴팁을 고정합니다. (팝업이 열리는 동안 유지)
+        /// </summary>
+        public void PinTooltip()
+        {
+            isPinned = true;
+            pinnedItem = hoveredItem;
+            pinnedRect = currentTargetRect;
+        }
+
+        /// <summary>
+        /// 툴팁 고정을 해제합니다.
+        /// </summary>
+        public void UnpinTooltip()
+        {
+            isPinned = false;
+            pinnedItem = null;
+            pinnedRect = null;
+        }
+
+        /// <summary>
+        /// 특정 아이템/Rect 기준으로 툴팁을 고정합니다.
+        /// </summary>
+        public void PinTooltip(ActiveItemDefinition item, RectTransform rect)
+        {
+            isPinned = true;
+            pinnedItem = item;
+            pinnedRect = rect;
+            hoveredItem = item;
+            currentTargetRect = rect;
         }
 
         /// <summary>

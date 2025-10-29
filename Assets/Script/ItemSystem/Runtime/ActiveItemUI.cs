@@ -226,7 +226,7 @@ namespace Game.ItemSystem.Runtime
                 return;
             }
 
-            // 팝업 생성
+            // 팝업 생성 (초기 부모는 슬롯이지만, 툴팁이 있으면 동일 캔버스로 이동)
             GameObject popupInstance = Instantiate(actionPopupPrefab, transform);
             currentPopup = popupInstance.GetComponent<ActionPopupUI>();
 
@@ -255,12 +255,83 @@ namespace Game.ItemSystem.Runtime
                 currentPopup.gameObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
             }
 
-            // 팝업 위치 설정 (아이템 아이콘 위쪽에 표시)
+            // 팝업 위치 설정: 기본은 슬롯 위쪽, 툴팁이 열려 있으면 툴팁 오른편에 정렬
             RectTransform rectTransform = GetComponent<RectTransform>();
-            Vector2 popupPosition = rectTransform.anchoredPosition + Vector2.up * 60f; // 앵커드 포지션 사용
+            Vector2 popupPosition = rectTransform.anchoredPosition + Vector2.up * 60f; // 기본값
+
+            var itemTooltip = tooltipManager != null ? tooltipManager.CurrentTooltip : null;
+            if (itemTooltip != null && itemTooltip.gameObject.activeInHierarchy)
+            {
+                var tooltipRT = itemTooltip.GetComponent<RectTransform>();
+                var tooltipParentRT = tooltipRT != null ? tooltipRT.parent as RectTransform : null;
+                if (tooltipRT != null && tooltipParentRT != null)
+                {
+                    // 팝업 부모를 툴팁과 동일한 캔버스로 이동
+                    currentPopup.transform.SetParent(tooltipParentRT, false);
+
+                    // 툴팁 좌/우 하단(World) 코너를 동일 부모 로컬로 변환
+                    Vector3[] corners = new Vector3[4];
+                    tooltipRT.GetWorldCorners(corners); // 0:BL, 1:TL, 2:TR, 3:BR
+                    Vector3 tooltipBLWorld = corners[0];
+                    Vector3 tooltipBRWorld = corners[3];
+
+                    var canvas = tooltipParentRT.GetComponentInParent<Canvas>();
+                    Camera cam = null;
+                    if (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay)
+                    {
+                        cam = canvas.worldCamera;
+                    }
+
+                    Vector2 brScreen = RectTransformUtility.WorldToScreenPoint(cam, tooltipBRWorld);
+                    Vector2 blScreen = RectTransformUtility.WorldToScreenPoint(cam, tooltipBLWorld);
+
+                    Vector2 brLocal, blLocal;
+                    bool gotBR = RectTransformUtility.ScreenPointToLocalPointInRectangle(tooltipParentRT, brScreen, cam, out brLocal);
+                    bool gotBL = RectTransformUtility.ScreenPointToLocalPointInRectangle(tooltipParentRT, blScreen, cam, out blLocal);
+                    if (gotBR && gotBL)
+                    {
+                        // 팝업 Rect 정보
+                        var popupRT = currentPopup.GetComponent<RectTransform>();
+                        if (popupRT != null)
+                        {
+                            // 좌하 피벗으로 정렬해 겹침 방지
+                            popupRT.pivot = new Vector2(0f, 0f);
+
+                            float tooltipRight = brLocal.x;
+                            float tooltipLeft = blLocal.x;
+                            float popupWidth = Mathf.Abs(popupRT.rect.width);
+                            const float popupOffsetX = 12f;
+
+                            var parentRect = tooltipParentRT.rect;
+                            bool canShowRight = (parentRect.xMax - tooltipRight) >= (popupWidth + popupOffsetX);
+
+                            float targetX = canShowRight
+                                ? tooltipRight + popupOffsetX
+                                : tooltipLeft - popupOffsetX - popupWidth;
+
+                            // 하단 정렬(y는 툴팁 하단과 동일)
+                            float targetY = brLocal.y;
+
+                            // 좌우 경계 클램프
+                            float minX = parentRect.xMin;
+                            float maxX = parentRect.xMax - popupWidth;
+                            if (targetX < minX) targetX = minX;
+                            else if (targetX > maxX) targetX = maxX;
+
+                            popupPosition = new Vector2(targetX, targetY);
+                        }
+                    }
+                }
+            }
 
             // 팝업 설정
             currentPopup.SetupPopup(slotIndex, currentItem, popupPosition, allowUse);
+
+            // 팝업이 열리는 동안 툴팁을 현재 아이템/슬롯 기준으로 고정
+            if (tooltipManager != null)
+            {
+                tooltipManager.PinTooltip(currentItem, rectTransform);
+            }
 
             // 이벤트 연결
             currentPopup.OnUseButtonClicked += HandleUseButtonClicked;
@@ -285,6 +356,13 @@ namespace Game.ItemSystem.Runtime
                 // 팝업 제거
                 Destroy(currentPopup.gameObject);
                 currentPopup = null;
+
+                // 외부/내부 어떤 경로로든 팝업을 닫을 때 툴팁도 함께 종료
+                if (tooltipManager != null)
+                {
+                    tooltipManager.UnpinTooltip();
+                    tooltipManager.ForceHideTooltip();
+                }
 
                 GameLogger.LogInfo($"[ActiveItemUI] 액션 팝업 닫힘: 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
             }
@@ -328,6 +406,13 @@ namespace Game.ItemSystem.Runtime
         private void HandlePopupClosed()
         {
             currentPopup = null;
+            // 팝업이 닫히면 툴팁 고정 해제
+            if (tooltipManager != null)
+            {
+                tooltipManager.UnpinTooltip();
+                // 클릭으로 고정된 툴팁도 함께 닫기
+                tooltipManager.ForceHideTooltip();
+            }
             GameLogger.LogInfo($"[ActiveItemUI] 팝업 닫힘 이벤트 처리: 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
         }
 
