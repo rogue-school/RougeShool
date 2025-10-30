@@ -1033,14 +1033,34 @@ namespace Game.SkillCardSystem.UI
                             });
                         }
 
-                        // 자원 효과 (리소스 → 자원으로 용어 통일)
+                        // 자원 효과: 플레이어 자원 이름(예: 화살/마나)로 표기
                         if (customSettings.resourceDelta != 0)
                         {
                             string resourceText = customSettings.resourceDelta > 0 ? "획득" : "소모";
+                            string resourceName = "자원";
+                            // 플레이어 카드인 경우 PlayerManager에서 자원 이름 조회
+                            if (currentCard != null && currentCard.IsFromPlayer())
+                            {
+                                var pm = FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
+                                if (pm != null && !string.IsNullOrEmpty(pm.ResourceName))
+                                {
+                                    resourceName = pm.ResourceName;
+                                }
+                                else
+                                {
+                                    // 데이터 폴백
+                                    var ch = pm?.GetCharacter();
+                                    if (ch != null && ch.CharacterData is Game.CharacterSystem.Data.PlayerCharacterData pcd && !string.IsNullOrEmpty(pcd.ResourceName))
+                                    {
+                                        resourceName = pcd.ResourceName;
+                                    }
+                                }
+                            }
+
                             effects.Add(new EffectData
                             {
-                                name = "자원",
-                                description = $"자원 {resourceText}: {Mathf.Abs(customSettings.resourceDelta)}",
+                                name = resourceName,
+                                description = $"{resourceName} {resourceText}: {Mathf.Abs(customSettings.resourceDelta)}",
                                 iconColor = customSettings.resourceDelta > 0 ? Color.green : Color.red,
                                 effectType = EffectType.Special
                             });

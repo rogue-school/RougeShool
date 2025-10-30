@@ -306,6 +306,10 @@ namespace Game.CharacterSystem.UI
             if (isSubscribed || playerCharacter == null) return;
             playerCharacter.OnHPChanged += OnHpChangedHandler;
             playerCharacter.OnBuffsChanged += OnBuffsChangedHandler;
+            if (playerManager != null)
+            {
+                playerManager.OnResourceChanged += OnResourceChangedByManager;
+            }
             isSubscribed = true;
         }
 
@@ -317,6 +321,10 @@ namespace Game.CharacterSystem.UI
             if (!isSubscribed || playerCharacter == null) return;
             playerCharacter.OnHPChanged -= OnHpChangedHandler;
             playerCharacter.OnBuffsChanged -= OnBuffsChangedHandler;
+            if (playerManager != null)
+            {
+                playerManager.OnResourceChanged -= OnResourceChangedByManager;
+            }
             isSubscribed = false;
         }
 
@@ -738,6 +746,16 @@ namespace Game.CharacterSystem.UI
         /// <param name="oldAmount">이전 리소스량</param>
         /// <param name="newAmount">새 리소스량</param>
         public void OnResourceChanged(int oldAmount, int newAmount)
+        {
+            UpdateMPBar();
+        }
+
+        /// <summary>
+        /// PlayerManager 리소스 변경 이벤트 핸들러 (현재/최대 전달)
+        /// </summary>
+        /// <param name="current">현재 리소스</param>
+        /// <param name="max">최대 리소스</param>
+        private void OnResourceChangedByManager(int current, int max)
         {
             UpdateMPBar();
         }

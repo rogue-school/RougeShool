@@ -69,6 +69,12 @@ namespace Game.CharacterSystem.Data
         public int MaxResource { get; private set; }
 
         /// <summary>
+        /// 캐릭터 생성 시 시작 리소스입니다. (0 ~ MaxResource 범위 권장)
+        /// </summary>
+        [field: SerializeField]
+        public int InitialResource { get; private set; }
+
+        /// <summary>
         /// 리소스 이름입니다. (예: "화살", "마나")
         /// </summary>
         [field: SerializeField]

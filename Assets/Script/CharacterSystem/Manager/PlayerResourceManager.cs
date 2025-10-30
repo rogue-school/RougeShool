@@ -62,7 +62,7 @@ namespace Game.CharacterSystem.Manager
 
             maxResource = characterData.MaxResource;
             resourceName = characterData.ResourceName;
-            currentResource = maxResource; // 시작 시 최대치로 설정
+            currentResource = Mathf.Clamp(characterData.InitialResource, 0, maxResource);
 
             GameLogger.LogInfo($"{characterData.DisplayName} 리소스 초기화: {resourceName} {currentResource}/{maxResource}", GameLogger.LogCategory.Character);
             OnResourceChanged?.Invoke(currentResource, maxResource);

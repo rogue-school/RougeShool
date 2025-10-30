@@ -1608,7 +1608,7 @@ MonoBehaviour:
   persistAcrossScenes: 1
   initializeWithoutRequiredReferences: 1
   currentGameState: 0
-  selectedCharacter: {fileID: 11400000, guid: 09c242a71ef51f7479baa0e5ae122d6c, type: 2}
+  selectedCharacter: {fileID: 0}
 --- !u!1 &1343503450
 GameObject:
   m_ObjectHideFlags: 0

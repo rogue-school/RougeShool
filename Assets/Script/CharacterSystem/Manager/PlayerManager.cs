@@ -150,7 +150,16 @@ namespace Game.CharacterSystem.Manager
                 return gameStateManager;
             }
 
-            GameLogger.LogWarning("GameStateManager가 주입되지 않았습니다. DI 설정을 확인해주세요.", GameLogger.LogCategory.Character);
+            // 전역 객체에서 검색 (DontDestroyOnLoad 포함)
+            var found = UnityEngine.Object.FindFirstObjectByType<GameStateManager>(FindObjectsInactive.Include);
+            if (found != null)
+            {
+                gameStateManager = found; // 캐시
+                GameLogger.LogInfo("[PlayerManager] 전역에서 GameStateManager를 찾았습니다.", GameLogger.LogCategory.Character);
+                return gameStateManager;
+            }
+
+            GameLogger.LogWarning("GameStateManager를 찾지 못했습니다. 선택된 캐릭터를 가져올 수 없습니다.", GameLogger.LogCategory.Character);
             return null;
         }
 
@@ -173,6 +182,29 @@ namespace Game.CharacterSystem.Manager
                 return cachedSelectedCharacter;
             }
 
+            // 3. PlayerPrefs 폴백 (선택 타입만 저장되어 있는 경우)
+            try
+            {
+                string typeStr = PlayerPrefs.GetString("SELECTED_CHARACTER_TYPE", string.Empty);
+                if (!string.IsNullOrEmpty(typeStr) && System.Enum.TryParse<PlayerCharacterType>(typeStr, out var ct))
+                {
+                    // 가능한 모든 PlayerCharacterData를 탐색하여 타입이 일치하는 첫 번째 자산을 선택
+                    var allDatas = Resources.LoadAll<PlayerCharacterData>(string.Empty);
+                    foreach (var d in allDatas)
+                    {
+                        if (d != null && d.CharacterType == ct)
+                        {
+                            cachedSelectedCharacter = d;
+                            GameLogger.LogInfo($"[PlayerManager] PlayerPrefs 폴백으로 캐릭터 복구: {d.DisplayName}", GameLogger.LogCategory.Character);
+                            return cachedSelectedCharacter;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                GameLogger.LogWarning($"[PlayerManager] PlayerPrefs 폴백 중 예외: {ex.Message}", GameLogger.LogCategory.Character);
+            }
 
             return null;
         }

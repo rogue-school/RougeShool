@@ -248,6 +248,40 @@ namespace Game.CombatSystem.Manager
             // 카드 실행
             try
             {
+                // 플레이어 카드의 자원 소모 처리 (선소모/부족 시 실패)
+                if (card != null && card.IsFromPlayer())
+                {
+                    var def = card.CardDefinition;
+                    var cfg = def?.configuration;
+                    if (cfg != null && cfg.hasResource && cfg.resourceConfig != null)
+                    {
+                        int cost = Mathf.Max(0, cfg.resourceConfig.cost);
+                        if (cost > 0)
+                        {
+                            if (playerManager == null)
+                            {
+                                GameLogger.LogError("PlayerManager가 없어 자원 소모를 처리할 수 없습니다.", GameLogger.LogCategory.Error);
+                                return new ExecutionResult(false, null, "자원 매니저 없음");
+                            }
+
+                            if (!playerManager.HasEnoughResource(cost))
+                            {
+                                GameLogger.LogWarning($"자원이 부족하여 카드를 사용할 수 없습니다. 필요: {cost}, 현재: {playerManager.CurrentResource}", GameLogger.LogCategory.SkillCard);
+                                return new ExecutionResult(false, null, "자원이 부족합니다");
+                            }
+
+                            // 선소모
+                            bool consumed = playerManager.ConsumeResource(cost);
+                            if (!consumed)
+                            {
+                                GameLogger.LogWarning($"자원 소모 실패: 필요 {cost}, 현재 {playerManager.CurrentResource}", GameLogger.LogCategory.SkillCard);
+                                return new ExecutionResult(false, null, "자원 소모 실패");
+                            }
+                            GameLogger.LogInfo($"자원 소모: {cost} (남은 {playerManager.CurrentResource}/{playerManager.MaxResource})", GameLogger.LogCategory.SkillCard);
+                        }
+                    }
+                }
+
                 card.ExecuteSkill(sourceCharacter, targetCharacter);
 
                 // 실행 이벤트 발생
