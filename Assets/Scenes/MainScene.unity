@@ -2571,10 +2571,10 @@ MonoBehaviour:
   skillCardUIPrefab: {fileID: 4627134175914890069, guid: dd8cb0a8e6cf7b34bbbbfe597c28aa49, type: 3}
   skillCardPreviewContainer: {fileID: 728077167}
   swordButton: {fileID: 195103764}
-  bowButton: {fileID: 0}
+  bowButton: {fileID: 757399644}
   staffButton: {fileID: 0}
   swordCharacter: {fileID: 11400000, guid: 09c242a71ef51f7479baa0e5ae122d6c, type: 2}
-  bowCharacter: {fileID: 0}
+  bowCharacter: {fileID: 11400000, guid: 6ef45cb58dd5dd8458f635b269adad1d, type: 2}
   staffCharacter: {fileID: 0}
   creditsPanel: {fileID: 1781053227}
   backToMenuButton: {fileID: 784515821}

@@ -27,6 +27,9 @@ MonoBehaviour:
       hits: 1
       ignoreGuard: 0
       ignoreCounter: 0
+    hasResource: 0
+    resourceConfig:
+      cost: 0
     hasEffects: 0
     effects: []
     ownerPolicy: 0

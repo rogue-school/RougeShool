@@ -131,6 +131,13 @@ namespace Game.SkillCardSystem.Data
         [Tooltip("데미지 설정")]
         public DamageConfiguration damageConfig = new();
         
+        [Header("리소스 구성 (선택적)")]
+        [Tooltip("자원을 소모하는 카드인지")]
+        public bool hasResource = false;
+
+        [Tooltip("자원 소모 설정")] 
+        public ResourceConfiguration resourceConfig = new();
+
         [Header("효과 구성 (선택적)")]
         [Tooltip("추가 효과가 있는 카드인지")]
         public bool hasEffects = false;
@@ -145,6 +152,16 @@ namespace Game.SkillCardSystem.Data
         // 기존 시스템 호환성을 위한 프로퍼티들
         public List<SkillCardEffectSO> Effects => hasEffects ? this.effects.ConvertAll(e => e.effectSO) : new List<SkillCardEffectSO>();
         public string targetRule => "Enemy"; // 기본값
+    }
+
+    /// <summary>
+    /// 자원 소모 관련 설정을 담는 클래스입니다.
+    /// </summary>
+    [System.Serializable]
+    public class ResourceConfiguration
+    {
+        [Tooltip("카드 사용 시 소모할 리소스 양 (0이면 소모 없음)")]
+        public int cost = 0;
     }
 
     /// <summary>

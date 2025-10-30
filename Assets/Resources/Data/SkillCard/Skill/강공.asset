@@ -27,6 +27,9 @@ MonoBehaviour:
       hits: 1
       ignoreGuard: 0
       ignoreCounter: 0
+    hasResource: 0
+    resourceConfig:
+      cost: 0
     hasEffects: 1
     effects:
     - effectSO: {fileID: 11400000, guid: ee682d0f0be226a4784594150ab18ee4, type: 2}

@@ -286,6 +286,8 @@ MonoBehaviour:
   tooltipPrefab: {fileID: 3522811872384367802, guid: abeee521058f7584d920b1bb0a9668d6, type: 3}
   showDelay: 0.1
   hideDelay: 0.1
+  alignPaddingX: 12
+  alignPaddingY: 0
 --- !u!1 &286090015
 GameObject:
   m_ObjectHideFlags: 0
@@ -1721,7 +1723,7 @@ MonoBehaviour:
   playerCharacterSelectionManager: {fileID: 80656796}
   skillCardTooltipManager: {fileID: 1069046947}
   buffDebuffTooltipManager: {fileID: 0}
-  itemTooltipManager: {fileID: 0}
+  itemTooltipManager: {fileID: 253123549}
   playerManager: {fileID: 0}
   enableLazyInitialization: 0
   enableCircularDependencyCheck: 1
@@ -2464,7 +2466,7 @@ Transform:
   m_GameObject: {fileID: 1935855617}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 765.4547, y: 496.38068, z: -0.8451657}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

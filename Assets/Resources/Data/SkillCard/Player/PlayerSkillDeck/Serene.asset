@@ -12,4 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ffc016728dd14b149a7f6697a7dde445, type: 3}
   m_Name: Serene
   m_EditorClassIdentifier: 
-  cardEntries: []
+  cardEntries:
+  - cardDefinition: {fileID: 11400000, guid: 3b352d671c7f55140b3e5dcb7c6a4afd, type: 2}
+    quantity: 0
+  - cardDefinition: {fileID: 11400000, guid: e8acbd95f5fa3c5499f3270986d25e7d, type: 2}
+    quantity: 0

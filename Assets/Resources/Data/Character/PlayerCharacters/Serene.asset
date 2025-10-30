@@ -15,10 +15,10 @@ MonoBehaviour:
   <DisplayName>k__BackingField: "\uC138\uB80C"
   <CharacterType>k__BackingField: 1
   <MaxHP>k__BackingField: 17
-  <Portrait>k__BackingField: {fileID: 0}
-  <PlayerUIPortrait>k__BackingField: {fileID: 0}
-  <Emblem>k__BackingField: {fileID: 0}
-  <Description>k__BackingField: 
+  <Portrait>k__BackingField: {fileID: -1883461940335079187, guid: 38f2b0a7d468c03478fdf15e6da37b58, type: 3}
+  <PlayerUIPortrait>k__BackingField: {fileID: -1883461940335079187, guid: 38f2b0a7d468c03478fdf15e6da37b58, type: 3}
+  <Emblem>k__BackingField: {fileID: 1062745770087508711, guid: e3010b4810bab58429a89dd8239f4c43, type: 3}
+  <Description>k__BackingField: "\uC74C \uC77C\uB2E8 \uD14C\uC2A4\uD2B8\uC6A9"
   <MaxResource>k__BackingField: 15
   <ResourceName>k__BackingField: Arrow
-  <SkillDeck>k__BackingField: {fileID: 0}
+  <SkillDeck>k__BackingField: {fileID: 11400000, guid: dfb8f4cf70659d843936a523bdf72c21, type: 2}

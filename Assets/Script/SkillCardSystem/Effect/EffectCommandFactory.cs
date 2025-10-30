@@ -22,6 +22,7 @@ namespace Game.SkillCardSystem.Effect
             strategies.Add(new StunEffectStrategy());
             strategies.Add(new HealEffectStrategy());
             strategies.Add(new CardUseStackEffectStrategy());
+            strategies.Add(new ResourceEffectStrategy());
         }
 
         /// <summary>

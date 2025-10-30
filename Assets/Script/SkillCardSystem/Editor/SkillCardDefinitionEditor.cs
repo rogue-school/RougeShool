@@ -120,6 +120,17 @@ namespace Game.SkillCardSystem.Editor
             }
             
             EditorGUILayout.Space();
+
+            // 리소스 구성 토글
+            configuration.hasResource = EditorGUILayout.Toggle("Has Resource", configuration.hasResource);
+            if (configuration.hasResource)
+            {
+                EditorGUI.indentLevel++;
+                DrawResourceConfiguration(configuration.resourceConfig);
+                EditorGUI.indentLevel--;
+            }
+            
+            EditorGUILayout.Space();
             
             // 효과 구성 토글
             configuration.hasEffects = EditorGUILayout.Toggle("Has Effects", configuration.hasEffects);
@@ -147,6 +158,14 @@ namespace Game.SkillCardSystem.Editor
             config.hits = EditorGUILayout.IntField("공격 횟수", config.hits);
             config.ignoreGuard = EditorGUILayout.Toggle("방어 무효화", config.ignoreGuard);
             config.ignoreCounter = EditorGUILayout.Toggle("반격 무효화", config.ignoreCounter);
+            EditorGUI.indentLevel--;
+        }
+
+        private void DrawResourceConfiguration(ResourceConfiguration config)
+        {
+            EditorGUILayout.LabelField("자원 설정", EditorStyles.boldLabel);
+            EditorGUI.indentLevel++;
+            config.cost = EditorGUILayout.IntField("Cost", config.cost);
             EditorGUI.indentLevel--;
         }
         
@@ -272,6 +291,8 @@ namespace Game.SkillCardSystem.Editor
             var summary = $"ID: {card.cardId}\n" +
                          $"Name: {card.displayName}\n" +
                          $"Has Damage: {card.configuration.hasDamage}\n" +
+                         $"Has Resource: {card.configuration.hasResource}\n" +
+                         (card.configuration.hasResource ? $"Resource Cost: {card.configuration.resourceConfig.cost}\n" : string.Empty) +
                          $"Has Effects: {card.configuration.hasEffects}\n" +
                          $"Effect Count: {card.configuration.effects.Count}";
             
