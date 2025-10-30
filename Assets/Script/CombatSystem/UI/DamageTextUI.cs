@@ -60,7 +60,8 @@ namespace Game.CombatSystem.UI
                 // 플래시 색상 선택: 데미지('-')=노란색, 회복('+')=흰색, 기타=화이트
                 if (prefix == "-")
                 {
-                    flashColor = Color.yellow;
+                    // 데미지 플래시: 붉은색에 가까운 앰버(레드 기운이 강한 노란색)
+                    flashColor = new Color(1f, 0.45f, 0.05f);
                 }
                 else if (prefix == "+")
                 {
