@@ -20,6 +20,6 @@ MonoBehaviour:
   <Emblem>k__BackingField: {fileID: 1062745770087508711, guid: e3010b4810bab58429a89dd8239f4c43, type: 3}
   <Description>k__BackingField: "\uC74C \uC77C\uB2E8 \uD14C\uC2A4\uD2B8\uC6A9"
   <MaxResource>k__BackingField: 15
-  <InitialResource>k__BackingField: 5
+  <InitialResource>k__BackingField: 10
   <ResourceName>k__BackingField: "\uD654\uC0B4"
   <SkillDeck>k__BackingField: {fileID: 11400000, guid: dfb8f4cf70659d843936a523bdf72c21, type: 2}

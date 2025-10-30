@@ -174,7 +174,7 @@ namespace Game.ItemSystem.Manager
                 
                 if (parentForTooltip == null)
                 {
-                    GameLogger.LogError("[ItemTooltipManager] 툴팁 부모를 찾지 못했습니다 (캔버스)", GameLogger.LogCategory.Error);
+                    GameLogger.LogWarning("[ItemTooltipManager] 툴팁 부모를 찾지 못했습니다 (대상 캔버스 없음) – 표시를 건너뜁니다", GameLogger.LogCategory.UI);
                     return;
                 }
 
@@ -521,6 +521,14 @@ namespace Game.ItemSystem.Manager
                 }
             }
 
+            // 대상 캔버스를 찾지 못하면 표시를 건너뜁니다 (보상 패널 등 전환 시 안전 가드)
+            var targetCanvas = GetCanvasOfCurrentTarget();
+            if (targetCanvas == null)
+            {
+                GameLogger.LogWarning("[ItemTooltipManager] 대상 캔버스를 찾을 수 없습니다. 툴팁 표시를 건너뜁니다", GameLogger.LogCategory.UI);
+                return;
+            }
+
             if (currentTooltip == null)
             {
                 CreateTooltipInstance();
@@ -528,7 +536,7 @@ namespace Game.ItemSystem.Manager
             }
             else
             {
-                var canvas = GetCanvasOfCurrentTarget();
+                var canvas = targetCanvas;
                 if (canvas != null && currentTooltip.transform.parent != canvas.transform)
                 {
                     currentTooltip.transform.SetParent(canvas.transform, false);
