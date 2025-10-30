@@ -53,6 +53,11 @@ MonoBehaviour:
   damageText: {fileID: 1628565760815101529}
   floatSpeed: 30
   duration: 1
+  startScale: 0.5
+  popScale: 1.2
+  popDuration: 0.2
+  settleScale: 1
+  settleDuration: 0.2
 --- !u!222 &879133339805529158
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -83,8 +88,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: New Text
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 6077613107635ac40aff2f4b0452da6e, type: 2}
-  m_sharedMaterial: {fileID: -1843443578853736712, guid: 6077613107635ac40aff2f4b0452da6e, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []

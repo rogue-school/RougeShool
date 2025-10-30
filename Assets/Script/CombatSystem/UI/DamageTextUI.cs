@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using DG.Tweening;
 
 namespace Game.CombatSystem.UI
 {
@@ -9,10 +10,24 @@ namespace Game.CombatSystem.UI
     public class DamageTextUI : MonoBehaviour
     {
         [SerializeField] private TextMeshProUGUI damageText;
-        [SerializeField] private float floatSpeed = 50f;
         [SerializeField] private float duration = 1.0f;
 
+        [Header("팝 애니메이션 설정")]
+        [Tooltip("시작 스케일 (작게 시작)")]
+        [SerializeField] private float startScale = 0.5f;
+        [Tooltip("팝 최대 스케일")]
+        [SerializeField] private float popScale = 1.5f;
+        [Tooltip("팝 상승 시간 (초)")]
+        [SerializeField] private float popDuration = 0.1f;
+        [Tooltip("안정화 스케일 (최종)")]
+        [SerializeField] private float settleScale = 1.0f;
+        [Tooltip("안정화 시간 (초)")]
+        [SerializeField] private float settleDuration = 0.1f;
+
         private RectTransform rectTransform;
+        private Sequence scaleSequence;
+        private Color originalColor;
+        private Color flashColor;
 
         private void Awake()
         {
@@ -37,12 +52,30 @@ namespace Game.CombatSystem.UI
             if (damageText != null)
             {
                 damageText.text = $"{prefix}{amount}";
+                originalColor = color;
+                // 시작 시 불투명하게 보장
+                color.a = 1f;
                 damageText.color = color;
+
+                // 플래시 색상 선택: 데미지('-')=노란색, 회복('+')=흰색, 기타=화이트
+                if (prefix == "-")
+                {
+                    flashColor = Color.yellow;
+                }
+                else if (prefix == "+")
+                {
+                    flashColor = Color.white;
+                }
+                else
+                {
+                    flashColor = Color.white;
+                }
             }
 
             rectTransform.anchoredPosition = new Vector2(30f, 40f);
+            PlayPopScale();
             StopAllCoroutines();
-            StartCoroutine(FloatAndFade(color));
+            StartCoroutine(FloatAndFade(originalColor));
         }
 
         /// <summary>
@@ -58,21 +91,62 @@ namespace Game.CombatSystem.UI
                 float delta = Time.deltaTime;
                 elapsed += delta;
 
-                // 상승
-                rectTransform.anchoredPosition = startPos + Vector2.up * floatSpeed * (elapsed / duration);
+                // 이동 없이 제자리 유지 (타격감 강화를 위해 상승 제거)
+                rectTransform.anchoredPosition = startPos;
 
-                // 점점 투명하게
+                // 점점 투명하게 (현재 색상의 RGB는 유지하고 알파만 감소)
                 if (damageText != null)
                 {
-                    Color color = startColor;
-                    color.a = Mathf.Lerp(1f, 0f, elapsed / duration);
-                    damageText.color = color;
+                    Color current = damageText.color;
+                    current.a = Mathf.Lerp(1f, 0f, elapsed / duration);
+                    damageText.color = current;
                 }
 
                 yield return null;
             }
 
             Destroy(gameObject);
+        }
+
+        /// <summary>
+        /// 텍스트가 작게 시작하여 버블처럼 커졌다가 안정화되는 스케일 애니메이션을 재생합니다.
+        /// </summary>
+        private void PlayPopScale()
+        {
+            // 기존 시퀀스 정리
+            if (scaleSequence != null && scaleSequence.IsActive())
+            {
+                scaleSequence.Kill();
+                scaleSequence = null;
+            }
+
+            rectTransform.localScale = Vector3.one * startScale;
+
+            scaleSequence = DOTween.Sequence()
+                .Append(rectTransform.DOScale(popScale, popDuration).SetEase(Ease.OutBack))
+                .Join(damageText != null ? damageText.DOColor(flashColor, popDuration * 0.8f) : null)
+                .Append(rectTransform.DOScale(settleScale, settleDuration).SetEase(Ease.OutQuad))
+                .Join(damageText != null ? damageText.DOColor(originalColor, settleDuration) : null)
+                .SetAutoKill(true)
+                .OnComplete(() => { scaleSequence = null; });
+        }
+
+        private void OnDisable()
+        {
+            if (scaleSequence != null && scaleSequence.IsActive())
+            {
+                scaleSequence.Kill();
+                scaleSequence = null;
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (scaleSequence != null && scaleSequence.IsActive())
+            {
+                scaleSequence.Kill();
+                scaleSequence = null;
+            }
         }
     }
 }
