@@ -9,6 +9,7 @@ namespace Game.CombatSystem.Utility
 {
     public static class CardSlotHelper
     {
+        private static readonly Vector2 kCardAnchoredOffset = new Vector2(0f, 4f);
         public static void ResetCardToOriginal(SkillCardUI cardUI)
         {
             if (cardUI == null)
@@ -39,7 +40,7 @@ namespace Game.CombatSystem.Utility
 
             if (cardUI.TryGetComponent(out RectTransform rectTransform))
             {
-                rectTransform.anchoredPosition = Vector2.zero;
+                rectTransform.anchoredPosition = kCardAnchoredOffset;
                 rectTransform.localRotation = Quaternion.identity;
                 rectTransform.localScale = Vector3.one;
             }
@@ -68,6 +69,7 @@ namespace Game.CombatSystem.Utility
 
             rect.SetParent(slotTransform.transform, false);
             rect.localPosition = Vector3.zero;
+            rect.anchoredPosition = kCardAnchoredOffset;
             rect.localRotation = Quaternion.identity;
             rect.localScale = Vector3.one;
         }

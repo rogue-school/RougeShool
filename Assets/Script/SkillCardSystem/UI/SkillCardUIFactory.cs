@@ -69,7 +69,7 @@ namespace Game.SkillCardSystem.UI
             // === 기본 Transform 초기화 ===
             if (instance.TryGetComponent(out RectTransform rect))
             {
-                rect.anchoredPosition = Vector2.zero;
+                rect.anchoredPosition = new Vector2(0f, 4f);
                 rect.localRotation = Quaternion.identity;
                 rect.localScale = Vector3.one;
             }

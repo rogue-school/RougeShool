@@ -153,8 +153,8 @@ namespace Game.CombatSystem.Manager
                         uiRect.SetAsLastSibling();
                     }
 
-                    // 목적지 월드 좌표 계산 후 월드 기준 이동 트윈
-                    Vector3 endWorld = target.TransformPoint(Vector3.zero);
+                    // 목적지 월드 좌표 계산 후 월드 기준 이동 트윈 (Y=4 오프셋 적용)
+                    Vector3 endWorld = target.TransformPoint(new Vector3(0f, 4f, 0f));
                     var moveTween = uiRect.DOMove(endWorld, CombatConstants.AnimationDurations.CARD_MOVE)
                         .SetEase(Ease.OutQuad);
                     var scaleTween = uiRect.DOScale(1f, CombatConstants.AnimationDurations.CARD_MOVE)
@@ -163,7 +163,7 @@ namespace Game.CombatSystem.Manager
 
                     // 최종 부모로 설정하고 로컬 정렬
                     uiRect.SetParent(target, false);
-                    uiRect.anchoredPosition = Vector2.zero;
+                    uiRect.anchoredPosition = new Vector2(0f, 4f);
                 }
             }
 

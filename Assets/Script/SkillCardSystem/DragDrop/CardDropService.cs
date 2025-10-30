@@ -155,12 +155,13 @@ namespace Game.CombatSystem.Service
                                 canvasCamera,
                                 out Vector2 localPos
                             );
-                            // 로컬 좌표로 이동
+                            // 로컬 좌표로 이동 (Y=4 오프셋 적용)
+                            localPos += new Vector2(0f, 4f);
                             uiRect.DOLocalMove(localPos, 0.15f).SetEase(Ease.OutQuad).OnComplete(() =>
                             {
                                 // 이동 완료 후 부모 변경
                                 uiRect.SetParent(target, false);
-                                uiRect.anchoredPosition = Vector2.zero;
+                                uiRect.anchoredPosition = new Vector2(0f, 4f);
                                 uiRect.localScale = Vector3.one;
                                 
                                 // 상태 머신이 있으면 상태 머신에게 카드 배치 알림 (상태 머신이 실행 처리)
@@ -177,11 +178,14 @@ namespace Game.CombatSystem.Service
                         }
                         else
                         {
-                            // 카메라가 없으면 직접 이동
-                            uiRect.DOMove(endWorld, 0.15f).SetEase(Ease.OutQuad).OnComplete(() =>
+                            // 카메라가 없으면 직접 이동 (Y=4 오프셋 적용)
+                            Vector3 endWorldWithOffset = (target as RectTransform) != null
+                                ? (target as RectTransform).TransformPoint(new Vector3(0f, 4f, 0f))
+                                : endWorld + new Vector3(0f, 4f, 0f);
+                            uiRect.DOMove(endWorldWithOffset, 0.15f).SetEase(Ease.OutQuad).OnComplete(() =>
                             {
                                 uiRect.SetParent(target, false);
-                                uiRect.anchoredPosition = Vector2.zero;
+                                uiRect.anchoredPosition = new Vector2(0f, 4f);
                                 uiRect.localScale = Vector3.one;
                                 if (stateMachine != null)
                                 {
@@ -196,11 +200,14 @@ namespace Game.CombatSystem.Service
                     }
                     else
                     {
-                        // Overlay 모드에서는 단순히 부모 변경만
-                        uiRect.DOMove(endWorld, 0.15f).SetEase(Ease.OutQuad).OnComplete(() =>
+                        // Overlay 모드에서는 단순히 부모 변경만 (Y=4 오프셋 적용)
+                        Vector3 endWorldWithOffset = (target as RectTransform) != null
+                            ? (target as RectTransform).TransformPoint(new Vector3(0f, 4f, 0f))
+                            : endWorld + new Vector3(0f, 4f, 0f);
+                        uiRect.DOMove(endWorldWithOffset, 0.15f).SetEase(Ease.OutQuad).OnComplete(() =>
                         {
                             uiRect.SetParent(target, false);
-                            uiRect.anchoredPosition = Vector2.zero;
+                            uiRect.anchoredPosition = new Vector2(0f, 4f);
                             uiRect.localScale = Vector3.one;
                             if (stateMachine != null)
                             {
