@@ -30,6 +30,22 @@ namespace Game.SkillCardSystem.UI.Mappers
             var config = def.configuration;
             if (config != null)
             {
+                // 자원 코스트: 효과 요약 및 효과 행에 표시
+                if (config.hasResource && config.resourceConfig != null && config.resourceConfig.cost > 0)
+                {
+                    string resourceName = "자원";
+                    var pm0 = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
+                    if (pm0 != null && !string.IsNullOrEmpty(pm0.ResourceName)) resourceName = pm0.ResourceName;
+
+                    ruleLines.Add($"{resourceName} 소모: {config.resourceConfig.cost}");
+                    model.Effects.Add(new TooltipModel.EffectRow
+                    {
+                        Name = resourceName,
+                        Description = $"소모 {config.resourceConfig.cost}",
+                        Color = UnityEngine.Color.red
+                    });
+                }
+
                 if (config.hasDamage && config.damageConfig != null)
                 {
                     var dmg = config.damageConfig.baseDamage;
@@ -172,10 +188,13 @@ namespace Game.SkillCardSystem.UI.Mappers
                         if (cs != null && cs.resourceDelta != 0)
                         {
                             var text = cs.resourceDelta > 0 ? "획득" : "소모";
-                            ruleLines.Add($"자원 {text}: {Mathf.Abs(cs.resourceDelta)}");
+                            string resourceName = "자원";
+                            var pm = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
+                            if (pm != null && !string.IsNullOrEmpty(pm.ResourceName)) resourceName = pm.ResourceName;
+                            ruleLines.Add($"{resourceName} {text}: {Mathf.Abs(cs.resourceDelta)}");
                             model.Effects.Add(new TooltipModel.EffectRow
                             {
-                                Name = "자원",
+                                Name = resourceName,
                                 Description = $"{text} {Mathf.Abs(cs.resourceDelta)}",
                                 Color = cs.resourceDelta > 0 ? UnityEngine.Color.green : UnityEngine.Color.red
                             });
@@ -220,8 +239,22 @@ namespace Game.SkillCardSystem.UI.Mappers
 
             // 효과 요약(간단) 채우기 - 스택 기반 실제 데미지 표시
             var config = def.configuration;
-            if (config != null)
+                if (config != null)
             {
+                    // 자원 코스트 표시
+                    if (config.hasResource && config.resourceConfig != null && config.resourceConfig.cost > 0)
+                    {
+                        string resourceName = "자원";
+                        var pm1 = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
+                        if (pm1 != null && !string.IsNullOrEmpty(pm1.ResourceName)) resourceName = pm1.ResourceName;
+                        ruleLines.Add($"{resourceName} 소모: {config.resourceConfig.cost}");
+                        model.Effects.Add(new TooltipModel.EffectRow
+                        {
+                            Name = resourceName,
+                            Description = $"소모 {config.resourceConfig.cost}",
+                            Color = UnityEngine.Color.red
+                        });
+                    }
                 if (config.hasDamage && config.damageConfig != null)
                 {
                     var baseDmg = config.damageConfig.baseDamage;
@@ -424,10 +457,13 @@ namespace Game.SkillCardSystem.UI.Mappers
                         if (cs != null && cs.resourceDelta != 0)
                         {
                             var text = cs.resourceDelta > 0 ? "획득" : "소모";
-                            ruleLines.Add($"자원 {text}: {Mathf.Abs(cs.resourceDelta)}");
+                            string resourceName = "자원";
+                            var pm = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
+                            if (pm != null && !string.IsNullOrEmpty(pm.ResourceName)) resourceName = pm.ResourceName;
+                            ruleLines.Add($"{resourceName} {text}: {Mathf.Abs(cs.resourceDelta)}");
                             model.Effects.Add(new TooltipModel.EffectRow
                             {
-                                Name = "자원",
+                                Name = resourceName,
                                 Description = $"{text} {Mathf.Abs(cs.resourceDelta)}",
                                 Color = cs.resourceDelta > 0 ? UnityEngine.Color.green : UnityEngine.Color.red
                             });

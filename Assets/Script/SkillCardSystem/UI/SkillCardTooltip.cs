@@ -903,6 +903,23 @@ namespace Game.SkillCardSystem.UI
 
             var config = definition.configuration;
 
+            // 자원 코스트 표시 (소모)
+            if (config.hasResource && config.resourceConfig != null && config.resourceConfig.cost > 0)
+            {
+                string resourceName = "자원";
+                var pm = FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
+                if (pm != null && !string.IsNullOrEmpty(pm.ResourceName))
+                    resourceName = pm.ResourceName;
+
+                effects.Add(new EffectData
+                {
+                    name = resourceName,
+                    description = $"{resourceName} 소모: {config.resourceConfig.cost}",
+                    iconColor = Color.red,
+                    effectType = EffectType.Special
+                });
+            }
+
             // 데미지 효과 (스택 기반 실제 데미지 표시)
             if (config.hasDamage)
             {
