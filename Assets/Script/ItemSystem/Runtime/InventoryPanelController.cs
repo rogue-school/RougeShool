@@ -126,8 +126,8 @@ namespace Game.ItemSystem.Runtime
 				var slot = slots[slotIndex];
 				if (!slot.isEmpty && slot.item != null)
 				{
-					// 다른 아이템의 액션 팝업들 닫기
-					HideAllActionPopups();
+					// 다른 아이템의 액션 팝업들만 닫기 (현재 클릭 슬롯은 유지)
+					HideAllActionPopupsExcept(slotIndex);
 					
 					// 클릭된 아이템의 액션 팝업은 ActiveItemUI에서 자동으로 표시됨
 					GameLogger.LogInfo($"[Inventory] 아이템 클릭: {slot.item.DisplayName} @ 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
@@ -271,6 +271,61 @@ namespace Game.ItemSystem.Runtime
 		}
 
 		/// <summary>
+		/// 지정한 슬롯을 제외하고 모든 아이템의 액션 팝업들을 닫습니다.
+		/// </summary>
+		/// <param name="exceptIndex">닫지 않을 슬롯 인덱스</param>
+		private void HideAllActionPopupsExcept(int exceptIndex)
+		{
+			for (int i = 0; i < itemUIs.Length; i++)
+			{
+				if (i == exceptIndex) continue;
+				if (itemUIs[i] != null)
+				{
+					itemUIs[i].CloseActionPopupExternal();
+				}
+			}
+		}
+
+		// 한 프레임 동안 글로벌 닫기 억제 플래그
+		private bool _suppressGlobalCloseThisFrame;
+		public void SuppressGlobalCloseOneFrame()
+		{
+			_suppressGlobalCloseThisFrame = true;
+			StartCoroutine(ClearSuppressFlagEndOfFrame());
+		}
+
+		private System.Collections.IEnumerator ClearSuppressFlagEndOfFrame()
+		{
+			yield return null;
+			_suppressGlobalCloseThisFrame = false;
+		}
+
+		/// <summary>
+		/// 모든 팝업과 아이템 툴팁을 즉시 닫습니다.
+		/// 빈 공간 클릭 등 완전한 종료 시에만 사용하세요.
+		/// </summary>
+		public void CloseAllPopupsAndTooltip()
+		{
+			HideAllActionPopups();
+			var tooltipMgr = FindFirstObjectByType<Game.ItemSystem.Manager.ItemTooltipManager>();
+			if (tooltipMgr != null)
+			{
+				tooltipMgr.UnpinTooltip();
+				tooltipMgr.ForceHideTooltip();
+			}
+		}
+
+		/// <summary>
+		/// 다른 슬롯으로 전환할 때 팝업만 닫고 툴팁은 유지합니다.
+		/// 새로운 아이템의 툴팁/팝업이 다음 프레임에 열릴 준비를 합니다.
+		/// </summary>
+		public void CloseAllPopupsOnly()
+		{
+			HideAllActionPopups();
+			// 툴팁은 닫지 않음 - 각 ActiveItemUI의 CloseActionPopup에서 조건부로 처리됨
+		}
+
+		/// <summary>
 		/// 슬롯 클릭 시 아이템을 사용합니다.
 		/// </summary>
 		/// <param name="slotIndex">슬롯 인덱스</param>
@@ -322,6 +377,10 @@ namespace Game.ItemSystem.Runtime
 		/// </summary>
 		private void HandleGlobalClick()
 		{
+			if (_suppressGlobalCloseThisFrame)
+			{
+				return;
+			}
 			// 현재 열린 팝업이 있는지 확인
 			bool hasOpenPopup = false;
 			for (int i = 0; i < itemUIs.Length; i++)

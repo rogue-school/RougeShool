@@ -339,6 +339,20 @@ namespace Game.ItemSystem.Manager
         }
 
         /// <summary>
+        /// 툴팁이 특정 아이템에 고정되어 있을 때만 숨깁니다.
+        /// 다른 슬롯을 클릭해 새 툴팁을 띄운 직후, 이전 슬롯 정리 과정에서 새 툴팁이 닫히는 것을 방지합니다.
+        /// </summary>
+        /// <param name="item">검사할 아이템</param>
+        public void ForceHideIfPinnedTo(ActiveItemDefinition item)
+        {
+            if (item == null) return;
+            if (isPinned && pinnedItem == item)
+            {
+                ForceHideTooltip();
+            }
+        }
+
+        /// <summary>
         /// 다른 툴팁 매니저의 툴팁을 숨깁니다.
         /// </summary>
         private void HideOtherTooltips()

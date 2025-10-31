@@ -255,8 +255,15 @@ namespace Game.ItemSystem.Runtime
                 currentPopup.gameObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
             }
 
-            // 팝업 위치 설정: 기본은 슬롯 위쪽, 툴팁이 열려 있으면 툴팁 오른편에 정렬
+            // 먼저 툴팁을 현재 슬롯 기준으로 고정하고 즉시 표시 (아래 팝업 위치 계산에서 필요)
             RectTransform rectTransform = GetComponent<RectTransform>();
+            if (tooltipManager != null)
+            {
+                tooltipManager.PinTooltip(currentItem, rectTransform);
+                tooltipManager.ShowTooltip();
+            }
+
+            // 팝업 위치 설정: 기본은 슬롯 위쪽, 가능하면 툴팁 오른편에 정렬(툴팁 활성 보장 후 계산)
             Vector2 popupPosition = rectTransform.anchoredPosition + Vector2.up * 60f; // 기본값
 
             var itemTooltip = tooltipManager != null ? tooltipManager.CurrentTooltip : null;
@@ -324,14 +331,8 @@ namespace Game.ItemSystem.Runtime
                 }
             }
 
-            // 팝업 설정
+            // 팝업 설정 (최종 위치 반영)
             currentPopup.SetupPopup(slotIndex, currentItem, popupPosition, allowUse);
-
-            // 팝업이 열리는 동안 툴팁을 현재 아이템/슬롯 기준으로 고정
-            if (tooltipManager != null)
-            {
-                tooltipManager.PinTooltip(currentItem, rectTransform);
-            }
 
             // 이벤트 연결
             currentPopup.OnUseButtonClicked += HandleUseButtonClicked;
@@ -357,11 +358,12 @@ namespace Game.ItemSystem.Runtime
                 Destroy(currentPopup.gameObject);
                 currentPopup = null;
 
-                // 외부/내부 어떤 경로로든 팝업을 닫을 때 툴팁도 함께 종료
+                // 외부/내부 어떤 경로로든 팝업을 닫을 때 툴팁도 함께 종료하되,
+                // 현재 팝업의 아이템에 고정된 경우에만 닫도록 조건부 처리
                 if (tooltipManager != null)
                 {
+                    tooltipManager.ForceHideIfPinnedTo(currentItem);
                     tooltipManager.UnpinTooltip();
-                    tooltipManager.ForceHideTooltip();
                 }
 
                 GameLogger.LogInfo($"[ActiveItemUI] 액션 팝업 닫힘: 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
@@ -373,10 +375,10 @@ namespace Game.ItemSystem.Runtime
         /// </summary>
         private void HandleUseButtonClicked(int slotIndex)
         {
-            // 아이템 툴팁 강제 숨김
+            // 아이템 툴팁 강제 숨김 (현재 아이템에 고정된 경우에만)
             if (tooltipManager != null)
             {
-                tooltipManager.ForceHideTooltip();
+                tooltipManager.ForceHideIfPinnedTo(currentItem);
                 GameLogger.LogInfo("[ActiveItemUI] 사용 버튼 클릭 - 아이템 툴팁 숨김", GameLogger.LogCategory.UI);
             }
 
@@ -389,10 +391,10 @@ namespace Game.ItemSystem.Runtime
         /// </summary>
         private void HandleDiscardButtonClicked(int slotIndex)
         {
-            // 아이템 툴팁 강제 숨김
+            // 아이템 툴팁 강제 숨김 (현재 아이템에 고정된 경우에만)
             if (tooltipManager != null)
             {
-                tooltipManager.ForceHideTooltip();
+                tooltipManager.ForceHideIfPinnedTo(currentItem);
                 GameLogger.LogInfo("[ActiveItemUI] 버리기 버튼 클릭 - 아이템 툴팁 숨김", GameLogger.LogCategory.UI);
             }
 
@@ -493,6 +495,48 @@ namespace Game.ItemSystem.Runtime
                     return;
                 }
 
+                // 다른 슬롯의 팝업이 열려 있으면: 먼저 모두 닫고 다음 프레임에 현재 아이템을 정확히 열기
+                var openPopups = FindObjectsByType<ActionPopupUI>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+                bool hasOtherOpen = false;
+                for (int i = 0; i < openPopups.Length; i++)
+                {
+                    if (openPopups[i] != null && openPopups[i].GetSlotIndex() != slotIndex)
+                    {
+                        hasOtherOpen = true;
+                        break;
+                    }
+                }
+                if (hasOtherOpen)
+                {
+                    var panel = FindFirstObjectByType<InventoryPanelController>();
+                    if (panel != null)
+                    {
+                        // 다른 슬롯 전환 시: 먼저 툴팁을 현재 슬롯으로 재고정하여
+                        // 이전 슬롯 팝업 정리 과정에서 새 툴팁이 닫히지 않게 보호
+                        if (tooltipManager != null)
+                        {
+                            tooltipManager.PinTooltip(currentItem, GetComponent<RectTransform>());
+                            tooltipManager.ShowTooltip();
+                        }
+
+                        // 그런 다음 다른 슬롯의 팝업만 닫기
+                        // (툴팁은 유지, 다음 프레임에 팝업을 정상적으로 연다)
+                        panel.CloseAllPopupsOnly();
+                    }
+                    StartCoroutine(OpenAfterFrame());
+                    return;
+                }
+
+                // 동일 아이템(동일 슬롯) 토글: 팝업이 열려 있으면 빈공간 클릭처럼 팝업/툴팁 모두 닫고 종료
+                if (currentPopup != null && currentPopup.gameObject != null && currentPopup.gameObject.activeInHierarchy)
+                {
+                    if (currentPopup.GetSlotIndex() == slotIndex)
+                    {
+                        CloseActionPopup();
+                        return;
+                    }
+                }
+
                 // 이벤트 발송
                 if (OnItemClicked != null)
                 {
@@ -511,6 +555,19 @@ namespace Game.ItemSystem.Runtime
                 }
                 ShowActionPopup(isPlayerTurn);
             }
+        }
+
+        private System.Collections.IEnumerator OpenAfterFrame()
+        {
+            // 다음 프레임에서 글로벌 닫기 억제 후 정상 오픈
+            yield return null;
+            var panel = FindFirstObjectByType<InventoryPanelController>();
+            if (panel != null)
+            {
+                panel.SuppressGlobalCloseOneFrame();
+            }
+            OnItemClicked?.Invoke(slotIndex);
+            ShowActionPopup(IsPlayerTurn());
         }
 
         /// <summary>
