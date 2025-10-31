@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e232cf09ad41dc4bbf04c98c8759cfe, type: 3}
   m_Name: "108_\uB354\uBE14\uC0F7"
   m_EditorClassIdentifier: 
-  itemId: 
-  displayName: 
+  itemId: 108
+  displayName: "\uB354\uBE14\uC0F7"
   description: 
   icon: {fileID: 0}
-  targetSkill: {fileID: 0}
+  targetSkill: {fileID: 11400000, guid: b849f32ef7ef71241a4caa35ab88d71e, type: 2}
   enhancementIncrements: 010000000100000001000000
-  category: 3
+  category: 1
   bonusType: 0
