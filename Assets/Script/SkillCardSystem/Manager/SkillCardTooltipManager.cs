@@ -23,7 +23,7 @@ namespace Game.SkillCardSystem.Manager
         [SerializeField] private SkillCardTooltip tooltipPrefab;
         
         [Tooltip("툴팁 표시 지연 시간 (초)")]
-        [SerializeField] private float showDelay = 0.1f;
+        [SerializeField] private float showDelay = 0.05f; // 더 빠른 반응성
         
         [Tooltip("툴팁 숨김 지연 시간 (초)")]
         [SerializeField] private float hideDelay = 0.1f;
@@ -245,6 +245,12 @@ namespace Game.SkillCardSystem.Manager
         {
             if (card == null) return;
             cardUICache.Remove(card);
+
+            // 현재 표시/대기 중인 대상이 사라지면 즉시 숨김
+            if (hoveredCard == card || pendingCard == card)
+            {
+                ForceHideTooltip();
+            }
         }
 
         /// <summary>
@@ -473,14 +479,24 @@ namespace Game.SkillCardSystem.Manager
                 }
             }
 
-            // 툴팁 위치 업데이트 (고정된 툴팁이 아닌 경우에만)
-            if (currentTooltip != null && currentTooltip.gameObject.activeInHierarchy && !currentTooltip.IsFixed)
+            // 대상 유효성 검사: 대상이 사라졌거나 비활성화되면 즉시 숨김
+            if (currentTooltip != null && currentTooltip.gameObject.activeInHierarchy)
             {
-                // 스킬카드 위치를 가져와서 툴팁 위치 업데이트
-                Vector2 cardPosition = GetCurrentCardPosition();
-                if (cardPosition != Vector2.zero)
+                bool targetValid = currentTargetRect != null && currentTargetRect && currentTargetRect.gameObject.activeInHierarchy;
+                if (!targetValid)
                 {
-                    currentTooltip.UpdatePosition(cardPosition);
+                    ForceHideTooltip();
+                    return;
+                }
+
+                // 툴팁 위치 업데이트 (고정된 툴팁이 아닌 경우에만)
+                if (!currentTooltip.IsFixed)
+                {
+                    Vector2 cardPosition = GetCurrentCardPosition();
+                    if (cardPosition != Vector2.zero)
+                    {
+                        currentTooltip.UpdatePosition(cardPosition);
+                    }
                 }
             }
         }

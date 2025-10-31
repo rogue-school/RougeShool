@@ -68,7 +68,7 @@ namespace Game.SkillCardSystem.UI
 
         [Header("애니메이션 설정")]
         [Tooltip("페이드 인 시간")]
-        [SerializeField] private float fadeInDuration = 0.2f;
+        [SerializeField] private float fadeInDuration = 0.1f; // 더 빠른 표시
         
         [Tooltip("페이드 아웃 시간")]
         [SerializeField] private float fadeOutDuration = 0.15f;
