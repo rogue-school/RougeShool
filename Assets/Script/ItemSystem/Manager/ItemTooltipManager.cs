@@ -231,6 +231,12 @@ namespace Game.ItemSystem.Manager
         {
             if (item == null) return;
             itemUICache.Remove(item);
+
+            // 현재 표시/대기/고정 대상이 사라지면 즉시 숨김 처리
+            if (hoveredItem == item || pendingItem == item || (isPinned && pinnedItem == item))
+            {
+                ForceHideTooltip();
+            }
         }
 
         /// <summary>
@@ -431,6 +437,17 @@ namespace Game.ItemSystem.Manager
         /// </summary>
         private void UpdateTooltipTimers()
         {
+            // 고정 대상 유효성 검사: 보상 선택 등으로 대상 슬롯/오브젝트가 파괴되면 즉시 숨김
+            if (isPinned)
+            {
+                bool pinnedValid = pinnedRect != null && pinnedRect && pinnedRect.gameObject.activeInHierarchy;
+                if (!pinnedValid)
+                {
+                    ForceHideTooltip();
+                    return;
+                }
+            }
+
             if (isShowingTooltip && hoveredItem != null)
             {
                 showTimer += Time.deltaTime;
