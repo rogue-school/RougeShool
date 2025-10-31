@@ -25,6 +25,7 @@ namespace Game.SkillCardSystem.Editor
             serializedObject.Update();
 
             DrawDeckHeader();
+            DrawProbabilityTable();
             DrawCardEntries();
             DrawValidation();
             DrawTools();
@@ -44,6 +45,34 @@ namespace Game.SkillCardSystem.Editor
             EditorGUILayout.LabelField($"덱 이름: {deck.name}");
             EditorGUILayout.LabelField($"총 카드 수: {deck.TotalCardCount}");
             EditorGUILayout.LabelField($"카드 엔트리 수: {deck.CardEntries.Count}");
+            EditorGUILayout.EndVertical();
+        }
+
+        private void DrawProbabilityTable()
+        {
+            if (deck == null) return;
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("확률표", EditorStyles.boldLabel);
+            EditorGUILayout.BeginVertical("box");
+
+            int total = deck.TotalCardCount;
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine($"총 장수: {total}");
+            if (total > 0)
+            {
+                foreach (var entry in deck.CardEntries)
+                {
+                    if (entry == null || entry.cardDefinition == null || entry.quantity <= 0) continue;
+                    float pct = (entry.quantity / (float)total) * 100f;
+                    sb.AppendLine($"- {entry.cardDefinition.displayName}: {entry.quantity}장 → {pct:0.##}%");
+                }
+            }
+            else
+            {
+                sb.AppendLine("(덱이 비어있습니다)");
+            }
+
+            EditorGUILayout.HelpBox(sb.ToString(), MessageType.Info);
             EditorGUILayout.EndVertical();
         }
 
