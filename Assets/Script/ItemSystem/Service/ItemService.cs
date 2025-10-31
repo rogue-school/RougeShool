@@ -393,12 +393,16 @@ namespace Game.ItemSystem.Service
 
                             if (add > 0)
                             {
+                                int prevHP = player.GetCurrentHP();
                                 int newMax = player.GetMaxHP() + add;
                                 GameLogger.LogInfo($"[ItemService] 플레이어 최대 체력 증가: +{add} → {newMax}", GameLogger.LogCategory.Core);
                                 // ICharacter는 SetMaxHP가 없으므로 CharacterBase로 캐스팅하여 적용
                                 if (player is Game.CharacterSystem.Core.CharacterBase cb)
                                 {
                                     cb.SetMaxHP(newMax);
+                                    // 증가한 만큼 즉시 회복 (이전 HP + 증가량, 단 최대치 초과 금지)
+                                    int healed = Mathf.Min(prevHP + add, newMax);
+                                    cb.SetCurrentHP(healed);
                                 }
                                 else
                                 {
@@ -439,11 +443,24 @@ namespace Game.ItemSystem.Service
             {
                 int level = skillStarRanks[skillId];
 
-                // 해당 스킬을 타겟으로 하는 패시브 정의 검색
+                // 해당 스킬을 타겟으로 하는 패시브 정의 검색 (displayName 또는 cardId 모두 허용)
                 PassiveItemDefinition matched = null;
                 foreach (var def in passiveItemDefinitions.Values)
                 {
-                    if (def != null && def.TargetSkillId == skillId)
+                    if (def == null) continue;
+                    bool match = false;
+                    var target = def.TargetSkill;
+                    if (target != null)
+                    {
+                        if (!string.IsNullOrEmpty(target.displayName) && target.displayName == skillId) match = true;
+                        else if (!string.IsNullOrEmpty(target.cardId) && target.cardId == skillId) match = true;
+                    }
+                    else
+                    {
+                        if (def.TargetSkillId == skillId) match = true;
+                    }
+
+                    if (match)
                     {
                         matched = def;
                         break;
