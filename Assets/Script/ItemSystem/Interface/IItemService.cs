@@ -47,19 +47,27 @@ namespace Game.ItemSystem.Interface
 
         #endregion
 
-        #region 패시브 아이템 관리 (성급 시스템)
+        #region 패시브 아이템 관리 (강화 단계 시스템)
 
         /// <summary>
-        /// 패시브 아이템을 추가합니다 (성급 시스템).
+        /// 패시브 아이템을 추가합니다 (강화 단계 시스템).
         /// </summary>
         /// <param name="item">추가할 패시브 아이템 정의</param>
         void AddPassiveItem(PassiveItemDefinition item);
 
         /// <summary>
-        /// 특정 스킬의 성급을 가져옵니다.
+        /// 특정 스킬의 강화 단계를 가져옵니다.
+        /// </summary>
+        /// <param name="skillId">스킬 ID</param>
+        /// <returns>강화 단계 (0-3)</returns>
+        int GetSkillEnhancementLevel(string skillId);
+
+        /// <summary>
+        /// [이전 명칭] 특정 스킬의 성급을 가져옵니다. 향후 제거 예정입니다.
         /// </summary>
         /// <param name="skillId">스킬 ID</param>
         /// <returns>성급 (0-3)</returns>
+        [System.Obsolete("Use GetSkillEnhancementLevel instead")]
         int GetSkillStarRank(string skillId);
 
         /// <summary>
@@ -70,9 +78,9 @@ namespace Game.ItemSystem.Interface
         int GetSkillDamageBonus(string skillId);
 
         /// <summary>
-        /// 모든 스킬의 성급 정보를 가져옵니다.
+        /// 모든 스킬의 강화 단계 정보를 가져옵니다.
         /// </summary>
-        /// <returns>스킬 ID → 성급 매핑</returns>
+        /// <returns>스킬 ID → 강화 단계 매핑</returns>
         Dictionary<string, int> GetAllSkillStarRanks();
 
         /// <summary>
@@ -90,8 +98,14 @@ namespace Game.ItemSystem.Interface
         event Action<ActiveItemDefinition, int> OnActiveItemUsed;
 
         /// <summary>
-        /// 스킬 성급 업그레이드 이벤트
+        /// 스킬 강화 단계 업그레이드 이벤트
         /// </summary>
+        event Action<string, int> OnEnhancementUpgraded;
+
+        /// <summary>
+        /// [이전 명칭] 스킬 성급 업그레이드 이벤트. 향후 제거 예정입니다.
+        /// </summary>
+        [System.Obsolete("Use OnEnhancementUpgraded instead")]
         event Action<string, int> OnSkillStarUpgraded;
 
         /// <summary>

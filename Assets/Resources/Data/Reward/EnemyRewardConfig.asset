@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: EnemyRewardConfig
   m_EditorClassIdentifier: 
   activeCount: 4
-  passiveCount: 1
+  passiveCount: 4
   activePools:
   - {fileID: 11400000, guid: ac8a9ee6a33301e4f895f60bf5dca85a, type: 2}
   passivePools:
-  - {fileID: 0}
+  - {fileID: 11400000, guid: 17245acc61ddf3e47b3f4d1eb8997458, type: 2}

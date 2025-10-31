@@ -41,8 +41,10 @@ namespace Game.ItemSystem.Runtime
         #region 상태
 
         private ActiveItemDefinition currentItem;
+        private PassiveItemDefinition currentPassive;
         private int slotIndex = -1;
         private bool isInteractable = true;
+        private bool isPassiveSlot = false;
 
         #endregion
 
@@ -52,6 +54,7 @@ namespace Game.ItemSystem.Runtime
         /// 슬롯이 선택되었을 때 발생하는 이벤트
         /// </summary>
         public event System.Action<ActiveItemDefinition, int> OnSlotSelected;
+        public event System.Action<PassiveItemDefinition, int> OnPassiveSlotSelected;
 
         #endregion
 
@@ -163,10 +166,12 @@ namespace Game.ItemSystem.Runtime
             }
             
             currentItem = item;
+            currentPassive = null;
+            isPassiveSlot = false;
             slotIndex = index;
 
             // UI 업데이트
-            UpdateSlotUI();
+            UpdateSlotUIActive();
             
             // 툴팁 매니저에 등록
             RegisterToTooltipManager();
@@ -187,12 +192,47 @@ namespace Game.ItemSystem.Runtime
         /// <summary>
         /// 슬롯 UI를 업데이트합니다.
         /// </summary>
-        private void UpdateSlotUI()
+        private void UpdateSlotUIActive()
         {
             if (currentItem == null) return;
 
             // UIUpdateHelper를 사용하여 슬롯 UI 업데이트
             UIUpdateHelper.UpdateItemSlotUI(itemIcon, itemNameText, itemDescriptionText, currentItem, normalColor);
+        }
+
+        /// <summary>
+        /// 패시브 슬롯 설정
+        /// </summary>
+        public void SetupSlot(PassiveItemDefinition item, int index)
+        {
+            if (item == null)
+            {
+                GameLogger.LogWarning("[RewardSlotUI] 설정할 패시브 아이템이 null입니다", GameLogger.LogCategory.UI);
+                return;
+            }
+
+            if (currentItem != null)
+            {
+                UnregisterFromTooltipManager();
+            }
+
+            currentItem = null;
+            currentPassive = item;
+            isPassiveSlot = true;
+            slotIndex = index;
+
+            // UI 업데이트 (수동 - 공통 헬퍼는 액티브 전용)
+            if (itemIcon != null)
+            {
+                itemIcon.sprite = item.Icon;
+                itemIcon.color = normalColor;
+            }
+            if (itemNameText != null) itemNameText.text = item.DisplayName;
+            if (itemDescriptionText != null) itemDescriptionText.text = item.Description;
+
+            // 패시브는 툴팁 등록 스킵(현재 매니저가 액티브 기반) 또는 확장 가능
+
+            GameLogger.LogInfo($"[RewardSlotUI] 패시브 슬롯 설정 완료: {item.DisplayName} (인덱스: {index})", GameLogger.LogCategory.UI);
         }
 
         #endregion
@@ -204,7 +244,7 @@ namespace Game.ItemSystem.Runtime
         /// </summary>
         private void OnSlotClicked()
         {
-            if (currentItem == null)
+            if (!isPassiveSlot && currentItem == null)
             {
                 GameLogger.LogWarning("[RewardSlotUI] 현재 아이템이 null입니다", GameLogger.LogCategory.UI);
                 return;
@@ -216,9 +256,16 @@ namespace Game.ItemSystem.Runtime
                 return;
             }
 
-            // 이벤트 발생 (아이템과 인덱스 전달)
-            OnSlotSelected?.Invoke(currentItem, slotIndex);
-            GameLogger.LogInfo($"[RewardSlotUI] 아이템 선택됨: {currentItem.DisplayName} (인덱스: {slotIndex})", GameLogger.LogCategory.UI);
+            if (isPassiveSlot)
+            {
+                OnPassiveSlotSelected?.Invoke(currentPassive, slotIndex);
+                GameLogger.LogInfo($"[RewardSlotUI] 패시브 아이템 선택됨: {currentPassive?.DisplayName ?? "null"} (인덱스: {slotIndex})", GameLogger.LogCategory.UI);
+            }
+            else
+            {
+                OnSlotSelected?.Invoke(currentItem, slotIndex);
+                GameLogger.LogInfo($"[RewardSlotUI] 아이템 선택됨: {currentItem.DisplayName} (인덱스: {slotIndex})", GameLogger.LogCategory.UI);
+            }
         }
 
         /// <summary>
@@ -281,6 +328,8 @@ namespace Game.ItemSystem.Runtime
         {
             return currentItem;
         }
+
+        public PassiveItemDefinition GetCurrentPassive() => currentPassive;
 
         /// <summary>
         /// 슬롯 인덱스를 반환합니다.

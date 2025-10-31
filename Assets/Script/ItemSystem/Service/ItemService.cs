@@ -31,7 +31,7 @@ namespace Game.ItemSystem.Service
         // 액티브 아이템 슬롯 관리
         private ActiveItemSlotData[] activeSlots = new ActiveItemSlotData[ACTIVE_SLOT_COUNT];
 
-        // 패시브 아이템 관리 (성급 시스템)
+        // 패시브 아이템 관리 (강화 단계 시스템)
         private Dictionary<string, int> skillStarRanks = new Dictionary<string, int>();
         private Dictionary<string, PassiveItemDefinition> passiveItemDefinitions = new Dictionary<string, PassiveItemDefinition>();
 
@@ -45,6 +45,8 @@ namespace Game.ItemSystem.Service
         #region 이벤트
 
         public event Action<ActiveItemDefinition, int> OnActiveItemUsed;
+        public event Action<string, int> OnEnhancementUpgraded;
+        [System.Obsolete("Use OnEnhancementUpgraded instead")]
         public event Action<string, int> OnSkillStarUpgraded;
         public event Action<ActiveItemDefinition, int> OnActiveItemAdded;
         public event Action<int> OnActiveItemRemoved;
@@ -334,7 +336,7 @@ namespace Game.ItemSystem.Service
         }
 
         /// <summary>
-        /// 패시브 아이템을 추가합니다 (성급 시스템).
+        /// 패시브 아이템을 추가합니다 (강화 단계 시스템).
         /// </summary>
         /// <param name="passiveItemDefinition">패시브 아이템 정의</param>
         public void AddPassiveItem(PassiveItemDefinition passiveItemDefinition)
@@ -346,32 +348,80 @@ namespace Game.ItemSystem.Service
             }
 
             string skillId = passiveItemDefinition.TargetSkillId;
-            if (string.IsNullOrEmpty(skillId))
+            if (passiveItemDefinition.IsPlayerHealthBonus)
+            {
+                skillId = "__PLAYER_HP__"; // 공용 체력 키
+            }
+            else if (string.IsNullOrEmpty(skillId))
             {
                 GameLogger.LogError("패시브 아이템의 대상 스킬 ID가 비어있습니다", GameLogger.LogCategory.Core);
                 return;
             }
 
-            // 성급 증가 (최대 3)
+            // 강화 단계 증가 (최대 상수 제한)
             if (!skillStarRanks.ContainsKey(skillId))
             {
                 skillStarRanks[skillId] = 0;
             }
 
-            if (skillStarRanks[skillId] < ItemConstants.MAX_STAR_RANK)
+            if (skillStarRanks[skillId] < ItemConstants.MAX_ENHANCEMENT_LEVEL)
             {
                 skillStarRanks[skillId]++;
+                OnEnhancementUpgraded?.Invoke(skillId, skillStarRanks[skillId]);
                 OnSkillStarUpgraded?.Invoke(skillId, skillStarRanks[skillId]);
-                GameLogger.LogInfo($"스킬 성급 증가: {skillId} → ★{skillStarRanks[skillId]}", GameLogger.LogCategory.Core);
+                GameLogger.LogInfo($"스킬 강화 단계 증가: {skillId} → ★{skillStarRanks[skillId]}", GameLogger.LogCategory.Core);
+
+                // 정의 보관 (보너스 계산/HP 증가용)
+                if (passiveItemDefinition != null && !string.IsNullOrEmpty(passiveItemDefinition.ItemId))
+                {
+                    passiveItemDefinitions[passiveItemDefinition.ItemId] = passiveItemDefinition;
+                }
+
+                // 플레이어 체력 보너스 처리
+                if (passiveItemDefinition.IsPlayerHealthBonus)
+                {
+                    try
+                    {
+                        var player = GetPlayerCharacter();
+                        if (player != null)
+                        {
+                            var incs = passiveItemDefinition.EnhancementIncrements;
+                            int level = skillStarRanks[skillId];
+                            int add = 0;
+                            if (level >= 1 && level <= incs.Length)
+                                add = incs[level - 1];
+
+                            if (add > 0)
+                            {
+                                int newMax = player.GetMaxHP() + add;
+                                GameLogger.LogInfo($"[ItemService] 플레이어 최대 체력 증가: +{add} → {newMax}", GameLogger.LogCategory.Core);
+                                // ICharacter는 SetMaxHP가 없으므로 CharacterBase로 캐스팅하여 적용
+                                if (player is Game.CharacterSystem.Core.CharacterBase cb)
+                                {
+                                    cb.SetMaxHP(newMax);
+                                }
+                                else
+                                {
+                                    GameLogger.LogWarning("[ItemService] SetMaxHP를 적용할 수 없습니다 (CharacterBase 아님)", GameLogger.LogCategory.Core);
+                                }
+                            }
+                        }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        GameLogger.LogError($"[ItemService] 체력 보너스 적용 중 오류: {ex.Message}", GameLogger.LogCategory.Error);
+                    }
+                }
             }
             else
             {
-                GameLogger.LogInfo($"스킬 {skillId}이 이미 최대 성급(★3)입니다", GameLogger.LogCategory.Core);
+                GameLogger.LogInfo($"스킬 {skillId}이 이미 최대 강화 단계(★{ItemConstants.MAX_ENHANCEMENT_LEVEL})입니다", GameLogger.LogCategory.Core);
             }
         }
 
         /// <summary>
         /// 스킬의 데미지 보너스를 반환합니다.
+        /// 강화 단계 누적 보너스(1~현재단계까지의 합) + 스킬별 고정 보너스를 합산합니다.
         /// </summary>
         /// <param name="skillId">스킬 ID</param>
         /// <returns>데미지 보너스</returns>
@@ -384,32 +434,51 @@ namespace Game.ItemSystem.Service
 
             int totalBonus = 0;
 
-            // 성급 시스템 보너스
+            // 강화 단계 보너스 (단계별 가중치를 누적)
             if (skillStarRanks.ContainsKey(skillId))
             {
-                int starRank = skillStarRanks[skillId];
-                totalBonus += starRank; // 성급당 +1 데미지 (가산)
-            }
+                int level = skillStarRanks[skillId];
 
-            // 스킬별 직접 보너스
-            foreach (var passiveItem in passiveItemDefinitions.Values)
-            {
-                if (passiveItem.IsSkillDamageBonus &&
-                    passiveItem.TargetSkillId == skillId)
+                // 해당 스킬을 타겟으로 하는 패시브 정의 검색
+                PassiveItemDefinition matched = null;
+                foreach (var def in passiveItemDefinitions.Values)
                 {
-                    totalBonus += passiveItem.SkillDamageBonus;
+                    if (def != null && def.TargetSkillId == skillId)
+                    {
+                        matched = def;
+                        break;
+                    }
+                }
+
+                if (matched != null)
+                {
+                    var increments = matched.EnhancementIncrements;
+                    int sum = 0;
+                    int maxSumCount = Mathf.Min(level, increments.Length);
+                    for (int i = 0; i < maxSumCount; i++)
+                    {
+                        sum += increments[i];
+                    }
+                    totalBonus += sum;
+                }
+                else
+                {
+                    // 정의를 찾지 못한 경우 단계당 +1로 폴백
+                    totalBonus += level;
                 }
             }
+
+            // 고정 보너스는 제거되었음: 모든 수치는 강화 단계 누적 합계로 계산
 
             return totalBonus;
         }
 
         /// <summary>
-        /// 스킬의 성급을 반환합니다.
+        /// 스킬의 강화 단계를 반환합니다.
         /// </summary>
         /// <param name="skillId">스킬 ID</param>
-        /// <returns>성급 (0-3)</returns>
-        public int GetSkillStarRank(string skillId)
+        /// <returns>강화 단계 (0-3)</returns>
+        public int GetSkillEnhancementLevel(string skillId)
         {
             if (string.IsNullOrEmpty(skillId) || !skillStarRanks.ContainsKey(skillId))
             {
@@ -418,6 +487,9 @@ namespace Game.ItemSystem.Service
 
             return skillStarRanks[skillId];
         }
+
+        [System.Obsolete("Use GetSkillEnhancementLevel instead")]
+        public int GetSkillStarRank(string skillId) => GetSkillEnhancementLevel(skillId);
 
         /// <summary>
         /// 모든 스킬의 성급 정보를 가져옵니다.

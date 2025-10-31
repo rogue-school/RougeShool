@@ -14,9 +14,9 @@ namespace Game.ItemSystem.Constants
         public const int ACTIVE_SLOT_COUNT = 4;
 
         /// <summary>
-        /// 최대 성급 (패시브 아이템)
+        /// 최대 강화 단계 (패시브 아이템)
         /// </summary>
-        public const int MAX_STAR_RANK = 3;
+        public const int MAX_ENHANCEMENT_LEVEL = 3;
 
         #endregion
 

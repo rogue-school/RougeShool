@@ -12,12 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 187688c9866df8142ab8c540414b13d7, type: 3}
   m_Name: SwordPlayerRewardProfile
   m_EditorClassIdentifier: 
-  allowedTags: []
-  bannedTags: []
-  allowedItems:
+  allowedTags:
+  - 
+  bannedTags:
+  - 
+  tagWeightAdjust:
+  - tag: 
+    multiplier: 0
+  bannedActiveItems:
   - {fileID: 0}
-  bannedItems:
+  bannedPassiveItems:
   - {fileID: 0}
-  tagWeightAdjust: []
   allowedPassiveTags: []
   bannedPassiveTags: []

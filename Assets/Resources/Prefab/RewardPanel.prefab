@@ -287,10 +287,11 @@ MonoBehaviour:
   inventoryFullMessage: {fileID: 4339010993521650823}
   messageDisplayDuration: 2
   _isOpen: 0
-  _isContentVisible: 1
+  _isContentVisible: 0
   _candidates:
   - {fileID: 0}
-  _passiveCandidates: []
+  _passiveCandidates:
+  - {fileID: 0}
 --- !u!1 &3875046272081370582
 GameObject:
   m_ObjectHideFlags: 0

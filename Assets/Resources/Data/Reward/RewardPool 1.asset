@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47226f3817574124f884f349363d0833, type: 3}
+  m_Name: RewardPool 1
+  m_EditorClassIdentifier: 
+  entries:
+  - item: {fileID: 11400000, guid: c99a32792f42a79448cf650f44c4e07e, type: 2}
+    weight: 1
+    tags: []
+    minStage: 0
+    maxStage: 5
+    uniquePerRun: 0
+  - item: {fileID: 11400000, guid: 41e0a9dd4c5a9b940a1dcfa406ff7e07, type: 2}
+    weight: 1
+    tags: []
+    minStage: 0
+    maxStage: 5
+    uniquePerRun: 0
+  - item: {fileID: 11400000, guid: 0e7bfb3db8a181f43b4bdfc53fafdde4, type: 2}
+    weight: 1
+    tags: []
+    minStage: 0
+    maxStage: 5
+    uniquePerRun: 0
+  - item: {fileID: 11400000, guid: f66dd7588bd4cf14d8c560b449e3793b, type: 2}
+    weight: 1
+    tags: []
+    minStage: 0
+    maxStage: 5
+    uniquePerRun: 0
+  - item: {fileID: 11400000, guid: 1300310cc7f1cf24cb3d7dcdc3ea3477, type: 2}
+    weight: 1
+    tags: []
+    minStage: 0
+    maxStage: 5
+    uniquePerRun: 0
+  - item: {fileID: 11400000, guid: 08b89723f0fb2d940b739cdfd8adc1c0, type: 2}
+    weight: 1
+    tags: []
+    minStage: 0
+    maxStage: 5
+    uniquePerRun: 0
+  - item: {fileID: 11400000, guid: 0ce1a923728e9b74a816b26679ceb346, type: 2}
+    weight: 1
+    tags: []
+    minStage: 0
+    maxStage: 5
+    uniquePerRun: 0
+  - item: {fileID: 11400000, guid: bc3d08c8c83ccf840a5fd9f6637ca751, type: 2}
+    weight: 1
+    tags: []
+    minStage: 0
+    maxStage: 5
+    uniquePerRun: 0
+  - item: {fileID: 11400000, guid: 0ce1a923728e9b74a816b26679ceb346, type: 2}
+    weight: 1
+    tags: []
+    minStage: 0
+    maxStage: 5
+    uniquePerRun: 0
