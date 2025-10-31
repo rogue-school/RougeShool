@@ -350,7 +350,10 @@ namespace Game.ItemSystem.Service
             string skillId = null;
             if (passiveItemDefinition.IsPlayerHealthBonus)
             {
-                skillId = "__PLAYER_HP__"; // 공용 체력 키
+                // 공용 체력 보너스이지만, 아이템별로 독립된 성급을 관리하기 위해 아이템 ID를 키에 포함합니다
+                // 예: __PLAYER_HP__:116_망토, __PLAYER_HP__:117_투구, __PLAYER_HP__:118_갑옷
+                var itemKey = !string.IsNullOrEmpty(passiveItemDefinition.ItemId) ? passiveItemDefinition.ItemId : Guid.NewGuid().ToString();
+                skillId = $"__PLAYER_HP__:{itemKey}";
             }
             else
             {

@@ -16,7 +16,6 @@ MonoBehaviour:
   displayName: "\uB9DD\uD1A0"
   description: 
   icon: {fileID: 321799395836119982, guid: 60820a5b83d46bc438b3631051057ebb, type: 3}
-  targetSkillId: 
   targetSkill: {fileID: 0}
   enhancementIncrements: 010000000100000001000000
   category: 3

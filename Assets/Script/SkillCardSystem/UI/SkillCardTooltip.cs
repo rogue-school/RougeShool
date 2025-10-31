@@ -713,6 +713,17 @@ namespace Game.SkillCardSystem.UI
             if (cardNameText != null)
             {
                 var title = string.IsNullOrEmpty(definition.displayNameKO) ? definition.displayName : definition.displayNameKO;
+                // 강화 성급(★) 표기 추가
+                int level = 0;
+                var itemSvc = FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
+                if (itemSvc != null)
+                {
+                    level = itemSvc.GetSkillEnhancementLevel(definition.displayName);
+                }
+                if (level > 0)
+                {
+                    title = $"{title} {new string('★', Mathf.Clamp(level, 1, Game.ItemSystem.Constants.ItemConstants.MAX_ENHANCEMENT_LEVEL))}";
+                }
                 cardNameText.text = title;
             }
             // 타입 텍스트는 사용하지 않음

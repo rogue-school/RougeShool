@@ -4475,7 +4475,7 @@ MonoBehaviour:
   rewardPanelPrefab: {fileID: 7361546663476773089, guid: e715df0cdbbbf8648adcfc9a9b713994, type: 3}
   rewardPanelParent: {fileID: 611750855}
   swordPlayerRewardProfile: {fileID: 11400000, guid: 1d96796250297c144a3aef170e992e07, type: 2}
-  bowPlayerRewardProfile: {fileID: 0}
+  bowPlayerRewardProfile: {fileID: 11400000, guid: acef5ed5c4dd30547a6e23adc358080e, type: 2}
   staffPlayerRewardProfile: {fileID: 0}
   displayMode: 2
   stageIndex: 0
