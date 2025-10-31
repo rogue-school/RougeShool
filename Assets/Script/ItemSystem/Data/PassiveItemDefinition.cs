@@ -12,10 +12,6 @@ namespace Game.ItemSystem.Data
     {
         #region 패시브 아이템 설정
 
-        [Tooltip("대상 스킬 ID (참조가 없을 때 폴백으로 사용)")]
-        [HideInInspector]
-        [SerializeField] private string targetSkillId;
-
         [Tooltip("대상 스킬 참조(안전) - 설정 시 ID 대신 이 참조를 사용")]
         [SerializeField] private Game.SkillCardSystem.Data.SkillCardDefinition targetSkill;
 
@@ -38,11 +34,6 @@ namespace Game.ItemSystem.Data
         /// 아이템 타입 (패시브)
         /// </summary>
         public override ItemType Type => ItemType.Passive;
-
-        /// <summary>
-        /// 대상 스킬 ID
-        /// </summary>
-        public string TargetSkillId => targetSkill != null ? (targetSkill.displayName ?? targetSkill.cardId) : targetSkillId;
 
         /// <summary>
         /// 대상 스킬 참조(있을 경우 연결 안전)
@@ -89,10 +80,10 @@ namespace Game.ItemSystem.Data
             if (!base.IsValid())
                 return false;
 
-            // 스킬 데미지 보너스형이면 타겟 스킬 ID/참조 필수
-            if (IsSkillDamageBonus && targetSkill == null && string.IsNullOrEmpty(targetSkillId))
+            // 스킬 데미지 보너스형이면 타겟 스킬 참조 필수
+            if (IsSkillDamageBonus && targetSkill == null)
             {
-                GameLogger.LogError($"[PassiveItemDefinition] 대상 스킬 ID가 비어있습니다: {ItemId}", GameLogger.LogCategory.Core);
+                GameLogger.LogError($"[PassiveItemDefinition] 대상 스킬 참조가 비어있습니다: {ItemId}", GameLogger.LogCategory.Core);
                 return false;
             }
 

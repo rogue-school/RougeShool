@@ -266,17 +266,38 @@ namespace Game.SkillCardSystem.UI.Mappers
                         attackPotionBonus = GetAttackPotionBonus(playerCharacter);
                     }
                     
-                    var actualDmg = CalculateActualDamage(baseDmg, currentStacks, attackPotionBonus);
+                    // 강화 보너스 (패시브 성급)
+                    int enhancementBonus = 0;
+                    var itemService = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
+                    if (itemService != null)
+                    {
+                        string skillId = def.displayName;
+                        enhancementBonus = itemService.GetSkillDamageBonus(skillId);
+                    }
+                    
+                    var actualDmg = CalculateActualDamage(baseDmg, currentStacks, attackPotionBonus, enhancementBonus);
                     var hits = Mathf.Max(1, config.damageConfig.hits);
                     
                     if (hits <= 1)
                     {
-                        if (currentStacks > 0 || attackPotionBonus > 0)
+                        if (currentStacks > 0 || attackPotionBonus > 0 || enhancementBonus > 0)
                         {
                             string bonusText = "";
-                            if (currentStacks > 0 && attackPotionBonus > 0)
+                            if (currentStacks > 0 && attackPotionBonus > 0 && enhancementBonus > 0)
                             {
-                                bonusText = $" (기본 피해 {baseDmg} + 스택 {currentStacks} + 공격력 물약 {attackPotionBonus})";
+                                bonusText = $" (기본 피해 {baseDmg} + 스택 {currentStacks} + 공격력 물약 {attackPotionBonus} + 강화 {enhancementBonus})";
+                            }
+                            else if (currentStacks > 0 && enhancementBonus > 0)
+                            {
+                                bonusText = $" (기본 피해 {baseDmg} + 스택 {currentStacks} + 강화 {enhancementBonus})";
+                            }
+                            else if (attackPotionBonus > 0 && enhancementBonus > 0)
+                            {
+                                bonusText = $" (기본 피해 {baseDmg} + 공격력 물약 {attackPotionBonus} + 강화 {enhancementBonus})";
+                            }
+                            else if (enhancementBonus > 0)
+                            {
+                                bonusText = $" (기본 피해 {baseDmg} + 강화 {enhancementBonus})";
                             }
                             else if (currentStacks > 0)
                             {
@@ -298,12 +319,24 @@ namespace Game.SkillCardSystem.UI.Mappers
                     {
                         var totalActualDmg = actualDmg * hits;
                         var totalBaseDmg = baseDmg * hits;
-                        if (currentStacks > 0 || attackPotionBonus > 0)
+                        if (currentStacks > 0 || attackPotionBonus > 0 || enhancementBonus > 0)
                         {
                             string bonusText = "";
-                            if (currentStacks > 0 && attackPotionBonus > 0)
+                            if (currentStacks > 0 && attackPotionBonus > 0 && enhancementBonus > 0)
                             {
-                                bonusText = $" (기본 피해 {baseDmg} + 스택 {currentStacks} + 공격력 물약 {attackPotionBonus})";
+                                bonusText = $" (기본 피해 {baseDmg} + 스택 {currentStacks} + 공격력 물약 {attackPotionBonus} + 강화 {enhancementBonus})";
+                            }
+                            else if (currentStacks > 0 && enhancementBonus > 0)
+                            {
+                                bonusText = $" (기본 피해 {baseDmg} + 스택 {currentStacks} + 강화 {enhancementBonus})";
+                            }
+                            else if (attackPotionBonus > 0 && enhancementBonus > 0)
+                            {
+                                bonusText = $" (기본 피해 {baseDmg} + 공격력 물약 {attackPotionBonus} + 강화 {enhancementBonus})";
+                            }
+                            else if (enhancementBonus > 0)
+                            {
+                                bonusText = $" (기본 피해 {baseDmg} + 강화 {enhancementBonus})";
                             }
                             else if (currentStacks > 0)
                             {
@@ -332,17 +365,21 @@ namespace Game.SkillCardSystem.UI.Mappers
                     }
 
                     string effectDescription;
-                    if (currentStacks > 0 && attackPotionBonus > 0)
+                    if (currentStacks > 0 && attackPotionBonus > 0 && enhancementBonus > 0)
                     {
-                        effectDescription = $"현재 {actualDmg} (기본 피해 {baseDmg} + 스택 {currentStacks} + 공격력 물약 {attackPotionBonus})";
+                        effectDescription = $"현재 {actualDmg} (기본 피해 {baseDmg} + 스택 {currentStacks} + 공격력 물약 {attackPotionBonus} + 강화 {enhancementBonus})";
                     }
-                    else if (currentStacks > 0)
+                    else if (currentStacks > 0 && enhancementBonus > 0)
                     {
-                        effectDescription = $"현재 {actualDmg} (기본 피해 {baseDmg} + 스택 {currentStacks})";
+                        effectDescription = $"현재 {actualDmg} (기본 피해 {baseDmg} + 스택 {currentStacks} + 강화 {enhancementBonus})";
                     }
-                    else if (attackPotionBonus > 0)
+                    else if (attackPotionBonus > 0 && enhancementBonus > 0)
                     {
-                        effectDescription = $"현재 {actualDmg} (기본 피해 {baseDmg} + 공격력 물약 {attackPotionBonus})";
+                        effectDescription = $"현재 {actualDmg} (기본 피해 {baseDmg} + 공격력 물약 {attackPotionBonus} + 강화 {enhancementBonus})";
+                    }
+                    else if (enhancementBonus > 0)
+                    {
+                        effectDescription = $"현재 {actualDmg} (기본 피해 {baseDmg} + 강화 {enhancementBonus})";
                     }
                     else
                     {
@@ -527,10 +564,10 @@ namespace Game.SkillCardSystem.UI.Mappers
         /// <param name="currentStacks">현재 스택 수</param>
         /// <param name="attackPotionBonus">공격력 물약 보너스</param>
         /// <returns>실제 적용 데미지</returns>
-        private static int CalculateActualDamage(int baseDamage, int currentStacks, int attackPotionBonus = 0)
+        private static int CalculateActualDamage(int baseDamage, int currentStacks, int attackPotionBonus = 0, int enhancementBonus = 0)
         {
-            // 선형 증가: 기본 데미지 + 스택 수 + 공격력 물약 보너스
-            return baseDamage + currentStacks + attackPotionBonus;
+            // 선형 증가: 기본 데미지 + 스택 수 + 공격력 물약 + 강화 보너스
+            return baseDamage + currentStacks + attackPotionBonus + enhancementBonus;
         }
     }
     

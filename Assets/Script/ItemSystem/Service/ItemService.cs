@@ -347,15 +347,25 @@ namespace Game.ItemSystem.Service
                 return;
             }
 
-            string skillId = passiveItemDefinition.TargetSkillId;
+            string skillId = null;
             if (passiveItemDefinition.IsPlayerHealthBonus)
             {
                 skillId = "__PLAYER_HP__"; // 공용 체력 키
             }
-            else if (string.IsNullOrEmpty(skillId))
+            else
             {
-                GameLogger.LogError("패시브 아이템의 대상 스킬 ID가 비어있습니다", GameLogger.LogCategory.Core);
-                return;
+                // 대상 스킬은 참조 기반으로만 사용 (displayName → cardId 폴백)
+                var target = passiveItemDefinition.TargetSkill;
+                if (target != null)
+                {
+                    skillId = !string.IsNullOrEmpty(target.displayName) ? target.displayName : target.cardId;
+                }
+
+                if (string.IsNullOrEmpty(skillId))
+                {
+                    GameLogger.LogError("패시브 아이템의 대상 스킬 참조가 비어있습니다", GameLogger.LogCategory.Core);
+                    return;
+                }
             }
 
             // 강화 단계 증가 (최대 상수 제한)
@@ -454,10 +464,6 @@ namespace Game.ItemSystem.Service
                     {
                         if (!string.IsNullOrEmpty(target.displayName) && target.displayName == skillId) match = true;
                         else if (!string.IsNullOrEmpty(target.cardId) && target.cardId == skillId) match = true;
-                    }
-                    else
-                    {
-                        if (def.TargetSkillId == skillId) match = true;
                     }
 
                     if (match)

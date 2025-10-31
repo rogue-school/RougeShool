@@ -951,13 +951,38 @@ namespace Game.SkillCardSystem.UI
                     }
                 }
                 
+                // 강화 보너스 (패시브 성급)
+                int enhancementBonus = 0;
+                if (currentCard != null && currentCard.IsFromPlayer())
+                {
+                    // ItemService 조회 (주입이 없을 수 있어 1회 안전 조회)
+                    var service = FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
+                    if (service != null)
+                    {
+                        string skillId = definition.displayName;
+                        enhancementBonus = service.GetSkillDamageBonus(skillId);
+                    }
+                }
+
                 var baseDmg = config.damageConfig.baseDamage;
-                var actualDmg = baseDmg + currentStacks + attackPotionBonus; // 선형 증가
+                var actualDmg = baseDmg + currentStacks + attackPotionBonus + enhancementBonus; // 선형 합산
                 
                 string description;
-                if (currentStacks > 0 && attackPotionBonus > 0)
+                if (currentStacks > 0 && attackPotionBonus > 0 && enhancementBonus > 0)
                 {
-                    description = $"현재 데미지: {actualDmg} (기본 {baseDmg} + 스택 {currentStacks} + 물약 {attackPotionBonus})";
+                    description = $"현재 데미지: {actualDmg} (기본 {baseDmg} + 스택 {currentStacks} + 물약 {attackPotionBonus} + 강화 {enhancementBonus})";
+                }
+                else if (currentStacks > 0 && enhancementBonus > 0)
+                {
+                    description = $"현재 데미지: {actualDmg} (기본 {baseDmg} + 스택 {currentStacks} + 강화 {enhancementBonus})";
+                }
+                else if (attackPotionBonus > 0 && enhancementBonus > 0)
+                {
+                    description = $"현재 데미지: {actualDmg} (기본 {baseDmg} + 물약 {attackPotionBonus} + 강화 {enhancementBonus})";
+                }
+                else if (enhancementBonus > 0)
+                {
+                    description = $"현재 데미지: {actualDmg} (기본 {baseDmg} + 강화 {enhancementBonus})";
                 }
                 else if (currentStacks > 0)
                 {

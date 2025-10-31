@@ -108,10 +108,17 @@ namespace Game.SkillCardSystem.Effect
 
             // 2) 강화 단계 데미지 보너스 확인 (플레이어가 시전자일 때만 적용)
             int starBonus = 0;
-            if (itemService != null && context.Card != null && source != null && source.IsPlayerControlled())
+            IItemService service = itemService;
+            if (service == null)
+            {
+                // 실행 시점에 1회 안전 조회 (Update 루프 아님)
+                var svcImpl = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
+                if (svcImpl != null) service = svcImpl as IItemService;
+            }
+            if (service != null && context.Card != null && source != null && source.IsPlayerControlled())
             {
                 string skillId = context.Card.GetCardName();
-                starBonus = itemService.GetSkillDamageBonus(skillId);
+                starBonus = service.GetSkillDamageBonus(skillId);
             }
 
             int effectiveDamage = damageAmount + attackBonus + itemAttackBonus + starBonus;

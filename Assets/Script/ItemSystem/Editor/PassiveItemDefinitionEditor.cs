@@ -23,7 +23,6 @@ namespace Game.ItemSystem.Editor
                     "m_Script",
                     "bonusType",
                     "targetSkill",
-                    "targetSkillId",
                     "enhancementIncrements",
                     "category"
                 }
