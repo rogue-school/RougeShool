@@ -46,6 +46,12 @@ namespace Game.SkillCardSystem.Interface
         int GetEffectPower(SkillCardEffectSO effect);
 
         /// <summary>
+        /// 카드의 기본 데미지를 반환합니다 (데미지 오버라이드 포함).
+        /// </summary>
+        /// <returns>기본 데미지 값 (오버라이드가 있으면 오버라이드 값, 없으면 카드 정의의 기본 데미지)</returns>
+        int GetBaseDamage();
+
+        /// <summary>
         /// 카드에 포함된 이펙트를 생성합니다.
         /// </summary>
         List<SkillCardEffectSO> CreateEffects();

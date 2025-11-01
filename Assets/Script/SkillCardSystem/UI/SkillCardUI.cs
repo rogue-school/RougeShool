@@ -204,7 +204,8 @@ namespace Game.SkillCardSystem.UI
             {
                 if (card.CardDefinition?.configuration?.hasDamage == true)
                 {
-                    int damage = card.CardDefinition.configuration.damageConfig.baseDamage;
+                    // 카드 인스턴스의 실제 데미지 사용 (데미지 오버라이드 포함)
+                    int damage = card.GetBaseDamage();
                     damageText.text = damage.ToString();
                 }
                 else

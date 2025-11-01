@@ -221,8 +221,9 @@ namespace Game.SkillCardSystem.UI.Mappers
         /// <param name="def">카드 정의</param>
         /// <param name="currentStacks">현재 스택 수</param>
         /// <param name="playerCharacter">플레이어 캐릭터 (공격력 버프 확인용)</param>
+        /// <param name="card">카드 인스턴스 (데미지 오버라이드 확인용, 선택적)</param>
         /// <returns>툴팁 모델</returns>
-        public static TooltipModel FromWithStacks(SkillCardDefinition def, int currentStacks = 0, Game.CharacterSystem.Interface.ICharacter playerCharacter = null)
+        public static TooltipModel FromWithStacks(SkillCardDefinition def, int currentStacks = 0, Game.CharacterSystem.Interface.ICharacter playerCharacter = null, Game.SkillCardSystem.Interface.ISkillCard card = null)
         {
             var model = new TooltipModel();
             if (def == null) return model;
@@ -257,7 +258,8 @@ namespace Game.SkillCardSystem.UI.Mappers
                     }
                 if (config.hasDamage && config.damageConfig != null)
                 {
-                    var baseDmg = config.damageConfig.baseDamage;
+                    // 카드 인스턴스의 실제 기본 데미지 사용 (데미지 오버라이드 포함)
+                    var baseDmg = card != null ? card.GetBaseDamage() : config.damageConfig.baseDamage;
                     
                     // 공격력 물약 버프 계산
                     int attackPotionBonus = 0;

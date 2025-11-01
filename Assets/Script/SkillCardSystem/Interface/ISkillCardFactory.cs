@@ -15,8 +15,9 @@ namespace Game.SkillCardSystem.Interface
         /// </summary>
         /// <param name="definition">카드 정의</param>
         /// <param name="ownerCharacterName">소유 캐릭터 이름</param>
+        /// <param name="damageOverride">데미지 오버라이드 (옵셔널, -1이면 기본값 사용)</param>
         /// <returns>적 소유의 스킬 카드 인스턴스</returns>
-        ISkillCard CreateEnemyCard(SkillCardDefinition definition, string ownerCharacterName = null);
+        ISkillCard CreateEnemyCard(SkillCardDefinition definition, string ownerCharacterName = null, int damageOverride = -1);
 
         /// <summary>
         /// 플레이어 전용 스킬 카드를 생성합니다.

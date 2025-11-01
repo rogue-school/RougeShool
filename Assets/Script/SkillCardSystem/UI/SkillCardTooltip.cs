@@ -602,7 +602,7 @@ namespace Game.SkillCardSystem.UI
                         }
                     }
                     
-                    var model = SkillCardTooltipMapper.FromWithStacks(definition, currentStacks, playerCharacter);
+                    var model = SkillCardTooltipMapper.FromWithStacks(definition, currentStacks, playerCharacter, card);
                     descriptionText.text = model?.DescriptionRichText ?? string.Empty;
                 }
                 else
@@ -804,7 +804,8 @@ namespace Game.SkillCardSystem.UI
             {
                 if (definition.configuration?.hasDamage == true)
                 {
-                    int damage = definition.configuration.damageConfig.baseDamage;
+                    // 카드 인스턴스의 실제 데미지 사용 (데미지 오버라이드 포함)
+                    int damage = card != null ? card.GetBaseDamage() : definition.configuration.damageConfig.baseDamage;
                     damageText.text = $"데미지: {damage}";
                     damageText.gameObject.SetActive(true);
                     damageIconImage.gameObject.SetActive(true);
@@ -975,7 +976,8 @@ namespace Game.SkillCardSystem.UI
                     }
                 }
 
-                var baseDmg = config.damageConfig.baseDamage;
+                // 카드 인스턴스의 실제 기본 데미지 사용 (데미지 오버라이드 포함)
+                var baseDmg = currentCard != null ? currentCard.GetBaseDamage() : config.damageConfig.baseDamage;
                 var actualDmg = baseDmg + currentStacks + attackPotionBonus + enhancementBonus; // 선형 합산
                 
                 string description;

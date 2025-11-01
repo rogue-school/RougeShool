@@ -350,7 +350,10 @@ namespace Game.ItemSystem.Effect
             }
             
             var skillCardFactory = new Game.SkillCardSystem.Factory.SkillCardFactory(audioManager);
-            var newCard = skillCardFactory.CreateEnemyCard(randomEntry.definition, enemyCharacter.GetCharacterName());
+            // 데미지 오버라이드가 있으면 사용, 없으면 기본값 사용
+            var newCard = randomEntry.HasDamageOverride()
+                ? skillCardFactory.CreateEnemyCard(randomEntry.definition, enemyCharacter.GetCharacterName(), randomEntry.damageOverride)
+                : skillCardFactory.CreateEnemyCard(randomEntry.definition, enemyCharacter.GetCharacterName());
             
             if (newCard != null)
             {

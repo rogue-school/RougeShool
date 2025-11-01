@@ -78,6 +78,7 @@ namespace Game.SkillCardSystem.Editor
             var cardEntry = cardsProperty.GetArrayElementAtIndex(index);
             var definitionProperty = cardEntry.FindPropertyRelative("definition");
             var probabilityProperty = cardEntry.FindPropertyRelative("probability");
+            var damageOverrideProperty = cardEntry.FindPropertyRelative("damageOverride");
 
             EditorGUILayout.BeginVertical("box");
 
@@ -100,6 +101,26 @@ namespace Game.SkillCardSystem.Editor
 
             // 확률 설정
             EditorGUILayout.Slider(probabilityProperty, 0f, 1f, "등장 확률");
+
+            // 데미지 오버라이드 설정
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("데미지 오버라이드 (선택적)", EditorStyles.miniLabel);
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PropertyField(damageOverrideProperty, new GUIContent("데미지 오버라이드"), true);
+            if (damageOverrideProperty.intValue == -1)
+            {
+                var cardDef = definitionProperty.objectReferenceValue as SkillCardDefinition;
+                if (cardDef != null && cardDef.configuration.hasDamage)
+                {
+                    EditorGUILayout.LabelField($"→ 기본값: {cardDef.configuration.damageConfig.baseDamage}", EditorStyles.miniLabel);
+                }
+                else
+                {
+                    EditorGUILayout.LabelField("→ 기본값 사용", EditorStyles.miniLabel);
+                }
+            }
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.HelpBox("-1이면 카드 정의의 기본 데미지 사용, 양수면 해당 값으로 오버라이드", MessageType.None);
 
             // 카드 정보 표시
             if (definitionProperty.objectReferenceValue != null)
@@ -156,6 +177,7 @@ namespace Game.SkillCardSystem.Editor
             var newEntry = cardsProperty.GetArrayElementAtIndex(cardsProperty.arraySize - 1);
             newEntry.FindPropertyRelative("definition").objectReferenceValue = null;
             newEntry.FindPropertyRelative("probability").floatValue = 1.0f;
+            newEntry.FindPropertyRelative("damageOverride").intValue = -1;
         }
 
         private void RemoveCardEntry(int index)

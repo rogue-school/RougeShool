@@ -45,6 +45,20 @@ namespace Game.SkillCardSystem.Runtime
         public string GetDescription() => CardDefinition?.description ?? "[No Description]";
         public Sprite GetArtwork() => CardDefinition?.artwork;
         public int GetEffectPower(SkillCardEffectSO effect) => CardDefinition?.configuration.hasDamage == true ? CardDefinition.configuration.damageConfig.baseDamage : 0;
+        
+        /// <summary>
+        /// 카드의 기본 데미지를 반환합니다 (데미지 오버라이드 포함).
+        /// EnemySkillCardRuntime은 오버라이드를 지원하지 않으므로 항상 기본 데미지를 반환합니다.
+        /// </summary>
+        /// <returns>기본 데미지 값</returns>
+        public int GetBaseDamage()
+        {
+            if (CardDefinition?.configuration?.hasDamage != true)
+                return 0;
+
+            return CardDefinition.configuration.damageConfig.baseDamage;
+        }
+        
         public List<SkillCardEffectSO> CreateEffects() => new List<SkillCardEffectSO>(effects);
 
         public SlotOwner GetOwner() => owner;

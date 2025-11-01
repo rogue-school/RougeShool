@@ -27,6 +27,10 @@ namespace Game.SkillCardSystem.Deck
             [Range(0f, 1f)]
             public float probability = 1.0f;
 
+            [Header("데미지 오버라이드 (선택적)")]
+            [Tooltip("이 캐릭터가 사용할 때 적용할 데미지 값\n-1이면 카드 정의의 기본 데미지를 사용\n양수면 해당 값으로 오버라이드")]
+            public int damageOverride = -1;
+
             /// <summary>
             /// 카드 엔트리가 유효한지 확인합니다.
             /// </summary>
@@ -36,11 +40,20 @@ namespace Game.SkillCardSystem.Deck
             }
 
             /// <summary>
+            /// 데미지 오버라이드가 설정되어 있는지 확인합니다.
+            /// </summary>
+            public bool HasDamageOverride()
+            {
+                return damageOverride >= 0;
+            }
+
+            /// <summary>
             /// 카드 엔트리의 문자열 표현을 반환합니다.
             /// </summary>
             public override string ToString()
             {
-                return definition != null ? $"{definition.displayName} (확률: {probability:F2})" : "Invalid Entry";
+                string damageInfo = HasDamageOverride() ? $" 데미지:{damageOverride}" : "";
+                return definition != null ? $"{definition.displayName} (확률: {probability:F2}{damageInfo})" : "Invalid Entry";
             }
         }
 

@@ -254,7 +254,10 @@ namespace Game.CombatSystem.Manager
 
                 if (entry?.definition != null)
                 {
-                    var card = _cardFactory.CreateEnemyCard(entry.definition, enemyName);
+                    // 데미지 오버라이드가 있으면 사용, 없으면 기본값 사용
+                    var card = entry.HasDamageOverride()
+                        ? _cardFactory.CreateEnemyCard(entry.definition, enemyName, entry.damageOverride)
+                        : _cardFactory.CreateEnemyCard(entry.definition, enemyName);
                     var ui = CreateCardUIForSlot(card, CombatSlotPosition.WAIT_SLOT_4, cardUIPrefab);
                     var tween = PlaySpawnTween(ui);
                     _registry.RegisterCard(CombatSlotPosition.WAIT_SLOT_4, card, ui, SlotOwner.ENEMY);
@@ -342,7 +345,10 @@ namespace Game.CombatSystem.Manager
                     var entry = enemyData.EnemyDeck.GetRandomEntry();
                     if (entry?.definition != null)
                     {
-                        var card = _cardFactory.CreateEnemyCard(entry.definition, enemyName);
+                        // 데미지 오버라이드가 있으면 사용, 없으면 기본값 사용
+                        var card = entry.HasDamageOverride()
+                            ? _cardFactory.CreateEnemyCard(entry.definition, enemyName, entry.damageOverride)
+                            : _cardFactory.CreateEnemyCard(entry.definition, enemyName);
                         yield return PlaceCardInWaitSlot4AndMoveRoutine(card, SlotOwner.ENEMY, cardUIPrefab);
                         GameLogger.LogInfo(
                             $"[{i + 1}/5] 적 카드 생성 및 배치 완료: {card.CardDefinition?.CardName}",

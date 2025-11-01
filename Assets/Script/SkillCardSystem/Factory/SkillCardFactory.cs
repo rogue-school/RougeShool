@@ -33,6 +33,18 @@ namespace Game.SkillCardSystem.Factory
         /// <returns>생성된 스킬카드</returns>
         public ISkillCard CreateFromDefinition(SkillCardDefinition definition, Owner owner, string ownerCharacterName = null)
         {
+            return CreateFromDefinition(definition, owner, -1);
+        }
+
+        /// <summary>
+        /// 카드 정의로부터 스킬카드를 생성합니다 (데미지 오버라이드 지원).
+        /// </summary>
+        /// <param name="definition">카드 정의</param>
+        /// <param name="owner">소유자</param>
+        /// <param name="damageOverride">데미지 오버라이드 (옵셔널, -1이면 기본값 사용)</param>
+        /// <returns>생성된 스킬카드</returns>
+        public ISkillCard CreateFromDefinition(SkillCardDefinition definition, Owner owner, int damageOverride)
+        {
             if (definition == null)
             {
                 GameLogger.LogError("[SkillCardFactory] SkillCardDefinition이 null입니다.", GameLogger.LogCategory.SkillCard);
@@ -52,7 +64,7 @@ namespace Game.SkillCardSystem.Factory
                 throw new InvalidOperationException($"카드 '{definition.displayName}'은 적 전용입니다. 현재 소유자: {owner}");
             }
             
-            var skillCard = new SkillCard(definition, owner, audioManager);
+            var skillCard = new SkillCard(definition, owner, audioManager, damageOverride);
             
             // GameLogger.LogInfo($"[SkillCardFactory] 카드 생성 완료: {definition.displayName} (Owner: {owner})", GameLogger.LogCategory.SkillCard);
             
@@ -107,14 +119,22 @@ namespace Game.SkillCardSystem.Factory
         /// </summary>
         /// <param name="definition">카드 정의</param>
         /// <param name="ownerCharacterName">소유 캐릭터 이름</param>
+        /// <param name="damageOverride">데미지 오버라이드 (옵셔널, -1이면 기본값 사용)</param>
         /// <returns>생성된 적 스킬카드</returns>
-        public ISkillCard CreateEnemyCard(SkillCardDefinition definition, string ownerCharacterName = null)
+        public ISkillCard CreateEnemyCard(SkillCardDefinition definition, string ownerCharacterName = null, int damageOverride = -1)
         {
-            var card = CreateFromDefinition(definition, Owner.Enemy);
+            var card = CreateFromDefinition(definition, Owner.Enemy, damageOverride);
             
             if (card != null && !string.IsNullOrEmpty(ownerCharacterName))
             {
-                // GameLogger.LogInfo($"[SkillCardFactory] 적 카드 생성: {definition.displayName} (Character: {ownerCharacterName})", GameLogger.LogCategory.SkillCard);
+                if (damageOverride >= 0)
+                {
+                    GameLogger.LogInfo($"[SkillCardFactory] 적 카드 생성 (데미지 오버라이드): {definition.displayName} (Character: {ownerCharacterName}, Damage: {damageOverride})", GameLogger.LogCategory.SkillCard);
+                }
+                else
+                {
+                    // GameLogger.LogInfo($"[SkillCardFactory] 적 카드 생성: {definition.displayName} (Character: {ownerCharacterName})", GameLogger.LogCategory.SkillCard);
+                }
             }
             
             return card;

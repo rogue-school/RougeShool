@@ -38,6 +38,9 @@ namespace Game.SkillCardSystem.Runtime
         private IAudioManager audioManager;
         private static EffectCommandFactory effectFactory = new();
         
+        // 데미지 오버라이드 (캐릭터별 데미지 설정용, -1이면 기본값 사용)
+        private int damageOverride = -1;
+        
         #endregion
         
         #region 생성자
@@ -48,11 +51,13 @@ namespace Game.SkillCardSystem.Runtime
         /// <param name="definition">카드 정의</param>
         /// <param name="owner">소유자</param>
         /// <param name="audioManager">오디오 매니저</param>
-        public SkillCard(SkillCardDefinition definition, Owner owner, IAudioManager audioManager)
+        /// <param name="damageOverride">데미지 오버라이드 (옵셔널, -1이면 기본값 사용)</param>
+        public SkillCard(SkillCardDefinition definition, Owner owner, IAudioManager audioManager, int damageOverride = -1)
         {
             this.definition = definition;
             this.owner = owner;
             this.audioManager = audioManager;
+            this.damageOverride = damageOverride;
             
             SetupEffectCommands();
         }
@@ -111,8 +116,12 @@ namespace Game.SkillCardSystem.Runtime
             if (!definition.configuration.hasDamage) return;
 
             var damageConfig = definition.configuration.damageConfig;
+            
+            // 데미지 오버라이드가 있으면 사용, 없으면 기본값 사용
+            int finalDamage = damageOverride >= 0 ? damageOverride : damageConfig.baseDamage;
+            
             var damageCommand = new DamageEffectCommand(
-                damageConfig.baseDamage,
+                finalDamage,
                 damageConfig.hits,
                 damageConfig.ignoreGuard,
                 damageConfig.ignoreCounter
@@ -183,10 +192,10 @@ namespace Game.SkillCardSystem.Runtime
         
         public int GetEffectPower(SkillCardEffectSO effect)
         {
-            // 데미지 효과의 경우 데미지 설정에서 가져오기
+            // 데미지 효과의 경우 데미지 설정에서 가져오기 (오버라이드 포함)
             if (effect is DamageEffectSO && definition.configuration.hasDamage)
             {
-                return definition.configuration.damageConfig.baseDamage;
+                return GetBaseDamage();
             }
             
             // 다른 효과의 경우 커스텀 설정에서 가져오기
@@ -203,6 +212,21 @@ namespace Game.SkillCardSystem.Runtime
             }
             
             return 0;
+        }
+
+        /// <summary>
+        /// 카드의 기본 데미지를 반환합니다 (데미지 오버라이드 포함).
+        /// </summary>
+        /// <returns>기본 데미지 값 (오버라이드가 있으면 오버라이드 값, 없으면 카드 정의의 기본 데미지)</returns>
+        public int GetBaseDamage()
+        {
+            if (!definition.configuration.hasDamage)
+                return 0;
+
+            var damageConfig = definition.configuration.damageConfig;
+            
+            // 데미지 오버라이드가 있으면 사용, 없으면 기본값 사용
+            return damageOverride >= 0 ? damageOverride : damageConfig.baseDamage;
         }
         
         private int GetCustomEffectPower(EffectCustomSettings settings, SkillCardEffectSO effect)
