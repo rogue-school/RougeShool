@@ -359,7 +359,17 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      "Skill_020_\uD30C\uC774\uC5B4 \uBCFC_0": 2946144791076620614
+      "Skill_020_\uD30C\uC774\uC5B4 \uBCFC_1": -2159488440411966432
+      "Skill_020_\uD30C\uC774\uC5B4 \uBCFC_2": -3873250014960784809
+      "Skill_020_\uD30C\uC774\uC5B4 \uBCFC_3": -92965771233828685
+      "Skill_020_\uD30C\uC774\uC5B4 \uBCFC_4": 1942419894270399747
+      "Skill_020_\uD30C\uC774\uC5B4 \uBCFC_5": -9078563891951144714
+      "Skill_020_\uD30C\uC774\uC5B4 \uBCFC_6": -5380141816936545134
+      "Skill_020_\uD30C\uC774\uC5B4 \uBCFC_7": 6659535600953573945
+      "Skill_020_\uD30C\uC774\uC5B4 \uBCFC_8": 4095899909401699386
+      "Skill_020_\uD30C\uC774\uC5B4 \uBCFC_9": 5192862924640355493
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

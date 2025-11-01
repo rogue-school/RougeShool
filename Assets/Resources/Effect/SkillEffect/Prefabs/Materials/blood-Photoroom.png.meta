@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 3387cc4d47075a1498c0bd05da2b5eec
+guid: 3b12f7fceda9a6d438079ac10f7fccfe
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -1418982826759913454
-    second: "\uCD9C\uD608-2_0"
+      213: 2087773268168985289
+    second: blood-Photoroom_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: "\uCD9C\uD608-2_0"
+      name: blood-Photoroom_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 274
-        height: 274
+        x: 65
+        y: 22
+        width: 897
+        height: 981
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 210889c13a2ce4ce0800000000000000
-      internalID: -1418982826759913454
+      spriteID: 9cac4c4d9b249fc10800000000000000
+      internalID: 2087773268168985289
       vertices: []
       indices: 
       edges: []
@@ -134,8 +134,7 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable:
-      "\uCD9C\uD608-2_0": -1418982826759913454
+    nameFileIdTable: {}
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
