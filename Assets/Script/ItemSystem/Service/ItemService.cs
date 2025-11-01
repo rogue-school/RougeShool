@@ -50,6 +50,7 @@ namespace Game.ItemSystem.Service
         public event Action<string, int> OnSkillStarUpgraded;
         public event Action<ActiveItemDefinition, int> OnActiveItemAdded;
         public event Action<int> OnActiveItemRemoved;
+        public event Action<PassiveItemDefinition> OnPassiveItemAdded;
 
         #endregion
 
@@ -388,6 +389,7 @@ namespace Game.ItemSystem.Service
                 if (passiveItemDefinition != null && !string.IsNullOrEmpty(passiveItemDefinition.ItemId))
                 {
                     passiveItemDefinitions[passiveItemDefinition.ItemId] = passiveItemDefinition;
+                    OnPassiveItemAdded?.Invoke(passiveItemDefinition);
                 }
 
                 // 플레이어 체력 보너스 처리
@@ -623,6 +625,23 @@ namespace Game.ItemSystem.Service
                     GameLogger.LogWarning($"[ItemService.DetermineItemTarget] 알 수 없는 타겟 타입: {item.targetType}, 기본값(Self) 사용", GameLogger.LogCategory.Core);
                     return playerCharacter;
             }
+        }
+
+        /// <summary>
+        /// 현재 보유한 모든 패시브 아이템을 가져옵니다.
+        /// </summary>
+        /// <returns>패시브 아이템 정의 리스트</returns>
+        public List<PassiveItemDefinition> GetPassiveItems()
+        {
+            var items = new List<PassiveItemDefinition>();
+            foreach (var item in passiveItemDefinitions.Values)
+            {
+                if (item != null)
+                {
+                    items.Add(item);
+                }
+            }
+            return items;
         }
 
         /// <summary>

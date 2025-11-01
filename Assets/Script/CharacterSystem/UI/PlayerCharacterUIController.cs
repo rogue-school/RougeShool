@@ -10,6 +10,9 @@ using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Manager;
 using Game.CoreSystem.Utility;
 using UnityEngine.Serialization;
+using Game.ItemSystem.Interface;
+using Game.ItemSystem.Data;
+using Game.ItemSystem.UI;
 
 namespace Game.CharacterSystem.UI
 {
@@ -56,6 +59,13 @@ namespace Game.CharacterSystem.UI
         [Tooltip("버프/디버프 아이콘 프리팹")]
         [SerializeField] private GameObject buffDebuffIconPrefab;
 
+        [Header("패시브 아이템 아이콘")]
+        [Tooltip("패시브 아이템 아이콘들을 담을 부모 오브젝트")]
+        [SerializeField] private Transform passiveItemParent;
+        
+        [Tooltip("패시브 아이템 아이콘 프리팹")]
+        [SerializeField] private GameObject passiveItemIconPrefab;
+
         [Header("색상 설정")]
         [Tooltip("풀피일 때 HP 바 색상")]
         [SerializeField] private Color fullHPColor = Color.green;
@@ -90,6 +100,7 @@ namespace Game.CharacterSystem.UI
 
         private PlayerCharacter playerCharacter;
         [InjectOptional] private PlayerManager playerManager;
+        [InjectOptional] private IItemService itemService;
         private PlayerCharacterType characterType;
         
         // 애니메이션 관련
@@ -99,6 +110,9 @@ namespace Game.CharacterSystem.UI
         
 		// 버프/디버프 아이콘 관리
 		private System.Collections.Generic.Dictionary<string, GameObject> activeBuffDebuffIcons = new();
+		
+		// 패시브 아이템 아이콘 관리
+		private Dictionary<string, PassiveItemIcon> activePassiveItemIcons = new();
 		
 		// 리소스 핍 관리
 		private readonly System.Collections.Generic.List<Image> resourcePips = new();
@@ -124,6 +138,10 @@ namespace Game.CharacterSystem.UI
             colorTween?.Kill();
 
             UnsubscribeCharacterEvents();
+            UnsubscribeItemServiceEvents();
+            
+            // 패시브 아이템 아이콘 정리
+            ClearAllPassiveItemIcons();
         }
 
         #endregion
@@ -243,6 +261,10 @@ namespace Game.CharacterSystem.UI
             UpdateMPBar();
 
             SubscribeCharacterEvents();
+            SubscribeItemServiceEvents();
+            
+            // 초기 패시브 아이템 로드
+            RefreshPassiveItemIcons();
         }
         
         /// <summary>
@@ -326,6 +348,108 @@ namespace Game.CharacterSystem.UI
                 playerManager.OnResourceChanged -= OnResourceChangedByManager;
             }
             isSubscribed = false;
+        }
+
+        /// <summary>
+        /// ItemService 이벤트 구독
+        /// </summary>
+        private void SubscribeItemServiceEvents()
+        {
+            if (itemService == null) return;
+            
+            itemService.OnPassiveItemAdded += OnPassiveItemAddedHandler;
+            itemService.OnEnhancementUpgraded += OnEnhancementUpgradedHandler;
+            GameLogger.LogInfo("[PlayerCharacterUIController] ItemService 이벤트 구독 완료", GameLogger.LogCategory.Character);
+        }
+
+        /// <summary>
+        /// ItemService 이벤트 구독 해제
+        /// </summary>
+        private void UnsubscribeItemServiceEvents()
+        {
+            if (itemService == null) return;
+            
+            itemService.OnPassiveItemAdded -= OnPassiveItemAddedHandler;
+            itemService.OnEnhancementUpgraded -= OnEnhancementUpgradedHandler;
+        }
+
+        /// <summary>
+        /// 패시브 아이템 추가 이벤트 핸들러
+        /// </summary>
+        /// <param name="itemDefinition">추가된 패시브 아이템 정의</param>
+        private void OnPassiveItemAddedHandler(PassiveItemDefinition itemDefinition)
+        {
+            if (itemDefinition == null || itemService == null) return;
+
+            // 강화 단계 계산
+            int enhancementLevel = 1;
+            string skillId = null;
+
+            if (itemDefinition.IsPlayerHealthBonus)
+            {
+                skillId = $"__PLAYER_HP__:{itemDefinition.ItemId}";
+            }
+            else if (itemDefinition.TargetSkill != null)
+            {
+                skillId = !string.IsNullOrEmpty(itemDefinition.TargetSkill.displayName) 
+                    ? itemDefinition.TargetSkill.displayName 
+                    : itemDefinition.TargetSkill.cardId;
+            }
+
+            if (!string.IsNullOrEmpty(skillId))
+            {
+                enhancementLevel = itemService.GetSkillEnhancementLevel(skillId);
+                if (enhancementLevel <= 0)
+                    enhancementLevel = 1;
+            }
+
+            AddPassiveItemIcon(itemDefinition, enhancementLevel);
+        }
+
+        /// <summary>
+        /// 강화 단계 업그레이드 이벤트 핸들러
+        /// </summary>
+        /// <param name="skillId">스킬 ID</param>
+        /// <param name="newLevel">새로운 강화 단계</param>
+        private void OnEnhancementUpgradedHandler(string skillId, int newLevel)
+        {
+            if (itemService == null) return;
+
+            // 해당 스킬 ID와 관련된 패시브 아이템 찾기
+            var passiveItems = itemService.GetPassiveItems();
+            foreach (var item in passiveItems)
+            {
+                if (item == null || string.IsNullOrEmpty(item.ItemId))
+                    continue;
+
+                string itemSkillId = null;
+                if (item.IsPlayerHealthBonus)
+                {
+                    itemSkillId = $"__PLAYER_HP__:{item.ItemId}";
+                }
+                else if (item.TargetSkill != null)
+                {
+                    itemSkillId = !string.IsNullOrEmpty(item.TargetSkill.displayName) 
+                        ? item.TargetSkill.displayName 
+                        : item.TargetSkill.cardId;
+                }
+
+                if (itemSkillId == skillId)
+                {
+                    // 해당 패시브 아이템의 강화 단계 업데이트
+                    if (activePassiveItemIcons.TryGetValue(item.ItemId, out PassiveItemIcon icon))
+                    {
+                        icon.UpdateEnhancementLevel(newLevel);
+                        GameLogger.LogInfo($"[PlayerCharacterUIController] 패시브 아이템 강화 단계 업데이트: {item.DisplayName} → {newLevel}", GameLogger.LogCategory.Character);
+                    }
+                    else
+                    {
+                        // 아이콘이 없으면 새로 추가
+                        AddPassiveItemIcon(item, newLevel);
+                    }
+                    break;
+                }
+            }
         }
 
         private void OnHpChangedHandler(int current, int max)
@@ -710,6 +834,143 @@ namespace Game.CharacterSystem.UI
             }
             activeBuffDebuffIcons.Clear();
             GameLogger.LogInfo("[PlayerCharacterUIController] 모든 버프/디버프 아이콘 제거", GameLogger.LogCategory.Character);
+        }
+
+        #endregion
+
+        #region 패시브 아이템 시스템
+
+        /// <summary>
+        /// 패시브 아이템 아이콘을 추가합니다.
+        /// </summary>
+        /// <param name="itemDefinition">패시브 아이템 정의</param>
+        /// <param name="enhancementLevel">강화 단계 (1-3)</param>
+        public void AddPassiveItemIcon(PassiveItemDefinition itemDefinition, int enhancementLevel = 1)
+        {
+            if (passiveItemParent == null || passiveItemIconPrefab == null || itemDefinition == null)
+            {
+                GameLogger.LogWarning("[PlayerCharacterUIController] 패시브 아이템 아이콘을 추가할 수 없습니다 (컴포넌트 없음)", GameLogger.LogCategory.Character);
+                return;
+            }
+
+            string itemId = itemDefinition.ItemId;
+            if (string.IsNullOrEmpty(itemId))
+            {
+                GameLogger.LogError("[PlayerCharacterUIController] 패시브 아이템 ID가 비어있습니다", GameLogger.LogCategory.Character);
+                return;
+            }
+
+            // 이미 같은 아이템이 있으면 강화 단계만 업데이트
+            if (activePassiveItemIcons.TryGetValue(itemId, out PassiveItemIcon existingIcon))
+            {
+                existingIcon.UpdateEnhancementLevel(enhancementLevel);
+                GameLogger.LogInfo($"[PlayerCharacterUIController] 패시브 아이템 강화 단계 업데이트: {itemDefinition.DisplayName} → {enhancementLevel}", GameLogger.LogCategory.Character);
+                return;
+            }
+
+            // 새 아이콘 생성
+            GameObject iconObj = Instantiate(passiveItemIconPrefab, passiveItemParent);
+            PassiveItemIcon iconComponent = iconObj.GetComponent<PassiveItemIcon>();
+            
+            if (iconComponent == null)
+            {
+                GameLogger.LogError("[PlayerCharacterUIController] PassiveItemIcon 컴포넌트를 찾을 수 없습니다", GameLogger.LogCategory.Character);
+                Destroy(iconObj);
+                return;
+            }
+
+            iconComponent.SetupIcon(itemDefinition, enhancementLevel);
+
+            // 딕셔너리에 저장
+            activePassiveItemIcons[itemId] = iconComponent;
+
+            GameLogger.LogInfo($"[PlayerCharacterUIController] 패시브 아이템 아이콘 추가: {itemDefinition.DisplayName} (강화 단계: {enhancementLevel})", GameLogger.LogCategory.Character);
+        }
+
+        /// <summary>
+        /// 패시브 아이템 아이콘을 제거합니다.
+        /// </summary>
+        /// <param name="itemId">아이템 ID</param>
+        public void RemovePassiveItemIcon(string itemId)
+        {
+            if (activePassiveItemIcons.TryGetValue(itemId, out PassiveItemIcon icon))
+            {
+                icon.FadeOut(() => {
+                    if (icon != null && icon.gameObject != null)
+                        Destroy(icon.gameObject);
+                });
+                activePassiveItemIcons.Remove(itemId);
+                GameLogger.LogInfo($"[PlayerCharacterUIController] 패시브 아이템 아이콘 제거: {itemId}", GameLogger.LogCategory.Character);
+            }
+        }
+
+        /// <summary>
+        /// 모든 패시브 아이템 아이콘을 제거합니다.
+        /// </summary>
+        public void ClearAllPassiveItemIcons()
+        {
+            foreach (var icon in activePassiveItemIcons.Values)
+            {
+                if (icon != null && icon.gameObject != null)
+                    Destroy(icon.gameObject);
+            }
+            activePassiveItemIcons.Clear();
+            GameLogger.LogInfo("[PlayerCharacterUIController] 모든 패시브 아이템 아이콘 제거", GameLogger.LogCategory.Character);
+        }
+
+        /// <summary>
+        /// 패시브 아이템 아이콘을 새로고침합니다.
+        /// ItemService에서 현재 보유한 패시브 아이템을 가져와 표시합니다.
+        /// </summary>
+        public void RefreshPassiveItemIcons()
+        {
+            if (itemService == null)
+            {
+                GameLogger.LogWarning("[PlayerCharacterUIController] ItemService가 주입되지 않았습니다", GameLogger.LogCategory.Character);
+                return;
+            }
+
+            ClearAllPassiveItemIcons();
+
+            var passiveItems = itemService.GetPassiveItems();
+            if (passiveItems == null || passiveItems.Count == 0)
+            {
+                GameLogger.LogInfo("[PlayerCharacterUIController] 보유한 패시브 아이템이 없습니다", GameLogger.LogCategory.Character);
+                return;
+            }
+
+            foreach (var item in passiveItems)
+            {
+                if (item == null || string.IsNullOrEmpty(item.ItemId))
+                    continue;
+
+                // 강화 단계 계산 (같은 아이템이 여러 번 추가될 수 있으므로)
+                // ItemService에서 강화 단계를 직접 가져올 수 있는 메서드가 필요할 수 있음
+                // 현재는 기본값 1로 설정 (나중에 개선 가능)
+                int enhancementLevel = 1;
+                
+                // 아이템의 타겟 스킬 ID를 기반으로 강화 단계 확인
+                string skillId = null;
+                if (item.IsPlayerHealthBonus)
+                {
+                    skillId = $"__PLAYER_HP__:{item.ItemId}";
+                }
+                else if (item.TargetSkill != null)
+                {
+                    skillId = !string.IsNullOrEmpty(item.TargetSkill.displayName) ? item.TargetSkill.displayName : item.TargetSkill.cardId;
+                }
+
+                if (!string.IsNullOrEmpty(skillId))
+                {
+                    enhancementLevel = itemService.GetSkillEnhancementLevel(skillId);
+                    if (enhancementLevel <= 0)
+                        enhancementLevel = 1;
+                }
+
+                AddPassiveItemIcon(item, enhancementLevel);
+            }
+
+            GameLogger.LogInfo($"[PlayerCharacterUIController] 패시브 아이템 아이콘 새로고침 완료: {passiveItems.Count}개", GameLogger.LogCategory.Character);
         }
 
         #endregion
