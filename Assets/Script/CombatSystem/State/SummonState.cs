@@ -119,6 +119,15 @@ namespace Game.CombatSystem.State
                     LogStateTransition($"[소환 디버그] StageManager의 원본 데이터: {originalEnemyData?.DisplayName ?? "null"}");
                     LogStateTransition($"[소환 디버그] CharacterData 참조 비교: {enemyChar.CharacterData == originalEnemyData}");
                     
+                    // 비활성화 직전의 실제 현재 HP를 저장 (소환 트리거 시점 이후 체력 변화 반영)
+                    int currentActualHP = currentEnemy.GetCurrentHP();
+                    // 상위 스코프에서 이미 선언된 stageManager 사용
+                    if (stageManager != null)
+                    {
+                        stageManager.SetOriginalEnemyHP(currentActualHP);
+                        LogStateTransition($"[소환 디버그] 원본 적 현재 HP 저장 (비활성화 직전): {currentActualHP}/{currentEnemy.GetMaxHP()}");
+                    }
+                    
                     // 데미지 텍스트 정리 (소환 전에 남아있는 텍스트 제거)
                     enemyChar.ClearDamageTexts();
                     LogStateTransition($"원본 적의 데미지 텍스트 정리 완료");
@@ -257,10 +266,19 @@ namespace Game.CombatSystem.State
         private void OnSummonedEnemyDeath(CombatStateContext context, ICharacter deadEnemy, EnemyCharacterData originalData, int originalHP)
         {
             LogStateTransition($"소환된 적 사망: {deadEnemy.GetCharacterName()} - 원본 적 복귀 처리");
-            LogStateTransition($"[소환 디버그] 복귀할 원본 데이터: {originalData?.DisplayName ?? "null"}, HP: {originalHP}");
+            LogStateTransition($"[소환 디버그] 복귀할 원본 데이터: {originalData?.DisplayName ?? "null"}, 파라미터 HP: {originalHP}");
 
-            // 원본 적 복귀 상태로 전환
-            var returnState = new SummonReturnState(originalData, originalHP);
+            // StageManager에서 최신 원본 적 HP 가져오기 (비활성화 직전 업데이트된 값 사용)
+            var stageManager = UnityEngine.Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
+            int latestOriginalHP = originalHP;
+            if (stageManager != null)
+            {
+                latestOriginalHP = stageManager.GetOriginalEnemyHP();
+                LogStateTransition($"[소환 디버그] StageManager에서 최신 원본 HP 가져옴: {latestOriginalHP}");
+            }
+
+            // 원본 적 복귀 상태로 전환 (최신 HP 사용)
+            var returnState = new SummonReturnState(originalData, latestOriginalHP);
             RequestTransition(context, returnState);
         }
 

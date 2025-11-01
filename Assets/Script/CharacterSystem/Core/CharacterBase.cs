@@ -294,6 +294,15 @@ namespace Game.CharacterSystem.Core
             OnBuffsChanged?.Invoke(perTurnEffects.AsReadOnly());
         }
 
+        /// <summary>
+        /// 버프/이펙트 변경을 UI에 알립니다 (수동 트리거)
+        /// GameObject 재활성화 후 버프 상태를 UI에 반영할 때 사용합니다.
+        /// </summary>
+        public virtual void NotifyBuffsChanged()
+        {
+            OnBuffsChanged?.Invoke(perTurnEffects.AsReadOnly());
+        }
+
         #endregion
 
         #region Unity 생명주기

@@ -179,6 +179,36 @@ namespace Game.CombatSystem.State
                                 LogStateTransition($"[복귀 디버그] ✓ 원본 적 HP 복원: {originalHP}/{enemyChar.GetMaxHP()}");
                             }
 
+                            // HP 바 컨트롤러 재초기화 (체력바 색상 업데이트를 위해 필요)
+                            enemyChar.ReinitializeHPBarController();
+                            LogStateTransition($"[복귀 디버그] ✓ HP 바 컨트롤러 재초기화 완료");
+
+                            // EnemyCharacterUIController 재연결 (있다면)
+                            var uiController = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.UI.EnemyCharacterUIController>();
+                            if (uiController != null)
+                            {
+                                uiController.SetTarget(enemyChar);
+                                LogStateTransition($"[복귀 디버그] ✓ EnemyCharacterUIController 재연결 완료");
+                            }
+
+                            // UI 업데이트 (체력바 색상 및 버프/이펙트 복원)
+                            enemyChar.RefreshUI();
+                            LogStateTransition($"[복귀 디버그] ✓ 원본 적 UI 업데이트 완료");
+
+                            // 버프/이펙트 UI 업데이트를 위한 이벤트 트리거
+                            // perTurnEffects 리스트는 GameObject 비활성화 시에도 유지되므로,
+                            // 재활성화 후 OnBuffsChanged 이벤트를 수동으로 트리거하여 UI 동기화
+                            enemyChar.NotifyBuffsChanged();
+                            var buffs = enemyChar.GetBuffs();
+                            if (buffs != null && buffs.Count > 0)
+                            {
+                                LogStateTransition($"[복귀 디버그] ✓ 원본 적 버프/이펙트 복원: {buffs.Count}개");
+                            }
+                            else
+                            {
+                                LogStateTransition($"[복귀 디버그] 원본 적 버프/이펙트 없음");
+                            }
+
                             return enemyChar;
                         }
                         else

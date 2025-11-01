@@ -164,15 +164,25 @@ namespace Game.CharacterSystem.Core
             RefreshUI();
             
             // HP 바 초기화 (적 캐릭터 전용)
-            if (hpBarController != null)
-            {
-                hpBarController.Initialize(this);
-            }
+            ReinitializeHPBarController();
             
             // 적 캐릭터 덱의 스킬카드 스택 초기화
             InitializeEnemyDeckStacks();
             
             GameLogger.LogInfo($"[EnemyCharacter] Initialize 완료: {data.DisplayName}, CharacterData: {CharacterData?.DisplayName ?? "null"}", GameLogger.LogCategory.Character);
+        }
+
+        /// <summary>
+        /// HP 바 컨트롤러를 재초기화합니다.
+        /// GameObject 재활성화 후 UI 갱신을 위해 사용됩니다.
+        /// </summary>
+        public void ReinitializeHPBarController()
+        {
+            if (hpBarController != null)
+            {
+                hpBarController.Initialize(this);
+                GameLogger.LogInfo($"[EnemyCharacter] HP 바 컨트롤러 재초기화 완료", GameLogger.LogCategory.Character);
+            }
         }
 
         /// <summary>
@@ -324,7 +334,7 @@ namespace Game.CharacterSystem.Core
 	/// <summary>
 	/// UI 텍스트 및 초상화 갱신
 	/// </summary>
-	private void RefreshUI()
+	public void RefreshUI()
 	{
 		if (CharacterData == null) return;
 
