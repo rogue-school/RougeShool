@@ -4,6 +4,7 @@ using UnityEngine.Serialization;
 using Game.SkillCardSystem.Effect;
 using Game.CombatSystem.Interface;
 using Game.CoreSystem.Utility;
+using Game.VFXSystem.Manager;
 
 namespace Game.SkillCardSystem.Effect
 {
@@ -20,6 +21,13 @@ namespace Game.SkillCardSystem.Effect
 
         [Tooltip("출혈 지속 턴 수")]
         [SerializeField] private int duration;
+
+        [Header("이펙트 설정")]
+        [Tooltip("출혈 효과 적용 시 재생할 비주얼 이펙트 프리팹")]
+        [SerializeField] private GameObject visualEffectPrefab;
+
+        [Tooltip("출혈 피해 발생 시 매 턴 재생할 비주얼 이펙트 프리팹 (null이면 visualEffectPrefab 재사용)")]
+        [SerializeField] private GameObject perTurnEffectPrefab;
 
         // 레거시 마이그레이션: 과거 자식 필드명(icon)에서 부모(effectIcon)로 이전
         [FormerlySerializedAs("icon")]
@@ -39,7 +47,18 @@ namespace Game.SkillCardSystem.Effect
             {
                 Game.CoreSystem.Utility.GameLogger.LogWarning($"[BleedEffectSO] Icon이 비어 있습니다. SO 이름='{name}'", Game.CoreSystem.Utility.GameLogger.LogCategory.SkillCard);
             }
-            return new BleedEffectCommand(bleedAmount + power, duration, soIcon);
+            
+            // VFXManager 찾기 (DI 없이 직접 찾기)
+            var vfxManager = UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
+            
+            return new BleedEffectCommand(
+                bleedAmount + power, 
+                duration, 
+                soIcon, 
+                visualEffectPrefab,
+                perTurnEffectPrefab ?? visualEffectPrefab,
+                vfxManager
+            );
         }
 
         /// <summary>
@@ -56,7 +75,9 @@ namespace Game.SkillCardSystem.Effect
                 return;
             }
 
-            var bleed = new BleedEffect(value, duration, GetIcon());
+            // VFXManager 찾기
+            var vfxManager = UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            var bleed = new BleedEffect(value, duration, GetIcon(), perTurnEffectPrefab ?? visualEffectPrefab, vfxManager);
             
             // 가드 상태 확인하여 상태이상 효과 등록
             if (context.Target.RegisterStatusEffect(bleed))

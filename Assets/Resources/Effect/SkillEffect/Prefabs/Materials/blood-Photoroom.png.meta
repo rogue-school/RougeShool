@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      blood-Photoroom_0: 2087773268168985289
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
