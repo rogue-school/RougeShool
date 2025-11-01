@@ -34,7 +34,7 @@ MonoBehaviour:
         healChance: 50
         healAmount: 5
         damageAmount: 5
-        healSfxClip: {fileID: 0}
+        healSfxClip: {fileID: 8300000, guid: c48a972d3d024c2408a3331750786a29, type: 3}
         damageSfxClip: {fileID: 0}
         healVisualEffectPrefab: {fileID: 1730494339451064891, guid: 1a23dbabcd192db4e8db74db74b88d61, type: 3}
         damageVisualEffectPrefab: {fileID: 0}

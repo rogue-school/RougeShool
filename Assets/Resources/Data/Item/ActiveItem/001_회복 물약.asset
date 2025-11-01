@@ -32,5 +32,5 @@ MonoBehaviour:
       type: {class: HealEffectCustomSettings, ns: Game.ItemSystem.Data, asm: Assembly-CSharp}
       data:
         healAmount: 3
-        sfxClip: {fileID: 0}
+        sfxClip: {fileID: 8300000, guid: c48a972d3d024c2408a3331750786a29, type: 3}
         visualEffectPrefab: {fileID: 1730494339451064891, guid: 1a23dbabcd192db4e8db74db74b88d61, type: 3}
