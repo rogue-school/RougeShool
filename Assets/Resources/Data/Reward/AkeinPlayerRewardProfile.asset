@@ -12,15 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 187688c9866df8142ab8c540414b13d7, type: 3}
   m_Name: AkeinPlayerRewardProfile
   m_EditorClassIdentifier: 
-  allowedTags:
-  - 
-  bannedTags:
-  - 
-  tagWeightAdjust:
-  - tag: 
-    multiplier: 0
-  bannedActiveItems:
-  - {fileID: 0}
+  allowedTags: []
+  bannedTags: []
+  tagWeightAdjust: []
+  bannedActiveItems: []
   bannedPassiveItems:
   - {fileID: 11400000, guid: 099a1e641accae0499de2fcd6a75e568, type: 2}
   - {fileID: 11400000, guid: 77afcf72f8c1b934a8f923eb2eafa587, type: 2}

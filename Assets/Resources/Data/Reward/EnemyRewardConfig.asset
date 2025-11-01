@@ -12,9 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e18dbd878a2c5844fa59c057381c5f20, type: 3}
   m_Name: EnemyRewardConfig
   m_EditorClassIdentifier: 
-  activeCount: 4
+  activeCount: 0
   passiveCount: 12
-  activePools:
-  - {fileID: 11400000, guid: ac8a9ee6a33301e4f895f60bf5dca85a, type: 2}
+  activePools: []
   passivePools:
   - {fileID: 11400000, guid: 17245acc61ddf3e47b3f4d1eb8997458, type: 2}
