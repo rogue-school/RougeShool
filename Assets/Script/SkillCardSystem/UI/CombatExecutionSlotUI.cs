@@ -50,6 +50,12 @@ namespace Game.CombatSystem.UI
                 uiMb.transform.SetParent(transform);
                 uiMb.transform.localPosition = Vector3.zero;
                 uiMb.transform.localScale = Vector3.one;
+                
+                // RectTransform인 경우 anchoredPosition도 설정 (UI 위치 정확히 설정)
+                if (uiMb.TryGetComponent(out RectTransform rectTransform))
+                {
+                    rectTransform.anchoredPosition = new Vector2(0f, 4f);
+                }
             }
         }
 

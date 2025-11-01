@@ -639,6 +639,28 @@ namespace Game.SkillCardSystem.UI
             if (backgroundSprite != null)
             {
                 rootImage.sprite = backgroundSprite;
+                
+                // 적 카드인 경우 이미지 색상을 #9D2933으로 설정
+                if (!isPlayerCard)
+                {
+                    if (ColorUtility.TryParseHtmlString("#9D2933", out Color enemyColor))
+                    {
+                        rootImage.color = enemyColor;
+                        GameLogger.LogInfo($"[SkillCardUI] 적 카드 이미지 색상 설정: #9D2933", GameLogger.LogCategory.UI);
+                    }
+                    else
+                    {
+                        // 폴백: 직접 RGB 값 사용
+                        rootImage.color = new Color(157f / 255f, 41f / 255f, 51f / 255f, 1f);
+                        GameLogger.LogInfo($"[SkillCardUI] 적 카드 이미지 색상 설정 (폴백): #9D2933", GameLogger.LogCategory.UI);
+                    }
+                }
+                else
+                {
+                    // 플레이어 카드는 기본 색상(흰색) 유지
+                    rootImage.color = Color.white;
+                }
+                
                 GameLogger.LogInfo($"[SkillCardUI] 카드 배경 설정: {(isPlayerCard ? "플레이어" : "적")} 카드", GameLogger.LogCategory.UI);
             }
             else

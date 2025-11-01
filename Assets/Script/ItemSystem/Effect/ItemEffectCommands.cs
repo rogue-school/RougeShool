@@ -423,10 +423,8 @@ namespace Game.ItemSystem.Effect
             var newCardUI = Game.SkillCardSystem.UI.SkillCardUIFactory.CreateUI(prefab, slot.transform, newCard, null, null);
             if (newCardUI != null)
             {
+                // SetCardUI를 호출하면 AttachUIToSlot이 호출되어 올바른 위치(anchoredPosition: 0, 4)로 설정됩니다
                 slot.SetCardUI(newCardUI);
-                
-                // 슬롯에 올바른 위치로 배치 (CardSlotHelper 사용)
-                Game.CombatSystem.Utility.CardSlotHelper.AttachCardToSlot(newCardUI, slot as MonoBehaviour);
                 
                 GameLogger.LogInfo("[DiceOfFate] 새 카드 UI 생성 및 배치 완료", GameLogger.LogCategory.Core);
             }
