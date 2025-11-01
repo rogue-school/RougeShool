@@ -1,4 +1,7 @@
 using UnityEngine;
+using Game.ItemSystem.Interface;
+using Game.ItemSystem.Service;
+using Game.ItemSystem.Data;
 
 namespace Game.CombatSystem.State
 {
@@ -40,6 +43,9 @@ namespace Game.CombatSystem.State
 
             // 턴별 효과 처리 (가드, 출혈, 반격, 기절 등)
             ProcessTurnEffects(context);
+
+            // 매 플레이어 턴마다 액티브 아이템 보상 지급 (첫 턴 제외)
+            GiveActiveItemReward(context);
 
             // 소환 모드 확인 및 해제
             bool isSummonMode = context.SlotMovement?.IsSummonMode ?? false;
@@ -87,6 +93,67 @@ namespace Game.CombatSystem.State
             LogStateTransition("턴별 효과 처리 완료 (가드, 출혈, 반격, 기절 등)");
         }
 
+
+        /// <summary>
+        /// 매 플레이어 턴마다 액티브 아이템을 보상으로 지급합니다. (첫 턴 제외)
+        /// </summary>
+        private void GiveActiveItemReward(CombatStateContext context)
+        {
+            // 첫 플레이어 턴인지 확인 (턴 카운트가 1이면 첫 턴이므로 보상 지급 안 함)
+            if (context?.TurnController == null)
+            {
+                LogWarning("TurnController가 null입니다 - 액티브 아이템 보상 지급 건너뜀");
+                return;
+            }
+
+            // 첫 턴(턴 카운트 1)에는 보상 지급 안 함
+            if (context.TurnController.TurnCount <= 1)
+            {
+                LogStateTransition("첫 플레이어 턴이므로 액티브 아이템 보상 지급 건너뜀");
+                return;
+            }
+
+            // ItemService 찾기
+            var itemService = UnityEngine.Object.FindFirstObjectByType<ItemService>();
+            if (itemService == null)
+            {
+                LogWarning("ItemService를 찾을 수 없습니다 - 액티브 아이템 보상 지급 건너뜀");
+                return;
+            }
+
+            // 인벤토리가 가득 찼는지 확인
+            if (itemService.IsActiveInventoryFull())
+            {
+                LogStateTransition("인벤토리가 가득 찼습니다 - 액티브 아이템 보상 지급 건너뜀");
+                return;
+            }
+
+            // 랜덤 액티브 아이템 생성 (1개)
+            var rewards = DefaultRewardService.GenerateDefaultActiveReward(count: 1);
+            if (rewards == null || rewards.Length == 0)
+            {
+                LogWarning("액티브 아이템 보상을 생성할 수 없습니다");
+                return;
+            }
+
+            var rewardItem = rewards[0];
+            if (rewardItem == null)
+            {
+                LogWarning("생성된 액티브 아이템이 null입니다");
+                return;
+            }
+
+            // 아이템 추가
+            bool success = itemService.AddActiveItem(rewardItem);
+            if (success)
+            {
+                LogStateTransition($"액티브 아이템 보상 지급 완료: {rewardItem.DisplayName} (턴 {context.TurnController.TurnCount})");
+            }
+            else
+            {
+                LogWarning($"액티브 아이템 보상 지급 실패: {rewardItem.DisplayName}");
+            }
+        }
 
         /// <summary>
         /// 플레이어가 카드를 배치했을 때 호출
