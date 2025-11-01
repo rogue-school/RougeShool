@@ -18,9 +18,6 @@ MonoBehaviour:
   icon: {fileID: 1595455568400529970, guid: 346bf93060eb01c4fbfb53391ee5a80a, type: 3}
   targetType: 0
   turnPolicy: 0
-  presentation:
-    sfxClip: {fileID: 0}
-    visualEffectPrefab: {fileID: 0}
   effectConfiguration:
     effects:
     - effectSO: {fileID: 11400000, guid: f1c53a621995de34c958769972222c3a, type: 2}
@@ -35,3 +32,5 @@ MonoBehaviour:
       type: {class: HealEffectCustomSettings, ns: Game.ItemSystem.Data, asm: Assembly-CSharp}
       data:
         healAmount: 3
+        sfxClip: {fileID: 0}
+        visualEffectPrefab: {fileID: 1730494339451064891, guid: 1a23dbabcd192db4e8db74db74b88d61, type: 3}

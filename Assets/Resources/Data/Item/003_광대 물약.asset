@@ -16,9 +16,8 @@ MonoBehaviour:
   displayName: "\uAD11\uB300 \uBB3C\uC57D"
   description: 
   icon: {fileID: 5692228928022720828, guid: 9880d841690444d4c9622ca405a2c479, type: 3}
-  presentation:
-    sfxClip: {fileID: 0}
-    visualEffectPrefab: {fileID: 0}
+  targetType: 0
+  turnPolicy: 0
   effectConfiguration:
     effects:
     - effectSO: {fileID: 11400000, guid: 1c1a65d6c48ec364b96722d31c0a7b8b, type: 2}
@@ -35,3 +34,7 @@ MonoBehaviour:
         healChance: 50
         healAmount: 5
         damageAmount: 5
+        healSfxClip: {fileID: 0}
+        damageSfxClip: {fileID: 0}
+        healVisualEffectPrefab: {fileID: 1730494339451064891, guid: 1a23dbabcd192db4e8db74db74b88d61, type: 3}
+        damageVisualEffectPrefab: {fileID: 0}

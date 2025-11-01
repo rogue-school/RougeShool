@@ -2,6 +2,8 @@ using UnityEngine;
 using Game.ItemSystem.Interface;
 using Game.ItemSystem.Data;
 using Game.CoreSystem.Utility;
+using Game.VFXSystem.Manager;
+using Game.CoreSystem.Audio;
 
 namespace Game.ItemSystem.Effect
 {
@@ -15,12 +17,22 @@ namespace Game.ItemSystem.Effect
         [Tooltip("기본 회복량")]
         [SerializeField] private int healAmount = 3;
 
+        [Header("사운드 설정")]
+        [Tooltip("회복 시 재생할 SFX 클립")]
+        [SerializeField] private AudioClip sfxClip;
+
+        [Header("비주얼 이펙트 설정")]
+        [Tooltip("회복 시 재생할 비주얼 이펙트 프리팹")]
+        [SerializeField] private GameObject visualEffectPrefab;
+
         public override IItemEffectCommand CreateEffectCommand(int power)
         {
             // power가 0이 아니면 power 값을 사용 (커스텀 설정값)
             // power가 0이면 기본 healAmount 사용
             int finalHealAmount = power > 0 ? power : healAmount;
-            return new HealEffectCommand(finalHealAmount);
+            var vfxManager = UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            var audioManager = UnityEngine.Object.FindFirstObjectByType<AudioManager>();
+            return new HealEffectCommand(finalHealAmount, sfxClip, visualEffectPrefab, vfxManager, audioManager);
         }
 
         /// <summary>
@@ -28,12 +40,16 @@ namespace Game.ItemSystem.Effect
         /// </summary>
         public IItemEffectCommand CreateEffectCommand(HealEffectCustomSettings customSettings)
         {
+            var vfxManager = UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            var audioManager = UnityEngine.Object.FindFirstObjectByType<AudioManager>();
             if (customSettings == null)
             {
-                return new HealEffectCommand(healAmount);
+                return new HealEffectCommand(healAmount, sfxClip, visualEffectPrefab, vfxManager, audioManager);
             }
 
-            return new HealEffectCommand(customSettings.healAmount);
+            AudioClip finalSfxClip = customSettings.sfxClip ?? sfxClip;
+            GameObject finalVisualEffectPrefab = customSettings.visualEffectPrefab ?? visualEffectPrefab;
+            return new HealEffectCommand(customSettings.healAmount, finalSfxClip, finalVisualEffectPrefab, vfxManager, audioManager);
         }
 
         public override void ApplyEffect(IItemUseContext context, int value)

@@ -71,6 +71,32 @@ namespace Game.ItemSystem.Runtime
                 }
             }
 
+            // ReviveEffectSO도 특별한 처리가 필요합니다
+            if (effectConfig.effectSO is ReviveEffectSO reviveEffectSO)
+            {
+                if (effectConfig.useCustomSettings && effectConfig.customSettings is ReviveEffectCustomSettings reviveSettings)
+                {
+                    return reviveEffectSO.CreateEffectCommand(reviveSettings);
+                }
+                else
+                {
+                    return reviveEffectSO.CreateEffectCommand(0);
+                }
+            }
+
+            // RerollEffectSO도 특별한 처리가 필요합니다
+            if (effectConfig.effectSO is RerollEffectSO rerollEffectSO)
+            {
+                if (effectConfig.useCustomSettings && effectConfig.customSettings is RerollEffectCustomSettings rerollSettings)
+                {
+                    return rerollEffectSO.CreateEffectCommand(rerollSettings);
+                }
+                else
+                {
+                    return rerollEffectSO.CreateEffectCommand(0);
+                }
+            }
+
             int power = 0;
             if (effectConfig.useCustomSettings)
             {

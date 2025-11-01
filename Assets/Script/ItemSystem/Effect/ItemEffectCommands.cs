@@ -5,7 +5,9 @@ using Game.CoreSystem.Utility;
 using Game.ItemSystem.Interface;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Slot;
+using Game.VFXSystem.Manager;
 using UnityEngine;
+using UnityEngine.UI;
 using Zenject;
 
 namespace Game.ItemSystem.Effect
@@ -16,10 +18,23 @@ namespace Game.ItemSystem.Effect
     public class HealEffectCommand : BaseItemEffectCommand
     {
         private readonly int healAmount;
+        private readonly AudioClip sfxClip;
+        private readonly GameObject visualEffectPrefab;
+        private readonly VFXManager vfxManager;
+        private readonly Game.CoreSystem.Audio.AudioManager audioManager;
 
-        public HealEffectCommand(int healAmount) : base("체력 회복")
+        public HealEffectCommand(
+            int healAmount, 
+            AudioClip sfxClip = null, 
+            GameObject visualEffectPrefab = null, 
+            VFXManager vfxManager = null,
+            Game.CoreSystem.Audio.AudioManager audioManager = null) : base("체력 회복")
         {
             this.healAmount = healAmount;
+            this.sfxClip = sfxClip;
+            this.visualEffectPrefab = visualEffectPrefab;
+            this.vfxManager = vfxManager;
+            this.audioManager = audioManager;
         }
 
         protected override bool ExecuteInternal(IItemUseContext context)
@@ -32,6 +47,8 @@ namespace Game.ItemSystem.Effect
             {
                 context.User.Heal(actualHeal);
                 GameLogger.LogInfo($"체력 회복: {actualHeal} (현재: {currentHP + actualHeal}/{maxHP})", GameLogger.LogCategory.Core);
+                PlaySFX();
+                PlayVisualEffect(context);
                 return true;
             }
             else
@@ -39,6 +56,158 @@ namespace Game.ItemSystem.Effect
                 GameLogger.LogInfo("체력이 이미 최대입니다 - 아이템 사용은 성공으로 처리", GameLogger.LogCategory.Core);
                 return true; // 체력이 최대여도 아이템 사용은 성공으로 처리
             }
+        }
+
+        /// <summary>
+        /// 회복 사운드를 재생합니다.
+        /// </summary>
+        private void PlaySFX()
+        {
+            if (sfxClip == null)
+            {
+                GameLogger.LogWarning("[HealEffectCommand] 사운드 클립이 설정되지 않았습니다.", GameLogger.LogCategory.Core);
+                return;
+            }
+
+            var finalAudioManager = audioManager ?? UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            if (finalAudioManager != null)
+            {
+                finalAudioManager.PlaySFXWithPool(sfxClip, 0.9f);
+                GameLogger.LogInfo($"[HealEffectCommand] 회복 사운드 재생: {sfxClip.name}", GameLogger.LogCategory.Core);
+            }
+            else
+            {
+                GameLogger.LogWarning("[HealEffectCommand] AudioManager를 찾을 수 없습니다.", GameLogger.LogCategory.Core);
+            }
+        }
+
+        /// <summary>
+        /// 회복 비주얼 이펙트를 재생합니다.
+        /// </summary>
+        private void PlayVisualEffect(IItemUseContext context)
+        {
+            if (visualEffectPrefab == null)
+            {
+                GameLogger.LogWarning("[HealEffectCommand] 비주얼 이펙트 프리팹이 설정되지 않았습니다.", GameLogger.LogCategory.Core);
+                return;
+            }
+
+            var userTransform = (context.User as MonoBehaviour)?.transform;
+            if (userTransform == null)
+            {
+                GameLogger.LogWarning("[HealEffectCommand] 사용자 Transform을 찾을 수 없습니다.", GameLogger.LogCategory.Core);
+                return;
+            }
+
+            var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            if (finalVfxManager != null)
+            {
+                // 캐릭터의 시각적 중심 위치 계산
+                var spawnPos = GetPortraitCenterWorldPosition(userTransform);
+                
+                var effectInstance = finalVfxManager.PlayEffect(visualEffectPrefab, spawnPos);
+                if (effectInstance != null)
+                {
+                    SetEffectLayer(effectInstance);
+                    GameLogger.LogInfo($"[HealEffectCommand] 회복 비주얼 이펙트 재생: {visualEffectPrefab.name}", GameLogger.LogCategory.Core);
+                }
+            }
+            else
+            {
+                // Fallback: VFXManager가 없으면 기존 방식 사용
+                var spawnPos = GetPortraitCenterWorldPosition(userTransform);
+                var instance = UnityEngine.Object.Instantiate(visualEffectPrefab, spawnPos, Quaternion.identity);
+                SetEffectLayer(instance);
+                UnityEngine.Object.Destroy(instance, 2.0f);
+                GameLogger.LogInfo($"[HealEffectCommand] 회복 비주얼 이펙트 생성 완료: {visualEffectPrefab.name}", GameLogger.LogCategory.Core);
+            }
+        }
+
+        /// <summary>
+        /// 캐릭터 트랜스폼 하위의 포트레잇 Image 중심(시각적 중심)을 월드 좌표로 계산합니다.
+        /// </summary>
+        private static Vector3 GetPortraitCenterWorldPosition(Transform root)
+        {
+            if (root == null) return Vector3.zero;
+
+            // Portrait Image 우선
+            var portraitImage = FindPortraitImage(root);
+            if (portraitImage != null && portraitImage.rectTransform != null)
+            {
+                return GetRectTransformCenterWorld(portraitImage.rectTransform);
+            }
+
+            // RectTransform 폴백
+            var anyRect = root.GetComponentInChildren<RectTransform>(true);
+            if (anyRect != null)
+            {
+                return GetRectTransformCenterWorld(anyRect);
+            }
+
+            // SpriteRenderer 폴백
+            var sprite = root.GetComponentInChildren<SpriteRenderer>(true);
+            if (sprite != null)
+            {
+                return sprite.bounds.center;
+            }
+
+            // 최종 폴백
+            return root.position;
+        }
+
+        private static Image FindPortraitImage(Transform root)
+        {
+            var images = root.GetComponentsInChildren<Image>(true);
+            if (images == null || images.Length == 0) return null;
+
+            // 정확한 이름 우선
+            for (int i = 0; i < images.Length; i++)
+            {
+                if (images[i] != null && images[i].gameObject != null && images[i].gameObject.name == "Portrait")
+                {
+                    return images[i];
+                }
+            }
+            
+            // 폴백: 첫 번째 Image
+            return images[0];
+        }
+
+        private static Vector3 GetRectTransformCenterWorld(RectTransform rt)
+        {
+            if (rt == null) return Vector3.zero;
+            var bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(rt, rt);
+            var localCenter = bounds.center;
+            return rt.TransformPoint(localCenter);
+        }
+
+        /// <summary>
+        /// 이펙트 렌더 순서를 UI 위로 설정합니다.
+        /// </summary>
+        private static void SetEffectLayer(GameObject effectInstance)
+        {
+            if (effectInstance == null) return;
+            
+            int rendererCount = 0;
+            int particleCount = 0;
+
+            var renderers = effectInstance.GetComponentsInChildren<Renderer>(true);
+            foreach (var r in renderers)
+            {
+                r.sortingLayerName = "Effects";
+                r.sortingOrder = 10;
+                rendererCount++;
+            }
+            
+            var pss = effectInstance.GetComponentsInChildren<ParticleSystemRenderer>(true);
+            foreach (var pr in pss)
+            {
+                pr.sortingLayerName = "Effects";
+                pr.sortingOrder = 10;
+                particleCount++;
+            }
+
+            GameLogger.LogInfo($"[HealEffectCommand] 이펙트 레이어 설정 완료 (Renderer: {rendererCount}, Particle: {particleCount})", GameLogger.LogCategory.Core);
         }
     }
 
@@ -87,13 +256,28 @@ namespace Game.ItemSystem.Effect
         private int healChance;
         private int healAmount;
         private int damageAmount;
+        private AudioClip healSfxClip;
+        private AudioClip damageSfxClip;
+        private GameObject healVisualEffectPrefab;
+        private GameObject damageVisualEffectPrefab;
 
-        public ClownPotionEffectCommand(int healChance = 50, int healAmount = 5, int damageAmount = 5)
+        public ClownPotionEffectCommand(
+            int healChance = 50, 
+            int healAmount = 5, 
+            int damageAmount = 5, 
+            AudioClip healSfxClip = null, 
+            AudioClip damageSfxClip = null,
+            GameObject healVisualEffectPrefab = null,
+            GameObject damageVisualEffectPrefab = null)
             : base("광대 물약")
         {
             this.healChance = Mathf.Clamp(healChance, 0, 100);
             this.healAmount = healAmount;
             this.damageAmount = damageAmount;
+            this.healSfxClip = healSfxClip;
+            this.damageSfxClip = damageSfxClip;
+            this.healVisualEffectPrefab = healVisualEffectPrefab;
+            this.damageVisualEffectPrefab = damageVisualEffectPrefab;
         }
 
         protected override bool ExecuteInternal(IItemUseContext context)
@@ -104,14 +288,191 @@ namespace Game.ItemSystem.Effect
             {
                 context.User.Heal(healAmount);
                 GameLogger.LogInfo($"광대 물약 효과: 체력 회복 +{healAmount} (확률: {healChance}%)", GameLogger.LogCategory.Core);
+                
+                // 회복 SFX 재생
+                PlaySFX(healSfxClip, "회복");
+                
+                // 회복 비주얼 이펙트 재생
+                PlayVisualEffect(context, healVisualEffectPrefab, "회복");
             }
             else
             {
                 context.User.TakeDamage(damageAmount);
                 GameLogger.LogInfo($"광대 물약 효과: 데미지 -{damageAmount} (확률: {100 - healChance}%)", GameLogger.LogCategory.Core);
+                
+                // 데미지 SFX 재생
+                PlaySFX(damageSfxClip, "데미지");
+                
+                // 데미지 비주얼 이펙트 재생
+                PlayVisualEffect(context, damageVisualEffectPrefab, "데미지");
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// SFX를 재생합니다.
+        /// </summary>
+        /// <param name="clip">재생할 SFX 클립</param>
+        /// <param name="type">SFX 타입 (로그용)</param>
+        private void PlaySFX(AudioClip clip, string type)
+        {
+            if (clip == null)
+            {
+                GameLogger.LogInfo($"[ClownPotionEffectCommand] {type} SFX 클립이 설정되지 않음", GameLogger.LogCategory.Core);
+                return;
+            }
+
+            // AudioManager 찾기
+            var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            if (audioManager != null)
+            {
+                audioManager.PlaySFXWithPool(clip, 0.9f);
+                GameLogger.LogInfo($"[ClownPotionEffectCommand] {type} SFX 재생: {clip.name}", GameLogger.LogCategory.Core);
+            }
+            else
+            {
+                GameLogger.LogWarning("[ClownPotionEffectCommand] AudioManager를 찾을 수 없습니다", GameLogger.LogCategory.Core);
+            }
+        }
+
+        /// <summary>
+        /// 비주얼 이펙트를 재생합니다.
+        /// </summary>
+        /// <param name="context">아이템 사용 컨텍스트</param>
+        /// <param name="effectPrefab">재생할 이펙트 프리팹</param>
+        /// <param name="type">이펙트 타입 (로그용)</param>
+        private void PlayVisualEffect(IItemUseContext context, GameObject effectPrefab, string type)
+        {
+            if (effectPrefab == null)
+            {
+                GameLogger.LogInfo($"[ClownPotionEffectCommand] {type} 비주얼 이펙트 프리팹이 설정되지 않음", GameLogger.LogCategory.Core);
+                return;
+            }
+
+            if (context?.User == null)
+            {
+                GameLogger.LogWarning("[ClownPotionEffectCommand] 사용자가 null입니다. 이펙트 생성을 건너뜁니다.", GameLogger.LogCategory.Core);
+                return;
+            }
+
+            var userTransform = (context.User as MonoBehaviour)?.transform;
+            if (userTransform == null)
+            {
+                GameLogger.LogWarning("[ClownPotionEffectCommand] 사용자 Transform이 null입니다. 이펙트 생성을 건너뜁니다.", GameLogger.LogCategory.Core);
+                return;
+            }
+
+            // VFXManager 찾기
+            var vfxManager = UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
+            if (vfxManager != null)
+            {
+                // 캐릭터의 시각적 중심 위치 계산
+                var spawnPos = GetPortraitCenterWorldPosition(userTransform);
+                
+                var effectInstance = vfxManager.PlayEffect(effectPrefab, spawnPos);
+                if (effectInstance != null)
+                {
+                    SetEffectLayer(effectInstance);
+                    GameLogger.LogInfo($"[ClownPotionEffectCommand] {type} 비주얼 이펙트 재생: {effectPrefab.name}", GameLogger.LogCategory.Core);
+                }
+            }
+            else
+            {
+                // Fallback: VFXManager가 없으면 기존 방식 사용
+                var spawnPos = GetPortraitCenterWorldPosition(userTransform);
+                var instance = UnityEngine.Object.Instantiate(effectPrefab, spawnPos, Quaternion.identity);
+                SetEffectLayer(instance);
+                UnityEngine.Object.Destroy(instance, 2.0f);
+                GameLogger.LogInfo($"[ClownPotionEffectCommand] {type} 비주얼 이펙트 생성 완료: {effectPrefab.name}", GameLogger.LogCategory.Core);
+            }
+        }
+
+        /// <summary>
+        /// 캐릭터 트랜스폼 하위의 포트레잇 Image 중심(시각적 중심)을 월드 좌표로 계산합니다.
+        /// </summary>
+        private static Vector3 GetPortraitCenterWorldPosition(Transform root)
+        {
+            if (root == null) return Vector3.zero;
+
+            // Portrait Image 우선
+            var portraitImage = FindPortraitImage(root);
+            if (portraitImage != null && portraitImage.rectTransform != null)
+            {
+                return GetRectTransformCenterWorld(portraitImage.rectTransform);
+            }
+
+            // RectTransform 폴백
+            var anyRect = root.GetComponentInChildren<RectTransform>(true);
+            if (anyRect != null)
+            {
+                return GetRectTransformCenterWorld(anyRect);
+            }
+
+            // SpriteRenderer 폴백
+            var sprite = root.GetComponentInChildren<SpriteRenderer>(true);
+            if (sprite != null)
+            {
+                return sprite.bounds.center;
+            }
+
+            // 최종 폴백
+            return root.position;
+        }
+
+        private static UnityEngine.UI.Image FindPortraitImage(Transform root)
+        {
+            var images = root.GetComponentsInChildren<UnityEngine.UI.Image>(true);
+            if (images == null || images.Length == 0) return null;
+
+            // 정확한 이름 우선
+            for (int i = 0; i < images.Length; i++)
+            {
+                if (images[i] != null && images[i].gameObject != null && images[i].gameObject.name == "Portrait")
+                {
+                    return images[i];
+                }
+            }
+            
+            // 폴백: 첫 번째 Image
+            return images[0];
+        }
+
+        private static Vector3 GetRectTransformCenterWorld(RectTransform rt)
+        {
+            if (rt == null) return Vector3.zero;
+            var bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(rt, rt);
+            var localCenter = bounds.center;
+            return rt.TransformPoint(localCenter);
+        }
+
+        /// <summary>
+        /// 이펙트 렌더 순서를 UI 위로 설정합니다.
+        /// </summary>
+        private static void SetEffectLayer(GameObject effectInstance)
+        {
+            if (effectInstance == null) return;
+            
+            int rendererCount = 0;
+            int particleCount = 0;
+
+            var renderers = effectInstance.GetComponentsInChildren<Renderer>(true);
+            foreach (var r in renderers)
+            {
+                r.sortingLayerName = "Effects";
+                r.sortingOrder = 10;
+                rendererCount++;
+            }
+            
+            var pss = effectInstance.GetComponentsInChildren<ParticleSystemRenderer>(true);
+            foreach (var pr in pss)
+            {
+                pr.sortingLayerName = "Effects";
+                pr.sortingOrder = 10;
+                particleCount++;
+            }
+
+            GameLogger.LogInfo($"[ClownPotionEffectCommand] 이펙트 레이어 설정 완료 (Renderer: {rendererCount}, Particle: {particleCount})", GameLogger.LogCategory.Core);
         }
     }
 
@@ -120,8 +481,21 @@ namespace Game.ItemSystem.Effect
     /// </summary>
     public class ReviveEffectCommand : BaseItemEffectCommand
     {
-        public ReviveEffectCommand() : base("부활")
+        private readonly AudioClip sfxClip;
+        private readonly GameObject visualEffectPrefab;
+        private readonly VFXManager vfxManager;
+        private readonly Game.CoreSystem.Audio.AudioManager audioManager;
+
+        public ReviveEffectCommand(
+            AudioClip sfxClip = null,
+            GameObject visualEffectPrefab = null,
+            VFXManager vfxManager = null,
+            Game.CoreSystem.Audio.AudioManager audioManager = null) : base("부활")
         {
+            this.sfxClip = sfxClip;
+            this.visualEffectPrefab = visualEffectPrefab;
+            this.vfxManager = vfxManager;
+            this.audioManager = audioManager;
         }
 
         /// <summary>
@@ -163,6 +537,10 @@ namespace Game.ItemSystem.Effect
             int maxHP = context.User.GetMaxHP();
             context.User.Heal(maxHP);
 
+            // 사운드 및 비주얼 이펙트 재생
+            PlaySFX();
+            PlayVisualEffect(context);
+
             // 모든 디버프 제거
             if (context.User is Game.CharacterSystem.Core.CharacterBase characterBase)
             {
@@ -189,6 +567,136 @@ namespace Game.ItemSystem.Effect
             GameLogger.LogInfo($"부활 완료: 체력 {maxHP}으로 회복, 모든 디버프 제거", GameLogger.LogCategory.Core);
             return true;
         }
+
+        /// <summary>
+        /// 부활 사운드를 재생합니다.
+        /// </summary>
+        private void PlaySFX()
+        {
+            if (sfxClip == null)
+            {
+                GameLogger.LogWarning("[ReviveEffectCommand] 사운드 클립이 설정되지 않았습니다.", GameLogger.LogCategory.Core);
+                return;
+            }
+
+            var finalAudioManager = audioManager ?? UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            if (finalAudioManager != null)
+            {
+                finalAudioManager.PlaySFXWithPool(sfxClip, 0.9f);
+                GameLogger.LogInfo($"[ReviveEffectCommand] 부활 사운드 재생: {sfxClip.name}", GameLogger.LogCategory.Core);
+            }
+            else
+            {
+                GameLogger.LogWarning("[ReviveEffectCommand] AudioManager를 찾을 수 없습니다.", GameLogger.LogCategory.Core);
+            }
+        }
+
+        /// <summary>
+        /// 부활 비주얼 이펙트를 재생합니다.
+        /// </summary>
+        private void PlayVisualEffect(IItemUseContext context)
+        {
+            if (visualEffectPrefab == null)
+            {
+                GameLogger.LogWarning("[ReviveEffectCommand] 비주얼 이펙트 프리팹이 설정되지 않았습니다.", GameLogger.LogCategory.Core);
+                return;
+            }
+
+            var userTransform = (context.User as MonoBehaviour)?.transform;
+            if (userTransform == null)
+            {
+                GameLogger.LogWarning("[ReviveEffectCommand] 사용자 Transform을 찾을 수 없습니다.", GameLogger.LogCategory.Core);
+                return;
+            }
+
+            var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            if (finalVfxManager != null)
+            {
+                var spawnPos = GetPortraitCenterWorldPosition(userTransform);
+                var effectInstance = finalVfxManager.PlayEffect(visualEffectPrefab, spawnPos);
+                if (effectInstance != null)
+                {
+                    SetEffectLayer(effectInstance);
+                    GameLogger.LogInfo($"[ReviveEffectCommand] 부활 비주얼 이펙트 재생: {visualEffectPrefab.name}", GameLogger.LogCategory.Core);
+                }
+            }
+            else
+            {
+                var spawnPos = GetPortraitCenterWorldPosition(userTransform);
+                var instance = UnityEngine.Object.Instantiate(visualEffectPrefab, spawnPos, Quaternion.identity);
+                SetEffectLayer(instance);
+                UnityEngine.Object.Destroy(instance, 2.0f);
+                GameLogger.LogInfo($"[ReviveEffectCommand] 부활 비주얼 이펙트 생성 완료: {visualEffectPrefab.name}", GameLogger.LogCategory.Core);
+            }
+        }
+
+        private static Vector3 GetPortraitCenterWorldPosition(Transform root)
+        {
+            if (root == null) return Vector3.zero;
+
+            var portraitImage = FindPortraitImage(root);
+            if (portraitImage != null && portraitImage.rectTransform != null)
+            {
+                return GetRectTransformCenterWorld(portraitImage.rectTransform);
+            }
+
+            var anyRect = root.GetComponentInChildren<RectTransform>(true);
+            if (anyRect != null)
+            {
+                return GetRectTransformCenterWorld(anyRect);
+            }
+
+            var sprite = root.GetComponentInChildren<SpriteRenderer>(true);
+            if (sprite != null)
+            {
+                return sprite.bounds.center;
+            }
+
+            return root.position;
+        }
+
+        private static Image FindPortraitImage(Transform root)
+        {
+            var images = root.GetComponentsInChildren<Image>(true);
+            if (images == null || images.Length == 0) return null;
+
+            for (int i = 0; i < images.Length; i++)
+            {
+                if (images[i] != null && images[i].gameObject != null && images[i].gameObject.name == "Portrait")
+                {
+                    return images[i];
+                }
+            }
+
+            return images[0];
+        }
+
+        private static Vector3 GetRectTransformCenterWorld(RectTransform rt)
+        {
+            if (rt == null) return Vector3.zero;
+            var bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(rt, rt);
+            var localCenter = bounds.center;
+            return rt.TransformPoint(localCenter);
+        }
+
+        private static void SetEffectLayer(GameObject effectInstance)
+        {
+            if (effectInstance == null) return;
+
+            var renderers = effectInstance.GetComponentsInChildren<Renderer>(true);
+            foreach (var r in renderers)
+            {
+                r.sortingLayerName = "Effects";
+                r.sortingOrder = 10;
+            }
+
+            var pss = effectInstance.GetComponentsInChildren<ParticleSystemRenderer>(true);
+            foreach (var pr in pss)
+            {
+                pr.sortingLayerName = "Effects";
+                pr.sortingOrder = 10;
+            }
+        }
     }
 
     /// <summary>
@@ -198,10 +706,23 @@ namespace Game.ItemSystem.Effect
     public class TimeStopEffectCommand : BaseItemEffectCommand
     {
         private int sealCount;
+        private readonly AudioClip sfxClip;
+        private readonly GameObject visualEffectPrefab;
+        private readonly VFXManager vfxManager;
+        private readonly Game.CoreSystem.Audio.AudioManager audioManager;
 
-        public TimeStopEffectCommand(int sealCount = 1) : base("시간 정지")
+        public TimeStopEffectCommand(
+            int sealCount = 1,
+            AudioClip sfxClip = null,
+            GameObject visualEffectPrefab = null,
+            VFXManager vfxManager = null,
+            Game.CoreSystem.Audio.AudioManager audioManager = null) : base("시간 정지")
         {
             this.sealCount = Mathf.Max(1, sealCount);
+            this.sfxClip = sfxClip;
+            this.visualEffectPrefab = visualEffectPrefab;
+            this.vfxManager = vfxManager;
+            this.audioManager = audioManager;
         }
 
         protected override bool ExecuteInternal(IItemUseContext context)
@@ -232,7 +753,142 @@ namespace Game.ItemSystem.Effect
             // 아이템 유래 상태이상은 가드를 무시하고 직접 등록 (RegisterPerTurnEffect 사용)
             enemyCharacter.RegisterPerTurnEffect(stunDebuff);
             GameLogger.LogInfo($"[TimeStopEffect] 타임 스톱 스크롤 적용: {enemyCharacter.GetCharacterName()}에게 2턴 스턴 (아이템은 가드 무시)", GameLogger.LogCategory.Core);
+
+            // 사운드 및 비주얼 이펙트 재생 (적 캐릭터 위치)
+            PlaySFX();
+            PlayVisualEffect(enemyCharacter);
+
             return true;
+        }
+
+        /// <summary>
+        /// 시간 정지 사운드를 재생합니다.
+        /// </summary>
+        private void PlaySFX()
+        {
+            if (sfxClip == null)
+            {
+                GameLogger.LogWarning("[TimeStopEffectCommand] 사운드 클립이 설정되지 않았습니다.", GameLogger.LogCategory.Core);
+                return;
+            }
+
+            var finalAudioManager = audioManager ?? UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            if (finalAudioManager != null)
+            {
+                finalAudioManager.PlaySFXWithPool(sfxClip, 0.9f);
+                GameLogger.LogInfo($"[TimeStopEffectCommand] 시간 정지 사운드 재생: {sfxClip.name}", GameLogger.LogCategory.Core);
+            }
+            else
+            {
+                GameLogger.LogWarning("[TimeStopEffectCommand] AudioManager를 찾을 수 없습니다.", GameLogger.LogCategory.Core);
+            }
+        }
+
+        /// <summary>
+        /// 시간 정지 비주얼 이펙트를 재생합니다.
+        /// </summary>
+        private void PlayVisualEffect(Game.CharacterSystem.Interface.ICharacter target)
+        {
+            if (visualEffectPrefab == null)
+            {
+                GameLogger.LogWarning("[TimeStopEffectCommand] 비주얼 이펙트 프리팹이 설정되지 않았습니다.", GameLogger.LogCategory.Core);
+                return;
+            }
+
+            var targetTransform = (target as MonoBehaviour)?.transform;
+            if (targetTransform == null)
+            {
+                GameLogger.LogWarning("[TimeStopEffectCommand] 대상 Transform을 찾을 수 없습니다.", GameLogger.LogCategory.Core);
+                return;
+            }
+
+            var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            if (finalVfxManager != null)
+            {
+                var spawnPos = GetPortraitCenterWorldPosition(targetTransform);
+                var effectInstance = finalVfxManager.PlayEffect(visualEffectPrefab, spawnPos);
+                if (effectInstance != null)
+                {
+                    SetEffectLayer(effectInstance);
+                    GameLogger.LogInfo($"[TimeStopEffectCommand] 시간 정지 비주얼 이펙트 재생: {visualEffectPrefab.name}", GameLogger.LogCategory.Core);
+                }
+            }
+            else
+            {
+                var spawnPos = GetPortraitCenterWorldPosition(targetTransform);
+                var instance = UnityEngine.Object.Instantiate(visualEffectPrefab, spawnPos, Quaternion.identity);
+                SetEffectLayer(instance);
+                UnityEngine.Object.Destroy(instance, 2.0f);
+                GameLogger.LogInfo($"[TimeStopEffectCommand] 시간 정지 비주얼 이펙트 생성 완료: {visualEffectPrefab.name}", GameLogger.LogCategory.Core);
+            }
+        }
+
+        private static Vector3 GetPortraitCenterWorldPosition(Transform root)
+        {
+            if (root == null) return Vector3.zero;
+
+            var portraitImage = FindPortraitImage(root);
+            if (portraitImage != null && portraitImage.rectTransform != null)
+            {
+                return GetRectTransformCenterWorld(portraitImage.rectTransform);
+            }
+
+            var anyRect = root.GetComponentInChildren<RectTransform>(true);
+            if (anyRect != null)
+            {
+                return GetRectTransformCenterWorld(anyRect);
+            }
+
+            var sprite = root.GetComponentInChildren<SpriteRenderer>(true);
+            if (sprite != null)
+            {
+                return sprite.bounds.center;
+            }
+
+            return root.position;
+        }
+
+        private static Image FindPortraitImage(Transform root)
+        {
+            var images = root.GetComponentsInChildren<Image>(true);
+            if (images == null || images.Length == 0) return null;
+
+            for (int i = 0; i < images.Length; i++)
+            {
+                if (images[i] != null && images[i].gameObject != null && images[i].gameObject.name == "Portrait")
+                {
+                    return images[i];
+                }
+            }
+
+            return images[0];
+        }
+
+        private static Vector3 GetRectTransformCenterWorld(RectTransform rt)
+        {
+            if (rt == null) return Vector3.zero;
+            var bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(rt, rt);
+            var localCenter = bounds.center;
+            return rt.TransformPoint(localCenter);
+        }
+
+        private static void SetEffectLayer(GameObject effectInstance)
+        {
+            if (effectInstance == null) return;
+
+            var renderers = effectInstance.GetComponentsInChildren<Renderer>(true);
+            foreach (var r in renderers)
+            {
+                r.sortingLayerName = "Effects";
+                r.sortingOrder = 10;
+            }
+
+            var pss = effectInstance.GetComponentsInChildren<ParticleSystemRenderer>(true);
+            foreach (var pr in pss)
+            {
+                pr.sortingLayerName = "Effects";
+                pr.sortingOrder = 10;
+            }
         }
     }
 
@@ -479,10 +1135,23 @@ namespace Game.ItemSystem.Effect
     public class RerollEffectCommand : BaseItemEffectCommand
     {
         private int rerollCount;
+        private readonly AudioClip sfxClip;
+        private readonly GameObject visualEffectPrefab;
+        private readonly VFXManager vfxManager;
+        private readonly Game.CoreSystem.Audio.AudioManager audioManager;
 
-        public RerollEffectCommand(int rerollCount) : base("리롤")
+        public RerollEffectCommand(
+            int rerollCount,
+            AudioClip sfxClip = null,
+            GameObject visualEffectPrefab = null,
+            VFXManager vfxManager = null,
+            Game.CoreSystem.Audio.AudioManager audioManager = null) : base("리롤")
         {
             this.rerollCount = rerollCount;
+            this.sfxClip = sfxClip;
+            this.visualEffectPrefab = visualEffectPrefab;
+            this.vfxManager = vfxManager;
+            this.audioManager = audioManager;
         }
 
         protected override bool ExecuteInternal(IItemUseContext context)
@@ -531,8 +1200,142 @@ namespace Game.ItemSystem.Effect
             // PlayerHandManager의 GenerateInitialHand 메서드를 사용하여 새 카드 드로우
             handManager.GenerateInitialHand();
 
+            // 사운드 및 비주얼 이펙트 재생 (사용자 위치)
+            PlaySFX();
+            PlayVisualEffect(context);
+
             GameLogger.LogInfo($"역행의 모래시계 적용: 핸드 리롤 완료 ({currentHandCount}장 → 3장)", GameLogger.LogCategory.Core);
             return true;
+        }
+
+        /// <summary>
+        /// 리롤 사운드를 재생합니다.
+        /// </summary>
+        private void PlaySFX()
+        {
+            if (sfxClip == null)
+            {
+                GameLogger.LogWarning("[RerollEffectCommand] 사운드 클립이 설정되지 않았습니다.", GameLogger.LogCategory.Core);
+                return;
+            }
+
+            var finalAudioManager = audioManager ?? UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            if (finalAudioManager != null)
+            {
+                finalAudioManager.PlaySFXWithPool(sfxClip, 0.9f);
+                GameLogger.LogInfo($"[RerollEffectCommand] 리롤 사운드 재생: {sfxClip.name}", GameLogger.LogCategory.Core);
+            }
+            else
+            {
+                GameLogger.LogWarning("[RerollEffectCommand] AudioManager를 찾을 수 없습니다.", GameLogger.LogCategory.Core);
+            }
+        }
+
+        /// <summary>
+        /// 리롤 비주얼 이펙트를 재생합니다.
+        /// </summary>
+        private void PlayVisualEffect(IItemUseContext context)
+        {
+            if (visualEffectPrefab == null)
+            {
+                GameLogger.LogWarning("[RerollEffectCommand] 비주얼 이펙트 프리팹이 설정되지 않았습니다.", GameLogger.LogCategory.Core);
+                return;
+            }
+
+            var userTransform = (context.User as MonoBehaviour)?.transform;
+            if (userTransform == null)
+            {
+                GameLogger.LogWarning("[RerollEffectCommand] 사용자 Transform을 찾을 수 없습니다.", GameLogger.LogCategory.Core);
+                return;
+            }
+
+            var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            if (finalVfxManager != null)
+            {
+                var spawnPos = GetPortraitCenterWorldPosition(userTransform);
+                var effectInstance = finalVfxManager.PlayEffect(visualEffectPrefab, spawnPos);
+                if (effectInstance != null)
+                {
+                    SetEffectLayer(effectInstance);
+                    GameLogger.LogInfo($"[RerollEffectCommand] 리롤 비주얼 이펙트 재생: {visualEffectPrefab.name}", GameLogger.LogCategory.Core);
+                }
+            }
+            else
+            {
+                var spawnPos = GetPortraitCenterWorldPosition(userTransform);
+                var instance = UnityEngine.Object.Instantiate(visualEffectPrefab, spawnPos, Quaternion.identity);
+                SetEffectLayer(instance);
+                UnityEngine.Object.Destroy(instance, 2.0f);
+                GameLogger.LogInfo($"[RerollEffectCommand] 리롤 비주얼 이펙트 생성 완료: {visualEffectPrefab.name}", GameLogger.LogCategory.Core);
+            }
+        }
+
+        private static Vector3 GetPortraitCenterWorldPosition(Transform root)
+        {
+            if (root == null) return Vector3.zero;
+
+            var portraitImage = FindPortraitImage(root);
+            if (portraitImage != null && portraitImage.rectTransform != null)
+            {
+                return GetRectTransformCenterWorld(portraitImage.rectTransform);
+            }
+
+            var anyRect = root.GetComponentInChildren<RectTransform>(true);
+            if (anyRect != null)
+            {
+                return GetRectTransformCenterWorld(anyRect);
+            }
+
+            var sprite = root.GetComponentInChildren<SpriteRenderer>(true);
+            if (sprite != null)
+            {
+                return sprite.bounds.center;
+            }
+
+            return root.position;
+        }
+
+        private static Image FindPortraitImage(Transform root)
+        {
+            var images = root.GetComponentsInChildren<Image>(true);
+            if (images == null || images.Length == 0) return null;
+
+            for (int i = 0; i < images.Length; i++)
+            {
+                if (images[i] != null && images[i].gameObject != null && images[i].gameObject.name == "Portrait")
+                {
+                    return images[i];
+                }
+            }
+
+            return images[0];
+        }
+
+        private static Vector3 GetRectTransformCenterWorld(RectTransform rt)
+        {
+            if (rt == null) return Vector3.zero;
+            var bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(rt, rt);
+            var localCenter = bounds.center;
+            return rt.TransformPoint(localCenter);
+        }
+
+        private static void SetEffectLayer(GameObject effectInstance)
+        {
+            if (effectInstance == null) return;
+
+            var renderers = effectInstance.GetComponentsInChildren<Renderer>(true);
+            foreach (var r in renderers)
+            {
+                r.sortingLayerName = "Effects";
+                r.sortingOrder = 10;
+            }
+
+            var pss = effectInstance.GetComponentsInChildren<ParticleSystemRenderer>(true);
+            foreach (var pr in pss)
+            {
+                pr.sortingLayerName = "Effects";
+                pr.sortingOrder = 10;
+            }
         }
     }
 

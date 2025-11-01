@@ -16,9 +16,32 @@ namespace Game.ItemSystem.Effect
         [Tooltip("기본 효과량 (커스텀 설정이 없을 때 사용)")]
         [SerializeField] private int defaultEffectAmount = 5;
 
+        [Header("사운드 설정")]
+        [Tooltip("체력 회복 시 재생할 SFX 클립")]
+        [SerializeField] private AudioClip healSfxClip;
+        
+        [Tooltip("데미지 입을 시 재생할 SFX 클립")]
+        [SerializeField] private AudioClip damageSfxClip;
+
+        [Header("비주얼 이펙트 설정")]
+        [Tooltip("체력 회복 시 재생할 비주얼 이펙트 프리팹")]
+        [SerializeField] private GameObject healVisualEffectPrefab;
+        
+        [Tooltip("데미지 입을 시 재생할 비주얼 이펙트 프리팹")]
+        [SerializeField] private GameObject damageVisualEffectPrefab;
+
         public override IItemEffectCommand CreateEffectCommand(int power)
         {
-            return new ClownPotionEffectCommand(defaultEffectAmount + power);
+            // 기본값 사용: healChance=50, healAmount=defaultEffectAmount+power, damageAmount=defaultEffectAmount+power
+            return new ClownPotionEffectCommand(
+                50, 
+                defaultEffectAmount + power, 
+                defaultEffectAmount + power, 
+                healSfxClip, 
+                damageSfxClip,
+                healVisualEffectPrefab,
+                damageVisualEffectPrefab
+            );
         }
 
         /// <summary>
@@ -30,13 +53,25 @@ namespace Game.ItemSystem.Effect
         {
             if (customSettings == null)
             {
-                return new ClownPotionEffectCommand();
+                return new ClownPotionEffectCommand(50, 5, 5, healSfxClip, damageSfxClip, healVisualEffectPrefab, damageVisualEffectPrefab);
             }
+
+            // Custom Settings에 SFX가 있으면 우선 사용, 없으면 SO의 기본값 사용
+            AudioClip finalHealSfx = customSettings.healSfxClip ?? healSfxClip;
+            AudioClip finalDamageSfx = customSettings.damageSfxClip ?? damageSfxClip;
+            
+            // Custom Settings에 이펙트가 있으면 우선 사용, 없으면 SO의 기본값 사용
+            GameObject finalHealVfx = customSettings.healVisualEffectPrefab ?? healVisualEffectPrefab;
+            GameObject finalDamageVfx = customSettings.damageVisualEffectPrefab ?? damageVisualEffectPrefab;
 
             return new ClownPotionEffectCommand(
                 customSettings.healChance,
                 customSettings.healAmount,
-                customSettings.damageAmount
+                customSettings.damageAmount,
+                finalHealSfx,
+                finalDamageSfx,
+                finalHealVfx,
+                finalDamageVfx
             );
         }
 

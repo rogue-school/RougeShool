@@ -18,18 +18,19 @@ MonoBehaviour:
   icon: {fileID: -4549066492914507374, guid: 7ac1eb112e2b0044aa3a7e010b54eea9, type: 3}
   targetType: 1
   turnPolicy: 1
-  presentation:
-    sfxClip: {fileID: 0}
-    visualEffectPrefab: {fileID: 0}
   effectConfiguration:
     effects:
     - effectSO: {fileID: 11400000, guid: 01fceeadcde3cf24fa0606d9a55f186d, type: 2}
-      useCustomSettings: 0
+      useCustomSettings: 1
       customSettings:
-        rid: -2
+        rid: 8119732872858304584
       executionOrder: 0
   references:
     version: 2
     RefIds:
-    - rid: -2
-      type: {class: , ns: , asm: }
+    - rid: 8119732872858304584
+      type: {class: ShieldBreakerEffectCustomSettings, ns: Game.ItemSystem.Data, asm: Assembly-CSharp}
+      data:
+        duration: 2
+        sfxClip: {fileID: 0}
+        visualEffectPrefab: {fileID: 0}

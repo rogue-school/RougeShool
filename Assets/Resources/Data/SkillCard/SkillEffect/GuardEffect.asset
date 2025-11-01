@@ -15,4 +15,4 @@ MonoBehaviour:
   effectName: 
   description: 
   effectIcon: {fileID: -4066868676949960861, guid: e851fb3ce7002f146b013d4ddca5fbe9, type: 3}
-  visualEffectPrefab: {fileID: 2908695710229369708, guid: ed62a2f836d9f714f89c2b8d2e4bb962, type: 3}
+  visualEffectPrefab: {fileID: 8913217842006883145, guid: aee1face6295eee4abf08b6aabf93c63, type: 3}

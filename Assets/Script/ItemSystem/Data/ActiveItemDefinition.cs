@@ -36,10 +36,6 @@ namespace Game.ItemSystem.Data
         [Tooltip("아이템 효과의 턴 감소 정책 (Immediate: 즉시, EveryTurn: 매 턴, TargetTurnOnly: 대상 턴만)")]
         public ItemEffectTurnPolicy turnPolicy = ItemEffectTurnPolicy.Immediate;
 
-        [Header("연출 구성")]
-        [Tooltip("아이템 연출 설정")]
-        public ItemPresentation presentation = new();
-
         [Header("효과 구성")]
         [Tooltip("아이템 효과 설정")]
         public ItemEffectConfiguration effectConfiguration = new();
@@ -50,11 +46,6 @@ namespace Game.ItemSystem.Data
         /// 아이템 타입 (액티브)
         /// </summary>
         public override ItemType Type => ItemType.Active;
-
-        /// <summary>
-        /// 아이템 연출 설정을 반환합니다.
-        /// </summary>
-        public ItemPresentation Presentation => presentation;
 
         /// <summary>
         /// 아이템 효과 설정을 반환합니다.
@@ -108,7 +99,7 @@ namespace Game.ItemSystem.Data
                         needsUpdate = true;
                     else if (effectConfig.effectSO is ClownPotionEffectSO && !(effectConfig.customSettings is ClownPotionEffectCustomSettings))
                         needsUpdate = true;
-                    else if (effectConfig.effectSO is RerollEffectSO && effectConfig.customSettings != null)
+                    else if (effectConfig.effectSO is RerollEffectSO && !(effectConfig.customSettings is RerollEffectCustomSettings))
                         needsUpdate = true;
                     else if (effectConfig.effectSO is ShieldBreakerEffectSO && !(effectConfig.customSettings is ShieldBreakerEffectCustomSettings))
                         needsUpdate = true;
@@ -116,7 +107,7 @@ namespace Game.ItemSystem.Data
                         needsUpdate = true;
                     else if (effectConfig.effectSO is DiceOfFateEffectSO && !(effectConfig.customSettings is DiceOfFateEffectCustomSettings))
                         needsUpdate = true;
-                    else if (effectConfig.effectSO is ReviveEffectSO && effectConfig.customSettings != null)
+                    else if (effectConfig.effectSO is ReviveEffectSO && !(effectConfig.customSettings is ReviveEffectCustomSettings))
                         needsUpdate = true;
 
                     if (needsUpdate)
@@ -128,21 +119,6 @@ namespace Game.ItemSystem.Data
         }
 
         #endregion
-    }
-
-    /// <summary>
-    /// 아이템의 연출 관련 설정을 담는 클래스입니다.
-    /// </summary>
-    [System.Serializable]
-    public class ItemPresentation
-    {
-        [Header("사운드")]
-        [Tooltip("아이템 사용 시 재생할 고유 사운드")]
-        public AudioClip sfxClip;
-        
-        [Header("비주얼 이펙트")]
-        [Tooltip("아이템 사용 시 생성할 고유 비주얼 이펙트 프리팹")]
-        public GameObject visualEffectPrefab;
     }
 
     /// <summary>
@@ -201,7 +177,7 @@ namespace Game.ItemSystem.Data
             }
             else if (effectSO is RerollEffectSO)
             {
-                customSettings = null;
+                customSettings = new RerollEffectCustomSettings();
             }
             else if (effectSO is ShieldBreakerEffectSO)
             {
@@ -217,7 +193,7 @@ namespace Game.ItemSystem.Data
             }
             else if (effectSO is ReviveEffectSO)
             {
-                customSettings = null;
+                customSettings = new ReviveEffectCustomSettings();
             }
             else
             {
@@ -244,6 +220,14 @@ namespace Game.ItemSystem.Data
         [Header("회복 효과 설정")]
         [Tooltip("회복량")]
         public int healAmount = 0;
+
+        [Header("사운드 설정")]
+        [Tooltip("회복 시 재생할 SFX 클립 (비어있으면 HealEffectSO의 기본값 사용)")]
+        public AudioClip sfxClip;
+
+        [Header("비주얼 이펙트 설정")]
+        [Tooltip("회복 시 재생할 비주얼 이펙트 프리팹 (비어있으면 HealEffectSO의 기본값 사용)")]
+        public GameObject visualEffectPrefab;
     }
 
     /// <summary>
@@ -258,6 +242,14 @@ namespace Game.ItemSystem.Data
 
         [Tooltip("지속 시간 (턴)")]
         public int duration = 1;
+
+        [Header("사운드 설정")]
+        [Tooltip("버프 적용 시 재생할 SFX 클립 (비어있으면 AttackBuffEffectSO의 기본값 사용)")]
+        public AudioClip sfxClip;
+
+        [Header("비주얼 이펙트 설정")]
+        [Tooltip("버프 적용 시 재생할 비주얼 이펙트 프리팹 (비어있으면 AttackBuffEffectSO의 기본값 사용)")]
+        public GameObject visualEffectPrefab;
     }
 
     /// <summary>
@@ -276,6 +268,20 @@ namespace Game.ItemSystem.Data
 
         [Tooltip("입힐 데미지량")]
         public int damageAmount = 5;
+
+        [Header("사운드 설정")]
+        [Tooltip("체력 회복 시 재생할 SFX 클립 (비어있으면 ClownPotionEffectSO의 기본값 사용)")]
+        public AudioClip healSfxClip;
+        
+        [Tooltip("데미지 입을 시 재생할 SFX 클립 (비어있으면 ClownPotionEffectSO의 기본값 사용)")]
+        public AudioClip damageSfxClip;
+
+        [Header("비주얼 이펙트 설정")]
+        [Tooltip("체력 회복 시 재생할 비주얼 이펙트 프리팹 (비어있으면 ClownPotionEffectSO의 기본값 사용)")]
+        public GameObject healVisualEffectPrefab;
+        
+        [Tooltip("데미지 입을 시 재생할 비주얼 이펙트 프리팹 (비어있으면 ClownPotionEffectSO의 기본값 사용)")]
+        public GameObject damageVisualEffectPrefab;
     }
 
     /// <summary>
@@ -288,6 +294,13 @@ namespace Game.ItemSystem.Data
         [Tooltip("봉인할 적 카드 수")]
         public int sealCount = 1;
 
+        [Header("사운드 설정")]
+        [Tooltip("시간 정지 효과 적용 시 재생할 SFX 클립 (비어있으면 TimeStopEffectSO의 기본값 사용)")]
+        public AudioClip sfxClip;
+
+        [Header("비주얼 이펙트 설정")]
+        [Tooltip("시간 정지 효과 적용 시 재생할 비주얼 이펙트 프리팹 (비어있으면 TimeStopEffectSO의 기본값 사용)")]
+        public GameObject visualEffectPrefab;
     }
 
     /// <summary>
@@ -300,6 +313,13 @@ namespace Game.ItemSystem.Data
         [Tooltip("변경할 적 스킬 수")]
         public int changeCount = 1;
 
+        [Header("사운드 설정")]
+        [Tooltip("운명의 주사위 효과 적용 시 재생할 SFX 클립 (비어있으면 DiceOfFateEffectSO의 기본값 사용)")]
+        public AudioClip sfxClip;
+
+        [Header("비주얼 이펙트 설정")]
+        [Tooltip("운명의 주사위 효과 적용 시 재생할 비주얼 이펙트 프리팹 (비어있으면 DiceOfFateEffectSO의 기본값 사용)")]
+        public GameObject visualEffectPrefab;
     }
 
     /// <summary>
@@ -311,19 +331,46 @@ namespace Game.ItemSystem.Data
         [Header("실드 브레이커 효과 설정")]
         [Tooltip("지속 시간 (턴)")]
         public int duration = 2;
+
+        [Header("사운드 설정")]
+        [Tooltip("실드 브레이커 효과 적용 시 재생할 SFX 클립 (비어있으면 ShieldBreakerEffectSO의 기본값 사용)")]
+        public AudioClip sfxClip;
+
+        [Header("비주얼 이펙트 설정")]
+        [Tooltip("실드 브레이커 효과 적용 시 재생할 비주얼 이펙트 프리팹 (비어있으면 ShieldBreakerEffectSO의 기본값 사용)")]
+        public GameObject visualEffectPrefab;
     }
 
-    // 리롤과 부활은 커스텀 설정이 필요 없으므로 클래스 자체를 제거하거나
+    /// <summary>
+    /// 부활 효과의 커스텀 설정입니다.
+    /// </summary>
+    [System.Serializable]
+    public class ReviveEffectCustomSettings : ItemEffectCustomSettings
+    {
+        [Header("사운드 설정")]
+        [Tooltip("부활 효과 적용 시 재생할 SFX 클립 (비어있으면 ReviveEffectSO의 기본값 사용)")]
+        public AudioClip sfxClip;
+
+        [Header("비주얼 이펙트 설정")]
+        [Tooltip("부활 효과 적용 시 재생할 비주얼 이펙트 프리팹 (비어있으면 ReviveEffectSO의 기본값 사용)")]
+        public GameObject visualEffectPrefab;
+    }
+
+    // 리롤은 커스텀 설정이 필요 없으므로 클래스 자체를 제거하거나
     // 비워둘 수 있습니다. 하지만 기존 코드 호환성을 위해 남겨둡니다.
 
     /// <summary>
     /// 리롤 효과의 커스텀 설정입니다.
-    /// 참고: 리롤은 핸드 전체(3장)를 교체하므로 실제로는 설정이 불필요합니다.
     /// </summary>
     [System.Serializable]
     public class RerollEffectCustomSettings : ItemEffectCustomSettings
     {
-        // 핸드 크기가 고정이므로 설정 불필요
-        // 호환성을 위해 클래스는 유지하되 필드는 비움
+        [Header("사운드 설정")]
+        [Tooltip("리롤 효과 적용 시 재생할 SFX 클립 (비어있으면 RerollEffectSO의 기본값 사용)")]
+        public AudioClip sfxClip;
+
+        [Header("비주얼 이펙트 설정")]
+        [Tooltip("리롤 효과 적용 시 재생할 비주얼 이펙트 프리팹 (비어있으면 RerollEffectSO의 기본값 사용)")]
+        public GameObject visualEffectPrefab;
     }
 }

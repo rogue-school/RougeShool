@@ -17,4 +17,6 @@ MonoBehaviour:
   effectIcon: {fileID: 2717919221109400055, guid: 549774a4d5652684d93890dbb305fe2b, type: 3}
   bleedAmount: 0
   duration: 0
+  visualEffectPrefab: {fileID: 0}
+  perTurnEffectPrefab: {fileID: 7926437658294930577, guid: a39cbd8789899ed419fcf674d73aade8, type: 3}
   legacyIcon: {fileID: 0}

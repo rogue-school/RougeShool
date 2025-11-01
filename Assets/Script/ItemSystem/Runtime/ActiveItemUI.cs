@@ -709,28 +709,8 @@ namespace Game.ItemSystem.Runtime
             if (currentItem == null)
                 return "연출 없음";
 
-            var presentationInfo = new System.Text.StringBuilder();
-            presentationInfo.AppendLine("연출:");
-
-            if (currentItem.Presentation.sfxClip != null)
-            {
-                presentationInfo.AppendLine($"- 사운드: {currentItem.Presentation.sfxClip.name}");
-            }
-            else
-            {
-                presentationInfo.AppendLine("- 사운드: 없음");
-            }
-
-            if (currentItem.Presentation.visualEffectPrefab != null)
-            {
-                presentationInfo.AppendLine($"- 이펙트: {currentItem.Presentation.visualEffectPrefab.name}");
-            }
-            else
-            {
-                presentationInfo.AppendLine("- 이펙트: 없음");
-            }
-
-            return presentationInfo.ToString();
+            // 연출은 각 효과 커스텀 설정에서 관리됨
+            return "연출: 효과별 커스텀 설정에서 관리";
         }
 
         /// <summary>

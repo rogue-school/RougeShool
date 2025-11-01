@@ -18,18 +18,18 @@ MonoBehaviour:
   icon: {fileID: 8470695689447518132, guid: 49e04e00586ed84478377eb1c657bb6a, type: 3}
   targetType: 0
   turnPolicy: 0
-  presentation:
-    sfxClip: {fileID: 0}
-    visualEffectPrefab: {fileID: 0}
   effectConfiguration:
     effects:
     - effectSO: {fileID: 11400000, guid: b5af9dcc55a601d4293071c29191d1f5, type: 2}
-      useCustomSettings: 0
+      useCustomSettings: 1
       customSettings:
-        rid: -2
+        rid: 8119732872858304585
       executionOrder: 0
   references:
     version: 2
     RefIds:
-    - rid: -2
-      type: {class: , ns: , asm: }
+    - rid: 8119732872858304585
+      type: {class: ReviveEffectCustomSettings, ns: Game.ItemSystem.Data, asm: Assembly-CSharp}
+      data:
+        sfxClip: {fileID: 0}
+        visualEffectPrefab: {fileID: 0}

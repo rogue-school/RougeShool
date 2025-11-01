@@ -1,6 +1,9 @@
 using UnityEngine;
 using Game.ItemSystem.Interface;
+using Game.ItemSystem.Data;
 using Game.CoreSystem.Utility;
+using Game.VFXSystem.Manager;
+using Game.CoreSystem.Audio;
 
 namespace Game.ItemSystem.Effect
 {
@@ -14,9 +17,36 @@ namespace Game.ItemSystem.Effect
         [Tooltip("기본 리롤 수")]
         [SerializeField] private int rerollCount = 3;
 
+        [Header("사운드 설정")]
+        [Tooltip("리롤 효과 적용 시 재생할 SFX 클립")]
+        [SerializeField] private AudioClip sfxClip;
+
+        [Header("비주얼 이펙트 설정")]
+        [Tooltip("리롤 효과 적용 시 재생할 비주얼 이펙트 프리팹")]
+        [SerializeField] private GameObject visualEffectPrefab;
+
         public override IItemEffectCommand CreateEffectCommand(int power)
         {
-            return new RerollEffectCommand(rerollCount + power);
+            var vfxManager = UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            var audioManager = UnityEngine.Object.FindFirstObjectByType<AudioManager>();
+            return new RerollEffectCommand(rerollCount + power, sfxClip, visualEffectPrefab, vfxManager, audioManager);
+        }
+
+        /// <summary>
+        /// 커스텀 설정을 사용하여 효과 커맨드를 생성합니다.
+        /// </summary>
+        public IItemEffectCommand CreateEffectCommand(RerollEffectCustomSettings customSettings)
+        {
+            var vfxManager = UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            var audioManager = UnityEngine.Object.FindFirstObjectByType<AudioManager>();
+            if (customSettings == null)
+            {
+                return new RerollEffectCommand(rerollCount, sfxClip, visualEffectPrefab, vfxManager, audioManager);
+            }
+
+            AudioClip finalSfxClip = customSettings.sfxClip ?? sfxClip;
+            GameObject finalVisualEffectPrefab = customSettings.visualEffectPrefab ?? visualEffectPrefab;
+            return new RerollEffectCommand(rerollCount, finalSfxClip, finalVisualEffectPrefab, vfxManager, audioManager);
         }
 
         public override void ApplyEffect(IItemUseContext context, int value)
