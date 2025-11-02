@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: "\uACFC\uB85C"
   displayNameKO: 
   description: 
-  artwork: {fileID: 5030028871813081814, guid: 6cf510084cade6548830306658f9116f, type: 3}
+  artwork: {fileID: 5030028871813081814, guid: 5c0c2fc2c3313f54ea4f6c31f9b65769, type: 3}
   presentation:
     sfxClip: {fileID: 0}
     visualEffectPrefab: {fileID: 4203527421569735854, guid: d189a9259cac7744d8baf4468fb85239, type: 3}
@@ -52,4 +52,4 @@ MonoBehaviour:
         targetCardId: 
       executionOrder: 0
     ownerPolicy: 0
-  currentAttackPowerStacks: 3
+  currentAttackPowerStacks: 0
