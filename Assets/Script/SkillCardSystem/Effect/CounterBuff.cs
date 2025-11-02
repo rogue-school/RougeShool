@@ -4,7 +4,8 @@ using UnityEngine;
 namespace Game.SkillCardSystem.Effect
 {
     /// <summary>
-    /// 반격 버프: 1턴 동안 받는 피해의 절반만 받고, 나머지 절반을 공격자에게 반사.
+    /// 반격 버프: 1턴 동안 받는 피해의 100%를 공격자에게 반사.
+    /// 대상은 데미지를 받지 않고, 공격자가 원래 데미지의 100%를 받습니다.
     /// 또한 버프 지속 중에는 적의 상태이상 효과를 무효화합니다.
     /// </summary>
     public class CounterBuff : OwnTurnEffectBase

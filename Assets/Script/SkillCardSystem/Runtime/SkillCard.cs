@@ -398,6 +398,20 @@ namespace Game.SkillCardSystem.Runtime
                 return;
             }
 
+            // 반격 버프 확인: 대상이 반격 버프를 가지고 있으면 타겟에게 이펙트를 재생하지 않음
+            // (반격 이펙트는 DamageEffectCommand에서 공격자에게 재생됨)
+            bool targetHasCounter = false;
+            if (target is Game.CharacterSystem.Core.CharacterBase targetCharacter)
+            {
+                targetHasCounter = targetCharacter.HasEffect<Game.SkillCardSystem.Effect.CounterBuff>();
+            }
+
+            if (targetHasCounter)
+            {
+                GameLogger.LogInfo($"[SkillCard] 대상이 반격 버프를 가지고 있어서 타겟 이펙트 재생을 건너뜁니다. 반격 이펙트는 DamageEffectCommand에서 재생됩니다.", GameLogger.LogCategory.SkillCard);
+                return;
+            }
+
             // VFX 매니저를 통한 이펙트 생성
             var vfxManager = UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
             if (vfxManager != null)
