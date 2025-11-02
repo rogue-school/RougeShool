@@ -354,35 +354,36 @@ namespace Game.SkillCardSystem.Runtime
             GameLogger.LogInfo($"[SkillCard] 연출 시작: {definition.displayName}", GameLogger.LogCategory.SkillCard);
             
             // 데미지 설정에서 이펙트/사운드 가져오기
-            if (!definition.configuration.hasDamage)
+            if (definition.configuration.hasDamage)
             {
-                GameLogger.LogInfo("[SkillCard] 데미지가 없는 카드는 연출이 없습니다.", GameLogger.LogCategory.SkillCard);
-                return;
+                var damageConfig = definition.configuration.damageConfig;
+                
+                // 사운드 재생 (즉시, 풀링 우선)
+                if (damageConfig.sfxClip != null)
+                {
+                    GameLogger.LogInfo($"[SkillCard] 사운드 재생: {damageConfig.sfxClip.name}", GameLogger.LogCategory.SkillCard);
+                    PlaySFXPooled(damageConfig.sfxClip);
+                }
+                else
+                {
+                    GameLogger.LogInfo("[SkillCard] 사운드 클립이 설정되지 않음", GameLogger.LogCategory.SkillCard);
+                }
+                
+                // 비주얼 이펙트 생성 (즉시)
+                if (damageConfig.visualEffectPrefab != null)
+                {
+                    GameLogger.LogInfo($"[SkillCard] 비주얼 이펙트 생성 시작: {damageConfig.visualEffectPrefab.name}", GameLogger.LogCategory.SkillCard);
+                    CreateVisualEffect(context, damageConfig);
+                }
+                else
+                {
+                    GameLogger.LogWarning("[SkillCard] 비주얼 이펙트 프리팹이 설정되지 않음", GameLogger.LogCategory.SkillCard);
+                }
             }
-
-            var damageConfig = definition.configuration.damageConfig;
-            
-            // 사운드 재생 (즉시, 풀링 우선)
-            if (damageConfig.sfxClip != null)
-            {
-                GameLogger.LogInfo($"[SkillCard] 사운드 재생: {damageConfig.sfxClip.name}", GameLogger.LogCategory.SkillCard);
-                PlaySFXPooled(damageConfig.sfxClip);
-            }
-            else
-            {
-                GameLogger.LogInfo("[SkillCard] 사운드 클립이 설정되지 않음", GameLogger.LogCategory.SkillCard);
-            }
-            
-            // 비주얼 이펙트 생성 (즉시)
-            if (damageConfig.visualEffectPrefab != null)
-            {
-                GameLogger.LogInfo($"[SkillCard] 비주얼 이펙트 생성 시작: {damageConfig.visualEffectPrefab.name}", GameLogger.LogCategory.SkillCard);
-                CreateVisualEffect(context, damageConfig);
-            }
-            else
-            {
-                GameLogger.LogWarning("[SkillCard] 비주얼 이펙트 프리팹이 설정되지 않음", GameLogger.LogCategory.SkillCard);
-            }
+            // 데미지가 없는 카드는 가드 이펙트를 여기서 재생하지 않음
+            // 가드 차단 이펙트는 실제로 가드가 차단할 때만 재생됨:
+            // - 데미지: CharacterBase.TakeDamage()에서 가드 차단 시 재생
+            // - 상태이상: BleedEffectCommand 등에서 가드 차단 시 재생
         }
         
         private void PlaySFXPooled(AudioClip clip)
@@ -436,8 +437,7 @@ namespace Game.SkillCardSystem.Runtime
                     GameLogger.LogError("[SkillCard] 이펙트 인스턴스 생성 실패", GameLogger.LogCategory.SkillCard);
                 }
 
-                // 가드 버프 확인: 타겟이 가드 버프를 가지고 있고 턴이 남아있으면 가드 이펙트도 재생
-                PlayGuardEffectIfActive(vfxManager, target, targetTransform);
+                // 가드 차단 이펙트는 CharacterBase.TakeDamage()에서 실제 차단될 때만 재생됨
             }
             else
             {
@@ -445,62 +445,11 @@ namespace Game.SkillCardSystem.Runtime
             }
         }
 
-        /// <summary>
-        /// 타겟이 가드 버프를 가지고 있고 턴이 남아있으면 가드 이펙트를 재생합니다.
-        /// 가드 효과를 얻을 때와 카드 효과가 작동할 때 모두 호출됩니다.
-        /// </summary>
-        /// <param name="vfxManager">VFX 매니저</param>
-        /// <param name="target">대상 캐릭터</param>
-        /// <param name="targetTransform">대상 Transform</param>
-        private void PlayGuardEffectIfActive(Game.VFXSystem.Manager.VFXManager vfxManager, ICharacter target, Transform targetTransform)
-        {
-            if (vfxManager == null || target == null || targetTransform == null)
-            {
-                return;
-            }
-
-            // 타겟이 CharacterBase인지 확인
-            if (!(target is Game.CharacterSystem.Core.CharacterBase targetCharacter))
-            {
-                return;
-            }
-
-            // 가드 버프 찾기
-            var buffs = targetCharacter.GetBuffs();
-            Game.SkillCardSystem.Effect.GuardBuff guardBuff = null;
-            foreach (var buff in buffs)
-            {
-                if (buff is Game.SkillCardSystem.Effect.GuardBuff gb)
-                {
-                    guardBuff = gb;
-                    break;
-                }
-            }
-
-            // 가드 버프가 없거나 만료되었으면 재생하지 않음
-            if (guardBuff == null || guardBuff.IsExpired || guardBuff.RemainingTurns <= 0)
-            {
-                return;
-            }
-
-            // GuardBuff에서 가드 적용 이펙트 가져오기 (카드 효과 작동 시 재생)
-            if (guardBuff.ActivateEffectPrefab == null)
-            {
-                GameLogger.LogWarning("[SkillCard] GuardBuff에 가드 적용 이펙트가 없습니다. 가드 이펙트 재생을 건너뜁니다.", GameLogger.LogCategory.SkillCard);
-                return;
-            }
-
-            // 가드 이펙트 재생
-            var guardEffectInstance = vfxManager.PlayEffectAtCharacterCenter(guardBuff.ActivateEffectPrefab, targetTransform);
-            if (guardEffectInstance != null)
-            {
-                GameLogger.LogInfo($"[SkillCard] 가드 이펙트 재생 성공: {guardBuff.ActivateEffectPrefab.name} → {target.GetCharacterName()} (남은 턴: {guardBuff.RemainingTurns})", GameLogger.LogCategory.SkillCard);
-            }
-            else
-            {
-                GameLogger.LogWarning("[SkillCard] 가드 이펙트 인스턴스 생성 실패", GameLogger.LogCategory.SkillCard);
-            }
-        }
+        // 주의: PlayGuardEffectIfActive 메서드는 제거되었습니다.
+        // 가드 적용 이펙트는 GuardEffectCommand에서 가드 버프 적용 시에만 재생됩니다.
+        // 가드 차단 이펙트는 실제로 가드가 차단할 때만 재생됩니다:
+        // - 데미지 차단: CharacterBase.TakeDamage()에서 재생
+        // - 상태이상 차단: BleedEffectCommand.PlayGuardBlockEffect() 등에서 재생
         
         #endregion
         

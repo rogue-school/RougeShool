@@ -81,6 +81,9 @@ namespace Game.SkillCardSystem.Effect
             else
             {
                 GameLogger.LogInfo($"[BleedEffectCommand] {context.Target.GetCharacterName()}의 가드로 출혈 효과 차단됨", GameLogger.LogCategory.SkillCard);
+                
+                // 가드로 차단될 때 가드 차단 이펙트 재생
+                PlayGuardBlockEffect(context);
             }
         }
 
@@ -247,6 +250,84 @@ namespace Game.SkillCardSystem.Effect
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// 가드로 출혈 효과가 차단될 때 가드 차단 이펙트를 재생합니다.
+        /// </summary>
+        /// <param name="context">카드 실행 컨텍스트</param>
+        private void PlayGuardBlockEffect(ICardExecutionContext context)
+        {
+            if (context?.Target == null)
+            {
+                return;
+            }
+
+            // 타겟이 CharacterBase인지 확인
+            if (!(context.Target is Game.CharacterSystem.Core.CharacterBase targetCharacter))
+            {
+                return;
+            }
+
+            // 가드 버프 찾기
+            var buffs = targetCharacter.GetBuffs();
+            Game.SkillCardSystem.Effect.GuardBuff guardBuff = null;
+            foreach (var buff in buffs)
+            {
+                if (buff is Game.SkillCardSystem.Effect.GuardBuff gb)
+                {
+                    guardBuff = gb;
+                    break;
+                }
+            }
+
+            // 가드 버프가 없거나 만료되었으면 재생하지 않음
+            if (guardBuff == null || guardBuff.IsExpired || guardBuff.RemainingTurns <= 0)
+            {
+                return;
+            }
+
+            // GuardBuff에서 가드 차단 이펙트 가져오기
+            if (guardBuff.BlockEffectPrefab == null)
+            {
+                return;
+            }
+
+            var targetTransform = (context.Target as MonoBehaviour)?.transform;
+            if (targetTransform == null)
+            {
+                return;
+            }
+
+            // VFXManager를 통한 가드 차단 이펙트 재생
+            if (vfxManager != null)
+            {
+                var guardBlockEffectInstance = vfxManager.PlayEffectAtCharacterCenter(guardBuff.BlockEffectPrefab, targetTransform);
+                if (guardBlockEffectInstance != null)
+                {
+                    GameLogger.LogInfo($"[BleedEffectCommand] 가드 차단 이펙트 재생 성공: {guardBuff.BlockEffectPrefab.name} → {context.Target.GetCharacterName()}", GameLogger.LogCategory.SkillCard);
+                }
+            }
+            else
+            {
+                // Fallback: VFXManager가 없으면 직접 재생
+                var spawnPos = GetPortraitCenterWorldPosition(targetTransform);
+                var instance = UnityEngine.Object.Instantiate(guardBuff.BlockEffectPrefab, spawnPos, Quaternion.identity);
+                SetEffectLayer(instance);
+                UnityEngine.Object.Destroy(instance, 2.0f);
+                GameLogger.LogInfo($"[BleedEffectCommand] 가드 차단 이펙트 재생 (Fallback): {guardBuff.BlockEffectPrefab.name}", GameLogger.LogCategory.SkillCard);
+            }
+
+            // 가드 차단 사운드 재생
+            if (guardBuff.BlockSfxClip != null)
+            {
+                var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+                if (audioManager != null)
+                {
+                    audioManager.PlaySFXWithPool(guardBuff.BlockSfxClip, 0.9f);
+                    GameLogger.LogInfo($"[BleedEffectCommand] 가드 차단 사운드 재생: {guardBuff.BlockSfxClip.name}", GameLogger.LogCategory.SkillCard);
+                }
+            }
         }
     }
 }

@@ -75,13 +75,8 @@ namespace Game.SkillCardSystem.Effect
             int currentHP = source.GetCurrentHP();
             int maxHP = source.GetMaxHP();
             
-            // 이미 최대 체력이면 치유 불가
-            if (currentHP >= maxHP)
-            {
-                GameLogger.LogInfo($"[HealEffectCommand] '{sourceName}' 이미 최대 체력입니다. (현재: {currentHP}/{maxHP})", 
-                    GameLogger.LogCategory.SkillCard);
-                return;
-            }
+            // 이미 최대 체력이면 치유 불가하지만 이펙트와 사운드는 재생
+            bool isFullHP = currentHP >= maxHP;
             
             // 실제 치유량 계산 (최대 체력을 넘지 않도록)
             int actualHealAmount = healAmount;
@@ -90,25 +85,31 @@ namespace Game.SkillCardSystem.Effect
                 actualHealAmount = Mathf.Min(healAmount, maxHealAmount);
             }
             
-            // 최대 체력을 넘지 않도록 제한
-            int maxPossibleHeal = maxHP - currentHP;
-            actualHealAmount = Mathf.Min(actualHealAmount, maxPossibleHeal);
-            
-            if (actualHealAmount <= 0)
+            // 풀피가 아니면 체력 회복 적용
+            if (!isFullHP)
             {
-                GameLogger.LogWarning($"[HealEffectCommand] '{sourceName}' 치유량이 0 이하입니다.", 
-                    GameLogger.LogCategory.SkillCard);
-                return;
+                // 최대 체력을 넘지 않도록 제한
+                int maxPossibleHeal = maxHP - currentHP;
+                actualHealAmount = Mathf.Min(actualHealAmount, maxPossibleHeal);
+                
+                if (actualHealAmount > 0)
+                {
+                    // 체력 회복 적용
+                    source.Heal(actualHealAmount);
+                    
+                    int newHP = source.GetCurrentHP();
+                    
+                    GameLogger.LogInfo($"[HealEffectCommand] '{sourceName}' 체력 회복 완료 - 치유량: {actualHealAmount}, 체력: {currentHP} → {newHP}/{maxHP}", 
+                        GameLogger.LogCategory.SkillCard);
+                }
             }
-            
-            // 체력 회복 적용
-            source.Heal(actualHealAmount);
-            
-            int newHP = source.GetCurrentHP();
-            
-            GameLogger.LogInfo($"[HealEffectCommand] '{sourceName}' 체력 회복 완료 - 치유량: {actualHealAmount}, 체력: {currentHP} → {newHP}/{maxHP}", 
-                GameLogger.LogCategory.SkillCard);
+            else
+            {
+                GameLogger.LogInfo($"[HealEffectCommand] '{sourceName}' 이미 최대 체력입니다. (현재: {currentHP}/{maxHP})", 
+                    GameLogger.LogCategory.SkillCard);
+            }
 
+            // 풀피여도 이펙트와 사운드는 재생 (스킬이 작동 중임을 알리기 위해)
             // 시각적 이펙트: 시전자 위치에 생성
             TrySpawnEffectAtSource(context);
         }
