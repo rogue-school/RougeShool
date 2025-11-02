@@ -464,9 +464,9 @@ namespace Game.SkillCardSystem.Effect
                 return;
             }
 
-            // 카드의 시각적 이펙트 프리팹 가져오기
+            // 카드의 시각적 이펙트 프리팹 가져오기 (데미지 설정에서)
             var cardDefinition = context.Card?.CardDefinition;
-            if (cardDefinition == null || cardDefinition.presentation == null || cardDefinition.presentation.visualEffectPrefab == null)
+            if (cardDefinition == null || !cardDefinition.configuration.hasDamage || cardDefinition.configuration.damageConfig.visualEffectPrefab == null)
             {
                 GameLogger.LogWarning("[DamageEffectCommand] 반격 이펙트 재생 실패: visualEffectPrefab이 설정되지 않았습니다.", GameLogger.LogCategory.Combat);
                 return;
@@ -484,7 +484,7 @@ namespace Game.SkillCardSystem.Effect
             var vfxManager = UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
             if (vfxManager != null)
             {
-                var visualEffectPrefab = cardDefinition.presentation.visualEffectPrefab;
+                var visualEffectPrefab = cardDefinition.configuration.damageConfig.visualEffectPrefab;
                 
                 // 공격자에게 반격 이펙트 재생
                 var effectInstance = vfxManager.PlayEffectAtCharacterCenter(visualEffectPrefab, sourceTransform);

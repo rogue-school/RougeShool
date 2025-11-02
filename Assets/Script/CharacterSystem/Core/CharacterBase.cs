@@ -4,6 +4,7 @@ using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Data;
 using Game.CharacterSystem.UI;
 using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.Effect;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem;
 using Game.CoreSystem.Utility;
@@ -152,6 +153,10 @@ namespace Game.CharacterSystem.Core
             if (isGuarded)
             {
                 GameLogger.LogInfo($"[{GetCharacterDataName()}] 가드로 데미지 차단: {amount}", GameLogger.LogCategory.Character);
+                
+                // GuardBuff에서 가드 차단 이펙트/사운드 가져와서 재생
+                PlayGuardBlockEffects();
+                
                 return; // 가드 상태면 데미지 무효화
             }
 
@@ -292,6 +297,53 @@ namespace Game.CharacterSystem.Core
             }
             // 매 턴 UI가 남은 턴 수를 갱신할 수 있도록 전체 리스트를 통지
             OnBuffsChanged?.Invoke(perTurnEffects.AsReadOnly());
+        }
+
+        /// <summary>
+        /// 가드가 데미지를 차단할 때 이펙트와 사운드를 재생합니다.
+        /// GuardBuff에서 EffectConfiguration으로부터 가져온 이펙트/사운드를 사용합니다.
+        /// </summary>
+        private void PlayGuardBlockEffects()
+        {
+            // GuardBuff 찾기
+            GuardBuff guardBuff = null;
+            foreach (var effect in perTurnEffects)
+            {
+                if (effect is GuardBuff gb)
+                {
+                    guardBuff = gb;
+                    break;
+                }
+            }
+
+            // 가드 차단 이펙트 재생
+            if (guardBuff != null && guardBuff.BlockEffectPrefab != null)
+            {
+                var vfxManager = UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
+                if (vfxManager != null)
+                {
+                    var effectInstance = vfxManager.PlayEffectAtCharacterCenter(guardBuff.BlockEffectPrefab, transform);
+                    if (effectInstance != null)
+                    {
+                        GameLogger.LogInfo($"[{GetCharacterDataName()}] 가드 차단 이펙트 재생: {guardBuff.BlockEffectPrefab.name}", GameLogger.LogCategory.Character);
+                    }
+                }
+            }
+
+            // 가드 차단 사운드 재생
+            if (guardBuff != null && guardBuff.BlockSfxClip != null)
+            {
+                var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+                if (audioManager != null)
+                {
+                    audioManager.PlaySFXWithPool(guardBuff.BlockSfxClip, 0.9f);
+                    GameLogger.LogInfo($"[{GetCharacterDataName()}] 가드 차단 사운드 재생: {guardBuff.BlockSfxClip.name}", GameLogger.LogCategory.Character);
+                }
+                else
+                {
+                    GameLogger.LogWarning($"[{GetCharacterDataName()}] AudioManager를 찾을 수 없습니다. 가드 차단 사운드 재생을 건너뜁니다.", GameLogger.LogCategory.Character);
+                }
+            }
         }
 
         /// <summary>

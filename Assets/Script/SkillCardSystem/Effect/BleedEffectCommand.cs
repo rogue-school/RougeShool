@@ -64,8 +64,11 @@ namespace Game.SkillCardSystem.Effect
                 GameLogger.LogWarning("[BleedEffectCommand] 아이콘이 null입니다. BleedEffectSO의 Icon이 비어있지 않은지 확인하세요.", GameLogger.LogCategory.SkillCard);
             }
 
-            // 출혈 효과 생성 (perTurnEffectPrefab 전달)
-            var bleedEffect = new BleedEffect(amount, duration, icon, perTurnEffectPrefab, vfxManager);
+            // EffectConfiguration에서 턴당 사운드 가져오기
+            var perTurnSfxClip = GetBleedPerTurnSfxClip(context);
+            
+            // 출혈 효과 생성 (perTurnEffectPrefab 및 perTurnSfxClip 전달)
+            var bleedEffect = new BleedEffect(amount, duration, icon, perTurnEffectPrefab, perTurnSfxClip, vfxManager);
             
             // 가드 상태 확인하여 상태이상 효과 등록
             if (context.Target.RegisterStatusEffect(bleedEffect))
@@ -215,6 +218,35 @@ namespace Game.SkillCardSystem.Effect
             var bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(rt, rt);
             var localCenter = bounds.center;
             return rt.TransformPoint(localCenter);
+        }
+
+        /// <summary>
+        /// EffectConfiguration에서 출혈 턴당 사운드를 가져옵니다.
+        /// </summary>
+        /// <param name="context">카드 실행 컨텍스트</param>
+        /// <returns>출혈 턴당 사운드</returns>
+        private AudioClip GetBleedPerTurnSfxClip(ICardExecutionContext context)
+        {
+            if (context?.Card?.CardDefinition == null)
+            {
+                return null;
+            }
+
+            var cardDefinition = context.Card.CardDefinition;
+            if (!cardDefinition.configuration.hasEffects)
+            {
+                return null;
+            }
+
+            foreach (var effectConfig in cardDefinition.configuration.effects)
+            {
+                if (effectConfig.effectSO is BleedEffectSO && effectConfig.useCustomSettings && effectConfig.customSettings != null)
+                {
+                    return effectConfig.customSettings.bleedPerTurnSfxClip;
+                }
+            }
+
+            return null;
         }
     }
 }

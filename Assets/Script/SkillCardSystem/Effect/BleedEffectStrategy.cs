@@ -29,12 +29,18 @@ namespace Game.SkillCardSystem.Effect
 
             if (config.useCustomSettings && config.customSettings != null)
             {
+                // EffectCustomSettings에서 이펙트/아이콘 가져오기
+                var activateEffectPrefab = config.customSettings.bleedActivateEffectPrefab ?? visualEffectPrefab;
+                var perTurnEffect = config.customSettings.bleedPerTurnEffectPrefab ?? perTurnEffectPrefab ?? activateEffectPrefab;
+                var icon = config.customSettings.bleedIcon ?? bleedEffectSO.GetIcon();
+                
+                // BleedEffectCommand 생성 (턴당 사운드는 BleedEffectCommand에서 context로부터 가져옴)
                 return new BleedEffectCommand(
                     config.customSettings.bleedAmount,
                     config.customSettings.bleedDuration,
-                    bleedEffectSO.GetIcon(),
-                    visualEffectPrefab,
-                    perTurnEffectPrefab ?? visualEffectPrefab,
+                    icon,
+                    activateEffectPrefab,
+                    perTurnEffect,
                     vfxManager
                 );
             }

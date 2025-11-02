@@ -16,13 +16,15 @@ namespace Game.SkillCardSystem.Effect
         private readonly int healAmount;
         private readonly int maxHealAmount;
         private readonly GameObject visualEffectPrefab;
+        private readonly AudioClip healSfxClip;
         private readonly VFXManager vfxManager;
 
-        public HealEffectCommand(int healAmount, int maxHealAmount = 0, GameObject visualEffectPrefab = null, VFXManager vfxManager = null)
+        public HealEffectCommand(int healAmount, int maxHealAmount = 0, GameObject visualEffectPrefab = null, AudioClip healSfxClip = null, VFXManager vfxManager = null)
         {
             this.healAmount = healAmount;
             this.maxHealAmount = maxHealAmount;
             this.visualEffectPrefab = visualEffectPrefab;
+            this.healSfxClip = healSfxClip;
             this.vfxManager = vfxManager;
             
             // GameLogger.LogInfo($"[HealEffectCommand] 생성됨 - 치유량: {healAmount}, 최대: {maxHealAmount}", 
@@ -37,7 +39,9 @@ namespace Game.SkillCardSystem.Effect
         {
             this.healAmount = customSettings.healAmount;
             this.maxHealAmount = 0; // 커스텀 설정에서는 최대치 제한 없음
-            this.visualEffectPrefab = null;
+            this.visualEffectPrefab = customSettings.healEffectPrefab;
+            this.healSfxClip = customSettings.healSfxClip;
+            this.vfxManager = null; // VFXManager는 Execute에서 찾음
             
             // GameLogger.LogInfo($"[HealEffectCommand] 생성됨 (CustomSettings) - 치유량: {healAmount}", 
             //    GameLogger.LogCategory.SkillCard);
@@ -49,6 +53,19 @@ namespace Game.SkillCardSystem.Effect
             {
                 GameLogger.LogWarning("[HealEffectCommand] 시전자가 null입니다.", GameLogger.LogCategory.SkillCard);
                 return;
+            }
+
+            // EffectConfiguration에서 사운드 가져오기 (우선순위)
+            var customSfxClip = GetHealSfxClip(context);
+            if (customSfxClip != null)
+            {
+                // context에서 가져온 사운드로 재생
+                PlayHealSoundFromClip(customSfxClip);
+            }
+            else if (healSfxClip != null)
+            {
+                // 생성자에서 받은 사운드로 재생
+                PlayHealSoundFromClip(healSfxClip);
             }
 
             var source = context.Source;
@@ -249,6 +266,58 @@ namespace Game.SkillCardSystem.Effect
             var bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(rt, rt);
             var localCenter = bounds.center;
             return rt.TransformPoint(localCenter);
+        }
+
+        /// <summary>
+        /// EffectConfiguration에서 치유 사운드를 가져옵니다.
+        /// </summary>
+        /// <param name="context">카드 실행 컨텍스트</param>
+        /// <returns>치유 사운드</returns>
+        private AudioClip GetHealSfxClip(ICardExecutionContext context)
+        {
+            if (context?.Card?.CardDefinition == null)
+            {
+                return null;
+            }
+
+            var cardDefinition = context.Card.CardDefinition;
+            if (!cardDefinition.configuration.hasEffects)
+            {
+                return null;
+            }
+
+            foreach (var effectConfig in cardDefinition.configuration.effects)
+            {
+                if (effectConfig.effectSO is HealEffectSO && effectConfig.useCustomSettings && effectConfig.customSettings != null)
+                {
+                    return effectConfig.customSettings.healSfxClip;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 치유 사운드를 재생합니다.
+        /// </summary>
+        /// <param name="sfxClip">재생할 사운드 클립</param>
+        private void PlayHealSoundFromClip(AudioClip sfxClip)
+        {
+            if (sfxClip == null)
+            {
+                return;
+            }
+
+            var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            if (audioManager != null)
+            {
+                audioManager.PlaySFXWithPool(sfxClip, 0.9f);
+                GameLogger.LogInfo($"[HealEffectCommand] 치유 사운드 재생: {sfxClip.name}", GameLogger.LogCategory.SkillCard);
+            }
+            else
+            {
+                GameLogger.LogWarning("[HealEffectCommand] AudioManager를 찾을 수 없습니다. 치유 사운드 재생을 건너뜁니다.", GameLogger.LogCategory.SkillCard);
+            }
         }
     }
 }

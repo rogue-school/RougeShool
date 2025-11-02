@@ -17,6 +17,7 @@ namespace Game.SkillCardSystem.Effect
         private int remainingTurns;
         private readonly Sprite icon;
         private readonly GameObject perTurnEffectPrefab;
+        private readonly AudioClip perTurnSfxClip;
         private readonly VFXManager vfxManager;
 
         /// <summary>
@@ -33,6 +34,26 @@ namespace Game.SkillCardSystem.Effect
             this.remainingTurns = duration;
             this.icon = icon;
             this.perTurnEffectPrefab = perTurnEffectPrefab;
+            this.perTurnSfxClip = null;
+            this.vfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
+        }
+
+        /// <summary>
+        /// 출혈 효과 생성자 (턴당 사운드 포함)
+        /// </summary>
+        /// <param name="amount">매 턴 입힐 피해량</param>
+        /// <param name="duration">지속 턴 수</param>
+        /// <param name="icon">출혈 효과 아이콘</param>
+        /// <param name="perTurnEffectPrefab">출혈 피해 발생 시 매 턴 재생할 이펙트 프리팹</param>
+        /// <param name="perTurnSfxClip">출혈 피해 발생 시 매 턴 재생할 사운드</param>
+        /// <param name="vfxManager">VFX 매니저 (선택적)</param>
+        public BleedEffect(int amount, int duration, Sprite icon, GameObject perTurnEffectPrefab, AudioClip perTurnSfxClip, VFXManager vfxManager)
+        {
+            this.amount = amount;
+            this.remainingTurns = duration;
+            this.icon = icon;
+            this.perTurnEffectPrefab = perTurnEffectPrefab;
+            this.perTurnSfxClip = perTurnSfxClip;
             this.vfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
         }
 
@@ -61,8 +82,9 @@ namespace Game.SkillCardSystem.Effect
 
             GameLogger.LogInfo($"[BleedEffect] {target.GetCharacterName()} 출혈 피해: {amount} (남은 턴: {remainingTurns})", GameLogger.LogCategory.SkillCard);
             
-            // 출혈 피해 발생 시 이펙트 재생
+            // 출혈 피해 발생 시 이펙트 및 사운드 재생
             TrySpawnPerTurnEffect(target);
+            PlayPerTurnSound();
         }
 
         /// <summary>
@@ -182,6 +204,28 @@ namespace Game.SkillCardSystem.Effect
             var bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(rt, rt);
             var localCenter = bounds.center;
             return rt.TransformPoint(localCenter);
+        }
+
+        /// <summary>
+        /// 매 턴 출혈 피해 발생 시 사운드를 재생합니다.
+        /// </summary>
+        private void PlayPerTurnSound()
+        {
+            if (perTurnSfxClip == null)
+            {
+                return;
+            }
+
+            var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            if (audioManager != null)
+            {
+                audioManager.PlaySFXWithPool(perTurnSfxClip, 0.9f);
+                GameLogger.LogInfo($"[BleedEffect] 출혈 턴당 사운드 재생: {perTurnSfxClip.name}", GameLogger.LogCategory.SkillCard);
+            }
+            else
+            {
+                GameLogger.LogWarning("[BleedEffect] AudioManager를 찾을 수 없습니다. 출혈 턴당 사운드 재생을 건너뜁니다.", GameLogger.LogCategory.SkillCard);
+            }
         }
     }
 }

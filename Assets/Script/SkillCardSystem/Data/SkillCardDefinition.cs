@@ -90,9 +90,9 @@ namespace Game.SkillCardSystem.Data
         public SkillCardDefinition Definition => this;
         public SkillCardDefinition Card => this;
         
-        // 기존 시스템 호환성을 위한 추가 프로퍼티들
-        public AudioClip SfxClip => presentation.sfxClip;
-        public GameObject VisualEffectPrefab => presentation.visualEffectPrefab;
+        // 기존 시스템 호환성을 위한 추가 프로퍼티들 (데미지 설정에서 가져오기)
+        public AudioClip SfxClip => configuration.hasDamage ? configuration.damageConfig.sfxClip : null;
+        public GameObject VisualEffectPrefab => configuration.hasDamage ? configuration.damageConfig.visualEffectPrefab : null;
         public string Name => displayName;
         public string CardId => cardId;
         public string CardName => displayName;
@@ -170,6 +170,7 @@ namespace Game.SkillCardSystem.Data
     [System.Serializable]
     public class DamageConfiguration
     {
+        [Header("데미지 수치")]
         [Tooltip("기본 데미지")]
         public int baseDamage = 0;
         
@@ -181,6 +182,13 @@ namespace Game.SkillCardSystem.Data
 
         [Tooltip("반격 버프 무효화 여부")]
         public bool ignoreCounter = false;
+
+        [Header("데미지 이펙트/사운드")]
+        [Tooltip("데미지 공격 시 재생할 사운드")]
+        public AudioClip sfxClip;
+
+        [Tooltip("데미지 공격 시 재생할 비주얼 이펙트 프리팹")]
+        public GameObject visualEffectPrefab;
     }
 
     /// <summary>
@@ -232,21 +240,74 @@ namespace Game.SkillCardSystem.Data
         [Tooltip("출혈 지속 시간")]
         public int bleedDuration = 0;
 
+        [Header("출혈 효과 아이콘/이펙트/사운드")]
+        [Tooltip("출혈 효과 UI 아이콘")]
+        public Sprite bleedIcon;
+
+        [Tooltip("출혈 효과 적용 시 재생할 비주얼 이펙트 프리팹")]
+        public GameObject bleedActivateEffectPrefab;
+
+        [Tooltip("출혈 효과 적용 시 재생할 사운드")]
+        public AudioClip bleedActivateSfxClip;
+
+        [Tooltip("출혈 피해 발생 시 매 턴 재생할 비주얼 이펙트 프리팹")]
+        public GameObject bleedPerTurnEffectPrefab;
+
+        [Tooltip("출혈 피해 발생 시 매 턴 재생할 사운드")]
+        public AudioClip bleedPerTurnSfxClip;
+
         [Header("반격 효과 설정")]
         [Tooltip("반격 지속 턴 수")]
         public int counterDuration = 1;
+
+        [Header("반격 효과 아이콘/이펙트/사운드")]
+        [Tooltip("반격 효과 UI 아이콘")]
+        public Sprite counterIcon;
+
+        [Tooltip("반격 버프 적용 시 재생할 비주얼 이펙트 프리팹")]
+        public GameObject counterActivateEffectPrefab;
+
+        [Tooltip("반격 버프 적용 시 재생할 사운드")]
+        public AudioClip counterActivateSfxClip;
         
         [Header("가드 효과 설정")]
         [Tooltip("가드 지속 턴 수")]
         public int guardDuration = 1;
+
+        [Header("가드 효과 아이콘/이펙트/사운드")]
+        [Tooltip("가드 효과 UI 아이콘")]
+        public Sprite guardIcon;
+
+        [Tooltip("가드 버프 적용 시 재생할 비주얼 이펙트 프리팹")]
+        public GameObject guardActivateEffectPrefab;
+
+        [Tooltip("가드 버프 적용 시 재생할 사운드")]
+        public AudioClip guardActivateSfxClip;
+
+        [Tooltip("가드가 데미지를 차단할 때 재생할 비주얼 이펙트 프리팹")]
+        public GameObject guardBlockEffectPrefab;
+
+        [Tooltip("가드가 데미지를 차단할 때 재생할 사운드")]
+        public AudioClip guardBlockSfxClip;
         
         [Header("스턴 효과 설정")]
         [Tooltip("스턴 지속 턴 수")]
         public int stunDuration = 1;
 
+        [Header("스턴 효과 아이콘")]
+        [Tooltip("스턴 효과 UI 아이콘")]
+        public Sprite stunIcon;
+
         [Header("치유 효과 설정")]
         [Tooltip("치유량")]
         public int healAmount = 0;
+
+        [Header("치유 효과 이펙트/사운드")]
+        [Tooltip("치유 시 재생할 비주얼 이펙트 프리팹")]
+        public GameObject healEffectPrefab;
+
+        [Tooltip("치유 시 재생할 사운드")]
+        public AudioClip healSfxClip;
         
         [Header("드로우 효과 설정")]
         [Tooltip("드로우 수")]

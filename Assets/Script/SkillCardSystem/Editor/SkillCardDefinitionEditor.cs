@@ -13,7 +13,6 @@ namespace Game.SkillCardSystem.Editor
     public class SkillCardDefinitionEditor : UnityEditor.Editor
     {
         private SkillCardDefinition card;
-        private bool showPresentation = true;
         private bool showConfiguration = true;
         
         private void OnEnable()
@@ -29,11 +28,6 @@ namespace Game.SkillCardSystem.Editor
             
             // 필수 정보 섹션
             DrawRequiredInfo();
-            
-            EditorGUILayout.Space();
-            
-            // 연출 구성 섹션
-            DrawPresentationSection();
             
             EditorGUILayout.Space();
             
@@ -64,37 +58,6 @@ namespace Game.SkillCardSystem.Editor
             EditorGUI.indentLevel--;
         }
         
-        private void DrawPresentationSection()
-        {
-            showPresentation = EditorGUILayout.Foldout(showPresentation, "연출 구성", true);
-            
-            if (showPresentation)
-            {
-                EditorGUI.indentLevel++;
-                DrawPresentationSettings(card.presentation);
-                EditorGUI.indentLevel--;
-            }
-        }
-        
-        private void DrawPresentationSettings(CardPresentation presentation)
-        {
-            // 사운드 섹션
-            EditorGUILayout.LabelField("사운드", EditorStyles.boldLabel);
-            EditorGUI.indentLevel++;
-            presentation.sfxClip = (AudioClip)EditorGUILayout.ObjectField("SFX Clip", presentation.sfxClip, typeof(AudioClip), false);
-            EditorGUI.indentLevel--;
-            
-            EditorGUILayout.Space();
-            
-            // 비주얼 이펙트 섹션
-            EditorGUILayout.LabelField("비주얼 이펙트", EditorStyles.boldLabel);
-            EditorGUI.indentLevel++;
-            presentation.visualEffectPrefab = (GameObject)EditorGUILayout.ObjectField("Effect Prefab", presentation.visualEffectPrefab, typeof(GameObject), false);
-            EditorGUI.indentLevel--;
-            
-            EditorGUILayout.Space();
-            EditorGUILayout.HelpBox("연출 타이밍은 각 시스템(AudioSystem, DOTween Pro)에서 관리됩니다.", MessageType.Info);
-        }
         
         private void DrawConfigurationSection()
         {
@@ -154,10 +117,23 @@ namespace Game.SkillCardSystem.Editor
         {
             EditorGUILayout.LabelField("데미지 설정", EditorStyles.boldLabel);
             EditorGUI.indentLevel++;
+            
+            EditorGUILayout.LabelField("데미지 수치", EditorStyles.boldLabel);
+            EditorGUI.indentLevel++;
             config.baseDamage = EditorGUILayout.IntField("기본 데미지", config.baseDamage);
             config.hits = EditorGUILayout.IntField("공격 횟수", config.hits);
             config.ignoreGuard = EditorGUILayout.Toggle("방어 무효화", config.ignoreGuard);
             config.ignoreCounter = EditorGUILayout.Toggle("반격 무효화", config.ignoreCounter);
+            EditorGUI.indentLevel--;
+            
+            EditorGUILayout.Space();
+            
+            EditorGUILayout.LabelField("데미지 이펙트/사운드", EditorStyles.boldLabel);
+            EditorGUI.indentLevel++;
+            config.sfxClip = (AudioClip)EditorGUILayout.ObjectField("SFX Clip", config.sfxClip, typeof(AudioClip), false);
+            config.visualEffectPrefab = (GameObject)EditorGUILayout.ObjectField("Effect Prefab", config.visualEffectPrefab, typeof(GameObject), false);
+            EditorGUI.indentLevel--;
+            
             EditorGUI.indentLevel--;
         }
 
@@ -224,21 +200,47 @@ namespace Game.SkillCardSystem.Editor
                 EditorGUILayout.LabelField("출혈 효과 설정", EditorStyles.boldLabel);
                 settings.bleedAmount = EditorGUILayout.IntField("출혈량", settings.bleedAmount);
                 settings.bleedDuration = EditorGUILayout.IntField("출혈 지속 시간", settings.bleedDuration);
+                
+                EditorGUILayout.Space();
+                EditorGUILayout.LabelField("출혈 아이콘/이펙트/사운드", EditorStyles.boldLabel);
+                settings.bleedIcon = (Sprite)EditorGUILayout.ObjectField("출혈 효과 아이콘", settings.bleedIcon, typeof(Sprite), false);
+                settings.bleedActivateEffectPrefab = (GameObject)EditorGUILayout.ObjectField("출혈 효과 적용 이펙트", settings.bleedActivateEffectPrefab, typeof(GameObject), false);
+                settings.bleedActivateSfxClip = (AudioClip)EditorGUILayout.ObjectField("출혈 효과 적용 사운드", settings.bleedActivateSfxClip, typeof(AudioClip), false);
+                settings.bleedPerTurnEffectPrefab = (GameObject)EditorGUILayout.ObjectField("출혈 턴당 이펙트", settings.bleedPerTurnEffectPrefab, typeof(GameObject), false);
+                settings.bleedPerTurnSfxClip = (AudioClip)EditorGUILayout.ObjectField("출혈 턴당 사운드", settings.bleedPerTurnSfxClip, typeof(AudioClip), false);
             }
             else if (effectSO is CounterEffectSO)
             {
                 EditorGUILayout.LabelField("반격 효과 설정", EditorStyles.boldLabel);
                 settings.counterDuration = EditorGUILayout.IntField("반격 지속 턴 수", settings.counterDuration);
+                
+                EditorGUILayout.Space();
+                EditorGUILayout.LabelField("반격 아이콘/이펙트/사운드", EditorStyles.boldLabel);
+                settings.counterIcon = (Sprite)EditorGUILayout.ObjectField("반격 효과 아이콘", settings.counterIcon, typeof(Sprite), false);
+                settings.counterActivateEffectPrefab = (GameObject)EditorGUILayout.ObjectField("반격 버프 적용 이펙트", settings.counterActivateEffectPrefab, typeof(GameObject), false);
+                settings.counterActivateSfxClip = (AudioClip)EditorGUILayout.ObjectField("반격 버프 적용 사운드", settings.counterActivateSfxClip, typeof(AudioClip), false);
             }
             else if (effectSO is GuardEffectSO)
             {
                 EditorGUILayout.LabelField("가드 효과 설정", EditorStyles.boldLabel);
                 settings.guardDuration = EditorGUILayout.IntField("가드 지속 턴 수", settings.guardDuration);
+                
+                EditorGUILayout.Space();
+                EditorGUILayout.LabelField("가드 아이콘/이펙트/사운드", EditorStyles.boldLabel);
+                settings.guardIcon = (Sprite)EditorGUILayout.ObjectField("가드 효과 아이콘", settings.guardIcon, typeof(Sprite), false);
+                settings.guardActivateEffectPrefab = (GameObject)EditorGUILayout.ObjectField("가드 버프 적용 이펙트", settings.guardActivateEffectPrefab, typeof(GameObject), false);
+                settings.guardActivateSfxClip = (AudioClip)EditorGUILayout.ObjectField("가드 버프 적용 사운드", settings.guardActivateSfxClip, typeof(AudioClip), false);
+                settings.guardBlockEffectPrefab = (GameObject)EditorGUILayout.ObjectField("가드 차단 이펙트", settings.guardBlockEffectPrefab, typeof(GameObject), false);
+                settings.guardBlockSfxClip = (AudioClip)EditorGUILayout.ObjectField("가드 차단 사운드", settings.guardBlockSfxClip, typeof(AudioClip), false);
             }
             else if (effectSO is StunEffectSO)
             {
                 EditorGUILayout.LabelField("스턴 효과 설정", EditorStyles.boldLabel);
                 settings.stunDuration = EditorGUILayout.IntField("스턴 지속 턴 수", settings.stunDuration);
+                
+                EditorGUILayout.Space();
+                EditorGUILayout.LabelField("스턴 아이콘", EditorStyles.boldLabel);
+                settings.stunIcon = (Sprite)EditorGUILayout.ObjectField("스턴 효과 아이콘", settings.stunIcon, typeof(Sprite), false);
             }
             else if (effectSO is CardUseStackEffectSO)
             {
@@ -250,6 +252,11 @@ namespace Game.SkillCardSystem.Editor
             {
                 EditorGUILayout.LabelField("치유 효과 설정", EditorStyles.boldLabel);
                 settings.healAmount = EditorGUILayout.IntField("치유량", settings.healAmount);
+                
+                EditorGUILayout.Space();
+                EditorGUILayout.LabelField("치유 이펙트/사운드", EditorStyles.boldLabel);
+                settings.healEffectPrefab = (GameObject)EditorGUILayout.ObjectField("치유 이펙트", settings.healEffectPrefab, typeof(GameObject), false);
+                settings.healSfxClip = (AudioClip)EditorGUILayout.ObjectField("치유 사운드", settings.healSfxClip, typeof(AudioClip), false);
             }
             else if (effectSO is ResourceGainEffectSO)
             {
