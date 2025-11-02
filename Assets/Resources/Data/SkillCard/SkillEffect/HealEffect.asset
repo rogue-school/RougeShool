@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a91b8dd4696a05c4abd28ea7be6f7fe6, type: 3}
   m_Name: HealEffect
   m_EditorClassIdentifier: 
-  effectName: 
+  effectName: "\uD68C\uBCF5"
   description: 
   effectIcon: {fileID: 3266114987532570557, guid: 8f16522edadc5c54b8457af0ebfe232a, type: 3}
   baseHealAmount: 5
   maxHealAmount: 0
-  visualEffectPrefab: {fileID: 1730494339451064891, guid: 1a23dbabcd192db4e8db74db74b88d61, type: 3}
+  visualEffectPrefab: {fileID: 0}

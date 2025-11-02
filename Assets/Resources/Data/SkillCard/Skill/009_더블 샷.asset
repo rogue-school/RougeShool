@@ -27,6 +27,8 @@ MonoBehaviour:
       hits: 1
       ignoreGuard: 0
       ignoreCounter: 0
+      sfxClip: {fileID: 0}
+      visualEffectPrefab: {fileID: 4203527421569735854, guid: d189a9259cac7744d8baf4468fb85239, type: 3}
     hasResource: 1
     resourceConfig:
       cost: 1

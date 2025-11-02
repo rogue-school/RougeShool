@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 97a804dfa3cab074c86817b6284bc46e, type: 3}
   m_Name: GuardEffect
   m_EditorClassIdentifier: 
-  effectName: 
+  effectName: "\uAC00\uB4DC"
   description: 
-  effectIcon: {fileID: -4066868676949960861, guid: e851fb3ce7002f146b013d4ddca5fbe9, type: 3}
-  visualEffectPrefab: {fileID: 8913217842006883145, guid: aee1face6295eee4abf08b6aabf93c63, type: 3}
+  effectIcon: {fileID: 0}

@@ -98,25 +98,28 @@ namespace Game.SkillCardSystem.UI.Mappers
 
                         if (so is BleedEffectSO)
                         {
+                            string effectName = GetEffectName(so, "출혈");
+                            
                             if (cs != null && cs.bleedAmount > 0)
                             {
-                                ruleLines.Add(KoreanTextHelper.FormatBleedEffectText(cs.bleedAmount, cs.bleedDuration));
+                                ruleLines.Add(KoreanTextHelper.FormatBleedEffectText(cs.bleedAmount, cs.bleedDuration, effectName));
                             }
                             model.Effects.Add(new TooltipModel.EffectRow
                             {
-                                Name = "출혈",
+                                Name = effectName,
                                 Description = cs != null ? $"{cs.bleedAmount}, {cs.bleedDuration}턴" : "적용",
                                 Color = UnityEngine.Color.red
                             });
                         }
                         {
+                            string effectName = GetEffectName(so, "치유");
                             if (cs != null && cs.healAmount > 0)
                             {
                                 ruleLines.Add($"체력을 {cs.healAmount} 회복합니다.");
                             }
                             model.Effects.Add(new TooltipModel.EffectRow
                             {
-                                Name = "치유",
+                                Name = effectName,
                                 Description = cs != null ? $"{cs.healAmount}" : "회복",
                                 Color = UnityEngine.Color.green
                             });
@@ -124,10 +127,11 @@ namespace Game.SkillCardSystem.UI.Mappers
 
                         if (so is GuardEffectSO)
                         {
-                            ruleLines.Add("가드 1을 얻습니다.");
+                            string effectName = GetEffectName(so, "가드");
+                            ruleLines.Add($"{effectName} 1을 얻습니다.");
                             model.Effects.Add(new TooltipModel.EffectRow
                             {
-                                Name = "가드",
+                                Name = effectName,
                                 Description = "+1",
                                 Color = UnityEngine.Color.blue
                             });
@@ -135,6 +139,7 @@ namespace Game.SkillCardSystem.UI.Mappers
 
                         if (so is StunEffectSO)
                         {
+                            string effectName = GetEffectName(so, "스턴");
                             if (cs != null && cs.stunDuration > 0)
                             {
                                 ruleLines.Add($"대상을 {cs.stunDuration}턴 동안 기절시킵니다.");
@@ -145,7 +150,7 @@ namespace Game.SkillCardSystem.UI.Mappers
                             }
                             model.Effects.Add(new TooltipModel.EffectRow
                             {
-                                Name = "스턴",
+                                Name = effectName,
                                 Description = cs != null && cs.stunDuration > 0 ? $"{cs.stunDuration}턴" : "적용",
                                 Color = UnityEngine.Color.red
                             });
@@ -153,6 +158,7 @@ namespace Game.SkillCardSystem.UI.Mappers
 
                         if (so is CounterEffectSO)
                         {
+                            string effectName = GetEffectName(so, "반격");
                             if (cs != null && cs.counterDuration > 0)
                             {
                                 ruleLines.Add($"{cs.counterDuration}턴 동안 공격받으면 즉시 반격합니다.");
@@ -163,7 +169,7 @@ namespace Game.SkillCardSystem.UI.Mappers
                             }
                             model.Effects.Add(new TooltipModel.EffectRow
                             {
-                                Name = "반격",
+                                Name = effectName,
                                 Description = cs != null && cs.counterDuration > 0 ? $"{cs.counterDuration}턴" : "적용",
                                 Color = UnityEngine.Color.yellow
                             });
@@ -171,6 +177,7 @@ namespace Game.SkillCardSystem.UI.Mappers
 
                         if (so is CardUseStackEffectSO)
                         {
+                            string effectName = GetEffectName(so, "스택");
                             if (cs != null && cs.stackIncreasePerUse > 0)
                             {
                                 var inc = cs.stackIncreasePerUse;
@@ -179,7 +186,7 @@ namespace Game.SkillCardSystem.UI.Mappers
                             }
                             model.Effects.Add(new TooltipModel.EffectRow
                             {
-                                Name = "스택",
+                                Name = effectName,
                                 Description = cs != null && cs.stackIncreasePerUse > 0 ? $"+{cs.stackIncreasePerUse}" : "+스택",
                                 Color = new Color(0.8f, 0.8f, 1f)
                             });
@@ -406,25 +413,28 @@ namespace Game.SkillCardSystem.UI.Mappers
 
                         if (so is BleedEffectSO)
                         {
+                            string effectName = GetEffectName(so, "출혈");
+                            
                             if (cs != null && cs.bleedAmount > 0)
                             {
-                                ruleLines.Add(KoreanTextHelper.FormatBleedEffectText(cs.bleedAmount, cs.bleedDuration));
+                                ruleLines.Add(KoreanTextHelper.FormatBleedEffectText(cs.bleedAmount, cs.bleedDuration, effectName));
                             }
                             model.Effects.Add(new TooltipModel.EffectRow
                             {
-                                Name = "출혈",
+                                Name = effectName,
                                 Description = cs != null ? $"{cs.bleedAmount}, {cs.bleedDuration}턴" : "적용",
                                 Color = UnityEngine.Color.red
                             });
                         }
                         {
+                            string effectName = GetEffectName(so, "치유");
                             if (cs != null && cs.healAmount > 0)
                             {
                                 ruleLines.Add($"체력을 {cs.healAmount} 회복합니다.");
                             }
                             model.Effects.Add(new TooltipModel.EffectRow
                             {
-                                Name = "치유",
+                                Name = effectName,
                                 Description = cs != null ? $"{cs.healAmount}" : "회복",
                                 Color = UnityEngine.Color.green
                             });
@@ -432,10 +442,11 @@ namespace Game.SkillCardSystem.UI.Mappers
 
                         if (so is GuardEffectSO)
                         {
-                            ruleLines.Add("가드 1을 얻습니다.");
+                            string effectName = GetEffectName(so, "가드");
+                            ruleLines.Add($"{effectName} 1을 얻습니다.");
                             model.Effects.Add(new TooltipModel.EffectRow
                             {
-                                Name = "가드",
+                                Name = effectName,
                                 Description = "+1",
                                 Color = UnityEngine.Color.blue
                             });
@@ -443,6 +454,7 @@ namespace Game.SkillCardSystem.UI.Mappers
 
                         if (so is StunEffectSO)
                         {
+                            string effectName = GetEffectName(so, "스턴");
                             if (cs != null && cs.stunDuration > 0)
                             {
                                 ruleLines.Add($"대상을 {cs.stunDuration}턴 동안 기절시킵니다.");
@@ -453,7 +465,7 @@ namespace Game.SkillCardSystem.UI.Mappers
                             }
                             model.Effects.Add(new TooltipModel.EffectRow
                             {
-                                Name = "스턴",
+                                Name = effectName,
                                 Description = cs != null && cs.stunDuration > 0 ? $"{cs.stunDuration}턴" : "적용",
                                 Color = UnityEngine.Color.red
                             });
@@ -461,6 +473,7 @@ namespace Game.SkillCardSystem.UI.Mappers
 
                         if (so is CounterEffectSO)
                         {
+                            string effectName = GetEffectName(so, "반격");
                             if (cs != null && cs.counterDuration > 0)
                             {
                                 ruleLines.Add($"{cs.counterDuration}턴 동안 공격받으면 즉시 반격합니다.");
@@ -471,7 +484,7 @@ namespace Game.SkillCardSystem.UI.Mappers
                             }
                             model.Effects.Add(new TooltipModel.EffectRow
                             {
-                                Name = "반격",
+                                Name = effectName,
                                 Description = cs != null && cs.counterDuration > 0 ? $"{cs.counterDuration}턴" : "적용",
                                 Color = UnityEngine.Color.yellow
                             });
@@ -479,6 +492,7 @@ namespace Game.SkillCardSystem.UI.Mappers
 
                         if (so is CardUseStackEffectSO)
                         {
+                            string effectName = GetEffectName(so, "스택");
                             if (cs != null && cs.stackIncreasePerUse > 0)
                             {
                                 var inc = cs.stackIncreasePerUse;
@@ -487,7 +501,7 @@ namespace Game.SkillCardSystem.UI.Mappers
                             }
                             model.Effects.Add(new TooltipModel.EffectRow
                             {
-                                Name = "스택",
+                                Name = effectName,
                                 Description = cs != null && cs.stackIncreasePerUse > 0 ? $"+{cs.stackIncreasePerUse}" : "+스택",
                                 Color = new Color(0.8f, 0.8f, 1f)
                             });
@@ -522,6 +536,28 @@ namespace Game.SkillCardSystem.UI.Mappers
             }
             model.DescriptionRichText = SimpleRich.EmphasizeNumbers(sb.ToString().TrimEnd());
             return model;
+        }
+
+        /// <summary>
+        /// 이펙트 SO에서 이름을 가져옵니다.
+        /// </summary>
+        /// <param name="effectSO">이펙트 SO</param>
+        /// <param name="defaultName">기본 이름</param>
+        /// <returns>이펙트 이름</returns>
+        private static string GetEffectName(SkillCardEffectSO effectSO, string defaultName)
+        {
+            if (effectSO == null) return defaultName;
+            
+            string soName = effectSO.GetEffectName();
+            if (!string.IsNullOrWhiteSpace(soName))
+            {
+                return soName;
+            }
+            else
+            {
+                // GetEffectName()이 비어있으면 SO의 name 사용
+                return effectSO.name;
+            }
         }
 
         /// <summary>

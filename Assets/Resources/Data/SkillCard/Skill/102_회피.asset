@@ -18,7 +18,7 @@ MonoBehaviour:
   description: 
   artwork: {fileID: 7784363581341926264, guid: 9c096f5e2652cfd4faa8342b08733f32, type: 3}
   presentation:
-    sfxClip: {fileID: 8300000, guid: 78954d39d73d7e04f83b3000648774f8, type: 3}
+    sfxClip: {fileID: 0}
     visualEffectPrefab: {fileID: 0}
   configuration:
     hasDamage: 0
@@ -27,6 +27,8 @@ MonoBehaviour:
       hits: 1
       ignoreGuard: 0
       ignoreCounter: 0
+      sfxClip: {fileID: 0}
+      visualEffectPrefab: {fileID: 0}
     hasResource: 0
     resourceConfig:
       cost: 0
@@ -41,10 +43,26 @@ MonoBehaviour:
         ignoreCounter: 0
         bleedAmount: 0
         bleedDuration: 0
+        bleedIcon: {fileID: 0}
+        bleedActivateEffectPrefab: {fileID: 0}
+        bleedActivateSfxClip: {fileID: 0}
+        bleedPerTurnEffectPrefab: {fileID: 0}
+        bleedPerTurnSfxClip: {fileID: 0}
         counterDuration: 1
+        counterIcon: {fileID: 0}
+        counterActivateEffectPrefab: {fileID: 0}
+        counterActivateSfxClip: {fileID: 0}
         guardDuration: 1
+        guardIcon: {fileID: 7784363581341926264, guid: 9c096f5e2652cfd4faa8342b08733f32, type: 3}
+        guardActivateEffectPrefab: {fileID: 8913217842006883145, guid: aee1face6295eee4abf08b6aabf93c63, type: 3}
+        guardActivateSfxClip: {fileID: 8300000, guid: 695c3919f0cc0cd4991e2ce375b5ba9d, type: 3}
+        guardBlockEffectPrefab: {fileID: 8913217842006883145, guid: aee1face6295eee4abf08b6aabf93c63, type: 3}
+        guardBlockSfxClip: {fileID: 8300000, guid: 1c5f6174cf4a0ff4da0679a5c0dce564, type: 3}
         stunDuration: 1
+        stunIcon: {fileID: 0}
         healAmount: 0
+        healEffectPrefab: {fileID: 0}
+        healSfxClip: {fileID: 0}
         drawCount: 0
         resourceDelta: 0
         stackIncreasePerUse: 1

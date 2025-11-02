@@ -27,6 +27,8 @@ MonoBehaviour:
       hits: 1
       ignoreGuard: 0
       ignoreCounter: 0
+      sfxClip: {fileID: 0}
+      visualEffectPrefab: {fileID: 4203527421569735854, guid: d189a9259cac7744d8baf4468fb85239, type: 3}
     hasResource: 0
     resourceConfig:
       cost: 0
@@ -41,10 +43,26 @@ MonoBehaviour:
         ignoreCounter: 0
         bleedAmount: 0
         bleedDuration: 0
+        bleedIcon: {fileID: 0}
+        bleedActivateEffectPrefab: {fileID: 0}
+        bleedActivateSfxClip: {fileID: 0}
+        bleedPerTurnEffectPrefab: {fileID: 0}
+        bleedPerTurnSfxClip: {fileID: 0}
         counterDuration: 1
+        counterIcon: {fileID: 0}
+        counterActivateEffectPrefab: {fileID: 0}
+        counterActivateSfxClip: {fileID: 0}
         guardDuration: 1
+        guardIcon: {fileID: 0}
+        guardActivateEffectPrefab: {fileID: 0}
+        guardActivateSfxClip: {fileID: 0}
+        guardBlockEffectPrefab: {fileID: 0}
+        guardBlockSfxClip: {fileID: 0}
         stunDuration: 1
+        stunIcon: {fileID: 0}
         healAmount: 0
+        healEffectPrefab: {fileID: 0}
+        healSfxClip: {fileID: 0}
         drawCount: 0
         resourceDelta: 0
         stackIncreasePerUse: 1
@@ -52,4 +70,4 @@ MonoBehaviour:
         targetCardId: 
       executionOrder: 0
     ownerPolicy: 0
-  currentAttackPowerStacks: 0
+  currentAttackPowerStacks: 1
