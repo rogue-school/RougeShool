@@ -708,7 +708,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 40, y: 40}
+  m_SizeDelta: {x: 20, y: 30}
   m_Pivot: {x: 0.5, y: 0.50000024}
 --- !u!114 &185243246
 MonoBehaviour:
@@ -1477,7 +1477,7 @@ GameObject:
   - component: {fileID: 355008065}
   - component: {fileID: 355008064}
   m_Layer: 5
-  m_Name: Weapon Selection (1)
+  m_Name: Weapon Selection
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2367,7 +2367,7 @@ GameObject:
   - component: {fileID: 793426374}
   - component: {fileID: 793426373}
   m_Layer: 5
-  m_Name: PlayerPortrait (1)
+  m_Name: PlayerPortrait
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
