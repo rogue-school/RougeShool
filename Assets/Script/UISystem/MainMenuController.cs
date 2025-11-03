@@ -85,6 +85,10 @@ namespace Game.UISystem
         [Tooltip("캐릭터 다시 선택 버튼")]
         [SerializeField] private Button reselectCharacterButton;
 
+        [Header("튜토리얼")]
+        [Tooltip("튜토리얼 건너뛰기 토글")]
+        [SerializeField] private Toggle skipTutorialToggle;
+
         [Header("미리보기 카드(실제 프리팹)")]
         [Tooltip("메뉴에서 미리보기로 사용할 스킬 카드 UI 프리팹")]
         [SerializeField] private SkillCardUI skillCardUIPrefab;
@@ -252,6 +256,13 @@ namespace Game.UISystem
             TryBindUnderlineHover(startGameButton);
             TryBindUnderlineHover(reselectCharacterButton);
             TryBindUnderlineHover(backToMenuButton);
+
+            // 튜토리얼 스킵 토글 초기 상태 복원
+            if (skipTutorialToggle != null)
+            {
+                int savedSkip = PlayerPrefs.GetInt("TUTORIAL_SKIP", 0);
+                skipTutorialToggle.isOn = savedSkip == 1;
+            }
         }
         
         /// <summary>
@@ -653,6 +664,19 @@ namespace Game.UISystem
                 
                 if (transitionManager != null)
                 {
+                    // 튜토리얼 스킵 설정 저장 (게임 시작 시점)
+                    try
+                    {
+                        int skip = (skipTutorialToggle != null && skipTutorialToggle.isOn) ? 1 : 0;
+                        PlayerPrefs.SetInt("TUTORIAL_SKIP", skip);
+                        PlayerPrefs.Save();
+                        GameLogger.LogInfo($"[MainMenuController] 튜토리얼 스킵 설정 저장: {(skip == 1 ? "ON" : "OFF")}", GameLogger.LogCategory.UI);
+                    }
+                    catch (System.Exception ex)
+                    {
+                        GameLogger.LogWarning($"[MainMenuController] 튜토리얼 스킵 설정 저장 실패: {ex.Message}", GameLogger.LogCategory.UI);
+                    }
+
                     GameLogger.LogInfo("[MainMenuController] SceneTransitionManager 발견됨, 스테이지 씬으로 전환 시작", GameLogger.LogCategory.UI);
                     await transitionManager.TransitionToStageScene();
                     GameLogger.LogInfo("[MainMenuController] 스테이지 씬으로 전환 완료", GameLogger.LogCategory.UI);

@@ -117,6 +117,21 @@ namespace Game.StageSystem.Manager
         /// </summary>
         private void Start()
         {
+            // 튜토리얼 실행 여부 결정 및 저장 (메인 메뉴 설정/최초 완료 상태 반영)
+            try
+            {
+                bool skip = PlayerPrefs.GetInt("TUTORIAL_SKIP", 0) == 1;
+                bool done = PlayerPrefs.GetInt("TUTORIAL_DONE", 0) == 1;
+                int shouldRun = (!skip && !done) ? 1 : 0;
+                PlayerPrefs.SetInt("TUTORIAL_SHOULD_RUN", shouldRun);
+                PlayerPrefs.Save();
+                GameLogger.LogInfo($"[StageManager] 튜토리얼 실행 플래그 설정: {(shouldRun == 1 ? "실행" : "미실행")}", GameLogger.LogCategory.UI);
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogWarning($"[StageManager] 튜토리얼 실행 플래그 설정 실패: {ex.Message}", GameLogger.LogCategory.UI);
+            }
+
             // 새게임 요청 플래그 확인 및 초기화
             if (PlayerPrefs.GetInt("NEW_GAME_REQUESTED", 0) == 1)
             {
