@@ -84,11 +84,9 @@ namespace Game.TutorialSystem
             _canvasGroup.DOFade(1f, tweenTime);
             _canvasGroup.blocksRaycasts = true;
             _canvasGroup.interactable = true;
-            // 페이지 모드일 경우 첫 페이지로 초기화
-            if (pagesRoot != null)
-            {
+            // 페이지 모드일 경우 첫 페이지로 초기화 (리스트 우선, 없으면 pagesRoot)
+            if (GetPageCount() > 0)
                 SetActivePage(initialPageIndex);
-            }
         }
 
         /// <summary>
@@ -131,15 +129,7 @@ namespace Game.TutorialSystem
         /// </summary>
         public void NextPage()
         {
-            if (pagesRoot == null)
-            {
-                // 단일 메시지 모드: 닫기 동작으로 사용
-                Hide();
-                Completed?.Invoke();
-                return;
-            }
-
-            int pageCount = pagesRoot.childCount;
+            int pageCount = GetPageCount();
             if (pageCount <= 0)
             {
                 Hide();
