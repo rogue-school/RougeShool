@@ -47,34 +47,26 @@ namespace Game.TutorialSystem
 
         private void Awake()
         {
-            // 실행 여부 결정 (StageManager가 미리 계산한 플래그 우선)
-            int shouldRun = PlayerPrefs.GetInt("TUTORIAL_SHOULD_RUN", -1);
-            if (shouldRun == -1)
-            {
-                bool skip = PlayerPrefs.GetInt("TUTORIAL_SKIP", 0) == 1;
-                bool done = PlayerPrefs.GetInt("TUTORIAL_DONE", 0) == 1;
-                _shouldRun = !skip && !done;
-            }
-            else
-            {
-                _shouldRun = shouldRun == 1;
-            }
-            GameLogger.LogInfo($"[TutorialManager] Gate: SHOULD_RUN={_shouldRun}, SKIP={PlayerPrefs.GetInt("TUTORIAL_SKIP",0)}, DONE={PlayerPrefs.GetInt("TUTORIAL_DONE",0)}", GameLogger.LogCategory.UI);
+            // 정책 변경: 한 번만 보는 튜토리얼이 아님. 메인 메뉴의 스킵 토글만 반영
+            bool skip = PlayerPrefs.GetInt("TUTORIAL_SKIP", 0) == 1;
+            _shouldRun = !skip;
+            GameLogger.LogInfo($"[TutorialManager] Gate: SHOULD_RUN={_shouldRun} (by SKIP only), SKIP={PlayerPrefs.GetInt("TUTORIAL_SKIP",0)}", GameLogger.LogCategory.UI);
         }
 
         private void Start()
         {
+            // 항상 이벤트는 구독하여, 런타임에 게이트 변경/강제 실행 시 반응하도록 함
+            TrySubscribe();
+
             if (!_shouldRun)
             {
-                // 컴포넌트를 비활성화하지는 않습니다. (플래그가 바뀌거나 강제 표시를 위해 상시 활성 유지)
                 GameLogger.LogInfo("[TutorialManager] 튜토리얼 미실행 – 게이트에 의해 대기 상태", GameLogger.LogCategory.UI);
+                // 게이트가 열리면(ForceShow 등) Player 턴 이벤트에서 시작됨
                 return;
             }
 
-            TrySubscribe();
-            PrepareOverlay();
-            // 이미 플레이어 턴 상태로 들어가 있었다면 즉시 시작
-            TryStartIfAlreadyPlayerTurn();
+            // 시작 시 즉시 표시하지 않습니다. 전투 상태머신이 PlayerTurn으로 진입하며
+            // TurnCount가 증가한 이벤트(최초 1 이상)에서 시작합니다.
         }
 
         private void OnDestroy()
@@ -146,7 +138,9 @@ namespace Game.TutorialSystem
 
         private void StartTutorialIfReady()
         {
+            if (!_shouldRun) return; // 게이트 닫힘
             if (_isRunning || _startedOnce) return;
+            if (_overlay == null) PrepareOverlay();
             _isRunning = true;
             _startedOnce = true;
             GameLogger.LogInfo("[TutorialManager] 튜토리얼 실행 시작", GameLogger.LogCategory.UI);
@@ -166,10 +160,8 @@ namespace Game.TutorialSystem
         {
             if (!_isRunning) return;
             _isRunning = false;
-            PlayerPrefs.SetInt("TUTORIAL_DONE", 1);
-            PlayerPrefs.SetInt("TUTORIAL_SHOULD_RUN", 0);
-            PlayerPrefs.Save();
-            GameLogger.LogInfo("[TutorialManager] 튜토리얼 완료 – DONE 플래그 저장", GameLogger.LogCategory.UI);
+            // 한 번만 보는 정책이 아니므로 완료 후 플래그 저장하지 않음
+            GameLogger.LogInfo("[TutorialManager] 튜토리얼 완료", GameLogger.LogCategory.UI);
         }
 
         private void OnOverlayCompleted()
@@ -278,14 +270,20 @@ namespace Game.TutorialSystem
         private void ForceShowNow()
         {
             PlayerPrefs.SetInt("TUTORIAL_SKIP", 0);
-            PlayerPrefs.SetInt("TUTORIAL_DONE", 0);
-            PlayerPrefs.SetInt("TUTORIAL_SHOULD_RUN", 1);
             PlayerPrefs.Save();
             _shouldRun = true;
             _startedOnce = false;
             _isRunning = false;
-            if (_overlay == null) PrepareOverlay();
             StartTutorialIfReady();
+        }
+
+        [ContextMenu("Tutorial/Clear Flags (Done/Skip)")]
+        private void ClearFlags()
+        {
+            PlayerPrefs.SetInt("TUTORIAL_SKIP", 0);
+            PlayerPrefs.Save();
+            GameLogger.LogInfo("[TutorialManager] 튜토리얼 플래그 초기화 (SKIP=0)", GameLogger.LogCategory.UI);
+            _shouldRun = true;
         }
 
         private Game.CombatSystem.Interface.TurnType ConvertTurnType(Game.CombatSystem.Manager.TurnManager.TurnType t)
@@ -321,9 +319,15 @@ namespace Game.TutorialSystem
             // 1) 아직 시작 전이면, 플레이어 턴 진입 시 첫 페이지를 표시합니다.
             if (!_isRunning)
             {
-                if (turn == TurnType.Player)
+                if (_shouldRun && turn == TurnType.Player)
                 {
-                    StartCoroutine(ShowNextFrame());
+                    // 초기 TurnController 설정 단계의 Player 이벤트(턴 카운트 0)를 건너뛰고,
+                    // 실제 상태머신 진입 후 SetTurnAndIncrement로 1 이상이 된 뒤 시작합니다.
+                    int count = _turnController?.TurnCount ?? 0;
+                    if (count >= 1)
+                    {
+                        StartCoroutine(ShowNextFrame());
+                    }
                 }
                 return;
             }
@@ -360,8 +364,8 @@ namespace Game.TutorialSystem
         [ContextMenu("Restart Tutorial (Editor)")]
         public void RestartTutorial()
         {
-            PlayerPrefs.SetInt("TUTORIAL_DONE", 0);
-            PlayerPrefs.SetInt("TUTORIAL_SHOULD_RUN", 1);
+            // 스킵만 해제하면 다음 Player 턴에서 다시 실행됨
+            PlayerPrefs.SetInt("TUTORIAL_SKIP", 0);
             PlayerPrefs.Save();
             _isRunning = false;
             StartTutorialIfReady();
