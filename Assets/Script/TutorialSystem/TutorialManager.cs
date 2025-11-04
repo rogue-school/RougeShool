@@ -174,11 +174,10 @@ namespace Game.TutorialSystem
             // 페이지 완료 → 드래그/드랍 안내 후 실제 플레이 대기 단계로 전환
             if (_step == Step.PagesIntroAndTooltip)
             {
-                _step = Step.WaitCardUseEnemyThenPlayer;
-                _sawEnemyTurn = false;
-                GameLogger.LogInfo("[TutorialManager] 페이지 완료 → 카드 사용 및 턴 복귀 대기", GameLogger.LogCategory.UI);
-                // 안내를 닫고 실제 플레이를 유도
+                // 단일 세션 1회 표출로 단순화: 첫 페이지 시퀀스 완료 시 튜토리얼 종료
                 if (_overlay != null) _overlay.Hide();
+                _step = Step.Done;
+                CompleteTutorial();
                 return;
             }
 
