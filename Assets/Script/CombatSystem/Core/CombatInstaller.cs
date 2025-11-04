@@ -173,6 +173,15 @@ public class CombatInstaller : MonoInstaller
                 Container.Bind<AutoSaveManager>().FromInstance(autoSave).AsSingle();
                 GameLogger.LogInfo(" AutoSaveManager 바인딩 완료 (씬에서 찾기)");
             }
+
+        // CombatStatsAggregator 바인딩 (전투 통계 수집기)
+        if (!Container.HasBinding<Game.CombatSystem.Manager.CombatStatsAggregator>())
+        {
+            Container.BindInterfacesAndSelfTo<Game.CombatSystem.Manager.CombatStatsAggregator>()
+                .FromNewComponentOnNewGameObject()
+                .AsSingle();
+            GameLogger.LogInfo(" CombatStatsAggregator 자동 생성 및 바인딩 완료");
+        }
     }
 
 

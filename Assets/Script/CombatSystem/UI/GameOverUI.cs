@@ -21,7 +21,7 @@ namespace Game.CombatSystem.UI
         [Tooltip("게임 오버 텍스트")]
         [SerializeField] private TextMeshProUGUI gameOverText;
 
-        [Tooltip("재시작 버튼")]
+        // 재시작 버튼은 사용하지 않음 (디자인에 따라 비활성/숨김)
         [SerializeField] private Button restartButton;
 
         [Tooltip("메인 메뉴 버튼")]
@@ -65,9 +65,10 @@ namespace Game.CombatSystem.UI
             }
 
             // 버튼 이벤트 연결
+            // 재시작 버튼 제거 요구: 버튼이 있다면 비활성화/숨김 처리
             if (restartButton != null)
             {
-                restartButton.onClick.AddListener(OnRestartClicked);
+                restartButton.gameObject.SetActive(false);
             }
 
             if (mainMenuButton != null)
@@ -108,50 +109,7 @@ namespace Game.CombatSystem.UI
             }
         }
 
-        /// <summary>
-        /// 재시작 버튼 클릭 처리
-        /// </summary>
-        private async void OnRestartClicked()
-        {
-            try
-            {
-                GameLogger.LogInfo("[GameOverUI] 재시작 버튼 클릭", GameLogger.LogCategory.UI);
-
-                HideGameOver();
-
-                // 세이브 매니저 찾기
-                var saveManager = FindFirstObjectByType<SaveManager>();
-                if (saveManager != null)
-                {
-                    saveManager.InitializeNewGame();
-                    GameLogger.LogInfo("[GameOverUI] 게임 상태 초기화 완료", GameLogger.LogCategory.Save);
-                }
-
-                // 새게임 플래그 설정
-                PlayerPrefs.SetInt("NEW_GAME_REQUESTED", 1);
-                PlayerPrefs.SetInt("RESUME_REQUESTED", 0);
-                PlayerPrefs.SetInt("START_STAGE_NUMBER", 1);
-                PlayerPrefs.SetInt("START_ENEMY_INDEX", 0);
-                PlayerPrefs.Save();
-
-                // 씬 전환
-                if (sceneTransitionManager != null)
-                {
-                    await sceneTransitionManager.TransitionToStageScene();
-                }
-                else
-                {
-                    GameLogger.LogWarning("[GameOverUI] SceneTransitionManager가 없습니다. 직접 씬 전환", GameLogger.LogCategory.UI);
-                    UnityEngine.SceneManagement.SceneManager.LoadScene("StageScene");
-                }
-
-                GameLogger.LogInfo("[GameOverUI] 재시작 완료", GameLogger.LogCategory.UI);
-            }
-            catch (System.Exception ex)
-            {
-                GameLogger.LogError($"재시작 실패: {ex.Message}", GameLogger.LogCategory.Error);
-            }
-        }
+        // 재시작 로직은 미사용 (요구사항에 따라 제거)
 
         /// <summary>
         /// 메인 메뉴 버튼 클릭 처리

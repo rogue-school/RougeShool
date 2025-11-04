@@ -52,6 +52,16 @@ namespace Game.CharacterSystem.Manager
         /// </summary>
         public event Action<ICharacter> OnPlayerCharacterReady;
 
+        /// <summary>
+        /// 리소스를 소모했을 때 발생하는 이벤트 (amount)
+        /// </summary>
+        public event Action<int> OnResourceConsumed;
+
+        /// <summary>
+        /// 리소스를 획득/회복했을 때 발생하는 이벤트 (amount)
+        /// </summary>
+        public event Action<int> OnResourceRestored;
+
         #endregion
 
         #region DI
@@ -513,13 +523,33 @@ namespace Game.CharacterSystem.Manager
         /// </summary>
         /// <param name="amount">소모할 양</param>
         /// <returns>소모 성공 여부</returns>
-        public bool ConsumeResource(int amount) => resourceManager.ConsumeResource(amount);
+        public bool ConsumeResource(int amount)
+        {
+            bool consumed = resourceManager.ConsumeResource(amount);
+            if (consumed)
+            {
+                try { OnResourceConsumed?.Invoke(amount); }
+                catch (Exception ex)
+                {
+                    GameLogger.LogWarning($"[PlayerManager] OnResourceConsumed 핸들러 예외: {ex.Message}", GameLogger.LogCategory.Character);
+                }
+            }
+            return consumed;
+        }
 
         /// <summary>
         /// 리소스를 회복합니다.
         /// </summary>
         /// <param name="amount">회복할 양</param>
-        public void RestoreResource(int amount) => resourceManager.RestoreResource(amount);
+        public void RestoreResource(int amount)
+        {
+            resourceManager.RestoreResource(amount);
+            try { OnResourceRestored?.Invoke(amount); }
+            catch (Exception ex)
+            {
+                GameLogger.LogWarning($"[PlayerManager] OnResourceRestored 핸들러 예외: {ex.Message}", GameLogger.LogCategory.Character);
+            }
+        }
 
         /// <summary>
         /// 리소스를 최대치로 회복합니다.

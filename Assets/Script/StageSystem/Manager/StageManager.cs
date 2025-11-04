@@ -1005,6 +1005,8 @@ namespace Game.StageSystem.Manager
             
             // 스테이지 완료 이벤트 발생
             OnStageCompleted?.Invoke(currentStage);
+            // 전투 UI 브리지: 보상 종료 후 최종적으로 스테이지가 완료되면 승리 이벤트 발행
+            Game.CombatSystem.CombatEvents.RaiseVictory();
             
             GameLogger.LogInfo($"스테이지 완료 (승리!): {currentStage.stageName} (스테이지 {currentStage.stageNumber})", GameLogger.LogCategory.Combat);
             
