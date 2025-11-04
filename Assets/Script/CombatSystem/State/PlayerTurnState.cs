@@ -2,6 +2,8 @@ using UnityEngine;
 using Game.ItemSystem.Interface;
 using Game.ItemSystem.Service;
 using Game.ItemSystem.Data;
+using Game.ItemSystem.Data.Reward;
+using Game.ItemSystem.Service.Reward;
 
 namespace Game.CombatSystem.State
 {
@@ -128,15 +130,34 @@ namespace Game.CombatSystem.State
                 return;
             }
 
-            // 랜덤 액티브 아이템 생성 (1개)
-            var rewards = DefaultRewardService.GenerateDefaultActiveReward(count: 1);
-            if (rewards == null || rewards.Length == 0)
+            // 가중치가 적용된 보상 풀에서 액티브 아이템 1개 선택
+            ActiveItemDefinition rewardItem = null;
+            var pools = Resources.LoadAll<RewardPool>("Data/Reward");
+            if (pools != null && pools.Length > 0)
             {
-                LogWarning("액티브 아이템 보상을 생성할 수 없습니다");
-                return;
+                var tempConfig = ScriptableObject.CreateInstance<EnemyRewardConfig>();
+                tempConfig.activeCount = 1;
+                tempConfig.activePools = pools;
+
+                var generator = new RewardGenerator();
+                var generated = generator.GenerateActive(tempConfig, player: null, stageIndex: 0, runSeed: 0);
+                if (generated != null && generated.Length > 0)
+                {
+                    rewardItem = generated[0];
+                }
             }
 
-            var rewardItem = rewards[0];
+            // 풀을 찾지 못했거나 생성 실패 시 기본 랜덤 보상으로 폴백
+            if (rewardItem == null)
+            {
+                var rewards = DefaultRewardService.GenerateDefaultActiveReward(count: 1);
+                if (rewards == null || rewards.Length == 0)
+                {
+                    LogWarning("액티브 아이템 보상을 생성할 수 없습니다");
+                    return;
+                }
+                rewardItem = rewards[0];
+            }
             if (rewardItem == null)
             {
                 LogWarning("생성된 액티브 아이템이 null입니다");
