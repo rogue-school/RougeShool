@@ -2522,14 +2522,14 @@ MonoBehaviour:
   bgmVolume: 0.1
   sfxVolume: 1
   fadeTime: 1
-  mainMenuBGM: {fileID: 8300000, guid: a7503b5a743eef54a8441cdd7549102a, type: 3}
+  mainMenuBGM: {fileID: 8300000, guid: 4112d8028dfe04f4489bba412d468981, type: 3}
   stageEnemyBGMConfigs:
   - stageData: {fileID: 11400000, guid: ebcb895c197bd934c92f968aea234a27, type: 2}
     enemyBGMs:
     - enemy: {fileID: 11400000, guid: 108def2387b83ed419893e2db0906a67, type: 2}
-      bgm: {fileID: 8300000, guid: 725f1a68ceaf83847a310b9549aca2e4, type: 3}
+      bgm: {fileID: 8300000, guid: c1ce27d81bac8fe40829c3d8ecbc015d, type: 3}
     - enemy: {fileID: 11400000, guid: 8cadc1d0ca0290d459798eeaf8d20958, type: 2}
-      bgm: {fileID: 8300000, guid: d4dac6797058f084da5f440df75790a2, type: 3}
+      bgm: {fileID: 8300000, guid: 891b959a134125f46b927711093ef086, type: 3}
 --- !u!1 &2125065708
 GameObject:
   m_ObjectHideFlags: 0

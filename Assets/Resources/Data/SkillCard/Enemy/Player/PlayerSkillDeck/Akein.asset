@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ffc016728dd14b149a7f6697a7dde445, type: 3}
+  m_Name: Akein
+  m_EditorClassIdentifier: 
+  cardEntries:
+  - cardDefinition: {fileID: 11400000, guid: 3d223c84e3f302d44a3898d59476bc0d, type: 2}
+    quantity: 5
+  - cardDefinition: {fileID: 11400000, guid: 4a24e3a1761bce042b4cb403dc4601c4, type: 2}
+    quantity: 3
+  - cardDefinition: {fileID: 11400000, guid: 04abc0b37ae55144b9dd46479b287a04, type: 2}
+    quantity: 4
+  - cardDefinition: {fileID: 11400000, guid: eb3a49d8d06fef145b6d11fa3594d1c7, type: 2}
+    quantity: 2
+  - cardDefinition: {fileID: 11400000, guid: c5921eae76219584398aaa75d7a34171, type: 2}
+    quantity: 3
+  - cardDefinition: {fileID: 11400000, guid: ba4ed920ca6f56a4db4470228c4d2c4d, type: 2}
+    quantity: 2
+  - cardDefinition: {fileID: 11400000, guid: 2b4769eb1b4adb540a991305d8970fbb, type: 2}
+    quantity: 1
+  - cardDefinition: {fileID: 11400000, guid: 8a0c82097ec50a646bc391177972f07b, type: 2}
+    quantity: 1

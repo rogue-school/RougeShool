@@ -14,43 +14,43 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   entries:
   - item: {fileID: 11400000, guid: 3cb5e3479510827458e2598a331e408e, type: 2}
-    weight: 1
+    weight: 100
     tags: []
     minStage: 0
     maxStage: 5
     uniquePerRun: 0
   - item: {fileID: 11400000, guid: a2552aaa7b5ddb241a0e3097e236f2de, type: 2}
-    weight: 1
+    weight: 100
     tags: []
     minStage: 0
     maxStage: 5
     uniquePerRun: 0
   - item: {fileID: 11400000, guid: 39c1b6ba9f1aec848a4aad24c4892672, type: 2}
-    weight: 1
+    weight: 25
     tags: []
     minStage: 0
     maxStage: 5
     uniquePerRun: 0
   - item: {fileID: 11400000, guid: 30a6d292842a2c04b97c0f9f86f7dc4a, type: 2}
-    weight: 1
+    weight: 10
     tags: []
     minStage: 0
     maxStage: 5
     uniquePerRun: 0
   - item: {fileID: 11400000, guid: 1caced4adf7cebf479de0eda33d605af, type: 2}
-    weight: 1
+    weight: 20
     tags: []
     minStage: 0
     maxStage: 5
     uniquePerRun: 0
   - item: {fileID: 11400000, guid: 14c307b0a6a787c42a08ec5d01720ce4, type: 2}
-    weight: 1
+    weight: 30
     tags: []
     minStage: 0
     maxStage: 5
     uniquePerRun: 0
   - item: {fileID: 11400000, guid: 362d0136b5a2d41478c223a118e81363, type: 2}
-    weight: 1
+    weight: 20
     tags: []
     minStage: 0
     maxStage: 5
