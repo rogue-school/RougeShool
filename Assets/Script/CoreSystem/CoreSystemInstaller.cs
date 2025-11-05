@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using Game.ItemSystem.Interface;
 using Game.ItemSystem.Service;
 using Game.ItemSystem.Service.Reward;
+using Game.CoreSystem.Statistics;
 
 namespace Game.CoreSystem
 {
@@ -36,6 +37,8 @@ namespace Game.CoreSystem
         [SerializeField] private SkillCardTooltipManager skillCardTooltipManager;
         [SerializeField] private BuffDebuffTooltipManager buffDebuffTooltipManager;
         [SerializeField] private Game.ItemSystem.Manager.ItemTooltipManager itemTooltipManager;
+        [SerializeField] private GameSessionStatistics gameSessionStatistics;
+        [SerializeField] private StatisticsManager statisticsManager;
         
         [Header("CharacterSystem 매니저들")]
         [SerializeField] private PlayerManager playerManager;
@@ -85,7 +88,9 @@ namespace Game.CoreSystem
                 (skillCardTooltipManager, "SkillCardTooltipManager", null),
                 (buffDebuffTooltipManager, "BuffDebuffTooltipManager", null),
                 (itemTooltipManager, "ItemTooltipManager", null),
-                (playerManager, "PlayerManager", null)
+                (playerManager, "PlayerManager", null),
+                (gameSessionStatistics, "GameSessionStatistics", null),
+                (statisticsManager, "StatisticsManager", typeof(IStatisticsManager))
             };
 
             foreach (var (instance, name, interfaceType) in managers)
@@ -140,6 +145,15 @@ namespace Game.CoreSystem
             Container.Bind<IRewardGenerator>()
                 .To<RewardGenerator>()
                 .AsSingle();
+
+            // ICombatStatsProvider: 전투 통계 수집기 (StageScene에서 생성되지만 전역에서 찾기)
+            Container.Bind<Game.CombatSystem.Manager.ICombatStatsProvider>()
+                .FromMethod(_ =>
+                {
+                    return Object.FindFirstObjectByType<Game.CombatSystem.Manager.CombatStatsAggregator>(FindObjectsInactive.Include);
+                })
+                .AsSingle()
+                .NonLazy();
         }
 
         #endregion

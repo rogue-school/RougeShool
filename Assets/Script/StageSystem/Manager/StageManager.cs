@@ -14,6 +14,7 @@ using Game.CoreSystem.Utility;
 using DG.Tweening;
 using Game.CoreSystem.Audio;
 using Game.ItemSystem.Runtime;
+using Game.CoreSystem.Statistics;
 
 namespace Game.StageSystem.Manager
 {
@@ -86,6 +87,8 @@ namespace Game.StageSystem.Manager
         [Zenject.Inject(Optional = true)] private Game.CharacterSystem.Manager.PlayerManager playerManager;
         [Zenject.Inject(Optional = true)] private Game.CombatSystem.State.CombatStateMachine combatStateMachine;
         [Zenject.Inject(Optional = true)] private Game.SkillCardSystem.Manager.PlayerHandManager playerHandManagerConcrete;
+        [Zenject.Inject(Optional = true)] private GameSessionStatistics gameSessionStatistics;
+        [Zenject.Inject(Optional = true)] private IStatisticsManager statisticsManager;
 
         private bool isWaitingForPlayer = false;
 
@@ -139,6 +142,9 @@ namespace Game.StageSystem.Manager
                 InitializeGameStateForNewGame();
                 PlayerPrefs.SetInt("NEW_GAME_REQUESTED", 0);
                 PlayerPrefs.Save();
+                
+                // 통계 세션 시작
+                StartStatisticsSession();
                 
                 // 새게임인 경우 기본 스테이지 로드
                 LoadDefaultStage();
@@ -198,6 +204,29 @@ namespace Game.StageSystem.Manager
         private void OnPlayerReady(ICharacter player)
         {
             GameLogger.LogInfo($"[StageManager] 플레이어 준비 완료: {player.GetCharacterName()}", GameLogger.LogCategory.Combat);
+
+            // 통계 세션의 캐릭터 이름 업데이트 (세션이 이미 시작된 경우)
+            if (gameSessionStatistics != null && gameSessionStatistics.IsSessionActive)
+            {
+                string characterName = "Unknown";
+                var playerData = player.CharacterData as PlayerCharacterData;
+                if (playerData != null)
+                {
+                    characterName = playerData.DisplayName ?? "Unknown";
+                }
+                else
+                {
+                    characterName = player.GetCharacterName();
+                }
+                
+                // 세션 데이터의 캐릭터 이름 업데이트
+                var sessionData = gameSessionStatistics.GetCurrentSessionData();
+                if (sessionData != null)
+                {
+                    sessionData.selectedCharacterName = characterName;
+                    GameLogger.LogInfo($"[StageManager] 통계 세션의 캐릭터 이름 업데이트: {characterName}", GameLogger.LogCategory.Save);
+                }
+            }
 
             // 대기 중이었다면 스테이지 시작
             if (isWaitingForPlayer)
@@ -289,6 +318,7 @@ namespace Game.StageSystem.Manager
         
         /// <summary>
         /// 다른 씬으로 전환하기 전에 현재 진행 상황을 저장합니다.
+        /// 메인 씬으로 전환되는 경우 통계도 저장합니다.
         /// </summary>
         public async Task SaveProgressBeforeSceneTransition()
         {
@@ -302,6 +332,15 @@ namespace Game.StageSystem.Manager
                 else
                 {
                     GameLogger.LogWarning("[StageManager] SaveManager를 찾을 수 없습니다", GameLogger.LogCategory.Save);
+                }
+
+                // 메인 씬으로 전환되는 경우 통계 저장 (게임 종료로 간주)
+                var currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+                if (currentScene == "StageScene" || currentScene == "BattleScene")
+                {
+                    // 메인 씬으로 전환되는 경우 통계 저장
+                    GameLogger.LogInfo("[StageManager] 메인 씬 전환 감지 - 통계 저장 시작", GameLogger.LogCategory.Save);
+                    await EndStatisticsSession();
                 }
             }
             catch (System.Exception ex)
@@ -1030,20 +1069,140 @@ namespace Game.StageSystem.Manager
         /// <summary>
         /// 게임을 완료합니다. (모든 스테이지 완료)
         /// </summary>
-        private void CompleteGame()
+        private async void CompleteGame()
         {
             isGameCompleted = true;
             OnGameCompleted?.Invoke();
             GameLogger.LogInfo("🎉 게임 완료! 모든 스테이지를 클리어했습니다!", GameLogger.LogCategory.Combat);
+            
+            // 통계 세션 종료 및 저장
+            await EndStatisticsSession();
         }
         
 
-        public void FailStage()
+        public async void FailStage()
         {
             progressState = StageProgressState.Failed;
             OnProgressChanged?.Invoke(progressState);
             
             GameLogger.LogWarning($"스테이지 실패: {currentStage?.stageName ?? "Unknown"} (스테이지 {currentStage?.stageNumber ?? 1})", GameLogger.LogCategory.Combat);
+            
+            // 통계 세션 종료 및 저장
+            await EndStatisticsSession();
+        }
+
+        /// <summary>
+        /// 통계 세션 시작
+        /// </summary>
+        private void StartStatisticsSession()
+        {
+            GameLogger.LogInfo("[StageManager] 통계 세션 시작 시도", GameLogger.LogCategory.Save);
+
+            if (gameSessionStatistics == null)
+            {
+                gameSessionStatistics = FindFirstObjectByType<GameSessionStatistics>(FindObjectsInactive.Include);
+                GameLogger.LogInfo($"[StageManager] GameSessionStatistics 찾기: {(gameSessionStatistics != null ? "성공" : "실패")}", GameLogger.LogCategory.Save);
+            }
+
+            if (gameSessionStatistics == null)
+            {
+                GameLogger.LogWarning("[StageManager] GameSessionStatistics를 찾을 수 없습니다. 통계 수집을 시작할 수 없습니다.", GameLogger.LogCategory.Save);
+                return;
+            }
+
+            // PlayerManager가 null이면 찾기
+            if (playerManager == null)
+            {
+                playerManager = FindFirstObjectByType<PlayerManager>(FindObjectsInactive.Include);
+                GameLogger.LogInfo($"[StageManager] PlayerManager 찾기: {(playerManager != null ? "성공" : "실패")}", GameLogger.LogCategory.Save);
+            }
+
+            string characterName = "Unknown";
+            if (playerManager != null && playerManager.GetPlayer() != null)
+            {
+                var playerData = playerManager.GetPlayer().CharacterData as PlayerCharacterData;
+                if (playerData != null)
+                {
+                    characterName = playerData.DisplayName ?? "Unknown";
+                    GameLogger.LogInfo($"[StageManager] PlayerCharacterData에서 캐릭터 이름 가져옴: {characterName}", GameLogger.LogCategory.Save);
+                }
+                else
+                {
+                    // CharacterData가 없으면 캐릭터 이름 직접 가져오기
+                    characterName = playerManager.GetPlayer().GetCharacterName();
+                    GameLogger.LogInfo($"[StageManager] GetCharacterName()에서 캐릭터 이름 가져옴: {characterName}", GameLogger.LogCategory.Save);
+                }
+            }
+            else
+            {
+                GameLogger.LogWarning("[StageManager] PlayerManager 또는 Player를 찾을 수 없습니다. 캐릭터 이름을 'Unknown'으로 설정합니다.", GameLogger.LogCategory.Save);
+            }
+
+            gameSessionStatistics.StartSession(characterName);
+            GameLogger.LogInfo($"[StageManager] 통계 세션 시작 완료: {characterName}", GameLogger.LogCategory.Save);
+        }
+
+        /// <summary>
+        /// 통계 세션 종료 및 저장
+        /// </summary>
+        private async Task EndStatisticsSession()
+        {
+            GameLogger.LogInfo("[StageManager] 통계 세션 종료 및 저장 시작", GameLogger.LogCategory.Save);
+
+            if (gameSessionStatistics == null)
+            {
+                gameSessionStatistics = FindFirstObjectByType<GameSessionStatistics>(FindObjectsInactive.Include);
+                GameLogger.LogInfo($"[StageManager] GameSessionStatistics 찾기: {(gameSessionStatistics != null ? "성공" : "실패")}", GameLogger.LogCategory.Save);
+            }
+
+            if (statisticsManager == null)
+            {
+                statisticsManager = FindFirstObjectByType<StatisticsManager>(FindObjectsInactive.Include);
+                GameLogger.LogInfo($"[StageManager] StatisticsManager 찾기: {(statisticsManager != null ? "성공" : "실패")}", GameLogger.LogCategory.Save);
+            }
+
+            if (gameSessionStatistics == null)
+            {
+                GameLogger.LogWarning("[StageManager] GameSessionStatistics를 찾을 수 없습니다. 통계 저장을 건너뜁니다.", GameLogger.LogCategory.Save);
+                return;
+            }
+
+            // 이미 저장된 세션이면 건너뛰기
+            if (gameSessionStatistics.IsSaved)
+            {
+                GameLogger.LogInfo("[StageManager] 세션이 이미 저장되었습니다. 통계 저장을 건너뜁니다.", GameLogger.LogCategory.Save);
+                return;
+            }
+
+            // 세션이 비활성화되어 있어도 데이터가 있으면 저장 시도
+            var sessionData = gameSessionStatistics.GetCurrentSessionData();
+            
+            if (sessionData == null)
+            {
+                GameLogger.LogWarning("[StageManager] 세션 데이터가 없습니다. 통계 저장을 건너뜁니다.", GameLogger.LogCategory.Save);
+                return;
+            }
+
+            if (statisticsManager == null)
+            {
+                GameLogger.LogWarning("[StageManager] StatisticsManager를 찾을 수 없습니다. 통계 저장을 건너뜁니다.", GameLogger.LogCategory.Save);
+                return;
+            }
+
+            // 세션이 활성화되어 있으면 종료 처리
+            if (gameSessionStatistics.IsSessionActive)
+            {
+                gameSessionStatistics.EndSession();
+                sessionData = gameSessionStatistics.GetCurrentSessionData();
+            }
+            else
+            {
+                GameLogger.LogWarning("[StageManager] 활성화된 통계 세션이 없지만, 기존 세션 데이터를 저장합니다.", GameLogger.LogCategory.Save);
+            }
+
+            await statisticsManager.SaveSessionStatistics(sessionData);
+            gameSessionStatistics.MarkAsSaved();
+            GameLogger.LogInfo("[StageManager] 통계 세션 저장 완료", GameLogger.LogCategory.Save);
         }
 
         public event System.Action<StageProgressState> OnProgressChanged;

@@ -268,7 +268,11 @@ namespace Game.CombatSystem.State
                 $"[CombatStateMachine] 전투 시작{(enemyData != null ? $" - 적: {enemyName}" : "")}",
                 GameLogger.LogCategory.Combat);
 
+            // 인스턴스 이벤트 발생
             OnCombatStarted?.Invoke();
+
+            // 정적 이벤트 발생 (통계 시스템 등 전역 구독자용)
+            CombatEvents.RaiseCombatStarted();
 
             // 초기화 상태로 시작 (적 데이터 전달)
             var initState = new CombatInitState();

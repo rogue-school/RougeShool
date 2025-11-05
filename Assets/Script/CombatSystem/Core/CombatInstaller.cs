@@ -175,12 +175,19 @@ public class CombatInstaller : MonoInstaller
             }
 
         // CombatStatsAggregator 바인딩 (전투 통계 수집기)
+        // DontDestroyOnLoad로 설정하여 씬 전환 후에도 유지되도록 함
         if (!Container.HasBinding<Game.CombatSystem.Manager.CombatStatsAggregator>())
         {
+            var aggregatorGO = new GameObject("CombatStatsAggregator");
+            DontDestroyOnLoad(aggregatorGO);
+            var aggregator = aggregatorGO.AddComponent<Game.CombatSystem.Manager.CombatStatsAggregator>();
+            
             Container.BindInterfacesAndSelfTo<Game.CombatSystem.Manager.CombatStatsAggregator>()
-                .FromNewComponentOnNewGameObject()
+                .FromInstance(aggregator)
                 .AsSingle();
-            GameLogger.LogInfo(" CombatStatsAggregator 자동 생성 및 바인딩 완료");
+            
+            Container.QueueForInject(aggregator);
+            GameLogger.LogInfo(" CombatStatsAggregator 자동 생성 및 바인딩 완료 (DontDestroyOnLoad)", GameLogger.LogCategory.Combat);
         }
     }
 

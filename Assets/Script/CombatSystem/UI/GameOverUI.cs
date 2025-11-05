@@ -5,6 +5,8 @@ using Game.CoreSystem.Utility;
 using Game.CoreSystem.Manager;
 using Game.CoreSystem.Interface;
 using Game.CoreSystem.Save;
+using Game.CoreSystem.Statistics;
+using Zenject;
 
 namespace Game.CombatSystem.UI
 {
@@ -29,6 +31,10 @@ namespace Game.CombatSystem.UI
 
         // 씬 전환 매니저
         private ISceneTransitionManager sceneTransitionManager;
+        
+        // 통계 매니저
+        [Inject(Optional = true)] private GameSessionStatistics gameSessionStatistics;
+        [Inject(Optional = true)] private IStatisticsManager statisticsManager;
 
         private void Start()
         {
@@ -82,7 +88,7 @@ namespace Game.CombatSystem.UI
         /// <summary>
         /// 게임 오버 화면을 표시합니다.
         /// </summary>
-        public void ShowGameOver()
+        public async void ShowGameOver()
         {
             if (panel != null)
             {
@@ -95,6 +101,78 @@ namespace Game.CombatSystem.UI
             {
                 gameOverText.text = "게임 오버";
             }
+
+            // 통계 세션 종료 및 저장
+            await SaveStatisticsSession();
+        }
+
+        /// <summary>
+        /// 통계 세션 저장
+        /// </summary>
+        private async System.Threading.Tasks.Task SaveStatisticsSession()
+        {
+            GameLogger.LogInfo("[GameOverUI] 통계 세션 저장 시도", GameLogger.LogCategory.Save);
+
+            if (gameSessionStatistics == null)
+            {
+                gameSessionStatistics = FindFirstObjectByType<GameSessionStatistics>(FindObjectsInactive.Include);
+                GameLogger.LogInfo($"[GameOverUI] GameSessionStatistics 찾기: {(gameSessionStatistics != null ? "성공" : "실패")}", GameLogger.LogCategory.Save);
+            }
+
+            if (statisticsManager == null)
+            {
+                statisticsManager = FindFirstObjectByType<StatisticsManager>(FindObjectsInactive.Include);
+                GameLogger.LogInfo($"[GameOverUI] StatisticsManager 찾기: {(statisticsManager != null ? "성공" : "실패")}", GameLogger.LogCategory.Save);
+            }
+
+            if (gameSessionStatistics == null)
+            {
+                GameLogger.LogWarning("[GameOverUI] GameSessionStatistics를 찾을 수 없습니다. 통계 저장을 건너뜁니다.", GameLogger.LogCategory.Save);
+                return;
+            }
+
+            // 이미 저장된 세션이면 건너뛰기
+            if (gameSessionStatistics.IsSaved)
+            {
+                GameLogger.LogInfo("[GameOverUI] 세션이 이미 저장되었습니다. 통계 저장을 건너뜁니다.", GameLogger.LogCategory.Save);
+                return;
+            }
+
+            // 세션이 비활성화되어 있어도 데이터가 있으면 저장 시도
+            var sessionData = gameSessionStatistics.GetCurrentSessionData();
+            
+            if (sessionData == null)
+            {
+                GameLogger.LogWarning("[GameOverUI] 세션 데이터가 없습니다. 통계 저장을 건너뜁니다.", GameLogger.LogCategory.Save);
+                return;
+            }
+
+            // 세션이 활성화되어 있으면 종료 처리
+            if (gameSessionStatistics.IsSessionActive)
+            {
+                gameSessionStatistics.EndSession();
+                sessionData = gameSessionStatistics.GetCurrentSessionData();
+                
+                if (sessionData == null)
+                {
+                    GameLogger.LogWarning("[GameOverUI] 세션 종료 후 데이터가 null입니다. 통계 저장을 건너뜁니다.", GameLogger.LogCategory.Save);
+                    return;
+                }
+            }
+            else
+            {
+                GameLogger.LogWarning("[GameOverUI] 활성화된 세션이 없지만, 기존 세션 데이터를 저장합니다.", GameLogger.LogCategory.Save);
+            }
+
+            if (statisticsManager == null)
+            {
+                GameLogger.LogWarning("[GameOverUI] StatisticsManager를 찾을 수 없습니다. 통계 저장을 건너뜁니다.", GameLogger.LogCategory.Save);
+                return;
+            }
+
+            await statisticsManager.SaveSessionStatistics(sessionData);
+            gameSessionStatistics.MarkAsSaved();
+            GameLogger.LogInfo("[GameOverUI] 통계 세션 저장 완료", GameLogger.LogCategory.Save);
         }
 
         /// <summary>

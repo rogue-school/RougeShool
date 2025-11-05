@@ -120,9 +120,9 @@ namespace Game.ItemSystem.Interface
         event Action<ActiveItemDefinition, int> OnActiveItemAdded;
 
         /// <summary>
-        /// 액티브 아이템 제거 이벤트
+        /// 액티브 아이템 제거 이벤트 (아이템 정의, 슬롯 인덱스)
         /// </summary>
-        event Action<int> OnActiveItemRemoved;
+        event Action<ActiveItemDefinition, int> OnActiveItemRemoved;
 
         /// <summary>
         /// 패시브 아이템 추가 이벤트

@@ -353,9 +353,9 @@ namespace Game.ItemSystem.Runtime
 			RefreshSlots();
 		}
 
-		private void HandleItemRemoved(int slotIndex)
+		private void HandleItemRemoved(Game.ItemSystem.Data.ActiveItemDefinition item, int slotIndex)
 		{
-			GameLogger.LogInfo($"[Inventory] 제거 이벤트: 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
+			GameLogger.LogInfo($"[Inventory] 제거 이벤트: {item?.DisplayName ?? "Unknown"} (슬롯 {slotIndex})", GameLogger.LogCategory.UI);
 			RefreshSlots();
 		}
 

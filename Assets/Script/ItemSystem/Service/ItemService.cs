@@ -49,7 +49,7 @@ namespace Game.ItemSystem.Service
         [System.Obsolete("Use OnEnhancementUpgraded instead")]
         public event Action<string, int> OnSkillStarUpgraded;
         public event Action<ActiveItemDefinition, int> OnActiveItemAdded;
-        public event Action<int> OnActiveItemRemoved;
+        public event Action<ActiveItemDefinition, int> OnActiveItemRemoved;
         public event Action<PassiveItemDefinition> OnPassiveItemAdded;
 
         #endregion
@@ -309,11 +309,14 @@ namespace Game.ItemSystem.Service
                 return false;
             }
 
+            // 제거 전 아이템 정보 저장
+            var removedItem = slot.item;
+
             slot.item = null;
             slot.isEmpty = true;
 
-            OnActiveItemRemoved?.Invoke(slotIndex);
-            GameLogger.LogInfo($"아이템 제거됨: 슬롯 {slotIndex}", GameLogger.LogCategory.Core);
+            OnActiveItemRemoved?.Invoke(removedItem, slotIndex);
+            GameLogger.LogInfo($"아이템 제거됨: {removedItem?.DisplayName ?? "Unknown"} (슬롯 {slotIndex})", GameLogger.LogCategory.Core);
 
             return true;
         }
