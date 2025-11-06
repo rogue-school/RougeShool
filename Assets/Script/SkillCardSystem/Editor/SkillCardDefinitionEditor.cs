@@ -262,6 +262,7 @@ namespace Game.SkillCardSystem.Editor
             {
                 EditorGUILayout.LabelField("자원 획득 효과 설정", EditorStyles.boldLabel);
                 settings.resourceDelta = EditorGUILayout.IntField("자원 획득량", Mathf.Max(0, settings.resourceDelta));
+                settings.resourceGainSfxClip = (AudioClip)EditorGUILayout.ObjectField("자원 획득 사운드", settings.resourceGainSfxClip, typeof(AudioClip), false);
             }
             // TODO: 향후 추가될 EffectSO 타입들을 위한 예약 공간
             // else if (effectSO is DrawEffectSO)

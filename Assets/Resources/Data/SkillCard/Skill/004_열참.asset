@@ -27,7 +27,7 @@ MonoBehaviour:
       hits: 1
       ignoreGuard: 0
       ignoreCounter: 0
-      sfxClip: {fileID: 8300000, guid: 00dce77b07380da4c9d29f6fa85a6ca0, type: 3}
+      sfxClip: {fileID: 8300000, guid: dfa851d7b6e5e5b4bbe81df7487580c1, type: 3}
       visualEffectPrefab: {fileID: 2663204648779552833, guid: 14e254c33e25d82499eb644e4cb9045c, type: 3}
     hasResource: 0
     resourceConfig:
@@ -65,6 +65,7 @@ MonoBehaviour:
         healSfxClip: {fileID: 0}
         drawCount: 0
         resourceDelta: 0
+        resourceGainSfxClip: {fileID: 0}
         stackIncreasePerUse: 1
         maxStacks: 5
         targetCardId: 

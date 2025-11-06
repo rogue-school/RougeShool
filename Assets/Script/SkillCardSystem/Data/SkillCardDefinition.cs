@@ -317,6 +317,9 @@ namespace Game.SkillCardSystem.Data
         [Tooltip("리소스 변화량")]
         public int resourceDelta = 0;
         
+        [Tooltip("자원 획득 시 재생할 사운드")]
+        public AudioClip resourceGainSfxClip;
+        
         [Header("카드 사용 스택 효과 설정")]
         [Tooltip("카드 사용 시 증가할 스택 수")]
         public int stackIncreasePerUse = 1;

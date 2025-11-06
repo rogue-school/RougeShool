@@ -55,9 +55,9 @@ MonoBehaviour:
         guardDuration: 1
         guardIcon: {fileID: -8852535039943177423, guid: f76e00646753dfb4db19c98fb0512adf, type: 3}
         guardActivateEffectPrefab: {fileID: 8913217842006883145, guid: aee1face6295eee4abf08b6aabf93c63, type: 3}
-        guardActivateSfxClip: {fileID: 8300000, guid: 695c3919f0cc0cd4991e2ce375b5ba9d, type: 3}
+        guardActivateSfxClip: {fileID: 8300000, guid: 0e4d2e6a197feea49b5b32b6f3afeabe, type: 3}
         guardBlockEffectPrefab: {fileID: 8913217842006883145, guid: aee1face6295eee4abf08b6aabf93c63, type: 3}
-        guardBlockSfxClip: {fileID: 8300000, guid: 1c5f6174cf4a0ff4da0679a5c0dce564, type: 3}
+        guardBlockSfxClip: {fileID: 8300000, guid: b773d897cc60fd740838dab6f53363d1, type: 3}
         stunDuration: 1
         stunIcon: {fileID: 0}
         healAmount: 0
@@ -65,6 +65,7 @@ MonoBehaviour:
         healSfxClip: {fileID: 0}
         drawCount: 0
         resourceDelta: 0
+        resourceGainSfxClip: {fileID: 0}
         stackIncreasePerUse: 1
         maxStacks: 5
         targetCardId: 

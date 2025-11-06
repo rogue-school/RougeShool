@@ -21,12 +21,12 @@ namespace Game.SkillCardSystem.Effect
 			// 커스텀 설정에 resourceDelta가 있으면 우선 사용
 			if (config.useCustomSettings && config.customSettings != null)
 			{
-				int amount = config.customSettings.resourceDelta;
-				return new ResourceGainEffectCommand(amount);
+                int amount = config.customSettings.resourceDelta;
+                return new ResourceGainEffectCommand(amount, config.customSettings.resourceGainSfxClip);
 			}
 
 			// SO 기본값 사용
-			return config.effectSO.CreateEffectCommand(0);
+            return config.effectSO.CreateEffectCommand(0);
 		}
 	}
 }
