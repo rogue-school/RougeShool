@@ -568,10 +568,10 @@ namespace Game.ItemSystem.Runtime
 			GameLogger.LogInfo($"[RewardPanel] 인벤토리 변경 감지 - 추가: {def?.DisplayName ?? "null"} @ 슬롯 {slot}", GameLogger.LogCategory.UI);
 		}
 
-		private void HandleInventoryChangedSlot(int slot)
+		private void HandleInventoryChangedSlot(Game.ItemSystem.Data.ActiveItemDefinition item, int slot)
 		{
 			// 인벤토리 변경 시 로그만 출력
-			GameLogger.LogInfo($"[RewardPanel] 인벤토리 변경 감지 - 제거: 슬롯 {slot}", GameLogger.LogCategory.UI);
+			GameLogger.LogInfo($"[RewardPanel] 인벤토리 변경 감지 - 제거: {item?.DisplayName ?? "Unknown"} (슬롯 {slot})", GameLogger.LogCategory.UI);
 		}
 
 		private void HandleInventoryUsed(ActiveItemDefinition def, int slot)

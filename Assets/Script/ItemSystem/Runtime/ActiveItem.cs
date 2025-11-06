@@ -233,10 +233,7 @@ namespace Game.ItemSystem.Runtime
 				return false;
 			}
 			
-			// 연출 시작
-			StartPresentation(context);
-			
-			// 효과 실행
+			// 효과 실행 (각 효과 커맨드에서 연출 직접 처리)
 			bool success = ExecuteEffects(context);
 			
 			return success;
@@ -271,51 +268,6 @@ namespace Game.ItemSystem.Runtime
 		
 		#endregion
 		
-		#region === 연출 처리 ===
-		
-		/// <summary>
-		/// 연출을 시작합니다.
-		/// </summary>
-		/// <param name="context">사용 컨텍스트</param>
-		private void StartPresentation(IItemUseContext context)
-		{
-			var presentation = definition.presentation;
-			
-			// 사운드 재생 (즉시, 풀링 우선)
-			if (presentation.sfxClip != null)
-			{
-				PlaySFXPooled(presentation.sfxClip);
-			}
-			
-			// 비주얼 이펙트 생성 (즉시)
-			if (presentation.visualEffectPrefab != null)
-			{
-				CreateVisualEffect(context, presentation);
-			}
-		}
-		
-		private void PlaySFXPooled(AudioClip clip)
-		{
-			if (audioManager == null || clip == null) return;
-			// 전역 오디오 풀을 통한 재생으로 동시 재생/우선순위 대응
-			audioManager.PlaySFXWithPool(clip, 0.9f);
-		}
-		
-		private void CreateVisualEffect(IItemUseContext context, ItemPresentation presentation)
-		{
-			var target = context.Target;
-			var targetTransform = (target as MonoBehaviour)?.transform;
-			if (targetTransform == null) return;
-
-			// 주입된 VFX 매니저 사용(없으면 스킵)
-			if (_vfxManager != null && presentation.visualEffectPrefab != null)
-			{
-				_vfxManager.PlayEffect(presentation.visualEffectPrefab, targetTransform.position);
-			}
-		}
-		
-		#endregion
-		
 		#region === 유틸리티 ===
 		
 		/// <summary>
@@ -323,12 +275,6 @@ namespace Game.ItemSystem.Runtime
 		/// </summary>
 		/// <returns>아이템 정의</returns>
 		public ActiveItemDefinition GetDefinition() => definition;
-		
-		/// <summary>
-		/// 연출 설정을 반환합니다.
-		/// </summary>
-		/// <returns>연출 설정</returns>
-		public ItemPresentation GetPresentation() => definition.presentation;
 		
 		/// <summary>
 		/// 효과 명령을 추가합니다.

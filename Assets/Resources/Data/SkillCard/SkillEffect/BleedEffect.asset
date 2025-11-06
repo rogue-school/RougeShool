@@ -14,7 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   effectName: "\uCD9C\uD608"
   description: 
-  effectIcon: {fileID: 2717919221109400055, guid: 549774a4d5652684d93890dbb305fe2b, type: 3}
+  effectIcon: {fileID: 0}
   bleedAmount: 0
   duration: 0
+  visualEffectPrefab: {fileID: 0}
+  perTurnEffectPrefab: {fileID: 0}
   legacyIcon: {fileID: 0}

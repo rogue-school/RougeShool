@@ -211,9 +211,9 @@ namespace Game.CharacterSystem.UI
             var tooltipManager = Object.FindFirstObjectByType<BuffDebuffTooltipManager>();
             if (tooltipManager != null)
             {
-                // 모델 생성(남은 턴 등 값-페어 포함)은 매니저 내부에서 사용 가능하지만,
-                // 현재 매니저 시그니처를 유지하고 내용 파퓰레이션은 서브 빌더가 처리합니다.
-                tooltipManager.ShowBuffDebuffTooltip(CurrentEffect, transform.position);
+                // 자신의 RectTransform을 전달하여 정확한 위치 계산
+                var rectTransform = GetComponent<RectTransform>();
+                tooltipManager.ShowBuffDebuffTooltip(CurrentEffect, transform.position, rectTransform);
                 GameLogger.LogInfo($"[BuffDebuffSlotView] 툴팁 표시: {GetEffectDisplayName(CurrentEffect)}", GameLogger.LogCategory.UI);
             }
             else
@@ -252,7 +252,7 @@ namespace Game.CharacterSystem.UI
                 case "BleedEffect":
                     return "출혈";
                 case "StunEffect":
-                    return "스턴";
+                    return "기절";
                 case "GuardBuff":
                     return "가드";
                 case "CounterBuff":

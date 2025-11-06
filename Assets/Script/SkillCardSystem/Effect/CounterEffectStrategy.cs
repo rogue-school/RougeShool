@@ -1,3 +1,4 @@
+using UnityEngine;
 using Game.SkillCardSystem.Data;
 using Game.SkillCardSystem.Interface;
 
@@ -19,12 +20,18 @@ namespace Game.SkillCardSystem.Effect
                 return null;
 
             int duration = 1;
+            Sprite icon = null;
+            
             if (config.useCustomSettings && config.customSettings != null)
             {
                 duration = config.customSettings.counterDuration;
+                icon = config.customSettings.counterIcon;
             }
 
-            return new CounterEffectCommand(duration, counterEffectSO.GetIcon());
+            // 아이콘이 설정되지 않았으면 EffectSO에서 가져오기 (폴백)
+            icon ??= counterEffectSO.GetIcon();
+            
+            return new CounterEffectCommand(duration, icon);
         }
     }
 }

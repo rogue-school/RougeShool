@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c09e1b77e536f347b4476bf0d294a5c, type: 3}
   m_Name: ResourceGainEffect
   m_EditorClassIdentifier: 
-  effectName: 
+  effectName: "\uC790\uC6D0 \uC218\uAE09"
   description: 
   effectIcon: {fileID: 0}
   baseResourceAmount: 1

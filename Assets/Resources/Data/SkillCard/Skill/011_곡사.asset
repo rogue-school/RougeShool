@@ -19,14 +19,16 @@ MonoBehaviour:
   artwork: {fileID: -1052562433205533470, guid: 2556da05b18029f448159a0e1f1eabe0, type: 3}
   presentation:
     sfxClip: {fileID: 0}
-    visualEffectPrefab: {fileID: 0}
+    visualEffectPrefab: {fileID: 4203527421569735854, guid: d189a9259cac7744d8baf4468fb85239, type: 3}
   configuration:
     hasDamage: 1
     damageConfig:
-      baseDamage: 5
+      baseDamage: 7
       hits: 1
       ignoreGuard: 1
       ignoreCounter: 1
+      sfxClip: {fileID: 8300000, guid: a5defe9de9de61942bd7529e76387472, type: 3}
+      visualEffectPrefab: {fileID: 4203527421569735854, guid: d189a9259cac7744d8baf4468fb85239, type: 3}
     hasResource: 1
     resourceConfig:
       cost: 3

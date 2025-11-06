@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4c005c7bf88e4f1458175d80d45b7061, type: 3}
   m_Name: CounterEffect
   m_EditorClassIdentifier: 
-  effectName: 
+  effectName: "\uBC18\uACA9"
   description: 
-  effectIcon: {fileID: -2328275288128407278, guid: 638f4518310816540b3a17058a58f41d, type: 3}
+  effectIcon: {fileID: 0}
   duration: 1

@@ -16,9 +16,9 @@ MonoBehaviour:
   displayName: "\uC77C\uC12C"
   displayNameKO: 
   description: 
-  artwork: {fileID: -635304477047082008, guid: d80c2c5d019a4f44bab1c3ec58cbfe12, type: 3}
+  artwork: {fileID: -635304477047082008, guid: 9bff04f63ec37a24abfbad0e8654a78e, type: 3}
   presentation:
-    sfxClip: {fileID: 0}
+    sfxClip: {fileID: 8300000, guid: 6cd114f15d319e246b8483b429f275f8, type: 3}
     visualEffectPrefab: {fileID: 2663204648779552833, guid: 14e254c33e25d82499eb644e4cb9045c, type: 3}
   configuration:
     hasDamage: 1
@@ -27,6 +27,8 @@ MonoBehaviour:
       hits: 1
       ignoreGuard: 1
       ignoreCounter: 1
+      sfxClip: {fileID: 8300000, guid: 4b7d391f1fcb77a4b8d1dbb3fb250b79, type: 3}
+      visualEffectPrefab: {fileID: 2663204648779552833, guid: 14e254c33e25d82499eb644e4cb9045c, type: 3}
     hasResource: 0
     resourceConfig:
       cost: 0

@@ -20,9 +20,12 @@ namespace Game.SkillCardSystem.Effect
 
             if (config.useCustomSettings && config.customSettings != null)
             {
+                // 아이콘이 설정되지 않았으면 EffectSO에서 가져오기 (폴백)
+                var icon = config.customSettings.stunIcon ?? stunEffectSO.GetIcon();
+                
                 return new StunEffectCommand(
                     config.customSettings.stunDuration,
-                    stunEffectSO.GetIcon()
+                    icon
                 );
             }
 

@@ -126,8 +126,8 @@ namespace Game.SkillCardSystem.Effect
             // 🔍 디버그: 최종 데미지 계산 상세 로그
             GameLogger.LogInfo($"[DamageCalc] 💥 기본:{damageAmount} + 스택:{attackBonus} + 아이템:{itemAttackBonus} + 강화:{starBonus} = 최종:{effectiveDamage}", GameLogger.LogCategory.Combat);
 
-            // 반격 버프 처리: 대상이 CounterBuff 보유 시, 들어오는 피해의 절반만 받고 나머지 절반을 공격자에게 반사
-            // 정수 절삭/올림 규칙: 들어오는 피해를 ceil(절반)은 수신, floor(절반)은 반사
+            // 반격 버프 처리: 대상이 CounterBuff 보유 시, 들어오는 피해의 100%를 공격자에게 반사
+            // 대상은 데미지를 받지 않고, 공격자가 원래 데미지의 100%를 받음
             // 단일 히트/다단 히트 모두 동일 규칙 적용
             bool targetHasCounter = false;
             if (target is Game.CharacterSystem.Core.CharacterBase cb)
@@ -180,15 +180,16 @@ namespace Game.SkillCardSystem.Effect
                 // 단일 히트는 즉시 실행
                 if (targetHasCounter && source != null)
                 {
-                    int receive = Mathf.CeilToInt(effectiveDamage * 0.5f);
-                    int reflect = effectiveDamage - receive; // floor
-                    ApplyDamageCustom(target, receive);
-                    totalDamage += receive;
+                    // 반격: 대상은 데미지를 받지 않고, 공격자가 원래 데미지의 100%를 받음
+                    int reflect = effectiveDamage;
                     if (reflect > 0)
                     {
                         source.TakeDamageIgnoreGuard(reflect);
                         totalDamage += reflect;
-                        Debug.Log($"[DamageEffectCommand] 반격: 대상 {receive} 수신, 공격자 {reflect} 반사");
+                        Debug.Log($"[DamageEffectCommand] 반격: 대상 0 수신, 공격자 {reflect} 반사");
+                        
+                        // 반격 이펙트 재생: 적의 공격 이펙트가 적에게 반사되어 나타남
+                        PlayCounterAttackEffect(context, source);
                     }
                 }
                 else
@@ -326,16 +327,17 @@ namespace Game.SkillCardSystem.Effect
                 // 데미지 적용 (반격 고려)
                 if (targetHasCounter && source != null)
                 {
-                    int receive = Mathf.CeilToInt(perHitDamage * 0.5f);
-                    int reflect = perHitDamage - receive;
-                    ApplyDamageCustom(target, receive);
-                    totalDamage += receive;
+                    // 반격: 대상은 데미지를 받지 않고, 공격자가 원래 데미지의 100%를 받음
+                    int reflect = perHitDamage;
                     if (reflect > 0)
                     {
                         source.TakeDamageIgnoreGuard(reflect);
                         totalDamage += reflect;
+                        
+                        // 반격 이펙트 재생: 적의 공격 이펙트가 적에게 반사되어 나타남
+                        PlayCounterAttackEffect(context, source);
                     }
-                    Debug.Log($"[DamageEffectCommand] 반격(멀티히트) step {i + 1}: 대상 {receive}, 반사 {reflect}");
+                    Debug.Log($"[DamageEffectCommand] 반격(멀티히트) step {i + 1}: 대상 0, 반사 {reflect}");
                 }
                 else
                 {
@@ -446,6 +448,58 @@ namespace Game.SkillCardSystem.Effect
             {
                 // CharacterBase가 아닌 경우 일반 TakeDamage 사용
                 target.TakeDamage(damage);
+            }
+        }
+
+        /// <summary>
+        /// 반격 이펙트를 재생합니다. 적의 공격 이펙트가 적에게 반사되어 나타납니다.
+        /// </summary>
+        /// <param name="context">카드 실행 컨텍스트</param>
+        /// <param name="source">공격자 (이펙트가 재생될 대상)</param>
+        private void PlayCounterAttackEffect(ICardExecutionContext context, ICharacter source)
+        {
+            if (context?.Card == null || source == null)
+            {
+                GameLogger.LogWarning("[DamageEffectCommand] 반격 이펙트 재생 실패: context 또는 source가 null입니다.", GameLogger.LogCategory.Combat);
+                return;
+            }
+
+            // 카드의 시각적 이펙트 프리팹 가져오기 (데미지 설정에서)
+            var cardDefinition = context.Card?.CardDefinition;
+            if (cardDefinition == null || !cardDefinition.configuration.hasDamage || cardDefinition.configuration.damageConfig.visualEffectPrefab == null)
+            {
+                GameLogger.LogWarning("[DamageEffectCommand] 반격 이펙트 재생 실패: visualEffectPrefab이 설정되지 않았습니다.", GameLogger.LogCategory.Combat);
+                return;
+            }
+
+            // 공격자의 Transform 가져오기
+            var sourceTransform = (source as MonoBehaviour)?.transform;
+            if (sourceTransform == null)
+            {
+                GameLogger.LogWarning("[DamageEffectCommand] 반격 이펙트 재생 실패: source Transform이 null입니다.", GameLogger.LogCategory.Combat);
+                return;
+            }
+
+            // VFXManager 찾기
+            var vfxManager = UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
+            if (vfxManager != null)
+            {
+                var visualEffectPrefab = cardDefinition.configuration.damageConfig.visualEffectPrefab;
+                
+                // 공격자에게 반격 이펙트 재생
+                var effectInstance = vfxManager.PlayEffectAtCharacterCenter(visualEffectPrefab, sourceTransform);
+                if (effectInstance != null)
+                {
+                    GameLogger.LogInfo($"[DamageEffectCommand] 반격 이펙트 재생 성공: {visualEffectPrefab.name} → {source.GetCharacterName()}", GameLogger.LogCategory.Combat);
+                }
+                else
+                {
+                    GameLogger.LogWarning("[DamageEffectCommand] 반격 이펙트 인스턴스 생성 실패", GameLogger.LogCategory.Combat);
+                }
+            }
+            else
+            {
+                GameLogger.LogWarning("[DamageEffectCommand] 반격 이펙트 재생 실패: VFXManager를 찾을 수 없습니다.", GameLogger.LogCategory.Combat);
             }
         }
 

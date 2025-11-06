@@ -1031,9 +1031,11 @@ namespace Game.SkillCardSystem.UI
                         // 출혈 효과
                         if (customSettings.bleedAmount > 0)
                         {
+                            string effectName = GetEffectNameFromSO(effectConfig.effectSO, "출혈");
+                            
                             effects.Add(new EffectData
                             {
-                                name = "출혈",
+                                name = effectName,
                                 description = $"출혈량: {customSettings.bleedAmount}, 지속: {customSettings.bleedDuration}턴",
                                 iconColor = Color.red,
                                 effectType = EffectType.Debuff
@@ -1043,9 +1045,11 @@ namespace Game.SkillCardSystem.UI
                         // 반격 효과
                         if (customSettings.counterDuration > 0)
                         {
+                            string effectName = GetEffectNameFromSO(effectConfig.effectSO, "반격");
+                            
                             effects.Add(new EffectData
                             {
-                                name = "반격",
+                                name = effectName,
                                 description = $"반격 지속: {customSettings.counterDuration}턴",
                                 iconColor = Color.yellow,
                                 effectType = EffectType.Buff
@@ -1055,9 +1059,11 @@ namespace Game.SkillCardSystem.UI
                         // 가드 효과
                         if (customSettings.guardDuration > 0)
                         {
+                            string effectName = GetEffectNameFromSO(effectConfig.effectSO, "가드");
+                            
                             effects.Add(new EffectData
                             {
-                                name = "가드",
+                                name = effectName,
                                 description = $"가드 지속: {customSettings.guardDuration}턴",
                                 iconColor = Color.blue,
                                 effectType = EffectType.Shield
@@ -1067,9 +1073,11 @@ namespace Game.SkillCardSystem.UI
                         // 스턴 효과
                         if (customSettings.stunDuration > 0)
                         {
+                            string effectName = GetEffectNameFromSO(effectConfig.effectSO, "스턴");
+                            
                             effects.Add(new EffectData
                             {
-                                name = "스턴",
+                                name = effectName,
                                 description = $"스턴 지속: {customSettings.stunDuration}턴",
                                 iconColor = Color.red,
                                 effectType = EffectType.Debuff
@@ -1079,9 +1087,11 @@ namespace Game.SkillCardSystem.UI
                         // 치유 효과
                         if (customSettings.healAmount > 0)
                         {
+                            string effectName = GetEffectNameFromSO(effectConfig.effectSO, "치유");
+                            
                             effects.Add(new EffectData
                             {
-                                name = "치유",
+                                name = effectName,
                                 description = $"치유량: {customSettings.healAmount}",
                                 iconColor = Color.green,
                                 effectType = EffectType.Heal
@@ -1142,6 +1152,28 @@ namespace Game.SkillCardSystem.UI
             if (effectItemComponent != null)
             {
                 effectItemComponent.SetupEffect(effectData, this); // 부모 툴팁 참조 전달
+            }
+        }
+
+        /// <summary>
+        /// 이펙트 SO에서 이름을 가져옵니다.
+        /// </summary>
+        /// <param name="effectSO">이펙트 SO</param>
+        /// <param name="defaultName">기본 이름</param>
+        /// <returns>이펙트 이름</returns>
+        private string GetEffectNameFromSO(SkillCardSystem.Effect.SkillCardEffectSO effectSO, string defaultName)
+        {
+            if (effectSO == null) return defaultName;
+            
+            string soName = effectSO.GetEffectName();
+            if (!string.IsNullOrWhiteSpace(soName))
+            {
+                return soName;
+            }
+            else
+            {
+                // GetEffectName()이 비어있으면 SO의 name 사용
+                return effectSO.name;
             }
         }
 

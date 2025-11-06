@@ -27,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 1610907298654940666}
   serializedVersion: 2
   m_LocalRotation: {x: 0.26719627, y: -0.00000017881392, z: 0.9636421, w: -0.00000013411044}
-  m_LocalPosition: {x: 0.13, y: -0, z: 0.48}
+  m_LocalPosition: {x: 0, y: 0, z: 0.48}
   m_LocalScale: {x: 0.76385003, y: 0.8370959, z: 0.8370961}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -48,7 +48,7 @@ ParticleSystem:
   ringBufferMode: 0
   ringBufferLoopRange: {x: 0, y: 1}
   emitterVelocityMode: 0
-  looping: 1
+  looping: 0
   prewarm: 0
   playOnAwake: 1
   useUnscaledTime: 0
@@ -4927,7 +4927,7 @@ Transform:
   m_GameObject: {fileID: 5642123133417710225}
   serializedVersion: 2
   m_LocalRotation: {x: -0.25906375, y: -0, z: 0.96586025, w: 0.000000014901159}
-  m_LocalPosition: {x: -0.13, y: -0, z: 0.48}
+  m_LocalPosition: {x: 0, y: 0, z: 0.48}
   m_LocalScale: {x: 0.76385003, y: 0.8370959, z: 0.8370961}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4948,7 +4948,7 @@ ParticleSystem:
   ringBufferMode: 0
   ringBufferLoopRange: {x: 0, y: 1}
   emitterVelocityMode: 0
-  looping: 1
+  looping: 0
   prewarm: 0
   playOnAwake: 1
   useUnscaledTime: 0
@@ -9827,7 +9827,7 @@ Transform:
   m_GameObject: {fileID: 7926437658294930577}
   serializedVersion: 2
   m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 3.72, y: 0.06, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -9850,7 +9850,7 @@ ParticleSystem:
   ringBufferMode: 0
   ringBufferLoopRange: {x: 0, y: 1}
   emitterVelocityMode: 1
-  looping: 1
+  looping: 0
   prewarm: 0
   playOnAwake: 1
   useUnscaledTime: 0

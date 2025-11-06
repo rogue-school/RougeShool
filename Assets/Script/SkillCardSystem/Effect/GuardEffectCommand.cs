@@ -16,19 +16,26 @@ namespace Game.SkillCardSystem.Effect
     public class GuardEffectCommand : ICardEffectCommand
     {
         private readonly int duration;
-        private readonly GameObject visualEffectPrefab;
+        private readonly GameObject activateEffectPrefab;
+        private readonly AudioClip activateSfxClip;
         private readonly VFXManager vfxManager;
+
+        private readonly Sprite icon;
 
         /// <summary>
         /// 가드 효과 커맨드 생성자
         /// </summary>
         /// <param name="duration">가드 지속 턴 수 (기본값: 1)</param>
-        /// <param name="visualEffectPrefab">VFX 프리팹 (선택적)</param>
+        /// <param name="icon">가드 효과 UI 아이콘</param>
+        /// <param name="activateEffectPrefab">가드 버프 적용 시 이펙트 프리팹 (선택적)</param>
+        /// <param name="activateSfxClip">가드 버프 적용 시 사운드 (선택적)</param>
         /// <param name="vfxManager">VFX 매니저 (선택적)</param>
-        public GuardEffectCommand(int duration = 1, GameObject visualEffectPrefab = null, VFXManager vfxManager = null)
+        public GuardEffectCommand(int duration = 1, Sprite icon = null, GameObject activateEffectPrefab = null, AudioClip activateSfxClip = null, VFXManager vfxManager = null)
         {
             this.duration = duration;
-            this.visualEffectPrefab = visualEffectPrefab;
+            this.icon = icon;
+            this.activateEffectPrefab = activateEffectPrefab;
+            this.activateSfxClip = activateSfxClip;
             this.vfxManager = vfxManager;
         }
         
@@ -46,23 +53,13 @@ namespace Game.SkillCardSystem.Effect
                 return;
             }
 
-            // 소스 캐릭터에게 가드 버프 적용
+                // 소스 캐릭터에게 가드 버프 적용
             if (context.Source is ICharacter character)
             {
-                // 가드 아이콘 로드 (ScriptableObject에서)
-                Sprite guardIcon = null;
-                var guardEffectSO = Resources.Load<Game.SkillCardSystem.Effect.GuardEffectSO>("Data/SkillCard/SkillEffect/GuardEffect");
-                if (guardEffectSO != null)
-                {
-                    guardIcon = guardEffectSO.GetIcon();
-                    GameLogger.LogInfo($"[GuardEffectCommand] 가드 아이콘 로드 성공: {guardIcon?.name ?? "null"}", GameLogger.LogCategory.Combat);
-                }
-                else
-                {
-                    GameLogger.LogWarning("[GuardEffectCommand] GuardEffectSO를 찾을 수 없습니다.", GameLogger.LogCategory.Combat);
-                }
+                // EffectCustomSettings에서 아이콘 사용, 없으면 생성자에서 받은 아이콘 사용, 둘 다 없으면 폴백
+                Sprite guardIcon = this.icon;
                 
-                // 아이콘이 없으면 기본 아이콘 시도
+                // 아이콘이 없으면 기본 아이콘 시도 (폴백)
                 if (guardIcon == null)
                 {
                     guardIcon = Resources.Load<Sprite>("Image/UI (1)/UI/shield_icon");
@@ -72,16 +69,24 @@ namespace Game.SkillCardSystem.Effect
                     }
                     else
                     {
-                        GameLogger.LogWarning("[GuardEffectCommand] 대체 가드 아이콘도 찾을 수 없습니다.", GameLogger.LogCategory.Combat);
+                        GameLogger.LogWarning("[GuardEffectCommand] 가드 아이콘을 찾을 수 없습니다.", GameLogger.LogCategory.Combat);
                     }
                 }
                 
-                var guardBuff = new GuardBuff(duration, guardIcon); // 커스텀 지속 시간과 아이콘으로 생성
+                // EffectConfiguration에서 가드 적용/차단 이펙트/사운드 가져오기
+                var guardBlockEffectPrefab = GetGuardBlockEffectPrefab(context);
+                var guardBlockSfxClip = GetGuardBlockSfxClip(context);
+
+                // GuardBuff에 가드 적용/차단 이펙트/사운드 저장
+                var guardBuff = new GuardBuff(duration, guardIcon, activateEffectPrefab, guardBlockEffectPrefab, guardBlockSfxClip);
                 character.RegisterPerTurnEffect(guardBuff);
                 // 즉시 보호 활성화: 다음 자신의 턴 시작 시 카운트가 0이 되면 해제됨
                 character.SetGuarded(true);
                 
                 GameLogger.LogInfo($"[GuardEffectCommand] {character.GetCharacterName()}에게 가드 버프 적용 ({duration}턴 지속, 아이콘: {guardIcon?.name ?? "없음"})", GameLogger.LogCategory.Combat);
+
+                // 가드 버프 적용 사운드 재생
+                PlayGuardActivateSound();
 
                 // 가드 비주얼 이펙트: 시전자 위치에 생성
                 TrySpawnEffectAtSource(context);
@@ -121,20 +126,23 @@ namespace Game.SkillCardSystem.Effect
                 GameLogger.LogWarning("[GuardEffectCommand] 시전자(Source)가 null입니다. 가드 VFX 생성을 건너뜁니다.", GameLogger.LogCategory.SkillCard);
                 return;
             }
-            if (visualEffectPrefab == null)
+            if (activateEffectPrefab == null)
             {
-                GameLogger.LogWarning("[GuardEffectCommand] visualEffectPrefab이 지정되지 않았습니다. 가드 VFX 생성을 건너뜁니다.", GameLogger.LogCategory.SkillCard);
+                GameLogger.LogWarning("[GuardEffectCommand] activateEffectPrefab이 지정되지 않았습니다. 가드 VFX 생성을 건너뜁니다.", GameLogger.LogCategory.SkillCard);
                 return;
             }
 
             // 포트레잇 이미지의 정확한 중앙에서 스폰되도록 계산
             var spawnPos = GetPortraitCenterWorldPosition(context.Source.Transform);
-            GameLogger.LogInfo($"[GuardEffectCommand] 가드 VFX 생성 시작 - 프리팹: {visualEffectPrefab.name}, 위치: {spawnPos}", GameLogger.LogCategory.SkillCard);
+            GameLogger.LogInfo($"[GuardEffectCommand] 가드 VFX 생성 시작 - 프리팹: {activateEffectPrefab.name}, 위치: {spawnPos}", GameLogger.LogCategory.SkillCard);
+
+            // VFXManager 찾기
+            var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
 
             // VFXManager를 통한 이펙트 생성 (Object Pooling)
-            if (vfxManager != null)
+            if (finalVfxManager != null)
             {
-                var instance = vfxManager.PlayEffect(visualEffectPrefab, spawnPos);
+                var instance = finalVfxManager.PlayEffect(activateEffectPrefab, spawnPos);
                 if (instance != null)
                 {
                     SetEffectLayer(instance);
@@ -144,7 +152,7 @@ namespace Game.SkillCardSystem.Effect
             else
             {
                 // Fallback: VFXManager가 없으면 기존 방식 사용
-                var instance = UnityEngine.Object.Instantiate(visualEffectPrefab, spawnPos, Quaternion.identity);
+                var instance = UnityEngine.Object.Instantiate(activateEffectPrefab, spawnPos, Quaternion.identity);
                 GameLogger.LogInfo($"[GuardEffectCommand] 가드 VFX 인스턴스 생성 완료: {instance.name}", GameLogger.LogCategory.SkillCard);
 
                 SetEffectLayer(instance);
@@ -251,6 +259,87 @@ namespace Game.SkillCardSystem.Effect
             }
 
             GameLogger.LogInfo($"[GuardEffectCommand] 가드 VFX 레이어 설정 완료 (Renderer: {rendererCount}, Particle: {particleCount})", GameLogger.LogCategory.SkillCard);
+        }
+
+        /// <summary>
+        /// 가드 버프 적용 시 사운드를 재생합니다.
+        /// </summary>
+        private void PlayGuardActivateSound()
+        {
+            if (activateSfxClip == null)
+            {
+                return;
+            }
+
+            // AudioManager 찾기
+            var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            if (audioManager != null)
+            {
+                audioManager.PlaySFXWithPool(activateSfxClip, 0.9f);
+                GameLogger.LogInfo($"[GuardEffectCommand] 가드 버프 적용 사운드 재생: {activateSfxClip.name}", GameLogger.LogCategory.Combat);
+            }
+            else
+            {
+                GameLogger.LogWarning("[GuardEffectCommand] AudioManager를 찾을 수 없습니다. 가드 버프 적용 사운드 재생을 건너뜁니다.", GameLogger.LogCategory.Combat);
+            }
+        }
+
+        /// <summary>
+        /// EffectConfiguration에서 가드 차단 이펙트 프리팹을 가져옵니다.
+        /// </summary>
+        /// <param name="context">카드 실행 컨텍스트</param>
+        /// <returns>가드 차단 이펙트 프리팹</returns>
+        private GameObject GetGuardBlockEffectPrefab(ICardExecutionContext context)
+        {
+            if (context?.Card?.CardDefinition == null)
+            {
+                return null;
+            }
+
+            var cardDefinition = context.Card.CardDefinition;
+            if (!cardDefinition.configuration.hasEffects)
+            {
+                return null;
+            }
+
+            foreach (var effectConfig in cardDefinition.configuration.effects)
+            {
+                if (effectConfig.effectSO is GuardEffectSO && effectConfig.useCustomSettings && effectConfig.customSettings != null)
+                {
+                    return effectConfig.customSettings.guardBlockEffectPrefab;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// EffectConfiguration에서 가드 차단 사운드를 가져옵니다.
+        /// </summary>
+        /// <param name="context">카드 실행 컨텍스트</param>
+        /// <returns>가드 차단 사운드</returns>
+        private AudioClip GetGuardBlockSfxClip(ICardExecutionContext context)
+        {
+            if (context?.Card?.CardDefinition == null)
+            {
+                return null;
+            }
+
+            var cardDefinition = context.Card.CardDefinition;
+            if (!cardDefinition.configuration.hasEffects)
+            {
+                return null;
+            }
+
+            foreach (var effectConfig in cardDefinition.configuration.effects)
+            {
+                if (effectConfig.effectSO is GuardEffectSO && effectConfig.useCustomSettings && effectConfig.customSettings != null)
+                {
+                    return effectConfig.customSettings.guardBlockSfxClip;
+                }
+            }
+
+            return null;
         }
     }
 }

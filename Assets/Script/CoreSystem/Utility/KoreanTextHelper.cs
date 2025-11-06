@@ -221,12 +221,13 @@ namespace Game.CoreSystem.Utility
         /// </summary>
         /// <param name="damage">피해량</param>
         /// <param name="turns">지속 턴</param>
+        /// <param name="effectName">이펙트 이름 (기본값: "출혈")</param>
         /// <returns>포맷팅된 출혈 텍스트</returns>
-        public static string FormatBleedEffectText(int damage, int turns)
+        public static string FormatBleedEffectText(int damage, int turns, string effectName = "출혈")
         {
             string turnText = FormatTurnText(turns);
             
-            return $"{damage} 피해를 {turnText} 입히는 출혈을 부여합니다";
+            return $"{damage} 피해를 {turnText} 입히는 {effectName}을 부여합니다";
         }
 
         #endregion

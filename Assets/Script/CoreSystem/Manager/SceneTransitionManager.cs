@@ -31,8 +31,8 @@ namespace Game.CoreSystem.Manager
 		[SerializeField] private string stageSceneName = "StageScene";
 		
 		[Header("전환 설정")]
-		[Tooltip("전환 지속 시간")]
-		[SerializeField] private float transitionDuration = 0.1f;
+		[Tooltip("전환 지속 시간 (페이드 시간)")]
+		[SerializeField] private float transitionDuration = 0.5f;
 		[Tooltip("전환 커브")]
 		[SerializeField] private AnimationCurve transitionCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 		
@@ -41,8 +41,6 @@ namespace Game.CoreSystem.Manager
 		[SerializeField] private CanvasGroup transitionCanvas;
 		[Tooltip("전환 이미지")]
 		[SerializeField] private UnityEngine.UI.Image transitionImage;
-		[Tooltip("로딩 텍스트")]
-		[SerializeField] private UnityEngine.UI.Text loadingText;
 		
 		#endregion
 		
@@ -100,7 +98,42 @@ namespace Game.CoreSystem.Manager
 				transitionCanvas.alpha = 0f;
 				transitionCanvas.interactable = false;
 				transitionCanvas.blocksRaycasts = false;
+				
+			// 페이드용 검은색 이미지 자동 생성
+			if (transitionImage == null)
+			{
+				var imageObj = new GameObject("TransitionImage");
+				imageObj.transform.SetParent(canvasObj.transform, false);
+				
+				var rectTransform = imageObj.AddComponent<RectTransform>();
+				rectTransform.anchorMin = Vector2.zero;
+				rectTransform.anchorMax = Vector2.one;
+				rectTransform.sizeDelta = Vector2.zero;
+				rectTransform.anchoredPosition = Vector2.zero;
+				
+				transitionImage = imageObj.AddComponent<UnityEngine.UI.Image>();
+				transitionImage.color = Color.black;
 			}
+			
+
+		}
+		else if (transitionImage == null)
+		{
+			// transitionCanvas는 있지만 transitionImage가 없는 경우
+			var imageObj = new GameObject("TransitionImage");
+			imageObj.transform.SetParent(transitionCanvas.transform, false);
+			
+			var rectTransform = imageObj.AddComponent<RectTransform>();
+			rectTransform.anchorMin = Vector2.zero;
+			rectTransform.anchorMax = Vector2.one;
+			rectTransform.sizeDelta = Vector2.zero;
+			rectTransform.anchoredPosition = Vector2.zero;
+			
+			transitionImage = imageObj.AddComponent<UnityEngine.UI.Image>();
+			transitionImage.color = Color.black;
+		}
+		
+
 			
 			GameLogger.LogInfo("SceneTransitionManager 초기화 완료", GameLogger.LogCategory.UI);
 		}
@@ -201,7 +234,7 @@ namespace Game.CoreSystem.Manager
 		}
 		
 		/// <summary>
-		/// 씬 전환 실행 (페이드 효과 비활성화)
+		/// 씬 전환 실행 - 영화 스타일 페이드 효과 적용
 		/// </summary>
 		/// <param name="sceneName">전환할 씬 이름</param>
 		/// <param name="transitionType">전환 효과 타입</param>
@@ -228,8 +261,22 @@ namespace Game.CoreSystem.Manager
 
 			try
 			{
-				// 페이드 효과 비활성화 - 바로 씬 로딩
-				await LoadSceneAsync(sceneName);
+				// Instant 타입이면 페이드 없이 바로 전환
+				if (transitionType == TransitionType.Instant)
+				{
+					await LoadSceneAsync(sceneName);
+				}
+				else
+				{
+					// 페이드 아웃 (현재 씬을 어둡게)
+					await StartTransition(transitionType);
+					
+					// 씬 로딩 (페이드 아웃된 상태에서 로딩)
+					await LoadSceneAsync(sceneName);
+					
+					// 페이드 인 (새 씬을 밝게)
+					await EndTransition(transitionType);
+				}
 
 				OnSceneTransitionEnd?.Invoke(sceneName);
 			}
@@ -292,10 +339,6 @@ namespace Game.CoreSystem.Manager
 			
 			while (operation.progress < 0.9f)
 			{
-				// 로딩 진행률 표시
-				float progress = operation.progress / 0.9f;
-				UpdateLoadingProgress(progress);
-				
 				await Task.Yield();
 			}
 			
@@ -308,17 +351,7 @@ namespace Game.CoreSystem.Manager
 				await Task.Yield();
 			}
 		}
-		
-		/// <summary>
-		/// 로딩 진행률 업데이트
-		/// </summary>
-		private void UpdateLoadingProgress(float progress)
-		{
-			if (loadingText != null)
-			{
-				loadingText.text = $"로딩 중... {Mathf.RoundToInt(progress * 100)}%";
-			}
-		}
+
 		
 		/// <summary>
 		/// 전환 시작 (페이드 아웃 - 화면을 어둡게)
@@ -372,7 +405,7 @@ namespace Game.CoreSystem.Manager
 		}
 		
 		/// <summary>
-		/// 페이드 전환 (DOTween 사용)
+		/// 페이드 전환 (DOTween 사용) - 영화 스타일
 		/// </summary>
 		/// <param name="fadeIn">페이드 인 여부 (true: 밝아짐, false: 어두워짐)</param>
 		private async Task FadeTransition(bool fadeIn)
@@ -388,9 +421,11 @@ namespace Game.CoreSystem.Manager
 
 			transitionCanvas.alpha = startAlpha;
 
-			// DOTween 사용
+			// DOTween 사용 - 크레딧과 동일한 느낌
+			Ease easeType = fadeIn ? Ease.OutQuad : Ease.InQuad;
 			await transitionCanvas.DOFade(endAlpha, transitionDuration)
-				.SetEase(Ease.InOutQuad)
+				.SetEase(easeType)
+				.SetAutoKill(true)
 				.AsyncWaitForCompletion();
 
 			GameLogger.LogInfo($"페이드 전환 완료: {(fadeIn ? "페이드 인" : "페이드 아웃")}", GameLogger.LogCategory.UI);

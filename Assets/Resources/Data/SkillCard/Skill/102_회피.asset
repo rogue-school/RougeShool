@@ -27,6 +27,8 @@ MonoBehaviour:
       hits: 1
       ignoreGuard: 0
       ignoreCounter: 0
+      sfxClip: {fileID: 0}
+      visualEffectPrefab: {fileID: 0}
     hasResource: 0
     resourceConfig:
       cost: 0
@@ -41,12 +43,29 @@ MonoBehaviour:
         ignoreCounter: 0
         bleedAmount: 0
         bleedDuration: 0
+        bleedIcon: {fileID: 0}
+        bleedActivateEffectPrefab: {fileID: 0}
+        bleedActivateSfxClip: {fileID: 0}
+        bleedPerTurnEffectPrefab: {fileID: 0}
+        bleedPerTurnSfxClip: {fileID: 0}
         counterDuration: 1
+        counterIcon: {fileID: 0}
+        counterActivateEffectPrefab: {fileID: 0}
+        counterActivateSfxClip: {fileID: 0}
         guardDuration: 1
+        guardIcon: {fileID: 7784363581341926264, guid: 9c096f5e2652cfd4faa8342b08733f32, type: 3}
+        guardActivateEffectPrefab: {fileID: 8913217842006883145, guid: aee1face6295eee4abf08b6aabf93c63, type: 3}
+        guardActivateSfxClip: {fileID: 8300000, guid: a1f7984d4baf4f94996dfcdf81d8dfe1, type: 3}
+        guardBlockEffectPrefab: {fileID: 8913217842006883145, guid: aee1face6295eee4abf08b6aabf93c63, type: 3}
+        guardBlockSfxClip: {fileID: 8300000, guid: a1f7984d4baf4f94996dfcdf81d8dfe1, type: 3}
         stunDuration: 1
+        stunIcon: {fileID: 0}
         healAmount: 0
+        healEffectPrefab: {fileID: 0}
+        healSfxClip: {fileID: 0}
         drawCount: 0
         resourceDelta: 0
+        resourceGainSfxClip: {fileID: 0}
         stackIncreasePerUse: 1
         maxStacks: 5
         targetCardId: 

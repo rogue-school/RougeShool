@@ -39,7 +39,10 @@ namespace Game.SkillCardSystem.Effect
         /// <returns>치유 효과 명령</returns>
         public ICardEffectCommand CreateEffectCommand(Game.SkillCardSystem.Data.EffectCustomSettings customSettings)
         {
-            return new HealEffectCommand(customSettings.healAmount, maxHealAmount, visualEffectPrefab);
+            // EffectCustomSettings의 이펙트/사운드가 있으면 우선 사용, 없으면 SO의 기본 이펙트 사용
+            var effectPrefab = customSettings.healEffectPrefab ?? visualEffectPrefab;
+            var sfxClip = customSettings.healSfxClip;
+            return new HealEffectCommand(customSettings.healAmount, maxHealAmount, effectPrefab, sfxClip);
         }
 
         /// <summary>

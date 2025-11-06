@@ -27,22 +27,16 @@ namespace Game.CharacterSystem.Manager
         [Tooltip("툴팁 숨김 지연 시간 (초)")]
         [SerializeField] private float hideDelay = 0.1f;
 
-        [Header("캔버스 설정")]
-        [Tooltip("캔버스 Sort Order (자동 생성 시 사용)")]
-        [SerializeField] private int canvasSortOrder = 1001;
-        
-        [Tooltip("캔버스 이름 (자동 검색 시 사용)")]
-        [SerializeField] private string canvasName = "BuffDebuffTooltipCanvas";
-
         #endregion
 
         #region Private Fields
 
         private BuffDebuffTooltip currentTooltip;
-        private Canvas tooltipCanvas;
         private IPerTurnEffect hoveredEffect;
         private IPerTurnEffect pendingEffect; // 초기화 대기 중 첫 호버 효과 저장
         private bool pendingShow; // 초기화 완료 즉시 표시 플래그
+        private Vector3 pendingShowPosition; // 초기화 대기 중 첫 호버 위치 저장
+        private RectTransform pendingTargetRect; // 초기화 대기 중 첫 호버 대상 RectTransform 저장
 		private RectTransform currentTargetRect; // 현재 호버 대상 슬롯의 RectTransform
 
         private float showTimer;
@@ -75,6 +69,16 @@ namespace Game.CharacterSystem.Manager
             if (!IsInitialized) return;
 
             UpdateTooltipTimers();
+            
+            // 툴팁이 표시 중이면 지속적으로 위치 업데이트
+            if (currentTooltip != null && currentTooltip.gameObject != null && currentTooltip.gameObject.activeInHierarchy)
+            {
+                Vector2 effectPosition = GetCurrentEffectPosition();
+                if (effectPosition != Vector2.zero)
+                {
+                    currentTooltip.UpdatePosition(effectPosition);
+                }
+            }
         }
 
         #endregion
@@ -160,26 +164,36 @@ namespace Game.CharacterSystem.Manager
                 yield break;
             }
 
-            // 툴팁 캔버스 자동 설정
-            SetupTooltipCanvas();
-
-
 			// 초기화 완료 확인 (인스턴스는 첫 표시 시점에 생성)
-			if (tooltipCanvas != null || true)
+			IsInitialized = true;
+            GameLogger.LogInfo("[BuffDebuffTooltipManager] 툴팁 시스템 초기화 완료", GameLogger.LogCategory.UI);
+            
+            // 대기 중이던 첫 호버 효과가 있으면 즉시 표시
+            if (pendingShow && pendingEffect != null)
             {
-                IsInitialized = true;
-                GameLogger.LogInfo("[BuffDebuffTooltipManager] 툴팁 시스템 초기화 완료", GameLogger.LogCategory.UI);
-                
-                // 대기 중이던 첫 호버 효과가 있으면 즉시 표시
-                if (pendingShow && pendingEffect != null)
+                GameLogger.LogInfo("[BuffDebuffTooltipManager] 대기 중이던 효과 툴팁 즉시 표시", GameLogger.LogCategory.UI);
+                // 현재 상태를 저장하고 초기화 전 상태 복원
+                var savedEffect = hoveredEffect;
+                var savedRect = currentTargetRect;
+                hoveredEffect = pendingEffect;
+                currentTargetRect = pendingTargetRect;
+                // 위치를 계산하여 ShowTooltip 호출
+                Vector2 effectPosition = GetCurrentEffectPosition();
+                if (effectPosition == Vector2.zero && pendingShowPosition != Vector3.zero)
                 {
-                    GameLogger.LogInfo("[BuffDebuffTooltipManager] 대기 중이던 효과 툴팁 즉시 표시", GameLogger.LogCategory.UI);
-                    ShowTooltip();
+                    effectPosition = pendingShowPosition;
                 }
-            }
-            else
-            {
-                GameLogger.LogError("[BuffDebuffTooltipManager] 툴팁 시스템 초기화 실패", GameLogger.LogCategory.Error);
+                if (effectPosition != Vector2.zero)
+                {
+                    ShowBuffDebuffTooltip(pendingEffect, pendingShowPosition);
+                }
+                // 상태 복원
+                hoveredEffect = savedEffect;
+                currentTargetRect = savedRect;
+                pendingEffect = null;
+                pendingShow = false;
+                pendingShowPosition = Vector3.zero;
+                pendingTargetRect = null;
             }
         }
 
@@ -201,51 +215,18 @@ namespace Game.CharacterSystem.Manager
         }
 
         /// <summary>
-        /// 툴팁 캔버스를 설정합니다.
+        /// 현재 대상의 캔버스를 가져옵니다.
         /// </summary>
-        private void SetupTooltipCanvas()
+        /// <returns>대상의 캔버스 (없으면 null)</returns>
+        private Canvas GetCanvasOfCurrentTarget()
         {
-            // 기존 캔버스 찾기
-            tooltipCanvas = GameObject.Find(canvasName)?.GetComponent<Canvas>();
-            
-            if (tooltipCanvas == null)
-            {
-                // 캔버스가 없으면 새로 생성
-                CreateTooltipCanvas();
-            }
-            else
-            {
-                GameLogger.LogInfo("[BuffDebuffTooltipManager] 기존 툴팁 캔버스 사용", GameLogger.LogCategory.UI);
-            }
-        }
-
-        /// <summary>
-        /// 툴팁 캔버스를 생성합니다.
-        /// </summary>
-        private void CreateTooltipCanvas()
-        {
-            GameObject canvasObj = new GameObject(canvasName);
-            canvasObj.transform.SetParent(transform);
-            
-            tooltipCanvas = canvasObj.AddComponent<Canvas>();
-            tooltipCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            tooltipCanvas.sortingOrder = canvasSortOrder;
-            
-            // CanvasScaler 추가
-            var canvasScaler = canvasObj.AddComponent<UnityEngine.UI.CanvasScaler>();
-            canvasScaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            canvasScaler.referenceResolution = new Vector2(1920, 1080);
-            canvasScaler.screenMatchMode = UnityEngine.UI.CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-            canvasScaler.matchWidthOrHeight = 0.5f;
-            
-            // GraphicRaycaster 추가
-            canvasObj.AddComponent<UnityEngine.UI.GraphicRaycaster>();
-            
-            GameLogger.LogInfo("[BuffDebuffTooltipManager] 툴팁 캔버스 생성 완료", GameLogger.LogCategory.UI);
+            if (currentTargetRect == null) return null;
+            return currentTargetRect.GetComponentInParent<Canvas>();
         }
 
         /// <summary>
         /// 툴팁 인스턴스를 생성합니다.
+        /// SkillCardTooltipManager, ItemTooltipManager와 동일한 방식으로 대상의 캔버스에 생성합니다.
         /// </summary>
 		private void CreateTooltipInstance()
         {
@@ -256,19 +237,22 @@ namespace Game.CharacterSystem.Manager
                 currentTooltip = null;
             }
             
-			if (tooltipPrefab == null) return;
+			if (tooltipPrefab == null)
+            {
+                GameLogger.LogError("[BuffDebuffTooltipManager] tooltipPrefab이 null입니다", GameLogger.LogCategory.Error);
+                return;
+            }
 
             try
             {
-				// 툴팁을 대상 슬롯의 자식으로 생성 (요청사항 반영)
-				Transform parentForTooltip = currentTargetRect != null
-					? (Transform)currentTargetRect
-					: (tooltipCanvas != null ? tooltipCanvas.transform : null);
-				if (parentForTooltip == null)
-				{
-					GameLogger.LogError("[BuffDebuffTooltipManager] 툴팁 부모를 찾지 못했습니다 (대상 슬롯/캔버스)", GameLogger.LogCategory.Error);
-					return;
-				}
+                // SkillCardTooltipManager, ItemTooltipManager와 동일: 대상의 캔버스에 생성
+                Transform parentForTooltip = GetCanvasOfCurrentTarget()?.transform;
+                
+                if (parentForTooltip == null)
+                {
+                    GameLogger.LogWarning("[BuffDebuffTooltipManager] 툴팁 부모를 찾지 못했습니다 (대상 캔버스 없음) – 표시를 건너뜁니다", GameLogger.LogCategory.UI);
+                    return;
+                }
 
 				currentTooltip = Instantiate(tooltipPrefab, parentForTooltip);
                 if (currentTooltip == null)
@@ -277,7 +261,7 @@ namespace Game.CharacterSystem.Manager
                     return;
                 }
 
-                // 초기에는 비활성화
+                // 초기에는 비활성화하고 캔버스 최상단으로 정렬
                 currentTooltip.gameObject.SetActive(false);
 				currentTooltip.transform.SetAsLastSibling();
 
@@ -303,7 +287,11 @@ namespace Game.CharacterSystem.Manager
             if (effect == null) return;
 
 			// 현재 호버된 효과의 슬롯 RectTransform 캐시
-			currentTargetRect = FindSlotRectForEffect(effect);
+			// targetRect가 전달되지 않았거나 null이면 찾기
+			if (currentTargetRect == null)
+			{
+				currentTargetRect = FindSlotRectForEffect(effect);
+			}
 
             // 초기화가 완료되지 않았다면 즉시 초기화 시도 후 첫 호버를 기억하여 바로 표시
             if (!IsInitialized)
@@ -311,13 +299,9 @@ namespace Game.CharacterSystem.Manager
                 GameLogger.LogInfo("[BuffDebuffTooltipManager] 초기화 안됨 - 즉시 초기화 시도 (첫 호버 효과 보존)", GameLogger.LogCategory.UI);
                 pendingEffect = effect;
                 pendingShow = true;
+                pendingShowPosition = position;
+                pendingTargetRect = currentTargetRect;
                 StartCoroutine(ForceInitialize());
-                return;
-            }
-
-            if (currentTooltip == null) 
-            {
-                GameLogger.LogWarning("[BuffDebuffTooltipManager] currentTooltip이 null입니다", GameLogger.LogCategory.UI);
                 return;
             }
 
@@ -325,6 +309,7 @@ namespace Game.CharacterSystem.Manager
             isHidingTooltip = false;
             hideTimer = 0f;
 
+            // currentTooltip이 null이면 ShowTooltip()에서 생성하므로 여기서는 체크하지 않음
             if (!isShowingTooltip)
             {
                 isShowingTooltip = true;
@@ -346,6 +331,8 @@ namespace Game.CharacterSystem.Manager
             // 초기화 대기 중이던 첫 호버도 해제
             pendingEffect = null;
             pendingShow = false;
+            pendingShowPosition = Vector2.zero;
+            pendingTargetRect = null;
 
             if (!isHidingTooltip)
             {
@@ -359,8 +346,13 @@ namespace Game.CharacterSystem.Manager
         /// </summary>
         /// <param name="effect">표시할 효과</param>
         /// <param name="position">슬롯 위치</param>
-        public void ShowBuffDebuffTooltip(IPerTurnEffect effect, Vector3 position)
+        /// <param name="targetRect">대상 슬롯의 RectTransform (선택적, 전달되면 우선 사용)</param>
+        public void ShowBuffDebuffTooltip(IPerTurnEffect effect, Vector3 position, RectTransform targetRect = null)
         {
+            if (targetRect != null)
+            {
+                currentTargetRect = targetRect;
+            }
             OnEffectHoverEnter(effect, position);
         }
 
@@ -400,6 +392,30 @@ namespace Game.CharacterSystem.Manager
                     HideTooltip();
                 }
             }
+
+            // 대상 유효성 검사: 대상이 사라졌거나 비활성화되면 즉시 숨김
+            if (currentTooltip != null && currentTooltip.gameObject != null && currentTooltip.gameObject.activeInHierarchy)
+            {
+                bool targetValid = currentTargetRect != null && currentTargetRect && currentTargetRect.gameObject.activeInHierarchy;
+                if (!targetValid)
+                {
+                    // 이미 정리된 상태가 아니면 로그 출력 및 강제 숨김
+                    if (hoveredEffect != null || isShowingTooltip)
+                    {
+                        GameLogger.LogInfo("[BuffDebuffTooltipManager] 대상이 사라져서 툴팁 숨김", GameLogger.LogCategory.UI);
+                    }
+                    ForceHideTooltip();
+                    return;
+                }
+
+                // 효과가 여전히 유효한지 확인 (hoveredEffect가 null이거나 만료되었는지)
+                if (hoveredEffect != null && hoveredEffect.IsExpired)
+                {
+                    GameLogger.LogInfo("[BuffDebuffTooltipManager] 효과가 만료되어 툴팁 숨김", GameLogger.LogCategory.UI);
+                    ForceHideTooltip();
+                    return;
+                }
+            }
         }
 
         /// <summary>
@@ -409,10 +425,29 @@ namespace Game.CharacterSystem.Manager
         {
             GameLogger.LogInfo($"[BuffDebuffTooltipManager] ShowTooltip 호출됨 - currentTooltip: {currentTooltip != null}, hoveredEffect: {hoveredEffect?.GetType().Name}", GameLogger.LogCategory.UI);
             
+            // 대상 캔버스를 찾지 못하면 표시를 건너뜁니다
+            var targetCanvas = GetCanvasOfCurrentTarget();
+            if (targetCanvas == null)
+            {
+                GameLogger.LogWarning("[BuffDebuffTooltipManager] 대상 캔버스를 찾을 수 없습니다. 툴팁 표시를 건너뜁니다", GameLogger.LogCategory.UI);
+                return;
+            }
+            
 			if (currentTooltip == null)
             {
 				CreateTooltipInstance();
 				if (currentTooltip == null) return;
+            }
+            else
+            {
+                // 기존 인스턴스를 캔버스 최상위로 이동 (다른 UI 요소 위에 표시)
+                var canvas = targetCanvas;
+                if (canvas != null && currentTooltip.transform.parent != canvas.transform)
+                {
+                    currentTooltip.transform.SetParent(canvas.transform, false);
+                }
+                // 항상 최상단으로 이동 (다른 UI 뒤에 숨지 않도록)
+                currentTooltip.transform.SetAsLastSibling();
             }
             
             if (hoveredEffect == null)
@@ -433,9 +468,15 @@ namespace Game.CharacterSystem.Manager
                 Vector2 effectPosition = GetCurrentEffectPosition();
                 if (effectPosition != Vector2.zero)
                 {
-                    // SubTooltipModel에 남은 턴 등 값-페어를 추가하도록 유도하려면
-                    // 현재 구조에서 SubTooltip 생성 시 SkillCardTooltip이 모델을 조립합니다.
-                    currentTooltip.ShowTooltip(hoveredEffect, effectPosition);
+                    // currentTargetRect를 툴팁에 전달하여 정확한 위치 계산
+                    currentTooltip.ShowTooltip(hoveredEffect, effectPosition, currentTargetRect);
+                    
+                    // 툴팁이 항상 최상단에 렌더링되도록 보장
+                    if (currentTooltip.transform.parent != null)
+                    {
+                        currentTooltip.transform.SetAsLastSibling();
+                    }
+                    
                     GameLogger.LogInfo($"버프/디버프 툴팁 표시: {hoveredEffect.GetType().Name} at {effectPosition}", GameLogger.LogCategory.UI);
                 }
                 else
@@ -468,9 +509,15 @@ namespace Game.CharacterSystem.Manager
             if (currentTooltip != null)
             {
                 currentTooltip.HideTooltip();
+                // 툴팁을 완전히 비활성화하여 다음 프레임 체크 방지
+                if (currentTooltip.gameObject != null)
+                {
+                    currentTooltip.gameObject.SetActive(false);
+                }
             }
 
             hoveredEffect = null;
+            currentTargetRect = null;
             isShowingTooltip = false;
             isHidingTooltip = false;
             showTimer = 0f;
@@ -478,21 +525,46 @@ namespace Game.CharacterSystem.Manager
         }
 
         /// <summary>
-        /// 현재 효과의 위치를 가져옵니다.
+        /// 현재 효과의 위치를 가져옵니다. (좌하단 기준 스크린 좌표)
         /// </summary>
-        /// <returns>효과 위치</returns>
+        /// <returns>효과 위치 (스크린 좌표)</returns>
         private Vector2 GetCurrentEffectPosition()
         {
             if (hoveredEffect == null) return Vector2.zero;
 
-            // 현재 호버된 효과의 슬롯을 찾아서 위치 반환
-            var slotViews = Object.FindObjectsByType<BuffDebuffSlotView>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            foreach (var slotView in slotViews)
+            // currentTargetRect가 있으면 직접 사용
+            RectTransform slotRect = currentTargetRect;
+            if (slotRect == null)
             {
-                if (slotView.CurrentEffect == hoveredEffect)
+                // 현재 호버된 효과의 슬롯을 찾아서 위치 반환
+                var slotViews = Object.FindObjectsByType<BuffDebuffSlotView>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                foreach (var slotView in slotViews)
                 {
-                    return RectTransformUtility.WorldToScreenPoint(Camera.main, slotView.transform.position);
+                    if (slotView != null && slotView.CurrentEffect == hoveredEffect)
+                    {
+                        slotRect = slotView.transform as RectTransform;
+                        if (slotRect != null)
+                            break;
+                    }
                 }
+            }
+
+            if (slotRect != null)
+            {
+                // 슬롯이 속한 캔버스와 카메라를 확인
+                var sourceCanvas = slotRect.GetComponentInParent<Canvas>();
+                Camera cam = null;
+                if (sourceCanvas != null && sourceCanvas.renderMode != RenderMode.ScreenSpaceOverlay)
+                {
+                    cam = sourceCanvas.worldCamera;
+                }
+
+                // 슬롯의 왼쪽-아래 모서리를 계산: GetWorldCorners 사용 (하단 정렬용)
+                Vector3[] corners = new Vector3[4];
+                slotRect.GetWorldCorners(corners); // 0:BL, 1:TL, 2:TR, 3:BR
+                Vector3 bottomLeftWorld = corners[0]; // BL = Bottom Left
+                Vector2 screenBL = RectTransformUtility.WorldToScreenPoint(cam, bottomLeftWorld);
+                return screenBL;
             }
 
             return Vector2.zero;

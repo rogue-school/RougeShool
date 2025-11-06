@@ -16,10 +16,10 @@ MonoBehaviour:
   displayName: "\uB2E8\uAC80 \uBCA0\uAE30"
   displayNameKO: 
   description: 
-  artwork: {fileID: -1482091945284704496, guid: fdc504dedb6e0154c910311c9fb6acb6, type: 3}
+  artwork: {fileID: -881498738938504451, guid: d54cc7f03866e384a991904a2315fbe4, type: 3}
   presentation:
     sfxClip: {fileID: 0}
-    visualEffectPrefab: {fileID: 0}
+    visualEffectPrefab: {fileID: 4203527421569735854, guid: d189a9259cac7744d8baf4468fb85239, type: 3}
   configuration:
     hasDamage: 1
     damageConfig:
@@ -27,6 +27,8 @@ MonoBehaviour:
       hits: 1
       ignoreGuard: 0
       ignoreCounter: 0
+      sfxClip: {fileID: 8300000, guid: 775057f623112d040b87308bf649a1f8, type: 3}
+      visualEffectPrefab: {fileID: 2663204648779552833, guid: 14e254c33e25d82499eb644e4cb9045c, type: 3}
     hasResource: 0
     resourceConfig:
       cost: 0

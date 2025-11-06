@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Game.CoreSystem.Utility;
-using Game.CoreSystem.UI;
 using Game.CoreSystem.Audio;
 using Game.CoreSystem.Save;
 using Game.CoreSystem.Interface;
@@ -263,12 +262,7 @@ namespace Game.CoreSystem.Manager
         
         private void BindCanvasComponents(Canvas canvas)
         {
-            // LoadingScreenController 바인딩
-            var loadingController = canvas.GetComponentInChildren<LoadingScreenController>();
-            if (loadingController != null)
-            {
-                // 필요한 바인딩 로직
-            }
+            // 현재 바인딩할 항목 없음
         }
 
         private System.Collections.IEnumerator GoToMainSceneNextFrame()

@@ -351,31 +351,39 @@ namespace Game.SkillCardSystem.Runtime
         /// <param name="context">실행 컨텍스트</param>
         private void StartPresentation(ICardExecutionContext context)
         {
-            var presentation = definition.presentation;
-            
             GameLogger.LogInfo($"[SkillCard] 연출 시작: {definition.displayName}", GameLogger.LogCategory.SkillCard);
             
-            // 사운드 재생 (즉시, 풀링 우선)
-            if (presentation.sfxClip != null)
+            // 데미지 설정에서 이펙트/사운드 가져오기
+            if (definition.configuration.hasDamage)
             {
-                GameLogger.LogInfo($"[SkillCard] 사운드 재생: {presentation.sfxClip.name}", GameLogger.LogCategory.SkillCard);
-                PlaySFXPooled(presentation.sfxClip);
+                var damageConfig = definition.configuration.damageConfig;
+                
+                // 사운드 재생 (즉시, 풀링 우선)
+                if (damageConfig.sfxClip != null)
+                {
+                    GameLogger.LogInfo($"[SkillCard] 사운드 재생: {damageConfig.sfxClip.name}", GameLogger.LogCategory.SkillCard);
+                    PlaySFXPooled(damageConfig.sfxClip);
+                }
+                else
+                {
+                    GameLogger.LogInfo("[SkillCard] 사운드 클립이 설정되지 않음", GameLogger.LogCategory.SkillCard);
+                }
+                
+                // 비주얼 이펙트 생성 (즉시)
+                if (damageConfig.visualEffectPrefab != null)
+                {
+                    GameLogger.LogInfo($"[SkillCard] 비주얼 이펙트 생성 시작: {damageConfig.visualEffectPrefab.name}", GameLogger.LogCategory.SkillCard);
+                    CreateVisualEffect(context, damageConfig);
+                }
+                else
+                {
+                    GameLogger.LogWarning("[SkillCard] 비주얼 이펙트 프리팹이 설정되지 않음", GameLogger.LogCategory.SkillCard);
+                }
             }
-            else
-            {
-                GameLogger.LogInfo("[SkillCard] 사운드 클립이 설정되지 않음", GameLogger.LogCategory.SkillCard);
-            }
-            
-            // 비주얼 이펙트 생성 (즉시)
-            if (presentation.visualEffectPrefab != null)
-            {
-                GameLogger.LogInfo($"[SkillCard] 비주얼 이펙트 생성 시작: {presentation.visualEffectPrefab.name}", GameLogger.LogCategory.SkillCard);
-                CreateVisualEffect(context, presentation);
-            }
-            else
-            {
-                GameLogger.LogWarning("[SkillCard] 비주얼 이펙트 프리팹이 설정되지 않음", GameLogger.LogCategory.SkillCard);
-            }
+            // 데미지가 없는 카드는 가드 이펙트를 여기서 재생하지 않음
+            // 가드 차단 이펙트는 실제로 가드가 차단할 때만 재생됨:
+            // - 데미지: CharacterBase.TakeDamage()에서 가드 차단 시 재생
+            // - 상태이상: BleedEffectCommand 등에서 가드 차단 시 재생
         }
         
         private void PlaySFXPooled(AudioClip clip)
@@ -385,7 +393,7 @@ namespace Game.SkillCardSystem.Runtime
             audioManager.PlaySFXWithPool(clip, 0.9f);
         }
         
-        private void CreateVisualEffect(ICardExecutionContext context, CardPresentation presentation)
+        private void CreateVisualEffect(ICardExecutionContext context, DamageConfiguration damageConfig)
         {
             var target = context.Target;
             var targetTransform = (target as MonoBehaviour)?.transform;
@@ -398,6 +406,20 @@ namespace Game.SkillCardSystem.Runtime
                 return;
             }
 
+            // 반격 버프 확인: 대상이 반격 버프를 가지고 있으면 타겟에게 이펙트를 재생하지 않음
+            // (반격 이펙트는 DamageEffectCommand에서 공격자에게 재생됨)
+            bool targetHasCounter = false;
+            if (target is Game.CharacterSystem.Core.CharacterBase targetCharacter)
+            {
+                targetHasCounter = targetCharacter.HasEffect<Game.SkillCardSystem.Effect.CounterBuff>();
+            }
+
+            if (targetHasCounter)
+            {
+                GameLogger.LogInfo($"[SkillCard] 대상이 반격 버프를 가지고 있어서 타겟 이펙트 재생을 건너뜁니다. 반격 이펙트는 DamageEffectCommand에서 재생됩니다.", GameLogger.LogCategory.SkillCard);
+                return;
+            }
+
             // VFX 매니저를 통한 이펙트 생성
             var vfxManager = UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
             if (vfxManager != null)
@@ -405,7 +427,7 @@ namespace Game.SkillCardSystem.Runtime
                 GameLogger.LogInfo($"[SkillCard] VFXManager 발견됨 - 캐릭터 중심에서 이펙트 재생 시작", GameLogger.LogCategory.SkillCard);
                 
                 // 캐릭터의 시각적 중심에서 이펙트 재생
-                var effectInstance = vfxManager.PlayEffectAtCharacterCenter(presentation.visualEffectPrefab, targetTransform);
+                var effectInstance = vfxManager.PlayEffectAtCharacterCenter(damageConfig.visualEffectPrefab, targetTransform);
                 if (effectInstance != null)
                 {
                     GameLogger.LogInfo($"[SkillCard] 이펙트 인스턴스 생성 성공: {effectInstance.name}", GameLogger.LogCategory.SkillCard);
@@ -414,12 +436,20 @@ namespace Game.SkillCardSystem.Runtime
                 {
                     GameLogger.LogError("[SkillCard] 이펙트 인스턴스 생성 실패", GameLogger.LogCategory.SkillCard);
                 }
+
+                // 가드 차단 이펙트는 CharacterBase.TakeDamage()에서 실제 차단될 때만 재생됨
             }
             else
             {
                 GameLogger.LogError("[SkillCard] VFXManager를 찾을 수 없습니다 - DI 바인딩 확인 필요", GameLogger.LogCategory.SkillCard);
             }
         }
+
+        // 주의: PlayGuardEffectIfActive 메서드는 제거되었습니다.
+        // 가드 적용 이펙트는 GuardEffectCommand에서 가드 버프 적용 시에만 재생됩니다.
+        // 가드 차단 이펙트는 실제로 가드가 차단할 때만 재생됩니다:
+        // - 데미지 차단: CharacterBase.TakeDamage()에서 재생
+        // - 상태이상 차단: BleedEffectCommand.PlayGuardBlockEffect() 등에서 재생
         
         #endregion
         
@@ -452,10 +482,16 @@ namespace Game.SkillCardSystem.Runtime
         public SkillCardDefinition GetDefinition() => definition;
         
         /// <summary>
-        /// 연출 설정을 반환합니다.
+        /// 연출 설정을 반환합니다 (호환성을 위해 유지, 데미지 설정에서 반환).
         /// </summary>
-        /// <returns>연출 설정</returns>
-        public CardPresentation GetPresentation() => definition.presentation;
+        /// <returns>데미지 설정의 연출 정보</returns>
+        public CardPresentation GetPresentation()
+        {
+            // 호환성을 위해 빈 CardPresentation 반환 (실제 사용은 DamageConfiguration 사용)
+            return definition.configuration.hasDamage ? 
+                new CardPresentation { sfxClip = definition.configuration.damageConfig.sfxClip, visualEffectPrefab = definition.configuration.damageConfig.visualEffectPrefab } : 
+                new CardPresentation();
+        }
         
         /// <summary>
         /// 효과 명령을 추가합니다.

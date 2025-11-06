@@ -12,9 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d34d89639212f0d419f98578c899a3cc, type: 3}
   m_Name: CardUseStackEffect
   m_EditorClassIdentifier: 
-  effectName: 
+  effectName: "\uC2A4\uD0DD"
   description: 
   effectIcon: {fileID: 0}
   stackIncreasePerUse: 1
   maxStacks: 5
-  targetCardId: 

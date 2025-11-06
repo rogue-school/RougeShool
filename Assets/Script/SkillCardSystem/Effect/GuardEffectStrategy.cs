@@ -1,3 +1,4 @@
+using UnityEngine;
 using Game.SkillCardSystem.Data;
 using Game.SkillCardSystem.Interface;
 
@@ -19,12 +20,22 @@ namespace Game.SkillCardSystem.Effect
                 return null;
 
             int duration = 1;
+            Sprite icon = null;
+            GameObject activateEffectPrefab = null;
+            AudioClip activateSfxClip = null;
+
             if (config.useCustomSettings && config.customSettings != null)
             {
                 duration = config.customSettings.guardDuration;
+                icon = config.customSettings.guardIcon;
+                activateEffectPrefab = config.customSettings.guardActivateEffectPrefab;
+                activateSfxClip = config.customSettings.guardActivateSfxClip;
             }
 
-            return new GuardEffectCommand(duration, guardEffectSO.visualEffectPrefab);
+            // 아이콘이 설정되지 않았으면 EffectSO에서 가져오기 (폴백)
+            icon ??= guardEffectSO.GetIcon();
+
+            return new GuardEffectCommand(duration, icon, activateEffectPrefab, activateSfxClip);
         }
     }
 }
