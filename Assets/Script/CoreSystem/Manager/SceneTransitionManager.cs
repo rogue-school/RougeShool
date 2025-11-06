@@ -9,7 +9,6 @@ using Game.CoreSystem.Audio;
 using Game.StageSystem.Manager;
 using Zenject;
 using DG.Tweening;
-using TMPro;
 
 namespace Game.CoreSystem.Manager
 {
@@ -42,8 +41,6 @@ namespace Game.CoreSystem.Manager
 		[SerializeField] private CanvasGroup transitionCanvas;
 		[Tooltip("전환 이미지")]
 		[SerializeField] private UnityEngine.UI.Image transitionImage;
-		[Tooltip("로딩 텍스트 (TextMeshPro)")]
-		[SerializeField] private TextMeshProUGUI loadingText;
 		
 		#endregion
 		
@@ -118,24 +115,7 @@ namespace Game.CoreSystem.Manager
 				transitionImage.color = Color.black;
 			}
 			
-			// 로딩 텍스트 자동 생성 (TextMeshPro)
-			if (loadingText == null)
-			{
-				var textObj = new GameObject("LoadingText");
-				textObj.transform.SetParent(canvasObj.transform, false);
-				
-				var textRectTransform = textObj.AddComponent<RectTransform>();
-				textRectTransform.anchorMin = new Vector2(0.5f, 0.5f);
-				textRectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-				textRectTransform.sizeDelta = new Vector2(400f, 100f);
-				textRectTransform.anchoredPosition = new Vector2(0f, -100f);
-				
-				loadingText = textObj.AddComponent<TextMeshProUGUI>();
-				loadingText.text = "로딩 중...";
-				loadingText.fontSize = 24f;
-				loadingText.alignment = TextAlignmentOptions.Center;
-				loadingText.color = Color.white;
-			}
+
 		}
 		else if (transitionImage == null)
 		{
@@ -153,24 +133,7 @@ namespace Game.CoreSystem.Manager
 			transitionImage.color = Color.black;
 		}
 		
-		if (loadingText == null && transitionCanvas != null)
-		{
-			// transitionCanvas는 있지만 loadingText가 없는 경우
-			var textObj = new GameObject("LoadingText");
-			textObj.transform.SetParent(transitionCanvas.transform, false);
-			
-			var textRectTransform = textObj.AddComponent<RectTransform>();
-			textRectTransform.anchorMin = new Vector2(0.5f, 0.5f);
-			textRectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-			textRectTransform.sizeDelta = new Vector2(400f, 100f);
-			textRectTransform.anchoredPosition = new Vector2(0f, -100f);
-			
-			loadingText = textObj.AddComponent<TextMeshProUGUI>();
-			loadingText.text = "로딩 중...";
-			loadingText.fontSize = 24f;
-			loadingText.alignment = TextAlignmentOptions.Center;
-			loadingText.color = Color.white;
-		}
+
 			
 			GameLogger.LogInfo("SceneTransitionManager 초기화 완료", GameLogger.LogCategory.UI);
 		}
@@ -376,10 +339,6 @@ namespace Game.CoreSystem.Manager
 			
 			while (operation.progress < 0.9f)
 			{
-				// 로딩 진행률 표시
-				float progress = operation.progress / 0.9f;
-				UpdateLoadingProgress(progress);
-				
 				await Task.Yield();
 			}
 			
@@ -392,17 +351,7 @@ namespace Game.CoreSystem.Manager
 				await Task.Yield();
 			}
 		}
-		
-		/// <summary>
-		/// 로딩 진행률 업데이트
-		/// </summary>
-		private void UpdateLoadingProgress(float progress)
-		{
-			if (loadingText != null)
-			{
-				loadingText.text = $"로딩 중... {Mathf.RoundToInt(progress * 100)}%";
-			}
-		}
+
 		
 		/// <summary>
 		/// 전환 시작 (페이드 아웃 - 화면을 어둡게)
