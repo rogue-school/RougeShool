@@ -67,8 +67,11 @@ namespace Game.SkillCardSystem.Effect
             // EffectConfiguration에서 턴당 사운드 가져오기
             var perTurnSfxClip = GetBleedPerTurnSfxClip(context);
             
+            // 원본 효과 SO 이름 가져오기 (툴팁 표시용)
+            string sourceEffectName = GetSourceEffectName(context);
+            
             // 출혈 효과 생성 (perTurnEffectPrefab 및 perTurnSfxClip 전달)
-            var bleedEffect = new BleedEffect(amount, duration, icon, perTurnEffectPrefab, perTurnSfxClip, vfxManager);
+            var bleedEffect = new BleedEffect(amount, duration, icon, perTurnEffectPrefab, perTurnSfxClip, vfxManager, sourceEffectName);
             
             // 가드 상태 확인하여 상태이상 효과 등록
             if (context.Target.RegisterStatusEffect(bleedEffect))
@@ -243,6 +246,39 @@ namespace Game.SkillCardSystem.Effect
                 if (effectConfig.effectSO is BleedEffectSO && effectConfig.useCustomSettings && effectConfig.customSettings != null)
                 {
                     return effectConfig.customSettings.bleedPerTurnSfxClip;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// EffectConfiguration에서 원본 효과 SO 이름을 가져옵니다 (툴팁 표시용).
+        /// </summary>
+        /// <param name="context">카드 실행 컨텍스트</param>
+        /// <returns>원본 효과 SO 이름 (없으면 null)</returns>
+        private string GetSourceEffectName(ICardExecutionContext context)
+        {
+            if (context?.Card?.CardDefinition == null)
+            {
+                return null;
+            }
+
+            var cardDefinition = context.Card.CardDefinition;
+            if (!cardDefinition.configuration.hasEffects)
+            {
+                return null;
+            }
+
+            foreach (var effectConfig in cardDefinition.configuration.effects)
+            {
+                if (effectConfig.effectSO is BleedEffectSO bleedEffectSO)
+                {
+                    string effectName = bleedEffectSO.GetEffectName();
+                    if (!string.IsNullOrWhiteSpace(effectName))
+                    {
+                        return effectName;
+                    }
                 }
             }
 

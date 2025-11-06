@@ -133,6 +133,10 @@ namespace Game.UISystem
         private PlayerCharacterData selectedCharacter;
         private List<GameObject> characterCards = new List<GameObject>();
         
+        private Tween creditsPanelTween;
+        private CanvasGroup creditsCanvasGroup;
+        private CanvasGroup mainMenuCanvasGroup;
+        
         #endregion
         
         #region 초기화
@@ -142,6 +146,7 @@ namespace Game.UISystem
             GameLogger.LogInfo("[MainMenuController] 초기화 시작", GameLogger.LogCategory.UI);
             
             InitializeUI();
+            InitializeCanvasGroups();
             ValidateInspectorBindings();
             LoadCharacterData();
             CreateCharacterCards();
@@ -156,6 +161,34 @@ namespace Game.UISystem
             GameLogger.LogInfo($"[MainMenuController] DI 주입 상태 - SceneTransitionManager: {(sceneTransitionManager != null ? "성공" : "실패")}", GameLogger.LogCategory.UI);
             
             GameLogger.LogInfo("[MainMenuController] 초기화 완료", GameLogger.LogCategory.UI);
+        }
+        
+        /// <summary>
+        /// 크레딧 및 메인 메뉴 CanvasGroup 초기화
+        /// </summary>
+        private void InitializeCanvasGroups()
+        {
+            if (creditsPanel != null)
+            {
+                creditsCanvasGroup = creditsPanel.GetComponent<CanvasGroup>();
+                if (creditsCanvasGroup == null)
+                {
+                    creditsCanvasGroup = creditsPanel.AddComponent<CanvasGroup>();
+                }
+                creditsCanvasGroup.alpha = 0f;
+                creditsCanvasGroup.blocksRaycasts = false;
+            }
+            
+            if (mainMenuPanel != null)
+            {
+                mainMenuCanvasGroup = mainMenuPanel.GetComponent<CanvasGroup>();
+                if (mainMenuCanvasGroup == null)
+                {
+                    mainMenuCanvasGroup = mainMenuPanel.AddComponent<CanvasGroup>();
+                }
+                mainMenuCanvasGroup.alpha = 1f;
+                mainMenuCanvasGroup.blocksRaycasts = true;
+            }
         }
 
         /// <summary>
@@ -513,33 +546,104 @@ namespace Game.UISystem
         }
         
         /// <summary>
-        /// 크레딧 버튼 클릭
+        /// 크레딧 버튼 클릭 - 영화 스타일 페이드 전환 효과
         /// </summary>
         private void OnCreditsButtonClicked()
         {
             GameLogger.LogInfo("[MainMenuController] 크레딧 버튼 클릭", GameLogger.LogCategory.UI);
             
-            if (creditsPanel != null)
+            if (creditsPanel == null || creditsCanvasGroup == null)
+                return;
+            
+            creditsPanelTween?.Kill();
+            
+            creditsPanel.SetActive(true);
+            creditsCanvasGroup.alpha = 0f;
+            creditsCanvasGroup.blocksRaycasts = false;
+            
+            if (mainMenuCanvasGroup != null)
             {
-                creditsPanel.SetActive(true);
-                creditsPanel.transform.localScale = Vector3.zero;
-                creditsPanel.transform.DOScale(Vector3.one, 0.3f)
-                    .SetEase(Ease.OutBack);
+                Sequence fadeSequence = DOTween.Sequence()
+                    .Append(mainMenuCanvasGroup.DOFade(0f, 0.5f)
+                        .SetEase(Ease.InQuad))
+                    .AppendCallback(() =>
+                    {
+                        if (mainMenuPanel != null)
+                            mainMenuPanel.SetActive(false);
+                        
+                        creditsCanvasGroup.blocksRaycasts = true;
+                    })
+                    .Append(creditsCanvasGroup.DOFade(1f, 0.5f)
+                        .SetEase(Ease.OutQuad))
+                    .SetAutoKill(true)
+                    .OnComplete(() => creditsPanelTween = null);
+                
+                creditsPanelTween = fadeSequence;
+            }
+            else
+            {
+                if (mainMenuPanel != null)
+                    mainMenuPanel.SetActive(false);
+                
+                creditsCanvasGroup.blocksRaycasts = true;
+                creditsPanelTween = creditsCanvasGroup.DOFade(1f, 0.5f)
+                    .SetEase(Ease.OutQuad)
+                    .SetAutoKill(true)
+                    .OnComplete(() => creditsPanelTween = null);
             }
         }
         
         /// <summary>
-        /// 메인 메뉴로 버튼 클릭
+        /// 메인 메뉴로 버튼 클릭 - 영화 스타일 페이드 전환 효과
         /// </summary>
         private void OnBackToMenuButtonClicked()
         {
             GameLogger.LogInfo("[MainMenuController] 메인 메뉴로 버튼 클릭", GameLogger.LogCategory.UI);
             
-            if (creditsPanel != null)
+            if (creditsPanel == null || creditsCanvasGroup == null)
+                return;
+            
+            creditsPanelTween?.Kill();
+            
+            creditsCanvasGroup.blocksRaycasts = false;
+            
+            if (mainMenuCanvasGroup != null)
             {
-                creditsPanel.transform.DOScale(Vector3.zero, 0.2f)
-                    .SetEase(Ease.InBack)
-                    .OnComplete(() => creditsPanel.SetActive(false));
+                Sequence fadeSequence = DOTween.Sequence()
+                    .Append(creditsCanvasGroup.DOFade(0f, 0.5f)
+                        .SetEase(Ease.InQuad))
+                    .AppendCallback(() =>
+                    {
+                        creditsPanel.SetActive(false);
+                        
+                        if (mainMenuPanel != null)
+                            mainMenuPanel.SetActive(true);
+                    })
+                    .Append(mainMenuCanvasGroup.DOFade(1f, 0.5f)
+                        .SetEase(Ease.OutQuad))
+                    .SetAutoKill(true)
+                    .OnComplete(() =>
+                    {
+                        if (mainMenuCanvasGroup != null)
+                            mainMenuCanvasGroup.blocksRaycasts = true;
+                        creditsPanelTween = null;
+                    });
+                
+                creditsPanelTween = fadeSequence;
+            }
+            else
+            {
+                creditsPanelTween = creditsCanvasGroup.DOFade(0f, 0.5f)
+                    .SetEase(Ease.InQuad)
+                    .SetAutoKill(true)
+                    .OnComplete(() =>
+                    {
+                        creditsPanel.SetActive(false);
+                        creditsPanelTween = null;
+                        
+                        if (mainMenuPanel != null)
+                            mainMenuPanel.SetActive(true);
+                    });
             }
         }
         
@@ -869,6 +973,22 @@ namespace Game.UISystem
         /// 캐릭터 타입에 따른 설명 반환
         /// </summary>
         // 타입별 하드코딩 설명 제거됨
+        
+        #endregion
+        
+        #region Cleanup
+        
+        private void OnDisable()
+        {
+            creditsPanelTween?.Kill();
+            creditsPanelTween = null;
+        }
+        
+        private void OnDestroy()
+        {
+            creditsPanelTween?.Kill();
+            creditsPanelTween = null;
+        }
         
         #endregion
     }

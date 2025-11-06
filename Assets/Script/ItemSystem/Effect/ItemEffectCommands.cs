@@ -231,9 +231,10 @@ namespace Game.ItemSystem.Effect
             var activeItemDef = context.ItemDefinition as Game.ItemSystem.Data.ActiveItemDefinition;
             var turnPolicy = activeItemDef?.turnPolicy ?? Interface.ItemEffectTurnPolicy.TargetTurnOnly;
             var itemIcon = context.ItemDefinition?.Icon;
+            var itemName = context.ItemDefinition?.DisplayName;
 
             // 공격력 버프 효과 생성 및 적용
-            var attackBuffEffect = new AttackPowerBuffEffect(buffAmount, duration, turnPolicy, itemIcon);
+            var attackBuffEffect = new AttackPowerBuffEffect(buffAmount, duration, turnPolicy, itemIcon, itemName);
             context.User.RegisterPerTurnEffect(attackBuffEffect);
 
             // UI에 버프 아이콘 표시 (아이템 이미지 사용)

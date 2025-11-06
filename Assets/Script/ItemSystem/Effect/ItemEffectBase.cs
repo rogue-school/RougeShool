@@ -23,6 +23,9 @@ namespace Game.ItemSystem.Effect
         /// <summary>턴 감소 정책</summary>
         public ItemEffectTurnPolicy TurnPolicy { get; protected set; }
 
+        /// <summary>원본 아이템 이름 (툴팁 표시용)</summary>
+        public string SourceItemName { get; protected set; }
+
         /// <summary>TurnManager 캐싱 (성능 최적화)</summary>
         private static Game.CombatSystem.Manager.TurnManager _cachedTurnManager;
 
@@ -32,11 +35,13 @@ namespace Game.ItemSystem.Effect
         /// <param name="duration">지속 턴 수</param>
         /// <param name="turnPolicy">턴 감소 정책</param>
         /// <param name="icon">UI 아이콘</param>
-        protected ItemEffectBase(int duration, ItemEffectTurnPolicy turnPolicy, Sprite icon = null)
+        /// <param name="sourceItemName">원본 아이템 이름 (선택적)</param>
+        protected ItemEffectBase(int duration, ItemEffectTurnPolicy turnPolicy, Sprite icon = null, string sourceItemName = null)
         {
             RemainingTurns = duration;
             TurnPolicy = turnPolicy;
             Icon = icon;
+            SourceItemName = sourceItemName;
         }
 
         /// <summary>

@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 namespace Game.CoreSystem.UI
 {
@@ -11,8 +12,10 @@ namespace Game.CoreSystem.UI
         [Header("로딩 UI")]
         [SerializeField] private GameObject loadingPanel;
         [SerializeField] private Slider progressBar;
-        [SerializeField] private Text progressText;
-        [SerializeField] private Text loadingText;
+        [Tooltip("진행률 텍스트 (TextMeshPro)")]
+        [SerializeField] private TextMeshProUGUI progressText;
+        [Tooltip("로딩 텍스트 (TextMeshPro)")]
+        [SerializeField] private TextMeshProUGUI loadingText;
         
         [Header("로딩 텍스트")]
         [SerializeField] private string[] loadingMessages = {

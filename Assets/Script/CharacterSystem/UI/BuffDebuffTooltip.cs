@@ -118,7 +118,8 @@ namespace Game.CharacterSystem.UI
         /// </summary>
         /// <param name="effect">표시할 효과</param>
         /// <param name="slotPosition">슬롯의 위치</param>
-        public void ShowTooltip(IPerTurnEffect effect, Vector2 slotPosition)
+        /// <param name="targetRect">대상 슬롯의 RectTransform (선택적)</param>
+        public void ShowTooltip(IPerTurnEffect effect, Vector2 slotPosition, RectTransform targetRect = null)
         {
             GameLogger.LogInfo($"[BuffDebuffTooltip] ShowTooltip 호출됨 - effect: {effect?.GetType().Name}, slotPosition: {slotPosition}, isVisible: {isVisible}", GameLogger.LogCategory.UI);
             
@@ -129,6 +130,7 @@ namespace Game.CharacterSystem.UI
             }
 
             currentEffect = effect;
+            currentTargetRect = targetRect;
             UpdateTooltipContent(effect);
             
             // Layout 시스템이 적용되도록 한 프레임 대기 후 위치 계산
@@ -144,7 +146,7 @@ namespace Game.CharacterSystem.UI
             yield return null;
 
             // 툴팁 위치 계산
-            UpdateTooltipPosition(slotPosition);
+            UpdatePosition(slotPosition);
 
             if (!isVisible)
             {
@@ -165,18 +167,6 @@ namespace Game.CharacterSystem.UI
             if (isVisible)
             {
                 FadeOut();
-            }
-        }
-
-        /// <summary>
-        /// 툴팁 위치를 업데이트합니다.
-        /// </summary>
-        /// <param name="slotPosition">슬롯 위치</param>
-        public void UpdatePosition(Vector2 slotPosition)
-        {
-            if (isVisible)
-            {
-                UpdateTooltipPosition(slotPosition);
             }
         }
 
@@ -201,8 +191,7 @@ namespace Game.CharacterSystem.UI
             // 효과 설명 업데이트
             UpdateEffectDescription(effect);
 
-            // 턴 정보 업데이트
-            UpdateTurnInfo(effect);
+            // 턴 정보는 사용하지 않음
         }
 
         /// <summary>
@@ -388,22 +377,21 @@ namespace Game.CharacterSystem.UI
         }
 
         /// <summary>
-        /// 턴 정보를 업데이트합니다.
+        /// 턴 정보는 사용하지 않습니다.
         /// </summary>
         /// <param name="effect">효과</param>
         private void UpdateTurnInfo(IPerTurnEffect effect)
         {
+            // 턴 정보 텍스트 비활성화
             if (remainingTurnsText != null)
             {
-                int remainingTurns = effect.RemainingTurns;
-                remainingTurnsText.text = $"남은 턴: {remainingTurns}";
-                remainingTurnsText.gameObject.SetActive(true);
+                remainingTurnsText.gameObject.SetActive(false);
             }
 
-            // 턴 정보 컨테이너가 있으면 추가 정보 표시
+            // 턴 정보 컨테이너 비활성화
             if (turnInfoContainer != null)
             {
-                UpdateTurnInfoContainer(effect);
+                turnInfoContainer.gameObject.SetActive(false);
             }
         }
 
@@ -461,6 +449,23 @@ namespace Game.CharacterSystem.UI
         {
             if (effect == null) return "알 수 없는 효과";
 
+            // 액티브 아이템 효과인 경우 아이템 이름을 우선 표시
+            if (effect is Game.ItemSystem.Interface.IItemPerTurnEffect)
+            {
+                string itemName = GetItemNameFromEffect(effect);
+                if (!string.IsNullOrEmpty(itemName))
+                {
+                    return itemName;
+                }
+            }
+
+            // 스킬 카드 효과인 경우 원본 SO의 effectName을 우선 표시
+            string effectSOName = GetEffectNameFromSO(effect);
+            if (!string.IsNullOrEmpty(effectSOName))
+            {
+                return effectSOName;
+            }
+
             string effectTypeName = effect.GetType().Name;
             
             switch (effectTypeName)
@@ -468,7 +473,7 @@ namespace Game.CharacterSystem.UI
                 case "BleedEffect":
                     return "출혈";
                 case "StunEffect":
-                    return "스턴";
+                    return "기절";
                 case "GuardBuff":
                     return "가드";
                 case "CounterBuff":
@@ -478,6 +483,118 @@ namespace Game.CharacterSystem.UI
                 default:
                     return effectTypeName.Replace("Effect", "").Replace("Buff", "");
             }
+        }
+
+        /// <summary>
+        /// 효과에서 원본 SkillCardEffectSO의 effectName을 가져옵니다.
+        /// </summary>
+        /// <param name="effect">효과</param>
+        /// <returns>효과 SO 이름 (없으면 null)</returns>
+        private string GetEffectNameFromSO(IPerTurnEffect effect)
+        {
+            if (effect == null) return null;
+
+            try
+            {
+                var effectType = effect.GetType();
+                
+                // 리플렉션으로 SourceEffectSO, EffectSO 등의 필드/프로퍼티 찾기
+                var fieldNames = new[] { "SourceEffectSO", "EffectSO", "sourceEffectSO", "effectSO", "SourceEffectName", "EffectName", "sourceEffectName", "effectName" };
+                
+                foreach (var fieldName in fieldNames)
+                {
+                    // 필드 확인
+                    var field = effectType.GetField(fieldName, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (field != null)
+                    {
+                        var value = field.GetValue(effect);
+                        if (value is Game.SkillCardSystem.Effect.SkillCardEffectSO effectSO)
+                        {
+                            string name = effectSO.GetEffectName();
+                            if (!string.IsNullOrWhiteSpace(name))
+                            {
+                                return name;
+                            }
+                        }
+                        else if (value is string nameStr && !string.IsNullOrEmpty(nameStr))
+                        {
+                            return nameStr;
+                        }
+                    }
+                    
+                    // 프로퍼티 확인
+                    var property = effectType.GetProperty(fieldName, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (property != null && property.CanRead)
+                    {
+                        var value = property.GetValue(effect);
+                        if (value is Game.SkillCardSystem.Effect.SkillCardEffectSO effectSO)
+                        {
+                            string name = effectSO.GetEffectName();
+                            if (!string.IsNullOrWhiteSpace(name))
+                            {
+                                return name;
+                            }
+                        }
+                        else if (value is string nameStr && !string.IsNullOrEmpty(nameStr))
+                        {
+                            return nameStr;
+                        }
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogWarning($"[BuffDebuffTooltip] 효과 SO 이름 추출 중 오류: {ex.Message}", GameLogger.LogCategory.UI);
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 효과에서 원본 아이템 이름을 가져옵니다 (리플렉션 사용).
+        /// </summary>
+        /// <param name="effect">효과</param>
+        /// <returns>아이템 이름 (없으면 null)</returns>
+        private string GetItemNameFromEffect(IPerTurnEffect effect)
+        {
+            if (effect == null) return null;
+
+            try
+            {
+                var effectType = effect.GetType();
+                
+                // 리플렉션으로 SourceItemName, ItemName, ActiveItemName 등의 필드/프로퍼티 찾기
+                var fieldNames = new[] { "SourceItemName", "ItemName", "ActiveItemName", "sourceItemName", "itemName", "activeItemName" };
+                
+                foreach (var fieldName in fieldNames)
+                {
+                    var field = effectType.GetField(fieldName, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (field != null)
+                    {
+                        var value = field.GetValue(effect) as string;
+                        if (!string.IsNullOrEmpty(value))
+                        {
+                            return value;
+                        }
+                    }
+                    
+                    var property = effectType.GetProperty(fieldName, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (property != null && property.CanRead)
+                    {
+                        var value = property.GetValue(effect) as string;
+                        if (!string.IsNullOrEmpty(value))
+                        {
+                            return value;
+                        }
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogWarning($"[BuffDebuffTooltip] 아이템 이름 추출 중 오류: {ex.Message}", GameLogger.LogCategory.UI);
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -509,22 +626,86 @@ namespace Game.CharacterSystem.UI
             if (effect == null) return "";
 
             string effectTypeName = effect.GetType().Name;
+            int remainingTurns = effect.RemainingTurns;
+            
+            // 리플렉션으로 데미지/치유량 등 수치 값 가져오기
+            // BleedEffect의 경우 "amount" 필드 (소문자)를 찾아야 함
+            int damageValue = GetEffectValue(effect, new[] { "amount", "Amount", "Value", "DamagePerTurn", "Damage", "BleedAmount" });
+            int healValue = GetEffectValue(effect, new[] { "healAmount", "HealPerTurn", "HealAmount" });
             
             switch (effectTypeName)
             {
                 case "BleedEffect":
-                    return "매 턴마다 체력이 감소합니다.\n지속 시간이 끝날 때까지 계속됩니다.";
+                    if (damageValue > 0)
+                        return $"매 턴이 시작할때마다 피해를 입힙니다.\n{damageValue}의 피해를 입히며 {remainingTurns}턴이 남았습니다.";
+                    else
+                        return $"매 턴이 시작할때마다 피해를 입힙니다.\n피해를 입히며 {remainingTurns}턴이 남았습니다.";
+                        
                 case "StunEffect":
-                    return "행동을 할 수 없는 상태입니다.\n턴을 건너뛰게 됩니다.";
+                    return $"매 턴이 시작할때마다 작동합니다.\n행동을 할 수 없게 하며 {remainingTurns}턴이 남았습니다.";
+                    
                 case "GuardBuff":
-                    return "받는 데미지를 무효화합니다.\n지속 시간이 끝날 때까지 유지됩니다.";
+                    return $"받는 모든 데미지와 상태이상을 무효화합니다.\n자신의 턴이 시작할 때마다 턴 수가 감소하며 {remainingTurns}턴이 남았습니다.";
+                    
                 case "CounterBuff":
-                    return "공격을 받으면 반격합니다.\n지속 시간이 끝날 때까지 유지됩니다.";
+                    return $"공격을 받으면 반격합니다.\n자신의 턴이 시작할 때마다 턴 수가 감소하며 {remainingTurns}턴이 남았습니다.";
+                    
                 case "HealEffect":
-                    return "매 턴마다 체력이 회복됩니다.\n지속 시간이 끝날 때까지 계속됩니다.";
+                    if (healValue > 0)
+                        return $"매 턴이 시작할때마다 작동합니다.\n{healValue}의 체력을 회복하며 {remainingTurns}턴이 남았습니다.";
+                    else
+                        return $"매 턴이 시작할때마다 작동합니다.\n체력을 회복하며 {remainingTurns}턴이 남았습니다.";
+                        
                 default:
-                    return "특수 효과가 적용되어 있습니다.\n지속 시간이 끝날 때까지 유지됩니다.";
+                    return $"매 턴이 시작할때마다 작동합니다.\n효과가 {remainingTurns}턴이 남았습니다.";
             }
+        }
+        
+        /// <summary>
+        /// 리플렉션을 사용하여 효과의 수치 값을 가져옵니다.
+        /// </summary>
+        /// <param name="effect">효과</param>
+        /// <param name="propertyNames">찾을 프로퍼티 이름 배열</param>
+        /// <returns>찾은 수치 값 (없으면 0)</returns>
+        private int GetEffectValue(IPerTurnEffect effect, string[] propertyNames)
+        {
+            if (effect == null) return 0;
+            
+            var effectType = effect.GetType();
+            
+            foreach (var propName in propertyNames)
+            {
+                var prop = effectType.GetProperty(propName, 
+                    System.Reflection.BindingFlags.Public | 
+                    System.Reflection.BindingFlags.NonPublic | 
+                    System.Reflection.BindingFlags.Instance);
+                
+                if (prop != null && prop.CanRead)
+                {
+                    var value = prop.GetValue(effect);
+                    if (value is int intValue)
+                        return intValue;
+                    if (value is float floatValue)
+                        return Mathf.RoundToInt(floatValue);
+                }
+                
+                // 프로퍼티가 없으면 필드 찾기
+                var field = effectType.GetField(propName, 
+                    System.Reflection.BindingFlags.Public | 
+                    System.Reflection.BindingFlags.NonPublic | 
+                    System.Reflection.BindingFlags.Instance);
+                
+                if (field != null)
+                {
+                    var value = field.GetValue(effect);
+                    if (value is int intValue)
+                        return intValue;
+                    if (value is float floatValue)
+                        return Mathf.RoundToInt(floatValue);
+                }
+            }
+            
+            return 0;
         }
 
         /// <summary>
@@ -579,33 +760,55 @@ namespace Game.CharacterSystem.UI
         /// <summary>
         /// 툴팁 위치를 슬롯 기준으로 업데이트합니다.
         /// </summary>
-        /// <param name="slotPosition">슬롯의 위치</param>
-        private void UpdateTooltipPosition(Vector2 slotPosition)
+        /// <param name="slotPosition">슬롯의 위치 (스크린 좌표)</param>
+        public void UpdatePosition(Vector2 slotPosition)
         {
             if (rectTransform == null) return;
+            
+            // 툴팁이 활성화되지 않았으면 위치만 설정 (표시되지 않음)
+            if (!gameObject.activeInHierarchy)
+            {
+                gameObject.SetActive(true);
+            }
 
             // 슬롯 위치를 캔버스 로컬 좌표로 변환
+            var targetParent = rectTransform.parent as RectTransform;
+            if (targetParent == null) return;
+
+            // 툴팁이 속한 캔버스의 카메라 확인
+            Camera cameraToUse = null;
+            var parentCanvas = rectTransform.GetComponentInParent<Canvas>();
+            if (parentCanvas != null && parentCanvas.renderMode != RenderMode.ScreenSpaceOverlay)
+            {
+                cameraToUse = parentCanvas.worldCamera;
+            }
+
             Vector2 slotLocalPoint;
-            Camera cameraToUse = null; // ScreenSpaceOverlay 모드 사용
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                rectTransform.parent as RectTransform, // 부모 RectTransform 사용
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                targetParent,
                 slotPosition,
                 cameraToUse,
-                out slotLocalPoint);
+                out slotLocalPoint))
+            {
+                return; // 변환 실패
+            }
 
             // 슬롯 기준으로 툴팁 위치 계산
             Vector2 tooltipPosition = CalculateTooltipPositionRelativeToSlot(slotLocalPoint);
 
             // 화면 경계 내로 제한
-            tooltipPosition = ClampToScreenBounds(tooltipPosition);
+            tooltipPosition = ClampToScreenBounds(tooltipPosition, targetParent);
 
             rectTransform.localPosition = tooltipPosition;
+            
+            // 다른 UI 위에 표시
+            rectTransform.SetAsLastSibling();
         }
 
         /// <summary>
-        /// 슬롯 기준으로 툴팁 위치를 계산합니다.
+        /// 슬롯 기준으로 툴팁 위치를 계산합니다. (SkillCardTooltip과 동일한 정책)
         /// </summary>
-        /// <param name="slotLocalPoint">슬롯의 로컬 좌표</param>
+        /// <param name="slotLocalPoint">슬롯의 로컬 좌표 (좌하단 기준)</param>
         /// <returns>툴팁의 로컬 좌표</returns>
         private Vector2 CalculateTooltipPositionRelativeToSlot(Vector2 slotLocalPoint)
         {
@@ -618,11 +821,16 @@ namespace Game.CharacterSystem.UI
             float tooltipWidth = Mathf.Abs(tooltipRect.width);
             float tooltipHeight = Mathf.Abs(tooltipRect.height);
 
-            // 툴팁의 Pivot 고려
+            // SkillCardTooltip과 동일: 좌하단 pivot 사용
+            rectTransform.pivot = new Vector2(0f, 0f);
             Vector2 tooltipPivot = rectTransform.pivot;
 
-            // 슬롯 크기 (기본값 50)
-            float slotSize = 50f;
+            // 슬롯 크기 계산 (currentTargetRect가 있으면 사용, 없으면 기본값)
+            float slotWidth = 50f;
+            if (currentTargetRect != null)
+            {
+                slotWidth = Mathf.Abs(currentTargetRect.rect.width);
+            }
 
             // 캔버스의 실제 경계
             float canvasLeft = canvasRect.xMin;
@@ -630,80 +838,92 @@ namespace Game.CharacterSystem.UI
             float canvasTop = canvasRect.yMax;
             float canvasBottom = canvasRect.yMin;
 
+            // 슬롯 우측 경계 계산 (slotLocalPoint는 슬롯 좌하단)
+            float slotRightEdge = slotLocalPoint.x + slotWidth;
+            
             // 슬롯 위치 기준 여유 공간 계산
-            float rightSpace = canvasRight - (slotLocalPoint.x + slotSize * 0.5f);
-            float leftSpace = (slotLocalPoint.x - slotSize * 0.5f) - canvasLeft;
+            float rightSpace = canvasRight - slotRightEdge;
+            float leftSpace = slotLocalPoint.x - canvasLeft;
 
-            // 툴팁이 들어갈 공간이 있는지 확인
-            float tooltipRequiredWidth = tooltipWidth * (1f - tooltipPivot.x) + slotOffsetX;
+            // 툴팁이 들어갈 공간이 있는지 확인 (간격 포함)
+            float tooltipRequiredWidth = tooltipWidth + slotOffsetX;
             bool canShowRight = rightSpace >= tooltipRequiredWidth;
             bool canShowLeft = leftSpace >= tooltipRequiredWidth;
 
             Vector2 tooltipPosition = slotLocalPoint;
 
-            // 수평 위치 결정 (오른쪽 우선)
+            // 수평 위치 결정 (오른쪽 우선, 부족 시 왼쪽 폴백)
             if (canShowRight)
             {
-                tooltipPosition.x = slotLocalPoint.x + (slotSize * 0.5f) + slotOffsetX + (tooltipWidth * tooltipPivot.x);
+                // 슬롯 우측 경계에서 간격을 두고 배치
+                tooltipPosition.x = slotRightEdge + slotOffsetX;
             }
             else if (canShowLeft)
             {
-                tooltipPosition.x = slotLocalPoint.x - (slotSize * 0.5f) - slotOffsetX - (tooltipWidth * (1f - tooltipPivot.x));
+                // 좌측 폴백: 슬롯 좌측에 간격을 두고 배치
+                tooltipPosition.x = slotLocalPoint.x - slotOffsetX - tooltipWidth;
             }
             else
             {
-                tooltipPosition.x = slotLocalPoint.x + slotSize * 0.5f + 10f;
+                // 양쪽 모두 부족하면 중앙 쪽으로 클램프
+                tooltipPosition.x = Mathf.Clamp(slotLocalPoint.x, canvasLeft, canvasRight - tooltipWidth);
             }
 
-            // 수직 위치는 슬롯 중심과 맞춤
-            tooltipPosition.y = slotLocalPoint.y;
+            // 수직 위치: 슬롯 하단과 맞춤 + 오프셋
+            tooltipPosition.y = slotLocalPoint.y + slotOffsetY;
 
             // 수직 경계 체크 및 조정
-            float tooltipTop = tooltipPosition.y + tooltipHeight * (1f - tooltipPivot.y);
-            float tooltipBottom = tooltipPosition.y - tooltipHeight * tooltipPivot.y;
+            float tooltipTop = tooltipPosition.y + tooltipHeight;
+            float tooltipBottom = tooltipPosition.y;
 
             if (tooltipTop > canvasTop)
             {
-                tooltipPosition.y = canvasTop - tooltipHeight * (1f - tooltipPivot.y);
+                tooltipPosition.y = canvasTop - tooltipHeight;
             }
             else if (tooltipBottom < canvasBottom)
             {
-                tooltipPosition.y = canvasBottom + tooltipHeight * tooltipPivot.y;
+                tooltipPosition.y = canvasBottom;
             }
 
             return tooltipPosition;
         }
+        
+        private RectTransform currentTargetRect;
 
         /// <summary>
         /// 위치를 화면 경계 내로 제한합니다.
         /// </summary>
         /// <param name="position">원본 위치</param>
+        /// <param name="targetParent">대상 부모 RectTransform</param>
         /// <returns>제한된 위치</returns>
-        private Vector2 ClampToScreenBounds(Vector2 position)
+        private Vector2 ClampToScreenBounds(Vector2 position, RectTransform targetParent)
         {
-            if (rectTransform == null) return position;
+            if (rectTransform == null || targetParent == null) return position;
 
-            var canvasRect = rectTransform.parent.GetComponent<RectTransform>().rect;
+            var canvasRect = targetParent.rect;
             var tooltipRect = rectTransform.rect;
 
             // X축 제한
-            if (position.x + tooltipRect.width > canvasRect.width)
+            float tooltipWidth = Mathf.Abs(tooltipRect.width);
+            float tooltipHeight = Mathf.Abs(tooltipRect.height);
+            
+            if (position.x + tooltipWidth > canvasRect.xMax)
             {
-                position.x = canvasRect.width - tooltipRect.width - slotOffsetX;
+                position.x = canvasRect.xMax - tooltipWidth;
             }
-            if (position.x < canvasRect.x)
+            if (position.x < canvasRect.xMin)
             {
-                position.x = canvasRect.x + slotOffsetX;
+                position.x = canvasRect.xMin;
             }
 
             // Y축 제한
-            if (position.y - tooltipRect.height < canvasRect.y)
+            if (position.y + tooltipHeight > canvasRect.yMax)
             {
-                position.y = canvasRect.y + tooltipRect.height + slotOffsetY;
+                position.y = canvasRect.yMax - tooltipHeight;
             }
-            if (position.y > canvasRect.height)
+            if (position.y < canvasRect.yMin)
             {
-                position.y = canvasRect.height - slotOffsetY;
+                position.y = canvasRect.yMin;
             }
 
             return position;

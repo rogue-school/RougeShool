@@ -77,7 +77,7 @@ namespace Game.SkillCardSystem.Effect
 
             // VFXManager 찾기
             var vfxManager = UnityEngine.Object.FindFirstObjectByType<VFXManager>();
-            var bleed = new BleedEffect(value, duration, GetIcon(), perTurnEffectPrefab ?? visualEffectPrefab, vfxManager);
+            var bleed = new BleedEffect(value, duration, GetIcon(), perTurnEffectPrefab ?? visualEffectPrefab, vfxManager, GetEffectName());
             
             // 가드 상태 확인하여 상태이상 효과 등록
             if (context.Target.RegisterStatusEffect(bleed))

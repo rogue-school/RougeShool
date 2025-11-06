@@ -1030,7 +1030,9 @@ namespace Game.StageSystem.Manager
         /// </summary>
         public bool HasNextStage()
         {
-            return currentStage?.stageNumber < 4;
+            // 다음 스테이지 번호 계산 후 실제 데이터 존재 여부로 판단
+            int nextStageNumber = (currentStage?.stageNumber ?? 1) + 1;
+            return GetStageData(nextStageNumber) != null;
         }
         
         /// <summary>
@@ -1063,7 +1065,7 @@ namespace Game.StageSystem.Manager
             var stageData = GetStageData(stageNumber);
             if (stageData == null)
             {
-                GameLogger.LogError($"스테이지 {stageNumber} 데이터를 찾을 수 없습니다", GameLogger.LogCategory.Combat);
+                GameLogger.LogWarning($"스테이지 {stageNumber} 데이터를 찾을 수 없습니다", GameLogger.LogCategory.Combat);
                 return false;
             }
             
@@ -1191,6 +1193,11 @@ namespace Game.StageSystem.Manager
                 {
                     GameLogger.LogInfo($"다음 스테이지로 진행: {currentStage.stageName}", GameLogger.LogCategory.Combat);
                     StartStage();
+                }
+                else
+                {
+                    // 다음 스테이지 데이터 부재 시 치명적 에러가 아닌 안내 로그만 남기고 종료
+                    GameLogger.LogInfo("다음 스테이지 데이터를 찾을 수 없어 자동 진행을 건너뜁니다", GameLogger.LogCategory.Combat);
                 }
             }
         }

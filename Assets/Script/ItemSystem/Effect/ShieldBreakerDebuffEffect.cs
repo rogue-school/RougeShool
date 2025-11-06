@@ -17,11 +17,13 @@ namespace Game.ItemSystem.Effect
         /// <param name="duration">지속 턴 수</param>
         /// <param name="turnPolicy">턴 감소 정책</param>
         /// <param name="icon">UI 아이콘</param>
+        /// <param name="sourceItemName">원본 아이템 이름 (선택적)</param>
         public ShieldBreakerDebuffEffect(
             int duration,
             ItemEffectTurnPolicy turnPolicy,
-            Sprite icon = null)
-            : base(duration, turnPolicy, icon)
+            Sprite icon = null,
+            string sourceItemName = null)
+            : base(duration, turnPolicy, icon, sourceItemName)
         {
         }
 

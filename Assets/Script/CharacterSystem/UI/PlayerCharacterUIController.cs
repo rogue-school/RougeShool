@@ -476,7 +476,8 @@ namespace Game.CharacterSystem.UI
                 var view = slotObj.GetComponent<BuffDebuffSlotView>();
                 if (view != null)
                 {
-                    view.SetData(e.Icon, e.RemainingTurns);
+                    // 효과 데이터를 설정하여 툴팁 기능 활성화
+                    view.SetEffectData(e);
                 }
                 else
                 {

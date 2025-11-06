@@ -19,6 +19,7 @@ namespace Game.SkillCardSystem.Effect
         private readonly GameObject perTurnEffectPrefab;
         private readonly AudioClip perTurnSfxClip;
         private readonly VFXManager vfxManager;
+        private readonly string sourceEffectName;
 
         /// <summary>
         /// 출혈 효과 생성자
@@ -28,7 +29,8 @@ namespace Game.SkillCardSystem.Effect
         /// <param name="icon">출혈 효과 아이콘</param>
         /// <param name="perTurnEffectPrefab">출혈 피해 발생 시 매 턴 재생할 이펙트 프리팹</param>
         /// <param name="vfxManager">VFX 매니저 (선택적)</param>
-        public BleedEffect(int amount, int duration, Sprite icon = null, GameObject perTurnEffectPrefab = null, VFXManager vfxManager = null)
+        /// <param name="sourceEffectName">원본 효과 SO 이름 (툴팁 표시용)</param>
+        public BleedEffect(int amount, int duration, Sprite icon = null, GameObject perTurnEffectPrefab = null, VFXManager vfxManager = null, string sourceEffectName = null)
         {
             this.amount = amount;
             this.remainingTurns = duration;
@@ -36,6 +38,7 @@ namespace Game.SkillCardSystem.Effect
             this.perTurnEffectPrefab = perTurnEffectPrefab;
             this.perTurnSfxClip = null;
             this.vfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
+            this.sourceEffectName = sourceEffectName;
         }
 
         /// <summary>
@@ -47,7 +50,8 @@ namespace Game.SkillCardSystem.Effect
         /// <param name="perTurnEffectPrefab">출혈 피해 발생 시 매 턴 재생할 이펙트 프리팹</param>
         /// <param name="perTurnSfxClip">출혈 피해 발생 시 매 턴 재생할 사운드</param>
         /// <param name="vfxManager">VFX 매니저 (선택적)</param>
-        public BleedEffect(int amount, int duration, Sprite icon, GameObject perTurnEffectPrefab, AudioClip perTurnSfxClip, VFXManager vfxManager)
+        /// <param name="sourceEffectName">원본 효과 SO 이름 (툴팁 표시용)</param>
+        public BleedEffect(int amount, int duration, Sprite icon, GameObject perTurnEffectPrefab, AudioClip perTurnSfxClip, VFXManager vfxManager, string sourceEffectName = null)
         {
             this.amount = amount;
             this.remainingTurns = duration;
@@ -55,6 +59,7 @@ namespace Game.SkillCardSystem.Effect
             this.perTurnEffectPrefab = perTurnEffectPrefab;
             this.perTurnSfxClip = perTurnSfxClip;
             this.vfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
+            this.sourceEffectName = sourceEffectName;
         }
 
         /// <summary>
