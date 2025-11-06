@@ -69,6 +69,7 @@ namespace Game.StageSystem.Manager
         private bool isSpawning = false;
         private bool isStageCompleted = false;
         private bool isSummonInProgress = false;
+        private bool isDestroyed = false;
 
         // 스테이지 진행 상태
         private StageProgressState progressState = StageProgressState.NotStarted;
@@ -120,6 +121,9 @@ namespace Game.StageSystem.Manager
         /// </summary>
         private void Start()
         {
+            // 씬 재로드 시 상태 초기화
+            isDestroyed = false;
+            
             // 튜토리얼 실행 여부 결정 및 저장 (메인 메뉴 설정/최초 완료 상태 반영)
             try
             {
@@ -169,11 +173,16 @@ namespace Game.StageSystem.Manager
 
         private void OnDestroy()
         {
+            // 씬 전환/파괴 상태 표시
+            isDestroyed = true;
+            
             // 이벤트 구독 해제
             if (playerManager != null)
             {
                 playerManager.OnPlayerCharacterReady -= OnPlayerReady;
             }
+            
+            GameLogger.LogInfo("[StageManager] StageManager 파괴됨 - 모든 작업 중단", GameLogger.LogCategory.Combat);
         }
 
         /// <summary>
@@ -322,6 +331,9 @@ namespace Game.StageSystem.Manager
         /// </summary>
         public async Task SaveProgressBeforeSceneTransition()
         {
+            // 씬 전환 상태 표시
+            isDestroyed = true;
+            
             try
             {
                 if (saveManager != null)
@@ -365,6 +377,13 @@ namespace Game.StageSystem.Manager
         /// </summary>
         public async Task<bool> SpawnNextEnemyAsync()
         {
+            // 씬 전환/파괴 상태 확인
+            if (isDestroyed || this == null)
+            {
+                GameLogger.LogWarning("StageManager가 파괴되었습니다 - 적 생성 취소", GameLogger.LogCategory.Combat);
+                return false;
+            }
+            
             if (isSpawning)
             {
                 GameLogger.LogWarning("중복 스폰 방지", GameLogger.LogCategory.Combat);
@@ -389,9 +408,19 @@ namespace Game.StageSystem.Manager
             {
                 // 적 생성 (단순화된 로직)
                 var enemy = await CreateEnemyAsync(data);
-                if (enemy == null)
+                
+                // 씬 전환/파괴 상태 재확인 (생성 후에도 확인)
+                if (isDestroyed || this == null || enemy == null)
                 {
-                    GameLogger.LogError("적 생성 실패", GameLogger.LogCategory.Combat);
+                    if (isDestroyed || this == null)
+                    {
+                        GameLogger.LogWarning("StageManager가 파괴되었습니다 - 적 생성 취소 (생성 후)", GameLogger.LogCategory.Combat);
+                    }
+                    else
+                    {
+                        GameLogger.LogError("적 생성 실패", GameLogger.LogCategory.Combat);
+                    }
+                    isSpawning = false;
                     return false;
                 }
 
@@ -718,6 +747,13 @@ namespace Game.StageSystem.Manager
         /// </summary>
         private async Task<ICharacter> CreateEnemyInternalAsync(EnemyCharacterData data)
         {
+            // 씬 전환/파괴 상태 확인
+            if (isDestroyed || this == null)
+            {
+                GameLogger.LogWarning("StageManager가 파괴되었습니다 - 적 생성 취소", GameLogger.LogCategory.Combat);
+                return null;
+            }
+            
             if (data?.Prefab == null)
             {
                 GameLogger.LogError("적 데이터 또는 프리팹이 null입니다", GameLogger.LogCategory.Error);
@@ -726,6 +762,13 @@ namespace Game.StageSystem.Manager
 
             // 비동기 처리 시뮬레이션
             await Task.Delay(100);
+
+            // 씬 전환/파괴 상태 재확인 (비동기 작업 중간에 씬이 전환될 수 있음)
+            if (isDestroyed || this == null)
+            {
+                GameLogger.LogWarning("StageManager가 파괴되었습니다 - 적 생성 취소 (비동기 작업 중)", GameLogger.LogCategory.Combat);
+                return null;
+            }
 
             if (enemyManager == null)
             {
@@ -756,14 +799,75 @@ namespace Game.StageSystem.Manager
             enemy.SetCharacterData(data);
 
             // 등장 연출 (오른쪽 바깥에서 자리로) - Ease.InOutCubic 그래프
+            // 씬 전환/파괴 상태 확인
+            if (isDestroyed || this == null || enemyInstance == null)
+            {
+                GameLogger.LogWarning("StageManager가 파괴되었습니다 - 애니메이션 취소", GameLogger.LogCategory.Combat);
+                return null;
+            }
+            
             var entranceTween = TryPlayEntranceAnimation(enemyInstance.transform, fromLeft: false);
 
             // 애니메이션 완료 대기
-            if (entranceTween != null)
+            if (entranceTween != null && !isDestroyed && this != null && enemyInstance != null)
             {
-                GameLogger.LogInfo($"적 등장 애니메이션 시작: {data.CharacterName}", GameLogger.LogCategory.Combat);
-                await entranceTween.AsyncWaitForCompletion();
-                GameLogger.LogInfo($"적 등장 애니메이션 완료: {data.CharacterName}", GameLogger.LogCategory.Combat);
+                try
+                {
+                    GameLogger.LogInfo($"적 등장 애니메이션 시작: {data.CharacterName}", GameLogger.LogCategory.Combat);
+                    
+                    // 애니메이션 완료 대기 (타임아웃 설정)
+                    var timeoutTask = Task.Delay(TimeSpan.FromSeconds(2.0)); // 최대 2초 대기
+                    var animationTask = entranceTween.AsyncWaitForCompletion();
+                    var completedTask = await Task.WhenAny(animationTask, timeoutTask);
+                    
+                    // 씬 전환/파괴 상태 재확인
+                    if (isDestroyed || this == null || enemyInstance == null || characterSlot == null)
+                    {
+                        GameLogger.LogWarning("StageManager가 파괴되었습니다 - 애니메이션 완료 후 취소", GameLogger.LogCategory.Combat);
+                        // 애니메이션 취소
+                        if (entranceTween != null && entranceTween.IsActive())
+                        {
+                            entranceTween.Kill();
+                        }
+                        return null;
+                    }
+                    
+                    if (completedTask == animationTask)
+                    {
+                        GameLogger.LogInfo($"적 등장 애니메이션 완료: {data.CharacterName}", GameLogger.LogCategory.Combat);
+                    }
+                    else
+                    {
+                        GameLogger.LogWarning($"적 등장 애니메이션 타임아웃: {data.CharacterName}", GameLogger.LogCategory.Combat);
+                        // 타임아웃 시 애니메이션 취소
+                        if (entranceTween != null && entranceTween.IsActive())
+                        {
+                            entranceTween.Kill();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    GameLogger.LogWarning($"애니메이션 대기 중 오류 발생 (씬 전환 가능성): {ex.Message}", GameLogger.LogCategory.Combat);
+                    // 애니메이션 취소
+                    if (entranceTween != null && entranceTween.IsActive())
+                    {
+                        entranceTween.Kill();
+                    }
+                    
+                    // 씬 전환/파괴 상태 확인
+                    if (isDestroyed || this == null || enemyInstance == null || characterSlot == null)
+                    {
+                        return null;
+                    }
+                }
+            }
+
+            // 최종 상태 확인
+            if (isDestroyed || this == null || enemyInstance == null || characterSlot == null)
+            {
+                GameLogger.LogWarning("StageManager가 파괴되었습니다 - 적 생성 최종 취소", GameLogger.LogCategory.Combat);
+                return null;
             }
 
             GameLogger.LogInfo($"적 캐릭터 생성 및 배치 완료: {data.CharacterName} (슬롯: {characterSlot.name})", GameLogger.LogCategory.Combat);
@@ -776,23 +880,48 @@ namespace Game.StageSystem.Manager
         /// </summary>
         private Tween TryPlayEntranceAnimation(Transform target, bool fromLeft)
         {
-            if (target == null) return null;
+            if (target == null || isDestroyed || this == null) return null;
+            
             const float duration = 1.5f;
             var ease = Ease.InOutCubic;
 
-            if (target is RectTransform rt)
+            try
             {
-                Vector2 end = rt.anchoredPosition;
-                Vector2 start = new Vector2(fromLeft ? -1100f : 1100f, end.y);
-                rt.anchoredPosition = start;
-                return rt.DOAnchorPos(end, duration).SetEase(ease);
+                if (target is RectTransform rt)
+                {
+                    // 객체가 유효한지 확인
+                    if (rt == null || rt.gameObject == null) return null;
+                    
+                    Vector2 end = rt.anchoredPosition;
+                    Vector2 start = new Vector2(fromLeft ? -1100f : 1100f, end.y);
+                    rt.anchoredPosition = start;
+                    
+                    var tween = rt.DOAnchorPos(end, duration)
+                        .SetEase(ease)
+                        .SetAutoKill(true); // 자동 정리 설정
+                    
+                    return tween;
+                }
+                else
+                {
+                    // 객체가 유효한지 확인
+                    if (target == null || target.gameObject == null) return null;
+                    
+                    Vector3 end = target.position;
+                    Vector3 start = new Vector3(fromLeft ? -1100f : 1100f, end.y, end.z);
+                    target.position = start;
+                    
+                    var tween = target.DOMove(end, duration)
+                        .SetEase(ease)
+                        .SetAutoKill(true); // 자동 정리 설정
+                    
+                    return tween;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                Vector3 end = target.position;
-                Vector3 start = new Vector3(fromLeft ? -1100f : 1100f, end.y, end.z);
-                target.position = start;
-                return target.DOMove(end, duration).SetEase(ease);
+                GameLogger.LogWarning($"애니메이션 생성 중 오류 발생: {ex.Message}", GameLogger.LogCategory.Combat);
+                return null;
             }
         }
 
@@ -1278,6 +1407,13 @@ namespace Game.StageSystem.Manager
         /// </summary>
         private async Task TransitionToSummonState(EnemyCharacterData targetEnemy, bool isRestore)
         {
+            // 씬 전환/파괴 상태 확인
+            if (isDestroyed || this == null)
+            {
+                GameLogger.LogWarning("StageManager가 파괴되었습니다 - 소환 처리 취소", GameLogger.LogCategory.Combat);
+                return;
+            }
+            
             // CombatStateMachine 확인 (DI 주입)
             if (combatStateMachine == null)
             {
@@ -1289,6 +1425,13 @@ namespace Game.StageSystem.Manager
             {
                 // 1단계: 기존 적 제거 및 슬롯 정리
                 await CleanupCurrentEnemy();
+                
+                // 씬 전환/파괴 상태 재확인
+                if (isDestroyed || this == null)
+                {
+                    GameLogger.LogWarning("StageManager가 파괴되었습니다 - 소환 처리 취소 (정리 후)", GameLogger.LogCategory.Combat);
+                    return;
+                }
                 
                 // 2단계: 새로운 적 생성
                 var newEnemy = await CreateEnemyForSummonAsync(targetEnemy);
