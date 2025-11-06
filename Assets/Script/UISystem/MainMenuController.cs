@@ -750,6 +750,21 @@ namespace Game.UISystem
                 PlayerPrefs.SetString("SELECTED_CHARACTER_TYPE", startCharacter.CharacterType.ToString());
                 PlayerPrefs.Save();
 
+                // 게임 시작 전 잔존할 수 있는 게임 오버 UI를 확실히 초기화
+                try
+                {
+                    var gameOverUI = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.UI.GameOverUI>(FindObjectsInactive.Include);
+                    if (gameOverUI != null)
+                    {
+                        gameOverUI.HideGameOver();
+                        GameLogger.LogInfo("[MainMenuController] 게임 시작 전 GameOverUI 초기화(숨김)", GameLogger.LogCategory.UI);
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    GameLogger.LogWarning($"[MainMenuController] GameOverUI 초기화 중 경고: {ex.Message}", GameLogger.LogCategory.UI);
+                }
+
                 // 스테이지 씬으로 전환 (DI 주입 또는 직접 찾기)
                 ISceneTransitionManager transitionManager = sceneTransitionManager;
                 

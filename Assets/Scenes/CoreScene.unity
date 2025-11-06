@@ -3655,8 +3655,6 @@ MonoBehaviour:
   tooltipPrefab: {fileID: 775124722761666854, guid: 122d777589a1d0d408092d0999b166f0, type: 3}
   showDelay: 0.2
   hideDelay: 0.1
-  canvasSortOrder: 1000
-  canvasName: BuffDebuffTooltipCanvas
 --- !u!1 &1935855617
 GameObject:
   m_ObjectHideFlags: 0
