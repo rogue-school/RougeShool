@@ -104,13 +104,10 @@ namespace Game.SkillCardSystem.Effect
                 return;
             }
 
-            // 캐릭터의 시각적 중심 위치 계산
-            var spawnPos = GetPortraitCenterWorldPosition(targetTransform);
-
-            // VFXManager를 통한 이펙트 생성
+            // VFXManager를 통한 이펙트 생성 (동일한 위치 계산 방식 사용)
             if (vfxManager != null)
             {
-                var instance = vfxManager.PlayEffect(perTurnEffectPrefab, spawnPos);
+                var instance = vfxManager.PlayEffectAtCharacterCenter(perTurnEffectPrefab, targetTransform);
                 if (instance != null)
                 {
                     SetEffectLayer(instance);
@@ -120,6 +117,7 @@ namespace Game.SkillCardSystem.Effect
             else
             {
                 // Fallback: VFXManager가 없으면 기존 방식 사용
+                var spawnPos = GetPortraitCenterWorldPosition(targetTransform);
                 var instance = UnityEngine.Object.Instantiate(perTurnEffectPrefab, spawnPos, Quaternion.identity);
                 SetEffectLayer(instance);
                 UnityEngine.Object.Destroy(instance, 2.0f);

@@ -178,9 +178,16 @@ namespace Game.VFXSystem.Manager
                 GameLogger.LogInfo($"[VFXManager] 이펙트 레이어를 Effects로 설정: {effectsLayer}", GameLogger.LogCategory.Combat);
             }
 
-            // 부모 설정
+            // 부모 설정 (월드 위치 유지)
             Transform targetParent = parent ?? effectContainer;
-            effect.transform.SetParent(targetParent);
+            effect.transform.SetParent(targetParent, worldPositionStays: true);
+            
+            // 부모 설정 후에도 위치가 올바른지 확인 및 재설정
+            if (effect.transform.position != position)
+            {
+                effect.transform.position = position;
+                GameLogger.LogWarning($"[VFXManager] 이펙트 위치 보정: {effect.transform.position} → {position}", GameLogger.LogCategory.Combat);
+            }
             
             GameLogger.LogInfo($"[VFXManager] 이펙트 생성 완료: {effect.name}, 위치: {effect.transform.position}", GameLogger.LogCategory.Combat);
 
@@ -213,10 +220,18 @@ namespace Game.VFXSystem.Manager
                 return PlayEffect(effectPrefab, Vector3.zero, rotation, parent);
             }
 
-            // 캐릭터의 시각적 중심 위치 계산
+            // 캐릭터의 시각적 중심 위치 계산 (동일한 Transform에 대해 일관된 위치 보장)
             Vector3 centerPosition = GetCharacterVisualCenter(characterTransform);
             
             GameLogger.LogInfo($"[VFXManager] 캐릭터 중심 이펙트 재생: {effectPrefab?.name}, 캐릭터: {characterTransform.name}, 중심 위치: {centerPosition}", GameLogger.LogCategory.Combat);
+            
+            // 위치를 재확인하여 일관성 보장
+            Vector3 verifiedPosition = GetCharacterVisualCenter(characterTransform);
+            if (Vector3.Distance(centerPosition, verifiedPosition) > 0.01f)
+            {
+                GameLogger.LogWarning($"[VFXManager] 위치 계산 불일치 감지: {centerPosition} vs {verifiedPosition}, 재계산된 위치 사용", GameLogger.LogCategory.Combat);
+                centerPosition = verifiedPosition;
+            }
             
             return PlayEffect(effectPrefab, centerPosition, rotation, parent);
         }
@@ -336,15 +351,23 @@ namespace Game.VFXSystem.Manager
 
         /// <summary>
         /// RectTransform의 중심을 월드 좌표로 계산합니다.
+        /// GetWorldCorners를 사용하여 더 안정적으로 계산합니다.
         /// </summary>
         /// <param name="rt">RectTransform</param>
         /// <returns>월드 중심 좌표</returns>
         private Vector3 GetRectTransformCenterWorld(RectTransform rt)
         {
             if (rt == null) return Vector3.zero;
-            var bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(rt, rt);
-            var localCenter = bounds.center;
-            return rt.TransformPoint(localCenter);
+            
+            // GetWorldCorners를 사용하여 월드 좌표로 4개 코너 가져오기
+            // 0: BL (Bottom Left), 1: TL (Top Left), 2: TR (Top Right), 3: BR (Bottom Right)
+            Vector3[] corners = new Vector3[4];
+            rt.GetWorldCorners(corners);
+            
+            // 4개 코너의 중심 계산
+            Vector3 center = (corners[0] + corners[1] + corners[2] + corners[3]) / 4f;
+            
+            return center;
         }
 
 

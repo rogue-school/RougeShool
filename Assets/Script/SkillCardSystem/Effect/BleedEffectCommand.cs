@@ -111,14 +111,10 @@ namespace Game.SkillCardSystem.Effect
                 return;
             }
 
-            // 캐릭터의 시각적 중심 위치 계산
-            var spawnPos = GetPortraitCenterWorldPosition(targetTransform);
-            GameLogger.LogInfo($"[BleedEffectCommand] 출혈 VFX 생성 시작 - 프리팹: {visualEffectPrefab.name}, 위치: {spawnPos}", GameLogger.LogCategory.SkillCard);
-
-            // VFXManager를 통한 이펙트 생성
+            // VFXManager를 통한 이펙트 생성 (동일한 위치 계산 방식 사용)
             if (vfxManager != null)
             {
-                var instance = vfxManager.PlayEffect(visualEffectPrefab, spawnPos);
+                var instance = vfxManager.PlayEffectAtCharacterCenter(visualEffectPrefab, targetTransform);
                 if (instance != null)
                 {
                     SetEffectLayer(instance);
@@ -128,6 +124,7 @@ namespace Game.SkillCardSystem.Effect
             else
             {
                 // Fallback: VFXManager가 없으면 기존 방식 사용
+                var spawnPos = GetPortraitCenterWorldPosition(targetTransform);
                 var instance = UnityEngine.Object.Instantiate(visualEffectPrefab, spawnPos, Quaternion.identity);
                 GameLogger.LogInfo($"[BleedEffectCommand] 출혈 VFX 인스턴스 생성 완료: {instance.name}", GameLogger.LogCategory.SkillCard);
 
