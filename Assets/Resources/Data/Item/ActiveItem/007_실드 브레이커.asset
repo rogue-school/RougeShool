@@ -33,4 +33,4 @@ MonoBehaviour:
       data:
         duration: 2
         sfxClip: {fileID: 0}
-        visualEffectPrefab: {fileID: 0}
+        visualEffectPrefab: {fileID: 1889961486689213479, guid: 62adec539a892f84d84c9b9c5539a32d, type: 3}

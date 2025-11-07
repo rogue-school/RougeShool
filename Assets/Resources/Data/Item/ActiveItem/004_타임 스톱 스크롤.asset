@@ -18,9 +18,6 @@ MonoBehaviour:
   icon: {fileID: 8933749813396638541, guid: b00db80c164406045a26f3629ea98a3c, type: 3}
   targetType: 1
   turnPolicy: 1
-  presentation:
-    sfxClip: {fileID: 0}
-    visualEffectPrefab: {fileID: 0}
   effectConfiguration:
     effects:
     - effectSO: {fileID: 11400000, guid: 6ee40127bbb1cc542a239046e3e7e675, type: 2}
@@ -35,3 +32,5 @@ MonoBehaviour:
       type: {class: TimeStopEffectCustomSettings, ns: Game.ItemSystem.Data, asm: Assembly-CSharp}
       data:
         sealCount: 1
+        sfxClip: {fileID: 0}
+        visualEffectPrefab: {fileID: 7697830669745601185, guid: 74e235f7b8a3df94c976f5922b5a66f9, type: 3}

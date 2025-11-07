@@ -18,9 +18,6 @@ MonoBehaviour:
   icon: {fileID: 606631214649944254, guid: 87fa5e53c998ffe4bb5742cce6e1f3e1, type: 3}
   targetType: 0
   turnPolicy: 1
-  presentation:
-    sfxClip: {fileID: 0}
-    visualEffectPrefab: {fileID: 0}
   effectConfiguration:
     effects:
     - effectSO: {fileID: 11400000, guid: 9cb727b99d484454a93efca0b3c4f7a4, type: 2}
@@ -36,3 +33,5 @@ MonoBehaviour:
       data:
         buffAmount: 3
         duration: 1
+        sfxClip: {fileID: 0}
+        visualEffectPrefab: {fileID: 126652359712664187, guid: ce2e25d009608434bba688c9ef8bf708, type: 3}

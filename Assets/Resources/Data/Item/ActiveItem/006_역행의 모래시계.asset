@@ -32,4 +32,4 @@ MonoBehaviour:
       type: {class: RerollEffectCustomSettings, ns: Game.ItemSystem.Data, asm: Assembly-CSharp}
       data:
         sfxClip: {fileID: 0}
-        visualEffectPrefab: {fileID: 0}
+        visualEffectPrefab: {fileID: 7697830669745601185, guid: 74e235f7b8a3df94c976f5922b5a66f9, type: 3}
