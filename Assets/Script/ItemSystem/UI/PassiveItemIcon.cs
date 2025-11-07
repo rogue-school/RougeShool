@@ -1,9 +1,11 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.EventSystems;
 using DG.Tweening;
 using Game.CoreSystem.Utility;
 using Game.ItemSystem.Data;
+using Game.ItemSystem.Manager;
 
 namespace Game.ItemSystem.UI
 {
@@ -11,7 +13,7 @@ namespace Game.ItemSystem.UI
     /// 패시브 아이템 아이콘을 관리하는 컴포넌트입니다.
     /// 아이템 아이콘과 강화 단계 숫자를 표시합니다.
     /// </summary>
-    public class PassiveItemIcon : MonoBehaviour
+    public class PassiveItemIcon : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         #region Serialized Fields
 
@@ -53,6 +55,9 @@ namespace Game.ItemSystem.UI
         private Tween fadeTween;
         private Tween scaleTween;
 
+        private ItemTooltipManager tooltipManager;
+        private RectTransform rectTransform;
+
         #endregion
 
         #region Unity Lifecycle
@@ -60,12 +65,28 @@ namespace Game.ItemSystem.UI
         private void Awake()
         {
             InitializeIcon();
+            rectTransform = GetComponent<RectTransform>();
+        }
+
+        private void Start()
+        {
+            tooltipManager = UnityEngine.Object.FindFirstObjectByType<ItemTooltipManager>();
+            if (tooltipManager == null)
+            {
+                GameLogger.LogWarning("[PassiveItemIcon] ItemTooltipManager를 찾을 수 없습니다", GameLogger.LogCategory.UI);
+            }
         }
 
         private void OnDestroy()
         {
             fadeTween?.Kill();
             scaleTween?.Kill();
+
+            // 툴팁 매니저에서 등록 해제
+            if (tooltipManager != null && itemDefinition != null)
+            {
+                tooltipManager.UnregisterPassiveItemUI(itemDefinition);
+            }
         }
 
         #endregion
@@ -110,6 +131,17 @@ namespace Game.ItemSystem.UI
             SetIconColor();
 
             FadeIn();
+
+            // 툴팁 매니저에 등록 (없으면 찾기)
+            if (tooltipManager == null)
+            {
+                tooltipManager = UnityEngine.Object.FindFirstObjectByType<ItemTooltipManager>();
+            }
+
+            if (tooltipManager != null && rectTransform != null)
+            {
+                tooltipManager.RegisterPassiveItemUI(itemDefinition, rectTransform);
+            }
 
             GameLogger.LogInfo($"[PassiveItemIcon] 패시브 아이템 아이콘 설정: {itemDefinition.DisplayName}, 강화 단계: {enhancementLevel}", GameLogger.LogCategory.UI);
         }
@@ -254,6 +286,36 @@ namespace Game.ItemSystem.UI
             scaleTween = transform.DOScale(1f, 0.2f)
                 .SetEase(Ease.OutQuad)
                 .SetAutoKill(true);
+        }
+
+        /// <summary>
+        /// 포인터가 UI 요소에 진입했을 때 호출됩니다.
+        /// </summary>
+        /// <param name="eventData">포인터 이벤트 데이터</param>
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            OnMouseEnter();
+
+            // 툴팁 표시
+            if (tooltipManager != null && itemDefinition != null)
+            {
+                tooltipManager.OnPassiveItemHoverEnter(itemDefinition, rectTransform, enhancementLevel);
+            }
+        }
+
+        /// <summary>
+        /// 포인터가 UI 요소에서 이탈했을 때 호출됩니다.
+        /// </summary>
+        /// <param name="eventData">포인터 이벤트 데이터</param>
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            OnMouseExit();
+
+            // 툴팁 숨김
+            if (tooltipManager != null)
+            {
+                tooltipManager.OnItemHoverExit();
+            }
         }
 
         #endregion

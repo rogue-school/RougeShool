@@ -43,9 +43,13 @@ namespace Game.ItemSystem.Manager
         private ItemTooltip currentTooltip;
         private RectTransform tooltipLayer;
         private ActiveItemDefinition hoveredItem;
+        private PassiveItemDefinition hoveredPassiveItem;
+        private int hoveredPassiveItemEnhancementLevel = 1;
         private RectTransform currentTargetRect;
         private bool pendingShow;
         private ActiveItemDefinition pendingItem;
+        private PassiveItemDefinition pendingPassiveItem;
+        private int pendingPassiveItemEnhancementLevel = 1;
 
         private float showTimer;
         private float hideTimer;
@@ -53,10 +57,13 @@ namespace Game.ItemSystem.Manager
         private bool isHidingTooltip;
         private bool isPinned; // 팝업 등으로 고정된 동안 숨기지 않음
         private ActiveItemDefinition pinnedItem;
+        private PassiveItemDefinition pinnedPassiveItem;
+        private int pinnedPassiveItemEnhancementLevel = 1;
         private RectTransform pinnedRect;
 
         private EventSystem eventSystem;
         private System.Collections.Generic.Dictionary<ActiveItemDefinition, RectTransform> itemUICache = new();
+        private System.Collections.Generic.Dictionary<PassiveItemDefinition, RectTransform> passiveItemUICache = new();
 
         #endregion
 
@@ -224,6 +231,17 @@ namespace Game.ItemSystem.Manager
         }
 
         /// <summary>
+        /// 패시브 아이템 UI를 등록합니다.
+        /// </summary>
+        /// <param name="item">패시브 아이템 데이터</param>
+        /// <param name="itemTransform">아이템 UI의 RectTransform</param>
+        public void RegisterPassiveItemUI(PassiveItemDefinition item, RectTransform itemTransform)
+        {
+            if (item == null || itemTransform == null) return;
+            passiveItemUICache[item] = itemTransform;
+        }
+
+        /// <summary>
         /// 아이템 UI 등록을 해제합니다.
         /// </summary>
         /// <param name="item">아이템 데이터</param>
@@ -234,6 +252,22 @@ namespace Game.ItemSystem.Manager
 
             // 현재 표시/대기/고정 대상이 사라지면 즉시 숨김 처리
             if (hoveredItem == item || pendingItem == item || (isPinned && pinnedItem == item))
+            {
+                ForceHideTooltip();
+            }
+        }
+
+        /// <summary>
+        /// 패시브 아이템 UI 등록을 해제합니다.
+        /// </summary>
+        /// <param name="item">패시브 아이템 데이터</param>
+        public void UnregisterPassiveItemUI(PassiveItemDefinition item)
+        {
+            if (item == null) return;
+            passiveItemUICache.Remove(item);
+
+            // 현재 표시/대기/고정 대상이 사라지면 즉시 숨김 처리
+            if (hoveredPassiveItem == item || pendingPassiveItem == item || (isPinned && pinnedPassiveItem == item))
             {
                 ForceHideTooltip();
             }
@@ -299,28 +333,91 @@ namespace Game.ItemSystem.Manager
         /// </summary>
         public void OnItemHoverExit()
         {
-            if (hoveredItem == null) return;
+            if (hoveredItem == null && hoveredPassiveItem == null) return;
 
             if (isPinned)
             {
                 // 고정 상태에서는 숨김 타이머를 시작하지 않고 상태만 초기화
                 hoveredItem = null;
+                hoveredPassiveItem = null;
                 isShowingTooltip = false;
                 showTimer = 0f;
                 return;
             }
 
             hoveredItem = null;
+            hoveredPassiveItem = null;
             isShowingTooltip = false;
             showTimer = 0f;
 
             pendingItem = null;
+            pendingPassiveItem = null;
             pendingShow = false;
 
             if (!isHidingTooltip)
             {
                 isHidingTooltip = true;
                 hideTimer = 0f;
+            }
+        }
+
+        /// <summary>
+        /// 패시브 아이템에 마우스가 진입했을 때 호출됩니다.
+        /// </summary>
+        /// <param name="item">호버된 패시브 아이템</param>
+        /// <param name="enhancementLevel">강화 단계</param>
+        public void OnPassiveItemHoverEnter(PassiveItemDefinition item, int enhancementLevel = 1)
+        {
+            OnPassiveItemHoverEnter(item, null, enhancementLevel);
+        }
+
+        /// <summary>
+        /// 패시브 아이템에 마우스가 진입했을 때 호출됩니다. (호버 소스 Rect 우선)
+        /// </summary>
+        /// <param name="item">호버된 패시브 아이템</param>
+        /// <param name="sourceRect">호버를 발생시킨 UI의 RectTransform</param>
+        /// <param name="enhancementLevel">강화 단계</param>
+        public void OnPassiveItemHoverEnter(PassiveItemDefinition item, RectTransform sourceRect, int enhancementLevel = 1)
+        {
+            if (item == null) return;
+
+            // 팝업으로 고정된 동안에는 다른 아이템으로 전환하지 않음
+            if (isPinned)
+            {
+                return;
+            }
+
+            if (!IsInitialized)
+            {
+                GameLogger.LogInfo("[ItemTooltipManager] 초기화 안됨 - 즉시 초기화 시도", GameLogger.LogCategory.UI);
+                pendingPassiveItem = item;
+                pendingPassiveItemEnhancementLevel = enhancementLevel;
+                pendingShow = true;
+                StartCoroutine(ForceInitialize());
+                return;
+            }
+
+            hoveredPassiveItem = item;
+            hoveredPassiveItemEnhancementLevel = Mathf.Clamp(enhancementLevel, 1, 3);
+            hoveredItem = null;
+            // 호버를 발생시킨 소스 Rect를 우선 사용
+            currentTargetRect = sourceRect;
+            if (currentTargetRect == null)
+            {
+                // 폴백: 캐시된 Rect 사용
+                if (passiveItemUICache.TryGetValue(item, out var rt) && rt != null)
+                {
+                    currentTargetRect = rt;
+                }
+            }
+
+            isHidingTooltip = false;
+            hideTimer = 0f;
+
+            if (!isShowingTooltip)
+            {
+                isShowingTooltip = true;
+                showTimer = 0f;
             }
         }
 
@@ -335,12 +432,14 @@ namespace Game.ItemSystem.Manager
             }
 
             hoveredItem = null;
+            hoveredPassiveItem = null;
             isShowingTooltip = false;
             isHidingTooltip = false;
             showTimer = 0f;
             hideTimer = 0f;
             isPinned = false;
             pinnedItem = null;
+            pinnedPassiveItem = null;
             pinnedRect = null;
         }
 
@@ -394,32 +493,46 @@ namespace Game.ItemSystem.Manager
                 IsInitialized = true;
                 GameLogger.LogInfo($"[ItemTooltipManager] 강제 초기화 완료", GameLogger.LogCategory.UI);
 
-                if (pendingShow && pendingItem != null)
-                {
-                    try
-                    {
-                        hoveredItem = pendingItem;
-                        pendingItem = null;
-                        pendingShow = false;
-
-                        isHidingTooltip = false;
-                        hideTimer = 0f;
-                        isShowingTooltip = false;
-                        showTimer = 0f;
-
-                        currentTargetRect = null;
-                        if (hoveredItem != null && itemUICache.TryGetValue(hoveredItem, out var cachedRt) && cachedRt != null)
+                        if (pendingShow)
                         {
-                            currentTargetRect = cachedRt;
-                        }
+                            try
+                            {
+                                if (pendingItem != null)
+                                {
+                                    hoveredItem = pendingItem;
+                                    pendingItem = null;
+                                    currentTargetRect = null;
+                                    if (hoveredItem != null && itemUICache.TryGetValue(hoveredItem, out var cachedRt) && cachedRt != null)
+                                    {
+                                        currentTargetRect = cachedRt;
+                                    }
+                                }
+                                else if (pendingPassiveItem != null)
+                                {
+                                    hoveredPassiveItem = pendingPassiveItem;
+                                    hoveredPassiveItemEnhancementLevel = pendingPassiveItemEnhancementLevel;
+                                    pendingPassiveItem = null;
+                                    currentTargetRect = null;
+                                    if (hoveredPassiveItem != null && passiveItemUICache.TryGetValue(hoveredPassiveItem, out var cachedRt) && cachedRt != null)
+                                    {
+                                        currentTargetRect = cachedRt;
+                                    }
+                                }
 
-                        ShowTooltip();
-                    }
-                    catch (System.Exception ex)
-                    {
-                        GameLogger.LogError($"[ItemTooltipManager] 초기화 직후 표시 중 오류: {ex.Message}", GameLogger.LogCategory.Error);
-                    }
-                }
+                                pendingShow = false;
+
+                                isHidingTooltip = false;
+                                hideTimer = 0f;
+                                isShowingTooltip = false;
+                                showTimer = 0f;
+
+                                ShowTooltip();
+                            }
+                            catch (System.Exception ex)
+                            {
+                                GameLogger.LogError($"[ItemTooltipManager] 초기화 직후 표시 중 오류: {ex.Message}", GameLogger.LogCategory.Error);
+                            }
+                        }
             }
             else
             {
@@ -448,7 +561,7 @@ namespace Game.ItemSystem.Manager
                 }
             }
 
-            if (isShowingTooltip && hoveredItem != null)
+            if (isShowingTooltip && (hoveredItem != null || hoveredPassiveItem != null))
             {
                 showTimer += Time.deltaTime;
                 if (showTimer >= showDelay)
@@ -499,12 +612,25 @@ namespace Game.ItemSystem.Manager
                 return RectTransformUtility.WorldToScreenPoint(cam, bottomLeftPinned);
             }
 
-            if (hoveredItem == null) return Vector2.zero;
-
             RectTransform itemRect = currentTargetRect;
-            if (itemRect == null)
+            
+            if (hoveredItem != null)
             {
-                itemUICache.TryGetValue(hoveredItem, out itemRect);
+                if (itemRect == null)
+                {
+                    itemUICache.TryGetValue(hoveredItem, out itemRect);
+                }
+            }
+            else if (hoveredPassiveItem != null)
+            {
+                if (itemRect == null)
+                {
+                    passiveItemUICache.TryGetValue(hoveredPassiveItem, out itemRect);
+                }
+            }
+            else
+            {
+                return Vector2.zero;
             }
             
             if (itemRect != null)
@@ -582,24 +708,30 @@ namespace Game.ItemSystem.Manager
                 currentTooltip.transform.SetAsLastSibling();
             }
             
-            if (hoveredItem == null)
-            {
-                GameLogger.LogWarning("[ItemTooltipManager] hoveredItem이 null입니다.", GameLogger.LogCategory.UI);
-                return;
-            }
-
             try
             {
                 Vector2 itemPosition = GetCurrentItemPosition();
                 if (itemPosition != Vector2.zero)
                 {
-                    // 툴팁 표시
-                    currentTooltip.Show(hoveredItem);
+                    // 툴팁 표시 (액티브 아이템 또는 패시브 아이템)
+                    if (hoveredItem != null)
+                    {
+                        currentTooltip.Show(hoveredItem);
+                        GameLogger.LogInfo($"툴팁 표시: {hoveredItem.DisplayName}", GameLogger.LogCategory.UI);
+                    }
+                    else if (hoveredPassiveItem != null)
+                    {
+                        currentTooltip.Show(hoveredPassiveItem, hoveredPassiveItemEnhancementLevel);
+                        GameLogger.LogInfo($"패시브 아이템 툴팁 표시: {hoveredPassiveItem.DisplayName}, 강화 단계: {hoveredPassiveItemEnhancementLevel}", GameLogger.LogCategory.UI);
+                    }
+                    else
+                    {
+                        GameLogger.LogWarning("[ItemTooltipManager] hoveredItem과 hoveredPassiveItem이 모두 null입니다.", GameLogger.LogCategory.UI);
+                        return;
+                    }
                     
                     // 위치 업데이트 (Show 이후에 호출하여 오브젝트가 활성화된 후 위치 설정)
                     UpdateTooltipPosition(itemPosition);
-                    
-                    GameLogger.LogInfo($"툴팁 표시: {hoveredItem.DisplayName}", GameLogger.LogCategory.UI);
                 }
                 else
                 {
@@ -696,13 +828,26 @@ namespace Game.ItemSystem.Manager
                 cameraToUse,
                 out localPoint))
             {
-                // SkillCard과 동일한 정책: 우측 우선, 좌우 폴백, 하단 정렬
-                rectTransform.pivot = new Vector2(0f, 0f);
+                // 패시브 아이템인지 확인
+                bool isPassiveItem = hoveredPassiveItem != null;
+                
+                // 패시브 아이템은 상단 정렬, 액티브 아이템은 하단 정렬
+                if (isPassiveItem)
+                {
+                    // 상단 정렬: pivot을 좌상단(0, 1)으로 설정
+                    rectTransform.pivot = new Vector2(0f, 1f);
+                }
+                else
+                {
+                    // 하단 정렬: pivot을 좌하단(0, 0)으로 설정
+                    rectTransform.pivot = new Vector2(0f, 0f);
+                }
 
                 var canvasRect = targetParent.rect;
                 var tooltipRect = rectTransform.rect;
 
                 float tooltipWidth = Mathf.Abs(tooltipRect.width);
+                float tooltipHeight = Mathf.Abs(tooltipRect.height);
 
                 // 아이템 폭 계산 (기본값 100)
                 float itemWidth = 100f;
@@ -712,6 +857,13 @@ namespace Game.ItemSystem.Manager
                 }
 
                 float itemRightEdge = localPoint.x + itemWidth;
+                
+                // 아이템 높이 계산
+                float itemHeight = 100f;
+                if (currentTargetRect != null)
+                {
+                    itemHeight = Mathf.Abs(currentTargetRect.rect.height);
+                }
 
                 float canvasLeft = canvasRect.xMin;
                 float canvasRight = canvasRect.xMax;
@@ -725,6 +877,7 @@ namespace Game.ItemSystem.Manager
 
                 Vector2 tooltipPosition = localPoint;
 
+                // 수평 위치 결정 (우측 우선, 부족 시 좌측 폴백)
                 if (canShowRight)
                 {
                     tooltipPosition.x = itemRightEdge + alignPaddingX;
@@ -739,14 +892,23 @@ namespace Game.ItemSystem.Manager
                     tooltipPosition.x = Mathf.Clamp(localPoint.x, canvasRect.xMin, canvasRect.xMax - tooltipWidth);
                 }
 
-                // 하단 정렬 유지 + 세로 오프셋
-                tooltipPosition.y = localPoint.y + alignPaddingY;
+                // 수직 정렬: 패시브 아이템은 상단 정렬, 액티브 아이템은 하단 정렬
+                if (isPassiveItem)
+                {
+                    // 상단 정렬: 아이템 상단과 툴팁 상단을 일치
+                    tooltipPosition.y = localPoint.y + itemHeight + alignPaddingY;
+                }
+                else
+                {
+                    // 하단 정렬: 아이템 하단과 툴팁 하단을 일치
+                    tooltipPosition.y = localPoint.y + alignPaddingY;
+                }
 
                 // 다른 UI 위에 표시
                 rectTransform.SetAsLastSibling();
 
                 // 좌우 경계 클램프
-                tooltipPosition = ClampToScreenBounds(tooltipPosition, targetParent);
+                tooltipPosition = ClampToScreenBounds(tooltipPosition, targetParent, isPassiveItem);
 
                 rectTransform.localPosition = tooltipPosition;
             }
@@ -766,14 +928,14 @@ namespace Game.ItemSystem.Manager
         /// <summary>
         /// 위치를 화면 경계 내로 제한합니다.
         /// </summary>
-        private Vector2 ClampToScreenBounds(Vector2 position, RectTransform parentRect)
+        private Vector2 ClampToScreenBounds(Vector2 position, RectTransform parentRect, bool isPassiveItem = false)
         {
             if (parentRect == null || currentTooltip == null) return position;
 
             var canvasRect = parentRect.rect;
             var tooltipRect = currentTooltip.GetComponent<RectTransform>().rect;
 
-            // 좌우 경계만 클램프 (하단 정렬 유지, pivot.x=0)
+            // 좌우 경계 클램프
             float minX = canvasRect.xMin;
             float maxX = canvasRect.xMax - tooltipRect.width;
 
@@ -784,6 +946,21 @@ namespace Game.ItemSystem.Manager
             else if (position.x > maxX)
             {
                 position.x = maxX;
+            }
+
+            // 패시브 아이템의 경우 상단 정렬이므로 상단 경계도 클램프
+            if (isPassiveItem)
+            {
+                float maxY = canvasRect.yMax;
+                float tooltipTop = position.y; // pivot.y = 1이므로 position.y가 상단
+                if (tooltipTop > maxY)
+                {
+                    position.y = maxY;
+                }
+            }
+            else
+            {
+                // 액티브 아이템은 하단 정렬이므로 하단 경계만 클램프 (기존 동작 유지)
             }
 
             return position;

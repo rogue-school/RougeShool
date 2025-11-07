@@ -125,10 +125,17 @@ namespace Game.ItemSystem.Runtime
         /// </summary>
         private void RegisterToTooltipManager()
         {
-            if (tooltipManager == null || currentItem == null || rectTransform == null)
+            if (tooltipManager == null || rectTransform == null)
                 return;
 
-            tooltipManager.RegisterItemUI(currentItem, rectTransform);
+            if (currentItem != null)
+            {
+                tooltipManager.RegisterItemUI(currentItem, rectTransform);
+            }
+            else if (currentPassive != null)
+            {
+                tooltipManager.RegisterPassiveItemUI(currentPassive, rectTransform);
+            }
         }
         
         /// <summary>
@@ -136,10 +143,17 @@ namespace Game.ItemSystem.Runtime
         /// </summary>
         private void UnregisterFromTooltipManager()
         {
-            if (tooltipManager == null || currentItem == null)
+            if (tooltipManager == null)
                 return;
 
-            tooltipManager.UnregisterItemUI(currentItem);
+            if (currentItem != null)
+            {
+                tooltipManager.UnregisterItemUI(currentItem);
+            }
+            else if (currentPassive != null)
+            {
+                tooltipManager.UnregisterPassiveItemUI(currentPassive);
+            }
         }
 
         #endregion
@@ -230,7 +244,8 @@ namespace Game.ItemSystem.Runtime
             if (itemNameText != null) itemNameText.text = item.DisplayName;
             if (itemDescriptionText != null) itemDescriptionText.text = item.Description;
 
-            // 패시브는 툴팁 등록 스킵(현재 매니저가 액티브 기반) 또는 확장 가능
+            // 툴팁 매니저에 등록
+            RegisterToTooltipManager();
 
             GameLogger.LogInfo($"[RewardSlotUI] 패시브 슬롯 설정 완료: {item.DisplayName} (인덱스: {index})", GameLogger.LogCategory.UI);
         }
@@ -353,11 +368,19 @@ namespace Game.ItemSystem.Runtime
         /// </summary>
         public void OnPointerEnter(PointerEventData eventData)
         {
-            if (currentItem == null || tooltipManager == null)
+            if (tooltipManager == null)
                 return;
             
             // 보상창 슬롯의 RectTransform을 소스로 명시 전달하여 인벤토리 슬롯과 구분
-            tooltipManager.OnItemHoverEnter(currentItem, rectTransform);
+            if (currentItem != null)
+            {
+                tooltipManager.OnItemHoverEnter(currentItem, rectTransform);
+            }
+            else if (currentPassive != null)
+            {
+                // 패시브 아이템은 강화 단계 1로 표시 (보상창에서는 항상 1단계)
+                tooltipManager.OnPassiveItemHoverEnter(currentPassive, rectTransform, 1);
+            }
         }
         
         /// <summary>

@@ -45,6 +45,8 @@ namespace Game.ItemSystem.UI
         #region Private Fields
 
         private ActiveItemDefinition currentItem;
+        private PassiveItemDefinition currentPassiveItem;
+        private int currentEnhancementLevel = 1;
         private RectTransform rectTransform;
         private CanvasGroup canvasGroup;
 
@@ -87,6 +89,8 @@ namespace Game.ItemSystem.UI
             gameObject.SetActive(true);
 
             currentItem = item;
+            currentPassiveItem = null;
+            currentEnhancementLevel = 1;
             UpdateTooltipContent();
             
             // 페이드 인 애니메이션
@@ -94,6 +98,34 @@ namespace Game.ItemSystem.UI
             canvasGroup.DOFade(1f, fadeInDuration).SetEase(fadeEase);
             
             GameLogger.LogInfo($"[ItemTooltip] 툴팁 표시: {item.DisplayName}", GameLogger.LogCategory.UI);
+        }
+
+        /// <summary>
+        /// 툴팁에 패시브 아이템 정보를 표시합니다.
+        /// </summary>
+        /// <param name="item">표시할 패시브 아이템</param>
+        /// <param name="enhancementLevel">강화 단계</param>
+        public void Show(PassiveItemDefinition item, int enhancementLevel = 1)
+        {
+            if (item == null)
+            {
+                GameLogger.LogWarning("[ItemTooltip] 패시브 아이템이 null입니다", GameLogger.LogCategory.UI);
+                return;
+            }
+
+            // 오브젝트를 활성화하여 보이도록 함
+            gameObject.SetActive(true);
+
+            currentPassiveItem = item;
+            currentEnhancementLevel = Mathf.Clamp(enhancementLevel, 1, 3);
+            currentItem = null;
+            UpdatePassiveItemTooltipContent();
+            
+            // 페이드 인 애니메이션
+            canvasGroup.blocksRaycasts = true;
+            canvasGroup.DOFade(1f, fadeInDuration).SetEase(fadeEase);
+            
+            GameLogger.LogInfo($"[ItemTooltip] 패시브 아이템 툴팁 표시: {item.DisplayName}, 강화 단계: {currentEnhancementLevel}", GameLogger.LogCategory.UI);
         }
 
         /// <summary>
@@ -143,6 +175,96 @@ namespace Game.ItemSystem.UI
 
             // 아이템 설명 (효과 포함)
             UpdateEffects();
+        }
+
+        /// <summary>
+        /// 패시브 아이템 툴팁 내용을 업데이트합니다.
+        /// </summary>
+        private void UpdatePassiveItemTooltipContent()
+        {
+            if (currentPassiveItem == null) return;
+
+            // 아이템 이름 (강화 단계 표시 - 별(★) 사용)
+            if (itemNameText != null)
+            {
+                string name = currentPassiveItem.DisplayName;
+                if (currentEnhancementLevel > 0)
+                {
+                    name += $" {new string('★', Mathf.Clamp(currentEnhancementLevel, 1, Game.ItemSystem.Constants.ItemConstants.MAX_ENHANCEMENT_LEVEL))}";
+                }
+                itemNameText.text = name;
+            }
+
+            // 아이템 아이콘
+            if (itemIconImage != null && currentPassiveItem.Icon != null)
+            {
+                itemIconImage.sprite = currentPassiveItem.Icon;
+                itemIconImage.enabled = true;
+            }
+            else if (itemIconImage != null)
+            {
+                itemIconImage.enabled = false;
+            }
+
+            // 패시브 아이템 설명
+            UpdatePassiveItemDescription();
+        }
+
+        /// <summary>
+        /// 패시브 아이템 설명을 업데이트합니다.
+        /// </summary>
+        private void UpdatePassiveItemDescription()
+        {
+            if (currentPassiveItem == null || descriptionText == null) return;
+
+            var builder = new System.Text.StringBuilder();
+
+            // 강화 단계별 누적 보너스 계산
+            int totalBonus = 0;
+            if (currentPassiveItem.EnhancementIncrements.Length > 0)
+            {
+                for (int i = 0; i < currentEnhancementLevel && i < currentPassiveItem.EnhancementIncrements.Length; i++)
+                {
+                    totalBonus += currentPassiveItem.EnhancementIncrements[i];
+                }
+            }
+
+            // 보너스 타입에 따라 설명 생성
+            if (currentPassiveItem.IsSkillDamageBonus)
+            {
+                if (currentPassiveItem.TargetSkill != null)
+                {
+                    string skillName = string.IsNullOrEmpty(currentPassiveItem.TargetSkill.displayNameKO) 
+                        ? currentPassiveItem.TargetSkill.displayName 
+                        : currentPassiveItem.TargetSkill.displayNameKO;
+                    builder.Append($"{skillName}의 데미지가 {totalBonus}만큼 영구적으로 증가합니다.");
+                }
+                else
+                {
+                    builder.Append($"스킬 데미지가 {totalBonus}만큼 영구적으로 증가합니다.");
+                }
+            }
+            else if (currentPassiveItem.IsPlayerHealthBonus)
+            {
+                builder.Append($"플레이어의 최대 체력이 {totalBonus}만큼 영구적으로 증가합니다.");
+            }
+
+            // 강화 단계 정보 추가
+            if (currentEnhancementLevel < currentPassiveItem.MaxEnhancementLevel)
+            {
+                builder.Append($"\n\n현재 강화 단계: {currentEnhancementLevel}/{currentPassiveItem.MaxEnhancementLevel}");
+                if (currentEnhancementLevel < currentPassiveItem.EnhancementIncrements.Length)
+                {
+                    int nextBonus = currentPassiveItem.EnhancementIncrements[currentEnhancementLevel];
+                    builder.Append($"\n다음 강화 시 추가 보너스: +{nextBonus}");
+                }
+            }
+            else
+            {
+                builder.Append($"\n\n최대 강화 단계 달성 ({currentEnhancementLevel}/{currentPassiveItem.MaxEnhancementLevel})");
+            }
+
+            descriptionText.text = builder.ToString();
         }
 
         /// <summary>

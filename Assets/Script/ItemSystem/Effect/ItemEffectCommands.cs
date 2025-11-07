@@ -218,11 +218,25 @@ namespace Game.ItemSystem.Effect
     {
         private readonly int buffAmount;
         private readonly int duration;
+        private readonly AudioClip sfxClip;
+        private readonly GameObject visualEffectPrefab;
+        private readonly VFXManager vfxManager;
+        private readonly Game.CoreSystem.Audio.AudioManager audioManager;
 
-        public AttackBuffEffectCommand(int buffAmount, int duration = 1) : base("공격력 버프")
+        public AttackBuffEffectCommand(
+            int buffAmount, 
+            int duration = 1,
+            AudioClip sfxClip = null,
+            GameObject visualEffectPrefab = null,
+            VFXManager vfxManager = null,
+            Game.CoreSystem.Audio.AudioManager audioManager = null) : base("공격력 버프")
         {
             this.buffAmount = buffAmount;
             this.duration = duration;
+            this.sfxClip = sfxClip;
+            this.visualEffectPrefab = visualEffectPrefab;
+            this.vfxManager = vfxManager;
+            this.audioManager = audioManager;
         }
 
         protected override bool ExecuteInternal(IItemUseContext context)
@@ -244,8 +258,164 @@ namespace Game.ItemSystem.Effect
                 playerCharacter.AddBuffDebuffIcon("AttackPowerBuff", itemIcon, true, duration);
             }
 
+            // 사운드 및 비주얼 이펙트 재생
+            PlaySFX();
+            PlayVisualEffect(context);
+
             GameLogger.LogInfo($"공격력 버프 적용: +{buffAmount} ({duration}턴, 정책: {turnPolicy})", GameLogger.LogCategory.Core);
             return true;
+        }
+
+        /// <summary>
+        /// 버프 사운드를 재생합니다.
+        /// </summary>
+        private void PlaySFX()
+        {
+            if (sfxClip == null)
+            {
+                GameLogger.LogWarning("[AttackBuffEffectCommand] 사운드 클립이 설정되지 않았습니다.", GameLogger.LogCategory.Core);
+                return;
+            }
+
+            var finalAudioManager = audioManager ?? UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            if (finalAudioManager != null)
+            {
+                finalAudioManager.PlaySFXWithPool(sfxClip, 0.9f);
+                GameLogger.LogInfo($"[AttackBuffEffectCommand] 버프 사운드 재생: {sfxClip.name}", GameLogger.LogCategory.Core);
+            }
+            else
+            {
+                GameLogger.LogWarning("[AttackBuffEffectCommand] AudioManager를 찾을 수 없습니다.", GameLogger.LogCategory.Core);
+            }
+        }
+
+        /// <summary>
+        /// 버프 비주얼 이펙트를 재생합니다.
+        /// </summary>
+        private void PlayVisualEffect(IItemUseContext context)
+        {
+            if (visualEffectPrefab == null)
+            {
+                GameLogger.LogWarning("[AttackBuffEffectCommand] 비주얼 이펙트 프리팹이 설정되지 않았습니다.", GameLogger.LogCategory.Core);
+                return;
+            }
+
+            var userTransform = (context.User as MonoBehaviour)?.transform;
+            if (userTransform == null)
+            {
+                GameLogger.LogWarning("[AttackBuffEffectCommand] 사용자 Transform을 찾을 수 없습니다.", GameLogger.LogCategory.Core);
+                return;
+            }
+
+            var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            if (finalVfxManager != null)
+            {
+                // 캐릭터의 시각적 중심 위치 계산
+                var spawnPos = GetPortraitCenterWorldPosition(userTransform);
+                
+                var effectInstance = finalVfxManager.PlayEffect(visualEffectPrefab, spawnPos);
+                if (effectInstance != null)
+                {
+                    SetEffectLayer(effectInstance);
+                    GameLogger.LogInfo($"[AttackBuffEffectCommand] 버프 비주얼 이펙트 재생: {visualEffectPrefab.name}", GameLogger.LogCategory.Core);
+                }
+            }
+            else
+            {
+                // Fallback: VFXManager가 없으면 기존 방식 사용
+                var spawnPos = GetPortraitCenterWorldPosition(userTransform);
+                var instance = UnityEngine.Object.Instantiate(visualEffectPrefab, spawnPos, Quaternion.identity);
+                SetEffectLayer(instance);
+                UnityEngine.Object.Destroy(instance, 2.0f);
+                GameLogger.LogInfo($"[AttackBuffEffectCommand] 버프 비주얼 이펙트 생성 완료: {visualEffectPrefab.name}", GameLogger.LogCategory.Core);
+            }
+        }
+
+        /// <summary>
+        /// 캐릭터 트랜스폼 하위의 포트레잇 Image 중심(시각적 중심)을 월드 좌표로 계산합니다.
+        /// </summary>
+        private static Vector3 GetPortraitCenterWorldPosition(Transform root)
+        {
+            if (root == null) return Vector3.zero;
+
+            // Portrait Image 우선
+            var portraitImage = FindPortraitImage(root);
+            if (portraitImage != null && portraitImage.rectTransform != null)
+            {
+                return GetRectTransformCenterWorld(portraitImage.rectTransform);
+            }
+
+            // RectTransform 폴백
+            var anyRect = root.GetComponentInChildren<RectTransform>(true);
+            if (anyRect != null)
+            {
+                return GetRectTransformCenterWorld(anyRect);
+            }
+
+            // SpriteRenderer 폴백
+            var sprite = root.GetComponentInChildren<SpriteRenderer>(true);
+            if (sprite != null)
+            {
+                return sprite.bounds.center;
+            }
+
+            // 최종 폴백
+            return root.position;
+        }
+
+        private static Image FindPortraitImage(Transform root)
+        {
+            var images = root.GetComponentsInChildren<Image>(true);
+            if (images == null || images.Length == 0) return null;
+
+            // 정확한 이름 우선
+            for (int i = 0; i < images.Length; i++)
+            {
+                if (images[i] != null && images[i].gameObject != null && images[i].gameObject.name == "Portrait")
+                {
+                    return images[i];
+                }
+            }
+            
+            // 폴백: 첫 번째 Image
+            return images[0];
+        }
+
+        private static Vector3 GetRectTransformCenterWorld(RectTransform rt)
+        {
+            if (rt == null) return Vector3.zero;
+            var bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(rt, rt);
+            var localCenter = bounds.center;
+            return rt.TransformPoint(localCenter);
+        }
+
+        /// <summary>
+        /// 이펙트 렌더 순서를 UI 위로 설정합니다.
+        /// </summary>
+        private static void SetEffectLayer(GameObject effectInstance)
+        {
+            if (effectInstance == null) return;
+            
+            int rendererCount = 0;
+            int particleCount = 0;
+
+            var renderers = effectInstance.GetComponentsInChildren<Renderer>(true);
+            foreach (var r in renderers)
+            {
+                r.sortingLayerName = "Effects";
+                r.sortingOrder = 10;
+                rendererCount++;
+            }
+            
+            var pss = effectInstance.GetComponentsInChildren<ParticleSystemRenderer>(true);
+            foreach (var pr in pss)
+            {
+                pr.sortingLayerName = "Effects";
+                pr.sortingOrder = 10;
+                particleCount++;
+            }
+
+            GameLogger.LogInfo($"[AttackBuffEffectCommand] 이펙트 레이어 설정 완료 (Renderer: {rendererCount}, Particle: {particleCount})", GameLogger.LogCategory.Core);
         }
     }
 
@@ -1346,10 +1516,23 @@ namespace Game.ItemSystem.Effect
     public class ShieldBreakerEffectCommand : BaseItemEffectCommand
     {
         private int duration;
+        private readonly AudioClip sfxClip;
+        private readonly GameObject visualEffectPrefab;
+        private readonly VFXManager vfxManager;
+        private readonly Game.CoreSystem.Audio.AudioManager audioManager;
 
-        public ShieldBreakerEffectCommand(int duration = 2) : base("실드 브레이커")
+        public ShieldBreakerEffectCommand(
+            int duration = 2,
+            AudioClip sfxClip = null,
+            GameObject visualEffectPrefab = null,
+            VFXManager vfxManager = null,
+            Game.CoreSystem.Audio.AudioManager audioManager = null) : base("실드 브레이커")
         {
             this.duration = duration;
+            this.sfxClip = sfxClip;
+            this.visualEffectPrefab = visualEffectPrefab;
+            this.vfxManager = vfxManager;
+            this.audioManager = audioManager;
         }
 
         protected override bool ExecuteInternal(IItemUseContext context)
@@ -1379,9 +1562,15 @@ namespace Game.ItemSystem.Effect
             // 실드 브레이커 효과: 적의 가드 버프를 즉시 제거
             var guardBuffRemoved = RemoveGuardBuff(enemyCharacter);
             
+            // 가드 버프가 제거되었을 때만 이펙트 재생
             if (guardBuffRemoved)
             {
                 GameLogger.LogInfo($"[ShieldBreakerEffect] 실드 브레이커 적용 완료: {enemyCharacter.GetCharacterName()}의 가드 버프 제거", GameLogger.LogCategory.Core);
+                
+                // 사운드 및 비주얼 이펙트 재생 (적 캐릭터 위치)
+                PlaySFX();
+                PlayVisualEffect(enemyCharacter);
+                
                 return true;
             }
             else
@@ -1389,6 +1578,158 @@ namespace Game.ItemSystem.Effect
                 GameLogger.LogInfo($"[ShieldBreakerEffect] 실드 브레이커 적용 완료: {enemyCharacter.GetCharacterName()}에게 가드 버프가 없음", GameLogger.LogCategory.Core);
                 return true; // 가드가 없어도 성공으로 처리
             }
+        }
+
+        /// <summary>
+        /// 실드 브레이커 사운드를 재생합니다.
+        /// </summary>
+        private void PlaySFX()
+        {
+            if (sfxClip == null)
+            {
+                GameLogger.LogWarning("[ShieldBreakerEffectCommand] 사운드 클립이 설정되지 않았습니다.", GameLogger.LogCategory.Core);
+                return;
+            }
+
+            var finalAudioManager = audioManager ?? UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            if (finalAudioManager != null)
+            {
+                finalAudioManager.PlaySFXWithPool(sfxClip, 0.9f);
+                GameLogger.LogInfo($"[ShieldBreakerEffectCommand] 실드 브레이커 사운드 재생: {sfxClip.name}", GameLogger.LogCategory.Core);
+            }
+            else
+            {
+                GameLogger.LogWarning("[ShieldBreakerEffectCommand] AudioManager를 찾을 수 없습니다.", GameLogger.LogCategory.Core);
+            }
+        }
+
+        /// <summary>
+        /// 실드 브레이커 비주얼 이펙트를 재생합니다.
+        /// </summary>
+        private void PlayVisualEffect(Game.CharacterSystem.Interface.ICharacter target)
+        {
+            if (visualEffectPrefab == null)
+            {
+                GameLogger.LogWarning("[ShieldBreakerEffectCommand] 비주얼 이펙트 프리팹이 설정되지 않았습니다.", GameLogger.LogCategory.Core);
+                return;
+            }
+
+            var targetTransform = (target as MonoBehaviour)?.transform;
+            if (targetTransform == null)
+            {
+                GameLogger.LogWarning("[ShieldBreakerEffectCommand] 대상 Transform을 찾을 수 없습니다.", GameLogger.LogCategory.Core);
+                return;
+            }
+
+            var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            if (finalVfxManager != null)
+            {
+                // 캐릭터의 시각적 중심 위치 계산
+                var spawnPos = GetPortraitCenterWorldPosition(targetTransform);
+                
+                var effectInstance = finalVfxManager.PlayEffect(visualEffectPrefab, spawnPos);
+                if (effectInstance != null)
+                {
+                    SetEffectLayer(effectInstance);
+                    GameLogger.LogInfo($"[ShieldBreakerEffectCommand] 실드 브레이커 비주얼 이펙트 재생: {visualEffectPrefab.name}", GameLogger.LogCategory.Core);
+                }
+            }
+            else
+            {
+                // Fallback: VFXManager가 없으면 기존 방식 사용
+                var spawnPos = GetPortraitCenterWorldPosition(targetTransform);
+                var instance = UnityEngine.Object.Instantiate(visualEffectPrefab, spawnPos, Quaternion.identity);
+                SetEffectLayer(instance);
+                UnityEngine.Object.Destroy(instance, 2.0f);
+                GameLogger.LogInfo($"[ShieldBreakerEffectCommand] 실드 브레이커 비주얼 이펙트 생성 완료: {visualEffectPrefab.name}", GameLogger.LogCategory.Core);
+            }
+        }
+
+        /// <summary>
+        /// 캐릭터 트랜스폼 하위의 포트레잇 Image 중심(시각적 중심)을 월드 좌표로 계산합니다.
+        /// </summary>
+        private static Vector3 GetPortraitCenterWorldPosition(Transform root)
+        {
+            if (root == null) return Vector3.zero;
+
+            // Portrait Image 우선
+            var portraitImage = FindPortraitImage(root);
+            if (portraitImage != null && portraitImage.rectTransform != null)
+            {
+                return GetRectTransformCenterWorld(portraitImage.rectTransform);
+            }
+
+            // RectTransform 폴백
+            var anyRect = root.GetComponentInChildren<RectTransform>(true);
+            if (anyRect != null)
+            {
+                return GetRectTransformCenterWorld(anyRect);
+            }
+
+            // SpriteRenderer 폴백
+            var sprite = root.GetComponentInChildren<SpriteRenderer>(true);
+            if (sprite != null)
+            {
+                return sprite.bounds.center;
+            }
+
+            // 최종 폴백
+            return root.position;
+        }
+
+        private static Image FindPortraitImage(Transform root)
+        {
+            var images = root.GetComponentsInChildren<Image>(true);
+            if (images == null || images.Length == 0) return null;
+
+            // 정확한 이름 우선
+            for (int i = 0; i < images.Length; i++)
+            {
+                if (images[i] != null && images[i].gameObject != null && images[i].gameObject.name == "Portrait")
+                {
+                    return images[i];
+                }
+            }
+            
+            // 폴백: 첫 번째 Image
+            return images[0];
+        }
+
+        private static Vector3 GetRectTransformCenterWorld(RectTransform rt)
+        {
+            if (rt == null) return Vector3.zero;
+            var bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(rt, rt);
+            var localCenter = bounds.center;
+            return rt.TransformPoint(localCenter);
+        }
+
+        /// <summary>
+        /// 이펙트 렌더 순서를 UI 위로 설정합니다.
+        /// </summary>
+        private static void SetEffectLayer(GameObject effectInstance)
+        {
+            if (effectInstance == null) return;
+            
+            int rendererCount = 0;
+            int particleCount = 0;
+
+            var renderers = effectInstance.GetComponentsInChildren<Renderer>(true);
+            foreach (var r in renderers)
+            {
+                r.sortingLayerName = "Effects";
+                r.sortingOrder = 10;
+                rendererCount++;
+            }
+            
+            var pss = effectInstance.GetComponentsInChildren<ParticleSystemRenderer>(true);
+            foreach (var pr in pss)
+            {
+                pr.sortingLayerName = "Effects";
+                pr.sortingOrder = 10;
+                particleCount++;
+            }
+
+            GameLogger.LogInfo($"[ShieldBreakerEffectCommand] 이펙트 레이어 설정 완료 (Renderer: {rendererCount}, Particle: {particleCount})", GameLogger.LogCategory.Core);
         }
 
         /// <summary>

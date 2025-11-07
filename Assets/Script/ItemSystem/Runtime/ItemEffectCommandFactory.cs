@@ -97,6 +97,32 @@ namespace Game.ItemSystem.Runtime
                 }
             }
 
+            // AttackBuffEffectSO도 특별한 처리가 필요합니다
+            if (effectConfig.effectSO is AttackBuffEffectSO attackBuffEffectSO)
+            {
+                if (effectConfig.useCustomSettings && effectConfig.customSettings is AttackBuffEffectCustomSettings buffSettings)
+                {
+                    return attackBuffEffectSO.CreateEffectCommand(buffSettings);
+                }
+                else
+                {
+                    return attackBuffEffectSO.CreateEffectCommand(0);
+                }
+            }
+
+            // ShieldBreakerEffectSO도 특별한 처리가 필요합니다
+            if (effectConfig.effectSO is ShieldBreakerEffectSO shieldBreakerEffectSO)
+            {
+                if (effectConfig.useCustomSettings && effectConfig.customSettings is ShieldBreakerEffectCustomSettings shieldSettings)
+                {
+                    return shieldBreakerEffectSO.CreateEffectCommand(shieldSettings);
+                }
+                else
+                {
+                    return shieldBreakerEffectSO.CreateEffectCommand(0);
+                }
+            }
+
             int power = 0;
             if (effectConfig.useCustomSettings)
             {
