@@ -64,6 +64,7 @@ namespace Game.ItemSystem.Manager
         private EventSystem eventSystem;
         private System.Collections.Generic.Dictionary<ActiveItemDefinition, RectTransform> itemUICache = new();
         private System.Collections.Generic.Dictionary<PassiveItemDefinition, RectTransform> passiveItemUICache = new();
+        private Game.ItemSystem.Service.ItemService itemService;
 
         #endregion
 
@@ -97,6 +98,12 @@ namespace Game.ItemSystem.Manager
 
         private void OnDestroy()
         {
+            // 이벤트 구독 해제
+            if (itemService != null)
+            {
+                itemService.OnEnhancementUpgraded -= OnEnhancementUpgradedHandler;
+            }
+
             if (currentTooltip != null && currentTooltip.gameObject != null)
             {
                 Destroy(currentTooltip.gameObject);
@@ -152,6 +159,18 @@ namespace Game.ItemSystem.Manager
             if (tooltipPrefab == null)
             {
                 GameLogger.LogWarning("[ItemTooltipManager] 툴팁 프리팹이 설정되지 않았습니다. Inspector에서 설정해주세요.", GameLogger.LogCategory.UI);
+            }
+
+            // ItemService 찾기 및 이벤트 구독
+            itemService = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
+            if (itemService != null)
+            {
+                itemService.OnEnhancementUpgraded += OnEnhancementUpgradedHandler;
+                GameLogger.LogInfo("[ItemTooltipManager] ItemService 이벤트 구독 완료", GameLogger.LogCategory.UI);
+            }
+            else
+            {
+                GameLogger.LogWarning("[ItemTooltipManager] ItemService를 찾을 수 없습니다. 강화 레벨 업데이트가 작동하지 않을 수 있습니다.", GameLogger.LogCategory.UI);
             }
 
             GameLogger.LogInfo("[ItemTooltipManager] 툴팁 시스템 초기화 완료", GameLogger.LogCategory.UI);
@@ -538,6 +557,40 @@ namespace Game.ItemSystem.Manager
             {
                 GameLogger.LogError("[ItemTooltipManager] 강제 초기화 실패 - 필수 컴포넌트 누락", GameLogger.LogCategory.Error);
                 IsInitialized = false;
+            }
+        }
+
+        #endregion
+
+        #region Event Handlers
+
+        /// <summary>
+        /// 강화 레벨 업그레이드 이벤트 핸들러
+        /// </summary>
+        private void OnEnhancementUpgradedHandler(string skillId, int newLevel)
+        {
+            // 현재 표시 중인 패시브 아이템 툴팁이 있고, 해당 스킬과 관련된 아이템인지 확인
+            if (currentTooltip != null && currentTooltip.gameObject != null && currentTooltip.gameObject.activeInHierarchy)
+            {
+                if (hoveredPassiveItem != null)
+                {
+                    // 패시브 아이템의 대상 스킬과 비교
+                    string targetSkillId = null;
+                    if (hoveredPassiveItem.TargetSkill != null)
+                    {
+                        targetSkillId = !string.IsNullOrEmpty(hoveredPassiveItem.TargetSkill.displayName) 
+                            ? hoveredPassiveItem.TargetSkill.displayName 
+                            : hoveredPassiveItem.TargetSkill.cardId;
+                    }
+
+                    if (targetSkillId == skillId)
+                    {
+                        // 강화 레벨 업데이트
+                        hoveredPassiveItemEnhancementLevel = newLevel;
+                        currentTooltip.UpdateEnhancementLevel(newLevel);
+                        GameLogger.LogInfo($"[ItemTooltipManager] 툴팁 강화 레벨 실시간 업데이트: {hoveredPassiveItem.DisplayName} → {newLevel}", GameLogger.LogCategory.UI);
+                    }
+                }
             }
         }
 

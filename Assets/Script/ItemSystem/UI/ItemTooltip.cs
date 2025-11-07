@@ -129,6 +129,20 @@ namespace Game.ItemSystem.UI
         }
 
         /// <summary>
+        /// 패시브 아이템의 강화 레벨을 업데이트합니다.
+        /// </summary>
+        /// <param name="newLevel">새로운 강화 레벨</param>
+        public void UpdateEnhancementLevel(int newLevel)
+        {
+            if (currentPassiveItem == null) return;
+            
+            currentEnhancementLevel = Mathf.Clamp(newLevel, 1, Game.ItemSystem.Constants.ItemConstants.MAX_ENHANCEMENT_LEVEL);
+            UpdatePassiveItemTooltipContent();
+            
+            GameLogger.LogInfo($"[ItemTooltip] 강화 레벨 업데이트: {currentPassiveItem.DisplayName} → {currentEnhancementLevel}", GameLogger.LogCategory.UI);
+        }
+
+        /// <summary>
         /// 툴팁을 숨깁니다.
         /// </summary>
         public void Hide()
