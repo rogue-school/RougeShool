@@ -300,6 +300,67 @@ namespace Game.CharacterSystem.Core
         }
 
         /// <summary>
+        /// 등록된 턴 효과를 처리하고 출혈 이펙트 완료를 기다립니다 (코루틴)
+        /// </summary>
+        public virtual System.Collections.IEnumerator ProcessTurnEffectsCoroutine()
+        {
+            // GameObject가 비활성화 상태면 턴 효과 처리 안 함
+            if (!gameObject.activeInHierarchy)
+            {
+                yield break;
+            }
+
+            // 출혈 효과 개수 카운트 (처리 전에 카운트)
+            int bleedEffectCount = 0;
+            foreach (var effect in perTurnEffects)
+            {
+                if (effect is Game.SkillCardSystem.Effect.BleedEffect)
+                {
+                    bleedEffectCount++;
+                }
+            }
+
+            // 출혈 효과가 없으면 즉시 처리
+            if (bleedEffectCount == 0)
+            {
+                ProcessTurnEffects();
+                yield break;
+            }
+
+            // 출혈 효과가 있으면 완료 이벤트 대기
+            int completedBleedEffects = 0;
+            System.Action onBleedComplete = () => completedBleedEffects++;
+
+            // 이벤트 구독 (ProcessTurnEffects 호출 전에 구독해야 함)
+            Game.CombatSystem.CombatEvents.OnBleedTurnStartEffectComplete += onBleedComplete;
+
+            // 턴 효과 처리 (출혈 이펙트 재생 시작)
+            ProcessTurnEffects();
+
+            // 모든 출혈 이펙트 완료 대기 (타임아웃: 최대 1.5초)
+            float timeout = 1.5f;
+            float elapsed = 0f;
+            
+            while (completedBleedEffects < bleedEffectCount && elapsed < timeout)
+            {
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+
+            // 이벤트 구독 해제
+            Game.CombatSystem.CombatEvents.OnBleedTurnStartEffectComplete -= onBleedComplete;
+
+            if (completedBleedEffects >= bleedEffectCount)
+            {
+                GameLogger.LogInfo($"[{GetCharacterDataName()}] 모든 출혈 이펙트 완료 ({completedBleedEffects}/{bleedEffectCount})", GameLogger.LogCategory.Combat);
+            }
+            else
+            {
+                GameLogger.LogWarning($"[{GetCharacterDataName()}] 출혈 이펙트 완료 타임아웃 ({completedBleedEffects}/{bleedEffectCount}, {elapsed:F2}초 경과)", GameLogger.LogCategory.Combat);
+            }
+        }
+
+        /// <summary>
         /// 가드가 데미지를 차단할 때 이펙트와 사운드를 재생합니다.
         /// GuardBuff에서 EffectConfiguration으로부터 가져온 이펙트/사운드를 사용합니다.
         /// </summary>

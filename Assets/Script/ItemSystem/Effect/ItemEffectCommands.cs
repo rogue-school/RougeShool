@@ -1070,10 +1070,23 @@ namespace Game.ItemSystem.Effect
     public class DiceOfFateEffectCommand : BaseItemEffectCommand
     {
         private int changeCount;
+        private readonly AudioClip sfxClip;
+        private readonly GameObject visualEffectPrefab;
+        private readonly VFXManager vfxManager;
+        private readonly Game.CoreSystem.Audio.AudioManager audioManager;
 
-        public DiceOfFateEffectCommand(int changeCount = 1) : base("운명의 주사위")
+        public DiceOfFateEffectCommand(
+            int changeCount = 1,
+            AudioClip sfxClip = null,
+            GameObject visualEffectPrefab = null,
+            VFXManager vfxManager = null,
+            Game.CoreSystem.Audio.AudioManager audioManager = null) : base("운명의 주사위")
         {
             this.changeCount = Mathf.Max(1, changeCount);
+            this.sfxClip = sfxClip;
+            this.visualEffectPrefab = visualEffectPrefab;
+            this.vfxManager = vfxManager;
+            this.audioManager = audioManager;
         }
 
         /// <summary>
@@ -1113,8 +1126,87 @@ namespace Game.ItemSystem.Effect
             // 4단계: 카드 데이터 교체 (GameObject 생성/삭제 없음)
             ReplaceCardInSlot(targetSlot, newCard);
 
+            // 5단계: 이펙트 및 사운드 재생
+            PlaySFX();
+            PlayVisualEffect(context);
+
             GameLogger.LogInfo($"[DiceOfFate] 운명의 주사위 적용 완료: {existingCard.GetCardName()} → {newCard.GetCardName()}", GameLogger.LogCategory.Core);
             return true;
+        }
+
+        /// <summary>
+        /// 운명의 주사위 사운드를 재생합니다.
+        /// </summary>
+        private void PlaySFX()
+        {
+            if (sfxClip == null)
+            {
+                GameLogger.LogInfo("[DiceOfFate] 사운드 클립이 설정되지 않았습니다.", GameLogger.LogCategory.Core);
+                return;
+            }
+
+            var finalAudioManager = audioManager ?? UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            if (finalAudioManager != null)
+            {
+                finalAudioManager.PlaySFXWithPool(sfxClip, 0.9f);
+                GameLogger.LogInfo($"[DiceOfFate] 사운드 재생: {sfxClip.name}", GameLogger.LogCategory.Core);
+            }
+            else
+            {
+                GameLogger.LogWarning("[DiceOfFate] AudioManager를 찾을 수 없습니다.", GameLogger.LogCategory.Core);
+            }
+        }
+
+        /// <summary>
+        /// 운명의 주사위 비주얼 이펙트를 재생합니다.
+        /// 적 캐릭터에게 이펙트를 재생합니다.
+        /// </summary>
+        private void PlayVisualEffect(IItemUseContext context)
+        {
+            if (visualEffectPrefab == null)
+            {
+                GameLogger.LogInfo("[DiceOfFate] 비주얼 이펙트 프리팹이 설정되지 않았습니다.", GameLogger.LogCategory.Core);
+                return;
+            }
+
+            // 적 캐릭터의 Transform 가져오기 (Target이 적)
+            var targetTransform = (context.Target as MonoBehaviour)?.transform;
+            if (targetTransform == null)
+            {
+                // Fallback: EnemyManager에서 적 캐릭터 찾기
+                var enemyManager = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
+                var enemyCharacter = enemyManager?.GetCurrentEnemy();
+                targetTransform = (enemyCharacter as MonoBehaviour)?.transform;
+            }
+
+            if (targetTransform == null)
+            {
+                GameLogger.LogWarning("[DiceOfFate] 적 캐릭터 Transform을 찾을 수 없습니다.", GameLogger.LogCategory.Core);
+                return;
+            }
+
+            var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            if (finalVfxManager != null)
+            {
+                // 캐릭터의 시각적 중심 위치 계산
+                var spawnPos = GetPortraitCenterWorldPosition(targetTransform);
+                
+                var effectInstance = finalVfxManager.PlayEffect(visualEffectPrefab, spawnPos);
+                if (effectInstance != null)
+                {
+                    SetEffectLayer(effectInstance);
+                    GameLogger.LogInfo($"[DiceOfFate] 비주얼 이펙트 재생: {visualEffectPrefab.name} (적 캐릭터: {targetTransform.name})", GameLogger.LogCategory.Core);
+                }
+            }
+            else
+            {
+                // Fallback: VFXManager가 없으면 기존 방식 사용
+                var spawnPos = GetPortraitCenterWorldPosition(targetTransform);
+                var instance = UnityEngine.Object.Instantiate(visualEffectPrefab, spawnPos, Quaternion.identity);
+                SetEffectLayer(instance);
+                UnityEngine.Object.Destroy(instance, 2.0f);
+                GameLogger.LogInfo($"[DiceOfFate] 비주얼 이펙트 생성 완료: {visualEffectPrefab.name} (적 캐릭터: {targetTransform.name})", GameLogger.LogCategory.Core);
+            }
         }
 
         private Game.CombatSystem.UI.CombatExecutionSlotUI FindWaitSlot1()
@@ -1297,6 +1389,81 @@ namespace Game.ItemSystem.Effect
             cardSlotRegistry.RegisterCard(position, newCard, existingUI, Game.CombatSystem.Data.SlotOwner.ENEMY);
             
             GameLogger.LogInfo($"[DiceOfFate] CardSlotRegistry 업데이트 완료: {position} = {newCard.GetCardName()}", GameLogger.LogCategory.Core);
+        }
+
+        /// <summary>
+        /// 캐릭터 트랜스폼 하위의 포트레잇 Image 중심(시각적 중심)을 월드 좌표로 계산합니다.
+        /// </summary>
+        private static Vector3 GetPortraitCenterWorldPosition(Transform root)
+        {
+            if (root == null) return Vector3.zero;
+
+            // Portrait Image 우선
+            var portraitImage = FindPortraitImage(root);
+            if (portraitImage != null && portraitImage.rectTransform != null)
+            {
+                return GetRectTransformCenterWorld(portraitImage.rectTransform);
+            }
+
+            // RectTransform 폴백
+            var anyRect = root.GetComponentInChildren<RectTransform>(true);
+            if (anyRect != null)
+            {
+                return GetRectTransformCenterWorld(anyRect);
+            }
+
+            // SpriteRenderer 폴백
+            var sprite = root.GetComponentInChildren<SpriteRenderer>(true);
+            if (sprite != null)
+            {
+                return sprite.bounds.center;
+            }
+
+            // 최종 폴백
+            return root.position;
+        }
+
+        private static Image FindPortraitImage(Transform root)
+        {
+            var images = root.GetComponentsInChildren<Image>(true);
+            if (images == null || images.Length == 0) return null;
+
+            for (int i = 0; i < images.Length; i++)
+            {
+                if (images[i] != null && images[i].gameObject != null && images[i].gameObject.name == "Portrait")
+                {
+                    return images[i];
+                }
+            }
+
+            return images[0];
+        }
+
+        private static Vector3 GetRectTransformCenterWorld(RectTransform rt)
+        {
+            if (rt == null) return Vector3.zero;
+            var bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(rt, rt);
+            var localCenter = bounds.center;
+            return rt.TransformPoint(localCenter);
+        }
+
+        private static void SetEffectLayer(GameObject effectInstance)
+        {
+            if (effectInstance == null) return;
+
+            var renderers = effectInstance.GetComponentsInChildren<Renderer>(true);
+            foreach (var r in renderers)
+            {
+                r.sortingLayerName = "Effects";
+                r.sortingOrder = 10;
+            }
+
+            var pss = effectInstance.GetComponentsInChildren<ParticleSystemRenderer>(true);
+            foreach (var pr in pss)
+            {
+                pr.sortingLayerName = "Effects";
+                pr.sortingOrder = 10;
+            }
         }
     }
 

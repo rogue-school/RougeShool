@@ -45,6 +45,7 @@ namespace Game.CombatSystem.State
 
         // 부활 관련 플래그
         private bool hasUsedReviveThisDeath = false;
+        private bool isWaitingForDeathEffect = false;
 
         #endregion
 
@@ -84,6 +85,9 @@ namespace Game.CombatSystem.State
         {
             // PlayerHandManager 찾기 (Optional)
             handManager = FindFirstObjectByType<PlayerHandManager>();
+
+            // 사망 이펙트 완료 이벤트 구독
+            CombatEvents.OnPlayerDeathEffectComplete += OnPlayerDeathEffectComplete;
 
             // 지연 초기화 (다른 매니저들이 준비될 때까지 대기)
             Invoke(nameof(DelayedInitialize), 0.1f);
@@ -187,6 +191,9 @@ namespace Game.CombatSystem.State
 
         private void OnDestroy()
         {
+            // 이벤트 구독 해제
+            CombatEvents.OnPlayerDeathEffectComplete -= OnPlayerDeathEffectComplete;
+
             // 현재 상태 정리
             if (_currentState != null && _context != null)
             {
@@ -647,6 +654,34 @@ namespace Game.CombatSystem.State
             }
 
             // 부활 아이템이 있는지 확인
+            bool hasReviveItem = CheckReviveItemExists();
+            if (!hasReviveItem)
+            {
+                GameLogger.LogInfo("[CombatStateMachine] 부활 아이템이 없어 게임 종료", GameLogger.LogCategory.Combat);
+                EndCombat(false);
+                return;
+            }
+
+            // 사망 이펙트 완료를 기다리는 플래그 설정
+            isWaitingForDeathEffect = true;
+            GameLogger.LogInfo("[CombatStateMachine] 사망 이펙트 완료 대기 중...", GameLogger.LogCategory.Combat);
+        }
+
+        /// <summary>
+        /// 플레이어 사망 이펙트 완료 시 호출
+        /// </summary>
+        private void OnPlayerDeathEffectComplete()
+        {
+            // 사망 이펙트 완료를 기다리고 있지 않으면 무시
+            if (!isWaitingForDeathEffect)
+            {
+                return;
+            }
+
+            isWaitingForDeathEffect = false;
+            GameLogger.LogInfo("[CombatStateMachine] 사망 이펙트 완료 - 부활 아이템 효과 발동", GameLogger.LogCategory.Combat);
+
+            // 부활 아이템 효과 발동
             if (TryAutoRevive())
             {
                 hasUsedReviveThisDeath = true; // 부활 사용 플래그 설정 (이번 사망에서만 사용)
@@ -654,12 +689,37 @@ namespace Game.CombatSystem.State
                 
                 // 플레이어가 살아나는 것을 대기한 후 플래그 리셋
                 StartCoroutine(ResetReviveFlagAfterRevive());
-                
-                return; // 부활했으므로 게임 계속
             }
+            else
+            {
+                // 부활 아이템 사용 실패 시 패배 상태로 전환
+                GameLogger.LogWarning("[CombatStateMachine] 부활 아이템 사용 실패 - 게임 종료", GameLogger.LogCategory.Combat);
+                EndCombat(false);
+            }
+        }
 
-            // 부활 아이템이 없거나 사용 실패 시 패배 상태로 전환
-            EndCombat(false);
+        /// <summary>
+        /// 부활 아이템 존재 여부를 확인합니다 (아이템 사용 전 체크)
+        /// </summary>
+        /// <returns>부활 아이템 존재 여부</returns>
+        private bool CheckReviveItemExists()
+        {
+            try
+            {
+                var itemService = FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
+                if (itemService == null)
+                {
+                    return false;
+                }
+
+                var reviveItemSlot = FindReviveItemSlot(itemService);
+                return reviveItemSlot != -1;
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogError($"[CombatStateMachine] 부활 아이템 확인 중 오류: {ex.Message}", GameLogger.LogCategory.Error);
+                return false;
+            }
         }
 
         /// <summary>

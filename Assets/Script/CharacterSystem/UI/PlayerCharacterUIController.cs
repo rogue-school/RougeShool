@@ -382,7 +382,7 @@ namespace Game.CharacterSystem.UI
             if (itemDefinition == null || itemService == null) return;
 
             // 강화 단계 계산
-            int enhancementLevel = 1;
+            int enhancementLevel = 0; // 기본값 0 (강화 안됨)
             string skillId = null;
 
             if (itemDefinition.IsPlayerHealthBonus)
@@ -399,8 +399,9 @@ namespace Game.CharacterSystem.UI
             if (!string.IsNullOrEmpty(skillId))
             {
                 enhancementLevel = itemService.GetSkillEnhancementLevel(skillId);
-                if (enhancementLevel <= 0)
-                    enhancementLevel = 1;
+                // 강화 레벨이 0보다 작으면 0으로 설정 (이미 0 이상이므로 사실상 불필요하지만 안전장치)
+                if (enhancementLevel < 0)
+                    enhancementLevel = 0;
             }
 
             AddPassiveItemIcon(itemDefinition, enhancementLevel);
@@ -845,8 +846,8 @@ namespace Game.CharacterSystem.UI
         /// 패시브 아이템 아이콘을 추가합니다.
         /// </summary>
         /// <param name="itemDefinition">패시브 아이템 정의</param>
-        /// <param name="enhancementLevel">강화 단계 (1-3)</param>
-        public void AddPassiveItemIcon(PassiveItemDefinition itemDefinition, int enhancementLevel = 1)
+        /// <param name="enhancementLevel">강화 단계 (0-3, 0 = 강화 안됨)</param>
+        public void AddPassiveItemIcon(PassiveItemDefinition itemDefinition, int enhancementLevel = 0)
         {
             if (passiveItemParent == null || passiveItemIconPrefab == null || itemDefinition == null)
             {
@@ -946,9 +947,7 @@ namespace Game.CharacterSystem.UI
                     continue;
 
                 // 강화 단계 계산 (같은 아이템이 여러 번 추가될 수 있으므로)
-                // ItemService에서 강화 단계를 직접 가져올 수 있는 메서드가 필요할 수 있음
-                // 현재는 기본값 1로 설정 (나중에 개선 가능)
-                int enhancementLevel = 1;
+                int enhancementLevel = 0; // 기본값 0 (강화 안됨)
                 
                 // 아이템의 타겟 스킬 ID를 기반으로 강화 단계 확인
                 string skillId = null;
@@ -964,8 +963,9 @@ namespace Game.CharacterSystem.UI
                 if (!string.IsNullOrEmpty(skillId))
                 {
                     enhancementLevel = itemService.GetSkillEnhancementLevel(skillId);
-                    if (enhancementLevel <= 0)
-                        enhancementLevel = 1;
+                    // 강화 레벨이 0보다 작으면 0으로 설정 (이미 0 이상이므로 사실상 불필요하지만 안전장치)
+                    if (enhancementLevel < 0)
+                        enhancementLevel = 0;
                 }
 
                 AddPassiveItemIcon(item, enhancementLevel);

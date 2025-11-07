@@ -47,6 +47,7 @@ namespace Game.ItemSystem.UI
         private ActiveItemDefinition currentItem;
         private PassiveItemDefinition currentPassiveItem;
         private int currentEnhancementLevel = 1;
+        private bool isRewardPanelContext = false; // 보상창 컨텍스트인지 여부
         private RectTransform rectTransform;
         private CanvasGroup canvasGroup;
 
@@ -104,8 +105,9 @@ namespace Game.ItemSystem.UI
         /// 툴팁에 패시브 아이템 정보를 표시합니다.
         /// </summary>
         /// <param name="item">표시할 패시브 아이템</param>
-        /// <param name="enhancementLevel">강화 단계</param>
-        public void Show(PassiveItemDefinition item, int enhancementLevel = 1)
+        /// <param name="enhancementLevel">강화 단계 (0-3, 0 = 강화 안됨)</param>
+        /// <param name="isRewardPanel">보상창 컨텍스트인지 여부 (true = 보상창, false = 패시브 컨테이너)</param>
+        public void Show(PassiveItemDefinition item, int enhancementLevel = 0, bool isRewardPanel = false)
         {
             if (item == null)
             {
@@ -117,7 +119,8 @@ namespace Game.ItemSystem.UI
             gameObject.SetActive(true);
 
             currentPassiveItem = item;
-            currentEnhancementLevel = Mathf.Clamp(enhancementLevel, 1, 3);
+            currentEnhancementLevel = Mathf.Clamp(enhancementLevel, 0, Game.ItemSystem.Constants.ItemConstants.MAX_ENHANCEMENT_LEVEL);
+            isRewardPanelContext = isRewardPanel;
             currentItem = null;
             UpdatePassiveItemTooltipContent();
             
@@ -125,18 +128,18 @@ namespace Game.ItemSystem.UI
             canvasGroup.blocksRaycasts = true;
             canvasGroup.DOFade(1f, fadeInDuration).SetEase(fadeEase);
             
-            GameLogger.LogInfo($"[ItemTooltip] 패시브 아이템 툴팁 표시: {item.DisplayName}, 강화 단계: {currentEnhancementLevel}", GameLogger.LogCategory.UI);
+            GameLogger.LogInfo($"[ItemTooltip] 패시브 아이템 툴팁 표시: {item.DisplayName}, 강화 단계: {currentEnhancementLevel}, 보상창: {isRewardPanel}", GameLogger.LogCategory.UI);
         }
 
         /// <summary>
         /// 패시브 아이템의 강화 레벨을 업데이트합니다.
         /// </summary>
-        /// <param name="newLevel">새로운 강화 레벨</param>
+        /// <param name="newLevel">새로운 강화 레벨 (0-3)</param>
         public void UpdateEnhancementLevel(int newLevel)
         {
             if (currentPassiveItem == null) return;
             
-            currentEnhancementLevel = Mathf.Clamp(newLevel, 1, Game.ItemSystem.Constants.ItemConstants.MAX_ENHANCEMENT_LEVEL);
+            currentEnhancementLevel = Mathf.Clamp(newLevel, 0, Game.ItemSystem.Constants.ItemConstants.MAX_ENHANCEMENT_LEVEL);
             UpdatePassiveItemTooltipContent();
             
             GameLogger.LogInfo($"[ItemTooltip] 강화 레벨 업데이트: {currentPassiveItem.DisplayName} → {currentEnhancementLevel}", GameLogger.LogCategory.UI);
@@ -233,13 +236,34 @@ namespace Game.ItemSystem.UI
 
             var builder = new System.Text.StringBuilder();
 
-            // 강화 단계별 누적 보너스 계산
-            int totalBonus = 0;
-            if (currentPassiveItem.EnhancementIncrements.Length > 0)
+            // 보상창과 패시브 컨테이너에 따라 다른 보너스 값 계산
+            int displayBonus = 0;
+            if (isRewardPanelContext)
             {
+                // 보상창 컨텍스트: 획득 시 증가량 표시
+                if (currentEnhancementLevel == 0)
+                {
+                    // 아직 획득하지 않은 경우: 첫 번째 강화 보너스 표시
+                    if (currentPassiveItem.EnhancementIncrements.Length > 0)
+                    {
+                        displayBonus = currentPassiveItem.EnhancementIncrements[0];
+                    }
+                }
+                else
+                {
+                    // 이미 획득한 경우: 현재까지의 누적 보너스 표시
+                    for (int i = 0; i < currentEnhancementLevel && i < currentPassiveItem.EnhancementIncrements.Length; i++)
+                    {
+                        displayBonus += currentPassiveItem.EnhancementIncrements[i];
+                    }
+                }
+            }
+            else
+            {
+                // 패시브 컨테이너 컨텍스트: 총 증가량 표시 (현재까지의 누적 보너스)
                 for (int i = 0; i < currentEnhancementLevel && i < currentPassiveItem.EnhancementIncrements.Length; i++)
                 {
-                    totalBonus += currentPassiveItem.EnhancementIncrements[i];
+                    displayBonus += currentPassiveItem.EnhancementIncrements[i];
                 }
             }
 
@@ -251,31 +275,75 @@ namespace Game.ItemSystem.UI
                     string skillName = string.IsNullOrEmpty(currentPassiveItem.TargetSkill.displayNameKO) 
                         ? currentPassiveItem.TargetSkill.displayName 
                         : currentPassiveItem.TargetSkill.displayNameKO;
-                    builder.Append($"{skillName}의 데미지가 {totalBonus}만큼 영구적으로 증가합니다.");
+                    builder.Append($"{skillName}의 피해가 {displayBonus}만큼 영구적으로 증가합니다.");
                 }
                 else
                 {
-                    builder.Append($"스킬 데미지가 {totalBonus}만큼 영구적으로 증가합니다.");
+                    builder.Append($"스킬 피해가 {displayBonus}만큼 영구적으로 증가합니다.");
                 }
             }
             else if (currentPassiveItem.IsPlayerHealthBonus)
             {
-                builder.Append($"플레이어의 최대 체력이 {totalBonus}만큼 영구적으로 증가합니다.");
+                builder.Append($"플레이어의 최대 체력이 {displayBonus}만큼 영구적으로 증가합니다.");
             }
 
-            // 강화 단계 정보 추가
-            if (currentEnhancementLevel < currentPassiveItem.MaxEnhancementLevel)
+            // 강화 단계 정보 추가 (보상창과 패시브 컨테이너 구분)
+            if (isRewardPanelContext)
             {
-                builder.Append($"\n\n현재 강화 단계: {currentEnhancementLevel}/{currentPassiveItem.MaxEnhancementLevel}");
-                if (currentEnhancementLevel < currentPassiveItem.EnhancementIncrements.Length)
+                // 보상창 컨텍스트: 획득 시 강화 단계 표시
+                if (currentEnhancementLevel == 0)
                 {
-                    int nextBonus = currentPassiveItem.EnhancementIncrements[currentEnhancementLevel];
-                    builder.Append($"\n다음 강화 시 추가 보너스: +{nextBonus}");
+                    // 아직 획득하지 않은 경우
+                    builder.Append($"\n\n획득 시 강화 단계: 1/{currentPassiveItem.MaxEnhancementLevel}");
+                    if (currentPassiveItem.EnhancementIncrements.Length > 0)
+                    {
+                        int firstBonus = currentPassiveItem.EnhancementIncrements[0];
+                        builder.Append($"\n획득 시 보너스: +{firstBonus}");
+                    }
+                }
+                else
+                {
+                    // 이미 획득한 경우 (같은 아이템을 다시 선택)
+                    builder.Append($"\n\n현재 강화 단계: {currentEnhancementLevel}/{currentPassiveItem.MaxEnhancementLevel}");
+                    if (currentEnhancementLevel < currentPassiveItem.MaxEnhancementLevel)
+                    {
+                        if (currentEnhancementLevel < currentPassiveItem.EnhancementIncrements.Length)
+                        {
+                            int nextBonus = currentPassiveItem.EnhancementIncrements[currentEnhancementLevel];
+                            builder.Append($"\n다음 강화 시 추가 보너스: +{nextBonus}");
+                        }
+                    }
+                    else
+                    {
+                        builder.Append($"\n최대 강화 단계 달성");
+                    }
                 }
             }
             else
             {
-                builder.Append($"\n\n최대 강화 단계 달성 ({currentEnhancementLevel}/{currentPassiveItem.MaxEnhancementLevel})");
+                // 패시브 컨테이너 컨텍스트: 현재 강화 단계 표시
+                if (currentEnhancementLevel == 0)
+                {
+                    builder.Append($"\n\n현재 강화 단계: 0/{currentPassiveItem.MaxEnhancementLevel} (강화 안됨)");
+                    if (currentPassiveItem.EnhancementIncrements.Length > 0)
+                    {
+                        int firstBonus = currentPassiveItem.EnhancementIncrements[0];
+                        builder.Append($"\n첫 강화 시 보너스: +{firstBonus}");
+                    }
+                }
+                else if (currentEnhancementLevel < currentPassiveItem.MaxEnhancementLevel)
+                {
+                    builder.Append($"\n\n현재 강화 단계: {currentEnhancementLevel}/{currentPassiveItem.MaxEnhancementLevel}");
+                    if (currentEnhancementLevel < currentPassiveItem.EnhancementIncrements.Length)
+                    {
+                        int nextBonus = currentPassiveItem.EnhancementIncrements[currentEnhancementLevel];
+                        builder.Append($"\n다음 강화 시 추가 보너스: +{nextBonus}");
+                    }
+                }
+                else
+                {
+                    builder.Append($"\n\n최대 강화 단계 달성 ({currentEnhancementLevel}/{currentPassiveItem.MaxEnhancementLevel})");
+                }
             }
 
             descriptionText.text = builder.ToString();
@@ -407,7 +475,7 @@ namespace Game.ItemSystem.UI
                 
                 return $"50% 확률로 체력을 {clownSettings.healAmount} 회복시키거나 {clownSettings.damageAmount} 잃어버립니다.";
             }
-            return "랜덤하게 체력을 회복시키거나 데미지를 받습니다.";
+            return "랜덤하게 체력을 회복시키거나 피해를 받습니다.";
         }
 
         #endregion

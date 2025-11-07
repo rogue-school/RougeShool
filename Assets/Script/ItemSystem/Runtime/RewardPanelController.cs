@@ -683,6 +683,14 @@ namespace Game.ItemSystem.Runtime
 			}
 
 			_itemService.AddPassiveItem(selectedItem);
+			
+			// 툴팁 매니저에 툴팁 업데이트 요청
+			var tooltipManager = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Manager.ItemTooltipManager>();
+			if (tooltipManager != null)
+			{
+				tooltipManager.RefreshPassiveItemTooltip(selectedItem);
+			}
+			
 			RemovePassiveSlot(slotIndex);
 		}
 	}

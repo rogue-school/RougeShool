@@ -33,7 +33,15 @@ namespace Game.ItemSystem.Effect
                 return new DiceOfFateEffectCommand(changeCount);
             }
 
-            return new DiceOfFateEffectCommand(customSettings.changeCount);
+            var vfxManager = UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
+            var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+
+            return new DiceOfFateEffectCommand(
+                customSettings.changeCount,
+                customSettings.sfxClip,
+                customSettings.visualEffectPrefab,
+                vfxManager,
+                audioManager);
         }
 
         public override void ApplyEffect(IItemUseContext context, int value)

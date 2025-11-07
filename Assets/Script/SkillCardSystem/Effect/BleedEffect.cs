@@ -3,8 +3,10 @@ using Game.CombatSystem.Interface;
 using Game.CharacterSystem.Interface;
 using Game.SkillCardSystem.Interface;
 using Game.VFXSystem.Manager;
+using Game.VFXSystem;
 using Game.CoreSystem.Utility;
 using UnityEngine.UI;
+using Game.CombatSystem;
 
 namespace Game.SkillCardSystem.Effect
 {
@@ -99,6 +101,8 @@ namespace Game.SkillCardSystem.Effect
         {
             if (perTurnEffectPrefab == null)
             {
+                // 이펙트가 없어도 완료 이벤트 발행 (피해는 이미 발생했으므로)
+                CombatEvents.RaiseBleedTurnStartEffectComplete();
                 return;
             }
 
@@ -106,6 +110,7 @@ namespace Game.SkillCardSystem.Effect
             if (targetTransform == null)
             {
                 GameLogger.LogWarning("[BleedEffect] 대상 Transform이 null입니다. 출혈 턴별 VFX 생성을 건너뜁니다.", GameLogger.LogCategory.SkillCard);
+                CombatEvents.RaiseBleedTurnStartEffectComplete();
                 return;
             }
 
@@ -117,6 +122,14 @@ namespace Game.SkillCardSystem.Effect
                 {
                     SetEffectLayer(instance);
                     GameLogger.LogInfo($"[BleedEffect] 턴별 출혈 VFX 재생: {instance.name}", GameLogger.LogCategory.SkillCard);
+                    
+                    // 이펙트 지속 시간 계산 후 완료 이벤트 발행
+                    float duration = GetEffectDuration(instance);
+                    vfxManager.StartCoroutine(DelayedBleedEffectComplete(duration));
+                }
+                else
+                {
+                    CombatEvents.RaiseBleedTurnStartEffectComplete();
                 }
             }
             else
@@ -125,8 +138,88 @@ namespace Game.SkillCardSystem.Effect
                 var spawnPos = GetPortraitCenterWorldPosition(targetTransform);
                 var instance = UnityEngine.Object.Instantiate(perTurnEffectPrefab, spawnPos, Quaternion.identity);
                 SetEffectLayer(instance);
-                UnityEngine.Object.Destroy(instance, 2.0f);
+                
+                // 이펙트 지속 시간 계산
+                float duration = GetEffectDuration(instance);
+                UnityEngine.Object.Destroy(instance, duration);
+                
+                // 지속 시간 후 완료 이벤트 발행 (MonoBehaviour 필요)
+                var targetMono = target as MonoBehaviour;
+                if (targetMono != null)
+                {
+                    targetMono.StartCoroutine(DelayedBleedEffectComplete(duration));
+                }
+                else
+                {
+                    CombatEvents.RaiseBleedTurnStartEffectComplete();
+                }
             }
+        }
+
+        /// <summary>
+        /// 이펙트 지속 시간 후 출혈 이펙트 완료 이벤트를 발행합니다.
+        /// </summary>
+        private System.Collections.IEnumerator DelayedBleedEffectComplete(float duration)
+        {
+            // 최대 0.8초로 제한 (너무 오래 기다리지 않도록)
+            float actualDuration = Mathf.Min(duration, 0.8f);
+            yield return new WaitForSeconds(actualDuration);
+            CombatEvents.RaiseBleedTurnStartEffectComplete();
+        }
+
+        /// <summary>
+        /// 이펙트의 지속 시간을 계산합니다.
+        /// EffectDuration 컴포넌트가 있으면 우선적으로 사용하고,
+        /// 없으면 ParticleSystem과 Animator를 기반으로 자동 계산합니다.
+        /// </summary>
+        private float GetEffectDuration(GameObject effect)
+        {
+            // EffectDuration 컴포넌트가 있으면 우선 사용
+            var effectDuration = effect.GetComponent<EffectDuration>();
+            if (effectDuration != null && effectDuration.HasCustomDuration)
+            {
+                float customDuration = effectDuration.Duration;
+                GameLogger.LogInfo($"[BleedEffect] 커스텀 지속 시간 사용: {customDuration}초 (이펙트: {effect.name})", GameLogger.LogCategory.SkillCard);
+                return Mathf.Min(customDuration, 0.8f); // 최대 0.8초로 제한
+            }
+
+            // 자동 계산 (기존 로직)
+            float maxDuration = 0f;
+
+            var particleSystems = effect.GetComponentsInChildren<ParticleSystem>();
+            foreach (var ps in particleSystems)
+            {
+                var main = ps.main;
+                float duration = main.duration + main.startLifetime.constantMax;
+                
+                // 파티클이 루프인 경우 최대 지속 시간 제한
+                if (main.loop)
+                {
+                    duration = Mathf.Min(duration, 1.0f); // 출혈 이펙트는 최대 1초
+                }
+                
+                if (duration > maxDuration)
+                {
+                    maxDuration = duration;
+                }
+            }
+
+            // 애니메이션 클립이 있으면 확인
+            var animator = effect.GetComponent<Animator>();
+            if (animator != null && animator.runtimeAnimatorController != null)
+            {
+                var clips = animator.runtimeAnimatorController.animationClips;
+                foreach (var clip in clips)
+                {
+                    if (clip.length > maxDuration)
+                    {
+                        maxDuration = clip.length;
+                    }
+                }
+            }
+
+            // 최대 지속 시간 제한 (출혈 이펙트는 빠르게 처리)
+            return Mathf.Min(maxDuration > 0 ? maxDuration : 0.6f, 0.8f);
         }
 
         /// <summary>

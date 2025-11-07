@@ -378,9 +378,42 @@ namespace Game.ItemSystem.Runtime
             }
             else if (currentPassive != null)
             {
-                // 패시브 아이템은 강화 단계 1로 표시 (보상창에서는 항상 1단계)
-                tooltipManager.OnPassiveItemHoverEnter(currentPassive, rectTransform, 1);
+                // 보상창에서는 실제 강화 레벨을 조회 (아직 선택하지 않았으면 0)
+                int enhancementLevel = 0;
+                var itemService = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
+                if (itemService != null)
+                {
+                    string skillId = GetPassiveItemSkillId(currentPassive);
+                    if (!string.IsNullOrEmpty(skillId))
+                    {
+                        enhancementLevel = itemService.GetSkillEnhancementLevel(skillId);
+                    }
+                }
+                // 보상창 컨텍스트로 표시
+                tooltipManager.OnPassiveItemHoverEnter(currentPassive, rectTransform, enhancementLevel, isRewardPanel: true);
             }
+        }
+
+        /// <summary>
+        /// 패시브 아이템의 스킬 ID를 가져옵니다.
+        /// </summary>
+        private string GetPassiveItemSkillId(PassiveItemDefinition item)
+        {
+            if (item == null) return null;
+
+            if (item.IsPlayerHealthBonus)
+            {
+                var itemKey = !string.IsNullOrEmpty(item.ItemId) ? item.ItemId : System.Guid.NewGuid().ToString();
+                return $"__PLAYER_HP__:{itemKey}";
+            }
+            else if (item.TargetSkill != null)
+            {
+                return !string.IsNullOrEmpty(item.TargetSkill.displayName) 
+                    ? item.TargetSkill.displayName 
+                    : item.TargetSkill.cardId;
+            }
+
+            return null;
         }
         
         /// <summary>

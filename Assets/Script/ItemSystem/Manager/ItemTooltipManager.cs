@@ -4,6 +4,7 @@ using Game.ItemSystem.Data;
 using Game.ItemSystem.UI;
 using Game.CoreSystem.Utility;
 using Game.CoreSystem.Interface;
+using System;
 using System.Collections;
 using TMPro;
 using UnityEngine.UI;
@@ -44,7 +45,8 @@ namespace Game.ItemSystem.Manager
         private RectTransform tooltipLayer;
         private ActiveItemDefinition hoveredItem;
         private PassiveItemDefinition hoveredPassiveItem;
-        private int hoveredPassiveItemEnhancementLevel = 1;
+        private int hoveredPassiveItemEnhancementLevel = 0;
+        private bool hoveredPassiveItemIsRewardPanel = false; // 보상창 컨텍스트인지 여부
         private RectTransform currentTargetRect;
         private bool pendingShow;
         private ActiveItemDefinition pendingItem;
@@ -384,10 +386,11 @@ namespace Game.ItemSystem.Manager
         /// 패시브 아이템에 마우스가 진입했을 때 호출됩니다.
         /// </summary>
         /// <param name="item">호버된 패시브 아이템</param>
-        /// <param name="enhancementLevel">강화 단계</param>
-        public void OnPassiveItemHoverEnter(PassiveItemDefinition item, int enhancementLevel = 1)
+        /// <param name="enhancementLevel">강화 단계 (0-3, 0 = 강화 안됨)</param>
+        /// <param name="isRewardPanel">보상창 컨텍스트인지 여부 (true = 보상창, false = 패시브 컨테이너)</param>
+        public void OnPassiveItemHoverEnter(PassiveItemDefinition item, int enhancementLevel = 0, bool isRewardPanel = false)
         {
-            OnPassiveItemHoverEnter(item, null, enhancementLevel);
+            OnPassiveItemHoverEnter(item, null, enhancementLevel, isRewardPanel);
         }
 
         /// <summary>
@@ -395,8 +398,9 @@ namespace Game.ItemSystem.Manager
         /// </summary>
         /// <param name="item">호버된 패시브 아이템</param>
         /// <param name="sourceRect">호버를 발생시킨 UI의 RectTransform</param>
-        /// <param name="enhancementLevel">강화 단계</param>
-        public void OnPassiveItemHoverEnter(PassiveItemDefinition item, RectTransform sourceRect, int enhancementLevel = 1)
+        /// <param name="enhancementLevel">강화 단계 (0-3, 0 = 강화 안됨)</param>
+        /// <param name="isRewardPanel">보상창 컨텍스트인지 여부 (true = 보상창, false = 패시브 컨테이너)</param>
+        public void OnPassiveItemHoverEnter(PassiveItemDefinition item, RectTransform sourceRect, int enhancementLevel = 0, bool isRewardPanel = false)
         {
             if (item == null) return;
 
@@ -417,7 +421,8 @@ namespace Game.ItemSystem.Manager
             }
 
             hoveredPassiveItem = item;
-            hoveredPassiveItemEnhancementLevel = Mathf.Clamp(enhancementLevel, 1, 3);
+            hoveredPassiveItemEnhancementLevel = Mathf.Clamp(enhancementLevel, 0, Game.ItemSystem.Constants.ItemConstants.MAX_ENHANCEMENT_LEVEL);
+            hoveredPassiveItemIsRewardPanel = isRewardPanel;
             hoveredItem = null;
             // 호버를 발생시킨 소스 Rect를 우선 사용
             currentTargetRect = sourceRect;
@@ -459,6 +464,7 @@ namespace Game.ItemSystem.Manager
             isPinned = false;
             pinnedItem = null;
             pinnedPassiveItem = null;
+            pinnedPassiveItemEnhancementLevel = 1;
             pinnedRect = null;
         }
 
@@ -482,7 +488,7 @@ namespace Game.ItemSystem.Manager
         private void HideOtherTooltips()
         {
             // 스킬카드 툴팁 숨김
-            var skillCardTooltipManager = Object.FindFirstObjectByType<SkillCardTooltipManager>();
+            var skillCardTooltipManager = UnityEngine.Object.FindFirstObjectByType<SkillCardTooltipManager>();
             if (skillCardTooltipManager != null)
             {
                 skillCardTooltipManager.ForceHideTooltip();
@@ -490,7 +496,7 @@ namespace Game.ItemSystem.Manager
             }
 
             // 버프/디버프 툴팁 숨김
-            var buffDebuffTooltipManager = Object.FindFirstObjectByType<BuffDebuffTooltipManager>();
+            var buffDebuffTooltipManager = UnityEngine.Object.FindFirstObjectByType<BuffDebuffTooltipManager>();
             if (buffDebuffTooltipManager != null)
             {
                 buffDebuffTooltipManager.ForceHideTooltip();
@@ -574,14 +580,8 @@ namespace Game.ItemSystem.Manager
             {
                 if (hoveredPassiveItem != null)
                 {
-                    // 패시브 아이템의 대상 스킬과 비교
-                    string targetSkillId = null;
-                    if (hoveredPassiveItem.TargetSkill != null)
-                    {
-                        targetSkillId = !string.IsNullOrEmpty(hoveredPassiveItem.TargetSkill.displayName) 
-                            ? hoveredPassiveItem.TargetSkill.displayName 
-                            : hoveredPassiveItem.TargetSkill.cardId;
-                    }
+                    // 패시브 아이템의 대상 스킬 ID 계산
+                    string targetSkillId = GetPassiveItemSkillId(hoveredPassiveItem);
 
                     if (targetSkillId == skillId)
                     {
@@ -589,6 +589,84 @@ namespace Game.ItemSystem.Manager
                         hoveredPassiveItemEnhancementLevel = newLevel;
                         currentTooltip.UpdateEnhancementLevel(newLevel);
                         GameLogger.LogInfo($"[ItemTooltipManager] 툴팁 강화 레벨 실시간 업데이트: {hoveredPassiveItem.DisplayName} → {newLevel}", GameLogger.LogCategory.UI);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 패시브 아이템의 스킬 ID를 가져옵니다.
+        /// </summary>
+        private string GetPassiveItemSkillId(PassiveItemDefinition item)
+        {
+            if (item == null) return null;
+
+            if (item.IsPlayerHealthBonus)
+            {
+                // 공용 체력 보너스는 아이템 ID를 키에 포함
+                var itemKey = !string.IsNullOrEmpty(item.ItemId) ? item.ItemId : Guid.NewGuid().ToString();
+                return $"__PLAYER_HP__:{itemKey}";
+            }
+            else if (item.TargetSkill != null)
+            {
+                return !string.IsNullOrEmpty(item.TargetSkill.displayName) 
+                    ? item.TargetSkill.displayName 
+                    : item.TargetSkill.cardId;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 현재 표시 중인 패시브 아이템 툴팁의 강화 레벨을 업데이트합니다.
+        /// 보상창에서 아이템을 선택했을 때 호출됩니다.
+        /// </summary>
+        /// <param name="item">업데이트할 패시브 아이템</param>
+        public void RefreshPassiveItemTooltip(PassiveItemDefinition item)
+        {
+            if (item == null || itemService == null) return;
+
+            // 현재 표시 중인 툴팁이 패시브 아이템인지 확인
+            if (currentTooltip != null && currentTooltip.gameObject != null && currentTooltip.gameObject.activeInHierarchy)
+            {
+                if (hoveredPassiveItem == null) return;
+
+                // 스킬 ID로 비교 (더 정확한 매칭)
+                string selectedSkillId = GetPassiveItemSkillId(item);
+                string hoveredSkillId = GetPassiveItemSkillId(hoveredPassiveItem);
+
+                // 스킬 ID가 같으면 같은 아이템으로 간주
+                if (!string.IsNullOrEmpty(selectedSkillId) && selectedSkillId == hoveredSkillId)
+                {
+                    // 코루틴으로 약간의 지연을 주어 AddPassiveItem이 완료된 후 업데이트
+                    StartCoroutine(RefreshPassiveItemTooltipDelayed(item));
+                }
+            }
+        }
+
+        /// <summary>
+        /// 지연된 패시브 아이템 툴팁 업데이트 코루틴
+        /// </summary>
+        private System.Collections.IEnumerator RefreshPassiveItemTooltipDelayed(PassiveItemDefinition item)
+        {
+            // 한 프레임 대기하여 AddPassiveItem이 완료되도록 함
+            yield return null;
+
+            if (item == null || itemService == null) yield break;
+
+            // 현재 강화 레벨 조회
+            string skillId = GetPassiveItemSkillId(item);
+            if (!string.IsNullOrEmpty(skillId))
+            {
+                int currentLevel = itemService.GetSkillEnhancementLevel(skillId);
+                // 강화 레벨이 변경되었으면 업데이트 (0에서 1로 증가하는 경우 포함)
+                if (currentLevel != hoveredPassiveItemEnhancementLevel)
+                {
+                    hoveredPassiveItemEnhancementLevel = currentLevel;
+                    if (currentTooltip != null && currentTooltip.gameObject != null && currentTooltip.gameObject.activeInHierarchy)
+                    {
+                        currentTooltip.UpdateEnhancementLevel(currentLevel);
+                        GameLogger.LogInfo($"[ItemTooltipManager] 보상창 선택 후 툴팁 강화 레벨 업데이트: {item.DisplayName} → {currentLevel}", GameLogger.LogCategory.UI);
                     }
                 }
             }
@@ -774,8 +852,8 @@ namespace Game.ItemSystem.Manager
                     }
                     else if (hoveredPassiveItem != null)
                     {
-                        currentTooltip.Show(hoveredPassiveItem, hoveredPassiveItemEnhancementLevel);
-                        GameLogger.LogInfo($"패시브 아이템 툴팁 표시: {hoveredPassiveItem.DisplayName}, 강화 단계: {hoveredPassiveItemEnhancementLevel}", GameLogger.LogCategory.UI);
+                        currentTooltip.Show(hoveredPassiveItem, hoveredPassiveItemEnhancementLevel, hoveredPassiveItemIsRewardPanel);
+                        GameLogger.LogInfo($"패시브 아이템 툴팁 표시: {hoveredPassiveItem.DisplayName}, 강화 단계: {hoveredPassiveItemEnhancementLevel}, 보상창: {hoveredPassiveItemIsRewardPanel}", GameLogger.LogCategory.UI);
                     }
                     else
                     {
@@ -827,6 +905,8 @@ namespace Game.ItemSystem.Manager
         {
             isPinned = true;
             pinnedItem = hoveredItem;
+            pinnedPassiveItem = hoveredPassiveItem;
+            pinnedPassiveItemEnhancementLevel = hoveredPassiveItemEnhancementLevel;
             pinnedRect = currentTargetRect;
         }
 
@@ -837,6 +917,8 @@ namespace Game.ItemSystem.Manager
         {
             isPinned = false;
             pinnedItem = null;
+            pinnedPassiveItem = null;
+            pinnedPassiveItemEnhancementLevel = 1;
             pinnedRect = null;
         }
 

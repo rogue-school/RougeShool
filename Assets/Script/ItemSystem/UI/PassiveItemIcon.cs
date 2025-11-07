@@ -49,7 +49,7 @@ namespace Game.ItemSystem.UI
         #region Private Fields
 
         private string itemId;
-        private int enhancementLevel = 1;
+        private int enhancementLevel = 0; // 0 = 강화 안됨, 1-3 = 강화 단계
         private PassiveItemDefinition itemDefinition;
 
         private Tween fadeTween;
@@ -111,8 +111,8 @@ namespace Game.ItemSystem.UI
         /// 패시브 아이템 아이콘을 설정합니다.
         /// </summary>
         /// <param name="itemDefinition">패시브 아이템 정의</param>
-        /// <param name="enhancementLevel">강화 단계 (1-3)</param>
-        public void SetupIcon(PassiveItemDefinition itemDefinition, int enhancementLevel = 1)
+        /// <param name="enhancementLevel">강화 단계 (0-3, 0 = 강화 안됨)</param>
+        public void SetupIcon(PassiveItemDefinition itemDefinition, int enhancementLevel = 0)
         {
             if (itemDefinition == null)
             {
@@ -122,7 +122,7 @@ namespace Game.ItemSystem.UI
 
             this.itemDefinition = itemDefinition;
             this.itemId = itemDefinition.ItemId;
-            this.enhancementLevel = Mathf.Clamp(enhancementLevel, 1, 3);
+            this.enhancementLevel = Mathf.Clamp(enhancementLevel, 0, Game.ItemSystem.Constants.ItemConstants.MAX_ENHANCEMENT_LEVEL);
 
             if (iconImage != null && itemDefinition.Icon != null)
                 iconImage.sprite = itemDefinition.Icon;
@@ -153,7 +153,15 @@ namespace Game.ItemSystem.UI
         {
             if (enhancementLevelText != null)
             {
-                enhancementLevelText.text = enhancementLevel.ToString();
+                // 0강일 때는 텍스트를 표시하지 않음
+                if (enhancementLevel > 0)
+                {
+                    enhancementLevelText.text = enhancementLevel.ToString();
+                }
+                else
+                {
+                    enhancementLevelText.text = "";
+                }
             }
         }
 
@@ -180,10 +188,10 @@ namespace Game.ItemSystem.UI
         /// <summary>
         /// 강화 단계를 업데이트합니다.
         /// </summary>
-        /// <param name="newLevel">새로운 강화 단계 (1-3)</param>
+        /// <param name="newLevel">새로운 강화 단계 (0-3)</param>
         public void UpdateEnhancementLevel(int newLevel)
         {
-            enhancementLevel = Mathf.Clamp(newLevel, 1, 3);
+            enhancementLevel = Mathf.Clamp(newLevel, 0, Game.ItemSystem.Constants.ItemConstants.MAX_ENHANCEMENT_LEVEL);
             UpdateEnhancementLevelText();
             GameLogger.LogInfo($"[PassiveItemIcon] 강화 단계 업데이트: {itemId} → {enhancementLevel}", GameLogger.LogCategory.UI);
         }
@@ -334,7 +342,7 @@ namespace Game.ItemSystem.UI
         /// <summary>
         /// 현재 강화 단계를 반환합니다.
         /// </summary>
-        /// <returns>강화 단계 (1-3)</returns>
+        /// <returns>강화 단계 (0-3)</returns>
         public int GetEnhancementLevel()
         {
             return enhancementLevel;

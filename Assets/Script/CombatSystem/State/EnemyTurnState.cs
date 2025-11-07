@@ -36,9 +36,36 @@ namespace Game.CombatSystem.State
                 context.TurnController.SetTurnAndIncrement(Interface.TurnType.Enemy);
             }
 
-            // 턴별 효과 처리 (가드, 출혈, 반격, 기절 등)
-            ProcessTurnEffects(context);
+            // 턴별 효과 처리 및 출혈 이펙트 완료 대기 후 다음 동작 진행
+            if (context.StateMachine != null && context.StateMachine is MonoBehaviour stateMachineMono)
+            {
+                stateMachineMono.StartCoroutine(ProcessTurnEffectsAndContinue(context));
+            }
+            else
+            {
+                // Fallback: 코루틴을 시작할 수 없으면 즉시 처리
+                ProcessTurnEffects(context);
+                ContinueAfterTurnEffects(context);
+            }
+        }
 
+        /// <summary>
+        /// 턴별 효과 처리 및 출혈 이펙트 완료 후 다음 동작 진행
+        /// </summary>
+        private System.Collections.IEnumerator ProcessTurnEffectsAndContinue(CombatStateContext context)
+        {
+            // 턴별 효과 처리 (출혈 이펙트 완료 대기)
+            yield return ProcessTurnEffectsCoroutine(context);
+
+            // 출혈 이펙트 완료 후 다음 동작 진행
+            ContinueAfterTurnEffects(context);
+        }
+
+        /// <summary>
+        /// 턴별 효과 처리 후 다음 동작 진행
+        /// </summary>
+        private void ContinueAfterTurnEffects(CombatStateContext context)
+        {
             // 턴별 효과 처리 후 적이 사망했는지 확인
             if (context.EnemyManager != null)
             {
@@ -69,6 +96,7 @@ namespace Game.CombatSystem.State
 
         /// <summary>
         /// 턴별 효과를 처리합니다 (가드, 출혈, 반격, 기절 등)
+        /// 출혈 이펙트 완료를 기다립니다.
         /// </summary>
         private void ProcessTurnEffects(CombatStateContext context)
         {
@@ -78,9 +106,92 @@ namespace Game.CombatSystem.State
                 return;
             }
 
-            // TurnController의 ProcessAllCharacterTurnEffects 메서드 호출
+            // 즉시 처리 (코루틴 없이)
             context.TurnController.ProcessAllCharacterTurnEffects();
             LogStateTransition("턴별 효과 처리 완료 (가드, 출혈, 반격, 기절 등)");
+        }
+
+        /// <summary>
+        /// 턴별 효과를 처리하는 코루틴 (출혈 이펙트 완료 대기)
+        /// 플레이어와 적의 출혈 효과를 동시에 처리합니다.
+        /// </summary>
+        private System.Collections.IEnumerator ProcessTurnEffectsCoroutine(CombatStateContext context)
+        {
+            if (context?.TurnController == null || context.PlayerManager == null || context.EnemyManager == null)
+            {
+                LogWarning("필수 매니저가 null - 턴별 효과 처리 건너뜀");
+                yield break;
+            }
+
+            // 플레이어와 적 캐릭터 가져오기
+            var player = context.PlayerManager.GetCharacter();
+            var enemy = context.EnemyManager.GetCharacter();
+
+            // 모든 캐릭터의 출혈 효과 개수 카운트
+            int totalBleedEffectCount = 0;
+            if (player is Game.CharacterSystem.Core.CharacterBase playerBase)
+            {
+                var playerBuffs = playerBase.GetBuffs();
+                foreach (var buff in playerBuffs)
+                {
+                    if (buff is Game.SkillCardSystem.Effect.BleedEffect)
+                    {
+                        totalBleedEffectCount++;
+                    }
+                }
+            }
+
+            if (enemy is Game.CharacterSystem.Core.CharacterBase enemyBase)
+            {
+                var enemyBuffs = enemyBase.GetBuffs();
+                foreach (var buff in enemyBuffs)
+                {
+                    if (buff is Game.SkillCardSystem.Effect.BleedEffect)
+                    {
+                        totalBleedEffectCount++;
+                    }
+                }
+            }
+
+            // 출혈 효과가 없으면 즉시 처리
+            if (totalBleedEffectCount == 0)
+            {
+                context.TurnController.ProcessAllCharacterTurnEffects();
+                LogStateTransition("출혈 효과 없음 - 즉시 처리 완료");
+                yield break;
+            }
+
+            // 출혈 효과가 있으면 동시에 처리
+            int completedBleedEffects = 0;
+            System.Action onBleedComplete = () => completedBleedEffects++;
+
+            // 이벤트 구독 (ProcessTurnEffects 호출 전에 구독해야 함)
+            Game.CombatSystem.CombatEvents.OnBleedTurnStartEffectComplete += onBleedComplete;
+
+            // 모든 캐릭터의 턴 효과를 동시에 처리 (출혈 이펙트 재생 시작)
+            context.TurnController.ProcessAllCharacterTurnEffects();
+
+            // 모든 출혈 이펙트 완료 대기 (타임아웃: 최대 1.5초)
+            float timeout = 1.5f;
+            float elapsed = 0f;
+            
+            while (completedBleedEffects < totalBleedEffectCount && elapsed < timeout)
+            {
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+
+            // 이벤트 구독 해제
+            Game.CombatSystem.CombatEvents.OnBleedTurnStartEffectComplete -= onBleedComplete;
+
+            if (completedBleedEffects >= totalBleedEffectCount)
+            {
+                LogStateTransition($"모든 출혈 이펙트 완료 ({completedBleedEffects}/{totalBleedEffectCount})");
+            }
+            else
+            {
+                LogWarning($"출혈 이펙트 완료 타임아웃 ({completedBleedEffects}/{totalBleedEffectCount}, {elapsed:F2}초 경과)");
+            }
         }
 
         /// <summary>

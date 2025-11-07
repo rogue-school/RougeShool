@@ -11,6 +11,8 @@ namespace Game.CombatSystem
         #region 캐릭터 관련 이벤트
         // 플레이어 캐릭터 사망
         public static event Action<PlayerCharacterData, GameObject> OnPlayerCharacterDeath;
+        // 플레이어 캐릭터 사망 이펙트 완료
+        public static event Action OnPlayerDeathEffectComplete;
         // 적 캐릭터 사망
         public static event Action<Game.CharacterSystem.Data.EnemyCharacterData, GameObject> OnEnemyCharacterDeath;
         // 플레이어 캐릭터 피해
@@ -46,6 +48,8 @@ namespace Game.CombatSystem
         public static event Action<string, GameObject, CombatSlotPosition> OnEnemyCardMoved;
         // 핸드 슬롯 스킬카드 소멸 애니메이션 트리거
         public static event Action<bool> OnHandSkillCardsVanishOnCharacterDeath; // bool: true=플레이어, false=적
+        // 출혈 턴 시작 이펙트 완료
+        public static event Action OnBleedTurnStartEffectComplete;
         #endregion
 
         #region 전투 상태 관련 이벤트
@@ -88,6 +92,7 @@ namespace Game.CombatSystem
         #region 이벤트 발행 메서드
         // 캐릭터 관련
         public static void RaisePlayerCharacterDeath(PlayerCharacterData data, GameObject obj) => OnPlayerCharacterDeath?.Invoke(data, obj);
+        public static void RaisePlayerDeathEffectComplete() => OnPlayerDeathEffectComplete?.Invoke();
         public static void RaiseEnemyCharacterDeath(Game.CharacterSystem.Data.EnemyCharacterData data, GameObject obj) => OnEnemyCharacterDeath?.Invoke(data, obj);
         public static void RaisePlayerCharacterDamaged(PlayerCharacterData data, GameObject obj, int damage) => OnPlayerCharacterDamaged?.Invoke(data, obj, damage);
         public static void RaiseEnemyCharacterDamaged(Game.CharacterSystem.Data.EnemyCharacterData data, GameObject obj, int damage) => OnEnemyCharacterDamaged?.Invoke(data, obj, damage);
@@ -108,6 +113,8 @@ namespace Game.CombatSystem
 
         // 핸드 슬롯 스킬카드 소멸 애니메이션 트리거
         public static void RaiseHandSkillCardsVanishOnCharacterDeath(bool isPlayer) => OnHandSkillCardsVanishOnCharacterDeath?.Invoke(isPlayer);
+        // 출혈 턴 시작 이펙트 완료
+        public static void RaiseBleedTurnStartEffectComplete() => OnBleedTurnStartEffectComplete?.Invoke();
 
         // 전투 상태 관련
         public static void RaiseCombatStarted() => OnCombatStarted?.Invoke();
