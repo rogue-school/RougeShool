@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d10d2d327137db7439e30c5872e2329a, type: 3}
+  m_Name: "002_\uACF5\uACA9\uB825 \uBB3C\uC57D"
+  m_EditorClassIdentifier: 
+  itemId: 002
+  displayName: "\uACF5\uACA9\uB825 \uBB3C\uC57D"
+  description: 
+  icon: {fileID: 606631214649944254, guid: 87fa5e53c998ffe4bb5742cce6e1f3e1, type: 3}
+  targetType: 0
+  turnPolicy: 1
+  effectConfiguration:
+    effects:
+    - effectSO: {fileID: 11400000, guid: 9cb727b99d484454a93efca0b3c4f7a4, type: 2}
+      useCustomSettings: 1
+      customSettings:
+        rid: 8488197037359104071
+      executionOrder: 0
+  references:
+    version: 2
+    RefIds:
+    - rid: 8488197037359104071
+      type: {class: AttackBuffEffectCustomSettings, ns: Game.ItemSystem.Data, asm: Assembly-CSharp}
+      data:
+        buffAmount: 3
+        duration: 1
+        sfxClip: {fileID: 0}
+        visualEffectPrefab: {fileID: 126652359712664187, guid: ce2e25d009608434bba688c9ef8bf708, type: 3}
