@@ -665,6 +665,28 @@ namespace Game.CombatSystem.State
             // 사망 이펙트 완료를 기다리는 플래그 설정
             isWaitingForDeathEffect = true;
             GameLogger.LogInfo("[CombatStateMachine] 사망 이펙트 완료 대기 중...", GameLogger.LogCategory.Combat);
+
+            // 사망 이펙트가 없는 경우 즉시 완료 이벤트 호출
+            // OnPlayerCharacterDeath 이벤트를 구독하는 곳에서 사망 이펙트를 재생하고 완료 시 RaisePlayerDeathEffectComplete()를 호출해야 함
+            // 현재 사망 이펙트가 없는 경우를 대비해 일정 시간 후 자동으로 완료 처리
+            StartCoroutine(WaitForDeathEffectOrTimeout());
+        }
+
+        /// <summary>
+        /// 사망 이펙트 완료를 기다리거나 타임아웃 시 완료 처리
+        /// </summary>
+        private System.Collections.IEnumerator WaitForDeathEffectOrTimeout()
+        {
+            // 사망 이펙트가 없는 경우를 대비해 짧은 지연 후 즉시 완료 처리
+            // OnPlayerCharacterDeath 이벤트를 구독하는 곳에서 사망 이펙트를 재생하고 완료 시 RaisePlayerDeathEffectComplete()를 호출해야 함
+            yield return new WaitForSeconds(0.1f); // 사망 이펙트 재생 시작을 위한 짧은 지연
+
+            // 여전히 대기 중이면 사망 이펙트가 없는 것으로 간주하고 즉시 완료 처리
+            if (isWaitingForDeathEffect)
+            {
+                GameLogger.LogWarning("[CombatStateMachine] 사망 이펙트가 없거나 완료되지 않음 - 즉시 부활 처리 진행", GameLogger.LogCategory.Combat);
+                CombatEvents.RaisePlayerDeathEffectComplete();
+            }
         }
 
         /// <summary>
