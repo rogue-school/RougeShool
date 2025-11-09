@@ -144,10 +144,11 @@ namespace Game.SkillCardSystem.Effect
             var spawnPos = GetPortraitCenterWorldPosition(context.Source.Transform);
             GameLogger.LogInfo($"[HealEffectCommand] 힐 VFX 생성 시작 - 프리팹: {visualEffectPrefab.name}, 위치: {spawnPos}", GameLogger.LogCategory.SkillCard);
 
-            // VFXManager를 통한 이펙트 생성 (Object Pooling)
-            if (vfxManager != null)
+            // VFXManager를 통한 이펙트 생성 (정확한 위치 지정)
+            var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            if (finalVfxManager != null)
             {
-                var instance = vfxManager.PlayEffect(visualEffectPrefab, spawnPos);
+                var instance = finalVfxManager.PlayEffectAtCharacterCenter(visualEffectPrefab, context.Source.Transform);
                 if (instance != null)
                 {
                     SetEffectLayer(instance);
@@ -156,15 +157,8 @@ namespace Game.SkillCardSystem.Effect
             }
             else
             {
-                // Fallback: VFXManager가 없으면 기존 방식 사용
-                var instance = UnityEngine.Object.Instantiate(visualEffectPrefab, spawnPos, Quaternion.identity);
-                GameLogger.LogInfo($"[HealEffectCommand] 힐 VFX 인스턴스 생성 완료: {instance.name}", GameLogger.LogCategory.SkillCard);
-
-                SetEffectLayer(instance);
-
-                UnityEngine.Object.Destroy(instance, 2.0f);
+                GameLogger.LogError("[HealEffectCommand] VFXManager를 찾을 수 없습니다. 힐 VFX를 생성할 수 없습니다.", GameLogger.LogCategory.SkillCard);
             }
-            GameLogger.LogInfo("[HealEffectCommand] 힐 VFX 2초 후 자동 제거 예약", GameLogger.LogCategory.SkillCard);
         }
 
         /// <summary>

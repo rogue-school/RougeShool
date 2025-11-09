@@ -114,18 +114,19 @@ namespace Game.SkillCardSystem.Effect
                 return;
             }
 
-            // VFXManager를 통한 이펙트 생성 (동일한 위치 계산 방식 사용)
-            if (vfxManager != null)
+            // VFXManager를 통한 이펙트 생성 (RectTransform 중심, UI 기반, 정확한 위치 지정)
+            var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            if (finalVfxManager != null)
             {
-                var instance = vfxManager.PlayEffectAtCharacterCenter(perTurnEffectPrefab, targetTransform);
+                var instance = finalVfxManager.PlayEffectAtCharacterRectTransformCenter(perTurnEffectPrefab, targetTransform);
                 if (instance != null)
                 {
                     SetEffectLayer(instance);
-                    GameLogger.LogInfo($"[BleedEffect] 턴별 출혈 VFX 재생: {instance.name}", GameLogger.LogCategory.SkillCard);
+                    GameLogger.LogInfo($"[BleedEffect] 턴별 출혈 VFX 재생 (RectTransform 중심): {instance.name}", GameLogger.LogCategory.SkillCard);
                     
                     // 이펙트 지속 시간 계산 후 완료 이벤트 발행
                     float duration = GetEffectDuration(instance);
-                    vfxManager.StartCoroutine(DelayedBleedEffectComplete(duration));
+                    finalVfxManager.StartCoroutine(DelayedBleedEffectComplete(duration));
                 }
                 else
                 {
@@ -134,25 +135,8 @@ namespace Game.SkillCardSystem.Effect
             }
             else
             {
-                // Fallback: VFXManager가 없으면 기존 방식 사용
-                var spawnPos = GetPortraitCenterWorldPosition(targetTransform);
-                var instance = UnityEngine.Object.Instantiate(perTurnEffectPrefab, spawnPos, Quaternion.identity);
-                SetEffectLayer(instance);
-                
-                // 이펙트 지속 시간 계산
-                float duration = GetEffectDuration(instance);
-                UnityEngine.Object.Destroy(instance, duration);
-                
-                // 지속 시간 후 완료 이벤트 발행 (MonoBehaviour 필요)
-                var targetMono = target as MonoBehaviour;
-                if (targetMono != null)
-                {
-                    targetMono.StartCoroutine(DelayedBleedEffectComplete(duration));
-                }
-                else
-                {
-                    CombatEvents.RaiseBleedTurnStartEffectComplete();
-                }
+                GameLogger.LogError("[BleedEffect] VFXManager를 찾을 수 없습니다. 턴별 출혈 VFX를 생성할 수 없습니다.", GameLogger.LogCategory.SkillCard);
+                CombatEvents.RaiseBleedTurnStartEffectComplete();
             }
         }
 

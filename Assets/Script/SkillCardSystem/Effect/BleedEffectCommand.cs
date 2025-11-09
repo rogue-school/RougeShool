@@ -114,25 +114,20 @@ namespace Game.SkillCardSystem.Effect
                 return;
             }
 
-            // VFXManager를 통한 이펙트 생성 (동일한 위치 계산 방식 사용)
-            if (vfxManager != null)
+            // VFXManager를 통한 이펙트 생성 (RectTransform 중심, UI 기반, 정확한 위치 지정)
+            var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            if (finalVfxManager != null)
             {
-                var instance = vfxManager.PlayEffectAtCharacterCenter(visualEffectPrefab, targetTransform);
+                var instance = finalVfxManager.PlayEffectAtCharacterRectTransformCenter(visualEffectPrefab, targetTransform);
                 if (instance != null)
                 {
                     SetEffectLayer(instance);
-                    GameLogger.LogInfo($"[BleedEffectCommand] VFXManager로 출혈 VFX 재생: {instance.name}", GameLogger.LogCategory.SkillCard);
+                    GameLogger.LogInfo($"[BleedEffectCommand] VFXManager로 출혈 VFX 재생 (RectTransform 중심): {instance.name}", GameLogger.LogCategory.SkillCard);
                 }
             }
             else
             {
-                // Fallback: VFXManager가 없으면 기존 방식 사용
-                var spawnPos = GetPortraitCenterWorldPosition(targetTransform);
-                var instance = UnityEngine.Object.Instantiate(visualEffectPrefab, spawnPos, Quaternion.identity);
-                GameLogger.LogInfo($"[BleedEffectCommand] 출혈 VFX 인스턴스 생성 완료: {instance.name}", GameLogger.LogCategory.SkillCard);
-
-                SetEffectLayer(instance);
-                UnityEngine.Object.Destroy(instance, 2.0f);
+                GameLogger.LogError("[BleedEffectCommand] VFXManager를 찾을 수 없습니다. 출혈 VFX를 생성할 수 없습니다.", GameLogger.LogCategory.SkillCard);
             }
         }
 
@@ -332,10 +327,11 @@ namespace Game.SkillCardSystem.Effect
                 return;
             }
 
-            // VFXManager를 통한 가드 차단 이펙트 재생
-            if (vfxManager != null)
+            // VFXManager를 통한 가드 차단 이펙트 재생 (정확한 위치 지정)
+            var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            if (finalVfxManager != null)
             {
-                var guardBlockEffectInstance = vfxManager.PlayEffectAtCharacterCenter(guardBuff.BlockEffectPrefab, targetTransform);
+                var guardBlockEffectInstance = finalVfxManager.PlayEffectAtCharacterCenter(guardBuff.BlockEffectPrefab, targetTransform);
                 if (guardBlockEffectInstance != null)
                 {
                     GameLogger.LogInfo($"[BleedEffectCommand] 가드 차단 이펙트 재생 성공: {guardBuff.BlockEffectPrefab.name} → {context.Target.GetCharacterName()}", GameLogger.LogCategory.SkillCard);
@@ -343,12 +339,7 @@ namespace Game.SkillCardSystem.Effect
             }
             else
             {
-                // Fallback: VFXManager가 없으면 직접 재생
-                var spawnPos = GetPortraitCenterWorldPosition(targetTransform);
-                var instance = UnityEngine.Object.Instantiate(guardBuff.BlockEffectPrefab, spawnPos, Quaternion.identity);
-                SetEffectLayer(instance);
-                UnityEngine.Object.Destroy(instance, 2.0f);
-                GameLogger.LogInfo($"[BleedEffectCommand] 가드 차단 이펙트 재생 (Fallback): {guardBuff.BlockEffectPrefab.name}", GameLogger.LogCategory.SkillCard);
+                GameLogger.LogError("[BleedEffectCommand] VFXManager를 찾을 수 없습니다. 가드 차단 이펙트를 생성할 수 없습니다.", GameLogger.LogCategory.SkillCard);
             }
 
             // 가드 차단 사운드 재생

@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 6743235649393541424}
   - component: {fileID: 4643942819424713258}
   - component: {fileID: 5057252772339114670}
-  m_Layer: 3
+  m_Layer: 0
   m_Name: heal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -41,7 +41,7 @@ ParticleSystem:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1610907298654940666}
   serializedVersion: 8
-  lengthInSec: 1
+  lengthInSec: 3
   simulationSpeed: 1
   stopAction: 0
   cullingMode: 3
@@ -4911,7 +4911,7 @@ GameObject:
   - component: {fileID: 845471045083889700}
   - component: {fileID: 3942354905074468427}
   - component: {fileID: 6425871425671592101}
-  m_Layer: 3
+  m_Layer: 0
   m_Name: heal (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4941,7 +4941,7 @@ ParticleSystem:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5642123133417710225}
   serializedVersion: 8
-  lengthInSec: 1
+  lengthInSec: 3
   simulationSpeed: 1
   stopAction: 0
   cullingMode: 3
@@ -9809,7 +9809,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6567792364190537745}
-  - component: {fileID: 3674522811186202783}
   - component: {fileID: 7394158980345469548}
   - component: {fileID: 6698801099059052164}
   m_Layer: 0
@@ -9836,19 +9835,6 @@ Transform:
   - {fileID: 845471045083889700}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
---- !u!114 &3674522811186202783
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7926437658294930577}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6d92448d8e4bcaa43b61664fedbaab06, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  duration: 0.5
 --- !u!198 &7394158980345469548
 ParticleSystem:
   m_ObjectHideFlags: 0
@@ -9857,7 +9843,7 @@ ParticleSystem:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7926437658294930577}
   serializedVersion: 8
-  lengthInSec: 5
+  lengthInSec: 3
   simulationSpeed: 1
   stopAction: 0
   cullingMode: 0
@@ -14614,8 +14600,8 @@ ParticleSystemRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1068465481
+  m_SortingLayer: 1
   m_SortingOrder: 0
   m_RenderMode: 0
   m_MeshDistribution: 0

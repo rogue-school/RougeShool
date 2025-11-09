@@ -31,8 +31,6 @@ namespace Game.VFXSystem.Manager
 
         #region 이펙트 관리
 
-        private Transform effectContainer;
-
         [Header("이펙트 설정")]
         [Tooltip("이펙트 기본 지속 시간 (초)")]
         [SerializeField] private float defaultEffectDuration = 2f;
@@ -43,10 +41,6 @@ namespace Game.VFXSystem.Manager
 
         private void Awake()
         {
-            // 이펙트 컨테이너 생성
-            effectContainer = new GameObject("VFX_EffectContainer").transform;
-            effectContainer.SetParent(transform);
-
             // 메인 카메라가 Effects 레이어를 렌더링하는지 확인하고 설정
             EnsureMainCameraRendersEffects();
 
@@ -151,11 +145,12 @@ namespace Game.VFXSystem.Manager
 
         /// <summary>
         /// 이펙트를 재생합니다. (간단 모드 - 풀링 없음)
+        /// 부모 Transform이 필수입니다. 이펙트는 부모의 자식으로 생성됩니다.
         /// </summary>
         /// <param name="effectPrefab">이펙트 프리팹</param>
         /// <param name="position">재생 위치</param>
         /// <param name="rotation">회전 (선택적)</param>
-        /// <param name="parent">부모 Transform (선택적)</param>
+        /// <param name="parent">부모 Transform (필수)</param>
         public GameObject PlayEffect(GameObject effectPrefab, Vector3 position, Quaternion? rotation = null, Transform parent = null)
         {
             GameLogger.LogInfo($"[VFXManager] 이펙트 재생: {effectPrefab?.name ?? "null"}, 위치: {position}", GameLogger.LogCategory.Combat);
@@ -163,6 +158,12 @@ namespace Game.VFXSystem.Manager
             if (effectPrefab == null)
             {
                 GameLogger.LogWarning("[VFXManager] 이펙트 프리팹이 null입니다.", GameLogger.LogCategory.Combat);
+                return null;
+            }
+
+            if (parent == null)
+            {
+                GameLogger.LogWarning("[VFXManager] 부모 Transform이 null입니다. 이펙트를 생성할 수 없습니다.", GameLogger.LogCategory.Combat);
                 return null;
             }
 
@@ -179,8 +180,7 @@ namespace Game.VFXSystem.Manager
             }
 
             // 부모 설정 (월드 위치 유지)
-            Transform targetParent = parent ?? effectContainer;
-            effect.transform.SetParent(targetParent, worldPositionStays: true);
+            effect.transform.SetParent(parent, worldPositionStays: true);
             
             // 부모 설정 후에도 위치가 올바른지 확인 및 재설정
             if (effect.transform.position != position)
@@ -189,7 +189,7 @@ namespace Game.VFXSystem.Manager
                 GameLogger.LogWarning($"[VFXManager] 이펙트 위치 보정: {effect.transform.position} → {position}", GameLogger.LogCategory.Combat);
             }
             
-            GameLogger.LogInfo($"[VFXManager] 이펙트 생성 완료: {effect.name}, 위치: {effect.transform.position}", GameLogger.LogCategory.Combat);
+            GameLogger.LogInfo($"[VFXManager] 이펙트 생성 완료: {effect.name}, 위치: {effect.transform.position}, 부모: {parent.name}", GameLogger.LogCategory.Combat);
 
             // 파티클 시스템 재생
             var particleSystems = effect.GetComponentsInChildren<ParticleSystem>();
@@ -207,33 +207,282 @@ namespace Game.VFXSystem.Manager
 
         /// <summary>
         /// 캐릭터의 시각적 중심에서 이펙트를 재생합니다.
+        /// 이펙트를 감싸는 부모 GameObject를 생성하고, 그 부모를 캐릭터의 자식으로 설정합니다.
+        /// 이펙트 프리팹의 Transform은 원본 그대로 유지됩니다.
         /// </summary>
         /// <param name="effectPrefab">이펙트 프리팹</param>
         /// <param name="characterTransform">캐릭터 Transform</param>
         /// <param name="rotation">회전 (선택적)</param>
-        /// <param name="parent">부모 Transform (선택적)</param>
-        public GameObject PlayEffectAtCharacterCenter(GameObject effectPrefab, Transform characterTransform, Quaternion? rotation = null, Transform parent = null)
+        /// <returns>생성된 이펙트 GameObject</returns>
+        public GameObject PlayEffectAtCharacterCenter(GameObject effectPrefab, Transform characterTransform, Quaternion? rotation = null)
         {
+            if (effectPrefab == null)
+            {
+                GameLogger.LogWarning("[VFXManager] 이펙트 프리팹이 null입니다.", GameLogger.LogCategory.Combat);
+                return null;
+            }
+
             if (characterTransform == null)
             {
                 GameLogger.LogWarning("[VFXManager] 캐릭터 Transform이 null입니다.", GameLogger.LogCategory.Combat);
-                return PlayEffect(effectPrefab, Vector3.zero, rotation, parent);
+                return null;
             }
 
-            // 캐릭터의 시각적 중심 위치 계산 (동일한 Transform에 대해 일관된 위치 보장)
+            // 캐릭터의 시각적 중심 위치 계산
             Vector3 centerPosition = GetCharacterVisualCenter(characterTransform);
             
-            GameLogger.LogInfo($"[VFXManager] 캐릭터 중심 이펙트 재생: {effectPrefab?.name}, 캐릭터: {characterTransform.name}, 중심 위치: {centerPosition}", GameLogger.LogCategory.Combat);
+            GameLogger.LogInfo($"[VFXManager] 캐릭터 중심 이펙트 재생: {effectPrefab.name}, 캐릭터: {characterTransform.name}, 중심 위치: {centerPosition}", GameLogger.LogCategory.Combat);
+
+            // 이펙트를 감싸는 부모 GameObject 생성
+            GameObject effectParent = new GameObject($"{effectPrefab.name}_Parent");
             
-            // 위치를 재확인하여 일관성 보장
-            Vector3 verifiedPosition = GetCharacterVisualCenter(characterTransform);
-            if (Vector3.Distance(centerPosition, verifiedPosition) > 0.01f)
+            // 부모 GameObject를 캐릭터의 자식으로 설정 (월드 위치 유지)
+            effectParent.transform.SetParent(characterTransform, worldPositionStays: true);
+            effectParent.transform.position = centerPosition;
+            
+            // 부모가 활성화되어 있는지 확인
+            if (!effectParent.activeSelf)
             {
-                GameLogger.LogWarning($"[VFXManager] 위치 계산 불일치 감지: {centerPosition} vs {verifiedPosition}, 재계산된 위치 사용", GameLogger.LogCategory.Combat);
-                centerPosition = verifiedPosition;
+                effectParent.SetActive(true);
             }
             
-            return PlayEffect(effectPrefab, centerPosition, rotation, parent);
+            // 이펙트 인스턴스 생성 (프리팹의 원본 Transform 그대로 유지)
+            GameObject effect = Instantiate(effectPrefab);
+            
+            // 이펙트가 활성화되어 있는지 확인
+            if (!effect.activeSelf)
+            {
+                effect.SetActive(true);
+            }
+            
+            // 이펙트를 부모 GameObject의 자식으로 설정 (프리팹의 원본 로컬 Transform 유지)
+            effect.transform.SetParent(effectParent.transform, worldPositionStays: false);
+            
+            // 회전이 지정된 경우에만 적용
+            if (rotation.HasValue)
+            {
+                effect.transform.localRotation = rotation.Value;
+            }
+            
+            // 위치 확인 및 로그
+            GameLogger.LogInfo($"[VFXManager] 이펙트 생성 확인 - 부모 위치: {effectParent.transform.position}, 이펙트 월드 위치: {effect.transform.position}, 이펙트 로컬 위치: {effect.transform.localPosition}", GameLogger.LogCategory.Combat);
+            
+            // 이펙트 레이어를 Effects로 설정
+            int effectsLayer = LayerMask.NameToLayer("Effects");
+            if (effectsLayer != -1)
+            {
+                effect.layer = effectsLayer;
+                SetLayerRecursively(effect, effectsLayer);
+                GameLogger.LogInfo($"[VFXManager] 이펙트 레이어를 Effects로 설정: {effectsLayer}", GameLogger.LogCategory.Combat);
+            }
+            
+            GameLogger.LogInfo($"[VFXManager] 캐릭터 중심 이펙트 생성 완료: {effect.name}, 부모: {effectParent.name}, 위치: {effect.transform.position}", GameLogger.LogCategory.Combat);
+
+            // 파티클 시스템 재생
+            var particleSystems = effect.GetComponentsInChildren<ParticleSystem>();
+            foreach (var ps in particleSystems)
+            {
+                ps.Play();
+            }
+
+            // 이펙트 지속 시간 후 자동 제거 (부모도 함께 제거)
+            float duration = GetEffectDuration(effect);
+            StartCoroutine(DestroyEffectAfterDelay(effectParent, duration));
+
+            return effect;
+        }
+
+        /// <summary>
+        /// 지정된 Transform의 위치에서 이펙트를 재생합니다.
+        /// 이펙트를 감싸는 부모 GameObject를 생성하고, 그 부모를 대상 Transform의 자식으로 설정합니다.
+        /// </summary>
+        /// <param name="effectPrefab">이펙트 프리팹</param>
+        /// <param name="targetTransform">대상 Transform</param>
+        /// <param name="rotation">회전 (선택적)</param>
+        /// <returns>생성된 이펙트 GameObject</returns>
+        public GameObject PlayEffectAtTransform(GameObject effectPrefab, Transform targetTransform, Quaternion? rotation = null)
+        {
+            if (effectPrefab == null)
+            {
+                GameLogger.LogWarning("[VFXManager] 이펙트 프리팹이 null입니다.", GameLogger.LogCategory.Combat);
+                return null;
+            }
+
+            if (targetTransform == null)
+            {
+                GameLogger.LogWarning("[VFXManager] 대상 Transform이 null입니다.", GameLogger.LogCategory.Combat);
+                return null;
+            }
+
+            Vector3 position = targetTransform.position;
+            GameLogger.LogInfo($"[VFXManager] Transform 위치 이펙트 재생: {effectPrefab.name}, 대상: {targetTransform.name}, 위치: {position}", GameLogger.LogCategory.Combat);
+            
+            // 이펙트를 감싸는 부모 GameObject 생성
+            GameObject effectParent = new GameObject($"{effectPrefab.name}_Parent");
+            
+            // 부모 GameObject를 먼저 대상 Transform의 자식으로 설정 (월드 위치 유지)
+            effectParent.transform.SetParent(targetTransform, worldPositionStays: true);
+            effectParent.transform.position = position;
+            
+            // 부모가 활성화되어 있는지 확인
+            if (!effectParent.activeSelf)
+            {
+                effectParent.SetActive(true);
+            }
+            
+            // 이펙트 인스턴스 생성 (프리팹의 원본 Transform 그대로 유지)
+            GameObject effect = Instantiate(effectPrefab);
+            
+            // 이펙트가 활성화되어 있는지 확인
+            if (!effect.activeSelf)
+            {
+                effect.SetActive(true);
+            }
+            
+            // 이펙트를 부모 GameObject의 자식으로 설정 (프리팹의 원본 로컬 Transform 유지)
+            effect.transform.SetParent(effectParent.transform, worldPositionStays: false);
+            
+            // 회전이 지정된 경우에만 적용
+            if (rotation.HasValue)
+            {
+                effect.transform.localRotation = rotation.Value;
+            }
+            
+            // 이펙트 레이어를 Effects로 설정
+            int effectsLayer = LayerMask.NameToLayer("Effects");
+            if (effectsLayer != -1)
+            {
+                effect.layer = effectsLayer;
+                SetLayerRecursively(effect, effectsLayer);
+            }
+
+            // 파티클 시스템 재생
+            var particleSystems = effect.GetComponentsInChildren<ParticleSystem>();
+            foreach (var ps in particleSystems)
+            {
+                ps.Play();
+            }
+
+            // 이펙트 지속 시간 후 자동 제거 (부모도 함께 제거)
+            float duration = GetEffectDuration(effect);
+            StartCoroutine(DestroyEffectAfterDelay(effectParent, duration));
+
+            return effect;
+        }
+
+        /// <summary>
+        /// 캐릭터 Transform에서 RectTransform을 찾아 이펙트를 재생합니다.
+        /// 이펙트 프리팹의 Transform은 원본 그대로 유지되며, 부모 RectTransform의 중심에 배치됩니다.
+        /// 이펙트를 감싸는 부모 GameObject를 생성하고, 그 부모를 대상 RectTransform의 자식으로 설정합니다.
+        /// </summary>
+        /// <param name="effectPrefab">이펙트 프리팹</param>
+        /// <param name="characterTransform">캐릭터 Transform</param>
+        /// <param name="rotation">회전 (선택적)</param>
+        /// <returns>생성된 이펙트 GameObject</returns>
+        public GameObject PlayEffectAtCharacterRectTransformCenter(GameObject effectPrefab, Transform characterTransform, Quaternion? rotation = null)
+        {
+            if (effectPrefab == null)
+            {
+                GameLogger.LogWarning("[VFXManager] 이펙트 프리팹이 null입니다.", GameLogger.LogCategory.Combat);
+                return null;
+            }
+
+            if (characterTransform == null)
+            {
+                GameLogger.LogWarning("[VFXManager] 캐릭터 Transform이 null입니다.", GameLogger.LogCategory.Combat);
+                return null;
+            }
+
+            // 캐릭터 Transform에서 RectTransform 찾기
+            RectTransform targetRectTransform = FindCharacterRectTransform(characterTransform);
+            if (targetRectTransform == null)
+            {
+                GameLogger.LogWarning($"[VFXManager] 캐릭터 Transform에서 RectTransform을 찾을 수 없습니다: {characterTransform.name}. 월드 좌표로 생성합니다.", GameLogger.LogCategory.Combat);
+                return PlayEffectAtCharacterCenter(effectPrefab, characterTransform, rotation);
+            }
+
+            return PlayEffectAtRectTransformCenter(effectPrefab, targetRectTransform, rotation);
+        }
+
+        /// <summary>
+        /// RectTransform의 중심에 이펙트를 재생하고, 이펙트를 부모의 자식으로 생성합니다.
+        /// 이펙트 프리팹의 Transform은 원본 그대로 유지되며, 부모 RectTransform의 중심에 배치됩니다.
+        /// 이펙트를 감싸는 부모 GameObject를 생성하고, 그 부모를 대상 RectTransform의 자식으로 설정합니다.
+        /// </summary>
+        /// <param name="effectPrefab">이펙트 프리팹</param>
+        /// <param name="parentRectTransform">부모 RectTransform (이펙트가 자식으로 생성됨)</param>
+        /// <param name="rotation">회전 (선택적)</param>
+        /// <returns>생성된 이펙트 GameObject</returns>
+        public GameObject PlayEffectAtRectTransformCenter(GameObject effectPrefab, RectTransform parentRectTransform, Quaternion? rotation = null)
+        {
+            if (effectPrefab == null)
+            {
+                GameLogger.LogWarning("[VFXManager] 이펙트 프리팹이 null입니다.", GameLogger.LogCategory.Combat);
+                return null;
+            }
+
+            if (parentRectTransform == null)
+            {
+                GameLogger.LogWarning("[VFXManager] 부모 RectTransform이 null입니다.", GameLogger.LogCategory.Combat);
+                return null;
+            }
+
+            // 부모 RectTransform의 중심 위치 계산
+            Vector3 centerPosition = GetRectTransformCenterWorld(parentRectTransform);
+            
+            GameLogger.LogInfo($"[VFXManager] RectTransform 중심 이펙트 재생: {effectPrefab.name}, 부모: {parentRectTransform.name}, 중심 위치: {centerPosition}", GameLogger.LogCategory.Combat);
+
+            // 이펙트를 감싸는 부모 GameObject 생성
+            GameObject effectParent = new GameObject($"{effectPrefab.name}_Parent");
+            RectTransform effectParentRect = effectParent.AddComponent<RectTransform>();
+            
+            // 부모 RectTransform의 자식으로 설정
+            effectParentRect.SetParent(parentRectTransform, false);
+            
+            // 부모 RectTransform의 중심에 배치 (로컬 좌표 기준)
+            effectParentRect.anchorMin = new Vector2(0.5f, 0.5f);
+            effectParentRect.anchorMax = new Vector2(0.5f, 0.5f);
+            effectParentRect.pivot = new Vector2(0.5f, 0.5f);
+            effectParentRect.anchoredPosition = Vector2.zero;
+            effectParentRect.sizeDelta = Vector2.zero;
+
+            // 이펙트 인스턴스 생성 (원본 Transform 유지)
+            GameObject effect = Instantiate(effectPrefab, centerPosition, rotation ?? Quaternion.identity);
+            
+            // 이펙트를 부모 GameObject의 자식으로 설정 (월드 위치 유지)
+            effect.transform.SetParent(effectParent.transform, worldPositionStays: true);
+            
+            // 부모 설정 후에도 위치가 올바른지 확인 및 재설정
+            Vector3 verifiedCenterPosition = GetRectTransformCenterWorld(parentRectTransform);
+            if (Vector3.Distance(effect.transform.position, verifiedCenterPosition) > 0.01f)
+            {
+                effect.transform.position = verifiedCenterPosition;
+                GameLogger.LogWarning($"[VFXManager] 이펙트 위치 보정: {effect.transform.position} → {verifiedCenterPosition}", GameLogger.LogCategory.Combat);
+            }
+            
+            // 이펙트 레이어를 Effects로 설정
+            int effectsLayer = LayerMask.NameToLayer("Effects");
+            if (effectsLayer != -1)
+            {
+                effect.layer = effectsLayer;
+                SetLayerRecursively(effect, effectsLayer);
+                GameLogger.LogInfo($"[VFXManager] 이펙트 레이어를 Effects로 설정: {effectsLayer}", GameLogger.LogCategory.Combat);
+            }
+            
+            GameLogger.LogInfo($"[VFXManager] RectTransform 중심 이펙트 생성 완료: {effect.name}, 부모: {effectParent.name}, 위치: {effect.transform.position}", GameLogger.LogCategory.Combat);
+
+            // 파티클 시스템 재생
+            var particleSystems = effect.GetComponentsInChildren<ParticleSystem>();
+            foreach (var ps in particleSystems)
+            {
+                ps.Play();
+            }
+
+            // 이펙트 지속 시간 후 자동 제거 (부모도 함께 제거)
+            float duration = GetEffectDuration(effect);
+            StartCoroutine(DestroyEffectAfterDelay(effectParent, duration));
+
+            return effect;
         }
 
         /// <summary>
@@ -347,6 +596,35 @@ namespace Game.VFXSystem.Manager
             }
             // 폴백: 첫 번째 Image
             return images[0];
+        }
+
+        /// <summary>
+        /// 캐릭터 Transform에서 RectTransform을 찾습니다.
+        /// Portrait Image 우선, 그 다음 첫 번째 RectTransform을 반환합니다.
+        /// </summary>
+        /// <param name="characterTransform">캐릭터 Transform</param>
+        /// <returns>찾은 RectTransform (없으면 null)</returns>
+        private RectTransform FindCharacterRectTransform(Transform characterTransform)
+        {
+            if (characterTransform == null) return null;
+
+            // 1) Portrait Image 우선
+            var portraitImage = FindPortraitImage(characterTransform);
+            if (portraitImage != null && portraitImage.rectTransform != null)
+            {
+                GameLogger.LogInfo($"[VFXManager] Portrait Image RectTransform 사용: {portraitImage.rectTransform.name}", GameLogger.LogCategory.Combat);
+                return portraitImage.rectTransform;
+            }
+
+            // 2) 첫 번째 RectTransform 폴백
+            var anyRect = characterTransform.GetComponentInChildren<RectTransform>(true);
+            if (anyRect != null)
+            {
+                GameLogger.LogInfo($"[VFXManager] 첫 번째 RectTransform 사용: {anyRect.name}", GameLogger.LogCategory.Combat);
+                return anyRect;
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -492,21 +770,25 @@ namespace Game.VFXSystem.Manager
 
         /// <summary>
         /// 모든 활성 이펙트를 즉시 제거합니다. (간단 모드)
+        /// 이펙트는 각 캐릭터의 자식으로 생성되므로, 씬에서 직접 찾아 제거합니다.
         /// </summary>
         public void ClearAllEffects()
         {
-            // 이펙트 컨테이너의 모든 자식 이펙트 제거
-            if (effectContainer != null)
+            // 씬에서 모든 이펙트 부모 GameObject 찾아 제거
+            var effectParents = FindObjectsByType<GameObject>(FindObjectsSortMode.None);
+            int removedCount = 0;
+            foreach (var obj in effectParents)
             {
-                int childCount = effectContainer.childCount;
-                for (int i = childCount - 1; i >= 0; i--)
+                if (obj != null && obj.name.EndsWith("_Parent"))
                 {
-                    Transform child = effectContainer.GetChild(i);
-                    if (child != null)
-                    {
-                        Destroy(child.gameObject);
-                    }
+                    Destroy(obj);
+                    removedCount++;
                 }
+            }
+
+            if (removedCount > 0)
+            {
+                GameLogger.LogInfo($"[VFXManager] {removedCount}개의 이펙트 부모 제거 완료", GameLogger.LogCategory.Combat);
             }
 
             // 다른 풀들도 정리
@@ -535,8 +817,16 @@ namespace Game.VFXSystem.Manager
         [ContextMenu("VFX 상태 출력")]
         private void LogVFXStatus()
         {
-            // 이펙트 컨테이너의 자식 개수 확인
-            int activeEffectCount = effectContainer != null ? effectContainer.childCount : 0;
+            // 씬에서 모든 이펙트 부모 GameObject 찾아 개수 확인
+            var effectParents = FindObjectsByType<GameObject>(FindObjectsSortMode.None);
+            int activeEffectCount = 0;
+            foreach (var obj in effectParents)
+            {
+                if (obj != null && obj.name.EndsWith("_Parent"))
+                {
+                    activeEffectCount++;
+                }
+            }
             GameLogger.LogInfo($"[VFXManager] 활성 이펙트: {activeEffectCount}개 (간단 모드)", GameLogger.LogCategory.Combat);
 
             if (damageTextPool != null)
