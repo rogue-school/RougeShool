@@ -26,7 +26,7 @@ MonoBehaviour:
     maxStage: 5
     uniquePerRun: 0
   - item: {fileID: 11400000, guid: 39c1b6ba9f1aec848a4aad24c4892672, type: 2}
-    weight: 25
+    weight: 35
     tags: []
     minStage: 0
     maxStage: 5
