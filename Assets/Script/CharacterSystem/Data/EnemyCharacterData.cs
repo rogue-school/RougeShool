@@ -39,6 +39,14 @@ namespace Game.CharacterSystem.Data
         [field: SerializeField]
         public Sprite Portrait { get; private set; }
 
+        /// <summary>
+        /// 캐릭터의 Portrait 프리팹입니다.
+        /// 각 캐릭터마다 독립적인 Portrait 프리팹을 설정할 수 있습니다.
+        /// 비어 있으면 기본 Portrait GameObject를 사용합니다(폴백).
+        /// </summary>
+        [field: SerializeField]
+        public GameObject PortraitPrefab { get; private set; }
+
         #endregion
 
         #region 프리팹 참조

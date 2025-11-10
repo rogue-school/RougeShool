@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using Game.CoreSystem.Utility;
 using Game.VFXSystem.Pool;
+using Game.VFXSystem.Component;
 using Zenject;
 
 namespace Game.VFXSystem.Manager
@@ -566,13 +567,25 @@ namespace Game.VFXSystem.Manager
 
         /// <summary>
         /// 명시적 VFX 앵커를 찾습니다.
+        /// 우선순위: VFXAnchorPoint 컴포넌트 > "VFXAnchor" 이름 > "PortraitVFXAnchor" 이름
         /// </summary>
         /// <param name="root">루트 Transform</param>
         /// <returns>VFX 앵커 Transform</returns>
         private Transform FindExplicitVfxAnchor(Transform root)
         {
+            // 1) VFXAnchorPoint 컴포넌트를 가진 자식 오브젝트 찾기 (최우선)
+            var anchorPoint = root.GetComponentInChildren<VFXAnchorPoint>(true);
+            if (anchorPoint != null)
+            {
+                GameLogger.LogInfo($"[VFXManager] VFXAnchorPoint 컴포넌트 사용: {anchorPoint.name}", GameLogger.LogCategory.Combat);
+                return anchorPoint.transform;
+            }
+
+            // 2) "VFXAnchor" 이름의 자식 오브젝트 찾기
             var anchor = root.Find("VFXAnchor");
             if (anchor != null) return anchor;
+
+            // 3) "PortraitVFXAnchor" 이름의 자식 오브젝트 찾기
             return root.Find("PortraitVFXAnchor");
         }
 

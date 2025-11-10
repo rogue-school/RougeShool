@@ -36,7 +36,11 @@ namespace Game.CharacterSystem.Core
         public override object CharacterData => PlayerCharacterData;
 
         [Header("UI Components")]
+        [Tooltip("Portrait 이미지 (자동으로 찾거나 설정됨)")]
         [SerializeField] private Image portraitImage;
+
+        [Tooltip("Portrait가 배치될 부모 Transform (기본 Portrait GameObject의 부모)")]
+        [SerializeField] private Transform portraitParent;
 
         [Header("Damage UI")]
         [SerializeField] private Transform hpTextAnchor;
@@ -140,6 +144,9 @@ namespace Game.CharacterSystem.Core
         /// <param name="data">플레이어 데이터</param>
         private void InitializeCharacter(PlayerCharacterData data)
         {
+            // Portrait 프리팹 인스턴스화 (데이터에 설정된 경우)
+            InitializePortrait(data);
+            
             SetMaxHP(data.MaxHP);
             UpdateUI();
             
@@ -153,6 +160,86 @@ namespace Game.CharacterSystem.Core
             if (playerCharacterUIController != null)
             {
                 playerCharacterUIController.Initialize(this);
+            }
+        }
+
+        /// <summary>
+        /// Portrait 프리팹을 인스턴스화하고 설정합니다.
+        /// </summary>
+        /// <param name="data">플레이어 캐릭터 데이터</param>
+        private void InitializePortrait(PlayerCharacterData data)
+        {
+            if (data == null) return;
+
+            // Portrait 프리팹이 설정되어 있으면 인스턴스화
+            if (data.PortraitPrefab != null)
+            {
+                // Portrait 부모 Transform 찾기
+                Transform parent = portraitParent;
+                if (parent == null)
+                {
+                    // 기존 Portrait GameObject의 부모를 찾기
+                    var existingPortrait = transform.Find("Portrait");
+                    if (existingPortrait != null)
+                    {
+                        parent = existingPortrait.parent;
+                        // 기존 Portrait 비활성화 (프리팹으로 교체)
+                        existingPortrait.gameObject.SetActive(false);
+                    }
+                    else
+                    {
+                        // Portrait 부모를 찾을 수 없으면 캐릭터 Transform 사용
+                        parent = transform;
+                    }
+                }
+
+                // Portrait 프리팹 인스턴스화
+                GameObject portraitInstance = Instantiate(data.PortraitPrefab, parent);
+                portraitInstance.name = "Portrait";
+
+                // Portrait Image 컴포넌트 찾기
+                if (portraitImage == null)
+                {
+                    portraitImage = portraitInstance.GetComponentInChildren<Image>(true);
+                    if (portraitImage == null)
+                    {
+                        GameLogger.LogWarning("[PlayerCharacter] Portrait 프리팹에서 Image 컴포넌트를 찾을 수 없습니다.", GameLogger.LogCategory.Character);
+                    }
+                }
+
+                // HP Text Anchor 찾기 (Portrait 프리팹 내부에 있을 수 있음)
+                if (hpTextAnchor == null)
+                {
+                    // "HPTectAnchor" 또는 "HPTextAnchor" 이름으로 찾기
+                    var hpAnchor = portraitInstance.transform.Find("HPTectAnchor");
+                    if (hpAnchor == null)
+                    {
+                        hpAnchor = portraitInstance.transform.Find("HPTextAnchor");
+                    }
+                    if (hpAnchor != null)
+                    {
+                        hpTextAnchor = hpAnchor;
+                    }
+                }
+
+                GameLogger.LogInfo($"[PlayerCharacter] Portrait 프리팹 인스턴스화 완료: {data.PortraitPrefab.name}", GameLogger.LogCategory.Character);
+            }
+            else
+            {
+                // Portrait 프리팹이 없으면 기존 Portrait GameObject 사용
+                if (portraitImage == null)
+                {
+                    var existingPortrait = transform.Find("Portrait");
+                    if (existingPortrait != null)
+                    {
+                        portraitImage = existingPortrait.GetComponent<Image>();
+                    }
+                }
+
+                if (portraitImage == null)
+                {
+                    GameLogger.LogWarning("[PlayerCharacter] Portrait Image를 찾을 수 없습니다.", GameLogger.LogCategory.Character);
+                }
             }
         }
 
