@@ -185,7 +185,7 @@ namespace Game.CombatSystem.UI
             if (isFinal)
             {
                 await ShowScoreAndRank();
-                await ShowLeaderboard();
+                ShowLeaderboard();
             }
             else
             {
@@ -325,7 +325,7 @@ namespace Game.CombatSystem.UI
         /// <summary>
         /// 리더보드 표시 (최종 승리 시, 오른쪽에 배치)
         /// </summary>
-        private async System.Threading.Tasks.Task ShowLeaderboard()
+        private void ShowLeaderboard()
         {
             if (_leaderboardManager == null)
             {
@@ -344,26 +344,8 @@ namespace Game.CombatSystem.UI
                 return;
             }
 
-            var sessionData = _gameSessionStatistics.GetCurrentSessionData();
-            if (sessionData == null || string.IsNullOrEmpty(sessionData.selectedCharacterName))
-            {
-                GameLogger.LogWarning("[VictoryUI] ShowLeaderboard: 세션 데이터가 null이거나 캐릭터 이름이 비어있습니다.", GameLogger.LogCategory.UI);
-                HideLeaderboard();
-                return;
-            }
-
-            string characterName = sessionData.selectedCharacterName;
-            var leaderboard = _leaderboardManager.GetLeaderboard(characterName);
-            
-            // 리더보드 제목 표시
-            if (leaderboardTitleText != null)
-            {
-                leaderboardTitleText.gameObject.SetActive(true);
-                leaderboardTitleText.text = "리더보드";
-            }
-
-            // 최고 점수 가져오기 및 표시
-            int bestScore = _leaderboardManager.GetBestScore(characterName);
+            // 모든 캐릭터 통합 최고 점수 가져오기 및 표시
+            int bestScore = _leaderboardManager.GetBestScoreAllCharacters();
             if (leaderboardBestScoreText != null)
             {
                 leaderboardBestScoreText.gameObject.SetActive(true);
@@ -377,8 +359,8 @@ namespace Game.CombatSystem.UI
                 }
             }
 
-            // 상위 10개 항목 가져오기
-            var topEntries = _leaderboardManager.GetTopEntries(characterName, 10);
+            // 모든 캐릭터 통합 상위 10개 항목 가져오기
+            var topEntries = _leaderboardManager.GetTopEntriesAllCharacters(10);
 
             // 슬롯에 순위와 점수 표시 (1~10위 고정 슬롯)
             for (int i = 0; i < leaderboardSlots.Length; i++)
@@ -402,7 +384,7 @@ namespace Game.CombatSystem.UI
                 }
             }
 
-            GameLogger.LogInfo($"[VictoryUI] ShowLeaderboard: 리더보드 표시 완료. 캐릭터={characterName}, 최고점수={bestScore}, 상위항목수={topEntries.Count}", GameLogger.LogCategory.UI);
+            GameLogger.LogInfo($"[VictoryUI] ShowLeaderboard: 통합 리더보드 표시 완료. 최고점수={bestScore}, 상위항목수={topEntries.Count}", GameLogger.LogCategory.UI);
         }
 
         /// <summary>
@@ -410,9 +392,6 @@ namespace Game.CombatSystem.UI
         /// </summary>
         private void HideLeaderboard()
         {
-            if (leaderboardTitleText != null)
-                leaderboardTitleText.gameObject.SetActive(false);
-            
             if (leaderboardBestScoreText != null)
                 leaderboardBestScoreText.gameObject.SetActive(false);
 

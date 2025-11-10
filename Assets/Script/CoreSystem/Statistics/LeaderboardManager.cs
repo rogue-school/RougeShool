@@ -55,6 +55,16 @@ namespace Game.CoreSystem.Statistics
         List<LeaderboardEntry> GetTopEntries(string characterName, int count = 5);
 
         /// <summary>
+        /// 모든 캐릭터 통합 상위 N개 항목 가져오기
+        /// </summary>
+        List<LeaderboardEntry> GetTopEntriesAllCharacters(int count = 10);
+
+        /// <summary>
+        /// 모든 캐릭터 통합 최고 점수 가져오기
+        /// </summary>
+        int GetBestScoreAllCharacters();
+
+        /// <summary>
         /// 리더보드 데이터 로드
         /// </summary>
         Task LoadLeaderboard();
@@ -269,6 +279,64 @@ namespace Game.CoreSystem.Statistics
 
             // entries는 이미 점수 높은 순으로 정렬되어 있음
             return leaderboard.entries.Take(count).ToList();
+        }
+
+        /// <summary>
+        /// 모든 캐릭터 통합 상위 N개 항목 가져오기
+        /// </summary>
+        public List<LeaderboardEntry> GetTopEntriesAllCharacters(int count = 10)
+        {
+            if (_leaderboardData == null || _leaderboardData.characterLeaderboards == null)
+            {
+                return new List<LeaderboardEntry>();
+            }
+
+            // 모든 캐릭터의 항목을 수집
+            List<LeaderboardEntry> allEntries = new List<LeaderboardEntry>();
+            foreach (var leaderboard in _leaderboardData.characterLeaderboards.Values)
+            {
+                if (leaderboard.entries != null && leaderboard.entries.Count > 0)
+                {
+                    allEntries.AddRange(leaderboard.entries);
+                }
+            }
+
+            // 점수 높은 순으로 정렬 (동일 점수면 플레이 시간 짧은 순)
+            allEntries = allEntries
+                .OrderByDescending(e => e.totalScore)
+                .ThenBy(e => e.playTimeSeconds)
+                .Take(count)
+                .ToList();
+
+            GameLogger.LogInfo($"[LeaderboardManager] GetTopEntriesAllCharacters: 통합 상위 {count}개 항목 반환. 총항목수={allEntries.Count}", GameLogger.LogCategory.UI);
+            return allEntries;
+        }
+
+        /// <summary>
+        /// 모든 캐릭터 통합 최고 점수 가져오기
+        /// </summary>
+        public int GetBestScoreAllCharacters()
+        {
+            if (_leaderboardData == null || _leaderboardData.characterLeaderboards == null)
+            {
+                return 0;
+            }
+
+            int bestScore = 0;
+            foreach (var leaderboard in _leaderboardData.characterLeaderboards.Values)
+            {
+                if (leaderboard.entries != null && leaderboard.entries.Count > 0)
+                {
+                    // entries는 이미 점수 높은 순으로 정렬되어 있음
+                    int characterBestScore = leaderboard.entries[0].totalScore;
+                    if (characterBestScore > bestScore)
+                    {
+                        bestScore = characterBestScore;
+                    }
+                }
+            }
+
+            return bestScore;
         }
 
         /// <summary>
