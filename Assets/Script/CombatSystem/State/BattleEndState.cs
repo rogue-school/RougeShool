@@ -64,7 +64,8 @@ namespace Game.CombatSystem.State
                 context.TurnController.EndGame();
             }
 
-            // 승리 이벤트 발생 (UI, 보상 등)
+            // 승리 이벤트 발생 (전투 통계 수집을 위해 호출)
+            Game.CombatSystem.CombatEvents.RaiseVictory();
             LogStateTransition("승리 처리 완료");
 
             // 여기서 보상 화면 표시 등의 로직 추가 가능
@@ -81,8 +82,12 @@ namespace Game.CombatSystem.State
                 context.TurnController.EndGame();
             }
 
-            // 패배 이벤트 발생 (UI, 재시작 옵션 등)
+            // 패배 이벤트 발생 (전투 통계 수집을 위해 먼저 호출)
+            Game.CombatSystem.CombatEvents.RaiseDefeat();
             LogStateTransition("패배 처리 완료");
+
+            // 게임 오버 이벤트 발생 (세션 종료를 위해 호출)
+            Game.CombatSystem.CombatEvents.RaiseGameOver();
 
             // 게임 오버 UI 표시
             var gameOverUI = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.UI.GameOverUI>();

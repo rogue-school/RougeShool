@@ -35,6 +35,21 @@ namespace Game.CoreSystem.Statistics
         public int speedRunBonus;
 
         /// <summary>
+        /// 스테이지 클리어 보너스
+        /// </summary>
+        public int stageClearBonus;
+
+        /// <summary>
+        /// 체력 보너스
+        /// </summary>
+        public int healthBonus;
+
+        /// <summary>
+        /// 무패 보너스
+        /// </summary>
+        public int noDamageBonus;
+
+        /// <summary>
         /// 점수 계산 상세 정보
         /// </summary>
         public ScoreBreakdown breakdown = new ScoreBreakdown();
@@ -75,6 +90,11 @@ namespace Game.CoreSystem.Statistics
         /// 데미지 효율 비율
         /// </summary>
         public float damageEfficiencyRatio;
+
+        /// <summary>
+        /// 총 회복량
+        /// </summary>
+        public int totalHealing;
     }
 }
 

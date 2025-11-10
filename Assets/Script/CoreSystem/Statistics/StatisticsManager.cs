@@ -116,7 +116,7 @@ namespace Game.CoreSystem.Statistics
                     GameLogger.LogWarning($"[StatisticsManager] 플레이어 덱 가져오기 실패: {ex.Message}", GameLogger.LogCategory.Save);
                 }
 
-                sessionData.PrepareForSerialization(playerDeck);
+                StatisticsSerializer.PrepareForSerialization(sessionData, playerDeck);
 
                 // JSON으로 직렬화
                 string jsonData = JsonUtility.ToJson(statisticsData, true);
@@ -210,14 +210,37 @@ namespace Game.CoreSystem.Statistics
             // 플레이 시간 누적
             existing.totalPlayTimeSeconds += newData.totalPlayTimeSeconds;
 
-            // 전투 통계 병합 (새 전투 추가)
+            // 전투 통계 병합 (중복 체크 후 새 전투만 추가)
             if (newData.combatStatistics != null && newData.combatStatistics.Count > 0)
             {
                 if (existing.combatStatistics == null)
                 {
                     existing.combatStatistics = new List<CombatStatisticsData>();
                 }
-                existing.combatStatistics.AddRange(newData.combatStatistics);
+                
+                // 중복 체크: combatStartTime과 stageNumber, enemyIndex로 중복 판단
+                foreach (var newCombat in newData.combatStatistics)
+                {
+                    bool isDuplicate = false;
+                    if (!string.IsNullOrEmpty(newCombat.combatStartTime))
+                    {
+                        foreach (var existingCombat in existing.combatStatistics)
+                        {
+                            if (existingCombat.combatStartTime == newCombat.combatStartTime &&
+                                existingCombat.stageNumber == newCombat.stageNumber &&
+                                existingCombat.enemyIndex == newCombat.enemyIndex)
+                            {
+                                isDuplicate = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (!isDuplicate)
+                    {
+                        existing.combatStatistics.Add(newCombat);
+                    }
+                }
             }
 
             // Dictionary 통계 누적

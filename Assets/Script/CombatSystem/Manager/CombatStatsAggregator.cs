@@ -60,6 +60,7 @@ namespace Game.CombatSystem.Manager
 
         // 내부 집계 상태
         private float _combatStartTime;
+        private int _startTurnCount; // 전투 시작 시점의 턴 수
         private int _damageDealt;
         private int _damageTaken;
         private int _healed;
@@ -70,6 +71,10 @@ namespace Game.CombatSystem.Manager
         private readonly Dictionary<string, int> _activeItemSpawn = new Dictionary<string, int>(); // 액티브 아이템 생성 횟수
         private readonly Dictionary<string, int> _activeItemDiscard = new Dictionary<string, int>(); // 액티브 아이템 버리기 횟수
         private readonly Dictionary<string, int> _passiveItemAcquired = new Dictionary<string, int>(); // 패시브 아이템 획득 횟수
+        // 사용된 아이템 추적 (사용으로 인해 Remove되는 경우 버리기 집계에서 제외)
+        private readonly HashSet<string> _usedActiveItemIds = new HashSet<string>();
+        // 전투 종료/정리 중 제거 이벤트 무시
+        private bool _suppressDiscardCounting = false;
 
         private string _resourceName;
         private int _startResource;
@@ -192,6 +197,24 @@ namespace Game.CombatSystem.Manager
             ResetStats();
             _combatStartTime = Time.time;
 
+            // TurnController가 null이면 Zenject Container를 통해 찾기 시도
+            if (_turnController == null)
+            {
+                var sceneContext = FindFirstObjectByType<Zenject.SceneContext>(FindObjectsInactive.Include);
+                if (sceneContext != null && sceneContext.Container != null)
+                {
+                    _turnController = sceneContext.Container.TryResolve<ITurnController>();
+                    if (_turnController != null)
+                    {
+                        GameLogger.LogInfo("[CombatStatsAggregator] ITurnController를 Zenject Container에서 찾음", GameLogger.LogCategory.Combat);
+                    }
+                }
+            }
+
+            // 전투 시작 시점의 턴 수 저장
+            _startTurnCount = _turnController != null ? _turnController.TurnCount : 1;
+            GameLogger.LogInfo($"[CombatStatsAggregator] 전투 시작 시점 턴 수 저장: {_startTurnCount}", GameLogger.LogCategory.Combat);
+
             // PlayerManager가 null이면 직접 찾기 시도
             if (_playerManager == null)
             {
@@ -222,6 +245,9 @@ namespace Game.CombatSystem.Manager
 
         private void HandleCombatEnded()
         {
+            // 전투 종료 시점부터 인벤토리 정리로 발생하는 Remove는 버리기로 카운트하지 않음
+            _suppressDiscardCounting = true;
+
             // PlayerManager가 null이면 직접 찾기 시도
             if (_playerManager == null)
             {
@@ -286,29 +312,14 @@ namespace Game.CombatSystem.Manager
 
         /// <summary>
         /// 카드 ID로부터 카드 이름을 가져옵니다.
+        /// StatisticsData의 GetCardDisplayNameStatic()과 동일한 로직 사용
         /// </summary>
         private string GetCardName(string cardId)
         {
             if (string.IsNullOrEmpty(cardId)) return null;
 
-            try
-            {
-                // Resources에서 직접 카드 정의 로드
-                var definition = Resources.Load<Game.SkillCardSystem.Data.SkillCardDefinition>($"SkillCards/{cardId}");
-                if (definition != null)
-                {
-                    // 한국어 이름이 있으면 한국어 이름 우선, 없으면 영문 이름
-                    return !string.IsNullOrEmpty(definition.displayNameKO) 
-                        ? definition.displayNameKO 
-                        : definition.displayName;
-                }
-            }
-            catch (System.Exception ex)
-            {
-                GameLogger.LogWarning($"[CombatStatsAggregator] 카드 이름 로드 실패: {cardId}, {ex.Message}", GameLogger.LogCategory.Combat);
-            }
-
-            return cardId; // 실패 시 카드 ID 반환
+            // StatisticsData의 정적 메서드 사용 (캐싱 및 여러 경로 시도)
+            return Game.CoreSystem.Statistics.SessionStatisticsData.GetCardDisplayNameStatic(cardId);
         }
 
         private void HandleActiveItemUsed(ActiveItemDefinition def, int slotIndex)
@@ -317,6 +328,12 @@ namespace Game.CombatSystem.Manager
             
             string itemId = def.ItemId;
             string itemName = def.DisplayName;
+            
+            // 사용된 아이템 ID 추적 (이후 Remove 이벤트에서 버리기 카운트 제외)
+            if (!string.IsNullOrEmpty(itemId))
+            {
+                _usedActiveItemIds.Add(itemId);
+            }
             
             // 아이템 이름별 사용 횟수 (기존 호환성 유지)
             if (!_activeItemUsage.ContainsKey(itemName)) _activeItemUsage[itemName] = 0;
@@ -347,6 +364,21 @@ namespace Game.CombatSystem.Manager
             if (def == null) return;
             
             string itemId = def.ItemId;
+
+            // 전투 종료/정리 중에는 버리기 집계 제외
+            if (_suppressDiscardCounting)
+            {
+                GameLogger.LogInfo($"[CombatStatsAggregator] 아이템 제거(정리 중, 버리기 제외): {def.DisplayName} (ID: {itemId})", GameLogger.LogCategory.Combat);
+                return;
+            }
+            
+            // 사용으로 인해 제거된 경우 버리기 통계에서 제외
+            if (!string.IsNullOrEmpty(itemId) && _usedActiveItemIds.Contains(itemId))
+            {
+                _usedActiveItemIds.Remove(itemId); // 한 번만 처리
+                GameLogger.LogInfo($"[CombatStatsAggregator] 액티브 아이템 제거 (사용됨, 버리기 제외): {def.DisplayName} (ID: {itemId})", GameLogger.LogCategory.Combat);
+                return;
+            }
             
             // 아이템 ID별 버리기 횟수
             if (!_activeItemDiscard.ContainsKey(itemId)) _activeItemDiscard[itemId] = 0;
@@ -412,10 +444,16 @@ namespace Game.CombatSystem.Manager
                 _endResource = _playerManager.CurrentResource;
             }
 
+            // 전투 종료 시점의 턴 수 계산 (현재 턴 수 - 시작 시점 턴 수)
+            int currentTurnCount = _turnController != null ? _turnController.TurnCount : 0;
+            int combatTurns = Mathf.Max(0, currentTurnCount - _startTurnCount + 1); // +1은 시작 턴 포함
+            
+            GameLogger.LogInfo($"[CombatStatsAggregator] GetSnapshot: 시작턴수={_startTurnCount}, 현재턴수={currentTurnCount}, 전투턴수={combatTurns}", GameLogger.LogCategory.Combat);
+
             var snapshot = new CombatStatsSnapshot
             {
                 battleDurationSeconds = _combatStartTime > 0f ? Mathf.Max(0f, Time.time - _combatStartTime) : 0f,
-                totalTurns = _turnController != null ? _turnController.TurnCount : 0,
+                totalTurns = combatTurns,
                 totalDamageDealtToEnemies = _damageDealt,
                 totalDamageTakenByPlayer = _damageTaken,
                 totalHealingToPlayer = _healed,
@@ -449,8 +487,10 @@ namespace Game.CombatSystem.Manager
         public void ResetStats()
         {
             _combatStartTime = 0f;
+            _startTurnCount = 1; // 기본값 1로 초기화
             _damageDealt = 0;
             _damageTaken = 0;
+            _suppressDiscardCounting = false;
             _healed = 0;
             _skillUsage.Clear();
             _skillUsageByName.Clear();
@@ -459,6 +499,7 @@ namespace Game.CombatSystem.Manager
             _activeItemSpawn.Clear();
             _activeItemDiscard.Clear();
             _passiveItemAcquired.Clear();
+            _usedActiveItemIds.Clear();
             _resourceName = string.Empty;
             _startResource = 0;
             _endResource = 0;

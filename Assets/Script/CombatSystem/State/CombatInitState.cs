@@ -258,17 +258,27 @@ namespace Game.CombatSystem.State
         private void PerformInitialization(CombatStateContext context)
         {
             // 게임 시작 (TurnController 사용)
-            if (context.TurnController != null)
+            // 소환/복귀 모드가 아닐 때만 게임 시작 (이미 시작된 게임은 유지)
+            if (context.TurnController != null && !_isSummonMode)
             {
                 context.TurnController.StartGame();
                 LogStateTransition("게임 시작");
             }
+            else if (_isSummonMode)
+            {
+                LogStateTransition("소환/복귀 모드 - 게임 시작 건너뜀 (이미 진행 중)");
+            }
 
             // 턴 리셋 (TurnController 사용)
-            if (context.TurnController != null)
+            // 소환/복귀 모드일 때는 턴 리셋 건너뛰기 (턴 수 유지)
+            if (context.TurnController != null && !_isSummonMode)
             {
                 context.TurnController.ResetTurn();
                 LogStateTransition("턴 리셋");
+            }
+            else if (_isSummonMode)
+            {
+                LogStateTransition("소환/복귀 모드 - 턴 리셋 건너뜀 (턴 수 유지)");
             }
 
             // 컨텍스트 리셋

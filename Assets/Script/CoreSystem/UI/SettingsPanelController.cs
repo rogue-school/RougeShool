@@ -4,6 +4,7 @@ using Game.CoreSystem.Interface;
 using Game.CoreSystem.Utility;
 using Game.CoreSystem.Save;
 using Game.CoreSystem.Manager;
+using Game.CoreSystem.Statistics;
 using Zenject;
 
 namespace Game.CoreSystem.UI
@@ -117,6 +118,55 @@ namespace Game.CoreSystem.UI
             try
             {
                 GameLogger.LogInfo("다시하기 시작 - 전체 게임 상태 초기화", GameLogger.LogCategory.UI);
+                
+                // 다시하기 플래그 설정 (SaveProgressBeforeSceneTransition에서 완전 종료 처리)
+                PlayerPrefs.SetInt("RESTART_GAME_REQUESTED", 1);
+                PlayerPrefs.Save();
+                
+                // 통계 세션 완전 종료 (다시하기는 완전 종료) - 게임 승리와 동일한 로직
+                var gameSessionStatistics = UnityEngine.Object.FindFirstObjectByType<GameSessionStatistics>(UnityEngine.FindObjectsInactive.Include);
+                var statisticsManager = UnityEngine.Object.FindFirstObjectByType<StatisticsManager>(UnityEngine.FindObjectsInactive.Include);
+                
+                if (gameSessionStatistics != null && statisticsManager != null)
+                {
+                    // 세션이 활성화되어 있으면 종료 처리 (완전 종료)
+                    if (gameSessionStatistics.IsSessionActive)
+                    {
+                        gameSessionStatistics.EndSession(true); // 완전 종료
+                        var sessionData = gameSessionStatistics.GetCurrentSessionData();
+                        if (sessionData != null)
+                        {
+                            await statisticsManager.SaveSessionStatistics(sessionData);
+                            gameSessionStatistics.MarkAsSaved();
+                            GameLogger.LogInfo("다시하기 - 통계 세션 완전 종료 및 저장 완료", GameLogger.LogCategory.Save);
+                        }
+                    }
+                    else
+                    {
+                        // 세션이 이미 종료되었어도 데이터가 있으면 저장 시도 (게임 승리와 동일)
+                        var sessionData = gameSessionStatistics.GetCurrentSessionData();
+                        if (sessionData != null)
+                        {
+                            await statisticsManager.SaveSessionStatistics(sessionData);
+                            gameSessionStatistics.MarkAsSaved();
+                            GameLogger.LogInfo("다시하기 - 세션이 이미 종료되었지만, 기존 세션 데이터를 저장했습니다. (완전 종료)", GameLogger.LogCategory.Save);
+                        }
+                    }
+                }
+                else
+                {
+                    if (gameSessionStatistics == null)
+                    {
+                        GameLogger.LogWarning("다시하기 - GameSessionStatistics를 찾을 수 없습니다. 통계 저장을 건너뜁니다.", GameLogger.LogCategory.Save);
+                    }
+                    if (statisticsManager == null)
+                    {
+                        GameLogger.LogWarning("다시하기 - StatisticsManager를 찾을 수 없습니다. 통계 저장을 건너뜁니다.", GameLogger.LogCategory.Save);
+                    }
+                }
+                
+                // 세션 ID 초기화 (다시하기는 새 게임)
+                PlayerPrefs.DeleteKey("CURRENT_SESSION_ID");
                 
                 // 전체 게임 상태 초기화 (새게임과 동일한 로직)
                 if (saveManager != null)

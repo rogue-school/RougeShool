@@ -63,6 +63,24 @@ namespace Game.CoreSystem.Manager
         {
             base.Start();
             // 베이스 클래스에서 자동 초기화 처리
+            
+            // CoreScene 로드 시 VictoryUI 패널 숨기기
+            try
+            {
+                var victoryUI = FindFirstObjectByType<Game.CombatSystem.UI.VictoryUI>(FindObjectsInactive.Include);
+                if (victoryUI != null)
+                {
+                    victoryUI.Hide();
+                    if (enableDebugLogging)
+                    {
+                        GameLogger.LogInfo("[CoreSystemInitializer] CoreScene 로드 시 VictoryUI 패널 숨김", GameLogger.LogCategory.UI);
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogWarning($"[CoreSystemInitializer] VictoryUI 숨김 중 경고: {ex.Message}", GameLogger.LogCategory.UI);
+            }
         }
 
         protected override System.Collections.IEnumerator OnInitialize()
