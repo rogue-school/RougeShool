@@ -45,9 +45,9 @@ MonoBehaviour:
         bleedDuration: 3
         bleedIcon: {fileID: 8848535255239831726, guid: 1a1da09f60b3d2c4cb612f8b98b2bf54, type: 3}
         bleedActivateEffectPrefab: {fileID: 0}
-        bleedActivateSfxClip: {fileID: 0}
+        bleedActivateSfxClip: {fileID: 8300000, guid: dfa851d7b6e5e5b4bbe81df7487580c1, type: 3}
         bleedPerTurnEffectPrefab: {fileID: 7926437658294930577, guid: a39cbd8789899ed419fcf674d73aade8, type: 3}
-        bleedPerTurnSfxClip: {fileID: 0}
+        bleedPerTurnSfxClip: {fileID: 8300000, guid: c996f7150069ad642b0608e46078fe8e, type: 3}
         counterDuration: 1
         counterIcon: {fileID: 0}
         counterActivateEffectPrefab: {fileID: 0}

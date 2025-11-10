@@ -123,6 +123,13 @@ namespace Game.UISystem
         [Tooltip("메인 메뉴로 버튼")]
         [SerializeField] private Button backToMenuButton;
         
+        [Header("메시지 표시")]
+        [Tooltip("추후 업데이트 메시지를 표시할 TextMeshProUGUI (선택적)")]
+        [SerializeField] private TextMeshProUGUI messageText;
+        
+        [Tooltip("메시지 표시 패널 (선택적, messageText가 없을 경우 사용)")]
+        [SerializeField] private GameObject messagePanel;
+        
         // 설정 UI 제거됨 (요청에 따라 인스펙터 비우기)
         
         #endregion
@@ -136,6 +143,9 @@ namespace Game.UISystem
         private Tween creditsPanelTween;
         private CanvasGroup creditsCanvasGroup;
         private CanvasGroup mainMenuCanvasGroup;
+        
+        private Tween messageTween;
+        private CanvasGroup messageCanvasGroup;
         
         #endregion
         
@@ -189,6 +199,30 @@ namespace Game.UISystem
                 mainMenuCanvasGroup.alpha = 1f;
                 mainMenuCanvasGroup.blocksRaycasts = true;
             }
+            
+            if (messagePanel != null)
+            {
+                messageCanvasGroup = messagePanel.GetComponent<CanvasGroup>();
+                if (messageCanvasGroup == null)
+                {
+                    messageCanvasGroup = messagePanel.AddComponent<CanvasGroup>();
+                }
+                messageCanvasGroup.alpha = 0f;
+                messageCanvasGroup.blocksRaycasts = false;
+                messagePanel.SetActive(false);
+            }
+            else if (messageText != null)
+            {
+                var parent = messageText.transform.parent;
+                if (parent != null)
+                {
+                    messageCanvasGroup = parent.GetComponent<CanvasGroup>();
+                    if (messageCanvasGroup == null)
+                    {
+                        messageCanvasGroup = parent.gameObject.AddComponent<CanvasGroup>();
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -214,20 +248,90 @@ namespace Game.UISystem
         /// </summary>
         private void BindFixedCharacterButtons()
         {
-            BindFixed(swordButton, swordCharacter);
-            BindFixed(bowButton, bowCharacter);
-            BindFixed(staffButton, staffCharacter);
+            BindFixed(swordButton, swordCharacter, "CharacterCard_Sword");
+            BindFixed(bowButton, bowCharacter, "CharacterCard_Bow");
+            BindFixed(staffButton, staffCharacter, "CharacterCard_Staff");
         }
 
-        private void BindFixed(Button button, PlayerCharacterData gameCharacter)
+        private void BindFixed(Button button, PlayerCharacterData gameCharacter, string buttonName = null)
         {
+            // 버튼이 null이면 여러 방법으로 찾기 시도
             if (button == null)
             {
+                // 방법 1: characterCardContainer의 자식에서 이름으로 찾기
+                if (characterCardContainer != null && !string.IsNullOrEmpty(buttonName))
+                {
+                    for (int i = 0; i < characterCardContainer.childCount; i++)
+                    {
+                        var child = characterCardContainer.GetChild(i);
+                        if (child != null && child.name.Contains(buttonName.Replace("CharacterCard_", "")))
+                        {
+                            button = child.GetComponent<Button>();
+                            if (button != null)
+                            {
+                                GameLogger.LogInfo($"[MainMenuController] 버튼을 컨테이너에서 찾았습니다: {child.name}", GameLogger.LogCategory.UI);
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                // 방법 2: GameObject.Find로 찾기 (비활성화된 오브젝트도 찾기)
+                if (button == null && !string.IsNullOrEmpty(buttonName))
+                {
+                    var foundObj = GameObject.Find(buttonName);
+                    if (foundObj != null)
+                    {
+                        button = foundObj.GetComponent<Button>();
+                        if (button != null)
+                        {
+                            GameLogger.LogInfo($"[MainMenuController] 버튼을 Find로 찾았습니다: {buttonName}", GameLogger.LogCategory.UI);
+                        }
+                    }
+                }
+                
+                // 방법 3: characterCardContainer의 인덱스로 찾기 (지팡이는 3번째)
+                if (button == null && characterCardContainer != null && buttonName != null && buttonName.Contains("Staff"))
+                {
+                    if (characterCardContainer.childCount >= 3)
+                    {
+                        var staffChild = characterCardContainer.GetChild(2);
+                        if (staffChild != null)
+                        {
+                            button = staffChild.GetComponent<Button>();
+                            if (button != null)
+                            {
+                                GameLogger.LogInfo($"[MainMenuController] 버튼을 인덱스로 찾았습니다: {staffChild.name}", GameLogger.LogCategory.UI);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if (button == null)
+            {
+                GameLogger.LogWarning($"[MainMenuController] 버튼을 찾을 수 없습니다. 버튼 이름: {buttonName ?? "Unknown"}, 캐릭터 데이터: {(gameCharacter != null ? gameCharacter.DisplayName : "null")}", GameLogger.LogCategory.UI);
+                if (gameCharacter == null)
+                {
+                    GameLogger.LogWarning($"[MainMenuController] 버튼과 캐릭터 데이터가 모두 null입니다. 버튼 이름: {buttonName ?? "Unknown"}", GameLogger.LogCategory.UI);
+                }
                 return; // 선택적 기능
             }
+            
+            GameLogger.LogInfo($"[MainMenuController] 버튼 바인딩 완료: {button.name}, 캐릭터: {(gameCharacter != null ? gameCharacter.DisplayName : "null")}", GameLogger.LogCategory.UI);
+            
             button.onClick.RemoveAllListeners();
             button.onClick.AddListener(() =>
             {
+                GameLogger.LogInfo($"[MainMenuController] 버튼 클릭: {button.name}", GameLogger.LogCategory.UI);
+                
+                if (gameCharacter == null)
+                {
+                    ShowUpcomingUpdateMessage();
+                    GameLogger.LogInfo("[MainMenuController] 데이터가 존재하지 않는 캐릭터를 선택하려고 시도했습니다", GameLogger.LogCategory.UI);
+                    return;
+                }
+                
                 pendingStartCharacter = gameCharacter;
                 // 실제 시작에 사용될 캐릭터를 선택 상태로도 보관하여 Start 버튼 가드 통과
                 selectedCharacter = gameCharacter;
@@ -680,7 +784,15 @@ namespace Game.UISystem
                 return;
             }
             
-            selectedCharacter = availableCharacters[characterIndex];
+            var character = availableCharacters[characterIndex];
+            if (character == null)
+            {
+                ShowUpcomingUpdateMessage();
+                GameLogger.LogInfo("[MainMenuController] 데이터가 존재하지 않는 캐릭터를 선택하려고 시도했습니다", GameLogger.LogCategory.UI);
+                return;
+            }
+            
+            selectedCharacter = character;
             GameLogger.LogInfo($"[MainMenuController] 캐릭터 선택: {selectedCharacter.DisplayName}", GameLogger.LogCategory.UI);
             
             // SO에 요약 반영 및 시작용 캐릭터 후보 보관
@@ -989,6 +1101,97 @@ namespace Game.UISystem
         /// </summary>
         // 타입별 하드코딩 설명 제거됨
         
+        /// <summary>
+        /// 추후 업데이트 예정 메시지 표시
+        /// </summary>
+        private void ShowUpcomingUpdateMessage()
+        {
+            ShowMessage("추후 업데이트할 예정입니다");
+        }
+        
+        /// <summary>
+        /// 메시지 표시 (공통 메서드)
+        /// </summary>
+        /// <param name="message">표시할 메시지</param>
+        private void ShowMessage(string message)
+        {
+            messageTween?.Kill();
+            
+            if (messagePanel != null)
+            {
+                messagePanel.SetActive(true);
+                if (messageCanvasGroup != null)
+                {
+                    messageCanvasGroup.alpha = 0f;
+                    messageCanvasGroup.blocksRaycasts = true;
+                    
+                    messageTween = messageCanvasGroup.DOFade(1f, 0.3f)
+                        .SetEase(Ease.OutQuad)
+                        .OnComplete(() =>
+                        {
+                            messageTween = messageCanvasGroup.DOFade(0f, 0.3f)
+                                .SetDelay(2f)
+                                .SetEase(Ease.InQuad)
+                                .OnComplete(() =>
+                                {
+                                    messagePanel.SetActive(false);
+                                    messageCanvasGroup.blocksRaycasts = false;
+                                    messageTween = null;
+                                });
+                        });
+                }
+            }
+            else if (messageText != null)
+            {
+                messageText.text = message;
+                messageText.gameObject.SetActive(true);
+                
+                if (messageCanvasGroup != null)
+                {
+                    messageCanvasGroup.alpha = 0f;
+                    messageCanvasGroup.blocksRaycasts = true;
+                    
+                    messageTween = messageCanvasGroup.DOFade(1f, 0.3f)
+                        .SetEase(Ease.OutQuad)
+                        .OnComplete(() =>
+                        {
+                            messageTween = messageCanvasGroup.DOFade(0f, 0.3f)
+                                .SetDelay(2f)
+                                .SetEase(Ease.InQuad)
+                                .OnComplete(() =>
+                                {
+                                    messageText.gameObject.SetActive(false);
+                                    messageCanvasGroup.blocksRaycasts = false;
+                                    messageTween = null;
+                                });
+                        });
+                }
+                else
+                {
+                    var textColor = messageText.color;
+                    messageText.color = new Color(textColor.r, textColor.g, textColor.b, 0f);
+                    
+                    messageTween = messageText.DOFade(1f, 0.3f)
+                        .SetEase(Ease.OutQuad)
+                        .OnComplete(() =>
+                        {
+                            messageTween = messageText.DOFade(0f, 0.3f)
+                                .SetDelay(2f)
+                                .SetEase(Ease.InQuad)
+                                .OnComplete(() =>
+                                {
+                                    messageText.gameObject.SetActive(false);
+                                    messageTween = null;
+                                });
+                        });
+                }
+            }
+            else
+            {
+                GameLogger.LogInfo($"[MainMenuController] {message}", GameLogger.LogCategory.UI);
+            }
+        }
+        
         #endregion
         
         #region Cleanup
@@ -997,12 +1200,16 @@ namespace Game.UISystem
         {
             creditsPanelTween?.Kill();
             creditsPanelTween = null;
+            messageTween?.Kill();
+            messageTween = null;
         }
         
         private void OnDestroy()
         {
             creditsPanelTween?.Kill();
             creditsPanelTween = null;
+            messageTween?.Kill();
+            messageTween = null;
         }
         
         #endregion

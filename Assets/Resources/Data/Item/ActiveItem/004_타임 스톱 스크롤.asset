@@ -32,5 +32,5 @@ MonoBehaviour:
       type: {class: TimeStopEffectCustomSettings, ns: Game.ItemSystem.Data, asm: Assembly-CSharp}
       data:
         sealCount: 1
-        sfxClip: {fileID: 0}
+        sfxClip: {fileID: 8300000, guid: 9cb65eb2505fbf443ac876ba177374f9, type: 3}
         visualEffectPrefab: {fileID: 3163224208476687169, guid: d4fb561c5f4194647a74f74ec2a6e6fd, type: 3}

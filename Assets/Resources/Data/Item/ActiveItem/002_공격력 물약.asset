@@ -33,5 +33,5 @@ MonoBehaviour:
       data:
         buffAmount: 3
         duration: 1
-        sfxClip: {fileID: 0}
+        sfxClip: {fileID: 8300000, guid: b1b9c1f0ea1fcae439ed1a4d44ff05fd, type: 3}
         visualEffectPrefab: {fileID: 126652359712664187, guid: ce2e25d009608434bba688c9ef8bf708, type: 3}
