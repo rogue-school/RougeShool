@@ -153,9 +153,19 @@ namespace Game.CoreSystem.Statistics
         }
 
         /// <summary>
-        /// 게임 세션 시작
+        /// 게임 세션 시작 (새 세션)
         /// </summary>
         public void StartSession(string characterName)
+        {
+            StartSession(characterName, null);
+        }
+
+        /// <summary>
+        /// 게임 세션 시작 (이어하기 지원)
+        /// </summary>
+        /// <param name="characterName">캐릭터 이름</param>
+        /// <param name="existingSessionId">기존 세션 ID (이어하기 시 사용, null이면 새 세션)</param>
+        public void StartSession(string characterName, string existingSessionId)
         {
             if (IsSessionActive)
             {
@@ -163,10 +173,21 @@ namespace Game.CoreSystem.Statistics
                 return;
             }
 
+            // 이어하기 시 기존 세션 ID 사용, 새 게임 시 새 세션 ID 생성
+            string sessionId = existingSessionId ?? GenerateSessionId();
+            
+            if (!string.IsNullOrEmpty(existingSessionId))
+            {
+                GameLogger.LogInfo($"[GameSessionStatistics] 이어하기 세션 ID: {existingSessionId}, 세션 재개", GameLogger.LogCategory.Save);
+                // 기존 세션 데이터는 StatisticsManager.SaveSessionStatistics에서 자동으로 업데이트됨
+                // 여기서는 세션 ID만 사용하여 재개
+            }
+
+            // 새 세션 생성 (이어하기 시에도 기존 데이터는 StatisticsManager에서 자동으로 업데이트됨)
             _currentSession = new SessionStatisticsData
             {
-                sessionId = GenerateSessionId(),
-                gameStartTime = DateTime.UtcNow.ToString("o"),
+                sessionId = sessionId,
+                gameStartTime = string.IsNullOrEmpty(existingSessionId) ? DateTime.UtcNow.ToString("o") : DateTime.UtcNow.ToString("o"), // 이어하기 시에도 새 시작 시간 (누적 시간은 별도 계산)
                 selectedCharacterName = characterName ?? "Unknown",
                 finalStageNumber = 0,
                 finalEnemyIndex = 0,
@@ -192,20 +213,36 @@ namespace Game.CoreSystem.Statistics
             _currentSession.totalResourceGained = 0;
             _currentSession.totalResourceSpent = 0;
 
-            // CombatStatsAggregator 미리 찾기 시도
-            EnsureCombatStatsAggregator();
-
             _gameStartTime = Time.time;
             IsSessionActive = true;
             IsSaved = false;
 
-            GameLogger.LogInfo($"[GameSessionStatistics] 세션 시작: {_currentSession.sessionId}, 캐릭터: {_currentSession.selectedCharacterName}", GameLogger.LogCategory.UI);
+            if (!string.IsNullOrEmpty(existingSessionId))
+            {
+                GameLogger.LogInfo($"[GameSessionStatistics] 세션 재개: {_currentSession.sessionId}, 캐릭터: {_currentSession.selectedCharacterName}", GameLogger.LogCategory.UI);
+            }
+            else
+            {
+                GameLogger.LogInfo($"[GameSessionStatistics] 새 세션 시작: {_currentSession.sessionId}, 캐릭터: {_currentSession.selectedCharacterName}", GameLogger.LogCategory.UI);
+            }
+
+            // CombatStatsAggregator 미리 찾기 시도
+            EnsureCombatStatsAggregator();
+        }
+
+        /// <summary>
+        /// 게임 세션 종료 (완전 종료)
+        /// </summary>
+        public void EndSession()
+        {
+            EndSession(true);
         }
 
         /// <summary>
         /// 게임 세션 종료
         /// </summary>
-        public void EndSession()
+        /// <param name="finalEnd">완전 종료 여부 (true: 게임 종료, false: 중간 저장)</param>
+        public void EndSession(bool finalEnd)
         {
             if (!IsSessionActive)
             {
@@ -214,8 +251,24 @@ namespace Game.CoreSystem.Statistics
             }
 
             _gameEndTime = Time.time;
-            _currentSession.gameEndTime = DateTime.UtcNow.ToString("o");
-            _currentSession.totalPlayTimeSeconds = _gameEndTime - _gameStartTime;
+            
+            // 중간 저장 시에는 gameEndTime을 업데이트하지 않음 (이어하기 가능성)
+            if (finalEnd)
+            {
+                _currentSession.gameEndTime = DateTime.UtcNow.ToString("o");
+            }
+            
+            // 플레이 시간 누적 계산 (이어하기 고려)
+            float currentPlayTime = _gameEndTime - _gameStartTime;
+            if (_currentSession.totalPlayTimeSeconds > 0)
+            {
+                // 기존 세션 재개인 경우 누적
+                _currentSession.totalPlayTimeSeconds += currentPlayTime;
+            }
+            else
+            {
+                _currentSession.totalPlayTimeSeconds = currentPlayTime;
+            }
 
             // 최종 스테이지 정보 업데이트
             if (_stageManager != null)
@@ -253,6 +306,23 @@ namespace Game.CoreSystem.Statistics
         }
 
         /// <summary>
+        /// 세션 재개 (중간 저장 후 재개)
+        /// </summary>
+        public void ResumeSession()
+        {
+            if (_currentSession == null)
+            {
+                GameLogger.LogWarning("[GameSessionStatistics] 재개할 세션이 없습니다", GameLogger.LogCategory.Error);
+                return;
+            }
+
+            _gameStartTime = Time.time; // 재개 시간 업데이트
+            IsSessionActive = true;
+            IsSaved = false;
+            GameLogger.LogInfo($"[GameSessionStatistics] 세션 재개: {_currentSession.sessionId}", GameLogger.LogCategory.Save);
+        }
+
+        /// <summary>
         /// 현재 세션 통계 데이터 가져오기
         /// </summary>
         public SessionStatisticsData GetCurrentSessionData()
@@ -264,7 +334,21 @@ namespace Game.CoreSystem.Statistics
             }
 
             // 최신 데이터로 업데이트
-            _currentSession.totalPlayTimeSeconds = Time.time - _gameStartTime;
+            if (IsSessionActive)
+            {
+                // 활성 세션인 경우 현재 플레이 시간 계산
+                float currentPlayTime = Time.time - _gameStartTime;
+                if (_currentSession.totalPlayTimeSeconds > 0)
+                {
+                    // 이어하기 세션인 경우 누적 시간 계산
+                    _currentSession.totalPlayTimeSeconds = _currentSession.totalPlayTimeSeconds + currentPlayTime;
+                }
+                else
+                {
+                    _currentSession.totalPlayTimeSeconds = currentPlayTime;
+                }
+            }
+            
             if (_stageManager != null)
             {
                 _currentSession.finalStageNumber = _stageManager.GetCurrentStageNumber();
