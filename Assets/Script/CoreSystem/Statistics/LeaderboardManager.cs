@@ -35,6 +35,11 @@ namespace Game.CoreSystem.Statistics
         int GetTotalClearCount(string characterName);
 
         /// <summary>
+        /// 전체 캐릭터 통합 총 클리어 횟수 가져오기
+        /// </summary>
+        int GetTotalClearCountAllCharacters();
+
+        /// <summary>
         /// 처음 클리어 여부를 확인합니다.
         /// </summary>
         bool IsFirstClear(string characterName);
@@ -215,6 +220,25 @@ namespace Game.CoreSystem.Statistics
             }
 
             return leaderboard.totalClearCount;
+        }
+
+        /// <summary>
+        /// 전체 캐릭터 통합 총 클리어 횟수 가져오기
+        /// </summary>
+        public int GetTotalClearCountAllCharacters()
+        {
+            if (_leaderboardData == null || _leaderboardData.characterLeaderboards == null)
+            {
+                return 0;
+            }
+
+            int totalCount = 0;
+            foreach (var leaderboard in _leaderboardData.characterLeaderboards.Values)
+            {
+                totalCount += leaderboard.totalClearCount;
+            }
+
+            return totalCount;
         }
 
         /// <summary>

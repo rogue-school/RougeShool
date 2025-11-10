@@ -284,7 +284,6 @@ namespace Game.CombatSystem.UI
             
             sb.AppendLine($"총 점수: {scoreData.totalScore:N0}");
             sb.AppendLine($"  - 기본 점수: 10,000");
-            sb.AppendLine($"  - 진행도: {scoreData.progressScore}");
             if (scoreData.turnEfficiencyScore < 0)
             {
                 sb.AppendLine($"  - 턴 수 차감: {scoreData.turnEfficiencyScore:N0}");
@@ -308,22 +307,12 @@ namespace Game.CombatSystem.UI
 
             if (_leaderboardManager != null)
             {
-                string characterName = sessionData.selectedCharacterName;
-                if (!string.IsNullOrEmpty(characterName))
-                {
-                    int rank = _leaderboardManager.GetCurrentRank(characterName, scoreData.totalScore);
-                    int clearCount = _leaderboardManager.GetTotalClearCount(characterName);
-                    
-                    GameLogger.LogInfo($"[VictoryUI] ShowScoreAndRank: 캐릭터={characterName}, 점수={scoreData.totalScore}, 순위={rank}, 클리어횟수={clearCount}", GameLogger.LogCategory.UI);
-                    
-                    sb.AppendLine();
-                    sb.AppendLine($"현재 순위: {rank}위");
-                    sb.AppendLine($"총 클리어 횟수: {clearCount}회");
-                }
-                else
-                {
-                    GameLogger.LogWarning("[VictoryUI] ShowScoreAndRank: 캐릭터 이름이 비어있습니다", GameLogger.LogCategory.UI);
-                }
+                int totalClearCountAll = _leaderboardManager.GetTotalClearCountAllCharacters();
+                
+                GameLogger.LogInfo($"[VictoryUI] ShowScoreAndRank: 전체클리어횟수={totalClearCountAll}", GameLogger.LogCategory.UI);
+                
+                sb.AppendLine();
+                sb.AppendLine($"총 클리어 횟수: {totalClearCountAll}회");
             }
             else
             {
