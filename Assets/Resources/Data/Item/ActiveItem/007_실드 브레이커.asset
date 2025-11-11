@@ -32,5 +32,5 @@ MonoBehaviour:
       type: {class: ShieldBreakerEffectCustomSettings, ns: Game.ItemSystem.Data, asm: Assembly-CSharp}
       data:
         duration: 2
-        sfxClip: {fileID: 0}
-        visualEffectPrefab: {fileID: 1889961486689213479, guid: 62adec539a892f84d84c9b9c5539a32d, type: 3}
+        sfxClip: {fileID: 8300000, guid: b773d897cc60fd740838dab6f53363d1, type: 3}
+        visualEffectPrefab: {fileID: 5309526777682471748, guid: 73710bc93cfab254784a810a78742692, type: 3}

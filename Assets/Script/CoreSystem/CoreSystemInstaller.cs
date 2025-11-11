@@ -39,6 +39,7 @@ namespace Game.CoreSystem
         [SerializeField] private Game.ItemSystem.Manager.ItemTooltipManager itemTooltipManager;
         [SerializeField] private GameSessionStatistics gameSessionStatistics;
         [SerializeField] private StatisticsManager statisticsManager;
+        [SerializeField] private LeaderboardManager leaderboardManager;
         
         [Header("CharacterSystem 매니저들")]
         [SerializeField] private PlayerManager playerManager;
@@ -90,7 +91,8 @@ namespace Game.CoreSystem
                 (itemTooltipManager, "ItemTooltipManager", null),
                 (playerManager, "PlayerManager", null),
                 (gameSessionStatistics, "GameSessionStatistics", null),
-                (statisticsManager, "StatisticsManager", typeof(IStatisticsManager))
+                (statisticsManager, "StatisticsManager", typeof(IStatisticsManager)),
+                (leaderboardManager, "LeaderboardManager", typeof(ILeaderboardManager))
             };
 
             foreach (var (instance, name, interfaceType) in managers)

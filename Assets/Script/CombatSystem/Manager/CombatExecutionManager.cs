@@ -287,6 +287,28 @@ namespace Game.CombatSystem.Manager
                 // 실행 이벤트 발생
                 OnCardExecuted?.Invoke(card, sourceCharacter, targetCharacter);
 
+                // 전투 통계 이벤트 발생
+                if (card != null && card.CardDefinition != null)
+                {
+                    string cardId = card.CardDefinition.cardId;
+                    GameObject cardObj = null;
+                    
+                    // 카드 UI GameObject 찾기 시도
+                    if (card is MonoBehaviour cardMono)
+                    {
+                        cardObj = cardMono.gameObject;
+                    }
+                    
+                    if (card.IsFromPlayer())
+                    {
+                        Game.CombatSystem.CombatEvents.RaisePlayerCardUse(cardId, cardObj);
+                    }
+                    else
+                    {
+                        Game.CombatSystem.CombatEvents.RaiseEnemyCardUse(cardId, cardObj);
+                    }
+                }
+
                 return new ExecutionResult(true, null, "카드 실행 성공");
             }
             catch (System.Exception ex)

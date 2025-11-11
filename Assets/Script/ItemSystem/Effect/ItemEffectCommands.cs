@@ -99,13 +99,11 @@ namespace Game.ItemSystem.Effect
                 return;
             }
 
+            // VFXManager를 통한 이펙트 생성 (정확한 위치 지정)
             var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
             if (finalVfxManager != null)
             {
-                // 캐릭터의 시각적 중심 위치 계산
-                var spawnPos = GetPortraitCenterWorldPosition(userTransform);
-                
-                var effectInstance = finalVfxManager.PlayEffect(visualEffectPrefab, spawnPos);
+                var effectInstance = finalVfxManager.PlayEffectAtCharacterCenter(visualEffectPrefab, userTransform);
                 if (effectInstance != null)
                 {
                     SetEffectLayer(effectInstance);
@@ -114,12 +112,7 @@ namespace Game.ItemSystem.Effect
             }
             else
             {
-                // Fallback: VFXManager가 없으면 기존 방식 사용
-                var spawnPos = GetPortraitCenterWorldPosition(userTransform);
-                var instance = UnityEngine.Object.Instantiate(visualEffectPrefab, spawnPos, Quaternion.identity);
-                SetEffectLayer(instance);
-                UnityEngine.Object.Destroy(instance, 2.0f);
-                GameLogger.LogInfo($"[HealEffectCommand] 회복 비주얼 이펙트 생성 완료: {visualEffectPrefab.name}", GameLogger.LogCategory.Core);
+                GameLogger.LogError("[HealEffectCommand] VFXManager를 찾을 수 없습니다. 회복 비주얼 이펙트를 생성할 수 없습니다.", GameLogger.LogCategory.Core);
             }
         }
 
@@ -307,13 +300,11 @@ namespace Game.ItemSystem.Effect
                 return;
             }
 
+            // VFXManager를 통한 이펙트 생성 (정확한 위치 지정)
             var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
             if (finalVfxManager != null)
             {
-                // 캐릭터의 시각적 중심 위치 계산
-                var spawnPos = GetPortraitCenterWorldPosition(userTransform);
-                
-                var effectInstance = finalVfxManager.PlayEffect(visualEffectPrefab, spawnPos);
+                var effectInstance = finalVfxManager.PlayEffectAtCharacterCenter(visualEffectPrefab, userTransform);
                 if (effectInstance != null)
                 {
                     SetEffectLayer(effectInstance);
@@ -322,12 +313,7 @@ namespace Game.ItemSystem.Effect
             }
             else
             {
-                // Fallback: VFXManager가 없으면 기존 방식 사용
-                var spawnPos = GetPortraitCenterWorldPosition(userTransform);
-                var instance = UnityEngine.Object.Instantiate(visualEffectPrefab, spawnPos, Quaternion.identity);
-                SetEffectLayer(instance);
-                UnityEngine.Object.Destroy(instance, 2.0f);
-                GameLogger.LogInfo($"[AttackBuffEffectCommand] 버프 비주얼 이펙트 생성 완료: {visualEffectPrefab.name}", GameLogger.LogCategory.Core);
+                GameLogger.LogError("[AttackBuffEffectCommand] VFXManager를 찾을 수 없습니다. 버프 비주얼 이펙트를 생성할 수 없습니다.", GameLogger.LogCategory.Core);
             }
         }
 
@@ -534,14 +520,11 @@ namespace Game.ItemSystem.Effect
                 return;
             }
 
-            // VFXManager 찾기
+            // VFXManager를 통한 이펙트 생성 (정확한 위치 지정)
             var vfxManager = UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
             if (vfxManager != null)
             {
-                // 캐릭터의 시각적 중심 위치 계산
-                var spawnPos = GetPortraitCenterWorldPosition(userTransform);
-                
-                var effectInstance = vfxManager.PlayEffect(effectPrefab, spawnPos);
+                var effectInstance = vfxManager.PlayEffectAtCharacterCenter(effectPrefab, userTransform);
                 if (effectInstance != null)
                 {
                     SetEffectLayer(effectInstance);
@@ -550,12 +533,7 @@ namespace Game.ItemSystem.Effect
             }
             else
             {
-                // Fallback: VFXManager가 없으면 기존 방식 사용
-                var spawnPos = GetPortraitCenterWorldPosition(userTransform);
-                var instance = UnityEngine.Object.Instantiate(effectPrefab, spawnPos, Quaternion.identity);
-                SetEffectLayer(instance);
-                UnityEngine.Object.Destroy(instance, 2.0f);
-                GameLogger.LogInfo($"[ClownPotionEffectCommand] {type} 비주얼 이펙트 생성 완료: {effectPrefab.name}", GameLogger.LogCategory.Core);
+                GameLogger.LogError($"[ClownPotionEffectCommand] VFXManager를 찾을 수 없습니다. {type} 비주얼 이펙트를 생성할 수 없습니다.", GameLogger.LogCategory.Core);
             }
         }
 
@@ -780,11 +758,11 @@ namespace Game.ItemSystem.Effect
                 return;
             }
 
+            // VFXManager를 통한 이펙트 생성 (정확한 위치 지정)
             var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
             if (finalVfxManager != null)
             {
-                var spawnPos = GetPortraitCenterWorldPosition(userTransform);
-                var effectInstance = finalVfxManager.PlayEffect(visualEffectPrefab, spawnPos);
+                var effectInstance = finalVfxManager.PlayEffectAtCharacterCenter(visualEffectPrefab, userTransform);
                 if (effectInstance != null)
                 {
                     SetEffectLayer(effectInstance);
@@ -793,11 +771,7 @@ namespace Game.ItemSystem.Effect
             }
             else
             {
-                var spawnPos = GetPortraitCenterWorldPosition(userTransform);
-                var instance = UnityEngine.Object.Instantiate(visualEffectPrefab, spawnPos, Quaternion.identity);
-                SetEffectLayer(instance);
-                UnityEngine.Object.Destroy(instance, 2.0f);
-                GameLogger.LogInfo($"[ReviveEffectCommand] 부활 비주얼 이펙트 생성 완료: {visualEffectPrefab.name}", GameLogger.LogCategory.Core);
+                GameLogger.LogError("[ReviveEffectCommand] VFXManager를 찾을 수 없습니다. 부활 비주얼 이펙트를 생성할 수 없습니다.", GameLogger.LogCategory.Core);
             }
         }
 
@@ -973,11 +947,11 @@ namespace Game.ItemSystem.Effect
                 return;
             }
 
+            // VFXManager를 통한 이펙트 생성 (정확한 위치 지정)
             var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
             if (finalVfxManager != null)
             {
-                var spawnPos = GetPortraitCenterWorldPosition(targetTransform);
-                var effectInstance = finalVfxManager.PlayEffect(visualEffectPrefab, spawnPos);
+                var effectInstance = finalVfxManager.PlayEffectAtCharacterCenter(visualEffectPrefab, targetTransform);
                 if (effectInstance != null)
                 {
                     SetEffectLayer(effectInstance);
@@ -986,11 +960,7 @@ namespace Game.ItemSystem.Effect
             }
             else
             {
-                var spawnPos = GetPortraitCenterWorldPosition(targetTransform);
-                var instance = UnityEngine.Object.Instantiate(visualEffectPrefab, spawnPos, Quaternion.identity);
-                SetEffectLayer(instance);
-                UnityEngine.Object.Destroy(instance, 2.0f);
-                GameLogger.LogInfo($"[TimeStopEffectCommand] 시간 정지 비주얼 이펙트 생성 완료: {visualEffectPrefab.name}", GameLogger.LogCategory.Core);
+                GameLogger.LogError("[TimeStopEffectCommand] VFXManager를 찾을 수 없습니다. 시간 정지 비주얼 이펙트를 생성할 수 없습니다.", GameLogger.LogCategory.Core);
             }
         }
 
@@ -1185,13 +1155,11 @@ namespace Game.ItemSystem.Effect
                 return;
             }
 
+            // VFXManager를 통한 이펙트 생성 (정확한 위치 지정)
             var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
             if (finalVfxManager != null)
             {
-                // 캐릭터의 시각적 중심 위치 계산
-                var spawnPos = GetPortraitCenterWorldPosition(targetTransform);
-                
-                var effectInstance = finalVfxManager.PlayEffect(visualEffectPrefab, spawnPos);
+                var effectInstance = finalVfxManager.PlayEffectAtCharacterCenter(visualEffectPrefab, targetTransform);
                 if (effectInstance != null)
                 {
                     SetEffectLayer(effectInstance);
@@ -1200,12 +1168,7 @@ namespace Game.ItemSystem.Effect
             }
             else
             {
-                // Fallback: VFXManager가 없으면 기존 방식 사용
-                var spawnPos = GetPortraitCenterWorldPosition(targetTransform);
-                var instance = UnityEngine.Object.Instantiate(visualEffectPrefab, spawnPos, Quaternion.identity);
-                SetEffectLayer(instance);
-                UnityEngine.Object.Destroy(instance, 2.0f);
-                GameLogger.LogInfo($"[DiceOfFate] 비주얼 이펙트 생성 완료: {visualEffectPrefab.name} (적 캐릭터: {targetTransform.name})", GameLogger.LogCategory.Core);
+                GameLogger.LogError("[DiceOfFate] VFXManager를 찾을 수 없습니다. 비주얼 이펙트를 생성할 수 없습니다.", GameLogger.LogCategory.Core);
             }
         }
 
@@ -1587,11 +1550,11 @@ namespace Game.ItemSystem.Effect
                 return;
             }
 
+            // VFXManager를 통한 이펙트 생성 (정확한 위치 지정)
             var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
             if (finalVfxManager != null)
             {
-                var spawnPos = GetPortraitCenterWorldPosition(userTransform);
-                var effectInstance = finalVfxManager.PlayEffect(visualEffectPrefab, spawnPos);
+                var effectInstance = finalVfxManager.PlayEffectAtCharacterCenter(visualEffectPrefab, userTransform);
                 if (effectInstance != null)
                 {
                     SetEffectLayer(effectInstance);
@@ -1600,11 +1563,7 @@ namespace Game.ItemSystem.Effect
             }
             else
             {
-                var spawnPos = GetPortraitCenterWorldPosition(userTransform);
-                var instance = UnityEngine.Object.Instantiate(visualEffectPrefab, spawnPos, Quaternion.identity);
-                SetEffectLayer(instance);
-                UnityEngine.Object.Destroy(instance, 2.0f);
-                GameLogger.LogInfo($"[RerollEffectCommand] 리롤 비주얼 이펙트 생성 완료: {visualEffectPrefab.name}", GameLogger.LogCategory.Core);
+                GameLogger.LogError("[RerollEffectCommand] VFXManager를 찾을 수 없습니다. 리롤 비주얼 이펙트를 생성할 수 없습니다.", GameLogger.LogCategory.Core);
             }
         }
 
@@ -1788,13 +1747,11 @@ namespace Game.ItemSystem.Effect
                 return;
             }
 
+            // VFXManager를 통한 이펙트 생성 (정확한 위치 지정)
             var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
             if (finalVfxManager != null)
             {
-                // 캐릭터의 시각적 중심 위치 계산
-                var spawnPos = GetPortraitCenterWorldPosition(targetTransform);
-                
-                var effectInstance = finalVfxManager.PlayEffect(visualEffectPrefab, spawnPos);
+                var effectInstance = finalVfxManager.PlayEffectAtCharacterCenter(visualEffectPrefab, targetTransform);
                 if (effectInstance != null)
                 {
                     SetEffectLayer(effectInstance);
@@ -1803,12 +1760,7 @@ namespace Game.ItemSystem.Effect
             }
             else
             {
-                // Fallback: VFXManager가 없으면 기존 방식 사용
-                var spawnPos = GetPortraitCenterWorldPosition(targetTransform);
-                var instance = UnityEngine.Object.Instantiate(visualEffectPrefab, spawnPos, Quaternion.identity);
-                SetEffectLayer(instance);
-                UnityEngine.Object.Destroy(instance, 2.0f);
-                GameLogger.LogInfo($"[ShieldBreakerEffectCommand] 실드 브레이커 비주얼 이펙트 생성 완료: {visualEffectPrefab.name}", GameLogger.LogCategory.Core);
+                GameLogger.LogError("[ShieldBreakerEffectCommand] VFXManager를 찾을 수 없습니다. 실드 브레이커 비주얼 이펙트를 생성할 수 없습니다.", GameLogger.LogCategory.Core);
             }
         }
 

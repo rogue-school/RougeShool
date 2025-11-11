@@ -147,6 +147,19 @@ namespace Game.SkillCardSystem.Manager
                 if (card != null && slot != null)
                 {
                     slot.AttachCard(card, cardUIPrefab);
+                    
+                    // 전투 통계 이벤트 발생 (카드 생성)
+                    if (card.CardDefinition != null)
+                    {
+                        string cardId = card.CardDefinition.cardId;
+                        GameObject cardObj = null;
+                        if (card is MonoBehaviour cardMono)
+                        {
+                            cardObj = cardMono.gameObject;
+                        }
+                        Game.CombatSystem.CombatEvents.RaisePlayerCardSpawn(cardId, cardObj);
+                    }
+                    
                     // GameLogger.LogInfo($"핸드에 카드 추가: {card.GetCardName()} (슬롯 {slot.GetSlotPosition()})", GameLogger.LogCategory.SkillCard);
                 }
             }
@@ -178,6 +191,19 @@ namespace Game.SkillCardSystem.Manager
                     var card = drawn.ElementAtOrDefault(added);
                     if (card == null) break;
                     slot.AttachCard(card, cardUIPrefab);
+                    
+                    // 전투 통계 이벤트 발생 (카드 생성)
+                    if (card.CardDefinition != null)
+                    {
+                        string cardId = card.CardDefinition.cardId;
+                        GameObject cardObj = null;
+                        if (card is MonoBehaviour cardMono)
+                        {
+                            cardObj = cardMono.gameObject;
+                        }
+                        Game.CombatSystem.CombatEvents.RaisePlayerCardSpawn(cardId, cardObj);
+                    }
+                    
                     added++;
                 }
             }
@@ -226,6 +252,19 @@ namespace Game.SkillCardSystem.Manager
                 if (emptySlot != null)
                 {
                     emptySlot.SetCard(card);
+                    
+                    // 전투 통계 이벤트 발생 (카드 생성)
+                    if (card.CardDefinition != null)
+                    {
+                        string cardId = card.CardDefinition.cardId;
+                        GameObject cardObj = null;
+                        if (card is MonoBehaviour cardMono)
+                        {
+                            cardObj = cardMono.gameObject;
+                        }
+                        Game.CombatSystem.CombatEvents.RaisePlayerCardSpawn(cardId, cardObj);
+                    }
+                    
                     GameLogger.LogInfo($"카드 추가: {card.GetCardName()}", GameLogger.LogCategory.SkillCard);
                 }
                 else
@@ -256,6 +295,19 @@ namespace Game.SkillCardSystem.Manager
             if (handSlot != null)
             {
                 handSlot.SetCard(card);
+                
+                // 전투 통계 이벤트 발생 (카드 생성)
+                if (card.CardDefinition != null)
+                {
+                    string cardId = card.CardDefinition.cardId;
+                    GameObject cardObj = null;
+                    if (card is MonoBehaviour cardMono)
+                    {
+                        cardObj = cardMono.gameObject;
+                    }
+                    Game.CombatSystem.CombatEvents.RaisePlayerCardSpawn(cardId, cardObj);
+                }
+                
                 GameLogger.LogInfo($"카드 추가: {card.GetCardName()} to {slot}", GameLogger.LogCategory.SkillCard);
             }
             else

@@ -46,6 +46,9 @@ namespace Game.CombatSystem.State
         // 부활 관련 플래그
         private bool hasUsedReviveThisDeath = false;
         private bool isWaitingForDeathEffect = false;
+        
+        // 게임 오버 플래그 (완전히 사망했을 때 설정 - 이후 모든 액션 차단)
+        private bool isGameOver = false;
 
         #endregion
 
@@ -111,6 +114,10 @@ namespace Game.CombatSystem.State
         /// </summary>
         private void CheckCharacterDeath()
         {
+            // 게임 오버 상태이면 사망 체크를 하지 않음
+            if (isGameOver)
+                return;
+
             // BattleEndState에서는 체크하지 않음
             if (_currentState is BattleEndState)
                 return;
@@ -270,6 +277,7 @@ namespace Game.CombatSystem.State
 
             // 부활 플래그 리셋 (새 전투 시작)
             hasUsedReviveThisDeath = false;
+            isGameOver = false;
 
             GameLogger.LogInfo(
                 $"[CombatStateMachine] 전투 시작{(enemyData != null ? $" - 적: {enemyName}" : "")}",
@@ -457,6 +465,25 @@ namespace Game.CombatSystem.State
         }
 
         /// <summary>
+        /// 게임 오버 플래그를 설정하고 전투를 종료합니다 (플레이어 완전 사망 시 사용)
+        /// </summary>
+        private void SetGameOverAndEndCombat(bool isVictory)
+        {
+            // 게임 오버 플래그 설정 (이후 모든 사망 체크 차단)
+            isGameOver = true;
+            
+            GameLogger.LogInfo(
+                $"[CombatStateMachine] 게임 오버 설정 및 전투 종료 - {(isVictory ? "승리" : "패배")}",
+                GameLogger.LogCategory.Combat);
+
+            // 즉시 BattleEndState로 전환하여 모든 액션 차단
+            var endState = new BattleEndState(isVictory);
+            ChangeStateImmediate(endState);
+
+            OnCombatEnded?.Invoke(isVictory);
+        }
+
+        /// <summary>
         /// 전투를 종료합니다
         /// </summary>
         public void EndCombat(bool isVictory)
@@ -641,6 +668,12 @@ namespace Game.CombatSystem.State
         /// </summary>
         private void OnPlayerDeath()
         {
+            // 게임 오버 상태이면 처리하지 않음
+            if (isGameOver)
+            {
+                return;
+            }
+
             GameLogger.LogInfo(
                 "[CombatStateMachine] 플레이어 사망 감지",
                 GameLogger.LogCategory.Combat);
@@ -649,7 +682,7 @@ namespace Game.CombatSystem.State
             if (hasUsedReviveThisDeath)
             {
                 GameLogger.LogInfo("[CombatStateMachine] 이미 부활을 사용했으므로 게임 종료", GameLogger.LogCategory.Combat);
-                EndCombat(false);
+                SetGameOverAndEndCombat(false);
                 return;
             }
 
@@ -658,13 +691,41 @@ namespace Game.CombatSystem.State
             if (!hasReviveItem)
             {
                 GameLogger.LogInfo("[CombatStateMachine] 부활 아이템이 없어 게임 종료", GameLogger.LogCategory.Combat);
-                EndCombat(false);
+                SetGameOverAndEndCombat(false);
                 return;
             }
 
             // 사망 이펙트 완료를 기다리는 플래그 설정
             isWaitingForDeathEffect = true;
             GameLogger.LogInfo("[CombatStateMachine] 사망 이펙트 완료 대기 중...", GameLogger.LogCategory.Combat);
+
+            // 사망 이펙트가 없는 경우 즉시 완료 이벤트 호출
+            // OnPlayerCharacterDeath 이벤트를 구독하는 곳에서 사망 이펙트를 재생하고 완료 시 RaisePlayerDeathEffectComplete()를 호출해야 함
+            // 현재 사망 이펙트가 없는 경우를 대비해 일정 시간 후 자동으로 완료 처리
+            StartCoroutine(WaitForDeathEffectOrTimeout());
+        }
+
+        /// <summary>
+        /// 사망 이펙트 완료를 기다리거나 타임아웃 시 완료 처리
+        /// </summary>
+        private System.Collections.IEnumerator WaitForDeathEffectOrTimeout()
+        {
+            // 사망 이펙트가 없는 경우를 대비해 짧은 지연 후 즉시 완료 처리
+            // OnPlayerCharacterDeath 이벤트를 구독하는 곳에서 사망 이펙트를 재생하고 완료 시 RaisePlayerDeathEffectComplete()를 호출해야 함
+            yield return new WaitForSeconds(0.1f); // 사망 이펙트 재생 시작을 위한 짧은 지연
+
+            // 게임 오버 상태이면 처리하지 않음
+            if (isGameOver)
+            {
+                yield break;
+            }
+
+            // 여전히 대기 중이면 사망 이펙트가 없는 것으로 간주하고 즉시 완료 처리
+            if (isWaitingForDeathEffect)
+            {
+                GameLogger.LogWarning("[CombatStateMachine] 사망 이펙트가 없거나 완료되지 않음 - 즉시 부활 처리 진행", GameLogger.LogCategory.Combat);
+                CombatEvents.RaisePlayerDeathEffectComplete();
+            }
         }
 
         /// <summary>
@@ -672,6 +733,12 @@ namespace Game.CombatSystem.State
         /// </summary>
         private void OnPlayerDeathEffectComplete()
         {
+            // 게임 오버 상태이면 처리하지 않음
+            if (isGameOver)
+            {
+                return;
+            }
+
             // 사망 이펙트 완료를 기다리고 있지 않으면 무시
             if (!isWaitingForDeathEffect)
             {
@@ -694,7 +761,7 @@ namespace Game.CombatSystem.State
             {
                 // 부활 아이템 사용 실패 시 패배 상태로 전환
                 GameLogger.LogWarning("[CombatStateMachine] 부활 아이템 사용 실패 - 게임 종료", GameLogger.LogCategory.Combat);
-                EndCombat(false);
+                SetGameOverAndEndCombat(false);
             }
         }
 
@@ -728,6 +795,13 @@ namespace Game.CombatSystem.State
         /// <returns>부활 성공 여부</returns>
         private bool TryAutoRevive()
         {
+            // 게임 오버 상태이면 부활 시도하지 않음
+            if (isGameOver)
+            {
+                GameLogger.LogWarning("[CombatStateMachine] 게임 오버 상태이므로 부활 시도하지 않음", GameLogger.LogCategory.Combat);
+                return false;
+            }
+
             try
             {
                 // ItemService 찾기

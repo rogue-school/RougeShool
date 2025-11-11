@@ -31,5 +31,5 @@ MonoBehaviour:
     - rid: 8119732872858304586
       type: {class: RerollEffectCustomSettings, ns: Game.ItemSystem.Data, asm: Assembly-CSharp}
       data:
-        sfxClip: {fileID: 0}
-        visualEffectPrefab: {fileID: 7697830669745601185, guid: 74e235f7b8a3df94c976f5922b5a66f9, type: 3}
+        sfxClip: {fileID: 8300000, guid: a58e438b7cfa445498120af0e6169082, type: 3}
+        visualEffectPrefab: {fileID: 7697830669745601185, guid: a592c47cbee71654b964d776a2bc0ffb, type: 3}

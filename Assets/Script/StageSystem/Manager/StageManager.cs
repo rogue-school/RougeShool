@@ -346,13 +346,27 @@ namespace Game.StageSystem.Manager
                     GameLogger.LogWarning("[StageManager] SaveManager를 찾을 수 없습니다", GameLogger.LogCategory.Save);
                 }
 
-                // 메인 씬으로 전환되는 경우 통계 저장 (게임 종료로 간주)
+                // 메인 씬으로 전환되는 경우 통계 저장 (다시하기 여부 확인)
                 var currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
                 if (currentScene == "StageScene" || currentScene == "BattleScene")
                 {
-                    // 메인 씬으로 전환되는 경우 통계 저장
-                    GameLogger.LogInfo("[StageManager] 메인 씬 전환 감지 - 통계 저장 시작", GameLogger.LogCategory.Save);
-                    await EndStatisticsSession();
+                    // 다시하기 요청 여부 확인
+                    bool isRestartRequested = PlayerPrefs.GetInt("RESTART_GAME_REQUESTED", 0) == 1;
+                    
+                    if (isRestartRequested)
+                    {
+                        // 다시하기: 완전 종료
+                        GameLogger.LogInfo("[StageManager] 다시하기 감지 - 통계 완전 종료", GameLogger.LogCategory.Save);
+                        await SaveStatisticsSession(true); // 완전 종료
+                        PlayerPrefs.SetInt("RESTART_GAME_REQUESTED", 0);
+                        PlayerPrefs.Save();
+                    }
+                    else
+                    {
+                        // 일반 메인 메뉴 이동: 중간 저장 (세션 유지)
+                        GameLogger.LogInfo("[StageManager] 메인 씬 전환 감지 - 통계 중간 저장 시작 (세션 유지)", GameLogger.LogCategory.Save);
+                        await SaveStatisticsSession(false); // 중간 저장 (세션 유지)
+                    }
                 }
             }
             catch (System.Exception ex)
@@ -1279,11 +1293,20 @@ namespace Game.StageSystem.Manager
         }
 
         /// <summary>
-        /// 통계 세션 종료 및 저장
+        /// 통계 세션 종료 및 저장 (완전 종료)
         /// </summary>
         private async Task EndStatisticsSession()
         {
-            GameLogger.LogInfo("[StageManager] 통계 세션 종료 및 저장 시작", GameLogger.LogCategory.Save);
+            await SaveStatisticsSession(true);
+        }
+
+        /// <summary>
+        /// 통계 세션 저장 (중간 저장 또는 완전 종료)
+        /// </summary>
+        /// <param name="finalEnd">완전 종료 여부 (true: 게임 종료, false: 중간 저장)</param>
+        private async Task SaveStatisticsSession(bool finalEnd)
+        {
+            GameLogger.LogInfo($"[StageManager] 통계 세션 저장 시작 (종료: {finalEnd})", GameLogger.LogCategory.Save);
 
             if (gameSessionStatistics == null)
             {
@@ -1303,13 +1326,6 @@ namespace Game.StageSystem.Manager
                 return;
             }
 
-            // 이미 저장된 세션이면 건너뛰기
-            if (gameSessionStatistics.IsSaved)
-            {
-                GameLogger.LogInfo("[StageManager] 세션이 이미 저장되었습니다. 통계 저장을 건너뜁니다.", GameLogger.LogCategory.Save);
-                return;
-            }
-
             // 세션이 비활성화되어 있어도 데이터가 있으면 저장 시도
             var sessionData = gameSessionStatistics.GetCurrentSessionData();
             
@@ -1325,20 +1341,53 @@ namespace Game.StageSystem.Manager
                 return;
             }
 
-            // 세션이 활성화되어 있으면 종료 처리
+            // 세션이 활성화되어 있으면 처리
             if (gameSessionStatistics.IsSessionActive)
             {
-                gameSessionStatistics.EndSession();
+                if (finalEnd)
+                {
+                    // 완전 종료: 세션 종료
+                    gameSessionStatistics.EndSession(true);
                 sessionData = gameSessionStatistics.GetCurrentSessionData();
+                    GameLogger.LogInfo("[StageManager] 통계 세션 완전 종료", GameLogger.LogCategory.Save);
+                }
+                else
+                {
+                    // 중간 저장: 세션 유지 (종료하지 않음)
+                    gameSessionStatistics.EndSession(false);
+                    sessionData = gameSessionStatistics.GetCurrentSessionData();
+                    // 세션 재개
+                    gameSessionStatistics.ResumeSession();
+                    GameLogger.LogInfo("[StageManager] 통계 세션 중간 저장 (세션 유지)", GameLogger.LogCategory.Save);
+                }
             }
             else
             {
                 GameLogger.LogWarning("[StageManager] 활성화된 통계 세션이 없지만, 기존 세션 데이터를 저장합니다.", GameLogger.LogCategory.Save);
             }
 
+            if (sessionData == null)
+            {
+                GameLogger.LogWarning("[StageManager] 세션 데이터가 null입니다. 통계 저장을 건너뜁니다.", GameLogger.LogCategory.Save);
+                return;
+            }
+
             await statisticsManager.SaveSessionStatistics(sessionData);
+            
+            if (finalEnd)
+            {
             gameSessionStatistics.MarkAsSaved();
-            GameLogger.LogInfo("[StageManager] 통계 세션 저장 완료", GameLogger.LogCategory.Save);
+            }
+            
+            // 세션 ID를 PlayerPrefs에 저장 (이어하기용)
+            if (saveManager != null && sessionData != null && !string.IsNullOrEmpty(sessionData.sessionId))
+            {
+                PlayerPrefs.SetString("CURRENT_SESSION_ID", sessionData.sessionId);
+                PlayerPrefs.Save();
+                GameLogger.LogInfo($"[StageManager] 세션 ID 저장: {sessionData.sessionId}", GameLogger.LogCategory.Save);
+            }
+            
+            GameLogger.LogInfo($"[StageManager] 통계 세션 저장 완료 (종료: {finalEnd})", GameLogger.LogCategory.Save);
         }
 
         public event System.Action<StageProgressState> OnProgressChanged;

@@ -187,6 +187,21 @@ namespace Game.CoreSystem.Manager
 		/// </summary>
 		public async Task TransitionToMainScene()
 		{
+			// CoreScene에 있는 VictoryUI 패널 숨기기
+			try
+			{
+				var victoryUI = FindFirstObjectByType<Game.CombatSystem.UI.VictoryUI>(FindObjectsInactive.Include);
+				if (victoryUI != null)
+				{
+					victoryUI.Hide();
+					GameLogger.LogInfo("[SceneTransitionManager] 메인 씬 전환 전 VictoryUI 숨김", GameLogger.LogCategory.UI);
+				}
+			}
+			catch (System.Exception ex)
+			{
+				GameLogger.LogWarning($"[SceneTransitionManager] VictoryUI 숨김 중 경고: {ex.Message}", GameLogger.LogCategory.UI);
+			}
+
 			// 현재 씬이 StageScene이면 진행 상황 저장
 			if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == stageSceneName)
 			{

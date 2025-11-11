@@ -77,10 +77,13 @@ namespace Game.CoreSystem.Statistics
                 var existingSession = statisticsData.sessions.FirstOrDefault(s => s.sessionId == sessionData.sessionId);
                 if (existingSession != null)
                 {
-                    // 기존 세션 업데이트
+                    // 기존 세션 업데이트 (통계 누적)
                     var index = statisticsData.sessions.IndexOf(existingSession);
-                    statisticsData.sessions[index] = sessionData;
-                    GameLogger.LogInfo($"[StatisticsManager] 기존 세션 업데이트: {sessionData.sessionId}", GameLogger.LogCategory.Save);
+                    
+                    // 기존 세션 데이터와 새 데이터 병합 (누적)
+                    var mergedSession = MergeSessionData(existingSession, sessionData);
+                    statisticsData.sessions[index] = mergedSession;
+                    GameLogger.LogInfo($"[StatisticsManager] 기존 세션 업데이트 (통계 누적): {sessionData.sessionId}", GameLogger.LogCategory.Save);
                 }
                 else
                 {
@@ -113,7 +116,7 @@ namespace Game.CoreSystem.Statistics
                     GameLogger.LogWarning($"[StatisticsManager] 플레이어 덱 가져오기 실패: {ex.Message}", GameLogger.LogCategory.Save);
                 }
 
-                sessionData.PrepareForSerialization(playerDeck);
+                StatisticsSerializer.PrepareForSerialization(sessionData, playerDeck);
 
                 // JSON으로 직렬화
                 string jsonData = JsonUtility.ToJson(statisticsData, true);
@@ -182,6 +185,97 @@ namespace Game.CoreSystem.Statistics
         public string GetStatisticsFilePath()
         {
             return StatisticsFilePath;
+        }
+
+        /// <summary>
+        /// 기존 세션 데이터와 새 세션 데이터를 병합 (통계 누적)
+        /// </summary>
+        private SessionStatisticsData MergeSessionData(SessionStatisticsData existing, SessionStatisticsData newData)
+        {
+            if (existing == null) return newData;
+            if (newData == null) return existing;
+
+            // 기본 정보는 새 데이터로 업데이트 (최신 정보)
+            existing.gameEndTime = newData.gameEndTime;
+            existing.finalStageNumber = newData.finalStageNumber;
+            existing.finalEnemyIndex = newData.finalEnemyIndex;
+            existing.finalTurns = newData.finalTurns;
+
+            // 통계 누적
+            existing.totalVictoryCount += newData.totalVictoryCount;
+            existing.totalDefeatCount += newData.totalDefeatCount;
+            existing.totalResourceGained += newData.totalResourceGained;
+            existing.totalResourceSpent += newData.totalResourceSpent;
+
+            // 플레이 시간 누적
+            existing.totalPlayTimeSeconds += newData.totalPlayTimeSeconds;
+
+            // 전투 통계 병합 (중복 체크 후 새 전투만 추가)
+            if (newData.combatStatistics != null && newData.combatStatistics.Count > 0)
+            {
+                if (existing.combatStatistics == null)
+                {
+                    existing.combatStatistics = new List<CombatStatisticsData>();
+                }
+                
+                // 중복 체크: combatStartTime과 stageNumber, enemyIndex로 중복 판단
+                foreach (var newCombat in newData.combatStatistics)
+                {
+                    bool isDuplicate = false;
+                    if (!string.IsNullOrEmpty(newCombat.combatStartTime))
+                    {
+                        foreach (var existingCombat in existing.combatStatistics)
+                        {
+                            if (existingCombat.combatStartTime == newCombat.combatStartTime &&
+                                existingCombat.stageNumber == newCombat.stageNumber &&
+                                existingCombat.enemyIndex == newCombat.enemyIndex)
+                            {
+                                isDuplicate = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (!isDuplicate)
+                    {
+                        existing.combatStatistics.Add(newCombat);
+                    }
+                }
+            }
+
+            // Dictionary 통계 누적
+            MergeDictionary(existing.skillCardSpawnCountByCardId, newData.skillCardSpawnCountByCardId);
+            MergeDictionary(existing.skillCardUseCountByCardId, newData.skillCardUseCountByCardId);
+            MergeDictionary(existing.skillUseCountByName, newData.skillUseCountByName);
+            MergeDictionary(existing.activeItemSpawnCountByItemId, newData.activeItemSpawnCountByItemId);
+            MergeDictionary(existing.activeItemUseCountByName, newData.activeItemUseCountByName);
+            MergeDictionary(existing.activeItemDiscardCountByItemId, newData.activeItemDiscardCountByItemId);
+            MergeDictionary(existing.passiveItemAcquiredCountByItemId, newData.passiveItemAcquiredCountByItemId);
+
+            // 요약 재계산
+            existing.summary = newData.summary; // 최신 요약으로 업데이트
+
+            return existing;
+        }
+
+        /// <summary>
+        /// Dictionary 통계 누적
+        /// </summary>
+        private void MergeDictionary(Dictionary<string, int> existing, Dictionary<string, int> newData)
+        {
+            if (existing == null || newData == null) return;
+
+            foreach (var kv in newData)
+            {
+                if (existing.ContainsKey(kv.Key))
+                {
+                    existing[kv.Key] += kv.Value;
+                }
+                else
+                {
+                    existing[kv.Key] = kv.Value;
+                }
+            }
         }
 
         /// <summary>

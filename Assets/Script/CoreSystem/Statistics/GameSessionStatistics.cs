@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine;
 using Zenject;
 using Game.CoreSystem.Utility;
@@ -53,11 +55,22 @@ namespace Game.CoreSystem.Statistics
         [Inject(Optional = true)] private PlayerManager _playerManager;
         [Inject(Optional = true)] private StageManager _stageManager;
         [Inject(Optional = true)] private Game.ItemSystem.Interface.IItemService _itemService;
+        [Inject(Optional = true)] private IStatisticsManager _statisticsManager;
 
         /// <summary>
         /// CombatStatsAggregator 캐시 (성능 최적화)
         /// </summary>
         private CombatStatsAggregator _cachedCombatStatsAggregator;
+
+        /// <summary>
+        /// 사용된 아이템 ID 추적 (버리기 통계에서 제외하기 위함)
+        /// </summary>
+        private HashSet<string> _usedItemIds = new HashSet<string>();
+        
+        /// <summary>
+        /// 세션/전투 종료 정리 중 제거 이벤트 무시
+        /// </summary>
+        private bool _suppressDiscardCounting = false;
 
         /// <summary>
         /// 세션이 시작되었는지 여부
@@ -128,6 +141,7 @@ namespace Game.CoreSystem.Statistics
             {
                 // 세션 레벨 즉시 집계: 획득/제거 모두 반영
                 _itemService.OnActiveItemAdded += HandleActiveItemAdded;
+                _itemService.OnActiveItemUsed += HandleActiveItemUsed;
                 _itemService.OnActiveItemRemoved += HandleActiveItemRemoved;
                 GameLogger.LogInfo("[GameSessionStatistics] ItemService 이벤트 구독 완료", GameLogger.LogCategory.UI);
             }
@@ -148,14 +162,25 @@ namespace Game.CoreSystem.Statistics
             if (_itemService != null)
             {
                 _itemService.OnActiveItemAdded -= HandleActiveItemAdded;
+                _itemService.OnActiveItemUsed -= HandleActiveItemUsed;
                 _itemService.OnActiveItemRemoved -= HandleActiveItemRemoved;
             }
         }
 
         /// <summary>
-        /// 게임 세션 시작
+        /// 게임 세션 시작 (새 세션)
         /// </summary>
         public void StartSession(string characterName)
+        {
+            StartSession(characterName, null);
+        }
+
+        /// <summary>
+        /// 게임 세션 시작 (이어하기 지원)
+        /// </summary>
+        /// <param name="characterName">캐릭터 이름</param>
+        /// <param name="existingSessionId">기존 세션 ID (이어하기 시 사용, null이면 새 세션)</param>
+        public async void StartSession(string characterName, string existingSessionId)
         {
             if (IsSessionActive)
             {
@@ -163,49 +188,106 @@ namespace Game.CoreSystem.Statistics
                 return;
             }
 
-            _currentSession = new SessionStatisticsData
+            // 이어하기 시 기존 세션 ID 사용, 새 게임 시 새 세션 ID 생성
+            string sessionId = existingSessionId ?? GenerateSessionId();
+            
+            SessionStatisticsData existingSessionData = null;
+            if (!string.IsNullOrEmpty(existingSessionId))
             {
-                sessionId = GenerateSessionId(),
-                gameStartTime = DateTime.UtcNow.ToString("o"),
-                selectedCharacterName = characterName ?? "Unknown",
-                finalStageNumber = 0,
-                finalEnemyIndex = 0,
-                totalVictoryCount = 0,
-                totalDefeatCount = 0,
-                totalResourceGained = 0,
-                totalResourceSpent = 0,
-                unacquiredActiveItemCount = 0,
-                finalTurns = 0,
-                combatStatistics = new List<CombatStatisticsData>()
-            };
+                GameLogger.LogInfo($"[GameSessionStatistics] 이어하기 세션 ID: {existingSessionId}, 기존 세션 데이터 로드 중...", GameLogger.LogCategory.Save);
+                
+                // 기존 세션 데이터 로드
+                if (_statisticsManager != null)
+                {
+                    var allStatistics = await _statisticsManager.LoadAllStatistics();
+                    if (allStatistics != null && allStatistics.sessions != null)
+                    {
+                        existingSessionData = allStatistics.sessions.FirstOrDefault(s => s.sessionId == existingSessionId);
+                        if (existingSessionData != null)
+                        {
+                            GameLogger.LogInfo($"[GameSessionStatistics] 기존 세션 데이터 로드 완료: {existingSessionData.combatStatistics?.Count ?? 0}개 전투", GameLogger.LogCategory.Save);
+                        }
+                        else
+                        {
+                            GameLogger.LogWarning($"[GameSessionStatistics] 기존 세션 데이터를 찾을 수 없습니다: {existingSessionId}", GameLogger.LogCategory.Error);
+                        }
+                    }
+                }
+            }
 
-            // Dictionary 초기화
-            _currentSession.skillCardSpawnCountByCardId = new Dictionary<string, int>();
-            _currentSession.skillCardUseCountByCardId = new Dictionary<string, int>();
-            _currentSession.skillUseCountByName = new Dictionary<string, int>();
-            _currentSession.activeItemSpawnCountByItemId = new Dictionary<string, int>();
-            _currentSession.activeItemUseCountByName = new Dictionary<string, int>();
-            _currentSession.activeItemDiscardCountByItemId = new Dictionary<string, int>();
-            _currentSession.passiveItemAcquiredCountByItemId = new Dictionary<string, int>();
+            // 새 세션 생성 또는 기존 세션 데이터 복원
+            if (existingSessionData != null)
+            {
+                // 기존 세션 데이터 복원 (누적 Dictionary 포함)
+                _currentSession = existingSessionData;
+                GameLogger.LogInfo($"[GameSessionStatistics] 기존 세션 데이터 복원 완료: 총 승리={_currentSession.totalVictoryCount}, 총 패배={_currentSession.totalDefeatCount}", GameLogger.LogCategory.Save);
+            }
+            else
+            {
+                // 새 세션 생성
+                _currentSession = new SessionStatisticsData
+                {
+                    sessionId = sessionId,
+                    gameStartTime = DateTime.UtcNow.ToString("o"),
+                    selectedCharacterName = characterName ?? "Unknown",
+                    finalStageNumber = 0,
+                    finalEnemyIndex = 0,
+                    totalVictoryCount = 0,
+                    totalDefeatCount = 0,
+                    totalResourceGained = 0,
+                    totalResourceSpent = 0,
+                    unacquiredActiveItemCount = 0,
+                    finalTurns = 0,
+                    combatStatistics = new List<CombatStatisticsData>()
+                };
 
-            // 자원 통계 초기화
-            _currentSession.totalResourceGained = 0;
-            _currentSession.totalResourceSpent = 0;
+                // Dictionary 초기화
+                _currentSession.skillCardSpawnCountByCardId = new Dictionary<string, int>();
+                _currentSession.skillCardUseCountByCardId = new Dictionary<string, int>();
+                _currentSession.skillUseCountByName = new Dictionary<string, int>();
+                _currentSession.activeItemSpawnCountByItemId = new Dictionary<string, int>();
+                _currentSession.activeItemUseCountByName = new Dictionary<string, int>();
+                _currentSession.activeItemDiscardCountByItemId = new Dictionary<string, int>();
+                _currentSession.passiveItemAcquiredCountByItemId = new Dictionary<string, int>();
 
-            // CombatStatsAggregator 미리 찾기 시도
-            EnsureCombatStatsAggregator();
+                // 자원 통계 초기화
+                _currentSession.totalResourceGained = 0;
+                _currentSession.totalResourceSpent = 0;
+            }
+
+            // 사용된 아이템 ID 추적 초기화
+            _usedItemIds.Clear();
 
             _gameStartTime = Time.time;
             IsSessionActive = true;
             IsSaved = false;
 
-            GameLogger.LogInfo($"[GameSessionStatistics] 세션 시작: {_currentSession.sessionId}, 캐릭터: {_currentSession.selectedCharacterName}", GameLogger.LogCategory.UI);
+            if (!string.IsNullOrEmpty(existingSessionId))
+            {
+                GameLogger.LogInfo($"[GameSessionStatistics] 세션 재개: {_currentSession.sessionId}, 캐릭터: {_currentSession.selectedCharacterName}", GameLogger.LogCategory.UI);
+            }
+            else
+            {
+                GameLogger.LogInfo($"[GameSessionStatistics] 새 세션 시작: {_currentSession.sessionId}, 캐릭터: {_currentSession.selectedCharacterName}", GameLogger.LogCategory.UI);
+            }
+
+            // CombatStatsAggregator 미리 찾기 시도
+            EnsureCombatStatsAggregator();
+        }
+
+        /// <summary>
+        /// 게임 세션 종료 (완전 종료)
+        /// </summary>
+        public void EndSession()
+        {
+            EndSession(true);
         }
 
         /// <summary>
         /// 게임 세션 종료
         /// </summary>
-        public void EndSession()
+        /// <param name="finalEnd">완전 종료 여부 (true: 게임 종료, false: 중간 저장)</param>
+        public void EndSession(bool finalEnd)
         {
             if (!IsSessionActive)
             {
@@ -213,9 +295,34 @@ namespace Game.CoreSystem.Statistics
                 return;
             }
 
+            // 다시하기 시 현재 전투 통계가 있으면 수집 (게임 승리와 동일한 로직)
+            // HandleGameOver()에서 이미 HandleCombatEnded()를 호출하므로, 게임 오버가 아닌 경우에만 호출
+            if (finalEnd && _currentCombatStats != null && string.IsNullOrEmpty(_currentCombatStats.combatEndTime))
+            {
+                GameLogger.LogInfo("[GameSessionStatistics] 세션 종료 전 현재 전투 통계 수집 (다시하기 등)", GameLogger.LogCategory.Combat);
+                _isCurrentCombatVictory = false; // 중단된 전투는 패배로 처리
+                HandleCombatEnded(); // 전투 통계 수집
+            }
+
             _gameEndTime = Time.time;
-            _currentSession.gameEndTime = DateTime.UtcNow.ToString("o");
-            _currentSession.totalPlayTimeSeconds = _gameEndTime - _gameStartTime;
+            
+            // 중간 저장 시에는 gameEndTime을 업데이트하지 않음 (이어하기 가능성)
+            if (finalEnd)
+            {
+                _currentSession.gameEndTime = DateTime.UtcNow.ToString("o");
+            }
+            
+            // 플레이 시간 누적 계산 (이어하기 고려)
+            float currentPlayTime = _gameEndTime - _gameStartTime;
+            if (_currentSession.totalPlayTimeSeconds > 0)
+            {
+                // 기존 세션 재개인 경우 누적
+                _currentSession.totalPlayTimeSeconds += currentPlayTime;
+            }
+            else
+            {
+                _currentSession.totalPlayTimeSeconds = currentPlayTime;
+            }
 
             // 최종 스테이지 정보 업데이트
             if (_stageManager != null)
@@ -253,6 +360,23 @@ namespace Game.CoreSystem.Statistics
         }
 
         /// <summary>
+        /// 세션 재개 (중간 저장 후 재개)
+        /// </summary>
+        public void ResumeSession()
+        {
+            if (_currentSession == null)
+            {
+                GameLogger.LogWarning("[GameSessionStatistics] 재개할 세션이 없습니다", GameLogger.LogCategory.Error);
+                return;
+            }
+
+            _gameStartTime = Time.time; // 재개 시간 업데이트
+            IsSessionActive = true;
+            IsSaved = false;
+            GameLogger.LogInfo($"[GameSessionStatistics] 세션 재개: {_currentSession.sessionId}", GameLogger.LogCategory.Save);
+        }
+
+        /// <summary>
         /// 현재 세션 통계 데이터 가져오기
         /// </summary>
         public SessionStatisticsData GetCurrentSessionData()
@@ -264,14 +388,35 @@ namespace Game.CoreSystem.Statistics
             }
 
             // 최신 데이터로 업데이트
-            _currentSession.totalPlayTimeSeconds = Time.time - _gameStartTime;
+            if (IsSessionActive)
+            {
+                // 활성 세션인 경우 현재 플레이 시간 계산
+                float currentPlayTime = Time.time - _gameStartTime;
+                if (_currentSession.totalPlayTimeSeconds > 0)
+                {
+                    // 이어하기 세션인 경우 누적 시간 계산
+                    _currentSession.totalPlayTimeSeconds = _currentSession.totalPlayTimeSeconds + currentPlayTime;
+                }
+                else
+                {
+                    _currentSession.totalPlayTimeSeconds = currentPlayTime;
+                }
+            }
+            
             if (_stageManager != null)
             {
                 _currentSession.finalStageNumber = _stageManager.GetCurrentStageNumber();
                 _currentSession.finalEnemyIndex = _stageManager.GetCurrentEnemyIndex();
             }
 
+            // 세션 요약 계산 (점수 계산 전에 반드시 호출)
             CalculateSessionSummary();
+            
+            // 디버그: summary 값 확인
+            if (_currentSession.summary != null)
+            {
+                GameLogger.LogInfo($"[GameSessionStatistics] GetCurrentSessionData - summary: 총턴수={_currentSession.summary.totalTurns}, 총데미지={_currentSession.summary.totalDamageDealt}, 총받은데미지={_currentSession.summary.totalDamageTaken}, 총힐={_currentSession.summary.totalHealing}, 아이템사용수={_currentSession.activeItemUseCountByName?.Count ?? 0}", GameLogger.LogCategory.Combat);
+            }
 
             return _currentSession;
         }
@@ -376,6 +521,8 @@ namespace Game.CoreSystem.Statistics
         /// </summary>
         private void HandleVictory()
         {
+            // 이후 인벤토리 정리로 인한 제거 이벤트는 버리기로 집계하지 않음
+            _suppressDiscardCounting = true;
             _isCurrentCombatVictory = true;
             HandleCombatEnded();
         }
@@ -385,6 +532,8 @@ namespace Game.CoreSystem.Statistics
         /// </summary>
         private void HandleDefeat()
         {
+            // 이후 인벤토리 정리로 인한 제거 이벤트는 버리기로 집계하지 않음
+            _suppressDiscardCounting = true;
             _isCurrentCombatVictory = false;
             HandleCombatEnded();
         }
@@ -481,106 +630,33 @@ namespace Game.CoreSystem.Statistics
                     _currentCombatStats.totalResourceGained = snapshot.totalResourceGained;
                     _currentCombatStats.totalResourceSpent = snapshot.totalResourceSpent;
 
-                    // 카드 사용 통계 복사 (카드 ID별)
+                    // 전투별 통계 복사 (사용)
                     if (snapshot.playerSkillUsageByCardId != null)
-                    {
                         foreach (var kv in snapshot.playerSkillUsageByCardId)
-                        {
                             _currentCombatStats.playerSkillUsageByCardId[kv.Key] = kv.Value;
-                        }
-                    }
-
-                    // 스킬 사용 통계 복사 (스킬 이름별)
                     if (snapshot.playerSkillUsageByName != null)
-                    {
                         foreach (var kv in snapshot.playerSkillUsageByName)
-                        {
                             _currentCombatStats.playerSkillUsageByName[kv.Key] = kv.Value;
-                        }
-                    }
-
-                    // 아이템 사용 통계 복사
                     if (snapshot.activeItemUsageByName != null)
-                    {
                         foreach (var kv in snapshot.activeItemUsageByName)
-                        {
                             _currentCombatStats.activeItemUsageByName[kv.Key] = kv.Value;
-                        }
-                    }
 
-                    // 세션 레벨 통계 집계: 스킬카드 생성/사용
+                    // 전투별 통계 복사 (생성/버리기)
                     if (snapshot.playerSkillCardSpawnByCardId != null)
-                    {
                         foreach (var kv in snapshot.playerSkillCardSpawnByCardId)
-                        {
-                            if (!_currentSession.skillCardSpawnCountByCardId.ContainsKey(kv.Key))
-                                _currentSession.skillCardSpawnCountByCardId[kv.Key] = 0;
-                            _currentSession.skillCardSpawnCountByCardId[kv.Key] += kv.Value;
-                        }
-                    }
-
-                    if (snapshot.playerSkillUsageByCardId != null)
-                    {
-                        foreach (var kv in snapshot.playerSkillUsageByCardId)
-                        {
-                            if (!_currentSession.skillCardUseCountByCardId.ContainsKey(kv.Key))
-                                _currentSession.skillCardUseCountByCardId[kv.Key] = 0;
-                            _currentSession.skillCardUseCountByCardId[kv.Key] += kv.Value;
-                        }
-                    }
-
-                    if (snapshot.playerSkillUsageByName != null)
-                    {
-                        foreach (var kv in snapshot.playerSkillUsageByName)
-                        {
-                            if (!_currentSession.skillUseCountByName.ContainsKey(kv.Key))
-                                _currentSession.skillUseCountByName[kv.Key] = 0;
-                            _currentSession.skillUseCountByName[kv.Key] += kv.Value;
-                        }
-                    }
-
-                    // 세션 레벨 통계 집계: 액티브 아이템 생성
+                            _currentCombatStats.playerSkillCardSpawnByCardId[kv.Key] = kv.Value;
                     if (snapshot.activeItemSpawnByItemId != null)
-                    {
                         foreach (var kv in snapshot.activeItemSpawnByItemId)
-                        {
-                            if (!_currentSession.activeItemSpawnCountByItemId.ContainsKey(kv.Key))
-                                _currentSession.activeItemSpawnCountByItemId[kv.Key] = 0;
-                            _currentSession.activeItemSpawnCountByItemId[kv.Key] += kv.Value;
-                        }
-                    }
-
-                    // 세션 레벨 통계 집계: 액티브 아이템 사용 (이름별로 저장)
-                    if (snapshot.activeItemUsageByName != null)
-                    {
-                        foreach (var kv in snapshot.activeItemUsageByName)
-                        {
-                            if (!_currentSession.activeItemUseCountByName.ContainsKey(kv.Key))
-                                _currentSession.activeItemUseCountByName[kv.Key] = 0;
-                            _currentSession.activeItemUseCountByName[kv.Key] += kv.Value;
-                        }
-                    }
-
-                    // 세션 레벨 통계 집계: 액티브 아이템 버리기
+                            _currentCombatStats.activeItemSpawnByItemId[kv.Key] = kv.Value;
                     if (snapshot.activeItemDiscardByItemId != null)
-                    {
                         foreach (var kv in snapshot.activeItemDiscardByItemId)
-                        {
-                            if (!_currentSession.activeItemDiscardCountByItemId.ContainsKey(kv.Key))
-                                _currentSession.activeItemDiscardCountByItemId[kv.Key] = 0;
-                            _currentSession.activeItemDiscardCountByItemId[kv.Key] += kv.Value;
-                        }
-                    }
-
+                            _currentCombatStats.activeItemDiscardByItemId[kv.Key] = kv.Value;
                     if (snapshot.passiveItemAcquiredByItemId != null)
-                    {
                         foreach (var kv in snapshot.passiveItemAcquiredByItemId)
-                        {
-                            if (!_currentSession.passiveItemAcquiredCountByItemId.ContainsKey(kv.Key))
-                                _currentSession.passiveItemAcquiredCountByItemId[kv.Key] = 0;
-                            _currentSession.passiveItemAcquiredCountByItemId[kv.Key] += kv.Value;
-                        }
-                    }
+                            _currentCombatStats.passiveItemAcquiredByItemId[kv.Key] = kv.Value;
+
+                    // 세션 누적 (단일 진입점)
+                    SessionAccumulator.ApplyToSession(_currentSession, snapshot);
 
                     // 세션 레벨 자원 통계 집계
                     _currentSession.totalResourceGained += snapshot.totalResourceGained;
@@ -617,7 +693,11 @@ namespace Game.CoreSystem.Statistics
             // 통계 저장 검증
             int combatCount = _currentSession.combatStatistics.Count;
             GameLogger.LogInfo($"[GameSessionStatistics] 전투 통계 저장 완료 (총 전투 수: {combatCount})", GameLogger.LogCategory.Combat);
-            GameLogger.LogInfo($"[GameSessionStatistics] 저장된 전투 통계: 턴={_currentCombatStats.totalTurns}, 데미지={_currentCombatStats.totalDamageDealtToEnemies}, 스킬카드 사용={_currentCombatStats.playerSkillUsageByCardId?.Count ?? 0}개", GameLogger.LogCategory.Combat);
+            GameLogger.LogInfo($"[GameSessionStatistics] 저장된 전투 통계: 스테이지={_currentCombatStats.stageNumber}, 적인덱스={_currentCombatStats.enemyIndex}, 턴={_currentCombatStats.totalTurns}, 데미지={_currentCombatStats.totalDamageDealtToEnemies}, 받은데미지={_currentCombatStats.totalDamageTakenByPlayer}, 힐={_currentCombatStats.totalHealingToPlayer}, 스킬카드 사용={_currentCombatStats.playerSkillUsageByCardId?.Count ?? 0}개", GameLogger.LogCategory.Combat);
+            
+            // 세션 요약 즉시 재계산 (디버깅용)
+            CalculateSessionSummary();
+            GameLogger.LogInfo($"[GameSessionStatistics] 세션 요약 재계산 완료: 총턴수={_currentSession.summary.totalTurns}, 총데미지={_currentSession.summary.totalDamageDealt}, 총받은데미지={_currentSession.summary.totalDamageTaken}, 총힐={_currentSession.summary.totalHealing}", GameLogger.LogCategory.Combat);
             
             _currentCombatStats = null;
             _isCurrentCombatVictory = false;
@@ -631,14 +711,40 @@ namespace Game.CoreSystem.Statistics
         }
 
         /// <summary>
-        /// 게임 오버 핸들러
+        /// 게임 오버 핸들러 (게임 승리와 동일하게 전투 통계 수집)
         /// </summary>
         private void HandleGameOver()
         {
             if (IsSessionActive)
             {
-                EndSession();
+                // 이후 인벤토리 정리로 인한 제거 이벤트는 버리기로 집계하지 않음
+                _suppressDiscardCounting = true;
+                // 게임 오버 시 전투 통계 수집 (게임 승리와 동일한 로직)
+                _isCurrentCombatVictory = false; // 패배로 처리
+                HandleCombatEnded(); // 전투 통계 수집
+                
+                // 세션 종료 (저장은 GameOverUI나 StageManager에서 처리)
+                EndSession(true); // 완전 종료
+                GameLogger.LogInfo("[GameSessionStatistics] 게임 오버 이벤트 처리 - 전투 통계 수집 및 세션 종료", GameLogger.LogCategory.Save);
             }
+        }
+
+        /// <summary>
+        /// 액티브 아이템 사용 핸들러 (사용된 아이템 추적)
+        /// </summary>
+        private void HandleActiveItemUsed(Game.ItemSystem.Data.ActiveItemDefinition def, int slotIndex)
+        {
+            if (!IsSessionActive || def == null)
+                return;
+
+            string itemId = def.ItemId;
+            if (string.IsNullOrEmpty(itemId))
+                return;
+
+            // 사용된 아이템 ID 추적 (버리기 통계에서 제외하기 위함)
+            _usedItemIds.Add(itemId);
+            
+            GameLogger.LogInfo($"[GameSessionStatistics] 액티브 아이템 사용: {def.DisplayName} (ID: {itemId})", GameLogger.LogCategory.Combat);
         }
 
         /// <summary>
@@ -650,8 +756,26 @@ namespace Game.CoreSystem.Statistics
                 return;
 
             string itemId = def.ItemId;
+            if (string.IsNullOrEmpty(itemId))
+                return;
+
+            // 세션/전투 종료 정리 중에는 버리기 집계 제외
+            if (_suppressDiscardCounting)
+            {
+                GameLogger.LogInfo($"[GameSessionStatistics] 액티브 아이템 제거 (정리 중, 버리기 통계 제외): {def.DisplayName} (ID: {itemId})", GameLogger.LogCategory.Combat);
+                return;
+            }
+
+            // 사용된 아이템은 버리기 통계에서 제외
+            if (_usedItemIds.Contains(itemId))
+            {
+                // 사용된 아이템이므로 버리기 통계에 포함하지 않음
+                _usedItemIds.Remove(itemId); // 추적에서 제거 (한 번만 처리)
+                GameLogger.LogInfo($"[GameSessionStatistics] 액티브 아이템 제거 (사용됨, 버리기 통계 제외): {def.DisplayName} (ID: {itemId})", GameLogger.LogCategory.Combat);
+                return;
+            }
             
-            // 세션 레벨 통계 집계: 액티브 아이템 버리기
+            // 세션 레벨 통계 집계: 액티브 아이템 버리기 (사용되지 않은 경우만)
             if (!_currentSession.activeItemDiscardCountByItemId.ContainsKey(itemId))
                 _currentSession.activeItemDiscardCountByItemId[itemId] = 0;
             _currentSession.activeItemDiscardCountByItemId[itemId]++;
@@ -685,6 +809,7 @@ namespace Game.CoreSystem.Statistics
         {
             if (_currentSession == null || _currentSession.combatStatistics == null)
             {
+                GameLogger.LogWarning("[GameSessionStatistics] CalculateSessionSummary: 세션이나 전투 통계가 null입니다", GameLogger.LogCategory.Combat);
                 return;
             }
 
@@ -698,8 +823,14 @@ namespace Game.CoreSystem.Statistics
             Dictionary<string, int> skillUsageCount = new Dictionary<string, int>(); // 스킬 이름별 통계
             Dictionary<string, int> itemUsageCount = new Dictionary<string, int>();
 
+            int combatIndex = 0;
+            GameLogger.LogInfo($"[GameSessionStatistics] CalculateSessionSummary: 전투 통계 수집 시작 (총 전투 수: {_currentSession.combatStatistics.Count})", GameLogger.LogCategory.Combat);
+
             foreach (var combat in _currentSession.combatStatistics)
             {
+                combatIndex++;
+                GameLogger.LogInfo($"[GameSessionStatistics] 전투 {combatIndex}: 턴={combat.totalTurns}, 데미지={combat.totalDamageDealtToEnemies}, 받은데미지={combat.totalDamageTakenByPlayer}, 힐={combat.totalHealingToPlayer}", GameLogger.LogCategory.Combat);
+                
                 summary.totalDamageDealt += combat.totalDamageDealtToEnemies;
                 summary.totalDamageTaken += combat.totalDamageTakenByPlayer;
                 summary.totalHealing += combat.totalHealingToPlayer;
@@ -739,19 +870,7 @@ namespace Game.CoreSystem.Statistics
                 }
             }
 
-            // 가장 많이 사용된 카드 찾기 (카드 ID별)
-            string mostUsedCardId = null;
-            int mostUsedCardCount = 0;
-            foreach (var kv in cardUsageCount)
-            {
-                if (kv.Value > mostUsedCardCount)
-                {
-                    mostUsedCardId = kv.Key;
-                    mostUsedCardCount = kv.Value;
-                }
-            }
-            summary.mostUsedCardId = mostUsedCardId ?? "None";
-            summary.mostUsedCardCount = mostUsedCardCount;
+            // 카드 ID 기반 최다 사용 통계는 JSON 요구사항에 따라 제외
 
             // 가장 많이 사용된 스킬 찾기 (스킬 이름별)
             string mostUsedSkillName = null;
@@ -780,6 +899,14 @@ namespace Game.CoreSystem.Statistics
             }
             summary.mostUsedItemName = mostUsedItemName ?? "None";
             summary.mostUsedItemCount = mostUsedItemCount;
+
+            // activeItemUseCountByName 업데이트 (점수 계산에 필요)
+            _currentSession.activeItemUseCountByName.Clear();
+            foreach (var kv in itemUsageCount)
+            {
+                _currentSession.activeItemUseCountByName[kv.Key] = kv.Value;
+            }
+            GameLogger.LogInfo($"[GameSessionStatistics] activeItemUseCountByName 업데이트 완료: {itemUsageCount.Count}개 아이템", GameLogger.LogCategory.Combat);
         }
 
         /// <summary>

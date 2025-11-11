@@ -9,7 +9,7 @@ namespace Game.VFXSystem.Pool
     /// 다양한 UI 요소를 재사용하기 위한 범용 풀링 시스템
     /// </summary>
     /// <typeparam name="T">풀링할 컴포넌트 타입</typeparam>
-    public class GenericUIPool<T> where T : Component
+    public class GenericUIPool<T> where T : UnityEngine.Component
     {
         private readonly GameObject prefab;
         private readonly Transform container;

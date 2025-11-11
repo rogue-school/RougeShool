@@ -38,6 +38,14 @@ namespace Game.CharacterSystem.Data
         public Sprite Portrait { get; private set; }
 
         /// <summary>
+        /// 캐릭터의 Portrait 프리팹입니다.
+        /// 각 캐릭터마다 독립적인 Portrait 프리팹을 설정할 수 있습니다.
+        /// 비어 있으면 기본 Portrait GameObject를 사용합니다(폴백).
+        /// </summary>
+        [field: SerializeField]
+        public GameObject PortraitPrefab { get; private set; }
+
+        /// <summary>
         /// UI 전용(플레이어 HUD/패널용) 초상화 이미지입니다.
         /// 캐릭터 본체 스프라이트와 별개로, 비율/여백이 UI에 맞게 제작된 아트를 연결합니다.
         /// 비어 있으면 Portrait를 사용합니다(폴백).

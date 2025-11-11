@@ -219,6 +219,14 @@ namespace Game.CombatSystem.State
                 return;
             }
 
+            // 소환/복귀 진행 중에는 보상 지급 차단 (턴 카운트 유지 요청에 따라 재생성 구간 보상 억제)
+            bool isSummonMode = context.SlotMovement != null && context.SlotMovement.IsSummonMode;
+            if (isSummonMode)
+            {
+                LogStateTransition($"소환/복귀 모드이므로 액티브 아이템 보상 지급 건너뜀 (턴: {context.TurnController.TurnCount})");
+                return;
+            }
+
             // 첫 턴(턴 카운트 1)에는 보상 지급 안 함
             if (context.TurnController.TurnCount <= 1)
             {
