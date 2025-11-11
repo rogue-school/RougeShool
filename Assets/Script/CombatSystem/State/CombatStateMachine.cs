@@ -46,6 +46,14 @@ namespace Game.CombatSystem.State
         // 부활 관련 플래그
         private bool hasUsedReviveThisDeath = false;
         private bool isWaitingForDeathEffect = false;
+
+		[Header("부활 트리거 설정")]
+		[Tooltip("치명타격(사망을 유발한 공격) 이펙트가 끝난 뒤 부활을 시도하기 위해 대기할 시간(초)")]
+		[SerializeField] private float reviveAfterFatalHitDelay = 0.6f;
+
+		[Header("처치 트리거 설정")]
+		[Tooltip("적 처치(사망을 유발한 공격) 이펙트가 끝난 뒤 처치 처리를 진행하기 위해 대기할 시간(초)")]
+		[SerializeField] private float enemyAfterFatalHitDelay = 0.5f;
         
         // 게임 오버 플래그 (완전히 사망했을 때 설정 - 이후 모든 액션 차단)
         private bool isGameOver = false;
@@ -313,6 +321,13 @@ namespace Game.CombatSystem.State
                 return;
             }
 
+			// 게임 오버 시에는 BattleEndState로의 전환만 허용
+			if (isGameOver && newState is not BattleEndState)
+			{
+				GameLogger.LogWarning("[CombatStateMachine] 게임 오버 상태입니다 - 상태 전환 차단", GameLogger.LogCategory.Combat);
+				return;
+			}
+
             // 현재 상태가 있으면 완료 검증 및 대기
             if (_currentState != null)
             {
@@ -360,6 +375,13 @@ namespace Game.CombatSystem.State
         /// </summary>
         private void ChangeStateImmediate(ICombatState newState)
         {
+			// 게임 오버 시에는 BattleEndState로의 전환만 허용
+			if (isGameOver && newState is not BattleEndState)
+			{
+				GameLogger.LogWarning("[CombatStateMachine] 게임 오버 상태입니다 - 상태 전환 차단", GameLogger.LogCategory.Combat);
+				return;
+			}
+
             var previousState = _currentState;
 
             // 이전 상태 종료
@@ -392,6 +414,13 @@ namespace Game.CombatSystem.State
         /// </summary>
         public void ChangeState(ICombatState newState)
         {
+			// 게임 오버 시에는 BattleEndState로의 전환만 허용
+			if (isGameOver && newState is not BattleEndState)
+			{
+				GameLogger.LogWarning("[CombatStateMachine] 게임 오버 상태입니다 - 상태 전환 차단", GameLogger.LogCategory.Combat);
+				return;
+			}
+
             if (newState == null)
             {
                 GameLogger.LogError(
@@ -433,6 +462,13 @@ namespace Game.CombatSystem.State
         /// <param name="newState">새로운 상태</param>
         public void ForceChangeState(ICombatState newState)
         {
+			// 게임 오버 시에는 BattleEndState로의 전환만 허용
+			if (isGameOver && newState is not BattleEndState)
+			{
+				GameLogger.LogWarning("[CombatStateMachine] 게임 오버 상태입니다 - 상태 전환 차단", GameLogger.LogCategory.Combat);
+				return;
+			}
+
             if (newState == null)
             {
                 GameLogger.LogError(
@@ -609,9 +645,17 @@ namespace Game.CombatSystem.State
                 return; // 소환된 적이 죽으면 StageManager에서 원본 적 복귀 처리
             }
 
-            // 일반 적 사망 시 적 처치 상태로 전환
-            var enemyDefeatedState = new EnemyDefeatedState();
-            ChangeState(enemyDefeatedState);
+			// 일반 적 사망: 치명타격 이펙트가 끝날 시간을 잠시 대기한 뒤 처치 상태로 전환
+			if (this != null)
+			{
+				StartCoroutine(WaitForEnemyFatalHitEffectThenProceed());
+			}
+			else
+			{
+				// 폴백: 코루틴 불가 시 즉시 전환
+				var enemyDefeatedState = new EnemyDefeatedState();
+				ChangeState(enemyDefeatedState);
+			}
         }
 
         /// <summary>
@@ -699,10 +743,9 @@ namespace Game.CombatSystem.State
             isWaitingForDeathEffect = true;
             GameLogger.LogInfo("[CombatStateMachine] 사망 이펙트 완료 대기 중...", GameLogger.LogCategory.Combat);
 
-            // 사망 이펙트가 없는 경우 즉시 완료 이벤트 호출
-            // OnPlayerCharacterDeath 이벤트를 구독하는 곳에서 사망 이펙트를 재생하고 완료 시 RaisePlayerDeathEffectComplete()를 호출해야 함
-            // 현재 사망 이펙트가 없는 경우를 대비해 일정 시간 후 자동으로 완료 처리
-            StartCoroutine(WaitForDeathEffectOrTimeout());
+			// 공격(히트) 이펙트가 끝난 뒤 부활하도록 약간 대기 후 완료 이벤트를 발생시킵니다
+			// 외부에서 별도 완료 신호가 없으므로 설정값 기반의 안전한 지연을 둡니다
+			StartCoroutine(WaitForFatalHitEffectThenComplete());
         }
 
         /// <summary>
@@ -727,6 +770,54 @@ namespace Game.CombatSystem.State
                 CombatEvents.RaisePlayerDeathEffectComplete();
             }
         }
+
+		/// <summary>
+		/// 치명타격(사망을 유발한 공격)의 히트 이펙트가 끝날 시간을 대기한 뒤
+		/// 사망 이펙트 완료로 간주하고 부활 처리를 진행합니다.
+		/// </summary>
+		private System.Collections.IEnumerator WaitForFatalHitEffectThenComplete()
+		{
+			// 설정된 지연 시간만큼 대기하여 마지막 히트 이펙트가 끝나도록 유예
+			float delay = Mathf.Max(0f, reviveAfterFatalHitDelay);
+			if (delay > 0f)
+			{
+				yield return new WaitForSeconds(delay);
+			}
+
+			// 게임 오버 상태이면 처리하지 않음
+			if (isGameOver)
+			{
+				yield break;
+			}
+
+			// 아직 사망 이펙트 완료를 기다리고 있으면 완료 이벤트 발생
+			if (isWaitingForDeathEffect)
+			{
+				GameLogger.LogInfo("[CombatStateMachine] 치명타격 이펙트 대기 후 부활 처리 진행", GameLogger.LogCategory.Combat);
+				CombatEvents.RaisePlayerDeathEffectComplete();
+			}
+		}
+
+		/// <summary>
+		/// 적 처치(사망 유발) 히트 이펙트 종료 시간을 대기한 뒤 적 처치 상태로 전환합니다.
+		/// </summary>
+		private System.Collections.IEnumerator WaitForEnemyFatalHitEffectThenProceed()
+		{
+			float delay = Mathf.Max(0f, enemyAfterFatalHitDelay);
+			if (delay > 0f)
+			{
+				yield return new WaitForSeconds(delay);
+			}
+
+			// 게임 오버 상태이면 더 이상 진행하지 않음
+			if (isGameOver)
+			{
+				yield break;
+			}
+
+			var enemyDefeatedState = new EnemyDefeatedState();
+			ChangeState(enemyDefeatedState);
+		}
 
         /// <summary>
         /// 플레이어 사망 이펙트 완료 시 호출
