@@ -19,17 +19,17 @@ namespace Game.CoreSystem.Statistics
         /// <summary>
         /// 턴당 차감 점수
         /// </summary>
-        private const int TURN_PENALTY_PER_TURN = 100;
+        private const int TURN_PENALTY_PER_TURN = 50;
 
         /// <summary>
         /// 데미지당 차감 점수 (받은 데미지 1당 차감)
         /// </summary>
-        private const int DAMAGE_PENALTY_PER_DAMAGE = 10;
+        private const int DAMAGE_PENALTY_PER_DAMAGE = 15;
 
         /// <summary>
         /// 회복량당 차감 점수 (회복량 1당 차감)
         /// </summary>
-        private const int HEALING_PENALTY_PER_HEAL = 5;
+        private const int HEALING_PENALTY_PER_HEAL = 25;
 
         /// <summary>
         /// 사용한 엑티브 아이템당 차감 점수 (아이템 1개당 차감)
@@ -45,6 +45,11 @@ namespace Game.CoreSystem.Statistics
         /// 최소 점수 (0점 이하로 내려가지 않음)
         /// </summary>
         private const int MIN_SCORE = 0;
+
+        /// <summary>
+        /// 가한 데미지당 보너스 점수 (적에게 준 데미지 1당 가산)
+        /// </summary>
+        private const int DAMAGE_BONUS_PER_DAMAGE_DEALT = 10;
 
         #endregion
 
@@ -101,10 +106,19 @@ namespace Game.CoreSystem.Statistics
             // 5. 자원 획득량 차감
             int resourcePenalty = CalculateResourcePenalty(sessionData.totalResourceGained);
             finalScore -= resourcePenalty;
-            scoreData.speedRunBonus = -resourcePenalty; // 차감량을 음수로 표시
+            scoreData.speedRunBonus = -resourcePenalty; // 리소스 차감은 현재 0 유지
 
-            // 무패 보너스 제거 (사용 안 함)
-            scoreData.noDamageBonus = 0;
+            // 6. 적에게 준 데미지 보너스 (+10/데미지)
+            int damageDealtBonus = 0;
+            if (breakdown.totalDamageDealt > 0)
+            {
+                damageDealtBonus = breakdown.totalDamageDealt * DAMAGE_BONUS_PER_DAMAGE_DEALT;
+                finalScore += damageDealtBonus;
+            }
+            // 보너스 표시는 noDamageBonus 필드를 재활용 (양수로 표시)
+            scoreData.noDamageBonus = damageDealtBonus;
+
+            // 무패 보너스는 별도 사용하지 않음 (위에서 보너스로 재활용)
 
             // 최소 점수 보장
             finalScore = Mathf.Max(finalScore, MIN_SCORE);
@@ -113,7 +127,7 @@ namespace Game.CoreSystem.Statistics
             // 진행도 점수는 차감이 아닌 정보로만 표시
             scoreData.progressScore = breakdown.progressValue;
 
-            GameLogger.LogInfo($"[ScoreCalculator] 점수 계산 완료: 총점={scoreData.totalScore} (기본={BASE_SCORE}, 턴차감={turnPenalty}, 데미지차감={damagePenalty}, 회복차감={healingPenalty}, 아이템차감={itemPenalty}, 자원차감={resourcePenalty})", GameLogger.LogCategory.UI);
+            GameLogger.LogInfo($"[ScoreCalculator] 점수 계산 완료: 총점={scoreData.totalScore} (기본={BASE_SCORE}, 턴차감={turnPenalty}, 데미지차감={damagePenalty}, 회복차감={healingPenalty}, 아이템차감={itemPenalty}, 자원차감={resourcePenalty}, 가한데미지보너스={damageDealtBonus})", GameLogger.LogCategory.UI);
 
             return scoreData;
         }
@@ -150,7 +164,7 @@ namespace Game.CoreSystem.Statistics
             int penalty = totalDamageTaken * DAMAGE_PENALTY_PER_DAMAGE;
             GameLogger.LogInfo($"[ScoreCalculator] 데미지 차감: {penalty} (받은 데미지: {totalDamageTaken}, 데미지당: {DAMAGE_PENALTY_PER_DAMAGE})", GameLogger.LogCategory.UI);
             return penalty;
-        }
+            }
 
         /// <summary>
         /// 회복량 차감을 계산합니다.
@@ -195,7 +209,7 @@ namespace Game.CoreSystem.Statistics
             int penalty = totalUsedItems * ACTIVE_ITEM_USE_PENALTY_PER_ITEM;
             GameLogger.LogInfo($"[ScoreCalculator] 사용한 엑티브 아이템 차감: {penalty} (총 사용한 아이템: {totalUsedItems}, 아이템당: {ACTIVE_ITEM_USE_PENALTY_PER_ITEM})", GameLogger.LogCategory.UI);
             return penalty;
-        }
+            }
 
         /// <summary>
         /// 자원 획득량 차감을 계산합니다.

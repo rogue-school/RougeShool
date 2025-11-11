@@ -209,6 +209,10 @@ namespace Game.CombatSystem.State
                                 LogStateTransition($"[복귀 디버그] 원본 적 버프/이펙트 없음");
                             }
 
+                            // Idle 시각 효과 재시작 (복귀 시 idle 루프가 적용되도록)
+                            enemyChar.StartIdleVisualLoop();
+                            LogStateTransition($"[복귀 디버그] ✓ 원본 적 Idle 시각 효과 재시작 완료");
+
                             return enemyChar;
                         }
                         else

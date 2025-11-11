@@ -15,6 +15,7 @@ using UnityEngine.UI;
 using TMPro;
 using UnityEngine;
 using Zenject;
+using DG.Tweening;
 
 namespace Game.CharacterSystem.Core
 {
@@ -69,6 +70,10 @@ namespace Game.CharacterSystem.Core
         [SerializeField] private Transform hpTextAnchor; // 데미지 텍스트 위치
         [SerializeField] private GameObject damageTextPrefab; // 데미지 텍스트 프리팹
 
+        [Header("애니메이션 설정")]
+        [Tooltip("적 캐릭터 애니메이터")]
+        [SerializeField] private Animator enemyAnimator;
+
         private EnemySkillDeck skillDeck;
         private System.Action<ICharacter> onDeathCallback;
         private bool isDead = false;
@@ -76,6 +81,7 @@ namespace Game.CharacterSystem.Core
         private System.Collections.Generic.List<ICharacterEffect> characterEffects = new System.Collections.Generic.List<ICharacterEffect>();
 
         [Inject(Optional = true)] private VFXManager vfxManager;
+        private Sequence deathSequence;
 
         /// <summary>
         /// 적 캐릭터의 데이터 (스크립터블 오브젝트)
@@ -89,6 +95,12 @@ namespace Game.CharacterSystem.Core
 
         private void Awake()
         {
+            // 애니메이터 자동 검색 (수동 설정이 없는 경우)
+            if (enemyAnimator == null)
+            {
+                enemyAnimator = GetComponent<Animator>();
+            }
+
             if (CharacterData != null)
                 this.gameObject.name = CharacterData.name;
         }
@@ -176,6 +188,9 @@ namespace Game.CharacterSystem.Core
             
             // 적 캐릭터 덱의 스킬카드 스택 초기화
             InitializeEnemyDeckStacks();
+            
+            // 기본 Idle 시각 효과 시작 (부드러운 호흡)
+            StartIdleVisualLoop();
             
             GameLogger.LogInfo($"[EnemyCharacter] Initialize 완료: {data.DisplayName}, CharacterData: {CharacterData?.DisplayName ?? "null"}", GameLogger.LogCategory.Character);
         }
@@ -538,12 +553,10 @@ namespace Game.CharacterSystem.Core
             if (isDead) return;
 
             isDead = true;
-            GameLogger.LogInfo($"[EnemyCharacter] '{GetCharacterName()}' 사망 처리 (MarkAsDead 호출)", GameLogger.LogCategory.Character);
+            GameLogger.LogInfo($"[EnemyCharacter] '{GetCharacterName()}' 사망 연출 시작", GameLogger.LogCategory.Character);
 
-            // 사망 애니메이션/이벤트 발행 코드 제거
-            // Game.CombatSystem.CombatEvents.RaiseHandSkillCardsVanishOnCharacterDeath(false);
-            // Game.CombatSystem.CombatEvents.RaiseEnemyCharacterDeath(CharacterData, this.gameObject);
-            onDeathCallback?.Invoke(this);
+            // 사망 연출 실행 (완료 시 콜백)
+            PlayDeathPresentation();
         }
 
         /// <summary>
@@ -603,6 +616,25 @@ namespace Game.CharacterSystem.Core
         protected override void OnDamaged(int amount)
         {
             CombatEvents.RaiseEnemyCharacterDamaged(CharacterData, this.gameObject, amount);
+
+            // 피격 애니메이션 재생
+            PlayHitAnimation();
+
+            // 피격 시각 효과 재생
+            PlayHitVisualEffects(amount);
+        }
+
+        /// <summary>
+        /// 피격 애니메이션을 재생합니다.
+        /// </summary>
+        private void PlayHitAnimation()
+        {
+            if (enemyAnimator != null)
+            {
+                // Hit 트리거 활성화
+                enemyAnimator.SetTrigger("Hit");
+                GameLogger.LogInfo($"[{GetCharacterName()}] 적 피격 애니메이션 재생", GameLogger.LogCategory.Character);
+            }
         }
 
         #endregion
@@ -661,7 +693,98 @@ namespace Game.CharacterSystem.Core
         protected override void OnDestroy()
         {
             base.OnDestroy();
+            // DOTween 시퀀스 정리
+            if (deathSequence != null && deathSequence.IsActive())
+            {
+                deathSequence.Kill();
+                deathSequence = null;
+            }
             CleanupEffects();
+        }
+
+        /// <summary>
+        /// 피격 시각 효과를 적용할 비주얼 루트를 반환합니다 (Portrait 기준으로 한정)
+        /// </summary>
+        protected override Transform GetHitVisualRoot()
+        {
+            if (portraitImage != null) return portraitImage.transform;
+            var portrait = transform.Find("Portrait");
+            return portrait != null ? portrait : transform;
+        }
+
+        /// <summary>
+        /// 사망 연출(VFX/애니메이션)을 재생하고 완료 후 사망 처리 콜백을 호출합니다.
+        /// </summary>
+        private void PlayDeathPresentation()
+        {
+            // 기존 시퀀스가 있으면 정리
+            if (deathSequence != null && deathSequence.IsActive())
+            {
+                deathSequence.Kill();
+                deathSequence = null;
+            }
+
+            // 데미지 텍스트 정리
+            ClearDamageTexts();
+
+            // Animator가 있으면 "Die" 트리거 우선 사용
+            bool animatorPlayed = false;
+            if (enemyAnimator != null)
+            {
+                try
+                {
+                    enemyAnimator.SetTrigger("Die");
+                    animatorPlayed = true;
+                    GameLogger.LogInfo($"[{GetCharacterName()}] 적 사망 애니메이션 트리거 재생", GameLogger.LogCategory.Character);
+                }
+                catch (Exception ex)
+                {
+                    GameLogger.LogWarning($"[{GetCharacterName()}] 사망 애니메이션 트리거 실패: {ex.Message}", GameLogger.LogCategory.Character);
+                }
+            }
+
+            // 비주얼 루트 기준으로 페이드/스케일 아웃 시퀀스
+            Transform visualRoot = GetHitVisualRoot();
+            var target = visualRoot != null ? visualRoot : transform;
+
+            // CanvasGroup이 있으면 알파 페이드 사용, 없으면 스케일만 사용
+            CanvasGroup cg = target.GetComponent<CanvasGroup>();
+            if (cg == null)
+            {
+                cg = target.gameObject.AddComponent<CanvasGroup>();
+            }
+
+            // 시퀀스 구성
+            deathSequence = DOTween.Sequence()
+                // 약간의 준비 동작: 미세한 스케일 업으로 타격 여운
+                .Append(target.DOScale(1.04f, 0.10f).SetEase(Ease.OutQuad))
+                .AppendInterval(animatorPlayed ? 0.15f : 0.08f)
+                // 페이드 아웃과 동시에 오른쪽(화면 바깥쪽)으로 밀려나며 퇴장
+                .Append(cg.DOFade(0f, 0.40f).SetEase(Ease.InQuad))
+                .Join(target.DOLocalMoveX(target.localPosition.x + 1.2f, 0.40f).SetEase(Ease.InQuad))
+                // 퇴장 중 살짝 스케일 다운으로 원근감 부여
+                .Join(target.DOScale(0.96f, 0.40f).SetEase(Ease.InQuad))
+                .SetUpdate(false)
+                .SetAutoKill(true)
+                .OnComplete(() =>
+                {
+                    deathSequence = null;
+                    HandleDeathPresentationComplete();
+                });
+        }
+
+        /// <summary>
+        /// 사망 연출 완료 핸들러: 사망 관련 이벤트 발행 및 외부 콜백 호출
+        /// </summary>
+        private void HandleDeathPresentationComplete()
+        {
+            // 핸드 카드 소멸 트리거 (적)
+            CombatEvents.RaiseHandSkillCardsVanishOnCharacterDeath(false);
+            // 적 사망 이벤트 발행
+            CombatEvents.RaiseEnemyCharacterDeath(CharacterData, this.gameObject);
+
+            GameLogger.LogInfo($"[EnemyCharacter] '{GetCharacterName()}' 사망 연출 완료 → 콜백 호출", GameLogger.LogCategory.Character);
+            onDeathCallback?.Invoke(this);
         }
 
         #endregion

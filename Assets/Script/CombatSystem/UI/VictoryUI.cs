@@ -139,8 +139,8 @@ namespace Game.CombatSystem.UI
                         statsText.text = "게임을 클리어했습니다!";
                     }
                     else
-                    {
-                        statsText.text = "통계 정보를 불러올 수 없습니다.";
+                {
+                    statsText.text = "통계 정보를 불러올 수 없습니다.";
                     }
                 }
                 else
@@ -303,6 +303,11 @@ namespace Game.CombatSystem.UI
             if (scoreData.speedRunBonus < 0)
             {
                 sb.AppendLine($"  - 자원 획득 차감: {scoreData.speedRunBonus:N0}");
+            }
+            // 보너스 표시: 적에게 준 총 데미지 보너스
+            if (scoreData.noDamageBonus > 0)
+            {
+                sb.AppendLine($"  - 적에게 준 총 데미지 보너스: +{scoreData.noDamageBonus:N0}");
             }
 
             if (_leaderboardManager != null)

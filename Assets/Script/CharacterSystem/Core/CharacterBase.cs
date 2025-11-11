@@ -9,6 +9,8 @@ using Game.CombatSystem.Interface;
 using Game.CombatSystem;
 using Game.CoreSystem.Utility;
 using System;
+using DG.Tweening;
+using UnityEngine.UI;
 
 namespace Game.CharacterSystem.Core
 {
@@ -429,6 +431,169 @@ namespace Game.CharacterSystem.Core
             OnHPChanged = null;
             OnGuardStateChanged = null;
             OnBuffsChanged = null;
+            // Idle 루프 정리
+            StopIdleVisualLoop();
+        }
+
+        #endregion
+
+        #region 피격 시각 효과
+
+        /// <summary>
+        /// 피격 시 시각 효과를 재생합니다 (색상 플래시, 스케일 변화)
+        /// </summary>
+        /// <param name="damageAmount">피해량 (시각 효과 강도 조절용)</param>
+        protected virtual void PlayHitVisualEffects(int damageAmount)
+        {
+            if (damageAmount <= 0) return;
+
+            // 색상 플래시 효과
+            PlayHitColorFlash();
+
+            // 스케일 변화 효과
+            PlayHitScaleEffect();
+        }
+
+        /// <summary>
+        /// 피격 시각 효과를 적용할 비주얼 루트 Transform을 반환합니다.
+        /// 기본은 현재 Transform이며, 자식 클래스에서 Portrait 등으로 한정하도록 override 합니다.
+        /// </summary>
+        protected virtual Transform GetHitVisualRoot()
+        {
+            return transform;
+        }
+
+        /// <summary>
+        /// 피격 시 색상 플래시 효과를 재생합니다
+        /// </summary>
+        private void PlayHitColorFlash()
+        {
+            // 비주얼 루트 기준으로 한정
+            Transform visualRoot = GetHitVisualRoot() != null ? GetHitVisualRoot() : transform;
+
+            // Image 컴포넌트 찾기 (Portrait 등) - 데미지 텍스트/HP/Buff UI 제외
+            var images = visualRoot.GetComponentsInChildren<Image>(true);
+            foreach (var image in images)
+            {
+                if (image == null) continue;
+
+                // DamageTextUI 하위는 제외
+                if (image.GetComponentInParent<Game.CombatSystem.UI.DamageTextUI>() != null)
+                    continue;
+                // HPTextAnchor/HPTectAnchor 하위는 제외
+                var t = image.transform;
+                bool underHpTextAnchor = false;
+                while (t != null && t != visualRoot)
+                {
+                    if (t.name == "HPTextAnchor" || t.name == "HPTectAnchor")
+                    {
+                        underHpTextAnchor = true;
+                        break;
+                    }
+                    t = t.parent;
+                }
+                if (underHpTextAnchor) continue;
+
+                // 원래 색상 저장
+                Color originalColor = image.color;
+
+                // 빨간색으로 플래시
+                image.DOColor(new Color(1f, 0.3f, 0.3f, originalColor.a), 0.1f)
+                    .SetEase(Ease.OutQuad)
+                    .OnComplete(() =>
+                    {
+                        // 원래 색상으로 복원
+                        image.DOColor(originalColor, 0.15f)
+                            .SetEase(Ease.InQuad);
+                    });
+            }
+
+            // SpriteRenderer 컴포넌트 찾기 (캐릭터 스프라이트 등)
+            var spriteRenderers = visualRoot.GetComponentsInChildren<SpriteRenderer>(true);
+            foreach (var spriteRenderer in spriteRenderers)
+            {
+                if (spriteRenderer == null) continue;
+
+                // 원래 색상 저장
+                Color originalColor = spriteRenderer.color;
+
+                // 빨간색으로 플래시
+                spriteRenderer.DOColor(new Color(1f, 0.3f, 0.3f, originalColor.a), 0.1f)
+                    .SetEase(Ease.OutQuad)
+                    .OnComplete(() =>
+                    {
+                        // 원래 색상으로 복원
+                        spriteRenderer.DOColor(originalColor, 0.15f)
+                            .SetEase(Ease.InQuad);
+                    });
+            }
+        }
+
+        /// <summary>
+        /// 피격 시 스케일 변화 효과를 재생합니다
+        /// </summary>
+        private void PlayHitScaleEffect()
+        {
+            if (transform == null) return;
+
+            // 원래 스케일 저장
+            Vector3 originalScale = transform.localScale;
+
+            // 약간 축소 후 복원 (피격 느낌)
+            transform.DOScale(originalScale * 0.95f, 0.08f)
+                .SetEase(Ease.OutQuad)
+                .OnComplete(() =>
+                {
+                    transform.DOScale(originalScale, 0.12f)
+                        .SetEase(Ease.OutBack);
+                });
+        }
+
+        // ----- Idle 시각 효과 (부드러운 호흡 스케일) -----
+        private Tween _idleTween;
+        private Vector3 _idleBaseScale;
+
+        /// <summary>
+        /// 캐릭터가 대기 중일 때 부드러운 호흡 느낌의 스케일 루프를 시작합니다.
+        /// </summary>
+        /// <param name="amplitude">스케일 변화 폭 (기본 0.02 = 2%)</param>
+        /// <param name="periodSeconds">한 왕복 주기 시간 (기본 1.5초)</param>
+        public void StartIdleVisualLoop(float amplitude = 0.02f, float periodSeconds = 1.5f)
+        {
+            Transform visualRoot = GetHitVisualRoot() != null ? GetHitVisualRoot() : transform;
+            if (visualRoot == null) return;
+
+            // 기존 트윈 정리
+            _idleTween?.Kill();
+
+            _idleBaseScale = visualRoot.localScale;
+            float amp = Mathf.Clamp(amplitude, 0.005f, 0.05f);
+            // 좌우(X) 스케일은 유지하고, 수직(Y)만 호흡하도록 변경
+            Vector3 targetScale = new Vector3(_idleBaseScale.x, _idleBaseScale.y * (1f + amp), _idleBaseScale.z);
+
+            _idleTween = visualRoot.DOScale(targetScale, Mathf.Max(0.2f, periodSeconds * 0.5f))
+                .SetEase(Ease.InOutSine)
+                .SetLoops(-1, LoopType.Yoyo)
+                .SetAutoKill(false);
+        }
+
+        /// <summary>
+        /// 대기 시각 효과 루프를 중지하고 원래 스케일로 복원합니다.
+        /// </summary>
+        public void StopIdleVisualLoop()
+        {
+            if (_idleTween != null)
+            {
+                var target = _idleTween.target as Transform;
+                _idleTween.Kill();
+                _idleTween = null;
+
+                if (target != null)
+                {
+                    // 원래 스케일로 복원
+                    target.localScale = _idleBaseScale == Vector3.zero ? Vector3.one : _idleBaseScale;
+                }
+            }
         }
 
         #endregion
@@ -466,5 +631,10 @@ namespace Game.CharacterSystem.Core
         }
 
         #endregion
+
+        private void OnDisable()
+        {
+            StopIdleVisualLoop();
+        }
     }
 }

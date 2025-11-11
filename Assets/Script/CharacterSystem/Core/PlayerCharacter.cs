@@ -13,6 +13,7 @@ using Game.CharacterSystem.UI;
 using Game.CoreSystem.Utility;
 using Game.VFXSystem.Manager;
 using Zenject;
+using DG.Tweening;
 
 namespace Game.CharacterSystem.Core
 {
@@ -161,6 +162,9 @@ namespace Game.CharacterSystem.Core
             {
                 playerCharacterUIController.Initialize(this);
             }
+
+            // 기본 Idle 시각 효과 시작 (부드러운 호흡)
+            StartIdleVisualLoop();
         }
 
         /// <summary>
@@ -514,6 +518,41 @@ namespace Game.CharacterSystem.Core
             
             // 피격 애니메이션 재생
             PlayHitAnimation();
+
+            // 피격 시각 효과 재생
+            PlayHitVisualEffects(amount);
+
+            // 카메라 쉐이크 (플레이어만)
+            PlayCameraShake(amount);
+        }
+
+        /// <summary>
+        /// 플레이어가 데미지를 받을 때 카메라 쉐이크를 재생합니다
+        /// </summary>
+        /// <param name="damageAmount">피해량 (쉐이크 강도 조절용)</param>
+        private void PlayCameraShake(int damageAmount)
+        {
+            if (damageAmount <= 0) return;
+
+            Camera mainCamera = Camera.main;
+            if (mainCamera == null)
+            {
+                mainCamera = UnityEngine.Object.FindFirstObjectByType<Camera>();
+            }
+
+            if (mainCamera == null)
+            {
+                GameLogger.LogWarning("[PlayerCharacter] 카메라를 찾을 수 없어 쉐이크를 재생할 수 없습니다.", GameLogger.LogCategory.Character);
+                return;
+            }
+
+            // 데미지에 비례한 쉐이크 강도 (최소 0.1, 최대 0.3)
+            float shakeStrength = Mathf.Clamp(damageAmount * 0.01f, 0.1f, 0.3f);
+            float shakeDuration = Mathf.Clamp(damageAmount * 0.01f, 0.15f, 0.25f);
+
+            // 카메라 위치 쉐이크
+            mainCamera.transform.DOShakePosition(shakeDuration, shakeStrength, 10, 90f, false, true)
+                .SetEase(Ease.OutQuad);
         }
 
         #endregion
@@ -650,6 +689,16 @@ namespace Game.CharacterSystem.Core
                 playerAnimator.Play(currentState.shortNameHash, 0, 0f);
                 GameLogger.LogInfo($"[ForceRestartAnimation] 애니메이션 강제 재시작: {currentState.shortNameHash}", GameLogger.LogCategory.Character);
             }
+        }
+
+        /// <summary>
+        /// 피격 시각 효과를 적용할 비주얼 루트를 반환합니다 (Portrait 기준으로 한정)
+        /// </summary>
+        protected override Transform GetHitVisualRoot()
+        {
+            if (portraitImage != null) return portraitImage.transform;
+            var portrait = transform.Find("Portrait");
+            return portrait != null ? portrait : transform;
         }
 
         #endregion

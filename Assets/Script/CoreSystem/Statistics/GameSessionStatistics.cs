@@ -225,34 +225,34 @@ namespace Game.CoreSystem.Statistics
             else
             {
                 // 새 세션 생성
-                _currentSession = new SessionStatisticsData
-                {
+            _currentSession = new SessionStatisticsData
+            {
                     sessionId = sessionId,
-                    gameStartTime = DateTime.UtcNow.ToString("o"),
-                    selectedCharacterName = characterName ?? "Unknown",
-                    finalStageNumber = 0,
-                    finalEnemyIndex = 0,
-                    totalVictoryCount = 0,
-                    totalDefeatCount = 0,
-                    totalResourceGained = 0,
-                    totalResourceSpent = 0,
-                    unacquiredActiveItemCount = 0,
-                    finalTurns = 0,
-                    combatStatistics = new List<CombatStatisticsData>()
-                };
+                gameStartTime = DateTime.UtcNow.ToString("o"),
+                selectedCharacterName = characterName ?? "Unknown",
+                finalStageNumber = 0,
+                finalEnemyIndex = 0,
+                totalVictoryCount = 0,
+                totalDefeatCount = 0,
+                totalResourceGained = 0,
+                totalResourceSpent = 0,
+                unacquiredActiveItemCount = 0,
+                finalTurns = 0,
+                combatStatistics = new List<CombatStatisticsData>()
+            };
 
-                // Dictionary 초기화
-                _currentSession.skillCardSpawnCountByCardId = new Dictionary<string, int>();
-                _currentSession.skillCardUseCountByCardId = new Dictionary<string, int>();
-                _currentSession.skillUseCountByName = new Dictionary<string, int>();
-                _currentSession.activeItemSpawnCountByItemId = new Dictionary<string, int>();
-                _currentSession.activeItemUseCountByName = new Dictionary<string, int>();
-                _currentSession.activeItemDiscardCountByItemId = new Dictionary<string, int>();
-                _currentSession.passiveItemAcquiredCountByItemId = new Dictionary<string, int>();
+            // Dictionary 초기화
+            _currentSession.skillCardSpawnCountByCardId = new Dictionary<string, int>();
+            _currentSession.skillCardUseCountByCardId = new Dictionary<string, int>();
+            _currentSession.skillUseCountByName = new Dictionary<string, int>();
+            _currentSession.activeItemSpawnCountByItemId = new Dictionary<string, int>();
+            _currentSession.activeItemUseCountByName = new Dictionary<string, int>();
+            _currentSession.activeItemDiscardCountByItemId = new Dictionary<string, int>();
+            _currentSession.passiveItemAcquiredCountByItemId = new Dictionary<string, int>();
 
-                // 자원 통계 초기화
-                _currentSession.totalResourceGained = 0;
-                _currentSession.totalResourceSpent = 0;
+            // 자원 통계 초기화
+            _currentSession.totalResourceGained = 0;
+            _currentSession.totalResourceSpent = 0;
             }
 
             // 사용된 아이템 ID 추적 초기화
@@ -309,7 +309,7 @@ namespace Game.CoreSystem.Statistics
             // 중간 저장 시에는 gameEndTime을 업데이트하지 않음 (이어하기 가능성)
             if (finalEnd)
             {
-                _currentSession.gameEndTime = DateTime.UtcNow.ToString("o");
+            _currentSession.gameEndTime = DateTime.UtcNow.ToString("o");
             }
             
             // 플레이 시간 누적 계산 (이어하기 고려)

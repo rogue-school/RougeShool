@@ -46,6 +46,7 @@ namespace Game.CombatSystem.State
         // 부활 관련 플래그
         private bool hasUsedReviveThisDeath = false;
         private bool isWaitingForDeathEffect = false;
+        private bool isProcessingEnemyDeath = false;
 
 		[Header("부활 트리거 설정")]
 		[Tooltip("치명타격(사망을 유발한 공격) 이펙트가 끝난 뒤 부활을 시도하기 위해 대기할 시간(초)")]
@@ -397,6 +398,13 @@ namespace Game.CombatSystem.State
             // 새 상태 시작
             _currentState.OnEnter(_context);
 
+            // EnemyDefeatedState로 전환되었으면 적 사망 처리 플래그는 유지,
+            // 그 외 상태로 전환될 때에는 리셋하여 다음 라운드에서 정상 동작하도록 함
+            if (_currentState is not EnemyDefeatedState)
+            {
+                isProcessingEnemyDeath = false;
+            }
+
             // 이벤트 발생
             OnStateChanged?.Invoke(previousState, _currentState);
 
@@ -631,6 +639,13 @@ namespace Game.CombatSystem.State
         /// </summary>
         private void OnEnemyDeath()
         {
+            // 중복 처리 방지: 사망 처리 진행 중이면 무시
+            if (isProcessingEnemyDeath)
+            {
+                return;
+            }
+
+            isProcessingEnemyDeath = true;
             GameLogger.LogInfo(
                 "[CombatStateMachine] 적 사망 감지",
                 GameLogger.LogCategory.Combat);
@@ -777,8 +792,16 @@ namespace Game.CombatSystem.State
 		/// </summary>
 		private System.Collections.IEnumerator WaitForFatalHitEffectThenComplete()
 		{
-			// 설정된 지연 시간만큼 대기하여 마지막 히트 이펙트가 끝나도록 유예
-			float delay = Mathf.Max(0f, reviveAfterFatalHitDelay);
+			// 플레이어 캐릭터의 현재 재생 중인 파티클/애니메이션 기반으로 남은 시간을 추정
+			float dynamicRemaining = 0f;
+			var player = playerManager != null ? playerManager.GetCharacter() as MonoBehaviour : null;
+			if (player != null)
+			{
+				dynamicRemaining = ComputeApproxEffectRemainingTime(player.transform, reviveAfterFatalHitDelay);
+			}
+
+			// 설정값과 동적으로 계산한 값 중 더 큰 값을 사용
+			float delay = Mathf.Max(0f, Mathf.Max(reviveAfterFatalHitDelay, dynamicRemaining));
 			if (delay > 0f)
 			{
 				yield return new WaitForSeconds(delay);
@@ -803,7 +826,15 @@ namespace Game.CombatSystem.State
 		/// </summary>
 		private System.Collections.IEnumerator WaitForEnemyFatalHitEffectThenProceed()
 		{
-			float delay = Mathf.Max(0f, enemyAfterFatalHitDelay);
+			// 현재 적 캐릭터 기준으로 남은 이펙트 시간을 추정
+			float dynamicRemaining = 0f;
+			var enemy = enemyManager != null ? enemyManager.GetCharacter() as MonoBehaviour : null;
+			if (enemy != null)
+			{
+				dynamicRemaining = ComputeApproxEffectRemainingTime(enemy.transform, enemyAfterFatalHitDelay);
+			}
+
+			float delay = Mathf.Max(0f, Mathf.Max(enemyAfterFatalHitDelay, dynamicRemaining));
 			if (delay > 0f)
 			{
 				yield return new WaitForSeconds(delay);
@@ -817,6 +848,53 @@ namespace Game.CombatSystem.State
 
 			var enemyDefeatedState = new EnemyDefeatedState();
 			ChangeState(enemyDefeatedState);
+		}
+
+		/// <summary>
+		/// 대상 캐릭터 하위에서 재생 중인 파티클/애니메이션을 탐색하여
+		/// 대략적인 남은 이펙트 시간을 계산합니다. 최소 보장값으로 fallback을 사용합니다.
+		/// </summary>
+		private float ComputeApproxEffectRemainingTime(Transform characterRoot, float fallbackSeconds)
+		{
+			if (characterRoot == null) return Mathf.Max(0f, fallbackSeconds);
+
+			float maxSeconds = 0f;
+
+			// 파티클 기반 추정
+			var particleSystems = characterRoot.GetComponentsInChildren<ParticleSystem>(true);
+			for (int i = 0; i < particleSystems.Length; i++)
+			{
+				var ps = particleSystems[i];
+				if (ps == null) continue;
+				var main = ps.main;
+				// 대략: duration + 최대 수명
+				float approx = main.duration + main.startLifetime.constantMax;
+				if (main.loop)
+				{
+					approx = Mathf.Min(approx, 3f);
+				}
+				if (approx > maxSeconds) maxSeconds = approx;
+			}
+
+			// 애니메이션 기반 추정
+			var animator = characterRoot.GetComponentInChildren<Animator>(true);
+			if (animator != null && animator.runtimeAnimatorController != null)
+			{
+				var clips = animator.runtimeAnimatorController.animationClips;
+				for (int i = 0; i < clips.Length; i++)
+				{
+					var clip = clips[i];
+					if (clip != null && clip.length > maxSeconds)
+					{
+						maxSeconds = clip.length;
+					}
+				}
+			}
+
+			// 최소 보장값과 상한 적용
+			float result = Mathf.Max(fallbackSeconds, maxSeconds);
+			// 안전 상한 (지나치게 긴 루프/클립으로 인한 과도 대기 방지)
+			return Mathf.Clamp(result, 0f, 2.0f);
 		}
 
         /// <summary>
