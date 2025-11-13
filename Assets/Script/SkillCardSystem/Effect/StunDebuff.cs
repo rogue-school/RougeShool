@@ -18,10 +18,14 @@ namespace Game.SkillCardSystem.Effect
         /// <summary>만료 여부</summary>
         public bool IsExpired => RemainingTurns <= 0;
 
-        public StunDebuff(int duration, Sprite icon = null)
+        /// <summary>원본 효과 SO 이름 (툴팁 표시용)</summary>
+        private readonly string sourceEffectName;
+
+        public StunDebuff(int duration, Sprite icon = null, string sourceEffectName = null)
         {
             RemainingTurns = duration;
             Icon = icon;
+            this.sourceEffectName = sourceEffectName;
         }
 
         /// <summary>

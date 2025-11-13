@@ -252,6 +252,7 @@ namespace Game.CharacterSystem.UI
                 case "BleedEffect":
                     return "출혈";
                 case "StunEffect":
+                case "StunDebuff":
                     return "기절";
                 case "GuardBuff":
                     return "가드";

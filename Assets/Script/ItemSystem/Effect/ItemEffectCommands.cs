@@ -894,7 +894,9 @@ namespace Game.ItemSystem.Effect
             // StunDebuff는 매 턴 감소하므로 2턴으로 설정
             // EveryTurn 정책: 플레이어 턴(적용) → 적 턴(감소하며 스턴 유지) → 다음 플레이어 턴(만료)
             // 이렇게 하면 적 턴 전체를 차단할 수 있습니다
-            var stunDebuff = new Game.SkillCardSystem.Effect.StunDebuff(2, itemIcon);
+            // 아이템 이름을 효과 이름으로 사용
+            string itemName = context.ItemDefinition?.DisplayName;
+            var stunDebuff = new Game.SkillCardSystem.Effect.StunDebuff(2, itemIcon, itemName);
             // 아이템 유래 상태이상은 가드를 무시하고 직접 등록 (RegisterPerTurnEffect 사용)
             enemyCharacter.RegisterPerTurnEffect(stunDebuff);
             GameLogger.LogInfo($"[TimeStopEffect] 타임 스톱 스크롤 적용: {enemyCharacter.GetCharacterName()}에게 2턴 스턴 (아이템은 가드 무시)", GameLogger.LogCategory.Core);

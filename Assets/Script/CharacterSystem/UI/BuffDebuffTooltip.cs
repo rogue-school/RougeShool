@@ -473,6 +473,7 @@ namespace Game.CharacterSystem.UI
                 case "BleedEffect":
                     return "출혈";
                 case "StunEffect":
+                case "StunDebuff":
                     return "기절";
                 case "GuardBuff":
                     return "가드";
@@ -642,7 +643,8 @@ namespace Game.CharacterSystem.UI
                         return $"매 턴이 시작할때마다 피해를 입힙니다.\n피해를 입히며 {remainingTurns}턴이 남았습니다.";
                         
                 case "StunEffect":
-                    return $"매 턴이 시작할때마다 작동합니다.\n행동을 할 수 없게 하며 {remainingTurns}턴이 남았습니다.";
+                case "StunDebuff":
+                    return $"매 턴이 시작할때마다 작동합니다.\n효과가 {remainingTurns}턴이 남았습니다.";
                     
                 case "GuardBuff":
                     return $"받는 모든 데미지와 상태이상을 무효화합니다.\n자신의 턴이 시작할 때마다 턴 수가 감소하며 {remainingTurns}턴이 남았습니다.";

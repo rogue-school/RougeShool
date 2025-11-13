@@ -26,7 +26,10 @@ namespace Game.SkillCardSystem.Effect
                 return;
             }
 
-            var stun = new StunDebuff(duration, icon);
+            // 원본 효과 SO 이름 가져오기 (툴팁 표시용)
+            string sourceEffectName = GetSourceEffectName(context);
+            
+            var stun = new StunDebuff(duration, icon, sourceEffectName);
             if (context.Target.RegisterStatusEffect(stun))
             {
                 Game.CoreSystem.Utility.GameLogger.LogInfo($"[StunEffectCommand] {context.Target.GetCharacterName()} 스턴 적용 ({duration}턴)", Game.CoreSystem.Utility.GameLogger.LogCategory.SkillCard);
@@ -35,6 +38,39 @@ namespace Game.SkillCardSystem.Effect
             {
                 Game.CoreSystem.Utility.GameLogger.LogInfo($"[StunEffectCommand] 보호 상태로 스턴 차단", Game.CoreSystem.Utility.GameLogger.LogCategory.SkillCard);
             }
+        }
+
+        /// <summary>
+        /// EffectConfiguration에서 원본 효과 SO 이름을 가져옵니다 (툴팁 표시용).
+        /// </summary>
+        /// <param name="context">카드 실행 컨텍스트</param>
+        /// <returns>원본 효과 SO 이름 (없으면 null)</returns>
+        private string GetSourceEffectName(ICardExecutionContext context)
+        {
+            if (context?.Card?.CardDefinition == null)
+            {
+                return null;
+            }
+
+            var cardDefinition = context.Card.CardDefinition;
+            if (!cardDefinition.configuration.hasEffects)
+            {
+                return null;
+            }
+
+            foreach (var effectConfig in cardDefinition.configuration.effects)
+            {
+                if (effectConfig.effectSO is StunEffectSO stunEffectSO)
+                {
+                    string effectName = stunEffectSO.GetEffectName();
+                    if (!string.IsNullOrWhiteSpace(effectName))
+                    {
+                        return effectName;
+                    }
+                }
+            }
+
+            return null;
         }
     }
 }

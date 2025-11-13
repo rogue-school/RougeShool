@@ -25,11 +25,11 @@ namespace Game.SkillCardSystem.Effect
         {
             if (context?.Target == null)
             {
-                Debug.LogWarning("[StunEffectSO] 대상이 null입니다. 스턴 적용 실패.");
+                Game.CoreSystem.Utility.GameLogger.LogWarning("[StunEffectSO] 대상이 null입니다. 스턴 적용 실패.", Game.CoreSystem.Utility.GameLogger.LogCategory.SkillCard);
                 return;
             }
 
-            var stun = new StunDebuff(Mathf.Max(1, value > 0 ? value : duration), GetIcon());
+            var stun = new StunDebuff(Mathf.Max(1, value > 0 ? value : duration), GetIcon(), GetEffectName());
             if (context.Target.RegisterStatusEffect(stun))
             {
                 Game.CoreSystem.Utility.GameLogger.LogInfo($"[StunEffectSO] {context.Target.GetCharacterName()}에게 스턴 적용 ({stun.RemainingTurns}턴)", Game.CoreSystem.Utility.GameLogger.LogCategory.SkillCard);

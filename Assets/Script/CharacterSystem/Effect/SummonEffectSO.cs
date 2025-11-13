@@ -1,6 +1,7 @@
 using UnityEngine;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Data;
+using Game.CharacterSystem.UI;
 using Game.CoreSystem.Utility;
 
 namespace Game.CharacterSystem.Effect
@@ -78,6 +79,9 @@ namespace Game.CharacterSystem.Effect
                 hasTriggered = true;
                 GameLogger.LogInfo($"[SummonEffectSO] {character.GetCharacterName()} 소환 발동! 현재 체력: {currentHP}/{maxHP} ({currentRatio:P0}), 대상: {activeSummonTarget.DisplayName}", GameLogger.LogCategory.Character);
                 
+                // UI 알림 표시
+                ShowSummonNotification(activeSummonTarget);
+                
                 // 즉시 소환 트리거 (CombatStateMachine에서 즉시 감지하여 처리)
                 OnSummonTriggered?.Invoke(activeSummonTarget, currentHP);
             }
@@ -103,5 +107,33 @@ namespace Game.CharacterSystem.Effect
 
         public EnemyCharacterData GetSummonTarget() => activeSummonTarget ?? defaultSummonTarget;
         public float GetHealthThreshold() => activeSummonTarget != null ? activeHealthThreshold : defaultHealthThreshold;
+
+        /// <summary>
+        /// 소환 알림을 UI 패널에 표시합니다.
+        /// </summary>
+        /// <param name="summonTarget">소환 대상</param>
+        private void ShowSummonNotification(EnemyCharacterData summonTarget)
+        {
+            if (summonTarget == null)
+            {
+                GameLogger.LogWarning("[SummonEffectSO] 소환 대상이 null입니다 - 알림 표시 건너뜀", GameLogger.LogCategory.UI);
+                return;
+            }
+
+            // EffectNotificationPanel 찾기 (비활성화된 오브젝트도 포함)
+            EffectNotificationPanel notificationPanel = UnityEngine.Object.FindFirstObjectByType<EffectNotificationPanel>(FindObjectsInactive.Include);
+            if (notificationPanel != null)
+            {
+                // 이펙트 이름만 사용
+                string effectName = GetEffectName();
+
+                notificationPanel.ShowNotification(effectName);
+                GameLogger.LogInfo($"[SummonEffectSO] 소환 알림 표시: {effectName}", GameLogger.LogCategory.UI);
+            }
+            else
+            {
+                GameLogger.LogWarning("[SummonEffectSO] EffectNotificationPanel을 찾을 수 없습니다 - 알림 표시 건너뜀", GameLogger.LogCategory.UI);
+            }
+        }
     }
 }
