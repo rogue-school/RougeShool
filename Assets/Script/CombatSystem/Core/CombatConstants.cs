@@ -29,7 +29,7 @@ namespace Game.CombatSystem.Core
         public static class AnimationDurations
         {
             /// <summary>카드 이동 애니메이션 시간</summary>
-            public const float CARD_MOVE = 0.2f;
+            public const float CARD_MOVE = 0.15f;
 
             /// <summary>카드 스폰 애니메이션 시간</summary>
             public const float CARD_SPAWN = 0.2f;
