@@ -296,15 +296,6 @@ namespace Game.SkillCardSystem.Manager
         public void OnCardHoverExit()
         {
             if (hoveredCard == null) return;
-
-            // 고정된 툴팁이 있으면 호버 종료 시에도 툴팁을 유지
-            if (currentTooltip != null && currentTooltip.IsFixed)
-            {
-                hoveredCard = null;
-                isShowingTooltip = false;
-                showTimer = 0f;
-                return;
-            }
             
             hoveredCard = null;
             isShowingTooltip = false;
@@ -489,14 +480,11 @@ namespace Game.SkillCardSystem.Manager
                     return;
                 }
 
-                // 툴팁 위치 업데이트 (고정된 툴팁이 아닌 경우에만)
-                if (!currentTooltip.IsFixed)
+                // 툴팁 위치 업데이트
+                Vector2 cardPosition = GetCurrentCardPosition();
+                if (cardPosition != Vector2.zero)
                 {
-                    Vector2 cardPosition = GetCurrentCardPosition();
-                    if (cardPosition != Vector2.zero)
-                    {
-                        currentTooltip.UpdatePosition(cardPosition);
-                    }
+                    currentTooltip.UpdatePosition(cardPosition);
                 }
             }
         }
@@ -631,16 +619,8 @@ namespace Game.SkillCardSystem.Manager
 
             try
             {
-                // 고정된 툴팁이 아닌 경우에만 숨김
-                if (!currentTooltip.IsFixed)
-                {
-                    currentTooltip.HideTooltip();
-                    GameLogger.LogInfo("툴팁 숨김 완료", GameLogger.LogCategory.UI);
-                }
-                else
-                {
-                    GameLogger.LogInfo("툴팁이 고정되어 있어 숨기지 않음", GameLogger.LogCategory.UI);
-                }
+                currentTooltip.HideTooltip();
+                GameLogger.LogInfo("툴팁 숨김 완료", GameLogger.LogCategory.UI);
             }
             catch (System.Exception ex)
             {

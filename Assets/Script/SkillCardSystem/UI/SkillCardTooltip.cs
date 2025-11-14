@@ -217,10 +217,6 @@ namespace Game.SkillCardSystem.UI
         private ISkillCard currentCard;
         private RectTransform currentCardRectTransform; // 현재 카드의 RectTransform (크기 계산용)
         
-        // 툴팁 고정 관련
-        private bool isFixed = false;
-        private Vector2 fixedPosition;
-        
         // 동적 크기 조절을 위한 컴포넌트들
         private ContentSizeFitter contentSizeFitter;
         private LayoutElement layoutElement;
@@ -237,11 +233,6 @@ namespace Game.SkillCardSystem.UI
         #endregion
 
         #region Public Properties
-
-        /// <summary>
-        /// 툴팁이 고정되어 있는지 여부를 반환합니다.
-        /// </summary>
-        public bool IsFixed => isFixed;
 
         #endregion
 
@@ -1204,13 +1195,6 @@ namespace Game.SkillCardSystem.UI
         {
             if (rectTransform == null) return;
 
-            // 고정된 툴팁은 위치를 업데이트하지 않음
-            if (isFixed)
-            {
-                GameLogger.LogInfo("[SkillCardTooltip] 툴팁이 고정되어 있어 위치 업데이트 무시", GameLogger.LogCategory.UI);
-                return;
-            }
-
             // 스킬카드 위치를 캔버스 로컬 좌표로 변환
             Vector2 cardLocalPoint;
             // 툴팁이 속한 캔버스의 카메라 사용(Overlay면 null)
@@ -1466,49 +1450,6 @@ namespace Game.SkillCardSystem.UI
                     currentCard = null;
                     GameLogger.LogInfo("툴팁 숨김 완료", GameLogger.LogCategory.UI);
                 });
-        }
-
-        #endregion
-
-        #region Tooltip Fix/Unfix
-
-        /// <summary>
-        /// 툴팁을 현재 위치에 고정합니다.
-        /// </summary>
-        public void FixTooltip()
-        {
-            if (rectTransform == null) return;
-
-            isFixed = true;
-            fixedPosition = rectTransform.localPosition;
-            
-            GameLogger.LogInfo($"[SkillCardTooltip] 툴팁 고정됨 - 위치: {fixedPosition}", GameLogger.LogCategory.UI);
-        }
-
-        /// <summary>
-        /// 툴팁 고정을 해제합니다.
-        /// </summary>
-        public void UnfixTooltip()
-        {
-            isFixed = false;
-            fixedPosition = Vector2.zero;
-            
-            GameLogger.LogInfo("[SkillCardTooltip] 툴팁 고정 해제됨", GameLogger.LogCategory.UI);
-        }
-
-        /// <summary>
-        /// 툴팁 고정 상태를 토글합니다.
-        /// </summary>
-        public void ToggleTooltipFix()
-        {
-            if (isFixed)
-            {
-                UnfixTooltip();
-            }
-            else
-            {
-                FixTooltip();
-            }
         }
 
         #endregion

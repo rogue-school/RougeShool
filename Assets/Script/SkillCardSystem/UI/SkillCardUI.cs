@@ -44,16 +44,6 @@ namespace Game.SkillCardSystem.UI
         [Tooltip("드래그 중 툴팁 숨김 여부")]
         [SerializeField] private bool hideTooltipOnDrag = true;
 
-        [Header("툴팁 고정 시각적 표시")]
-        [Tooltip("툴팁 고정 시 표시할 테두리 이미지")]
-        [SerializeField] private Image fixedTooltipBorder;
-        
-        [Tooltip("툴팁 고정 시 테두리 색상")]
-        [SerializeField] private Color fixedTooltipColor = Color.yellow;
-        
-        [Tooltip("툴팁 고정 시 테두리 두께")]
-        [SerializeField] private float fixedTooltipBorderWidth = 3f;
-
         #endregion
 
         #region Private Fields
@@ -86,7 +76,6 @@ namespace Game.SkillCardSystem.UI
         // 툴팁 관련 상태
         private bool isHovering = false;
         private bool isDragging = false;
-        private bool isTooltipFixed = false;
         private Coroutine tooltipCoroutine;
 
         // 카드 애니메이션 상태 플래그
@@ -295,8 +284,8 @@ namespace Game.SkillCardSystem.UI
 
             isHovering = true;
 
-            // 고정된 툴팁이나 드래그 중이면 무시
-            if (isTooltipFixed || (isDragging && hideTooltipOnDrag))
+            // 드래그 중이면 무시
+            if (isDragging && hideTooltipOnDrag)
             {
                 return;
             }
@@ -331,12 +320,6 @@ namespace Game.SkillCardSystem.UI
                 tooltipCoroutine = null;
             }
 
-            // 고정된 툴팁이 있으면 호버 종료 시에도 툴팁을 유지
-            if (isTooltipFixed)
-            {
-                return;
-            }
-
             // 툴팁 숨김
             currentTooltipManager.OnCardHoverExit();
         }
@@ -368,24 +351,6 @@ namespace Game.SkillCardSystem.UI
                 return;
             }
             
-            // 모든 카드 타입에 대해 툴팁 클릭 허용 (플레이어, 적, 선택 화면 등)
-            // 클릭 허용
-
-            // 우클릭: 툴팁 고정/해제 토글
-            if (eventData.button == PointerEventData.InputButton.Right)
-            {
-                GameLogger.LogInfo("우클릭 감지됨 - 툴팁 토글 실행", GameLogger.LogCategory.UI);
-                ToggleTooltipFixed();
-            }
-            // 좌클릭: 고정된 툴팁 해제 (고정된 툴팁이 있을 때만)
-            else if (eventData.button == PointerEventData.InputButton.Left)
-            {
-                if (isTooltipFixed)
-                {
-                    GameLogger.LogInfo("좌클릭 감지됨 - 고정된 툴팁 해제 실행", GameLogger.LogCategory.UI);
-                    ReleaseFixedTooltip();
-                }
-            }
         }
 
         #endregion
@@ -417,139 +382,6 @@ namespace Game.SkillCardSystem.UI
             else
             {
                 // 툴팁 표시 취소
-            }
-        }
-
-        #endregion
-
-        #region Tooltip Fixed Management
-
-        /// <summary>
-        /// 툴팁 고정 상태를 토글합니다.
-        /// </summary>
-        private void ToggleTooltipFixed()
-        {
-            GameLogger.LogInfo($"ToggleTooltipFixed 호출됨 - 현재 고정 상태: {isTooltipFixed}", GameLogger.LogCategory.UI);
-            
-            if (isTooltipFixed)
-            {
-                ReleaseFixedTooltip();
-            }
-            else
-            {
-                FixTooltip();
-            }
-        }
-
-        /// <summary>
-        /// 툴팁을 고정합니다.
-        /// </summary>
-        private void FixTooltip()
-        {
-            isTooltipFixed = true;
-            
-            // 지연된 툴팁 표시 취소
-            if (tooltipCoroutine != null)
-            {
-                StopCoroutine(tooltipCoroutine);
-                tooltipCoroutine = null;
-            }
-            
-            // 즉시 툴팁 표시
-            var currentTooltipManager = GetTooltipManager();
-            if (currentTooltipManager != null && card != null)
-            {
-                currentTooltipManager.OnCardHoverEnter(card);
-                
-                // 툴팁이 표시된 후 고정
-                StartCoroutine(FixTooltipAfterShow());
-            }
-            
-            // 시각적 표시 업데이트
-            UpdateFixedTooltipVisual(true);
-            
-            GameLogger.LogInfo($"툴팁 고정: {card?.GetCardName()}", GameLogger.LogCategory.UI);
-        }
-
-        /// <summary>
-        /// 툴팁이 표시된 후 고정하는 코루틴입니다.
-        /// </summary>
-        private System.Collections.IEnumerator FixTooltipAfterShow()
-        {
-            // 툴팁이 표시될 때까지 대기
-            yield return new WaitForSeconds(0.1f);
-            
-            // 툴팁 매니저에서 현재 툴팁을 가져와서 고정
-            var currentTooltipManager = GetTooltipManager();
-            if (currentTooltipManager != null && currentTooltipManager.CurrentTooltip != null)
-            {
-                currentTooltipManager.CurrentTooltip.FixTooltip();
-                // 툴팁 고정
-            }
-        }
-
-        /// <summary>
-        /// 고정된 툴팁을 해제합니다.
-        /// </summary>
-        private void ReleaseFixedTooltip()
-        {
-            isTooltipFixed = false;
-            
-            var currentTooltipManager = GetTooltipManager();
-            if (currentTooltipManager != null && currentTooltipManager.CurrentTooltip != null)
-            {
-                // 툴팁 고정 해제
-                currentTooltipManager.CurrentTooltip.UnfixTooltip();
-                currentTooltipManager.ForceHideTooltip();
-            }
-            
-            // 시각적 표시 업데이트
-            UpdateFixedTooltipVisual(false);
-            
-            GameLogger.LogInfo("툴팁 고정 해제", GameLogger.LogCategory.UI);
-        }
-
-        /// <summary>
-        /// 외부에서 툴팁 고정을 해제할 수 있도록 하는 공개 메서드입니다.
-        /// </summary>
-        public void ForceReleaseTooltip()
-        {
-            if (isTooltipFixed)
-            {
-                ReleaseFixedTooltip();
-            }
-        }
-
-        /// <summary>
-        /// 툴팁이 고정되어 있는지 확인합니다.
-        /// </summary>
-        /// <returns>툴팁이 고정되어 있으면 true</returns>
-        public bool IsTooltipFixed()
-        {
-            return isTooltipFixed;
-        }
-
-        /// <summary>
-        /// 툴팁 고정 상태의 시각적 표시를 업데이트합니다.
-        /// </summary>
-        /// <param name="isFixed">고정 상태 여부</param>
-        private void UpdateFixedTooltipVisual(bool isFixed)
-        {
-            if (fixedTooltipBorder != null)
-            {
-                fixedTooltipBorder.gameObject.SetActive(isFixed);
-                
-                if (isFixed)
-                {
-                    fixedTooltipBorder.color = fixedTooltipColor;
-                    
-                    // 테두리 두께 설정 (RectTransform의 크기 조정)
-                    var rectTransform = fixedTooltipBorder.rectTransform;
-                    if (rectTransform != null)
-                    {
-                        rectTransform.sizeDelta = new Vector2(fixedTooltipBorderWidth, fixedTooltipBorderWidth);
-                    }
-                }
             }
         }
 

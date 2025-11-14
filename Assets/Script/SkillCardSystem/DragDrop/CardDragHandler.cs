@@ -67,7 +67,7 @@ namespace Game.CombatSystem.DragDrop
         /// </summary>
 		public void OnBeginDrag(PointerEventData eventData)
         {
-            // 좌클릭만 허용 (우클릭은 툴팁 고정용)
+            // 좌클릭만 허용
             if (eventData.button != PointerEventData.InputButton.Left)
             {
                 return;

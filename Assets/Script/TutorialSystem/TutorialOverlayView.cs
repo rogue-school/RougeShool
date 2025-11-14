@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
+using Game.UISystem;
 
 namespace Game.TutorialSystem
 {
@@ -54,6 +55,12 @@ namespace Game.TutorialSystem
             if (nextButton != null)
             {
                 nextButton.onClick.AddListener(NextPage);
+                
+                // NextButton에 호버 효과 자동 추가
+                if (nextButton.GetComponent<ButtonHoverEffect>() == null)
+                {
+                    nextButton.gameObject.AddComponent<ButtonHoverEffect>();
+                }
             }
 
             // 초기 비활성화 상태

@@ -208,12 +208,6 @@ tooltipManager.ShowTooltip(card, mousePosition);
 3. **효과 이탈**: 효과 이름 원래 색상 + 서브 툴팁 숨김
 4. **카드 이탈**: 메인 툴팁 + 서브 툴팁 모두 숨김
 
-### **3. 툴팁 고정**
-```csharp
-// 우클릭으로 툴팁 고정/해제
-tooltipManager.CurrentTooltip.ToggleTooltipFix();
-```
-
 ## 🔧 커스터마이징
 
 ### **1. 효과 타입별 설명 추가**

@@ -1547,6 +1547,7 @@ GameObject:
   - component: {fileID: 4513735895546587535}
   - component: {fileID: 390204186671392967}
   - component: {fileID: 7946195966166148343}
+  - component: {fileID: 818238981741846321}
   m_Layer: 5
   m_Name: NextButton
   m_TagString: Untagged
@@ -1570,8 +1571,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 472, y: 29}
-  m_SizeDelta: {x: 278.9636, y: 145.5658}
+  m_AnchoredPosition: {x: 400, y: -193}
+  m_SizeDelta: {x: 300, y: 150}
   m_Pivot: {x: 0.5, y: 0.8542181}
 --- !u!222 &4513735895546587535
 CanvasRenderer:
@@ -1594,7 +1595,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 1, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1655,6 +1656,24 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &818238981741846321
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4118590522340493936}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cac7a8dcc61ec0e43ae634f14a59ab30, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hoverScale: 1.1
+  hoverBrightness: 1.2
+  enterDuration: 0.2
+  exitDuration: 0.15
+  enterEase: 6
+  exitEase: 5
 --- !u!1 &4204262583309387045
 GameObject:
   m_ObjectHideFlags: 0
@@ -2968,7 +2987,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &3629192772324555770
 RectTransform:
   m_ObjectHideFlags: 0
