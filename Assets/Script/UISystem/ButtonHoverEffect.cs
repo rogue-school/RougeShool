@@ -9,6 +9,7 @@ namespace Game.UISystem
     /// 버튼에 호버 효과를 적용합니다.
     /// - 포인터 진입 시 스케일 확대 및 밝기 증가
     /// - 포인터 이탈 시 원래 상태로 복원
+    /// - 키보드 입력으로도 클릭 가능
     /// </summary>
     public class ButtonHoverEffect : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
@@ -18,6 +19,16 @@ namespace Game.UISystem
 
         [Tooltip("호버 시 밝기 배율 (1.0 = 원래 밝기)")]
         [SerializeField] private float hoverBrightness = 1.2f;
+
+        [Header("키보드 입력 설정")]
+        [Tooltip("키보드 입력 활성화 여부")]
+        [SerializeField] private bool enableKeyboardInput = true;
+
+        [Tooltip("클릭에 사용할 키 (None이면 모든 키 허용)")]
+        [SerializeField] private KeyCode triggerKey = KeyCode.None;
+
+        [Tooltip("모든 키 허용 여부 (triggerKey가 None일 때만 적용)")]
+        [SerializeField] private bool allowAnyKey = true;
 
         [Header("애니메이션 설정")]
         [Tooltip("호버 진입 시간(초)")]
@@ -69,6 +80,28 @@ namespace Game.UISystem
         private void OnDestroy()
         {
             KillAllTweens();
+        }
+
+        private void Update()
+        {
+            if (!enableKeyboardInput || _button == null || !CanInteract())
+                return;
+
+            bool keyPressed = false;
+
+            if (triggerKey != KeyCode.None)
+            {
+                keyPressed = Input.GetKeyDown(triggerKey);
+            }
+            else if (allowAnyKey)
+            {
+                keyPressed = Input.anyKeyDown && !Input.GetMouseButtonDown(0) && !Input.GetMouseButtonDown(1) && !Input.GetMouseButtonDown(2);
+            }
+
+            if (keyPressed)
+            {
+                _button.onClick.Invoke();
+            }
         }
 
         public void OnPointerEnter(PointerEventData eventData)
