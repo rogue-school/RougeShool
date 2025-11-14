@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Zenject;
+using DG.Tweening;
 
 namespace Game.ItemSystem.Runtime
 {
@@ -22,6 +23,10 @@ namespace Game.ItemSystem.Runtime
         [Header("액션 팝업 프리팹")]
         [SerializeField] private GameObject actionPopupPrefab;
 
+        [Header("호버 효과 설정")]
+        [Tooltip("호버 시 스케일")]
+        [SerializeField] private float hoverScale = 1.2f;
+
         #endregion
 
         #region 상태
@@ -36,6 +41,9 @@ namespace Game.ItemSystem.Runtime
         // 툴팁 매니저
         private Game.ItemSystem.Manager.ItemTooltipManager tooltipManager;
         private RectTransform rectTransform;
+
+        // 호버 효과 관련
+        private Tween scaleTween;
 
         #endregion
 
@@ -93,9 +101,15 @@ namespace Game.ItemSystem.Runtime
             GameLogger.LogInfo($"[ActiveItemUI] Start() 완료 - GameObject: {gameObject.name}", GameLogger.LogCategory.UI);
         }
         
+        private void OnDisable()
+        {
+            scaleTween?.Kill();
+        }
+        
         private void OnDestroy()
         {
             UnregisterFromTooltipManager();
+            scaleTween?.Kill();
         }
         
         /// <summary>
@@ -745,6 +759,12 @@ namespace Game.ItemSystem.Runtime
         /// </summary>
         public void OnPointerEnter(PointerEventData eventData)
         {
+            // 호버 확대 효과
+            scaleTween?.Kill();
+            scaleTween = transform.DOScale(hoverScale, 0.2f)
+                .SetEase(Ease.OutQuad)
+                .SetAutoKill(true);
+
             if (currentItem == null || tooltipManager == null)
                 return;
 
@@ -757,6 +777,12 @@ namespace Game.ItemSystem.Runtime
         /// </summary>
         public void OnPointerExit(PointerEventData eventData)
         {
+            // 호버 확대 효과 해제
+            scaleTween?.Kill();
+            scaleTween = transform.DOScale(1f, 0.2f)
+                .SetEase(Ease.OutQuad)
+                .SetAutoKill(true);
+
             if (tooltipManager == null)
                 return;
 

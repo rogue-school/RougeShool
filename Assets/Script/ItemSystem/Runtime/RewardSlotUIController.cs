@@ -6,6 +6,7 @@ using Game.ItemSystem.Data;
 using Game.ItemSystem.Utility;
 using Game.CoreSystem.Utility;
 using Game.ItemSystem.Manager;
+using DG.Tweening;
 
 namespace Game.ItemSystem.Runtime
 {
@@ -28,6 +29,10 @@ namespace Game.ItemSystem.Runtime
         
         [Header("툴팁용 Image (자동 할당)")]
         [SerializeField] private Image backgroundImage;
+
+        [Header("호버 효과 설정")]
+        [Tooltip("호버 시 스케일")]
+        [SerializeField] private float hoverScale = 1.2f;
         
         #endregion
         
@@ -35,6 +40,9 @@ namespace Game.ItemSystem.Runtime
         
         private ItemTooltipManager tooltipManager;
         private RectTransform rectTransform;
+
+        // 호버 효과 관련
+        private Tween scaleTween;
         
         #endregion
 
@@ -66,9 +74,15 @@ namespace Game.ItemSystem.Runtime
             FindTooltipManager();
         }
         
+        private void OnDisable()
+        {
+            scaleTween?.Kill();
+        }
+        
         private void OnDestroy()
         {
             UnregisterFromTooltipManager();
+            scaleTween?.Kill();
         }
 
         #endregion
@@ -368,6 +382,12 @@ namespace Game.ItemSystem.Runtime
         /// </summary>
         public void OnPointerEnter(PointerEventData eventData)
         {
+            // 호버 확대 효과
+            scaleTween?.Kill();
+            scaleTween = transform.DOScale(hoverScale, 0.2f)
+                .SetEase(Ease.OutQuad)
+                .SetAutoKill(true);
+
             if (tooltipManager == null)
                 return;
             
@@ -421,6 +441,12 @@ namespace Game.ItemSystem.Runtime
         /// </summary>
         public void OnPointerExit(PointerEventData eventData)
         {
+            // 호버 확대 효과 해제
+            scaleTween?.Kill();
+            scaleTween = transform.DOScale(1f, 0.2f)
+                .SetEase(Ease.OutQuad)
+                .SetAutoKill(true);
+
             if (tooltipManager == null)
                 return;
             

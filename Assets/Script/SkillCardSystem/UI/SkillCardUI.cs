@@ -7,6 +7,7 @@ using Game.SkillCardSystem.Manager;
 using Game.CombatSystem.DragDrop;
 using Game.CoreSystem.Utility;
 using Zenject;
+using DG.Tweening;
 
 namespace Game.SkillCardSystem.UI
 {
@@ -43,6 +44,10 @@ namespace Game.SkillCardSystem.UI
 
         [Tooltip("드래그 중 툴팁 숨김 여부")]
         [SerializeField] private bool hideTooltipOnDrag = true;
+
+        [Header("호버 효과 설정")]
+        [Tooltip("호버 시 스케일 (플레이어 카드만 적용)")]
+        [SerializeField] private float hoverScale = 1.05f;
 
         #endregion
 
@@ -81,6 +86,9 @@ namespace Game.SkillCardSystem.UI
         // 카드 애니메이션 상태 플래그
         public bool IsAnimating { get; private set; }
 
+        // 호버 효과 관련
+        private Tween scaleTween;
+
         #endregion
 
         #region Unity Lifecycle
@@ -98,11 +106,13 @@ namespace Game.SkillCardSystem.UI
         private void OnDisable()
         {
             UnregisterFromTooltipManager();
+            scaleTween?.Kill();
         }
 
         private void OnDestroy()
         {
             UnregisterFromTooltipManager();
+            scaleTween?.Kill();
         }
 
         #endregion
@@ -272,6 +282,15 @@ namespace Game.SkillCardSystem.UI
         /// <param name="eventData">포인터 이벤트 데이터</param>
         public void OnPointerEnter(PointerEventData eventData)
         {
+            // 호버 확대 효과 (플레이어 카드만)
+            if (card != null && card.IsFromPlayer())
+            {
+                scaleTween?.Kill();
+                scaleTween = transform.DOScale(hoverScale, 0.2f)
+                    .SetEase(Ease.OutQuad)
+                    .SetAutoKill(true);
+            }
+
             var currentTooltipManager = GetTooltipManager();
 
             if (!enableTooltip || currentTooltipManager == null || card == null || isHovering)
@@ -304,6 +323,15 @@ namespace Game.SkillCardSystem.UI
         /// <param name="eventData">포인터 이벤트 데이터</param>
         public void OnPointerExit(PointerEventData eventData)
         {
+            // 호버 확대 효과 해제 (플레이어 카드만)
+            if (card != null && card.IsFromPlayer())
+            {
+                scaleTween?.Kill();
+                scaleTween = transform.DOScale(1f, 0.2f)
+                    .SetEase(Ease.OutQuad)
+                    .SetAutoKill(true);
+            }
+
             var currentTooltipManager = GetTooltipManager();
 
             if (!enableTooltip || currentTooltipManager == null || !isHovering)
