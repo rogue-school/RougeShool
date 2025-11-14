@@ -24,12 +24,6 @@ namespace Game.UISystem
         [Tooltip("키보드 입력 활성화 여부")]
         [SerializeField] private bool enableKeyboardInput = true;
 
-        [Tooltip("클릭에 사용할 키 (None이면 모든 키 허용)")]
-        [SerializeField] private KeyCode triggerKey = KeyCode.None;
-
-        [Tooltip("모든 키 허용 여부 (triggerKey가 None일 때만 적용)")]
-        [SerializeField] private bool allowAnyKey = true;
-
         [Header("애니메이션 설정")]
         [Tooltip("호버 진입 시간(초)")]
         [SerializeField] private float enterDuration = 0.2f;
@@ -87,16 +81,16 @@ namespace Game.UISystem
             if (!enableKeyboardInput || _button == null || !CanInteract())
                 return;
 
-            bool keyPressed = false;
-
-            if (triggerKey != KeyCode.None)
-            {
-                keyPressed = Input.GetKeyDown(triggerKey);
-            }
-            else if (allowAnyKey)
-            {
-                keyPressed = Input.anyKeyDown && !Input.GetMouseButtonDown(0) && !Input.GetMouseButtonDown(1) && !Input.GetMouseButtonDown(2);
-            }
+            // Space, Enter, Control, Shift, Z, X, C 키만 허용
+            bool keyPressed = Input.GetKeyDown(KeyCode.Space)
+                || Input.GetKeyDown(KeyCode.Return)
+                || Input.GetKeyDown(KeyCode.LeftControl)
+                || Input.GetKeyDown(KeyCode.RightControl)
+                || Input.GetKeyDown(KeyCode.LeftShift)
+                || Input.GetKeyDown(KeyCode.RightShift)
+                || Input.GetKeyDown(KeyCode.Z)
+                || Input.GetKeyDown(KeyCode.X)
+                || Input.GetKeyDown(KeyCode.C);
 
             if (keyPressed)
             {
