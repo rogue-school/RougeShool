@@ -66,9 +66,19 @@ namespace Game.ItemSystem.Constants
         public const float ANIMATION_DURATION = 0.3f;
 
         /// <summary>
-        /// 툴팁 지연 시간 (초)
+        /// 툴팁 표시 지연 시간 (초)
         /// </summary>
-        public const float TOOLTIP_DELAY = 0.5f;
+        public const float TOOLTIP_SHOW_DELAY = 0.1f;
+        
+        /// <summary>
+        /// 엑티브 아이템 툴팁 표시 지연 시간 (초)
+        /// </summary>
+        public const float ACTIVE_ITEM_TOOLTIP_SHOW_DELAY = 0.15f;
+        
+        /// <summary>
+        /// 툴팁 숨김 지연 시간 (초)
+        /// </summary>
+        public const float TOOLTIP_HIDE_DELAY = 0.1f;
 
         #endregion
 

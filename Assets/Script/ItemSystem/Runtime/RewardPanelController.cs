@@ -53,6 +53,9 @@ namespace Game.ItemSystem.Runtime
 		private List<RewardSlotUIController> activeSlots = new List<RewardSlotUIController>();
 		private List<RewardSlotUIController> passiveSlots = new List<RewardSlotUIController>();
 
+		// 패시브 아이템 경고 표시 상태
+		private bool _hasShownPassiveWarning = false;
+
 		/// <summary>
 		/// 보상 패널이 완전히 닫혔을 때 발생하는 이벤트
 		/// </summary>
@@ -155,6 +158,7 @@ namespace Game.ItemSystem.Runtime
 			_candidates = candidates;
 			_passiveCandidates = null;
 			_isOpen = true;
+			_hasShownPassiveWarning = false; // 경고 상태 초기화
 
 			// 메시지 숨기기
 			HideInventoryFullMessage();
@@ -179,6 +183,7 @@ namespace Game.ItemSystem.Runtime
 		{
 			_passiveCandidates = candidates;
 			_candidates = null;
+			_hasShownPassiveWarning = false; // 경고 상태 초기화
 
 			// 메시지 숨기기
 			HideInventoryFullMessage();
@@ -234,6 +239,7 @@ namespace Game.ItemSystem.Runtime
 			_candidates = _rewardGenerator.GenerateActive(enemyCfg, playerProfile, stageIndex, runSeed);
 			_passiveCandidates = _rewardGenerator.GeneratePassive(enemyCfg, playerProfile, stageIndex, runSeed);
 			_isOpen = true;
+			_hasShownPassiveWarning = false; // 경고 상태 초기화
 
 			// 메시지 숨기기
 			HideInventoryFullMessage();
@@ -252,6 +258,31 @@ namespace Game.ItemSystem.Runtime
 
 		public void Close()
 		{
+			// 패시브 아이템이 남아있는지 확인
+			if (HasRemainingPassiveItems())
+			{
+				// 첫 번째 클릭: 경고 메시지 표시
+				if (!_hasShownPassiveWarning)
+				{
+					_hasShownPassiveWarning = true;
+					ShowPassiveItemWarning();
+					GameLogger.LogWarning("[RewardPanel] 패시브 아이템이 남아있어 패널을 닫을 수 없습니다", GameLogger.LogCategory.UI);
+					return;
+				}
+				// 두 번째 클릭: 모든 패시브 아이템 자동 선택
+				else
+				{
+					SelectAllRemainingPassiveItems();
+					_hasShownPassiveWarning = false;
+					// 모든 패시브 아이템을 선택했으므로 이제 닫기 가능
+				}
+			}
+			else
+			{
+				// 패시브 아이템이 없으면 경고 상태 초기화
+				_hasShownPassiveWarning = false;
+			}
+
 			// Is Open 상태에 따라 GameObject 비활성화 관리
 			_isOpen = false;
 			gameObject.SetActive(false);
@@ -259,6 +290,9 @@ namespace Game.ItemSystem.Runtime
 
 			// 메시지 숨기기
 			HideInventoryFullMessage();
+
+			// 경고 상태 초기화
+			_hasShownPassiveWarning = false;
 
 			// 토글 버튼도 함께 비활성화
 			if (toggleButton != null)
@@ -453,6 +487,87 @@ namespace Game.ItemSystem.Runtime
 				inventoryFullMessage.gameObject.SetActive(false);
 				GameLogger.LogInfo("[RewardPanel] 인벤토리 가득 참 메시지 강제 숨김", GameLogger.LogCategory.UI);
 			}
+		}
+
+		/// <summary>
+		/// 남아있는 패시브 아이템이 있는지 확인합니다.
+		/// </summary>
+		/// <returns>패시브 아이템이 남아있으면 true</returns>
+		private bool HasRemainingPassiveItems()
+		{
+			// 패시브 슬롯이 남아있는지 확인
+			if (passiveSlots != null && passiveSlots.Count > 0)
+			{
+				// 실제로 활성화된 슬롯이 있는지 확인
+				foreach (var slot in passiveSlots)
+				{
+					if (slot != null && slot.gameObject != null && slot.gameObject.activeInHierarchy)
+					{
+						return true;
+					}
+				}
+			}
+
+			// 패시브 후보가 남아있는지 확인
+			if (_passiveCandidates != null && _passiveCandidates.Length > 0)
+			{
+				return true;
+			}
+
+			return false;
+		}
+
+		/// <summary>
+		/// 패시브 아이템 선택 경고 메시지를 표시합니다.
+		/// </summary>
+		private void ShowPassiveItemWarning()
+		{
+			int remainingCount = GetRemainingPassiveItemCount();
+			
+			if (inventoryFullMessage != null)
+			{
+				inventoryFullMessage.text = $"패시브 아이템 {remainingCount}개를 선택해주세요!\n아이템을 클릭하여 선택할 수 있습니다.";
+				inventoryFullMessage.gameObject.SetActive(true);
+
+				// 자동으로 사라지게 하기 위해 코루틴 시작
+				StopCoroutine(HideMessageCoroutine());
+				StartCoroutine(HideMessageCoroutine());
+
+				GameLogger.LogInfo($"[RewardPanel] 패시브 아이템 선택 경고 메시지 표시 (남은 개수: {remainingCount})", GameLogger.LogCategory.UI);
+			}
+			else
+			{
+				GameLogger.LogWarning("[RewardPanel] inventoryFullMessage가 할당되지 않았습니다!", GameLogger.LogCategory.UI);
+			}
+		}
+
+		/// <summary>
+		/// 남아있는 패시브 아이템 개수를 반환합니다.
+		/// </summary>
+		/// <returns>남아있는 패시브 아이템 개수</returns>
+		private int GetRemainingPassiveItemCount()
+		{
+			int count = 0;
+
+			// 활성화된 패시브 슬롯 개수 확인
+			if (passiveSlots != null)
+			{
+				foreach (var slot in passiveSlots)
+				{
+					if (slot != null && slot.gameObject != null && slot.gameObject.activeInHierarchy)
+					{
+						count++;
+					}
+				}
+			}
+
+			// 슬롯이 없으면 후보 배열 개수 확인
+			if (count == 0 && _passiveCandidates != null)
+			{
+				count = _passiveCandidates.Length;
+			}
+
+			return count;
 		}
 
 		private int GetInventoryCount()
@@ -692,6 +807,86 @@ namespace Game.ItemSystem.Runtime
 			}
 			
 			RemovePassiveSlot(slotIndex);
+
+			// 패시브 아이템을 선택했으므로 경고 상태 초기화
+			_hasShownPassiveWarning = false;
+		}
+
+		/// <summary>
+		/// 남아있는 모든 패시브 아이템을 자동으로 선택합니다.
+		/// </summary>
+		private void SelectAllRemainingPassiveItems()
+		{
+			if (_itemService == null)
+			{
+				GameLogger.LogError("[RewardPanel] _itemService가 null입니다. 패시브 아이템 자동 선택 실패", GameLogger.LogCategory.UI);
+				return;
+			}
+
+			// 활성화된 패시브 슬롯들을 역순으로 처리 (인덱스 변경 방지)
+			var slotsToProcess = new List<RewardSlotUIController>();
+			foreach (var slot in passiveSlots)
+			{
+				if (slot != null && slot.gameObject != null && slot.gameObject.activeInHierarchy)
+				{
+					var passiveItem = slot.GetCurrentPassive();
+					if (passiveItem != null)
+					{
+						slotsToProcess.Add(slot);
+					}
+				}
+			}
+
+			// 역순으로 처리하여 인덱스 문제 방지
+			for (int i = slotsToProcess.Count - 1; i >= 0; i--)
+			{
+				var slot = slotsToProcess[i];
+				var passiveItem = slot.GetCurrentPassive();
+				if (passiveItem != null)
+				{
+					_itemService.AddPassiveItem(passiveItem);
+					
+					// 툴팁 매니저에 툴팁 업데이트 요청
+					var tooltipManager = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Manager.ItemTooltipManager>();
+					if (tooltipManager != null)
+					{
+						tooltipManager.RefreshPassiveItemTooltip(passiveItem);
+					}
+
+					// 슬롯 인덱스 찾기
+					int slotIndex = passiveSlots.IndexOf(slot);
+					if (slotIndex >= 0)
+					{
+						RemovePassiveSlot(slotIndex);
+					}
+
+					GameLogger.LogInfo($"[RewardPanel] 패시브 아이템 자동 선택: {passiveItem.DisplayName}", GameLogger.LogCategory.UI);
+				}
+			}
+
+			// 후보 배열에서도 처리 (슬롯이 없는 경우)
+			if (_passiveCandidates != null && _passiveCandidates.Length > 0)
+			{
+				foreach (var passiveItem in _passiveCandidates)
+				{
+					if (passiveItem != null)
+					{
+						_itemService.AddPassiveItem(passiveItem);
+						
+						// 툴팁 매니저에 툴팁 업데이트 요청
+						var tooltipManager = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Manager.ItemTooltipManager>();
+						if (tooltipManager != null)
+						{
+							tooltipManager.RefreshPassiveItemTooltip(passiveItem);
+						}
+
+						GameLogger.LogInfo($"[RewardPanel] 패시브 아이템 자동 선택 (후보 배열): {passiveItem.DisplayName}", GameLogger.LogCategory.UI);
+					}
+				}
+				_passiveCandidates = null;
+			}
+
+			GameLogger.LogInfo($"[RewardPanel] 모든 패시브 아이템 자동 선택 완료 (총 {slotsToProcess.Count}개)", GameLogger.LogCategory.UI);
 		}
 	}
 }

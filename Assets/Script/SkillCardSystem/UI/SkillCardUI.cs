@@ -6,6 +6,7 @@ using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Manager;
 using Game.CombatSystem.DragDrop;
 using Game.CoreSystem.Utility;
+using Game.ItemSystem.Constants;
 using Zenject;
 using DG.Tweening;
 
@@ -39,8 +40,8 @@ namespace Game.SkillCardSystem.UI
         [Tooltip("툴팁 활성화 여부")]
         [SerializeField] private bool enableTooltip = true;
 
-        [Tooltip("툴팁 표시 지연 시간 (초)")]
-        [SerializeField] private float tooltipDelay = 0.5f;
+        // 툴팁 지연 시간은 ItemConstants에서 관리 (코드로 제어)
+        private float tooltipDelay;
 
         [Tooltip("드래그 중 툴팁 숨김 여부")]
         [SerializeField] private bool hideTooltipOnDrag = true;
@@ -96,6 +97,8 @@ namespace Game.SkillCardSystem.UI
         private void Awake()
         {
             // DI를 통해 tooltipManager가 자동으로 주입됨
+            // 툴팁 지연 시간을 상수에서 초기화
+            tooltipDelay = ItemConstants.TOOLTIP_SHOW_DELAY;
         }
 
         private void OnEnable()

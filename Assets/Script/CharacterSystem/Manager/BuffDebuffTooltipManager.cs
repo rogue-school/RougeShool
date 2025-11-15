@@ -4,6 +4,7 @@ using Game.SkillCardSystem.Interface;
 using Game.CharacterSystem.UI;
 using Game.CoreSystem.Utility;
 using Game.CoreSystem.Interface;
+using Game.ItemSystem.Constants;
 using Zenject;
 using System.Collections;
 
@@ -21,11 +22,9 @@ namespace Game.CharacterSystem.Manager
         [Tooltip("버프/디버프 툴팁 프리팹")]
         [SerializeField] private BuffDebuffTooltip tooltipPrefab;
         
-        [Tooltip("툴팁 표시 지연 시간 (초)")]
-        [SerializeField] private float showDelay = 0.2f;
-        
-        [Tooltip("툴팁 숨김 지연 시간 (초)")]
-        [SerializeField] private float hideDelay = 0.1f;
+        // 툴팁 지연 시간은 ItemConstants에서 관리 (코드로 제어)
+        private float showDelay;
+        private float hideDelay;
 
         #endregion
 
@@ -137,6 +136,10 @@ namespace Game.CharacterSystem.Manager
         /// </summary>
         private void InitializeComponents()
         {
+            // 툴팁 지연 시간을 상수에서 초기화
+            showDelay = ItemConstants.TOOLTIP_SHOW_DELAY;
+            hideDelay = ItemConstants.TOOLTIP_HIDE_DELAY;
+            
             eventSystem = EventSystem.current;
             if (eventSystem == null)
             {

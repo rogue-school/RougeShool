@@ -6,6 +6,7 @@ using Game.CoreSystem.Utility;
 using Game.SkillCardSystem.Interface;
 using Game.CharacterSystem.Manager;
 using Game.SkillCardSystem.UI.Mappers;
+using Game.ItemSystem.Constants;
 
 namespace Game.CharacterSystem.UI
 {
@@ -31,8 +32,8 @@ namespace Game.CharacterSystem.UI
         [SerializeField] private bool autoHideOnZeroTurn = true;
 
         [Header("툴팁 설정")]
-        [Tooltip("툴팁 표시 지연 시간 (초)")]
-        [SerializeField] private float tooltipDelay = 0.2f;
+        // 툴팁 지연 시간은 ItemConstants에서 관리 (코드로 제어)
+        private float tooltipDelay;
 
         #endregion
 
@@ -59,6 +60,16 @@ namespace Game.CharacterSystem.UI
 
         private Coroutine tooltipCoroutine;
         private bool isHovering = false;
+
+        #endregion
+
+        #region Unity Lifecycle
+
+        private void Awake()
+        {
+            // 툴팁 지연 시간을 상수에서 초기화
+            tooltipDelay = ItemConstants.TOOLTIP_SHOW_DELAY;
+        }
 
         #endregion
 

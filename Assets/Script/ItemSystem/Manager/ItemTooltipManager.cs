@@ -4,6 +4,7 @@ using Game.ItemSystem.Data;
 using Game.ItemSystem.UI;
 using Game.CoreSystem.Utility;
 using Game.CoreSystem.Interface;
+using Game.ItemSystem.Constants;
 using System;
 using System.Collections;
 using TMPro;
@@ -25,11 +26,10 @@ namespace Game.ItemSystem.Manager
         [Tooltip("툴팁 프리팹 (ItemTooltip 컴포넌트 포함)")]
         [SerializeField] private GameObject tooltipPrefab;
         
-        [Tooltip("툴팁 표시 지연 시간 (초)")]
-        [SerializeField] private float showDelay = 0.1f;
-        
-        [Tooltip("툴팁 숨김 지연 시간 (초)")]
-        [SerializeField] private float hideDelay = 0.1f;
+        // 툴팁 지연 시간은 ItemConstants에서 관리 (코드로 제어)
+        private float showDelay;
+        private float activeItemShowDelay; // 엑티브 아이템 전용 지연 시간
+        private float hideDelay;
 
         [Header("정렬 간격 설정")]
         [Tooltip("아이템과 툴팁 사이의 가로 간격(px)")]
@@ -144,6 +144,11 @@ namespace Game.ItemSystem.Manager
         /// </summary>
         private void InitializeComponents()
         {
+            // 툴팁 지연 시간을 상수에서 초기화
+            showDelay = ItemConstants.TOOLTIP_SHOW_DELAY;
+            activeItemShowDelay = ItemConstants.ACTIVE_ITEM_TOOLTIP_SHOW_DELAY;
+            hideDelay = ItemConstants.TOOLTIP_HIDE_DELAY;
+            
             eventSystem = EventSystem.current;
             if (eventSystem == null)
             {
@@ -327,6 +332,9 @@ namespace Game.ItemSystem.Manager
                 return;
             }
 
+            // 다른 아이템으로 전환하는 경우 (이미 툴팁이 표시 중이고 다른 아이템인 경우)
+            bool isSwitchingItems = hoveredItem != null && hoveredItem != item && currentTooltip != null && currentTooltip.gameObject != null && currentTooltip.gameObject.activeInHierarchy;
+
             hoveredItem = item;
             // 호버를 발생시킨 소스 Rect를 우선 사용
             currentTargetRect = sourceRect;
@@ -339,10 +347,18 @@ namespace Game.ItemSystem.Manager
                 }
             }
 
+            // 숨김 타이머 취소 (다른 슬롯으로 전환 시)
             isHidingTooltip = false;
             hideTimer = 0f;
 
-            if (!isShowingTooltip)
+            // 다른 아이템으로 전환하는 경우 즉시 표시
+            if (isSwitchingItems)
+            {
+                isShowingTooltip = false;
+                showTimer = 0f;
+                ShowTooltip(); // 즉시 새 아이템 툴팁 표시
+            }
+            else if (!isShowingTooltip)
             {
                 isShowingTooltip = true;
                 showTimer = 0f;
@@ -420,6 +436,9 @@ namespace Game.ItemSystem.Manager
                 return;
             }
 
+            // 다른 패시브 아이템으로 전환하는 경우 (이미 툴팁이 표시 중이고 다른 아이템인 경우)
+            bool isSwitchingItems = hoveredPassiveItem != null && hoveredPassiveItem != item && currentTooltip != null && currentTooltip.gameObject != null && currentTooltip.gameObject.activeInHierarchy;
+
             hoveredPassiveItem = item;
             hoveredPassiveItemEnhancementLevel = Mathf.Clamp(enhancementLevel, 0, Game.ItemSystem.Constants.ItemConstants.MAX_ENHANCEMENT_LEVEL);
             hoveredPassiveItemIsRewardPanel = isRewardPanel;
@@ -435,10 +454,18 @@ namespace Game.ItemSystem.Manager
                 }
             }
 
+            // 숨김 타이머 취소 (다른 슬롯으로 전환 시)
             isHidingTooltip = false;
             hideTimer = 0f;
 
-            if (!isShowingTooltip)
+            // 다른 아이템으로 전환하는 경우 즉시 표시
+            if (isSwitchingItems)
+            {
+                isShowingTooltip = false;
+                showTimer = 0f;
+                ShowTooltip(); // 즉시 새 아이템 툴팁 표시
+            }
+            else if (!isShowingTooltip)
             {
                 isShowingTooltip = true;
                 showTimer = 0f;
@@ -695,7 +722,9 @@ namespace Game.ItemSystem.Manager
             if (isShowingTooltip && (hoveredItem != null || hoveredPassiveItem != null))
             {
                 showTimer += Time.deltaTime;
-                if (showTimer >= showDelay)
+                // 엑티브 아이템인 경우 더 긴 지연 시간 사용
+                float currentDelay = hoveredItem != null ? activeItemShowDelay : showDelay;
+                if (showTimer >= currentDelay)
                 {
                     ShowTooltip();
                     isShowingTooltip = false;

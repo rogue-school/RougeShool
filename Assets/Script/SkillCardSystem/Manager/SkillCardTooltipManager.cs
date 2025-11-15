@@ -4,6 +4,7 @@ using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.UI;
 using Game.CoreSystem.Utility;
 using Game.CoreSystem.Interface;
+using Game.ItemSystem.Constants;
 using Zenject;
 using System.Collections;
 using Game.CharacterSystem.Manager;
@@ -22,11 +23,9 @@ namespace Game.SkillCardSystem.Manager
         [Tooltip("툴팁 프리팹")]
         [SerializeField] private SkillCardTooltip tooltipPrefab;
         
-        [Tooltip("툴팁 표시 지연 시간 (초)")]
-        [SerializeField] private float showDelay = 0.05f; // 더 빠른 반응성
-        
-        [Tooltip("툴팁 숨김 지연 시간 (초)")]
-        [SerializeField] private float hideDelay = 0.1f;
+        // 툴팁 지연 시간은 ItemConstants에서 관리 (코드로 제어)
+        private float showDelay;
+        private float hideDelay;
 
         // TooltipLayer 제거: 캔버스 루트에 직접 붙입니다
 
@@ -121,6 +120,10 @@ namespace Game.SkillCardSystem.Manager
         /// </summary>
         private void InitializeComponents()
         {
+            // 툴팁 지연 시간을 상수에서 초기화
+            showDelay = ItemConstants.TOOLTIP_SHOW_DELAY;
+            hideDelay = ItemConstants.TOOLTIP_HIDE_DELAY;
+            
             eventSystem = EventSystem.current;
             if (eventSystem == null)
             {
