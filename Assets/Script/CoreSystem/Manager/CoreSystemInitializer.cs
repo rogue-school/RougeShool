@@ -225,7 +225,6 @@ namespace Game.CoreSystem.Manager
             var essentialSystemNames = new HashSet<string>
             {
                 "AudioManager",
-                "SaveManager", 
                 "PlayerCharacterSelectionManager",
                 "CoreSystemInitializer"
             };

@@ -1,7 +1,6 @@
 using Zenject;
 using UnityEngine;
 using Game.CoreSystem.Interface;
-using Game.CoreSystem.Save;
 using Game.CoreSystem.UI;
 using Game.CoreSystem.Utility;
 using Game.CharacterSystem.Interface;
@@ -25,12 +24,6 @@ namespace Game.CoreSystem.Manager
             Container.Bind<IGameStateManager>().FromMethod(_ =>
             {
                 return Object.FindFirstObjectByType<GameStateManager>(FindObjectsInactive.Include);
-            }).AsSingle();
-
-            // 저장 매니저 바인딩
-            Container.Bind<ISaveManager>().FromMethod(_ =>
-            {
-                return Object.FindFirstObjectByType<SaveManager>(FindObjectsInactive.Include);
             }).AsSingle();
 
             // 설정 매니저 바인딩

@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using Game.CoreSystem.Interface;
 using Game.CoreSystem.Utility;
-using Game.CoreSystem.Save;
 using Game.CoreSystem.Manager;
 using Game.CoreSystem.Statistics;
 using Zenject;
@@ -23,7 +22,6 @@ namespace Game.CoreSystem.UI
         [SerializeField] private Button exitGameButton;
         
         // 직접 참조 (DI 대신)
-        private ISaveManager saveManager;
         private ISceneTransitionManager sceneTransitionManager;
         private SettingsManager settingsManager;
         
@@ -42,13 +40,12 @@ namespace Game.CoreSystem.UI
         /// </summary>
         private void FindManagers()
         {
-            saveManager = FindFirstObjectByType<SaveManager>();
             sceneTransitionManager = FindFirstObjectByType<SceneTransitionManager>();
             settingsManager = FindFirstObjectByType<SettingsManager>();
             
             if (enableDebugLogging)
             {
-                GameLogger.LogInfo($"매니저 찾기 완료 - SaveManager: {saveManager != null}, SceneTransitionManager: {sceneTransitionManager != null}, SettingsManager: {settingsManager != null}", GameLogger.LogCategory.UI);
+                GameLogger.LogInfo($"매니저 찾기 완료 - SceneTransitionManager: {sceneTransitionManager != null}, SettingsManager: {settingsManager != null}", GameLogger.LogCategory.UI);
             }
         }
         

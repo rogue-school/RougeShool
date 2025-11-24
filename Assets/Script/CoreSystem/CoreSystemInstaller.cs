@@ -30,7 +30,6 @@ namespace Game.CoreSystem
         [SerializeField] private GameStateManager gameStateManager;
         [SerializeField] private SceneTransitionManager sceneTransitionManager;
         [SerializeField] private AudioManager audioManager;
-        [SerializeField] private SaveManager saveManager;
         [SerializeField] private SettingsManager settingsManager;
         [SerializeField] private CoroutineRunner coroutineRunner;
         [SerializeField] private PlayerCharacterSelectionManager playerCharacterSelectionManager;
@@ -83,7 +82,6 @@ namespace Game.CoreSystem
                 (sceneTransitionManager, "SceneTransitionManager", typeof(ISceneTransitionManager)),
                 (gameStateManager, "GameStateManager", typeof(IGameStateManager)),
                 (audioManager, "AudioManager", typeof(IAudioManager)),
-                (saveManager, "SaveManager", typeof(ISaveManager)),
                 (settingsManager, "SettingsManager", null),
                 (playerCharacterSelectionManager, "PlayerCharacterSelectionManager", typeof(IPlayerCharacterSelectionManager)),
                 (skillCardTooltipManager, "SkillCardTooltipManager", null),
@@ -133,7 +131,6 @@ namespace Game.CoreSystem
         private void BindCoreServices()
         {
             // AudioPoolManager는 AudioManager에 포함되어 있으므로 별도 바인딩 불필요
-            // CardStateCollector, CardStateRestorer는 제거되었고 SaveManager에 StageProgressCollector가 포함됨
 
             // ItemSystem 전역 바인딩
             // IItemService: 전역 싱글톤으로 생성(없으면 새 GO 생성)
@@ -198,7 +195,6 @@ namespace Game.CoreSystem
                 typeof(SceneTransitionManager),
                 typeof(GameStateManager),
                 typeof(AudioManager),
-                typeof(SaveManager),
                 typeof(PlayerCharacterSelectionManager),
                 typeof(SkillCardTooltipManager),
                 typeof(BuffDebuffTooltipManager),

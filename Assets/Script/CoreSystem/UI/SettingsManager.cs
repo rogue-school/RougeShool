@@ -29,7 +29,6 @@ namespace Game.CoreSystem.UI
         
         // 의존성 주입
         [Inject] private IAudioManager audioManager;
-        [Inject] private ISaveManager saveManager;
         [Inject] private ISceneTransitionManager sceneTransitionManager;
         [InjectOptional] private Canvas mainCanvas;
         

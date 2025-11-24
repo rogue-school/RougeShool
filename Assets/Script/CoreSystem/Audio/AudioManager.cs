@@ -69,7 +69,6 @@ namespace Game.CoreSystem.Audio
         public bool IsInitialized { get; private set; } = false;
 
         // 의존성 주입
-        private ISaveManager saveManager;
 
         // Resources.Load 캐싱
         private Dictionary<string, AudioClip> audioClipCache = new Dictionary<string, AudioClip>();
@@ -85,12 +84,6 @@ namespace Game.CoreSystem.Audio
             { "BattleScene", "Sounds/BGM/Battle" },
             { "StageScene", "Sounds/BGM/Stage" }
         };
-        
-        [Inject]
-        public void Construct(ISaveManager saveManager)
-        {
-            this.saveManager = saveManager;
-        }
         
         private void Awake()
         {

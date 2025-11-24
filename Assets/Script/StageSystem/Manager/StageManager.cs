@@ -78,8 +78,6 @@ namespace Game.StageSystem.Manager
         private StageData currentStage;
         private int totalStagesCompleted = 0;
         private bool isGameCompleted = false;
-
-        [Zenject.Inject(Optional = true)] private Game.CoreSystem.Save.SaveManager saveManager;
         [Zenject.Inject] private EnemyManager enemyManager;
         [Zenject.Inject(Optional = true)] private Game.CoreSystem.Interface.IAudioManager audioManager;
         [Zenject.Inject(Optional = true)] private Game.SkillCardSystem.Interface.IPlayerHandManager playerHandManager;
@@ -155,8 +153,8 @@ namespace Game.StageSystem.Manager
             }
             else
             {
-                // 저장된 진행 상황이 있으면 자동 로드
-                StartCoroutine(AutoLoadSavedProgress());
+                // 세이브 시스템 제거로 인해 항상 기본 스테이지를 로드합니다.
+                LoadDefaultStage();
             }
 
             // PlayerManager의 플레이어 준비 완료 이벤트 구독
@@ -246,58 +244,7 @@ namespace Game.StageSystem.Manager
             }
         }
         
-        /// <summary>
-        /// 저장된 진행 상황을 자동으로 로드합니다.
-        /// </summary>
-        private System.Collections.IEnumerator AutoLoadSavedProgress()
-        {
-            if (saveManager == null)
-            {
-                GameLogger.LogWarning("[StageManager] SaveManager를 찾을 수 없습니다 - 기본 스테이지 로드로 진행", GameLogger.LogCategory.Save);
-                LoadDefaultStage();
-                yield break;
-            }
-            
-            // 새 게임인지 확인
-            if (saveManager.IsNewGame())
-            {
-                GameLogger.LogInfo("[StageManager] 새 게임 시작 - 저장된 데이터 로드 건너뛰기", GameLogger.LogCategory.Save);
-                
-                // 새 게임 플래그 해제
-                saveManager.ClearNewGameFlag();
-                
-                // 기본 스테이지 로드
-                LoadDefaultStage();
-                yield break;
-            }
-            
-            // 저장된 진행 상황이 있는지 확인
-            if (saveManager.HasStageProgressSave())
-            {
-                GameLogger.LogInfo("[StageManager] 저장된 진행 상황 발견, 자동 로드 시작", GameLogger.LogCategory.Save);
-                
-                // 비동기 로드를 코루틴으로 변환
-                var loadTask = saveManager.LoadStageProgress();
-                yield return new WaitUntil(() => loadTask.IsCompleted);
-                
-                if (loadTask.Result)
-                {
-                    GameLogger.LogInfo("[StageManager] 저장된 진행 상황 자동 로드 완료", GameLogger.LogCategory.Save);
-                }
-                else
-                {
-                    GameLogger.LogWarning("[StageManager] 저장된 진행 상황 로드 실패", GameLogger.LogCategory.Save);
-                    // 로드 실패 시 기본 스테이지 로드
-                    LoadDefaultStage();
-                }
-            }
-            else
-            {
-                GameLogger.LogInfo("[StageManager] 저장된 진행 상황이 없습니다. 기본 스테이지를 시작합니다", GameLogger.LogCategory.Save);
-                // 저장된 데이터가 없으면 기본 스테이지 로드
-                LoadDefaultStage();
-            }
-        }
+        // 세이브 시스템 제거로 인해 진행 상황 자동 로드 기능은 비활성화되었습니다.
         
         /// <summary>
         /// 기본 스테이지를 로드합니다.
@@ -343,7 +290,7 @@ namespace Game.StageSystem.Manager
                 }
                 else
                 {
-                    GameLogger.LogWarning("[StageManager] SaveManager를 찾을 수 없습니다", GameLogger.LogCategory.Save);
+                GameLogger.LogWarning("[StageManager] 진행 상황 로드 중 StageManager를 찾을 수 없습니다", GameLogger.LogCategory.Save);
                 }
 
                 // 메인 씬으로 전환되는 경우 통계 저장 (다시하기 여부 확인)

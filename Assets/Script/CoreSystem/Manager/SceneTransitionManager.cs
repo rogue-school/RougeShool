@@ -56,9 +56,8 @@ namespace Game.CoreSystem.Manager
 		// 의존성 주입
 		private IAudioManager audioManager;
 
-		// FindObjectOfType 캐싱
-		private StageManager cachedStageManager;
-		private Game.CoreSystem.Save.SaveManager cachedSaveManager;
+        // FindObjectOfType 캐싱
+        private StageManager cachedStageManager;
 		
 		[Inject]
 		public void Construct(IAudioManager audioManager)
@@ -150,19 +149,7 @@ namespace Game.CoreSystem.Manager
 			return cachedStageManager;
 		}
 
-		/// <summary>
-		/// SaveManager 캐시 가져오기 (지연 초기화)
-		/// </summary>
-		private Game.CoreSystem.Save.SaveManager GetCachedSaveManager()
-		{
-			if (cachedSaveManager == null)
-			{
-				cachedSaveManager = FindFirstObjectByType<Game.CoreSystem.Save.SaveManager>();
-			}
-			return cachedSaveManager;
-		}
-
-		/// <summary>
+        /// <summary>
 		/// AudioEventTrigger 캐시 가져오기 (지연 초기화)
 		/// </summary>
 		private AudioEventTrigger GetCachedAudioEventTrigger()
@@ -182,11 +169,11 @@ namespace Game.CoreSystem.Manager
 			await TransitionToScene(coreSceneName, TransitionType.Fade);
 		}
 		
-		/// <summary>
-		/// 메인 씬으로 전환
-		/// </summary>
-		public async Task TransitionToMainScene()
-		{
+        /// <summary>
+        /// 메인 씬으로 전환
+        /// </summary>
+        public async Task TransitionToMainScene()
+        {
 			// CoreScene에 있는 VictoryUI 패널 숨기기
 			try
 			{
@@ -202,12 +189,7 @@ namespace Game.CoreSystem.Manager
 				GameLogger.LogWarning($"[SceneTransitionManager] VictoryUI 숨김 중 경고: {ex.Message}", GameLogger.LogCategory.UI);
 			}
 
-			// 현재 씬이 StageScene이면 진행 상황 저장
-			if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == stageSceneName)
-			{
-				await SaveProgressFromStageScene();
-			}
-
+            // 세이브 시스템 제거로 인해 진행 상황 저장 없이 바로 전환합니다.
 			// 스테이지 매니저가 있으면 스테이지 BGM 정리
 			var stageManager = GetCachedStageManager();
 			if (stageManager != null)
@@ -460,88 +442,9 @@ namespace Game.CoreSystem.Manager
 		
 		#region 데이터 보존 기능
 		
-		/// <summary>
-		/// 씬 전환 전 현재 진행 상황 저장
-		/// </summary>
-		private async Task SaveCurrentProgressBeforeTransition()
-		{
-			try
-			{
-				var saveManager = GetCachedSaveManager();
-				if (saveManager != null)
-				{
-					await saveManager.SaveCurrentProgress("SceneTransition");
-					GameLogger.LogInfo("씬 전환 전 진행 상황 저장 완료", GameLogger.LogCategory.Save);
-				}
-				else
-				{
-					GameLogger.LogWarning("SaveManager를 찾을 수 없습니다", GameLogger.LogCategory.Save);
-				}
-			}
-			catch (System.Exception ex)
-			{
-				GameLogger.LogError($"전환 전 저장 실패: {ex.Message}", GameLogger.LogCategory.Error);
-			}
-		}
-
-		/// <summary>
-		/// 씬 전환 후 저장된 진행 상황 로드
-		/// </summary>
-		private async Task LoadProgressAfterTransition()
-		{
-			try
-			{
-				// 씬 로드 완료 후 잠시 대기 (매니저들이 초기화될 시간 확보)
-				await Task.Delay(100);
-
-				var saveManager = GetCachedSaveManager();
-				if (saveManager != null && saveManager.HasStageProgressSave())
-				{
-					bool loadSuccess = await saveManager.LoadStageProgress();
-					if (loadSuccess)
-					{
-						GameLogger.LogInfo("씬 전환 후 진행 상황 로드 완료", GameLogger.LogCategory.Save);
-					}
-					else
-					{
-						GameLogger.LogWarning("진행 상황 로드 실패", GameLogger.LogCategory.Save);
-					}
-				}
-				else
-				{
-					GameLogger.LogInfo("저장된 진행 상황이 없습니다", GameLogger.LogCategory.Save);
-				}
-			}
-			catch (System.Exception ex)
-			{
-				GameLogger.LogError($"전환 후 로드 실패: {ex.Message}", GameLogger.LogCategory.Error);
-			}
-		}
-
-		/// <summary>
-		/// StageScene에서 다른 씬으로 전환할 때 진행 상황 저장
-		/// </summary>
-		private async Task SaveProgressFromStageScene()
-		{
-			try
-			{
-				var stageManager = GetCachedStageManager();
-				if (stageManager != null)
-				{
-					await stageManager.SaveProgressBeforeSceneTransition();
-				}
-				else
-				{
-					GameLogger.LogWarning("StageManager를 찾을 수 없습니다", GameLogger.LogCategory.Save);
-				}
-			}
-			catch (System.Exception ex)
-			{
-				GameLogger.LogError($"StageScene에서 저장 실패: {ex.Message}", GameLogger.LogCategory.Error);
-			}
-		}
-		
-		#endregion
+        // 세이브 시스템 제거로 인해 진행 상황 저장/로드 관련 메서드는 제거되었습니다.
+        
+        #endregion
 		
 		#region 베이스 클래스 구현
 

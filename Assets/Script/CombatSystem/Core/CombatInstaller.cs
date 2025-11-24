@@ -21,7 +21,6 @@ using Game.SkillCardSystem.Manager;
 using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Initialization;
-using Game.SaveSystem.Manager;
 using Game.UtilitySystem.GameFlow;
 using Game.StageSystem.Manager;
 using Game.StageSystem.Interface;
@@ -158,21 +157,6 @@ public class CombatInstaller : MonoInstaller
                 .AsSingle();
             GameLogger.LogInfo(" CombatFlowManager 자동 생성 및 바인딩 완료");
         }
-
-            // SaveSystem 바인딩: AutoSaveManager (CardStateCollector/Restorer 제거됨)
-            var autoSave = FindFirstObjectByType<AutoSaveManager>();
-            if (autoSave == null)
-            {
-                Container.BindInterfacesAndSelfTo<AutoSaveManager>()
-                    .FromNewComponentOnNewGameObject()
-                    .AsSingle();
-                GameLogger.LogInfo(" AutoSaveManager 자동 생성 및 바인딩 완료");
-            }
-            else
-            {
-                Container.Bind<AutoSaveManager>().FromInstance(autoSave).AsSingle();
-                GameLogger.LogInfo(" AutoSaveManager 바인딩 완료 (씬에서 찾기)");
-            }
 
         // CombatStatsAggregator 바인딩 (전투 통계 수집기)
         // DontDestroyOnLoad로 설정하여 씬 전환 후에도 유지되도록 함
@@ -462,8 +446,7 @@ public class CombatInstaller : MonoInstaller
         // CoroutineRunner는 CoreSystemInstaller에서 바인딩됨
         // PlayerCharacterSelectionManager는 CoreSystemInstaller에서 바인딩됨
         
-        // SaveManager 바인딩
-        BindSaveManager();
+        // SaveManager 바인딩은 세이브 시스템 제거로 인해 비활성화되었습니다.
     }
 
     #endregion
@@ -669,37 +652,8 @@ public class CombatInstaller : MonoInstaller
         GameLogger.LogInfo("AnimationFacade 바인딩을 건너뜁니다.", GameLogger.LogCategory.Combat);
     }
 
-    /// <summary>
-    /// 저장 시스템 바인딩
-    /// </summary>
-    private void BindSaveManager()
-    {
-        GameLogger.LogInfo(" BindSaveManager 호출 시작");
-        
-        // SaveManager를 씬에서 찾기
-        var saveManager = FindFirstObjectByType<SaveManager>();
-        
-        if (saveManager == null)
-        {
-            GameLogger.LogWarning(" SaveManager를 씬에서 찾을 수 없습니다. null로 바인딩합니다.");
-            // ISaveManager와 SaveManager를 null로 바인딩
-            Container.Bind<ISaveManager>().FromInstance(null).AsSingle();
-            Container.Bind<SaveManager>().FromInstance(null).AsSingle();
-        }
-        else
-        {
-            GameLogger.LogInfo($"[CombatInstaller] SaveManager 발견: {saveManager.name}", GameLogger.LogCategory.Combat);
-            
-            // ISaveManager 인터페이스로 바인딩
-            Container.Bind<ISaveManager>().FromInstance(saveManager).AsSingle();
-            
-            // SaveManager 클래스로도 바인딩 (PlayerDeckManager가 직접 요구)
-            Container.Bind<SaveManager>().FromInstance(saveManager).AsSingle();
-            
-            GameLogger.LogInfo(" 저장 시스템 바인딩 완료");
-        }
-    }
-
+    // 세이브 시스템 관련 BindSaveManager 메서드는 제거되었습니다.
+    
     /// <summary>
     /// 오디오 시스템 바인딩
     /// </summary>

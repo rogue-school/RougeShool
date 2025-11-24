@@ -30,7 +30,6 @@ namespace Game.SkillCardSystem.Manager
         #region 의존성 주입 (DI로 자동 해결)
 
         [Inject] private PlayerManager playerManager;
-        [InjectOptional] private SaveManager saveManager;
         [InjectOptional] private ISkillCardFactory cardFactory;
 
         #endregion
