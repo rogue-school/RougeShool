@@ -4709,6 +4709,7 @@ MonoBehaviour:
   stageSettings:
     allStages:
     - {fileID: 11400000, guid: ebcb895c197bd934c92f968aea234a27, type: 2}
+    - {fileID: 11400000, guid: 4602ef4ea0888594fb090e107cc04a64, type: 2}
   debugSettings:
     enableStageLogging: 1
     showEnemyStatus: 1

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: "\uBE44\uC624\uB124"
   m_EditorClassIdentifier: 
   <DisplayName>k__BackingField: "\uBE44\uC694\uB124 \uC870\uAD50"
-  <MaxHP>k__BackingField: 25
+  <MaxHP>k__BackingField: 10
   <Portrait>k__BackingField: {fileID: -3497099482240395334, guid: fe52cdc804695d34f8bea3b0cc12b56f, type: 3}
   <PortraitPrefab>k__BackingField: {fileID: 751987938129930587, guid: d2de1313ad7fb2e4eb16a9511fccabb2, type: 3}
   <Prefab>k__BackingField: {fileID: 7769799778275336730, guid: 2c6e844c91775424681f573a6951211e, type: 3}

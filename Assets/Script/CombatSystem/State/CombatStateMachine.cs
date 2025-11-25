@@ -542,6 +542,43 @@ namespace Game.CombatSystem.State
             OnCombatEnded?.Invoke(isVictory);
         }
 
+        /// <summary>
+        /// 전투 상태를 완전히 리셋합니다. (새 스테이지 시작 전 호출)
+        /// </summary>
+        public void ResetCombatState()
+        {
+            if (_currentState != null)
+            {
+                GameLogger.LogInfo("[CombatStateMachine] 전투 상태 리셋 시작", GameLogger.LogCategory.Combat);
+                
+                // 실행 중인 모든 코루틴 정리 (상태 전환 중 코루틴이 실행 중일 수 있음)
+                StopAllCoroutines();
+                GameLogger.LogInfo("[CombatStateMachine] 실행 중인 코루틴 정리 완료", GameLogger.LogCategory.Combat);
+                
+                // SlotMovementController 상태 리셋 (코루틴 중단으로 인한 상태 불일치 방지)
+                if (_context?.SlotMovement != null)
+                {
+                    _context.SlotMovement.ResetSlotStates();
+                    GameLogger.LogInfo("[CombatStateMachine] SlotMovementController 상태 리셋 완료", GameLogger.LogCategory.Combat);
+                }
+                
+                // 현재 상태 종료
+                _currentState.OnExit(_context);
+                
+                // 상태를 null로 리셋
+                _currentState = null;
+                currentStateName = "None";
+                
+                // 플래그 리셋
+                hasUsedReviveThisDeath = false;
+                isGameOver = false;
+                isWaitingForDeathEffect = false;
+                isProcessingEnemyDeath = false;
+                
+                GameLogger.LogInfo("[CombatStateMachine] 전투 상태 리셋 완료", GameLogger.LogCategory.Combat);
+            }
+        }
+
         #endregion
 
         #region 상태 쿼리

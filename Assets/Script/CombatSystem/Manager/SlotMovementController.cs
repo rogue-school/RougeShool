@@ -311,6 +311,10 @@ namespace Game.CombatSystem.Manager
 
             GameLogger.LogInfo("동적 슬롯 셋업 시작 - 실제 게임 플레이 방식", GameLogger.LogCategory.Combat);
 
+            // 초기 셋업 시작 시 상태 초기화 (이전 코루틴 중단으로 인한 상태 불일치 방지)
+            _isAdvancingQueue = false;
+            _initialSlotSetupCompleted = false;
+
             // 초기 셋업 구간에서는 자동 보충/자동 실행 억제
             _suppressAutoRefill = true;
             _suppressAutoExecution = true;

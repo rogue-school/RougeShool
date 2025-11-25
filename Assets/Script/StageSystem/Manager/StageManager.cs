@@ -1152,6 +1152,117 @@ namespace Game.StageSystem.Manager
                 return;
             }
 
+            // 이전 적이 있으면 정리 (GameObject 포함)
+            if (enemyManager != null)
+            {
+                var currentEnemy = enemyManager.GetEnemy();
+                if (currentEnemy != null)
+                {
+                    GameLogger.LogInfo($"[StageManager] 이전 적 정리 중: {currentEnemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
+                    
+                    // EnemyManager에서 참조 제거
+                    enemyManager.UnregisterEnemy();
+                    
+                    // 적 GameObject 파괴
+                    if (currentEnemy is EnemyCharacter enemyCharacter)
+                    {
+                        Destroy(enemyCharacter.gameObject);
+                        GameLogger.LogInfo("[StageManager] 이전 적 GameObject 파괴 완료", GameLogger.LogCategory.Combat);
+                    }
+                }
+            }
+            
+            // 적 슬롯의 모든 자식 오브젝트 파괴 (안전장치)
+            var enemySlotGameObject = GameObject.Find("EnemyCharacterSlot");
+            if (enemySlotGameObject != null)
+            {
+                int childCount = enemySlotGameObject.transform.childCount;
+                if (childCount > 0)
+                {
+                    GameLogger.LogInfo($"[StageManager] 적 슬롯의 자식 오브젝트 {childCount}개 파괴 중", GameLogger.LogCategory.Combat);
+                    for (int i = enemySlotGameObject.transform.childCount - 1; i >= 0; i--)
+                    {
+                        var child = enemySlotGameObject.transform.GetChild(i);
+                        if (child != null)
+                        {
+                            Destroy(child.gameObject);
+                        }
+                    }
+                    GameLogger.LogInfo("[StageManager] 적 슬롯 정리 완료", GameLogger.LogCategory.Combat);
+                }
+            }
+
+            // 승리 UI 숨기기
+            var victoryUI = FindFirstObjectByType<Game.CombatSystem.UI.VictoryUI>(FindObjectsInactive.Include);
+            if (victoryUI != null)
+            {
+                victoryUI.Hide();
+                GameLogger.LogInfo("[StageManager] 승리 UI 숨김", GameLogger.LogCategory.UI);
+            }
+
+            // 전투 상태 머신 리셋 (새 스테이지 시작 전)
+            // 주의: 스테이지 1 처음 시작 시에는 _currentState가 이미 null이므로 리셋 불필요
+            // 스테이지 전환 시에만 리셋 필요
+            var combatStateMachine = FindFirstObjectByType<Game.CombatSystem.State.CombatStateMachine>(FindObjectsInactive.Include);
+            if (combatStateMachine != null)
+            {
+                var currentState = combatStateMachine.GetCurrentState();
+                if (currentState != null)
+                {
+                    GameLogger.LogInfo($"[StageManager] 전투 상태 리셋: {currentState.StateName} → None", GameLogger.LogCategory.Combat);
+                    combatStateMachine.ResetCombatState();
+                    
+                    // 상태 리셋 후 짧은 대기 (코루틴 정리 시간)
+                    StartCoroutine(WaitForStateResetAndContinue());
+                    return; // 코루틴에서 나머지 작업 계속
+                }
+                else
+                {
+                    GameLogger.LogInfo("[StageManager] 전투 상태가 이미 None - 리셋 불필요", GameLogger.LogCategory.Combat);
+                }
+            }
+
+            // 상태 리셋이 필요 없거나 완료된 경우 바로 계속
+            ContinueStartStageAfterReset();
+        }
+
+        /// <summary>
+        /// 전투 상태 리셋 후 나머지 작업을 계속합니다.
+        /// </summary>
+        private System.Collections.IEnumerator WaitForStateResetAndContinue()
+        {
+            // 상태 리셋 후 짧은 대기 (코루틴 정리 시간)
+            yield return new WaitForSeconds(0.1f);
+            
+            // 나머지 StartStage 작업 계속
+            ContinueStartStageAfterReset();
+        }
+
+        /// <summary>
+        /// 상태 리셋 후 StartStage의 나머지 작업을 계속합니다.
+        /// </summary>
+        private void ContinueStartStageAfterReset()
+        {
+            // 플레이어 체력을 최대 체력으로 회복
+            if (playerManager != null)
+            {
+                var player = playerManager.GetCharacter();
+                if (player != null)
+                {
+                    int currentHP = player.GetCurrentHP();
+                    int maxHP = player.GetMaxHP();
+                    if (currentHP < maxHP)
+                    {
+                        int healAmount = maxHP - currentHP;
+                        player.Heal(healAmount);
+                        GameLogger.LogInfo($"[StageManager] 플레이어 체력 회복: {currentHP} → {maxHP}", GameLogger.LogCategory.Character);
+                    }
+                }
+            }
+
+            // 적 카드 슬롯 정리
+            _ = ClearEnemyCardsFromSlots();
+
             progressState = StageProgressState.InProgress;
             currentEnemyIndex = 0;
             isStageCompleted = false;
@@ -1206,6 +1317,13 @@ namespace Game.StageSystem.Manager
                 if (ProgressToNextStage())
                 {
                     GameLogger.LogInfo($"다음 스테이지로 진행: {currentStage.stageName}", GameLogger.LogCategory.Combat);
+                    
+                    // 다음 스테이지로 진행한 후 진행 상황 저장
+                    if (saveManager != null)
+                    {
+                        _ = saveManager.SaveCurrentProgress("StageComplete");
+                    }
+                    
                     StartStage();
                 }
                 else

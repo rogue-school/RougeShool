@@ -129,6 +129,19 @@ namespace Game.CombatSystem.State
             // 추가 초기화 대기 시간 (UI 안정화 등)
             yield return new WaitForSeconds(0.2f);
 
+            // 컨텍스트 유효성 재확인
+            if (context == null)
+            {
+                LogError("플레이어 턴 전환 실패: context가 null입니다");
+                yield break;
+            }
+
+            if (context.StateMachine == null)
+            {
+                LogError("플레이어 턴 전환 실패: StateMachine이 null입니다");
+                yield break;
+            }
+
             // 플레이어 턴으로 전환
             LogStateTransition($"{(_isSummonMode ? "소환 모드" : "일반 모드")} - 플레이어 턴으로 전환");
             StartPlayerTurn(context);
@@ -292,10 +305,24 @@ namespace Game.CombatSystem.State
         /// </summary>
         private void StartPlayerTurn(CombatStateContext context)
         {
+            if (context == null)
+            {
+                LogError("StartPlayerTurn: context가 null입니다");
+                return;
+            }
+
+            if (context.StateMachine == null)
+            {
+                LogError("StartPlayerTurn: StateMachine이 null입니다");
+                return;
+            }
+
             LogStateTransition("플레이어 턴으로 전환");
 
             var playerTurnState = new PlayerTurnState();
             RequestTransition(context, playerTurnState);
+            
+            LogStateTransition($"RequestTransition 호출 완료 - 다음 상태: {playerTurnState.StateName}");
         }
 
         /// <summary>

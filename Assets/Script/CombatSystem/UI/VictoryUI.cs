@@ -422,24 +422,59 @@ namespace Game.CombatSystem.UI
             if (isFinal)
             {
                 await SaveStatisticsSession(true);
-            }
-            
-            var stm = _sceneTransitionManager != null
-                ? _sceneTransitionManager
-                : FindFirstObjectByType<Game.CoreSystem.Manager.SceneTransitionManager>(FindObjectsInactive.Include);
-            if (stm == null)
-            {
-                GameLogger.LogWarning("[VictoryUI] SceneTransitionManager를 찾을 수 없습니다", GameLogger.LogCategory.UI);
+                
+                var stm = _sceneTransitionManager != null
+                    ? _sceneTransitionManager
+                    : FindFirstObjectByType<Game.CoreSystem.Manager.SceneTransitionManager>(FindObjectsInactive.Include);
+                if (stm != null)
+                {
+                    _ = stm.TransitionToMainScene();
+                }
                 return;
             }
             
-            if (isFinal)
+            // 스테이지 클리어 시: 자동 진행이 이미 되었으면 패널만 숨기고, 아니면 다음 스테이지로 진행
+            var sm = _stageManager != null ? _stageManager :
+                FindFirstObjectByType<Game.StageSystem.Manager.StageManager>(FindObjectsInactive.Include);
+            
+            if (sm != null)
             {
-                _ = stm.TransitionToMainScene();
+                var currentStage = sm.GetCurrentStage();
+                if (currentStage != null && currentStage.autoProgressToNext)
+                {
+                    // 자동 진행이 이미 완료되었으므로 패널만 숨김
+                    GameLogger.LogInfo("[VictoryUI] 자동 진행 완료 - 패널 숨김", GameLogger.LogCategory.UI);
+                    Hide();
+                }
+                else
+                {
+                    // 수동 진행: 다음 스테이지로 진행
+                    if (sm.ProgressToNextStage())
+                    {
+                        GameLogger.LogInfo("[VictoryUI] 다음 스테이지로 수동 진행", GameLogger.LogCategory.UI);
+                        
+                        // 진행 상황 저장
+                        var saveManager = FindFirstObjectByType<Game.CoreSystem.Save.SaveManager>(FindObjectsInactive.Include);
+                        if (saveManager != null)
+                        {
+                            await saveManager.SaveCurrentProgress("ManualStageProgress");
+                        }
+                        
+                        // 스테이지 시작
+                        sm.StartStage();
+                        
+                        // 패널 숨김
+                        Hide();
+                    }
+                    else
+                    {
+                        GameLogger.LogWarning("[VictoryUI] 다음 스테이지로 진행할 수 없습니다", GameLogger.LogCategory.UI);
+                    }
+                }
             }
             else
             {
-                _ = stm.TransitionToStageScene();
+                GameLogger.LogWarning("[VictoryUI] StageManager를 찾을 수 없습니다", GameLogger.LogCategory.UI);
             }
         }
         
@@ -526,21 +561,15 @@ namespace Game.CombatSystem.UI
                 // 1) 이미 게임 완료 플래그가 올라간 경우
                 if (sm.IsGameCompleted) return true;
 
-                // 2) 현재 스테이지가 마지막 스테이지인지 확인
-                int currentStageNumber = sm.GetCurrentStageNumber();
-                if (currentStageNumber <= 0)
+                // 2) 현재 스테이지 데이터를 가져와서 IsLastStage 확인
+                var currentStageData = sm.GetCurrentStage();
+                if (currentStageData != null && currentStageData.IsLastStage)
                 {
-                    // 스테이지가 초기화되지 않았거나 0이면 최종 승리가 아님
-                    return false;
+                    // 현재 스테이지가 마지막 스테이지인 경우
+                    return true;
                 }
 
-                // 3) 다음 스테이지가 없는 경우
-                if (!sm.HasNextStage()) return true;
-
-                // 4) 스테이지가 더 있다고 표기되지만, 다음 스테이지 데이터가 미등록된 경우도 최종 승리로 간주
-                var nextData = sm.GetStageDataPublic(currentStageNumber + 1);
-                if (nextData == null) return true;
-
+                // 그 외의 경우는 최종 승리가 아님
                 return false;
             }
             
