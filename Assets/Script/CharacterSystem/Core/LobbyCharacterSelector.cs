@@ -35,7 +35,7 @@ namespace Game.CharacterSystem.Core
 		{
 			if (mainMenuController == null)
 			{
-				mainMenuController = FindFirstObjectByType<Game.UISystem.MainMenuController>();
+				Game.CoreSystem.Utility.GameLogger.LogWarning("[LobbyCharacterSelector] MainMenuController가 인스펙터에 설정되지 않았습니다", Game.CoreSystem.Utility.GameLogger.LogCategory.UI);
 			}
 		}
 

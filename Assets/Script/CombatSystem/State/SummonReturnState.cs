@@ -127,7 +127,7 @@ namespace Game.CombatSystem.State
             LogStateTransition($"[복귀 디버그] 원본 적 찾기 시작 - 찾는 대상: {targetData?.DisplayName ?? "null"}");
 
             // EnemyManager의 캐릭터 슬롯에서 비활성화된 원본 적 찾기
-            var enemyManager = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
+            var enemyManager = context?.EnemyManager;
             if (enemyManager == null)
             {
                 LogError("[복귀 디버그] EnemyManager를 찾을 수 없습니다");
@@ -184,7 +184,7 @@ namespace Game.CombatSystem.State
                             LogStateTransition($"[복귀 디버그] ✓ HP 바 컨트롤러 재초기화 완료");
 
                             // EnemyCharacterUIController 재연결 (있다면)
-                            var uiController = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.UI.EnemyCharacterUIController>();
+                            var uiController = Game.CharacterSystem.UI.EnemyCharacterUIController.Instance;
                             if (uiController != null)
                             {
                                 uiController.SetTarget(enemyChar);
@@ -236,7 +236,9 @@ namespace Game.CombatSystem.State
         private void RegisterRestoredEnemy(CombatStateContext context, ICharacter restoredEnemy)
         {
             // StageManager를 통해 복귀된 적 등록
-            var stageManager = UnityEngine.Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
+            var stageManager = context?.StateMachine != null 
+                ? context.StateMachine.GetStageManager()
+                : null;
             if (stageManager != null)
             {
                 stageManager.RegisterEnemy(restoredEnemy);

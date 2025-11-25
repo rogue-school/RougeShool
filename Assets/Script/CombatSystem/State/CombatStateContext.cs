@@ -3,6 +3,7 @@ using Game.CharacterSystem.Manager;
 using Game.CombatSystem.Manager;
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Manager;
+using Game.Application.Battle;
 
 namespace Game.CombatSystem.State
 {
@@ -23,6 +24,8 @@ namespace Game.CombatSystem.State
         public ITurnController TurnController { get; set; }
         public ICardSlotRegistry SlotRegistry { get; set; }
         public ISlotMovementController SlotMovement { get; set; }
+        public ExecuteCardUseCase ExecuteCardUseCase { get; set; }
+        public EndTurnUseCase EndTurnUseCase { get; set; }
 
         // 상태 머신 참조
         public CombatStateMachine StateMachine { get; set; }

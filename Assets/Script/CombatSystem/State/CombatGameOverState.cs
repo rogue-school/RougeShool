@@ -84,15 +84,14 @@ namespace Game.CombatSystem.State
             if (CheckPlayerDeath())
             {
                 // 게임 오버 UI 표시
-                var gameOverUI = Object.FindFirstObjectByType<Game.CombatSystem.UI.GameOverUI>();
-                if (gameOverUI != null)
+                if (Game.CombatSystem.UI.GameOverUI.Instance != null)
                 {
-                    gameOverUI.ShowGameOver();
+                    Game.CombatSystem.UI.GameOverUI.Instance.ShowGameOver();
                     GameLogger.LogInfo("게임 오버 UI 표시 완료", GameLogger.LogCategory.Combat);
                 }
                 else
                 {
-                    GameLogger.LogWarning("GameOverUI를 찾을 수 없습니다", GameLogger.LogCategory.Combat);
+                    GameLogger.LogWarning("GameOverUI 인스턴스를 찾을 수 없습니다", GameLogger.LogCategory.Combat);
                 }
             }
             else

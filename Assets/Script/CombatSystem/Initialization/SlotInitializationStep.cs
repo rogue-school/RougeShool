@@ -5,7 +5,7 @@ using System.Linq;
 using Game.CombatSystem.Slot;
 using Game.CoreSystem.Utility;
 
-namespace Game.CombatSystem.Intialization
+namespace Game.CombatSystem.Initialization
 {
     /// <summary>
     /// 전투 시작 시 슬롯 정보를 자동으로 바인딩하고 레지스트리에 등록하는 초기화 스텝입니다.

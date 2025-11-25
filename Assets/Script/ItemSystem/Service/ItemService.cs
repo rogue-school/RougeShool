@@ -19,6 +19,7 @@ namespace Game.ItemSystem.Service
     /// </summary>
     public class ItemService : MonoBehaviour, IItemService
     {
+        public static ItemService Instance { get; private set; }
         #region 상수
 
         private const int ACTIVE_SLOT_COUNT = ItemConstants.ACTIVE_SLOT_COUNT;
@@ -39,6 +40,9 @@ namespace Game.ItemSystem.Service
         [Inject(Optional = true)] private PlayerManager playerManager;
         [Inject] private IAudioManager audioManager;
         [Inject(Optional = true)] private IVFXManager vfxManager;
+        [Inject(Optional = true)] private Game.CombatSystem.Manager.TurnManager turnManager;
+        [Inject(Optional = true)] private Game.CombatSystem.State.CombatStateMachine combatStateMachine;
+        [Inject(Optional = true)] private Game.CharacterSystem.Manager.EnemyManager enemyManager;
 
         #endregion
 
@@ -58,6 +62,15 @@ namespace Game.ItemSystem.Service
 
         private void Awake()
         {
+            if (Instance != null && Instance != this)
+            {
+                GameLogger.LogWarning("[ItemService] 중복 인스턴스가 감지되었습니다. 기존 인스턴스를 유지하고 새 인스턴스를 제거합니다.", GameLogger.LogCategory.Core);
+                Destroy(gameObject);
+                return;
+            }
+
+            Instance = this;
+
             InitializeActiveSlots();
 
             // PlayerManager 주입 상태 확인
@@ -69,14 +82,18 @@ namespace Game.ItemSystem.Service
 
         private void Start()
         {
-            // Start에서 PlayerManager 재확인
+            // PlayerManager는 Zenject DI로 주입되며, 주입되지 않았다면 경고만 남기고 동작합니다.
             if (playerManager == null)
             {
-                playerManager = FindFirstObjectByType<PlayerManager>();
-                if (playerManager != null)
-                {
-                    GameLogger.LogInfo("[ItemService] Start에서 PlayerManager를 찾았습니다", GameLogger.LogCategory.Core);
-                }
+                GameLogger.LogWarning("[ItemService] Start 시점에도 PlayerManager가 주입되지 않았습니다.", GameLogger.LogCategory.Core);
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+            {
+                Instance = null;
             }
         }
 
@@ -542,21 +559,19 @@ namespace Game.ItemSystem.Service
         /// <returns>완전한 플레이어 턴이면 true, 아니면 false</returns>
         private bool IsPlayerTurn()
         {
-            // 1단계: TurnManager 턴 상태 확인
-            var turnManager = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
+            // 1단계: TurnManager 턴 상태 확인 (DI 기반)
             if (turnManager == null)
             {
-                GameLogger.LogWarning("TurnManager를 찾을 수 없습니다. 아이템 사용을 차단합니다", GameLogger.LogCategory.Core);
+                GameLogger.LogWarning("TurnManager가 주입되지 않았습니다. 아이템 사용을 차단합니다", GameLogger.LogCategory.Core);
                 return false; // TurnManager가 없으면 안전하게 차단
             }
 
             bool isTurnPlayerTurn = turnManager.IsPlayerTurn();
 
-            // 2단계: CombatStateMachine 전투 상태 확인
-            var combatStateMachine = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.State.CombatStateMachine>();
+            // 2단계: CombatStateMachine 전투 상태 확인 (DI 기반)
             if (combatStateMachine == null)
             {
-                GameLogger.LogWarning("CombatStateMachine을 찾을 수 없습니다. 아이템 사용을 차단합니다", GameLogger.LogCategory.Core);
+                GameLogger.LogWarning("CombatStateMachine이 주입되지 않았습니다. 아이템 사용을 차단합니다", GameLogger.LogCategory.Core);
                 return false;
             }
 
@@ -603,8 +618,7 @@ namespace Game.ItemSystem.Service
 
                 case ItemTargetType.Enemy:
                     // 적에게 사용
-                    var enemyManager = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
-                    GameLogger.LogInfo($"[ItemService.DetermineItemTarget] Enemy 타입 → EnemyManager 찾기 결과={enemyManager != null}", GameLogger.LogCategory.Core);
+                    GameLogger.LogInfo($"[ItemService.DetermineItemTarget] Enemy 타입 → EnemyManager 주입 여부={enemyManager != null}", GameLogger.LogCategory.Core);
 
                     var enemyCharacter = enemyManager?.GetCurrentEnemy();
                     GameLogger.LogInfo($"[ItemService.DetermineItemTarget] 현재 적 캐릭터={enemyCharacter?.GetCharacterName() ?? "null"}, 플레이어인가={enemyCharacter?.IsPlayerControlled()}", GameLogger.LogCategory.Core);
@@ -677,17 +691,8 @@ namespace Game.ItemSystem.Service
         {
             try
             {
-                // InventoryPanelController 찾기
-                var inventoryController = FindFirstObjectByType<Game.ItemSystem.Runtime.InventoryPanelController>();
-                if (inventoryController != null)
-                {
-                    inventoryController.ClearAllItemPrefabs();
-                    GameLogger.LogInfo("[ItemService] 인벤토리 UI 자식 오브젝트 제거 완료", GameLogger.LogCategory.Core);
-                }
-                else
-                {
-                    GameLogger.LogWarning("[ItemService] InventoryPanelController를 찾을 수 없습니다", GameLogger.LogCategory.Core);
-                }
+                // InventoryPanelController는 UI 계층에서 직접 관리하므로, 여기서는 존재 여부만 로그로 남깁니다.
+                GameLogger.LogInfo("[ItemService] 인벤토리 UI 정리 요청 - 실제 제거는 UI 계층에서 처리해야 합니다", GameLogger.LogCategory.Core);
             }
             catch (System.Exception ex)
             {

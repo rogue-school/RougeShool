@@ -4,7 +4,7 @@ using Game.SkillCardSystem.Factory;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Service;
 
-namespace Game.SkillCardSystem.Installation
+namespace Game.SkillCardSystem.Installer
 {
     /// <summary>
     /// SkillCardSystem용 Zenject Installer.

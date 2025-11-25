@@ -168,8 +168,7 @@ namespace Game.ItemSystem.Manager
                 GameLogger.LogWarning("[ItemTooltipManager] 툴팁 프리팹이 설정되지 않았습니다. Inspector에서 설정해주세요.", GameLogger.LogCategory.UI);
             }
 
-            // ItemService 찾기 및 이벤트 구독
-            itemService = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
+            // ItemService는 DI 또는 인스펙터를 통해 주입되어야 합니다.
             if (itemService != null)
             {
                 itemService.OnEnhancementUpgraded += OnEnhancementUpgradedHandler;
@@ -177,7 +176,7 @@ namespace Game.ItemSystem.Manager
             }
             else
             {
-                GameLogger.LogWarning("[ItemTooltipManager] ItemService를 찾을 수 없습니다. 강화 레벨 업데이트가 작동하지 않을 수 있습니다.", GameLogger.LogCategory.UI);
+                GameLogger.LogWarning("[ItemTooltipManager] ItemService가 주입되지 않았습니다. 강화 레벨 업데이트가 작동하지 않을 수 있습니다.", GameLogger.LogCategory.UI);
             }
 
             GameLogger.LogInfo("[ItemTooltipManager] 툴팁 시스템 초기화 완료", GameLogger.LogCategory.UI);
@@ -515,18 +514,16 @@ namespace Game.ItemSystem.Manager
         private void HideOtherTooltips()
         {
             // 스킬카드 툴팁 숨김
-            var skillCardTooltipManager = UnityEngine.Object.FindFirstObjectByType<SkillCardTooltipManager>();
-            if (skillCardTooltipManager != null)
+            if (SkillCardTooltipManager.Instance != null)
             {
-                skillCardTooltipManager.ForceHideTooltip();
+                SkillCardTooltipManager.Instance.ForceHideTooltip();
                 GameLogger.LogInfo("[ItemTooltipManager] 다른 툴팁 숨김 (SkillCardTooltipManager)", GameLogger.LogCategory.UI);
             }
 
             // 버프/디버프 툴팁 숨김
-            var buffDebuffTooltipManager = UnityEngine.Object.FindFirstObjectByType<BuffDebuffTooltipManager>();
-            if (buffDebuffTooltipManager != null)
+            if (BuffDebuffTooltipManager.Instance != null)
             {
-                buffDebuffTooltipManager.ForceHideTooltip();
+                BuffDebuffTooltipManager.Instance.ForceHideTooltip();
                 GameLogger.LogInfo("[ItemTooltipManager] 다른 툴팁 숨김 (BuffDebuffTooltipManager)", GameLogger.LogCategory.UI);
             }
         }

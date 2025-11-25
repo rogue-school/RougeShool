@@ -22,6 +22,7 @@ namespace Game.CharacterSystem.Manager
     /// </summary>
     public class PlayerManager : BaseCharacterManager<ICharacter>
     {
+        public static PlayerManager Instance { get; private set; }
         #region 플레이어 캐릭터 전용 설정
 
         [Header("플레이어 UI 연결 (씬 UI 통합)")]
@@ -38,10 +39,35 @@ namespace Game.CharacterSystem.Manager
 
         private IPlayerHandManager handManager;
         private IGameStateManager gameStateManager;
+        [Zenject.Inject(Optional = true)] private Game.SkillCardSystem.Service.SkillCardRegistry _skillCardRegistry;
         private PlayerCharacterData cachedSelectedCharacter;
 
         // UI 컨트롤러 (선택적 의존성)
         private Game.CharacterSystem.UI.PlayerCharacterUIController playerCharacterUIController;
+
+        #endregion
+
+        #region Unity 생명주기 / 전역 접근 지원
+
+        private void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                GameLogger.LogWarning("[PlayerManager] 중복 인스턴스가 감지되었습니다. 기존 인스턴스를 유지하고 새 인스턴스를 제거합니다.", GameLogger.LogCategory.Character);
+                Destroy(gameObject);
+                return;
+            }
+
+            Instance = this;
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+            {
+                Instance = null;
+            }
+        }
 
         #endregion
 
@@ -154,22 +180,13 @@ namespace Game.CharacterSystem.Manager
         /// </summary>
         private IGameStateManager FindGameStateManager()
         {
-            // DI로 주입된 매니저 사용
+            // DI로 주입된 매니저만 사용
             if (gameStateManager != null)
             {
                 return gameStateManager;
             }
 
-            // 전역 객체에서 검색 (DontDestroyOnLoad 포함)
-            var found = UnityEngine.Object.FindFirstObjectByType<GameStateManager>(FindObjectsInactive.Include);
-            if (found != null)
-            {
-                gameStateManager = found; // 캐시
-                GameLogger.LogInfo("[PlayerManager] 전역에서 GameStateManager를 찾았습니다.", GameLogger.LogCategory.Character);
-                return gameStateManager;
-            }
-
-            GameLogger.LogWarning("GameStateManager를 찾지 못했습니다. 선택된 캐릭터를 가져올 수 없습니다.", GameLogger.LogCategory.Character);
+            GameLogger.LogWarning("GameStateManager가 주입되지 않았습니다. 선택된 캐릭터를 가져올 수 없습니다.", GameLogger.LogCategory.Character);
             return null;
         }
 
@@ -570,15 +587,14 @@ namespace Game.CharacterSystem.Manager
         {
             try
             {
-                var skillCardRegistry = FindFirstObjectByType<Game.SkillCardSystem.Service.SkillCardRegistry>();
-                if (skillCardRegistry != null)
+                if (_skillCardRegistry != null)
                 {
-                    skillCardRegistry.ResetAllSkillCardStacks();
+                    _skillCardRegistry.ResetAllSkillCardStacks();
                     GameLogger.LogInfo("[PlayerManager] 스킬카드 스택 초기화 완료", GameLogger.LogCategory.Character);
                 }
                 else
                 {
-                    GameLogger.LogWarning("[PlayerManager] SkillCardRegistry를 찾을 수 없습니다 - 스택 초기화 건너뜀", GameLogger.LogCategory.Character);
+                    GameLogger.LogWarning("[PlayerManager] SkillCardRegistry가 주입되지 않았습니다 - 스택 초기화 건너뜁니다", GameLogger.LogCategory.Character);
                 }
             }
             catch (System.Exception ex)

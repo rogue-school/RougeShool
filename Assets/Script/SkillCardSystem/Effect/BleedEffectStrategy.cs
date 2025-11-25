@@ -21,7 +21,7 @@ namespace Game.SkillCardSystem.Effect
                 return null;
 
             // VFXManager 찾기 (DI 없이 직접 찾기)
-            var vfxManager = UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            var vfxManager = Game.VFXSystem.Manager.VFXManager.Instance;
             
             // visualEffectPrefab과 perTurnEffectPrefab 가져오기 (리플렉션 사용)
             var visualEffectPrefab = GetVisualEffectPrefab(bleedEffectSO);

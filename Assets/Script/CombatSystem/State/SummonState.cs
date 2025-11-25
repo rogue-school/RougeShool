@@ -29,7 +29,9 @@ namespace Game.CombatSystem.State
             LogStateTransition($"소환 상태 진입: {summonTarget.DisplayName} (원본 HP: {originalHP})");
 
             // 즉시 소환 플래그 해제 (중복 소환 방지)
-            var stageManager = UnityEngine.Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
+            var stageManager = context?.StateMachine != null 
+                ? context.StateMachine.GetStageManager()
+                : null;
             if (stageManager != null)
             {
                 stageManager.SetSummonedEnemyActive(false);
@@ -88,7 +90,9 @@ namespace Game.CombatSystem.State
         private IEnumerator SummonProcessCoroutine(CombatStateContext context)
         {
             // 1단계: StageManager에서 원본 적 데이터 가져오기
-            var stageManager = UnityEngine.Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
+            var stageManager = context?.StateMachine != null 
+                ? context.StateMachine.GetStageManager()
+                : null;
             if (stageManager == null)
             {
                 LogError("소환 실패 - StageManager 없음");
@@ -186,7 +190,9 @@ namespace Game.CombatSystem.State
         private IEnumerator CreateSummonedEnemy(CombatStateContext context, EnemyCharacterData targetData, System.Action<ICharacter> onComplete)
         {
             // StageManager에서 적 생성 로직을 가져와서 사용
-            var stageManager = UnityEngine.Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
+            var stageManager = context?.StateMachine != null 
+                ? context.StateMachine.GetStageManager()
+                : null;
             if (stageManager == null)
             {
                 LogError("StageManager를 찾을 수 없습니다");
@@ -226,7 +232,9 @@ namespace Game.CombatSystem.State
         private void RegisterSummonedEnemy(CombatStateContext context, ICharacter newEnemy, EnemyCharacterData originalData, int originalHP)
         {
             // StageManager를 통해 소환된 적 등록
-            var stageManager = UnityEngine.Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
+            var stageManager = context?.StateMachine != null 
+                ? context.StateMachine.GetStageManager()
+                : null;
             if (stageManager != null)
             {
                 stageManager.RegisterSummonedEnemy(newEnemy);
@@ -269,7 +277,9 @@ namespace Game.CombatSystem.State
             LogStateTransition($"[소환 디버그] 복귀할 원본 데이터: {originalData?.DisplayName ?? "null"}, 파라미터 HP: {originalHP}");
 
             // StageManager에서 최신 원본 적 HP 가져오기 (비활성화 직전 업데이트된 값 사용)
-            var stageManager = UnityEngine.Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
+            var stageManager = context?.StateMachine != null 
+                ? context.StateMachine.GetStageManager()
+                : null;
             int latestOriginalHP = originalHP;
             if (stageManager != null)
             {

@@ -15,6 +15,7 @@ using Game.CoreSystem.Utility;
 using DG.Tweening;
 using TMPro;
 using Zenject;
+using Game.Application.Battle;
 
 namespace Game.CombatSystem.Manager
 {
@@ -32,6 +33,7 @@ namespace Game.CombatSystem.Manager
         private readonly EnemyManager _enemyManager;
         private readonly ICombatExecutionManager _executionManager;
         private readonly ITurnController _turnController;
+        private readonly MoveSlotUseCase _moveSlotUseCase;
 
         #endregion
 
@@ -70,7 +72,8 @@ namespace Game.CombatSystem.Manager
             PlayerManager playerManager,
             EnemyManager enemyManager,
             ICombatExecutionManager executionManager,
-            ITurnController turnController)
+            ITurnController turnController,
+            MoveSlotUseCase moveSlotUseCase)
         {
             _registry = registry;
             _cardFactory = cardFactory;
@@ -78,6 +81,7 @@ namespace Game.CombatSystem.Manager
             _enemyManager = enemyManager;
             _executionManager = executionManager;
             _turnController = turnController;
+            _moveSlotUseCase = moveSlotUseCase;
         }
 
         #endregion
@@ -170,6 +174,25 @@ namespace Game.CombatSystem.Manager
             // 데이터 재등록
             _registry.MoveCardData(fromSlot, toSlot);
 
+            // 도메인 슬롯 레지스트리 동기화 (가능한 경우)
+            if (_moveSlotUseCase != null)
+            {
+                try
+                {
+                    var fromDomain = ToDomainSlotPosition(fromSlot);
+                    var toDomain = ToDomainSlotPosition(toSlot);
+                    if (fromDomain != Game.Domain.Combat.ValueObjects.SlotPosition.None &&
+                        toDomain != Game.Domain.Combat.ValueObjects.SlotPosition.None)
+                    {
+                        _moveSlotUseCase.Execute(fromDomain, toDomain);
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    GameLogger.LogError($"도메인 슬롯 이동 중 오류 발생: {ex.Message}", GameLogger.LogCategory.Error);
+                }
+            }
+
             GameLogger.LogInfo(
                 $"{FormatLogTag()} 카드 이동: {card.GetCardName()} ({fromSlot} → {toSlot})",
                 GameLogger.LogCategory.Combat);
@@ -180,6 +203,25 @@ namespace Game.CombatSystem.Manager
                 GameLogger.LogInfo(
                     $"{FormatLogTag()} 적 카드 배틀 슬롯 도달: {card.GetCardName()}",
                     GameLogger.LogCategory.Combat);
+            }
+        }
+
+        private static Game.Domain.Combat.ValueObjects.SlotPosition ToDomainSlotPosition(CombatSlotPosition position)
+        {
+            switch (position)
+            {
+                case CombatSlotPosition.BATTLE_SLOT:
+                    return Game.Domain.Combat.ValueObjects.SlotPosition.BattleSlot;
+                case CombatSlotPosition.WAIT_SLOT_1:
+                    return Game.Domain.Combat.ValueObjects.SlotPosition.WaitSlot1;
+                case CombatSlotPosition.WAIT_SLOT_2:
+                    return Game.Domain.Combat.ValueObjects.SlotPosition.WaitSlot2;
+                case CombatSlotPosition.WAIT_SLOT_3:
+                    return Game.Domain.Combat.ValueObjects.SlotPosition.WaitSlot3;
+                case CombatSlotPosition.WAIT_SLOT_4:
+                    return Game.Domain.Combat.ValueObjects.SlotPosition.WaitSlot4;
+                default:
+                    return Game.Domain.Combat.ValueObjects.SlotPosition.None;
             }
         }
 

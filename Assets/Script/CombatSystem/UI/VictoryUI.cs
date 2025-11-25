@@ -209,12 +209,12 @@ namespace Game.CombatSystem.UI
 
             if (_gameSessionStatistics == null)
             {
-                _gameSessionStatistics = FindFirstObjectByType<GameSessionStatistics>(FindObjectsInactive.Include);
+                _gameSessionStatistics = Game.CoreSystem.Statistics.GameSessionStatisticsLocator.Instance;
             }
 
             if (_leaderboardManager == null)
             {
-                _leaderboardManager = FindFirstObjectByType<LeaderboardManager>(FindObjectsInactive.Include);
+                _leaderboardManager = Game.CoreSystem.Statistics.LeaderboardManagerLocator.Instance;
             }
 
             if (_gameSessionStatistics == null)
@@ -332,14 +332,9 @@ namespace Game.CombatSystem.UI
         /// </summary>
         private void ShowLeaderboard()
         {
-            if (_leaderboardManager == null)
+            if (_leaderboardManager == null || _gameSessionStatistics == null)
             {
-                _leaderboardManager = FindFirstObjectByType<LeaderboardManager>(FindObjectsInactive.Include);
-            }
-
-            if (_gameSessionStatistics == null)
-            {
-                _gameSessionStatistics = FindFirstObjectByType<GameSessionStatistics>(FindObjectsInactive.Include);
+                GameLogger.LogWarning("[VictoryUI] ShowLeaderboard: LeaderboardManager 또는 GameSessionStatistics가 주입되지 않았습니다.", GameLogger.LogCategory.UI);
             }
 
             if (_leaderboardManager == null || _gameSessionStatistics == null)
@@ -424,9 +419,7 @@ namespace Game.CombatSystem.UI
                 await SaveStatisticsSession(true);
             }
             
-            var stm = _sceneTransitionManager != null
-                ? _sceneTransitionManager
-                : FindFirstObjectByType<Game.CoreSystem.Manager.SceneTransitionManager>(FindObjectsInactive.Include);
+            var stm = _sceneTransitionManager;
             if (stm == null)
             {
                 GameLogger.LogWarning("[VictoryUI] SceneTransitionManager를 찾을 수 없습니다", GameLogger.LogCategory.UI);
@@ -452,12 +445,14 @@ namespace Game.CombatSystem.UI
             
             if (_gameSessionStatistics == null)
             {
-                _gameSessionStatistics = FindFirstObjectByType<GameSessionStatistics>(FindObjectsInactive.Include);
+                GameLogger.LogWarning("[VictoryUI] GameSessionStatistics가 주입되지 않았습니다. 통계 저장을 건너뜁니다.", GameLogger.LogCategory.Save);
+                return;
             }
             
             if (_statisticsManager == null)
             {
-                _statisticsManager = FindFirstObjectByType<StatisticsManager>(FindObjectsInactive.Include);
+                GameLogger.LogWarning("[VictoryUI] StatisticsManager가 주입되지 않았습니다. 통계 저장을 건너뜁니다.", GameLogger.LogCategory.Save);
+                return;
             }
             
             if (_gameSessionStatistics == null)
@@ -519,8 +514,7 @@ namespace Game.CombatSystem.UI
         private bool IsFinalVictory()
         {
             // StageManager가 주입되지 않았으면 안전하게 찾아봅니다.
-            var sm = _stageManager != null ? _stageManager :
-                FindFirstObjectByType<Game.StageSystem.Manager.StageManager>(FindObjectsInactive.Include);
+            var sm = _stageManager;
             if (sm != null)
             {
                 // 1) 이미 게임 완료 플래그가 올라간 경우

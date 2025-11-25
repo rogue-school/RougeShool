@@ -168,7 +168,6 @@ namespace Game.ItemSystem.Runtime
         /// </summary>
         private void SubscribeToTurnChanges()
         {
-            turnManager = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
             if (turnManager != null)
             {
                 turnManager.OnTurnChanged += HandleTurnChanged;
@@ -176,7 +175,7 @@ namespace Game.ItemSystem.Runtime
             }
             else
             {
-                GameLogger.LogWarning("[ActionPopupUI] TurnManager를 찾을 수 없습니다", GameLogger.LogCategory.UI);
+                GameLogger.LogWarning("[ActionPopupUI] TurnManager가 주입되지 않았습니다", GameLogger.LogCategory.UI);
             }
         }
 

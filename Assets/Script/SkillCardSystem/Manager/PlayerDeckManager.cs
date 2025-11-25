@@ -37,6 +37,7 @@ namespace Game.SkillCardSystem.Manager
         #region 핵심 필드
         
         private List<PlayerSkillDeck.CardEntry> currentDeck = new();
+        [Inject(Optional = true)] private IPlayerHandManager playerHandManager;
         
         #endregion
         
@@ -160,18 +161,7 @@ namespace Game.SkillCardSystem.Manager
         /// </summary>
         private void InitializeCirculationSystem()
         {
-            // 순환 참조 방지: FindFirstObjectByType으로 찾기
-            var circulationSystem = FindFirstObjectByType<MonoBehaviour>()?.GetComponent<ICardCirculationSystem>();
-
-            // 또는 PlayerHandManager를 통해 접근
-            var handManager = FindFirstObjectByType<PlayerHandManager>();
-            if (handManager != null)
-            {
-                // PlayerHandManager가 CardCirculationSystem을 가지고 있음
-                // 리플렉션 또는 public 메서드를 통해 접근 가능
-                GameLogger.LogInfo("PlayerHandManager를 통해 CardCirculationSystem 초기화 예정", GameLogger.LogCategory.SkillCard);
-            }
-
+            // PlayerHandManager를 통해 접근
             if (cardFactory == null)
             {
                 GameLogger.LogWarning("SkillCardFactory를 찾을 수 없습니다 - 순환 시스템 초기화 건너뜀", GameLogger.LogCategory.SkillCard);
@@ -193,7 +183,7 @@ namespace Game.SkillCardSystem.Manager
             }
 
             // PlayerHandManager를 통해 간접적으로 초기화
-            if (handManager != null && cardInstances.Count > 0)
+            if (playerHandManager != null && cardInstances.Count > 0)
             {
                 // PlayerHandManager에 초기화 메서드가 있다면 호출
                 StartCoroutine(DelayedInitializeCirculation(cardInstances));
@@ -205,11 +195,10 @@ namespace Game.SkillCardSystem.Manager
             // 프레임 대기하여 모든 DI 완료 후 초기화
             yield return new WaitForEndOfFrame();
 
-            var handManager = FindFirstObjectByType<PlayerHandManager>();
-            if (handManager != null)
+            if (playerHandManager != null)
             {
                 // PlayerHandManager의 InitializeCirculationSystem 메서드 호출
-                handManager.InitializeDeck(cardInstances);
+                playerHandManager.InitializeDeck(cardInstances);
                 GameLogger.LogInfo($"CardCirculationSystem 초기화 완료: {cardInstances.Count}장", GameLogger.LogCategory.SkillCard);
             }
         }

@@ -101,7 +101,7 @@ namespace Game.CoreSystem.Statistics
                 Game.SkillCardSystem.Deck.PlayerSkillDeck playerDeck = null;
                 try
                 {
-                    var playerManager = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>(UnityEngine.FindObjectsInactive.Include);
+                    var playerManager = Game.CharacterSystem.Manager.PlayerManager.Instance;
                     if (playerManager != null && playerManager.GetPlayer() != null)
                     {
                         var playerData = playerManager.GetPlayer().CharacterData as Game.CharacterSystem.Data.PlayerCharacterData;

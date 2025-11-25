@@ -92,21 +92,7 @@ namespace Game.TutorialSystem
                 _itemService.OnActiveItemUsed += HandleActiveItemUsed;
             }
 
-            // Fallback: TurnManager 어댑터에서도 구독 시도 (DI 미주입 대비)
-            if (_turnController == null)
-            {
-                var tm = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
-                if (tm != null)
-                {
-                    tm.OnTurnChanged += (t) => HandleTurnChanged(ConvertTurnType(t));
-                    tm.OnTurnCountChanged += (c) => HandleTurnCountChanged(c);
-                    GameLogger.LogWarning("[TutorialManager] ITurnController 미주입 → TurnManager에 직접 구독", GameLogger.LogCategory.UI);
-                }
-                else
-                {
-                    GameLogger.LogWarning("[TutorialManager] Turn 이벤트 소스를 찾지 못했습니다(디아보스?)", GameLogger.LogCategory.UI);
-                }
-            }
+            // ITurnController가 주입되지 않았다면 튜토리얼은 턴 이벤트에 반응하지 않습니다.
         }
 
         private void Unsubscribe()
@@ -198,10 +184,6 @@ namespace Game.TutorialSystem
 
         private void PrepareOverlay()
         {
-            if (_overlay != null) return;
-
-            // 우선: 씬에 이미 존재하면 재사용
-            _overlay = FindFirstObjectByType<TutorialOverlayView>();
             if (_overlay != null) return;
 
             if (overlayPrefab == null)
@@ -303,11 +285,7 @@ namespace Game.TutorialSystem
         {
             if (!_shouldRun || _isRunning || _startedOnce) return;
             bool isPlayer = _turnController != null ? _turnController.IsPlayerTurn() : false;
-            if (!isPlayer)
-            {
-                var tm = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
-                if (tm != null) isPlayer = tm.IsPlayerTurn();
-            }
+            // ITurnController가 없으면 튜토리얼 자동 시작을 하지 않습니다.
             GameLogger.LogInfo($"[TutorialManager] 초기 상태 검사: isPlayerTurn={isPlayer}", GameLogger.LogCategory.UI);
             if (isPlayer) StartCoroutine(ShowNextFrame());
         }

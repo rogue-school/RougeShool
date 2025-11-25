@@ -120,8 +120,8 @@ namespace Game.CharacterSystem.Effect
                 return;
             }
 
-            // EffectNotificationPanel 찾기 (비활성화된 오브젝트도 포함)
-            EffectNotificationPanel notificationPanel = UnityEngine.Object.FindFirstObjectByType<EffectNotificationPanel>(FindObjectsInactive.Include);
+            // EffectNotificationPanel 전역 인스턴스 사용
+            EffectNotificationPanel notificationPanel = EffectNotificationPanel.Instance;
             if (notificationPanel != null)
             {
                 // 이펙트 이름만 사용

@@ -49,13 +49,10 @@ namespace Game.CombatSystem.Service
         /// </summary>
         private void FindStateMachine()
         {
+            // CombatStateMachine은 DI 또는 외부에서 설정되어야 합니다.
             if (stateMachine == null)
             {
-                stateMachine = Object.FindFirstObjectByType<CombatStateMachine>();
-                if (stateMachine != null)
-                {
-                    GameLogger.LogInfo("[CardDropService] CombatStateMachine 연결 완료", GameLogger.LogCategory.Combat);
-                }
+                GameLogger.LogWarning("[CardDropService] CombatStateMachine이 설정되지 않았습니다.", GameLogger.LogCategory.Combat);
             }
         }
 

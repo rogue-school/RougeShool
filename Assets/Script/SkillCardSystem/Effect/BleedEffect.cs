@@ -39,7 +39,7 @@ namespace Game.SkillCardSystem.Effect
             this.icon = icon;
             this.perTurnEffectPrefab = perTurnEffectPrefab;
             this.perTurnSfxClip = null;
-            this.vfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
+            this.vfxManager = vfxManager ?? Game.VFXSystem.Manager.VFXManager.Instance;
             this.sourceEffectName = sourceEffectName;
         }
 
@@ -60,7 +60,7 @@ namespace Game.SkillCardSystem.Effect
             this.icon = icon;
             this.perTurnEffectPrefab = perTurnEffectPrefab;
             this.perTurnSfxClip = perTurnSfxClip;
-            this.vfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
+            this.vfxManager = vfxManager ?? Game.VFXSystem.Manager.VFXManager.Instance;
             this.sourceEffectName = sourceEffectName;
         }
 
@@ -115,7 +115,7 @@ namespace Game.SkillCardSystem.Effect
             }
 
             // VFXManager를 통한 이펙트 생성 (RectTransform 중심, UI 기반, 정확한 위치 지정)
-            var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            var finalVfxManager = vfxManager ?? Game.VFXSystem.Manager.VFXManager.Instance;
             if (finalVfxManager != null)
             {
                 var instance = finalVfxManager.PlayEffectAtCharacterRectTransformCenter(perTurnEffectPrefab, targetTransform);
@@ -296,7 +296,7 @@ namespace Game.SkillCardSystem.Effect
                 return;
             }
 
-            var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            var audioManager = Game.CoreSystem.Audio.AudioManager.Instance;
             if (audioManager != null)
             {
                 audioManager.PlaySFXWithPool(perTurnSfxClip, 0.9f);

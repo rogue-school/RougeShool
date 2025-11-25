@@ -195,22 +195,6 @@ namespace Game.CombatSystem.Manager
             _turnController?.ProcessAllCharacterTurnEffects();
         }
 
-        public void RestoreTurnState(int turnCount, TurnType turnType)
-        {
-            if (_turnController is TurnController controller)
-            {
-                controller.RestoreTurnState(turnCount, ConvertToNewTurnType(turnType));
-            }
-        }
-
-        public void SetTurnCount(int count)
-        {
-            if (_turnController is TurnController controller)
-            {
-                controller.SetTurnCount(count);
-            }
-        }
-
         #endregion
 
         #region 카드 레지스트리 관리 (Delegate to CardSlotRegistry)
@@ -373,26 +357,6 @@ namespace Game.CombatSystem.Manager
         public int GetCurrentTurn()
         {
             return TurnCount;
-        }
-
-        public void ApplyGuardEffect()
-        {
-            GameLogger.LogInfo("가드 효과 적용 요청됨", GameLogger.LogCategory.Combat);
-        }
-
-        public void PauseTurn()
-        {
-            GameLogger.LogInfo("턴 일시정지", GameLogger.LogCategory.Combat);
-        }
-
-        public void ResumeTurn()
-        {
-            GameLogger.LogInfo("턴 재개", GameLogger.LogCategory.Combat);
-        }
-
-        public void ResetTurnTimer()
-        {
-            GameLogger.LogInfo("턴 시간 리셋", GameLogger.LogCategory.Combat);
         }
 
         #endregion

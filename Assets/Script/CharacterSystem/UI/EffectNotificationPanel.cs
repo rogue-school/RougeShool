@@ -12,6 +12,7 @@ namespace Game.CharacterSystem.UI
     /// </summary>
     public class EffectNotificationPanel : MonoBehaviour
     {
+        public static EffectNotificationPanel Instance { get; private set; }
         [Header("UI 컴포넌트")]
         [Tooltip("알림 패널 GameObject")]
         [SerializeField] private GameObject panel;
@@ -39,11 +40,25 @@ namespace Game.CharacterSystem.UI
 
         private void Awake()
         {
+            if (Instance != null && Instance != this)
+            {
+                GameLogger.LogWarning("[EffectNotificationPanel] 중복 인스턴스가 감지되었습니다. 기존 인스턴스를 유지하고 새 인스턴스를 제거합니다.", GameLogger.LogCategory.UI);
+                Destroy(gameObject);
+                return;
+            }
+
+            Instance = this;
+
             InitializeComponents();
         }
 
         private void OnDestroy()
         {
+            if (Instance == this)
+            {
+                Instance = null;
+            }
+
             // DOTween 시퀀스 정리
             if (currentSequence != null && currentSequence.IsActive())
             {

@@ -88,75 +88,31 @@ public class CombatInstaller : MonoInstaller
     /// </summary>
     private void BindIntegratedManagers()
     {
-        // PlayerManager 바인딩 - 씬에 있으면 사용, 없으면 자동 생성
-        var playerManager = FindFirstObjectByType<PlayerManager>();
-        if (playerManager != null)
-        {
-            Container.Bind<PlayerManager>().FromInstance(playerManager).AsSingle();
-            GameLogger.LogInfo(" PlayerManager 바인딩 완료 (씬에서 찾기)");
-        }
-        else
-        {
-            // PlayerManager가 없으면 자동 생성
-            var playerManagerGO = new GameObject("PlayerManager");
-            playerManager = playerManagerGO.AddComponent<PlayerManager>();
-            Container.Bind<PlayerManager>().FromInstance(playerManager).AsSingle();
-            // 자동 생성된 컴포넌트에 의존성 주입
-            Container.Inject(playerManager);
-            GameLogger.LogInfo(" PlayerManager 자동 생성 및 바인딩 완료");
-        }
+        // PlayerManager 바인딩 - 자동 생성 (씬에 없을 것을 전제로 함)
+        Container.Bind<PlayerManager>()
+            .FromNewComponentOnNewGameObject()
+            .AsSingle();
+        GameLogger.LogInfo(" PlayerManager 자동 생성 및 바인딩 완료", GameLogger.LogCategory.Combat);
 
-        // EnemyManager 바인딩 - 씬에 있으면 사용, 없으면 자동 생성
-        var enemyManager = FindFirstObjectByType<EnemyManager>();
-        if (enemyManager != null)
-        {
-            Container.Bind<EnemyManager>().FromInstance(enemyManager).AsSingle();
-            GameLogger.LogInfo(" EnemyManager 바인딩 완료 (씬에서 찾기)");
-        }
-        else
-        {
-            // EnemyManager가 없으면 자동 생성
-            var enemyManagerGO = new GameObject("EnemyManager");
-            enemyManager = enemyManagerGO.AddComponent<EnemyManager>();
-            Container.Bind<EnemyManager>().FromInstance(enemyManager).AsSingle();
-            // 자동 생성된 컴포넌트에 의존성 주입
-            Container.Inject(enemyManager);
-            GameLogger.LogInfo(" EnemyManager 자동 생성 및 바인딩 완료");
-        }
+        // EnemyManager 바인딩 - 자동 생성
+        Container.Bind<EnemyManager>()
+            .FromNewComponentOnNewGameObject()
+            .AsSingle();
+        GameLogger.LogInfo(" EnemyManager 자동 생성 및 바인딩 완료", GameLogger.LogCategory.Combat);
 
         // GameStartupController는 삭제됨 (상태 패턴으로 전환)
 
         // CombatExecutionManager 바인딩 - PlayerManager와 EnemyManager 이후에 바인딩 (CombatFlowManager보다 먼저)
-        var combatExecutionManager = FindFirstObjectByType<CombatExecutionManager>();
-        if (combatExecutionManager != null)
-        {
-            Container.Bind<ICombatExecutionManager>().FromInstance(combatExecutionManager).AsSingle();
-            GameLogger.LogInfo(" CombatExecutionManager 바인딩 완료 (씬에서 찾기)");
-        }
-        else
-        {
-            // CombatExecutionManager가 없으면 자동 생성
-            Container.BindInterfacesAndSelfTo<CombatExecutionManager>()
-                .FromNewComponentOnNewGameObject()
-                .AsSingle();
-            GameLogger.LogInfo(" CombatExecutionManager 자동 생성 및 바인딩 완료");
-        }
+        Container.BindInterfacesAndSelfTo<CombatExecutionManager>()
+            .FromNewComponentOnNewGameObject()
+            .AsSingle();
+        GameLogger.LogInfo(" CombatExecutionManager 자동 생성 및 바인딩 완료", GameLogger.LogCategory.Combat);
 
         // CombatFlowManager 바인딩 - CombatExecutionManager 이후에 바인딩
-        var combatFlowManager = FindFirstObjectByType<CombatFlowManager>();
-        if (combatFlowManager != null)
-        {
-            Container.Bind<ICombatFlowManager>().FromInstance(combatFlowManager).AsSingle();
-            GameLogger.LogInfo(" CombatFlowManager 바인딩 완료 (씬에서 찾기)");
-        }
-        else
-        {
-            // CombatFlowManager가 없으면 자동 생성
-            Container.BindInterfacesAndSelfTo<CombatFlowManager>()
-                .FromNewComponentOnNewGameObject()
-                .AsSingle();
-            GameLogger.LogInfo(" CombatFlowManager 자동 생성 및 바인딩 완료");
-        }
+        Container.BindInterfacesAndSelfTo<CombatFlowManager>()
+            .FromNewComponentOnNewGameObject()
+            .AsSingle();
+        GameLogger.LogInfo(" CombatFlowManager 자동 생성 및 바인딩 완료", GameLogger.LogCategory.Combat);
 
         // CombatStatsAggregator 바인딩 (전투 통계 수집기)
         // DontDestroyOnLoad로 설정하여 씬 전환 후에도 유지되도록 함
@@ -197,17 +153,7 @@ public class CombatInstaller : MonoInstaller
     /// </summary>
     private void BindItemSystemServices()
     {
-        // IItemService: 전역에서 찾고 없으면 생성
-        var itemService = FindFirstObjectByType<ItemService>(FindObjectsInactive.Include);
-        if (itemService == null)
-        {
-            var go = new GameObject("ItemService");
-            DontDestroyOnLoad(go);
-            itemService = go.AddComponent<ItemService>();
-            GameLogger.LogInfo(" ItemService 자동 생성 및 전역 고정");
-        }
-        Container.Bind<IItemService>().FromInstance(itemService).AsSingle();
-
+        // IItemService: CoreSystemInstaller에서 전역 싱글톤으로 바인딩됨 (여기서는 재바인딩하지 않음)
         // IRewardGenerator: 순수 서비스 싱글톤 (중복 바인딩 방지)
         if (!Container.HasBinding<IRewardGenerator>())
         {
@@ -247,44 +193,23 @@ public class CombatInstaller : MonoInstaller
         Container.Bind<TurnContext>().AsSingle();
         GameLogger.LogInfo(" TurnContext 바인딩 완료");
         
-        // IStageManager 바인딩 - 씬에 있으면 사용, 없으면 자동 생성
-        var stageManager = FindFirstObjectByType<StageManager>();
-        if (stageManager != null)
-        {
-            Container.Bind<IStageManager>().FromInstance(stageManager).AsSingle();
-            GameLogger.LogInfo(" IStageManager 바인딩 완료 (씬에서 찾기)");
-        }
-        else
-        {
-            // StageManager가 없으면 자동 생성
-            var stageManagerGO = new GameObject("StageManager");
-            stageManager = stageManagerGO.AddComponent<StageManager>();
-            Container.Bind<IStageManager>().FromInstance(stageManager).AsSingle();
-            GameLogger.LogInfo(" IStageManager 자동 생성 및 바인딩 완료");
-        }
+        // IStageManager 바인딩 - 자동 생성
+        Container.Bind<IStageManager>()
+            .To<StageManager>()
+            .FromNewComponentOnNewGameObject()
+            .AsSingle();
+        GameLogger.LogInfo(" IStageManager 자동 생성 및 바인딩 완료", GameLogger.LogCategory.Combat);
         
         // CardDropService 바인딩 (CombatExecutionManager 의존성 추가)
         // 주입 의존성은 사전 바인딩된 타입으로 자동 해결되도록 단순 바인딩
         // (Install 중 Resolve 방지, 의존성 순서 문제 예방)
         Container.Bind<CardDropService>().AsSingle();
         
-        // VFXManager 바인딩 - 씬에 있으면 사용, 없으면 자동 생성
-        var vfxManager = FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
-        if (vfxManager != null)
-        {
-            Container.Bind<Game.VFXSystem.Manager.VFXManager>().FromInstance(vfxManager).AsSingle();
-            GameLogger.LogInfo(" VFXManager 바인딩 완료 (씬에서 찾기)");
-        }
-        else
-        {
-            // VFXManager가 없으면 자동 생성
-            var vfxManagerGO = new GameObject("VFXManager");
-            vfxManager = vfxManagerGO.AddComponent<Game.VFXSystem.Manager.VFXManager>();
-            Container.Bind<Game.VFXSystem.Manager.VFXManager>().FromInstance(vfxManager).AsSingle();
-            // 자동 생성된 컴포넌트에 의존성 주입
-            Container.Inject(vfxManager);
-            GameLogger.LogInfo(" VFXManager 자동 생성 및 바인딩 완료");
-        }
+        // VFXManager 바인딩 - 자동 생성
+        Container.Bind<Game.VFXSystem.Manager.VFXManager>()
+            .FromNewComponentOnNewGameObject()
+            .AsSingle();
+        GameLogger.LogInfo(" VFXManager 자동 생성 및 바인딩 완료", GameLogger.LogCategory.Combat);
 
         // TurnManager 바인딩 - 자동 생성으로 최적화
         Container.BindInterfacesAndSelfTo<TurnManager>()
@@ -313,30 +238,11 @@ public class CombatInstaller : MonoInstaller
     /// </summary>
     private void BindCombatStateMachine()
     {
-        // CombatStateMachine 컴포넌트를 보장
-        var existing = FindFirstObjectByType<CombatStateMachine>();
-        CombatStateMachine stateMachine;
-
-        if (existing != null)
-        {
-            stateMachine = existing;
-            GameLogger.LogInfo(" CombatStateMachine 발견 (씬에서 찾기)", GameLogger.LogCategory.Combat);
-        }
-        else
-        {
-            // 자동 생성
-            var stateMachineGO = new GameObject("CombatStateMachine");
-            stateMachine = stateMachineGO.AddComponent<CombatStateMachine>();
-            GameLogger.LogInfo(" CombatStateMachine 자동 생성 완료", GameLogger.LogCategory.Combat);
-        }
-
-        // Zenject 바인딩
-        Container.Bind<CombatStateMachine>().FromInstance(stateMachine).AsSingle();
-
-        // 의존성 주입 예약 (설치 완료 후 자동 주입됨)
-        Container.QueueForInject(stateMachine);
-
-        GameLogger.LogInfo(" CombatStateMachine 바인딩/초기화 완료", GameLogger.LogCategory.Combat);
+        // CombatStateMachine 컴포넌트를 자동 생성하여 바인딩
+        Container.Bind<CombatStateMachine>()
+            .FromNewComponentOnNewGameObject()
+            .AsSingle();
+        GameLogger.LogInfo(" CombatStateMachine 자동 생성 및 바인딩 완료", GameLogger.LogCategory.Combat);
     }
 
     #endregion
@@ -345,27 +251,17 @@ public class CombatInstaller : MonoInstaller
 
     private void BindStageFlowStateMachine()
     {
-        // StageFlowStateMachine 컴포넌트를 보장
-        var existing = FindFirstObjectByType<StageFlowStateMachine>();
-        StageFlowStateMachine flow;
-        if (existing != null)
-        {
-            flow = existing;
-        }
-        else
-        {
-            flow = new GameObject("StageFlowStateMachine").AddComponent<StageFlowStateMachine>();
-        }
+        // StageFlowStateMachine 컴포넌트를 자동 생성하고 StageManager를 주입하여 초기화
+        var flowGO = new GameObject("StageFlowStateMachine");
+        var flow = flowGO.AddComponent<StageFlowStateMachine>();
 
-        // StageManager를 찾아 초기화
-        var stageMgr = FindFirstObjectByType<StageManager>();
+        var stageMgr = Container.TryResolve<IStageManager>() as StageManager;
         if (stageMgr != null)
         {
             flow.Initialize(stageMgr);
         }
 
-        // DI는 필요 없으므로 컨테이너 바인딩은 생략
-        GameLogger.LogInfo(" StageFlowStateMachine 바인딩/초기화 완료");
+        GameLogger.LogInfo(" StageFlowStateMachine 바인딩/초기화 완료", GameLogger.LogCategory.Combat);
     }
 
     #endregion
@@ -400,42 +296,16 @@ public class CombatInstaller : MonoInstaller
         // TurnManager는 BindFactories()에서 바인딩됨
 
         // CombatExecutionManager 바인딩 (SlotExecutionSystem 대신 CombatExecutionManager 사용)
-        var executionManager = FindFirstObjectByType<CombatExecutionManager>();
-        if (executionManager != null)
-        {
-            Container.Bind<CombatExecutionManager>().FromInstance(executionManager).AsSingle();
-            Container.Bind<ICombatExecutionManager>().FromInstance(executionManager).AsSingle();
-            GameLogger.LogInfo(" CombatExecutionManager 바인딩 완료");
-        }
-        else
-        {
-            // CombatExecutionManager가 없으면 생성
-            var executionManagerGO = new GameObject("CombatExecutionManager");
-            executionManager = executionManagerGO.AddComponent<CombatExecutionManager>();
-            Container.Bind<CombatExecutionManager>().FromInstance(executionManager).AsSingle();
-            Container.Bind<ICombatExecutionManager>().FromInstance(executionManager).AsSingle();
-            GameLogger.LogInfo(" CombatExecutionManager 생성 및 바인딩 완료");
-        }
+        Container.BindInterfacesAndSelfTo<CombatExecutionManager>()
+            .FromNewComponentOnNewGameObject()
+            .AsSingle();
+        GameLogger.LogInfo(" CombatExecutionManager 자동 생성 및 바인딩 완료", GameLogger.LogCategory.Combat);
 
         // 기존 매니저들 바인딩
         // PlayerManager는 BindFactories()에서 바인딩됨 (씬에서 찾기)
         // PlayerHandManager는 BindFactories()에서 바인딩됨
         
-        // EnemyManager 바인딩 - 씬에 있으면 사용, 없으면 자동 생성
-        var enemyManager = FindFirstObjectByType<EnemyManager>();
-        if (enemyManager != null)
-        {
-            Container.BindInterfacesAndSelfTo<EnemyManager>().FromInstance(enemyManager).AsSingle();
-            GameLogger.LogInfo(" EnemyManager 바인딩 완료 (씬에서 찾기)");
-        }
-        else
-        {
-            // EnemyManager가 없으면 자동 생성
-            var enemyManagerGO = new GameObject("EnemyManager");
-            enemyManager = enemyManagerGO.AddComponent<EnemyManager>();
-            Container.BindInterfacesAndSelfTo<EnemyManager>().FromInstance(enemyManager).AsSingle();
-            GameLogger.LogInfo(" EnemyManager 자동 생성 및 바인딩 완료");
-        }
+        // EnemyManager는 BindIntegratedManagers에서 이미 바인딩됨
         
         // IStageManager는 BindFactories()에서 바인딩됨
         
@@ -485,28 +355,7 @@ public class CombatInstaller : MonoInstaller
             }
         }
 
-        // 코어 시스템 매니저들 바인딩 (DontDestroyOnLoad로 전역에서 찾기)
-        var gameStateManager = FindFirstObjectByType<GameStateManager>(FindObjectsInactive.Include);
-        if (gameStateManager != null)
-        {
-            Container.Bind<IGameStateManager>().FromInstance(gameStateManager).AsSingle();
-            GameLogger.LogInfo(" GameStateManager 바인딩 완료 (전역에서 찾기)", GameLogger.LogCategory.Combat);
-        }
-        else
-        {
-            GameLogger.LogWarning(" GameStateManager를 찾을 수 없습니다!", GameLogger.LogCategory.Combat);
-        }
-
-        var settingsManager = FindFirstObjectByType<SettingsManager>(FindObjectsInactive.Include);
-        if (settingsManager != null)
-        {
-            Container.Bind<SettingsManager>().FromInstance(settingsManager).AsSingle();
-            GameLogger.LogInfo(" SettingsManager 바인딩 완료 (전역에서 찾기)", GameLogger.LogCategory.Combat);
-        }
-        else
-        {
-            GameLogger.LogWarning(" SettingsManager를 찾을 수 없습니다!", GameLogger.LogCategory.Combat);
-        }
+        // 코어 시스템 매니저들 바인딩은 CoreSystemInstaller에서 처리되므로 여기서는 재바인딩하지 않음
 
         // 특별한 경우들
         // Container.Bind<CardDropService>().AsSingle(); // 중복 바인딩 제거 - BindFactories에서 의존성 포함 바인딩
@@ -544,20 +393,11 @@ public class CombatInstaller : MonoInstaller
         Container.Bind<CombatSlotRegistry>().AsSingle();
         Container.Bind<CharacterSlotRegistry>().AsSingle();
         
-        // SlotRegistry는 MonoBehaviour이므로 씬에서 찾아서 바인딩
-        var slotRegistry = FindFirstObjectByType<SlotRegistry>();
-        if (slotRegistry != null)
-        {
-            Container.Bind<SlotRegistry>().FromInstance(slotRegistry).AsSingle();
-            GameLogger.LogInfo(" SlotRegistry 바인딩 완료");
-        }
-        else
-        {
-            // SlotRegistry가 없으면 자동 생성
-            Container.BindInterfacesAndSelfTo<SlotRegistry>()
-                .FromNewComponentOnNewGameObject().AsSingle();
-            GameLogger.LogInfo(" SlotRegistry 자동 생성 및 바인딩 완료");
-        }
+        // SlotRegistry는 자동 생성하여 바인딩
+        Container.BindInterfacesAndSelfTo<SlotRegistry>()
+            .FromNewComponentOnNewGameObject()
+            .AsSingle();
+        GameLogger.LogInfo(" SlotRegistry 자동 생성 및 바인딩 완료", GameLogger.LogCategory.Combat);
 
         // DefaultTurnStartConditionChecker 바인딩
         Container.Bind<DefaultTurnStartConditionChecker>().AsSingle();
@@ -592,19 +432,8 @@ public class CombatInstaller : MonoInstaller
 
     private void BindSceneLoader()
     {
-        // SceneTransitionManager는 MonoBehaviour이므로 씬에서 찾아야 함
-        var transitionManager = FindFirstObjectByType<SceneTransitionManager>();
-        if (transitionManager == null)
-        {
-            GameLogger.LogError(" SceneTransitionManager를 씬에서 찾을 수 없습니다.");
-            return;
-        }
-
-        // ISceneLoader 인터페이스로 바인딩
-        Container.Bind<ISceneLoader>().FromInstance(transitionManager).AsSingle();
-        Container.Bind<ISceneTransitionManager>().FromInstance(transitionManager).AsSingle();
-        
-        GameLogger.LogInfo(" 씬 로더 바인딩 완료");
+        // SceneTransitionManager는 CoreSystem에서 이미 바인딩되므로 재바인딩하지 않습니다.
+        GameLogger.LogInfo(" 씬 로더 바인딩은 CoreSystem에서 처리되므로 건너뜁니다.", GameLogger.LogCategory.Combat);
     }
 
     #endregion
@@ -661,24 +490,7 @@ public class CombatInstaller : MonoInstaller
     {
         GameLogger.LogInfo(" BindAudioManager 호출 시작");
         
-        // AudioManager를 씬에서 찾기
-        var audioManager = FindFirstObjectByType<AudioManager>();
-        
-        if (audioManager == null)
-        {
-            GameLogger.LogWarning(" AudioManager를 씬에서 찾을 수 없습니다. null로 바인딩합니다.");
-            // IAudioManager를 null로 바인딩
-            Container.Bind<IAudioManager>().FromInstance(null).AsSingle();
-        }
-        else
-        {
-            GameLogger.LogInfo($"[CombatInstaller] AudioManager 발견: {audioManager.name}", GameLogger.LogCategory.Combat);
-            
-            // IAudioManager 인터페이스로 바인딩
-            Container.Bind<IAudioManager>().FromInstance(audioManager).AsSingle();
-            
-            GameLogger.LogInfo(" 오디오 시스템 바인딩 완료");
-        }
+        // AudioManager는 CoreSystemInstaller에서 전역 싱글톤으로 바인딩되므로 여기서는 재바인딩하지 않습니다.
     }
 
     /// <summary>
@@ -688,24 +500,8 @@ public class CombatInstaller : MonoInstaller
     {
         GameLogger.LogInfo(" BindCoroutineRunner 호출 시작");
         
-        // CoroutineRunner를 씬에서 찾기
-        var coroutineRunner = FindFirstObjectByType<CoroutineRunner>();
-        
-        if (coroutineRunner == null)
-        {
-            GameLogger.LogWarning(" CoroutineRunner를 씬에서 찾을 수 없습니다. null로 바인딩합니다.");
-            // ICoroutineRunner를 null로 바인딩
-            Container.Bind<ICoroutineRunner>().FromInstance(null).AsSingle();
-        }
-        else
-        {
-            GameLogger.LogInfo($"[CombatInstaller] CoroutineRunner 발견: {coroutineRunner.name}", GameLogger.LogCategory.Combat);
-            
-            // ICoroutineRunner 인터페이스로 바인딩
-            Container.Bind<ICoroutineRunner>().FromInstance(coroutineRunner).AsSingle();
-        }
-        
-        GameLogger.LogInfo(" 코루틴 러너 바인딩 완료");
+        // CoroutineRunner는 CoreSystemInstaller에서 ICoroutineRunner로 이미 바인딩되므로 추가 작업이 필요 없습니다.
+        GameLogger.LogInfo(" 코루틴 러너 바인딩은 CoreSystemInstaller에서 처리되므로 건너뜁니다.", GameLogger.LogCategory.Combat);
     }
 
     /// <summary>
@@ -778,20 +574,8 @@ public class CombatInstaller : MonoInstaller
         //     GameLogger.LogWarning(" PlayerResourceManager를 찾을 수 없습니다.");
         // }
         
-        // GameStateManager 바인딩 (DontDestroyOnLoad로 유지되는 인스턴스)
-        var gameStateManager = FindFirstObjectByType<GameStateManager>();
-        if (gameStateManager != null)
-        {
-            Container.Bind<IGameStateManager>().FromInstance(gameStateManager).AsSingle();
-            Container.Bind<GameStateManager>().FromInstance(gameStateManager).AsSingle();
-            GameLogger.LogInfo(" GameStateManager 바인딩 완료");
-        }
-        else
-        {
-            GameLogger.LogWarning(" GameStateManager를 찾을 수 없습니다.");
-        }
-        
-        GameLogger.LogInfo(" 캐릭터 시스템 바인딩 완료");
+        // GameStateManager 바인딩은 CoreSystemInstaller에서 처리되므로 여기서는 재바인딩하지 않습니다.
+        GameLogger.LogInfo(" 캐릭터 시스템 바인딩 완료", GameLogger.LogCategory.Combat);
     }
 
     #endregion

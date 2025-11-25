@@ -90,15 +90,14 @@ namespace Game.CombatSystem.State
             Game.CombatSystem.CombatEvents.RaiseGameOver();
 
             // 게임 오버 UI 표시
-            var gameOverUI = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.UI.GameOverUI>();
-            if (gameOverUI != null)
+            if (Game.CombatSystem.UI.GameOverUI.Instance != null)
             {
-                gameOverUI.ShowGameOver();
+                Game.CombatSystem.UI.GameOverUI.Instance.ShowGameOver();
                 LogStateTransition("게임 오버 UI 표시 완료");
             }
             else
             {
-                LogError("GameOverUI를 찾을 수 없습니다");
+                LogError("GameOverUI 인스턴스를 찾을 수 없습니다");
             }
         }
     }

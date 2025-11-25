@@ -36,16 +36,13 @@ namespace Game.CoreSystem.UI
         }
         
         /// <summary>
-        /// 매니저들 찾기
+        /// 매니저들 찾기 (DI 또는 인스펙터로 주입되므로 추가 작업 없음)
         /// </summary>
         private void FindManagers()
         {
-            sceneTransitionManager = FindFirstObjectByType<SceneTransitionManager>();
-            settingsManager = FindFirstObjectByType<SettingsManager>();
-            
             if (enableDebugLogging)
             {
-                GameLogger.LogInfo($"매니저 찾기 완료 - SceneTransitionManager: {sceneTransitionManager != null}, SettingsManager: {settingsManager != null}", GameLogger.LogCategory.UI);
+                GameLogger.LogInfo($"매니저 참조 상태 - SceneTransitionManager: {sceneTransitionManager != null}, SettingsManager: {settingsManager != null}", GameLogger.LogCategory.UI);
             }
         }
         
@@ -121,9 +118,6 @@ namespace Game.CoreSystem.UI
                 PlayerPrefs.Save();
                 
                 // 통계 세션 완전 종료 (다시하기는 완전 종료) - 게임 승리와 동일한 로직
-                var gameSessionStatistics = UnityEngine.Object.FindFirstObjectByType<GameSessionStatistics>(UnityEngine.FindObjectsInactive.Include);
-                var statisticsManager = UnityEngine.Object.FindFirstObjectByType<StatisticsManager>(UnityEngine.FindObjectsInactive.Include);
-                
                 if (gameSessionStatistics != null && statisticsManager != null)
                 {
                     // 세션이 활성화되어 있으면 종료 처리 (완전 종료)

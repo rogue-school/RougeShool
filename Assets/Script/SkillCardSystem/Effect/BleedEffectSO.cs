@@ -49,7 +49,7 @@ namespace Game.SkillCardSystem.Effect
             }
             
             // VFXManager 찾기 (DI 없이 직접 찾기)
-            var vfxManager = UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
+            var vfxManager = Game.VFXSystem.Manager.VFXManager.Instance;
             
             return new BleedEffectCommand(
                 bleedAmount + power, 
@@ -76,7 +76,7 @@ namespace Game.SkillCardSystem.Effect
             }
 
             // VFXManager 찾기
-            var vfxManager = UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            var vfxManager = Game.VFXSystem.Manager.VFXManager.Instance;
             var bleed = new BleedEffect(value, duration, GetIcon(), perTurnEffectPrefab ?? visualEffectPrefab, vfxManager, GetEffectName());
             
             // 가드 상태 확인하여 상태이상 효과 등록

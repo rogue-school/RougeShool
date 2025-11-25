@@ -28,8 +28,8 @@ namespace Game.ItemSystem.Effect
 
         public override IItemEffectCommand CreateEffectCommand(int power)
         {
-            var vfxManager = UnityEngine.Object.FindFirstObjectByType<VFXManager>();
-            var audioManager = UnityEngine.Object.FindFirstObjectByType<AudioManager>();
+            var vfxManager = Game.VFXSystem.Manager.VFXManager.Instance;
+            var audioManager = Game.CoreSystem.Audio.AudioManager.Instance;
             return new TimeStopEffectCommand(sealCount + power, sfxClip, visualEffectPrefab, vfxManager, audioManager);
         }
 
@@ -40,8 +40,8 @@ namespace Game.ItemSystem.Effect
         /// <returns>효과 커맨드</returns>
         public IItemEffectCommand CreateEffectCommand(TimeStopEffectCustomSettings customSettings)
         {
-            var vfxManager = UnityEngine.Object.FindFirstObjectByType<VFXManager>();
-            var audioManager = UnityEngine.Object.FindFirstObjectByType<AudioManager>();
+            var vfxManager = Game.VFXSystem.Manager.VFXManager.Instance;
+            var audioManager = Game.CoreSystem.Audio.AudioManager.Instance;
             if (customSettings == null)
             {
                 return new TimeStopEffectCommand(sealCount, sfxClip, visualEffectPrefab, vfxManager, audioManager);

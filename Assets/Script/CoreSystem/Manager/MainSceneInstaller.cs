@@ -21,28 +21,27 @@ namespace Game.CoreSystem.Manager
             // 안전하게 전역에서 직접 탐색하여 바인딩
             
             // 게임 상태 매니저 바인딩
-            Container.Bind<IGameStateManager>().FromMethod(_ =>
-            {
-                return Object.FindFirstObjectByType<GameStateManager>(FindObjectsInactive.Include);
-            }).AsSingle();
+            Container.Bind<IGameStateManager>()
+                .To<GameStateManager>()
+                .FromComponentInHierarchy()
+                .AsSingle();
 
             // 설정 매니저 바인딩
-            Container.Bind<SettingsManager>().FromMethod(_ =>
-            {
-                return Object.FindFirstObjectByType<SettingsManager>(FindObjectsInactive.Include);
-            }).AsSingle();
+            Container.Bind<SettingsManager>()
+                .FromComponentInHierarchy()
+                .AsSingle();
 
             // 플레이어 캐릭터 선택 매니저 바인딩
-            Container.Bind<IPlayerCharacterSelectionManager>().FromMethod(_ =>
-            {
-                return Object.FindFirstObjectByType<PlayerCharacterSelectionManager>(FindObjectsInactive.Include);
-            }).AsSingle();
+            Container.Bind<IPlayerCharacterSelectionManager>()
+                .To<PlayerCharacterSelectionManager>()
+                .FromComponentInHierarchy()
+                .AsSingle();
 
             // 씬 전환 매니저 바인딩
-            Container.Bind<ISceneTransitionManager>().FromMethod(_ =>
-            {
-                return Object.FindFirstObjectByType<SceneTransitionManager>(FindObjectsInactive.Include);
-            }).AsSingle();
+            Container.Bind<ISceneTransitionManager>()
+                .To<SceneTransitionManager>()
+                .FromComponentInHierarchy()
+                .AsSingle();
 
             // 필요 시 Canvas 등 씬 전용 컴포넌트 주입(원하면 주석 해제)
             // Container.Bind<UnityEngine.Canvas>().FromComponentInHierarchy().AsSingle();

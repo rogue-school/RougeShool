@@ -382,7 +382,7 @@ namespace Game.CharacterSystem.Core
             // 가드 차단 이펙트 재생
             if (guardBuff != null && guardBuff.BlockEffectPrefab != null)
             {
-                var vfxManager = UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
+                var vfxManager = Game.VFXSystem.Manager.VFXManager.Instance;
                 if (vfxManager != null)
                 {
                     var effectInstance = vfxManager.PlayEffectAtCharacterCenter(guardBuff.BlockEffectPrefab, transform);
@@ -396,7 +396,7 @@ namespace Game.CharacterSystem.Core
             // 가드 차단 사운드 재생
             if (guardBuff != null && guardBuff.BlockSfxClip != null)
             {
-                var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+                var audioManager = Game.CoreSystem.Audio.AudioManager.Instance;
                 if (audioManager != null)
                 {
                     audioManager.PlaySFXWithPool(guardBuff.BlockSfxClip, 0.9f);
@@ -404,7 +404,7 @@ namespace Game.CharacterSystem.Core
                 }
                 else
                 {
-                    GameLogger.LogWarning($"[{GetCharacterDataName()}] AudioManager를 찾을 수 없습니다. 가드 차단 사운드 재생을 건너뜁니다.", GameLogger.LogCategory.Character);
+                    GameLogger.LogWarning($"[{GetCharacterDataName()}] AudioManager 인스턴스를 찾을 수 없습니다. 가드 차단 사운드 재생을 건너뜁니다.", GameLogger.LogCategory.Character);
                 }
             }
         }

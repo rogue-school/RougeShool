@@ -115,7 +115,7 @@ namespace Game.SkillCardSystem.Effect
             }
 
             // VFXManager를 통한 이펙트 생성 (RectTransform 중심, UI 기반, 정확한 위치 지정)
-            var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            var finalVfxManager = vfxManager ?? Game.VFXSystem.Manager.VFXManager.Instance;
             if (finalVfxManager != null)
             {
                 var instance = finalVfxManager.PlayEffectAtCharacterRectTransformCenter(visualEffectPrefab, targetTransform);
@@ -328,7 +328,7 @@ namespace Game.SkillCardSystem.Effect
             }
 
             // VFXManager를 통한 가드 차단 이펙트 재생 (정확한 위치 지정)
-            var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            var finalVfxManager = vfxManager ?? Game.VFXSystem.Manager.VFXManager.Instance;
             if (finalVfxManager != null)
             {
                 var guardBlockEffectInstance = finalVfxManager.PlayEffectAtCharacterCenter(guardBuff.BlockEffectPrefab, targetTransform);
@@ -345,7 +345,7 @@ namespace Game.SkillCardSystem.Effect
             // 가드 차단 사운드 재생
             if (guardBuff.BlockSfxClip != null)
             {
-                var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+                var audioManager = Game.CoreSystem.Audio.AudioManager.Instance;
                 if (audioManager != null)
                 {
                     audioManager.PlaySFXWithPool(guardBuff.BlockSfxClip, 0.9f);

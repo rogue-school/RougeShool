@@ -42,23 +42,23 @@ namespace Game.Application.Battle
             }
 
             CombatSlot fromSlot = _slotRegistry.GetSlot(from);
-            if (fromSlot == null || fromSlot.IsEmpty)
+            if (fromSlot == null || !fromSlot.HasCard)
             {
                 throw new InvalidOperationException("출발 슬롯에 이동할 카드가 없습니다.");
             }
 
-            CombatSlot toSlot = _slotRegistry.GetSlot(to);
-            if (toSlot == null)
+            CombatSlot toSlot = _slotRegistry.GetSlot(to) ?? new CombatSlot(to);
+
+            if (fromSlot.CardId == null || !fromSlot.Owner.HasValue)
             {
-                toSlot = new CombatSlot(to);
+                throw new InvalidOperationException("출발 슬롯의 카드 정보가 유효하지 않습니다.");
             }
 
-            var card = fromSlot.Card;
-            fromSlot.ClearCard();
-            toSlot.AssignCard(card);
+            CombatSlot clearedFrom = fromSlot.Clear();
+            CombatSlot updatedTo = toSlot.WithCard(fromSlot.CardId, fromSlot.Owner.Value);
 
-            _slotRegistry.SetSlot(fromSlot);
-            _slotRegistry.SetSlot(toSlot);
+            _slotRegistry.SetSlot(clearedFrom);
+            _slotRegistry.SetSlot(updatedTo);
         }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using Game.Application.Services;
 using Game.Domain.Combat.Entities;
 using Game.Domain.Combat.Interfaces;
 using Game.Domain.Combat.ValueObjects;
@@ -12,15 +13,18 @@ namespace Game.Application.Battle
     public sealed class EndTurnUseCase
     {
         private readonly ITurnManager _turnManager;
+        private readonly IEventBus _eventBus;
 
         /// <summary>
         /// 턴 종료 유스케이스를 생성합니다.
         /// </summary>
         /// <param name="turnManager">턴 관리 도메인 서비스</param>
+        /// <param name="eventBus">턴 변경 이벤트를 발행할 이벤트 버스</param>
         /// <exception cref="ArgumentNullException">turnManager가 null인 경우</exception>
-        public EndTurnUseCase(ITurnManager turnManager)
+        public EndTurnUseCase(ITurnManager turnManager, IEventBus eventBus)
         {
             _turnManager = turnManager ?? throw new ArgumentNullException(nameof(turnManager), "턴 매니저는 null일 수 없습니다.");
+            _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus), "이벤트 버스는 null일 수 없습니다.");
         }
 
         /// <summary>
@@ -65,7 +69,13 @@ namespace Game.Application.Battle
             }
 
             // 다음 턴 시작
-            return _turnManager.StartNextTurn(nextTurnType);
+            Turn nextTurn = _turnManager.StartNextTurn(nextTurnType);
+
+            // 턴 변경 이벤트 발행
+            var changedEvent = new TurnChangedEvent(nextTurn.Number, nextTurn.TurnType, nextTurn.Phase);
+            _eventBus.Publish(changedEvent);
+
+            return nextTurn;
         }
     }
 }

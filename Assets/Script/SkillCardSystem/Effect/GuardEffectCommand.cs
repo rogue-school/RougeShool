@@ -137,7 +137,7 @@ namespace Game.SkillCardSystem.Effect
             GameLogger.LogInfo($"[GuardEffectCommand] 가드 VFX 생성 시작 - 프리팹: {activateEffectPrefab.name}, 위치: {spawnPos}", GameLogger.LogCategory.SkillCard);
 
             // VFXManager를 통한 이펙트 생성 (정확한 위치 지정)
-            var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
+            var finalVfxManager = vfxManager ?? Game.VFXSystem.Manager.VFXManager.Instance;
             if (finalVfxManager != null)
             {
                 var instance = finalVfxManager.PlayEffectAtCharacterCenter(activateEffectPrefab, context.Source.Transform);
@@ -263,7 +263,7 @@ namespace Game.SkillCardSystem.Effect
             }
 
             // AudioManager 찾기
-            var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            var audioManager = Game.CoreSystem.Audio.AudioManager.Instance;
             if (audioManager != null)
             {
                 audioManager.PlaySFXWithPool(activateSfxClip, 0.9f);

@@ -33,8 +33,8 @@ namespace Game.ItemSystem.Effect
                 return new DiceOfFateEffectCommand(changeCount);
             }
 
-            var vfxManager = UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
-            var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            var vfxManager = Game.VFXSystem.Manager.VFXManager.Instance;
+            var audioManager = Game.CoreSystem.Audio.AudioManager.Instance;
 
             return new DiceOfFateEffectCommand(
                 customSettings.changeCount,

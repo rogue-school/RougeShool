@@ -3,6 +3,7 @@ using Game.Application.Battle;
 using Game.Application.Card;
 using Game.Application.Character;
 using Game.Application.Services;
+using Game.Application.Stage;
 
 namespace Game.Infrastructure.DI
 {
@@ -20,6 +21,7 @@ namespace Game.Infrastructure.DI
             BindBattleUseCases();
             BindCharacterUseCases();
             BindCardUseCases();
+            BindStageUseCases();
         }
 
         private void BindBuses()
@@ -51,6 +53,14 @@ namespace Game.Infrastructure.DI
             Container.Bind<PlayCardUseCase>().AsSingle();
             Container.Bind<DiscardCardUseCase>().AsSingle();
             Container.Bind<ShuffleDeckUseCase>().AsSingle();
+        }
+
+        private void BindStageUseCases()
+        {
+            Container.Bind<StartStageUseCase>().AsSingle();
+            Container.Bind<AdvanceEnemyUseCase>().AsSingle();
+            Container.Bind<CompleteStageUseCase>().AsSingle();
+            Container.Bind<FailStageUseCase>().AsSingle();
         }
     }
 }

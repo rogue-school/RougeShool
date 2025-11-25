@@ -66,6 +66,22 @@ namespace Game.Domain.Stage.Entities
                 ProgressState = StageProgressState.Completed;
             }
         }
+
+        /// <summary>
+        /// 스테이지를 실패 상태로 표시합니다.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">
+        /// 이미 완료된 스테이지를 실패 상태로 변경하려는 경우
+        /// </exception>
+        public void MarkFailed()
+        {
+            if (ProgressState == StageProgressState.Completed)
+            {
+                throw new InvalidOperationException("이미 완료된 스테이지는 실패 상태로 변경할 수 없습니다.");
+            }
+
+            ProgressState = StageProgressState.Failed;
+        }
     }
 }
 

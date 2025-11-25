@@ -44,18 +44,18 @@ namespace Game.CombatSystem.UI
         }
 
         /// <summary>
-        /// 씬 전환 매니저를 찾습니다.
+        /// 씬 전환 매니저를 확인합니다.
+        /// (DI 또는 인스펙터로 주입된 참조를 사용하며, 추가 검색은 수행하지 않습니다)
         /// </summary>
         private void FindSceneTransitionManager()
         {
-            sceneTransitionManager = FindFirstObjectByType<SceneTransitionManager>();
             if (sceneTransitionManager != null)
             {
-                GameLogger.LogInfo("[GameOverUI] SceneTransitionManager 찾기 완료", GameLogger.LogCategory.UI);
+                GameLogger.LogInfo("[GameOverUI] SceneTransitionManager 참조가 이미 설정되어 있습니다", GameLogger.LogCategory.UI);
             }
             else
             {
-                GameLogger.LogWarning("[GameOverUI] SceneTransitionManager를 찾을 수 없습니다", GameLogger.LogCategory.UI);
+                GameLogger.LogWarning("[GameOverUI] SceneTransitionManager가 주입되지 않았습니다", GameLogger.LogCategory.UI);
             }
         }
 
@@ -112,18 +112,6 @@ namespace Game.CombatSystem.UI
         private async System.Threading.Tasks.Task SaveStatisticsSession()
         {
             GameLogger.LogInfo("[GameOverUI] 통계 세션 저장 시도 (완전 종료)", GameLogger.LogCategory.Save);
-
-            if (gameSessionStatistics == null)
-            {
-                gameSessionStatistics = FindFirstObjectByType<GameSessionStatistics>(FindObjectsInactive.Include);
-                GameLogger.LogInfo($"[GameOverUI] GameSessionStatistics 찾기: {(gameSessionStatistics != null ? "성공" : "실패")}", GameLogger.LogCategory.Save);
-            }
-
-            if (statisticsManager == null)
-            {
-                statisticsManager = FindFirstObjectByType<StatisticsManager>(FindObjectsInactive.Include);
-                GameLogger.LogInfo($"[GameOverUI] StatisticsManager 찾기: {(statisticsManager != null ? "성공" : "실패")}", GameLogger.LogCategory.Save);
-            }
 
             if (gameSessionStatistics == null)
             {

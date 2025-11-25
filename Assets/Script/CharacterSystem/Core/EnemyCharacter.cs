@@ -652,27 +652,28 @@ namespace Game.CharacterSystem.Core
             }
         }
 
+        [Zenject.Inject(Optional = true)] private Game.StageSystem.Manager.StageManager _stageManager;
+
         private void HandleSummonTriggered(EnemyCharacterData summonTarget, int currentHP)
         {
             GameLogger.LogInfo($"[{GetCharacterName()}] 소환 요청 전달: {summonTarget.DisplayName}, 현재 체력: {currentHP}", GameLogger.LogCategory.Character);
             
             // StageManager에 소환 요청 전달 (상태 패턴에서 처리)
-            var stageManager = UnityEngine.Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
-            if (stageManager != null)
+            if (_stageManager != null)
             {
                 // 원본 적 정보 저장
-                stageManager.SetOriginalEnemyData(CharacterData as EnemyCharacterData);
-                stageManager.SetOriginalEnemyHP(currentHP);
-                stageManager.SetSummonTarget(summonTarget);
+                _stageManager.SetOriginalEnemyData(CharacterData as EnemyCharacterData);
+                _stageManager.SetOriginalEnemyHP(currentHP);
+                _stageManager.SetSummonTarget(summonTarget);
                 
                 // 소환 상태 플래그 설정
-                stageManager.SetSummonedEnemyActive(true);
+                _stageManager.SetSummonedEnemyActive(true);
                 
                 GameLogger.LogInfo($"[{GetCharacterName()}] StageManager에 소환 요청 전달 완료", GameLogger.LogCategory.Character);
             }
             else
             {
-                GameLogger.LogError($"[{GetCharacterName()}] StageManager를 찾을 수 없습니다", GameLogger.LogCategory.Character);
+                GameLogger.LogError($"[{GetCharacterName()}] StageManager가 주입되지 않았습니다", GameLogger.LogCategory.Character);
             }
         }
 

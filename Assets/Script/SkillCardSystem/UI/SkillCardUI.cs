@@ -61,21 +61,6 @@ namespace Game.SkillCardSystem.UI
         // 툴팁 매니저 지연 초기화
         private SkillCardTooltipManager GetTooltipManager()
         {
-            if (tooltipManager == null)
-            {
-                // Zenject 컨테이너에서 직접 가져오기
-                var container = FindFirstObjectByType<Zenject.SceneContext>()?.Container;
-                if (container != null)
-                {
-                    tooltipManager = container.TryResolve<SkillCardTooltipManager>();
-                }
-                
-                // 여전히 null이면 직접 찾기
-                if (tooltipManager == null)
-                {
-                    tooltipManager = FindFirstObjectByType<SkillCardTooltipManager>();
-                }
-            }
             return tooltipManager;
         }
         

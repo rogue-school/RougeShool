@@ -41,6 +41,12 @@ namespace Game.CoreSystem.Manager
 		[SerializeField] private CanvasGroup transitionCanvas;
 		[Tooltip("전환 이미지")]
 		[SerializeField] private UnityEngine.UI.Image transitionImage;
+		[Tooltip("승리 UI 패널 (선택)")]
+		[SerializeField] private Game.CombatSystem.UI.VictoryUI victoryUI;
+
+		[Header("오디오/이벤트 참조")]
+		[Tooltip("씬별 BGM을 트리거할 AudioEventTrigger (선택)")]
+		[SerializeField] private AudioEventTrigger audioEventTrigger;
 		
 		#endregion
 		
@@ -51,13 +57,8 @@ namespace Game.CoreSystem.Manager
 		public System.Action<string> OnSceneTransitionStart { get; set; }
 		public System.Action<string> OnSceneTransitionEnd { get; set; }
 
-		private AudioEventTrigger cachedAudioEventTrigger;
-
 		// 의존성 주입
 		private IAudioManager audioManager;
-
-        // FindObjectOfType 캐싱
-        private StageManager cachedStageManager;
 		
 		[Inject]
 		public void Construct(IAudioManager audioManager)
@@ -138,27 +139,11 @@ namespace Game.CoreSystem.Manager
 		}
 
 		/// <summary>
-		/// StageManager 캐시 가져오기 (지연 초기화)
-		/// </summary>
-		private StageManager GetCachedStageManager()
-		{
-			if (cachedStageManager == null)
-			{
-				cachedStageManager = FindFirstObjectByType<StageManager>();
-			}
-			return cachedStageManager;
-		}
-
-        /// <summary>
 		/// AudioEventTrigger 캐시 가져오기 (지연 초기화)
 		/// </summary>
 		private AudioEventTrigger GetCachedAudioEventTrigger()
 		{
-			if (cachedAudioEventTrigger == null)
-			{
-				cachedAudioEventTrigger = FindFirstObjectByType<AudioEventTrigger>();
-			}
-			return cachedAudioEventTrigger;
+			return audioEventTrigger;
 		}
 		
 		/// <summary>
@@ -177,7 +162,6 @@ namespace Game.CoreSystem.Manager
 			// CoreScene에 있는 VictoryUI 패널 숨기기
 			try
 			{
-				var victoryUI = FindFirstObjectByType<Game.CombatSystem.UI.VictoryUI>(FindObjectsInactive.Include);
 				if (victoryUI != null)
 				{
 					victoryUI.Hide();
@@ -187,14 +171,6 @@ namespace Game.CoreSystem.Manager
 			catch (System.Exception ex)
 			{
 				GameLogger.LogWarning($"[SceneTransitionManager] VictoryUI 숨김 중 경고: {ex.Message}", GameLogger.LogCategory.UI);
-			}
-
-            // 세이브 시스템 제거로 인해 진행 상황 저장 없이 바로 전환합니다.
-			// 스테이지 매니저가 있으면 스테이지 BGM 정리
-			var stageManager = GetCachedStageManager();
-			if (stageManager != null)
-			{
-				stageManager.CleanupStageBGM();
 			}
 
 			// 기존 BGM 정지 (추가 안전장치)

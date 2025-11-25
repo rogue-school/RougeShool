@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using Game.Application.Battle;
 
 namespace Game.CombatSystem.State
 {
@@ -178,6 +179,19 @@ namespace Game.CombatSystem.State
                 return;
             }
 
+            // 도메인 턴 종료 및 다음 턴 시작 (가능한 경우)
+            if (context.EndTurnUseCase != null)
+            {
+                try
+                {
+                    context.EndTurnUseCase.Execute();
+                }
+                catch (System.Exception ex)
+                {
+                    LogError($"도메인 턴 종료 중 오류 발생: {ex.Message}");
+                }
+            }
+
             // 배틀 슬롯의 카드 확인 (SlotRegistry 사용)
             var battleCard = context.SlotRegistry.GetCardInSlot(Slot.CombatSlotPosition.BATTLE_SLOT);
             
@@ -227,7 +241,9 @@ namespace Game.CombatSystem.State
             LogStateTransition("소환/복귀 트리거 즉시 체크 시작");
 
             // StageManager에서 소환 플래그 직접 확인
-            var stageManager = UnityEngine.Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
+            var stageManager = context?.StateMachine != null 
+                ? context.StateMachine.GetStageManager()
+                : null;
             if (stageManager != null && stageManager.IsSummonedEnemyActive())
             {
                 LogStateTransition("소환 트리거 감지 - 즉시 SummonState로 전환");

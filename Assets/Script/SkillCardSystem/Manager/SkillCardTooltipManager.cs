@@ -338,18 +338,16 @@ namespace Game.SkillCardSystem.Manager
         private void HideOtherTooltips()
         {
             // 아이템 툴팁 숨김
-            var itemTooltipManager = Object.FindFirstObjectByType<Game.ItemSystem.Manager.ItemTooltipManager>();
-            if (itemTooltipManager != null)
+            if (Game.ItemSystem.Manager.ItemTooltipManager.Instance != null)
             {
-                itemTooltipManager.ForceHideTooltip();
+                Game.ItemSystem.Manager.ItemTooltipManager.Instance.ForceHideTooltip();
                 GameLogger.LogInfo("[SkillCardTooltipManager] 다른 툴팁 숨김 (ItemTooltipManager)", GameLogger.LogCategory.UI);
             }
 
             // 버프/디버프 툴팁 숨김
-            var buffDebuffTooltipManager = Object.FindFirstObjectByType<BuffDebuffTooltipManager>();
-            if (buffDebuffTooltipManager != null)
+            if (BuffDebuffTooltipManager.Instance != null)
             {
-                buffDebuffTooltipManager.ForceHideTooltip();
+                BuffDebuffTooltipManager.Instance.ForceHideTooltip();
                 GameLogger.LogInfo("[SkillCardTooltipManager] 다른 툴팁 숨김 (BuffDebuffTooltipManager)", GameLogger.LogCategory.UI);
             }
         }

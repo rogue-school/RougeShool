@@ -1,3 +1,5 @@
+using Game.Domain.Combat.Interfaces;
+using Game.Domain.Combat.Services;
 using Zenject;
 
 namespace Game.Infrastructure.DI
@@ -14,8 +16,14 @@ namespace Game.Infrastructure.DI
         /// </summary>
         public override void InstallBindings()
         {
-            // 현재 단계에서는 바인딩할 전용 도메인 서비스가 없습니다.
-            // 추후 ITurnManager, ISlotRegistry 등의 구현 클래스가 추가되면 여기서 바인딩합니다.
+            BindTurnManager();
+        }
+
+        private void BindTurnManager()
+        {
+            Container.Bind<ITurnManager>()
+                .To<DomainTurnManager>()
+                .AsSingle();
         }
     }
 }

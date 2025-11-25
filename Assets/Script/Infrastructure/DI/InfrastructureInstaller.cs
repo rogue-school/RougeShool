@@ -1,3 +1,7 @@
+using Game.CombatSystem.Manager;
+using Game.CombatSystem.Slot;
+using Game.Domain.Combat.Interfaces;
+using Game.Infrastructure.Combat;
 using Zenject;
 
 namespace Game.Infrastructure.DI
@@ -13,8 +17,20 @@ namespace Game.Infrastructure.DI
         /// </summary>
         public override void InstallBindings()
         {
-            // Phase 3에서 AudioManager 등 인프라 서비스를 재작성한 뒤
-            // 이 메서드에서 구체 구현을 바인딩합니다.
+            BindCombatAdapters();
+        }
+
+        private void BindCombatAdapters()
+        {
+            // 도메인 슬롯 레지스트리 → Unity 전투 슬롯 레지스트리 어댑터
+            Container.Bind<ISlotRegistry>()
+                .To<SlotRegistryAdapter>()
+                .AsSingle();
+
+            // 도메인 전투 실행기 → Unity CombatExecutionManager 어댑터
+            Container.Bind<ICombatExecutor>()
+                .To<CombatExecutorAdapter>()
+                .AsSingle();
         }
     }
 }

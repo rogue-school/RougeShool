@@ -81,14 +81,8 @@ namespace Game.SkillCardSystem.Manager
             }
             if (handSlotRegistry == null)
             {
-                // SlotRegistry에서 가져오기 시도
-                var slotRegistry = Object.FindFirstObjectByType<Game.CombatSystem.Slot.SlotRegistry>();
-                handSlotRegistry = slotRegistry?.GetHandSlotRegistry();
-                if (handSlotRegistry == null)
-                {
-                    GameLogger.LogWarning("초기 손패 생성 실패 - HandSlotRegistry가 null", GameLogger.LogCategory.SkillCard);
-                    return;
-                }
+                GameLogger.LogWarning("초기 손패 생성 실패 - HandSlotRegistry가 null", GameLogger.LogCategory.SkillCard);
+                return;
             }
             if (circulationSystem == null)
             {

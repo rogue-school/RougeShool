@@ -144,15 +144,6 @@ namespace Game.CoreSystem
             Container.Bind<IRewardGenerator>()
                 .To<RewardGenerator>()
                 .AsSingle();
-
-            // ICombatStatsProvider: 전투 통계 수집기 (StageScene에서 생성되지만 전역에서 찾기)
-            Container.Bind<Game.CombatSystem.Manager.ICombatStatsProvider>()
-                .FromMethod(_ =>
-                {
-                    return Object.FindFirstObjectByType<Game.CombatSystem.Manager.CombatStatsAggregator>(FindObjectsInactive.Include);
-                })
-                .AsSingle()
-                .NonLazy();
         }
 
         #endregion
@@ -233,13 +224,9 @@ namespace Game.CoreSystem
         {
             if (instance == null)
             {
-                instance = FindFirstObjectByType<T>();
-                if (instance == null)
-                {
-                    var go = new GameObject(gameObjectName);
-                    instance = go.AddComponent<T>();
-                    DontDestroyOnLoad(go);
-                }
+                var go = new GameObject(gameObjectName);
+                instance = go.AddComponent<T>();
+                DontDestroyOnLoad(go);
             }
             
             // 의존성 주입 예약 (바인딩은 BindCoreInterfaces에서 처리)
@@ -254,13 +241,9 @@ namespace Game.CoreSystem
         {
             if (instance == null)
             {
-                instance = FindFirstObjectByType<TConcrete>();
-                if (instance == null)
-                {
-                    var go = new GameObject(gameObjectName);
-                    instance = go.AddComponent<TConcrete>();
-                    DontDestroyOnLoad(go);
-                }
+                var go = new GameObject(gameObjectName);
+                instance = go.AddComponent<TConcrete>();
+                DontDestroyOnLoad(go);
             }
             
             // 의존성 주입 예약 (바인딩은 BindCoreInterfaces에서 처리)

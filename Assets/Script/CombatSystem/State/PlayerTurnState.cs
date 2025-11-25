@@ -234,11 +234,11 @@ namespace Game.CombatSystem.State
                 return;
             }
 
-            // ItemService 찾기
-            var itemService = UnityEngine.Object.FindFirstObjectByType<ItemService>();
+            // ItemService 조회
+            var itemService = Game.ItemSystem.Service.ItemServiceLocator.Instance;
             if (itemService == null)
             {
-                LogWarning("ItemService를 찾을 수 없습니다 - 액티브 아이템 보상 지급 건너뜀");
+                LogWarning("ItemService를 찾을 수 없습니다 - 액티브 아이템 보상 지급 건너뜀", context);
                 return;
             }
 

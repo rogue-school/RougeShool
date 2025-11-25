@@ -13,6 +13,7 @@ namespace Game.VFXSystem.Manager
     /// </summary>
     public class VFXManager : MonoBehaviour
     {
+        public static VFXManager Instance { get; private set; }
         #region 설정
 
         [Header("VFX 풀 설정")]
@@ -42,6 +43,15 @@ namespace Game.VFXSystem.Manager
 
         private void Awake()
         {
+            if (Instance != null && Instance != this)
+            {
+                GameLogger.LogWarning("[VFXManager] 중복 인스턴스가 감지되었습니다. 기존 인스턴스를 유지하고 새 인스턴스를 제거합니다.", GameLogger.LogCategory.Combat);
+                Destroy(gameObject);
+                return;
+            }
+
+            Instance = this;
+
             // 메인 카메라가 Effects 레이어를 렌더링하는지 확인하고 설정
             EnsureMainCameraRendersEffects();
 
@@ -51,16 +61,20 @@ namespace Game.VFXSystem.Manager
             }
         }
 
+        private void OnDestroy()
+        {
+            if (Instance == this)
+            {
+                Instance = null;
+            }
+        }
+
         /// <summary>
         /// 메인 카메라가 Effects 레이어를 렌더링하도록 설정합니다.
         /// </summary>
         private void EnsureMainCameraRendersEffects()
         {
             var mainCamera = Camera.main;
-            if (mainCamera == null)
-            {
-                mainCamera = FindFirstObjectByType<Camera>();
-            }
 
             if (mainCamera == null)
             {

@@ -421,7 +421,7 @@ namespace Game.SkillCardSystem.Runtime
             }
 
             // VFX 매니저를 통한 이펙트 생성
-            var vfxManager = UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
+            var vfxManager = Game.VFXSystem.Manager.VFXManager.Instance;
             if (vfxManager != null)
             {
                 GameLogger.LogInfo($"[SkillCard] VFXManager 발견됨 - 캐릭터 중심에서 이펙트 재생 시작", GameLogger.LogCategory.SkillCard);

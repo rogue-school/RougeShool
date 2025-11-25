@@ -222,7 +222,7 @@ namespace Game.CoreSystem.Audio
         /// <summary>
         /// 씬별 BGM 트리거
         /// </summary>
-        /// <param name="sceneName">씬 이름</param>
+        /// <param name="bgmResourcePath">Resources 경로</param>
         public void OnSceneBGM(string bgmResourcePath)
         {
             Debug.Log($"[AudioEventTrigger] 리소스 경로 기반 BGM 트리거: {bgmResourcePath}");
@@ -231,10 +231,11 @@ namespace Game.CoreSystem.Audio
                 Debug.LogWarning("[AudioEventTrigger] 리소스 경로가 비어있습니다.");
                 return;
             }
-            var clip = Resources.Load<AudioClip>(bgmResourcePath);
+
+            var clip = audioManager != null ? audioManager.LoadAudioClipCached(bgmResourcePath) : null;
             if (clip != null)
             {
-                audioManager?.PlayBGM(clip, true);
+                audioManager.PlayBGM(clip, true);
             }
             else
             {

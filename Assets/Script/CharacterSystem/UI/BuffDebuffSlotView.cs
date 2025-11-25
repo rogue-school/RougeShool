@@ -219,12 +219,11 @@ namespace Game.CharacterSystem.UI
             if (CurrentEffect == null) return;
 
             // 버프/디버프 툴팁 매니저를 통해 툴팁 표시
-            var tooltipManager = Object.FindFirstObjectByType<BuffDebuffTooltipManager>();
-            if (tooltipManager != null)
+            if (BuffDebuffTooltipManager.Instance != null)
             {
                 // 자신의 RectTransform을 전달하여 정확한 위치 계산
                 var rectTransform = GetComponent<RectTransform>();
-                tooltipManager.ShowBuffDebuffTooltip(CurrentEffect, transform.position, rectTransform);
+                BuffDebuffTooltipManager.Instance.ShowBuffDebuffTooltip(CurrentEffect, transform.position, rectTransform);
                 GameLogger.LogInfo($"[BuffDebuffSlotView] 툴팁 표시: {GetEffectDisplayName(CurrentEffect)}", GameLogger.LogCategory.UI);
             }
             else
@@ -238,10 +237,9 @@ namespace Game.CharacterSystem.UI
         /// </summary>
         private void HideTooltip()
         {
-            var tooltipManager = Object.FindFirstObjectByType<BuffDebuffTooltipManager>();
-            if (tooltipManager != null)
+            if (BuffDebuffTooltipManager.Instance != null)
             {
-                tooltipManager.HideBuffDebuffTooltip();
+                BuffDebuffTooltipManager.Instance.HideBuffDebuffTooltip();
             }
         }
 

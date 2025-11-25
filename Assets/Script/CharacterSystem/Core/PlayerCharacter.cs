@@ -537,11 +537,6 @@ namespace Game.CharacterSystem.Core
             Camera mainCamera = Camera.main;
             if (mainCamera == null)
             {
-                mainCamera = UnityEngine.Object.FindFirstObjectByType<Camera>();
-            }
-
-            if (mainCamera == null)
-            {
                 GameLogger.LogWarning("[PlayerCharacter] 카메라를 찾을 수 없어 쉐이크를 재생할 수 없습니다.", GameLogger.LogCategory.Character);
                 return;
             }

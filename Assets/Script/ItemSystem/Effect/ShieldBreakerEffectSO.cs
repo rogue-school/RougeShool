@@ -27,8 +27,8 @@ namespace Game.ItemSystem.Effect
 
         public override IItemEffectCommand CreateEffectCommand(int power)
         {
-            var vfxManager = UnityEngine.Object.FindFirstObjectByType<VFXManager>();
-            var audioManager = UnityEngine.Object.FindFirstObjectByType<AudioManager>();
+            var vfxManager = Game.VFXSystem.Manager.VFXManager.Instance;
+            var audioManager = Game.CoreSystem.Audio.AudioManager.Instance;
             return new ShieldBreakerEffectCommand(duration, sfxClip, visualEffectPrefab, vfxManager, audioManager);
         }
 
@@ -37,8 +37,8 @@ namespace Game.ItemSystem.Effect
         /// </summary>
         public IItemEffectCommand CreateEffectCommand(ShieldBreakerEffectCustomSettings customSettings)
         {
-            var vfxManager = UnityEngine.Object.FindFirstObjectByType<VFXManager>();
-            var audioManager = UnityEngine.Object.FindFirstObjectByType<AudioManager>();
+            var vfxManager = Game.VFXSystem.Manager.VFXManager.Instance;
+            var audioManager = Game.CoreSystem.Audio.AudioManager.Instance;
             if (customSettings == null)
             {
                 return new ShieldBreakerEffectCommand(duration, sfxClip, visualEffectPrefab, vfxManager, audioManager);

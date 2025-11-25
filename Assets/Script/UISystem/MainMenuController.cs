@@ -94,6 +94,12 @@ namespace Game.UISystem
         [Tooltip("스킬 카드 미리보기 부모 컨테이너 (자식 정리 후 최대 3개 생성)")]
         [SerializeField] private Transform skillCardPreviewContainer;
 
+        [Header("전투 UI 참조")]
+        [Tooltip("게임 오버 UI (선택)")]
+        [SerializeField] private Game.CombatSystem.UI.GameOverUI gameOverUI;
+        [Tooltip("전투 승리 UI (선택)")]
+        [SerializeField] private Game.CombatSystem.UI.VictoryUI victoryUI;
+
         [Header("고정 캐릭터 매핑 (버튼 ↔ 데이터 1:1)")]
         [Tooltip("검 캐릭터 선택 버튼")]
         [SerializeField] private Button swordButton;
@@ -825,7 +831,6 @@ namespace Game.UISystem
                 // 게임 시작 전 잔존할 수 있는 게임 오버 UI를 확실히 초기화
                 try
                 {
-                    var gameOverUI = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.UI.GameOverUI>(FindObjectsInactive.Include);
                     if (gameOverUI != null)
                     {
                         gameOverUI.HideGameOver();
@@ -840,7 +845,6 @@ namespace Game.UISystem
                 // 게임 시작 전 잔존할 수 있는 승리 UI를 확실히 초기화
                 try
                 {
-                    var victoryUI = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.UI.VictoryUI>(FindObjectsInactive.Include);
                     if (victoryUI != null)
                     {
                         victoryUI.Hide();
@@ -852,23 +856,8 @@ namespace Game.UISystem
                     GameLogger.LogWarning($"[MainMenuController] VictoryUI 초기화 중 경고: {ex.Message}", GameLogger.LogCategory.UI);
                 }
 
-                // 스테이지 씬으로 전환 (DI 주입 또는 직접 찾기)
-                ISceneTransitionManager transitionManager = sceneTransitionManager;
-                
-                if (transitionManager == null)
-                {
-                    GameLogger.LogWarning("[MainMenuController] DI 주입된 SceneTransitionManager가 null입니다. 직접 찾아서 사용합니다.", GameLogger.LogCategory.UI);
-                    
-                    // 직접 찾아서 사용
-                    var foundTransitionManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Manager.SceneTransitionManager>();
-                    if (foundTransitionManager != null)
-                    {
-                        transitionManager = foundTransitionManager;
-                        GameLogger.LogInfo($"[MainMenuController] SceneTransitionManager를 직접 찾았습니다. 이름: {foundTransitionManager.name}", GameLogger.LogCategory.UI);
-                    }
-                }
-                
-                if (transitionManager != null)
+                // 스테이지 씬으로 전환 (DI 주입 사용)
+                if (sceneTransitionManager != null)
                 {
                     // 튜토리얼 스킵 설정 저장 (게임 시작 시점)
                     try
@@ -884,7 +873,7 @@ namespace Game.UISystem
                     }
 
                     GameLogger.LogInfo("[MainMenuController] SceneTransitionManager 발견됨, 스테이지 씬으로 전환 시작", GameLogger.LogCategory.UI);
-                    await transitionManager.TransitionToStageScene();
+                    await sceneTransitionManager.TransitionToStageScene();
                     GameLogger.LogInfo("[MainMenuController] 스테이지 씬으로 전환 완료", GameLogger.LogCategory.UI);
                 }
                 else

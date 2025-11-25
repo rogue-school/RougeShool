@@ -307,11 +307,10 @@ namespace Game.ItemSystem.Runtime
 		public void CloseAllPopupsAndTooltip()
 		{
 			HideAllActionPopups();
-			var tooltipMgr = FindFirstObjectByType<Game.ItemSystem.Manager.ItemTooltipManager>();
-			if (tooltipMgr != null)
+			if (Game.ItemSystem.Manager.ItemTooltipManager.Instance != null)
 			{
-				tooltipMgr.UnpinTooltip();
-				tooltipMgr.ForceHideTooltip();
+				Game.ItemSystem.Manager.ItemTooltipManager.Instance.UnpinTooltip();
+				Game.ItemSystem.Manager.ItemTooltipManager.Instance.ForceHideTooltip();
 			}
 		}
 
@@ -434,7 +433,6 @@ namespace Game.ItemSystem.Runtime
 		/// </summary>
 		private void SubscribeToTurnChanges()
 		{
-			turnManager = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
 			if (turnManager != null)
 			{
 				turnManager.OnTurnChanged += HandleTurnChanged;

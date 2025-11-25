@@ -42,13 +42,13 @@ namespace Game.SkillCardSystem.Effect
         {
             if (target == null) return;
 
-            // TurnManager 캐싱 (최초 1회만 검색)
             if (_cachedTurnManager == null)
             {
-                _cachedTurnManager = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
+                Game.CoreSystem.Utility.GameLogger.LogWarning(
+                    $"[{GetType().Name}] TurnManager가 주입되지 않았습니다. 턴 감소를 건너뜁니다.",
+                    Game.CoreSystem.Utility.GameLogger.LogCategory.SkillCard);
+                return;
             }
-
-            if (_cachedTurnManager == null) return;
 
             // 자신의 턴에만 감소
             bool shouldDecrement = target.IsPlayerControlled()

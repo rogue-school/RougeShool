@@ -14,6 +14,7 @@ namespace Game.CharacterSystem.Manager
     /// </summary>
     public class EnemyManager : BaseCharacterManager<ICharacter>
     {
+        public static EnemyManager Instance { get; private set; }
         #region 적 캐릭터 전용 설정
 
         // 적 캐릭터는 프리팹 내장 UI를 사용합니다.
@@ -24,14 +25,38 @@ namespace Game.CharacterSystem.Manager
 
         #region DI
 
-    /// <summary>
-    /// Zenject 의존성 주입 (확장용)
-    /// </summary>
-    [Inject]
-    public void Construct()
-    {
-        // 필요시 의존성 주입 로직 추가
-    }
+        /// <summary>
+        /// Zenject 의존성 주입 (확장용)
+        /// </summary>
+        [Inject]
+        public void Construct()
+        {
+            // 필요시 의존성 주입 로직 추가
+        }
+
+        #endregion
+
+        #region Unity 생명주기 / 전역 접근 지원
+
+        private void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                GameLogger.LogWarning("[EnemyManager] 중복 인스턴스가 감지되었습니다. 기존 인스턴스를 유지하고 새 인스턴스를 제거합니다.", GameLogger.LogCategory.Character);
+                Destroy(gameObject);
+                return;
+            }
+
+            Instance = this;
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+            {
+                Instance = null;
+            }
+        }
 
         #endregion
 

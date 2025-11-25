@@ -112,7 +112,7 @@ namespace Game.SkillCardSystem.Effect
             if (service == null)
             {
                 // 실행 시점에 1회 안전 조회 (Update 루프 아님)
-                var svcImpl = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
+                var svcImpl = Game.ItemSystem.Service.ItemService.Instance;
                 if (svcImpl != null) service = svcImpl as IItemService;
             }
             if (service != null && context.Card != null && source != null && source.IsPlayerControlled())
@@ -481,7 +481,7 @@ namespace Game.SkillCardSystem.Effect
             }
 
             // VFXManager 찾기
-            var vfxManager = UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
+            var vfxManager = Game.VFXSystem.Manager.VFXManager.Instance;
             if (vfxManager != null)
             {
                 var visualEffectPrefab = cardDefinition.configuration.damageConfig.visualEffectPrefab;

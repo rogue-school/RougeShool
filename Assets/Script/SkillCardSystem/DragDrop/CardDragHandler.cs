@@ -7,7 +7,7 @@ using Game.CombatSystem.Manager;
 using Game.CombatSystem.Utility;
 using Game.CoreSystem.Utility;
 
-namespace Game.CombatSystem.DragDrop
+namespace Game.SkillCardSystem.DragDrop
 {
     /// <summary>
     /// 카드 드래그 앤 드롭을 처리하는 핸들러입니다.

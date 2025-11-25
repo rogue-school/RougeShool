@@ -208,43 +208,6 @@ namespace Game.CombatSystem.Manager
 
         #endregion
 
-        #region 저장/로드 지원
-
-        /// <summary>
-        /// 턴 상태를 복원합니다. (저장 시스템용)
-        /// </summary>
-        public void RestoreTurnState(int turnCount, TurnType turnType)
-        {
-            _turnCount = turnCount;
-            _currentTurn = turnType;
-
-            OnTurnChanged?.Invoke(turnType);
-            OnTurnCountChanged?.Invoke(turnCount);
-
-            var turnName = turnType == TurnType.Player ? "플레이어" : "적";
-            GameLogger.LogInfo(
-                $"턴 상태 복원: {turnName} 턴 (턴 {turnCount})",
-                GameLogger.LogCategory.Combat);
-        }
-
-        /// <summary>
-        /// 턴 수를 설정합니다. (저장 시스템용)
-        /// </summary>
-        public void SetTurnCount(int count)
-        {
-            if (count < 1)
-            {
-                GameLogger.LogError($"잘못된 턴 수: {count}", GameLogger.LogCategory.Combat);
-                return;
-            }
-
-            _turnCount = count;
-            OnTurnCountChanged?.Invoke(_turnCount);
-            GameLogger.LogInfo($"턴 수 설정: {count}", GameLogger.LogCategory.Combat);
-        }
-
-        #endregion
-
         #region 디버그
 
         public void LogTurnInfo()

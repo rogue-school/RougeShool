@@ -6,6 +6,7 @@ using Game.CombatSystem.Manager;
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Manager;
 using Zenject;
+using Game.Application.Battle;
 
 namespace Game.CombatSystem.State
 {
@@ -23,6 +24,7 @@ namespace Game.CombatSystem.State
         [Inject] private TurnManager turnManager;
         [Inject] private PlayerManager playerManager;
         [Inject] private EnemyManager enemyManager;
+        [Inject(Optional = true)] private Game.StageSystem.Manager.StageManager stageManager;
 
         // 새로운 분리된 인터페이스들 (리팩토링)
         [Inject] private ITurnController turnController;
@@ -30,7 +32,14 @@ namespace Game.CombatSystem.State
         [Inject] private ISlotMovementController slotMovement;
 
         // PlayerHandManager는 Optional (씬에 없을 수 있음)
-        private PlayerHandManager handManager;
+        [Inject(Optional = true)] private PlayerHandManager handManager;
+        [Inject(Optional = true)] private ExecuteCardUseCase executeCardUseCase;
+        [Inject(Optional = true)] private EndTurnUseCase endTurnUseCase;
+
+        public Game.StageSystem.Manager.StageManager GetStageManager()
+        {
+            return stageManager;
+        }
 
         #endregion
 
@@ -95,9 +104,6 @@ namespace Game.CombatSystem.State
 
         private void Start()
         {
-            // PlayerHandManager 찾기 (Optional)
-            handManager = FindFirstObjectByType<PlayerHandManager>();
-
             // 사망 이펙트 완료 이벤트 구독
             CombatEvents.OnPlayerDeathEffectComplete += OnPlayerDeathEffectComplete;
 
@@ -165,41 +171,46 @@ namespace Game.CombatSystem.State
             // BattleEndState나 EnemyDefeatedState에서는 체크하지 않음
             if (_currentState is BattleEndState || _currentState is EnemyDefeatedState || _currentState is SummonState || _currentState is SummonReturnState)
             {
-                GameLogger.LogInfo(
-                    $"[CombatStateMachine] 소환 체크 건너뜀 - 현재 상태: {_currentState.StateName}",
-                    GameLogger.LogCategory.Combat);
+                if (enableDebugLogging && _currentState != null)
+                {
+                    GameLogger.LogInfo(
+                        $"[CombatStateMachine] 소환 체크 건너뜀 - 현재 상태: {_currentState.StateName}",
+                        GameLogger.LogCategory.Combat);
+                }
+                return;
+            }
+
+            // StageManager 또는 EnemyManager가 없으면 소환 체크를 하지 않음
+            if (stageManager == null || enemyManager == null)
+            {
                 return;
             }
 
             // 적이 있고 살아있을 때만 체크
-            if (enemyManager != null)
+            var enemy = enemyManager.GetCharacter();
+            if (enemy != null && !enemy.IsDead())
             {
-                var enemy = enemyManager.GetCharacter();
-                if (enemy != null && !enemy.IsDead())
+                // StageManager에서 소환 플래그 확인
+                if (stageManager.IsSummonedEnemyActive())
                 {
-                    // StageManager에서 소환 플래그 확인
-                    var stageManager = FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
-                    if (stageManager != null && stageManager.IsSummonedEnemyActive())
+                    GameLogger.LogInfo(
+                        "[CombatStateMachine] 소환 트리거 감지 - SummonState로 전환",
+                        GameLogger.LogCategory.Combat);
+
+                    // SummonState로 전환
+                    var summonData = stageManager.GetSummonTarget();
+                    var originalHP = stageManager.GetOriginalEnemyHP();
+
+                    if (summonData != null)
                     {
-                        GameLogger.LogInfo(
-                            "[CombatStateMachine] 소환 트리거 감지 - SummonState로 전환",
-                            GameLogger.LogCategory.Combat);
-
-                        // SummonState로 전환
-                        var summonData = stageManager.GetSummonTarget();
-                        var originalHP = stageManager.GetOriginalEnemyHP();
-
-                        if (summonData != null)
-                        {
-                            var summonState = new SummonState(summonData, originalHP);
-                            ChangeState(summonState);
-                        }
-                        else
-                        {
-                            GameLogger.LogError(
-                                "[CombatStateMachine] 소환 대상 데이터가 없습니다",
-                                GameLogger.LogCategory.Error);
-                        }
+                        var summonState = new SummonState(summonData, originalHP);
+                        ChangeState(summonState);
+                    }
+                    else
+                    {
+                        GameLogger.LogError(
+                            "[CombatStateMachine] 소환 대상 데이터가 없습니다",
+                            GameLogger.LogCategory.Error);
                     }
                 }
             }
@@ -237,6 +248,10 @@ namespace Game.CombatSystem.State
                 turnController,
                 slotRegistry,
                 slotMovement);
+
+            // 애플리케이션 레이어 유스케이스 연결
+            _context.ExecuteCardUseCase = executeCardUseCase;
+            _context.EndTurnUseCase = endTurnUseCase;
 
             // 매니저 검증
             if (!_context.ValidateManagers())
@@ -651,7 +666,6 @@ namespace Game.CombatSystem.State
                 GameLogger.LogCategory.Combat);
 
             // 소환된 적인지 확인
-            var stageManager = FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
             if (stageManager != null && stageManager.IsSummonedEnemyActive())
             {
                 GameLogger.LogInfo(
@@ -942,7 +956,7 @@ namespace Game.CombatSystem.State
         {
             try
             {
-                var itemService = FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
+                var itemService = Game.ItemSystem.Service.ItemServiceLocator.Instance;
                 if (itemService == null)
                 {
                     return false;
@@ -973,8 +987,8 @@ namespace Game.CombatSystem.State
 
             try
             {
-                // ItemService 찾기
-                var itemService = FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
+                // ItemService 조회
+                var itemService = Game.ItemSystem.Service.ItemServiceLocator.Instance;
                 if (itemService == null)
                 {
                     GameLogger.LogWarning("[CombatStateMachine] ItemService를 찾을 수 없습니다", GameLogger.LogCategory.Combat);

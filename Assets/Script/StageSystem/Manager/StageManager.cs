@@ -8,6 +8,7 @@ using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Manager;
 using Game.CombatSystem.Interface;
 using Game.StageSystem.Data;
+using Game.Application.Battle;
 using Game.StageSystem.Interface;
 using Zenject;
 using Game.CoreSystem.Utility;
@@ -15,6 +16,10 @@ using DG.Tweening;
 using Game.CoreSystem.Audio;
 using Game.ItemSystem.Runtime;
 using Game.CoreSystem.Statistics;
+using Game.Application.Stage;
+using Game.Domain.Stage.Entities;
+using Game.Domain.Stage.Interfaces;
+using Game.Domain.Stage.ValueObjects;
 
 namespace Game.StageSystem.Manager
 {
@@ -78,8 +83,10 @@ namespace Game.StageSystem.Manager
         private StageData currentStage;
         private int totalStagesCompleted = 0;
         private bool isGameCompleted = false;
+        private IStage _domainStage;
         [Zenject.Inject] private EnemyManager enemyManager;
         [Zenject.Inject(Optional = true)] private Game.CoreSystem.Interface.IAudioManager audioManager;
+        [Zenject.Inject(Optional = true)] private Game.ItemSystem.Service.IItemService itemService;
         [Zenject.Inject(Optional = true)] private Game.SkillCardSystem.Interface.IPlayerHandManager playerHandManager;
         [Zenject.Inject(Optional = true)] private Game.CombatSystem.Slot.CombatSlotRegistry combatSlotRegistry;
         [Zenject.Inject(Optional = true)] private Game.CombatSystem.Interface.ICombatTurnManager turnManager;
@@ -88,6 +95,11 @@ namespace Game.StageSystem.Manager
         [Zenject.Inject(Optional = true)] private Game.SkillCardSystem.Manager.PlayerHandManager playerHandManagerConcrete;
         [Zenject.Inject(Optional = true)] private GameSessionStatistics gameSessionStatistics;
         [Zenject.Inject(Optional = true)] private IStatisticsManager statisticsManager;
+        [Zenject.Inject(Optional = true)] private StartStageUseCase _startStageUseCase;
+        [Zenject.Inject(Optional = true)] private AdvanceEnemyUseCase _advanceEnemyUseCase;
+        [Zenject.Inject(Optional = true)] private CompleteStageUseCase _completeStageUseCase;
+        [Zenject.Inject(Optional = true)] private FailStageUseCase _failStageUseCase;
+        [Zenject.Inject(Optional = true)] private StartCombatUseCase _startCombatUseCase;
 
         private bool isWaitingForPlayer = false;
 
@@ -191,7 +203,6 @@ namespace Game.StageSystem.Manager
             GameLogger.LogInfo("[StageManager] 새게임 상태 초기화 시작", GameLogger.LogCategory.Save);
             
             // 인벤토리 초기화 (스킬카드 스택은 캐릭터 생성 시 초기화됨)
-            var itemService = FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
             if (itemService != null)
             {
                 itemService.ResetInventoryForNewGame();
@@ -272,55 +283,7 @@ namespace Game.StageSystem.Manager
             }
         }
         
-        /// <summary>
-        /// 다른 씬으로 전환하기 전에 현재 진행 상황을 저장합니다.
-        /// 메인 씬으로 전환되는 경우 통계도 저장합니다.
-        /// </summary>
-        public async Task SaveProgressBeforeSceneTransition()
-        {
-            // 씬 전환 상태 표시
-            isDestroyed = true;
-            
-            try
-            {
-                if (saveManager != null)
-                {
-                    await saveManager.SaveCurrentProgress("SceneTransition");
-                    GameLogger.LogInfo("[StageManager] 씬 전환 전 진행 상황 저장 완료", GameLogger.LogCategory.Save);
-                }
-                else
-                {
-                GameLogger.LogWarning("[StageManager] 진행 상황 로드 중 StageManager를 찾을 수 없습니다", GameLogger.LogCategory.Save);
-                }
-
-                // 메인 씬으로 전환되는 경우 통계 저장 (다시하기 여부 확인)
-                var currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-                if (currentScene == "StageScene" || currentScene == "BattleScene")
-                {
-                    // 다시하기 요청 여부 확인
-                    bool isRestartRequested = PlayerPrefs.GetInt("RESTART_GAME_REQUESTED", 0) == 1;
-                    
-                    if (isRestartRequested)
-                    {
-                        // 다시하기: 완전 종료
-                        GameLogger.LogInfo("[StageManager] 다시하기 감지 - 통계 완전 종료", GameLogger.LogCategory.Save);
-                        await SaveStatisticsSession(true); // 완전 종료
-                        PlayerPrefs.SetInt("RESTART_GAME_REQUESTED", 0);
-                        PlayerPrefs.Save();
-                    }
-                    else
-                    {
-                        // 일반 메인 메뉴 이동: 중간 저장 (세션 유지)
-                        GameLogger.LogInfo("[StageManager] 메인 씬 전환 감지 - 통계 중간 저장 시작 (세션 유지)", GameLogger.LogCategory.Save);
-                        await SaveStatisticsSession(false); // 중간 저장 (세션 유지)
-                    }
-                }
-            }
-            catch (System.Exception ex)
-            {
-                GameLogger.LogError($"[StageManager] 씬 전환 전 저장 실패: {ex.Message}", GameLogger.LogCategory.Error);
-            }
-        }
+        // 세이브 시스템 제거로 인해 SaveProgressBeforeSceneTransition는 더 이상 사용되지 않습니다.
 
         #endregion
 
@@ -429,6 +392,23 @@ namespace Game.StageSystem.Manager
                         {
                             GameLogger.LogWarning($"[StageManager] 적 캐릭터 타입을 확인할 수 없습니다: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
                             combatStateMachine.StartCombat();
+                        }
+
+                        // 도메인 전투 턴 시스템 시작 (애플리케이션 유스케이스)
+                        if (_startCombatUseCase != null && _domainStage != null)
+                        {
+                            try
+                            {
+                                _startCombatUseCase.Execute(_domainStage, Game.Domain.Combat.ValueObjects.TurnType.Player);
+                            }
+                            catch (Exception ex)
+                            {
+                                GameLogger.LogError($"도메인 전투 시작 중 오류 발생: {ex.Message}", GameLogger.LogCategory.Error);
+                            }
+                        }
+                        else
+                        {
+                            GameLogger.LogWarning("[StageManager] StartCombatUseCase 또는 도메인 스테이지가 null입니다 - 도메인 전투 시작 건너뜀", GameLogger.LogCategory.Combat);
                         }
                     }
                     else
@@ -594,6 +574,18 @@ namespace Game.StageSystem.Manager
 			if (HasMoreEnemies())
 			{
 				GameLogger.LogInfo($"[StageManager] 다음 적이 존재함 - 생성 시작", GameLogger.LogCategory.Combat);
+
+                if (_domainStage != null && _advanceEnemyUseCase != null)
+                {
+                    try
+                    {
+                        _advanceEnemyUseCase.Execute(_domainStage);
+                    }
+                    catch (Exception ex)
+                    {
+                        GameLogger.LogWarning($"도메인 스테이지 적 진행 처리 중 오류: {ex.Message}", GameLogger.LogCategory.Combat);
+                    }
+                }
 
 				// 적 카드 슬롯 정리 후 다음 적 생성
 				_ = ClearEnemySlotsAndSpawnNext();
@@ -908,11 +900,11 @@ namespace Game.StageSystem.Manager
 
         /// <inheritdoc />
         public StageData GetCurrentStage() => currentStage;
-
+        
         /// <inheritdoc />
         public bool HasNextEnemy() =>
             currentStage != null && currentEnemyIndex < currentStage.enemies.Count;
-
+        
         /// <summary>
         /// 아직 처치하지 않은 적이 더 있는지 확인합니다.
         /// </summary>
@@ -920,71 +912,10 @@ namespace Game.StageSystem.Manager
         {
             return HasNextEnemy();
         }
-
+        
         /// <inheritdoc />
         public EnemyCharacterData PeekNextEnemyData() =>
             HasNextEnemy() ? currentStage.enemies[currentEnemyIndex] : null;
-
-        /// <summary>
-        /// 현재 스테이지 번호를 설정합니다. (저장 시스템용)
-        /// </summary>
-        /// <param name="stageNumber">스테이지 번호</param>
-        public void SetCurrentStageNumber(int stageNumber)
-        {
-            if (stageNumber < 1 || stageNumber > 4)
-            {
-                GameLogger.LogError($"잘못된 스테이지 번호: {stageNumber}", GameLogger.LogCategory.Combat);
-                return;
-            }
-            
-            LoadStage(stageNumber);
-            GameLogger.LogInfo($"스테이지 번호 설정: {stageNumber}", GameLogger.LogCategory.Combat);
-        }
-
-        /// <summary>
-        /// 현재 스테이지 번호를 가져옵니다. (저장 시스템용)
-        /// </summary>
-        /// <returns>스테이지 번호</returns>
-        public int GetCurrentStageNumber()
-        {
-            return currentStage?.stageNumber ?? 1;
-        }
-        
-        /// <summary>
-        /// 스테이지 진행 상태를 설정합니다. (저장 시스템용)
-        /// </summary>
-        /// <param name="state">설정할 진행 상태</param>
-        public void SetProgressState(StageProgressState state)
-        {
-            progressState = state;
-            OnProgressChanged?.Invoke(progressState);
-            GameLogger.LogInfo($"스테이지 진행 상태 설정: {state}", GameLogger.LogCategory.Combat);
-        }
-        
-        /// <summary>
-        /// 현재 적 인덱스를 설정합니다. (저장 시스템용)
-        /// </summary>
-        /// <param name="index">설정할 적 인덱스</param>
-        public void SetCurrentEnemyIndex(int index)
-        {
-            if (index < 0)
-            {
-                GameLogger.LogError($"잘못된 적 인덱스: {index}", GameLogger.LogCategory.Combat);
-                return;
-            }
-            
-            currentEnemyIndex = index;
-            GameLogger.LogInfo($"현재 적 인덱스 설정: {index}", GameLogger.LogCategory.Combat);
-        }
-        
-        /// <summary>
-        /// 현재 적 인덱스를 가져옵니다. (저장 시스템용)
-        /// </summary>
-        /// <returns>현재 적 인덱스</returns>
-        public int GetCurrentEnemyIndex()
-        {
-            return currentEnemyIndex;
-        }
         
         /// <summary>
         /// 다음 스테이지가 있는지 확인합니다.
@@ -1044,6 +975,7 @@ namespace Game.StageSystem.Manager
             currentEnemyIndex = 0;
             isStageCompleted = false;
             progressState = StageProgressState.NotStarted;
+            _domainStage = CreateDomainStage(currentStage);
             
             // 스테이지 전환 이벤트 발생
             if (previousStage != null)
@@ -1079,6 +1011,54 @@ namespace Game.StageSystem.Manager
             return null;
         }
 
+            /// <summary>
+            /// StageData를 도메인 스테이지 엔티티로 변환합니다.
+            /// </summary>
+            /// <param name="stageData">스테이지 데이터</param>
+            /// <returns>도메인 스테이지 엔티티, 변환 불가 시 null</returns>
+            private Stage CreateDomainStage(StageData stageData)
+            {
+                if (stageData == null)
+                {
+                    return null;
+                }
+
+                if (stageData.enemies == null || stageData.enemies.Count == 0)
+                {
+                    return null;
+                }
+
+                var enemyIds = new List<string>();
+                foreach (var enemy in stageData.enemies)
+                {
+                    if (enemy == null)
+                    {
+                        continue;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(enemy.name))
+                    {
+                        enemyIds.Add(enemy.name);
+                    }
+                }
+
+                if (enemyIds.Count == 0)
+                {
+                    return null;
+                }
+
+                var id = new StageId($"Stage_{stageData.stageNumber}");
+                var definition = new StageDefinition(
+                    id,
+                    stageData.stageNumber,
+                    stageData.stageName,
+                    stageData.stageDescription,
+                    stageData.autoProgressToNext,
+                    enemyIds);
+
+                return new Stage(definition);
+            }
+
         #endregion
 
         #region 로그 스쿨 시스템 - 단계별 관리
@@ -1104,7 +1084,19 @@ namespace Game.StageSystem.Manager
             isStageCompleted = false;
             
             OnProgressChanged?.Invoke(progressState);
-            
+
+            if (_domainStage != null && _startStageUseCase != null)
+            {
+                try
+                {
+                    _startStageUseCase.Execute(_domainStage);
+                }
+                catch (Exception ex)
+                {
+                    GameLogger.LogWarning($"도메인 스테이지 시작 처리 중 오류: {ex.Message}", GameLogger.LogCategory.Combat);
+                }
+            }
+
             GameLogger.LogInfo($"스테이지 시작: {currentStage.stageName} (스테이지 {currentStage.stageNumber})", GameLogger.LogCategory.Combat);
             
             // 첫 번째 적의 BGM 즉시 재생 (스테이지 시작 시)
@@ -1133,6 +1125,18 @@ namespace Game.StageSystem.Manager
             totalStagesCompleted++;
             
             OnProgressChanged?.Invoke(progressState);
+
+            if (_domainStage != null && _completeStageUseCase != null)
+            {
+                try
+                {
+                    _completeStageUseCase.Execute(_domainStage);
+                }
+                catch (Exception ex)
+                {
+                    GameLogger.LogError($"도메인 스테이지 완료 검증 중 오류: {ex.Message}", GameLogger.LogCategory.Combat);
+                }
+            }
             
             // 스테이지 완료 이벤트 발생
             OnStageCompleted?.Invoke(currentStage);
@@ -1181,6 +1185,18 @@ namespace Game.StageSystem.Manager
         {
             progressState = StageProgressState.Failed;
             OnProgressChanged?.Invoke(progressState);
+
+            if (_domainStage != null && _failStageUseCase != null)
+            {
+                try
+                {
+                    _failStageUseCase.Execute(_domainStage);
+                }
+                catch (Exception ex)
+                {
+                    GameLogger.LogError($"도메인 스테이지 실패 처리 중 오류: {ex.Message}", GameLogger.LogCategory.Combat);
+                }
+            }
             
             GameLogger.LogWarning($"스테이지 실패: {currentStage?.stageName ?? "Unknown"} (스테이지 {currentStage?.stageNumber ?? 1})", GameLogger.LogCategory.Combat);
             
@@ -1197,21 +1213,8 @@ namespace Game.StageSystem.Manager
 
             if (gameSessionStatistics == null)
             {
-                gameSessionStatistics = FindFirstObjectByType<GameSessionStatistics>(FindObjectsInactive.Include);
-                GameLogger.LogInfo($"[StageManager] GameSessionStatistics 찾기: {(gameSessionStatistics != null ? "성공" : "실패")}", GameLogger.LogCategory.Save);
-            }
-
-            if (gameSessionStatistics == null)
-            {
                 GameLogger.LogWarning("[StageManager] GameSessionStatistics를 찾을 수 없습니다. 통계 수집을 시작할 수 없습니다.", GameLogger.LogCategory.Save);
                 return;
-            }
-
-            // PlayerManager가 null이면 찾기
-            if (playerManager == null)
-            {
-                playerManager = FindFirstObjectByType<PlayerManager>(FindObjectsInactive.Include);
-                GameLogger.LogInfo($"[StageManager] PlayerManager 찾기: {(playerManager != null ? "성공" : "실패")}", GameLogger.LogCategory.Save);
             }
 
             string characterName = "Unknown";
@@ -1254,18 +1257,6 @@ namespace Game.StageSystem.Manager
         private async Task SaveStatisticsSession(bool finalEnd)
         {
             GameLogger.LogInfo($"[StageManager] 통계 세션 저장 시작 (종료: {finalEnd})", GameLogger.LogCategory.Save);
-
-            if (gameSessionStatistics == null)
-            {
-                gameSessionStatistics = FindFirstObjectByType<GameSessionStatistics>(FindObjectsInactive.Include);
-                GameLogger.LogInfo($"[StageManager] GameSessionStatistics 찾기: {(gameSessionStatistics != null ? "성공" : "실패")}", GameLogger.LogCategory.Save);
-            }
-
-            if (statisticsManager == null)
-            {
-                statisticsManager = FindFirstObjectByType<StatisticsManager>(FindObjectsInactive.Include);
-                GameLogger.LogInfo($"[StageManager] StatisticsManager 찾기: {(statisticsManager != null ? "성공" : "실패")}", GameLogger.LogCategory.Save);
-            }
 
             if (gameSessionStatistics == null)
             {

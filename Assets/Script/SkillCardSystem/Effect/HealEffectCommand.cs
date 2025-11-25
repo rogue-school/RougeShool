@@ -145,7 +145,7 @@ namespace Game.SkillCardSystem.Effect
             GameLogger.LogInfo($"[HealEffectCommand] 힐 VFX 생성 시작 - 프리팹: {visualEffectPrefab.name}, 위치: {spawnPos}", GameLogger.LogCategory.SkillCard);
 
             // VFXManager를 통한 이펙트 생성 (정확한 위치 지정)
-            var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            var finalVfxManager = vfxManager ?? Game.VFXSystem.Manager.VFXManager.Instance;
             if (finalVfxManager != null)
             {
                 var instance = finalVfxManager.PlayEffectAtCharacterCenter(visualEffectPrefab, context.Source.Transform);
@@ -303,7 +303,7 @@ namespace Game.SkillCardSystem.Effect
                 return;
             }
 
-            var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            var audioManager = Game.CoreSystem.Audio.AudioManager.Instance;
             if (audioManager != null)
             {
                 audioManager.PlaySFXWithPool(sfxClip, 0.9f);

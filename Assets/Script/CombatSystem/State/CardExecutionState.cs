@@ -1,5 +1,7 @@
 using UnityEngine;
 using System.Collections;
+using Game.Domain.Combat.ValueObjects;
+using Game.CombatSystem.Slot;
 
 namespace Game.CombatSystem.State
 {
@@ -83,7 +85,7 @@ namespace Game.CombatSystem.State
                 }
             }
 
-            // CombatExecutionManager를 통해 카드 실행
+            // CombatExecutionManager를 통해 카드 실행 (도메인 유스케이스 우선 사용)
             if (context.ExecutionManager != null)
             {
                 // 실행 완료 이벤트 구독 (일회성)
@@ -100,12 +102,58 @@ namespace Game.CombatSystem.State
                 context.ExecutionManager.OnExecutionCompleted += onCompleted;
 
                 // 카드 실행
-                context.ExecutionManager.ExecuteCardImmediately(card, slot);
+                if (context.ExecuteCardUseCase != null)
+                {
+                    try
+                    {
+                        var owner = card != null && card.IsFromPlayer()
+                            ? TurnType.Player
+                            : TurnType.Enemy;
+
+                        var slotPosition = ToDomainSlotPosition(slot);
+                        if (slotPosition == SlotPosition.None)
+                        {
+                            LogError($"지원하지 않는 슬롯 위치입니다: {slot}");
+                            ReturnToTurnState(context);
+                            return;
+                        }
+
+                        context.ExecuteCardUseCase.Execute(slotPosition, owner);
+                    }
+                    catch (System.Exception ex)
+                    {
+                        LogError($"도메인 카드 실행 중 오류 발생: {ex.Message}");
+                        ReturnToTurnState(context);
+                    }
+                }
+                else
+                {
+                    context.ExecutionManager.ExecuteCardImmediately(card, slot);
+                }
             }
             else
             {
                 LogError("ExecutionManager가 null입니다");
                 ReturnToTurnState(context);
+            }
+        }
+
+        private static SlotPosition ToDomainSlotPosition(CombatSlotPosition position)
+        {
+            switch (position)
+            {
+                case CombatSlotPosition.BATTLE_SLOT:
+                    return SlotPosition.BattleSlot;
+                case CombatSlotPosition.WAIT_SLOT_1:
+                    return SlotPosition.WaitSlot1;
+                case CombatSlotPosition.WAIT_SLOT_2:
+                    return SlotPosition.WaitSlot2;
+                case CombatSlotPosition.WAIT_SLOT_3:
+                    return SlotPosition.WaitSlot3;
+                case CombatSlotPosition.WAIT_SLOT_4:
+                    return SlotPosition.WaitSlot4;
+                default:
+                    return SlotPosition.None;
             }
         }
 

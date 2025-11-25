@@ -138,13 +138,6 @@ namespace Game.CombatSystem.Manager
                 GameLogger.LogInfo("[CombatStatsAggregator] ItemService 이벤트 구독 완료", GameLogger.LogCategory.Combat);
             }
 
-            // Resource consume/restore from PlayerManager
-            // PlayerManager가 null이면 직접 찾기 시도
-            if (_playerManager == null)
-            {
-                _playerManager = FindFirstObjectByType<PlayerManager>(FindObjectsInactive.Include);
-            }
-
             if (_playerManager != null)
             {
                 _playerManager.OnResourceConsumed += HandleResourceConsumed;
@@ -197,36 +190,9 @@ namespace Game.CombatSystem.Manager
             ResetStats();
             _combatStartTime = Time.time;
 
-            // TurnController가 null이면 Zenject Container를 통해 찾기 시도
-            if (_turnController == null)
-            {
-                var sceneContext = FindFirstObjectByType<Zenject.SceneContext>(FindObjectsInactive.Include);
-                if (sceneContext != null && sceneContext.Container != null)
-                {
-                    _turnController = sceneContext.Container.TryResolve<ITurnController>();
-                    if (_turnController != null)
-                    {
-                        GameLogger.LogInfo("[CombatStatsAggregator] ITurnController를 Zenject Container에서 찾음", GameLogger.LogCategory.Combat);
-                    }
-                }
-            }
-
             // 전투 시작 시점의 턴 수 저장
             _startTurnCount = _turnController != null ? _turnController.TurnCount : 1;
             GameLogger.LogInfo($"[CombatStatsAggregator] 전투 시작 시점 턴 수 저장: {_startTurnCount}", GameLogger.LogCategory.Combat);
-
-            // PlayerManager가 null이면 직접 찾기 시도
-            if (_playerManager == null)
-            {
-                _playerManager = FindFirstObjectByType<PlayerManager>(FindObjectsInactive.Include);
-                if (_playerManager != null)
-                {
-                    // 이벤트 구독
-                    _playerManager.OnResourceConsumed += HandleResourceConsumed;
-                    _playerManager.OnResourceRestored += HandleResourceRestored;
-                    GameLogger.LogInfo("[CombatStatsAggregator] PlayerManager 직접 찾기 및 이벤트 구독 완료", GameLogger.LogCategory.Combat);
-                }
-            }
 
             if (_playerManager != null)
             {
@@ -247,12 +213,6 @@ namespace Game.CombatSystem.Manager
         {
             // 전투 종료 시점부터 인벤토리 정리로 발생하는 Remove는 버리기로 카운트하지 않음
             _suppressDiscardCounting = true;
-
-            // PlayerManager가 null이면 직접 찾기 시도
-            if (_playerManager == null)
-            {
-                _playerManager = FindFirstObjectByType<PlayerManager>(FindObjectsInactive.Include);
-            }
 
             if (_playerManager != null)
             {
@@ -413,31 +373,6 @@ namespace Game.CombatSystem.Manager
         // API
         public CombatStatsSnapshot GetSnapshot()
         {
-            // TurnController가 null이면 Zenject Container를 통해 찾기 시도
-            if (_turnController == null)
-            {
-                var sceneContext = FindFirstObjectByType<Zenject.SceneContext>(FindObjectsInactive.Include);
-                if (sceneContext != null && sceneContext.Container != null)
-                {
-                    _turnController = sceneContext.Container.TryResolve<ITurnController>();
-                    if (_turnController != null)
-                    {
-                        GameLogger.LogInfo("[CombatStatsAggregator] ITurnController를 Zenject Container에서 찾음", GameLogger.LogCategory.Combat);
-                    }
-                }
-            }
-
-            // PlayerManager가 null이면 직접 찾기 시도 (최신 자원 정보 가져오기)
-            if (_playerManager == null)
-            {
-                _playerManager = FindFirstObjectByType<PlayerManager>(FindObjectsInactive.Include);
-                if (_playerManager != null && string.IsNullOrEmpty(_resourceName))
-                {
-                    _resourceName = _playerManager.ResourceName;
-                    _maxResource = _playerManager.MaxResource;
-                }
-            }
-
             // 최신 종료 자원 정보 업데이트
             if (_playerManager != null && _endResource == 0 && _combatStartTime > 0f)
             {

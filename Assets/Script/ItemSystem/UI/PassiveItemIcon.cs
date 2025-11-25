@@ -67,13 +67,13 @@ namespace Game.ItemSystem.UI
             InitializeIcon();
             rectTransform = GetComponent<RectTransform>();
         }
-
+        
         private void Start()
         {
-            tooltipManager = UnityEngine.Object.FindFirstObjectByType<ItemTooltipManager>();
+            tooltipManager = ItemTooltipManager.Instance;
             if (tooltipManager == null)
             {
-                GameLogger.LogWarning("[PassiveItemIcon] ItemTooltipManager를 찾을 수 없습니다", GameLogger.LogCategory.UI);
+                GameLogger.LogWarning("[PassiveItemIcon] ItemTooltipManager 인스턴스를 찾을 수 없습니다", GameLogger.LogCategory.UI);
             }
         }
 
@@ -132,12 +132,7 @@ namespace Game.ItemSystem.UI
 
             FadeIn();
 
-            // 툴팁 매니저에 등록 (없으면 찾기)
-            if (tooltipManager == null)
-            {
-                tooltipManager = UnityEngine.Object.FindFirstObjectByType<ItemTooltipManager>();
-            }
-
+            // 툴팁 매니저에 등록
             if (tooltipManager != null && rectTransform != null)
             {
                 tooltipManager.RegisterPassiveItemUI(itemDefinition, rectTransform);

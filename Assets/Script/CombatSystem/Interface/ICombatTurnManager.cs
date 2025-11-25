@@ -77,24 +77,6 @@ namespace Game.CombatSystem.Interface
         void RegisterCard(CombatSlotPosition slot, ISkillCard card, SkillCardUI ui, SlotOwner owner);
 
         /// <summary>
-        /// 현재 턴을 설정합니다. (저장 시스템용)
-        /// </summary>
-        /// <param name="turn">설정할 턴</param>
-        void SetCurrentTurn(int turn);
-
-        /// <summary>
-        /// 현재 턴을 반환합니다. (저장 시스템용)
-        /// </summary>
-        /// <returns>현재 턴 번호</returns>
-        int GetCurrentTurn();
-
-        /// <summary>
-        /// 가드 효과를 적용합니다.
-        /// 다음 슬롯의 적 스킬카드를 무효화시킵니다.
-        /// </summary>
-        void ApplyGuardEffect();
-
-        /// <summary>
         /// 현재 턴이 플레이어 턴인지 확인합니다.
         /// 1번 슬롯이 비어있으면 플레이어 턴입니다.
         /// </summary>
@@ -144,21 +126,6 @@ namespace Game.CombatSystem.Interface
         /// 게임을 종료합니다.
         /// </summary>
         void EndGame();
-        
-        /// <summary>
-        /// 턴을 일시정지합니다.
-        /// </summary>
-        void PauseTurn();
-        
-        /// <summary>
-        /// 턴을 재개합니다.
-        /// </summary>
-        void ResumeTurn();
-        
-        /// <summary>
-        /// 턴 시간을 리셋합니다.
-        /// </summary>
-        void ResetTurnTimer();
         
         // 이벤트들
         /// <summary>턴이 변경될 때 발생하는 이벤트</summary>

@@ -33,9 +33,7 @@ namespace Game.SkillCardSystem.UI.Mappers
                 // 자원 코스트: 효과 요약 및 효과 행에 표시
                 if (config.hasResource && config.resourceConfig != null && config.resourceConfig.cost > 0)
                 {
-                    string resourceName = "자원";
-                    var pm0 = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
-                    if (pm0 != null && !string.IsNullOrEmpty(pm0.ResourceName)) resourceName = pm0.ResourceName;
+                    const string resourceName = "자원";
 
                     ruleLines.Add($"{resourceName} 소모: {config.resourceConfig.cost}");
                     model.Effects.Add(new TooltipModel.EffectRow
@@ -195,9 +193,7 @@ namespace Game.SkillCardSystem.UI.Mappers
                         if (cs != null && cs.resourceDelta != 0)
                         {
                             var text = cs.resourceDelta > 0 ? "획득" : "소모";
-                            string resourceName = "자원";
-                            var pm = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
-                            if (pm != null && !string.IsNullOrEmpty(pm.ResourceName)) resourceName = pm.ResourceName;
+                            const string resourceName = "자원";
                             ruleLines.Add($"{resourceName} {text}: {Mathf.Abs(cs.resourceDelta)}");
                             model.Effects.Add(new TooltipModel.EffectRow
                             {
@@ -252,9 +248,7 @@ namespace Game.SkillCardSystem.UI.Mappers
                     // 자원 코스트 표시
                     if (config.hasResource && config.resourceConfig != null && config.resourceConfig.cost > 0)
                     {
-                        string resourceName = "자원";
-                        var pm1 = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
-                        if (pm1 != null && !string.IsNullOrEmpty(pm1.ResourceName)) resourceName = pm1.ResourceName;
+                        const string resourceName = "자원";
                         ruleLines.Add($"{resourceName} 소모: {config.resourceConfig.cost}");
                         model.Effects.Add(new TooltipModel.EffectRow
                         {
@@ -275,14 +269,8 @@ namespace Game.SkillCardSystem.UI.Mappers
                         attackPotionBonus = GetAttackPotionBonus(playerCharacter);
                     }
                     
-                    // 강화 보너스 (패시브 성급)
+                    // 강화 보너스 (패시브 성급) - 글로벌 검색을 사용하지 않고, 호출자가 계산한 값을 넘기는 구조로 향후 확장 가능
                     int enhancementBonus = 0;
-                    var itemService = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
-                    if (itemService != null)
-                    {
-                        string skillId = def.displayName;
-                        enhancementBonus = itemService.GetSkillDamageBonus(skillId);
-                    }
                     
                     var actualDmg = CalculateActualDamage(baseDmg, currentStacks, attackPotionBonus, enhancementBonus);
                     var hits = Mathf.Max(1, config.damageConfig.hits);
@@ -510,9 +498,7 @@ namespace Game.SkillCardSystem.UI.Mappers
                         if (cs != null && cs.resourceDelta != 0)
                         {
                             var text = cs.resourceDelta > 0 ? "획득" : "소모";
-                            string resourceName = "자원";
-                            var pm = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
-                            if (pm != null && !string.IsNullOrEmpty(pm.ResourceName)) resourceName = pm.ResourceName;
+                            const string resourceName = "자원";
                             ruleLines.Add($"{resourceName} {text}: {Mathf.Abs(cs.resourceDelta)}");
                             model.Effects.Add(new TooltipModel.EffectRow
                             {

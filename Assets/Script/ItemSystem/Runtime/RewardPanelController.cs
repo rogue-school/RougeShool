@@ -800,10 +800,9 @@ namespace Game.ItemSystem.Runtime
 			_itemService.AddPassiveItem(selectedItem);
 			
 			// 툴팁 매니저에 툴팁 업데이트 요청
-			var tooltipManager = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Manager.ItemTooltipManager>();
-			if (tooltipManager != null)
+			if (Game.ItemSystem.Manager.ItemTooltipManager.Instance != null)
 			{
-				tooltipManager.RefreshPassiveItemTooltip(selectedItem);
+				Game.ItemSystem.Manager.ItemTooltipManager.Instance.RefreshPassiveItemTooltip(selectedItem);
 			}
 			
 			RemovePassiveSlot(slotIndex);
@@ -847,10 +846,9 @@ namespace Game.ItemSystem.Runtime
 					_itemService.AddPassiveItem(passiveItem);
 					
 					// 툴팁 매니저에 툴팁 업데이트 요청
-					var tooltipManager = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Manager.ItemTooltipManager>();
-					if (tooltipManager != null)
+					if (Game.ItemSystem.Manager.ItemTooltipManager.Instance != null)
 					{
-						tooltipManager.RefreshPassiveItemTooltip(passiveItem);
+						Game.ItemSystem.Manager.ItemTooltipManager.Instance.RefreshPassiveItemTooltip(passiveItem);
 					}
 
 					// 슬롯 인덱스 찾기
@@ -874,10 +872,9 @@ namespace Game.ItemSystem.Runtime
 						_itemService.AddPassiveItem(passiveItem);
 						
 						// 툴팁 매니저에 툴팁 업데이트 요청
-						var tooltipManager = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Manager.ItemTooltipManager>();
-						if (tooltipManager != null)
+						if (Game.ItemSystem.Manager.ItemTooltipManager.Instance != null)
 						{
-							tooltipManager.RefreshPassiveItemTooltip(passiveItem);
+							Game.ItemSystem.Manager.ItemTooltipManager.Instance.RefreshPassiveItemTooltip(passiveItem);
 						}
 
 						GameLogger.LogInfo($"[RewardPanel] 패시브 아이템 자동 선택 (후보 배열): {passiveItem.DisplayName}", GameLogger.LogCategory.UI);

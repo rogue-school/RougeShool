@@ -30,8 +30,8 @@ namespace Game.ItemSystem.Effect
             // power가 0이 아니면 power 값을 사용 (커스텀 설정값)
             // power가 0이면 기본 healAmount 사용
             int finalHealAmount = power > 0 ? power : healAmount;
-            var vfxManager = UnityEngine.Object.FindFirstObjectByType<VFXManager>();
-            var audioManager = UnityEngine.Object.FindFirstObjectByType<AudioManager>();
+            var vfxManager = Game.VFXSystem.Manager.VFXManager.Instance;
+            var audioManager = Game.CoreSystem.Audio.AudioManager.Instance;
             return new HealEffectCommand(finalHealAmount, sfxClip, visualEffectPrefab, vfxManager, audioManager);
         }
 
@@ -40,8 +40,8 @@ namespace Game.ItemSystem.Effect
         /// </summary>
         public IItemEffectCommand CreateEffectCommand(HealEffectCustomSettings customSettings)
         {
-            var vfxManager = UnityEngine.Object.FindFirstObjectByType<VFXManager>();
-            var audioManager = UnityEngine.Object.FindFirstObjectByType<AudioManager>();
+            var vfxManager = Game.VFXSystem.Manager.VFXManager.Instance;
+            var audioManager = Game.CoreSystem.Audio.AudioManager.Instance;
             if (customSettings == null)
             {
                 return new HealEffectCommand(healAmount, sfxClip, visualEffectPrefab, vfxManager, audioManager);

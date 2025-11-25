@@ -127,10 +127,10 @@ namespace Game.ItemSystem.Runtime
         /// </summary>
         private void FindTooltipManager()
         {
-            tooltipManager = Object.FindFirstObjectByType<ItemTooltipManager>();
+            tooltipManager = ItemTooltipManager.Instance;
             if (tooltipManager == null)
             {
-                GameLogger.LogWarning("[RewardSlotUI] ItemTooltipManager를 찾을 수 없습니다", GameLogger.LogCategory.UI);
+                GameLogger.LogWarning("[RewardSlotUI] ItemTooltipManager 인스턴스를 찾을 수 없습니다", GameLogger.LogCategory.UI);
             }
         }
         
@@ -400,13 +400,12 @@ namespace Game.ItemSystem.Runtime
             {
                 // 보상창에서는 실제 강화 레벨을 조회 (아직 선택하지 않았으면 0)
                 int enhancementLevel = 0;
-                var itemService = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
-                if (itemService != null)
+                if (_itemService != null)
                 {
                     string skillId = GetPassiveItemSkillId(currentPassive);
                     if (!string.IsNullOrEmpty(skillId))
                     {
-                        enhancementLevel = itemService.GetSkillEnhancementLevel(skillId);
+                        enhancementLevel = _itemService.GetSkillEnhancementLevel(skillId);
                     }
                 }
                 // 보상창 컨텍스트로 표시

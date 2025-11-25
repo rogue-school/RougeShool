@@ -44,6 +44,12 @@ namespace Game.CoreSystem.Manager
         
         [Tooltip("필수 시스템만 초기화 (불필요한 시스템 제외)")]
         [SerializeField] private bool initializeEssentialSystemsOnly = true;
+        
+        [Header("UI 참조")]
+        [Tooltip("CoreScene에서 사용하는 VictoryUI (선택)")]
+        [SerializeField] private Game.CombatSystem.UI.VictoryUI victoryUI;
+        [Tooltip("자동 바인딩에 사용할 메인 Canvas (선택)")]
+        [SerializeField] private Canvas mainCanvas;
         #endregion
 
         #region 초기화 상태
@@ -67,7 +73,6 @@ namespace Game.CoreSystem.Manager
             // CoreScene 로드 시 VictoryUI 패널 숨기기
             try
             {
-                var victoryUI = FindFirstObjectByType<Game.CombatSystem.UI.VictoryUI>(FindObjectsInactive.Include);
                 if (victoryUI != null)
                 {
                     victoryUI.Hide();
@@ -263,10 +268,14 @@ namespace Game.CoreSystem.Manager
             }
             
             // Canvas 자동 바인딩
-            Canvas canvas = FindFirstObjectByType<Canvas>();
+            Canvas canvas = mainCanvas;
             if (canvas != null)
             {
                 BindCanvasComponents(canvas);
+            }
+            else if (enableDebugLogging)
+            {
+                GameLogger.LogWarning("[CoreSystemInitializer] mainCanvas가 설정되지 않았습니다. 자동 바인딩을 건너뜁니다.", GameLogger.LogCategory.UI);
             }
             
             if (enableDebugLogging)

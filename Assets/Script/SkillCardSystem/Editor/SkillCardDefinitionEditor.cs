@@ -314,7 +314,7 @@ namespace Game.SkillCardSystem.Editor
         
         private void ValidateCard()
         {
-            var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            var audioManager = Game.CoreSystem.Audio.AudioManager.Instance;
             var factory = new Game.SkillCardSystem.Factory.SkillCardFactory(audioManager);
             bool isValid = factory.ValidateDefinition(card);
             

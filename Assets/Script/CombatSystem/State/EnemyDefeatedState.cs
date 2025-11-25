@@ -96,8 +96,10 @@ namespace Game.CombatSystem.State
             
             LogStateTransition("적 처치 - 정리 작업 완료");
             
-                   // StageManager에 정리 완료 알림
-                   var stageManager = Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
+            // StageManager에 정리 완료 알림
+            var stageManager = context?.StateMachine != null 
+                ? context.StateMachine.GetStageManager()
+                : null;
             if (stageManager != null)
             {
                 GameLogger.LogInfo("[EnemyDefeatedState] StageManager 발견 - 정리 완료 알림 전송", GameLogger.LogCategory.Combat);

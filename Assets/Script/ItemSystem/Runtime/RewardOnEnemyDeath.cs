@@ -69,21 +69,12 @@ namespace Game.ItemSystem.Runtime
 				return;
 			}
 
-			// 부모 Transform이 없으면 Canvas를 찾아서 사용
-			if (rewardPanelParent == null)
+			// 부모 Transform이 없으면 Canvas를 Inspector에서 설정해야 합니다.
+            if (rewardPanelParent == null)
 			{
-				var canvas = Object.FindFirstObjectByType<Canvas>();
-				if (canvas != null)
-				{
-					rewardPanelParent = canvas.transform;
-					GameLogger.LogInfo("[RewardOnEnemyDeath] Canvas를 부모로 설정했습니다.", GameLogger.LogCategory.UI);
-				}
-				else
-				{
-					GameLogger.LogError("[RewardOnEnemyDeath] Canvas를 찾을 수 없습니다.", GameLogger.LogCategory.UI);
-					OnRewardProcessCompleted?.Invoke();
-					return;
-				}
+				GameLogger.LogError("[RewardOnEnemyDeath] rewardPanelParent가 설정되지 않았습니다. Inspector에서 Canvas 하위 Transform을 지정해주세요.", GameLogger.LogCategory.UI);
+				OnRewardProcessCompleted?.Invoke();
+				return;
 			}
 
 			// 보상 패널 프리팹을 동적으로 생성

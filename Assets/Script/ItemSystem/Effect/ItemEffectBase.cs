@@ -53,12 +53,6 @@ namespace Game.ItemSystem.Effect
         {
             if (target == null) return;
 
-            // TurnManager 캐싱 (최초 1회만 검색)
-            if (_cachedTurnManager == null)
-            {
-                _cachedTurnManager = Object.FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
-            }
-
             if (_cachedTurnManager == null)
             {
                 GameLogger.LogWarning($"[{GetType().Name}] TurnManager를 찾을 수 없습니다", GameLogger.LogCategory.Core);

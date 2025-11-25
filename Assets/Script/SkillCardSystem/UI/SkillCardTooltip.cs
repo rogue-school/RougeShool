@@ -582,7 +582,7 @@ namespace Game.SkillCardSystem.UI
                     if (card != null && card.IsFromPlayer())
                     {
                         // 플레이어 카드인 경우에만 공격력 물약 버프 확인
-                        var playerManager = FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
+                        var playerManager = Game.CharacterSystem.Manager.PlayerManager.Instance;
                         if (playerManager != null)
                         {
                             var character = playerManager.GetCharacter();
@@ -706,7 +706,7 @@ namespace Game.SkillCardSystem.UI
                 var title = string.IsNullOrEmpty(definition.displayNameKO) ? definition.displayName : definition.displayNameKO;
                 // 강화 성급(★) 표기 추가
                 int level = 0;
-                var itemSvc = FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
+                var itemSvc = Game.ItemSystem.Service.ItemServiceLocator.Instance;
                 if (itemSvc != null)
                 {
                     level = itemSvc.GetSkillEnhancementLevel(definition.displayName);
@@ -910,7 +910,7 @@ namespace Game.SkillCardSystem.UI
             if (config.hasResource && config.resourceConfig != null && config.resourceConfig.cost > 0)
             {
                 string resourceName = "자원";
-                var pm = FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
+                var pm = Game.CharacterSystem.Manager.PlayerManager.Instance;
                 if (pm != null && !string.IsNullOrEmpty(pm.ResourceName))
                     resourceName = pm.ResourceName;
 
@@ -936,7 +936,7 @@ namespace Game.SkillCardSystem.UI
                 int attackPotionBonus = 0;
                 if (currentCard != null && currentCard.IsFromPlayer())
                 {
-                    var playerManager = FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
+                    var playerManager = Game.CharacterSystem.Manager.PlayerManager.Instance;
                     if (playerManager != null)
                     {
                         var character = playerManager.GetCharacter();
@@ -958,8 +958,8 @@ namespace Game.SkillCardSystem.UI
                 int enhancementBonus = 0;
                 if (currentCard != null && currentCard.IsFromPlayer())
                 {
-                    // ItemService 조회 (주입이 없을 수 있어 1회 안전 조회)
-                    var service = FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
+                    // ItemService 조회 (로케이터 기반)
+                    var service = Game.ItemSystem.Service.ItemServiceLocator.Instance;
                     if (service != null)
                     {
                         string skillId = definition.displayName;
@@ -1097,7 +1097,7 @@ namespace Game.SkillCardSystem.UI
                             // 플레이어 카드인 경우 PlayerManager에서 자원 이름 조회
                             if (currentCard != null && currentCard.IsFromPlayer())
                             {
-                                var pm = FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
+                                var pm = Game.CharacterSystem.Manager.PlayerManager.Instance;
                                 if (pm != null && !string.IsNullOrEmpty(pm.ResourceName))
                                 {
                                     resourceName = pm.ResourceName;

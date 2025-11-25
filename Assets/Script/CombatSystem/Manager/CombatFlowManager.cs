@@ -587,60 +587,6 @@ namespace Game.CombatSystem.Manager
 
         #endregion
         
-        #region 세이브/로드 시스템 지원
-        
-        /// <summary>
-        /// 전투 상태를 복원합니다. (저장 시스템용)
-        /// </summary>
-        /// <param name="flowState">복원할 플로우 상태</param>
-        public void RestoreCombatState(string flowState)
-        {
-            if (string.IsNullOrEmpty(flowState))
-            {
-                GameLogger.LogWarning("복원할 전투 상태가 비어있습니다", GameLogger.LogCategory.Combat);
-                return;
-            }
-            
-            try
-            {
-                // 문자열을 FlowState로 변환
-                if (System.Enum.TryParse<FlowState>(flowState, out var parsedState))
-                {
-                    currentFlowState = parsedState;
-                    GameLogger.LogInfo($"전투 상태 복원: {flowState}", GameLogger.LogCategory.Combat);
-                }
-                else
-                {
-                    GameLogger.LogWarning($"알 수 없는 전투 상태: {flowState}", GameLogger.LogCategory.Combat);
-                }
-            }
-            catch (System.Exception ex)
-            {
-                GameLogger.LogError($"전투 상태 복원 실패: {ex.Message}", GameLogger.LogCategory.Error);
-            }
-        }
-        
-        /// <summary>
-        /// 현재 전투 상태를 가져옵니다. (저장 시스템용)
-        /// </summary>
-        /// <returns>현재 전투 상태 문자열</returns>
-        public string GetCurrentCombatState()
-        {
-            return currentFlowState.ToString();
-        }
-        
-        /// <summary>
-        /// 전투 활성 상태를 설정합니다. (저장 시스템용)
-        /// </summary>
-        /// <param name="active">전투 활성 여부</param>
-        public void SetCombatActive(bool active)
-        {
-            isCombatActive = active;
-            GameLogger.LogInfo($"전투 활성 상태 설정: {active}", GameLogger.LogCategory.Combat);
-        }
-        
-        #endregion
-        
         #region 게임 오버 관리 (GameOverManager 통합)
         
         [Header("게임 오버 설정")]

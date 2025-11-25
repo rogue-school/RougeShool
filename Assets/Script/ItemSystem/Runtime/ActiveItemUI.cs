@@ -117,14 +117,14 @@ namespace Game.ItemSystem.Runtime
         /// </summary>
         private void FindTooltipManager()
         {
-            tooltipManager = FindFirstObjectByType<Game.ItemSystem.Manager.ItemTooltipManager>();
+            tooltipManager = Game.ItemSystem.Manager.ItemTooltipManager.Instance;
             if (tooltipManager != null)
             {
-                GameLogger.LogInfo("[ActiveItemUI] ItemTooltipManager 찾기 완료", GameLogger.LogCategory.UI);
+                GameLogger.LogInfo("[ActiveItemUI] ItemTooltipManager 인스턴스 찾기 완료", GameLogger.LogCategory.UI);
             }
             else
             {
-                GameLogger.LogWarning("[ActiveItemUI] ItemTooltipManager를 찾을 수 없습니다", GameLogger.LogCategory.UI);
+                GameLogger.LogWarning("[ActiveItemUI] ItemTooltipManager 인스턴스를 찾을 수 없습니다", GameLogger.LogCategory.UI);
             }
         }
         
@@ -522,8 +522,7 @@ namespace Game.ItemSystem.Runtime
                 }
                 if (hasOtherOpen)
                 {
-                    var panel = FindFirstObjectByType<InventoryPanelController>();
-                    if (panel != null)
+                    if (inventoryPanel != null)
                     {
                         // 다른 슬롯 전환 시: 먼저 툴팁을 현재 슬롯으로 재고정하여
                         // 이전 슬롯 팝업 정리 과정에서 새 툴팁이 닫히지 않게 보호
@@ -535,7 +534,7 @@ namespace Game.ItemSystem.Runtime
 
                         // 그런 다음 다른 슬롯의 팝업만 닫기
                         // (툴팁은 유지, 다음 프레임에 팝업을 정상적으로 연다)
-                        panel.CloseAllPopupsOnly();
+                        inventoryPanel.CloseAllPopupsOnly();
                     }
                     StartCoroutine(OpenAfterFrame());
                     return;
@@ -575,10 +574,9 @@ namespace Game.ItemSystem.Runtime
         {
             // 다음 프레임에서 글로벌 닫기 억제 후 정상 오픈
             yield return null;
-            var panel = FindFirstObjectByType<InventoryPanelController>();
-            if (panel != null)
+            if (inventoryPanel != null)
             {
-                panel.SuppressGlobalCloseOneFrame();
+                inventoryPanel.SuppressGlobalCloseOneFrame();
             }
             OnItemClicked?.Invoke(slotIndex);
             ShowActionPopup(IsPlayerTurn());
@@ -592,32 +590,17 @@ namespace Game.ItemSystem.Runtime
         private bool IsPlayerTurn()
         {
             // 1단계: TurnManager 턴 상태 확인
-            bool isTurnPlayerTurn = false;
-            if (turnManager != null)
+            if (turnManager == null)
             {
-                isTurnPlayerTurn = turnManager.IsPlayerTurn();
+                GameLogger.LogWarning("[ActiveItemUI] TurnManager가 주입되지 않았습니다. 아이템 사용을 차단합니다.", GameLogger.LogCategory.UI);
+                return false;
             }
-            else
-            {
-                // TurnManager가 없으면 씬에서 직접 찾기
-                var foundTurnManager = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
-                if (foundTurnManager != null)
-                {
-                    isTurnPlayerTurn = foundTurnManager.IsPlayerTurn();
-                }
-                else
-                {
-                    // TurnManager를 찾을 수 없으면 안전하게 false 반환 (아이템 사용 차단)
-                    GameLogger.LogWarning("[ActiveItemUI] TurnManager를 찾을 수 없습니다. 아이템 사용을 차단합니다.", GameLogger.LogCategory.UI);
-                    return false;
-                }
-            }
+            bool isTurnPlayerTurn = turnManager.IsPlayerTurn();
 
             // 2단계: CombatStateMachine 전투 상태 확인
-            var combatStateMachine = FindFirstObjectByType<Game.CombatSystem.State.CombatStateMachine>();
             if (combatStateMachine == null)
             {
-                GameLogger.LogWarning("[ActiveItemUI] CombatStateMachine을 찾을 수 없습니다. 아이템 사용을 차단합니다.", GameLogger.LogCategory.UI);
+                GameLogger.LogWarning("[ActiveItemUI] CombatStateMachine이 주입되지 않았습니다. 아이템 사용을 차단합니다.", GameLogger.LogCategory.UI);
                 return false;
             }
 

@@ -33,8 +33,8 @@ namespace Game.ItemSystem.Effect
             // power 파라미터가 이미 최종 buffAmount입니다 (CustomSettings에서 가져옴)
             // SO의 buffAmount는 기본값일 뿐, 중복 더하기하면 안 됩니다!
             int finalBuffAmount = power > 0 ? power : buffAmount; // power가 있으면 사용, 없으면 기본값
-            var vfxManager = UnityEngine.Object.FindFirstObjectByType<VFXManager>();
-            var audioManager = UnityEngine.Object.FindFirstObjectByType<AudioManager>();
+            var vfxManager = Game.VFXSystem.Manager.VFXManager.Instance;
+            var audioManager = Game.CoreSystem.Audio.AudioManager.Instance;
             return new AttackBuffEffectCommand(finalBuffAmount, duration, sfxClip, visualEffectPrefab, vfxManager, audioManager);
         }
 
@@ -43,8 +43,8 @@ namespace Game.ItemSystem.Effect
         /// </summary>
         public IItemEffectCommand CreateEffectCommand(AttackBuffEffectCustomSettings customSettings)
         {
-            var vfxManager = UnityEngine.Object.FindFirstObjectByType<VFXManager>();
-            var audioManager = UnityEngine.Object.FindFirstObjectByType<AudioManager>();
+            var vfxManager = Game.VFXSystem.Manager.VFXManager.Instance;
+            var audioManager = Game.CoreSystem.Audio.AudioManager.Instance;
             if (customSettings == null)
             {
                 return new AttackBuffEffectCommand(buffAmount, duration, sfxClip, visualEffectPrefab, vfxManager, audioManager);

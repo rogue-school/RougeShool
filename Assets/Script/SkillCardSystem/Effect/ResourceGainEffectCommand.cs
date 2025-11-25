@@ -33,12 +33,11 @@ namespace Game.SkillCardSystem.Effect
 				return;
 			}
 
-			// 현재 구조에서 리소스 조작은 PlayerManager가 담당하므로 일회성 조회로 위임합니다.
-			// (Update에서 호출하지 않으며, DI가 없다면 안전한 폴백)
-			var playerManager = UnityEngine.Object.FindFirstObjectByType<PlayerManager>();
+			// 현재 구조에서 리소스 조작은 PlayerManager가 담당하므로 전역 인스턴스를 통해 위임합니다.
+			var playerManager = Game.CharacterSystem.Manager.PlayerManager.Instance;
 			if (playerManager == null)
 			{
-				GameLogger.LogWarning("[ResourceGainEffect] PlayerManager를 찾을 수 없습니다.", GameLogger.LogCategory.SkillCard);
+				GameLogger.LogWarning("[ResourceGainEffect] PlayerManager 인스턴스를 찾을 수 없습니다.", GameLogger.LogCategory.SkillCard);
 				return;
 			}
 
@@ -48,7 +47,7 @@ namespace Game.SkillCardSystem.Effect
             // 사운드 재생 (가능할 때만)
             if (sfxClip != null)
             {
-                var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+                var audioManager = Game.CoreSystem.Audio.AudioManager.Instance;
                 if (audioManager != null)
                 {
                     audioManager.PlaySFXWithPool(sfxClip, 0.9f);
@@ -56,7 +55,7 @@ namespace Game.SkillCardSystem.Effect
                 }
                 else
                 {
-                    GameLogger.LogWarning("[ResourceGainEffect] AudioManager를 찾을 수 없습니다. 자원 수급 사운드 재생을 건너뜁니다.", GameLogger.LogCategory.SkillCard);
+                    GameLogger.LogWarning("[ResourceGainEffect] AudioManager 인스턴스를 찾을 수 없습니다. 자원 수급 사운드 재생을 건너뜁니다.", GameLogger.LogCategory.SkillCard);
                 }
             }
 		}

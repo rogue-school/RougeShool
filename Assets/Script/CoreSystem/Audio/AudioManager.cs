@@ -15,6 +15,7 @@ namespace Game.CoreSystem.Audio
     /// </summary>
     public class AudioManager : MonoBehaviour, ICoreSystemInitializable, IAudioManager
     {
+        public static AudioManager Instance { get; private set; }
         
         [Header("오디오 소스")]
         [SerializeField] private AudioSource bgmSource;  // 배경음악
@@ -87,6 +88,15 @@ namespace Game.CoreSystem.Audio
         
         private void Awake()
         {
+            if (Instance != null && Instance != this)
+            {
+                GameLogger.LogWarning("[AudioManager] 중복 인스턴스가 감지되었습니다. 기존 인스턴스를 유지하고 새 인스턴스를 제거합니다.", GameLogger.LogCategory.Audio);
+                Destroy(gameObject);
+                return;
+            }
+
+            Instance = this;
+
             // 전역 오디오 매니저로 설정 (씬 전환 시에도 유지)
             if (transform.parent == null)
             {
@@ -103,6 +113,11 @@ namespace Game.CoreSystem.Audio
         
         private void OnDestroy()
         {
+            if (Instance == this)
+            {
+                Instance = null;
+            }
+
             SceneManager.sceneLoaded -= OnSceneLoaded;
         }
         
