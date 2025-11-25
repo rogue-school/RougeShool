@@ -20,6 +20,7 @@ using Game.Application.Stage;
 using Game.Domain.Stage.Entities;
 using Game.Domain.Stage.Interfaces;
 using Game.Domain.Stage.ValueObjects;
+using StageDataProgressState = Game.StageSystem.Data.StageProgressState;
 
 namespace Game.StageSystem.Manager
 {
@@ -77,7 +78,7 @@ namespace Game.StageSystem.Manager
         private bool isDestroyed = false;
 
         // 스테이지 진행 상태
-        private StageProgressState progressState = StageProgressState.NotStarted;
+        private StageDataProgressState progressState = StageDataProgressState.NotStarted;
 
         // 다중 스테이지 관리
         private StageData currentStage;
@@ -86,7 +87,7 @@ namespace Game.StageSystem.Manager
         private IStage _domainStage;
         [Zenject.Inject] private EnemyManager enemyManager;
         [Zenject.Inject(Optional = true)] private Game.CoreSystem.Interface.IAudioManager audioManager;
-        [Zenject.Inject(Optional = true)] private Game.ItemSystem.Service.IItemService itemService;
+        [Zenject.Inject(Optional = true)] private Game.ItemSystem.Interface.IItemService itemService;
         [Zenject.Inject(Optional = true)] private Game.SkillCardSystem.Interface.IPlayerHandManager playerHandManager;
         [Zenject.Inject(Optional = true)] private Game.CombatSystem.Slot.CombatSlotRegistry combatSlotRegistry;
         [Zenject.Inject(Optional = true)] private Game.CombatSystem.Interface.ICombatTurnManager turnManager;
@@ -974,7 +975,7 @@ namespace Game.StageSystem.Manager
             currentStage = stageData;
             currentEnemyIndex = 0;
             isStageCompleted = false;
-            progressState = StageProgressState.NotStarted;
+            progressState = StageDataProgressState.NotStarted;
             _domainStage = CreateDomainStage(currentStage);
             
             // 스테이지 전환 이벤트 발생
@@ -1065,8 +1066,18 @@ namespace Game.StageSystem.Manager
 
         #region 스테이지 진행 관리
 
-        public StageProgressState ProgressState => progressState;
+        public StageDataProgressState ProgressState => progressState;
         public bool IsStageCompleted => isStageCompleted;
+
+        /// <summary>
+        /// 현재 적 인덱스를 반환합니다.
+        /// </summary>
+        public int CurrentEnemyIndex => currentEnemyIndex;
+
+        /// <summary>
+        /// 현재 스테이지 번호를 반환합니다.
+        /// </summary>
+        public int CurrentStageNumber => currentStage != null ? currentStage.stageNumber : 0;
 
         /// <summary>
         /// 스테이지를 시작합니다. 첫 번째 적을 생성합니다.
@@ -1079,7 +1090,7 @@ namespace Game.StageSystem.Manager
                 return;
             }
 
-            progressState = StageProgressState.InProgress;
+            progressState = StageDataProgressState.InProgress;
             currentEnemyIndex = 0;
             isStageCompleted = false;
             
@@ -1120,7 +1131,7 @@ namespace Game.StageSystem.Manager
         /// </summary>
         public void CompleteStage()
         {
-            progressState = StageProgressState.Completed;
+            progressState = StageDataProgressState.Completed;
             isStageCompleted = true;
             totalStagesCompleted++;
             
@@ -1183,7 +1194,7 @@ namespace Game.StageSystem.Manager
 
         public async void FailStage()
         {
-            progressState = StageProgressState.Failed;
+            progressState = StageDataProgressState.Failed;
             OnProgressChanged?.Invoke(progressState);
 
             if (_domainStage != null && _failStageUseCase != null)
@@ -1317,18 +1328,10 @@ namespace Game.StageSystem.Manager
             gameSessionStatistics.MarkAsSaved();
             }
             
-            // 세션 ID를 PlayerPrefs에 저장 (이어하기용)
-            if (saveManager != null && sessionData != null && !string.IsNullOrEmpty(sessionData.sessionId))
-            {
-                PlayerPrefs.SetString("CURRENT_SESSION_ID", sessionData.sessionId);
-                PlayerPrefs.Save();
-                GameLogger.LogInfo($"[StageManager] 세션 ID 저장: {sessionData.sessionId}", GameLogger.LogCategory.Save);
-            }
-            
             GameLogger.LogInfo($"[StageManager] 통계 세션 저장 완료 (종료: {finalEnd})", GameLogger.LogCategory.Save);
         }
 
-        public event System.Action<StageProgressState> OnProgressChanged;
+        public event System.Action<StageDataProgressState> OnProgressChanged;
 
         #endregion
 

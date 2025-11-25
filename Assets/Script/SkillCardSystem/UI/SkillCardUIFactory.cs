@@ -1,7 +1,7 @@
 using UnityEngine;
 using Game.SkillCardSystem.Interface;
 using Game.CoreSystem.Utility;
-using Game.CombatSystem.DragDrop;
+using Game.SkillCardSystem.DragDrop;
 using Game.CombatSystem.Manager;
 using Game.VFXSystem.Manager;
 

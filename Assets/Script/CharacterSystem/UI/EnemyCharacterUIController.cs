@@ -80,7 +80,7 @@ namespace Game.CharacterSystem.UI
                     }
                     else
                     {
-                        if (Application.isPlaying) Destroy(icon); else DestroyImmediate(icon);
+                        if (UnityEngine.Application.isPlaying) Destroy(icon); else DestroyImmediate(icon);
                     }
                 }
             }

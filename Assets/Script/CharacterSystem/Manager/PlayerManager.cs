@@ -49,8 +49,10 @@ namespace Game.CharacterSystem.Manager
 
         #region Unity 생명주기 / 전역 접근 지원
 
-        private void Awake()
+        protected override void Awake()
         {
+            base.Awake();
+
             if (Instance != null && Instance != this)
             {
                 GameLogger.LogWarning("[PlayerManager] 중복 인스턴스가 감지되었습니다. 기존 인스턴스를 유지하고 새 인스턴스를 제거합니다.", GameLogger.LogCategory.Character);
@@ -61,12 +63,14 @@ namespace Game.CharacterSystem.Manager
             Instance = this;
         }
 
-        private void OnDestroy()
+        protected override void OnDestroy()
         {
             if (Instance == this)
             {
                 Instance = null;
             }
+
+            base.OnDestroy();
         }
 
         #endregion

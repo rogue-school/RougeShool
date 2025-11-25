@@ -4,7 +4,6 @@ using TMPro;
 using Game.CoreSystem.Utility;
 using Game.CoreSystem.Manager;
 using Game.CoreSystem.Interface;
-using Game.CoreSystem.Save;
 using Game.CoreSystem.Statistics;
 using Zenject;
 
@@ -16,6 +15,7 @@ namespace Game.CombatSystem.UI
     /// </summary>
     public class GameOverUI : MonoBehaviour
     {
+        public static GameOverUI Instance { get; private set; }
         [Header("게임 오버 UI 요소")]
         [Tooltip("게임 오버 패널 (배경)")]
         [SerializeField] private GameObject panel;
@@ -35,6 +35,26 @@ namespace Game.CombatSystem.UI
         // 통계 매니저
         [Inject(Optional = true)] private GameSessionStatistics gameSessionStatistics;
         [Inject(Optional = true)] private IStatisticsManager statisticsManager;
+
+        private void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                GameLogger.LogWarning("[GameOverUI] 중복 인스턴스가 감지되었습니다. 기존 인스턴스를 유지하고 새 인스턴스를 제거합니다.", GameLogger.LogCategory.UI);
+                Destroy(gameObject);
+                return;
+            }
+
+            Instance = this;
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+            {
+                Instance = null;
+            }
+        }
 
         private void Start()
         {

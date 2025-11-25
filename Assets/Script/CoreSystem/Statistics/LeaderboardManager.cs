@@ -87,7 +87,7 @@ namespace Game.CoreSystem.Statistics
         /// <summary>
         /// 리더보드 파일 전체 경로
         /// </summary>
-        private string LeaderboardFilePath => Path.Combine(Application.persistentDataPath, leaderboardFileName);
+        private string LeaderboardFilePath => Path.Combine(UnityEngine.Application.persistentDataPath, leaderboardFileName);
 
         /// <summary>
         /// 현재 리더보드 데이터

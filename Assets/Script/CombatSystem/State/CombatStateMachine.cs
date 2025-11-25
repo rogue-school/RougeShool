@@ -956,7 +956,7 @@ namespace Game.CombatSystem.State
         {
             try
             {
-                var itemService = Game.ItemSystem.Service.ItemServiceLocator.Instance;
+                var itemService = Game.ItemSystem.Service.ItemService.Instance;
                 if (itemService == null)
                 {
                     return false;
@@ -988,7 +988,7 @@ namespace Game.CombatSystem.State
             try
             {
                 // ItemService 조회
-                var itemService = Game.ItemSystem.Service.ItemServiceLocator.Instance;
+                var itemService = Game.ItemSystem.Service.ItemService.Instance;
                 if (itemService == null)
                 {
                     GameLogger.LogWarning("[CombatStateMachine] ItemService를 찾을 수 없습니다", GameLogger.LogCategory.Combat);

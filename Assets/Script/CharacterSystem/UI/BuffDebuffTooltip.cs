@@ -404,7 +404,7 @@ namespace Game.CharacterSystem.UI
             // 기존 턴 정보 아이템들 제거
             foreach (Transform child in turnInfoContainer)
             {
-                if (Application.isPlaying)
+                if (UnityEngine.Application.isPlaying)
                     Destroy(child.gameObject);
                 else
                     DestroyImmediate(child.gameObject);

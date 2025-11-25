@@ -1,6 +1,6 @@
 using UnityEngine;
 using Game.SkillCardSystem.UI;
-using Game.CombatSystem.DragDrop;
+using Game.SkillCardSystem.DragDrop;
 using Game.SkillCardSystem.Slot;
 using System.Linq;
 using Game.CombatSystem.UI;

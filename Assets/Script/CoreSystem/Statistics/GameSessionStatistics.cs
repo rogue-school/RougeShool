@@ -327,8 +327,8 @@ namespace Game.CoreSystem.Statistics
             // 최종 스테이지 정보 업데이트
             if (_stageManager != null)
             {
-                _currentSession.finalStageNumber = _stageManager.GetCurrentStageNumber();
-                _currentSession.finalEnemyIndex = _stageManager.GetCurrentEnemyIndex();
+                _currentSession.finalStageNumber = _stageManager.CurrentStageNumber;
+                _currentSession.finalEnemyIndex = _stageManager.CurrentEnemyIndex;
             }
 
             // 최종 전투의 턴수 업데이트 (마지막 전투의 턴수)
@@ -405,8 +405,8 @@ namespace Game.CoreSystem.Statistics
             
             if (_stageManager != null)
             {
-                _currentSession.finalStageNumber = _stageManager.GetCurrentStageNumber();
-                _currentSession.finalEnemyIndex = _stageManager.GetCurrentEnemyIndex();
+                _currentSession.finalStageNumber = _stageManager.CurrentStageNumber;
+                _currentSession.finalEnemyIndex = _stageManager.CurrentEnemyIndex;
             }
 
             // 세션 요약 계산 (점수 계산 전에 반드시 호출)
@@ -481,8 +481,8 @@ namespace Game.CoreSystem.Statistics
             // 스테이지 정보 업데이트
             if (_stageManager != null)
             {
-                _currentCombatStats.stageNumber = _stageManager.GetCurrentStageNumber();
-                _currentCombatStats.enemyIndex = _stageManager.GetCurrentEnemyIndex();
+                _currentCombatStats.stageNumber = _stageManager.CurrentStageNumber;
+                _currentCombatStats.enemyIndex = _stageManager.CurrentEnemyIndex;
                 GameLogger.LogInfo($"[GameSessionStatistics] 스테이지 정보: {_currentCombatStats.stageNumber}-{_currentCombatStats.enemyIndex}", GameLogger.LogCategory.Combat);
             }
 

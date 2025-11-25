@@ -200,7 +200,7 @@ namespace Game.StageSystem.UI
         {
             if (stageManager is StageManager concreteManager)
             {
-                return concreteManager.GetCurrentEnemyIndex();
+                return concreteManager.CurrentEnemyIndex;
             }
             return 0;
         }

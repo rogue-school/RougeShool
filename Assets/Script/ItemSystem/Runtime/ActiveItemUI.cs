@@ -37,6 +37,8 @@ namespace Game.ItemSystem.Runtime
 
         // 의존성 주입
         [Inject(Optional = true)] private Game.CombatSystem.Manager.TurnManager turnManager;
+        [Inject(Optional = true)] private InventoryPanelController inventoryPanel;
+        [Inject(Optional = true)] private Game.CombatSystem.State.CombatStateMachine combatStateMachine;
         
         // 툴팁 매니저
         private Game.ItemSystem.Manager.ItemTooltipManager tooltipManager;

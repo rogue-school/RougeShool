@@ -5,7 +5,6 @@ using System.Collections;
 using Game.CoreSystem.Interface;
 using Game.CoreSystem.Manager;
 using Game.CoreSystem.Audio;
-using Game.CoreSystem.Save;
 using Game.CoreSystem.Utility;
 using Zenject;
 
@@ -368,7 +367,7 @@ namespace Game.CoreSystem.UI
         /// </summary>
         private void OnExitGameClicked()
         {
-            Application.Quit();
+            UnityEngine.Application.Quit();
         }
         
         #endregion

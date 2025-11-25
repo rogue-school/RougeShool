@@ -546,7 +546,7 @@ namespace Game.CharacterSystem.UI
             // 모두 제거 후 다시 구성(간단/안전)
             foreach (Transform child in buffDebuffParent)
             {
-                if (Application.isPlaying) Destroy(child.gameObject); else DestroyImmediate(child.gameObject);
+                if (UnityEngine.Application.isPlaying) Destroy(child.gameObject); else DestroyImmediate(child.gameObject);
             }
 
             foreach (var e in effects)

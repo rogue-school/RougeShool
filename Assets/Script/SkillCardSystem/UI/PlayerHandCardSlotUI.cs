@@ -6,7 +6,7 @@ using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Slot;
 using Game.SkillCardSystem.UI;
 using Game.CombatSystem.Utility;
-using Game.CombatSystem.DragDrop;
+using Game.SkillCardSystem.DragDrop;
 using Game.CoreSystem.Utility;
 
 namespace Game.CombatSystem.UI

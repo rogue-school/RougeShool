@@ -5,7 +5,6 @@ using Zenject;
 using Game.SkillCardSystem.Data;
 using Game.SkillCardSystem.Deck;
 using Game.SkillCardSystem.Interface;
-using Game.CoreSystem.Save;
 using Game.CoreSystem.Utility;
 using Game.CharacterSystem.Manager;
 using Game.CharacterSystem.Data;
@@ -37,7 +36,7 @@ namespace Game.SkillCardSystem.Manager
         #region 핵심 필드
         
         private List<PlayerSkillDeck.CardEntry> currentDeck = new();
-        [Inject(Optional = true)] private IPlayerHandManager playerHandManager;
+        [Inject(Optional = true)] private PlayerHandManager playerHandManager;
         
         #endregion
         
@@ -494,32 +493,24 @@ namespace Game.SkillCardSystem.Manager
         #region 저장/로드
         
         /// <summary>
-        /// 현재 덱 구성을 저장합니다.
+        /// 현재 덱 구성을 저장합니다. (세이브 시스템 제거로 현재는 동작하지 않습니다)
         /// </summary>
         public void SaveDeckConfiguration()
         {
-            if (saveManager != null)
+            if (enableDebugLogging)
             {
-                // 저장 로직 구현 (필요시)
-                if (enableDebugLogging)
-                {
-                    GameLogger.LogInfo("덱 구성 저장 완료", GameLogger.LogCategory.SkillCard);
-                }
+                GameLogger.LogInfo("덱 구성 저장 기능은 세이브 시스템 제거로 비활성화되었습니다.", GameLogger.LogCategory.SkillCard);
             }
         }
         
         /// <summary>
-        /// 저장된 덱 구성을 로드합니다.
+        /// 저장된 덱 구성을 로드합니다. (세이브 시스템 제거로 현재는 동작하지 않습니다)
         /// </summary>
         public void LoadDeckConfiguration()
         {
-            if (saveManager != null)
+            if (enableDebugLogging)
             {
-                // 로드 로직 구현 (필요시)
-                if (enableDebugLogging)
-                {
-                    GameLogger.LogInfo("덱 구성 로드 완료", GameLogger.LogCategory.SkillCard);
-                }
+                GameLogger.LogInfo("덱 구성 로드 기능은 세이브 시스템 제거로 비활성화되었습니다.", GameLogger.LogCategory.SkillCard);
             }
         }
         

@@ -1326,27 +1326,16 @@ namespace Game.ItemSystem.Effect
         }
 
         /// <summary>
-        /// CardSlotRegistry의 카드 데이터를 업데이트합니다
+        /// CardSlotRegistry의 카드 데이터를 업데이트합니다.
+        /// 도메인/레거시 슬롯 동기화는 리팩토링 과정에서 다른 경로로 처리되므로,
+        /// 현재 구현에서는 슬롯 내부 상태와 UI만 갱신합니다.
         /// </summary>
         /// <param name="position">슬롯 위치</param>
         /// <param name="newCard">새로운 카드</param>
         private void UpdateCardSlotRegistry(Game.CombatSystem.Slot.CombatSlotPosition position, Game.SkillCardSystem.Interface.ISkillCard newCard)
         {
-            // ICardSlotRegistry는 DI를 통해 주입된 인스턴스를 사용해야 합니다.
-            var cardSlotRegistry = Game.CombatSystem.Interface.CardSlotRegistryLocator.Instance;
-            if (cardSlotRegistry == null)
-            {
-                GameLogger.LogError("[DiceOfFate] ICardSlotRegistry를 DI 컨테이너에서 찾을 수 없습니다", GameLogger.LogCategory.Core);
-                return;
-            }
-
-            // 기존 카드 UI 가져오기
-            var existingUI = cardSlotRegistry.GetCardUIInSlot(position);
-            
-            // CardSlotRegistry에 새 카드 등록
-            cardSlotRegistry.RegisterCard(position, newCard, existingUI, Game.CombatSystem.Data.SlotOwner.ENEMY);
-            
-            GameLogger.LogInfo($"[DiceOfFate] CardSlotRegistry 업데이트 완료: {position} = {newCard.GetCardName()}", GameLogger.LogCategory.Core);
+            // TODO: 필요 시 ICardSlotRegistry를 DI로 주입받아 도메인 슬롯까지 동기화할 수 있습니다.
+            GameLogger.LogInfo($"[DiceOfFate] CardSlotRegistry 직접 동기화는 현재 비활성화되어 있습니다. Position={position}, Card={newCard?.GetCardName()}", GameLogger.LogCategory.Core);
         }
 
         /// <summary>

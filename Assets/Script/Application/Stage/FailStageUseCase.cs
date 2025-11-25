@@ -24,7 +24,7 @@ namespace Game.Application.Stage
                 throw new ArgumentNullException(nameof(stage), "스테이지는 null일 수 없습니다.");
             }
 
-            if (stage is Stage concreteStage)
+            if (stage is Game.Domain.Stage.Entities.Stage concreteStage)
             {
                 concreteStage.MarkFailed();
             }

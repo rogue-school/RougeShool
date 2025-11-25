@@ -45,7 +45,7 @@ namespace Game.Application.Battle
             }
 
             CombatSlot slot = _slotRegistry.GetSlot(slotPosition);
-            if (slot == null || slot.IsEmpty)
+            if (slot == null || !slot.HasCard)
             {
                 throw new InvalidOperationException("해당 슬롯에 실행할 카드가 없습니다.");
             }

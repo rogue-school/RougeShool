@@ -17,6 +17,7 @@ namespace Game.SkillCardSystem.Manager
     /// </summary>
     public class SkillCardTooltipManager : MonoBehaviour, ICoreSystemInitializable
     {
+        public static SkillCardTooltipManager Instance { get; private set; }
         #region Serialized Fields
 
         [Header("툴팁 설정")]
@@ -64,6 +65,14 @@ namespace Game.SkillCardSystem.Manager
 
         private void Awake()
         {
+            if (Instance != null && Instance != this)
+            {
+                GameLogger.LogWarning("[SkillCardTooltipManager] 중복 인스턴스가 감지되었습니다. 기존 인스턴스를 유지하고 새 인스턴스를 제거합니다.", GameLogger.LogCategory.UI);
+                Destroy(gameObject);
+                return;
+            }
+
+            Instance = this;
             InitializeComponents();
             // 프리팹은 Inspector로 지정되며, 선택적으로 DI로 주입 가능합니다.
         }
@@ -74,6 +83,19 @@ namespace Game.SkillCardSystem.Manager
 
             UpdateMousePosition();
             UpdateTooltipTimers();
+        }
+
+        private void OnDestroy()
+        {
+            if (currentTooltip != null)
+            {
+                Destroy(currentTooltip.gameObject);
+            }
+
+            if (Instance == this)
+            {
+                Instance = null;
+            }
         }
 
         #endregion
@@ -632,14 +654,6 @@ namespace Game.SkillCardSystem.Manager
         #endregion
 
         #region Cleanup
-
-        private void OnDestroy()
-        {
-            if (currentTooltip != null)
-            {
-                Destroy(currentTooltip.gameObject);
-            }
-        }
 
         /// <summary>
         /// 씬 전환 시 툴팁 캔버스를 정리합니다.

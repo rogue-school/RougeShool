@@ -20,6 +20,7 @@ namespace Game.ItemSystem.Manager
     /// </summary>
     public class ItemTooltipManager : MonoBehaviour, ICoreSystemInitializable
     {
+        public static ItemTooltipManager Instance { get; private set; }
         #region Serialized Fields
 
         [Header("툴팁 설정")]
@@ -88,6 +89,14 @@ namespace Game.ItemSystem.Manager
 
         private void Awake()
         {
+            if (Instance != null && Instance != this)
+            {
+                GameLogger.LogWarning("[ItemTooltipManager] 중복 인스턴스가 감지되었습니다. 기존 인스턴스를 유지하고 새 인스턴스를 제거합니다.", GameLogger.LogCategory.UI);
+                Destroy(gameObject);
+                return;
+            }
+
+            Instance = this;
             InitializeComponents();
         }
 
@@ -109,6 +118,11 @@ namespace Game.ItemSystem.Manager
             if (currentTooltip != null && currentTooltip.gameObject != null)
             {
                 Destroy(currentTooltip.gameObject);
+            }
+
+            if (Instance == this)
+            {
+                Instance = null;
             }
         }
 

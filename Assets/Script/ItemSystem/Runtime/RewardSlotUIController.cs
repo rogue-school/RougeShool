@@ -6,7 +6,9 @@ using Game.ItemSystem.Data;
 using Game.ItemSystem.Utility;
 using Game.CoreSystem.Utility;
 using Game.ItemSystem.Manager;
+using Game.ItemSystem.Interface;
 using DG.Tweening;
+using Zenject;
 
 namespace Game.ItemSystem.Runtime
 {
@@ -44,6 +46,12 @@ namespace Game.ItemSystem.Runtime
         // 호버 효과 관련
         private Tween scaleTween;
         
+        #endregion
+
+        #region 의존성
+
+        [Inject(Optional = true)] private IItemService _itemService;
+
         #endregion
 
         #region 상태

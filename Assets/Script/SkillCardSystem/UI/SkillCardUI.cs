@@ -4,7 +4,7 @@ using TMPro;
 using UnityEngine.EventSystems;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Manager;
-using Game.CombatSystem.DragDrop;
+using Game.SkillCardSystem.DragDrop;
 using Game.CoreSystem.Utility;
 using Game.ItemSystem.Constants;
 using Zenject;
@@ -164,7 +164,7 @@ namespace Game.SkillCardSystem.UI
                     canvasGroup.blocksRaycasts = false;
                     canvasGroup.alpha = 0f; // 완전히 투명하게 설정
                 }
-                if (TryGetComponent(out Game.CombatSystem.DragDrop.CardDragHandler dragHandlerForMarker))
+                if (TryGetComponent(out CardDragHandler dragHandlerForMarker))
                 {
                     dragHandlerForMarker.enabled = false;
                 }
@@ -226,7 +226,7 @@ namespace Game.SkillCardSystem.UI
                 canvasGroup.interactable = true; // 모든 카드에서 상호작용 허용 (툴팁을 위해)
                 canvasGroup.blocksRaycasts = true; // 모든 카드에서 레이캐스트 허용 (툴팁을 위해)
             }
-            if (TryGetComponent(out Game.CombatSystem.DragDrop.CardDragHandler dragHandler))
+            if (TryGetComponent(out CardDragHandler dragHandler))
             {
                 dragHandler.enabled = isPlayerCard; // 드래그는 플레이어 카드만
             }

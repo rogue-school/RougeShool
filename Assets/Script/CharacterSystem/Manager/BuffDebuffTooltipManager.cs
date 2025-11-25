@@ -16,6 +16,7 @@ namespace Game.CharacterSystem.Manager
     /// </summary>
     public class BuffDebuffTooltipManager : MonoBehaviour, ICoreSystemInitializable
     {
+        public static BuffDebuffTooltipManager Instance { get; private set; }
         #region Serialized Fields
 
         [Header("툴팁 설정")]
@@ -60,6 +61,14 @@ namespace Game.CharacterSystem.Manager
 
         private void Awake()
         {
+            if (Instance != null && Instance != this)
+            {
+                GameLogger.LogWarning("[BuffDebuffTooltipManager] 중복 인스턴스가 감지되었습니다. 기존 인스턴스를 유지하고 새 인스턴스를 제거합니다.", GameLogger.LogCategory.UI);
+                Destroy(gameObject);
+                return;
+            }
+
+            Instance = this;
             InitializeComponents();
         }
 
@@ -77,6 +86,14 @@ namespace Game.CharacterSystem.Manager
                 {
                     currentTooltip.UpdatePosition(effectPosition);
                 }
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+            {
+                Instance = null;
             }
         }
 

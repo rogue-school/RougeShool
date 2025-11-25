@@ -209,16 +209,6 @@ namespace Game.CombatSystem.UI
 
             if (_gameSessionStatistics == null)
             {
-                _gameSessionStatistics = Game.CoreSystem.Statistics.GameSessionStatisticsLocator.Instance;
-            }
-
-            if (_leaderboardManager == null)
-            {
-                _leaderboardManager = Game.CoreSystem.Statistics.LeaderboardManagerLocator.Instance;
-            }
-
-            if (_gameSessionStatistics == null)
-            {
                 GameLogger.LogWarning("[VictoryUI] GameSessionStatistics를 찾을 수 없습니다. 점수 표시를 건너뜁니다.", GameLogger.LogCategory.UI);
                 if (scoreAndRankText != null)
                 {
@@ -521,7 +511,7 @@ namespace Game.CombatSystem.UI
                 if (sm.IsGameCompleted) return true;
 
                 // 2) 현재 스테이지가 마지막 스테이지인지 확인
-                int currentStageNumber = sm.GetCurrentStageNumber();
+                int currentStageNumber = sm.CurrentStageNumber;
                 if (currentStageNumber <= 0)
                 {
                     // 스테이지가 초기화되지 않았거나 0이면 최종 승리가 아님

@@ -349,16 +349,6 @@ namespace Game.CombatSystem.Manager
             return IsPlayerTurn();
         }
 
-        public void SetCurrentTurn(int turn)
-        {
-            SetTurnCount(turn);
-        }
-
-        public int GetCurrentTurn()
-        {
-            return TurnCount;
-        }
-
         #endregion
 
         #region 타입 변환 헬퍼

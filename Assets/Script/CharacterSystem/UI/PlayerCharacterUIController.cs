@@ -464,7 +464,7 @@ namespace Game.CharacterSystem.UI
             // 모두 제거 후 다시 구성(간단/안전)
             foreach (Transform child in buffDebuffParent)
             {
-                if (Application.isPlaying) Destroy(child.gameObject); else DestroyImmediate(child.gameObject);
+                if (UnityEngine.Application.isPlaying) Destroy(child.gameObject); else DestroyImmediate(child.gameObject);
             }
 
             foreach (var e in effects)
@@ -711,11 +711,11 @@ namespace Game.CharacterSystem.UI
 		{
 			if (resourcePipParent == null || resourcePipPrefab == null) return;
 			// 모두 제거
-			for (int i = resourcePipParent.childCount - 1; i >= 0; i--)
-			{
-				var child = resourcePipParent.GetChild(i);
-				if (Application.isPlaying) Destroy(child.gameObject); else DestroyImmediate(child.gameObject);
-			}
+            for (int i = resourcePipParent.childCount - 1; i >= 0; i--)
+            {
+                var child = resourcePipParent.GetChild(i);
+                if (UnityEngine.Application.isPlaying) Destroy(child.gameObject); else DestroyImmediate(child.gameObject);
+            }
 			resourcePips.Clear();
 			// 지정 개수 생성(최소 1)
 			int create = Mathf.Max(1, count);

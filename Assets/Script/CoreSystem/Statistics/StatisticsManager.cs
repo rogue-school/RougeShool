@@ -49,7 +49,7 @@ namespace Game.CoreSystem.Statistics
         /// <summary>
         /// 통계 파일 전체 경로
         /// </summary>
-        private string StatisticsFilePath => Path.Combine(Application.persistentDataPath, statisticsFileName);
+        private string StatisticsFilePath => Path.Combine(UnityEngine.Application.persistentDataPath, statisticsFileName);
 
         /// <summary>
         /// 현재 세션 통계 저장

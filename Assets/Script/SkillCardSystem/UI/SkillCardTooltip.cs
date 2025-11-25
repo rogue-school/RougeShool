@@ -706,7 +706,7 @@ namespace Game.SkillCardSystem.UI
                 var title = string.IsNullOrEmpty(definition.displayNameKO) ? definition.displayName : definition.displayNameKO;
                 // 강화 성급(★) 표기 추가
                 int level = 0;
-                var itemSvc = Game.ItemSystem.Service.ItemServiceLocator.Instance;
+                var itemSvc = Game.ItemSystem.Service.ItemService.Instance;
                 if (itemSvc != null)
                 {
                     level = itemSvc.GetSkillEnhancementLevel(definition.displayName);
@@ -848,7 +848,7 @@ namespace Game.SkillCardSystem.UI
             // 기존 효과 아이템들 제거
             foreach (Transform child in effectsContainer)
             {
-                if (Application.isPlaying)
+                if (UnityEngine.Application.isPlaying)
                     Destroy(child.gameObject);
                 else
                     DestroyImmediate(child.gameObject);
@@ -958,8 +958,8 @@ namespace Game.SkillCardSystem.UI
                 int enhancementBonus = 0;
                 if (currentCard != null && currentCard.IsFromPlayer())
                 {
-                    // ItemService 조회 (로케이터 기반)
-                    var service = Game.ItemSystem.Service.ItemServiceLocator.Instance;
+                    // ItemService 조회
+                    var service = Game.ItemSystem.Service.ItemService.Instance;
                     if (service != null)
                     {
                         string skillId = definition.displayName;
@@ -1973,7 +1973,7 @@ namespace Game.SkillCardSystem.UI
                 fadeTween = canvasGroup.DOFade(0f, fadeOutDuration)
                     .SetEase(fadeEase)
                     .OnComplete(() => {
-                        if (Application.isPlaying)
+                        if (UnityEngine.Application.isPlaying)
                         {
                             Destroy(gameObject);
                         }

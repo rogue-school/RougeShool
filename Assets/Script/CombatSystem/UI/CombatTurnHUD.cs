@@ -6,6 +6,8 @@ using Game.Domain.Combat.Interfaces;
 using Game.Domain.Combat.ValueObjects;
 using Game.CombatSystem.Interface;
 using Zenject;
+using DomainTurnType = Game.Domain.Combat.ValueObjects.TurnType;
+using DomainCombatPhase = Game.Domain.Combat.ValueObjects.CombatPhase;
 
 namespace Game.CombatSystem.UI
 {
@@ -64,7 +66,7 @@ namespace Game.CombatSystem.UI
 
         // Update ------------------------------------------------------
 
-        private void HandleTurnChanged(Manager.TurnType _)
+        private void HandleTurnChanged(Game.CombatSystem.Interface.TurnType _)
         {
             RefreshHUD();
         }
@@ -85,8 +87,8 @@ namespace Game.CombatSystem.UI
             }
 
             int turnNumber = _domainTurnManager.CurrentTurnNumber;
-            TurnType turnType = _domainTurnManager.CurrentTurnType;
-            CombatPhase phase = _domainTurnManager.Phase;
+            DomainTurnType turnType = _domainTurnManager.CurrentTurnType;
+            DomainCombatPhase phase = _domainTurnManager.Phase;
 
             string typeText = GetTurnTypeText(turnType);
             string phaseText = GetPhaseText(phase);
@@ -103,40 +105,40 @@ namespace Game.CombatSystem.UI
             }
         }
 
-        private static string GetTurnTypeText(TurnType turnType)
+        private static string GetTurnTypeText(DomainTurnType turnType)
         {
             switch (turnType)
             {
-                case TurnType.Player:
+                case DomainTurnType.Player:
                     return "플레이어 턴";
-                case TurnType.Enemy:
+                case DomainTurnType.Enemy:
                     return "적 턴";
                 default:
                     return "알 수 없음";
             }
         }
 
-        private static string GetPhaseText(CombatPhase phase)
+        private static string GetPhaseText(DomainCombatPhase phase)
         {
             switch (phase)
             {
-                case CombatPhase.None:
+                case DomainCombatPhase.None:
                     return "대기";
-                case CombatPhase.Preparation:
+                case DomainCombatPhase.Preparation:
                     return "준비";
-                case CombatPhase.PlayerTurn:
+                case DomainCombatPhase.PlayerTurn:
                     return "플레이어";
-                case CombatPhase.EnemyTurn:
+                case DomainCombatPhase.EnemyTurn:
                     return "적";
-                case CombatPhase.Resolution:
+                case DomainCombatPhase.Resolution:
                     return "해결";
-                case CombatPhase.Victory:
+                case DomainCombatPhase.Victory:
                     return "승리";
-                case CombatPhase.Defeat:
+                case DomainCombatPhase.Defeat:
                     return "패배";
-                case CombatPhase.Ended:
+                case DomainCombatPhase.Ended:
                     return "종료";
-                case CombatPhase.Paused:
+                case DomainCombatPhase.Paused:
                     return "일시정지";
                 default:
                     return "알 수 없음";

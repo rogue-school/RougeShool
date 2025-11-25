@@ -183,14 +183,6 @@ namespace Game.CombatSystem.State
                             enemyChar.ReinitializeHPBarController();
                             LogStateTransition($"[복귀 디버그] ✓ HP 바 컨트롤러 재초기화 완료");
 
-                            // EnemyCharacterUIController 재연결 (있다면)
-                            var uiController = Game.CharacterSystem.UI.EnemyCharacterUIController.Instance;
-                            if (uiController != null)
-                            {
-                                uiController.SetTarget(enemyChar);
-                                LogStateTransition($"[복귀 디버그] ✓ EnemyCharacterUIController 재연결 완료");
-                            }
-
                             // UI 업데이트 (체력바 색상 및 버프/이펙트 복원)
                             enemyChar.RefreshUI();
                             LogStateTransition($"[복귀 디버그] ✓ 원본 적 UI 업데이트 완료");
