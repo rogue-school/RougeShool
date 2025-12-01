@@ -22,6 +22,6 @@ MonoBehaviour:
   - effectSO: {fileID: 11400000, guid: 2e13356527d7b9441a73264d772ce306, type: 2}
     useCustomSettings: 1
     customSettings:
-      healthThreshold: 1
+      healthThreshold: 0.5
       summonTarget: {fileID: 11400000, guid: e3919db64768fa44f92e4de1af2055a2, type: 2}
     priority: 0
