@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Game.CoreSystem.Utility;
 using Game.CharacterSystem.Interface;
 using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.Effect;
 using Game.SkillCardSystem.Data;
 using Game.CombatSystem.Slot;
 using Game.CombatSystem.Interface;
@@ -50,6 +51,19 @@ namespace Game.CombatSystem.Manager
         [Inject] private IPlayerHandManager playerHandManager;
         [Inject] private ICombatFlowManager combatFlowManager;
         [Inject(Optional = true)] private Game.StageSystem.Interface.IStageManager stageManager;
+
+        #endregion
+
+        #region 카드 히스토리
+
+        private class CardHistoryEntry
+        {
+            public ISkillCard Card;
+            public int Turn;
+        }
+
+        private readonly List<CardHistoryEntry> _playerCardHistory = new List<CardHistoryEntry>();
+        private readonly List<CardHistoryEntry> _enemyCardHistory = new List<CardHistoryEntry>();
 
         #endregion
 
@@ -245,9 +259,9 @@ namespace Game.CombatSystem.Manager
                 return new ExecutionResult(false, null, "캐릭터를 찾을 수 없음");
             }
 
-            // 카드 실행
             try
             {
+                // 카드 실행
                 // 플레이어 카드의 자원 소모 처리 (선소모/부족 시 실패)
                 if (card != null && card.IsFromPlayer())
                 {
@@ -283,6 +297,9 @@ namespace Game.CombatSystem.Manager
                 }
 
                 card.ExecuteSkill(sourceCharacter, targetCharacter);
+
+                // 카드 사용 히스토리 등록 (연계 스킬은 제외)
+                RegisterCardUsage(card);
 
                 // 실행 이벤트 발생
                 OnCardExecuted?.Invoke(card, sourceCharacter, targetCharacter);
@@ -327,6 +344,112 @@ namespace Game.CombatSystem.Manager
             string owner = card.IsFromPlayer() ? "플레이어" : "적";
             string id = string.IsNullOrEmpty(card.CardDefinition.cardId) ? (card.GetCardName() ?? "Unknown") : card.CardDefinition.cardId;
             return $"{owner}_{id}";
+        }
+
+        #endregion
+
+        #region 카드 히스토리 관리
+
+        /// <summary>
+        /// 이전 턴에 사용된 비-연계 스킬 카드를 조회합니다.
+        /// 현재 턴에서 연계 스킬이 사용될 때, 같은 소유자의 직전 턴 카드(연계 제외)를 찾는 데 사용됩니다.
+        /// </summary>
+        /// <param name="currentCard">현재 실행 중인 카드 (연계 스킬)</param>
+        /// <returns>이전 턴에 사용된 비-연계 카드, 없으면 null</returns>
+        public ISkillCard GetPreviousNonLinkCardForOwner(ISkillCard currentCard)
+        {
+            if (currentCard == null || turnManager == null)
+            {
+                return null;
+            }
+
+            int currentTurn = turnManager.GetTurnCount();
+            var history = currentCard.IsFromPlayer() ? _playerCardHistory : _enemyCardHistory;
+
+            // 가장 최근 기록부터 거꾸로 탐색하면서,
+            // - 카드가 null이 아니고
+            // - 기록된 턴이 현재 턴보다 작은 경우(이전 턴들)
+            // 첫 번째로 발견되는 카드를 반환합니다.
+            for (int i = history.Count - 1; i >= 0; i--)
+            {
+                var entry = history[i];
+                if (entry == null || entry.Card == null)
+                {
+                    continue;
+                }
+
+                if (entry.Turn < currentTurn)
+                {
+                    return entry.Card;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 카드 사용 히스토리를 등록합니다.
+        /// 연계 스킬 카드는 히스토리에서 제외하고, 같은 캐릭터가 나중에 연계 스킬을 사용할 때
+        /// 참조할 수 있도록 이전 턴 비-연계 카드만 기록합니다.
+        /// </summary>
+        /// <param name="card">사용된 카드</param>
+        private void RegisterCardUsage(ISkillCard card)
+        {
+            if (card == null || turnManager == null)
+            {
+                return;
+            }
+
+            // 연계 스킬 자체는 히스토리에서 제외
+            if (IsLinkSkillCard(card))
+            {
+                return;
+            }
+
+            int currentTurn = turnManager.GetTurnCount();
+            var history = card.IsFromPlayer() ? _playerCardHistory : _enemyCardHistory;
+
+            history.Add(new CardHistoryEntry
+            {
+                Card = card,
+                Turn = currentTurn
+            });
+        }
+
+        /// <summary>
+        /// 해당 카드가 연계(이전 턴 카드 재실행) 스킬 카드인지 확인합니다.
+        /// 카드 정의에 ReplayPreviousTurnCardEffectSO가 포함되어 있는지 검사합니다.
+        /// </summary>
+        /// <param name="card">검사할 카드</param>
+        /// <returns>연계 스킬 카드이면 true, 아니면 false</returns>
+        private bool IsLinkSkillCard(ISkillCard card)
+        {
+            var definition = card?.CardDefinition;
+            if (definition == null)
+            {
+                return false;
+            }
+
+            var config = definition.configuration;
+            if (!config.hasEffects || config.effects == null)
+            {
+                return false;
+            }
+
+            foreach (var effectConfig in config.effects)
+            {
+                if (effectConfig == null || effectConfig.effectSO == null)
+                {
+                    continue;
+                }
+
+                if (effectConfig.effectSO is ReplayPreviousTurnCardEffectSO)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         #endregion

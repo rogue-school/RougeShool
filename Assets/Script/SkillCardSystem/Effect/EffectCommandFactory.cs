@@ -23,6 +23,7 @@ namespace Game.SkillCardSystem.Effect
             strategies.Add(new HealEffectStrategy());
             strategies.Add(new CardUseStackEffectStrategy());
             strategies.Add(new ResourceEffectStrategy());
+            strategies.Add(new ReplayPreviousTurnCardEffectStrategy());
         }
 
         /// <summary>
