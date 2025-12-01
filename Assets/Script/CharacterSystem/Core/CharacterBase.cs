@@ -494,7 +494,8 @@ namespace Game.CharacterSystem.Core
                 }
                 if (underHpTextAnchor) continue;
 
-                // 원래 색상 저장
+                // 기존 색상 트윈이 남아 있으면 완료 처리 후 현재 색상을 기준으로 사용
+                image.DOKill(true);
                 Color originalColor = image.color;
 
                 // 빨간색으로 플래시
@@ -514,7 +515,8 @@ namespace Game.CharacterSystem.Core
             {
                 if (spriteRenderer == null) continue;
 
-                // 원래 색상 저장
+                // 기존 색상 트윈이 남아 있으면 완료 처리 후 현재 색상을 기준으로 사용
+                spriteRenderer.DOKill(true);
                 Color originalColor = spriteRenderer.color;
 
                 // 빨간색으로 플래시

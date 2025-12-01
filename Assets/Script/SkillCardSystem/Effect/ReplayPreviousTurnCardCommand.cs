@@ -61,40 +61,79 @@ namespace Game.SkillCardSystem.Effect
                 $"[ReplayPreviousTurnCardCommand] 이전 턴 카드 재실행 시작 - 카드: {previousName}, 횟수: {_repeatCount}",
                 GameLogger.LogCategory.SkillCard);
 
-            // 재실행 전 체력 기록 (총 피해량 계산용)
-            int previousHP = target.GetCurrentHP();
+            // 시전자가 MonoBehaviour이면 코루틴으로, 아니면 즉시 실행으로 처리
+            var sourceMono = source as MonoBehaviour;
+            if (sourceMono != null)
+            {
+                sourceMono.StartCoroutine(ReplayWithDelayRoutine(previousCard, source, target, previousName));
+            }
+            else
+            {
+                ReplayImmediately(previousCard, source, target, previousName);
+            }
+        }
+
+        private System.Collections.IEnumerator ReplayWithDelayRoutine(ISkillCard previousCard, Game.CharacterSystem.Interface.ICharacter source, Game.CharacterSystem.Interface.ICharacter target, string previousName)
+        {
+            const float interval = 0.15f;
 
             for (int i = 0; i < _repeatCount; i++)
             {
+                if (target == null || target.IsDead())
+                {
+                    GameLogger.LogInfo(
+                        "[ReplayPreviousTurnCardCommand] 대상이 사망하여 연계 재실행을 중단합니다.",
+                        GameLogger.LogCategory.SkillCard);
+                    yield break;
+                }
+
                 try
                 {
                     previousCard.ExecuteSkill(source, target);
                     GameLogger.LogInfo(
-                        $"[ReplayPreviousTurnCardCommand] 재실행 완료 {i + 1}/{_repeatCount} - 카드: {previousName}",
+                        $"[ReplayPreviousTurnCardCommand] 지연 재실행 완료 {i + 1}/{_repeatCount} - 카드: {previousName}",
                         GameLogger.LogCategory.SkillCard);
                 }
                 catch (System.Exception ex)
                 {
                     GameLogger.LogError(
-                        $"[ReplayPreviousTurnCardCommand] 재실행 중 예외 발생: {ex.Message}",
+                        $"[ReplayPreviousTurnCardCommand] 지연 재실행 중 예외 발생: {ex.Message}",
                         GameLogger.LogCategory.Error);
-                    break;
+                    yield break;
+                }
+
+                if (i < _repeatCount - 1)
+                {
+                    yield return new WaitForSeconds(interval);
                 }
             }
+        }
 
-            // 총 피해량 계산 및 단일 데미지 텍스트 표시
-            int currentHP = target.GetCurrentHP();
-            int totalDamage = Mathf.Max(0, previousHP - currentHP);
-
-            if (totalDamage > 0)
+        private void ReplayImmediately(ISkillCard previousCard, Game.CharacterSystem.Interface.ICharacter source, Game.CharacterSystem.Interface.ICharacter target, string previousName)
+        {
+            for (int i = 0; i < _repeatCount; i++)
             {
-                var vfxManager = Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
-                if (vfxManager != null && target.Transform != null)
+                if (target == null || target.IsDead())
                 {
-                    vfxManager.ShowDamageText(totalDamage, target.Transform.position, target.Transform);
                     GameLogger.LogInfo(
-                        $"[ReplayPreviousTurnCardCommand] 총 피해량 텍스트 표시: {totalDamage} (이전 HP: {previousHP} → 현재 HP: {currentHP})",
-                        GameLogger.LogCategory.Combat);
+                        "[ReplayPreviousTurnCardCommand] 대상이 사망하여 즉시 재실행을 중단합니다.",
+                        GameLogger.LogCategory.SkillCard);
+                    return;
+                }
+
+                try
+                {
+                    previousCard.ExecuteSkill(source, target);
+                    GameLogger.LogInfo(
+                        $"[ReplayPreviousTurnCardCommand] 즉시 재실행 완료 {i + 1}/{_repeatCount} - 카드: {previousName}",
+                        GameLogger.LogCategory.SkillCard);
+                }
+                catch (System.Exception ex)
+                {
+                    GameLogger.LogError(
+                        $"[ReplayPreviousTurnCardCommand] 즉시 재실행 중 예외 발생: {ex.Message}",
+                        GameLogger.LogCategory.Error);
+                    return;
                 }
             }
         }
