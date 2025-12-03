@@ -24,6 +24,7 @@ namespace Game.SkillCardSystem.Effect
             strategies.Add(new CardUseStackEffectStrategy());
             strategies.Add(new ResourceEffectStrategy());
             strategies.Add(new ReplayPreviousTurnCardEffectStrategy());
+            strategies.Add(new AttackPowerBuffSkillEffectStrategy());
         }
 
         /// <summary>

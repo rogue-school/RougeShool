@@ -19,6 +19,9 @@ namespace Game.SkillCardSystem.Effect
         private int hits;
         private bool ignoreGuard;
         private bool ignoreCounter;
+        private bool useRandomBaseDamage;
+        private int minBaseDamage;
+        private int maxBaseDamage;
         private readonly IAudioManager audioManager;
         private readonly IItemService itemService;
 
@@ -40,8 +43,34 @@ namespace Game.SkillCardSystem.Effect
             this.hits = hits;
             this.ignoreGuard = ignoreGuard;
             this.ignoreCounter = ignoreCounter;
+            this.useRandomBaseDamage = false;
+            this.minBaseDamage = 0;
+            this.maxBaseDamage = 0;
             this.audioManager = null; // 의존성 주입이 아닌 경우
             this.itemService = null; // 의존성 주입이 아닌 경우
+        }
+
+        /// <summary>
+        /// 랜덤 데미지 구간을 포함하는 데미지 효과 명령을 생성합니다.
+        /// </summary>
+        /// <param name="damageAmount">기본 데미지(랜덤을 사용하지 않을 때)</param>
+        /// <param name="hits">공격 횟수</param>
+        /// <param name="ignoreGuard">가드 무시 여부</param>
+        /// <param name="ignoreCounter">반격 무시 여부</param>
+        /// <param name="useRandomBaseDamage">랜덤 데미지 사용 여부</param>
+        /// <param name="minBaseDamage">랜덤 데미지 최소값</param>
+        /// <param name="maxBaseDamage">랜덤 데미지 최대값</param>
+        public DamageEffectCommand(int damageAmount, int hits, bool ignoreGuard, bool ignoreCounter, bool useRandomBaseDamage, int minBaseDamage, int maxBaseDamage)
+        {
+            this.damageAmount = damageAmount;
+            this.hits = hits;
+            this.ignoreGuard = ignoreGuard;
+            this.ignoreCounter = ignoreCounter;
+            this.useRandomBaseDamage = useRandomBaseDamage;
+            this.minBaseDamage = minBaseDamage;
+            this.maxBaseDamage = maxBaseDamage;
+            this.audioManager = null;
+            this.itemService = null;
         }
 
         /// <summary>
@@ -60,6 +89,9 @@ namespace Game.SkillCardSystem.Effect
             var target = context.Target;
             var source = context.Source;
             var totalDamage = 0;
+
+            // 0) 기본 데미지 결정 (랜덤/고정)
+            int baseDamageValue = GetBaseDamageValue();
 
             // 1) 공격력 스택 버프 확인(시전자 기준) → 추가 피해량 = 스택 수
             int attackBonus = 0;
@@ -121,10 +153,10 @@ namespace Game.SkillCardSystem.Effect
                 starBonus = service.GetSkillDamageBonus(skillId);
             }
 
-            int effectiveDamage = damageAmount + attackBonus + itemAttackBonus + starBonus;
+            int effectiveDamage = baseDamageValue + attackBonus + itemAttackBonus + starBonus;
 
             // 🔍 디버그: 최종 데미지 계산 상세 로그
-            GameLogger.LogInfo($"[DamageCalc] 💥 기본:{damageAmount} + 스택:{attackBonus} + 아이템:{itemAttackBonus} + 강화:{starBonus} = 최종:{effectiveDamage}", GameLogger.LogCategory.Combat);
+            GameLogger.LogInfo($"[DamageCalc] 💥 기본:{baseDamageValue} + 스택:{attackBonus} + 아이템:{itemAttackBonus} + 강화:{starBonus} = 최종:{effectiveDamage}", GameLogger.LogCategory.Combat);
 
             // 반격 버프 처리: 대상이 CounterBuff 보유 시, 들어오는 피해의 100%를 공격자에게 반사
             // 대상은 데미지를 받지 않고, 공격자가 원래 데미지의 100%를 받음
@@ -229,6 +261,28 @@ namespace Game.SkillCardSystem.Effect
         }
 
         /// <summary>
+        /// 기본 데미지 값을 반환합니다. 랜덤 데미지를 사용하는 경우 최소/최대 범위 내에서 무작위 값을 반환합니다.
+        /// </summary>
+        /// <returns>기본 데미지 값</returns>
+        private int GetBaseDamageValue()
+        {
+            if (!useRandomBaseDamage)
+            {
+                return damageAmount;
+            }
+
+            int min = Mathf.Min(minBaseDamage, maxBaseDamage);
+            int max = Mathf.Max(minBaseDamage, maxBaseDamage);
+
+            if (max <= min)
+            {
+                return min;
+            }
+
+            return UnityEngine.Random.Range(min, max + 1);
+        }
+
+        /// <summary>
         /// 데미지량을 반환합니다.
         /// </summary>
         /// <returns>데미지량</returns>
@@ -313,10 +367,10 @@ namespace Game.SkillCardSystem.Effect
                 starBonus = itemService.GetSkillDamageBonus(skillId);
             }
 
-            int perHitDamage = damageAmount + attackBonus + itemAttackBonus + starBonus;
-
             for (int i = 0; i < hitCount; i++)
             {
+                int baseDamageValue = GetBaseDamageValue();
+                int perHitDamage = baseDamageValue + attackBonus + itemAttackBonus + starBonus;
                 // 대상이 사망했으면 중단
                 if (target.IsDead())
                 {
@@ -371,11 +425,11 @@ namespace Game.SkillCardSystem.Effect
             // Note: ExecuteImmediateDamage는 context가 없으므로 스택 계산이 제한적입니다.
             // 이 메서드는 주로 MonoBehaviour가 아닌 경우에 사용되므로 스택은 0으로 가정합니다.
 
-            // 강화 단계 보너스는 context가 없으므로 적용하지 않음
-            int perHitDamage = damageAmount + attackBonus;
-
             for (int i = 0; i < hitCount; i++)
             {
+                int baseDamageValue = GetBaseDamageValue();
+                int perHitDamage = baseDamageValue + attackBonus;
+
                 ApplyDamageCustom(target, perHitDamage);
                 totalDamage += perHitDamage;
             }

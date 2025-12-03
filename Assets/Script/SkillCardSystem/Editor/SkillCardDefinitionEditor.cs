@@ -127,6 +127,18 @@ namespace Game.SkillCardSystem.Editor
             EditorGUI.indentLevel--;
             
             EditorGUILayout.Space();
+
+            EditorGUILayout.LabelField("랜덤 데미지 설정", EditorStyles.boldLabel);
+            EditorGUI.indentLevel++;
+            config.useRandomDamage = EditorGUILayout.Toggle("랜덤 데미지 사용", config.useRandomDamage);
+            if (config.useRandomDamage)
+            {
+                config.minDamage = EditorGUILayout.IntField("최소 데미지", config.minDamage);
+                config.maxDamage = EditorGUILayout.IntField("최대 데미지", config.maxDamage);
+            }
+            EditorGUI.indentLevel--;
+            
+            EditorGUILayout.Space();
             
             EditorGUILayout.LabelField("데미지 이펙트/사운드", EditorStyles.boldLabel);
             EditorGUI.indentLevel++;

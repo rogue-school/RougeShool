@@ -119,12 +119,17 @@ namespace Game.SkillCardSystem.Runtime
             
             // 데미지 오버라이드가 있으면 사용, 없으면 기본값 사용
             int finalDamage = damageOverride >= 0 ? damageOverride : damageConfig.baseDamage;
-            
+
+            bool useRandomDamage = damageOverride < 0 && damageConfig.useRandomDamage;
+
             var damageCommand = new DamageEffectCommand(
                 finalDamage,
                 damageConfig.hits,
                 damageConfig.ignoreGuard,
-                damageConfig.ignoreCounter
+                damageConfig.ignoreCounter,
+                useRandomDamage,
+                damageConfig.minDamage,
+                damageConfig.maxDamage
             );
             effectCommands.Add(damageCommand);
         }

@@ -183,6 +183,16 @@ namespace Game.SkillCardSystem.Data
         [Tooltip("반격 버프 무효화 여부")]
         public bool ignoreCounter = false;
 
+        [Header("랜덤 데미지 설정")]
+        [Tooltip("랜덤 데미지를 사용할지 여부 (true이면 최소/최대값 사이에서 무작위 선택)")]
+        public bool useRandomDamage = false;
+
+        [Tooltip("랜덤 데미지 최소값")]
+        public int minDamage = 0;
+
+        [Tooltip("랜덤 데미지 최대값")]
+        public int maxDamage = 0;
+
         [Header("데미지 이펙트/사운드")]
         [Tooltip("데미지 공격 시 재생할 사운드")]
         public AudioClip sfxClip;
