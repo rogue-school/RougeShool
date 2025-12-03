@@ -275,13 +275,16 @@ namespace Game.SkillCardSystem.UI.Mappers
                         attackPotionBonus = GetAttackPotionBonus(playerCharacter);
                     }
                     
-                    // 강화 보너스 (패시브 성급)
+                    // 강화 보너스 (패시브 성급) - 플레이어 카드일 때만 적용
                     int enhancementBonus = 0;
-                    var itemService = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
-                    if (itemService != null)
+                    if (card != null && card.IsFromPlayer())
                     {
-                        string skillId = def.displayName;
-                        enhancementBonus = itemService.GetSkillDamageBonus(skillId);
+                        var itemService = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
+                        if (itemService != null)
+                        {
+                            string skillId = def.displayName;
+                            enhancementBonus = itemService.GetSkillDamageBonus(skillId);
+                        }
                     }
                     
                     var actualDmg = CalculateActualDamage(baseDmg, currentStacks, attackPotionBonus, enhancementBonus);

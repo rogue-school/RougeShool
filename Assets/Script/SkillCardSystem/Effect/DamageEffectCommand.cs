@@ -131,7 +131,7 @@ namespace Game.SkillCardSystem.Effect
                 }
             }
 
-            // 2) 강화 단계 데미지 보너스 확인 (플레이어가 시전자일 때만 적용)
+            // 2) 강화 단계 데미지 보너스 확인 (플레이어가 시전자이고 플레이어 카드일 때만 적용)
             int starBonus = 0;
             IItemService service = itemService;
             if (service == null)
@@ -140,7 +140,8 @@ namespace Game.SkillCardSystem.Effect
                 var svcImpl = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
                 if (svcImpl != null) service = svcImpl as IItemService;
             }
-            if (service != null && context.Card != null && source != null && source.IsPlayerControlled())
+            if (service != null && context.Card != null && source != null && 
+                source.IsPlayerControlled() && context.Card.IsFromPlayer())
             {
                 string skillId = context.Card.GetCardName();
                 starBonus = service.GetSkillDamageBonus(skillId);
@@ -348,9 +349,10 @@ namespace Game.SkillCardSystem.Effect
                 }
             }
 
-            // 강화 단계 데미지 보너스 확인 (플레이어가 시전자일 때만 적용)
+            // 강화 단계 데미지 보너스 확인 (플레이어가 시전자이고 플레이어 카드일 때만 적용)
             int starBonus = 0;
-            if (itemService != null && context.Card != null && source != null && source.IsPlayerControlled())
+            if (itemService != null && context.Card != null && source != null && 
+                source.IsPlayerControlled() && context.Card.IsFromPlayer())
             {
                 string skillId = context.Card.GetCardName();
                 starBonus = itemService.GetSkillDamageBonus(skillId);
