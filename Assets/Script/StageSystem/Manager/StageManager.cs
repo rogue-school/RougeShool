@@ -573,8 +573,8 @@ namespace Game.StageSystem.Manager
 		{
 			GameLogger.LogInfo($"[StageManager] 적 처치: {enemy.GetCharacterName()} (현재 인덱스: {currentEnemyIndex})", GameLogger.LogCategory.Combat);
 
-			// 소환된 적인지 확인 (원본 적 데이터가 저장되어 있는지로 판단)
-			if (originalEnemyData != null)
+			// 소환된 적인지 확인 (소환 컨텍스트 스택이 비어 있지 않으면 소환 체인 진행 중)
+			if (originalEnemyStack.Count > 0)
 			{
 				GameLogger.LogInfo($"[StageManager] 소환된 적 사망 감지 - 원본 복귀 시작: {originalEnemyData.DisplayName}", GameLogger.LogCategory.Combat);
 				// 소환된 적 사망 콜백 호출
@@ -1565,10 +1565,26 @@ namespace Game.StageSystem.Manager
 
         #region 소환 시스템
 
+        /// <summary>
+        /// 소환/복귀용 원본 적 정보를 관리하는 컨텍스트입니다.
+        /// 다단계 소환을 지원하기 위해 스택으로 관리됩니다.
+        /// </summary>
+        private struct OriginalEnemyContext
+        {
+            public EnemyCharacterData EnemyData;
+            public int EnemyHP;
+        }
+
+        // 기존 필드는 현재 소환 체인의 최상단 컨텍스트 스냅샷으로 유지합니다.
         private EnemyCharacterData originalEnemyData;
         private int originalEnemyHP;
         private EnemyCharacterData summonTargetData;
         private bool isSummonedEnemyActive = false;
+
+        /// <summary>
+        /// 다단계 소환을 위한 원본 적 컨텍스트 스택입니다.
+        /// </summary>
+        private readonly Stack<OriginalEnemyContext> originalEnemyStack = new Stack<OriginalEnemyContext>();
 
         private void HandleSummonRequest(EnemyCharacterData summonTarget, int currentHP)
         {
@@ -1707,21 +1723,37 @@ namespace Game.StageSystem.Manager
 
         private void OnSummonedEnemyDeath(ICharacter summonedEnemy)
         {
-            GameLogger.LogInfo($"[소환] {summonedEnemy.GetCharacterName()} 사망 → {originalEnemyData?.DisplayName} 복귀 (HP: {originalEnemyHP})", GameLogger.LogCategory.Combat);
-            
-            if (originalEnemyData != null)
+            // 현재 소환 체인의 최상단 컨텍스트를 사용하여 복귀를 처리합니다.
+            if (originalEnemyStack.Count > 0)
             {
+                var context = originalEnemyStack.Pop();
+                originalEnemyData = context.EnemyData;
+                originalEnemyHP = context.EnemyHP;
+
+                GameLogger.LogInfo(
+                    $"[소환] {summonedEnemy.GetCharacterName()} 사망 → {originalEnemyData?.DisplayName} 복귀 (HP: {originalEnemyHP}, 남은 스택: {originalEnemyStack.Count})",
+                    GameLogger.LogCategory.Combat);
+
                 // 복귀 전환 상태로 이동
                 _ = TransitionToSummonState(originalEnemyData, true);
-                
-                // 원본 적 복귀 완료 후 소환 변수 초기화
-                originalEnemyData = null;
-                originalEnemyHP = 0;
-                // isSummonedEnemyActive는 TransitionToSummonState에서 false로 설정됨
+
+                // 스택이 비어 있으면 최상위 소환 체인이 종료된 것이므로 필드를 초기화합니다.
+                if (originalEnemyStack.Count == 0)
+                {
+                    originalEnemyData = null;
+                    originalEnemyHP = 0;
+                }
+                else
+                {
+                    // 남은 상위 컨텍스트를 스냅샷으로 유지
+                    var parent = originalEnemyStack.Peek();
+                    originalEnemyData = parent.EnemyData;
+                    originalEnemyHP = parent.EnemyHP;
+                }
             }
             else
             {
-                GameLogger.LogWarning("[소환] 원본 적 데이터가 없어서 복귀할 수 없습니다.", GameLogger.LogCategory.Combat);
+                GameLogger.LogWarning("[소환] 원본 적 컨텍스트 스택이 비어 있어 복귀할 수 없습니다.", GameLogger.LogCategory.Combat);
                 // 데이터가 없어도 상태는 초기화
                 isSummonedEnemyActive = false;
             }
@@ -1756,36 +1788,68 @@ namespace Game.StageSystem.Manager
 
         /// <summary>
         /// 원본 적 데이터를 반환합니다 (상태 패턴에서 사용)
+        /// 항상 현재 소환 체인의 최상단 컨텍스트를 반환합니다.
         /// </summary>
         public EnemyCharacterData GetOriginalEnemyData()
         {
             return originalEnemyData;
         }
-
+        
         /// <summary>
         /// 원본 적 HP를 반환합니다 (상태 패턴에서 사용)
+        /// 항상 현재 소환 체인의 최상단 컨텍스트를 반환합니다.
         /// </summary>
         public int GetOriginalEnemyHP()
         {
             return originalEnemyHP;
         }
-
+        
         /// <summary>
-        /// 원본 적 데이터를 설정합니다 (상태 패턴에서 사용)
+        /// 새로운 소환 컨텍스트의 원본 적 데이터를 설정합니다.
+        /// 다단계 소환을 위해 스택에 푸시합니다.
         /// </summary>
         public void SetOriginalEnemyData(EnemyCharacterData data)
         {
-            originalEnemyData = data;
-            GameLogger.LogInfo($"[StageManager] 원본 적 데이터 설정: {data?.DisplayName}", GameLogger.LogCategory.Combat);
-        }
+            if (data == null)
+            {
+                GameLogger.LogWarning("[StageManager] 원본 적 데이터 설정 시 null이 전달되었습니다", GameLogger.LogCategory.Combat);
+                return;
+            }
 
+            var context = new OriginalEnemyContext
+            {
+                EnemyData = data,
+                EnemyHP = originalEnemyHP // HP는 이후 SetOriginalEnemyHP에서 갱신
+            };
+
+            originalEnemyStack.Push(context);
+            originalEnemyData = data;
+
+            GameLogger.LogInfo($"[StageManager] 원본 적 컨텍스트 푸시: {data.DisplayName} (스택 깊이: {originalEnemyStack.Count})", GameLogger.LogCategory.Combat);
+        }
+        
         /// <summary>
-        /// 원본 적 HP를 설정합니다 (상태 패턴에서 사용)
+        /// 현재 소환 컨텍스트의 원본 적 HP를 설정합니다.
+        /// 가장 최근에 푸시된 컨텍스트의 HP를 갱신합니다.
         /// </summary>
         public void SetOriginalEnemyHP(int hp)
         {
+            if (originalEnemyStack.Count == 0)
+            {
+                // 소환 컨텍스트가 없는데 HP만 설정되는 경우는 예외적인 상황이므로 경고를 남깁니다.
+                originalEnemyHP = hp;
+                GameLogger.LogWarning($"[StageManager] 소환 컨텍스트 없이 원본 적 HP가 설정되었습니다: {hp}", GameLogger.LogCategory.Combat);
+                return;
+            }
+
+            var context = originalEnemyStack.Pop();
+            context.EnemyHP = hp;
+            originalEnemyStack.Push(context);
+
             originalEnemyHP = hp;
-            GameLogger.LogInfo($"[StageManager] 원본 적 HP 설정: {hp}", GameLogger.LogCategory.Combat);
+            originalEnemyData = context.EnemyData;
+            
+            GameLogger.LogInfo($"[StageManager] 원본 적 HP 갱신: {hp} (대상: {context.EnemyData?.DisplayName}, 스택 깊이: {originalEnemyStack.Count})", GameLogger.LogCategory.Combat);
         }
 
         /// <summary>
@@ -1814,6 +1878,7 @@ namespace Game.StageSystem.Manager
             originalEnemyHP = 0;
             summonTargetData = null;
             isSummonedEnemyActive = false;
+            originalEnemyStack.Clear();
             GameLogger.LogInfo("[StageManager] 소환 데이터 초기화 완료", GameLogger.LogCategory.Combat);
         }
 

@@ -689,12 +689,19 @@ namespace Game.CombatSystem.State
 
             // 소환된 적인지 확인
             var stageManager = FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
-            if (stageManager != null && stageManager.IsSummonedEnemyActive())
+            if (stageManager != null)
             {
-                GameLogger.LogInfo(
-                    "[CombatStateMachine] 소환된 적 사망 - EnemyDefeatedState로 전환하지 않음 (원본 적 복귀 처리)",
-                    GameLogger.LogCategory.Combat);
-                return; // 소환된 적이 죽으면 StageManager에서 원본 적 복귀 처리
+                // 소환 플래그 또는 원본 적 데이터가 존재하면, 현재 적은 소환 체인에 속한 적으로 간주합니다.
+                bool isInSummonChain = stageManager.IsSummonedEnemyActive() ||
+                                       stageManager.GetOriginalEnemyData() != null;
+
+                if (isInSummonChain)
+                {
+                    GameLogger.LogInfo(
+                        "[CombatStateMachine] 소환 체인에 속한 적 사망 - EnemyDefeatedState로 전환하지 않음 (원본 적 복귀 처리)",
+                        GameLogger.LogCategory.Combat);
+                    return; // 소환된 적이 죽으면 StageManager에서 원본 적 복귀 처리
+                }
             }
 
 			// 일반 적 사망: 치명타격 이펙트가 끝날 시간을 잠시 대기한 뒤 처치 상태로 전환

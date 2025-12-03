@@ -53,9 +53,6 @@ namespace Game.ItemSystem.Runtime
 		private List<RewardSlotUIController> activeSlots = new List<RewardSlotUIController>();
 		private List<RewardSlotUIController> passiveSlots = new List<RewardSlotUIController>();
 
-		// 패시브 아이템 경고 표시 상태
-		private bool _hasShownPassiveWarning = false;
-
 		/// <summary>
 		/// 보상 패널이 완전히 닫혔을 때 발생하는 이벤트
 		/// </summary>
@@ -158,7 +155,6 @@ namespace Game.ItemSystem.Runtime
 			_candidates = candidates;
 			_passiveCandidates = null;
 			_isOpen = true;
-			_hasShownPassiveWarning = false; // 경고 상태 초기화
 
 			// 메시지 숨기기
 			HideInventoryFullMessage();
@@ -183,7 +179,6 @@ namespace Game.ItemSystem.Runtime
 		{
 			_passiveCandidates = candidates;
 			_candidates = null;
-			_hasShownPassiveWarning = false; // 경고 상태 초기화
 
 			// 메시지 숨기기
 			HideInventoryFullMessage();
@@ -239,7 +234,6 @@ namespace Game.ItemSystem.Runtime
 			_candidates = _rewardGenerator.GenerateActive(enemyCfg, playerProfile, stageIndex, runSeed);
 			_passiveCandidates = _rewardGenerator.GeneratePassive(enemyCfg, playerProfile, stageIndex, runSeed);
 			_isOpen = true;
-			_hasShownPassiveWarning = false; // 경고 상태 초기화
 
 			// 메시지 숨기기
 			HideInventoryFullMessage();
@@ -258,29 +252,10 @@ namespace Game.ItemSystem.Runtime
 
 		public void Close()
 		{
-			// 패시브 아이템이 남아있는지 확인
+			// 패시브 아이템이 남아있으면 경고 없이 모두 자동 수령
 			if (HasRemainingPassiveItems())
 			{
-				// 첫 번째 클릭: 경고 메시지 표시
-				if (!_hasShownPassiveWarning)
-				{
-					_hasShownPassiveWarning = true;
-					ShowPassiveItemWarning();
-					GameLogger.LogWarning("[RewardPanel] 패시브 아이템이 남아있어 패널을 닫을 수 없습니다", GameLogger.LogCategory.UI);
-					return;
-				}
-				// 두 번째 클릭: 모든 패시브 아이템 자동 선택
-				else
-				{
-					SelectAllRemainingPassiveItems();
-					_hasShownPassiveWarning = false;
-					// 모든 패시브 아이템을 선택했으므로 이제 닫기 가능
-				}
-			}
-			else
-			{
-				// 패시브 아이템이 없으면 경고 상태 초기화
-				_hasShownPassiveWarning = false;
+				SelectAllRemainingPassiveItems();
 			}
 
 			// Is Open 상태에 따라 GameObject 비활성화 관리
@@ -290,9 +265,6 @@ namespace Game.ItemSystem.Runtime
 
 			// 메시지 숨기기
 			HideInventoryFullMessage();
-
-			// 경고 상태 초기화
-			_hasShownPassiveWarning = false;
 
 			// 토글 버튼도 함께 비활성화
 			if (toggleButton != null)
@@ -808,8 +780,7 @@ namespace Game.ItemSystem.Runtime
 			
 			RemovePassiveSlot(slotIndex);
 
-			// 패시브 아이템을 선택했으므로 경고 상태 초기화
-			_hasShownPassiveWarning = false;
+			// 패시브 아이템을 선택했으므로 경고 관련 상태는 더 이상 사용하지 않음
 		}
 
 		/// <summary>
