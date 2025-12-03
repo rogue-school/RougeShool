@@ -111,6 +111,9 @@ namespace Game.StageSystem.Manager
         
         /// <summary>스테이지 전환 시 호출되는 이벤트</summary>
         public event Action<StageData, StageData> OnStageTransition;
+        
+        /// <summary>보상 처리가 완료되었을 때 호출되는 이벤트</summary>
+        public event Action OnRewardProcessCompleted;
 
         #endregion
 
@@ -132,7 +135,6 @@ namespace Game.StageSystem.Manager
                 int shouldRun = (!skip && !done) ? 1 : 0;
                 PlayerPrefs.SetInt("TUTORIAL_SHOULD_RUN", shouldRun);
                 PlayerPrefs.Save();
-                GameLogger.LogInfo($"[StageManager] 튜토리얼 실행 플래그 설정: {(shouldRun == 1 ? "실행" : "미실행")}", GameLogger.LogCategory.UI);
             }
             catch (System.Exception ex)
             {
@@ -142,7 +144,6 @@ namespace Game.StageSystem.Manager
             // 새게임 요청 플래그 확인 및 초기화
             if (PlayerPrefs.GetInt("NEW_GAME_REQUESTED", 0) == 1)
             {
-                GameLogger.LogInfo("[StageManager] 새게임 요청 감지 - 게임 상태 초기화 시작", GameLogger.LogCategory.Save);
                 InitializeGameStateForNewGame();
                 PlayerPrefs.SetInt("NEW_GAME_REQUESTED", 0);
                 PlayerPrefs.Save();
@@ -163,7 +164,6 @@ namespace Game.StageSystem.Manager
             if (playerManager != null)
             {
                 playerManager.OnPlayerCharacterReady += OnPlayerReady;
-                GameLogger.LogInfo("[StageManager] PlayerManager 이벤트 구독 완료", GameLogger.LogCategory.Combat);
             }
             else
             {
@@ -181,8 +181,6 @@ namespace Game.StageSystem.Manager
             {
                 playerManager.OnPlayerCharacterReady -= OnPlayerReady;
             }
-            
-            GameLogger.LogInfo("[StageManager] StageManager 파괴됨 - 모든 작업 중단", GameLogger.LogCategory.Combat);
         }
 
         /// <summary>
@@ -190,21 +188,16 @@ namespace Game.StageSystem.Manager
         /// </summary>
         private void InitializeGameStateForNewGame()
         {
-            GameLogger.LogInfo("[StageManager] 새게임 상태 초기화 시작", GameLogger.LogCategory.Save);
-            
             // 인벤토리 초기화 (스킬카드 스택은 캐릭터 생성 시 초기화됨)
             var itemService = FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
             if (itemService != null)
             {
                 itemService.ResetInventoryForNewGame();
-                GameLogger.LogInfo("[StageManager] 인벤토리 초기화 완료", GameLogger.LogCategory.Save);
             }
             else
             {
                 GameLogger.LogWarning("[StageManager] ItemService를 찾을 수 없습니다 - 인벤토리 초기화 건너뜀", GameLogger.LogCategory.Save);
             }
-            
-            GameLogger.LogInfo("[StageManager] 새게임 상태 초기화 완료", GameLogger.LogCategory.Save);
         }
 
         /// <summary>
@@ -212,8 +205,6 @@ namespace Game.StageSystem.Manager
         /// </summary>
         private void OnPlayerReady(ICharacter player)
         {
-            GameLogger.LogInfo($"[StageManager] 플레이어 준비 완료: {player.GetCharacterName()}", GameLogger.LogCategory.Combat);
-
             // 통계 세션의 캐릭터 이름 업데이트 (세션이 이미 시작된 경우)
             if (gameSessionStatistics != null && gameSessionStatistics.IsSessionActive)
             {
@@ -233,7 +224,6 @@ namespace Game.StageSystem.Manager
                 if (sessionData != null)
                 {
                     sessionData.selectedCharacterName = characterName;
-                    GameLogger.LogInfo($"[StageManager] 통계 세션의 캐릭터 이름 업데이트: {characterName}", GameLogger.LogCategory.Save);
                 }
             }
 
@@ -241,7 +231,6 @@ namespace Game.StageSystem.Manager
             if (isWaitingForPlayer)
             {
                 isWaitingForPlayer = false;
-                GameLogger.LogInfo("[StageManager] 플레이어 준비 완료 → 스테이지 시작", GameLogger.LogCategory.Combat);
                 StartStage();
             }
         }
@@ -261,8 +250,6 @@ namespace Game.StageSystem.Manager
             // 새 게임인지 확인
             if (saveManager.IsNewGame())
             {
-                GameLogger.LogInfo("[StageManager] 새 게임 시작 - 저장된 데이터 로드 건너뛰기", GameLogger.LogCategory.Save);
-                
                 // 새 게임 플래그 해제
                 saveManager.ClearNewGameFlag();
                 
@@ -274,15 +261,12 @@ namespace Game.StageSystem.Manager
             // 저장된 진행 상황이 있는지 확인
             if (saveManager.HasStageProgressSave())
             {
-                GameLogger.LogInfo("[StageManager] 저장된 진행 상황 발견, 자동 로드 시작", GameLogger.LogCategory.Save);
-                
                 // 비동기 로드를 코루틴으로 변환
                 var loadTask = saveManager.LoadStageProgress();
                 yield return new WaitUntil(() => loadTask.IsCompleted);
                 
                 if (loadTask.Result)
                 {
-                    GameLogger.LogInfo("[StageManager] 저장된 진행 상황 자동 로드 완료", GameLogger.LogCategory.Save);
                 }
                 else
                 {
@@ -293,7 +277,6 @@ namespace Game.StageSystem.Manager
             }
             else
             {
-                GameLogger.LogInfo("[StageManager] 저장된 진행 상황이 없습니다. 기본 스테이지를 시작합니다", GameLogger.LogCategory.Save);
                 // 저장된 데이터가 없으면 기본 스테이지 로드
                 LoadDefaultStage();
             }
@@ -306,15 +289,12 @@ namespace Game.StageSystem.Manager
         {
             if (LoadStage(1))
             {
-                GameLogger.LogInfo("기본 스테이지 로드 완료 - 플레이어 준비 대기 중", GameLogger.LogCategory.Combat);
-
                 // 플레이어 준비 완료 대기 플래그 설정
                 isWaitingForPlayer = true;
-
+                
                 // 플레이어가 이미 준비되었는지 확인
                 if (playerManager != null && playerManager.GetCharacter() != null)
                 {
-                    GameLogger.LogInfo("[StageManager] 플레이어가 이미 준비됨 - 즉시 스테이지 시작", GameLogger.LogCategory.Combat);
                     isWaitingForPlayer = false;
                     StartStage();
                 }
@@ -339,7 +319,6 @@ namespace Game.StageSystem.Manager
                 if (saveManager != null)
                 {
                     await saveManager.SaveCurrentProgress("SceneTransition");
-                    GameLogger.LogInfo("[StageManager] 씬 전환 전 진행 상황 저장 완료", GameLogger.LogCategory.Save);
                 }
                 else
                 {
@@ -348,7 +327,7 @@ namespace Game.StageSystem.Manager
 
                 // 메인 씬으로 전환되는 경우 통계 저장 (다시하기 여부 확인)
                 var currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-                if (currentScene == "StageScene" || currentScene == "BattleScene")
+                    if (currentScene == "StageScene" || currentScene == "BattleScene")
                 {
                     // 다시하기 요청 여부 확인
                     bool isRestartRequested = PlayerPrefs.GetInt("RESTART_GAME_REQUESTED", 0) == 1;
@@ -356,7 +335,6 @@ namespace Game.StageSystem.Manager
                     if (isRestartRequested)
                     {
                         // 다시하기: 완전 종료
-                        GameLogger.LogInfo("[StageManager] 다시하기 감지 - 통계 완전 종료", GameLogger.LogCategory.Save);
                         await SaveStatisticsSession(true); // 완전 종료
                         PlayerPrefs.SetInt("RESTART_GAME_REQUESTED", 0);
                         PlayerPrefs.Save();
@@ -364,7 +342,6 @@ namespace Game.StageSystem.Manager
                     else
                     {
                         // 일반 메인 메뉴 이동: 중간 저장 (세션 유지)
-                        GameLogger.LogInfo("[StageManager] 메인 씬 전환 감지 - 통계 중간 저장 시작 (세션 유지)", GameLogger.LogCategory.Save);
                         await SaveStatisticsSession(false); // 중간 저장 (세션 유지)
                     }
                 }
@@ -394,7 +371,7 @@ namespace Game.StageSystem.Manager
             // 씬 전환/파괴 상태 확인
             if (isDestroyed || this == null)
             {
-                GameLogger.LogWarning("StageManager가 파괴되었습니다 - 적 생성 취소", GameLogger.LogCategory.Combat);
+                GameLogger.LogDebug("StageManager가 파괴되었습니다 - 적 생성 취소", GameLogger.LogCategory.Combat);
                 return false;
             }
             
@@ -443,7 +420,6 @@ namespace Game.StageSystem.Manager
                 // 적별 BGM 재생 (AudioManager에 위임)
                 if (audioManager != null)
                 {
-                    GameLogger.LogInfo($"AudioManager 존재 - PlayEnemyBGM 호출: {data.DisplayName}", GameLogger.LogCategory.Audio);
                     audioManager.PlayEnemyBGM(data);
                 }
                 else
@@ -453,23 +429,18 @@ namespace Game.StageSystem.Manager
 
                 currentEnemyIndex++;
 
-                GameLogger.LogInfo($"[StageManager] 적 생성 완료: {enemy.GetCharacterName()} (인덱스 증가: {currentEnemyIndex - 1} → {currentEnemyIndex})", GameLogger.LogCategory.Combat);
-
                 // CombatStateMachine에 적 생성 완료 알림 (DI 주입)
                 if (combatStateMachine != null)
                 {
                     if (currentEnemyIndex == 1)
                     {
                         // 첫 번째 적이 생성되면 CombatStateMachine 시작
-                        GameLogger.LogInfo($"[StageManager] 첫 번째 적 생성 완료 - CombatStateMachine 시작: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
-                        
                         // 적 데이터를 가져와서 StartCombat에 전달
                         if (enemy is Game.CharacterSystem.Core.EnemyCharacter enemyChar)
                         {
                             var enemyData = enemyChar.CharacterData;
                             if (enemyData != null)
                             {
-                                GameLogger.LogInfo($"[StageManager] 적 데이터로 CombatStateMachine 시작: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
                                 combatStateMachine.StartCombat(enemyData, enemy.GetCharacterName());
                             }
                             else
@@ -487,7 +458,6 @@ namespace Game.StageSystem.Manager
                     else
                     {
                         // 다음 적이 생성되면 CombatStateMachine에 알림
-                        GameLogger.LogInfo($"[StageManager] 다음 적 생성 완료 - CombatStateMachine에 알림: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
                         combatStateMachine.OnNextEnemySpawned();
                     }
                 }
@@ -527,7 +497,6 @@ namespace Game.StageSystem.Manager
             if (audioManager != null)
             {
                 audioManager.StopBGM();
-                GameLogger.LogInfo("스테이지 BGM 정리 완료", GameLogger.LogCategory.Combat);
             }
         }
 
@@ -544,8 +513,6 @@ namespace Game.StageSystem.Manager
                 concreteEnemy.SetDeathCallback(OnEnemyDeath);
                 // OnSummonRequested 이벤트는 더 이상 사용하지 않음 (상태 패턴으로 처리)
             }
-
-            GameLogger.LogInfo($"적 등록 완료: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
         }
 
         /// <summary>
@@ -554,16 +521,22 @@ namespace Game.StageSystem.Manager
         /// </summary>
         public void RegisterSummonedEnemy(ICharacter enemy)
         {
+            GameLogger.LogInfo($"[StageManager] RegisterSummonedEnemy 호출: {enemy?.GetCharacterName() ?? "null"}", GameLogger.LogCategory.Combat);
+            
             enemyManager?.RegisterEnemy(enemy);
+            GameLogger.LogInfo($"[StageManager] EnemyManager에 소환된 적 등록 완료", GameLogger.LogCategory.Combat);
 
             // 소환된 적은 소환 사망 콜백을 설정합니다
             if (enemy is EnemyCharacter concreteEnemy)
             {
                 concreteEnemy.SetDeathCallback(OnSummonedEnemyDeath);
+                GameLogger.LogInfo($"[StageManager] 소환된 적 사망 콜백 설정 완료: {concreteEnemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
                 // OnSummonRequested 이벤트는 더 이상 사용하지 않음 (상태 패턴으로 처리)
             }
-
-            GameLogger.LogInfo($"소환된 적 등록 완료: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
+            else
+            {
+                GameLogger.LogWarning($"[StageManager] RegisterSummonedEnemy: EnemyCharacter로 캐스팅 실패", GameLogger.LogCategory.Combat);
+            }
         }
 
 		/// <summary>
@@ -571,22 +544,24 @@ namespace Game.StageSystem.Manager
 		/// </summary>
 		public void OnEnemyDeath(ICharacter enemy)
 		{
-			GameLogger.LogInfo($"[StageManager] 적 처치: {enemy.GetCharacterName()} (현재 인덱스: {currentEnemyIndex})", GameLogger.LogCategory.Combat);
-
+			GameLogger.LogInfo($"[StageManager] OnEnemyDeath 호출: {enemy?.GetCharacterName() ?? "null"}, 소환스택={originalEnemyStack.Count}", GameLogger.LogCategory.Combat);
+			
 			// 소환된 적인지 확인 (소환 컨텍스트 스택이 비어 있지 않으면 소환 체인 진행 중)
 			if (originalEnemyStack.Count > 0)
 			{
-				GameLogger.LogInfo($"[StageManager] 소환된 적 사망 감지 - 원본 복귀 시작: {originalEnemyData.DisplayName}", GameLogger.LogCategory.Combat);
+				GameLogger.LogInfo($"[StageManager] 소환된 적 사망 감지 - OnSummonedEnemyDeath 호출 (스택: {originalEnemyStack.Count})", GameLogger.LogCategory.Combat);
+				
 				// 소환된 적 사망 콜백 호출
 				OnSummonedEnemyDeath(enemy);
 				return; // 소환된 적은 일반적인 적 처치 로직을 건너뜀
 			}
+			
+			GameLogger.LogInfo($"[StageManager] 원본 적 사망 감지 - 일반 적 처치 로직 진행", GameLogger.LogCategory.Combat);
 
 			// 일반 적 처치 로직
 			// CombatStateMachine에 적 사망 알림 (적 제거 전에 알려야 함, DI 주입)
 			if (combatStateMachine != null)
 			{
-				GameLogger.LogInfo($"[StageManager] CombatStateMachine에 적 사망 알림", GameLogger.LogCategory.Combat);
 				combatStateMachine.OnEnemyDeathDetected();
 			}
 
@@ -594,43 +569,35 @@ namespace Game.StageSystem.Manager
 			OnEnemyDefeated?.Invoke(enemy);
 
 			// 적을 enemyManager에서 제거
-			if (enemyManager != null)
-			{
-				enemyManager.UnregisterEnemy();
-				GameLogger.LogInfo($"[StageManager] 적 제거 완료: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
-			}
+            if (enemyManager != null)
+            {
+                enemyManager.UnregisterEnemy();
+            }
 
 			// 적 GameObject 파괴
-			if (enemy is EnemyCharacter enemyCharacter)
-			{
-				Destroy(enemyCharacter.gameObject);
-				GameLogger.LogInfo($"[StageManager] 적 오브젝트 파괴: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
-			}
+            if (enemy is EnemyCharacter enemyCharacter)
+            {
+                Destroy(enemyCharacter.gameObject);
+            }
 
-			// 보상창 열기는 EnemyDefeatedState 완료 후로 이동
-			// (EnemyDefeatedState에서 OnEnemyDefeatedCleanupCompleted 이벤트 발생 시 처리)
-			
-			GameLogger.LogInfo("[StageManager] 적 처치 완료 - 전투 정리 대기 중", GameLogger.LogCategory.Combat);
+            // 보상창 열기는 EnemyDefeatedState 완료 후로 이동
+            // (EnemyDefeatedState에서 OnEnemyDefeatedCleanupCompleted 이벤트 발생 시 처리)
 		}
 
 		/// <summary>
 		/// 보상 처리가 완료되었을 때 호출되는 콜백
 		/// </summary>
-		private void OnRewardProcessCompleted()
+		private void HandleRewardProcessCompleted()
 		{
 			// 콜백 해제
 			if (rewardBridge != null)
 			{
-				rewardBridge.OnRewardProcessCompleted -= OnRewardProcessCompleted;
+				rewardBridge.OnRewardProcessCompleted -= HandleRewardProcessCompleted;
 			}
 
-			GameLogger.LogInfo("[StageManager] 보상 처리 완료 - 다음 진행 시작", GameLogger.LogCategory.UI);
-			
-			// EnemyDefeatedState에 보상 완료 알림
-			// CombatStateMachine의 현재 상태를 직접 접근할 수 없으므로
-			// 다른 방식으로 처리 (예: 이벤트 시스템 사용)
-			GameLogger.LogInfo("[StageManager] 보상 완료 - EnemyDefeatedState에 알림 전송", GameLogger.LogCategory.UI);
-			
+			// 보상 완료 이벤트 발생 (StageFlowStateMachine 등이 구독)
+			OnRewardProcessCompleted?.Invoke();
+
 			// 스테이지 진행 상태 업데이트
 			UpdateStageProgress(null); // enemy는 이미 제거되었으므로 null 전달
 		}
@@ -641,19 +608,14 @@ namespace Game.StageSystem.Manager
 		/// </summary>
 		private void UpdateStageProgress(ICharacter enemy)
 		{
-			GameLogger.LogInfo($"[StageManager] UpdateStageProgress - 현재 인덱스: {currentEnemyIndex}, 총 적 수: {currentStage?.enemies.Count ?? 0}", GameLogger.LogCategory.Combat);
-
 			// 다음 적이 있는지 확인
 			if (HasMoreEnemies())
 			{
-				GameLogger.LogInfo($"[StageManager] 다음 적이 존재함 - 생성 시작", GameLogger.LogCategory.Combat);
-
 				// 적 카드 슬롯 정리 후 다음 적 생성
 				_ = ClearEnemySlotsAndSpawnNext();
 			}
 			else
 			{
-				GameLogger.LogInfo($"[StageManager] 모든 적 처치 완료 - 스테이지 승리", GameLogger.LogCategory.Combat);
 				// 모든 적 처치 완료 - 스테이지 승리!
 				CompleteStage();
 			}
@@ -662,28 +624,21 @@ namespace Game.StageSystem.Manager
 		/// <summary>
 		/// EnemyDefeatedState의 정리 작업이 완료되었을 때 호출되는 메서드
 		/// </summary>
-		public void OnEnemyDefeatedCleanupCompleted()
-		{
-			GameLogger.LogInfo("[StageManager] 전투 정리 완료 - 보상창 열기 시작", GameLogger.LogCategory.UI);
-			
+        public void OnEnemyDefeatedCleanupCompleted()
+        {
 			// 보상 UI 열기 및 완료 대기 (설정된 경우)
 			if (rewardBridge != null)
 			{
 				// 보상 완료 콜백 연결
-				rewardBridge.OnRewardProcessCompleted += OnRewardProcessCompleted;
+				rewardBridge.OnRewardProcessCompleted += HandleRewardProcessCompleted;
 				
-				rewardBridge.OnEnemyKilled();
-				if (debugSettings != null && debugSettings.showRewardInfo)
-				{
-					GameLogger.LogInfo("[StageManager] 전투 정리 완료 → 보상 UI 오픈 요청 (완료 대기)", GameLogger.LogCategory.UI);
-				}
+                rewardBridge.OnEnemyKilled();
 			}
-			else
-			{
-				// 보상 브리지가 없으면 바로 다음 진행
-				GameLogger.LogInfo("[StageManager] 보상 브리지가 없음 - 바로 다음 진행", GameLogger.LogCategory.UI);
-				UpdateStageProgress(null);
-			}
+            else
+            {
+                // 보상 브리지가 없으면 바로 다음 진행
+                UpdateStageProgress(null);
+            }
 		}
 
         /// <summary>
@@ -704,8 +659,6 @@ namespace Game.StageSystem.Manager
         /// </summary>
         private async Task ClearEnemyCardsFromSlots()
         {
-            GameLogger.LogInfo($"[StageManager] 모든 슬롯 정리 시작 (플레이어 턴 마커 + 적 카드)", GameLogger.LogCategory.Combat);
-
             // TurnManager를 통해 모든 카드 제거 (데이터 + UI)
             if (turnManager != null)
             {
@@ -728,8 +681,6 @@ namespace Game.StageSystem.Manager
                     {
                         tm.ClearSlot(slot);
                     }
-
-                    GameLogger.LogInfo($"[StageManager] 모든 슬롯 정리 완료", GameLogger.LogCategory.Combat);
                 }
             }
             else
@@ -764,7 +715,7 @@ namespace Game.StageSystem.Manager
             // 씬 전환/파괴 상태 확인
             if (isDestroyed || this == null)
             {
-                GameLogger.LogWarning("StageManager가 파괴되었습니다 - 적 생성 취소", GameLogger.LogCategory.Combat);
+                GameLogger.LogDebug("StageManager가 파괴되었습니다 - 적 생성 취소", GameLogger.LogCategory.Combat);
                 return null;
             }
             
@@ -827,7 +778,7 @@ namespace Game.StageSystem.Manager
             {
                 try
                 {
-                    GameLogger.LogInfo($"적 등장 애니메이션 시작: {data.CharacterName}", GameLogger.LogCategory.Combat);
+                    GameLogger.LogDebug($"적 등장 애니메이션 시작: {data.CharacterName}", GameLogger.LogCategory.Combat);
                     
                     // 애니메이션 완료 대기 (타임아웃 설정)
                     var timeoutTask = Task.Delay(TimeSpan.FromSeconds(2.0)); // 최대 2초 대기
@@ -848,11 +799,11 @@ namespace Game.StageSystem.Manager
                     
                     if (completedTask == animationTask)
                     {
-                        GameLogger.LogInfo($"적 등장 애니메이션 완료: {data.CharacterName}", GameLogger.LogCategory.Combat);
+                        GameLogger.LogDebug($"적 등장 애니메이션 완료: {data.CharacterName}", GameLogger.LogCategory.Combat);
                     }
                     else
                     {
-                        GameLogger.LogWarning($"적 등장 애니메이션 타임아웃: {data.CharacterName}", GameLogger.LogCategory.Combat);
+                        GameLogger.LogDebug($"적 등장 애니메이션 타임아웃: {data.CharacterName}", GameLogger.LogCategory.Combat);
                         // 타임아웃 시 애니메이션 취소
                         if (entranceTween != null && entranceTween.IsActive())
                         {
@@ -1158,7 +1109,7 @@ namespace Game.StageSystem.Manager
                 var currentEnemy = enemyManager.GetEnemy();
                 if (currentEnemy != null)
                 {
-                    GameLogger.LogInfo($"[StageManager] 이전 적 정리 중: {currentEnemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
+                    GameLogger.LogDebug($"[StageManager] 이전 적 정리 중: {currentEnemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
                     
                     // EnemyManager에서 참조 제거
                     enemyManager.UnregisterEnemy();
@@ -1275,12 +1226,12 @@ namespace Game.StageSystem.Manager
             if (audioManager != null && currentStage.enemies != null && currentStage.enemies.Count > 0)
             {
                 var firstEnemyData = currentStage.enemies[0];
-                GameLogger.LogInfo($"첫 번째 적 BGM 재생 시작: {firstEnemyData.DisplayName}", GameLogger.LogCategory.Audio);
+                GameLogger.LogDebug($"첫 번째 적 BGM 재생 시작: {firstEnemyData.DisplayName}", GameLogger.LogCategory.Audio);
                 audioManager.PlayEnemyBGM(firstEnemyData);
             }
             else if (audioManager == null)
             {
-                GameLogger.LogWarning("AudioManager가 null입니다 - 첫 적 BGM 재생 건너뜀", GameLogger.LogCategory.Audio);
+                GameLogger.LogDebug("AudioManager가 null입니다 - 첫 적 BGM 재생 건너뜀", GameLogger.LogCategory.Audio);
             }
             
             // 첫 번째 적 생성
@@ -1309,14 +1260,19 @@ namespace Game.StageSystem.Manager
             if (currentStage.IsLastStage)
             {
                 // 마지막 스테이지 완료 - 게임 완료!
+                GameLogger.LogDebug("[StageManager] 마지막 스테이지 완료 - 게임 완료 처리", GameLogger.LogCategory.Combat);
                 CompleteGame();
             }
             else if (currentStage.autoProgressToNext)
             {
                 // 다음 스테이지로 자동 진행 (즉시)
+                GameLogger.LogDebug(
+                    $"[StageManager] 다음 스테이지로 자동 진행 시도 - 현재 스테이지: {currentStage.stageNumber}, 다음 스테이지: {currentStage.stageNumber + 1}",
+                    GameLogger.LogCategory.Combat);
+                
                 if (ProgressToNextStage())
                 {
-                    GameLogger.LogInfo($"다음 스테이지로 진행: {currentStage.stageName}", GameLogger.LogCategory.Combat);
+                    GameLogger.LogDebug($"다음 스테이지로 진행: {currentStage.stageName}", GameLogger.LogCategory.Combat);
                     
                     // 다음 스테이지로 진행한 후 진행 상황 저장
                     if (saveManager != null)
@@ -1329,8 +1285,16 @@ namespace Game.StageSystem.Manager
                 else
                 {
                     // 다음 스테이지 데이터 부재 시 치명적 에러가 아닌 안내 로그만 남기고 종료
-                    GameLogger.LogInfo("다음 스테이지 데이터를 찾을 수 없어 자동 진행을 건너뜁니다", GameLogger.LogCategory.Combat);
+                    GameLogger.LogWarning(
+                        $"[StageManager] 다음 스테이지 데이터를 찾을 수 없어 자동 진행을 건너뜁니다 (현재 스테이지: {currentStage.stageNumber})",
+                        GameLogger.LogCategory.Combat);
                 }
+            }
+            else
+            {
+                GameLogger.LogDebug(
+                    $"[StageManager] autoProgressToNext가 false이므로 다음 스테이지로 자동 진행하지 않습니다",
+                    GameLogger.LogCategory.Combat);
             }
         }
         
@@ -1364,7 +1328,7 @@ namespace Game.StageSystem.Manager
         /// </summary>
         private void StartStatisticsSession()
         {
-            GameLogger.LogInfo("[StageManager] 통계 세션 시작 시도", GameLogger.LogCategory.Save);
+            GameLogger.LogDebug("[StageManager] 통계 세션 시작 시도", GameLogger.LogCategory.Save);
 
             if (gameSessionStatistics == null)
             {
@@ -1407,7 +1371,7 @@ namespace Game.StageSystem.Manager
             }
 
             gameSessionStatistics.StartSession(characterName);
-            GameLogger.LogInfo($"[StageManager] 통계 세션 시작 완료: {characterName}", GameLogger.LogCategory.Save);
+            GameLogger.LogDebug($"[StageManager] 통계 세션 시작 완료: {characterName}", GameLogger.LogCategory.Save);
         }
 
         /// <summary>
@@ -1424,7 +1388,7 @@ namespace Game.StageSystem.Manager
         /// <param name="finalEnd">완전 종료 여부 (true: 게임 종료, false: 중간 저장)</param>
         private async Task SaveStatisticsSession(bool finalEnd)
         {
-            GameLogger.LogInfo($"[StageManager] 통계 세션 저장 시작 (종료: {finalEnd})", GameLogger.LogCategory.Save);
+            GameLogger.LogDebug($"[StageManager] 통계 세션 저장 시작 (종료: {finalEnd})", GameLogger.LogCategory.Save);
 
             if (gameSessionStatistics == null)
             {
@@ -1467,7 +1431,7 @@ namespace Game.StageSystem.Manager
                     // 완전 종료: 세션 종료
                     gameSessionStatistics.EndSession(true);
                 sessionData = gameSessionStatistics.GetCurrentSessionData();
-                    GameLogger.LogInfo("[StageManager] 통계 세션 완전 종료", GameLogger.LogCategory.Save);
+                    GameLogger.LogDebug("[StageManager] 통계 세션 완전 종료", GameLogger.LogCategory.Save);
                 }
                 else
                 {
@@ -1476,7 +1440,7 @@ namespace Game.StageSystem.Manager
                     sessionData = gameSessionStatistics.GetCurrentSessionData();
                     // 세션 재개
                     gameSessionStatistics.ResumeSession();
-                    GameLogger.LogInfo("[StageManager] 통계 세션 중간 저장 (세션 유지)", GameLogger.LogCategory.Save);
+                    GameLogger.LogDebug("[StageManager] 통계 세션 중간 저장 (세션 유지)", GameLogger.LogCategory.Save);
                 }
             }
             else
@@ -1560,6 +1524,14 @@ namespace Game.StageSystem.Manager
         {
             return isSummonedEnemyActive;
         }
+        
+        /// <summary>
+        /// 원본 적 스택 개수를 반환합니다 (디버깅용)
+        /// </summary>
+        public int GetOriginalEnemyStackCount()
+        {
+            return originalEnemyStack.Count;
+        }
 
         #endregion
 
@@ -1595,8 +1567,10 @@ namespace Game.StageSystem.Manager
         /// <summary>
         /// 소환/복귀 전환 처리
         /// </summary>
-        private async Task TransitionToSummonState(EnemyCharacterData targetEnemy, bool isRestore)
+        private async Task TransitionToSummonState(EnemyCharacterData targetEnemy, bool isRestore, int restoreHP = -1)
         {
+            GameLogger.LogInfo($"[소환] TransitionToSummonState 시작: 대상={targetEnemy?.DisplayName ?? "null"}, 복귀모드={isRestore}", GameLogger.LogCategory.Combat);
+            
             // 씬 전환/파괴 상태 확인
             if (isDestroyed || this == null)
             {
@@ -1610,9 +1584,13 @@ namespace Game.StageSystem.Manager
                 GameLogger.LogError("[소환] CombatStateMachine이 주입되지 않았습니다 - 소환 중단", GameLogger.LogCategory.Combat);
                 return;
             }
+            
+            GameLogger.LogInfo($"[소환] CombatStateMachine 확인 완료, 현재 상태: {combatStateMachine.GetCurrentState()?.StateName ?? "null"}", GameLogger.LogCategory.Combat);
 
             try
             {
+                GameLogger.LogInfo($"[소환] 1단계 시작: 기존 적 제거 및 슬롯 정리", GameLogger.LogCategory.Combat);
+                
                 // 1단계: 기존 적 제거 및 슬롯 정리
                 await CleanupCurrentEnemy();
                 
@@ -1623,43 +1601,69 @@ namespace Game.StageSystem.Manager
                     return;
                 }
                 
-                // 2단계: 새로운 적 생성
-                var newEnemy = await CreateEnemyForSummonAsync(targetEnemy);
-                if (newEnemy == null)
-                {
-                    GameLogger.LogError("[소환] 적 생성 실패", GameLogger.LogCategory.Combat);
-                    return;
-                }
-
-                // 3단계: 적 등록
+                ICharacter newEnemy = null;
+                
                 if (isRestore)
                 {
+                    // 복귀 모드: 기존 GameObject를 찾아서 재활성화 (Initialize 호출 방지)
+                    GameLogger.LogInfo($"[소환] 2단계 시작: 기존 적 재활성화 - 대상: {targetEnemy?.DisplayName ?? "null"}", GameLogger.LogCategory.Combat);
+                    
+                    // restoreHP가 명시적으로 전달된 경우 사용, 아니면 필드 값 사용
+                    int hpToRestore = restoreHP >= 0 ? restoreHP : originalEnemyHP;
+                    newEnemy = FindAndReactivateOriginalEnemy(targetEnemy, hpToRestore);
+                    if (newEnemy == null)
+                    {
+                        GameLogger.LogError("[소환] 기존 적 재활성화 실패", GameLogger.LogCategory.Combat);
+                        return;
+                    }
+                    
+                    GameLogger.LogInfo($"[소환] 기존 적 재활성화 완료: {newEnemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
+                    
+                    GameLogger.LogInfo($"[소환] 3단계 시작: 적 등록 - 복귀모드=true, 원본HP={hpToRestore}", GameLogger.LogCategory.Combat);
+                    
                     RegisterEnemy(newEnemy);
-                    // 복귀 시 원래 HP 복원
-                    if (newEnemy is EnemyCharacter enemyChar && originalEnemyHP > 0)
-                    {
-                        enemyChar.SetCurrentHP(originalEnemyHP);
-                        GameLogger.LogInfo($"[소환] 복귀 완료: {targetEnemy.DisplayName} (HP 복원: {originalEnemyHP})", GameLogger.LogCategory.Combat);
-                    }
-                    else
-                    {
-                        GameLogger.LogInfo($"[소환] 복귀 완료: {targetEnemy.DisplayName}", GameLogger.LogCategory.Combat);
-                    }
+                    GameLogger.LogInfo($"[소환] RegisterEnemy 호출 완료: {newEnemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
+                    GameLogger.LogInfo($"[소환] 복귀 완료: {targetEnemy.DisplayName} (HP 복원: {hpToRestore}/{newEnemy.GetMaxHP()})", GameLogger.LogCategory.Combat);
                 }
                 else
                 {
+                    // 소환 모드: 새로운 적 생성
+                    GameLogger.LogInfo($"[소환] 2단계 시작: 새로운 적 생성 - 대상: {targetEnemy?.DisplayName ?? "null"}", GameLogger.LogCategory.Combat);
+                    
+                    newEnemy = await CreateEnemyForSummonAsync(targetEnemy);
+                    if (newEnemy == null)
+                    {
+                        GameLogger.LogError("[소환] 적 생성 실패", GameLogger.LogCategory.Combat);
+                        return;
+                    }
+                    
+                    GameLogger.LogInfo($"[소환] 적 생성 완료: {newEnemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
+                    
+                    GameLogger.LogInfo($"[소환] 3단계 시작: 적 등록 - 소환모드", GameLogger.LogCategory.Combat);
+                    
                     RegisterSummonedEnemy(newEnemy);
+                    GameLogger.LogInfo($"[소환] RegisterSummonedEnemy 호출 완료: {newEnemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
                     GameLogger.LogInfo($"[소환] 소환 완료: {targetEnemy.DisplayName}", GameLogger.LogCategory.Combat);
                 }
 
-                // 4단계: 소환 완료 - CombatInitState가 자동으로 감지하여 처리
+                // 4단계: 소환/복귀 완료 처리
                 if (!isRestore)
                 {
                     GameLogger.LogInfo("[소환] 소환 완료 - CombatInitState가 자동으로 슬롯 설정을 처리합니다", GameLogger.LogCategory.Combat);
                 }
                 else
                 {
-                    GameLogger.LogInfo("[소환] 복귀 완료 - CombatInitState가 자동으로 슬롯 설정을 처리합니다", GameLogger.LogCategory.Combat);
+                    GameLogger.LogInfo("[소환] 복귀 완료 - CombatInitState로 전환하여 슬롯 설정", GameLogger.LogCategory.Combat);
+                    
+                    // 복귀 모드: CombatInitState로 직접 전환하여 슬롯 설정
+                    if (combatStateMachine != null && targetEnemy != null)
+                    {
+                        var combatInitState = new Game.CombatSystem.State.CombatInitState();
+                        combatInitState.SetEnemyData(targetEnemy, targetEnemy.DisplayName);
+                        combatInitState.SetSummonMode(true);
+                        combatStateMachine.ChangeState(combatInitState);
+                        GameLogger.LogInfo($"[소환] CombatInitState로 전환 완료: {targetEnemy.DisplayName}", GameLogger.LogCategory.Combat);
+                    }
                 }
                 
                 // 소환 진행 완료 플래그 해제
@@ -1678,6 +1682,92 @@ namespace Game.StageSystem.Manager
         /// </summary>
         public bool IsSummonInProgress => isSummonInProgress;
 
+        /// <summary>
+        /// 비활성화된 원본 적을 찾아서 재활성화합니다 (복귀 모드 전용)
+        /// </summary>
+        /// <param name="targetData">재활성화할 적 데이터</param>
+        /// <param name="restoreHP">복원할 HP 값</param>
+        /// <returns>재활성화된 적 캐릭터</returns>
+        private ICharacter FindAndReactivateOriginalEnemy(EnemyCharacterData targetData, int restoreHP)
+        {
+            if (targetData == null)
+            {
+                GameLogger.LogError("[StageManager] FindAndReactivateOriginalEnemy: targetData가 null입니다", GameLogger.LogCategory.Combat);
+                return null;
+            }
+
+            if (enemyManager == null)
+            {
+                GameLogger.LogError("[StageManager] FindAndReactivateOriginalEnemy: EnemyManager를 찾을 수 없습니다", GameLogger.LogCategory.Combat);
+                return null;
+            }
+
+            var characterSlot = enemyManager.GetCharacterSlot();
+            if (characterSlot == null)
+            {
+                GameLogger.LogError("[StageManager] FindAndReactivateOriginalEnemy: CharacterSlot을 찾을 수 없습니다", GameLogger.LogCategory.Combat);
+                return null;
+            }
+
+            // CharacterSlot의 모든 자식 중 비활성화된 적 찾기
+            foreach (Transform child in characterSlot)
+            {
+                if (!child.gameObject.activeSelf)
+                {
+                    if (child.TryGetComponent<EnemyCharacter>(out var enemyChar))
+                    {
+                        // 데이터 일치 확인
+                        if (enemyChar.CharacterData == targetData)
+                        {
+                            GameLogger.LogInfo($"[StageManager] 원본 적 발견: {enemyChar.GetCharacterName()}", GameLogger.LogCategory.Combat);
+
+                            // GameObject 재활성화
+                            child.gameObject.SetActive(true);
+                            GameLogger.LogInfo($"[StageManager] 원본 적 재활성화 완료: {enemyChar.GetCharacterName()}", GameLogger.LogCategory.Combat);
+                            
+                            // 데미지 텍스트 정리
+                            enemyChar.ClearDamageTexts();
+
+                            // HP 복원 (Initialize가 호출되지 않으므로 HP가 유지됨)
+                            // restoreHP가 -1이 아니면 복원 (명시적으로 전달된 경우)
+                            if (restoreHP >= 0)
+                            {
+                                enemyChar.SetCurrentHP(restoreHP);
+                                GameLogger.LogInfo($"[StageManager] 원본 적 HP 복원: {restoreHP}/{enemyChar.GetMaxHP()}", GameLogger.LogCategory.Combat);
+                            }
+                            else
+                            {
+                                GameLogger.LogWarning($"[StageManager] HP 복원 값이 유효하지 않음: {restoreHP}", GameLogger.LogCategory.Combat);
+                            }
+
+                            // HP 바 컨트롤러 재초기화
+                            enemyChar.ReinitializeHPBarController();
+
+                            // EnemyCharacterUIController 재연결
+                            var uiController = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.UI.EnemyCharacterUIController>();
+                            if (uiController != null)
+                            {
+                                uiController.SetTarget(enemyChar);
+                            }
+
+                            // UI 업데이트
+                            enemyChar.RefreshUI();
+
+                            // 버프/이펙트 UI 업데이트
+                            enemyChar.NotifyBuffsChanged();
+
+                            // Idle 시각 효과 재시작
+                            enemyChar.StartIdleVisualLoop();
+
+                            return enemyChar;
+                        }
+                    }
+                }
+            }
+
+            GameLogger.LogError($"[StageManager] 비활성화된 원본 적을 찾을 수 없습니다: {targetData?.DisplayName ?? "null"}", GameLogger.LogCategory.Combat);
+            return null;
+        }
 
         /// <summary>
         /// 기존 적 제거 및 슬롯 정리
@@ -1727,15 +1817,12 @@ namespace Game.StageSystem.Manager
             if (originalEnemyStack.Count > 0)
             {
                 var context = originalEnemyStack.Pop();
-                originalEnemyData = context.EnemyData;
-                originalEnemyHP = context.EnemyHP;
+                var restoreEnemyData = context.EnemyData;
+                var restoreHP = context.EnemyHP; // 로컬 변수에 저장 (필드 초기화 전에)
 
                 GameLogger.LogInfo(
-                    $"[소환] {summonedEnemy.GetCharacterName()} 사망 → {originalEnemyData?.DisplayName} 복귀 (HP: {originalEnemyHP}, 남은 스택: {originalEnemyStack.Count})",
+                    $"[소환] {summonedEnemy.GetCharacterName()} 사망 → {restoreEnemyData?.DisplayName} 복귀 (HP: {restoreHP}, 남은 스택: {originalEnemyStack.Count})",
                     GameLogger.LogCategory.Combat);
-
-                // 복귀 전환 상태로 이동
-                _ = TransitionToSummonState(originalEnemyData, true);
 
                 // 스택이 비어 있으면 최상위 소환 체인이 종료된 것이므로 필드를 초기화합니다.
                 if (originalEnemyStack.Count == 0)
@@ -1750,6 +1837,9 @@ namespace Game.StageSystem.Manager
                     originalEnemyData = parent.EnemyData;
                     originalEnemyHP = parent.EnemyHP;
                 }
+
+                // 복귀 전환 상태로 이동 (HP 값을 직접 전달하여 필드 초기화 영향 방지)
+                _ = TransitionToSummonState(restoreEnemyData, true, restoreHP);
             }
             else
             {
@@ -1834,6 +1924,8 @@ namespace Game.StageSystem.Manager
         /// </summary>
         public void SetOriginalEnemyHP(int hp)
         {
+            GameLogger.LogInfo($"[StageManager] SetOriginalEnemyHP 호출: HP={hp}, 현재 스택={originalEnemyStack.Count}", GameLogger.LogCategory.Combat);
+            
             if (originalEnemyStack.Count == 0)
             {
                 // 소환 컨텍스트가 없는데 HP만 설정되는 경우는 예외적인 상황이므로 경고를 남깁니다.
@@ -1843,13 +1935,14 @@ namespace Game.StageSystem.Manager
             }
 
             var context = originalEnemyStack.Pop();
+            int previousHP = context.EnemyHP;
             context.EnemyHP = hp;
             originalEnemyStack.Push(context);
 
             originalEnemyHP = hp;
             originalEnemyData = context.EnemyData;
             
-            GameLogger.LogInfo($"[StageManager] 원본 적 HP 갱신: {hp} (대상: {context.EnemyData?.DisplayName}, 스택 깊이: {originalEnemyStack.Count})", GameLogger.LogCategory.Combat);
+            GameLogger.LogInfo($"[StageManager] 원본 적 HP 갱신: {previousHP} → {hp} (대상: {context.EnemyData?.DisplayName}, 스택 깊이: {originalEnemyStack.Count})", GameLogger.LogCategory.Combat);
         }
 
         /// <summary>

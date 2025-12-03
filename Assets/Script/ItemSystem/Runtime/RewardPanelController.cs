@@ -60,8 +60,6 @@ namespace Game.ItemSystem.Runtime
 
 		private void OnEnable()
 		{
-			GameLogger.LogInfo($"[RewardPanel] OnEnable() 호출 - GameObject.activeSelf: {gameObject.activeSelf}, activeInHierarchy: {gameObject.activeInHierarchy}", GameLogger.LogCategory.UI);
-
 			// 메시지 초기화 (활성화될 때 메시지 숨기기)
 			if (inventoryFullMessage != null)
 			{
@@ -74,7 +72,6 @@ namespace Game.ItemSystem.Runtime
 				_itemService.OnActiveItemAdded += HandleInventoryChanged;
 				_itemService.OnActiveItemRemoved += HandleInventoryChangedSlot;
 				_itemService.OnActiveItemUsed += HandleInventoryUsed;
-				GameLogger.LogInfo("[RewardPanel] 이벤트 구독 완료: OnActiveItemAdded, OnActiveItemRemoved, OnActiveItemUsed", GameLogger.LogCategory.UI);
 			}
 			else
 			{
@@ -84,8 +81,6 @@ namespace Game.ItemSystem.Runtime
 
 		private void OnDisable()
 		{
-			GameLogger.LogInfo("[RewardPanel] OnDisable() 호출 - 이벤트 구독 해제", GameLogger.LogCategory.UI);
-
 			// 실행 중인 모든 코루틴 중지
 			StopAllCoroutines();
 
@@ -100,7 +95,6 @@ namespace Game.ItemSystem.Runtime
 
 		private void Start()
 		{
-			GameLogger.LogInfo($"[RewardPanel] Start() - GameObject.activeSelf: {gameObject.activeSelf}, activeInHierarchy: {gameObject.activeInHierarchy}", GameLogger.LogCategory.UI);
 			InitializeUI();
 		}
 
@@ -131,23 +125,18 @@ namespace Game.ItemSystem.Runtime
 				{
 					// ToggleButton을 캔버스의 직접 자식으로 이동
 					toggleButton.transform.SetParent(canvas.transform, true);
-					GameLogger.LogInfo("[RewardPanel] 토글 버튼을 캔버스 루트로 이동 완료", GameLogger.LogCategory.UI);
 				}
-
-				GameLogger.LogInfo("[RewardPanel] 접기/펼치기 버튼 이벤트 연결 완료", GameLogger.LogCategory.UI);
 			}
 			else
 			{
 				GameLogger.LogWarning("[RewardPanel] toggleButton이 할당되지 않았습니다!", GameLogger.LogCategory.UI);
 			}
 
-			GameLogger.LogInfo("[RewardPanel] 보상 패널 UI 초기화 완료", GameLogger.LogCategory.UI);
 		}
 
 		public void Toggle()
 		{
 			_isOpen = !_isOpen;
-			GameLogger.LogInfo($"[Reward] 패널 {(_isOpen ? "열림" : "닫힘")}", GameLogger.LogCategory.UI);
 		}
 
 		public void Open(ActiveItemDefinition[] candidates)
@@ -169,10 +158,7 @@ namespace Game.ItemSystem.Runtime
 			if (toggleButton != null)
 			{
 				toggleButton.gameObject.SetActive(true);
-				GameLogger.LogInfo("[RewardPanel] 토글 버튼 활성화", GameLogger.LogCategory.UI);
 			}
-
-			GameLogger.LogInfo($"[Reward] 보상 {(_candidates?.Length ?? 0)}개 표시", GameLogger.LogCategory.UI);
 		}
 
 		public void OpenPassive(PassiveItemDefinition[] candidates)
@@ -188,8 +174,6 @@ namespace Game.ItemSystem.Runtime
 			gameObject.SetActive(true);
 
 			// 패시브 아이템은 현재 UI 미지원 (추후 확장 가능)
-			GameLogger.LogInfo($"[RewardPanel] 패시브 패널 열기 완료 - IsOpen: {_isOpen}, GameObject.activeSelf: {gameObject.activeSelf}", GameLogger.LogCategory.UI);
-			GameLogger.LogInfo($"[Reward] 패시브 보상 {(_passiveCandidates?.Length ?? 0)}개 표시", GameLogger.LogCategory.UI);
 		}
 
 		/// <summary>
@@ -245,9 +229,6 @@ namespace Game.ItemSystem.Runtime
 			// Is Open 상태에 따라 GameObject 활성화 관리
 			_isOpen = true;
 			gameObject.SetActive(true);
-
-			GameLogger.LogInfo($"[RewardPanel] 패널 열기 완료 - IsOpen: {_isOpen}, GameObject.activeSelf: {gameObject.activeSelf}", GameLogger.LogCategory.UI);
-			GameLogger.LogInfo($"[Reward] 액티브 {(_candidates?.Length ?? 0)}개 + 패시브 {(_passiveCandidates?.Length ?? 0)}개 표시", GameLogger.LogCategory.UI);
 		}
 
 		public void Close()
@@ -270,12 +251,10 @@ namespace Game.ItemSystem.Runtime
 			if (toggleButton != null)
 			{
 				toggleButton.gameObject.SetActive(false);
-				GameLogger.LogInfo("[RewardPanel] 토글 버튼 비활성화", GameLogger.LogCategory.UI);
 			}
 
 			// 보상 패널 완료 이벤트 발생
 			OnRewardPanelClosed?.Invoke();
-			GameLogger.LogInfo($"[RewardPanel] 패널 닫기 완료 - IsOpen: {_isOpen}, GameObject.activeSelf: {gameObject.activeSelf}", GameLogger.LogCategory.UI);
 		}
 
 		/// <summary>
@@ -349,7 +328,6 @@ namespace Game.ItemSystem.Runtime
 			}
 
 			bool ok = _itemService.AddActiveItem(item);
-			GameLogger.LogInfo($"[Reward] 가져오기 요청: {item.DisplayName} → {(ok ? "성공" : "실패")}", GameLogger.LogCategory.UI);
 			if (ok)
 			{
 				// 아이템을 성공적으로 가져간 경우 해당 슬롯 제거
@@ -374,7 +352,6 @@ namespace Game.ItemSystem.Runtime
 			{
 				// 슬롯 UI 제거
 				Destroy(slotToRemove.gameObject);
-				GameLogger.LogInfo($"[Reward] 슬롯 {slotIndex} 제거됨", GameLogger.LogCategory.UI);
 			}
 
 			// 배열에서 해당 슬롯 제거
@@ -422,8 +399,6 @@ namespace Game.ItemSystem.Runtime
 				// 자동으로 사라지게 하기 위해 코루틴 시작
 				StopCoroutine(HideMessageCoroutine());
 				StartCoroutine(HideMessageCoroutine());
-
-				GameLogger.LogInfo("[RewardPanel] 인벤토리 가득 참 메시지 표시", GameLogger.LogCategory.UI);
 			}
 			else
 			{
@@ -441,7 +416,6 @@ namespace Game.ItemSystem.Runtime
 			if (inventoryFullMessage != null)
 			{
 				inventoryFullMessage.gameObject.SetActive(false);
-				GameLogger.LogInfo("[RewardPanel] 인벤토리 가득 참 메시지 숨김", GameLogger.LogCategory.UI);
 			}
 		}
 
@@ -457,7 +431,6 @@ namespace Game.ItemSystem.Runtime
 			if (inventoryFullMessage != null)
 			{
 				inventoryFullMessage.gameObject.SetActive(false);
-				GameLogger.LogInfo("[RewardPanel] 인벤토리 가득 참 메시지 강제 숨김", GameLogger.LogCategory.UI);
 			}
 		}
 
@@ -504,8 +477,6 @@ namespace Game.ItemSystem.Runtime
 				// 자동으로 사라지게 하기 위해 코루틴 시작
 				StopCoroutine(HideMessageCoroutine());
 				StartCoroutine(HideMessageCoroutine());
-
-				GameLogger.LogInfo($"[RewardPanel] 패시브 아이템 선택 경고 메시지 표시 (남은 개수: {remainingCount})", GameLogger.LogCategory.UI);
 			}
 			else
 			{

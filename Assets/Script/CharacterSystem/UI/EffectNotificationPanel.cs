@@ -102,7 +102,6 @@ namespace Game.CharacterSystem.UI
 
             if (enableDebugLogging)
             {
-                GameLogger.LogInfo($"[EffectNotificationPanel] 알림 표시: {message}", GameLogger.LogCategory.UI);
             }
 
             // 기존 시퀀스 정리
@@ -117,14 +116,12 @@ namespace Game.CharacterSystem.UI
             // 패널 활성화 (모든 부모 체인 확인 및 활성화)
             if (enableDebugLogging)
             {
-                GameLogger.LogInfo($"[EffectNotificationPanel] 패널 상태 확인 - activeSelf={panel.activeSelf}, activeInHierarchy={panel.activeInHierarchy}", GameLogger.LogCategory.UI);
             }
 
             if (!panel.activeInHierarchy)
             {
                 if (enableDebugLogging)
                 {
-                    GameLogger.LogInfo($"[EffectNotificationPanel] 패널 활성화 시작", GameLogger.LogCategory.UI);
                 }
 
                 // 모든 부모를 확인하고 활성화
@@ -135,7 +132,6 @@ namespace Game.CharacterSystem.UI
                     {
                         if (enableDebugLogging)
                         {
-                            GameLogger.LogInfo($"[EffectNotificationPanel] 부모 활성화: {current.name}", GameLogger.LogCategory.UI);
                         }
                         current.gameObject.SetActive(true);
                     }
@@ -148,7 +144,6 @@ namespace Game.CharacterSystem.UI
                 {
                     if (enableDebugLogging)
                     {
-                        GameLogger.LogInfo($"[EffectNotificationPanel] Canvas 활성화: {canvas.name}", GameLogger.LogCategory.UI);
                     }
                     canvas.gameObject.SetActive(true);
                 }
@@ -165,7 +160,6 @@ namespace Game.CharacterSystem.UI
             
             if (enableDebugLogging)
             {
-                GameLogger.LogInfo($"[EffectNotificationPanel] 패널 활성화 확인 완료 - activeSelf={panel.activeSelf}, activeInHierarchy={panel.activeInHierarchy}", GameLogger.LogCategory.UI);
             }
 
             // 애니메이션 시작
@@ -174,7 +168,6 @@ namespace Game.CharacterSystem.UI
                 // CanvasGroup 사용
                 if (enableDebugLogging)
                 {
-                    GameLogger.LogInfo($"[EffectNotificationPanel] CanvasGroup 사용 - 현재 alpha: {canvasGroup.alpha}, blocksRaycasts: {canvasGroup.blocksRaycasts}", GameLogger.LogCategory.UI);
                 }
                 
                 canvasGroup.alpha = 0f;

@@ -226,7 +226,6 @@ namespace Game.CharacterSystem.Core
                     }
                 }
 
-                GameLogger.LogInfo($"[PlayerCharacter] Portrait 프리팹 인스턴스화 완료: {data.PortraitPrefab.name}", GameLogger.LogCategory.Character);
             }
             else
             {
@@ -281,7 +280,6 @@ namespace Game.CharacterSystem.Core
             // 가드로 차단된 경우 데미지 텍스트 표시하지 않음
             if (wasGuarded)
             {
-                GameLogger.LogInfo($"[{GetCharacterName()}] 가드로 데미지 차단됨 - 데미지 텍스트 표시 안함", GameLogger.LogCategory.Character);
                 return;
             }
 
@@ -403,7 +401,6 @@ namespace Game.CharacterSystem.Core
         /// <param name="card">복원할 카드</param>
         public void RestoreCardToHand(ISkillCard card)
         {
-            GameLogger.LogInfo($"[PlayerCharacter] 카드 복귀: {card?.CardDefinition?.displayName}", GameLogger.LogCategory.Character);
             // 실제 핸드 복원 로직은 handManager 내부에 구현되어야 함
         }
 
@@ -564,23 +561,17 @@ namespace Game.CharacterSystem.Core
         /// </summary>
         public void PlayIdleAnimation()
         {
-            GameLogger.LogInfo($"[PlayIdleAnimation] 호출됨 - playerAnimator: {(playerAnimator != null ? "존재" : "null")}", GameLogger.LogCategory.Character);
-            
             if (playerAnimator != null)
             {
                 // Animator 상태 확인
                 var currentState = playerAnimator.GetCurrentAnimatorStateInfo(0);
-                GameLogger.LogInfo($"[PlayIdleAnimation] 현재 상태: {currentState.shortNameHash}, 정규화 시간: {currentState.normalizedTime}", GameLogger.LogCategory.Character);
-                
                 // 방법 1: Trigger 사용
                 try
                 {
                     playerAnimator.SetTrigger("Idle");
-                    GameLogger.LogInfo("[PlayIdleAnimation] Idle 트리거 설정 완료", GameLogger.LogCategory.Character);
                     
                     // 강제로 애니메이션 재시작 (포트레이트 애니메이션용)
                     playerAnimator.Play(currentState.shortNameHash, 0, 0f);
-                    GameLogger.LogInfo("[PlayIdleAnimation] 애니메이션 강제 재시작 완료", GameLogger.LogCategory.Character);
                 }
                 catch (System.Exception ex)
                 {
@@ -590,7 +581,6 @@ namespace Game.CharacterSystem.Core
                     try
                     {
                         playerAnimator.Play("Player_idle_1", 0, 0f);
-                        GameLogger.LogInfo("[PlayIdleAnimation] 직접 애니메이션 재생 완료", GameLogger.LogCategory.Character);
                     }
                     catch (System.Exception ex2)
                     {
@@ -613,7 +603,6 @@ namespace Game.CharacterSystem.Core
             {
                 // Hit 트리거 활성화
                 playerAnimator.SetTrigger("Hit");
-                GameLogger.LogInfo("플레 gameObject.ani이어 피격 애니메이션 재생", GameLogger.LogCategory.Character);
             }
             else
             {
@@ -630,7 +619,6 @@ namespace Game.CharacterSystem.Core
             {
                 // Attack 트리거 활성화
                 playerAnimator.SetTrigger("Attack");
-                GameLogger.LogInfo("플레이어 공격 애니메이션 재생", GameLogger.LogCategory.Character);
             }
             else
             {
@@ -647,7 +635,6 @@ namespace Game.CharacterSystem.Core
             {
                 // Appeared 트리거 활성화
                 playerAnimator.SetTrigger("Appeared");
-                GameLogger.LogInfo("플레이어 등장 애니메이션 재생", GameLogger.LogCategory.Character);
             }
             else
             {
@@ -687,7 +674,6 @@ namespace Game.CharacterSystem.Core
             {
                 var currentState = playerAnimator.GetCurrentAnimatorStateInfo(0);
                 playerAnimator.Play(currentState.shortNameHash, 0, 0f);
-                GameLogger.LogInfo($"[ForceRestartAnimation] 애니메이션 강제 재시작: {currentState.shortNameHash}", GameLogger.LogCategory.Character);
             }
         }
 

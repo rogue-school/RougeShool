@@ -265,7 +265,7 @@ namespace Game.SkillCardSystem.Manager
                         Game.CombatSystem.CombatEvents.RaisePlayerCardSpawn(cardId, cardObj);
                     }
                     
-                    GameLogger.LogInfo($"카드 추가: {card.GetCardName()}", GameLogger.LogCategory.SkillCard);
+                    // 카드 추가 완료
                 }
                 else
                 {
@@ -308,7 +308,7 @@ namespace Game.SkillCardSystem.Manager
                     Game.CombatSystem.CombatEvents.RaisePlayerCardSpawn(cardId, cardObj);
                 }
                 
-                GameLogger.LogInfo($"카드 추가: {card.GetCardName()} to {slot}", GameLogger.LogCategory.SkillCard);
+                // 카드 추가 완료
             }
             else
             {
@@ -345,7 +345,7 @@ namespace Game.SkillCardSystem.Manager
                     if (slot.GetCard() == card)
                     {
                         slot.Clear();
-                        GameLogger.LogInfo($"플레이어 핸드에서 카드 제거 완료: {card.GetCardName()}", GameLogger.LogCategory.SkillCard);
+                        // 플레이어 핸드에서 카드 제거 완료
                         return;
                     }
                 }

@@ -73,10 +73,6 @@ namespace Game.ItemSystem.Service
             if (playerManager == null)
             {
                 playerManager = FindFirstObjectByType<PlayerManager>();
-                if (playerManager != null)
-                {
-                    GameLogger.LogInfo("[ItemService] Start에서 PlayerManager를 찾았습니다", GameLogger.LogCategory.Core);
-                }
             }
         }
 
@@ -97,7 +93,6 @@ namespace Game.ItemSystem.Service
                 var playerCharacter = playerManager.GetCharacter();
                 if (playerCharacter != null)
                 {
-                    GameLogger.LogInfo($"[ItemService] PlayerManager를 통해 캐릭터 발견: {playerCharacter.GetType().Name}", GameLogger.LogCategory.Core);
                     return playerCharacter;
                 }
                 else
@@ -120,7 +115,6 @@ namespace Game.ItemSystem.Service
                     // PlayerCharacter 우선 선택
                     if (obj is Game.CharacterSystem.Core.PlayerCharacter)
                     {
-                        GameLogger.LogInfo($"[ItemService] 씬에서 PlayerCharacter 발견: {obj.name}", GameLogger.LogCategory.Core);
                         return character;
                     }
                 }
@@ -131,7 +125,6 @@ namespace Game.ItemSystem.Service
             {
                 if (obj is ICharacter character)
                 {
-                    GameLogger.LogInfo($"[ItemService] 씬에서 {obj.GetType().Name} 발견: {obj.name}", GameLogger.LogCategory.Core);
                     return character;
                 }
             }
@@ -186,8 +179,6 @@ namespace Game.ItemSystem.Service
                 GameLogger.LogWarning("플레이어 캐릭터가 아직 초기화되지 않았습니다. 아이템 사용을 건너뜁니다", GameLogger.LogCategory.Core);
 
                 // 임시 해결책: 아이템 효과만 실행 (캐릭터 없이)
-                GameLogger.LogInfo($"아이템 효과 시뮬레이션: {slot.item.DisplayName}", GameLogger.LogCategory.Core);
-
                 // 소모품인 경우 슬롯에서 제거
                 if (slot.item.Type == ItemType.Active)
                 {
@@ -195,7 +186,6 @@ namespace Game.ItemSystem.Service
                 }
 
                 OnActiveItemUsed?.Invoke(slot.item, slotIndex);
-                GameLogger.LogInfo($"아이템 사용 성공 (시뮬레이션): {slot.item.DisplayName}", GameLogger.LogCategory.Core);
                 return true;
             }
 
@@ -221,9 +211,7 @@ namespace Game.ItemSystem.Service
             var activeItem = new ActiveItem(slot.item, audioManager, vfxManager);
 
             // 데이터 기반 타겟 결정
-            GameLogger.LogInfo($"[ItemService] 아이템 타겟 결정 시작: {slot.item.DisplayName}, 타겟타입={slot.item.targetType}", GameLogger.LogCategory.Core);
             var targetCharacter = DetermineItemTarget(slot.item, playerCharacter);
-            GameLogger.LogInfo($"[ItemService] 아이템 사용 대상 최종 결정: {slot.item.DisplayName} → {targetCharacter?.GetCharacterName()}, 플레이어인가={targetCharacter?.IsPlayerControlled()}", GameLogger.LogCategory.Core);
 
             bool success = activeItem.UseItem(playerCharacter, targetCharacter);
 
@@ -235,20 +223,10 @@ namespace Game.ItemSystem.Service
                 // 소모품인 경우 슬롯에서 제거
                 if (usedItem != null && usedItem.Type == ItemType.Active)
                 {
-                    GameLogger.LogInfo($"[ItemService] 아이템 제거 시작: {usedItem.DisplayName} (슬롯 {slotIndex})", GameLogger.LogCategory.Core);
                     RemoveActiveItem(slotIndex);
-                    GameLogger.LogInfo($"[ItemService] 아이템 제거 완료: {usedItem.DisplayName} (슬롯 {slotIndex})", GameLogger.LogCategory.Core);
                 }
-
+                
                 OnActiveItemUsed?.Invoke(usedItem, slotIndex);
-                if (usedItem != null)
-                {
-                    GameLogger.LogInfo($"아이템 사용 성공: {usedItem.DisplayName}", GameLogger.LogCategory.Core);
-                }
-                else
-                {
-                    GameLogger.LogInfo($"아이템 사용 성공: (제거됨)", GameLogger.LogCategory.Core);
-                }
             }
             else
             {
@@ -282,9 +260,8 @@ namespace Game.ItemSystem.Service
             // 슬롯에 아이템 추가
             activeSlots[emptySlotIndex].item = itemDefinition;
             activeSlots[emptySlotIndex].isEmpty = false;
-
+            
             OnActiveItemAdded?.Invoke(itemDefinition, emptySlotIndex);
-            GameLogger.LogInfo($"아이템 추가됨: {itemDefinition.DisplayName} (슬롯 {emptySlotIndex})", GameLogger.LogCategory.Core);
 
             return true;
         }
@@ -314,9 +291,8 @@ namespace Game.ItemSystem.Service
 
             slot.item = null;
             slot.isEmpty = true;
-
+            
             OnActiveItemRemoved?.Invoke(removedItem, slotIndex);
-            GameLogger.LogInfo($"아이템 제거됨: {removedItem?.DisplayName ?? "Unknown"} (슬롯 {slotIndex})", GameLogger.LogCategory.Core);
 
             return true;
         }
@@ -381,12 +357,11 @@ namespace Game.ItemSystem.Service
                 skillStarRanks[skillId] = 0;
             }
 
-            if (skillStarRanks[skillId] < ItemConstants.MAX_ENHANCEMENT_LEVEL)
+                if (skillStarRanks[skillId] < ItemConstants.MAX_ENHANCEMENT_LEVEL)
             {
                 skillStarRanks[skillId]++;
                 OnEnhancementUpgraded?.Invoke(skillId, skillStarRanks[skillId]);
                 OnSkillStarUpgraded?.Invoke(skillId, skillStarRanks[skillId]);
-                GameLogger.LogInfo($"스킬 강화 단계 증가: {skillId} → ★{skillStarRanks[skillId]}", GameLogger.LogCategory.Core);
 
                 // 정의 보관 (보너스 계산/HP 증가용)
                 if (passiveItemDefinition != null && !string.IsNullOrEmpty(passiveItemDefinition.ItemId))
@@ -413,7 +388,6 @@ namespace Game.ItemSystem.Service
                             {
                                 int prevHP = player.GetCurrentHP();
                                 int newMax = player.GetMaxHP() + add;
-                                GameLogger.LogInfo($"[ItemService] 플레이어 최대 체력 증가: +{add} → {newMax}", GameLogger.LogCategory.Core);
                                 // ICharacter는 SetMaxHP가 없으므로 CharacterBase로 캐스팅하여 적용
                                 if (player is Game.CharacterSystem.Core.CharacterBase cb)
                                 {
@@ -437,7 +411,6 @@ namespace Game.ItemSystem.Service
             }
             else
             {
-                GameLogger.LogInfo($"스킬 {skillId}이 이미 최대 강화 단계(★{ItemConstants.MAX_ENHANCEMENT_LEVEL})입니다", GameLogger.LogCategory.Core);
             }
         }
 
@@ -574,7 +547,6 @@ namespace Game.ItemSystem.Service
 
             if (!isCompletePlayerTurn)
             {
-                GameLogger.LogInfo($"아이템 사용 불가 - 턴상태: {isTurnPlayerTurn}, 전투상태: {currentState.StateName}, 드래그허용: {currentState.AllowPlayerCardDrag}", GameLogger.LogCategory.Core);
             }
 
             return isCompletePlayerTurn;
@@ -592,22 +564,17 @@ namespace Game.ItemSystem.Service
         /// <returns>대상 캐릭터</returns>
         private ICharacter DetermineItemTarget(ActiveItemDefinition item, ICharacter playerCharacter)
         {
-            GameLogger.LogInfo($"[ItemService.DetermineItemTarget] 타겟 결정 로직 시작: 아이템={item.DisplayName}, 타겟타입={item.targetType}", GameLogger.LogCategory.Core);
-
             switch (item.targetType)
             {
                 case ItemTargetType.Self:
                     // 플레이어 자신에게 사용
-                    GameLogger.LogInfo($"[ItemService.DetermineItemTarget] Self 타입 → 플레이어 ({playerCharacter?.GetCharacterName()})", GameLogger.LogCategory.Core);
                     return playerCharacter;
 
                 case ItemTargetType.Enemy:
                     // 적에게 사용
                     var enemyManager = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
-                    GameLogger.LogInfo($"[ItemService.DetermineItemTarget] Enemy 타입 → EnemyManager 찾기 결과={enemyManager != null}", GameLogger.LogCategory.Core);
-
+                    
                     var enemyCharacter = enemyManager?.GetCurrentEnemy();
-                    GameLogger.LogInfo($"[ItemService.DetermineItemTarget] 현재 적 캐릭터={enemyCharacter?.GetCharacterName() ?? "null"}, 플레이어인가={enemyCharacter?.IsPlayerControlled()}", GameLogger.LogCategory.Core);
 
                     if (enemyCharacter != null)
                     {
@@ -621,7 +588,6 @@ namespace Game.ItemSystem.Service
 
                 case ItemTargetType.Both:
                     // 양쪽 모두 (특수 처리 필요 시 확장 가능)
-                    GameLogger.LogInfo("[ItemService.DetermineItemTarget] Both 타입 → 플레이어 우선", GameLogger.LogCategory.Core);
                     return playerCharacter;
 
                 default:
@@ -652,8 +618,6 @@ namespace Game.ItemSystem.Service
         /// </summary>
         public void ResetInventoryForNewGame()
         {
-            GameLogger.LogInfo("[ItemService] 새 게임을 위한 인벤토리 초기화 시작", GameLogger.LogCategory.Core);
-            
             // 액티브 슬롯 초기화
             for (int i = 0; i < ACTIVE_SLOT_COUNT; i++)
             {
@@ -666,8 +630,6 @@ namespace Game.ItemSystem.Service
             
             // 인벤토리 UI 자식 오브젝트들 제거
             ClearInventoryUI();
-            
-            GameLogger.LogInfo("[ItemService] 인벤토리 초기화 완료", GameLogger.LogCategory.Core);
         }
 
         /// <summary>
@@ -678,12 +640,11 @@ namespace Game.ItemSystem.Service
             try
             {
                 // InventoryPanelController 찾기
-                var inventoryController = FindFirstObjectByType<Game.ItemSystem.Runtime.InventoryPanelController>();
-                if (inventoryController != null)
-                {
-                    inventoryController.ClearAllItemPrefabs();
-                    GameLogger.LogInfo("[ItemService] 인벤토리 UI 자식 오브젝트 제거 완료", GameLogger.LogCategory.Core);
-                }
+                    var inventoryController = FindFirstObjectByType<Game.ItemSystem.Runtime.InventoryPanelController>();
+                    if (inventoryController != null)
+                    {
+                        inventoryController.ClearAllItemPrefabs();
+                    }
                 else
                 {
                     GameLogger.LogWarning("[ItemService] InventoryPanelController를 찾을 수 없습니다", GameLogger.LogCategory.Core);

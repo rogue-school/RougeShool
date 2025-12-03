@@ -103,7 +103,6 @@ namespace Game.ItemSystem.Runtime
 			if (toggleButton != null)
 			{
 				toggleButton.onClick.AddListener(TogglePanel);
-				GameLogger.LogInfo("[Inventory] 접기/펼치기 버튼 이벤트 연결 완료", GameLogger.LogCategory.UI);
 			}
 			else
 			{
@@ -111,7 +110,6 @@ namespace Game.ItemSystem.Runtime
 			}
 
 			// 시작 시에는 아이템 프리팹을 생성하지 않음 (빈 슬롯 상태)
-			GameLogger.LogInfo("[Inventory] 인벤토리 초기화 완료 (빈 슬롯 상태)", GameLogger.LogCategory.UI);
 		}
 
 		/// <summary>
@@ -130,11 +128,6 @@ namespace Game.ItemSystem.Runtime
 					HideAllActionPopupsExcept(slotIndex);
 					
 					// 클릭된 아이템의 액션 팝업은 ActiveItemUI에서 자동으로 표시됨
-					GameLogger.LogInfo($"[Inventory] 아이템 클릭: {slot.item.DisplayName} @ 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
-				}
-				else
-				{
-					GameLogger.LogInfo($"[Inventory] 빈 슬롯 클릭: {slotIndex}", GameLogger.LogCategory.UI);
 				}
 			}
 			else
@@ -166,8 +159,6 @@ namespace Game.ItemSystem.Runtime
 					CreateOrUpdateItemPrefab(i, slot.item);
 				}
 				
-				string itemName = isEmpty ? "[빈 슬롯]" : slot.item.DisplayName;
-				GameLogger.LogInfo($"[Inventory] 슬롯 {i}: {itemName}", GameLogger.LogCategory.UI);
 			}
 		}
 
@@ -200,10 +191,7 @@ namespace Game.ItemSystem.Runtime
 				itemInstance.OnUseButtonClicked += OnClickUse;
 				itemInstance.OnDiscardButtonClicked += OnClickDiscard;
 				
-				GameLogger.LogInfo($"[Inventory] 이벤트 연결 완료: {item.DisplayName} @ 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
-				
 				itemUIs[slotIndex] = itemInstance;
-				GameLogger.LogInfo($"[Inventory] 아이템 프리팹 생성: {item.DisplayName} @ 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
 			}
 			else
 			{
@@ -212,8 +200,6 @@ namespace Game.ItemSystem.Runtime
 				
 				// GameObject 이름도 업데이트
 				itemUIs[slotIndex].gameObject.name = item.DisplayName;
-				
-				GameLogger.LogInfo($"[Inventory] 아이템 프리팹 업데이트: {item.DisplayName} @ 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
 			}
 		}
 
@@ -232,7 +218,6 @@ namespace Game.ItemSystem.Runtime
 				
 				Destroy(itemUIs[slotIndex].gameObject);
 				itemUIs[slotIndex] = null;
-				GameLogger.LogInfo($"[Inventory] 아이템 프리팹 제거: 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
 			}
 		}
 
@@ -332,7 +317,6 @@ namespace Game.ItemSystem.Runtime
 		public void OnClickUse(int slotIndex)
 		{
 			bool ok = _itemService.UseActiveItem(slotIndex);
-			GameLogger.LogInfo($"[Inventory] 사용 요청: 슬롯 {slotIndex} → {(ok ? "성공" : "실패")}", GameLogger.LogCategory.UI);
 		}
 
 		/// <summary>
@@ -342,20 +326,17 @@ namespace Game.ItemSystem.Runtime
 		public void OnClickDiscard(int slotIndex)
 		{
 			bool ok = _itemService.RemoveActiveItem(slotIndex);
-			GameLogger.LogInfo($"[Inventory] 버리기 요청: 슬롯 {slotIndex} → {(ok ? "성공" : "실패")}", GameLogger.LogCategory.UI);
 		}
 
 		#region ItemService 이벤트 처리
 
 		private void HandleItemAdded(ActiveItemDefinition def, int slotIndex)
 		{
-			GameLogger.LogInfo($"[Inventory] 추가 이벤트: {def.DisplayName} @ {slotIndex}", GameLogger.LogCategory.UI);
 			RefreshSlots();
 		}
 
 		private void HandleItemRemoved(Game.ItemSystem.Data.ActiveItemDefinition item, int slotIndex)
 		{
-			GameLogger.LogInfo($"[Inventory] 제거 이벤트: {item?.DisplayName ?? "Unknown"} (슬롯 {slotIndex})", GameLogger.LogCategory.UI);
 			RefreshSlots();
 		}
 
@@ -363,11 +344,11 @@ namespace Game.ItemSystem.Runtime
 		{
 			if (def != null)
 			{
-				GameLogger.LogInfo($"[Inventory] 사용 이벤트: {def.DisplayName} @ {slotIndex}", GameLogger.LogCategory.UI);
+
 			}
 			else
 			{
-				GameLogger.LogInfo($"[Inventory] 사용 이벤트: 아이템 제거됨 @ {slotIndex}", GameLogger.LogCategory.UI);
+
 			}
 			RefreshSlots();
 		}
@@ -425,7 +406,6 @@ namespace Game.ItemSystem.Runtime
 			if (!clickedOnPopupOrItem)
 			{
 				HideAllActionPopups();
-				GameLogger.LogInfo("[Inventory] 팝업 외부 클릭으로 모든 팝업 닫기", GameLogger.LogCategory.UI);
 			}
 		}
 
@@ -477,11 +457,6 @@ namespace Game.ItemSystem.Runtime
 			{
 				// 인벤토리 패널 자체를 클릭한 경우에만 액션 팝업들 닫기
 				HideAllActionPopups();
-				GameLogger.LogInfo("[Inventory] 인벤토리 패널 자체 클릭 - 액션 팝업들 숨김", GameLogger.LogCategory.UI);
-			}
-			else
-			{
-				GameLogger.LogInfo($"[Inventory] 인벤토리 패널 내부 오브젝트 클릭: {eventData.pointerCurrentRaycast.gameObject?.name}", GameLogger.LogCategory.UI);
 			}
 		}
 
@@ -502,7 +477,6 @@ namespace Game.ItemSystem.Runtime
 
 			isPanelOpen = true;
 			panelContent.SetActive(true);
-			GameLogger.LogInfo("[Inventory] 패널 펼침", GameLogger.LogCategory.UI);
 		}
 
 		/// <summary>
@@ -521,8 +495,6 @@ namespace Game.ItemSystem.Runtime
 
 			// 패널을 닫을 때 모든 액션 팝업도 닫기
 			HideAllActionPopups();
-
-			GameLogger.LogInfo("[Inventory] 패널 접힘", GameLogger.LogCategory.UI);
 		}
 
 		/// <summary>

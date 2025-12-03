@@ -288,8 +288,6 @@ namespace Game.CharacterSystem.UI
                 yield break;
             }
             
-            GameLogger.LogInfo("[PlayerCharacterUIController] CharacterData가 준비되었습니다. 다시 초기화합니다.", GameLogger.LogCategory.Character);
-            
             // 다시 초기화 시도
             Initialize(character);
             
@@ -300,7 +298,6 @@ namespace Game.CharacterSystem.UI
             UpdateHPBar();
             UpdateMPBar();
             
-            GameLogger.LogInfo($"[PlayerCharacterUIController] {characterType} 캐릭터 UI 초기화 완료", GameLogger.LogCategory.Character);
         }
 
         /// <summary>
@@ -359,7 +356,6 @@ namespace Game.CharacterSystem.UI
             
             itemService.OnPassiveItemAdded += OnPassiveItemAddedHandler;
             itemService.OnEnhancementUpgraded += OnEnhancementUpgradedHandler;
-            GameLogger.LogInfo("[PlayerCharacterUIController] ItemService 이벤트 구독 완료", GameLogger.LogCategory.Character);
         }
 
         /// <summary>
@@ -441,7 +437,6 @@ namespace Game.CharacterSystem.UI
                     if (activePassiveItemIcons.TryGetValue(item.ItemId, out PassiveItemIcon icon))
                     {
                         icon.UpdateEnhancementLevel(newLevel);
-                        GameLogger.LogInfo($"[PlayerCharacterUIController] 패시브 아이템 강화 단계 업데이트: {item.DisplayName} → {newLevel}", GameLogger.LogCategory.Character);
                     }
                     else
                     {
@@ -807,7 +802,6 @@ namespace Game.CharacterSystem.UI
             // 딕셔너리에 저장
             activeBuffDebuffIcons[effectId] = iconObj;
 
-            GameLogger.LogInfo($"[PlayerCharacterUIController] {(isBuff ? "버프" : "디버프")} 아이콘 추가: {effectId}", GameLogger.LogCategory.Character);
         }
 
         /// <summary>
@@ -820,7 +814,6 @@ namespace Game.CharacterSystem.UI
             {
                 Destroy(iconObj);
                 activeBuffDebuffIcons.Remove(effectId);
-                GameLogger.LogInfo($"[PlayerCharacterUIController] 버프/디버프 아이콘 제거: {effectId}", GameLogger.LogCategory.Character);
             }
         }
 
@@ -835,7 +828,6 @@ namespace Game.CharacterSystem.UI
                     Destroy(icon);
             }
             activeBuffDebuffIcons.Clear();
-            GameLogger.LogInfo("[PlayerCharacterUIController] 모든 버프/디버프 아이콘 제거", GameLogger.LogCategory.Character);
         }
 
         #endregion
@@ -866,7 +858,6 @@ namespace Game.CharacterSystem.UI
             if (activePassiveItemIcons.TryGetValue(itemId, out PassiveItemIcon existingIcon))
             {
                 existingIcon.UpdateEnhancementLevel(enhancementLevel);
-                GameLogger.LogInfo($"[PlayerCharacterUIController] 패시브 아이템 강화 단계 업데이트: {itemDefinition.DisplayName} → {enhancementLevel}", GameLogger.LogCategory.Character);
                 return;
             }
 
@@ -886,7 +877,6 @@ namespace Game.CharacterSystem.UI
             // 딕셔너리에 저장
             activePassiveItemIcons[itemId] = iconComponent;
 
-            GameLogger.LogInfo($"[PlayerCharacterUIController] 패시브 아이템 아이콘 추가: {itemDefinition.DisplayName} (강화 단계: {enhancementLevel})", GameLogger.LogCategory.Character);
         }
 
         /// <summary>
@@ -902,7 +892,6 @@ namespace Game.CharacterSystem.UI
                         Destroy(icon.gameObject);
                 });
                 activePassiveItemIcons.Remove(itemId);
-                GameLogger.LogInfo($"[PlayerCharacterUIController] 패시브 아이템 아이콘 제거: {itemId}", GameLogger.LogCategory.Character);
             }
         }
 
@@ -917,7 +906,6 @@ namespace Game.CharacterSystem.UI
                     Destroy(icon.gameObject);
             }
             activePassiveItemIcons.Clear();
-            GameLogger.LogInfo("[PlayerCharacterUIController] 모든 패시브 아이템 아이콘 제거", GameLogger.LogCategory.Character);
         }
 
         /// <summary>
@@ -937,7 +925,6 @@ namespace Game.CharacterSystem.UI
             var passiveItems = itemService.GetPassiveItems();
             if (passiveItems == null || passiveItems.Count == 0)
             {
-                GameLogger.LogInfo("[PlayerCharacterUIController] 보유한 패시브 아이템이 없습니다", GameLogger.LogCategory.Character);
                 return;
             }
 
@@ -971,7 +958,6 @@ namespace Game.CharacterSystem.UI
                 AddPassiveItemIcon(item, enhancementLevel);
             }
 
-            GameLogger.LogInfo($"[PlayerCharacterUIController] 패시브 아이템 아이콘 새로고침 완료: {passiveItems.Count}개", GameLogger.LogCategory.Character);
         }
 
         #endregion
@@ -1055,7 +1041,6 @@ namespace Game.CharacterSystem.UI
             // 버프/디버프 아이콘 초기화
             ClearAllBuffDebuffIcons();
             
-            GameLogger.LogInfo("[PlayerCharacterUIController] UI 초기화 완료", GameLogger.LogCategory.Character);
         }
 
         #endregion

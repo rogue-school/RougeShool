@@ -54,22 +54,14 @@ namespace Game.SaveSystem.Manager
 
         private System.Collections.IEnumerator Initialize()
         {
-            GameLogger.LogInfo("[AutoSaveManager] 초기화 시작", GameLogger.LogCategory.Save);
-
             // 이벤트 연결
             if (turnBasedAutosaveEnabled && autoSaveEnabled)
             {
                 HookRuntimeDependencies();
                 SceneManager.sceneLoaded += OnSceneLoaded;
-                GameLogger.LogInfo("[AutoSaveManager] 턴/스테이지 이벤트 기반 자동 저장 활성화", GameLogger.LogCategory.Save);
-            }
-            else
-            {
-                GameLogger.LogInfo("[AutoSaveManager] 자동 저장 비활성화 상태로 시작합니다.", GameLogger.LogCategory.Save);
             }
 
             isInitialized = true;
-            GameLogger.LogInfo("[AutoSaveManager] 초기화 완료", GameLogger.LogCategory.Save);
             yield return null;
         }
 
@@ -90,7 +82,6 @@ namespace Game.SaveSystem.Manager
             if (turnManager != null)
             {
                 turnManager.OnTurnChanged += OnTurnChanged;
-                GameLogger.LogInfo("[AutoSaveManager] 턴 매니저 이벤트 연결 완료", GameLogger.LogCategory.Save);
             }
 
             // 스테이지 매니저 이벤트 연결
@@ -98,7 +89,6 @@ namespace Game.SaveSystem.Manager
             {
                 stageManager.OnStageCompleted += OnStageCompleted;
                 stageManager.OnEnemyDefeated += OnEnemyDefeated;
-                GameLogger.LogInfo("[AutoSaveManager] 스테이지 매니저 이벤트 연결 완료", GameLogger.LogCategory.Save);
             }
         }
 
@@ -135,7 +125,6 @@ namespace Game.SaveSystem.Manager
                 lastSavedTrigger = "TurnChanged";
 
                 await saveManager.SaveCurrentProgress("TurnChanged");
-                GameLogger.LogInfo("[AutoSaveManager] 턴 변경 자동 저장 완료", GameLogger.LogCategory.Save);
             }
             catch (System.Exception ex)
             {
@@ -152,7 +141,6 @@ namespace Game.SaveSystem.Manager
                 lastSavedTrigger = "StageCompleted";
 
                 await saveManager.SaveCurrentProgress("StageCompleted");
-                GameLogger.LogInfo("[AutoSaveManager] 스테이지 완료 자동 저장 완료", GameLogger.LogCategory.Save);
             }
             catch (System.Exception ex)
             {
@@ -169,7 +157,6 @@ namespace Game.SaveSystem.Manager
                 lastSavedTrigger = "EnemyDefeated";
 
                 await saveManager.SaveCurrentProgress("EnemyDefeated");
-                GameLogger.LogInfo("[AutoSaveManager] 적 처치 자동 저장 완료", GameLogger.LogCategory.Save);
             }
             catch (System.Exception ex)
             {
@@ -191,8 +178,6 @@ namespace Game.SaveSystem.Manager
             yield return new WaitForSeconds(0.1f);
 
             HookRuntimeDependencies();
-
-            GameLogger.LogInfo("[AutoSaveManager] 스테이지 씬용 재초기화 완료", GameLogger.LogCategory.Save);
         }
 
         #endregion
@@ -209,7 +194,6 @@ namespace Game.SaveSystem.Manager
             try
             {
                 await saveManager.SaveCurrentProgress("Manual");
-                GameLogger.LogInfo("[AutoSaveManager] 수동 자동 저장 완료", GameLogger.LogCategory.Save);
             }
             catch (System.Exception ex)
             {
@@ -223,7 +207,6 @@ namespace Game.SaveSystem.Manager
         public void SetAutoSaveEnabled(bool enabled)
         {
             autoSaveEnabled = enabled;
-            GameLogger.LogInfo($"[AutoSaveManager] 자동 저장 {(enabled ? "활성화" : "비활성화")}", GameLogger.LogCategory.Save);
         }
 
         /// <summary>

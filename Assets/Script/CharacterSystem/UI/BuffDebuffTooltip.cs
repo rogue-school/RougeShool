@@ -121,8 +121,6 @@ namespace Game.CharacterSystem.UI
         /// <param name="targetRect">대상 슬롯의 RectTransform (선택적)</param>
         public void ShowTooltip(IPerTurnEffect effect, Vector2 slotPosition, RectTransform targetRect = null)
         {
-            GameLogger.LogInfo($"[BuffDebuffTooltip] ShowTooltip 호출됨 - effect: {effect?.GetType().Name}, slotPosition: {slotPosition}, isVisible: {isVisible}", GameLogger.LogCategory.UI);
-            
             if (effect == null)
             {
                 GameLogger.LogWarning("[BuffDebuffTooltip] 표시할 효과가 null입니다", GameLogger.LogCategory.UI);
@@ -150,12 +148,10 @@ namespace Game.CharacterSystem.UI
 
             if (!isVisible)
             {
-                GameLogger.LogInfo($"[BuffDebuffTooltip] 툴팁 페이드 인 시작: {currentEffect?.GetType().Name}", GameLogger.LogCategory.UI);
                 FadeIn();
             }
             else
             {
-                GameLogger.LogInfo("[BuffDebuffTooltip] 툴팁이 이미 표시 중입니다", GameLogger.LogCategory.UI);
             }
         }
 

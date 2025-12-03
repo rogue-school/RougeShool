@@ -42,7 +42,7 @@ namespace Game.CharacterSystem.Core
                 {
                     var oldName = oldValue?.DisplayName ?? "null";
                     var newName = value?.DisplayName ?? "null";
-                    GameLogger.LogInfo($"[EnemyCharacter] CharacterData 변경: {oldName} → {newName} (스택: {System.Environment.StackTrace.Split('\n')[1].Trim()})", GameLogger.LogCategory.Character);
+                    GameLogger.LogDebug($"[EnemyCharacter] CharacterData 변경: {oldName} → {newName}", GameLogger.LogCategory.Character);
                 }
             }
         }
@@ -171,8 +171,6 @@ namespace Game.CharacterSystem.Core
                 throw new ArgumentNullException(nameof(data), "적 캐릭터 데이터는 null일 수 없습니다.");
             }
 
-            GameLogger.LogInfo($"[EnemyCharacter] Initialize 시작: {data.DisplayName} (스택: {System.Environment.StackTrace.Split('\n')[1].Trim()})", GameLogger.LogCategory.Character);
-            
             CharacterData = data;
             skillDeck = data.EnemyDeck;
 
@@ -191,8 +189,6 @@ namespace Game.CharacterSystem.Core
             
             // 기본 Idle 시각 효과 시작 (부드러운 호흡)
             StartIdleVisualLoop();
-            
-            GameLogger.LogInfo($"[EnemyCharacter] Initialize 완료: {data.DisplayName}, CharacterData: {CharacterData?.DisplayName ?? "null"}", GameLogger.LogCategory.Character);
         }
 
         /// <summary>
@@ -254,7 +250,6 @@ namespace Game.CharacterSystem.Core
                     }
                 }
 
-                GameLogger.LogInfo($"[EnemyCharacter] Portrait 프리팹 인스턴스화 완료: {data.PortraitPrefab.name}", GameLogger.LogCategory.Character);
             }
             else
             {
@@ -284,7 +279,6 @@ namespace Game.CharacterSystem.Core
             if (hpBarController != null)
             {
                 hpBarController.Initialize(this);
-                GameLogger.LogInfo($"[EnemyCharacter] HP 바 컨트롤러 재초기화 완료", GameLogger.LogCategory.Character);
             }
         }
 
@@ -312,11 +306,8 @@ namespace Game.CharacterSystem.Core
                     {
                         entry.definition.ResetAttackPowerStacks();
                         resetCount++;
-                        GameLogger.LogInfo($"[EnemyCharacter] 덱 카드 스택 초기화: {entry.definition.displayName}", GameLogger.LogCategory.Character);
                     }
                 }
-                
-                GameLogger.LogInfo($"[EnemyCharacter] 적 덱 스택 초기화 완료: {resetCount}개 카드", GameLogger.LogCategory.Character);
             }
             catch (System.Exception ex)
             {
@@ -575,13 +566,13 @@ namespace Game.CharacterSystem.Core
                 throw new ArgumentNullException(nameof(data), "적 캐릭터 데이터는 null일 수 없습니다.");
             }
             
-            GameLogger.LogInfo($"[EnemyCharacter] SetCharacterData 호출: {data.DisplayName} (스택: {System.Environment.StackTrace.Split('\n')[1].Trim()})", GameLogger.LogCategory.Character);
+            GameLogger.LogDebug($"[EnemyCharacter] SetCharacterData 호출: {data.DisplayName}", GameLogger.LogCategory.Character);
             
             CharacterData = data;
             this.gameObject.name = CharacterData.name;
             Initialize(data);
             
-            GameLogger.LogInfo($"[EnemyCharacter] SetCharacterData 완료: {data.DisplayName}, CharacterData: {CharacterData?.DisplayName ?? "null"}", GameLogger.LogCategory.Character);
+            GameLogger.LogDebug($"[EnemyCharacter] SetCharacterData 완료: {data.DisplayName}", GameLogger.LogCategory.Character);
         }
 
         /// <summary>
@@ -643,18 +634,18 @@ namespace Game.CharacterSystem.Core
 
         private void NotifyHealthChanged(int previousHP, int currentHP)
         {
-            GameLogger.LogInfo($"[{GetCharacterName()}] 체력 변경 알림: {previousHP} → {currentHP} (이펙트 수: {characterEffects.Count})", GameLogger.LogCategory.Character);
+            GameLogger.LogDebug($"[{GetCharacterName()}] 체력 변경 알림: {previousHP} → {currentHP}", GameLogger.LogCategory.Character);
             
             foreach (var effect in characterEffects)
             {
-                GameLogger.LogInfo($"[{GetCharacterName()}] 이펙트 체력 변경 처리: {effect.GetEffectName()}", GameLogger.LogCategory.Character);
+                GameLogger.LogDebug($"[{GetCharacterName()}] 이펙트 체력 변경 처리: {effect.GetEffectName()}", GameLogger.LogCategory.Character);
                 effect.OnHealthChanged(this, previousHP, currentHP);
             }
         }
 
         private void HandleSummonTriggered(EnemyCharacterData summonTarget, int currentHP)
         {
-            GameLogger.LogInfo($"[{GetCharacterName()}] 소환 요청 전달: {summonTarget.DisplayName}, 현재 체력: {currentHP}", GameLogger.LogCategory.Character);
+            GameLogger.LogInfo($"[{GetCharacterName()}] 소환 요청 전달: {summonTarget.DisplayName}, 현재 체력: {currentHP}/{GetMaxHP()}", GameLogger.LogCategory.Character);
             
             // StageManager에 소환 요청 전달 (상태 패턴에서 처리)
             var stageManager = UnityEngine.Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
@@ -665,10 +656,12 @@ namespace Game.CharacterSystem.Core
                 stageManager.SetOriginalEnemyHP(currentHP);
                 stageManager.SetSummonTarget(summonTarget);
                 
+                GameLogger.LogInfo($"[{GetCharacterName()}] StageManager에 원본 적 데이터 저장: {CharacterData?.DisplayName ?? "null"}, HP: {currentHP}", GameLogger.LogCategory.Character);
+                
                 // 소환 상태 플래그 설정
                 stageManager.SetSummonedEnemyActive(true);
                 
-                GameLogger.LogInfo($"[{GetCharacterName()}] StageManager에 소환 요청 전달 완료", GameLogger.LogCategory.Character);
+                GameLogger.LogInfo($"[{GetCharacterName()}] StageManager에 소환 요청 전달 완료 - 소환 플래그 활성화", GameLogger.LogCategory.Character);
             }
             else
             {
@@ -735,7 +728,7 @@ namespace Game.CharacterSystem.Core
                 {
                     enemyAnimator.SetTrigger("Die");
                     animatorPlayed = true;
-                    GameLogger.LogInfo($"[{GetCharacterName()}] 적 사망 애니메이션 트리거 재생", GameLogger.LogCategory.Character);
+                    GameLogger.LogDebug($"[{GetCharacterName()}] 적 사망 애니메이션 트리거 재생", GameLogger.LogCategory.Character);
                 }
                 catch (Exception ex)
                 {
@@ -783,7 +776,7 @@ namespace Game.CharacterSystem.Core
             // 적 사망 이벤트 발행
             CombatEvents.RaiseEnemyCharacterDeath(CharacterData, this.gameObject);
 
-            GameLogger.LogInfo($"[EnemyCharacter] '{GetCharacterName()}' 사망 연출 완료 → 콜백 호출", GameLogger.LogCategory.Character);
+            GameLogger.LogDebug($"[EnemyCharacter] '{GetCharacterName()}' 사망 연출 완료 → 콜백 호출", GameLogger.LogCategory.Character);
             onDeathCallback?.Invoke(this);
         }
 

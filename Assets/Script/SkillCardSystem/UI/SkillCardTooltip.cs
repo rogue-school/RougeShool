@@ -201,7 +201,6 @@ namespace Game.SkillCardSystem.UI
 
 			if (enableVisualDebugValidation)
 			{
-				GameLogger.LogInfo("[SkillCardTooltip] Prefab 구조 검증/보정 완료", GameLogger.LogCategory.UI);
 			}
 		}
 
@@ -308,13 +307,8 @@ namespace Game.SkillCardSystem.UI
         /// <param name="card">표시할 카드</param>
         /// <param name="cardPosition">스킬카드의 위치</param>
         /// <param name="cardRectTransform">카드의 RectTransform (크기 계산용)</param>
-        public void ShowTooltip(ISkillCard card, Vector2 cardPosition, RectTransform cardRectTransform = null)
-        {
-            if (verboseLogging)
+            public void ShowTooltip(ISkillCard card, Vector2 cardPosition, RectTransform cardRectTransform = null)
             {
-                GameLogger.LogInfo($"[SkillCardTooltip] ShowTooltip 호출됨 - card: {card?.GetCardName()}, cardPosition: {cardPosition}, isVisible: {isVisible}", GameLogger.LogCategory.UI);
-            }
-            
             if (card == null)
             {
                 GameLogger.LogWarning("[SkillCardTooltip] 표시할 카드가 null입니다", GameLogger.LogCategory.UI);
@@ -345,15 +339,7 @@ namespace Game.SkillCardSystem.UI
 
             if (!isVisible)
             {
-                if (verboseLogging)
-                {
-                    GameLogger.LogInfo($"[SkillCardTooltip] 툴팁 페이드 인 시작: {currentCard?.GetCardName()}", GameLogger.LogCategory.UI);
-                }
                 FadeIn();
-            }
-            else
-            {
-                GameLogger.LogInfo("[SkillCardTooltip] 툴팁이 이미 표시 중입니다", GameLogger.LogCategory.UI);
             }
         }
 
@@ -631,10 +617,7 @@ namespace Game.SkillCardSystem.UI
             if (backgroundImage != null)
             {
                 bool hadSprite = backgroundImage.sprite != null;
-                if (enableVisualDebugValidation)
-                {
-                    GameLogger.LogInfo($"[TooltipDBG] Background sprite={(hadSprite ? backgroundImage.sprite.name : "<none>")}, type={backgroundImage.type}, colorA={backgroundImage.color.a}", GameLogger.LogCategory.UI);
-                }
+                // Visual debug validation 로그 제거
 
                 if (!hadSprite)
                 {
@@ -642,8 +625,7 @@ namespace Game.SkillCardSystem.UI
                     CreateDefaultBackgroundSprite();
                     backgroundImage.color = new Color(0.1f, 0.1f, 0.1f, 0.95f);
                     backgroundImage.gameObject.SetActive(true);
-                    if (enableVisualDebugValidation)
-                        GameLogger.LogInfo("[TooltipDBG] Background fallback: created 1x1 sprite", GameLogger.LogCategory.UI);
+                    // Visual debug validation 로그 제거
                 }
                 else
                 {
@@ -652,8 +634,7 @@ namespace Game.SkillCardSystem.UI
                     if (backgroundImage.color.a < 0.05f)
                     {
                         backgroundImage.color = new Color(0.1f, 0.1f, 0.1f, 0.95f);
-                        if (enableVisualDebugValidation)
-                            GameLogger.LogInfo("[TooltipDBG] Background alpha was ~0 → set to 0.95", GameLogger.LogCategory.UI);
+                        // Visual debug validation 로그 제거
                     }
                     backgroundImage.gameObject.SetActive(true);
                 }
@@ -661,7 +642,6 @@ namespace Game.SkillCardSystem.UI
 
             // Border 설정 로직 제거
 
-            GameLogger.LogInfo("[SkillCardTooltip] 툴팁 배경 및 보더 설정 완료", GameLogger.LogCategory.UI);
         }
 
         /// <summary>
@@ -777,10 +757,7 @@ namespace Game.SkillCardSystem.UI
                     descriptionText.gameObject.SetActive(false);
                 }
             }
-            else
-            {
-                GameLogger.LogInfo("[SkillCardTooltip] descriptionText가 프리팹에 할당되지 않았습니다 - 선택적 컴포넌트", GameLogger.LogCategory.UI);
-            }
+            // descriptionText가 없어도 정상 동작 (선택적 컴포넌트)
         }
 
         /// <summary>
@@ -835,7 +812,6 @@ namespace Game.SkillCardSystem.UI
         {
             if (effectsContainer == null)
             {
-                GameLogger.LogInfo("[SkillCardTooltip] effectsContainer가 프리팹에 할당되지 않았습니다 - 선택적 컴포넌트", GameLogger.LogCategory.UI);
                 return;
             }
 
@@ -1358,12 +1334,7 @@ namespace Game.SkillCardSystem.UI
                 localPoint.y += mouseOffsetY;
             }
 
-            // 디버그 로그는 위치가 크게 변경될 때만 출력
-            Vector2 previousPosition = rectTransform.localPosition;
-            if (Vector2.Distance(localPoint, previousPosition) > 50f)
-            {
-                GameLogger.LogInfo($"[SkillCardTooltip] 스마트 위치 계산 - 마우스: {mousePosition}, 툴팁 크기: {tooltipWidth}x{tooltipHeight}, 최종 위치: {localPoint}", GameLogger.LogCategory.UI);
-            }
+            // 위치 계산 완료
 
             return localPoint;
         }
@@ -1423,10 +1394,7 @@ namespace Game.SkillCardSystem.UI
             fadeTween = canvasGroup.DOFade(1f, fadeInDuration)
                 .SetEase(fadeEase)
                 .OnComplete(() => {
-                    if (verboseLogging)
-                    {
-                        GameLogger.LogInfo("툴팁 표시 완료", GameLogger.LogCategory.UI);
-                    }
+                    // 툴팁 표시 완료
                 });
         }
 
@@ -1448,7 +1416,6 @@ namespace Game.SkillCardSystem.UI
                 .SetEase(fadeEase)
                 .OnComplete(() => {
                     currentCard = null;
-                    GameLogger.LogInfo("툴팁 숨김 완료", GameLogger.LogCategory.UI);
                 });
         }
 
@@ -1463,8 +1430,6 @@ namespace Game.SkillCardSystem.UI
         /// <param name="triggerPosition">트리거된 UI 요소의 위치</param>
         public void ShowSubTooltip(EffectData effectData, Vector2 triggerPosition)
         {
-            GameLogger.LogInfo($"[SkillCardTooltip] ShowSubTooltip 호출됨 - effect: {effectData.name}", GameLogger.LogCategory.UI);
-            
             if (effectData == null)
             {
                 GameLogger.LogWarning("[SkillCardTooltip] 표시할 효과 데이터가 null입니다", GameLogger.LogCategory.UI);
@@ -1489,7 +1454,6 @@ namespace Game.SkillCardSystem.UI
         /// </summary>
         public void HideSubTooltip()
         {
-            GameLogger.LogInfo("[SkillCardTooltip] HideSubTooltip 호출됨", GameLogger.LogCategory.UI);
             
             // 기존 서브 툴팁 표시 코루틴 중지
             if (subTooltipCoroutine != null)
@@ -1593,7 +1557,6 @@ namespace Game.SkillCardSystem.UI
             
             // 스택 정렬(우상단에서 아래로)
             RepositionSubTooltipStack();
-            GameLogger.LogInfo($"[SkillCardTooltip] 서브 툴팁 생성 완료: {effectData.name}", GameLogger.LogCategory.UI);
         }
 
         private void RepositionSubTooltipStack()
@@ -1753,11 +1716,6 @@ namespace Game.SkillCardSystem.UI
                 {
                     layoutElement = gameObject.AddComponent<LayoutElement>();
                     layoutElement.minHeight = 80f; // 최소 높이만 설정
-                    GameLogger.LogInfo("[SubTooltipComponent] LayoutElement 추가됨", GameLogger.LogCategory.UI);
-                }
-                else
-                {
-                    GameLogger.LogInfo("[SubTooltipComponent] 기존 LayoutElement 사용", GameLogger.LogCategory.UI);
                 }
 
                 // ContentSizeFitter 확인/추가 (프리팹에 없을 경우에만)
@@ -1767,11 +1725,6 @@ namespace Game.SkillCardSystem.UI
                     contentSizeFitter = gameObject.AddComponent<ContentSizeFitter>();
                     contentSizeFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
                     contentSizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-                    GameLogger.LogInfo("[SubTooltipComponent] ContentSizeFitter 추가됨", GameLogger.LogCategory.UI);
-                }
-                else
-                {
-                    GameLogger.LogInfo("[SubTooltipComponent] 기존 ContentSizeFitter 사용", GameLogger.LogCategory.UI);
                 }
 
                 // VerticalLayoutGroup 확인/추가 (프리팹에 없을 경우에만)
@@ -1785,14 +1738,7 @@ namespace Game.SkillCardSystem.UI
                     verticalLayoutGroup.childControlWidth = false;
                     verticalLayoutGroup.childForceExpandHeight = false;
                     verticalLayoutGroup.childForceExpandWidth = false;
-                    GameLogger.LogInfo("[SubTooltipComponent] VerticalLayoutGroup 추가됨", GameLogger.LogCategory.UI);
                 }
-                else
-                {
-                    GameLogger.LogInfo("[SubTooltipComponent] 기존 VerticalLayoutGroup 사용", GameLogger.LogCategory.UI);
-                }
-
-                GameLogger.LogInfo("[SubTooltipComponent] 서브 툴팁 크기 제약 설정 완료", GameLogger.LogCategory.UI);
             }
 
             /// <summary>
@@ -1814,8 +1760,6 @@ namespace Game.SkillCardSystem.UI
                 }
 
                 // Border 설정 제거
-
-                GameLogger.LogInfo("[SubTooltipComponent] 서브 툴팁 배경 및 보더 설정 완료", GameLogger.LogCategory.UI);
             }
 
             /// <summary>
@@ -1953,7 +1897,6 @@ namespace Game.SkillCardSystem.UI
                 fadeTween = canvasGroup.DOFade(1f, fadeInDuration)
                     .SetEase(fadeEase)
                     .OnComplete(() => {
-                        GameLogger.LogInfo("[SubTooltipComponent] 서브 툴팁 표시 완료", GameLogger.LogCategory.UI);
                     });
             }
 

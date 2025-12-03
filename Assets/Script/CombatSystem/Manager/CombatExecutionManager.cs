@@ -212,7 +212,7 @@ namespace Game.CombatSystem.Manager
                         if (playerHandManager != null)
                         {
                             playerHandManager.RemoveCard(card);
-                            GameLogger.LogInfo($"플레이어 카드 실행 완료 - 핸드에서 제거: {FormatCardTag(card)}", GameLogger.LogCategory.SkillCard);
+                            // 플레이어 카드 실행 완료 - 핸드에서 제거
                         }
                         else
                         {
@@ -221,13 +221,12 @@ namespace Game.CombatSystem.Manager
                     }
                     else
                     {
-                        // 적 카드는 핸드에 없으므로 로그만 출력
-                        GameLogger.LogInfo($"적 카드 실행 완료: {FormatCardTag(card)}", GameLogger.LogCategory.Combat);
+                        // 적 카드 실행 완료
                     }
 
                     // 배틀 슬롯 정리 (UI 포함)
                     turnManager?.ClearSlot(CombatSlotPosition.BATTLE_SLOT);
-                    GameLogger.LogInfo("배틀 슬롯 정리 완료", GameLogger.LogCategory.Combat);
+                    // 배틀 슬롯 정리 완료
 
                     // 턴 진행은 상태 패턴(CombatStateMachine)이 담당
                 }
@@ -239,10 +238,7 @@ namespace Game.CombatSystem.Manager
 
             isExecuting = false;
 
-            if (enableDebugLogging)
-            {
-                GameLogger.LogInfo($"카드 실행 완료: {FormatCardTag(card)}", GameLogger.LogCategory.Combat);
-            }
+            // 카드 실행 완료
         }
 
         private ExecutionResult ExecuteCard(ISkillCard card, CombatSlotPosition slotPosition)
@@ -291,7 +287,7 @@ namespace Game.CombatSystem.Manager
                                 GameLogger.LogWarning($"자원 소모 실패: 필요 {cost}, 현재 {playerManager.CurrentResource}", GameLogger.LogCategory.SkillCard);
                                 return new ExecutionResult(false, null, "자원 소모 실패");
                             }
-                            GameLogger.LogInfo($"자원 소모: {cost} (남은 {playerManager.CurrentResource}/{playerManager.MaxResource})", GameLogger.LogCategory.SkillCard);
+                            // 자원 소모 완료
                         }
                     }
                 }

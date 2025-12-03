@@ -362,8 +362,6 @@ namespace Game.SkillCardSystem.UI
         public void OnPointerClick(PointerEventData eventData)
         {
             var currentTooltipManager = GetTooltipManager();
-            GameLogger.LogInfo($"OnPointerClick 호출됨 - 버튼: {eventData.button}, enableTooltip: {enableTooltip}, tooltipManager: {currentTooltipManager != null}, card: {card != null}", GameLogger.LogCategory.UI);
-            
             if (!enableTooltip)
             {
                 GameLogger.LogWarning("툴팁이 비활성화되어 있습니다.", GameLogger.LogCategory.UI);
@@ -510,13 +508,11 @@ namespace Game.SkillCardSystem.UI
                     if (ColorUtility.TryParseHtmlString("#9D2933", out Color enemyColor))
                     {
                         rootImage.color = enemyColor;
-                        GameLogger.LogInfo($"[SkillCardUI] 적 카드 이미지 색상 설정: #9D2933", GameLogger.LogCategory.UI);
                     }
                     else
                     {
                         // 폴백: 직접 RGB 값 사용
                         rootImage.color = new Color(157f / 255f, 41f / 255f, 51f / 255f, 1f);
-                        GameLogger.LogInfo($"[SkillCardUI] 적 카드 이미지 색상 설정 (폴백): #9D2933", GameLogger.LogCategory.UI);
                     }
                 }
                 else
@@ -524,8 +520,6 @@ namespace Game.SkillCardSystem.UI
                     // 플레이어 카드는 기본 색상(흰색) 유지
                     rootImage.color = Color.white;
                 }
-                
-                GameLogger.LogInfo($"[SkillCardUI] 카드 배경 설정: {(isPlayerCard ? "플레이어" : "적")} 카드", GameLogger.LogCategory.UI);
             }
             else
             {

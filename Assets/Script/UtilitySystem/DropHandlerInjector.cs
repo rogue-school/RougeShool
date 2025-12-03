@@ -37,7 +37,6 @@ namespace Game.UtilitySystem
 
             // CombatSlotManager 제거로 인한 단순화
             // 실제 슬롯 주입은 다른 시스템에서 처리
-            GameLogger.LogInfo("[DropHandlerInjector] 슬롯 주입 완료 (CombatSlotManager 제거됨)", GameLogger.LogCategory.Combat);
         }
     }
 }

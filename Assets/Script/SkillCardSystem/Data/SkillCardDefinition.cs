@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Game.SkillCardSystem.Effect;
+using Game.CoreSystem.Utility;
 
 namespace Game.SkillCardSystem.Data
 {
@@ -84,7 +85,7 @@ namespace Game.SkillCardSystem.Data
         public void ResetAttackPowerStacks()
         {
             currentAttackPowerStacks = 0;
-            Debug.Log($"[SkillCardDefinition] '{displayName}' 스택 초기화");
+            GameLogger.LogDebug($"[SkillCardDefinition] '{displayName}' 스택 초기화", GameLogger.LogCategory.SkillCard);
         }
         
         public SkillCardDefinition Definition => this;

@@ -102,10 +102,6 @@ namespace Game.CombatSystem.Manager
             _currentTurn = _settings.startingTurn;
             _turnCount = _settings.initialTurnCount;
             _isGameActive = false;
-
-            GameLogger.LogInfo(
-                $"TurnController 초기화 완료 ({_currentTurn} 턴 시작)",
-                GameLogger.LogCategory.Combat);
         }
 
         #endregion
@@ -118,38 +114,29 @@ namespace Game.CombatSystem.Manager
             if (_currentTurn != turnType)
             {
                 _turnCount++;
+                GameLogger.LogInfo($"[TurnController] 턴 변경: {_currentTurn} → {turnType}, 턴 수: {_turnCount}", GameLogger.LogCategory.Combat);
                 OnTurnCountChanged?.Invoke(_turnCount);
+            }
+            else
+            {
+                GameLogger.LogInfo($"[TurnController] 턴 유지: {turnType}, 턴 수: {_turnCount}", GameLogger.LogCategory.Combat);
             }
 
             _currentTurn = turnType;
             OnTurnChanged?.Invoke(turnType);
-
-            var turnName = turnType == TurnType.Player ? "플레이어" : "적";
-            GameLogger.LogInfo(
-                $"턴 설정 및 증가: {turnName} 턴 (턴 {_turnCount})",
-                GameLogger.LogCategory.Combat);
         }
 
         public void SetTurn(TurnType turnType)
         {
+            GameLogger.LogInfo($"[TurnController] 턴 설정: {turnType} (턴 수: {_turnCount})", GameLogger.LogCategory.Combat);
             _currentTurn = turnType;
             OnTurnChanged?.Invoke(turnType);
-
-            var turnName = turnType == TurnType.Player ? "플레이어" : "적";
-            GameLogger.LogInfo(
-                $"턴 설정: {turnName} 턴 (턴 {_turnCount})",
-                GameLogger.LogCategory.Combat);
         }
 
         public void ResetTurn()
         {
             _currentTurn = _settings.startingTurn;
             _turnCount = _settings.initialTurnCount;
-
-            var turnName = _currentTurn == TurnType.Player ? "플레이어" : "적";
-            GameLogger.LogInfo(
-                $"턴 리셋 완료 ({turnName} 턴 시작)",
-                GameLogger.LogCategory.Combat);
         }
 
         public bool IsPlayerTurn()
@@ -170,16 +157,12 @@ namespace Game.CombatSystem.Manager
         {
             _isGameActive = true;
             OnGameStarted?.Invoke();
-
-            GameLogger.LogInfo("게임 시작", GameLogger.LogCategory.Combat);
         }
 
         public void EndGame()
         {
             _isGameActive = false;
             OnGameEnded?.Invoke();
-
-            GameLogger.LogInfo("게임 종료", GameLogger.LogCategory.Combat);
         }
 
         #endregion
@@ -188,22 +171,25 @@ namespace Game.CombatSystem.Manager
 
         public void ProcessAllCharacterTurnEffects()
         {
+            GameLogger.LogInfo($"[TurnController] 턴 효과 처리 시작 - 현재 턴: {_currentTurn}", GameLogger.LogCategory.Combat);
+            
             // 플레이어 턴 효과 처리
             var player = _playerManager?.GetCharacter();
             if (player != null)
             {
+                GameLogger.LogInfo($"[TurnController] 플레이어 턴 효과 처리: {player.GetCharacterName()}", GameLogger.LogCategory.Combat);
                 player.ProcessTurnEffects();
-                GameLogger.LogInfo(
-                    $"플레이어 캐릭터 턴 효과 처리: {player.GetCharacterName()}",
-                    GameLogger.LogCategory.Combat);
             }
 
             // 적 턴 효과 처리
             var enemy = _enemyManager?.GetCharacter();
             if (enemy != null)
             {
+                GameLogger.LogInfo($"[TurnController] 적 턴 효과 처리: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
                 enemy.ProcessTurnEffects();
             }
+            
+            GameLogger.LogInfo($"[TurnController] 턴 효과 처리 완료", GameLogger.LogCategory.Combat);
         }
 
         #endregion
@@ -220,11 +206,6 @@ namespace Game.CombatSystem.Manager
 
             OnTurnChanged?.Invoke(turnType);
             OnTurnCountChanged?.Invoke(turnCount);
-
-            var turnName = turnType == TurnType.Player ? "플레이어" : "적";
-            GameLogger.LogInfo(
-                $"턴 상태 복원: {turnName} 턴 (턴 {turnCount})",
-                GameLogger.LogCategory.Combat);
         }
 
         /// <summary>
@@ -240,7 +221,6 @@ namespace Game.CombatSystem.Manager
 
             _turnCount = count;
             OnTurnCountChanged?.Invoke(_turnCount);
-            GameLogger.LogInfo($"턴 수 설정: {count}", GameLogger.LogCategory.Combat);
         }
 
         #endregion
@@ -249,10 +229,6 @@ namespace Game.CombatSystem.Manager
 
         public void LogTurnInfo()
         {
-            var turnName = _currentTurn == TurnType.Player ? "플레이어" : "적";
-            GameLogger.LogInfo(
-                $"현재 턴: {turnName} (턴 {_turnCount})",
-                GameLogger.LogCategory.Combat);
         }
 
         #endregion

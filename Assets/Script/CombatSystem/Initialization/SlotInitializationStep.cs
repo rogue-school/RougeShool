@@ -33,8 +33,6 @@ namespace Game.CombatSystem.Intialization
 
         public IEnumerator Initialize()
         {
-            GameLogger.LogInfo("[SlotInitializationStep] 슬롯 초기화 시작", GameLogger.LogCategory.Combat);
-
             // null 체크 추가
             if (slotRegistry == null)
             {
@@ -43,7 +41,6 @@ namespace Game.CombatSystem.Intialization
             }
 
             // 슬롯 자동 바인딩 (SlotInitializer 제거로 인해 직접 처리)
-            GameLogger.LogInfo("[SlotInitializationStep] 슬롯 자동 바인딩 기능은 현재 구현되지 않음", GameLogger.LogCategory.Combat);
 
             // 슬롯 레지스트리 초기화 대기
             float timeout = 5f; // 5초 타임아웃
@@ -63,10 +60,7 @@ namespace Game.CombatSystem.Intialization
                 yield break;
             }
 
-            // TODO: slotRegistry가 object 타입이므로 적절한 캐스팅 필요
-            GameLogger.LogInfo("[SlotInitializationStep] 슬롯 초기화 완료 (상세 정보는 임시로 비활성화)", GameLogger.LogCategory.Combat);
-
-            GameLogger.LogInfo("[SlotInitializationStep] 슬롯 초기화 완료", GameLogger.LogCategory.Combat);
+            // 슬롯 초기화 완료
         }
 
         #endregion

@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Game.CoreSystem.Utility;
 
 namespace Game.CoreSystem.Audio
 {
@@ -56,7 +57,7 @@ namespace Game.CoreSystem.Audio
             InitializeSoundPriority();
 
             isInitialized = true;
-            Debug.Log($"[AudioPoolManager] 오디오 풀 초기화 완료: {poolSize}개");
+            GameLogger.LogDebug($"[AudioPoolManager] 오디오 풀 초기화 완료: {poolSize}개", GameLogger.LogCategory.Audio);
         }
 
         /// <summary>
@@ -99,7 +100,7 @@ namespace Game.CoreSystem.Audio
         {
             if (clip == null || !isInitialized)
             {
-                Debug.LogWarning("[AudioPoolManager] 사운드 재생 실패: 클립이 null이거나 초기화되지 않음");
+                GameLogger.LogDebug("[AudioPoolManager] 사운드 재생 실패: 클립이 null이거나 초기화되지 않음", GameLogger.LogCategory.Audio);
                 return;
             }
 
@@ -108,14 +109,14 @@ namespace Game.CoreSystem.Audio
             // 쿨다운 체크
             if (enableCooldown && IsInCooldown(clipName))
             {
-                Debug.Log($"[AudioPoolManager] 사운드 재생 방지: {clipName} (쿨다운 중)");
+                GameLogger.LogDebug($"[AudioPoolManager] 사운드 재생 방지: {clipName} (쿨다운 중)", GameLogger.LogCategory.Audio);
                 return;
             }
 
             // 우선순위 체크
             if (enablePriority && !CanPlayWithPriority(clipName, priority))
             {
-                Debug.Log($"[AudioPoolManager] 사운드 재생 방지: {clipName} (우선순위 낮음)");
+                GameLogger.LogDebug($"[AudioPoolManager] 사운드 재생 방지: {clipName} (우선순위 낮음)", GameLogger.LogCategory.Audio);
                 return;
             }
 
@@ -123,7 +124,7 @@ namespace Game.CoreSystem.Audio
             AudioSource audioSource = GetAudioSourceFromPool();
             if (audioSource == null)
             {
-                Debug.LogWarning("[AudioPoolManager] AudioSource 풀에서 가져올 수 없음");
+                GameLogger.LogDebug("[AudioPoolManager] AudioSource 풀에서 가져올 수 없음", GameLogger.LogCategory.Audio);
                 return;
             }
 
@@ -139,7 +140,7 @@ namespace Game.CoreSystem.Audio
             // 재생 완료 후 풀에 반환
             StartCoroutine(ReturnToPoolAfterPlay(audioSource, clipName));
 
-            Debug.Log($"[AudioPoolManager] 사운드 재생: {clipName} (볼륨: {volume}, 우선순위: {priority})");
+            GameLogger.LogDebug($"[AudioPoolManager] 사운드 재생: {clipName} (볼륨: {volume}, 우선순위: {priority})", GameLogger.LogCategory.Audio);
         }
 
         /// <summary>
@@ -215,7 +216,7 @@ namespace Game.CoreSystem.Audio
             newAudioSource.playOnAwake = false;
             newAudioSource.loop = false;
             
-            Debug.LogWarning("[AudioPoolManager] AudioSource 풀이 비어있어 새로 생성");
+            GameLogger.LogDebug("[AudioPoolManager] AudioSource 풀이 비어있어 새로 생성", GameLogger.LogCategory.Audio);
             return newAudioSource;
         }
 
@@ -231,7 +232,7 @@ namespace Game.CoreSystem.Audio
             audioSourcePool.Enqueue(audioSource);
             playingSounds.Remove(clipName);
 
-            Debug.Log($"[AudioPoolManager] 사운드 재생 완료: {clipName}");
+            GameLogger.LogDebug($"[AudioPoolManager] 사운드 재생 완료: {clipName}", GameLogger.LogCategory.Audio);
         }
 
         #endregion
@@ -245,7 +246,7 @@ namespace Game.CoreSystem.Audio
         public void SetSoundCooldown(float cooldown)
         {
             soundCooldown = Mathf.Max(0f, cooldown);
-            Debug.Log($"[AudioPoolManager] 쿨다운 시간 설정: {soundCooldown}초");
+            GameLogger.LogDebug($"[AudioPoolManager] 쿨다운 시간 설정: {soundCooldown}초", GameLogger.LogCategory.Audio);
         }
 
         /// <summary>
@@ -255,7 +256,7 @@ namespace Game.CoreSystem.Audio
         public void SetCooldownEnabled(bool enabled)
         {
             enableCooldown = enabled;
-            Debug.Log($"[AudioPoolManager] 쿨다운 {(enabled ? "활성화" : "비활성화")}");
+            GameLogger.LogDebug($"[AudioPoolManager] 쿨다운 {(enabled ? "활성화" : "비활성화")}", GameLogger.LogCategory.Audio);
         }
 
         /// <summary>
@@ -265,7 +266,7 @@ namespace Game.CoreSystem.Audio
         public void SetPriorityEnabled(bool enabled)
         {
             enablePriority = enabled;
-            Debug.Log($"[AudioPoolManager] 우선순위 {(enabled ? "활성화" : "비활성화")}");
+            GameLogger.LogDebug($"[AudioPoolManager] 우선순위 {(enabled ? "활성화" : "비활성화")}", GameLogger.LogCategory.Audio);
         }
 
         /// <summary>
@@ -275,7 +276,7 @@ namespace Game.CoreSystem.Audio
         public void SetPoolSize(int size)
         {
             poolSize = Mathf.Max(1, size);
-            Debug.Log($"[AudioPoolManager] 풀 크기 설정: {poolSize}");
+            GameLogger.LogDebug($"[AudioPoolManager] 풀 크기 설정: {poolSize}", GameLogger.LogCategory.Audio);
         }
 
         #endregion

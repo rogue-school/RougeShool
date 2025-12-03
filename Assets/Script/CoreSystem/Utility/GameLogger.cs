@@ -48,17 +48,17 @@ namespace Game.CoreSystem.Utility
         {
             [LogCategory.Core] = true,
             [LogCategory.Combat] = true,
-            [LogCategory.Animation] = true,
+            [LogCategory.Animation] = false,
             [LogCategory.AnimationVerbose] = false,
             [LogCategory.Slot] = true,
             [LogCategory.Character] = true,
-            [LogCategory.SkillCard] = true,
+            [LogCategory.SkillCard] = false,
             [LogCategory.Database] = false,
             [LogCategory.Performance] = false,
-            [LogCategory.Network] = true,
+            [LogCategory.Network] = false,
             [LogCategory.UI] = true,
-            [LogCategory.Audio] = true,
-            [LogCategory.Save] = true,
+            [LogCategory.Audio] = false,
+            [LogCategory.Save] = false,
             [LogCategory.Error] = true
         };
         #endregion
@@ -77,8 +77,6 @@ namespace Game.CoreSystem.Utility
             #else
             currentLevel = LogLevel.Error;
             #endif
-
-            LogInfo("GameLogger 초기화 완료", LogCategory.Combat);
         }
         #endregion
 
@@ -89,7 +87,6 @@ namespace Game.CoreSystem.Utility
         public static void SetLogLevel(LogLevel level)
         {
             currentLevel = level;
-            LogInfo($"로그 레벨 변경: {level}", LogCategory.Combat);
         }
 
         /// <summary>

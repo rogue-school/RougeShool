@@ -75,7 +75,7 @@ namespace Game.CombatSystem.DragDrop
         public void Execute(ISkillCard card, ICardExecutionContext context)
         {
             // TODO: 카드 실행 로직 구현
-            GameLogger.LogInfo($"[DefaultCardDropValidator] 카드 실행: {card.CardDefinition.CardName}", GameLogger.LogCategory.Combat);
+            // 카드 실행 완료
         }
     }
 }

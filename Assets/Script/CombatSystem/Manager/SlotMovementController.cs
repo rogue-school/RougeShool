@@ -104,9 +104,6 @@ namespace Game.CombatSystem.Manager
             yield return RefillWaitSlot4IfNeededRoutine();
 
             _isAdvancingQueue = false;
-            GameLogger.LogInfo(
-                $"{FormatLogTag()} 슬롯 이동 완료: 4→3→2→1→배틀",
-                GameLogger.LogCategory.Combat);
 
             // 전진이 끝난 시점에서 배틀 슬롯의 적 카드를 자동 실행
             TryAutoExecuteEnemyAtBattleSlot();
@@ -122,8 +119,6 @@ namespace Game.CombatSystem.Manager
             {
                 yield return MoveAllSlotsForwardRoutine();
             }
-
-            GameLogger.LogInfo("슬롯 전진 완료", GameLogger.LogCategory.Combat);
         }
 
         private IEnumerator MoveCardToSlotRoutine(CombatSlotPosition fromSlot, CombatSlotPosition toSlot)
@@ -145,6 +140,15 @@ namespace Game.CombatSystem.Manager
 
                 if (uiRect != null && target != null)
                 {
+                    // 목적지 RectTransform이 파괴되었는지 확인
+                    if (target == null || target.gameObject == null)
+                    {
+                        GameLogger.LogWarning(
+                            $"[SlotMovementController] 목적지 슬롯이 파괴되었습니다: {toSlot}",
+                            GameLogger.LogCategory.Combat);
+                        yield break;
+                    }
+
                     // 이동 중에는 최상위 캔버스 하위로 올려서 항상 슬롯 위에 보이도록 처리
                     var root = target.root as RectTransform;
                     if (root != null)
@@ -161,26 +165,23 @@ namespace Game.CombatSystem.Manager
                         .SetEase(Ease.OutQuad);
                     yield return moveTween.WaitForCompletion();
 
-                    // 최종 부모로 설정하고 로컬 정렬
-                    uiRect.SetParent(target, false);
-                    uiRect.anchoredPosition = new Vector2(0f, 4f);
+                    // 최종 부모로 설정하기 전에 다시 한 번 확인
+                    if (target != null && target.gameObject != null)
+                    {
+                        uiRect.SetParent(target, false);
+                        uiRect.anchoredPosition = new Vector2(0f, 4f);
+                    }
+                    else
+                    {
+                        GameLogger.LogWarning(
+                            $"[SlotMovementController] 이동 완료 후 목적지 슬롯이 파괴되었습니다: {toSlot}",
+                            GameLogger.LogCategory.Combat);
+                    }
                 }
             }
 
             // 데이터 재등록
             _registry.MoveCardData(fromSlot, toSlot);
-
-            GameLogger.LogInfo(
-                $"{FormatLogTag()} 카드 이동: {card.GetCardName()} ({fromSlot} → {toSlot})",
-                GameLogger.LogCategory.Combat);
-
-            // 적 카드가 배틀 슬롯으로 이동했을 때 로그만 출력
-            if (toSlot == CombatSlotPosition.BATTLE_SLOT && !card.IsFromPlayer())
-            {
-                GameLogger.LogInfo(
-                    $"{FormatLogTag()} 적 카드 배틀 슬롯 도달: {card.GetCardName()}",
-                    GameLogger.LogCategory.Combat);
-            }
         }
 
         #endregion
@@ -191,17 +192,11 @@ namespace Game.CombatSystem.Manager
         {
             if (_suppressAutoRefill)
             {
-                GameLogger.LogInfo(
-                    $"{FormatLogTag()} [Refill] 자동 보충 억제 중 → 스킵",
-                    GameLogger.LogCategory.Combat);
                 yield break;
             }
-
+            
             if (_registry.GetCardInSlot(CombatSlotPosition.WAIT_SLOT_4) != null)
             {
-                GameLogger.LogInfo(
-                    $"{FormatLogTag()} [Refill] 대기4 이미 점유 → 스킵",
-                    GameLogger.LogCategory.Combat);
                 yield break;
             }
 
@@ -224,9 +219,6 @@ namespace Game.CombatSystem.Manager
                     var ui = CreateCardUIForSlot(marker, CombatSlotPosition.WAIT_SLOT_4, cardUIPrefab);
                     var tween = PlaySpawnTween(ui);
                     _registry.RegisterCard(CombatSlotPosition.WAIT_SLOT_4, marker, ui, SlotOwner.PLAYER);
-                    GameLogger.LogInfo(
-                        $"{FormatLogTag()} [Refill] 대기4 보충: 플레이어 마커",
-                        GameLogger.LogCategory.Combat);
                     if (tween != null)
                     {
                         yield return tween.WaitForCompletion();
@@ -261,9 +253,6 @@ namespace Game.CombatSystem.Manager
                     var ui = CreateCardUIForSlot(card, CombatSlotPosition.WAIT_SLOT_4, cardUIPrefab);
                     var tween = PlaySpawnTween(ui);
                     _registry.RegisterCard(CombatSlotPosition.WAIT_SLOT_4, card, ui, SlotOwner.ENEMY);
-                    GameLogger.LogInfo(
-                        $"{FormatLogTag()} [Refill] 대기4 보충: 적 카드 {card.GetCardName()}",
-                        GameLogger.LogCategory.Combat);
                     if (tween != null)
                     {
                         yield return tween.WaitForCompletion();
@@ -306,10 +295,7 @@ namespace Game.CombatSystem.Manager
             }
             else
             {
-                GameLogger.LogInfo("SkillCardUI 프리팹 로드 완료", GameLogger.LogCategory.Combat);
             }
-
-            GameLogger.LogInfo("동적 슬롯 셋업 시작 - 실제 게임 플레이 방식", GameLogger.LogCategory.Combat);
 
             // 초기 셋업 시작 시 상태 초기화 (이전 코루틴 중단으로 인한 상태 불일치 방지)
             _isAdvancingQueue = false;
@@ -329,20 +315,13 @@ namespace Game.CombatSystem.Manager
 
             for (int i = 0; i < CombatConstants.InitialSetup.INITIAL_CARD_COUNT; i++)
             {
-                GameLogger.LogInfo(
-                    $"[초기셋업] {i + 1}/5 - {(isPlayerTurn ? "플레이어 마커" : "적 카드")}",
-                    GameLogger.LogCategory.Combat);
-
                 if (isPlayerTurn)
                 {
-                    var marker = CreatePlayerMarker();
-                    if (marker != null)
-                    {
-                        yield return PlaceCardInWaitSlot4AndMoveRoutine(marker, SlotOwner.PLAYER, cardUIPrefab);
-                        GameLogger.LogInfo(
-                            $"[{i + 1}/5] 플레이어 마커 생성 및 배치 완료",
-                            GameLogger.LogCategory.Combat);
-                    }
+                        var marker = CreatePlayerMarker();
+                        if (marker != null)
+                        {
+                            yield return PlaceCardInWaitSlot4AndMoveRoutine(marker, SlotOwner.PLAYER, cardUIPrefab);
+                        }
                 }
                 else
                 {
@@ -354,9 +333,6 @@ namespace Game.CombatSystem.Manager
                             ? _cardFactory.CreateEnemyCard(entry.definition, enemyName, entry.damageOverride)
                             : _cardFactory.CreateEnemyCard(entry.definition, enemyName);
                         yield return PlaceCardInWaitSlot4AndMoveRoutine(card, SlotOwner.ENEMY, cardUIPrefab);
-                        GameLogger.LogInfo(
-                            $"[{i + 1}/5] 적 카드 생성 및 배치 완료: {card.CardDefinition?.CardName}",
-                            GameLogger.LogCategory.Combat);
                     }
                 }
 
@@ -364,9 +340,6 @@ namespace Game.CombatSystem.Manager
                 isPlayerTurn = !isPlayerTurn;
             }
 
-            GameLogger.LogInfo(
-                "동적 슬롯 셋업 완료 - 패턴: 플레이어 → 적 → 플레이어 → 적 → 플레이어 (1:1 교대)",
-                GameLogger.LogCategory.Combat);
             _initialSlotSetupCompleted = true;
 
             // 이동/애니메이션이 모두 끝날 때까지 대기
@@ -389,7 +362,6 @@ namespace Game.CombatSystem.Manager
             }
             else
             {
-                GameLogger.LogInfo("소환/복귀 모드 - 자동 실행 억제 유지", GameLogger.LogCategory.Combat);
             }
         }
 
@@ -413,9 +385,6 @@ namespace Game.CombatSystem.Manager
             var cardUI = CreateCardUIForSlot(card, CombatSlotPosition.WAIT_SLOT_4, cardUIPrefab);
             var spawnTween = PlaySpawnTween(cardUI);
             _registry.RegisterCard(CombatSlotPosition.WAIT_SLOT_4, card, cardUI, owner);
-            GameLogger.LogInfo(
-                $"대기4에 카드 배치: {card.GetCardName()}",
-                GameLogger.LogCategory.Combat);
             if (spawnTween != null)
             {
                 yield return spawnTween.WaitForCompletion();
@@ -426,7 +395,6 @@ namespace Game.CombatSystem.Manager
             if (!_registry.HasCardInSlot(CombatSlotPosition.BATTLE_SLOT))
             {
                 yield return MoveAllSlotsForwardRoutine();
-                GameLogger.LogInfo("배틀슬롯이 비어있어 모든 카드 앞으로 이동", GameLogger.LogCategory.Combat);
             }
         }
 
@@ -443,22 +411,16 @@ namespace Game.CombatSystem.Manager
             }
 
             _registry.RegisterCard(CombatSlotPosition.WAIT_SLOT_4, card, null, SlotOwner.ENEMY);
-            GameLogger.LogInfo(
-                $"적 카드 등록 완료: {card.CardDefinition?.CardName ?? "Unknown"} → WAIT_SLOT_4",
-                GameLogger.LogCategory.Combat);
         }
 
         public void ClearEnemyCache()
         {
             _cachedEnemyData = null;
             _cachedEnemyName = null;
-            GameLogger.LogInfo("적 캐시 초기화 완료", GameLogger.LogCategory.Combat);
         }
 
         public void ResetSlotStates()
         {
-            GameLogger.LogInfo("슬롯 상태 리셋 시작", GameLogger.LogCategory.Combat);
-
             // 슬롯 이동 상태 리셋
             _isAdvancingQueue = false;
             _initialSlotSetupCompleted = false;
@@ -469,8 +431,6 @@ namespace Game.CombatSystem.Manager
 
             // 다음 생성 주체 리셋
             _nextSpawnIsPlayer = true;
-
-            GameLogger.LogInfo("슬롯 상태 리셋 완료", GameLogger.LogCategory.Combat);
         }
 
         /// <summary>
@@ -482,7 +442,6 @@ namespace Game.CombatSystem.Manager
             {
                 _isSummonMode = false;
                 _suppressAutoExecution = false;
-                GameLogger.LogInfo("소환 모드 해제 - 일반 전투로 전환", GameLogger.LogCategory.Combat);
             }
         }
 
@@ -492,7 +451,6 @@ namespace Game.CombatSystem.Manager
         public void SetSummonMode(bool isSummonMode)
         {
             _isSummonMode = isSummonMode;
-            GameLogger.LogInfo($"소환 모드 설정: {isSummonMode}", GameLogger.LogCategory.Combat);
         }
 
         /// <summary>

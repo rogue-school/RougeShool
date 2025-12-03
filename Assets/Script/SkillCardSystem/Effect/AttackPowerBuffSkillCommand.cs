@@ -60,10 +60,6 @@ namespace Game.SkillCardSystem.Effect
                 sourceItemName: null);
 
             character.RegisterPerTurnEffect(effect);
-
-            GameLogger.LogInfo(
-                $"[AttackPowerBuffSkillCommand] '{character.GetCharacterName()}'에게 공격력 버프 적용: +{_attackPowerBonus}, {_duration}턴 지속",
-                GameLogger.LogCategory.SkillCard);
         }
     }
 }

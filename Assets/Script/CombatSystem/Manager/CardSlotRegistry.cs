@@ -100,10 +100,6 @@ namespace Game.CombatSystem.Manager
             }
 
             OnCardStateChanged?.Invoke();
-
-            GameLogger.LogInfo(
-                $"카드 데이터 이동: {card.GetCardName()} ({from} → {to})",
-                GameLogger.LogCategory.Combat);
         }
 
         #endregion
@@ -145,9 +141,6 @@ namespace Game.CombatSystem.Manager
                 if (_cardUIs.TryGetValue(slot, out var ui) && ui != null)
                 {
                     UnityEngine.Object.Destroy(ui.gameObject);
-                    GameLogger.LogInfo(
-                        $"슬롯 UI 제거: {slot}",
-                        GameLogger.LogCategory.Combat);
                 }
                 _cardUIs.Remove(slot);
             }
@@ -156,10 +149,6 @@ namespace Game.CombatSystem.Manager
             _cards.Clear();
             _reservedEnemySlot = null;
             OnCardStateChanged?.Invoke();
-
-            GameLogger.LogInfo(
-                $"모든 슬롯 정리 완료: {allSlots.Count}개 슬롯",
-                GameLogger.LogCategory.Combat);
         }
 
         public void ClearEnemyCardsOnly()
@@ -180,9 +169,6 @@ namespace Game.CombatSystem.Manager
                 if (_cardUIs.TryGetValue(key, out var ui) && ui != null)
                 {
                     UnityEngine.Object.Destroy(ui.gameObject);
-                    GameLogger.LogInfo(
-                        $"적 카드 UI 제거: 슬롯 {key}",
-                        GameLogger.LogCategory.Combat);
                 }
                 _cardUIs.Remove(key);
 
@@ -195,16 +181,11 @@ namespace Game.CombatSystem.Manager
 
             if (toRemove.Count > 0)
             {
-                GameLogger.LogInfo(
-                    $"적 카드 {toRemove.Count}개 제거 완료 (UI 포함)",
-                    GameLogger.LogCategory.Combat);
             }
         }
 
         public void ClearWaitSlots()
         {
-            GameLogger.LogInfo("대기 슬롯 정리 시작", GameLogger.LogCategory.Combat);
-
             // 모든 대기 슬롯의 카드 제거
             var waitSlots = new[]
             {
@@ -228,14 +209,8 @@ namespace Game.CombatSystem.Manager
                     // 데이터 제거
                     _cards.Remove(slot);
                     _cardUIs.Remove(slot);
-
-                    GameLogger.LogInfo(
-                        $"대기 슬롯 정리: {slot}",
-                        GameLogger.LogCategory.Combat);
                 }
             }
-
-            GameLogger.LogInfo("대기 슬롯 정리 완료", GameLogger.LogCategory.Combat);
         }
 
         #endregion

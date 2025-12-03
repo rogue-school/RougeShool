@@ -58,8 +58,6 @@ namespace Game.SaveSystem.Manager
                 // 메타데이터 설정
                 data.saveTime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                 data.sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-                
-                GameLogger.LogInfo("[StageProgressCollector] 진행 상황 수집 완료", GameLogger.LogCategory.Save);
             }
             catch (System.Exception ex)
             {
@@ -81,8 +79,6 @@ namespace Game.SaveSystem.Manager
                 data.currentStageName = stageManager.GetCurrentStage()?.stageName ?? "Unknown";
                 data.progressState = stageManager.ProgressState; // 실제 진행 상태 사용
                 data.currentEnemyIndex = stageManager.GetCurrentEnemyIndex(); // 실제 적 인덱스 사용
-                
-                GameLogger.LogInfo($"[StageProgressCollector] 스테이지 정보 수집: {data.currentStageName} (진행상태: {data.progressState}, 적인덱스: {data.currentEnemyIndex})", GameLogger.LogCategory.Save);
             }
             else
             {
@@ -100,8 +96,6 @@ namespace Game.SaveSystem.Manager
             {
                 data.isCombatActive = combatFlowManager.IsCombatActive;
                 data.combatFlowState = combatFlowManager.GetCurrentCombatState(); // 실제 플로우 상태 사용
-                
-                GameLogger.LogInfo($"[StageProgressCollector] 전투 상태 수집: 활성={data.isCombatActive}, 플로우={data.combatFlowState}", GameLogger.LogCategory.Save);
             }
             else
             {
@@ -119,8 +113,6 @@ namespace Game.SaveSystem.Manager
             {
                 data.turnCount = turnManager.GetTurnCount();
                 data.currentTurn = turnManager.GetCurrentTurnType().ToString();
-                
-                GameLogger.LogInfo($"[StageProgressCollector] 턴 정보 수집: {data.currentTurn} 턴 {data.turnCount}", GameLogger.LogCategory.Save);
             }
             else
             {
@@ -164,8 +156,6 @@ namespace Game.SaveSystem.Manager
                             
                             // 버프 정보 수집 (간소화)
                             characterData.buffs = new List<BuffData>();
-                            
-                            GameLogger.LogInfo($"[StageProgressCollector] 플레이어 상태 수집: HP {characterData.currentHP}/{characterData.maxHP}", GameLogger.LogCategory.Save);
                         }
                     }
                 }
@@ -184,8 +174,6 @@ namespace Game.SaveSystem.Manager
                             
                             // 버프 정보 수집 (간소화)
                             characterData.buffs = new List<BuffData>();
-                            
-                            GameLogger.LogInfo($"[StageProgressCollector] 적 상태 수집: HP {characterData.currentHP}/{characterData.maxHP}", GameLogger.LogCategory.Save);
                         }
                     }
                 }
@@ -233,8 +221,6 @@ namespace Game.SaveSystem.Manager
                         }
                     }
                 }
-                
-                GameLogger.LogInfo($"[StageProgressCollector] 플레이어 핸드 카드 수집: {cardIds.Count}개", GameLogger.LogCategory.Save);
             }
             catch (System.Exception ex)
             {
@@ -272,7 +258,6 @@ namespace Game.SaveSystem.Manager
                         }
                     }
                 }
-                GameLogger.LogInfo($"[StageProgressCollector] 전투 슬롯 상태 수집: {result.Count}개", GameLogger.LogCategory.Save);
             }
             catch (System.Exception ex)
             {

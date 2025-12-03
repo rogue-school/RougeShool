@@ -126,8 +126,6 @@ namespace Game.CoreSystem.Audio
                 bgmSource.loop = true;
                 bgmSource.playOnAwake = false;
                 bgmSource.volume = bgmVolume;
-                
-                GameLogger.LogInfo("BGM AudioSource 생성 완료", GameLogger.LogCategory.Audio);
             }
             
             // SFX 소스 설정
@@ -138,8 +136,6 @@ namespace Game.CoreSystem.Audio
                 sfxSource.loop = false;
                 sfxSource.playOnAwake = false;
                 sfxSource.volume = sfxVolume;
-                
-                GameLogger.LogInfo("SFX AudioSource 생성 완료", GameLogger.LogCategory.Audio);
             }
             
             // 오디오 풀 매니저 초기화
@@ -147,8 +143,6 @@ namespace Game.CoreSystem.Audio
             {
                 audioPoolManager = gameObject.AddComponent<AudioPoolManager>();
             }
-            
-            GameLogger.LogInfo("오디오 시스템 초기화 완료 (풀링 포함)", GameLogger.LogCategory.Audio);
         }
 
         /// <summary>
@@ -168,8 +162,6 @@ namespace Game.CoreSystem.Audio
             // 적 소환 시 AudioManager.PlayEnemyBGM()을 통해 재생됨
             
             // CoreScene은 BGM 재생 안 함 (전역 씬)
-            
-            GameLogger.LogInfo($"씬별 BGM 매핑 초기화 완료 (MainScene: {mainMenuBGM != null}, StageScene: 적별 BGM 사용)", GameLogger.LogCategory.Audio);
         }
 
         /// <summary>
@@ -178,23 +170,16 @@ namespace Game.CoreSystem.Audio
         private void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
         {
             string sceneName = scene.name;
-            GameLogger.LogInfo($"씬 로드됨: {sceneName}", GameLogger.LogCategory.Audio);
-            
             // MainScene 자동 BGM 재생
             if (sceneBGMMap != null && sceneBGMMap.TryGetValue(sceneName, out AudioClip bgm))
             {
                 if (bgm != null)
                 {
                     PlayBGM(bgm, true);
-                    GameLogger.LogInfo($"자동 BGM 재생: {sceneName}", GameLogger.LogCategory.Audio);
                 }
             }
             
             // StageScene은 적 소환 시 BGM 재생 (여기서는 재생 안 함)
-            if (sceneName == "StageScene")
-            {
-                GameLogger.LogInfo("StageScene 로드됨 - 적 소환 시 BGM 재생됨", GameLogger.LogCategory.Audio);
-            }
         }
 
 
@@ -210,9 +195,6 @@ namespace Game.CoreSystem.Audio
                 return;
             }
 
-            GameLogger.LogInfo($"PlayEnemyBGM 호출: {enemyData.DisplayName}", GameLogger.LogCategory.Audio);
-            GameLogger.LogInfo($"stageEnemyBGMConfigs 개수: {stageEnemyBGMConfigs?.Count ?? 0}", GameLogger.LogCategory.Audio);
-
             // stageEnemyBGMConfigs에서 찾기
             if (stageEnemyBGMConfigs != null && stageEnemyBGMConfigs.Count > 0)
             {
@@ -226,14 +208,11 @@ namespace Game.CoreSystem.Audio
                     
                     foreach (var enemyBGM in config.enemyBGMs)
                     {
-                        GameLogger.LogInfo($"검색 중: enemy={enemyBGM.enemy?.DisplayName}, 일치={enemyBGM.enemy == enemyData}, bgm={enemyBGM.bgm?.name ?? "null"}", GameLogger.LogCategory.Audio);
-                        
-                        if (enemyBGM.enemy == enemyData && enemyBGM.bgm != null)
-                        {
-                            PlayBGM(enemyBGM.bgm, true);
-                            GameLogger.LogInfo($"적별 BGM 재생 성공: {enemyData.DisplayName} -> {enemyBGM.bgm.name}", GameLogger.LogCategory.Audio);
-                            return;
-                        }
+                                if (enemyBGM.enemy == enemyData && enemyBGM.bgm != null)
+                                {
+                                    PlayBGM(enemyBGM.bgm, true);
+                                    return;
+                                }
                     }
                 }
             }

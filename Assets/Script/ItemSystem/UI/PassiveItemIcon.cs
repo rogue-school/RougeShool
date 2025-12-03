@@ -142,8 +142,6 @@ namespace Game.ItemSystem.UI
             {
                 tooltipManager.RegisterPassiveItemUI(itemDefinition, rectTransform);
             }
-
-            GameLogger.LogInfo($"[PassiveItemIcon] 패시브 아이템 아이콘 설정: {itemDefinition.DisplayName}, 강화 단계: {enhancementLevel}", GameLogger.LogCategory.UI);
         }
 
         /// <summary>
@@ -193,7 +191,6 @@ namespace Game.ItemSystem.UI
         {
             enhancementLevel = Mathf.Clamp(newLevel, 0, Game.ItemSystem.Constants.ItemConstants.MAX_ENHANCEMENT_LEVEL);
             UpdateEnhancementLevelText();
-            GameLogger.LogInfo($"[PassiveItemIcon] 강화 단계 업데이트: {itemId} → {enhancementLevel}", GameLogger.LogCategory.UI);
         }
 
         #endregion

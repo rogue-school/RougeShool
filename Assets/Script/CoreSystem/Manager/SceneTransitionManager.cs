@@ -133,9 +133,7 @@ namespace Game.CoreSystem.Manager
 			transitionImage.color = Color.black;
 		}
 		
-
 			
-			GameLogger.LogInfo("SceneTransitionManager 초기화 완료", GameLogger.LogCategory.UI);
 		}
 
 		/// <summary>

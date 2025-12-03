@@ -71,11 +71,6 @@ namespace Game.CoreSystem.UI
             yield return null;
             
             IsInitialized = true;
-            
-            if (enableDebugLogging)
-            {
-                GameLogger.LogInfo("SettingsManager 자동 초기화 완료", GameLogger.LogCategory.UI);
-            }
         }
         
         #region ICoreSystemInitializable 구현
@@ -111,10 +106,6 @@ namespace Game.CoreSystem.UI
             
             if (IsSettingsOpen)
             {
-                if (enableDebugLogging)
-                {
-                    GameLogger.LogInfo("설정창이 이미 열려있습니다. 강제로 닫고 다시 엽니다.", GameLogger.LogCategory.UI);
-                }
                 // 강제로 닫기
                 CloseSettings();
             }
@@ -136,9 +127,7 @@ namespace Game.CoreSystem.UI
             
             if (enableDebugLogging)
             {
-                GameLogger.LogInfo($"설정창을 Canvas '{currentCanvas.name}'에 생성합니다.", GameLogger.LogCategory.UI);
             }
-            
             // 설정창 생성
             currentSettingsPanel = Instantiate(settingsPanelPrefab, currentCanvas.transform);
             currentSettingsPanel.name = "SettingsPanel";
@@ -167,9 +156,7 @@ namespace Game.CoreSystem.UI
             // 설정창 활성화 확인
             if (enableDebugLogging)
             {
-                GameLogger.LogInfo($"설정창 생성 완료. 활성화 상태: {currentSettingsPanel.activeInHierarchy}", GameLogger.LogCategory.UI);
             }
-            
             // 설정창 초기화
             InitializeSettingsPanel();
             
@@ -178,7 +165,6 @@ namespace Game.CoreSystem.UI
             
             if (enableDebugLogging)
             {
-                GameLogger.LogInfo("설정창 열기 완료", GameLogger.LogCategory.UI);
             }
         }
         
@@ -189,10 +175,6 @@ namespace Game.CoreSystem.UI
         {
             if (!IsSettingsOpen)
             {
-                if (enableDebugLogging)
-                {
-                    GameLogger.LogInfo("설정창이 이미 닫혀있습니다", GameLogger.LogCategory.UI);
-                }
                 return;
             }
             
@@ -206,7 +188,6 @@ namespace Game.CoreSystem.UI
             
             if (enableDebugLogging)
             {
-                GameLogger.LogInfo("설정창 닫기 완료", GameLogger.LogCategory.UI);
             }
         }
         
@@ -238,16 +219,15 @@ namespace Game.CoreSystem.UI
             
             // SettingsPanelController 찾기
             var settingsController = currentSettingsPanel.GetComponent<SettingsPanelController>();
-            if (settingsController == null)
-            {
-                // SettingsPanelController가 없으면 추가
-                settingsController = currentSettingsPanel.AddComponent<SettingsPanelController>();
-                
-                if (enableDebugLogging)
+                if (settingsController == null)
                 {
-                    GameLogger.LogInfo("SettingsPanelController가 없어서 추가했습니다.", GameLogger.LogCategory.UI);
+                    // SettingsPanelController가 없으면 추가
+                    settingsController = currentSettingsPanel.AddComponent<SettingsPanelController>();
+                    
+                    if (enableDebugLogging)
+                    {
+                    }
                 }
-            }
             
             // 간단한 닫기 버튼 연결 (fallback)
             var closeButton = currentSettingsPanel.GetComponentInChildren<Button>();

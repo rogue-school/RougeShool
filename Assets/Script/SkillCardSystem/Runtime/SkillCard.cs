@@ -317,7 +317,6 @@ namespace Game.SkillCardSystem.Runtime
             // 스턴 상태면 스킬 사용 불가
             if ((context.Source as CharacterBase).HasEffect<StunDebuff>())
             {
-                GameLogger.LogInfo($"[SkillCard] 스턴 상태로 스킬 사용 불가: {context.Source.GetCharacterName()}", GameLogger.LogCategory.SkillCard);
                 return;
             }
 
@@ -356,8 +355,6 @@ namespace Game.SkillCardSystem.Runtime
         /// <param name="context">실행 컨텍스트</param>
         private void StartPresentation(ICardExecutionContext context)
         {
-            GameLogger.LogInfo($"[SkillCard] 연출 시작: {definition.displayName}", GameLogger.LogCategory.SkillCard);
-            
             // 데미지 설정에서 이펙트/사운드 가져오기
             if (definition.configuration.hasDamage)
             {
@@ -366,18 +363,12 @@ namespace Game.SkillCardSystem.Runtime
                 // 사운드 재생 (즉시, 풀링 우선)
                 if (damageConfig.sfxClip != null)
                 {
-                    GameLogger.LogInfo($"[SkillCard] 사운드 재생: {damageConfig.sfxClip.name}", GameLogger.LogCategory.SkillCard);
                     PlaySFXPooled(damageConfig.sfxClip);
-                }
-                else
-                {
-                    GameLogger.LogInfo("[SkillCard] 사운드 클립이 설정되지 않음", GameLogger.LogCategory.SkillCard);
                 }
                 
                 // 비주얼 이펙트 생성 (즉시)
                 if (damageConfig.visualEffectPrefab != null)
                 {
-                    GameLogger.LogInfo($"[SkillCard] 비주얼 이펙트 생성 시작: {damageConfig.visualEffectPrefab.name}", GameLogger.LogCategory.SkillCard);
                     CreateVisualEffect(context, damageConfig);
                 }
                 else
@@ -402,9 +393,6 @@ namespace Game.SkillCardSystem.Runtime
         {
             var target = context.Target;
             var targetTransform = (target as MonoBehaviour)?.transform;
-            
-            GameLogger.LogInfo($"[SkillCard] CreateVisualEffect 시작 - 대상: {target?.GetCharacterName()}", GameLogger.LogCategory.SkillCard);
-            
             if (targetTransform == null)
             {
                 GameLogger.LogError("[SkillCard] 대상 Transform이 null입니다", GameLogger.LogCategory.SkillCard);
@@ -421,7 +409,6 @@ namespace Game.SkillCardSystem.Runtime
 
             if (targetHasCounter)
             {
-                GameLogger.LogInfo($"[SkillCard] 대상이 반격 버프를 가지고 있어서 타겟 이펙트 재생을 건너뜁니다. 반격 이펙트는 DamageEffectCommand에서 재생됩니다.", GameLogger.LogCategory.SkillCard);
                 return;
             }
 
@@ -429,15 +416,9 @@ namespace Game.SkillCardSystem.Runtime
             var vfxManager = UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
             if (vfxManager != null)
             {
-                GameLogger.LogInfo($"[SkillCard] VFXManager 발견됨 - 캐릭터 중심에서 이펙트 재생 시작", GameLogger.LogCategory.SkillCard);
-                
                 // 캐릭터의 시각적 중심에서 이펙트 재생
                 var effectInstance = vfxManager.PlayEffectAtCharacterCenter(damageConfig.visualEffectPrefab, targetTransform);
-                if (effectInstance != null)
-                {
-                    GameLogger.LogInfo($"[SkillCard] 이펙트 인스턴스 생성 성공: {effectInstance.name}", GameLogger.LogCategory.SkillCard);
-                }
-                else
+                if (effectInstance == null)
                 {
                     GameLogger.LogError("[SkillCard] 이펙트 인스턴스 생성 실패", GameLogger.LogCategory.SkillCard);
                 }

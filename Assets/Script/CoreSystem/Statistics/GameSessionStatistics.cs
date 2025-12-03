@@ -90,11 +90,6 @@ namespace Game.CoreSystem.Statistics
             if (transform.parent == null)
             {
                 DontDestroyOnLoad(gameObject);
-                GameLogger.LogInfo("[GameSessionStatistics] Awake 완료 - DontDestroyOnLoad 설정 (루트 오브젝트)", GameLogger.LogCategory.UI);
-            }
-            else
-            {
-                GameLogger.LogInfo("[GameSessionStatistics] Awake 완료 - CoreContainer의 자식으로 유지됨", GameLogger.LogCategory.UI);
             }
         }
 
@@ -102,14 +97,12 @@ namespace Game.CoreSystem.Statistics
         {
             // Start()에서 구독하여 모든 컴포넌트 초기화 후 이벤트 구독
             SubscribeToEvents();
-            GameLogger.LogInfo("[GameSessionStatistics] Start 완료 - 이벤트 구독 시작", GameLogger.LogCategory.UI);
         }
 
         private void OnEnable()
         {
             // OnEnable()에서도 구독 (씬 전환 후 재활성화 시)
             SubscribeToEvents();
-            GameLogger.LogInfo("[GameSessionStatistics] OnEnable 완료 - 이벤트 구독 시작", GameLogger.LogCategory.UI);
         }
 
         private void OnDisable()
@@ -143,10 +136,7 @@ namespace Game.CoreSystem.Statistics
                 _itemService.OnActiveItemAdded += HandleActiveItemAdded;
                 _itemService.OnActiveItemUsed += HandleActiveItemUsed;
                 _itemService.OnActiveItemRemoved += HandleActiveItemRemoved;
-                GameLogger.LogInfo("[GameSessionStatistics] ItemService 이벤트 구독 완료", GameLogger.LogCategory.UI);
             }
-            
-            GameLogger.LogInfo("[GameSessionStatistics] 이벤트 구독 완료", GameLogger.LogCategory.UI);
         }
 
         /// <summary>
@@ -194,8 +184,6 @@ namespace Game.CoreSystem.Statistics
             SessionStatisticsData existingSessionData = null;
             if (!string.IsNullOrEmpty(existingSessionId))
             {
-                GameLogger.LogInfo($"[GameSessionStatistics] 이어하기 세션 ID: {existingSessionId}, 기존 세션 데이터 로드 중...", GameLogger.LogCategory.Save);
-                
                 // 기존 세션 데이터 로드
                 if (_statisticsManager != null)
                 {
@@ -203,11 +191,7 @@ namespace Game.CoreSystem.Statistics
                     if (allStatistics != null && allStatistics.sessions != null)
                     {
                         existingSessionData = allStatistics.sessions.FirstOrDefault(s => s.sessionId == existingSessionId);
-                        if (existingSessionData != null)
-                        {
-                            GameLogger.LogInfo($"[GameSessionStatistics] 기존 세션 데이터 로드 완료: {existingSessionData.combatStatistics?.Count ?? 0}개 전투", GameLogger.LogCategory.Save);
-                        }
-                        else
+                        if (existingSessionData == null)
                         {
                             GameLogger.LogWarning($"[GameSessionStatistics] 기존 세션 데이터를 찾을 수 없습니다: {existingSessionId}", GameLogger.LogCategory.Error);
                         }
@@ -220,7 +204,6 @@ namespace Game.CoreSystem.Statistics
             {
                 // 기존 세션 데이터 복원 (누적 Dictionary 포함)
                 _currentSession = existingSessionData;
-                GameLogger.LogInfo($"[GameSessionStatistics] 기존 세션 데이터 복원 완료: 총 승리={_currentSession.totalVictoryCount}, 총 패배={_currentSession.totalDefeatCount}", GameLogger.LogCategory.Save);
             }
             else
             {
@@ -264,11 +247,6 @@ namespace Game.CoreSystem.Statistics
 
             if (!string.IsNullOrEmpty(existingSessionId))
             {
-                GameLogger.LogInfo($"[GameSessionStatistics] 세션 재개: {_currentSession.sessionId}, 캐릭터: {_currentSession.selectedCharacterName}", GameLogger.LogCategory.UI);
-            }
-            else
-            {
-                GameLogger.LogInfo($"[GameSessionStatistics] 새 세션 시작: {_currentSession.sessionId}, 캐릭터: {_currentSession.selectedCharacterName}", GameLogger.LogCategory.UI);
             }
 
             // CombatStatsAggregator 미리 찾기 시도
@@ -299,7 +277,6 @@ namespace Game.CoreSystem.Statistics
             // HandleGameOver()에서 이미 HandleCombatEnded()를 호출하므로, 게임 오버가 아닌 경우에만 호출
             if (finalEnd && _currentCombatStats != null && string.IsNullOrEmpty(_currentCombatStats.combatEndTime))
             {
-                GameLogger.LogInfo("[GameSessionStatistics] 세션 종료 전 현재 전투 통계 수집 (다시하기 등)", GameLogger.LogCategory.Combat);
                 _isCurrentCombatVictory = false; // 중단된 전투는 패배로 처리
                 HandleCombatEnded(); // 전투 통계 수집
             }
@@ -346,8 +323,6 @@ namespace Game.CoreSystem.Statistics
             CalculateSessionSummary();
 
             IsSessionActive = false;
-
-            GameLogger.LogInfo($"[GameSessionStatistics] 세션 종료: {_currentSession.sessionId}", GameLogger.LogCategory.UI);
         }
 
         /// <summary>
@@ -356,7 +331,6 @@ namespace Game.CoreSystem.Statistics
         public void MarkAsSaved()
         {
             IsSaved = true;
-            GameLogger.LogInfo($"[GameSessionStatistics] 세션 저장 완료 표시: {_currentSession?.sessionId ?? "Unknown"}", GameLogger.LogCategory.Save);
         }
 
         /// <summary>
@@ -373,7 +347,6 @@ namespace Game.CoreSystem.Statistics
             _gameStartTime = Time.time; // 재개 시간 업데이트
             IsSessionActive = true;
             IsSaved = false;
-            GameLogger.LogInfo($"[GameSessionStatistics] 세션 재개: {_currentSession.sessionId}", GameLogger.LogCategory.Save);
         }
 
         /// <summary>
@@ -413,10 +386,6 @@ namespace Game.CoreSystem.Statistics
             CalculateSessionSummary();
             
             // 디버그: summary 값 확인
-            if (_currentSession.summary != null)
-            {
-                GameLogger.LogInfo($"[GameSessionStatistics] GetCurrentSessionData - summary: 총턴수={_currentSession.summary.totalTurns}, 총데미지={_currentSession.summary.totalDamageDealt}, 총받은데미지={_currentSession.summary.totalDamageTaken}, 총힐={_currentSession.summary.totalHealing}, 아이템사용수={_currentSession.activeItemUseCountByName?.Count ?? 0}", GameLogger.LogCategory.Combat);
-            }
 
             return _currentSession;
         }
@@ -426,8 +395,6 @@ namespace Game.CoreSystem.Statistics
         /// </summary>
         private void HandleCombatStarted()
         {
-            GameLogger.LogInfo("[GameSessionStatistics] HandleCombatStarted 호출됨!", GameLogger.LogCategory.Combat);
-            
             // 세션이 시작되지 않았으면 자동으로 시작 시도
             if (!IsSessionActive)
             {

@@ -105,12 +105,6 @@ namespace Game.SkillCardSystem.Factory
         public ISkillCard CreatePlayerCard(SkillCardDefinition definition, string ownerCharacterName = null)
         {
             var card = CreateFromDefinition(definition, Owner.Player);
-            
-            if (card != null && !string.IsNullOrEmpty(ownerCharacterName))
-            {
-                GameLogger.LogInfo($"[SkillCardFactory] 플레이어 카드 생성: {definition.displayName} (Character: {ownerCharacterName})", GameLogger.LogCategory.SkillCard);
-            }
-            
             return card;
         }
         
@@ -125,17 +119,6 @@ namespace Game.SkillCardSystem.Factory
         {
             var card = CreateFromDefinition(definition, Owner.Enemy, damageOverride);
             
-            if (card != null && !string.IsNullOrEmpty(ownerCharacterName))
-            {
-                if (damageOverride >= 0)
-                {
-                    GameLogger.LogInfo($"[SkillCardFactory] 적 카드 생성 (데미지 오버라이드): {definition.displayName} (Character: {ownerCharacterName}, Damage: {damageOverride})", GameLogger.LogCategory.SkillCard);
-                }
-                else
-                {
-                    // GameLogger.LogInfo($"[SkillCardFactory] 적 카드 생성: {definition.displayName} (Character: {ownerCharacterName})", GameLogger.LogCategory.SkillCard);
-                }
-            }
             
             return card;
         }

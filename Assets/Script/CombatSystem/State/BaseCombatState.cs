@@ -103,7 +103,7 @@ namespace Game.CombatSystem.State
         }
 
         /// <summary>
-        /// 상태 전환 로그
+        /// 상태 전환 로그 (소환 버그 검증을 위해 항상 출력)
         /// </summary>
         protected void LogStateTransition(string message)
         {

@@ -40,7 +40,7 @@ namespace Game.CombatSystem.State
         private CombatStateContext _context;
 
         [Header("디버그 설정")]
-        [SerializeField] private bool enableDebugLogging = true;
+        [SerializeField] private bool enableDebugLogging = false;
         [SerializeField] private string currentStateName = "None";
 
         // 부활 관련 플래그
@@ -58,6 +58,16 @@ namespace Game.CombatSystem.State
         
         // 게임 오버 플래그 (완전히 사망했을 때 설정 - 이후 모든 액션 차단)
         private bool isGameOver = false;
+
+        #endregion
+
+        #region 디버그 프로퍼티
+
+        /// <summary>
+        /// 전투 상태 디버그 로그 출력 여부를 확인합니다.
+        /// 상태 클래스(BaseCombatState 등)에서 전역 디버그 플래그로 사용합니다.
+        /// </summary>
+        public bool EnableDebugLogging => enableDebugLogging;
 
         #endregion
 
@@ -89,7 +99,7 @@ namespace Game.CombatSystem.State
 
             if (enableDebugLogging)
             {
-                GameLogger.LogInfo("[CombatStateMachine] 생성 완료", GameLogger.LogCategory.Combat);
+                GameLogger.LogDebug("[CombatStateMachine] 생성 완료", GameLogger.LogCategory.Combat);
             }
         }
 
@@ -131,16 +141,43 @@ namespace Game.CombatSystem.State
             if (_currentState is BattleEndState)
                 return;
 
+            // 적 사망 처리 중이면 체크 건너뜀 (중복 호출 방지)
+            if (isProcessingEnemyDeath)
+                return;
+
             // 적 사망 확인
             if (enemyManager != null)
             {
                 var enemy = enemyManager.GetCharacter();
                 if (enemy != null && enemy.IsDead())
                 {
-                    // EnemyDefeatedState가 아닐 때만 전환
+                    GameLogger.LogInfo($"[CombatStateMachine] 적 사망 감지: {enemy.GetCharacterName()}, 현재 상태: {_currentState?.StateName ?? "null"}", GameLogger.LogCategory.Combat);
+                    
+                    // EnemyDefeatedState가 아닐 때만 처리
                     if (!(_currentState is EnemyDefeatedState))
                     {
-                        OnEnemyDeath();
+                        // StageManager를 통해 소환된 적인지 확인하고 처리
+                        var stageManager = FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
+                        if (stageManager != null)
+                        {
+                            GameLogger.LogInfo($"[CombatStateMachine] StageManager.OnEnemyDeath 호출 - 소환 여부 확인", GameLogger.LogCategory.Combat);
+                            
+                            // StageManager의 OnEnemyDeath를 호출하여 소환된 적인지 확인
+                            // 소환된 적이면 OnSummonedEnemyDeath가 호출되어 복귀 처리
+                            // 원본 적이면 OnEnemyDeathDetected가 호출되어 EnemyDefeatedState로 전환
+                            stageManager.OnEnemyDeath(enemy);
+                        }
+                        else
+                        {
+                            GameLogger.LogWarning($"[CombatStateMachine] StageManager를 찾을 수 없음 - 직접 처리", GameLogger.LogCategory.Combat);
+                            
+                            // StageManager가 없으면 직접 처리
+                            OnEnemyDeath();
+                        }
+                    }
+                    else
+                    {
+                        GameLogger.LogInfo($"[CombatStateMachine] 이미 EnemyDefeatedState이므로 사망 처리 건너뜀", GameLogger.LogCategory.Combat);
                     }
                 }
             }
@@ -179,27 +216,45 @@ namespace Game.CombatSystem.State
                 {
                     // StageManager에서 소환 플래그 확인
                     var stageManager = FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
-                    if (stageManager != null && stageManager.IsSummonedEnemyActive())
+                    if (stageManager != null)
                     {
+                        bool isSummonActive = stageManager.IsSummonedEnemyActive();
                         GameLogger.LogInfo(
-                            "[CombatStateMachine] 소환 트리거 감지 - SummonState로 전환",
+                            $"[CombatStateMachine] 소환 플래그 확인: {isSummonActive}, 현재 적: {enemy.GetCharacterName()}",
                             GameLogger.LogCategory.Combat);
-
-                        // SummonState로 전환
-                        var summonData = stageManager.GetSummonTarget();
-                        var originalHP = stageManager.GetOriginalEnemyHP();
-
-                        if (summonData != null)
+                        
+                        if (isSummonActive)
                         {
-                            var summonState = new SummonState(summonData, originalHP);
-                            ChangeState(summonState);
+                            GameLogger.LogInfo(
+                                "[CombatStateMachine] 소환 트리거 감지 - SummonState로 전환",
+                                GameLogger.LogCategory.Combat);
+
+                            // SummonState로 전환
+                            var summonData = stageManager.GetSummonTarget();
+                            var originalHP = stageManager.GetOriginalEnemyHP();
+                            
+                            GameLogger.LogInfo(
+                                $"[CombatStateMachine] 소환 데이터: 대상={summonData?.DisplayName ?? "null"}, 원본HP={originalHP}",
+                                GameLogger.LogCategory.Combat);
+
+                            if (summonData != null)
+                            {
+                                var summonState = new SummonState(summonData, originalHP);
+                                ChangeState(summonState);
+                            }
+                            else
+                            {
+                                GameLogger.LogError(
+                                    "[CombatStateMachine] 소환 대상 데이터가 없습니다",
+                                    GameLogger.LogCategory.Error);
+                            }
                         }
-                        else
-                        {
-                            GameLogger.LogError(
-                                "[CombatStateMachine] 소환 대상 데이터가 없습니다",
-                                GameLogger.LogCategory.Error);
-                        }
+                    }
+                    else
+                    {
+                        GameLogger.LogWarning(
+                            "[CombatStateMachine] StageManager를 찾을 수 없습니다",
+                            GameLogger.LogCategory.Combat);
                     }
                 }
             }
@@ -249,14 +304,10 @@ namespace Game.CombatSystem.State
 
             if (enableDebugLogging)
             {
-                GameLogger.LogInfo(
-                    "[CombatStateMachine] 초기화 완료 (레거시 + 리팩토링)",
+                GameLogger.LogDebug(
+                    "[CombatStateMachine] 초기화 완료",
                     GameLogger.LogCategory.Combat);
             }
-
-            GameLogger.LogInfo(
-                "[CombatStateMachine] 초기화 완료 - Update()에서 캐릭터 사망 체크",
-                GameLogger.LogCategory.Combat);
         }
 
         #endregion
@@ -278,9 +329,12 @@ namespace Game.CombatSystem.State
         {
             if (_currentState != null)
             {
-                GameLogger.LogWarning(
-                    "[CombatStateMachine] 이미 전투가 진행 중입니다",
-                    GameLogger.LogCategory.Combat);
+                if (enableDebugLogging)
+                {
+                    GameLogger.LogDebug(
+                        "[CombatStateMachine] 이미 전투가 진행 중입니다",
+                        GameLogger.LogCategory.Combat);
+                }
                 return;
             }
 
@@ -325,7 +379,10 @@ namespace Game.CombatSystem.State
 			// 게임 오버 시에는 BattleEndState로의 전환만 허용
 			if (isGameOver && newState is not BattleEndState)
 			{
-				GameLogger.LogWarning("[CombatStateMachine] 게임 오버 상태입니다 - 상태 전환 차단", GameLogger.LogCategory.Combat);
+				if (enableDebugLogging)
+				{
+					GameLogger.LogDebug("[CombatStateMachine] 게임 오버 상태입니다 - 상태 전환 차단", GameLogger.LogCategory.Combat);
+				}
 				return;
 			}
 
@@ -335,9 +392,12 @@ namespace Game.CombatSystem.State
                 // 1단계: 전환 가능 여부 검증
                 if (!_currentState.CanTransitionToNextState(_context))
                 {
-                    GameLogger.LogWarning(
-                        $"[CombatStateMachine] {_currentState.StateName}에서 전환 불가능",
-                        GameLogger.LogCategory.Combat);
+                    if (enableDebugLogging)
+                    {
+                        GameLogger.LogDebug(
+                            $"[CombatStateMachine] {_currentState.StateName}에서 전환 불가능",
+                            GameLogger.LogCategory.Combat);
+                    }
                     return;
                 }
 
@@ -356,16 +416,22 @@ namespace Game.CombatSystem.State
         /// </summary>
         private System.Collections.IEnumerator WaitAndChangeState(ICombatState newState)
         {
-            GameLogger.LogInfo(
-                $"[CombatStateMachine] {_currentState.StateName} 완료 대기 시작",
-                GameLogger.LogCategory.Combat);
+            if (enableDebugLogging)
+            {
+                GameLogger.LogDebug(
+                    $"[CombatStateMachine] {_currentState.StateName} 완료 대기 시작",
+                    GameLogger.LogCategory.Combat);
+            }
 
             // 현재 상태의 완료 대기
             yield return _currentState.WaitForCompletion(_context);
 
-            GameLogger.LogInfo(
-                $"[CombatStateMachine] {_currentState.StateName} 완료 확인됨 - 상태 전환 시작",
-                GameLogger.LogCategory.Combat);
+            if (enableDebugLogging)
+            {
+                GameLogger.LogDebug(
+                    $"[CombatStateMachine] {_currentState.StateName} 완료 확인됨 - 상태 전환 시작",
+                    GameLogger.LogCategory.Combat);
+            }
 
             // 상태 전환 실행
             ChangeStateImmediate(newState);
@@ -379,7 +445,10 @@ namespace Game.CombatSystem.State
 			// 게임 오버 시에는 BattleEndState로의 전환만 허용
 			if (isGameOver && newState is not BattleEndState)
 			{
-				GameLogger.LogWarning("[CombatStateMachine] 게임 오버 상태입니다 - 상태 전환 차단", GameLogger.LogCategory.Combat);
+				if (enableDebugLogging)
+				{
+					GameLogger.LogDebug("[CombatStateMachine] 게임 오버 상태입니다 - 상태 전환 차단", GameLogger.LogCategory.Combat);
+				}
 				return;
 			}
 
@@ -400,6 +469,7 @@ namespace Game.CombatSystem.State
 
             // EnemyDefeatedState로 전환되었으면 적 사망 처리 플래그는 유지,
             // 그 외 상태로 전환될 때에는 리셋하여 다음 라운드에서 정상 동작하도록 함
+            // 단, SummonState나 SummonReturnState로 전환될 때는 소환/복귀 과정이므로 플래그를 리셋
             if (_currentState is not EnemyDefeatedState)
             {
                 isProcessingEnemyDeath = false;
@@ -425,7 +495,10 @@ namespace Game.CombatSystem.State
 			// 게임 오버 시에는 BattleEndState로의 전환만 허용
 			if (isGameOver && newState is not BattleEndState)
 			{
-				GameLogger.LogWarning("[CombatStateMachine] 게임 오버 상태입니다 - 상태 전환 차단", GameLogger.LogCategory.Combat);
+				if (enableDebugLogging)
+				{
+					GameLogger.LogDebug("[CombatStateMachine] 게임 오버 상태입니다 - 상태 전환 차단", GameLogger.LogCategory.Combat);
+				}
 				return;
 			}
 
@@ -455,13 +528,11 @@ namespace Game.CombatSystem.State
             // 이벤트 발생
             OnStateChanged?.Invoke(previousState, _currentState);
 
-            if (enableDebugLogging)
-            {
-                var prevName = previousState?.StateName ?? "None";
-                GameLogger.LogInfo(
-                    $"[CombatStateMachine] 상태 전환: {prevName} → {_currentState.StateName}",
-                    GameLogger.LogCategory.Combat);
-            }
+            // 소환 버그 검증을 위해 항상 상태 전환 로그 출력
+            var prevName = previousState?.StateName ?? "None";
+            GameLogger.LogInfo(
+                $"[CombatStateMachine] 상태 전환: {prevName} → {_currentState.StateName}",
+                GameLogger.LogCategory.Combat);
         }
 
         /// <summary>
@@ -473,7 +544,10 @@ namespace Game.CombatSystem.State
 			// 게임 오버 시에는 BattleEndState로의 전환만 허용
 			if (isGameOver && newState is not BattleEndState)
 			{
-				GameLogger.LogWarning("[CombatStateMachine] 게임 오버 상태입니다 - 상태 전환 차단", GameLogger.LogCategory.Combat);
+				if (enableDebugLogging)
+				{
+					GameLogger.LogDebug("[CombatStateMachine] 게임 오버 상태입니다 - 상태 전환 차단", GameLogger.LogCategory.Combat);
+				}
 				return;
 			}
 
@@ -485,9 +559,12 @@ namespace Game.CombatSystem.State
                 return;
             }
 
-            GameLogger.LogInfo(
-                $"[CombatStateMachine] 강제 상태 전환: {_currentState?.StateName ?? "None"} → {newState.StateName}",
-                GameLogger.LogCategory.Combat);
+            if (enableDebugLogging)
+            {
+                GameLogger.LogDebug(
+                    $"[CombatStateMachine] 강제 상태 전환: {_currentState?.StateName ?? "None"} → {newState.StateName}",
+                    GameLogger.LogCategory.Combat);
+            }
 
             var previousState = _currentState;
 
@@ -549,17 +626,18 @@ namespace Game.CombatSystem.State
         {
             if (_currentState != null)
             {
-                GameLogger.LogInfo("[CombatStateMachine] 전투 상태 리셋 시작", GameLogger.LogCategory.Combat);
+                if (enableDebugLogging)
+                {
+                    GameLogger.LogDebug("[CombatStateMachine] 전투 상태 리셋 시작", GameLogger.LogCategory.Combat);
+                }
                 
                 // 실행 중인 모든 코루틴 정리 (상태 전환 중 코루틴이 실행 중일 수 있음)
                 StopAllCoroutines();
-                GameLogger.LogInfo("[CombatStateMachine] 실행 중인 코루틴 정리 완료", GameLogger.LogCategory.Combat);
                 
                 // SlotMovementController 상태 리셋 (코루틴 중단으로 인한 상태 불일치 방지)
                 if (_context?.SlotMovement != null)
                 {
                     _context.SlotMovement.ResetSlotStates();
-                    GameLogger.LogInfo("[CombatStateMachine] SlotMovementController 상태 리셋 완료", GameLogger.LogCategory.Combat);
                 }
                 
                 // 현재 상태 종료
@@ -575,11 +653,26 @@ namespace Game.CombatSystem.State
                 isWaitingForDeathEffect = false;
                 isProcessingEnemyDeath = false;
                 
-                GameLogger.LogInfo("[CombatStateMachine] 전투 상태 리셋 완료", GameLogger.LogCategory.Combat);
+                if (enableDebugLogging)
+                {
+                    GameLogger.LogDebug("[CombatStateMachine] 전투 상태 리셋 완료", GameLogger.LogCategory.Combat);
+                }
             }
         }
 
         #endregion
+
+        /// <summary>
+        /// 적 사망 처리 플래그를 리셋합니다
+        /// EnemyDefeatedState에서 다음 상태로 전환될 때 호출됩니다
+        /// </summary>
+        public void ResetEnemyDeathProcessing()
+        {
+            if (isProcessingEnemyDeath)
+            {
+                isProcessingEnemyDeath = false;
+            }
+        }
 
         #region 상태 쿼리
 
@@ -659,9 +752,6 @@ namespace Game.CombatSystem.State
             // (SlotMovingState가 슬롯 이동 완료 후 자동으로 적 카드를 확인하고 실행함)
             if (_currentState is SlotMovingState)
             {
-                GameLogger.LogInfo(
-                    "[CombatStateMachine] 슬롯 이동 중 - 적 카드는 이동 완료 후 자동 실행됨",
-                    GameLogger.LogCategory.Combat);
                 return;
             }
 
@@ -672,49 +762,35 @@ namespace Game.CombatSystem.State
         }
 
         /// <summary>
-        /// 적이 사망했을 때 호출
+        /// 적이 사망했을 때 호출 (StageManager를 거치지 않고 직접 호출되는 경우)
         /// </summary>
         private void OnEnemyDeath()
         {
+            GameLogger.LogInfo($"[CombatStateMachine] OnEnemyDeath 호출 - 원본 적 사망 처리 시작", GameLogger.LogCategory.Combat);
+            
             // 중복 처리 방지: 사망 처리 진행 중이면 무시
             if (isProcessingEnemyDeath)
             {
+                GameLogger.LogWarning($"[CombatStateMachine] 이미 사망 처리 진행 중 - 중복 호출 무시", GameLogger.LogCategory.Combat);
                 return;
             }
 
             isProcessingEnemyDeath = true;
-            GameLogger.LogInfo(
-                "[CombatStateMachine] 적 사망 감지",
-                GameLogger.LogCategory.Combat);
+            GameLogger.LogInfo($"[CombatStateMachine] 사망 처리 플래그 설정 완료 - 치명타격 이펙트 대기 시작", GameLogger.LogCategory.Combat);
 
-            // 소환된 적인지 확인
-            var stageManager = FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
-            if (stageManager != null)
+            // 원본 적 사망: 치명타격 이펙트가 끝날 시간을 잠시 대기한 뒤 처치 상태로 전환
+            if (this != null)
             {
-                // 소환 플래그 또는 원본 적 데이터가 존재하면, 현재 적은 소환 체인에 속한 적으로 간주합니다.
-                bool isInSummonChain = stageManager.IsSummonedEnemyActive() ||
-                                       stageManager.GetOriginalEnemyData() != null;
-
-                if (isInSummonChain)
-                {
-                    GameLogger.LogInfo(
-                        "[CombatStateMachine] 소환 체인에 속한 적 사망 - EnemyDefeatedState로 전환하지 않음 (원본 적 복귀 처리)",
-                        GameLogger.LogCategory.Combat);
-                    return; // 소환된 적이 죽으면 StageManager에서 원본 적 복귀 처리
-                }
+                StartCoroutine(WaitForEnemyFatalHitEffectThenProceed());
             }
-
-			// 일반 적 사망: 치명타격 이펙트가 끝날 시간을 잠시 대기한 뒤 처치 상태로 전환
-			if (this != null)
-			{
-				StartCoroutine(WaitForEnemyFatalHitEffectThenProceed());
-			}
-			else
-			{
-				// 폴백: 코루틴 불가 시 즉시 전환
-				var enemyDefeatedState = new EnemyDefeatedState();
-				ChangeState(enemyDefeatedState);
-			}
+            else
+            {
+                GameLogger.LogWarning($"[CombatStateMachine] MonoBehaviour가 null - 즉시 EnemyDefeatedState로 전환", GameLogger.LogCategory.Combat);
+                
+                // 폴백: 코루틴 불가 시 즉시 전환
+                var enemyDefeatedState = new EnemyDefeatedState();
+                ChangeState(enemyDefeatedState);
+            }
         }
 
         /// <summary>
@@ -722,20 +798,16 @@ namespace Game.CombatSystem.State
         /// </summary>
         public void OnEnemyDeathDetected()
         {
-            GameLogger.LogInfo(
-                "[CombatStateMachine] StageManager로부터 적 사망 알림 수신",
-                GameLogger.LogCategory.Combat);
+            // 중복 처리 방지: 이미 사망 처리 중이면 무시
+            if (isProcessingEnemyDeath)
+            {
+                return;
+            }
 
             // EnemyDefeatedState가 아닐 때만 전환
             if (!(_currentState is EnemyDefeatedState))
             {
                 OnEnemyDeath();
-            }
-            else
-            {
-                GameLogger.LogInfo(
-                    "[CombatStateMachine] 이미 EnemyDefeatedState에 있음 - 전환 건너뜀",
-                    GameLogger.LogCategory.Combat);
             }
         }
 
@@ -744,25 +816,11 @@ namespace Game.CombatSystem.State
         /// </summary>
         public void OnNextEnemySpawned()
         {
-            GameLogger.LogInfo(
-                "[CombatStateMachine] StageManager로부터 다음 적 생성 완료 알림 수신",
-                GameLogger.LogCategory.Combat);
-
             // EnemyDefeatedState에서만 처리
             if (_currentState is EnemyDefeatedState enemyDefeatedState)
             {
-                GameLogger.LogInfo(
-                    "[CombatStateMachine] EnemyDefeatedState에서 다음 적 생성 완료 처리",
-                    GameLogger.LogCategory.Combat);
-                
                 // EnemyDefeatedState의 다음 적 확인 로직을 트리거
                 enemyDefeatedState.OnNextEnemyReady();
-            }
-            else
-            {
-                GameLogger.LogWarning(
-                    $"[CombatStateMachine] 다음 적 생성 완료 알림 - 현재 상태가 EnemyDefeatedState가 아님: {_currentState?.StateName ?? "None"}",
-                    GameLogger.LogCategory.Combat);
             }
         }
 
@@ -800,7 +858,10 @@ namespace Game.CombatSystem.State
 
             // 사망 이펙트 완료를 기다리는 플래그 설정
             isWaitingForDeathEffect = true;
-            GameLogger.LogInfo("[CombatStateMachine] 사망 이펙트 완료 대기 중...", GameLogger.LogCategory.Combat);
+            if (enableDebugLogging)
+            {
+                GameLogger.LogDebug("[CombatStateMachine] 사망 이펙트 완료 대기 중...", GameLogger.LogCategory.Combat);
+            }
 
 			// 공격(히트) 이펙트가 끝난 뒤 부활하도록 약간 대기 후 완료 이벤트를 발생시킵니다
 			// 외부에서 별도 완료 신호가 없으므로 설정값 기반의 안전한 지연을 둡니다
@@ -825,7 +886,10 @@ namespace Game.CombatSystem.State
             // 여전히 대기 중이면 사망 이펙트가 없는 것으로 간주하고 즉시 완료 처리
             if (isWaitingForDeathEffect)
             {
-                GameLogger.LogWarning("[CombatStateMachine] 사망 이펙트가 없거나 완료되지 않음 - 즉시 부활 처리 진행", GameLogger.LogCategory.Combat);
+                if (enableDebugLogging)
+                {
+                    GameLogger.LogDebug("[CombatStateMachine] 사망 이펙트가 없거나 완료되지 않음 - 즉시 부활 처리 진행", GameLogger.LogCategory.Combat);
+                }
                 CombatEvents.RaisePlayerDeathEffectComplete();
             }
         }
@@ -860,7 +924,10 @@ namespace Game.CombatSystem.State
 			// 아직 사망 이펙트 완료를 기다리고 있으면 완료 이벤트 발생
 			if (isWaitingForDeathEffect)
 			{
-				GameLogger.LogInfo("[CombatStateMachine] 치명타격 이펙트 대기 후 부활 처리 진행", GameLogger.LogCategory.Combat);
+				if (enableDebugLogging)
+				{
+					GameLogger.LogDebug("[CombatStateMachine] 치명타격 이펙트 대기 후 부활 처리 진행", GameLogger.LogCategory.Combat);
+				}
 				CombatEvents.RaisePlayerDeathEffectComplete();
 			}
 		}
@@ -870,19 +937,25 @@ namespace Game.CombatSystem.State
 		/// </summary>
 		private System.Collections.IEnumerator WaitForEnemyFatalHitEffectThenProceed()
 		{
+			GameLogger.LogInfo($"[CombatStateMachine] WaitForEnemyFatalHitEffectThenProceed 시작", GameLogger.LogCategory.Combat);
+			
 			// 현재 적 캐릭터 기준으로 남은 이펙트 시간을 추정
 			float dynamicRemaining = 0f;
 			var enemy = enemyManager != null ? enemyManager.GetCharacter() as MonoBehaviour : null;
 			if (enemy != null)
 			{
 				dynamicRemaining = ComputeApproxEffectRemainingTime(enemy.transform, enemyAfterFatalHitDelay);
+				GameLogger.LogInfo($"[CombatStateMachine] 이펙트 남은 시간 계산: {dynamicRemaining:F2}초", GameLogger.LogCategory.Combat);
 			}
 
 			float delay = Mathf.Max(0f, Mathf.Max(enemyAfterFatalHitDelay, dynamicRemaining));
 			if (delay > 0f)
 			{
+				GameLogger.LogInfo($"[CombatStateMachine] 치명타격 이펙트 대기: {delay:F2}초", GameLogger.LogCategory.Combat);
 				yield return new WaitForSeconds(delay);
 			}
+
+			GameLogger.LogInfo($"[CombatStateMachine] 치명타격 이펙트 대기 완료 - EnemyDefeatedState로 전환", GameLogger.LogCategory.Combat);
 
 			// 게임 오버 상태이면 더 이상 진행하지 않음
 			if (isGameOver)
@@ -959,7 +1032,10 @@ namespace Game.CombatSystem.State
             }
 
             isWaitingForDeathEffect = false;
-            GameLogger.LogInfo("[CombatStateMachine] 사망 이펙트 완료 - 부활 아이템 효과 발동", GameLogger.LogCategory.Combat);
+            if (enableDebugLogging)
+            {
+                GameLogger.LogDebug("[CombatStateMachine] 사망 이펙트 완료 - 부활 아이템 효과 발동", GameLogger.LogCategory.Combat);
+            }
 
             // 부활 아이템 효과 발동
             if (TryAutoRevive())
@@ -1011,7 +1087,10 @@ namespace Game.CombatSystem.State
             // 게임 오버 상태이면 부활 시도하지 않음
             if (isGameOver)
             {
-                GameLogger.LogWarning("[CombatStateMachine] 게임 오버 상태이므로 부활 시도하지 않음", GameLogger.LogCategory.Combat);
+                if (enableDebugLogging)
+                {
+                    GameLogger.LogDebug("[CombatStateMachine] 게임 오버 상태이므로 부활 시도하지 않음", GameLogger.LogCategory.Combat);
+                }
                 return false;
             }
 
@@ -1021,7 +1100,10 @@ namespace Game.CombatSystem.State
                 var itemService = FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
                 if (itemService == null)
                 {
-                    GameLogger.LogWarning("[CombatStateMachine] ItemService를 찾을 수 없습니다", GameLogger.LogCategory.Combat);
+                    if (enableDebugLogging)
+                    {
+                        GameLogger.LogDebug("[CombatStateMachine] ItemService를 찾을 수 없습니다", GameLogger.LogCategory.Combat);
+                    }
                     return false;
                 }
 
@@ -1029,7 +1111,10 @@ namespace Game.CombatSystem.State
                 var playerCharacter = playerManager?.GetCharacter();
                 if (playerCharacter == null)
                 {
-                    GameLogger.LogWarning("[CombatStateMachine] 플레이어 캐릭터를 찾을 수 없습니다", GameLogger.LogCategory.Combat);
+                    if (enableDebugLogging)
+                    {
+                        GameLogger.LogDebug("[CombatStateMachine] 플레이어 캐릭터를 찾을 수 없습니다", GameLogger.LogCategory.Combat);
+                    }
                     return false;
                 }
 
@@ -1037,23 +1122,35 @@ namespace Game.CombatSystem.State
                 var reviveItemSlot = FindReviveItemSlot(itemService);
                 if (reviveItemSlot == -1)
                 {
-                    GameLogger.LogInfo("[CombatStateMachine] 부활 아이템이 없습니다", GameLogger.LogCategory.Combat);
+                    if (enableDebugLogging)
+                    {
+                        GameLogger.LogDebug("[CombatStateMachine] 부활 아이템이 없습니다", GameLogger.LogCategory.Combat);
+                    }
                     return false;
                 }
 
-                GameLogger.LogInfo($"[CombatStateMachine] 부활 아이템 발견: 슬롯 {reviveItemSlot}", GameLogger.LogCategory.Combat);
+                if (enableDebugLogging)
+                {
+                    GameLogger.LogDebug($"[CombatStateMachine] 부활 아이템 발견: 슬롯 {reviveItemSlot}", GameLogger.LogCategory.Combat);
+                }
 
                 // 부활 아이템 사용 (사용 후 자동으로 슬롯에서 제거됨)
                 bool success = itemService.UseActiveItem(reviveItemSlot);
                 
                 if (success)
                 {
-                    GameLogger.LogInfo("[CombatStateMachine] 부활 아이템 사용 성공 - 한 번만 부활됩니다", GameLogger.LogCategory.Combat);
+                    if (enableDebugLogging)
+                    {
+                        GameLogger.LogDebug("[CombatStateMachine] 부활 아이템 사용 성공 - 한 번만 부활됩니다", GameLogger.LogCategory.Combat);
+                    }
                     return true;
                 }
                 else
                 {
-                    GameLogger.LogWarning("[CombatStateMachine] 부활 아이템 사용 실패", GameLogger.LogCategory.Combat);
+                    if (enableDebugLogging)
+                    {
+                        GameLogger.LogDebug("[CombatStateMachine] 부활 아이템 사용 실패", GameLogger.LogCategory.Combat);
+                    }
                     return false;
                 }
             }
@@ -1142,7 +1239,10 @@ namespace Game.CombatSystem.State
             if (playerCharacter != null && !playerCharacter.IsDead())
             {
                 hasUsedReviveThisDeath = false; // 플래그 리셋 (다음 사망에서 다시 부활 가능)
-                GameLogger.LogInfo("[CombatStateMachine] 부활 플래그 리셋 완료 - 다음 사망에서도 부활 가능", GameLogger.LogCategory.Combat);
+                if (enableDebugLogging)
+                {
+                    GameLogger.LogDebug("[CombatStateMachine] 부활 플래그 리셋 완료 - 다음 사망에서도 부활 가능", GameLogger.LogCategory.Combat);
+                }
             }
         }
 

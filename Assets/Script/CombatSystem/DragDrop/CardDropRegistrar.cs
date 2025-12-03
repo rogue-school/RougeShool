@@ -22,19 +22,19 @@ namespace Game.CombatSystem.DragDrop
 
             CardSlotHelper.AttachCardToSlot(ui, (MonoBehaviour)slot);
 
-            GameLogger.LogInfo($"[Registrar] 카드 등록 완료: {card.CardDefinition?.CardName ?? "Unknown"} → {execSlot}", GameLogger.LogCategory.Combat);
+            // 카드 등록 완료
         }
 
         public void RegisterPlayerCard(ISkillCard card)
         {
             playerCard = card;
-            GameLogger.LogInfo($"[Registrar] 플레이어 카드 등록: {card.CardDefinition?.CardName ?? "Unknown"}", GameLogger.LogCategory.Combat);
+            // 플레이어 카드 등록 완료
         }
 
         public void RegisterEnemyCard(ISkillCard card)
         {
             enemyCard = card;
-            GameLogger.LogInfo($"[Registrar] 적 카드 등록: {card.CardDefinition?.CardName ?? "Unknown"}", GameLogger.LogCategory.Combat);
+            // 적 카드 등록 완료
         }
 
         public (ISkillCard player, ISkillCard enemy) GetRegisteredCards()

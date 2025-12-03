@@ -484,7 +484,6 @@ namespace Game.CharacterSystem.UI
             // 딕셔너리에 저장
             activeBuffDebuffIcons[effectId] = iconObj;
 
-            GameLogger.LogInfo($"[HPBarController] {(isBuff ? "버프" : "디버프")} 아이콘 추가: {effectId}", GameLogger.LogCategory.Character);
         }
 
         /// <summary>
@@ -507,7 +506,6 @@ namespace Game.CharacterSystem.UI
                 }
 
                 activeBuffDebuffIcons.Remove(effectId);
-                GameLogger.LogInfo($"[HPBarController] 버프/디버프 아이콘 제거: {effectId}", GameLogger.LogCategory.Character);
             }
         }
 
@@ -532,7 +530,6 @@ namespace Game.CharacterSystem.UI
                 }
             }
             activeBuffDebuffIcons.Clear();
-            GameLogger.LogInfo("[HPBarController] 모든 버프/디버프 아이콘 제거", GameLogger.LogCategory.Character);
         }
 
         /// <summary>

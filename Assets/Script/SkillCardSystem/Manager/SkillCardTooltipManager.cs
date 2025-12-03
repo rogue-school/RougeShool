@@ -137,8 +137,6 @@ namespace Game.SkillCardSystem.Manager
         /// </summary>
         private System.Collections.IEnumerator InitializeTooltipSystem()
         {
-            GameLogger.LogInfo("[SkillCardTooltipManager] 툴팁 시스템 초기화 시작 - 이펙트 상태 확인", GameLogger.LogCategory.UI);
-            
             if (tooltipPrefab == null)
             {
                 GameLogger.LogError("[SkillCardTooltipManager] 툴팁 프리팹을 찾을 수 없습니다. Resources 폴더에 SkillCardTooltip 프리팹을 배치해주세요.", GameLogger.LogCategory.Error);
@@ -146,12 +144,7 @@ namespace Game.SkillCardSystem.Manager
             }
 
             // TooltipLayer는 카드의 실제 캔버스 기준으로 런타임에 보장합니다
-
             // 인스턴스는 첫 표시 시점에 생성 (대상 캔버스 보장)
-            GameLogger.LogInfo("[SkillCardTooltipManager] 툴팁 인스턴스는 첫 표시 시 생성", GameLogger.LogCategory.UI);
-
-			// 초기화 완료 확인 (툴팁은 첫 사용 시 생성)
-			GameLogger.LogInfo("[SkillCardTooltipManager] 툴팁 시스템 초기화 완료", GameLogger.LogCategory.UI);
 
             yield return null;
         }
@@ -267,7 +260,6 @@ namespace Game.SkillCardSystem.Manager
             // 초기화가 완료되지 않았다면 즉시 초기화 시도 후 첫 호버를 기억하여 바로 표시
             if (!IsInitialized)
             {
-                GameLogger.LogInfo("[툴팁] 초기화 안됨 - 즉시 초기화 시도 (첫 호버 카드 보존)", GameLogger.LogCategory.UI);
                 pendingCard = card;
                 pendingShow = true;
                 StartCoroutine(ForceInitialize());
@@ -342,7 +334,6 @@ namespace Game.SkillCardSystem.Manager
             if (itemTooltipManager != null)
             {
                 itemTooltipManager.ForceHideTooltip();
-                GameLogger.LogInfo("[SkillCardTooltipManager] 다른 툴팁 숨김 (ItemTooltipManager)", GameLogger.LogCategory.UI);
             }
 
             // 버프/디버프 툴팁 숨김
@@ -350,7 +341,6 @@ namespace Game.SkillCardSystem.Manager
             if (buffDebuffTooltipManager != null)
             {
                 buffDebuffTooltipManager.ForceHideTooltip();
-                GameLogger.LogInfo("[SkillCardTooltipManager] 다른 툴팁 숨김 (BuffDebuffTooltipManager)", GameLogger.LogCategory.UI);
             }
         }
 
@@ -360,11 +350,6 @@ namespace Game.SkillCardSystem.Manager
         /// </summary>
         private System.Collections.IEnumerator ForceInitialize()
         {
-            GameLogger.LogInfo("[SkillCardTooltipManager] 강제 초기화 시작 - 이펙트 보호 모드", GameLogger.LogCategory.UI);
-            
-            // 이펙트 상태 확인 로그 추가
-            GameLogger.LogInfo("[SkillCardTooltipManager] 강제 초기화 전 이펙트 상태 확인", GameLogger.LogCategory.UI);
-            
 			// 기존 초기화 로직 실행 (이펙트에 영향 주지 않도록)
             yield return InitializeTooltipSystem();
 			
@@ -372,8 +357,6 @@ namespace Game.SkillCardSystem.Manager
 			if (tooltipPrefab != null)
             {
                 IsInitialized = true;
-                GameLogger.LogInfo($"[SkillCardTooltipManager] 강제 초기화 완료 - IsInitialized={IsInitialized}, currentTooltip={currentTooltip != null}", GameLogger.LogCategory.UI);
-                GameLogger.LogInfo("[SkillCardTooltipManager] 강제 초기화 후 이펙트 상태 확인", GameLogger.LogCategory.UI);
 
                 // 첫 호버 즉시 표시 처리
                 if (pendingShow && pendingCard != null)
@@ -548,8 +531,6 @@ namespace Game.SkillCardSystem.Manager
         /// </summary>
         public void ShowTooltip()
         {
-            GameLogger.LogInfo($"[SkillCardTooltipManager] ShowTooltip 호출됨 - currentTooltip: {currentTooltip != null}, hoveredCard: {hoveredCard?.GetCardName()}", GameLogger.LogCategory.UI);
-            
             // 다른 툴팁 매니저의 툴팁 숨김 (중복 방지)
             HideOtherTooltips();
             
@@ -598,7 +579,6 @@ namespace Game.SkillCardSystem.Manager
                 if (cardPosition != Vector2.zero)
                 {
                     currentTooltip.ShowTooltip(hoveredCard, cardPosition, currentTargetRect);
-                    GameLogger.LogInfo($"툴팁 표시: {hoveredCard.GetCardName()} at {cardPosition}", GameLogger.LogCategory.UI);
                 }
                 else
                 {
@@ -616,14 +596,11 @@ namespace Game.SkillCardSystem.Manager
         /// </summary>
         public void HideTooltip()
         {
-            GameLogger.LogInfo($"[SkillCardTooltipManager] HideTooltip 호출됨 - currentTooltip: {currentTooltip != null}", GameLogger.LogCategory.UI);
-            
             if (currentTooltip == null) return;
 
             try
             {
                 currentTooltip.HideTooltip();
-                GameLogger.LogInfo("툴팁 숨김 완료", GameLogger.LogCategory.UI);
             }
             catch (System.Exception ex)
             {

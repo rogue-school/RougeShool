@@ -184,13 +184,18 @@ namespace Game.StageSystem.UI
 
             int currentEnemyIndex = GetCurrentEnemyIndex();
 
+            // UI 인덱스를 안전 범위로 클램프
+            int maxIndexByStage = Mathf.Max(0, currentStage.enemies.Count - 1);
+            int maxIndexByUI = Mathf.Max(0, indexPositions.Count - 1);
+            int safeIndex = Mathf.Clamp(currentEnemyIndex, 0, Mathf.Min(maxIndexByStage, maxIndexByUI));
+
             if (enableDebugLogging)
             {
-                GameLogger.LogInfo($"[StageEnemyIndexDisplay] 표시 새로고침 - 현재 인덱스: {currentEnemyIndex + 1} (0-based: {currentEnemyIndex})", GameLogger.LogCategory.UI);
+                GameLogger.LogInfo($"[StageEnemyIndexDisplay] 표시 새로고침 - 현재 인덱스: {currentEnemyIndex + 1} (0-based: {currentEnemyIndex}), 사용 인덱스: {safeIndex + 1}", GameLogger.LogCategory.UI);
             }
 
             // 타겟 마커를 현재 인덱스 위치로 이동
-            UpdateTargetMarkerPosition(currentEnemyIndex);
+            UpdateTargetMarkerPosition(safeIndex);
         }
 
         /// <summary>

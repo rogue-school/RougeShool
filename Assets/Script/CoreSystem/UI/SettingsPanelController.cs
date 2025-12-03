@@ -48,7 +48,6 @@ namespace Game.CoreSystem.UI
             
             if (enableDebugLogging)
             {
-                GameLogger.LogInfo($"매니저 찾기 완료 - SaveManager: {saveManager != null}, SceneTransitionManager: {sceneTransitionManager != null}, SettingsManager: {settingsManager != null}", GameLogger.LogCategory.UI);
             }
         }
         
@@ -75,7 +74,6 @@ namespace Game.CoreSystem.UI
             
             if (enableDebugLogging)
             {
-                GameLogger.LogInfo("시스템 설정창 UI 초기화 완료", GameLogger.LogCategory.UI);
             }
         }
         
@@ -98,9 +96,7 @@ namespace Game.CoreSystem.UI
             {
                 if (enableDebugLogging)
                 {
-                    GameLogger.LogInfo("이어하기 - 창 닫기", GameLogger.LogCategory.UI);
                 }
-                
                 // 설정창 닫기 (게임 계속 진행)
                 settingsManager.CloseSettings();
             }
@@ -117,8 +113,6 @@ namespace Game.CoreSystem.UI
         {
             try
             {
-                GameLogger.LogInfo("다시하기 시작 - 전체 게임 상태 초기화", GameLogger.LogCategory.UI);
-                
                 // 다시하기 플래그 설정 (SaveProgressBeforeSceneTransition에서 완전 종료 처리)
                 PlayerPrefs.SetInt("RESTART_GAME_REQUESTED", 1);
                 PlayerPrefs.Save();
@@ -134,23 +128,21 @@ namespace Game.CoreSystem.UI
                     {
                         gameSessionStatistics.EndSession(true); // 완전 종료
                         var sessionData = gameSessionStatistics.GetCurrentSessionData();
-                        if (sessionData != null)
-                        {
-                            await statisticsManager.SaveSessionStatistics(sessionData);
-                            gameSessionStatistics.MarkAsSaved();
-                            GameLogger.LogInfo("다시하기 - 통계 세션 완전 종료 및 저장 완료", GameLogger.LogCategory.Save);
-                        }
+                            if (sessionData != null)
+                            {
+                                await statisticsManager.SaveSessionStatistics(sessionData);
+                                gameSessionStatistics.MarkAsSaved();
+                            }
                     }
                     else
                     {
                         // 세션이 이미 종료되었어도 데이터가 있으면 저장 시도 (게임 승리와 동일)
                         var sessionData = gameSessionStatistics.GetCurrentSessionData();
-                        if (sessionData != null)
-                        {
-                            await statisticsManager.SaveSessionStatistics(sessionData);
-                            gameSessionStatistics.MarkAsSaved();
-                            GameLogger.LogInfo("다시하기 - 세션이 이미 종료되었지만, 기존 세션 데이터를 저장했습니다. (완전 종료)", GameLogger.LogCategory.Save);
-                        }
+                            if (sessionData != null)
+                            {
+                                await statisticsManager.SaveSessionStatistics(sessionData);
+                                gameSessionStatistics.MarkAsSaved();
+                            }
                     }
                 }
                 else
@@ -172,7 +164,6 @@ namespace Game.CoreSystem.UI
                 if (saveManager != null)
                 {
                     saveManager.InitializeNewGame();
-                    GameLogger.LogInfo("다시하기 - 게임 상태 초기화 완료", GameLogger.LogCategory.Save);
                 }
                 
                 // 새게임 플래그 설정 (스테이지에서 추가 초기화 수행)
@@ -185,7 +176,6 @@ namespace Game.CoreSystem.UI
                 // 메인 메뉴로 이동
                 await sceneTransitionManager.TransitionToMainScene();
                 
-                GameLogger.LogInfo("다시하기 완료", GameLogger.LogCategory.UI);
                 settingsManager.CloseSettings();
             }
             catch (System.Exception ex)
@@ -201,8 +191,6 @@ namespace Game.CoreSystem.UI
         {
             try
             {
-                GameLogger.LogInfo("메인 메뉴로 이동", GameLogger.LogCategory.UI);
-                
                 await sceneTransitionManager.TransitionToMainScene();
                 settingsManager.CloseSettings();
             }
@@ -219,8 +207,6 @@ namespace Game.CoreSystem.UI
         {
             try
             {
-                GameLogger.LogInfo("게임 종료", GameLogger.LogCategory.UI);
-                
                 // 게임 종료
                 Application.Quit();
             }

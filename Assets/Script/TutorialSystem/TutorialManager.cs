@@ -50,7 +50,6 @@ namespace Game.TutorialSystem
             // 정책 변경: 한 번만 보는 튜토리얼이 아님. 메인 메뉴의 스킵 토글만 반영
             bool skip = PlayerPrefs.GetInt("TUTORIAL_SKIP", 0) == 1;
             _shouldRun = !skip;
-            GameLogger.LogInfo($"[TutorialManager] Gate: SHOULD_RUN={_shouldRun} (by SKIP only), SKIP={PlayerPrefs.GetInt("TUTORIAL_SKIP",0)}", GameLogger.LogCategory.UI);
         }
 
         private void Start()
@@ -60,7 +59,6 @@ namespace Game.TutorialSystem
 
             if (!_shouldRun)
             {
-                GameLogger.LogInfo("[TutorialManager] 튜토리얼 미실행 – 게이트에 의해 대기 상태", GameLogger.LogCategory.UI);
                 // 게이트가 열리면(ForceShow 등) Player 턴 이벤트에서 시작됨
                 return;
             }
@@ -84,7 +82,6 @@ namespace Game.TutorialSystem
             {
                 _turnController.OnTurnChanged += HandleTurnChanged;
                 _turnController.OnTurnCountChanged += HandleTurnCountChanged;
-                GameLogger.LogInfo("[TutorialManager] ITurnController 이벤트 구독 완료", GameLogger.LogCategory.UI);
             }
 
             if (_itemService != null)
@@ -143,7 +140,6 @@ namespace Game.TutorialSystem
             if (_overlay == null) PrepareOverlay();
             _isRunning = true;
             _startedOnce = true;
-            GameLogger.LogInfo("[TutorialManager] 튜토리얼 실행 시작", GameLogger.LogCategory.UI);
             // 1~2단계: 페이지(수동 Next)
             if (_overlay != null)
             {
@@ -161,7 +157,6 @@ namespace Game.TutorialSystem
             if (!_isRunning) return;
             _isRunning = false;
             // 한 번만 보는 정책이 아니므로 완료 후 플래그 저장하지 않음
-            GameLogger.LogInfo("[TutorialManager] 튜토리얼 완료", GameLogger.LogCategory.UI);
         }
 
         private void OnOverlayCompleted()

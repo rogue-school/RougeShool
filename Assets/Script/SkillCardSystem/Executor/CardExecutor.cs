@@ -80,8 +80,6 @@ namespace Game.SkillCardSystem.Executor
                 int power = card.GetEffectPower(effect);
                 var command = commandFactory.Create(effect, power);
                 command?.Execute(context, turnManager);
-
-                GameLogger.LogInfo($"[CardExecutor] {card.GetCardName()} → {effect.GetEffectName()}, power: {power}", GameLogger.LogCategory.SkillCard);
             }
 
             // 효과 후 카드 사운드 재생

@@ -83,7 +83,6 @@ namespace Game.CombatSystem.UI
                 CardSlotHelper.AttachCardToSlot(currentCardUI, this);
 
                 // 생성 애니메이션 건너뛰기 (AnimationSystem 제거로 인해 임시 비활성화)
-                GameLogger.LogInfo($"카드 생성 애니메이션을 건너뜁니다: {card.GetCardName()}", GameLogger.LogCategory.SkillCard);
 
                 // 복귀 기준 위치 명시
                 var dragHandler = currentCardUI.GetComponent<CardDragHandler>();

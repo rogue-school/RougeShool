@@ -153,8 +153,6 @@ namespace Game.UISystem
         
         private void Start()
         {
-            GameLogger.LogInfo("[MainMenuController] 초기화 시작", GameLogger.LogCategory.UI);
-            
             InitializeUI();
             InitializeCanvasGroups();
             ValidateInspectorBindings();
@@ -166,11 +164,6 @@ namespace Game.UISystem
             
             // 초기 애니메이션
             PlayInitialAnimation();
-            
-            // DI 주입 상태 확인
-            GameLogger.LogInfo($"[MainMenuController] DI 주입 상태 - SceneTransitionManager: {(sceneTransitionManager != null ? "성공" : "실패")}", GameLogger.LogCategory.UI);
-            
-            GameLogger.LogInfo("[MainMenuController] 초기화 완료", GameLogger.LogCategory.UI);
         }
         
         /// <summary>
@@ -264,15 +257,14 @@ namespace Game.UISystem
                     for (int i = 0; i < characterCardContainer.childCount; i++)
                     {
                         var child = characterCardContainer.GetChild(i);
-                        if (child != null && child.name.Contains(buttonName.Replace("CharacterCard_", "")))
-                        {
-                            button = child.GetComponent<Button>();
-                            if (button != null)
-                            {
-                                GameLogger.LogInfo($"[MainMenuController] 버튼을 컨테이너에서 찾았습니다: {child.name}", GameLogger.LogCategory.UI);
-                                break;
-                            }
-                        }
+                                if (child != null && child.name.Contains(buttonName.Replace("CharacterCard_", "")))
+                                {
+                                    button = child.GetComponent<Button>();
+                                    if (button != null)
+                                    {
+                                        break;
+                                    }
+                                }
                     }
                 }
                 
@@ -280,14 +272,10 @@ namespace Game.UISystem
                 if (button == null && !string.IsNullOrEmpty(buttonName))
                 {
                     var foundObj = GameObject.Find(buttonName);
-                    if (foundObj != null)
-                    {
-                        button = foundObj.GetComponent<Button>();
-                        if (button != null)
+                        if (foundObj != null)
                         {
-                            GameLogger.LogInfo($"[MainMenuController] 버튼을 Find로 찾았습니다: {buttonName}", GameLogger.LogCategory.UI);
+                            button = foundObj.GetComponent<Button>();
                         }
-                    }
                 }
                 
                 // 방법 3: characterCardContainer의 인덱스로 찾기 (지팡이는 3번째)
@@ -301,7 +289,6 @@ namespace Game.UISystem
                             button = staffChild.GetComponent<Button>();
                             if (button != null)
                             {
-                                GameLogger.LogInfo($"[MainMenuController] 버튼을 인덱스로 찾았습니다: {staffChild.name}", GameLogger.LogCategory.UI);
                             }
                         }
                     }
@@ -318,17 +305,12 @@ namespace Game.UISystem
                 return; // 선택적 기능
             }
             
-            GameLogger.LogInfo($"[MainMenuController] 버튼 바인딩 완료: {button.name}, 캐릭터: {(gameCharacter != null ? gameCharacter.DisplayName : "null")}", GameLogger.LogCategory.UI);
-            
             button.onClick.RemoveAllListeners();
             button.onClick.AddListener(() =>
             {
-                GameLogger.LogInfo($"[MainMenuController] 버튼 클릭: {button.name}", GameLogger.LogCategory.UI);
-                
                 if (gameCharacter == null)
                 {
                     ShowUpcomingUpdateMessage();
-                    GameLogger.LogInfo("[MainMenuController] 데이터가 존재하지 않는 캐릭터를 선택하려고 시도했습니다", GameLogger.LogCategory.UI);
                     return;
                 }
                 
@@ -414,8 +396,6 @@ namespace Game.UISystem
                 GameLogger.LogWarning("[MainMenuController] 캐릭터 데이터를 찾을 수 없습니다!", GameLogger.LogCategory.Error);
                 return;
             }
-            
-            GameLogger.LogInfo($"[MainMenuController] {availableCharacters.Length}개의 캐릭터 데이터 로드 완료", GameLogger.LogCategory.UI);
         }
         
         /// <summary>
@@ -443,10 +423,8 @@ namespace Game.UISystem
             }
             characterCards.Clear();
 
-            {
-                // 프리팹이 없을 때: 컨테이너의 기존 자식들을 활용하여 이벤트 바인딩 및 데이터 반영
-                GameLogger.LogInfo("[MainMenuController] 카드 프리팹이 비어 있어 컨테이너 자식 오브젝트를 활용합니다", GameLogger.LogCategory.UI);
-
+                {
+                    // 프리팹이 없을 때: 컨테이너의 기존 자식들을 활용하여 이벤트 바인딩 및 데이터 반영
                 int childCount = characterCardContainer.childCount;
                 if (childCount == 0)
                 {
@@ -823,10 +801,10 @@ namespace Game.UISystem
             GameLogger.LogInfo($"[MainMenuController] 외부에서 캐릭터 선택: {selectedCharacter.DisplayName}", GameLogger.LogCategory.UI);
 
             // 캐릭터 선택 패널 숨기고 게임 시작 패널로 전환
-            if (characterSelectionPanel != null)
-            {
-                characterSelectionPanel.SetActive(false);
-            }
+                if (characterSelectionPanel != null)
+                {
+                    characterSelectionPanel.SetActive(false);
+                }
             UpdateSelectedCharacterInfo();
             ShowGameStartPanel();
         }

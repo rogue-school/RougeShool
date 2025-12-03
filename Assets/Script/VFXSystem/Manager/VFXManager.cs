@@ -47,7 +47,6 @@ namespace Game.VFXSystem.Manager
 
             if (enableDebugLogging)
             {
-                GameLogger.LogInfo("VFXManager 초기화 완료 (간단 모드)", GameLogger.LogCategory.Combat);
             }
         }
 
@@ -79,11 +78,6 @@ namespace Game.VFXSystem.Manager
                 if ((currentMask & effectsLayerMask) == 0)
                 {
                     mainCamera.cullingMask = currentMask | effectsLayerMask;
-                    GameLogger.LogInfo($"[VFXManager] {mainCamera.name}에 Effects 레이어 추가: {mainCamera.cullingMask}", GameLogger.LogCategory.Combat);
-                }
-                else
-                {
-                    GameLogger.LogInfo($"[VFXManager] {mainCamera.name}가 이미 Effects 레이어를 렌더링 중: {mainCamera.cullingMask}", GameLogger.LogCategory.Combat);
                 }
             }
             else
@@ -121,11 +115,6 @@ namespace Game.VFXSystem.Manager
                     textComponent.text = damageAmount.ToString();
                 }
 
-                if (enableDebugLogging)
-                {
-                    GameLogger.LogInfo($"데미지 텍스트 표시: {damageAmount}", GameLogger.LogCategory.Combat);
-                }
-
                 // 자동 반환 (애니메이션 완료 후)
                 StartCoroutine(ReturnDamageTextAfterDelay(damageText, 1.5f));
             }
@@ -152,10 +141,8 @@ namespace Game.VFXSystem.Manager
         /// <param name="position">재생 위치</param>
         /// <param name="rotation">회전 (선택적)</param>
         /// <param name="parent">부모 Transform (필수)</param>
-        public GameObject PlayEffect(GameObject effectPrefab, Vector3 position, Quaternion? rotation = null, Transform parent = null)
+            public GameObject PlayEffect(GameObject effectPrefab, Vector3 position, Quaternion? rotation = null, Transform parent = null)
         {
-            GameLogger.LogInfo($"[VFXManager] 이펙트 재생: {effectPrefab?.name ?? "null"}, 위치: {position}", GameLogger.LogCategory.Combat);
-            
             if (effectPrefab == null)
             {
                 GameLogger.LogWarning("[VFXManager] 이펙트 프리팹이 null입니다.", GameLogger.LogCategory.Combat);
@@ -177,7 +164,6 @@ namespace Game.VFXSystem.Manager
             {
                 effect.layer = effectsLayer;
                 SetLayerRecursively(effect, effectsLayer);
-                GameLogger.LogInfo($"[VFXManager] 이펙트 레이어를 Effects로 설정: {effectsLayer}", GameLogger.LogCategory.Combat);
             }
 
             // 부모 설정 (월드 위치 유지)
@@ -190,8 +176,6 @@ namespace Game.VFXSystem.Manager
                 GameLogger.LogWarning($"[VFXManager] 이펙트 위치 보정: {effect.transform.position} → {position}", GameLogger.LogCategory.Combat);
             }
             
-            GameLogger.LogInfo($"[VFXManager] 이펙트 생성 완료: {effect.name}, 위치: {effect.transform.position}, 부모: {parent.name}", GameLogger.LogCategory.Combat);
-
             // 파티클 시스템 재생
             var particleSystems = effect.GetComponentsInChildren<ParticleSystem>();
             foreach (var ps in particleSystems)
@@ -231,9 +215,6 @@ namespace Game.VFXSystem.Manager
 
             // 캐릭터의 시각적 중심 위치 계산
             Vector3 centerPosition = GetCharacterVisualCenter(characterTransform);
-            
-            GameLogger.LogInfo($"[VFXManager] 캐릭터 중심 이펙트 재생: {effectPrefab.name}, 캐릭터: {characterTransform.name}, 중심 위치: {centerPosition}", GameLogger.LogCategory.Combat);
-
             // 이펙트를 감싸는 부모 GameObject 생성
             GameObject effectParent = new GameObject($"{effectPrefab.name}_Parent");
             
@@ -265,19 +246,13 @@ namespace Game.VFXSystem.Manager
                 effect.transform.localRotation = rotation.Value;
             }
             
-            // 위치 확인 및 로그
-            GameLogger.LogInfo($"[VFXManager] 이펙트 생성 확인 - 부모 위치: {effectParent.transform.position}, 이펙트 월드 위치: {effect.transform.position}, 이펙트 로컬 위치: {effect.transform.localPosition}", GameLogger.LogCategory.Combat);
-            
             // 이펙트 레이어를 Effects로 설정
             int effectsLayer = LayerMask.NameToLayer("Effects");
             if (effectsLayer != -1)
             {
                 effect.layer = effectsLayer;
                 SetLayerRecursively(effect, effectsLayer);
-                GameLogger.LogInfo($"[VFXManager] 이펙트 레이어를 Effects로 설정: {effectsLayer}", GameLogger.LogCategory.Combat);
             }
-            
-            GameLogger.LogInfo($"[VFXManager] 캐릭터 중심 이펙트 생성 완료: {effect.name}, 부모: {effectParent.name}, 위치: {effect.transform.position}", GameLogger.LogCategory.Combat);
 
             // 파티클 시스템 재생
             var particleSystems = effect.GetComponentsInChildren<ParticleSystem>();
@@ -316,7 +291,6 @@ namespace Game.VFXSystem.Manager
             }
 
             Vector3 position = targetTransform.position;
-            GameLogger.LogInfo($"[VFXManager] Transform 위치 이펙트 재생: {effectPrefab.name}, 대상: {targetTransform.name}, 위치: {position}", GameLogger.LogCategory.Combat);
             
             // 이펙트를 감싸는 부모 GameObject 생성
             GameObject effectParent = new GameObject($"{effectPrefab.name}_Parent");
@@ -430,8 +404,6 @@ namespace Game.VFXSystem.Manager
 
             // 부모 RectTransform의 중심 위치 계산
             Vector3 centerPosition = GetRectTransformCenterWorld(parentRectTransform);
-            
-            GameLogger.LogInfo($"[VFXManager] RectTransform 중심 이펙트 재생: {effectPrefab.name}, 부모: {parentRectTransform.name}, 중심 위치: {centerPosition}", GameLogger.LogCategory.Combat);
 
             // 이펙트를 감싸는 부모 GameObject 생성
             GameObject effectParent = new GameObject($"{effectPrefab.name}_Parent");
@@ -467,10 +439,7 @@ namespace Game.VFXSystem.Manager
             {
                 effect.layer = effectsLayer;
                 SetLayerRecursively(effect, effectsLayer);
-                GameLogger.LogInfo($"[VFXManager] 이펙트 레이어를 Effects로 설정: {effectsLayer}", GameLogger.LogCategory.Combat);
             }
-            
-            GameLogger.LogInfo($"[VFXManager] RectTransform 중심 이펙트 생성 완료: {effect.name}, 부모: {effectParent.name}, 위치: {effect.transform.position}", GameLogger.LogCategory.Combat);
 
             // 파티클 시스템 재생
             var particleSystems = effect.GetComponentsInChildren<ParticleSystem>();
@@ -497,7 +466,6 @@ namespace Game.VFXSystem.Manager
             
             if (effect != null)
             {
-                GameLogger.LogInfo($"[VFXManager] 이펙트 자동 제거: {effect.name}", GameLogger.LogCategory.Combat);
                 Destroy(effect);
             }
         }
@@ -529,7 +497,6 @@ namespace Game.VFXSystem.Manager
             var explicitAnchor = FindExplicitVfxAnchor(characterTransform);
             if (explicitAnchor != null)
             {
-                GameLogger.LogInfo($"[VFXManager] 명시적 VFX 앵커 사용: {explicitAnchor.name}", GameLogger.LogCategory.Combat);
                 return explicitAnchor.position;
             }
 
@@ -538,7 +505,6 @@ namespace Game.VFXSystem.Manager
             if (portraitImage != null && portraitImage.rectTransform != null)
             {
                 Vector3 centerPos = GetRectTransformCenterWorld(portraitImage.rectTransform);
-                GameLogger.LogInfo($"[VFXManager] Portrait Image 중심 사용: {centerPos}", GameLogger.LogCategory.Combat);
                 return centerPos;
             }
 
@@ -547,7 +513,6 @@ namespace Game.VFXSystem.Manager
             if (anyRect != null)
             {
                 Vector3 centerPos = GetRectTransformCenterWorld(anyRect);
-                GameLogger.LogInfo($"[VFXManager] RectTransform 중심 사용: {centerPos}", GameLogger.LogCategory.Combat);
                 return centerPos;
             }
 
@@ -556,12 +521,10 @@ namespace Game.VFXSystem.Manager
             if (sprite != null)
             {
                 Vector3 centerPos = sprite.bounds.center;
-                GameLogger.LogInfo($"[VFXManager] SpriteRenderer 중심 사용: {centerPos}", GameLogger.LogCategory.Combat);
                 return centerPos;
             }
 
             // 5) 최종 폴백: Transform.position
-            GameLogger.LogInfo($"[VFXManager] Transform.position 폴백 사용: {characterTransform.position}", GameLogger.LogCategory.Combat);
             return characterTransform.position;
         }
 
@@ -577,7 +540,6 @@ namespace Game.VFXSystem.Manager
             var anchorPoint = root.GetComponentInChildren<VFXAnchorPoint>(true);
             if (anchorPoint != null)
             {
-                GameLogger.LogInfo($"[VFXManager] VFXAnchorPoint 컴포넌트 사용: {anchorPoint.name}", GameLogger.LogCategory.Combat);
                 return anchorPoint.transform;
             }
 
@@ -625,7 +587,6 @@ namespace Game.VFXSystem.Manager
             var portraitImage = FindPortraitImage(characterTransform);
             if (portraitImage != null && portraitImage.rectTransform != null)
             {
-                GameLogger.LogInfo($"[VFXManager] Portrait Image RectTransform 사용: {portraitImage.rectTransform.name}", GameLogger.LogCategory.Combat);
                 return portraitImage.rectTransform;
             }
 
@@ -633,7 +594,6 @@ namespace Game.VFXSystem.Manager
             var anyRect = characterTransform.GetComponentInChildren<RectTransform>(true);
             if (anyRect != null)
             {
-                GameLogger.LogInfo($"[VFXManager] 첫 번째 RectTransform 사용: {anyRect.name}", GameLogger.LogCategory.Combat);
                 return anyRect;
             }
 
@@ -757,11 +717,6 @@ namespace Game.VFXSystem.Manager
             }
 
             var cardUI = skillCardUIPool.Get(parent);
-            if (cardUI != null && enableDebugLogging)
-            {
-                GameLogger.LogInfo("스킬 카드 UI 생성", GameLogger.LogCategory.SkillCard);
-            }
-
             return cardUI;
         }
 
@@ -799,11 +754,6 @@ namespace Game.VFXSystem.Manager
                 }
             }
 
-            if (removedCount > 0)
-            {
-                GameLogger.LogInfo($"[VFXManager] {removedCount}개의 이펙트 부모 제거 완료", GameLogger.LogCategory.Combat);
-            }
-
             // 다른 풀들도 정리
             if (damageTextPool != null)
             {
@@ -819,8 +769,6 @@ namespace Game.VFXSystem.Manager
             {
                 skillCardUIPool.ReturnAll();
             }
-
-            GameLogger.LogInfo("모든 VFX 정리 완료 (간단 모드)", GameLogger.LogCategory.Combat);
         }
 
         #endregion

@@ -65,8 +65,6 @@ namespace Game.CoreSystem.Utility
         {
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
-            GameLogger.LogInfo("=== 컴포넌트 상호작용 최적화 시작 ===", GameLogger.LogCategory.Core);
-
             // 1. 역할 충돌 검사
             if (enableRoleConflictDetection)
             {
@@ -87,10 +85,6 @@ namespace Game.CoreSystem.Utility
 
             stopwatch.Stop();
             optimizationTime = stopwatch.ElapsedMilliseconds;
-
-            GameLogger.LogInfo($"=== 컴포넌트 상호작용 최적화 완료 ({optimizationTime}ms) ===", GameLogger.LogCategory.Core);
-            GameLogger.LogInfo($"최적화된 컴포넌트: {optimizedComponents}/{totalComponents}", GameLogger.LogCategory.Core);
-            GameLogger.LogInfo($"해결된 충돌: {conflictResolved}개", GameLogger.LogCategory.Core);
         }
 
         /// <summary>

@@ -48,6 +48,7 @@ namespace Game.StageSystem.State
             stageManager = manager;
             stageManager.OnEnemyDefeated += HandleEnemyDefeated;
             stageManager.OnStageCompleted += HandleStageCompleted;
+            stageManager.OnRewardProcessCompleted += HandleRewardProcessCompleted;
 
             SetState(StageFlowState.Combat);
         }
@@ -58,6 +59,7 @@ namespace Game.StageSystem.State
             {
                 stageManager.OnEnemyDefeated -= HandleEnemyDefeated;
                 stageManager.OnStageCompleted -= HandleStageCompleted;
+                stageManager.OnRewardProcessCompleted -= HandleRewardProcessCompleted;
             }
         }
 
@@ -72,9 +74,14 @@ namespace Game.StageSystem.State
 
         private void HandleEnemyDefeated(Game.CharacterSystem.Interface.ICharacter _)
         {
-            // 현재는 보상 상태로 잠깐 전환 후 바로 전투로 복귀(기존 StageManager가 다음 적 소환을 수행함)
+            // 보상 상태로 전환
             SetState(StageFlowState.Reward);
-            // 추후: 보상 UI/코루틴 완료 대기 → 완료 후 SetState(StageFlowState.Combat)
+            // 보상 처리가 완료될 때까지 대기 (HandleRewardProcessCompleted에서 Combat으로 전환)
+        }
+
+        private void HandleRewardProcessCompleted()
+        {
+            // 보상 처리가 완료되었으므로 전투로 복귀
             SetState(StageFlowState.Combat);
         }
 

@@ -121,20 +121,13 @@ namespace Game.SkillCardSystem.Effect
             {
                 // AttackPowerBuffEffect가 있는지 확인하고 보너스 적용
                 var attackBuffEffects = characterBase.GetBuffs();
-                int buffCount = 0;
                 foreach (var effect in attackBuffEffects)
                 {
                     if (effect is Game.ItemSystem.Effect.AttackPowerBuffEffect attackBuff)
                     {
                         int bonus = attackBuff.GetAttackPowerBonus();
                         itemAttackBonus += bonus;
-                        buffCount++;
-                        GameLogger.LogInfo($"[DamageCalc] 🔍 AttackPowerBuffEffect #{buffCount} 발견: +{bonus}, 누적: {itemAttackBonus}", GameLogger.LogCategory.Combat);
                     }
-                }
-                if (buffCount > 0)
-                {
-                    GameLogger.LogInfo($"[DamageCalc] 🔍 총 {buffCount}개의 공격력 버프 발견, 합계: +{itemAttackBonus}", GameLogger.LogCategory.Combat);
                 }
             }
 
@@ -154,9 +147,6 @@ namespace Game.SkillCardSystem.Effect
             }
 
             int effectiveDamage = baseDamageValue + attackBonus + itemAttackBonus + starBonus;
-
-            // 🔍 디버그: 최종 데미지 계산 상세 로그
-            GameLogger.LogInfo($"[DamageCalc] 💥 기본:{baseDamageValue} + 스택:{attackBonus} + 아이템:{itemAttackBonus} + 강화:{starBonus} = 최종:{effectiveDamage}", GameLogger.LogCategory.Combat);
 
             // 반격 버프 처리: 대상이 CounterBuff 보유 시, 들어오는 피해의 100%를 공격자에게 반사
             // 대상은 데미지를 받지 않고, 공격자가 원래 데미지의 100%를 받음
@@ -189,7 +179,6 @@ namespace Game.SkillCardSystem.Effect
             if (hasShieldBreaker)
             {
                 targetHasCounter = false;
-                GameLogger.LogInfo($"[DamageEffectCommand] 실드 브레이커 효과로 반격 무시", GameLogger.LogCategory.Combat);
             }
 
             // 다단 히트 처리 (시간 간격을 두고 공격)
@@ -218,7 +207,7 @@ namespace Game.SkillCardSystem.Effect
                     {
                         source.TakeDamageIgnoreGuard(reflect);
                         totalDamage += reflect;
-                        Debug.Log($"[DamageEffectCommand] 반격: 대상 0 수신, 공격자 {reflect} 반사");
+                        GameLogger.LogDebug($"[DamageEffectCommand] 반격: 대상 0 수신, 공격자 {reflect} 반사", GameLogger.LogCategory.Combat);
                         
                         // 반격 이펙트 재생: 적의 공격 이펙트가 적에게 반사되어 나타남
                         PlayCounterAttackEffect(context, source);
@@ -374,7 +363,7 @@ namespace Game.SkillCardSystem.Effect
                 // 대상이 사망했으면 중단
                 if (target.IsDead())
                 {
-                    Debug.Log($"[DamageEffectCommand] 대상이 사망하여 다단 히트 중단 (히트: {i}/{hitCount})");
+                    GameLogger.LogDebug($"[DamageEffectCommand] 대상이 사망하여 다단 히트 중단 (히트: {i}/{hitCount})", GameLogger.LogCategory.Combat);
                     break;
                 }
 
@@ -391,7 +380,7 @@ namespace Game.SkillCardSystem.Effect
                         // 반격 이펙트 재생: 적의 공격 이펙트가 적에게 반사되어 나타남
                         PlayCounterAttackEffect(context, source);
                     }
-                    Debug.Log($"[DamageEffectCommand] 반격(멀티히트) step {i + 1}: 대상 0, 반사 {reflect}");
+                    GameLogger.LogDebug($"[DamageEffectCommand] 반격(멀티히트) step {i + 1}: 대상 0, 반사 {reflect}", GameLogger.LogCategory.Combat);
                 }
                 else
                 {
@@ -399,7 +388,7 @@ namespace Game.SkillCardSystem.Effect
                     totalDamage += perHitDamage;
                 }
 
-                Debug.Log($"[DamageEffectCommand] 다단 히트 {i + 1}/{hitCount}: {perHitDamage} 데미지 (총 누적: {totalDamage})");
+                GameLogger.LogDebug($"[DamageEffectCommand] 다단 히트 {i + 1}/{hitCount}: {perHitDamage} 데미지 (총 누적: {totalDamage})", GameLogger.LogCategory.Combat);
 
                 // 마지막 히트가 아니면 대기
                 if (i < hitCount - 1)
@@ -408,7 +397,7 @@ namespace Game.SkillCardSystem.Effect
                 }
             }
 
-            Debug.Log($"[DamageEffectCommand] 다단 히트 완료 - 총 데미지: {totalDamage}");
+            GameLogger.LogDebug($"[DamageEffectCommand] 다단 히트 완료 - 총 데미지: {totalDamage}", GameLogger.LogCategory.Combat);
         }
 
         /// <summary>
@@ -434,7 +423,7 @@ namespace Game.SkillCardSystem.Effect
                 totalDamage += perHitDamage;
             }
 
-            Debug.Log($"[DamageEffectCommand] 즉시 데미지 적용 - 총 데미지: {totalDamage} (히트: {hitCount})");
+            GameLogger.LogDebug($"[DamageEffectCommand] 즉시 데미지 적용 - 총 데미지: {totalDamage} (히트: {hitCount})", GameLogger.LogCategory.Combat);
         }
 
         /// <summary>
@@ -450,13 +439,13 @@ namespace Game.SkillCardSystem.Effect
             {
                 // 가드 무시: TakeDamage를 우회하고 직접 체력 감소
                 ApplyDamageDirectly(target, damageAmount);
-                Debug.Log($"[DamageEffectCommand] 가드 무시 데미지: {damageAmount}");
+                GameLogger.LogDebug($"[DamageEffectCommand] 가드 무시 데미지: {damageAmount}", GameLogger.LogCategory.Combat);
             }
             else
             {
                 // 일반 데미지: 가드 체크 포함
                 target.TakeDamage(damageAmount);
-                Debug.Log($"[DamageEffectCommand] 일반 데미지: {damageAmount}");
+                GameLogger.LogDebug($"[DamageEffectCommand] 일반 데미지: {damageAmount}", GameLogger.LogCategory.Combat);
             }
         }
 
@@ -496,7 +485,7 @@ namespace Game.SkillCardSystem.Effect
             if (target is CharacterBase characterBase)
             {
                 characterBase.TakeDamageIgnoreGuard(damage);
-                Debug.Log($"[DamageEffectCommand] 가드 무시 직접 데미지: {damage}");
+                GameLogger.LogDebug($"[DamageEffectCommand] 가드 무시 직접 데미지: {damage}", GameLogger.LogCategory.Combat);
             }
             else
             {
@@ -568,7 +557,7 @@ namespace Game.SkillCardSystem.Effect
             {
                 // 기본 히트 사운드 재생 (임시)
                 // AudioManager.Instance.PlaySFX(hitSoundClip);
-                Debug.Log($"[DamageEffectCommand] 히트 사운드 재생");
+                GameLogger.LogDebug($"[DamageEffectCommand] 히트 사운드 재생", GameLogger.LogCategory.Audio);
             }
         }
 

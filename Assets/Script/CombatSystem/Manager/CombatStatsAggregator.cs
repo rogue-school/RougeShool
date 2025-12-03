@@ -135,7 +135,6 @@ namespace Game.CombatSystem.Manager
                 _itemService.OnActiveItemAdded += HandleActiveItemAdded;
                 _itemService.OnActiveItemRemoved += HandleActiveItemRemoved;
                 _itemService.OnPassiveItemAdded += HandlePassiveItemAdded;
-                GameLogger.LogInfo("[CombatStatsAggregator] ItemService 이벤트 구독 완료", GameLogger.LogCategory.Combat);
             }
 
             // Resource consume/restore from PlayerManager
@@ -149,7 +148,6 @@ namespace Game.CombatSystem.Manager
             {
                 _playerManager.OnResourceConsumed += HandleResourceConsumed;
                 _playerManager.OnResourceRestored += HandleResourceRestored;
-                GameLogger.LogInfo("[CombatStatsAggregator] PlayerManager 이벤트 구독 완료", GameLogger.LogCategory.Combat);
             }
             else
             {
@@ -204,16 +202,11 @@ namespace Game.CombatSystem.Manager
                 if (sceneContext != null && sceneContext.Container != null)
                 {
                     _turnController = sceneContext.Container.TryResolve<ITurnController>();
-                    if (_turnController != null)
-                    {
-                        GameLogger.LogInfo("[CombatStatsAggregator] ITurnController를 Zenject Container에서 찾음", GameLogger.LogCategory.Combat);
-                    }
                 }
             }
 
             // 전투 시작 시점의 턴 수 저장
             _startTurnCount = _turnController != null ? _turnController.TurnCount : 1;
-            GameLogger.LogInfo($"[CombatStatsAggregator] 전투 시작 시점 턴 수 저장: {_startTurnCount}", GameLogger.LogCategory.Combat);
 
             // PlayerManager가 null이면 직접 찾기 시도
             if (_playerManager == null)
@@ -224,7 +217,6 @@ namespace Game.CombatSystem.Manager
                     // 이벤트 구독
                     _playerManager.OnResourceConsumed += HandleResourceConsumed;
                     _playerManager.OnResourceRestored += HandleResourceRestored;
-                    GameLogger.LogInfo("[CombatStatsAggregator] PlayerManager 직접 찾기 및 이벤트 구독 완료", GameLogger.LogCategory.Combat);
                 }
             }
 
@@ -233,14 +225,12 @@ namespace Game.CombatSystem.Manager
                 _resourceName = _playerManager.ResourceName;
                 _startResource = _playerManager.CurrentResource;
                 _maxResource = _playerManager.MaxResource;
-                GameLogger.LogInfo($"[CombatStats] 자원 정보: {_resourceName} {_startResource}/{_maxResource}", GameLogger.LogCategory.Combat);
             }
             else
             {
                 GameLogger.LogWarning("[CombatStats] PlayerManager를 찾을 수 없어 자원 통계를 수집할 수 없습니다", GameLogger.LogCategory.Error);
             }
             
-            GameLogger.LogInfo("[CombatStats] 전투 집계 시작", GameLogger.LogCategory.Combat);
         }
 
         private void HandleCombatEnded()
@@ -257,14 +247,12 @@ namespace Game.CombatSystem.Manager
             if (_playerManager != null)
             {
                 _endResource = _playerManager.CurrentResource;
-                GameLogger.LogInfo($"[CombatStats] 종료 자원: {_resourceName} {_endResource}/{_maxResource}", GameLogger.LogCategory.Combat);
             }
             else
             {
                 GameLogger.LogWarning("[CombatStats] PlayerManager를 찾을 수 없어 종료 자원을 수집할 수 없습니다", GameLogger.LogCategory.Error);
             }
             
-            GameLogger.LogInfo("[CombatStats] 전투 집계 종료", GameLogger.LogCategory.Combat);
         }
 
         private void HandleEnemyDamaged(Game.CharacterSystem.Data.EnemyCharacterData data, GameObject obj, int amount)
@@ -289,8 +277,6 @@ namespace Game.CombatSystem.Manager
             // 카드 ID별 생성 횟수
             if (!_skillCardSpawn.ContainsKey(cardId)) _skillCardSpawn[cardId] = 0;
             _skillCardSpawn[cardId]++;
-            
-            GameLogger.LogInfo($"[CombatStatsAggregator] 스킬카드 생성: {cardId}", GameLogger.LogCategory.Combat);
         }
 
         private void HandlePlayerCardUsed(string cardId, GameObject obj)
@@ -338,12 +324,6 @@ namespace Game.CombatSystem.Manager
             // 아이템 이름별 사용 횟수 (기존 호환성 유지)
             if (!_activeItemUsage.ContainsKey(itemName)) _activeItemUsage[itemName] = 0;
             _activeItemUsage[itemName]++;
-            
-            // 아이템 ID별 사용 횟수도 저장 (세션 레벨 통계용)
-            // ID별 통계는 별도 Dictionary에 저장하지 않고, CombatStatisticsData에서 이름->ID 변환 필요
-            // 하지만 현재 구조에서는 이름별로만 저장되므로, 추후 개선 필요
-            
-            GameLogger.LogInfo($"[CombatStatsAggregator] 액티브 아이템 사용: {itemName} (ID: {itemId})", GameLogger.LogCategory.Combat);
         }
 
         private void HandleActiveItemAdded(ActiveItemDefinition def, int slotIndex)

@@ -33,20 +33,6 @@ namespace Game.CombatSystem.State
             if (stageManager != null)
             {
                 stageManager.SetSummonedEnemyActive(false);
-                LogStateTransition("소환 플래그 즉시 해제 - 중복 소환 방지");
-            }
-
-            // EnemyManager 상태 확인
-            LogStateTransition($"EnemyManager 상태: {(context.EnemyManager != null ? "존재" : "null")}");
-            if (context.EnemyManager != null)
-            {
-                var currentEnemy = context.EnemyManager.GetEnemy();
-                LogStateTransition($"현재 등록된 적: {(currentEnemy != null ? currentEnemy.GetCharacterName() : "null")}");
-                if (currentEnemy != null)
-                {
-                    LogStateTransition($"적 생존 상태: {(!currentEnemy.IsDead() ? "살아있음" : "죽음")}");
-                    LogStateTransition($"적 체력: {currentEnemy.GetCurrentHP()}/{currentEnemy.GetMaxHP()}");
-                }
             }
 
             StartSummonProcess(context);
@@ -81,7 +67,6 @@ namespace Game.CombatSystem.State
 
         private void StartSummonProcess(CombatStateContext context)
         {
-            LogStateTransition("소환 프로세스 시작");
             context.StateMachine.StartCoroutine(SummonProcessCoroutine(context));
         }
 
@@ -102,35 +87,22 @@ namespace Game.CombatSystem.State
                 yield break;
             }
 
-            LogStateTransition($"StageManager에서 원본 적 데이터 확인: {originalEnemyData.DisplayName}");
-
             // 2단계: 기존 적(원본) 비활성화 (태그 매치 방식 - 나중에 복귀)
-            LogStateTransition("기존 적(원본) 비활성화 시작");
             var currentEnemy = context.EnemyManager?.GetEnemy();
             if (currentEnemy != null)
             {
-                LogStateTransition($"원본 적 비활성화: {currentEnemy.GetCharacterName()}");
-
-                // 원본 적의 데이터 확인 (디버깅)
                 if (currentEnemy is EnemyCharacter enemyChar)
                 {
-                    LogStateTransition($"[소환 디버그] 비활성화할 원본 적 CharacterData: {enemyChar.CharacterData?.DisplayName ?? "null"}");
-                    LogStateTransition($"[소환 디버그] 원본 적 GameObject 이름: {enemyChar.gameObject.name}");
-                    LogStateTransition($"[소환 디버그] StageManager의 원본 데이터: {originalEnemyData?.DisplayName ?? "null"}");
-                    LogStateTransition($"[소환 디버그] CharacterData 참조 비교: {enemyChar.CharacterData == originalEnemyData}");
-                    
                     // 비활성화 직전의 실제 현재 HP를 저장 (소환 트리거 시점 이후 체력 변화 반영)
                     int currentActualHP = currentEnemy.GetCurrentHP();
                     // 상위 스코프에서 이미 선언된 stageManager 사용
                     if (stageManager != null)
                     {
                         stageManager.SetOriginalEnemyHP(currentActualHP);
-                        LogStateTransition($"[소환 디버그] 원본 적 현재 HP 저장 (비활성화 직전): {currentActualHP}/{currentEnemy.GetMaxHP()}");
                     }
                     
                     // 데미지 텍스트 정리 (소환 전에 남아있는 텍스트 제거)
                     enemyChar.ClearDamageTexts();
-                    LogStateTransition($"원본 적의 데미지 텍스트 정리 완료");
                 }
 
                 // EnemyManager에서 등록 해제 (하지만 GameObject는 유지)

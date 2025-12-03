@@ -49,8 +49,6 @@ namespace Game.CombatSystem.Manager
             _turnController = turnController;
             _slotRegistry = slotRegistry;
             _slotMovement = slotMovement;
-
-            GameLogger.LogInfo("TurnManager (Adapter) 의존성 주입 완료", GameLogger.LogCategory.Combat);
         }
 
         #endregion
@@ -60,7 +58,6 @@ namespace Game.CombatSystem.Manager
         private void Awake()
         {
             // Zenject Inject가 호출될 때까지 대기
-            GameLogger.LogInfo("TurnManager (Adapter) Awake 호출", GameLogger.LogCategory.Combat);
         }
 
         private void OnDestroy()
@@ -332,7 +329,6 @@ namespace Game.CombatSystem.Manager
         public void Initialize()
         {
             // TurnController는 생성자에서 초기화되므로 별도 작업 불필요
-            GameLogger.LogInfo("TurnManager (Adapter) 초기화 완료", GameLogger.LogCategory.Combat);
         }
 
         public void Reset()

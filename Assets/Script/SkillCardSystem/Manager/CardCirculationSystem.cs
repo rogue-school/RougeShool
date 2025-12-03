@@ -66,19 +66,12 @@ namespace Game.SkillCardSystem.Manager
                 CardName = g.Key.displayName, 
                 Count = g.Count() 
             });
-            
-            GameLogger.LogInfo($"카드 순환 시스템 초기화 완료: {playerDeck.Count}장", GameLogger.LogCategory.SkillCard);
-            foreach (var group in cardGroups)
-            {
-                GameLogger.LogInfo($"  - {group.CardName}: {group.Count}장", GameLogger.LogCategory.SkillCard);
-            }
         }
 
         public void Clear()
         {
             playerDeck.Clear();
             currentTurnCards.Clear();
-            GameLogger.LogInfo("카드 순환 시스템 초기화됨", GameLogger.LogCategory.SkillCard);
         }
 
         #endregion
@@ -120,12 +113,6 @@ namespace Game.SkillCardSystem.Manager
                 Count = g.Count() 
             });
             
-            // GameLogger.LogInfo($"턴 드로우 완료: {currentTurnCards.Count}장 (덱: {playerDeck.Count}장)", GameLogger.LogCategory.SkillCard);
-            foreach (var group in drawnCardGroups)
-            {
-                // GameLogger.LogInfo($"  - 드로우된 카드: {group.CardName} x{group.Count}", GameLogger.LogCategory.SkillCard);
-            }
-            
             return currentTurnCards;
         }
 
@@ -157,7 +144,6 @@ namespace Game.SkillCardSystem.Manager
             bool success = playerDeckManager.AddCardToDeck(cardDefinition, quantity);
             if (success)
             {
-                GameLogger.LogInfo($"카드 보상 지급: {cardDefinition.displayName} x{quantity}", GameLogger.LogCategory.SkillCard);
             }
             else
             {
@@ -187,8 +173,6 @@ namespace Game.SkillCardSystem.Manager
             currentTurnCards.AddRange(DrawCardsForTurn());
             hasPlayedThisTurn = false;
             isTurnStarted = true;
-
-            GameLogger.LogInfo($"턴 시작: {currentTurnCards.Count}장 드로우", GameLogger.LogCategory.SkillCard);
         }
 
         /// <summary>
@@ -210,7 +194,6 @@ namespace Game.SkillCardSystem.Manager
 
             isTurnStarted = false;
             hasPlayedThisTurn = false;
-            GameLogger.LogInfo("턴 종료 완료", GameLogger.LogCategory.SkillCard);
         }
 
         /// <summary>
@@ -240,8 +223,6 @@ namespace Game.SkillCardSystem.Manager
             // 카드 사용 처리
             currentTurnCards.Remove(card);
             hasPlayedThisTurn = true;
-
-            GameLogger.LogInfo($"카드 사용: {card.CardDefinition?.CardName ?? "Unknown"} (남은 카드: {currentTurnCards.Count})", GameLogger.LogCategory.SkillCard);
         }
 
         /// <summary>

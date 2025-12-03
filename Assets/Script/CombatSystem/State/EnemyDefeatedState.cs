@@ -58,6 +58,13 @@ namespace Game.CombatSystem.State
         public override void OnExit(CombatStateContext context)
         {
             base.OnExit(context);
+            
+            // 적 사망 처리 플래그 리셋 (다음 적 처리를 위해)
+            if (context?.StateMachine != null)
+            {
+                context.StateMachine.ResetEnemyDeathProcessing();
+            }
+            
             LogStateTransition("적 처치 정리 완료");
         }
 
@@ -96,11 +103,10 @@ namespace Game.CombatSystem.State
             
             LogStateTransition("적 처치 - 정리 작업 완료");
             
-                   // StageManager에 정리 완료 알림
-                   var stageManager = Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
+            // StageManager에 정리 완료 알림
+            var stageManager = Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
             if (stageManager != null)
             {
-                GameLogger.LogInfo("[EnemyDefeatedState] StageManager 발견 - 정리 완료 알림 전송", GameLogger.LogCategory.Combat);
                 stageManager.OnEnemyDefeatedCleanupCompleted();
             }
             else
@@ -191,11 +197,21 @@ namespace Game.CombatSystem.State
         {
             LogStateTransition("다음 적 확인 및 상태 전환");
 
+            // StageManager에서 소환 상태 확인
+            var stageManager = UnityEngine.Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
+            if (stageManager != null)
+            {
+                bool isSummonActive = stageManager.IsSummonedEnemyActive();
+                GameLogger.LogInfo($"[EnemyDefeatedState] 소환 플래그 확인: {isSummonActive}, 스택 크기: {stageManager.GetOriginalEnemyStackCount()}", GameLogger.LogCategory.Combat);
+            }
+
             // StageManager가 다음 적을 생성했는지 확인
             var enemyManager = context.EnemyManager;
             if (enemyManager != null)
             {
                 var currentEnemy = enemyManager.GetCharacter();
+                GameLogger.LogInfo($"[EnemyDefeatedState] EnemyManager에서 적 확인: {currentEnemy?.GetCharacterName() ?? "null"}, 사망여부: {currentEnemy?.IsDead() ?? true}", GameLogger.LogCategory.Combat);
+                
                 if (currentEnemy != null && !currentEnemy.IsDead())
                 {
                     // 새로운 적이 생성되었음 - CombatInitState로 전환하여 초기화 수행
@@ -210,6 +226,7 @@ namespace Game.CombatSystem.State
                         if (enemyData != null)
                         {
                             initState.SetEnemyData(enemyData, currentEnemy.GetCharacterName());
+                            GameLogger.LogInfo($"[EnemyDefeatedState] CombatInitState에 적 데이터 설정: {enemyData.DisplayName}", GameLogger.LogCategory.Combat);
                         }
                     }
                     
