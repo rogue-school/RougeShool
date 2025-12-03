@@ -27,6 +27,9 @@ MonoBehaviour:
       hits: 1
       ignoreGuard: 0
       ignoreCounter: 0
+      useRandomDamage: 0
+      minDamage: 0
+      maxDamage: 0
       sfxClip: {fileID: 0}
       visualEffectPrefab: {fileID: 4203527421569735854, guid: d189a9259cac7744d8baf4468fb85239, type: 3}
     hasResource: 0
@@ -47,7 +50,7 @@ MonoBehaviour:
         bleedActivateEffectPrefab: {fileID: 4203527421569735854, guid: d189a9259cac7744d8baf4468fb85239, type: 3}
         bleedActivateSfxClip: {fileID: 8300000, guid: 5dc9de37cb70dc34eb74e93c120ee02c, type: 3}
         bleedPerTurnEffectPrefab: {fileID: 4294010189161640749, guid: 52b97149ba487c94bb0fba4d467003d0, type: 3}
-        bleedPerTurnSfxClip: {fileID: 8300000, guid: c996f7150069ad642b0608e46078fe8e, type: 3}
+        bleedPerTurnSfxClip: {fileID: 8300000, guid: 0300cb94e80ab604a91163ea96ad5d03, type: 3}
         counterDuration: 1
         counterIcon: {fileID: 0}
         counterActivateEffectPrefab: {fileID: 0}

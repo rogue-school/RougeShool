@@ -27,6 +27,9 @@ MonoBehaviour:
       hits: 1
       ignoreGuard: 0
       ignoreCounter: 0
+      useRandomDamage: 0
+      minDamage: 0
+      maxDamage: 0
       sfxClip: {fileID: 0}
       visualEffectPrefab: {fileID: 0}
     hasResource: 0
@@ -55,9 +58,9 @@ MonoBehaviour:
         guardDuration: 1
         guardIcon: {fileID: -8852535039943177423, guid: f76e00646753dfb4db19c98fb0512adf, type: 3}
         guardActivateEffectPrefab: {fileID: 8913217842006883145, guid: aee1face6295eee4abf08b6aabf93c63, type: 3}
-        guardActivateSfxClip: {fileID: 8300000, guid: 0e4d2e6a197feea49b5b32b6f3afeabe, type: 3}
+        guardActivateSfxClip: {fileID: 8300000, guid: 35a7ca011fc264e42ab6efca8e8e3ee4, type: 3}
         guardBlockEffectPrefab: {fileID: 8913217842006883145, guid: aee1face6295eee4abf08b6aabf93c63, type: 3}
-        guardBlockSfxClip: {fileID: 8300000, guid: b773d897cc60fd740838dab6f53363d1, type: 3}
+        guardBlockSfxClip: {fileID: 8300000, guid: c81e72003a841564eae5d49919c00b10, type: 3}
         stunDuration: 1
         stunIcon: {fileID: 0}
         healAmount: 0

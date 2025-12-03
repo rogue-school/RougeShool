@@ -27,6 +27,9 @@ MonoBehaviour:
       hits: 1
       ignoreGuard: 0
       ignoreCounter: 0
+      useRandomDamage: 0
+      minDamage: 0
+      maxDamage: 0
       sfxClip: {fileID: 0}
       visualEffectPrefab: {fileID: 0}
     hasResource: 0
@@ -51,7 +54,7 @@ MonoBehaviour:
         counterDuration: 1
         counterIcon: {fileID: -2328275288128407278, guid: 7c60ba90f7c123a46913ce8406c64867, type: 3}
         counterActivateEffectPrefab: {fileID: 0}
-        counterActivateSfxClip: {fileID: 8300000, guid: c4387c7ab44aa1a40ac24737eb802d1f, type: 3}
+        counterActivateSfxClip: {fileID: 8300000, guid: afce9a143d911d440ac0c7fd7b06495a, type: 3}
         guardDuration: 1
         guardIcon: {fileID: 0}
         guardActivateEffectPrefab: {fileID: 0}

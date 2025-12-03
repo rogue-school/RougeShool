@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5a9c739d4e9a9a9408292eb093749246, type: 3}
   m_Name: SummonEffect
   m_EditorClassIdentifier: 
-  effectName: "!\uC870\uAD50 \uAC15\uC81C \uCD9C\uADFC!"
+  effectName: "\uC870\uAD50\uB294 \uC5B4\uB514\uAC14\uB098?"
   description: 
   effectIcon: {fileID: 0}
   defaultHealthThreshold: 0.5
