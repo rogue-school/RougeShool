@@ -5282,7 +5282,7 @@ MonoBehaviour:
   rewardPanelParent: {fileID: 611750855}
   swordPlayerRewardProfile: {fileID: 11400000, guid: 1d96796250297c144a3aef170e992e07, type: 2}
   bowPlayerRewardProfile: {fileID: 11400000, guid: acef5ed5c4dd30547a6e23adc358080e, type: 2}
-  staffPlayerRewardProfile: {fileID: 0}
+  staffPlayerRewardProfile: {fileID: 11400000, guid: a4b0e3da7ddaefa4593e7ba2eb3fea36, type: 2}
   displayMode: 2
   stageIndex: 0
   runSeed: 0

@@ -15,8 +15,8 @@ MonoBehaviour:
   itemId: 111
   displayName: "\uB9C8\uB825 \uC911\uCCA9"
   description: 
-  icon: {fileID: -1052562433205533470, guid: 2556da05b18029f448159a0e1f1eabe0, type: 3}
-  targetSkill: {fileID: 11400000, guid: 9204b4082f952c04ebba4d7c2c813ea4, type: 2}
+  icon: {fileID: -2159488440411966432, guid: 3bc157032df44d644b00e3ac3dee798e, type: 3}
+  targetSkill: {fileID: 11400000, guid: 8e09f8b5222a2224cb81d69daff22014, type: 2}
   enhancementIncrements: 010000000100000001000000
   category: 2
   bonusType: 0
