@@ -32,7 +32,7 @@
 | **Slot Positions (SkillCardSlotPosition, CombatSlotPosition, CombatFieldSlotPosition)** | `Game.SkillCardSystem.Slot` | `Slot/*.cs` | 카드/전투 슬롯 위치 열거형/구조체 | - | enum/구조체 값 | DI 없음 | CardSlotRegistry, SlotMovementController, SkillCard/Tooltips | ✅ 사용 중 |
 | **Drag&Drop (CardDropService, CardDropToSlotHandler, CardDropToHandHandler, CardDragHandler)** | `Game.SkillCardSystem.DragDrop` | `DragDrop/*.cs` | 카드 드래그&드랍/슬롯 등록/입력 처리 | `RegisterHandlers(...)` 등 | 드랍 핸들러 참조, 카드 UI 참조 | `CardDropService`는 CombatInstaller에서 AsSingle (`SkillCardSystem`과 공유), 나머지는 씬 컴포넌트 | CombatSystem, SkillCard UI 상호작용 | ✅ 사용 중 |
 | **EffectCommandFactory / ICardEffectCommandFactory / ICardEffectCommand / ICardEffect / SkillCardEffectSO** | `Game.SkillCardSystem.Effect` / `Game.SkillCardSystem.Interface` | `Effect/EffectCommandFactory.cs`, `Interface/*.cs`, `Effect/SkillCardEffectSO.cs` | 카드 효과(명령/전략/SO) 생성/인터페이스/기본 SO | `CreateCommand(...)` 등 | 효과 SO, 명령 매핑 | `SkillCard` 내부의 static `EffectCommandFactory`로 사용 (DI 바인딩 없음) | SkillCard, 개별 효과 전략들 | ✅ 사용 중 |
-| **DamageEffectCommand/Strategy/SO, HealEffect*, GuardEffect*, BleedEffect*, CounterEffect*, ResourceGainEffect*, StunEffect*, CardUseStackEffect*** | `Game.SkillCardSystem.Effect` | `Effect/*.cs` | 개별 카드 효과(데미지/힐/가드/출혈/카운터/자원/스턴/사용스택 등) 구현 | `ExecuteAsync(...)` 등 | 효과별 설정 필드 | 에셋(SO) + 런타임 명령, DI 없음 | SkillCard에서 효과 명령으로 사용, Combat/Character 상태 변화 | ✅ 사용 중 |
+| **DamageEffectCommand/Strategy/SO, HealEffect*, GuardEffect*, BleedEffect*, CounterEffect*, ResourceGainEffect*, StunEffect*, CardUseStackEffect*, AttackPowerBuffSkillEffectSO/Strategy, ReplayPreviousTurnCardEffectSO/Strategy/Command, ResourceEffectStrategy** | `Game.SkillCardSystem.Effect` | `Effect/*.cs` | 개별 카드 효과(데미지/힐/가드/출혈/카운터/자원/스턴/사용스택/공격력버프/이전턴재실행 등) 구현 | `ExecuteAsync(...)`, `CreateEffectCommand(...)` 등 | 효과별 설정 필드 | 에셋(SO) + 런타임 명령, DI 없음 | SkillCard에서 효과 명령으로 사용, Combat/Character 상태 변화 | ✅ 사용 중 |
 | **StunDebuff, GuardBuff, CounterBuff** | `Game.SkillCardSystem.Effect` | `Effect/*.cs` | 지속 디버프/버프 구현 | `Apply(...)`, `Remove(...)` 등 | 타겟/지속 턴 | 런타임 객체, DI 없음 | CharacterSystem, CombatStateMachine | ✅ 사용 중 |
 | **IStatusEffectMarkers, IPerTurnEffect, IAttackPowerStackProvider** | `Game.SkillCardSystem.Interface` | `Interface/*.cs` | 상태 이펙트 마커/턴당 효과/공격력 스택 인터페이스 | - | - | 인터페이스 타입 | SkillCard, CharacterEffect, Combat/Character 연동 | ✅ 사용 중 |
 | **DeckEditorUI / PlayerSkillDeckEditor / EnemySkillDeckEditor** | `Game.SkillCardSystem.UI` / `Game.SkillCardSystem.Editor` | `UI/DeckEditorUI.cs`, `Editor/*.cs` | 덱 에디터 런타임/에디터 UI | `RefreshDeck()`, 커스텀 인스펙터 메서드 등 | 덱 데이터 참조 | 에디터/씬용, DI 없음 | 디자이너용 덱 관리 | ✅ 사용 중 |
@@ -138,6 +138,8 @@ Assets/Script/SkillCardSystem/
 │   └── CardDropToSlotHandler.cs
 ├── Effect/
 │   ├── AttackPowerBuffSkillCommand.cs
+│   ├── AttackPowerBuffSkillEffectSO.cs
+│   ├── AttackPowerBuffSkillEffectStrategy.cs
 │   ├── BleedEffect*.cs
 │   ├── CardUseStack*.cs
 │   ├── CounterEffect*.cs
@@ -145,6 +147,10 @@ Assets/Script/SkillCardSystem/
 │   ├── GuardEffect*.cs
 │   ├── HealEffect*.cs
 │   ├── OwnTurnEffectBase.cs
+│   ├── ReplayPreviousTurnCardCommand.cs
+│   ├── ReplayPreviousTurnCardEffectSO.cs
+│   ├── ReplayPreviousTurnCardEffectStrategy.cs
+│   ├── ResourceEffectStrategy.cs
 │   ├── ResourceGainEffect*.cs
 │   ├── SkillCardEffectSO.cs
 │   ├── StunEffect*.cs
