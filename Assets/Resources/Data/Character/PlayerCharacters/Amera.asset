@@ -15,13 +15,14 @@ MonoBehaviour:
   <DisplayName>k__BackingField: "\uC544\uBA54\uB77C"
   <CharacterType>k__BackingField: 2
   <MaxHP>k__BackingField: 15
-  <Portrait>k__BackingField: {fileID: 21300000, guid: 87dab22ae8665ac4fb4f3cd54c1c91f5, type: 3}
+  <Portrait>k__BackingField: {fileID: -1986941848747793734, guid: cea6a74dbb62995498b5830c6c8a8709, type: 3}
   <PortraitPrefab>k__BackingField: {fileID: 751987938129930587, guid: 97fed038b9822464d91daefec0d4012f, type: 3}
-  <PlayerUIPortrait>k__BackingField: {fileID: 6111465266690084320, guid: f99d558af8f4a794690914664f4195ac, type: 3}
+  <PlayerUIPortrait>k__BackingField: {fileID: 8631797052835628650, guid: 59e733207fb35314e9bb7096ec70fa92, type: 3}
   <Emblem>k__BackingField: {fileID: 499279765919047262, guid: c86889f583372284193c699670515224, type: 3}
-  <Description>k__BackingField: "\u265A\u265A\uD788\uC5B4\uB85C\uC988 \uC624\uBE0C
-    \uB354 \uC2A4\u2606\uD1B0\u265A\u265A\uAC00\uC785\uC2DC$$\uC804\uC6D0 \uCE74\uB4DC\uD329\u261C\u261C\uB4B7\uBA74100%\uC99D\uC815\u203B
-    \u265C\uC6D4\uB4DC\uC624\uBE0C \uC6CC\uD06C\uB798\uD504\uD2B8\u265C\uD3AB \uBB34\uB8CC\uC99D\uC815\uFFE5"
+  <Description>k__BackingField: "\uC544\uBA54\uB77C\uB294 \uBCC0\uCE59\uC801\uC778
+    \uB370\uBBF8\uC9C0 \uD328\uD134\uC744 \uC9C0\uB2CC \uCE90\uB9AD\uD130\uB85C,
+    \uD55C \uBC88\uC758 \uACF5\uACA9\uC5D0\uC11C \uADF9\uC801\uC778 \uACE0\uC810\uACFC
+    \uB0AE\uC740 \uC800\uC810\uC774 \uACF5\uC874\uD558\uB294 \uCE90\uB9AD\uD130\uC785\uB2C8\uB2E4."
   <MaxResource>k__BackingField: 0
   <InitialResource>k__BackingField: 0
   <ResourceName>k__BackingField: 

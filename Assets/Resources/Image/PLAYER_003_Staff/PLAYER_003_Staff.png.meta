@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: ccad7d49a8ef5a0408bd97dedb5d75ab
+guid: cea6a74dbb62995498b5830c6c8a8709
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 7992305097684913714
-    second: "Skill_106_\uACBD\uBA78\uD558\uAE30_0"
+      213: -1986941848747793734
+    second: PLAYER_003_Staff_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -84,19 +84,6 @@ TextureImporter:
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
-    buildTarget: Standalone
-    maxTextureSize: 2048
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 1
-    compressionQuality: 50
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    overridden: 0
-    ignorePlatformSupport: 0
-    androidETC2FallbackOverride: 0
-    forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 4
     buildTarget: WebGL
     maxTextureSize: 2048
     resizeAlgorithm: 0
@@ -111,6 +98,19 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
     buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
@@ -178,13 +178,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: "Skill_106_\uACBD\uBA78\uD558\uAE30_0"
+      name: PLAYER_003_Staff_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 300
-        height: 300
+        x: 6
+        y: 37
+        width: 2142
+        height: 3338
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -193,8 +193,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 23e8d0c242f5aee60800000000000000
-      internalID: 7992305097684913714
+      spriteID: ab2a7047ae6fc64e0800000000000000
+      internalID: -1986941848747793734
       vertices: []
       indices: 
       edges: []
@@ -212,8 +212,7 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable:
-      "Skill_106_\uACBD\uBA78\uD558\uAE30_0": 7992305097684913714
+    nameFileIdTable: {}
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
