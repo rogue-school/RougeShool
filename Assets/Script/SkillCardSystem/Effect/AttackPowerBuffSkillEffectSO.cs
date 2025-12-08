@@ -1,6 +1,7 @@
 using UnityEngine;
 using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Interface;
+using Game.SkillCardSystem.Data;
 
 namespace Game.SkillCardSystem.Effect
 {
@@ -29,9 +30,7 @@ namespace Game.SkillCardSystem.Effect
         /// <returns>공격력 버프 적용 커맨드</returns>
         public override ICardEffectCommand CreateEffectCommand(int power)
         {
-            int finalBonus = Mathf.Max(0, _attackPowerBonus + power);
-            int finalDuration = Mathf.Max(1, _duration);
-            return new AttackPowerBuffSkillCommand(finalBonus, finalDuration, _icon);
+            return CreateEffectCommand(power, null);
         }
 
         /// <summary>
@@ -40,6 +39,48 @@ namespace Game.SkillCardSystem.Effect
         public override void ApplyEffect(ICardExecutionContext context, int value, ICombatTurnManager controller = null)
         {
             // 실제 효과는 AttackPowerBuffSkillCommand에서 처리합니다.
+        }
+
+        /// <summary>
+        /// 커스텀 설정을 포함해 커맨드를 생성합니다.
+        /// </summary>
+        /// <param name="power">추가 파워 수치</param>
+        /// <param name="customSettings">카드별 커스텀 설정</param>
+        /// <returns>공격력 버프 적용 커맨드</returns>
+        public ICardEffectCommand CreateEffectCommand(int power, EffectCustomSettings customSettings)
+        {
+            int bonusFromSo = Mathf.Max(0, _attackPowerBonus + power);
+            int durationFromSo = Mathf.Max(1, _duration);
+            Sprite iconFromSo = _icon ?? effectIcon;
+
+            if (customSettings != null)
+            {
+                // 공격력 증가량: damageAmount 사용 (0 이면 SO 값 사용)
+                if (customSettings.damageAmount > 0)
+                {
+                    bonusFromSo = customSettings.damageAmount + Mathf.Max(0, power);
+                }
+
+                // 지속 턴: guardDuration 우선 사용 (0/음수면 SO 값 유지)
+                if (customSettings.guardDuration > 0)
+                {
+                    durationFromSo = customSettings.guardDuration;
+                }
+
+                // 아이콘: guardIcon → bleedIcon → SO 기본 순으로 선택
+                if (customSettings.guardIcon != null)
+                {
+                    iconFromSo = customSettings.guardIcon;
+                }
+                else if (customSettings.bleedIcon != null)
+                {
+                    iconFromSo = customSettings.bleedIcon;
+                }
+            }
+
+            int finalBonus = Mathf.Max(0, bonusFromSo);
+            int finalDuration = Mathf.Max(1, durationFromSo);
+            return new AttackPowerBuffSkillCommand(finalBonus, finalDuration, iconFromSo);
         }
     }
 }

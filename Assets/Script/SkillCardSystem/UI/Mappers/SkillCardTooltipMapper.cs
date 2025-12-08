@@ -50,14 +50,33 @@ namespace Game.SkillCardSystem.UI.Mappers
                 {
                     var dmg = config.damageConfig.baseDamage;
                     var hits = Mathf.Max(1, config.damageConfig.hits);
-                    if (hits <= 1)
+                    bool useRandom = config.damageConfig.useRandomDamage;
+                    var minDmg = Mathf.Max(0, config.damageConfig.minDamage);
+                    var maxDmg = Mathf.Max(minDmg, config.damageConfig.maxDamage);
+
+                    if (useRandom)
                     {
-                        ruleLines.Add($"피해 {dmg}를 줍니다.");
+                        if (hits <= 1)
+                        {
+                            ruleLines.Add($"피해 {minDmg}~{maxDmg}을 줍니다.");
+                        }
+                        else
+                        {
+                            ruleLines.Add($"피해 {minDmg}~{maxDmg}을 {hits}번 줍니다.");
+                        }
                     }
                     else
                     {
-                        ruleLines.Add($"피해 {dmg}를 {hits}번 줍니다.");
+                        if (hits <= 1)
+                        {
+                            ruleLines.Add($"피해 {dmg}를 줍니다.");
+                        }
+                        else
+                        {
+                            ruleLines.Add($"피해 {dmg}를 {hits}번 줍니다.");
+                        }
                     }
+
                     if (config.damageConfig.ignoreGuard)
                     {
                         ruleLines.Add("가드를 무시합니다.");
@@ -67,10 +86,14 @@ namespace Game.SkillCardSystem.UI.Mappers
                         ruleLines.Add("반격을 무시합니다.");
                     }
 
+                    var damageDesc = useRandom
+                        ? $"랜덤 {minDmg}~{maxDmg}{(hits > 1 ? $", {hits}회" : string.Empty)}"
+                        : $"기본 {dmg}{(hits > 1 ? $", {hits}회" : string.Empty)}";
+
                     model.Effects.Add(new TooltipModel.EffectRow
                     {
                         Name = "데미지",
-                        Description = $"기본 {dmg}{(hits > 1 ? $", {hits}회" : string.Empty)}",
+                        Description = damageDesc,
                         Color = UnityEngine.Color.red
                     });
                 }
@@ -265,17 +288,19 @@ namespace Game.SkillCardSystem.UI.Mappers
                     }
                 if (config.hasDamage && config.damageConfig != null)
                 {
-                    // 카드 인스턴스의 실제 기본 데미지 사용 (데미지 오버라이드 포함)
                     var baseDmg = card != null ? card.GetBaseDamage() : config.damageConfig.baseDamage;
+                    bool useRandom = config.damageConfig.useRandomDamage;
+                    var minDmg = Mathf.Max(0, config.damageConfig.minDamage);
+                    var maxDmg = Mathf.Max(minDmg, config.damageConfig.maxDamage);
+                    var baseMin = minDmg;
+                    var baseMax = maxDmg;
                     
-                    // 공격력 물약 버프 계산
                     int attackPotionBonus = 0;
                     if (playerCharacter != null)
                     {
                         attackPotionBonus = GetAttackPotionBonus(playerCharacter);
                     }
                     
-                    // 강화 보너스 (패시브 성급) - 플레이어 카드일 때만 적용
                     int enhancementBonus = 0;
                     if (card != null && card.IsFromPlayer())
                     {
@@ -287,83 +312,77 @@ namespace Game.SkillCardSystem.UI.Mappers
                         }
                     }
                     
-                    var actualDmg = CalculateActualDamage(baseDmg, currentStacks, attackPotionBonus, enhancementBonus);
                     var hits = Mathf.Max(1, config.damageConfig.hits);
-                    
+
+                    int actualDmg = CalculateActualDamage(baseDmg, currentStacks, attackPotionBonus, enhancementBonus);
+                    int actualMin = useRandom ? CalculateActualDamage(minDmg, currentStacks, attackPotionBonus, enhancementBonus) : actualDmg;
+                    int actualMax = useRandom ? CalculateActualDamage(maxDmg, currentStacks, attackPotionBonus, enhancementBonus) : actualDmg;
+                    bool hasBonus = currentStacks > 0 || attackPotionBonus > 0 || enhancementBonus > 0;
+
                     if (hits <= 1)
                     {
-                        if (currentStacks > 0 || attackPotionBonus > 0 || enhancementBonus > 0)
+                        if (useRandom)
                         {
-                            string bonusText = "";
-                            if (currentStacks > 0 && attackPotionBonus > 0 && enhancementBonus > 0)
+                            var bonusText = "";
+                            if (hasBonus)
                             {
-                                bonusText = $" (기본 피해 {baseDmg} + 스택 {currentStacks} + 공격력 물약 {attackPotionBonus} + 강화 {enhancementBonus})";
+                                bonusText = $" (기본 {baseMin}~{baseMax}"
+                                            + (currentStacks > 0 ? $", 스택 {currentStacks}" : "")
+                                            + (attackPotionBonus > 0 ? $", 공격력 물약 {attackPotionBonus}" : "")
+                                            + (enhancementBonus > 0 ? $", 강화 {enhancementBonus}" : "")
+                                            + ")";
                             }
-                            else if (currentStacks > 0 && enhancementBonus > 0)
-                            {
-                                bonusText = $" (기본 피해 {baseDmg} + 스택 {currentStacks} + 강화 {enhancementBonus})";
-                            }
-                            else if (attackPotionBonus > 0 && enhancementBonus > 0)
-                            {
-                                bonusText = $" (기본 피해 {baseDmg} + 공격력 물약 {attackPotionBonus} + 강화 {enhancementBonus})";
-                            }
-                            else if (enhancementBonus > 0)
-                            {
-                                bonusText = $" (기본 피해 {baseDmg} + 강화 {enhancementBonus})";
-                            }
-                            else if (currentStacks > 0)
-                            {
-                                bonusText = $" (기본 피해 {baseDmg} + 스택 {currentStacks})";
-                            }
-                            else if (attackPotionBonus > 0)
-                            {
-                                bonusText = $" (기본 피해 {baseDmg} + 공격력 물약 {attackPotionBonus})";
-                            }
-                            
-                            ruleLines.Add($"피해 {KoreanTextHelper.AddKoreanParticle(actualDmg, "을/를")} 줍니다.\n{bonusText}");
+                            ruleLines.Add($"피해 {actualMin}~{actualMax}을 줍니다.{bonusText}");
                         }
                         else
                         {
-                            ruleLines.Add($"피해 {KoreanTextHelper.AddKoreanParticle(actualDmg, "을/를")} 줍니다.");
+                            if (hasBonus)
+                            {
+                                string bonusText = $" (기본 피해 {baseDmg}"
+                                    + (currentStacks > 0 ? $", 스택 {currentStacks}" : "")
+                                    + (attackPotionBonus > 0 ? $", 공격력 물약 {attackPotionBonus}" : "")
+                                    + (enhancementBonus > 0 ? $", 강화 {enhancementBonus}" : "")
+                                    + ")";
+                                ruleLines.Add($"피해 {KoreanTextHelper.AddKoreanParticle(actualDmg, "을/를")} 줍니다.{bonusText}");
+                            }
+                            else
+                            {
+                                ruleLines.Add($"피해 {KoreanTextHelper.AddKoreanParticle(actualDmg, "을/를")} 줍니다.");
+                            }
                         }
                     }
                     else
                     {
-                        var totalActualDmg = actualDmg * hits;
-                        var totalBaseDmg = baseDmg * hits;
-                        if (currentStacks > 0 || attackPotionBonus > 0 || enhancementBonus > 0)
+                        if (useRandom)
                         {
-                            string bonusText = "";
-                            if (currentStacks > 0 && attackPotionBonus > 0 && enhancementBonus > 0)
+                            var totalMin = actualMin * hits;
+                            var totalMax = actualMax * hits;
+                            var bonusText = "";
+                            if (hasBonus)
                             {
-                                bonusText = $" (기본 피해 {baseDmg} + 스택 {currentStacks} + 공격력 물약 {attackPotionBonus} + 강화 {enhancementBonus})";
+                                bonusText = $" (기본 {baseMin}~{baseMax}"
+                                            + (currentStacks > 0 ? $", 스택 {currentStacks}" : "")
+                                            + (attackPotionBonus > 0 ? $", 공격력 물약 {attackPotionBonus}" : "")
+                                            + (enhancementBonus > 0 ? $", 강화 {enhancementBonus}" : "")
+                                            + ")";
                             }
-                            else if (currentStacks > 0 && enhancementBonus > 0)
-                            {
-                                bonusText = $" (기본 피해 {baseDmg} + 스택 {currentStacks} + 강화 {enhancementBonus})";
-                            }
-                            else if (attackPotionBonus > 0 && enhancementBonus > 0)
-                            {
-                                bonusText = $" (기본 피해 {baseDmg} + 공격력 물약 {attackPotionBonus} + 강화 {enhancementBonus})";
-                            }
-                            else if (enhancementBonus > 0)
-                            {
-                                bonusText = $" (기본 피해 {baseDmg} + 강화 {enhancementBonus})";
-                            }
-                            else if (currentStacks > 0)
-                            {
-                                bonusText = $" (기본 피해 {baseDmg} + 스택 {currentStacks})";
-                            }
-                            else if (attackPotionBonus > 0)
-                            {
-                                bonusText = $" (기본 피해 {baseDmg} + 공격력 물약 {attackPotionBonus})";
-                            }
-                            
-                            ruleLines.Add($"피해 {KoreanTextHelper.AddKoreanParticle(actualDmg, "을/를")} {KoreanTextHelper.AddKoreanParticle(hits, "을/를")}번 줍니다.\n{bonusText}");
+                            ruleLines.Add($"피해 {totalMin}~{totalMax} (총 {hits}회){bonusText}");
                         }
                         else
                         {
-                            ruleLines.Add($"피해 {KoreanTextHelper.AddKoreanParticle(actualDmg, "을/를")} {KoreanTextHelper.AddKoreanParticle(hits, "을/를")}번 줍니다.");
+                            if (hasBonus)
+                            {
+                                string bonusText = $" (기본 피해 {baseDmg}"
+                                    + (currentStacks > 0 ? $", 스택 {currentStacks}" : "")
+                                    + (attackPotionBonus > 0 ? $", 공격력 물약 {attackPotionBonus}" : "")
+                                    + (enhancementBonus > 0 ? $", 강화 {enhancementBonus}" : "")
+                                    + ")";
+                                ruleLines.Add($"피해 {KoreanTextHelper.AddKoreanParticle(actualDmg, "을/를")} {KoreanTextHelper.AddKoreanParticle(hits, "을/를")}번 줍니다.{bonusText}");
+                            }
+                            else
+                            {
+                                ruleLines.Add($"피해 {KoreanTextHelper.AddKoreanParticle(actualDmg, "을/를")} {KoreanTextHelper.AddKoreanParticle(hits, "을/를")}번 줍니다.");
+                            }
                         }
                     }
                     
@@ -377,21 +396,11 @@ namespace Game.SkillCardSystem.UI.Mappers
                     }
 
                     string effectDescription;
-                    if (currentStacks > 0 && attackPotionBonus > 0 && enhancementBonus > 0)
+                    if (useRandom)
                     {
-                        effectDescription = $"현재 {actualDmg} (기본 피해 {baseDmg} + 스택 {currentStacks} + 공격력 물약 {attackPotionBonus} + 강화 {enhancementBonus})";
-                    }
-                    else if (currentStacks > 0 && enhancementBonus > 0)
-                    {
-                        effectDescription = $"현재 {actualDmg} (기본 피해 {baseDmg} + 스택 {currentStacks} + 강화 {enhancementBonus})";
-                    }
-                    else if (attackPotionBonus > 0 && enhancementBonus > 0)
-                    {
-                        effectDescription = $"현재 {actualDmg} (기본 피해 {baseDmg} + 공격력 물약 {attackPotionBonus} + 강화 {enhancementBonus})";
-                    }
-                    else if (enhancementBonus > 0)
-                    {
-                        effectDescription = $"현재 {actualDmg} (기본 피해 {baseDmg} + 강화 {enhancementBonus})";
+                        effectDescription = hits <= 1
+                            ? $"랜덤 {actualMin}~{actualMax}"
+                            : $"랜덤 {actualMin}~{actualMax} (총 {hits}회)";
                     }
                     else
                     {

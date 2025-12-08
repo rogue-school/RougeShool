@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: "\uACBD\uBA78"
   displayNameKO: 
   description: 
-  artwork: {fileID: 6335325153820656140, guid: b7185e8c434e7284abeb3b5c91b2a001, type: 3}
+  artwork: {fileID: 7992305097684913714, guid: ccad7d49a8ef5a0408bd97dedb5d75ab, type: 3}
   presentation:
     sfxClip: {fileID: 8300000, guid: d4287fcb866b9f443aa0b9cc56a6295f, type: 3}
     visualEffectPrefab: {fileID: 2663204648779552833, guid: 14e254c33e25d82499eb644e4cb9045c, type: 3}
@@ -27,6 +27,9 @@ MonoBehaviour:
       hits: 1
       ignoreGuard: 0
       ignoreCounter: 0
+      useRandomDamage: 0
+      minDamage: 0
+      maxDamage: 0
       sfxClip: {fileID: 8300000, guid: 4d109b7b270378e43867c63fb2f0341c, type: 3}
       visualEffectPrefab: {fileID: 2663204648779552833, guid: 14e254c33e25d82499eb644e4cb9045c, type: 3}
     hasResource: 0
@@ -59,7 +62,7 @@ MonoBehaviour:
         guardBlockEffectPrefab: {fileID: 0}
         guardBlockSfxClip: {fileID: 0}
         stunDuration: 3
-        stunIcon: {fileID: 0}
+        stunIcon: {fileID: -8332125718833699075, guid: 57dfbca147e2c3a45aafcb6b6ed1d8c5, type: 3}
         healAmount: 0
         healEffectPrefab: {fileID: 0}
         healSfxClip: {fileID: 0}

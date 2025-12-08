@@ -73,6 +73,36 @@ MonoBehaviour:
     minStage: 0
     maxStage: 5
     uniquePerRun: 0
+  - item: {fileID: 11400000, guid: 034dc89a73768244b901eed0f1d978c3, type: 2}
+    weight: 3
+    tags: []
+    minStage: 0
+    maxStage: 5
+    uniquePerRun: 0
+  - item: {fileID: 11400000, guid: b0a741b259f723c46af1d5d30e9191b3, type: 2}
+    weight: 2
+    tags: []
+    minStage: 0
+    maxStage: 5
+    uniquePerRun: 0
+  - item: {fileID: 11400000, guid: 16fc3ae200b53d2458e298767f344865, type: 2}
+    weight: 2
+    tags: []
+    minStage: 0
+    maxStage: 5
+    uniquePerRun: 0
+  - item: {fileID: 11400000, guid: de9daee7a4244784db291413d47a97c2, type: 2}
+    weight: 2
+    tags: []
+    minStage: 0
+    maxStage: 5
+    uniquePerRun: 0
+  - item: {fileID: 11400000, guid: e62abd9e8094016428cfb38b2b14aaa5, type: 2}
+    weight: 2
+    tags: []
+    minStage: 0
+    maxStage: 5
+    uniquePerRun: 0
   - item: {fileID: 11400000, guid: 0ce1a923728e9b74a816b26679ceb346, type: 2}
     weight: 3
     tags: []
@@ -86,7 +116,7 @@ MonoBehaviour:
     maxStage: 5
     uniquePerRun: 0
   - item: {fileID: 11400000, guid: bf2e73604ec6e694d8d4bd486a4bc16e, type: 2}
-    weight: 1
+    weight: 2
     tags: []
     minStage: 0
     maxStage: 5

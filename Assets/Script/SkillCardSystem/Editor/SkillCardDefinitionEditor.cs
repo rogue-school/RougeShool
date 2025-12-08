@@ -276,6 +276,13 @@ namespace Game.SkillCardSystem.Editor
                 settings.resourceDelta = EditorGUILayout.IntField("자원 획득량", Mathf.Max(0, settings.resourceDelta));
                 settings.resourceGainSfxClip = (AudioClip)EditorGUILayout.ObjectField("자원 획득 사운드", settings.resourceGainSfxClip, typeof(AudioClip), false);
             }
+            else if (effectSO is AttackPowerBuffSkillEffectSO)
+            {
+                EditorGUILayout.LabelField("공격력 버프 설정", EditorStyles.boldLabel);
+                settings.damageAmount = EditorGUILayout.IntField("공격력 증가 수치", Mathf.Max(0, settings.damageAmount));
+                settings.guardDuration = EditorGUILayout.IntField("버프 지속 턴 수", Mathf.Max(1, settings.guardDuration));
+                settings.guardIcon = (Sprite)EditorGUILayout.ObjectField("버프 아이콘", settings.guardIcon, typeof(Sprite), false);
+            }
             // TODO: 향후 추가될 EffectSO 타입들을 위한 예약 공간
             // else if (effectSO is DrawEffectSO)
             // {

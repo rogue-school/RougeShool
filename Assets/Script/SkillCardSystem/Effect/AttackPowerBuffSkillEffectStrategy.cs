@@ -20,8 +20,8 @@ namespace Game.SkillCardSystem.Effect
                 return null;
             }
 
-            // 현재는 커스텀 설정 없이 SO에 설정된 수치만 사용합니다.
-            return effectSO.CreateEffectCommand(0);
+            var customSettings = config.useCustomSettings ? config.customSettings : null;
+            return effectSO.CreateEffectCommand(0, customSettings);
         }
     }
 }

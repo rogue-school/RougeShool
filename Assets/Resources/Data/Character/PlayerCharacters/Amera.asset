@@ -16,7 +16,7 @@ MonoBehaviour:
   <CharacterType>k__BackingField: 2
   <MaxHP>k__BackingField: 15
   <Portrait>k__BackingField: {fileID: 21300000, guid: 87dab22ae8665ac4fb4f3cd54c1c91f5, type: 3}
-  <PortraitPrefab>k__BackingField: {fileID: 751987938129930587, guid: cfcaacc6ef976d04d9fd6fa07f74dd36, type: 3}
+  <PortraitPrefab>k__BackingField: {fileID: 751987938129930587, guid: 97fed038b9822464d91daefec0d4012f, type: 3}
   <PlayerUIPortrait>k__BackingField: {fileID: 6111465266690084320, guid: f99d558af8f4a794690914664f4195ac, type: 3}
   <Emblem>k__BackingField: {fileID: 499279765919047262, guid: c86889f583372284193c699670515224, type: 3}
   <Description>k__BackingField: "\u265A\u265A\uD788\uC5B4\uB85C\uC988 \uC624\uBE0C

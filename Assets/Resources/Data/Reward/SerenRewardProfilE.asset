@@ -23,5 +23,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f66dd7588bd4cf14d8c560b449e3793b, type: 2}
   - {fileID: 11400000, guid: 1300310cc7f1cf24cb3d7dcdc3ea3477, type: 2}
   - {fileID: 11400000, guid: 08b89723f0fb2d940b739cdfd8adc1c0, type: 2}
+  - {fileID: 11400000, guid: 099a1e641accae0499de2fcd6a75e568, type: 2}
+  - {fileID: 11400000, guid: 77afcf72f8c1b934a8f923eb2eafa587, type: 2}
+  - {fileID: 11400000, guid: 7e0aea7a41578c141a7e4c19d38dc46d, type: 2}
+  - {fileID: 11400000, guid: 034dc89a73768244b901eed0f1d978c3, type: 2}
   allowedPassiveTags: []
   bannedPassiveTags: []

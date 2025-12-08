@@ -770,11 +770,21 @@ namespace Game.SkillCardSystem.UI
             // 데미지 정보 (아이콘 + 텍스트)
             if (damageText != null && damageIconImage != null)
             {
-                if (definition.configuration?.hasDamage == true)
+                if (definition.configuration?.hasDamage == true && definition.configuration.damageConfig != null)
                 {
-                    // 카드 인스턴스의 실제 데미지 사용 (데미지 오버라이드 포함)
-                    int damage = card != null ? card.GetBaseDamage() : definition.configuration.damageConfig.baseDamage;
-                    damageText.text = $"데미지: {damage}";
+                    var dmgConfig = definition.configuration.damageConfig;
+                    if (dmgConfig.useRandomDamage)
+                    {
+                        int min = Mathf.Max(0, dmgConfig.minDamage);
+                        int max = Mathf.Max(min, dmgConfig.maxDamage);
+                        damageText.text = $"데미지: {min}~{max}";
+                    }
+                    else
+                    {
+                        int damage = card != null ? card.GetBaseDamage() : dmgConfig.baseDamage;
+                        damageText.text = $"데미지: {damage}";
+                    }
+                    
                     damageText.gameObject.SetActive(true);
                     damageIconImage.gameObject.SetActive(true);
                 }
