@@ -119,6 +119,49 @@ namespace Game.SkillCardSystem.UI.Mappers
                             }
                         }
 
+                        // 공격력 버프 효과 (집중 등)
+                        if (so is AttackPowerBuffSkillEffectSO attackPowerBuff)
+                        {
+                            string effectName = GetEffectName(so, "공격력 증가");
+
+                            int bonus = 0;
+                            int duration = 0;
+                            if (cs != null)
+                            {
+                                bonus = Mathf.Max(0, cs.damageAmount);
+                                duration = Mathf.Max(0, cs.guardDuration);
+                            }
+
+                            if (bonus <= 0)
+                            {
+                                bonus = attackPowerBuff.DefaultAttackPowerBonus;
+                            }
+
+                            if (duration <= 0)
+                            {
+                                duration = attackPowerBuff.DefaultDuration;
+                            }
+
+                            if (bonus > 0)
+                            {
+                                if (duration > 0)
+                                {
+                                    ruleLines.Add($"{duration}턴 동안 공격력이 {bonus} 증가합니다.");
+                                }
+                                else
+                                {
+                                    ruleLines.Add($"공격력이 {bonus} 증가합니다.");
+                                }
+
+                                model.Effects.Add(new TooltipModel.EffectRow
+                                {
+                                    Name = effectName,
+                                    Description = duration > 0 ? $"+{bonus}, {duration}턴" : $"+{bonus}",
+                                    Color = new Color(1f, 0.85f, 0.4f)
+                                });
+                            }
+                        }
+
                         if (so is BleedEffectSO)
                         {
                             string effectName = GetEffectName(so, "출혈");
@@ -288,8 +331,9 @@ namespace Game.SkillCardSystem.UI.Mappers
                     }
                 if (config.hasDamage && config.damageConfig != null)
                 {
+                    bool isPlayerCard = card != null && card.IsFromPlayer();
                     var baseDmg = card != null ? card.GetBaseDamage() : config.damageConfig.baseDamage;
-                    bool useRandom = config.damageConfig.useRandomDamage;
+                    bool useRandom = config.damageConfig.useRandomDamage && isPlayerCard;
                     var minDmg = Mathf.Max(0, config.damageConfig.minDamage);
                     var maxDmg = Mathf.Max(minDmg, config.damageConfig.maxDamage);
                     var baseMin = minDmg;
@@ -302,7 +346,7 @@ namespace Game.SkillCardSystem.UI.Mappers
                     }
                     
                     int enhancementBonus = 0;
-                    if (card != null && card.IsFromPlayer())
+                    if (isPlayerCard)
                     {
                         var itemService = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
                         if (itemService != null)
@@ -328,7 +372,7 @@ namespace Game.SkillCardSystem.UI.Mappers
                             {
                                 bonusText = $" (기본 {baseMin}~{baseMax}"
                                             + (currentStacks > 0 ? $", 스택 {currentStacks}" : "")
-                                            + (attackPotionBonus > 0 ? $", 공격력 물약 {attackPotionBonus}" : "")
+                                            + (attackPotionBonus > 0 ? $", 공격력 버프 {attackPotionBonus}" : "")
                                             + (enhancementBonus > 0 ? $", 강화 {enhancementBonus}" : "")
                                             + ")";
                             }
@@ -340,7 +384,7 @@ namespace Game.SkillCardSystem.UI.Mappers
                             {
                                 string bonusText = $" (기본 피해 {baseDmg}"
                                     + (currentStacks > 0 ? $", 스택 {currentStacks}" : "")
-                                    + (attackPotionBonus > 0 ? $", 공격력 물약 {attackPotionBonus}" : "")
+                                    + (attackPotionBonus > 0 ? $", 공격력 버프 {attackPotionBonus}" : "")
                                     + (enhancementBonus > 0 ? $", 강화 {enhancementBonus}" : "")
                                     + ")";
                                 ruleLines.Add($"피해 {KoreanTextHelper.AddKoreanParticle(actualDmg, "을/를")} 줍니다.{bonusText}");
@@ -362,7 +406,7 @@ namespace Game.SkillCardSystem.UI.Mappers
                             {
                                 bonusText = $" (기본 {baseMin}~{baseMax}"
                                             + (currentStacks > 0 ? $", 스택 {currentStacks}" : "")
-                                            + (attackPotionBonus > 0 ? $", 공격력 물약 {attackPotionBonus}" : "")
+                                            + (attackPotionBonus > 0 ? $", 공격력 버프 {attackPotionBonus}" : "")
                                             + (enhancementBonus > 0 ? $", 강화 {enhancementBonus}" : "")
                                             + ")";
                             }
@@ -374,7 +418,7 @@ namespace Game.SkillCardSystem.UI.Mappers
                             {
                                 string bonusText = $" (기본 피해 {baseDmg}"
                                     + (currentStacks > 0 ? $", 스택 {currentStacks}" : "")
-                                    + (attackPotionBonus > 0 ? $", 공격력 물약 {attackPotionBonus}" : "")
+                                    + (attackPotionBonus > 0 ? $", 공격력 버프 {attackPotionBonus}" : "")
                                     + (enhancementBonus > 0 ? $", 강화 {enhancementBonus}" : "")
                                     + ")";
                                 ruleLines.Add($"피해 {KoreanTextHelper.AddKoreanParticle(actualDmg, "을/를")} {KoreanTextHelper.AddKoreanParticle(hits, "을/를")}번 줍니다.{bonusText}");
@@ -422,6 +466,51 @@ namespace Game.SkillCardSystem.UI.Mappers
                     {
                         var so = effectConfig.effectSO;
                         var cs = effectConfig.useCustomSettings ? effectConfig.customSettings : null;
+
+                        // 공격력 버프 효과 (집중 등)
+                        if (so is AttackPowerBuffSkillEffectSO attackPowerBuff)
+                        {
+                            string effectName = GetEffectName(so, "공격력 증가");
+
+                            int bonus = 0;
+                            int duration = 0;
+                            if (cs != null)
+                            {
+                                bonus = Mathf.Max(0, cs.damageAmount);
+                                duration = Mathf.Max(0, cs.guardDuration);
+                            }
+
+                            if (bonus <= 0)
+                            {
+                                bonus = attackPowerBuff.DefaultAttackPowerBonus;
+                            }
+
+                            if (duration <= 0)
+                            {
+                                duration = attackPowerBuff.DefaultDuration;
+                            }
+
+                            if (bonus > 0)
+                            {
+                                if (duration > 0)
+                                {
+                                    ruleLines.Add($"{duration}턴 동안 공격력이 {bonus} 증가합니다.");
+                                }
+                                else
+                                {
+                                    ruleLines.Add($"공격력이 {bonus} 증가합니다.");
+                                }
+
+                                model.Effects.Add(new TooltipModel.EffectRow
+                                {
+                                    Name = effectName,
+                                    Description = duration > 0 ? $"+{bonus}, {duration}턴" : $"+{bonus}",
+                                    Color = new Color(1f, 0.85f, 0.4f)
+                                });
+                            }
+
+                            continue;
+                        }
 
                         if (so is BleedEffectSO)
                         {
@@ -585,10 +674,10 @@ namespace Game.SkillCardSystem.UI.Mappers
         }
 
         /// <summary>
-        /// 공격력 물약 버프 보너스를 계산합니다.
+        /// 공격력 버프(포션/스킬 포함) 보너스를 계산합니다.
         /// </summary>
         /// <param name="playerCharacter">플레이어 캐릭터</param>
-        /// <returns>공격력 물약 보너스</returns>
+        /// <returns>공격력 버프 보너스</returns>
         private static int GetAttackPotionBonus(Game.CharacterSystem.Interface.ICharacter playerCharacter)
         {
             if (playerCharacter == null) return 0;
@@ -612,11 +701,11 @@ namespace Game.SkillCardSystem.UI.Mappers
         /// </summary>
         /// <param name="baseDamage">기본 데미지</param>
         /// <param name="currentStacks">현재 스택 수</param>
-        /// <param name="attackPotionBonus">공격력 물약 보너스</param>
+        /// <param name="attackPotionBonus">공격력 버프 보너스</param>
         /// <returns>실제 적용 데미지</returns>
         private static int CalculateActualDamage(int baseDamage, int currentStacks, int attackPotionBonus = 0, int enhancementBonus = 0)
         {
-            // 선형 증가: 기본 데미지 + 스택 수 + 공격력 물약 + 강화 보너스
+            // 선형 증가: 기본 데미지 + 스택 수 + 공격력 버프 + 강화 보너스
             return baseDamage + currentStacks + attackPotionBonus + enhancementBonus;
         }
     }

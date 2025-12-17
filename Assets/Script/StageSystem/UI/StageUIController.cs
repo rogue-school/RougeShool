@@ -4,6 +4,9 @@ using TMPro;
 using DG.Tweening;
 using Game.CoreSystem.UI;
 using Game.CoreSystem.Utility;
+using Game.StageSystem.Data;
+using Game.StageSystem.Interface;
+using Game.StageSystem.Manager;
 using Zenject;
 
 namespace Game.StageSystem.UI
@@ -26,12 +29,19 @@ namespace Game.StageSystem.UI
         
         [Tooltip("메시지 표시 패널 (선택적, messageText가 없을 경우 사용)")]
         [SerializeField] private GameObject messagePanel;
+
+        [Header("스테이지 배경")]
+        [Tooltip("현재 스테이지에 따라 변경될 배경 이미지")]
+        [SerializeField] private Image stageBackgroundImage;
         
         [Header("설정")]
         [SerializeField] private bool enableDebugLogging = true;
 
         // SettingsManager DI 주입
         [Inject(Optional = true)] private SettingsManager settingsManager;
+        [Inject(Optional = true)] private IStageManager stageManager;
+
+        private StageManager concreteStageManager;
         
         private Tween messageTween;
         private CanvasGroup messageCanvasGroup;
@@ -40,6 +50,7 @@ namespace Game.StageSystem.UI
         {
             InitializeUI();
             InitializeCanvasGroups();
+            InitializeStageBackground();
 
             if (settingsManager == null && enableDebugLogging)
             {
@@ -75,6 +86,32 @@ namespace Game.StageSystem.UI
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// 스테이지 배경 초기화 및 이벤트 구독
+        /// </summary>
+        private void InitializeStageBackground()
+        {
+            if (stageBackgroundImage == null)
+            {
+                return;
+            }
+
+            if (stageManager == null)
+            {
+                GameLogger.LogWarning("[StageUIController] StageManager가 주입되지 않았습니다 - 스테이지 배경 업데이트를 건너뜁니다", GameLogger.LogCategory.UI);
+                return;
+            }
+
+            concreteStageManager = stageManager as StageManager;
+            if (concreteStageManager != null)
+            {
+                concreteStageManager.OnStageTransition += OnStageTransition;
+                concreteStageManager.OnProgressChanged += OnStageProgressChanged;
+            }
+
+            UpdateStageBackground(stageManager.GetCurrentStage());
         }
         
         /// <summary>
@@ -119,7 +156,7 @@ namespace Game.StageSystem.UI
                 }
             }
         }
-        
+
         private void Update()
         {
             // ESC 키로 설정창 열기
@@ -154,7 +191,58 @@ namespace Game.StageSystem.UI
                 GameLogger.LogError($"설정창 열기 실패: {ex.Message}", GameLogger.LogCategory.Error);
             }
         }
-        
+
+        /// <summary>
+        /// 스테이지 전환 시 배경을 업데이트합니다.
+        /// </summary>
+        private void OnStageTransition(StageData previousStage, StageData newStage)
+        {
+            UpdateStageBackground(newStage);
+        }
+
+        /// <summary>
+        /// 스테이지 진행 상태 변경 시 배경을 업데이트합니다.
+        /// </summary>
+        /// <param name="state">변경된 진행 상태</param>
+        private void OnStageProgressChanged(StageProgressState state)
+        {
+            if (state == StageProgressState.InProgress)
+            {
+                UpdateStageBackground(stageManager?.GetCurrentStage());
+            }
+        }
+
+        /// <summary>
+        /// 현재 스테이지 정보에 따라 배경 이미지를 설정합니다.
+        /// </summary>
+        /// <param name="stageData">배경을 설정할 스테이지 데이터</param>
+        private void UpdateStageBackground(StageData stageData)
+        {
+            if (stageBackgroundImage == null)
+            {
+                return;
+            }
+
+            if (stageData != null && stageData.StageBackgroundSprite != null)
+            {
+                stageBackgroundImage.sprite = stageData.StageBackgroundSprite;
+                stageBackgroundImage.enabled = true;
+
+                if (enableDebugLogging)
+                {
+                    GameLogger.LogInfo($"[StageUIController] 스테이지 배경 업데이트: {stageData.stageName}", GameLogger.LogCategory.UI);
+                }
+            }
+            else
+            {
+                // 배경 스프라이트가 설정되지 않은 경우에는 기존 이미지를 유지하거나 비활성화만 처리
+                if (enableDebugLogging)
+                {
+                    GameLogger.LogInfo("[StageUIController] 스테이지 배경 스프라이트가 설정되지 않았습니다. 기본 배경을 유지합니다.", GameLogger.LogCategory.UI);
+                }
+            }
+        }
+
         /// <summary>
         /// 도감 UI 버튼 클릭
         /// </summary>
@@ -163,7 +251,7 @@ namespace Game.StageSystem.UI
             GameLogger.LogInfo("[StageUIController] 도감 UI 버튼 클릭", GameLogger.LogCategory.UI);
             ShowUpcomingUpdateMessage();
         }
-        
+
         /// <summary>
         /// 추후 업데이트 예정 메시지 표시
         /// </summary>
@@ -263,7 +351,7 @@ namespace Game.StageSystem.UI
             messageTween?.Kill();
             messageTween = null;
         }
-        
+
         private void OnDestroy()
         {
             // 이벤트 해제
@@ -275,6 +363,12 @@ namespace Game.StageSystem.UI
             
             messageTween?.Kill();
             messageTween = null;
+
+            if (concreteStageManager != null)
+            {
+                concreteStageManager.OnStageTransition -= OnStageTransition;
+                concreteStageManager.OnProgressChanged -= OnStageProgressChanged;
+            }
         }
     }
 }

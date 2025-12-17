@@ -23,6 +23,11 @@ namespace Game.StageSystem.Data
         [Header("스테이지 설정")]
         [Tooltip("스테이지 완료 시 다음 스테이지로 자동 진행")]
         public bool autoProgressToNext = true;
+
+        [Space(10)]
+        [Header("배경 설정")]
+        [Tooltip("이 스테이지에서 사용할 배경 이미지")]
+        [SerializeField] private Sprite _stageBackgroundSprite;
         
         [Space(10)]
         [Header("적 설정")]
@@ -51,6 +56,11 @@ namespace Game.StageSystem.Data
         /// 마지막 스테이지인지 확인
         /// </summary>
         public bool IsLastStage => stageNumber >= 4;
+
+        /// <summary>
+        /// 이 스테이지에서 사용할 배경 스프라이트
+        /// </summary>
+        public Sprite StageBackgroundSprite => _stageBackgroundSprite;
         
         #endregion
         

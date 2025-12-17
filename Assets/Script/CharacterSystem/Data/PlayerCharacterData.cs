@@ -1,5 +1,6 @@
 using UnityEngine;
 using Game.SkillCardSystem.Deck;
+using Game.SkillCardSystem.Data;
 using Game.CharacterSystem.Interface;
 
 namespace Game.CharacterSystem.Data
@@ -91,12 +92,24 @@ namespace Game.CharacterSystem.Data
         #endregion
 
         #region 스킬 덱
-
+		
         /// <summary>
         /// 캐릭터가 사용하는 스킬 카드 덱입니다.
         /// </summary>
         [field: SerializeField]
         public PlayerSkillDeck SkillDeck { get; private set; }
+		
+        #endregion
+
+        #region 고유 스킬 카드
+
+        /// <summary>
+        /// 스테이지 1 마지막 적 처치 시 추가 보상으로 지급할 고유 스킬카드입니다.
+        /// </summary>
+        [field: Header("고유 스킬 카드 설정")]
+        [field: Tooltip("스테이지 1 마지막 적 처치 시 추가 보상으로 지급할 고유 스킬카드")]
+        [field: SerializeField]
+        public SkillCardDefinition UniqueSkillCard { get; private set; }
 
         #endregion
     }

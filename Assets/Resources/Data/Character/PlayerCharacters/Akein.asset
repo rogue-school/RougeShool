@@ -26,3 +26,4 @@ MonoBehaviour:
   <InitialResource>k__BackingField: 0
   <ResourceName>k__BackingField: 
   <SkillDeck>k__BackingField: {fileID: 11400000, guid: 01a1f3cd905df2e439aedf79636eaf13, type: 2}
+  <UniqueSkillCard>k__BackingField: {fileID: 11400000, guid: f5c061a2e9e9bf04d8622e68fabd5444, type: 2}

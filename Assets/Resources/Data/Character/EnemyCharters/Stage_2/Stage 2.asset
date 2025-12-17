@@ -16,7 +16,7 @@ MonoBehaviour:
   stageName: "\uC2A4\uD14C\uC774\uC9C0 2"
   stageDescription: "\uC2A4\uD14C\uC774\uC9C0 \uC124\uBA85"
   autoProgressToNext: 1
-  backgroundSprite: {fileID: -5722983415446139471, guid: 280b1d8ac291cb34daa385fd5084f711, type: 3}
+  _stageBackgroundSprite: {fileID: -8480656827663139636, guid: 22afbf6e2dcabfa40ac1d3e478a0c670, type: 3}
   enemies:
   - {fileID: 11400000, guid: 1c8e838f54cb4a04aae0a8691536623c, type: 2}
   - {fileID: 11400000, guid: 50162d6a562db924ea27f0ad5ebf451c, type: 2}

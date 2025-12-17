@@ -17,15 +17,16 @@ MonoBehaviour:
   tagWeightAdjust: []
   bannedActiveItems: []
   bannedPassiveItems:
+  - {fileID: 11400000, guid: c99a32792f42a79448cf650f44c4e07e, type: 2}
   - {fileID: 11400000, guid: 41e0a9dd4c5a9b940a1dcfa406ff7e07, type: 2}
   - {fileID: 11400000, guid: 0e7bfb3db8a181f43b4bdfc53fafdde4, type: 2}
   - {fileID: 11400000, guid: f66dd7588bd4cf14d8c560b449e3793b, type: 2}
   - {fileID: 11400000, guid: 1300310cc7f1cf24cb3d7dcdc3ea3477, type: 2}
   - {fileID: 11400000, guid: 08b89723f0fb2d940b739cdfd8adc1c0, type: 2}
-  - {fileID: 11400000, guid: 099a1e641accae0499de2fcd6a75e568, type: 2}
-  - {fileID: 11400000, guid: 77afcf72f8c1b934a8f923eb2eafa587, type: 2}
-  - {fileID: 11400000, guid: 7e0aea7a41578c141a7e4c19d38dc46d, type: 2}
-  - {fileID: 11400000, guid: e892a02c321ea7241a0bbf5ee246ab71, type: 2}
-  - {fileID: 11400000, guid: c99a32792f42a79448cf650f44c4e07e, type: 2}
+  - {fileID: 11400000, guid: 034dc89a73768244b901eed0f1d978c3, type: 2}
+  - {fileID: 11400000, guid: b0a741b259f723c46af1d5d30e9191b3, type: 2}
+  - {fileID: 11400000, guid: 16fc3ae200b53d2458e298767f344865, type: 2}
+  - {fileID: 11400000, guid: de9daee7a4244784db291413d47a97c2, type: 2}
+  - {fileID: 11400000, guid: e62abd9e8094016428cfb38b2b14aaa5, type: 2}
   allowedPassiveTags: []
   bannedPassiveTags: []

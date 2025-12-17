@@ -40,6 +40,13 @@ namespace Game.CharacterSystem.Data
         public Sprite Portrait { get; private set; }
 
         /// <summary>
+        /// 인덱스 UI 등에 사용될 전용 아이콘 이미지입니다.
+        /// 설정되지 않은 경우 Portrait를 사용할 수 있습니다.
+        /// </summary>
+        [field: SerializeField]
+        public Sprite IndexIcon { get; private set; }
+
+        /// <summary>
         /// 캐릭터의 Portrait 프리팹입니다.
         /// 각 캐릭터마다 독립적인 Portrait 프리팹을 설정할 수 있습니다.
         /// 비어 있으면 기본 Portrait GameObject를 사용합니다(폴백).

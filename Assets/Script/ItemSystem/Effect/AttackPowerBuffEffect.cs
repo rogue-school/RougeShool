@@ -1,5 +1,6 @@
 using Game.CharacterSystem.Interface;
 using Game.ItemSystem.Interface;
+using Game.SkillCardSystem.Effect;
 using UnityEngine;
 
 namespace Game.ItemSystem.Effect
@@ -14,6 +15,9 @@ namespace Game.ItemSystem.Effect
         /// <summary>버프로 증가하는 공격력 수치</summary>
         public int AttackPowerBonus { get; private set; }
 
+        /// <summary>원본 스킬 효과 이름 (스킬 기반 버프 식별용, 아이템 버프는 null)</summary>
+        public string SourceEffectName { get; private set; }
+
         /// <summary>
         /// 공격력 버프 효과를 생성합니다.
         /// </summary>
@@ -21,16 +25,19 @@ namespace Game.ItemSystem.Effect
         /// <param name="duration">지속 턴 수</param>
         /// <param name="turnPolicy">턴 감소 정책</param>
         /// <param name="icon">UI 아이콘</param>
-        /// <param name="sourceItemName">원본 아이템 이름 (선택적)</param>
+        /// <param name="sourceItemName">원본 아이템 이름 (선택적, 아이템 유래 버프용)</param>
+        /// <param name="sourceEffectName">원본 스킬 효과 이름 (선택적, 스킬 유래 버프용)</param>
         public AttackPowerBuffEffect(
             int attackPowerBonus,
             int duration,
             ItemEffectTurnPolicy turnPolicy,
             Sprite icon = null,
-            string sourceItemName = null)
+            string sourceItemName = null,
+            string sourceEffectName = null)
             : base(duration, turnPolicy, icon, sourceItemName)
         {
             AttackPowerBonus = attackPowerBonus;
+            SourceEffectName = sourceEffectName;
         }
 
         /// <summary>

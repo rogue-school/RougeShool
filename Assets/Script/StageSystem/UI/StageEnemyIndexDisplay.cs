@@ -4,6 +4,7 @@ using Game.StageSystem.Interface;
 using Game.StageSystem.Data;
 using Game.StageSystem.Manager;
 using Game.CoreSystem.Utility;
+using UnityEngine.UI;
 using Zenject;
 
 namespace Game.StageSystem.UI
@@ -25,6 +26,10 @@ namespace Game.StageSystem.UI
         [Header("죽은 적 UI 설정")]
         [Tooltip("죽은 적 표시 UI 프리팹 (EnemyDeadUI)")]
         [SerializeField] private GameObject enemyDeadUIPrefab;
+
+        [Header("적 미리보기 이미지 설정")]
+        [Tooltip("스테이지 적 순서에 맞게 표시할 미리보기 이미지들 (0번째 = 첫 번째 적)")]
+        [SerializeField] private List<Image> enemyPreviewImages = new List<Image>();
 
         [Header("설정")]
         [Tooltip("디버그 로깅 활성화")]
@@ -175,12 +180,18 @@ namespace Game.StageSystem.UI
                 {
                     GameLogger.LogInfo("[StageEnemyIndexDisplay] 스테이지 데이터가 없어 마커를 숨깁니다.", GameLogger.LogCategory.UI);
                 }
+
                 if (targetMarker != null)
                 {
                     targetMarker.gameObject.SetActive(false);
                 }
+
+                RefreshEnemyPreviews(null);
                 return;
             }
+
+            // 적 미리보기 이미지 갱신
+            RefreshEnemyPreviews(currentStage);
 
             int currentEnemyIndex = GetCurrentEnemyIndex();
 
@@ -262,6 +273,58 @@ namespace Game.StageSystem.UI
             if (enableDebugLogging)
             {
                 GameLogger.LogInfo($"[StageEnemyIndexDisplay] 타겟 마커 이동: 인덱스 {enemyIndex + 1} 위치로 이동 (위치: {targetPosition.position})", GameLogger.LogCategory.UI);
+            }
+        }
+
+        /// <summary>
+        /// 현재 스테이지 정보에 따라 적 미리보기 이미지를 갱신합니다.
+        /// </summary>
+        /// <param name="currentStage">현재 스테이지 데이터</param>
+        private void RefreshEnemyPreviews(StageData currentStage)
+        {
+            if (enemyPreviewImages == null || enemyPreviewImages.Count == 0)
+            {
+                return;
+            }
+
+            for (int i = 0; i < enemyPreviewImages.Count; i++)
+            {
+                var image = enemyPreviewImages[i];
+                if (image == null)
+                {
+                    continue;
+                }
+
+                if (currentStage != null && currentStage.enemies != null && i < currentStage.enemies.Count)
+                {
+                    var enemyData = currentStage.enemies[i];
+                    Sprite icon = null;
+
+                    if (enemyData != null)
+                    {
+                        // 인덱스 전용 아이콘이 있으면 우선 사용하고, 없으면 Portrait를 사용합니다.
+                        icon = enemyData.IndexIcon != null ? enemyData.IndexIcon : enemyData.Portrait;
+                    }
+
+                    if (icon != null)
+                    {
+                        image.sprite = icon;
+                        image.enabled = true;
+                    }
+                    else
+                    {
+                        image.enabled = false;
+
+                        if (enableDebugLogging)
+                        {
+                            GameLogger.LogWarning($"[StageEnemyIndexDisplay] {i + 1}번째 적의 인덱스용 아이콘 또는 Portrait가 설정되지 않았습니다.", GameLogger.LogCategory.UI);
+                        }
+                    }
+                }
+                else
+                {
+                    image.enabled = false;
+                }
             }
         }
 

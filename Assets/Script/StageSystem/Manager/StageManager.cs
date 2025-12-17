@@ -15,6 +15,8 @@ using DG.Tweening;
 using Game.CoreSystem.Audio;
 using Game.ItemSystem.Runtime;
 using Game.CoreSystem.Statistics;
+using Game.SkillCardSystem.Data;
+using Game.SkillCardSystem.Interface;
 
 namespace Game.StageSystem.Manager
 {
@@ -90,6 +92,7 @@ namespace Game.StageSystem.Manager
         [Zenject.Inject(Optional = true)] private Game.SkillCardSystem.Manager.PlayerHandManager playerHandManagerConcrete;
         [Zenject.Inject(Optional = true)] private GameSessionStatistics gameSessionStatistics;
         [Zenject.Inject(Optional = true)] private IStatisticsManager statisticsManager;
+        [Zenject.Inject(Optional = true)] private ICardCirculationSystem cardCirculationSystem;
 
         private bool isWaitingForPlayer = false;
 
@@ -626,6 +629,9 @@ namespace Game.StageSystem.Manager
 		/// </summary>
         public void OnEnemyDefeatedCleanupCompleted()
         {
+			// 스테이지 1의 마지막 적 처치 시 스킬카드 보상 지급 시도
+			TryGiveStage1FinalEnemyCardReward();
+			
 			// 보상 UI 열기 및 완료 대기 (설정된 경우)
 			if (rewardBridge != null)
 			{
@@ -639,6 +645,130 @@ namespace Game.StageSystem.Manager
                 // 보상 브리지가 없으면 바로 다음 진행
                 UpdateStageProgress(null);
             }
+		}
+
+		/// <summary>
+		/// 스테이지 1의 마지막 적을 처치했을 때 스킬카드 보상을 지급합니다.
+		/// 보상은 덱에 추가되며, 다음 스테이지부터 전투에 등장합니다.
+		/// </summary>
+		private void TryGiveStage1FinalEnemyCardReward()
+		{
+			try
+			{
+				// 스테이지 정보 또는 보상 시스템이 준비되지 않은 경우 건너뜀
+				if (currentStage == null)
+				{
+					return;
+				}
+
+				// 스테이지 1이 아니면 처리하지 않음
+				if (currentStage.stageNumber != 1)
+				{
+					return;
+				}
+
+				// 아직 남은 적이 있다면 마지막 적이 아니므로 처리하지 않음
+				if (HasMoreEnemies())
+				{
+					return;
+				}
+
+				// 플레이어/캐릭터 데이터 확인
+				if (playerManager == null)
+				{
+					GameLogger.LogWarning("[StageManager] PlayerManager가 주입되지 않았습니다. 스킬카드 보상을 지급할 수 없습니다.", GameLogger.LogCategory.SkillCard);
+					return;
+				}
+
+				var player = playerManager.GetPlayer();
+				if (player == null)
+				{
+					GameLogger.LogWarning("[StageManager] 플레이어 캐릭터가 생성되지 않았습니다. 스킬카드 보상을 지급할 수 없습니다.", GameLogger.LogCategory.SkillCard);
+					return;
+				}
+
+				if (player.CharacterData is not PlayerCharacterData playerData)
+				{
+					GameLogger.LogWarning("[StageManager] 플레이어 캐릭터 데이터가 PlayerCharacterData가 아닙니다. 스킬카드 보상을 지급할 수 없습니다.", GameLogger.LogCategory.SkillCard);
+					return;
+				}
+
+				// 우선 캐릭터에 설정된 고유 스킬카드를 보상으로 사용
+				SkillCardDefinition rewardCard = playerData.UniqueSkillCard;
+
+				// 고유 스킬카드가 설정되지 않은 경우, 스킬 덱에서 플레이어/공용 카드 중 하나를 선택
+				if (rewardCard == null)
+				{
+					if (playerData.SkillDeck == null)
+					{
+						GameLogger.LogWarning($"[StageManager] 플레이어 캐릭터 '{playerData.DisplayName}'의 스킬 덱이 설정되지 않았습니다. 스킬카드 보상을 지급할 수 없습니다.", GameLogger.LogCategory.SkillCard);
+						return;
+					}
+
+					var cardEntries = playerData.SkillDeck.CardEntries;
+					if (cardEntries != null)
+					{
+						foreach (var entry in cardEntries)
+						{
+							if (entry == null || entry.cardDefinition == null)
+							{
+								continue;
+							}
+
+							var definition = entry.cardDefinition;
+							if (definition.configuration.ownerPolicy == OwnerPolicy.Enemy)
+							{
+								continue;
+							}
+
+							rewardCard = definition;
+							break;
+						}
+					}
+				}
+
+				if (rewardCard == null)
+				{
+					GameLogger.LogWarning("[StageManager] 스킬 덱에서 보상으로 줄 수 있는 스킬카드를 찾지 못했습니다.", GameLogger.LogCategory.SkillCard);
+					return;
+				}
+
+				// 보상 UI 브리지가 있으면: 보상창에서 선택/나가기 시 지급되도록 후보만 설정
+				if (rewardBridge != null)
+				{
+					rewardBridge.SetPendingSkillCardReward(rewardCard);
+
+					if (debugSettings != null && debugSettings.showRewardInfo)
+					{
+						GameLogger.LogInfo($"[StageManager] 스테이지 1 마지막 적 처치 보상으로 스킬카드 후보 설정: {rewardCard.displayName}", GameLogger.LogCategory.SkillCard);
+					}
+				}
+				else
+				{
+					// 보상 UI가 없으면 즉시 덱에 추가 (자동 지급)
+					if (cardCirculationSystem == null)
+					{
+						GameLogger.LogWarning("[StageManager] 카드 순환 시스템이 주입되지 않았습니다. 스킬카드 보상을 자동 지급할 수 없습니다.", GameLogger.LogCategory.SkillCard);
+						return;
+					}
+
+					bool success = cardCirculationSystem.GiveCardReward(rewardCard, 1);
+					if (!success)
+					{
+						GameLogger.LogWarning($"[StageManager] 스킬카드 보상 자동 지급에 실패했습니다: {rewardCard.displayName}", GameLogger.LogCategory.SkillCard);
+						return;
+					}
+
+					if (debugSettings != null && debugSettings.showRewardInfo)
+					{
+						GameLogger.LogInfo($"[StageManager] 스테이지 1 마지막 적 처치 보상으로 스킬카드 자동 지급: {rewardCard.displayName}", GameLogger.LogCategory.SkillCard);
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				GameLogger.LogError($"[StageManager] 스킬카드 보상 처리 중 오류 발생: {ex.Message}", GameLogger.LogCategory.Error);
+			}
 		}
 
         /// <summary>

@@ -240,12 +240,43 @@ namespace Game.CharacterSystem.Core
                 return;
             }
 
-            // 동일 타입 효과가 이미 존재하면 중첩하지 않고 교체(지속시간/수치 초기화 목적)
-            var existing = perTurnEffects.Find(e => e != null && e.GetType() == effect.GetType());
-            if (existing != null)
+            // 공격력 증가 버프는 출처별로 동작 방식이 다르므로 별도 처리
+            if (effect is Game.ItemSystem.Effect.AttackPowerBuffEffect attackPowerBuff)
             {
-                perTurnEffects.Remove(existing);
-                GameLogger.LogInfo($"[{GetCharacterDataName()}] 상태이상 재적용: {effect.GetType().Name} → 기존 효과 제거 후 새 효과로 갱신(지속시간 초기화)", GameLogger.LogCategory.Character);
+                // 1) 아이템 유래 버프: SourceItemName이 있는 경우
+                //    → 동시에 하나만 유지, 새로운 아이템 버프로 기존 아이템 버프를 교체
+                // 2) 스킬 유래 버프: SourceItemName이 비어 있고 SourceEffectName만 있는 경우
+                //    → 여러 스킬에서 온 버프가 동시에 존재할 수 있으므로 제거 없이 누적
+                bool isItemBuff = !string.IsNullOrEmpty(attackPowerBuff.SourceItemName);
+
+                if (isItemBuff)
+                {
+                    // 기존 아이템 공격력 버프만 제거 (스킬 유래 버프는 유지)
+                    for (int i = perTurnEffects.Count - 1; i >= 0; i--)
+                    {
+                        if (perTurnEffects[i] is Game.ItemSystem.Effect.AttackPowerBuffEffect existingBuff &&
+                            !string.IsNullOrEmpty(existingBuff.SourceItemName))
+                        {
+                            perTurnEffects.RemoveAt(i);
+                        }
+                    }
+
+                    GameLogger.LogInfo(
+                        $"[{GetCharacterDataName()}] 아이템 공격력 버프 재적용: {attackPowerBuff.SourceItemName ?? "Unknown"}",
+                        GameLogger.LogCategory.Character);
+                }
+            }
+            else
+            {
+                // 기본 규칙: 동일 타입 효과는 하나만 유지(재적용 시 교체)
+                var existing = perTurnEffects.Find(e => e != null && e.GetType() == effect.GetType());
+                if (existing != null)
+                {
+                    perTurnEffects.Remove(existing);
+                    GameLogger.LogInfo(
+                        $"[{GetCharacterDataName()}] 상태이상 재적용: {effect.GetType().Name} → 기존 효과 제거 후 새 효과로 갱신(지속시간 초기화)",
+                        GameLogger.LogCategory.Character);
+                }
             }
 
             perTurnEffects.Add(effect);

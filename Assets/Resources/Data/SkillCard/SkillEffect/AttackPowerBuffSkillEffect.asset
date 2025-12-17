@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   effectName: 
   description: 
-  effectIcon: {fileID: 0}
+  effectIcon: {fileID: 4321231726138488557, guid: 46404f585870a154e9b50ba3578806cb, type: 3}
   _attackPowerBonus: 3
   _duration: 1
-  _icon: {fileID: 0}
+  _icon: {fileID: 4321231726138488557, guid: 46404f585870a154e9b50ba3578806cb, type: 3}

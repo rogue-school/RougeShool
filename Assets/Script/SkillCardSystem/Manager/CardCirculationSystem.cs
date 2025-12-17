@@ -19,6 +19,7 @@ namespace Game.SkillCardSystem.Manager
         private readonly List<ISkillCard> playerDeck = new();
         private readonly List<ISkillCard> currentTurnCards = new();
         private readonly IPlayerDeckManager playerDeckManager;
+        private readonly ISkillCardFactory skillCardFactory;
         
         // 턴 관리 필드
         private bool isTurnStarted = false;
@@ -28,9 +29,10 @@ namespace Game.SkillCardSystem.Manager
 
         #region 생성자
 
-        public CardCirculationSystem(IPlayerDeckManager playerDeckManager)
+        public CardCirculationSystem(IPlayerDeckManager playerDeckManager, ISkillCardFactory skillCardFactory)
         {
             this.playerDeckManager = playerDeckManager;
+            this.skillCardFactory = skillCardFactory;
         }
 
         #endregion
@@ -142,15 +144,33 @@ namespace Game.SkillCardSystem.Manager
             }
 
             bool success = playerDeckManager.AddCardToDeck(cardDefinition, quantity);
-            if (success)
-            {
-            }
-            else
+            if (!success)
             {
                 GameLogger.LogWarning($"카드 보상 지급 실패: {cardDefinition.displayName} x{quantity}", GameLogger.LogCategory.SkillCard);
+                return false;
             }
 
-            return success;
+            // 런타임 덱에도 동일한 수량만큼 카드 인스턴스를 추가하여 다음 턴부터 사용할 수 있도록 합니다.
+            if (skillCardFactory == null)
+            {
+                GameLogger.LogWarning("[CardCirculationSystem] SkillCardFactory가 주입되지 않았습니다. 런타임 덱에는 카드가 추가되지 않습니다.", GameLogger.LogCategory.SkillCard);
+                return true;
+            }
+
+            for (int i = 0; i < quantity; i++)
+            {
+                var cardInstance = skillCardFactory.CreatePlayerCard(cardDefinition);
+                if (cardInstance != null)
+                {
+                    playerDeck.Add(cardInstance);
+                }
+                else
+                {
+                    GameLogger.LogWarning($"[CardCirculationSystem] 스킬카드 인스턴스 생성 실패: {cardDefinition.displayName}", GameLogger.LogCategory.SkillCard);
+                }
+            }
+
+            return true;
         }
 
         #endregion

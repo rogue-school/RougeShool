@@ -477,6 +477,8 @@ namespace Game.CharacterSystem.UI
                     return "반격";
                 case "HealEffect":
                     return "치유";
+                case "AttackPowerBuffEffect":
+                    return "공격력 증가";
                 default:
                     return effectTypeName.Replace("Effect", "").Replace("Buff", "");
             }
@@ -653,9 +655,19 @@ namespace Game.CharacterSystem.UI
                         return $"매 턴이 시작할때마다 작동합니다.\n{healValue}의 체력을 회복하며 {remainingTurns}턴이 남았습니다.";
                     else
                         return $"매 턴이 시작할때마다 작동합니다.\n체력을 회복하며 {remainingTurns}턴이 남았습니다.";
+
+                case "AttackPowerBuffEffect":
+                {
+                    int bonus = GetEffectValue(effect, new[] { "AttackPowerBonus" });
+                    if (bonus > 0)
+                    {
+                        return $"공격력이 {bonus} 증가한 상태가 {remainingTurns}턴 동안 유지됩니다.";
+                    }
+                    return $"공격력이 증가한 상태가 {remainingTurns}턴 동안 유지됩니다.";
+                }
                         
                 default:
-                    return $"매 턴이 시작할때마다 작동합니다.\n효과가 {remainingTurns}턴이 남았습니다.";
+                    return $"효과가 {remainingTurns}턴 동안 유지됩니다.";
             }
         }
         

@@ -55,8 +55,8 @@ MonoBehaviour:
         counterIcon: {fileID: 0}
         counterActivateEffectPrefab: {fileID: 0}
         counterActivateSfxClip: {fileID: 0}
-        guardDuration: 3
-        guardIcon: {fileID: 606631214649944254, guid: 87fa5e53c998ffe4bb5742cce6e1f3e1, type: 3}
+        guardDuration: 2
+        guardIcon: {fileID: 4321231726138488557, guid: 46404f585870a154e9b50ba3578806cb, type: 3}
         guardActivateEffectPrefab: {fileID: 0}
         guardActivateSfxClip: {fileID: 0}
         guardBlockEffectPrefab: {fileID: 0}

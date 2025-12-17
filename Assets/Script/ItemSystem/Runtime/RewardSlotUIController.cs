@@ -7,6 +7,8 @@ using Game.ItemSystem.Utility;
 using Game.CoreSystem.Utility;
 using Game.ItemSystem.Manager;
 using DG.Tweening;
+using Game.SkillCardSystem.Data;
+using Game.SkillCardSystem.Interface;
 
 namespace Game.ItemSystem.Runtime
 {
@@ -50,9 +52,12 @@ namespace Game.ItemSystem.Runtime
 
         private ActiveItemDefinition currentItem;
         private PassiveItemDefinition currentPassive;
+        private SkillCardDefinition currentSkillCard;
+        private ISkillCard currentSkillCardInstance;
         private int slotIndex = -1;
         private bool isInteractable = true;
         private bool isPassiveSlot = false;
+        private bool isSkillCardSlot = false;
 
         #endregion
 
@@ -63,6 +68,7 @@ namespace Game.ItemSystem.Runtime
         /// </summary>
         public event System.Action<ActiveItemDefinition, int> OnSlotSelected;
         public event System.Action<PassiveItemDefinition, int> OnPassiveSlotSelected;
+        public event System.Action<SkillCardDefinition> OnSkillCardSlotSelected;
 
         #endregion
 
@@ -246,7 +252,9 @@ namespace Game.ItemSystem.Runtime
 
             currentItem = null;
             currentPassive = item;
+            currentSkillCard = null;
             isPassiveSlot = true;
+            isSkillCardSlot = false;
             slotIndex = index;
 
             // UI 업데이트 (수동 - 공통 헬퍼는 액티브 전용)
@@ -264,6 +272,54 @@ namespace Game.ItemSystem.Runtime
             GameLogger.LogInfo($"[RewardSlotUI] 패시브 슬롯 설정 완료: {item.DisplayName} (인덱스: {index})", GameLogger.LogCategory.UI);
         }
 
+        /// <summary>
+        /// 스킬카드 슬롯을 설정합니다.
+        /// </summary>
+        /// <param name="card">설정할 스킬카드 정의</param>
+        public void SetupSkillCardSlot(SkillCardDefinition card, ISkillCard cardInstance = null)
+        {
+            if (card == null)
+            {
+                GameLogger.LogWarning("[RewardSlotUI] 설정할 스킬카드가 null입니다", GameLogger.LogCategory.UI);
+                return;
+            }
+
+            if (currentItem != null || currentPassive != null)
+            {
+                UnregisterFromTooltipManager();
+            }
+
+            currentItem = null;
+            currentPassive = null;
+            currentSkillCard = card;
+            currentSkillCardInstance = cardInstance;
+            isPassiveSlot = false;
+            isSkillCardSlot = true;
+            slotIndex = -1;
+
+            // UI 업데이트 (카드 아트/이름/설명 사용)
+            if (itemIcon != null)
+            {
+                itemIcon.sprite = card.artwork;
+                itemIcon.color = normalColor;
+            }
+
+            if (itemNameText != null)
+            {
+                string cardName = !string.IsNullOrEmpty(card.displayNameKO)
+                    ? card.displayNameKO
+                    : card.displayName;
+                itemNameText.text = cardName;
+            }
+
+            if (itemDescriptionText != null)
+            {
+                itemDescriptionText.text = card.description;
+            }
+
+            GameLogger.LogInfo($"[RewardSlotUI] 스킬카드 슬롯 설정 완료: {card.displayName}", GameLogger.LogCategory.UI);
+        }
+
         #endregion
 
         #region 상호작용
@@ -273,7 +329,7 @@ namespace Game.ItemSystem.Runtime
         /// </summary>
         private void OnSlotClicked()
         {
-            if (!isPassiveSlot && currentItem == null)
+            if (!isPassiveSlot && !isSkillCardSlot && currentItem == null)
             {
                 GameLogger.LogWarning("[RewardSlotUI] 현재 아이템이 null입니다", GameLogger.LogCategory.UI);
                 return;
@@ -289,6 +345,11 @@ namespace Game.ItemSystem.Runtime
             {
                 OnPassiveSlotSelected?.Invoke(currentPassive, slotIndex);
                 GameLogger.LogInfo($"[RewardSlotUI] 패시브 아이템 선택됨: {currentPassive?.DisplayName ?? "null"} (인덱스: {slotIndex})", GameLogger.LogCategory.UI);
+            }
+            else if (isSkillCardSlot && currentSkillCard != null)
+            {
+                OnSkillCardSlotSelected?.Invoke(currentSkillCard);
+                GameLogger.LogInfo($"[RewardSlotUI] 스킬카드 슬롯 선택됨: {currentSkillCard.displayName}", GameLogger.LogCategory.UI);
             }
             else
             {
@@ -338,6 +399,11 @@ namespace Game.ItemSystem.Runtime
         public void ResetSlot()
         {
             currentItem = null;
+            currentPassive = null;
+            currentSkillCard = null;
+            currentSkillCardInstance = null;
+            isPassiveSlot = false;
+            isSkillCardSlot = false;
             slotIndex = -1;
             isInteractable = true;
 
@@ -387,6 +453,17 @@ namespace Game.ItemSystem.Runtime
             scaleTween = transform.DOScale(hoverScale, 0.2f)
                 .SetEase(Ease.OutQuad)
                 .SetAutoKill(true);
+
+            // 스킬카드 슬롯이면 스킬카드 툴팁 매니저를 사용
+            if (isSkillCardSlot && currentSkillCardInstance != null)
+            {
+                var skillTooltipManager = UnityEngine.Object.FindFirstObjectByType<Game.SkillCardSystem.Manager.SkillCardTooltipManager>();
+                if (skillTooltipManager != null)
+                {
+                    skillTooltipManager.OnCardHoverEnter(currentSkillCardInstance);
+                }
+                return;
+            }
 
             if (tooltipManager == null)
                 return;
@@ -446,6 +523,17 @@ namespace Game.ItemSystem.Runtime
             scaleTween = transform.DOScale(1f, 0.2f)
                 .SetEase(Ease.OutQuad)
                 .SetAutoKill(true);
+
+            // 스킬카드 슬롯이면 스킬카드 툴팁 매니저 사용
+            if (isSkillCardSlot)
+            {
+                var skillTooltipManager = UnityEngine.Object.FindFirstObjectByType<Game.SkillCardSystem.Manager.SkillCardTooltipManager>();
+                if (skillTooltipManager != null)
+                {
+                    skillTooltipManager.OnCardHoverExit();
+                }
+                return;
+            }
 
             if (tooltipManager == null)
                 return;

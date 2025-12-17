@@ -545,7 +545,7 @@ namespace Game.SkillCardSystem.UI
             SetupTooltipBackground();
 
             // 카드 헤더(아이콘/이름)만 갱신, 타입 비활성 처리
-            UpdateCardHeader(definition);
+            UpdateCardHeader(card, definition);
             // 설명: 수동 설명 우선, 없으면 자동 설명
             if (descriptionText != null)
             {
@@ -563,7 +563,7 @@ namespace Game.SkillCardSystem.UI
                         currentStacks = stackProvider.GetAttackPowerStack();
                     }
                     
-                    // 플레이어 캐릭터 가져오기 (공격력 물약 버프 확인용)
+                    // 플레이어 캐릭터 가져오기 (공격력 버프 확인용)
                     Game.CharacterSystem.Interface.ICharacter playerCharacter = null;
                     if (card != null && card.IsFromPlayer())
                     {
@@ -672,8 +672,9 @@ namespace Game.SkillCardSystem.UI
         /// 카드 헤더를 업데이트합니다. (아이콘 + 이름 + 타입)
         /// 프리팹 구조를 존중하며 텍스트와 이미지만 업데이트합니다.
         /// </summary>
+        /// <param name="card">툴팁을 요청한 카드 인스턴스</param>
         /// <param name="definition">카드 정의</param>
-        private void UpdateCardHeader(SkillCardDefinition definition)
+        private void UpdateCardHeader(ISkillCard card, SkillCardDefinition definition)
         {
             if (definition == null) return;
             if (cardIconImage != null)
@@ -684,17 +685,25 @@ namespace Game.SkillCardSystem.UI
             if (cardNameText != null)
             {
                 var title = string.IsNullOrEmpty(definition.displayNameKO) ? definition.displayName : definition.displayNameKO;
-                // 강화 성급(★) 표기 추가
-                int level = 0;
-                var itemSvc = FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
-                if (itemSvc != null)
+
+                // 플레이어 카드에만 강화 성급(★) 표기 적용
+                bool isPlayerCard = card != null && card.IsFromPlayer();
+                if (isPlayerCard)
                 {
-                    level = itemSvc.GetSkillEnhancementLevel(definition.displayName);
+                    int level = 0;
+                    var itemSvc = FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
+                    if (itemSvc != null)
+                    {
+                        level = itemSvc.GetSkillEnhancementLevel(definition.displayName);
+                    }
+
+                    if (level > 0)
+                    {
+                        int clampedLevel = Mathf.Clamp(level, 1, Game.ItemSystem.Constants.ItemConstants.MAX_ENHANCEMENT_LEVEL);
+                        title = $"{title} {new string('★', clampedLevel)}";
+                    }
                 }
-                if (level > 0)
-                {
-                    title = $"{title} {new string('★', Mathf.Clamp(level, 1, Game.ItemSystem.Constants.ItemConstants.MAX_ENHANCEMENT_LEVEL))}";
-                }
+
                 cardNameText.text = title;
             }
             // 타입 텍스트는 사용하지 않음
@@ -918,7 +927,7 @@ namespace Game.SkillCardSystem.UI
                     currentStacks = stackProvider.GetAttackPowerStack();
                 }
                 
-                // 공격력 물약 버프 계산 (플레이어 카드만)
+                // 공격력 버프(포션/스킬) 보너스 계산 (플레이어 카드만)
                 int attackPotionBonus = 0;
                 if (currentCard != null && currentCard.IsFromPlayer())
                 {
@@ -1001,6 +1010,50 @@ namespace Game.SkillCardSystem.UI
             {
                 foreach (var effectConfig in config.effects)
                 {
+                    var effectSO = effectConfig.effectSO;
+                    if (effectSO is SkillCardSystem.Effect.AttackPowerBuffSkillEffectSO attackPowerBuff)
+                    {
+                        var customSettings = effectConfig.useCustomSettings && effectConfig.customSettings != null
+                            ? effectConfig.customSettings
+                            : null;
+
+                        int bonus = 0;
+                        int duration = 0;
+                        if (customSettings != null)
+                        {
+                            bonus = Mathf.Max(0, customSettings.damageAmount);
+                            duration = Mathf.Max(0, customSettings.guardDuration);
+                        }
+
+                        if (bonus <= 0)
+                        {
+                            bonus = attackPowerBuff.DefaultAttackPowerBonus;
+                        }
+
+                        if (duration <= 0)
+                        {
+                            duration = attackPowerBuff.DefaultDuration;
+                        }
+
+                        if (bonus > 0)
+                        {
+                            string effectName = GetEffectNameFromSO(attackPowerBuff, "공격력 증가");
+                            string description = duration > 0
+                                ? $"공격력 +{bonus} ({duration}턴)"
+                                : $"공격력 +{bonus}";
+
+                            effects.Add(new EffectData
+                            {
+                                name = effectName,
+                                description = description,
+                                iconColor = new Color(1f, 0.85f, 0.4f),
+                                effectType = EffectType.Buff
+                            });
+                        }
+
+                        continue;
+                    }
+
                     if (effectConfig.useCustomSettings && effectConfig.customSettings != null)
                     {
                         var customSettings = effectConfig.customSettings;

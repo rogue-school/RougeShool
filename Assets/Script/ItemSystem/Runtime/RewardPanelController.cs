@@ -10,6 +10,9 @@ using Zenject;
 using Game.CoreSystem.Utility;
 using Game.ItemSystem.Data.Reward;
 using Game.ItemSystem.Service.Reward;
+using Game.SkillCardSystem.Data;
+using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.Manager;
 
 namespace Game.ItemSystem.Runtime
 {
@@ -22,6 +25,8 @@ namespace Game.ItemSystem.Runtime
 	{
 		[Inject] private IItemService _itemService;
 		[Inject(Optional = true)] private IRewardGenerator _rewardGenerator; // 주입 시 자동 생성 지원
+		// SkillCardFactory는 RewardOnEnemyDeath에서 수동으로 주입
+		[SerializeField] private ISkillCardFactory _cardFactory;
 
 		[Header("UI 구성 요소")]
 		[SerializeField] private GameObject itemSlotPrefab;
@@ -44,6 +49,10 @@ namespace Game.ItemSystem.Runtime
 		[Tooltip("메시지 표시 지속 시간(초)")]
 		[SerializeField] private float messageDisplayDuration = 2.0f;
 
+		[Header("스킬카드 보상 표시")]
+		[Tooltip("스킬카드 보상 정보를 표시할 텍스트 (선택)")]
+		[SerializeField] private TMPro.TextMeshProUGUI skillCardRewardText;
+
 		[SerializeField] private bool _isOpen;
 		[SerializeField] private bool _isContentVisible = true; // 컨텐츠 표시 여부
 		[SerializeField] private ActiveItemDefinition[] _candidates;
@@ -52,11 +61,28 @@ namespace Game.ItemSystem.Runtime
 		// UI 슬롯 관리
 		private List<RewardSlotUIController> activeSlots = new List<RewardSlotUIController>();
 		private List<RewardSlotUIController> passiveSlots = new List<RewardSlotUIController>();
+		private RewardSlotUIController skillCardSlot;
+
+		// 스킬카드 보상 상태
+		private SkillCardDefinition _skillCardReward;
+		private bool _skillCardRewardClaimed;
+		private ICardCirculationSystem _cardCirculationSystem;
+		private System.Action<SkillCardDefinition> skillCardSlotHandler;
+		private ISkillCard tooltipCard;
 
 		/// <summary>
 		/// 보상 패널이 완전히 닫혔을 때 발생하는 이벤트
 		/// </summary>
 		public event System.Action OnRewardPanelClosed;
+
+		/// <summary>
+		/// 카드 순환 시스템을 설정합니다. (RewardOnEnemyDeath에서 주입)
+		/// </summary>
+		/// <param name="circulationSystem">카드 순환 시스템 인스턴스</param>
+		public void SetCardCirculationSystem(ICardCirculationSystem circulationSystem)
+		{
+			_cardCirculationSystem = circulationSystem;
+		}
 
 		private void OnEnable()
 		{
@@ -139,6 +165,47 @@ namespace Game.ItemSystem.Runtime
 			_isOpen = !_isOpen;
 		}
 
+		/// <summary>
+		/// 스킬카드 보상을 수령합니다. (버튼 클릭 또는 나가기 시 자동 호출)
+		/// </summary>
+		public void TakeSkillCardReward()
+		{
+			if (_skillCardReward == null)
+			{
+				return;
+			}
+
+			if (_cardCirculationSystem == null)
+			{
+				GameLogger.LogWarning("[RewardPanel] ICardCirculationSystem이 주입되지 않았습니다. 스킬카드 보상을 지급할 수 없습니다.", GameLogger.LogCategory.UI);
+				return;
+			}
+
+			if (_skillCardRewardClaimed)
+			{
+				return;
+			}
+
+			bool success = _cardCirculationSystem.GiveCardReward(_skillCardReward, 1);
+			if (!success)
+			{
+				GameLogger.LogWarning($"[RewardPanel] 스킬카드 보상 지급 실패: {_skillCardReward.displayName}", GameLogger.LogCategory.UI);
+				return;
+			}
+
+			_skillCardRewardClaimed = true;
+
+			if (skillCardRewardText != null)
+			{
+				string cardName = !string.IsNullOrEmpty(_skillCardReward.displayNameKO)
+					? _skillCardReward.displayNameKO
+					: _skillCardReward.displayName;
+
+				skillCardRewardText.text = $"{cardName} 카드를 획득했습니다 (덱에 추가됨)";
+				skillCardRewardText.gameObject.SetActive(true);
+			}
+		}
+
 		public void Open(ActiveItemDefinition[] candidates)
 		{
 			_candidates = candidates;
@@ -159,6 +226,101 @@ namespace Game.ItemSystem.Runtime
 			{
 				toggleButton.gameObject.SetActive(true);
 			}
+		}
+
+		/// <summary>
+		/// 스킬카드 보상 정보를 설정합니다.
+		/// StageManager/RewardOnEnemyDeath에서 전달된 스킬카드 보상을 보상창에 표시합니다.
+		/// </summary>
+		/// <param name="cardDefinition">보상으로 지급될 스킬카드 정의</param>
+		public void SetSkillCardReward(SkillCardDefinition cardDefinition)
+		{
+			_skillCardReward = cardDefinition;
+			_skillCardRewardClaimed = false;
+
+			// 기존 툴팁 카드 등록 해제
+			if (tooltipCard != null)
+			{
+				var tooltipManager = UnityEngine.Object.FindFirstObjectByType<SkillCardTooltipManager>();
+				if (tooltipManager != null)
+				{
+					tooltipManager.UnregisterCardUI(tooltipCard);
+				}
+				tooltipCard = null;
+			}
+
+			// 스킬카드 슬롯 생성/설정
+			if (cardDefinition != null && itemSlotPrefab != null && itemSlotsContainer != null)
+			{
+				if (skillCardSlot == null)
+				{
+					var slotObject = Instantiate(itemSlotPrefab, itemSlotsContainer);
+					skillCardSlot = slotObject.GetComponent<RewardSlotUIController>();
+					if (skillCardSlot != null)
+					{
+						if (skillCardSlotHandler == null)
+						{
+							skillCardSlotHandler = _ => TakeSkillCardReward();
+						}
+						skillCardSlot.OnSkillCardSlotSelected += skillCardSlotHandler;
+					}
+				}
+
+				// 스킬카드 툴팁용 카드 인스턴스 생성 및 툴팁 매니저 등록
+				if (_cardFactory != null)
+				{
+					try
+					{
+						tooltipCard = _cardFactory.CreatePlayerCard(cardDefinition);
+						if (tooltipCard != null && skillCardSlot != null)
+						{
+							var tooltipManager = UnityEngine.Object.FindFirstObjectByType<SkillCardTooltipManager>();
+							if (tooltipManager != null)
+							{
+								var rt = skillCardSlot.GetComponent<RectTransform>();
+								tooltipManager.RegisterCardUI(tooltipCard, rt);
+							}
+						}
+					}
+					catch (System.Exception ex)
+					{
+						GameLogger.LogWarning($"[RewardPanel] 스킬카드 툴팁용 카드 생성 실패: {ex.Message}", GameLogger.LogCategory.UI);
+						tooltipCard = null;
+					}
+				}
+
+				if (skillCardSlot != null)
+				{
+					skillCardSlot.SetupSkillCardSlot(cardDefinition, tooltipCard);
+				}
+			}
+			else if (skillCardSlot != null && cardDefinition == null)
+			{
+				if (skillCardSlotHandler != null)
+				{
+					skillCardSlot.OnSkillCardSlotSelected -= skillCardSlotHandler;
+				}
+				Destroy(skillCardSlot.gameObject);
+				skillCardSlot = null;
+			}
+
+			if (skillCardRewardText == null)
+			{
+				return;
+			}
+
+			if (cardDefinition == null)
+			{
+				skillCardRewardText.gameObject.SetActive(false);
+				return;
+			}
+
+			string cardName = !string.IsNullOrEmpty(cardDefinition.displayNameKO)
+				? cardDefinition.displayNameKO
+				: cardDefinition.displayName;
+
+			skillCardRewardText.text = $"{cardName} 카드가 보상으로 준비되어 있습니다";
+			skillCardRewardText.gameObject.SetActive(true);
 		}
 
 		public void OpenPassive(PassiveItemDefinition[] candidates)
@@ -233,6 +395,12 @@ namespace Game.ItemSystem.Runtime
 
 		public void Close()
 		{
+			// 스킬카드 보상이 남아 있다면 자동으로 수령 처리 (나가기 = 모두 받기)
+			if (_skillCardReward != null && !_skillCardRewardClaimed && _cardCirculationSystem != null)
+			{
+				TakeSkillCardReward();
+			}
+
 			// 패시브 아이템이 남아있으면 경고 없이 모두 자동 수령
 			if (HasRemainingPassiveItems())
 			{
@@ -601,6 +769,28 @@ namespace Game.ItemSystem.Runtime
 				}
 			}
 			passiveSlots.Clear();
+
+			// 스킬카드 슬롯 정리
+			if (skillCardSlot != null)
+			{
+				if (skillCardSlotHandler != null)
+				{
+					skillCardSlot.OnSkillCardSlotSelected -= skillCardSlotHandler;
+				}
+				Destroy(skillCardSlot.gameObject);
+				skillCardSlot = null;
+			}
+
+			// 스킬카드 툴팁 등록 해제
+			if (tooltipCard != null)
+			{
+				var tooltipManager = UnityEngine.Object.FindFirstObjectByType<SkillCardTooltipManager>();
+				if (tooltipManager != null)
+				{
+					tooltipManager.UnregisterCardUI(tooltipCard);
+				}
+				tooltipCard = null;
+			}
 		}
 
 		/// <summary>

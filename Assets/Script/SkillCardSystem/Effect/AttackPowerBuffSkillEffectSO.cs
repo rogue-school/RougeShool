@@ -12,6 +12,8 @@ namespace Game.SkillCardSystem.Effect
     [CreateAssetMenu(fileName = "AttackPowerBuffSkillEffect", menuName = "SkillEffects/AttackPowerBuffSkillEffect")]
     public class AttackPowerBuffSkillEffectSO : SkillCardEffectSO
     {
+        #region 필드
+
         [Header("공격력 버프 설정")]
         [Tooltip("공격력 증가 수치")]
         [SerializeField] private int _attackPowerBonus = 3;
@@ -22,6 +24,22 @@ namespace Game.SkillCardSystem.Effect
         [Header("버프 아이콘")]
         [Tooltip("공격력 증가 버프 UI 아이콘")]
         [SerializeField] private Sprite _icon;
+
+        #endregion
+
+        #region 프로퍼티
+
+        /// <summary>
+        /// 기본 공격력 증가 수치를 반환합니다.
+        /// </summary>
+        public int DefaultAttackPowerBonus => Mathf.Max(0, _attackPowerBonus);
+
+        /// <summary>
+        /// 기본 버프 지속 턴 수를 반환합니다.
+        /// </summary>
+        public int DefaultDuration => Mathf.Max(1, _duration);
+
+        #endregion
 
         /// <summary>
         /// 커맨드 방식 실행을 위한 이펙트 커맨드를 생성합니다.
@@ -80,7 +98,15 @@ namespace Game.SkillCardSystem.Effect
 
             int finalBonus = Mathf.Max(0, bonusFromSo);
             int finalDuration = Mathf.Max(1, durationFromSo);
-            return new AttackPowerBuffSkillCommand(finalBonus, finalDuration, iconFromSo);
+
+            // 효과 이름: SO의 effectName을 우선 사용, 비어 있으면 에셋 이름 사용
+            string effectDisplayName = GetEffectName();
+            if (string.IsNullOrWhiteSpace(effectDisplayName))
+            {
+                effectDisplayName = name;
+            }
+
+            return new AttackPowerBuffSkillCommand(finalBonus, finalDuration, iconFromSo, effectDisplayName);
         }
     }
 }

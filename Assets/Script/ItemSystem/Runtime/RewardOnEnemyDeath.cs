@@ -7,6 +7,8 @@ using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Data;
 using Game.CharacterSystem.Manager;
 using Game.CoreSystem.Utility;
+using Game.SkillCardSystem.Data;
+using Game.SkillCardSystem.Interface;
 
 namespace Game.ItemSystem.Runtime
 {
@@ -48,11 +50,29 @@ namespace Game.ItemSystem.Runtime
 	[Inject(Optional = true)] private IRewardGenerator _generator;
 	[Inject(Optional = true)] private PlayerManager _playerManager;
 	[Inject(Optional = true)] private IItemService _itemService;
+		[Inject(Optional = true)] private ICardCirculationSystem _cardCirculationSystem;
+		[Inject(Optional = true)] private ISkillCardFactory _cardFactory;
 
-	/// <summary>
+		[Header("스킬카드 보상 표시 (선택)")]
+		[Tooltip("StageManager에서 전달한 스킬카드 보상을 보상 패널에 표시할지 여부")]
+		[SerializeField] private bool showSkillCardRewardInfo = true;
+
+		// StageManager에서 전달한 스킬카드 보상 (1회용)
+		private SkillCardDefinition pendingSkillCardReward;
+
+		/// <summary>
 	/// 보상 처리가 완료되었을 때 발생하는 이벤트
 	/// </summary>
 	public event System.Action OnRewardProcessCompleted;
+
+		/// <summary>
+		/// StageManager에서 스킬카드 보상을 전달할 때 호출합니다.
+		/// </summary>
+		/// <param name="cardDefinition">보상으로 지급된 스킬카드 정의</param>
+		public void SetPendingSkillCardReward(SkillCardDefinition cardDefinition)
+		{
+			pendingSkillCardReward = cardDefinition;
+		}
 
 		/// <summary>
 		/// 외부에서 적 처치 시 호출하세요.
@@ -105,6 +125,27 @@ namespace Game.ItemSystem.Runtime
 				var itemServiceField = typeof(RewardPanelController).GetField("_itemService", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 				itemServiceField?.SetValue(rewardPanelInstance, _itemService);
 				GameLogger.LogInfo("[RewardOnEnemyDeath] IItemService 수동 주입 완료", GameLogger.LogCategory.UI);
+			}
+
+			if (_cardFactory != null)
+			{
+				// ISkillCardFactory 주입
+				var cardFactoryField = typeof(RewardPanelController).GetField("_cardFactory", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+				cardFactoryField?.SetValue(rewardPanelInstance, _cardFactory);
+				GameLogger.LogInfo("[RewardOnEnemyDeath] ISkillCardFactory 수동 주입 완료", GameLogger.LogCategory.UI);
+			}
+
+			// 카드 순환 시스템 연결 (있을 경우)
+			if (_cardCirculationSystem != null)
+			{
+				rewardPanelInstance.SetCardCirculationSystem(_cardCirculationSystem);
+			}
+
+			// StageManager에서 전달된 스킬카드 보상을 보상 패널에 표시
+			if (showSkillCardRewardInfo && pendingSkillCardReward != null)
+			{
+				rewardPanelInstance.SetSkillCardReward(pendingSkillCardReward);
+				pendingSkillCardReward = null;
 			}
 
 			// 보상 패널 닫힘 이벤트 연결
