@@ -69,6 +69,14 @@ namespace Game.CombatSystem.State
 
             _isMoving = true;
 
+            // 적 사망 체크 (슬롯 이동 전에 즉시 체크)
+            if (CheckForEnemyDeath(context))
+            {
+                LogStateTransition("적 사망 감지 - 슬롯 이동 중단");
+                _isMoving = false;
+                yield break;
+            }
+
             // 소환/복귀 체크 (슬롯 이동 전에 즉시 체크)
             if (CheckForSummonOrReturn(context))
             {
@@ -97,6 +105,14 @@ namespace Game.CombatSystem.State
             {
                 LogWarning("SlotMovement가 null - 슬롯 이동 건너뜀");
                 yield return new WaitForSeconds(0.5f);
+            }
+
+            // 슬롯 이동 완료 후 다시 적 사망 체크 (슬롯 이동 중에 적이 죽었을 수 있음)
+            if (CheckForEnemyDeath(context))
+            {
+                LogStateTransition("슬롯 이동 완료 후 적 사망 감지 - 다음 턴 전환 건너뜀");
+                _isMoving = false;
+                yield break;
             }
 
             // 슬롯 이동 완료 플래그 해제
@@ -217,6 +233,34 @@ namespace Game.CombatSystem.State
                 var playerTurnState = new PlayerTurnState();
                 RequestTransition(context, playerTurnState);
             }
+        }
+
+        /// <summary>
+        /// 적 사망 체크 (슬롯 이동 전에 체크)
+        /// </summary>
+        private bool CheckForEnemyDeath(CombatStateContext context)
+        {
+            if (context?.EnemyManager == null)
+            {
+                return false;
+            }
+
+            var enemy = context.EnemyManager.GetCharacter();
+            if (enemy != null && enemy.IsDead())
+            {
+                LogStateTransition("적 사망 감지 - 슬롯 이동 중단");
+                return true;
+            }
+
+            // 현재 상태가 이미 EnemyDefeatedState인지 확인
+            var currentState = context?.StateMachine?.GetCurrentState();
+            if (currentState is EnemyDefeatedState)
+            {
+                LogStateTransition("이미 EnemyDefeatedState - 슬롯 이동 중단");
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>

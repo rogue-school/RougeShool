@@ -129,6 +129,18 @@ namespace Game.CombatSystem.State
         }
 
         /// <summary>
+        /// 카드 실행 완료 후 사망 체크를 명시적으로 트리거합니다.
+        /// VFX/데미지 효과 완료 후 사망 여부를 확인하기 위해 사용됩니다.
+        /// </summary>
+        public void CheckCharacterDeathAfterCardExecution()
+        {
+            if (_currentState != null && _context?.IsInitialized == true)
+            {
+                CheckCharacterDeath();
+            }
+        }
+
+        /// <summary>
         /// 캐릭터 사망 확인 및 처리
         /// </summary>
         private void CheckCharacterDeath()
@@ -144,6 +156,19 @@ namespace Game.CombatSystem.State
             // 적 사망 처리 중이면 체크 건너뜀 (중복 호출 방지)
             if (isProcessingEnemyDeath)
                 return;
+
+            // 카드 실행 중이면 사망 체크를 건너뜀 (VFX/데미지 효과 완료 대기)
+            // 카드 실행 완료 후 OnExecutionCompleted 이벤트에서 사망 체크가 이루어짐
+            if (_currentState is CardExecutionState)
+            {
+                return;
+            }
+
+            // CombatExecutionManager가 실행 중이면 사망 체크를 건너뜀
+            if (executionManager != null && executionManager.IsExecuting)
+            {
+                return;
+            }
 
             // 적 사망 확인
             if (enemyManager != null)
@@ -292,6 +317,12 @@ namespace Game.CombatSystem.State
                 turnController,
                 slotRegistry,
                 slotMovement);
+
+            // TurnController에 상태 머신 참조 설정 (턴 효과 처리 시 상태 확인용)
+            if (turnController is Manager.TurnController turnControllerConcrete)
+            {
+                turnControllerConcrete.SetStateMachine(this);
+            }
 
             // 매니저 검증
             if (!_context.ValidateManagers())

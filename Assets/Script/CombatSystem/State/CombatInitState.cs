@@ -126,6 +126,9 @@ namespace Game.CombatSystem.State
                 LogStateTransition("슬롯 설정 건너뜀 (이미 설정됨)");
             }
 
+            // 플레이어 핸드 생성은 PlayerTurnState에서 처리 (중복 방지)
+            // 게임 시작 순서: 배치 슬롯 생성 → 슬롯 이동 완료 → PlayerTurnState 진입 → 플레이어 핸드 생성
+
             // 추가 초기화 대기 시간 (UI 안정화 등)
             yield return new WaitForSeconds(0.2f);
 

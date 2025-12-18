@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using Game.CombatSystem.Interface;
+using Game.CombatSystem.State;
 using Game.CharacterSystem.Manager;
 using Game.CoreSystem.Utility;
 using Zenject;
@@ -34,6 +35,7 @@ namespace Game.CombatSystem.Manager
 
         private readonly PlayerManager _playerManager;
         private readonly EnemyManager _enemyManager;
+        private CombatStateMachine _stateMachine; // Optional: 상태 확인용
 
         #endregion
 
@@ -76,6 +78,14 @@ namespace Game.CombatSystem.Manager
             _settings = new TurnSettings();
 
             InitializeTurn();
+        }
+
+        /// <summary>
+        /// 상태 머신 참조 설정 (Optional, 상태 확인용)
+        /// </summary>
+        public void SetStateMachine(CombatStateMachine stateMachine)
+        {
+            _stateMachine = stateMachine;
         }
 
         /// <summary>
@@ -171,6 +181,17 @@ namespace Game.CombatSystem.Manager
 
         public void ProcessAllCharacterTurnEffects()
         {
+            // 적 처치 후 또는 전투 종료 상태에서는 턴 효과를 처리하지 않음
+            if (_stateMachine != null)
+            {
+                var currentState = _stateMachine.GetCurrentState();
+                if (currentState is EnemyDefeatedState || currentState is BattleEndState)
+                {
+                    GameLogger.LogInfo($"[TurnController] 턴 효과 처리 건너뜀 - 현재 상태: {currentState?.StateName ?? "null"} (적 처치/전투 종료 상태)", GameLogger.LogCategory.Combat);
+                    return;
+                }
+            }
+
             GameLogger.LogInfo($"[TurnController] 턴 효과 처리 시작 - 현재 턴: {_currentTurn}", GameLogger.LogCategory.Combat);
             
             // 플레이어 턴 효과 처리

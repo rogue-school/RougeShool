@@ -210,8 +210,12 @@ namespace Game.CombatSystem.Manager
                 yield break;
             }
 
+            // 현재 슬롯 상태를 기반으로 다음 생성할 카드 타입 결정
+            // 1순위: 배틀 슬롯 → 2순위: WAIT_SLOT_1 → 3순위: 내부 플래그
+            bool shouldSpawnPlayer = DetermineNextCardType();
+
             // 패턴: 플레이어 마커 1개 ↔ 적 카드 1개 (1:1 교대)
-            if (_nextSpawnIsPlayer)
+            if (shouldSpawnPlayer)
             {
                 var marker = CreatePlayerMarker();
                 if (marker != null)
@@ -266,8 +270,80 @@ namespace Game.CombatSystem.Manager
                 }
             }
 
-            // 다음 생성 주체 토글 (1:1 교대)
-            _nextSpawnIsPlayer = !_nextSpawnIsPlayer;
+            // 다음 생성 주체 업데이트 (1:1 교대 유지용 폴백)
+            _nextSpawnIsPlayer = !shouldSpawnPlayer;
+        }
+
+        /// <summary>
+        /// 슬롯 상태를 기반으로 다음 생성할 카드 타입을 결정합니다.
+        /// </summary>
+        private bool DetermineNextCardType()
+        {
+            // 1. 꼬리 쪽 카드 기준 (연속 타입 방지)
+            //    WAIT_SLOT_3 → WAIT_SLOT_2 → WAIT_SLOT_1 순으로 앞에 있는 카드 확인
+            var tailCard =
+                _registry.GetCardInSlot(CombatSlotPosition.WAIT_SLOT_3) ??
+                _registry.GetCardInSlot(CombatSlotPosition.WAIT_SLOT_2) ??
+                _registry.GetCardInSlot(CombatSlotPosition.WAIT_SLOT_1);
+
+            if (tailCard != null)
+            {
+                if (IsPlayerTurnMarker(tailCard))
+                {
+                    GameLogger.LogInfo("[자동 보충] 꼬리 슬롯: 플레이어 마커 → 다음은 적 카드", GameLogger.LogCategory.Combat);
+                    return false; // 적 카드 생성
+                }
+
+                if (!tailCard.IsFromPlayer())
+                {
+                    GameLogger.LogInfo("[자동 보충] 꼬리 슬롯: 적 카드 → 다음은 플레이어 마커", GameLogger.LogCategory.Combat);
+                    return true; // 플레이어 마커 생성
+                }
+            }
+
+            // 2. 꼬리 쪽에서 판단 불가하면, 배틀 슬롯 기준으로 턴 패턴 유지
+            var battleCard = _registry.GetCardInSlot(CombatSlotPosition.BATTLE_SLOT);
+            if (battleCard != null)
+            {
+                if (IsPlayerTurnMarker(battleCard))
+                {
+                    GameLogger.LogInfo("[자동 보충] 배틀 슬롯: 플레이어 마커 → 다음은 적 카드", GameLogger.LogCategory.Combat);
+                    return false;
+                }
+
+                if (!battleCard.IsFromPlayer())
+                {
+                    GameLogger.LogInfo("[자동 보충] 배틀 슬롯: 적 카드 → 다음은 플레이어 마커", GameLogger.LogCategory.Combat);
+                    return true;
+                }
+            }
+
+            // 3. 여전히 판단이 안 되면 현재 턴 정보를 기반으로 결정
+            //    - 플레이어 턴이면 다음은 적 카드
+            //    - 적 턴이면 다음은 플레이어 마커
+            bool byTurn =
+                _turnController != null && _turnController.IsPlayerTurn()
+                    ? false  // 플레이어 턴 → 적 카드
+                    : true;  // 적 턴 또는 정보 없음 → 플레이어 마커
+
+            GameLogger.LogInfo(
+                $"[자동 보충] 카드 상태로 판별 불가 → 턴 기준 사용: {(byTurn ? "플레이어 마커" : "적 카드")} (플래그: {(_nextSpawnIsPlayer ? "플레이어 마커" : "적 카드")})",
+                GameLogger.LogCategory.Combat);
+
+            return byTurn;
+        }
+
+        /// <summary>
+        /// 카드가 플레이어 턴 마커인지 확인합니다.
+        /// </summary>
+        private bool IsPlayerTurnMarker(ISkillCard card)
+        {
+            if (card?.CardDefinition == null)
+            {
+                return false;
+            }
+
+            return card.CardDefinition.cardId == CombatConstants.PLAYER_MARKER_ID && card.IsFromPlayer();
         }
 
         #endregion
@@ -310,6 +386,8 @@ namespace Game.CombatSystem.Manager
             _cachedEnemyName = enemyName;
 
             // 초기 셋업: 플레이어 마커 ↔ 적 카드 (1:1 교대, 총 5개)
+            // 게임 기본 틀: 모든 스테이지에서 플레이어가 가장 먼저 스킬카드를 사용 가능
+            // 생성 순서: 플레이어 마커 > 적 스킬카드 > 플레이어 마커 > 적 스킬카드 > 플레이어 마커
             _nextSpawnIsPlayer = true;
             bool isPlayerTurn = true;
 
@@ -317,14 +395,21 @@ namespace Game.CombatSystem.Manager
             {
                 if (isPlayerTurn)
                 {
-                        var marker = CreatePlayerMarker();
-                        if (marker != null)
-                        {
-                            yield return PlaceCardInWaitSlot4AndMoveRoutine(marker, SlotOwner.PLAYER, cardUIPrefab);
-                        }
+                    // 플레이어 마커 생성 (플레이어의 사용 턴을 알리는 마커)
+                    var marker = CreatePlayerMarker();
+                    if (marker != null)
+                    {
+                        GameLogger.LogInfo($"[초기 셋업] {i + 1}번째: 플레이어 마커 생성", GameLogger.LogCategory.Combat);
+                        yield return PlaceCardInWaitSlot4AndMoveRoutine(marker, SlotOwner.PLAYER, cardUIPrefab);
+                    }
+                    else
+                    {
+                        GameLogger.LogWarning($"[초기 셋업] {i + 1}번째: 플레이어 마커 생성 실패", GameLogger.LogCategory.Combat);
+                    }
                 }
                 else
                 {
+                    // 적 스킬카드 생성 (정해진 확률대로 생성)
                     var entry = enemyData.EnemyDeck.GetRandomEntry();
                     if (entry?.definition != null)
                     {
@@ -332,7 +417,12 @@ namespace Game.CombatSystem.Manager
                         var card = entry.HasDamageOverride()
                             ? _cardFactory.CreateEnemyCard(entry.definition, enemyName, entry.damageOverride)
                             : _cardFactory.CreateEnemyCard(entry.definition, enemyName);
+                        GameLogger.LogInfo($"[초기 셋업] {i + 1}번째: 적 스킬카드 생성 - {entry.definition.displayName}", GameLogger.LogCategory.Combat);
                         yield return PlaceCardInWaitSlot4AndMoveRoutine(card, SlotOwner.ENEMY, cardUIPrefab);
+                    }
+                    else
+                    {
+                        GameLogger.LogWarning($"[초기 셋업] {i + 1}번째: 적 스킬카드 생성 실패", GameLogger.LogCategory.Combat);
                     }
                 }
 
@@ -340,17 +430,19 @@ namespace Game.CombatSystem.Manager
                 isPlayerTurn = !isPlayerTurn;
             }
 
+            // 초기 셋업 완료 플래그 설정
             _initialSlotSetupCompleted = true;
 
-            // 이동/애니메이션이 모두 끝날 때까지 대기
+            // 초기 셋업 중에는 각 카드 배치 시 이미 슬롯 이동이 완료되었으므로
+            // 추가 슬롯 이동은 필요 없음 (각 카드 배치 시 이미 한 칸씩 이동됨)
+            GameLogger.LogInfo("[초기 셋업] 모든 카드 배치 및 슬롯 이동 완료", GameLogger.LogCategory.Combat);
+
+            // 최종 이동/애니메이션이 모두 끝날 때까지 대기
             while (_isAdvancingQueue)
             {
                 yield return null;
             }
             yield return null;
-
-            // 초기 셋업 완료 후 다음 생성 주체 설정
-            _nextSpawnIsPlayer = false;
 
             // 초기 셋업 종료 후 자동 보충/자동 실행 활성화
             _suppressAutoRefill = false;
@@ -374,14 +466,27 @@ namespace Game.CombatSystem.Manager
                 yield break;
             }
 
-            // 1. 대기4에 카드 배치
-            // 초기 셋업 중에는 중복 방지 로직을 우회하고 슬롯 이동을 통해 처리
+            // 초기 셋업 중: WAIT_SLOT_4에 이미 카드가 있으면 먼저 한 칸씩 이동
+            // WAIT_SLOT_4 → WAIT_SLOT_3 → WAIT_SLOT_2 → WAIT_SLOT_1 → BATTLE_SLOT
+            if (!_initialSlotSetupCompleted && _registry.HasCardInSlot(CombatSlotPosition.WAIT_SLOT_4))
+            {
+                // WAIT_SLOT_4에 이미 카드가 있으면, 모든 슬롯을 한 칸씩 이동하여 공간 확보
+                yield return MoveAllSlotsForwardRoutine();
+                
+                // 슬롯 이동 완료 대기
+                while (_isAdvancingQueue)
+                {
+                    yield return null;
+                }
+            }
+
+            // 일반적인 경우: WAIT_SLOT_4에 이미 카드가 있으면 중복 방지
             if (_initialSlotSetupCompleted && _registry.GetCardInSlot(CombatSlotPosition.WAIT_SLOT_4) != null)
             {
-                // 일반적인 경우에만 중복 방지
                 yield break;
             }
 
+            // 1. 대기4에 카드 배치
             var cardUI = CreateCardUIForSlot(card, CombatSlotPosition.WAIT_SLOT_4, cardUIPrefab);
             var spawnTween = PlaySpawnTween(cardUI);
             _registry.RegisterCard(CombatSlotPosition.WAIT_SLOT_4, card, cardUI, owner);
@@ -390,11 +495,21 @@ namespace Game.CombatSystem.Manager
                 yield return spawnTween.WaitForCompletion();
             }
 
-            // 2. 슬롯 이동 처리
-            yield return null;
-            if (!_registry.HasCardInSlot(CombatSlotPosition.BATTLE_SLOT))
+            // 2. 슬롯 이동 처리 (일반적인 경우만)
+            // 초기 셋업 중에는 이미 위에서 처리했으므로 여기서는 처리하지 않음
+            if (_initialSlotSetupCompleted)
             {
-                yield return MoveAllSlotsForwardRoutine();
+                // 일반적인 경우: 배틀 슬롯이 비어있으면 슬롯 이동
+                yield return null;
+                if (!_registry.HasCardInSlot(CombatSlotPosition.BATTLE_SLOT))
+                {
+                    yield return MoveAllSlotsForwardRoutine();
+                }
+            }
+            else
+            {
+                // 초기 셋업 중: 카드 배치만 하고 슬롯 이동은 다음 카드 배치 시 처리
+                yield return null;
             }
         }
 

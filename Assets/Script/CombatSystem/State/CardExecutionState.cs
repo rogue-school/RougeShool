@@ -117,6 +117,13 @@ namespace Game.CombatSystem.State
         {
             LogStateTransition($"실행 결과: {(result.isSuccess ? "성공" : "실패")} - {result.resultMessage}");
 
+            // 카드 실행 완료 후 VFX/데미지 효과가 완료되었으므로 사망 체크를 명시적으로 트리거
+            // 이렇게 하면 VFX/데미지 효과가 완료된 후에만 사망 체크가 이루어짐
+            if (context?.StateMachine != null)
+            {
+                context.StateMachine.CheckCharacterDeathAfterCardExecution();
+            }
+
             // 적이 죽어서 EnemyDefeatedState로 전환되거나 소환으로 SummonState로 전환된 경우에는 상태 전환을 하지 않음
             // CombatStateMachine에서 이미 적절한 상태로 전환했을 것임
             var currentState = context?.StateMachine?.GetCurrentState();
