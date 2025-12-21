@@ -41,6 +41,13 @@ namespace Game.CombatSystem.Interface
         void ClearEnemyCache();
 
         /// <summary>
+        /// 적 덱 캐시를 업데이트합니다 (페이즈 전환 시 사용)
+        /// </summary>
+        /// <param name="enemyData">새로운 적 데이터</param>
+        /// <param name="enemyName">새로운 적 이름</param>
+        void UpdateEnemyCache(EnemyCharacterData enemyData, string enemyName);
+
+        /// <summary>
         /// 슬롯 상태를 완전히 리셋합니다 (소환 전환 시 사용)
         /// </summary>
         void ResetSlotStates();

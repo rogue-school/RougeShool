@@ -128,12 +128,7 @@ namespace Game.CoreSystem.Manager
                 maxHPField.SetValue(newData, originalData.MaxHP);
             }
             
-            var portraitField = typeof(PlayerCharacterData).GetField("<Portrait>k__BackingField", 
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            if (portraitField != null)
-            {
-                portraitField.SetValue(newData, originalData.Portrait);
-            }
+            // Portrait는 프리팹으로 관리하므로 필드 복사 제거
             
             var skillDeckField = typeof(PlayerCharacterData).GetField("<SkillDeck>k__BackingField", 
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);

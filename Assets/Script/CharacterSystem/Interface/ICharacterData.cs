@@ -17,10 +17,5 @@ namespace Game.CharacterSystem.Interface
         /// 캐릭터의 최대 체력입니다.
         /// </summary>
         int MaxHP { get; }
-
-        /// <summary>
-        /// 캐릭터의 초상화 이미지입니다.
-        /// </summary>
-        Sprite Portrait { get; }
     }
 } 

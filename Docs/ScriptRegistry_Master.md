@@ -10,8 +10,8 @@
 | 시스템 | 루트 폴더 | 주요 책임 | 대표 허브 스크립트(레벨 3 분석 대상) | 스크립트 수(실제 `.cs`) | 레지스트리 문서 |
 |--------|-----------|-----------|-------------------------------------|-------------------------|------------------|
 | **CoreSystem** | `Assets/Script/CoreSystem/` | 오디오, 세이브, 통계, 씬 전환, 코어 매니저/유틸 | `CoreSystemInstaller`, `MainSceneInstaller`, `GameStateManager`, `AudioManager`, `SaveManager`, `GameLogger`, `ComponentInteractionOptimizer` | 36 | `Docs/ScriptRegistry_CoreSystem.md` |
-| **CharacterSystem** | `Assets/Script/CharacterSystem/` | 플레이어/적 캐릭터 데이터·코어 로직·매니저·UI | `EnemyCharacter`, `PlayerCharacter` | 40 | `Docs/ScriptRegistry_CharacterSystem.md` |
-| **CombatSystem** | `Assets/Script/CombatSystem/` | 전투 상태 머신, 턴/슬롯/실행, 전투 UI | `CombatInstaller`, `CombatStateMachine` | 63 | `Docs/ScriptRegistry_CombatSystem.md` |
+| **CharacterSystem** | `Assets/Script/CharacterSystem/` | 플레이어/적 캐릭터 데이터·코어 로직·매니저·UI·페이즈 시스템 | `EnemyCharacter`, `PlayerCharacter`, `EnemyPhaseData` | 41 | `Docs/ScriptRegistry_CharacterSystem.md` |
+| **CombatSystem** | `Assets/Script/CombatSystem/` | 전투 상태 머신, 턴/슬롯/실행, 전투 UI, 슬롯 이동/적 덱 캐시 관리 | `CombatInstaller`, `CombatStateMachine`, `SlotMovementController` | 63 | `Docs/ScriptRegistry_CombatSystem.md` |
 | **SkillCardSystem** | `Assets/Script/SkillCardSystem/` | 카드 정의/팩토리/이펙트/덱·핸드/슬롯/툴팁 | `SkillCardFactory`, `CardCirculationSystem` | 102 | `Docs/ScriptRegistry_SkillCardSystem.md` |
 | **ItemSystem** | `Assets/Script/ItemSystem/` | 액티브/패시브 아이템, 보상, 인벤토리/UI | `ItemService`, `RewardGenerator` | 52 | `Docs/ScriptRegistry_ItemSystem.md` |
 | **StageSystem** | `Assets/Script/StageSystem/` | 스테이지 데이터/진행/적 생성·소환·보상 트리거 | `StageManager` | 8 | `Docs/ScriptRegistry_StageSystem.md` |
@@ -62,8 +62,8 @@
 각 레지스트리에서 레벨 3(깊은 분석)이 작성된 핵심 스크립트 목록입니다.
 
 - **CoreSystem**: `CoreSystemInstaller`, `MainSceneInstaller`, `GameStateManager`, `AudioManager`, `SaveManager`, `GameLogger`, `ComponentInteractionOptimizer`  
-- **CharacterSystem**: `EnemyCharacter`, `PlayerCharacter`  
-- **CombatSystem**: `CombatInstaller`, `CombatStateMachine`  
+- **CharacterSystem**: `EnemyCharacter`, `PlayerCharacter`, `EnemyPhaseData`  
+- **CombatSystem**: `CombatInstaller`, `CombatStateMachine`, `SlotMovementController`  
 - **SkillCardSystem**: `SkillCardFactory`, `CardCirculationSystem`  
 - **ItemSystem**: `ItemService`, `RewardGenerator`  
 - **SaveSystem**: `AutoSaveManager`  

@@ -34,14 +34,7 @@ namespace Game.CharacterSystem.Data
         public int MaxHP { get; private set; }
 
         /// <summary>
-        /// UI에 표시될 캐릭터 초상화 이미지입니다.
-        /// </summary>
-        [field: SerializeField]
-        public Sprite Portrait { get; private set; }
-
-        /// <summary>
         /// 인덱스 UI 등에 사용될 전용 아이콘 이미지입니다.
-        /// 설정되지 않은 경우 Portrait를 사용할 수 있습니다.
         /// </summary>
         [field: SerializeField]
         public Sprite IndexIcon { get; private set; }
@@ -90,6 +83,25 @@ namespace Game.CharacterSystem.Data
         /// </summary>
         [field: SerializeField]
         public List<CharacterEffectEntry> CharacterEffects { get; private set; } = new List<CharacterEffectEntry>();
+
+        #endregion
+
+        #region 페이즈 시스템
+
+        [field: Header("페이즈 시스템")]
+
+        /// <summary>
+        /// 적 캐릭터의 페이즈 목록입니다.
+        /// 체력 임계값에 따라 자동으로 페이즈가 전환됩니다.
+        /// 빈 리스트이면 페이즈 시스템을 사용하지 않습니다.
+        /// </summary>
+        [field: SerializeField]
+        public List<EnemyPhaseData> Phases { get; private set; } = new List<EnemyPhaseData>();
+
+        /// <summary>
+        /// 페이즈 시스템을 사용하는지 확인합니다.
+        /// </summary>
+        public bool HasPhases => Phases != null && Phases.Count > 0;
 
         #endregion
     }

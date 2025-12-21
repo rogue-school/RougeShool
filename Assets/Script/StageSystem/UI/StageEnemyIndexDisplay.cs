@@ -302,8 +302,8 @@ namespace Game.StageSystem.UI
 
                     if (enemyData != null)
                     {
-                        // 인덱스 전용 아이콘이 있으면 우선 사용하고, 없으면 Portrait를 사용합니다.
-                        icon = enemyData.IndexIcon != null ? enemyData.IndexIcon : enemyData.Portrait;
+                        // 인덱스 전용 아이콘 사용
+                        icon = enemyData.IndexIcon;
                     }
 
                     if (icon != null)
@@ -317,7 +317,7 @@ namespace Game.StageSystem.UI
 
                         if (enableDebugLogging)
                         {
-                            GameLogger.LogWarning($"[StageEnemyIndexDisplay] {i + 1}번째 적의 인덱스용 아이콘 또는 Portrait가 설정되지 않았습니다.", GameLogger.LogCategory.UI);
+                            GameLogger.LogWarning($"[StageEnemyIndexDisplay] {i + 1}번째 적의 인덱스용 아이콘이 설정되지 않았습니다.", GameLogger.LogCategory.UI);
                         }
                     }
                 }

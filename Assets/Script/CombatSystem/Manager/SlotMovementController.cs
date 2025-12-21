@@ -166,7 +166,8 @@ namespace Game.CombatSystem.Manager
                     yield return moveTween.WaitForCompletion();
 
                     // 최종 부모로 설정하기 전에 다시 한 번 확인
-                    if (target != null && target.gameObject != null)
+                    // uiRect가 파괴되었는지도 확인 (페이즈 전환 중 카드 제거로 인한 파괴 가능)
+                    if (uiRect != null && uiRect.gameObject != null && target != null && target.gameObject != null)
                     {
                         uiRect.SetParent(target, false);
                         uiRect.anchoredPosition = new Vector2(0f, 4f);
@@ -174,7 +175,7 @@ namespace Game.CombatSystem.Manager
                     else
                     {
                         GameLogger.LogWarning(
-                            $"[SlotMovementController] 이동 완료 후 목적지 슬롯이 파괴되었습니다: {toSlot}",
+                            $"[SlotMovementController] UI 또는 타겟이 파괴되어 부모 설정 실패: fromSlot={fromSlot}, toSlot={toSlot}",
                             GameLogger.LogCategory.Combat);
                     }
                 }
@@ -532,6 +533,18 @@ namespace Game.CombatSystem.Manager
         {
             _cachedEnemyData = null;
             _cachedEnemyName = null;
+        }
+
+        /// <summary>
+        /// 적 덱 캐시를 업데이트합니다 (페이즈 전환 시 사용)
+        /// </summary>
+        /// <param name="enemyData">새로운 적 데이터</param>
+        /// <param name="enemyName">새로운 적 이름</param>
+        public void UpdateEnemyCache(EnemyCharacterData enemyData, string enemyName)
+        {
+            _cachedEnemyData = enemyData;
+            _cachedEnemyName = enemyName;
+            GameLogger.LogDebug($"[SlotMovementController] 적 덱 캐시 업데이트: {enemyName}", GameLogger.LogCategory.Combat);
         }
 
         public void ResetSlotStates()

@@ -102,9 +102,6 @@ namespace Game.SkillCardSystem.UI
 
 		[Header("배치 옵션")]
 
-        [Tooltip("상세 로깅 출력 여부")]
-        [SerializeField] private bool verboseLogging = false;
-
         [Header("레이아웃 옵션")]
         [Tooltip("최소 높이(px) - 0이면 텍스트 내용에 맞게 자동 조절")]
         [SerializeField] private float minLayoutHeight = 0f;

@@ -257,9 +257,7 @@ namespace Game.CharacterSystem.Core
         {
             if (PlayerCharacterData == null) return;
 
-            // 포트레이트 이미지만 설정
-            if (portraitImage != null)
-                portraitImage.sprite = PlayerCharacterData.Portrait;
+            // Portrait는 프리팹이 자체적으로 관리하므로 여기서 직접 설정하지 않음
             
             // HP 바 업데이트 (HP 바 컨트롤러가 있는 경우)
             hpBarController?.OnHealthChanged();

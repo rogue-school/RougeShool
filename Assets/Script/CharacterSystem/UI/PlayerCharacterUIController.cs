@@ -498,10 +498,10 @@ namespace Game.CharacterSystem.UI
             if (characterNameText != null)
                 characterNameText.text = data.DisplayName;
             
-            // 캐릭터 초상화 (UI 전용 → 없으면 Portrait 폴백)
+            // 캐릭터 초상화 (UI 전용)
             if (characterPortrait != null)
             {
-                var uiPortrait = data.PlayerUIPortrait != null ? data.PlayerUIPortrait : data.Portrait;
+                var uiPortrait = data.PlayerUIPortrait;
                 if (uiPortrait != null)
                 {
                     characterPortrait.sprite = uiPortrait;

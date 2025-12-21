@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Data;
 using Game.CharacterSystem.Interface;
@@ -7,8 +8,12 @@ using Game.CombatSystem.UI;
 using Game.CombatSystem.Context;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem;
+using Game.CombatSystem.Data;
+using Game.CombatSystem.Slot;
+using Game.CombatSystem.Core;
 using Game.SkillCardSystem.Deck;
 using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.UI;
 using Game.CoreSystem.Utility;
 using Game.VFXSystem.Manager;
 using UnityEngine.UI;
@@ -81,7 +86,59 @@ namespace Game.CharacterSystem.Core
         private System.Collections.Generic.List<ICharacterEffect> characterEffects = new System.Collections.Generic.List<ICharacterEffect>();
 
         [Inject(Optional = true)] private VFXManager vfxManager;
+        [Inject(Optional = true)] private Game.CoreSystem.Interface.IAudioManager audioManager;
+        [Inject(Optional = true)] private Game.CombatSystem.Interface.ICombatExecutionManager executionManager;
+        [Inject(Optional = true)] private Game.CombatSystem.Interface.ICardSlotRegistry slotRegistry;
+        [Inject(Optional = true)] private Game.CombatSystem.Interface.ISlotMovementController slotMovementController;
         private Sequence deathSequence;
+
+        #region 페이즈 시스템
+
+        /// <summary>
+        /// 현재 페이즈 인덱스 (-1 = 페이즈 시스템 미사용, 0 이상 = 페이즈 인덱스)
+        /// </summary>
+        private int currentPhaseIndex = -1;
+
+        /// <summary>
+        /// 페이즈 전환 대기 중인지 여부 (중복 전환 방지)
+        /// </summary>
+        private bool isPhaseTransitionPending = false;
+
+        /// <summary>
+        /// 페이즈별 기본 정보 캐시
+        /// </summary>
+        private string cachedPhaseDisplayName;
+        private Sprite cachedPhaseIndexIcon;
+        private GameObject cachedPhasePortraitPrefab;
+
+        /// <summary>
+        /// 현재 페이즈 인덱스를 반환합니다.
+        /// </summary>
+        public int CurrentPhaseIndex => currentPhaseIndex;
+
+        /// <summary>
+        /// 현재 페이즈 이름을 반환합니다.
+        /// </summary>
+        public string CurrentPhaseName
+        {
+            get
+            {
+                if (CharacterData == null || !CharacterData.HasPhases)
+                    return "기본";
+                
+                // currentPhaseIndex = -1: 기본 정보(1페이즈)
+                if (currentPhaseIndex < 0)
+                    return "1페이즈";
+                
+                // currentPhaseIndex >= 0: Phases 리스트의 페이즈 (2페이즈, 3페이즈, ...)
+                if (currentPhaseIndex >= CharacterData.Phases.Count)
+                    return "기본";
+                
+                return CharacterData.Phases[currentPhaseIndex].phaseName;
+            }
+        }
+
+        #endregion
 
         /// <summary>
         /// 적 캐릭터의 데이터 (스크립터블 오브젝트)
@@ -122,10 +179,48 @@ namespace Game.CharacterSystem.Core
             {
                 return gameObject.name.Replace("(Clone)", string.Empty).Trim();
             }
+
+            // 페이즈별 DisplayName이 있으면 우선 사용
+            if (!string.IsNullOrEmpty(cachedPhaseDisplayName))
+            {
+                return cachedPhaseDisplayName;
+            }
+
             // DisplayName이 없으면 ScriptableObject 이름으로 대체
             return string.IsNullOrEmpty(CharacterData.DisplayName)
                 ? CharacterData.name
                 : CharacterData.DisplayName;
+        }
+
+        /// <summary>
+        /// 캐릭터 초상화 반환
+        /// 프리팹을 사용하므로 스프라이트는 반환하지 않습니다.
+        /// </summary>
+        public override Sprite GetPortrait()
+        {
+            // 프리팹을 사용하므로 스프라이트 반환하지 않음
+            // 다른 시스템과의 호환성을 위해 null 반환
+            return null;
+        }
+
+        /// <summary>
+        /// 인덱스 아이콘 반환 (페이즈별 정보 우선)
+        /// </summary>
+        public Sprite GetIndexIcon()
+        {
+            // 페이즈별 IndexIcon이 있으면 우선 사용
+            if (cachedPhaseIndexIcon != null)
+            {
+                return cachedPhaseIndexIcon;
+            }
+
+            // 기본 IndexIcon 반환
+            if (CharacterData != null)
+            {
+                return CharacterData.IndexIcon;
+            }
+
+            return null;
         }
 
         // CharacterBase에서 사용할 이름 반환
@@ -186,6 +281,12 @@ namespace Game.CharacterSystem.Core
             
             // 적 캐릭터 덱의 스킬카드 스택 초기화
             InitializeEnemyDeckStacks();
+            
+            // 페이즈 시스템 초기화
+            InitializePhases();
+            
+            // 카드 실행 완료 이벤트 구독
+            SubscribeToExecutionEvents();
             
             // 기본 Idle 시각 효과 시작 (부드러운 호흡)
             StartIdleVisualLoop();
@@ -443,10 +544,7 @@ namespace Game.CharacterSystem.Core
 			hpText.color = currentHP >= GetMaxHP() ? Color.white : Color.red;
 		}
 
-		if (portraitImage != null)
-		{
-			portraitImage.sprite = CharacterData.Portrait;
-		}
+		// Portrait는 프리팹이 자체적으로 관리하므로 여기서 직접 설정하지 않음
 		
 		// HP 바 업데이트
 		if (hpBarController != null)
@@ -636,10 +734,18 @@ namespace Game.CharacterSystem.Core
         {
             GameLogger.LogDebug($"[{GetCharacterName()}] 체력 변경 알림: {previousHP} → {currentHP}", GameLogger.LogCategory.Character);
             
+            // 이펙트에 체력 변경 알림
             foreach (var effect in characterEffects)
             {
                 GameLogger.LogDebug($"[{GetCharacterName()}] 이펙트 체력 변경 처리: {effect.GetEffectName()}", GameLogger.LogCategory.Character);
                 effect.OnHealthChanged(this, previousHP, currentHP);
+            }
+            
+            // 페이즈 전환 체크 (카드 실행 완료 후 약간의 지연을 두고 체크)
+            // 코루틴으로 지연시켜서 카드 실행 완료 후에 체크하도록 함
+            if (CharacterData != null && CharacterData.HasPhases && !isPhaseTransitionPending && !isDead)
+            {
+                StartCoroutine(CheckPhaseTransitionDelayed(currentHP, GetMaxHP()));
             }
         }
 
@@ -693,6 +799,7 @@ namespace Game.CharacterSystem.Core
                 deathSequence = null;
             }
             CleanupEffects();
+            UnsubscribeFromExecutionEvents();
         }
 
         /// <summary>
@@ -778,6 +885,640 @@ namespace Game.CharacterSystem.Core
 
             GameLogger.LogDebug($"[EnemyCharacter] '{GetCharacterName()}' 사망 연출 완료 → 콜백 호출", GameLogger.LogCategory.Character);
             onDeathCallback?.Invoke(this);
+        }
+
+        #endregion
+
+        #region 페이즈 시스템 구현
+
+        /// <summary>
+        /// 페이즈 시스템을 초기화합니다.
+        /// 기본 정보 = 1페이즈 (currentPhaseIndex = -1)
+        /// Phases[0] = 2페이즈, Phases[1] = 3페이즈, ...
+        /// 항상 기본 정보(1페이즈)로 시작합니다.
+        /// </summary>
+        private void InitializePhases()
+        {
+            if (CharacterData == null)
+            {
+                GameLogger.LogWarning($"[{GetCharacterName()}] CharacterData가 null입니다 - 페이즈 시스템 초기화 실패", GameLogger.LogCategory.Character);
+                currentPhaseIndex = -1;
+                return;
+            }
+
+            if (!CharacterData.HasPhases)
+            {
+                GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 시스템 없음 - 기본 정보만 사용", GameLogger.LogCategory.Character);
+                currentPhaseIndex = -1;
+                return;
+            }
+
+            // 항상 기본 정보(1페이즈)로 시작
+            // currentPhaseIndex = -1: 기본 정보 사용
+            currentPhaseIndex = -1;
+            
+            // 페이즈별 정보 캐시 초기화 (기본 정보 사용)
+            cachedPhaseDisplayName = null;
+            cachedPhaseIndexIcon = null;
+            cachedPhasePortraitPrefab = null;
+
+            int currentHP = GetCurrentHP();
+            int maxHP = GetMaxHP();
+            float currentHealthRatio = maxHP > 0 ? (float)currentHP / maxHP : 1.0f;
+
+            // 페이즈 정보 로그
+            string phaseInfo = $"페이즈 수: {CharacterData.Phases.Count}";
+            for (int i = 0; i < CharacterData.Phases.Count; i++)
+            {
+                var phase = CharacterData.Phases[i];
+                phaseInfo += $", Phases[{i}]: {phase.phaseName} (임계값: {phase.healthThreshold:P0})";
+            }
+
+            GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 초기화: {CurrentPhaseName} (기본 정보 사용, 체력: {currentHP}/{maxHP}, 비율: {currentHealthRatio:P0}, {phaseInfo})", GameLogger.LogCategory.Character);
+        }
+
+        /// <summary>
+        /// 카드 실행 완료 이벤트를 구독합니다.
+        /// </summary>
+        private void SubscribeToExecutionEvents()
+        {
+            if (executionManager == null)
+            {
+                GameLogger.LogWarning($"[{GetCharacterName()}] ICombatExecutionManager가 null입니다 - 페이즈 전환 체크 불가", GameLogger.LogCategory.Character);
+                return;
+            }
+
+            executionManager.OnExecutionCompleted += OnCardExecutionCompleted;
+            GameLogger.LogInfo($"[{GetCharacterName()}] 카드 실행 완료 이벤트 구독 완료", GameLogger.LogCategory.Character);
+        }
+
+        /// <summary>
+        /// 카드 실행 완료 이벤트 구독을 해제합니다.
+        /// </summary>
+        private void UnsubscribeFromExecutionEvents()
+        {
+            if (executionManager != null)
+            {
+                executionManager.OnExecutionCompleted -= OnCardExecutionCompleted;
+            }
+        }
+
+        /// <summary>
+        /// 카드 실행 완료 시 호출되는 콜백입니다.
+        /// 페이즈 전환을 체크합니다.
+        /// </summary>
+        private void OnCardExecutionCompleted(Game.CombatSystem.Interface.ExecutionResult result)
+        {
+            if (isPhaseTransitionPending)
+            {
+                GameLogger.LogDebug($"[{GetCharacterName()}] 페이즈 전환 대기 중이므로 체크 스킵", GameLogger.LogCategory.Character);
+                return;
+            }
+
+            if (isDead)
+            {
+                GameLogger.LogDebug($"[{GetCharacterName()}] 캐릭터가 죽어있으므로 페이즈 전환 체크 스킵", GameLogger.LogCategory.Character);
+                return;
+            }
+
+            if (CharacterData == null || !CharacterData.HasPhases)
+            {
+                GameLogger.LogDebug($"[{GetCharacterName()}] 페이즈 시스템이 없으므로 체크 스킵", GameLogger.LogCategory.Character);
+                return;
+            }
+
+            int currentHP = GetCurrentHP();
+            int maxHP = GetMaxHP();
+            if (maxHP <= 0)
+            {
+                GameLogger.LogWarning($"[{GetCharacterName()}] MaxHP가 0 이하이므로 페이즈 전환 체크 스킵", GameLogger.LogCategory.Character);
+                return;
+            }
+
+            GameLogger.LogDebug($"[{GetCharacterName()}] 카드 실행 완료 - 페이즈 전환 체크 시작 (체력: {currentHP}/{maxHP})", GameLogger.LogCategory.Character);
+            
+            // 페이즈 전환 체크 (이제는 NotifyHealthChanged에서 처리하므로 여기서는 스킵)
+            // CheckPhaseTransition(currentHP, maxHP);
+        }
+
+        /// <summary>
+        /// 체력 변경 후 약간의 지연을 두고 페이즈 전환을 체크합니다.
+        /// 카드 실행 완료 후 VFX/데미지 효과가 완료된 후에 체크하도록 합니다.
+        /// </summary>
+        /// <param name="currentHP">현재 체력</param>
+        /// <param name="maxHP">최대 체력</param>
+        private System.Collections.IEnumerator CheckPhaseTransitionDelayed(int currentHP, int maxHP)
+        {
+            // 카드 실행 완료 후 약간의 지연 (VFX/데미지 효과 완료 대기)
+            yield return new WaitForSeconds(0.5f);
+            
+            // 다시 한 번 체크 (이미 전환 중이거나 죽었으면 스킵)
+            if (isPhaseTransitionPending || isDead || CharacterData == null || !CharacterData.HasPhases)
+            {
+                yield break;
+            }
+            
+            // 현재 체력이 변경되었을 수 있으므로 다시 가져옴
+            int actualCurrentHP = GetCurrentHP();
+            int actualMaxHP = GetMaxHP();
+            
+            GameLogger.LogDebug($"[{GetCharacterName()}] 지연된 페이즈 전환 체크 시작 (체력: {actualCurrentHP}/{actualMaxHP})", GameLogger.LogCategory.Character);
+            
+            CheckPhaseTransition(actualCurrentHP, actualMaxHP);
+        }
+
+        /// <summary>
+        /// 체력 변경에 따라 페이즈 전환을 체크합니다.
+        /// 기본 정보(1페이즈)에서 Phases[0](2페이즈)로, Phases[0]에서 Phases[1](3페이즈)로 전환됩니다.
+        /// </summary>
+        /// <param name="currentHP">현재 체력</param>
+        /// <param name="maxHP">최대 체력</param>
+        private void CheckPhaseTransition(int currentHP, int maxHP)
+        {
+            if (CharacterData == null || !CharacterData.HasPhases)
+            {
+                GameLogger.LogDebug($"[{GetCharacterName()}] 페이즈 전환 체크 스킵: 데이터 없음", GameLogger.LogCategory.Character);
+                return;
+            }
+
+            if (maxHP <= 0)
+            {
+                GameLogger.LogWarning($"[{GetCharacterName()}] 페이즈 전환 체크 스킵: MaxHP가 0 이하", GameLogger.LogCategory.Character);
+                return;
+            }
+
+            // 시작 인덱스 결정
+            // currentPhaseIndex = -1 (기본 정보/1페이즈): Phases[0]부터 체크
+            // currentPhaseIndex >= 0 (Phases 리스트의 페이즈): 다음 인덱스부터 체크
+            int startIndex = currentPhaseIndex < 0 ? 0 : currentPhaseIndex + 1;
+            float currentHealthRatio = (float)currentHP / maxHP;
+
+            GameLogger.LogDebug($"[{GetCharacterName()}] 페이즈 전환 체크: 현재 페이즈 인덱스={currentPhaseIndex}, 체력={currentHP}/{maxHP} ({currentHealthRatio:P2}), 시작 인덱스={startIndex}", GameLogger.LogCategory.Character);
+
+            // 현재 페이즈보다 높은 인덱스의 페이즈만 체크 (리스트 순서대로 진행)
+            for (int i = startIndex; i < CharacterData.Phases.Count; i++)
+            {
+                var phase = CharacterData.Phases[i];
+                
+                if (phase == null)
+                {
+                    GameLogger.LogWarning($"[{GetCharacterName()}] 페이즈 {i}가 null입니다", GameLogger.LogCategory.Character);
+                    continue;
+                }
+
+                bool thresholdReached = phase.IsThresholdReached(currentHP, maxHP);
+                GameLogger.LogDebug($"[{GetCharacterName()}] 페이즈 {i} ({phase.phaseName}) 체크: 임계값={phase.healthThreshold:P2}, 현재 비율={currentHealthRatio:P2}, 도달={thresholdReached}", GameLogger.LogCategory.Character);
+                
+                // 임계값에 도달했으면 다음 페이즈로 전환
+                if (thresholdReached)
+                {
+                    GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환 조건 만족: {phase.phaseName} (체력: {currentHP}/{maxHP}, 비율: {currentHealthRatio:P2} <= {phase.healthThreshold:P2})", GameLogger.LogCategory.Character);
+                    StartPhaseTransition(i);
+                    break; // 한 번에 하나의 페이즈만 전환
+                }
+            }
+        }
+
+        /// <summary>
+        /// 페이즈 전환을 시작합니다 (코루틴으로 처리).
+        /// </summary>
+        /// <param name="phaseIndex">전환할 페이즈 인덱스</param>
+        private void StartPhaseTransition(int phaseIndex)
+        {
+            if (isPhaseTransitionPending)
+                return;
+
+            isPhaseTransitionPending = true;
+            StartCoroutine(TransitionToPhaseCoroutine(phaseIndex));
+        }
+
+        /// <summary>
+        /// 슬롯 이동이 완료될 때까지 대기합니다.
+        /// </summary>
+        private System.Collections.IEnumerator WaitForSlotMovementToComplete()
+        {
+            if (slotMovementController == null)
+            {
+                yield break;
+            }
+
+            // SlotMovementController의 IsAdvancingQueue가 false가 될 때까지 대기
+            int maxWaitFrames = 300; // 최대 5초 (60fps 기준)
+            int waitFrames = 0;
+
+            while (slotMovementController.IsAdvancingQueue && waitFrames < maxWaitFrames)
+            {
+                yield return null;
+                waitFrames++;
+            }
+
+            if (waitFrames >= maxWaitFrames)
+            {
+                GameLogger.LogWarning($"[{GetCharacterName()}] 슬롯 이동 대기 시간 초과", GameLogger.LogCategory.Character);
+            }
+            else if (waitFrames > 0)
+            {
+                GameLogger.LogDebug($"[{GetCharacterName()}] 슬롯 이동 완료 대기 완료 ({waitFrames}프레임)", GameLogger.LogCategory.Character);
+            }
+        }
+
+        /// <summary>
+        /// 페이즈 전환 코루틴입니다.
+        /// </summary>
+        private System.Collections.IEnumerator TransitionToPhaseCoroutine(int phaseIndex)
+        {
+            if (CharacterData == null || !CharacterData.HasPhases)
+            {
+                isPhaseTransitionPending = false;
+                yield break;
+            }
+
+            if (phaseIndex < 0 || phaseIndex >= CharacterData.Phases.Count)
+            {
+                GameLogger.LogWarning($"[{GetCharacterName()}] 잘못된 페이즈 인덱스: {phaseIndex}", GameLogger.LogCategory.Character);
+                isPhaseTransitionPending = false;
+                yield break;
+            }
+
+            // 이미 해당 페이즈에 있으면 스킵
+            if (phaseIndex == currentPhaseIndex)
+            {
+                isPhaseTransitionPending = false;
+                yield break;
+            }
+
+            var newPhase = CharacterData.Phases[phaseIndex];
+            int previousPhaseIndex = currentPhaseIndex;
+            string previousPhaseName;
+            
+            // 이전 페이즈 이름 결정
+            if (previousPhaseIndex < 0)
+            {
+                // 기본 정보(1페이즈)
+                previousPhaseName = "1페이즈";
+            }
+            else if (previousPhaseIndex < CharacterData.Phases.Count)
+            {
+                // Phases 리스트의 페이즈
+                previousPhaseName = CharacterData.Phases[previousPhaseIndex].phaseName;
+            }
+            else
+            {
+                previousPhaseName = "기본";
+            }
+
+            GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환 시작: {previousPhaseName} → {newPhase.phaseName} (체력: {GetCurrentHP()}/{GetMaxHP()})", GameLogger.LogCategory.Character);
+
+            // 슬롯 이동이 완료될 때까지 대기 (타이밍 충돌 방지)
+            yield return StartCoroutine(WaitForSlotMovementToComplete());
+
+            // 페이즈 전환 연출 재생 (완료까지 대기)
+            yield return StartCoroutine(PlayPhaseTransitionEffectsCoroutine(newPhase));
+
+            // 페이즈 설정 적용 (카드 교체 제외)
+            currentPhaseIndex = phaseIndex;
+            ApplyPhaseSettings(newPhase, true, skipCardRegeneration: true);
+
+            // 슬롯의 적 카드 제거 후 새 카드 생성 (연출 완료 후 실행)
+            yield return StartCoroutine(ClearEnemyCardsAndRegenerateCoroutine());
+
+            GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환 완료: {newPhase.phaseName}", GameLogger.LogCategory.Character);
+
+            isPhaseTransitionPending = false;
+        }
+
+        /// <summary>
+        /// 페이즈 설정을 적용합니다.
+        /// </summary>
+        /// <param name="phase">적용할 페이즈 데이터</param>
+        /// <param name="isTransition">전환인지 초기화인지 여부</param>
+        /// <param name="skipCardRegeneration">카드 재생성 스킵 여부 (연출 후 별도 처리용)</param>
+        private void ApplyPhaseSettings(EnemyPhaseData phase, bool isTransition, bool skipCardRegeneration = false)
+        {
+            if (phase == null) return;
+
+            // 1. 페이즈별 기본 정보 캐시
+            CachePhaseBasicInfo(phase);
+
+            // 2. 버프/디버프 모두 제거 (전환 시에만)
+            if (isTransition)
+            {
+                ClearAllBuffsAndDebuffs();
+            }
+
+            // 3. 최대 체력 변경 (phaseMaxHP가 0이 아니면)
+            if (phase.phaseMaxHP > 0)
+            {
+                int oldMaxHP = GetMaxHP();
+                SetMaxHP(phase.phaseMaxHP);
+                
+                // 현재 체력을 새 최대 체력으로 회복
+                SetCurrentHP(phase.phaseMaxHP);
+                
+                GameLogger.LogInfo($"[{GetCharacterName()}] 최대 체력 변경: {oldMaxHP} → {phase.phaseMaxHP}, 현재 체력 회복: {phase.phaseMaxHP}/{phase.phaseMaxHP}", GameLogger.LogCategory.Character);
+            }
+
+            // 4. 덱 교체
+            if (phase.phaseDeck != null)
+            {
+                skillDeck = phase.phaseDeck;
+                GameLogger.LogInfo($"[{GetCharacterName()}] 덱 교체: {phase.phaseDeck.name}", GameLogger.LogCategory.Character);
+
+                // 덱 스택 초기화
+                InitializeEnemyDeckStacks();
+            }
+
+            // 5. 페이즈 전용 이펙트 적용 (전환 시에만)
+            if (isTransition)
+            {
+                ApplyPhaseEffects(phase);
+            }
+
+            // 6. 페이즈별 Portrait 프리팹 교체 (전환 시에만)
+            if (isTransition && phase.phasePortraitPrefab != null)
+            {
+                ApplyPhasePortraitPrefab(phase.phasePortraitPrefab);
+            }
+
+            // 7. 슬롯의 적 카드 제거 후 새 카드 생성 (전환 시에만, skipCardRegeneration이 false일 때만)
+            // skipCardRegeneration이 true면 TransitionToPhaseCoroutine에서 별도로 처리
+            if (isTransition && !skipCardRegeneration)
+            {
+                StartCoroutine(ClearEnemyCardsAndRegenerateCoroutine());
+            }
+
+            // UI 갱신
+            RefreshUI();
+        }
+
+        /// <summary>
+        /// 페이즈별 기본 정보를 캐시합니다.
+        /// </summary>
+        /// <param name="phase">페이즈 데이터</param>
+        private void CachePhaseBasicInfo(EnemyPhaseData phase)
+        {
+            if (phase == null) return;
+
+            // DisplayName 캐시 (null이면 기본값 사용)
+            cachedPhaseDisplayName = !string.IsNullOrEmpty(phase.phaseDisplayName) 
+                ? phase.phaseDisplayName 
+                : null;
+
+            // IndexIcon 캐시
+            cachedPhaseIndexIcon = phase.phaseIndexIcon;
+
+            // PortraitPrefab 캐시
+            cachedPhasePortraitPrefab = phase.phasePortraitPrefab;
+
+            GameLogger.LogDebug($"[{GetCharacterName()}] 페이즈 기본 정보 캐시: DisplayName={cachedPhaseDisplayName ?? "기본"}, IndexIcon={cachedPhaseIndexIcon != null}, PortraitPrefab={cachedPhasePortraitPrefab != null}", GameLogger.LogCategory.Character);
+        }
+
+        /// <summary>
+        /// 페이즈별 Portrait 프리팹을 적용합니다.
+        /// </summary>
+        /// <param name="portraitPrefab">적용할 Portrait 프리팹</param>
+        private void ApplyPhasePortraitPrefab(GameObject portraitPrefab)
+        {
+            if (portraitPrefab == null) return;
+
+            // 기존 Portrait 제거
+            var existingPortrait = transform.Find("Portrait");
+            if (existingPortrait != null)
+            {
+                Destroy(existingPortrait.gameObject);
+            }
+
+            // Portrait 부모 Transform 찾기
+            Transform parent = portraitParent;
+            if (parent == null)
+            {
+                parent = transform;
+            }
+
+            // 새 Portrait 프리팹 인스턴스화
+            GameObject portraitInstance = Instantiate(portraitPrefab, parent);
+            portraitInstance.name = "Portrait";
+
+            // Portrait Image 컴포넌트 찾기
+            portraitImage = portraitInstance.GetComponentInChildren<Image>(true);
+            if (portraitImage == null)
+            {
+                GameLogger.LogWarning("[EnemyCharacter] 페이즈 Portrait 프리팹에서 Image 컴포넌트를 찾을 수 없습니다.", GameLogger.LogCategory.Character);
+            }
+
+            // HP Text Anchor 찾기 (페이즈 전환 시 항상 다시 찾기)
+            var hpAnchor = portraitInstance.transform.Find("HPTectAnchor");
+            if (hpAnchor == null)
+            {
+                hpAnchor = portraitInstance.transform.Find("HPTextAnchor");
+            }
+            if (hpAnchor != null)
+            {
+                hpTextAnchor = hpAnchor;
+                GameLogger.LogDebug($"[{GetCharacterName()}] HP Text Anchor 재찾기 완료: {hpAnchor.name}", GameLogger.LogCategory.Character);
+            }
+            else
+            {
+                GameLogger.LogWarning($"[{GetCharacterName()}] HP Text Anchor를 찾을 수 없습니다 (데미지 텍스트가 표시되지 않을 수 있음)", GameLogger.LogCategory.Character);
+            }
+
+            GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 Portrait 프리팹 교체: {portraitPrefab.name}", GameLogger.LogCategory.Character);
+        }
+
+        /// <summary>
+        /// 모든 버프/디버프를 제거합니다.
+        /// </summary>
+        private void ClearAllBuffsAndDebuffs()
+        {
+            // CharacterBase의 perTurnEffects 제거
+            perTurnEffects.Clear();
+            NotifyBuffsChanged();
+
+            GameLogger.LogInfo($"[{GetCharacterName()}] 모든 버프/디버프 제거", GameLogger.LogCategory.Character);
+        }
+
+        /// <summary>
+        /// 페이즈 전용 이펙트를 적용합니다.
+        /// </summary>
+        /// <param name="phase">적용할 페이즈 데이터</param>
+        private void ApplyPhaseEffects(EnemyPhaseData phase)
+        {
+            if (phase == null || phase.phaseEffects == null || phase.phaseEffects.Count == 0)
+                return;
+
+            // 기존 이펙트 정리
+            CleanupEffects();
+            characterEffects.Clear();
+
+            foreach (var effectEntry in phase.phaseEffects)
+            {
+                if (effectEntry.effectSO == null) continue;
+
+                // 새 이펙트 추가
+                characterEffects.Add(effectEntry.effectSO);
+
+                // 커스텀 설정 사용 여부에 따라 초기화
+                if (effectEntry.useCustomSettings && effectEntry.effectSO is Effect.SummonEffectSO summonEffectWithCustom)
+                {
+                    summonEffectWithCustom.InitializeWithCustomSettings(this, effectEntry.customSettings);
+                    summonEffectWithCustom.OnSummonTriggered += HandleSummonTriggered;
+                }
+                else
+                {
+                    effectEntry.effectSO.Initialize(this);
+
+                    // SummonEffectSO 지원
+                    if (effectEntry.effectSO is Effect.SummonEffectSO summonEffectSO)
+                    {
+                        summonEffectSO.OnSummonTriggered += HandleSummonTriggered;
+                    }
+                }
+
+                GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 이펙트 적용: {effectEntry.effectSO.GetEffectName()}", GameLogger.LogCategory.Character);
+            }
+        }
+
+        /// <summary>
+        /// 페이즈 전환 연출을 재생합니다 (코루틴).
+        /// VFX/SFX가 없어도 전환은 진행됩니다.
+        /// </summary>
+        private System.Collections.IEnumerator PlayPhaseTransitionEffectsCoroutine(EnemyPhaseData phase)
+        {
+            if (phase == null)
+            {
+                GameLogger.LogWarning($"[{GetCharacterName()}] 페이즈 데이터가 null이므로 연출 스킵", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            bool hasVFX = phase.phaseTransitionVFX != null && vfxManager != null;
+            bool hasSFX = phase.phaseTransitionSFX != null && audioManager != null;
+
+            GameLogger.LogDebug($"[{GetCharacterName()}] 페이즈 전환 연출 시작: VFX={hasVFX}, SFX={hasSFX}", GameLogger.LogCategory.Character);
+
+            // VFX 재생
+            if (hasVFX)
+            {
+                Transform visualRoot = GetHitVisualRoot();
+                if (visualRoot != null)
+                {
+                    vfxManager.PlayEffect(phase.phaseTransitionVFX, visualRoot.position);
+                    GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환 VFX 재생: {phase.phaseTransitionVFX.name}", GameLogger.LogCategory.Character);
+                    
+                    // VFX 재생 시간 대기 (기본 1초)
+                    yield return new WaitForSeconds(1.0f);
+                }
+                else
+                {
+                    GameLogger.LogWarning($"[{GetCharacterName()}] VisualRoot를 찾을 수 없어 VFX 스킵", GameLogger.LogCategory.Character);
+                }
+            }
+            else
+            {
+                GameLogger.LogDebug($"[{GetCharacterName()}] VFX가 없거나 VFXManager가 null - 연출 없이 진행", GameLogger.LogCategory.Character);
+            }
+
+            // SFX 재생
+            if (hasSFX)
+            {
+                audioManager.PlaySFX(phase.phaseTransitionSFX);
+                GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환 SFX 재생: {phase.phaseTransitionSFX.name}", GameLogger.LogCategory.Character);
+            }
+            else
+            {
+                GameLogger.LogDebug($"[{GetCharacterName()}] SFX가 없거나 AudioManager가 null - 연출 없이 진행", GameLogger.LogCategory.Character);
+            }
+
+            // 연출이 없어도 최소한의 대기 시간 (0.1초) - 전환 효과를 위한 최소 딜레이
+            if (!hasVFX && !hasSFX)
+            {
+                yield return new WaitForSeconds(0.1f);
+            }
+        }
+
+        /// <summary>
+        /// 슬롯의 적 카드를 제거하고 새로 생성합니다 (코루틴).
+        /// </summary>
+        private System.Collections.IEnumerator ClearEnemyCardsAndRegenerateCoroutine()
+        {
+            // ICardSlotRegistry 찾기 (여러 방법 시도)
+            var registry = slotRegistry;
+            if (registry == null)
+            {
+                // 방법 1: slotMovementController를 통해 접근
+                if (slotMovementController != null)
+                {
+                    var slotMovementControllerImpl = slotMovementController as Game.CombatSystem.Manager.SlotMovementController;
+                    if (slotMovementControllerImpl != null)
+                    {
+                        registry = slotMovementControllerImpl.GetCardSlotRegistry();
+                    }
+                }
+            }
+
+            if (registry == null)
+            {
+                // 방법 2: Zenject 컨테이너에서 찾기
+                var sceneContext = FindFirstObjectByType<Zenject.SceneContext>();
+                if (sceneContext != null && sceneContext.Container != null)
+                {
+                    registry = sceneContext.Container.TryResolve<ICardSlotRegistry>();
+                }
+            }
+
+            if (registry == null)
+            {
+                GameLogger.LogWarning($"[{GetCharacterName()}] ICardSlotRegistry를 찾을 수 없습니다 - 슬롯 카드 제거 건너뜀", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            if (skillDeck == null)
+            {
+                GameLogger.LogWarning($"[{GetCharacterName()}] 적 덱이 null입니다 - 새 카드 생성 건너뜀", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            // 적 카드가 있는 슬롯 찾기
+            var enemySlots = new List<Game.CombatSystem.Slot.CombatSlotPosition>();
+            var allSlots = new[]
+            {
+                Game.CombatSystem.Slot.CombatSlotPosition.BATTLE_SLOT,
+                Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_1,
+                Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_2,
+                Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_3,
+                Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_4
+            };
+
+            foreach (var slot in allSlots)
+            {
+                var card = registry.GetCardInSlot(slot);
+                if (card != null && !card.IsFromPlayer())
+                {
+                    enemySlots.Add(slot);
+                }
+            }
+
+            // 적 카드 제거
+            foreach (var slot in enemySlots)
+            {
+                registry.ClearSlot(slot);
+                GameLogger.LogDebug($"[{GetCharacterName()}] 슬롯 카드 제거: {slot}", GameLogger.LogCategory.Character);
+            }
+
+            GameLogger.LogInfo($"[{GetCharacterName()}] 적 카드 제거 완료 ({enemySlots.Count}개 슬롯)", GameLogger.LogCategory.Character);
+
+            // SlotMovementController의 적 덱 캐시 업데이트
+            // 이후 자동 보충 로직이 빈 슬롯을 채우도록 함
+            if (slotMovementController != null)
+            {
+                var currentEnemyData = CharacterData;
+                var currentEnemyName = GetCharacterName();
+                slotMovementController.UpdateEnemyCache(currentEnemyData, currentEnemyName);
+                GameLogger.LogDebug($"[{GetCharacterName()}] SlotMovementController 적 덱 캐시 업데이트 완료", GameLogger.LogCategory.Character);
+            }
+
+            // 빈 슬롯이 있으면 SlotMovementController의 자동 보충 로직이 처리하도록 함
+            // MoveAllSlotsForwardRoutine이 자동으로 RefillWaitSlot4IfNeededRoutine을 호출하여 빈 슬롯을 채움
+            GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환 후 슬롯 재채우기 완료 - SlotMovementController의 자동 보충 로직이 빈 슬롯을 채울 것입니다", GameLogger.LogCategory.Character);
         }
 
         #endregion

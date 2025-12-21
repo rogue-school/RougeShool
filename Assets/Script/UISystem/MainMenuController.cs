@@ -478,8 +478,19 @@ namespace Game.UISystem
             }
             
             // 데이터 설정
-            if (characterImage != null && characterData.Portrait != null)
-                characterImage.sprite = characterData.Portrait;
+            // Portrait 이미지 설정 (PlayerUIPortrait 우선, 없으면 PortraitPrefab에서 가져오기)
+            if (characterImage != null)
+            {
+                Sprite portraitSprite = GetCharacterPortraitSprite(characterData);
+                if (portraitSprite != null)
+                {
+                    characterImage.sprite = portraitSprite;
+                }
+                else
+                {
+                    GameLogger.LogWarning($"[MainMenuController] 캐릭터 이미지를 찾을 수 없습니다: {characterData.DisplayName}", GameLogger.LogCategory.UI);
+                }
+            }
             
             if (characterNameText != null)
                 characterNameText.text = characterData.DisplayName;
@@ -956,8 +967,20 @@ namespace Game.UISystem
             {
                 if (selectedCharacterDescription != null)
                     selectedCharacterDescription.text = selectedCharacter.Description ?? string.Empty; // PlayerCharacterData의 Description 사용
-                if (selectedCharacterImage != null && selectedCharacter.Portrait != null)
-                    selectedCharacterImage.sprite = selectedCharacter.Portrait;
+                
+                // Portrait 이미지 설정 (PlayerUIPortrait 우선, 없으면 PortraitPrefab에서 가져오기)
+                if (selectedCharacterImage != null)
+                {
+                    Sprite portraitSprite = GetCharacterPortraitSprite(selectedCharacter);
+                    if (portraitSprite != null)
+                    {
+                        selectedCharacterImage.sprite = portraitSprite;
+                    }
+                    else
+                    {
+                        GameLogger.LogWarning($"[MainMenuController] 선택된 캐릭터 이미지를 찾을 수 없습니다: {selectedCharacter.DisplayName}", GameLogger.LogCategory.UI);
+                    }
+                }
             }
 
             // 대표 스킬 아이콘 UI 제거됨
@@ -1187,6 +1210,59 @@ namespace Game.UISystem
         
         #endregion
         
+        /// <summary>
+        /// 캐릭터 데이터에서 Portrait 스프라이트를 가져옵니다.
+        /// PortraitPrefab의 Image 컴포넌트에서 직접 스프라이트를 가져옵니다.
+        /// </summary>
+        /// <param name="characterData">캐릭터 데이터</param>
+        /// <returns>Portrait 스프라이트, 없으면 null</returns>
+        private Sprite GetCharacterPortraitSprite(PlayerCharacterData characterData)
+        {
+            if (characterData == null)
+                return null;
+
+            // PortraitPrefab에서 Image 컴포넌트의 sprite 가져오기
+            if (characterData.PortraitPrefab != null)
+            {
+                // 프리팹을 임시로 인스턴스화하여 Image 컴포넌트 찾기
+                GameObject tempInstance = Instantiate(characterData.PortraitPrefab);
+                tempInstance.SetActive(false); // 비활성화하여 렌더링 방지
+                
+                try
+                {
+                    // Image 컴포넌트 찾기 (루트 또는 자식에서)
+                    Image portraitImage = tempInstance.GetComponent<Image>();
+                    if (portraitImage == null)
+                    {
+                        portraitImage = tempInstance.GetComponentInChildren<Image>(true);
+                    }
+                    
+                    if (portraitImage != null && portraitImage.sprite != null)
+                    {
+                        Sprite sprite = portraitImage.sprite;
+                        DestroyImmediate(tempInstance);
+                        return sprite;
+                    }
+                }
+                finally
+                {
+                    // 예외가 발생해도 인스턴스 정리
+                    if (tempInstance != null)
+                    {
+                        DestroyImmediate(tempInstance);
+                    }
+                }
+            }
+
+            // PortraitPrefab이 없으면 PlayerUIPortrait 폴백
+            if (characterData.PlayerUIPortrait != null)
+            {
+                return characterData.PlayerUIPortrait;
+            }
+
+            return null;
+        }
+
         #region Cleanup
         
         private void OnDisable()
