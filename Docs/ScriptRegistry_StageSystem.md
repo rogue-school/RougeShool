@@ -10,16 +10,16 @@
 
 | 스크립트 이름 | 네임스페이스 | 상대 경로 | 역할 | 주요 공개 메서드(대표) | 주요 필드/프로퍼티(대표) | Zenject 바인딩(있으면) | 주요 참조자(사용처) | 상태 |
 |--------------|--------------|-----------|------|------------------------|---------------------------|------------------------|----------------------|------|
-| **StageManager** | `Game.StageSystem.Manager` | `Manager/StageManager.cs` | 스테이지 진행 총괄 매니저 (적 생성/소환/완료, 저장/로드, 통계/보상 연동) | `CreateEnemyAsync(...)`, `CreateEnemyForSummonAsync(...)`, `PeekNextEnemyData()`, `IsSummonedEnemyActive()`, `GetSummonTarget()`, `GetOriginalEnemyHP()`, `SetStageProgressState(...)` 등 | `StageSettings`, `DebugSettings`, `currentStage`, `progressState`, `currentEnemyIndex`, 소환/완료 플래그들 | `CombatInstaller.BindFactories()`에서 `IStageManager`로 바인딩 (`stageManager`를 씬에서 찾거나 새로 생성) | CombatStateMachine(소환/전투 시작), EnemyManager(적 등록), AudioManager(적별 BGM), SaveManager/StageProgressCollector, RewardOnEnemyDeath, TurnManager/CombatStats 등 | ✅ 사용 중 |
-| **IStageManager** | `Game.StageSystem.Interface` | `Interface/IStageManager.cs` | StageManager 인터페이스 | `LoadDefaultStage()`, `LoadStageByNumber(...)`, `GetCurrentStageNumber()` 등 | - | `CombatInstaller.BindFactories`에서 `IStageManager ← StageManager` AsSingle | CombatSystem, GameFlow(전투 진입/복귀), Save/통계 | ✅ 사용 중 |
+| **StageManager** | `Game.StageSystem.Manager` | `Manager/StageManager.cs` | 스테이지 진행 총괄 매니저 (적 생성/소환/완료, 보상 연동) | `CreateEnemyAsync(...)`, `CreateEnemyForSummonAsync(...)`, `PeekNextEnemyData()`, `IsSummonedEnemyActive()`, `GetSummonTarget()`, `GetOriginalEnemyHP()`, `SetStageProgressState(...)` 등 | `StageSettings`, `DebugSettings`, `currentStage`, `progressState`, `currentEnemyIndex`, 소환/완료 플래그들 | `CombatInstaller.BindFactories()`에서 `IStageManager`로 바인딩 (`stageManager`를 씬에서 찾거나 새로 생성) | CombatStateMachine(소환/전투 시작), EnemyManager(적 등록), AudioManager(적별 BGM), RewardOnEnemyDeath, TurnManager/CombatStats 등 | ✅ 사용 중 |
+| **IStageManager** | `Game.StageSystem.Interface` | `Interface/IStageManager.cs` | StageManager 인터페이스 | `LoadDefaultStage()`, `LoadStageByNumber(...)`, `GetCurrentStageNumber()` 등 | - | `CombatInstaller.BindFactories`에서 `IStageManager ← StageManager` AsSingle | CombatSystem, GameFlow(전투 진입/복귀) | ✅ 사용 중 |
 | **StageData** | `Game.StageSystem.Data` | `Data/StageData.cs` | 스테이지 구성 ScriptableObject (적 목록, 배치, 연출 등) | - | 스테이지 이름, 적 리스트, 보상/환경 설정 | 에셋, DI 없음 | StageManager(적 생성/소환), AudioManager(적별 BGM 설정), 통계/보상 로직 | ✅ 사용 중 |
-| **StageProgressState** | `Game.StageSystem.Data` | `Data/StageProgressState.cs` | 스테이지 진행 상태 enum (NotStarted/InProgress/Cleared 등) | - | enum 값 | DI 없음 | StageManager 내부 상태, Save/통계/진행 표시 | ✅ 사용 중 |
-| **StageProgressController** | `Game.StageSystem.Manager` | `Manager/StageProgressController.cs` | 스테이지 진행 상태/저장 연동 보조 매니저 | `SaveProgress(...)`, `LoadProgress(...)` 등 | 현재 스테이지 번호/진행도 | SaveSystem와 연동, DI 또는 Find 사용 | StageManager, AutoSaveManager | ✅ 사용 중 |
+| **StageProgressState** | `Game.StageSystem.Data` | `Data/StageProgressState.cs` | 스테이지 진행 상태 enum (NotStarted/InProgress/Cleared 등) | - | enum 값 | DI 없음 | StageManager 내부 상태, 진행 표시 | ✅ 사용 중 |
+| **StageProgressController** | `Game.StageSystem.Manager` | `Manager/StageProgressController.cs` | 스테이지 진행 로직 통합 관리 (스테이지 시작/실패/리셋) | `StartStage()`, `OnEnemyDeath(...)`, `FailStage()`, `ResetStage()` 등 | StageManager, EnemyManager 참조 | DI 주입 (`IStageManager`, `EnemyManager`) | StageManager, 적 사망 처리 | ✅ 사용 중 |
 | **StageFlowStateMachine** | `Game.StageSystem.State` | `State/StageFlowStateMachine.cs` | 스테이지 흐름 상태 머신 (예: 준비→전투→보상→다음 스테이지) | `ChangeState(...)`, `StartStageFlow(...)` 등 | 현재 상태, 컨텍스트 | `CombatInstaller.BindStageFlowStateMachine()`에서 바인딩 (CombatInstaller 내) | StageManager, GameFlow/UISystem | ✅ 사용 중 |
 | **StageEnemyIndexDisplay** | `Game.StageSystem.UI` | `UI/StageEnemyIndexDisplay.cs` | 현재 적 인덱스를 UI로 표시하는 컴포넌트 | `UpdateDisplay(...)` 등 | 텍스트 UI 참조, StageManager 참조 | 씬 컴포넌트, DI/Find | StageManager의 `currentEnemyIndex` 표시 | ✅ 사용 중 |
 | **StageUIController** | `Game.StageSystem.UI` | `UI/StageUIController.cs` | 스테이지 관련 UI(진행도/남은 적 등) 통합 컨트롤러 | `UpdateStageInfo(...)` 등 | StageData/StageManager 참조, UI 요소들 | 씬 컴포넌트, DI/Find | Stage 진행 상황 표시, 결과 화면 전환 등 | ✅ 사용 중 |
 
-> **사용 여부 메모**: StageSystem에는 소수의 스크립트만 있으며, `StageManager`와 `IStageManager`가 CombatInstaller 및 여러 시스템에서 직접 참조되고, 나머지 UI/보조 클래스들 역시 StageManager/Save/통계/CombatStateMachine과 연결되어 있어 **모두 실행 경로가 확인된 상태**입니다.
+> **사용 여부 메모**: StageSystem에는 소수의 스크립트만 있으며, `StageManager`와 `IStageManager`가 CombatInstaller 및 여러 시스템에서 직접 참조되고, 나머지 UI/보조 클래스들 역시 StageManager/CombatStateMachine과 연결되어 있어 **모두 실행 경로가 확인된 상태**입니다.
 
 ---
 
@@ -61,7 +61,6 @@ MonoBehaviour
 |----------|----------|------------|------|
 | `CombatInstaller` / `IStageManager` | DI 바인딩 | StageScene 전역 → CombatScene | 전투 상태 머신/Installer에서 스테이지 정보를 조회 |
 | `CombatStateMachine` (SummonState/ReturnState) | 메서드 호출 | 소환 대상/원래 HP 조회 | 전투 상태 전환 시 스테이지 소환/복귀 로직과 연동 |
-| `AutoSaveManager` / `StageProgressCollector` | 이벤트/메서드 호출 | Stage 완료/진행 → 세이브 데이터 | 스테이지 진행과 세이브 시스템을 연결 |
 | `StageUIController` / `StageEnemyIndexDisplay` | 참조/이벤트 | 진행도/인덱스 → UI | 현재 적 인덱스/스테이지 번호를 HUD에 표시 |
 
 ---
@@ -69,7 +68,6 @@ MonoBehaviour
 ## 레거시/미사용 코드 정리
 
 현재 StageSystem 폴더 내에서는 CombatInstaller/SaveSystem/통계/오디오 연계 및 grep 기준으로 **레거시/완전 미사용으로 분류된 스크립트가 없습니다.**  
-`StageProgressController`는 SaveSystem과의 경계 계층으로, AutoSave/StageProgressCollector와 함께 실사용 중입니다.
 
 ---
 

@@ -7,7 +7,6 @@ using System.Linq;
 using DG.Tweening;
 using Game.CoreSystem.Interface;
 using Game.CoreSystem.UI;
-using Game.CoreSystem.Save;
 using Game.CoreSystem.Utility;
  using Game.CharacterSystem.Data;
  using Game.CharacterSystem.Core;
@@ -28,7 +27,6 @@ namespace Game.UISystem
         #region 의존성 주입
 
         [Inject] private IGameStateManager gameStateManager;
-        [Inject] private ISaveManager saveManager;
         [Inject] private IPlayerCharacterSelectionManager playerCharacterSelectionManager;
         [Inject(Optional = true)] private ISceneTransitionManager sceneTransitionManager;
         [Inject(Optional = true)] private Game.CoreSystem.Audio.AudioManager audioManager;
@@ -571,7 +569,7 @@ namespace Game.UISystem
         {
             if (continueButton != null)
             {
-                bool hasStageProgressSave = saveManager?.HasStageProgressSave() ?? false;
+                bool hasStageProgressSave = false; // SaveSystem 제거됨
                 continueButton.interactable = hasStageProgressSave;
                 
                 var buttonText = continueButton.GetComponentInChildren<TextMeshProUGUI>();
@@ -641,12 +639,7 @@ namespace Game.UISystem
         {
             GameLogger.LogInfo("[MainMenuController] 새 게임 버튼 클릭", GameLogger.LogCategory.UI);
             
-            // 기존 저장 데이터 초기화
-            if (saveManager != null)
-            {
-                saveManager.InitializeNewGame();
-                GameLogger.LogInfo("[MainMenuController] 새 게임 초기화 완료", GameLogger.LogCategory.Save);
-            }
+            // SaveSystem 제거됨
             // 저장 불사용/신규 시작 플래그 설정 (StageScene에서 저장 복원 루틴 우회)
             PlayerPrefs.SetInt("RESUME_REQUESTED", 0);
             PlayerPrefs.SetInt("NEW_GAME_REQUESTED", 1);
@@ -661,42 +654,29 @@ namespace Game.UISystem
         /// <summary>
         /// 이어하기 버튼 클릭
         /// </summary>
-        private async void OnContinueButtonClicked()
+        private void OnContinueButtonClicked()
         {
-            GameLogger.LogInfo("[MainMenuController] 이어하기 버튼 클릭", GameLogger.LogCategory.UI);
+            GameLogger.LogInfo("[MainMenuController] 이어하기 버튼 클릭 (SaveSystem 제거됨 - 새 게임으로 전환)", GameLogger.LogCategory.UI);
             
-            if (saveManager == null)
-            {
-                GameLogger.LogError("[MainMenuController] SaveManager가 없습니다!", GameLogger.LogCategory.Error);
-                return;
-            }
-            
+            // SaveSystem 제거됨 - 이어하기 기능 비활성화, 새 게임으로 전환
             try
             {
-                // 오디오 설정 로드
-                var (bgm, sfx) = saveManager.LoadAudioSettings();
+                // 오디오 설정 로드 (PlayerPrefs에서 직접)
+                float bgm = PlayerPrefs.GetFloat("audio_bgm_volume", 0.7f);
+                float sfx = PlayerPrefs.GetFloat("audio_sfx_volume", 1.0f);
                 
-                // 이어하기 플래그 설정
-                PlayerPrefs.SetInt("RESUME_REQUESTED", 1);
-                PlayerPrefs.Save();
-
-                // 스테이지 씬으로 전환 (DI 주입)
-                if (sceneTransitionManager != null)
+                if (audioManager != null)
                 {
-                    await sceneTransitionManager.TransitionToStageScene();
-                    
-                    // 스테이지 진행 상황 복원
-                    bool loadSuccess = await saveManager.LoadStageProgress();
-                    if (!loadSuccess)
-                    {
-                        GameLogger.LogWarning("[MainMenuController] 이어하기 실패, 새 게임으로 폴백", GameLogger.LogCategory.Save);
-                        OnNewGameButtonClicked();
-                    }
+                    audioManager.SetBGMVolume(bgm);
+                    audioManager.SetSFXVolume(sfx);
                 }
+
+                // 새 게임으로 전환
+                OnNewGameButtonClicked();
             }
             catch (System.Exception ex)
             {
-                GameLogger.LogError($"[MainMenuController] 이어하기 중 오류: {ex.Message}", GameLogger.LogCategory.Error);
+                GameLogger.LogError($"[MainMenuController] 이어하기 처리 중 오류: {ex.Message}", GameLogger.LogCategory.Error);
                 OnNewGameButtonClicked();
             }
         }

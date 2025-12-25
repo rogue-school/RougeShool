@@ -4,8 +4,6 @@ using TMPro;
 using Game.CoreSystem.Utility;
 using Game.CoreSystem.Manager;
 using Game.CoreSystem.Interface;
-using Game.CoreSystem.Save;
-using Game.CoreSystem.Statistics;
 using Zenject;
 
 namespace Game.CombatSystem.UI
@@ -32,9 +30,7 @@ namespace Game.CombatSystem.UI
         // 씬 전환 매니저
         [Inject(Optional = true)] private ISceneTransitionManager sceneTransitionManager;
         
-        // 통계 매니저
-        [Inject(Optional = true)] private GameSessionStatistics gameSessionStatistics;
-        [Inject(Optional = true)] private IStatisticsManager statisticsManager;
+        // Statistics 제거됨
 
         private void Start()
         {
@@ -88,7 +84,7 @@ namespace Game.CombatSystem.UI
         /// <summary>
         /// 게임 오버 화면을 표시합니다.
         /// </summary>
-        public async void ShowGameOver()
+        public void ShowGameOver()
         {
             if (panel != null)
             {
@@ -102,73 +98,10 @@ namespace Game.CombatSystem.UI
                 gameOverText.text = "게임 오버";
             }
 
-            // 통계 세션 종료 및 저장
-            await SaveStatisticsSession();
+            // Statistics 제거됨
         }
 
-        /// <summary>
-        /// 통계 세션 저장 (게임 승리와 동일한 로직)
-        /// </summary>
-        private async System.Threading.Tasks.Task SaveStatisticsSession()
-        {
-            GameLogger.LogInfo("[GameOverUI] 통계 세션 저장 시도 (완전 종료)", GameLogger.LogCategory.Save);
-
-            // gameSessionStatistics와 statisticsManager는 DI로 주입받음
-            if (gameSessionStatistics != null)
-            {
-                GameLogger.LogInfo($"[GameOverUI] GameSessionStatistics 찾기: 성공", GameLogger.LogCategory.Save);
-            }
-
-            if (statisticsManager != null)
-            {
-                GameLogger.LogInfo($"[GameOverUI] StatisticsManager 찾기: 성공", GameLogger.LogCategory.Save);
-            }
-
-            if (gameSessionStatistics == null)
-            {
-                GameLogger.LogWarning("[GameOverUI] GameSessionStatistics를 찾을 수 없습니다. 통계 저장을 건너뜁니다.", GameLogger.LogCategory.Save);
-                return;
-            }
-
-            if (statisticsManager == null)
-            {
-                GameLogger.LogWarning("[GameOverUI] StatisticsManager를 찾을 수 없습니다. 통계 저장을 건너뜁니다.", GameLogger.LogCategory.Save);
-                return;
-            }
-
-            // 게임 승리와 동일하게 강제로 완전 종료 및 저장 (IsSaved 체크 제거)
-            // 세션이 활성화되어 있으면 종료 처리 (완전 종료)
-            if (gameSessionStatistics.IsSessionActive)
-            {
-                gameSessionStatistics.EndSession(true); // 완전 종료
-                var sessionData = gameSessionStatistics.GetCurrentSessionData();
-                
-                if (sessionData == null)
-                {
-                    GameLogger.LogWarning("[GameOverUI] 세션 종료 후 데이터가 null입니다. 통계 저장을 건너뜁니다.", GameLogger.LogCategory.Save);
-                    return;
-                }
-                
-                await statisticsManager.SaveSessionStatistics(sessionData);
-                gameSessionStatistics.MarkAsSaved();
-                GameLogger.LogInfo("[GameOverUI] 통계 세션 저장 완료 (완전 종료)", GameLogger.LogCategory.Save);
-            }
-            else
-            {
-                // 세션이 이미 종료되었어도 데이터가 있으면 저장 시도 (게임 승리와 동일)
-                var sessionData = gameSessionStatistics.GetCurrentSessionData();
-                if (sessionData != null)
-                {
-                    await statisticsManager.SaveSessionStatistics(sessionData);
-                    gameSessionStatistics.MarkAsSaved();
-                    GameLogger.LogInfo("[GameOverUI] 세션이 이미 종료되었지만, 기존 세션 데이터를 저장했습니다. (완전 종료)", GameLogger.LogCategory.Save);
-                }
-                else
-                {
-                    GameLogger.LogWarning("[GameOverUI] 세션 데이터가 null입니다. 통계 저장을 건너뜁니다.", GameLogger.LogCategory.Save);
-                }
-            }
-        }
+        // Statistics 제거됨 - SaveStatisticsSession 메서드 제거
 
         /// <summary>
         /// 게임 오버 화면을 숨깁니다.

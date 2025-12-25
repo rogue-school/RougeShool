@@ -245,6 +245,25 @@ namespace Game.ItemSystem.Effect
             // 공격력 버프 효과 생성 및 적용
             var attackBuffEffect = new AttackPowerBuffEffect(buffAmount, duration, turnPolicy, itemIcon, itemName);
             context.User.RegisterPerTurnEffect(attackBuffEffect);
+            
+            GameLogger.LogInfo($"[AttackBuffEffectCommand] 공격력 물약 버프 등록: {buffAmount} 증가, {duration}턴 지속, 사용자: {context.User?.GetCharacterName() ?? "null"}", GameLogger.LogCategory.Core);
+            
+            // 등록 후 확인
+            var buffs = context.User.GetBuffs();
+            bool found = false;
+            foreach (var buff in buffs)
+            {
+                if (buff is AttackPowerBuffEffect)
+                {
+                    found = true;
+                    GameLogger.LogInfo($"[AttackBuffEffectCommand] 공격력 버프 확인됨: {((AttackPowerBuffEffect)buff).GetAttackPowerBonus()} 증가", GameLogger.LogCategory.Core);
+                    break;
+                }
+            }
+            if (!found)
+            {
+                GameLogger.LogWarning($"[AttackBuffEffectCommand] 공격력 버프 등록 후 확인 실패! 사용자: {context.User?.GetCharacterName() ?? "null"}, 버프 수: {buffs?.Count ?? 0}", GameLogger.LogCategory.Core);
+            }
 
             // UI에 버프 아이콘 표시 (아이템 이미지 사용)
             if (context.User is Game.CharacterSystem.Core.PlayerCharacter playerCharacter)

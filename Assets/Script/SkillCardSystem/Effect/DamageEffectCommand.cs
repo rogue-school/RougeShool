@@ -139,18 +139,30 @@ namespace Game.SkillCardSystem.Effect
 
             // 1.5) 아이템 공격력 버프 확인(시전자 기준)
             int itemAttackBonus = 0;
-            if (source is Game.CharacterSystem.Core.CharacterBase characterBase)
+            if (source != null)
             {
-                // AttackPowerBuffEffect가 있는지 확인하고 보너스 적용
-                var attackBuffEffects = characterBase.GetBuffs();
-                foreach (var effect in attackBuffEffects)
+                // ICharacter 인터페이스를 통해 GetBuffs() 호출
+                var attackBuffEffects = source.GetBuffs();
+                if (attackBuffEffects != null)
                 {
-                    if (effect is Game.ItemSystem.Effect.AttackPowerBuffEffect attackBuff)
+                    foreach (var effect in attackBuffEffects)
                     {
-                        int bonus = attackBuff.GetAttackPowerBonus();
-                        itemAttackBonus += bonus;
+                        if (effect is Game.ItemSystem.Effect.AttackPowerBuffEffect attackBuff)
+                        {
+                            int bonus = attackBuff.GetAttackPowerBonus();
+                            itemAttackBonus += bonus;
+                            GameLogger.LogInfo($"[DamageEffectCommand] 공격력 물약 버프 적용: +{bonus} (총 보너스: {itemAttackBonus})", GameLogger.LogCategory.Combat);
+                        }
                     }
                 }
+                else
+                {
+                    GameLogger.LogWarning($"[DamageEffectCommand] source.GetBuffs()가 null을 반환했습니다. source: {source.GetCharacterName()}", GameLogger.LogCategory.Combat);
+                }
+            }
+            else
+            {
+                GameLogger.LogWarning("[DamageEffectCommand] source가 null입니다. 공격력 물약 버프를 확인할 수 없습니다.", GameLogger.LogCategory.Combat);
             }
 
             // 2) 강화 단계 데미지 보너스 확인 (플레이어가 시전자이고 플레이어 카드일 때만 적용)
@@ -359,14 +371,20 @@ namespace Game.SkillCardSystem.Effect
 
             // 아이템 공격력 버프 확인
             int itemAttackBonus = 0;
-            if (source is Game.CharacterSystem.Core.CharacterBase characterBase)
+            if (source != null)
             {
-                var attackBuffEffects = characterBase.GetBuffs();
-                foreach (var effect in attackBuffEffects)
+                // ICharacter 인터페이스를 통해 GetBuffs() 호출
+                var attackBuffEffects = source.GetBuffs();
+                if (attackBuffEffects != null)
                 {
-                    if (effect is Game.ItemSystem.Effect.AttackPowerBuffEffect attackBuff)
+                    foreach (var effect in attackBuffEffects)
                     {
-                        itemAttackBonus += attackBuff.GetAttackPowerBonus();
+                        if (effect is Game.ItemSystem.Effect.AttackPowerBuffEffect attackBuff)
+                        {
+                            int bonus = attackBuff.GetAttackPowerBonus();
+                            itemAttackBonus += bonus;
+                            GameLogger.LogInfo($"[DamageEffectCommand] 다단 히트 - 공격력 물약 버프 적용: +{bonus} (총 보너스: {itemAttackBonus})", GameLogger.LogCategory.Combat);
+                        }
                     }
                 }
             }

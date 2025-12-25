@@ -12,6 +12,7 @@ using Game.SkillCardSystem.UI.Mappers;
 using Game.CharacterSystem.Manager;
 using Game.ItemSystem.Service;
 using Zenject;
+using System.Linq;
 
 namespace Game.SkillCardSystem.UI
 {
@@ -126,6 +127,10 @@ namespace Game.SkillCardSystem.UI
 		private LayoutElement _layoutElement;
 		private ContentSizeFitter _contentSizeFitter;
         private int _lastAttackPowerStack = -1;
+        private int _lastPotionBonus = -1;
+        private int _lastFocusBonus = -1;
+        private int _lastEnhancementBonus = -1;
+        private Game.CharacterSystem.Interface.ICharacter _trackedPlayerCharacter;
 
 
 		private void EnsurePrefabStructure()
@@ -238,6 +243,76 @@ namespace Game.SkillCardSystem.UI
         private void Awake()
         {
             InitializeComponents();
+            EnsureDependenciesInjected();
+        }
+        
+        /// <summary>
+        /// playerManager와 itemService가 주입되지 않았으면 Zenject Container를 통해 주입을 시도합니다.
+        /// </summary>
+        private void EnsureDependenciesInjected()
+        {
+            if (playerManager != null && itemService != null) return;
+
+            try
+            {
+                // 1. ProjectContext를 통해 Container에 접근하여 주입 시도
+                var projectContext = Zenject.ProjectContext.Instance;
+                if (projectContext != null && projectContext.Container != null)
+                {
+                    projectContext.Container.Inject(this);
+                    if (playerManager != null && itemService != null)
+                    {
+                        GameLogger.LogInfo("[SkillCardTooltip] 의존성 주입 완료 (ProjectContext)", GameLogger.LogCategory.UI);
+                        return;
+                    }
+                }
+
+                // 2. SceneContextRegistry를 통해 현재 씬의 Container에 접근하여 주입 시도
+                if (projectContext != null && projectContext.Container != null)
+                {
+                    try
+                    {
+                        var sceneContextRegistry = projectContext.Container.Resolve<Zenject.SceneContextRegistry>();
+                        var sceneContainer = sceneContextRegistry.GetContainerForScene(gameObject.scene);
+                        if (sceneContainer != null)
+                        {
+                            sceneContainer.Inject(this);
+                            if (playerManager != null && itemService != null)
+                            {
+                                GameLogger.LogInfo("[SkillCardTooltip] 의존성 주입 완료 (SceneContext)", GameLogger.LogCategory.UI);
+                                return;
+                            }
+                        }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        GameLogger.LogWarning($"[SkillCardTooltip] SceneContext 주입 시도 실패: {ex.Message}", GameLogger.LogCategory.UI);
+                    }
+                }
+
+                // 3. FindFirstObjectByType을 사용한 폴백
+                if (playerManager == null)
+                {
+                    playerManager = UnityEngine.Object.FindFirstObjectByType<PlayerManager>();
+                    if (playerManager != null)
+                    {
+                        GameLogger.LogInfo("[SkillCardTooltip] playerManager 직접 찾기 완료 (FindFirstObjectByType)", GameLogger.LogCategory.UI);
+                    }
+                }
+
+                if (itemService == null)
+                {
+                    itemService = UnityEngine.Object.FindFirstObjectByType<ItemService>();
+                    if (itemService != null)
+                    {
+                        GameLogger.LogInfo("[SkillCardTooltip] itemService 직접 찾기 완료 (FindFirstObjectByType)", GameLogger.LogCategory.UI);
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogError($"[SkillCardTooltip] 의존성 주입 시도 중 오류: {ex.Message}", GameLogger.LogCategory.Error);
+            }
         }
 
         private void Start()
@@ -299,6 +374,9 @@ namespace Game.SkillCardSystem.UI
         /// <param name="cardRectTransform">카드의 RectTransform (크기 계산용)</param>
             public void ShowTooltip(ISkillCard card, Vector2 cardPosition, RectTransform cardRectTransform = null)
             {
+            // 의존성 주입 확인 (ShowTooltip 호출 시점에도 확인)
+            EnsureDependenciesInjected();
+            
             if (card == null)
             {
                 GameLogger.LogWarning("[SkillCardTooltip] 표시할 카드가 null입니다", GameLogger.LogCategory.UI);
@@ -307,9 +385,71 @@ namespace Game.SkillCardSystem.UI
 
             currentCard = card;
             currentCardRectTransform = cardRectTransform; // 카드 RectTransform 저장
+            
+            // 스택 및 버프 초기값 기록
+            if (card is Game.SkillCardSystem.Interface.IAttackPowerStackProvider sp)
+            {
+                _lastAttackPowerStack = sp.GetAttackPowerStack();
+            }
+            else
+            {
+                _lastAttackPowerStack = -1;
+            }
+            
+            // 버프 초기값 기록 (플레이어 카드만)
+            _lastPotionBonus = 0;
+            _lastFocusBonus = 0;
+            _lastEnhancementBonus = 0;
+            _trackedPlayerCharacter = null;
+            
+            if (card != null && card.IsFromPlayer() && playerManager != null)
+            {
+                var character = playerManager.GetCharacter();
+                if (character != null && character.IsPlayerControlled())
+                {
+                    _trackedPlayerCharacter = character;
+                    
+                    // 버프 초기값 계산
+                    var buffs = character.GetBuffs();
+                    if (buffs != null)
+                    {
+                        foreach (var effect in buffs)
+                        {
+                            if (effect is Game.ItemSystem.Effect.AttackPowerBuffEffect attackBuff)
+                            {
+                                int bonus = attackBuff.GetAttackPowerBonus();
+                                bool hasItemName = !string.IsNullOrEmpty(attackBuff.SourceItemName);
+                                bool hasEffectName = !string.IsNullOrEmpty(attackBuff.SourceEffectName);
+                                
+                                if (hasItemName)
+                                {
+                                    _lastPotionBonus += bonus;
+                                }
+                                else if (hasEffectName)
+                                {
+                                    _lastFocusBonus += bonus;
+                                }
+                                else
+                                {
+                                    _lastPotionBonus += bonus;
+                                }
+                            }
+                        }
+                    }
+                    
+                    // 강화 보너스 초기값
+                    if (itemService != null && card.CardDefinition != null)
+                    {
+                        string skillId = card.CardDefinition.displayName;
+                        _lastEnhancementBonus = itemService.GetSkillDamageBonus(skillId);
+                    }
+                    
+                    // 버프 변경 이벤트 구독
+                    character.OnBuffsChanged += OnPlayerBuffsChanged;
+                }
+            }
+            
             UpdateTooltipContent(card);
-            // 스택 기반 효과 변화 감지를 위해 현재 스택을 기록
-            _lastAttackPowerStack = (card is Game.SkillCardSystem.Interface.IAttackPowerStackProvider sp) ? sp.GetAttackPowerStack() : -1;
             
             // Layout 시스템이 적용되도록 한 프레임 대기 후 위치 계산
             StartCoroutine(ShowTooltipWithLayout(cardPosition));
@@ -342,9 +482,28 @@ namespace Game.SkillCardSystem.UI
         {
             if (isVisible)
             {
+                // 버프 변경 이벤트 구독 해제
+                if (_trackedPlayerCharacter != null)
+                {
+                    _trackedPlayerCharacter.OnBuffsChanged -= OnPlayerBuffsChanged;
+                    _trackedPlayerCharacter = null;
+                }
+                
                 // 서브 툴팁도 함께 숨김 (임시 비활성화)
                 HideSubTooltip();
                 FadeOut();
+            }
+        }
+        
+        /// <summary>
+        /// 플레이어 캐릭터의 버프가 변경되었을 때 호출됩니다.
+        /// </summary>
+        private void OnPlayerBuffsChanged(System.Collections.Generic.IReadOnlyList<Game.SkillCardSystem.Interface.IPerTurnEffect> buffs)
+        {
+            if (isVisible && currentCard != null && currentCard.IsFromPlayer())
+            {
+                GameLogger.LogInfo("[SkillCardTooltip] 플레이어 버프 변경 감지 - 툴팁 갱신", GameLogger.LogCategory.UI);
+                UpdateTooltipContent(currentCard);
             }
         }
 
@@ -354,18 +513,82 @@ namespace Game.SkillCardSystem.UI
         /// <param name="mousePosition">마우스 위치</param>
         public void UpdatePosition(Vector2 mousePosition)
         {
-            if (isVisible)
+            if (isVisible && currentCard != null)
             {
-                // 스택 변화가 있으면 콘텐츠 갱신
+                bool needsUpdate = false;
+                
+                // 스택 변화 확인
                 if (currentCard is Game.SkillCardSystem.Interface.IAttackPowerStackProvider sp)
                 {
                     int cur = sp.GetAttackPowerStack();
                     if (cur != _lastAttackPowerStack)
                     {
                         _lastAttackPowerStack = cur;
-                        UpdateTooltipContent(currentCard);
+                        needsUpdate = true;
                     }
                 }
+                
+                // 버프 변화 확인 (플레이어 카드만)
+                if (currentCard.IsFromPlayer() && playerManager != null)
+                {
+                    var character = playerManager.GetCharacter();
+                    if (character != null && character.IsPlayerControlled())
+                    {
+                        // 물약/집중 버프 확인
+                        int potionBonus = 0;
+                        int focusBonus = 0;
+                        var buffs = character.GetBuffs();
+                        if (buffs != null)
+                        {
+                            foreach (var effect in buffs)
+                            {
+                                if (effect is Game.ItemSystem.Effect.AttackPowerBuffEffect attackBuff)
+                                {
+                                    int bonus = attackBuff.GetAttackPowerBonus();
+                                    bool hasItemName = !string.IsNullOrEmpty(attackBuff.SourceItemName);
+                                    bool hasEffectName = !string.IsNullOrEmpty(attackBuff.SourceEffectName);
+                                    
+                                    if (hasItemName)
+                                    {
+                                        potionBonus += bonus;
+                                    }
+                                    else if (hasEffectName)
+                                    {
+                                        focusBonus += bonus;
+                                    }
+                                    else
+                                    {
+                                        potionBonus += bonus;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // 강화 보너스 확인
+                        int enhancementBonus = 0;
+                        if (itemService != null && currentCard.CardDefinition != null)
+                        {
+                            string skillId = currentCard.CardDefinition.displayName;
+                            enhancementBonus = itemService.GetSkillDamageBonus(skillId);
+                        }
+                        
+                        // 버프 변화 감지
+                        if (potionBonus != _lastPotionBonus || focusBonus != _lastFocusBonus || enhancementBonus != _lastEnhancementBonus)
+                        {
+                            _lastPotionBonus = potionBonus;
+                            _lastFocusBonus = focusBonus;
+                            _lastEnhancementBonus = enhancementBonus;
+                            needsUpdate = true;
+                            GameLogger.LogInfo($"[SkillCardTooltip] UpdatePosition: 버프 변화 감지 - 물약 {potionBonus} (이전: {_lastPotionBonus}), 집중 {focusBonus} (이전: {_lastFocusBonus}), 강화 {enhancementBonus} (이전: {_lastEnhancementBonus})", GameLogger.LogCategory.UI);
+                        }
+                    }
+                }
+                
+                if (needsUpdate)
+                {
+                    UpdateTooltipContent(currentCard);
+                }
+                
                 UpdateTooltipPosition(mousePosition);
             }
         }
@@ -543,6 +766,9 @@ namespace Game.SkillCardSystem.UI
         /// <param name="card">카드 정보</param>
         private void UpdateTooltipContent(ISkillCard card)
         {
+            // 의존성 주입 확인 (UpdateTooltipContent 호출 시점에도 확인)
+            EnsureDependenciesInjected();
+            
             if (card?.CardDefinition == null) return;
 
             var definition = card.CardDefinition;
@@ -580,7 +806,16 @@ namespace Game.SkillCardSystem.UI
                             if (character != null && character.IsPlayerControlled())
                             {
                                 playerCharacter = character;
+                                GameLogger.LogInfo($"[SkillCardTooltip] 플레이어 캐릭터 확인: {playerCharacter.GetCharacterName()}", GameLogger.LogCategory.UI);
                             }
+                            else
+                            {
+                                GameLogger.LogWarning("[SkillCardTooltip] playerManager.GetCharacter()가 null이거나 플레이어 캐릭터가 아닙니다.", GameLogger.LogCategory.UI);
+                            }
+                        }
+                        else
+                        {
+                            GameLogger.LogWarning("[SkillCardTooltip] playerManager가 null입니다. 공격력 물약 버프를 확인할 수 없습니다.", GameLogger.LogCategory.UI);
                         }
                     }
                     
@@ -944,8 +1179,9 @@ namespace Game.SkillCardSystem.UI
                     currentStacks = stackProvider.GetAttackPowerStack();
                 }
                 
-                // 공격력 버프(포션/스킬) 보너스 계산 (플레이어 카드만)
-                int attackPotionBonus = 0;
+                // 공격력 버프(물약/집중) 보너스 계산 (플레이어 카드만)
+                int potionBonus = 0;
+                int focusBonus = 0;
                 if (currentCard != null && currentCard.IsFromPlayer())
                 {
                     if (playerManager != null)
@@ -954,15 +1190,64 @@ namespace Game.SkillCardSystem.UI
                         if (character != null && character.IsPlayerControlled())
                         {
                             var buffs = character.GetBuffs();
-                            foreach (var effect in buffs)
+                            if (buffs != null)
                             {
-                                if (effect is Game.ItemSystem.Effect.AttackPowerBuffEffect attackBuff)
+                                GameLogger.LogInfo($"[SkillCardTooltip] GetCardEffects: 버프 수: {buffs.Count}, 캐릭터: {character.GetCharacterName()}", GameLogger.LogCategory.UI);
+                                
+                                foreach (var effect in buffs)
                                 {
-                                    attackPotionBonus += attackBuff.GetAttackPowerBonus();
+                                    if (effect is Game.ItemSystem.Effect.AttackPowerBuffEffect attackBuff)
+                                    {
+                                        int bonus = attackBuff.GetAttackPowerBonus();
+                                        
+                                        // SourceItemName이 있으면 물약 버프, SourceEffectName이 있으면 집중 버프
+                                        bool hasItemName = !string.IsNullOrEmpty(attackBuff.SourceItemName);
+                                        bool hasEffectName = !string.IsNullOrEmpty(attackBuff.SourceEffectName);
+                                        
+                                        GameLogger.LogInfo($"[SkillCardTooltip] GetCardEffects: 공격력 버프 발견 - 보너스: {bonus}, SourceItemName: {attackBuff.SourceItemName ?? "null"}, SourceEffectName: {attackBuff.SourceEffectName ?? "null"}", GameLogger.LogCategory.UI);
+                                        
+                                        if (hasItemName)
+                                        {
+                                            potionBonus += bonus;
+                                            GameLogger.LogInfo($"[SkillCardTooltip] GetCardEffects: 물약 버프로 분류: +{bonus} (총: {potionBonus})", GameLogger.LogCategory.UI);
+                                        }
+                                        else if (hasEffectName)
+                                        {
+                                            focusBonus += bonus;
+                                            GameLogger.LogInfo($"[SkillCardTooltip] GetCardEffects: 집중 버프로 분류: +{bonus} (총: {focusBonus})", GameLogger.LogCategory.UI);
+                                        }
+                                        else
+                                        {
+                                            // 둘 다 없으면 기본적으로 물약으로 간주
+                                            potionBonus += bonus;
+                                            GameLogger.LogInfo($"[SkillCardTooltip] GetCardEffects: 출처 불명 버프를 물약으로 분류: +{bonus} (총: {potionBonus})", GameLogger.LogCategory.UI);
+                                        }
+                                    }
+                                }
+                                
+                                if (potionBonus == 0 && focusBonus == 0)
+                                {
+                                    GameLogger.LogInfo($"[SkillCardTooltip] GetCardEffects: 공격력 버프가 없습니다. 버프 목록: {string.Join(", ", buffs.Select(b => b?.GetType().Name ?? "null"))}", GameLogger.LogCategory.UI);
                                 }
                             }
+                            else
+                            {
+                                GameLogger.LogWarning("[SkillCardTooltip] GetCardEffects: character.GetBuffs()가 null을 반환했습니다.", GameLogger.LogCategory.UI);
+                            }
+                        }
+                        else
+                        {
+                            GameLogger.LogWarning("[SkillCardTooltip] GetCardEffects: character가 null이거나 플레이어 캐릭터가 아닙니다.", GameLogger.LogCategory.UI);
                         }
                     }
+                    else
+                    {
+                        GameLogger.LogWarning("[SkillCardTooltip] GetCardEffects: playerManager가 null입니다.", GameLogger.LogCategory.UI);
+                    }
+                }
+                else
+                {
+                    GameLogger.LogInfo($"[SkillCardTooltip] GetCardEffects: 플레이어 카드가 아닙니다. currentCard: {currentCard?.GetCardName() ?? "null"}, IsFromPlayer: {currentCard?.IsFromPlayer() ?? false}", GameLogger.LogCategory.UI);
                 }
                 
                 // 강화 보너스 (패시브 성급)
@@ -979,20 +1264,53 @@ namespace Game.SkillCardSystem.UI
 
                 // 카드 인스턴스의 실제 기본 데미지 사용 (데미지 오버라이드 포함)
                 var baseDmg = currentCard != null ? currentCard.GetBaseDamage() : config.damageConfig.baseDamage;
-                var actualDmg = baseDmg + currentStacks + attackPotionBonus + enhancementBonus; // 선형 합산
+                int totalBuffBonus = potionBonus + focusBonus;
+                var actualDmg = baseDmg + currentStacks + totalBuffBonus + enhancementBonus; // 선형 합산
                 
                 string description;
-                if (currentStacks > 0 && attackPotionBonus > 0 && enhancementBonus > 0)
+                if (currentStacks > 0 && potionBonus > 0 && focusBonus > 0 && enhancementBonus > 0)
                 {
-                    description = $"현재 데미지: {actualDmg} (기본 {baseDmg} + 스택 {currentStacks} + 물약 {attackPotionBonus} + 강화 {enhancementBonus})";
+                    description = $"현재 데미지: {actualDmg} (기본 {baseDmg} + 스택 {currentStacks} + 공격력 물약 {potionBonus} + 집중 {focusBonus} + 강화 {enhancementBonus})";
+                }
+                else if (currentStacks > 0 && potionBonus > 0 && focusBonus > 0)
+                {
+                    description = $"현재 데미지: {actualDmg} (기본 {baseDmg} + 스택 {currentStacks} + 공격력 물약 {potionBonus} + 집중 {focusBonus})";
+                }
+                else if (currentStacks > 0 && potionBonus > 0 && enhancementBonus > 0)
+                {
+                    description = $"현재 데미지: {actualDmg} (기본 {baseDmg} + 스택 {currentStacks} + 공격력 물약 {potionBonus} + 강화 {enhancementBonus})";
+                }
+                else if (currentStacks > 0 && focusBonus > 0 && enhancementBonus > 0)
+                {
+                    description = $"현재 데미지: {actualDmg} (기본 {baseDmg} + 스택 {currentStacks} + 집중 {focusBonus} + 강화 {enhancementBonus})";
+                }
+                else if (potionBonus > 0 && focusBonus > 0 && enhancementBonus > 0)
+                {
+                    description = $"현재 데미지: {actualDmg} (기본 {baseDmg} + 공격력 물약 {potionBonus} + 집중 {focusBonus} + 강화 {enhancementBonus})";
                 }
                 else if (currentStacks > 0 && enhancementBonus > 0)
                 {
                     description = $"현재 데미지: {actualDmg} (기본 {baseDmg} + 스택 {currentStacks} + 강화 {enhancementBonus})";
                 }
-                else if (attackPotionBonus > 0 && enhancementBonus > 0)
+                else if (potionBonus > 0 && enhancementBonus > 0)
                 {
-                    description = $"현재 데미지: {actualDmg} (기본 {baseDmg} + 물약 {attackPotionBonus} + 강화 {enhancementBonus})";
+                    description = $"현재 데미지: {actualDmg} (기본 {baseDmg} + 공격력 물약 {potionBonus} + 강화 {enhancementBonus})";
+                }
+                else if (focusBonus > 0 && enhancementBonus > 0)
+                {
+                    description = $"현재 데미지: {actualDmg} (기본 {baseDmg} + 집중 {focusBonus} + 강화 {enhancementBonus})";
+                }
+                else if (currentStacks > 0 && potionBonus > 0)
+                {
+                    description = $"현재 데미지: {actualDmg} (기본 {baseDmg} + 스택 {currentStacks} + 공격력 물약 {potionBonus})";
+                }
+                else if (currentStacks > 0 && focusBonus > 0)
+                {
+                    description = $"현재 데미지: {actualDmg} (기본 {baseDmg} + 스택 {currentStacks} + 집중 {focusBonus})";
+                }
+                else if (potionBonus > 0 && focusBonus > 0)
+                {
+                    description = $"현재 데미지: {actualDmg} (기본 {baseDmg} + 공격력 물약 {potionBonus} + 집중 {focusBonus})";
                 }
                 else if (enhancementBonus > 0)
                 {
@@ -1002,9 +1320,13 @@ namespace Game.SkillCardSystem.UI
                 {
                     description = $"현재 데미지: {actualDmg} (기본 {baseDmg} + 스택 {currentStacks})";
                 }
-                else if (attackPotionBonus > 0)
+                else if (potionBonus > 0)
                 {
-                    description = $"현재 데미지: {actualDmg} (기본 {baseDmg} + 물약 {attackPotionBonus})";
+                    description = $"현재 데미지: {actualDmg} (기본 {baseDmg} + 공격력 물약 {potionBonus})";
+                }
+                else if (focusBonus > 0)
+                {
+                    description = $"현재 데미지: {actualDmg} (기본 {baseDmg} + 집중 {focusBonus})";
                 }
                 else
                 {
@@ -1054,8 +1376,8 @@ namespace Game.SkillCardSystem.UI
                         {
                             string effectName = GetEffectNameFromSO(attackPowerBuff, "공격력 증가");
                             string description = duration > 0
-                                ? $"공격력 +{bonus} ({duration}턴)"
-                                : $"공격력 +{bonus}";
+                                ? $"피해 +{bonus} ({duration}턴)"
+                                : $"피해 +{bonus}";
 
                             effects.Add(new EffectData
                             {
@@ -1789,6 +2111,13 @@ namespace Game.SkillCardSystem.UI
 
         private void OnDestroy()
         {
+            // 버프 변경 이벤트 구독 해제
+            if (_trackedPlayerCharacter != null)
+            {
+                _trackedPlayerCharacter.OnBuffsChanged -= OnPlayerBuffsChanged;
+                _trackedPlayerCharacter = null;
+            }
+            
             if (fadeTween != null)
             {
                 fadeTween.Kill();

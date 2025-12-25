@@ -5,7 +5,6 @@ using Zenject;
 using Game.SkillCardSystem.Data;
 using Game.SkillCardSystem.Deck;
 using Game.SkillCardSystem.Interface;
-using Game.CoreSystem.Save;
 using Game.CoreSystem.Utility;
 using Game.CharacterSystem.Manager;
 using Game.CharacterSystem.Data;
@@ -30,7 +29,7 @@ namespace Game.SkillCardSystem.Manager
         #region 의존성 주입 (DI로 자동 해결)
 
         [Inject] private PlayerManager playerManager;
-        [InjectOptional] private SaveManager saveManager;
+        // SaveSystem 제거됨
         [InjectOptional] private ISkillCardFactory cardFactory;
         [InjectOptional] private PlayerHandManager handManager;
 
@@ -533,11 +532,7 @@ namespace Game.SkillCardSystem.Manager
         /// </summary>
         public void SaveDeckConfiguration()
         {
-            if (saveManager != null)
-            {
-                // 저장 로직 구현 (필요시)
-                // 덱 구성 저장 완료
-            }
+            // SaveSystem 제거됨
         }
         
         /// <summary>
@@ -545,11 +540,7 @@ namespace Game.SkillCardSystem.Manager
         /// </summary>
         public void LoadDeckConfiguration()
         {
-            if (saveManager != null)
-            {
-                // 로드 로직 구현 (필요시)
-                // 덱 구성 로드 완료
-            }
+            // SaveSystem 제거됨
         }
         
         /// <summary>

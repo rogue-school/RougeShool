@@ -10,9 +10,9 @@
 
 | 스크립트 이름 | 네임스페이스 | 상대 경로 | 역할 | 주요 공개 메서드(대표) | 주요 필드/프로퍼티(대표) | Zenject 바인딩(있으면) | 주요 참조자(사용처) | 상태 |
 |--------------|--------------|-----------|------|------------------------|---------------------------|------------------------|----------------------|------|
-| **MainMenuController** | `Game.UISystem` | `MainMenuController.cs` | 메인 메뉴/캐릭터 선택/새 게임/이어하기/튜토리얼 스킵/크레딧 UI를 통합 제어하는 메인 컨트롤러 | `Start()`, `OnClickNewGame()`, `OnClickContinue()`, `OnClickStartGame()`, `SelectCharacterFromExternal(...)` 등 | `mainMenuPanel`, `characterSelectionPanel`, `gameStartPanel`, 캐릭터 버튼들, `swordCharacter/bowCharacter/staffCharacter`, `skipTutorialToggle`, `skillCardUIPrefab` 등 | `[Inject] IGameStateManager`, `ISaveManager`, `IPlayerCharacterSelectionManager`, `ISceneTransitionManager`, `AudioManager` 주입 (Zenject) | CoreSystem(상태/세이브/씬 전환), CharacterSystem(캐릭터 데이터), SkillCardSystem(미리보기), StageSystem(새 게임 플래그) | ✅ 사용 중 |
+| **MainMenuController** | `Game.UISystem` | `MainMenuController.cs` | 메인 메뉴/캐릭터 선택/새 게임/튜토리얼 스킵/크레딧 UI를 통합 제어하는 메인 컨트롤러 | `Start()`, `OnClickNewGame()`, `OnClickContinue()`, `OnClickStartGame()`, `SelectCharacterFromExternal(...)` 등 | `mainMenuPanel`, `characterSelectionPanel`, `gameStartPanel`, 캐릭터 버튼들, `swordCharacter/bowCharacter/staffCharacter`, `skipTutorialToggle`, `skillCardUIPrefab` 등 | `[Inject] IGameStateManager`, `IPlayerCharacterSelectionManager`, `ISceneTransitionManager`, `AudioManager` 주입 (Zenject) | CoreSystem(상태/씬 전환), CharacterSystem(캐릭터 데이터), SkillCardSystem(미리보기), StageSystem(새 게임 플래그) | ✅ 사용 중 |
 | **BaseUIController** | `Game.UISystem` | `BaseUIController.cs` | 공통 UI 컨트롤러 베이스 클래스 (패널 열기/닫기, 공용 헬퍼) | `Show()`, `Hide()` 등 | CanvasGroup/Animation 참조 (예상) | DI 없음 (상속용) | SettingsUIController, PanelManager 등 공통 베이스 | ✅ 사용 중 |
-| **SettingsUIController** | `Game.UISystem` | `SettingsUIController.cs` | 설정(볼륨/그래픽 등) UI를 제어하고 CoreSystem.SettingsManager와 연동 | `ApplySettings()`, `Open()`, `Close()` 등 | 슬라이더/토글 UI 참조, 설정 값 캐시 | `[Inject] SettingsManager` 또는 `ISaveManager` 등 주입 (코드 상 존재) | Main 메뉴/인게임 설정 패널 | ✅ 사용 중 |
+| **SettingsUIController** | `Game.UISystem` | `SettingsUIController.cs` | 설정(볼륨/그래픽 등) UI를 제어하고 CoreSystem.SettingsManager와 연동 | `ApplySettings()`, `Open()`, `Close()` 등 | 슬라이더/토글 UI 참조, 설정 값 캐시 | `[Inject] SettingsManager` 주입 | Main 메뉴/인게임 설정 패널 | ✅ 사용 중 |
 | **PanelManager** | `Game.UISystem` | `PanelManager.cs` | 여러 UI 패널 열기/닫기를 중앙에서 관리하는 유틸 컨트롤러 | `ShowPanel(...)`, `HidePanel(...)` 등 | 패널 리스트/맵 | 씬 컴포넌트, DI 없음 | MainMenu/Settings/기타 패널 토글 | ✅ 사용 중 |
 | **WeaponSelector** | `Game.UISystem` | `WeaponSelector.cs` | 메인 메뉴/캐릭터 선택 UI에서 무기(검/활/지팡이 등) 선택을 보조 | `SelectWeapon(...)` 등 | 버튼/아이콘 참조 | 씬 컴포넌트, DI 없음 | MainMenuController와 함께 캐릭터/무기 선택 연동 | ✅ 사용 중 |
 | **ButtonHoverEffect / UnderlineHoverEffect** | `Game.UISystem` | `ButtonHoverEffect.cs`, `UnderlineHoverEffect.cs` | 버튼/텍스트에 마우스 오버 효과(색/밑줄/스케일 등)를 주는 UI 효과 스크립트 | `OnPointerEnter(...)`, `OnPointerExit(...)` 등 | 색상/애니메이션 파라미터 | 씬/프리팹 컴포넌트, DI 없음 | 모든 UI 버튼/텍스트 호버 연출 | ✅ 사용 중 |
@@ -38,8 +38,7 @@ MonoBehaviour
 
 | 변수 이름 | 타입 | 접근성 | 초기값 | 용도 | 설명 |
 |----------|------|--------|--------|------|------|
-| `gameStateManager` | `IGameStateManager` | `[Inject] private` | `null` | 게임 상태 매니저 | 새 게임/이어하기/종료 등 전역 상태 전환 |
-| `saveManager` | `ISaveManager` | `[Inject] private` | `null` | 세이브 매니저 | 이어하기 가능 여부/세이브 슬롯 확인 |
+| `gameStateManager` | `IGameStateManager` | `[Inject] private` | `null` | 게임 상태 매니저 | 새 게임/종료 등 전역 상태 전환 |
 | `playerCharacterSelectionManager` | `IPlayerCharacterSelectionManager` | `[Inject] private` | `null` | 캐릭터 선택 매니저 | 선택된 캐릭터를 Stage/Combat에 전달 |
 | `sceneTransitionManager` | `ISceneTransitionManager` (Optional) | `[Inject(Optional = true)] private` | `null` | 씬 전환 매니저 | 메인 메뉴 → StageScene/게임 종료 등 씬 이동 |
 | `audioManager` | `AudioManager` (Optional) | `[Inject(Optional = true)] private` | `null` | 오디오 매니저 | 버튼 클릭/메인 메뉴 BGM 재생 |
@@ -53,8 +52,8 @@ MonoBehaviour
 | 함수 이름 | 반환 타입 | 매개변수 | 접근성 | 로직 흐름 | 설명 |
 |----------|----------|---------|--------|----------|------|
 | `Start()` | `void` | 없음 | `private` | 1. `InitializeUI()`로 패널/버튼 기본 상태 세팅<br>2. `InitializeCanvasGroups()`로 페이드용 CanvasGroup 구성<br>3. `ValidateInspectorBindings()`로 필수 필드 검사<br>4. `LoadCharacterData()`/`CreateCharacterCards()`/`BindFixedCharacterButtons()` 호출<br>5. `UpdateContinueButtonState()` 및 초기 애니메이션 실행 | 메인 메뉴 화면 초기화 |
-| `OnClickNewGame()` | `void` | 없음 | `public` | 1. 새 게임 확인/세이브 초기화 여부 판단<br>2. 캐릭터 선택 패널로 전환<br>3. 필요 시 효과음/애니메이션 재생 | “새 게임” 버튼 클릭 처리 |
-| `OnClickContinue()` | `void` | 없음 | `public` | 1. 세이브 존재 여부 다시 확인<br>2. 존재하면 `sceneTransitionManager`/`saveManager`를 통해 이어하기 진행<br>3. 없으면 경고 메시지 표시 | “이어하기” 버튼 클릭 처리 |
+| `OnClickNewGame()` | `void` | 없음 | `public` | 1. 캐릭터 선택 패널로 전환<br>2. 필요 시 효과음/애니메이션 재생 | “새 게임” 버튼 클릭 처리 |
+| `OnClickContinue()` | `void` | 없음 | `public` | 1. `sceneTransitionManager`를 통해 StageScene 전환 요청<br>2. `OnNewGameButtonClicked()` 호출 | “이어하기” 버튼 클릭 처리 (현재는 새 게임과 동일하게 처리) |
 | `OnClickStartGame()` | `void` | 없음 | `public` | 1. 선택된 캐릭터 유효성 검사<br>2. `playerCharacterSelectionManager`에 선택 반영<br>3. `PlayerPrefs`에 튜토리얼 스킵 값 저장<br>4. `sceneTransitionManager`로 StageScene 전환 요청 | 캐릭터 선택 후 실제 게임 시작 처리 |
 | `SelectCharacterFromExternal(PlayerCharacterData data)` | `void` | `PlayerCharacterData data` | `public` | 1. null 검사 후 `selectedCharacter` 설정<br>2. 선택 정보 UI 반영<br>3. StartGamePanel 활성화 | 외부 UI(WeaponSelector 등)에서 캐릭터 선택 시 호출되는 진입점 |
 
@@ -84,8 +83,7 @@ SceneTransitionManager를 통해 StageScene 로드
 
 | 연결 대상 | 연결 방식 | 데이터 흐름 | 설명 |
 |----------|----------|------------|------|
-| `IGameStateManager` | DI 주입 | 메인 메뉴 ↔ 게임 진행 상태 | 새 게임/이어하기/종료 시 상태 전환 |
-| `ISaveManager` | DI 주입 | 세이브 존재 여부/슬롯 정보 조회 | “이어하기” 버튼 활성/비활성 제어 |
+| `IGameStateManager` | DI 주입 | 메인 메뉴 ↔ 게임 진행 상태 | 새 게임/종료 시 상태 전환 |
 | `IPlayerCharacterSelectionManager` | DI 주입 | 선택된 캐릭터 데이터 전달 | Stage/Combat 진입 시 어떤 캐릭터를 사용할지 결정 |
 | `ISceneTransitionManager` | DI 주입(옵션) | 메인 메뉴 → StageScene | 씬 전환 연출/로딩 관리 |
 | `AudioManager` | DI 주입(옵션) | 버튼 클릭/메뉴 BGM 재생 | 유저 경험 향상을 위한 오디오 연출 |

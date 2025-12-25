@@ -52,6 +52,9 @@ namespace Game.ItemSystem.Runtime
         [Inject(Optional = true)]
         private ItemService itemService;
         
+        [Inject(Optional = true)]
+        private Game.SkillCardSystem.Interface.ISkillCardFactory cardFactory;
+        
         private RectTransform rectTransform;
 
         // 호버 효과 관련
@@ -150,6 +153,129 @@ namespace Game.ItemSystem.Runtime
             if (tooltipManager == null)
             {
                 GameLogger.LogWarning("[RewardSlotUI] ItemTooltipManager를 찾을 수 없습니다", GameLogger.LogCategory.UI);
+            }
+            
+            // skillCardTooltipManager도 확인
+            EnsureSkillCardTooltipManagerInjected();
+        }
+        
+        /// <summary>
+        /// skillCardTooltipManager가 null이면 주입을 시도합니다.
+        /// </summary>
+        private void EnsureSkillCardTooltipManagerInjected()
+        {
+            if (skillCardTooltipManager != null) return;
+
+            try
+            {
+                // 1. ProjectContext를 통해 Container에 접근하여 주입 시도
+                var projectContext = Zenject.ProjectContext.Instance;
+                if (projectContext != null && projectContext.Container != null)
+                {
+                    projectContext.Container.Inject(this);
+                    if (skillCardTooltipManager != null)
+                    {
+                        GameLogger.LogInfo("[RewardSlotUI] SkillCardTooltipManager 주입 완료 (ProjectContext)", GameLogger.LogCategory.UI);
+                        return;
+                    }
+                }
+
+                // 2. SceneContextRegistry를 통해 현재 씬의 Container에 접근하여 주입 시도
+                try
+                {
+                    var sceneContextRegistry = projectContext.Container.Resolve<Zenject.SceneContextRegistry>();
+                    var sceneContainer = sceneContextRegistry.TryGetContainerForScene(gameObject.scene);
+                    if (sceneContainer != null)
+                    {
+                        sceneContainer.Inject(this);
+                        if (skillCardTooltipManager != null)
+                        {
+                            GameLogger.LogInfo("[RewardSlotUI] SkillCardTooltipManager 주입 완료 (SceneContext)", GameLogger.LogCategory.UI);
+                            return;
+                        }
+                    }
+                }
+                catch
+                {
+                    // SceneContextRegistry를 찾을 수 없거나 씬 컨테이너가 없는 경우 무시
+                }
+
+                // 3. 직접 찾아서 할당 (최후의 수단)
+                var foundManager = UnityEngine.Object.FindFirstObjectByType<Game.SkillCardSystem.Manager.SkillCardTooltipManager>(UnityEngine.FindObjectsInactive.Include);
+                if (foundManager != null)
+                {
+                    skillCardTooltipManager = foundManager;
+                    GameLogger.LogInfo("[RewardSlotUI] SkillCardTooltipManager 직접 찾기 완료 (FindFirstObjectByType)", GameLogger.LogCategory.UI);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogWarning($"[RewardSlotUI] SkillCardTooltipManager 주입 시도 중 오류: {ex.Message}", GameLogger.LogCategory.UI);
+            }
+        }
+        
+        /// <summary>
+        /// cardFactory가 null이면 주입을 시도합니다.
+        /// </summary>
+        private void EnsureCardFactoryInjected()
+        {
+            if (cardFactory != null) return;
+
+            try
+            {
+                // 1. ProjectContext를 통해 Container에 접근하여 주입 시도
+                var projectContext = Zenject.ProjectContext.Instance;
+                if (projectContext != null && projectContext.Container != null)
+                {
+                    projectContext.Container.Inject(this);
+                    if (cardFactory != null)
+                    {
+                        GameLogger.LogInfo("[RewardSlotUI] ISkillCardFactory 주입 완료 (ProjectContext)", GameLogger.LogCategory.UI);
+                        return;
+                    }
+                }
+
+                // 2. SceneContextRegistry를 통해 현재 씬의 Container에 접근하여 주입 시도
+                try
+                {
+                    var sceneContextRegistry = projectContext.Container.Resolve<Zenject.SceneContextRegistry>();
+                    var sceneContainer = sceneContextRegistry.TryGetContainerForScene(gameObject.scene);
+                    if (sceneContainer != null)
+                    {
+                        sceneContainer.Inject(this);
+                        if (cardFactory != null)
+                        {
+                            GameLogger.LogInfo("[RewardSlotUI] ISkillCardFactory 주입 완료 (SceneContext)", GameLogger.LogCategory.UI);
+                            return;
+                        }
+                    }
+                }
+                catch
+                {
+                    // SceneContextRegistry를 찾을 수 없거나 씬 컨테이너가 없는 경우 무시
+                }
+
+                // 3. 컨테이너에서 직접 resolve 시도 (최후의 수단)
+                try
+                {
+                    if (projectContext != null && projectContext.Container != null)
+                    {
+                        var resolvedFactory = projectContext.Container.TryResolve<Game.SkillCardSystem.Interface.ISkillCardFactory>();
+                        if (resolvedFactory != null)
+                        {
+                            cardFactory = resolvedFactory;
+                            GameLogger.LogInfo("[RewardSlotUI] ISkillCardFactory resolve 완료 (ProjectContext Container)", GameLogger.LogCategory.UI);
+                        }
+                    }
+                }
+                catch
+                {
+                    // resolve 실패 시 무시
+                }
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogWarning($"[RewardSlotUI] ISkillCardFactory 주입 시도 중 오류: {ex.Message}", GameLogger.LogCategory.UI);
             }
         }
 
@@ -365,6 +491,8 @@ namespace Game.ItemSystem.Runtime
             isSkillCardSlot = true;
             slotIndex = -1;
 
+            GameLogger.LogInfo($"[RewardSlotUI] SetupSkillCardSlot 호출됨 - 카드: {card.displayName}, 인스턴스: {(cardInstance != null ? "있음" : "null")}, isSkillCardSlot: {isSkillCardSlot}", GameLogger.LogCategory.UI);
+
             // UI 업데이트 (카드 아트/이름/설명 사용)
             if (itemIcon != null)
             {
@@ -385,7 +513,17 @@ namespace Game.ItemSystem.Runtime
                 itemDescriptionText.text = card.description;
             }
 
-            GameLogger.LogInfo($"[RewardSlotUI] 스킬카드 슬롯 설정 완료: {card.displayName}", GameLogger.LogCategory.UI);
+            // 배경 Image의 raycastTarget 확인
+            if (backgroundImage != null)
+            {
+                if (!backgroundImage.raycastTarget)
+                {
+                    backgroundImage.raycastTarget = true;
+                    GameLogger.LogInfo("[RewardSlotUI] 배경 Image의 raycastTarget 활성화 (스킬카드 슬롯)", GameLogger.LogCategory.UI);
+                }
+            }
+
+            GameLogger.LogInfo($"[RewardSlotUI] 스킬카드 슬롯 설정 완료: {card.displayName}, 인스턴스: {(cardInstance != null ? "있음" : "null")}", GameLogger.LogCategory.UI);
         }
 
         #endregion
@@ -516,6 +654,8 @@ namespace Game.ItemSystem.Runtime
         /// </summary>
         public void OnPointerEnter(PointerEventData eventData)
         {
+            GameLogger.LogInfo($"[RewardSlotUI] OnPointerEnter 호출됨 - isSkillCardSlot: {isSkillCardSlot}, currentSkillCard: {(currentSkillCard != null ? currentSkillCard.displayName : "null")}, currentSkillCardInstance: {(currentSkillCardInstance != null ? "있음" : "null")}", GameLogger.LogCategory.UI);
+            
             // 호버 확대 효과
             Game.UtilitySystem.HoverEffectHelper.PlayHoverScaleWithCleanup(
                 ref scaleTween,
@@ -524,11 +664,55 @@ namespace Game.ItemSystem.Runtime
                 0.2f);
 
             // 스킬카드 슬롯이면 스킬카드 툴팁 매니저를 사용
-            if (isSkillCardSlot && currentSkillCardInstance != null)
+            if (isSkillCardSlot)
             {
-                if (skillCardTooltipManager != null)
+                GameLogger.LogInfo("[RewardSlotUI] 스킬카드 슬롯 감지 - 툴팁 표시 시도", GameLogger.LogCategory.UI);
+                
+                // skillCardTooltipManager 주입 확인
+                EnsureSkillCardTooltipManagerInjected();
+                
+                if (skillCardTooltipManager == null)
                 {
+                    GameLogger.LogWarning("[RewardSlotUI] SkillCardTooltipManager를 찾을 수 없습니다.", GameLogger.LogCategory.UI);
+                    return;
+                }
+                
+                GameLogger.LogInfo($"[RewardSlotUI] SkillCardTooltipManager 확인됨 - currentSkillCardInstance: {(currentSkillCardInstance != null ? "있음" : "null")}, currentSkillCard: {(currentSkillCard != null ? currentSkillCard.displayName : "null")}", GameLogger.LogCategory.UI);
+                
+                // currentSkillCardInstance가 null이면 카드 인스턴스 생성
+                if (currentSkillCardInstance == null && currentSkillCard != null)
+                {
+                    GameLogger.LogInfo("[RewardSlotUI] currentSkillCardInstance가 null - 카드 인스턴스 생성 시도", GameLogger.LogCategory.UI);
+                    EnsureCardFactoryInjected();
+                    
+                    if (cardFactory != null)
+                    {
+                        try
+                        {
+                            currentSkillCardInstance = cardFactory.CreatePlayerCard(currentSkillCard);
+                            GameLogger.LogInfo($"[RewardSlotUI] 스킬카드 인스턴스 생성 완료: {currentSkillCard.displayName}", GameLogger.LogCategory.UI);
+                        }
+                        catch (System.Exception ex)
+                        {
+                            GameLogger.LogError($"[RewardSlotUI] 스킬카드 인스턴스 생성 실패: {ex.Message}", GameLogger.LogCategory.Error);
+                        }
+                    }
+                    else
+                    {
+                        GameLogger.LogWarning("[RewardSlotUI] ISkillCardFactory를 찾을 수 없습니다. 툴팁을 표시할 수 없습니다.", GameLogger.LogCategory.UI);
+                        return;
+                    }
+                }
+                
+                if (currentSkillCardInstance != null)
+                {
+                    GameLogger.LogInfo($"[RewardSlotUI] OnCardHoverEnter 호출 시도 - 카드: {currentSkillCardInstance.GetCardName()}", GameLogger.LogCategory.UI);
                     skillCardTooltipManager.OnCardHoverEnter(currentSkillCardInstance);
+                    GameLogger.LogInfo("[RewardSlotUI] OnCardHoverEnter 호출 완료", GameLogger.LogCategory.UI);
+                }
+                else
+                {
+                    GameLogger.LogWarning("[RewardSlotUI] 스킬카드 인스턴스를 생성할 수 없습니다.", GameLogger.LogCategory.UI);
                 }
                 return;
             }

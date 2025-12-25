@@ -1,8 +1,9 @@
 ## CoreSystem 스크립트 레지스트리
 
 **루트 폴더**: `Assets/Script/CoreSystem/`  
-**목적**: 게임 전역 코어 시스템 (오디오, 세이브, 통계, 씬 전환, 코어 매니저/인터페이스 등) 관리  
-**비고**: 전체 게임에서 공용으로 사용되는 기반 시스템, 다른 시스템에서 참조하는 중심 계층
+**목적**: 게임 전역 코어 시스템 (오디오, 씬 전환, 코어 매니저/인터페이스 등) 관리  
+**비고**: 전체 게임에서 공용으로 사용되는 기반 시스템, 다른 시스템에서 참조하는 중심 계층  
+**최신 업데이트**: SaveSystem과 Statistics 시스템이 제거되었습니다 (2024년)
 
 ---
 
@@ -11,7 +12,7 @@
 | 스크립트 이름 | 네임스페이스 | 상대 경로 | 역할 | 주요 공개 메서드(대표) | 주요 필드/프로퍼티(대표) | Zenject 바인딩(있으면) | 주요 참조자(사용처) | 상태 |
 |--------------|--------------|-----------|------|------------------------|---------------------------|------------------------|----------------------|------|
 | **CoreSystemInstaller** | `Game.CoreSystem` | `CoreSystemInstaller.cs` | 코어 시스템 Zenject 인스톨러, 코어 서비스 DI 바인딩 | `InstallBindings()` | 코어 매니저/서비스 SerializeField 참조 | `MonoInstaller`로 CoreScene/ProjectContext에서 실행, 코어 매니저·서비스·유틸리티·인터페이스를 AsSingle로 바인딩 | 전체 시스템 (DI 컨테이너 초기화) | ✅ 사용 중 |
-| **MainSceneInstaller** | `Game.CoreSystem.Manager` | `Manager/MainSceneInstaller.cs` | 메인 씬 전용 Zenject 인스톨러, 씬 레벨 종속성 재바인딩 | `InstallBindings()` | - | `MonoInstaller`로 MainScene에서 실행, `IGameStateManager`·`ISaveManager`·`SettingsManager`·`IPlayerCharacterSelectionManager`·`ISceneTransitionManager`를 `FromMethod(FindFirstObjectByType)` AsSingle로 바인딩 | MainScene 내 Player/UI 컴포넌트, CharacterSystem 진입 흐름 | ✅ 사용 중 |
+| **MainSceneInstaller** | `Game.CoreSystem.Manager` | `Manager/MainSceneInstaller.cs` | 메인 씬 전용 Zenject 인스톨러, 씬 레벨 종속성 재바인딩 | `InstallBindings()` | - | `MonoInstaller`로 MainScene에서 실행, `IGameStateManager`·`SettingsManager`·`IPlayerCharacterSelectionManager`·`ISceneTransitionManager`를 `FromMethod(FindFirstObjectByType)` AsSingle로 바인딩 | MainScene 내 Player/UI 컴포넌트, CharacterSystem 진입 흐름 | ✅ 사용 중 |
 | **BaseCoreManager** | `Game.CoreSystem.Manager` | `Manager/BaseCoreManager.cs` | 코어 매니저 공통 베이스 클래스 (초기화/해제 패턴 정의) | `InitCoreSystem()` 등 | 초기화 상태 플래그 등 | 직접 DI 바인딩 없음 (상속 기반) | `CoreSystemInitializer`, 각 코어 매니저들의 베이스 | ✅ 사용 중 |
 | **CoreSystemInitializer** | `Game.CoreSystem.Manager` | `Manager/CoreSystemInitializer.cs` | 게임 시작 시 코어 시스템 초기화/부트스트랩 담당 | `InitializeAsync()` 등 | 초기화 대상 리스트, 플래그 | `CoreSystemInstaller`에서 `CoreSystemInitializer` 타입을 AsSingle로 바인딩, `ICoreSystemInitializable` 리스트를 `FromMethod`로 주입받아 순차 초기화 | 초기 진입 씬, 전역 코어 시스템 시작 지점 | ✅ 사용 중 |
 | **SceneTransitionManager** | `Game.CoreSystem.Manager` | `Manager/SceneTransitionManager.cs` | 씬 전환 요청/페이드 연출 관리 | `TransitionToScene(...)` | 현재 씬 이름, 전환 중 상태 | `CoreSystemInstaller`에서 `SceneTransitionManager` 및 `ISceneTransitionManager`를 FromInstance.AsSingle로 바인딩, `MainSceneInstaller`에서 `ISceneTransitionManager`를 재바인딩(FindFirstObjectByType) | Stage 전환, Combat 진입/복귀, UI 씬 전환 로직 | ✅ 사용 중 |
@@ -23,20 +24,9 @@
 | **IPlayerCharacterSelectionManager** | `Game.CoreSystem.Interface` | `Interface/IPlayerCharacterSelectionManager.cs` | 플레이어 캐릭터 선택 매니저 인터페이스 | `SelectCharacter(...)` 등 | - | `CoreSystemInstaller`: `IPlayerCharacterSelectionManager ← PlayerCharacterSelectionManager` AsSingle, `MainSceneInstaller`: `IPlayerCharacterSelectionManager`를 `FromMethod(FindFirstObjectByType<PlayerCharacterSelectionManager>)`로 바인딩 | 캐릭터 선택 UI, Stage 진입 로직 | ✅ 사용 중 |
 | **AudioManager** | `Game.CoreSystem.Audio` | `Audio/AudioManager.cs` | BGM/SFX 재생과 볼륨 관리 담당 오디오 매니저 | `PlayBgm(...)`, `PlaySfx(...)` 등 | BGM/SFX 클립/믹서, 볼륨 설정 | `CoreSystemInstaller`에서 `AudioManager` 및 `IAudioManager`를 FromInstance.AsSingle로 바인딩 | CombatSystem, SkillCardSystem, UISystem, VFXSystem 등에서 효과음/배경음 재생 | ✅ 사용 중 |
 | **IAudioManager** | `Game.CoreSystem.Interface` | `Interface/IAudioManager.cs` | 오디오 매니저 인터페이스 | `PlayBgm(...)`, `PlaySfx(...)` | - | `CoreSystemInstaller`: `IAudioManager ← AudioManager` AsSingle | 전투 연출, 카드 사용, UI 클릭 사운드 등 전역 오디오 DI | ✅ 사용 중 |
-| **AudioEventTrigger** | `Game.CoreSystem.Audio` | `Audio/AudioEventTrigger.cs` | Unity 이벤트에서 오디오 재생 트리거용 컴포넌트 | `Play()` 등 | AudioClip, AudioManager 참조 | DI 바인딩 없음 (씬 오브젝트에 직접 부착, 내부에서 `IAudioManager` 또는 `AudioManager` 참조) | 버튼/트리거 오브젝트에서 이벤트 기반 사운드 재생 | ✅ 사용 중 |
+| **AudioEventTrigger** | `Game.CoreSystem.Audio` | `Audio/AudioEventTrigger.cs` | Unity 이벤트에서 오디오 재생 트리거용 컴포넌트 | `Play()` 등 | AudioClip, AudioManager 참조 | DI 바인딩 없음 (CoreScene에는 없을 수 있음, 사용하는 쪽에서 `[InjectOptional]` 사용) | 버튼/트리거 오브젝트에서 이벤트 기반 사운드 재생 | ✅ 사용 중 |
 | **AudioPoolManager** | `Game.CoreSystem.Audio` | `Audio/AudioPoolManager.cs` | SFX 풀링 관리, 동시 재생 최적화 | `PlayOneShotPooled(...)` 등 | 오디오 소스 풀, 동시 재생 제한 값 | `AudioManager` 내부에서 조합되어 사용 (별도 DI 바인딩 없음 또는 내부 생성) | 전역 SFX 재생 경로 최적화 | ✅ 사용 중 |
-| **SaveManager** | `Game.CoreSystem.Save` | `Save/SaveManager.cs` | 코어 세이브 API, 세이브 슬롯/데이터 IO 관리 | `Save(...)`, `Load(...)` 등 | 세이브 경로/슬롯 정보, 현재 세이브 캐시 | `CoreSystemInstaller`에서 `SaveManager` 및 `ISaveManager`를 FromInstance.AsSingle로 바인딩, `MainSceneInstaller`에서 `ISaveManager`를 `FromMethod(FindFirstObjectByType<SaveManager>)`로 재바인딩 | SaveSystem, StageSystem, UISystem(세이브/로드 UI) | ✅ 사용 중 |
-| **ISaveManager** | `Game.CoreSystem.Interface` | `Interface/ISaveManager.cs` | 세이브 매니저 인터페이스 | `SaveGame(...)`, `LoadGame(...)` | - | `CoreSystemInstaller`: `ISaveManager ← SaveManager` AsSingle, `MainSceneInstaller`: `ISaveManager`를 `FromMethod(FindFirstObjectByType<SaveManager>)`로 바인딩 | Stage 진행 저장, 옵션 저장, 자동 저장 등 | ✅ 사용 중 |
-| **GameSessionStatistics** | `Game.CoreSystem.Statistics` | `Statistics/GameSessionStatistics.cs` | 한 게임 세션 동안의 통계(플레이 시간, 전투 수 등) 데이터 보관 | `Reset()`, `ApplyStageResult(...)` 등 | 플레이 시간, 처치 수, 받은 피해량 등 필드 | `CoreSystemInstaller`에서 FromInstance.AsSingle로 바인딩 (인터페이스는 없음) | `StatisticsManager`, `ScoreCalculator` 등 통계 집계 경로 | ✅ 사용 중 |
-| **StatisticsData** | `Game.CoreSystem.Statistics` | `Statistics/StatisticsData.cs` | 통합 통계 데이터 모델 | - | 점수/플레이 타임 등 직렬화 가능한 필드 | 직접 DI 바인딩 없음 (데이터 객체) | `StatisticsManager`, `StatisticsSerializer` 내부에서 사용 | ✅ 사용 중 |
-| **ScoreData** | `Game.CoreSystem.Statistics` | `Statistics/ScoreData.cs` | 점수 관련 데이터 구조 | - | 점수, 랭크, 난이도 정보 | 직접 DI 바인딩 없음 (데이터 객체) | `ScoreCalculator`, `LeaderboardManager` | ✅ 사용 중 |
-| **LeaderboardData** | `Game.CoreSystem.Statistics` | `Statistics/LeaderboardData.cs` | 리더보드 개별 항목/목록 데이터 | - | 플레이어 이름, 점수, 기록 시간 | 직접 DI 바인딩 없음 (데이터 객체) | `LeaderboardManager`, 리더보드 UI | ✅ 사용 중 |
-| **StatisticsManager** | `Game.CoreSystem.Statistics` | `Statistics/StatisticsManager.cs` | 게임 내 통계 수집/갱신/저장 관리 | `RecordStageResult(...)` 등 | 현재 세션 통계 참조, 누적 데이터 컬렉션 | `CoreSystemInstaller`에서 `StatisticsManager` 및 `IStatisticsManager`를 FromInstance.AsSingle로 바인딩 | StageSystem, CombatSystem에서 통계 기록, 리더보드 업데이트 | ✅ 사용 중 |
-| **LeaderboardManager** | `Game.CoreSystem.Statistics` | `Statistics/LeaderboardManager.cs` | 리더보드 로딩/정렬/표시 관리 | `UpdateLeaderboard(...)` 등 | 리더보드 리스트, 정렬 옵션 | `CoreSystemInstaller`에서 `LeaderboardManager` 및 `ILeaderboardManager`를 FromInstance.AsSingle로 바인딩 | 리더보드 UI, 결과 화면 | ✅ 사용 중 |
-| **ScoreCalculator** | `Game.CoreSystem.Statistics` | `Statistics/ScoreCalculator.cs` | 점수 계산 로직 캡슐화 | `CalculateScore(...)` | 점수 가중치 상수 | 직접 DI 바인딩 또는 `StatisticsManager` 내부에서 사용 (정적/헬퍼일 가능성) | Stage 클리어 시 최종 점수 산출 | ✅ 사용 중 |
-| **StatisticsSerializer** | `Game.CoreSystem.Statistics` | `Statistics/StatisticsSerializer.cs` | 통계 데이터 직렬화/역직렬화 유틸리티 | `Serialize(...)`, `Deserialize(...)` | 포맷/버전 정보 상수 | 직접 DI 바인딩 없음 (정적 유틸 또는 순수 클래스) | SaveManager, StatisticsManager에서 통계 저장/로드 시 사용 | ✅ 사용 중 |
-| **SessionAccumulator** | `Game.CoreSystem.Statistics` | `Statistics/SessionAccumulator.cs` | 세션 동안 누적값 계산/집계 | `Accumulate(...)` 등 | 누적 카운터 필드 | 직접 DI 바인딩 없음 (Statistics 내부 헬퍼) | `StatisticsManager`, `ScoreCalculator` 내부 사용 | ✅ 사용 중 |
-| **SettingsManager** | `Game.CoreSystem.UI` | `UI/SettingsManager.cs` | 설정값(볼륨, 해상도 등) 관리 및 저장 연동 | `ApplySettings()`, `LoadSettings()` 등 | 현재 설정값 프로퍼티, 저장 키 | `CoreSystemInstaller`에서 FromInstance.AsSingle로 바인딩, `MainSceneInstaller`에서 `SettingsManager`를 `FromMethod(FindFirstObjectByType<SettingsManager>)`로 바인딩 | SettingsPanelController, SaveManager (옵션 저장/로드) | ✅ 사용 중 |
+| **SettingsManager** | `Game.CoreSystem.UI` | `UI/SettingsManager.cs` | 설정값(볼륨, 해상도 등) 관리 및 PlayerPrefs 저장 연동 | `ApplySettings()`, `LoadSettings()` 등 | 현재 설정값 프로퍼티, 저장 키 | `CoreSystemInstaller`에서 FromInstance.AsSingle로 바인딩, `MainSceneInstaller`에서 `SettingsManager`를 `FromMethod(FindFirstObjectByType<SettingsManager>)`로 바인딩 | SettingsPanelController (옵션 저장/로드는 PlayerPrefs 사용) | ✅ 사용 중 |
 | **SettingsPanelController** | `Game.CoreSystem.UI` | `UI/SettingsPanelController.cs` | 설정 패널 UI 제어, 슬라이더/토글 ↔ 설정값 동기화 | `OnApply()`, `OnOpen()` 등 | 각종 UI 컴포넌트 참조 | 직접 DI 바인딩 없음, `SettingsManager`를 필드 참조 또는 DI로 사용 | 메인 메뉴/옵션 UI 씬 | ✅ 사용 중 |
 | **TransitionEffectController** | `Game.CoreSystem.UI` | `UI/TransitionEffectController.cs` | 화면 전환 연출(페이드 등) 전용 컨트롤러 | `PlayFadeIn()`, `PlayFadeOut()` 등 | CanvasGroup, 애니메이션 설정 | 직접 DI 바인딩 없음, `SceneTransitionManager` 또는 씬 전환 흐름에서 호출 | 씬 전환, 전투 시작/종료 연출 | ✅ 사용 중 |
 | **GameLogger** | `Game.CoreSystem.Utility` | `Utility/GameLogger.cs` | 프로젝트 공용 로그 유틸리티 (카테고리/레벨 구분, 한국어 메시지) | `LogInfo(...)`, `LogWarning(...)`, `LogError(...)` | 카테고리 enum, 로그 필터 설정 | 정적 클래스, DI 바인딩 없음 (모든 시스템에서 직접 호출) | 전체 시스템 공통 (예외/경고/정보 로그) | ✅ 사용 중 |
@@ -69,13 +59,9 @@ MonoBehaviour
 | `gameStateManager` | `GameStateManager` | `private` (SerializeField) | `null` | 게임 상태 매니저 | 메인 메뉴/전투/스테이지 등의 전역 상태 관리 |
 | `sceneTransitionManager` | `SceneTransitionManager` | `private` (SerializeField) | `null` | 씬 전환 매니저 | 페이드 연출과 함께 씬 전환을 수행 |
 | `audioManager` | `AudioManager` | `private` (SerializeField) | `null` | 오디오 매니저 | BGM/SFX 재생을 담당 |
-| `saveManager` | `SaveManager` | `private` (SerializeField) | `null` | 세이브 매니저 | 세이브/로드 기능 제공 |
 | `settingsManager` | `SettingsManager` | `private` (SerializeField) | `null` | 설정 매니저 | 게임 옵션(볼륨, 해상도 등) 관리 |
 | `coroutineRunner` | `CoroutineRunner` | `private` (SerializeField) | `null` | 코루틴 실행기 | 비 MonoBehaviour 서비스에서 코루틴을 실행할 수 있게 함 |
 | `playerCharacterSelectionManager` | `PlayerCharacterSelectionManager` | `private` (SerializeField) | `null` | 캐릭터 선택 매니저 | 플레이어 시작 캐릭터 선택/슬롯 관리 |
-| `gameSessionStatistics` | `GameSessionStatistics` | `private` (SerializeField) | `null` | 세션 통계 데이터 | 한 세션 동안의 모든 통계를 보관 |
-| `statisticsManager` | `StatisticsManager` | `private` (SerializeField) | `null` | 통계 매니저 | 통계 수집/저장을 총괄 |
-| `leaderboardManager` | `LeaderboardManager` | `private` (SerializeField) | `null` | 리더보드 매니저 | 리더보드 업데이트/조회 관리 |
 | `enableLazyInitialization` | `bool` | `private` (SerializeField) | `true` | DI 최적화 옵션 | 지연 초기화 여부 (향후 사용 예정) |
 | `enableCircularDependencyCheck` | `bool` | `private` (SerializeField) | `true` | 순환 의존성 검사 옵션 | DI 사이클 검사 활성화 여부 |
 | `enablePerformanceLogging` | `bool` | `private` (SerializeField) | `false` | 성능 로그 출력 | 바인딩 시간 측정 로그 출력 여부 |
@@ -105,7 +91,7 @@ InstallBindings()
     ↓ CoroutineRunner / ICoroutineRunner / UnityMainThreadDispatcher 바인딩
   ↓
   BindCoreManagers()
-    ↓ CoreSystemInitializer / SceneTransitionManager / GameStateManager / AudioManager / SaveManager ...
+    ↓ CoreSystemInitializer / SceneTransitionManager / GameStateManager / AudioManager ...
        각 매니저 및 관련 인터페이스 AsSingle 바인딩
   ↓
   BindCoreInterfaces()
@@ -145,7 +131,7 @@ MonoBehaviour
 
 | 함수 이름 | 반환 타입 | 매개변수 | 접근성 | 로직 흐름 | 설명 |
 |----------|----------|---------|--------|----------|------|
-| `InstallBindings` | `void` | 없음 | `public` (override) | 1. `IGameStateManager`를 `GameStateManager` 인스턴스 탐색 기반으로 바인딩<br>2. `ISaveManager`를 `SaveManager` 탐색 기반으로 바인딩<br>3. `SettingsManager`를 씬에서 탐색해 바인딩<br>4. `IPlayerCharacterSelectionManager`를 `PlayerCharacterSelectionManager` 탐색 기반으로 바인딩<br>5. `ISceneTransitionManager`를 `SceneTransitionManager` 탐색 기반으로 바인딩 | CoreScene에서 살아있는 전역 매니저들을 MainScene DI 컨테이너에 재노출하여, 씬 내 컴포넌트에서 안전하게 주입받을 수 있게 함 |
+| `InstallBindings` | `void` | 없음 | `public` (override) | 1. `IGameStateManager`를 `GameStateManager` 인스턴스 탐색 기반으로 바인딩<br>2. `SettingsManager`를 씬에서 탐색해 바인딩<br>3. `IPlayerCharacterSelectionManager`를 `PlayerCharacterSelectionManager` 탐색 기반으로 바인딩<br>4. `ISceneTransitionManager`를 `SceneTransitionManager` 탐색 기반으로 바인딩 | CoreScene에서 살아있는 전역 매니저들을 MainScene DI 컨테이너에 재노출하여, 씬 내 컴포넌트에서 안전하게 주입받을 수 있게 함 |
 
 #### 로직 흐름도
 
@@ -153,8 +139,6 @@ MonoBehaviour
 MainSceneInstaller.InstallBindings()
   ↓
   [전역 GameStateManager 탐색] → IGameStateManager 바인딩
-  ↓
-  [전역 SaveManager 탐색] → ISaveManager 바인딩
   ↓
   [전역 SettingsManager 탐색] → SettingsManager 바인딩
   ↓
@@ -170,7 +154,6 @@ MainSceneInstaller.InstallBindings()
 | 연결 대상 | 연결 방식 | 데이터 흐름 | 설명 |
 |----------|----------|------------|------|
 | `IGameStateManager` | `Bind<IGameStateManager>().FromMethod(_ => FindFirstObjectByType<GameStateManager>(Include)).AsSingle()` | 전역 `GameStateManager` 인스턴스를 찾아 인터페이스로 바인딩 | 메인 씬 내 컴포넌트에서 게임 상태 주입 |
-| `ISaveManager` | `Bind<ISaveManager>().FromMethod(_ => FindFirstObjectByType<SaveManager>(Include)).AsSingle()` | 전역 `SaveManager` 인스턴스를 찾아 인터페이스로 바인딩 | 메인 씬 내 세이브/로드 처리 |
 | `SettingsManager` | `Bind<SettingsManager>().FromMethod(_ => FindFirstObjectByType<SettingsManager>(Include)).AsSingle()` | 전역 설정 매니저를 타입 그대로 바인딩 | 옵션 UI에서 설정 접근 |
 | `IPlayerCharacterSelectionManager` | `Bind<IPlayerCharacterSelectionManager>().FromMethod(_ => FindFirstObjectByType<PlayerCharacterSelectionManager>(Include)).AsSingle()` | 전역 캐릭터 선택 매니저를 인터페이스로 바인딩 | 캐릭터 선택/스폰 로직에서 사용 |
 | `ISceneTransitionManager` | `Bind<ISceneTransitionManager>().FromMethod(_ => FindFirstObjectByType<SceneTransitionManager>(Include)).AsSingle()` | 전역 씬 전환 매니저를 인터페이스로 바인딩 | 메인 씬 내에서 Stage/Combat 씬 전환 요청에 사용 |
@@ -255,7 +238,6 @@ MonoBehaviour
 | `mainMenuBGM` | `AudioClip` | `private` (SerializeField) | `null` | 메인 메뉴 BGM | MainScene 자동 재생용 BGM |
 | `stageEnemyBGMConfigs` | `List<StageEnemyBGMConfig>` | `private` (SerializeField) | `new` | 스테이지별 적 BGM 설정 | Stage/Enemy 조합별 BGM 매핑 |
 | `IsInitialized` | `bool` | `public` | `false` | 초기화 여부 | 오디오 시스템 초기화 완료 플래그 |
-| `saveManager` | `ISaveManager` | `private` | `null` | 세이브 매니저 | 오디오 설정 저장/로드 등에 사용 가능 |
 | `audioClipCache` | `Dictionary<string, AudioClip>` | `private` | 빈 | AudioClip 캐시 | Resources 로드 결과 캐싱 |
 | `sceneBGMMap` | `Dictionary<string, AudioClip>` | `private` | `null` | 씬 이름 → BGM 매핑 | 씬 로드 시 자동 BGM 선택용 |
 | `sceneBGMRegistry` | `Dictionary<string, string>` | `private` | 기본 매핑 | 씬 이름 → Resources 경로 매핑 | 리소스 기반 BGM 로드용 |
@@ -264,7 +246,6 @@ MonoBehaviour
 
 | 함수 이름 | 반환 타입 | 매개변수 | 접근성 | 로직 흐름 | 설명 |
 |----------|----------|---------|--------|----------|------|
-| `Construct` | `void` | `ISaveManager saveManager` | `public` (`[Inject]`) | 1. 세이브 매니저 주입 | 오디오 설정 저장/로드 시 사용할 수 있도록 DI |
 | `Awake` | `void` | 없음 | `private` | 1. 전역 매니저로 `DontDestroyOnLoad` 설정<br>2. `InitializeAudio()` 호출<br>3. `InitializeSceneBGMMap()` 호출<br>4. `SceneManager.sceneLoaded`에 `OnSceneLoaded` 구독 | 오디오 시스템 초기화 및 전역 유지 설정 |
 | `InitializeAudio` | `void` | 없음 | `private` | 1. BGM/SFX AudioSource를 보장 및 설정<br>2. `AudioPoolManager`를 보장 | 런타임 오디오 재생에 필요한 컴포넌트 구성 |
 | `InitializeSceneBGMMap` | `void` | 없음 | `private` | 1. `sceneBGMMap` 초기화<br>2. `mainMenuBGM`가 있으면 MainScene 매핑 | 씬별 BGM 매핑 테이블 구성 |
@@ -298,75 +279,9 @@ OnSceneLoaded(scene)
 
 | 연결 대상 | 연결 방식 | 데이터 흐름 | 설명 |
 |----------|----------|------------|------|
-| `ISaveManager` | `[Inject] Construct(ISaveManager)` | 오디오 설정 저장/로드 | 옵션/세이브 시스템과 연동 가능 |
 | `AudioPoolManager` | SerializeField / `AddComponent` | SFX 풀 관리 | 다수의 효과음 동시 재생을 최적화 |
 | `StageManager` | `StageManager`에서 `IAudioManager` 주입 후 `PlayEnemyBGM` 호출 | 적 소환 → BGM 재생 | 스테이지/적 연출과 연결 |
 | `SceneManager.sceneLoaded` | 이벤트 구독 | 씬 로드 시 BGM 자동 재생 | 씬 전환과 오디오를 동기화 |
-
----
-
-### SaveManager
-
-#### 클래스 구조
-
-```csharp
-MonoBehaviour
-  └── SaveManager : ICoreSystemInitializable, ISaveManager
-```
-
-#### 변수 상세 (대표)
-
-| 변수 이름 | 타입 | 접근성 | 초기값 | 용도 | 설명 |
-|----------|------|--------|--------|------|------|
-| `saveFileName` | `string` | `private` (SerializeField) | `"GameSave.json"` | 씬 저장 파일 이름 | 현재 씬 전체 저장 파일 경로 구성을 위한 파일명 |
-| `stageProgressFileName` | `string` | `private` (SerializeField) | `"StageProgress.json"` | 스테이지 진행 저장 파일 이름 | Stage 진행도 전용 세이브 파일 이름 |
-| `IsInitialized` | `bool` | `public` | `false` | 초기화 플래그 | ICoreSystemInitializable 구현 상태 |
-| `gameStateManager` | `IGameStateManager` | `private` (`[Inject]`) | `null` | 게임 상태 매니저 | 세이브/로드 시 상태와 연동 가능 |
-| `progressCollector` | `StageProgressCollector` | `private` | `null` | 진행 상황 수집기 | Stage 진행 정보를 수집해 저장 |
-| 여러 `cached*` 필드 | 각 시스템 매니저 타입 | `private` | `null` | FindFirstObjectByType 캐시 | 저장/복원 시 필요한 매니저들을 지연 조회/캐시 |
-
-#### 함수 상세 (대표)
-
-| 함수 이름 | 반환 타입 | 매개변수 | 접근성 | 로직 흐름 | 설명 |
-|----------|----------|---------|--------|----------|------|
-| `Awake` | `void` | 없음 | `private` | 1. 초기화 로그 출력<br>2. `StageProgressCollector` 컴포넌트 획득/보장 | 세이브 매니저 기본 초기화 |
-| `SaveAudioSettings` | `void` | `float bgmVolume, float sfxVolume` | `public` | 1. `PlayerPrefs`에 볼륨 저장<br>2. `PlayerPrefs.Save()` 호출<br>3. 로그 출력 | 오디오 설정을 로컬에 저장 |
-| `LoadAudioSettings` | `(float, float)` | `float defaultBgmVolume, float defaultSfxVolume` | `public` | 1. `PlayerPrefs`에서 값 읽기 또는 기본값 사용<br>2. 클램프 후 튜플 반환 | 저장된 오디오 설정을 불러옵니다. |
-| `SaveCurrentScene` | `Task` | 없음 | `public` (async) | 1. 진행 로그 출력<br>2. `CollectSceneData()`로 현재 씬 데이터 수집<br>3. JSON 직렬화 후 파일로 저장<br>4. 완료 로그 출력<br>5. 예외 시 에러 로그 출력 | 현재 씬 전체 상태를 파일로 저장 |
-| `LoadSavedScene` | `Task<bool>` | 없음 | `public` (async) | 1. 파일 존재 여부 확인<br>2. 없으면 경고 로그 후 `false` 반환<br>3. JSON 로드 및 역직렬화<br>4. `RestoreSceneData` 호출<br>5. 성공/실패 로그 및 결과 반환 | 저장된 씬 상태를 복원 |
-| `ClearSave` | `void` | 없음 | `public` | 1. 세이브 파일 존재 여부 확인<br>2. 있으면 삭제 후 로그 출력 | 세이브 파일을 완전히 초기화 |
-| 여러 `GetCached*` 메서드 | 각 매니저 타입 | `private` | 없음 | 1. 캐시 필드 null 시 `FindFirstObjectByType` 호출<br>2. 결과 캐시 후 반환 | 자주 찾는 매니저들을 1회만 탐색하도록 최적화 |
-
-#### 로직 흐름도 (세이브/로드 요약)
-
-```text
-SaveCurrentScene()
-  ↓
-  CollectSceneData()
-  ↓
-  JsonUtility.ToJson → 파일로 저장
-  ↓
-  [성공/실패 로그]
-
-LoadSavedScene()
-  ↓
-  [파일 존재 여부 확인]
-    ↳ 없으면 경고 로그 후 false
-  ↓
-  파일 읽기 → JsonUtility.FromJson
-  ↓
-  RestoreSceneData(sceneData)
-  ↓
-  [성공/실패 로그 및 bool 반환]
-```
-
-#### 사용/연결 관계
-
-| 연결 대상 | 연결 방식 | 데이터 흐름 | 설명 |
-|----------|----------|------------|------|
-| `IGameStateManager` | `[Inject]` 필드 주입 | 세이브/로드 시 상태와 연동 가능 | 게임 진행 상태에 따라 세이브 전략 제어 |
-| `StageManager` 및 전투/캐릭터 매니저들 | `GetCached*` 메서드로 FindFirstObjectByType | 씬 데이터 수집/복원 | SaveSystem/StageSystem/CombatSystem 전체와 연결 |
-| `StageProgressCollector` | `GetComponent` 또는 `AddComponent` | 진행 정보 수집 | 스테이지별 진행도 저장용 |
 
 ---
 
@@ -478,7 +393,6 @@ Assets/Script/CoreSystem/
 │   ├── ICoreSystemInitializable.cs
 │   ├── IGameStateManager.cs
 │   ├── IPlayerCharacterSelectionManager.cs
-│   ├── ISaveManager.cs
 │   └── ISceneTransitionManager.cs
 ├── Manager/
 │   ├── BaseCoreManager.cs
@@ -487,18 +401,6 @@ Assets/Script/CoreSystem/
 │   ├── MainSceneInstaller.cs
 │   ├── PlayerCharacterSelectionManager.cs
 │   └── SceneTransitionManager.cs
-├── Save/
-│   └── SaveManager.cs
-├── Statistics/
-│   ├── GameSessionStatistics.cs
-│   ├── LeaderboardData.cs
-│   ├── LeaderboardManager.cs
-│   ├── ScoreCalculator.cs
-│   ├── ScoreData.cs
-│   ├── SessionAccumulator.cs
-│   ├── StatisticsData.cs
-│   ├── StatisticsManager.cs
-│   └── StatisticsSerializer.cs
 ├── UI/
 │   ├── SettingsManager.cs
 │   ├── SettingsPanelController.cs

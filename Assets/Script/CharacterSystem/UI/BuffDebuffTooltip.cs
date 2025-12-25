@@ -661,9 +661,9 @@ namespace Game.CharacterSystem.UI
                     int bonus = GetEffectValue(effect, new[] { "AttackPowerBonus" });
                     if (bonus > 0)
                     {
-                        return $"공격력이 {bonus} 증가한 상태가 {remainingTurns}턴 동안 유지됩니다.";
+                        return $"피해가 {bonus} 증가한 상태가 {remainingTurns}턴 동안 유지됩니다.";
                     }
-                    return $"공격력이 증가한 상태가 {remainingTurns}턴 동안 유지됩니다.";
+                    return $"피해가 증가한 상태가 {remainingTurns}턴 동안 유지됩니다.";
                 }
                         
                 default:

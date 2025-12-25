@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reflection;
 using Game.CoreSystem.Utility;
 using Game.CoreSystem.Audio;
-using Game.CoreSystem.Save;
 using Game.CoreSystem.Interface;
 using Zenject;
 using DG.Tweening;
@@ -25,7 +24,7 @@ namespace Game.CoreSystem.Manager
         private Game.CombatSystem.UI.VictoryUI victoryUI;
         
         [Inject]
-        public void Construct(List<ICoreSystemInitializable> coreSystems, ISceneTransitionManager sceneTransitionManager)
+        public void Construct(List<ICoreSystemInitializable> coreSystems, [InjectOptional] ISceneTransitionManager sceneTransitionManager)
         {
             this.coreSystems = coreSystems;
             this.sceneTransitionManager = sceneTransitionManager;
@@ -226,7 +225,6 @@ namespace Game.CoreSystem.Manager
             var essentialSystemNames = new HashSet<string>
             {
                 "AudioManager",
-                "SaveManager", 
                 "PlayerCharacterSelectionManager",
                 "CoreSystemInitializer"
             };

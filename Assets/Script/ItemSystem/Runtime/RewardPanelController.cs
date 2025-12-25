@@ -270,15 +270,24 @@ namespace Game.ItemSystem.Runtime
 				// 스킬카드 툴팁용 카드 인스턴스 생성 및 툴팁 매니저 등록
 				if (_cardFactory != null)
 				{
+					GameLogger.LogInfo($"[RewardPanel] 스킬카드 툴팁용 카드 생성 시도 - 카드: {cardDefinition.displayName}, _cardFactory: {(_cardFactory != null ? "있음" : "null")}", GameLogger.LogCategory.UI);
 					try
 					{
 						tooltipCard = _cardFactory.CreatePlayerCard(cardDefinition);
+						GameLogger.LogInfo($"[RewardPanel] tooltipCard 생성 완료 - {(tooltipCard != null ? "성공" : "실패")}, skillCardSlot: {(skillCardSlot != null ? "있음" : "null")}, skillCardTooltipManager: {(skillCardTooltipManager != null ? "있음" : "null")}", GameLogger.LogCategory.UI);
+						
 						if (tooltipCard != null && skillCardSlot != null)
 						{
 							if (skillCardTooltipManager != null)
 							{
 								var rt = skillCardSlot.GetComponent<RectTransform>();
+								GameLogger.LogInfo($"[RewardPanel] RegisterCardUI 호출 시도 - rt: {(rt != null ? "있음" : "null")}", GameLogger.LogCategory.UI);
 								skillCardTooltipManager.RegisterCardUI(tooltipCard, rt);
+								GameLogger.LogInfo("[RewardPanel] RegisterCardUI 호출 완료", GameLogger.LogCategory.UI);
+							}
+							else
+							{
+								GameLogger.LogWarning("[RewardPanel] skillCardTooltipManager가 null입니다. RegisterCardUI를 호출할 수 없습니다.", GameLogger.LogCategory.UI);
 							}
 						}
 					}
@@ -288,10 +297,19 @@ namespace Game.ItemSystem.Runtime
 						tooltipCard = null;
 					}
 				}
+				else
+				{
+					GameLogger.LogWarning("[RewardPanel] _cardFactory가 null입니다. 스킬카드 툴팁용 카드를 생성할 수 없습니다.", GameLogger.LogCategory.UI);
+				}
 
 				if (skillCardSlot != null)
 				{
+					GameLogger.LogInfo($"[RewardPanel] SetupSkillCardSlot 호출 - 카드: {cardDefinition.displayName}, tooltipCard: {(tooltipCard != null ? "있음" : "null")}", GameLogger.LogCategory.UI);
 					skillCardSlot.SetupSkillCardSlot(cardDefinition, tooltipCard);
+				}
+				else
+				{
+					GameLogger.LogWarning("[RewardPanel] skillCardSlot이 null입니다. SetupSkillCardSlot을 호출할 수 없습니다.", GameLogger.LogCategory.UI);
 				}
 			}
 			else if (skillCardSlot != null && cardDefinition == null)

@@ -5,7 +5,6 @@ using Game.CoreSystem.Interface;
 using Game.CoreSystem.UI;
 using Game.CoreSystem.Utility;
 using Game.CoreSystem.Audio;
-using Game.CoreSystem.Save;
 using Game.CombatSystem.Utility;
 using Game.CombatSystem.Interface;
 using Game.SkillCardSystem.Manager;
@@ -15,7 +14,6 @@ using System.Collections.Generic;
 using Game.ItemSystem.Interface;
 using Game.ItemSystem.Service;
 using Game.ItemSystem.Service.Reward;
-using Game.CoreSystem.Statistics;
 
 namespace Game.CoreSystem
 {
@@ -30,16 +28,12 @@ namespace Game.CoreSystem
         [SerializeField] private GameStateManager gameStateManager;
         [SerializeField] private SceneTransitionManager sceneTransitionManager;
         [SerializeField] private AudioManager audioManager;
-        [SerializeField] private SaveManager saveManager;
         [SerializeField] private SettingsManager settingsManager;
         [SerializeField] private CoroutineRunner coroutineRunner;
         [SerializeField] private PlayerCharacterSelectionManager playerCharacterSelectionManager;
         [SerializeField] private SkillCardTooltipManager skillCardTooltipManager;
         [SerializeField] private BuffDebuffTooltipManager buffDebuffTooltipManager;
         [SerializeField] private Game.ItemSystem.Manager.ItemTooltipManager itemTooltipManager;
-        [SerializeField] private GameSessionStatistics gameSessionStatistics;
-        [SerializeField] private StatisticsManager statisticsManager;
-        [SerializeField] private LeaderboardManager leaderboardManager;
         
         [Header("CharacterSystem 매니저들")]
         [SerializeField] private PlayerManager playerManager;
@@ -83,16 +77,12 @@ namespace Game.CoreSystem
                 (sceneTransitionManager, "SceneTransitionManager", typeof(ISceneTransitionManager)),
                 (gameStateManager, "GameStateManager", typeof(IGameStateManager)),
                 (audioManager, "AudioManager", typeof(IAudioManager)),
-                (saveManager, "SaveManager", typeof(ISaveManager)),
                 (settingsManager, "SettingsManager", null),
                 (playerCharacterSelectionManager, "PlayerCharacterSelectionManager", typeof(IPlayerCharacterSelectionManager)),
                 (skillCardTooltipManager, "SkillCardTooltipManager", null),
                 (buffDebuffTooltipManager, "BuffDebuffTooltipManager", null),
                 (itemTooltipManager, "ItemTooltipManager", null),
-                (playerManager, "PlayerManager", null),
-                (gameSessionStatistics, "GameSessionStatistics", null),
-                (statisticsManager, "StatisticsManager", typeof(IStatisticsManager)),
-                (leaderboardManager, "LeaderboardManager", typeof(ILeaderboardManager))
+                (playerManager, "PlayerManager", null)
             };
 
             foreach (var (instance, name, interfaceType) in managers)
@@ -173,11 +163,8 @@ namespace Game.CoreSystem
                 .AsSingle()
                 .NonLazy();
 
-            // AudioEventTrigger: 씬에 있는 컴포넌트를 찾아서 바인딩 (Optional)
-            Container.Bind<AudioEventTrigger>()
-                .FromComponentInHierarchy()
-                .AsSingle()
-                .NonLazy();
+            // AudioEventTrigger: 씬에 있는 컴포넌트를 찾아서 바인딩 (Optional - 없어도 됨)
+            // CoreScene에는 없을 수 있으므로 바인딩하지 않음 (사용하는 쪽에서 [InjectOptional] 사용)
 
             // VictoryUI: 씬에 있는 컴포넌트를 찾아서 바인딩 (Optional)
             Container.Bind<Game.CombatSystem.UI.VictoryUI>()
@@ -227,16 +214,12 @@ namespace Game.CoreSystem
                 typeof(SceneTransitionManager),
                 typeof(GameStateManager),
                 typeof(AudioManager),
-                typeof(SaveManager),
                 typeof(SettingsManager),
                 typeof(PlayerCharacterSelectionManager),
                 typeof(SkillCardTooltipManager),
                 typeof(BuffDebuffTooltipManager),
                 typeof(Game.ItemSystem.Manager.ItemTooltipManager),
-                typeof(PlayerManager),
-                typeof(GameSessionStatistics),
-                typeof(StatisticsManager),
-                typeof(LeaderboardManager)
+                typeof(PlayerManager)
             };
             
             // 아직 바인딩되지 않은 ICoreSystemInitializable 컴포넌트만 바인딩
@@ -324,16 +307,12 @@ namespace Game.CoreSystem
                 "SceneTransitionManager" => FindFirstObjectByType<SceneTransitionManager>(FindObjectsInactive.Include),
                 "GameStateManager" => FindFirstObjectByType<GameStateManager>(FindObjectsInactive.Include),
                 "AudioManager" => FindFirstObjectByType<AudioManager>(FindObjectsInactive.Include),
-                "SaveManager" => FindFirstObjectByType<SaveManager>(FindObjectsInactive.Include),
                 "SettingsManager" => FindFirstObjectByType<SettingsManager>(FindObjectsInactive.Include),
                 "PlayerCharacterSelectionManager" => FindFirstObjectByType<PlayerCharacterSelectionManager>(FindObjectsInactive.Include),
                 "SkillCardTooltipManager" => FindFirstObjectByType<SkillCardTooltipManager>(FindObjectsInactive.Include),
                 "BuffDebuffTooltipManager" => FindFirstObjectByType<BuffDebuffTooltipManager>(FindObjectsInactive.Include),
                 "ItemTooltipManager" => FindFirstObjectByType<Game.ItemSystem.Manager.ItemTooltipManager>(FindObjectsInactive.Include),
                 "PlayerManager" => FindFirstObjectByType<PlayerManager>(FindObjectsInactive.Include),
-                "GameSessionStatistics" => FindFirstObjectByType<GameSessionStatistics>(FindObjectsInactive.Include),
-                "StatisticsManager" => FindFirstObjectByType<StatisticsManager>(FindObjectsInactive.Include),
-                "LeaderboardManager" => FindFirstObjectByType<LeaderboardManager>(FindObjectsInactive.Include),
                 _ => null
             };
         }

@@ -351,14 +351,14 @@ namespace Game.CombatSystem.Manager
 
         /// <summary>
         /// 카드 ID로부터 카드 이름을 가져옵니다.
-        /// StatisticsData의 GetCardDisplayNameStatic()과 동일한 로직 사용
+        /// Statistics 제거됨 - 간단하게 cardId 반환
         /// </summary>
         private string GetCardName(string cardId)
         {
             if (string.IsNullOrEmpty(cardId)) return null;
 
-            // StatisticsData의 정적 메서드 사용 (캐싱 및 여러 경로 시도)
-            return Game.CoreSystem.Statistics.SessionStatisticsData.GetCardDisplayNameStatic(cardId);
+            // Statistics 제거됨 - cardId를 그대로 반환
+            return cardId;
         }
 
         private void HandleActiveItemUsed(ActiveItemDefinition def, int slotIndex)

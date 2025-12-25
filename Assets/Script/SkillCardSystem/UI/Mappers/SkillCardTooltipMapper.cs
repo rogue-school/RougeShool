@@ -4,6 +4,7 @@ using Game.SkillCardSystem.Utility;
 using UnityEngine;
 using Game.CoreSystem.Utility;
 using Game.CharacterSystem.Interface;
+using System.Linq;
 
 namespace Game.SkillCardSystem.UI.Mappers
 {
@@ -119,7 +120,7 @@ namespace Game.SkillCardSystem.UI.Mappers
                             }
                         }
 
-                        // 공격력 버프 효과 (집중 등)
+                        // 물약 효과 (집중 등)
                         if (so is AttackPowerBuffSkillEffectSO attackPowerBuff)
                         {
                             string effectName = GetEffectName(so, "공격력 증가");
@@ -146,11 +147,11 @@ namespace Game.SkillCardSystem.UI.Mappers
                             {
                                 if (duration > 0)
                                 {
-                                    ruleLines.Add($"{duration}턴 동안 공격력이 {bonus} 증가합니다.");
+                                    ruleLines.Add($"{duration}턴 동안 피해가 {bonus} 증가합니다.");
                                 }
                                 else
                                 {
-                                    ruleLines.Add($"공격력이 {bonus} 증가합니다.");
+                                    ruleLines.Add($"피해가 {bonus} 증가합니다.");
                                 }
 
                                 model.Effects.Add(new TooltipModel.EffectRow
@@ -291,7 +292,7 @@ namespace Game.SkillCardSystem.UI.Mappers
         /// </summary>
         /// <param name="def">카드 정의</param>
         /// <param name="currentStacks">현재 스택 수</param>
-        /// <param name="playerCharacter">플레이어 캐릭터 (공격력 버프 확인용)</param>
+        /// <param name="playerCharacter">플레이어 캐릭터 (물약 확인용)</param>
         /// <param name="card">카드 인스턴스 (데미지 오버라이드 확인용, 선택적)</param>
         /// <param name="playerManager">플레이어 매니저 (리소스 이름, 강화 보너스 확인용, 선택적)</param>
         /// <param name="itemService">아이템 서비스 (강화 보너스 확인용, 선택적)</param>
@@ -365,16 +366,30 @@ namespace Game.SkillCardSystem.UI.Mappers
             var baseMin = minDmg;
             var baseMax = maxDmg;
 
-            int attackPotionBonus = playerCharacter != null ? GetAttackPotionBonus(playerCharacter) : 0;
+            int potionBonus = 0;
+            int focusBonus = 0;
+            if (playerCharacter != null)
+            {
+                GetAttackPowerBuffs(playerCharacter, out potionBonus, out focusBonus);
+                if (potionBonus > 0 || focusBonus > 0)
+                {
+                    GameLogger.LogInfo($"[SkillCardTooltipMapper] 버프 확인: 물약 +{potionBonus}, 집중 +{focusBonus}, 캐릭터: {playerCharacter.GetCharacterName()}", GameLogger.LogCategory.UI);
+                }
+            }
+            else if (isPlayerCard)
+            {
+                GameLogger.LogWarning($"[SkillCardTooltipMapper] 플레이어 카드인데 playerCharacter가 null입니다. 공격력 버프를 확인할 수 없습니다.", GameLogger.LogCategory.UI);
+            }
             int enhancementBonus = isPlayerCard ? GetEnhancementBonus(def, itemService) : 0;
             var hits = Mathf.Max(1, config.damageConfig.hits);
 
-            int actualDmg = CalculateActualDamage(baseDmg, currentStacks, attackPotionBonus, enhancementBonus);
-            int actualMin = useRandom ? CalculateActualDamage(minDmg, currentStacks, attackPotionBonus, enhancementBonus) : actualDmg;
-            int actualMax = useRandom ? CalculateActualDamage(maxDmg, currentStacks, attackPotionBonus, enhancementBonus) : actualDmg;
-            bool hasBonus = currentStacks > 0 || attackPotionBonus > 0 || enhancementBonus > 0;
+            int totalBuffBonus = potionBonus + focusBonus;
+            int actualDmg = CalculateActualDamage(baseDmg, currentStacks, totalBuffBonus, enhancementBonus);
+            int actualMin = useRandom ? CalculateActualDamage(minDmg, currentStacks, totalBuffBonus, enhancementBonus) : actualDmg;
+            int actualMax = useRandom ? CalculateActualDamage(maxDmg, currentStacks, totalBuffBonus, enhancementBonus) : actualDmg;
+            bool hasBonus = currentStacks > 0 || potionBonus > 0 || focusBonus > 0 || enhancementBonus > 0;
 
-            AddDamageRuleLines(ruleLines, useRandom, hits, actualDmg, actualMin, actualMax, baseDmg, baseMin, baseMax, currentStacks, attackPotionBonus, enhancementBonus, hasBonus);
+            AddDamageRuleLines(ruleLines, useRandom, hits, actualDmg, actualMin, actualMax, baseDmg, baseMin, baseMax, currentStacks, potionBonus, focusBonus, enhancementBonus, hasBonus);
             AddDamageSpecialFlags(ruleLines, config.damageConfig);
             AddDamageEffectRow(model, useRandom, hits, actualDmg, actualMin, actualMax);
         }
@@ -393,7 +408,8 @@ namespace Game.SkillCardSystem.UI.Mappers
             int baseMin,
             int baseMax,
             int currentStacks,
-            int attackPotionBonus,
+            int potionBonus,
+            int focusBonus,
             int enhancementBonus,
             bool hasBonus)
         {
@@ -401,14 +417,14 @@ namespace Game.SkillCardSystem.UI.Mappers
             {
                 if (useRandom)
                 {
-                    string bonusText = hasBonus ? BuildBonusText(baseMin, baseMax, currentStacks, attackPotionBonus, enhancementBonus) : "";
+                    string bonusText = hasBonus ? BuildBonusText(baseMin, baseMax, currentStacks, potionBonus, focusBonus, enhancementBonus) : "";
                     ruleLines.Add($"피해 {actualMin}~{actualMax}을 줍니다.{bonusText}");
                 }
                 else
                 {
                     if (hasBonus)
                     {
-                        string bonusText = BuildDamageBonusText(baseDmg, currentStacks, attackPotionBonus, enhancementBonus);
+                        string bonusText = BuildDamageBonusText(baseDmg, currentStacks, potionBonus, focusBonus, enhancementBonus);
                         ruleLines.Add($"피해 {KoreanTextHelper.AddKoreanParticle(actualDmg, "을/를")} 줍니다.{bonusText}");
                     }
                     else
@@ -423,14 +439,14 @@ namespace Game.SkillCardSystem.UI.Mappers
                 {
                     var totalMin = actualMin * hits;
                     var totalMax = actualMax * hits;
-                    string bonusText = hasBonus ? BuildBonusText(baseMin, baseMax, currentStacks, attackPotionBonus, enhancementBonus) : "";
+                    string bonusText = hasBonus ? BuildBonusText(baseMin, baseMax, currentStacks, potionBonus, focusBonus, enhancementBonus) : "";
                     ruleLines.Add($"피해 {totalMin}~{totalMax} (총 {hits}회){bonusText}");
                 }
                 else
                 {
                     if (hasBonus)
                     {
-                        string bonusText = BuildDamageBonusText(baseDmg, currentStacks, attackPotionBonus, enhancementBonus);
+                        string bonusText = BuildDamageBonusText(baseDmg, currentStacks, potionBonus, focusBonus, enhancementBonus);
                         ruleLines.Add($"피해 {KoreanTextHelper.AddKoreanParticle(actualDmg, "을/를")} {KoreanTextHelper.AddKoreanParticle(hits, "을/를")}번 줍니다.{bonusText}");
                     }
                     else
@@ -484,11 +500,12 @@ namespace Game.SkillCardSystem.UI.Mappers
         /// <summary>
         /// 보너스 텍스트를 생성합니다 (랜덤 데미지용)
         /// </summary>
-        private static string BuildBonusText(int baseMin, int baseMax, int currentStacks, int attackPotionBonus, int enhancementBonus)
+        private static string BuildBonusText(int baseMin, int baseMax, int currentStacks, int potionBonus, int focusBonus, int enhancementBonus)
         {
             return $" (기본 {baseMin}~{baseMax}"
                 + (currentStacks > 0 ? $", 스택 {currentStacks}" : "")
-                + (attackPotionBonus > 0 ? $", 공격력 버프 {attackPotionBonus}" : "")
+                + (potionBonus > 0 ? $", 공격력 물약 {potionBonus}" : "")
+                + (focusBonus > 0 ? $", 집중 {focusBonus}" : "")
                 + (enhancementBonus > 0 ? $", 강화 {enhancementBonus}" : "")
                 + ")";
         }
@@ -496,11 +513,12 @@ namespace Game.SkillCardSystem.UI.Mappers
         /// <summary>
         /// 데미지 보너스 텍스트를 생성합니다 (고정 데미지용)
         /// </summary>
-        private static string BuildDamageBonusText(int baseDmg, int currentStacks, int attackPotionBonus, int enhancementBonus)
+        private static string BuildDamageBonusText(int baseDmg, int currentStacks, int potionBonus, int focusBonus, int enhancementBonus)
         {
             return $" (기본 피해 {baseDmg}"
                 + (currentStacks > 0 ? $", 스택 {currentStacks}" : "")
-                + (attackPotionBonus > 0 ? $", 공격력 버프 {attackPotionBonus}" : "")
+                + (potionBonus > 0 ? $", 공격력 물약 {potionBonus}" : "")
+                + (focusBonus > 0 ? $", 집중 {focusBonus}" : "")
                 + (enhancementBonus > 0 ? $", 강화 {enhancementBonus}" : "")
                 + ")";
         }
@@ -613,7 +631,7 @@ namespace Game.SkillCardSystem.UI.Mappers
         }
 
         /// <summary>
-        /// 공격력 버프 효과를 처리합니다
+        /// 물약 효과를 처리합니다
         /// </summary>
         private static void ProcessAttackPowerBuff(AttackPowerBuffSkillEffectSO attackPowerBuff, EffectCustomSettings cs, System.Collections.Generic.List<string> ruleLines, TooltipModel model)
         {
@@ -641,11 +659,11 @@ namespace Game.SkillCardSystem.UI.Mappers
             {
                 if (duration > 0)
                 {
-                    ruleLines.Add($"{duration}턴 동안 공격력이 {bonus} 증가합니다.");
+                    ruleLines.Add($"{duration}턴 동안 피해가 {bonus} 증가합니다.");
                 }
                 else
                 {
-                    ruleLines.Add($"공격력이 {bonus} 증가합니다.");
+                    ruleLines.Add($"피해가 {bonus} 증가합니다.");
                 }
 
                 model.Effects.Add(new TooltipModel.EffectRow
@@ -932,10 +950,11 @@ namespace Game.SkillCardSystem.UI.Mappers
                     var baseMin = minDmg;
                     var baseMax = maxDmg;
                     
-                    int attackPotionBonus = 0;
+                    int potionBonus = 0;
+                    int focusBonus = 0;
                     if (playerCharacter != null)
                     {
-                        attackPotionBonus = GetAttackPotionBonus(playerCharacter);
+                        GetAttackPowerBuffs(playerCharacter, out potionBonus, out focusBonus);
                     }
                     
                     int enhancementBonus = 0;
@@ -955,11 +974,12 @@ namespace Game.SkillCardSystem.UI.Mappers
                     }
                     
                     var hits = Mathf.Max(1, config.damageConfig.hits);
+                    int totalBuffBonus = potionBonus + focusBonus;
 
-                    int actualDmg = CalculateActualDamage(baseDmg, currentStacks, attackPotionBonus, enhancementBonus);
-                    int actualMin = useRandom ? CalculateActualDamage(minDmg, currentStacks, attackPotionBonus, enhancementBonus) : actualDmg;
-                    int actualMax = useRandom ? CalculateActualDamage(maxDmg, currentStacks, attackPotionBonus, enhancementBonus) : actualDmg;
-                    bool hasBonus = currentStacks > 0 || attackPotionBonus > 0 || enhancementBonus > 0;
+                    int actualDmg = CalculateActualDamage(baseDmg, currentStacks, totalBuffBonus, enhancementBonus);
+                    int actualMin = useRandom ? CalculateActualDamage(minDmg, currentStacks, totalBuffBonus, enhancementBonus) : actualDmg;
+                    int actualMax = useRandom ? CalculateActualDamage(maxDmg, currentStacks, totalBuffBonus, enhancementBonus) : actualDmg;
+                    bool hasBonus = currentStacks > 0 || potionBonus > 0 || focusBonus > 0 || enhancementBonus > 0;
 
                     if (hits <= 1)
                     {
@@ -970,7 +990,8 @@ namespace Game.SkillCardSystem.UI.Mappers
                             {
                                 bonusText = $" (기본 {baseMin}~{baseMax}"
                                             + (currentStacks > 0 ? $", 스택 {currentStacks}" : "")
-                                            + (attackPotionBonus > 0 ? $", 공격력 버프 {attackPotionBonus}" : "")
+                                            + (potionBonus > 0 ? $", 물약 {potionBonus}" : "")
+                                            + (focusBonus > 0 ? $", 집중 {focusBonus}" : "")
                                             + (enhancementBonus > 0 ? $", 강화 {enhancementBonus}" : "")
                                             + ")";
                             }
@@ -982,7 +1003,8 @@ namespace Game.SkillCardSystem.UI.Mappers
                             {
                                 string bonusText = $" (기본 피해 {baseDmg}"
                                     + (currentStacks > 0 ? $", 스택 {currentStacks}" : "")
-                                    + (attackPotionBonus > 0 ? $", 공격력 버프 {attackPotionBonus}" : "")
+                                    + (potionBonus > 0 ? $", 물약 {potionBonus}" : "")
+                                    + (focusBonus > 0 ? $", 집중 {focusBonus}" : "")
                                     + (enhancementBonus > 0 ? $", 강화 {enhancementBonus}" : "")
                                     + ")";
                                 ruleLines.Add($"피해 {KoreanTextHelper.AddKoreanParticle(actualDmg, "을/를")} 줍니다.{bonusText}");
@@ -1004,7 +1026,8 @@ namespace Game.SkillCardSystem.UI.Mappers
                             {
                                 bonusText = $" (기본 {baseMin}~{baseMax}"
                                             + (currentStacks > 0 ? $", 스택 {currentStacks}" : "")
-                                            + (attackPotionBonus > 0 ? $", 공격력 버프 {attackPotionBonus}" : "")
+                                            + (potionBonus > 0 ? $", 물약 {potionBonus}" : "")
+                                            + (focusBonus > 0 ? $", 집중 {focusBonus}" : "")
                                             + (enhancementBonus > 0 ? $", 강화 {enhancementBonus}" : "")
                                             + ")";
                             }
@@ -1016,7 +1039,8 @@ namespace Game.SkillCardSystem.UI.Mappers
                             {
                                 string bonusText = $" (기본 피해 {baseDmg}"
                                     + (currentStacks > 0 ? $", 스택 {currentStacks}" : "")
-                                    + (attackPotionBonus > 0 ? $", 공격력 버프 {attackPotionBonus}" : "")
+                                    + (potionBonus > 0 ? $", 물약 {potionBonus}" : "")
+                                    + (focusBonus > 0 ? $", 집중 {focusBonus}" : "")
                                     + (enhancementBonus > 0 ? $", 강화 {enhancementBonus}" : "")
                                     + ")";
                                 ruleLines.Add($"피해 {KoreanTextHelper.AddKoreanParticle(actualDmg, "을/를")} {KoreanTextHelper.AddKoreanParticle(hits, "을/를")}번 줍니다.{bonusText}");
@@ -1071,23 +1095,104 @@ namespace Game.SkillCardSystem.UI.Mappers
         }
 
         /// <summary>
-        /// 공격력 버프(포션/스킬 포함) 보너스를 계산합니다.
+        /// 물약 버프와 집중 버프를 분리하여 계산합니다.
         /// </summary>
         /// <param name="playerCharacter">플레이어 캐릭터</param>
-        /// <returns>공격력 버프 보너스</returns>
-        private static int GetAttackPotionBonus(Game.CharacterSystem.Interface.ICharacter playerCharacter)
+        /// <param name="potionBonus">물약 버프 보너스 (출력)</param>
+        /// <param name="focusBonus">집중 버프 보너스 (출력)</param>
+        private static void GetAttackPowerBuffs(Game.CharacterSystem.Interface.ICharacter playerCharacter, out int potionBonus, out int focusBonus)
         {
-            if (playerCharacter == null) return 0;
+            potionBonus = 0;
+            focusBonus = 0;
             
-            int totalBonus = 0;
+            if (playerCharacter == null)
+            {
+                GameLogger.LogWarning("[SkillCardTooltipMapper] GetAttackPowerBuffs: playerCharacter가 null입니다.", GameLogger.LogCategory.UI);
+                return;
+            }
+            
             var buffs = playerCharacter.GetBuffs();
+            
+            if (buffs == null)
+            {
+                GameLogger.LogWarning($"[SkillCardTooltipMapper] GetAttackPowerBuffs: {playerCharacter.GetCharacterName()}의 GetBuffs()가 null을 반환했습니다.", GameLogger.LogCategory.UI);
+                return;
+            }
+            
+            GameLogger.LogInfo($"[SkillCardTooltipMapper] GetAttackPowerBuffs: {playerCharacter.GetCharacterName()}의 버프 수: {buffs.Count}", GameLogger.LogCategory.UI);
             
             foreach (var effect in buffs)
             {
                 if (effect is Game.ItemSystem.Effect.AttackPowerBuffEffect attackBuff)
                 {
-                    totalBonus += attackBuff.GetAttackPowerBonus();
+                    int bonus = attackBuff.GetAttackPowerBonus();
+                    
+                    // SourceItemName이 있으면 물약 버프, SourceEffectName이 있으면 집중 버프
+                    bool hasItemName = !string.IsNullOrEmpty(attackBuff.SourceItemName);
+                    bool hasEffectName = !string.IsNullOrEmpty(attackBuff.SourceEffectName);
+                    
+                    if (hasItemName)
+                    {
+                        potionBonus += bonus;
+                        GameLogger.LogInfo($"[SkillCardTooltipMapper] 물약 버프 발견: +{bonus} (총: {potionBonus})", GameLogger.LogCategory.UI);
+                    }
+                    else if (hasEffectName)
+                    {
+                        focusBonus += bonus;
+                        GameLogger.LogInfo($"[SkillCardTooltipMapper] 집중 버프 발견: +{bonus} (총: {focusBonus})", GameLogger.LogCategory.UI);
+                    }
+                    else
+                    {
+                        // 둘 다 없으면 기본적으로 물약으로 간주
+                        potionBonus += bonus;
+                        GameLogger.LogInfo($"[SkillCardTooltipMapper] 공격력 버프 발견 (출처 불명): +{bonus} (물약으로 분류, 총: {potionBonus})", GameLogger.LogCategory.UI);
+                    }
                 }
+            }
+            
+            if (potionBonus == 0 && focusBonus == 0)
+            {
+                GameLogger.LogInfo($"[SkillCardTooltipMapper] GetAttackPowerBuffs: 공격력 버프가 없습니다. 버프 목록: {string.Join(", ", buffs.Select(b => b?.GetType().Name ?? "null"))}", GameLogger.LogCategory.UI);
+            }
+        }
+        
+        /// <summary>
+        /// 물약(포션/스킬 포함) 보너스를 계산합니다. (레거시 호환용)
+        /// </summary>
+        /// <param name="playerCharacter">플레이어 캐릭터</param>
+        /// <returns>물약 보너스</returns>
+        private static int GetAttackPotionBonus(Game.CharacterSystem.Interface.ICharacter playerCharacter)
+        {
+            if (playerCharacter == null)
+            {
+                GameLogger.LogWarning("[SkillCardTooltipMapper] GetAttackPotionBonus: playerCharacter가 null입니다.", GameLogger.LogCategory.UI);
+                return 0;
+            }
+            
+            int totalBonus = 0;
+            var buffs = playerCharacter.GetBuffs();
+            
+            if (buffs == null)
+            {
+                GameLogger.LogWarning($"[SkillCardTooltipMapper] GetAttackPotionBonus: {playerCharacter.GetCharacterName()}의 GetBuffs()가 null을 반환했습니다.", GameLogger.LogCategory.UI);
+                return 0;
+            }
+            
+            GameLogger.LogInfo($"[SkillCardTooltipMapper] GetAttackPotionBonus: {playerCharacter.GetCharacterName()}의 버프 수: {buffs.Count}", GameLogger.LogCategory.UI);
+            
+            foreach (var effect in buffs)
+            {
+                if (effect is Game.ItemSystem.Effect.AttackPowerBuffEffect attackBuff)
+                {
+                    int bonus = attackBuff.GetAttackPowerBonus();
+                    totalBonus += bonus;
+                    GameLogger.LogInfo($"[SkillCardTooltipMapper] 물약 발견: +{bonus} (총: {totalBonus})", GameLogger.LogCategory.UI);
+                }
+            }
+            
+            if (totalBonus == 0)
+            {
+                GameLogger.LogInfo($"[SkillCardTooltipMapper] GetAttackPotionBonus: 물약가 없습니다. 버프 목록: {string.Join(", ", buffs.Select(b => b?.GetType().Name ?? "null"))}", GameLogger.LogCategory.UI);
             }
             
             return totalBonus;
@@ -1098,12 +1203,13 @@ namespace Game.SkillCardSystem.UI.Mappers
         /// </summary>
         /// <param name="baseDamage">기본 데미지</param>
         /// <param name="currentStacks">현재 스택 수</param>
-        /// <param name="attackPotionBonus">공격력 버프 보너스</param>
+        /// <param name="totalBuffBonus">총 버프 보너스 (물약 + 집중)</param>
+        /// <param name="enhancementBonus">강화 보너스</param>
         /// <returns>실제 적용 데미지</returns>
-        private static int CalculateActualDamage(int baseDamage, int currentStacks, int attackPotionBonus = 0, int enhancementBonus = 0)
+        private static int CalculateActualDamage(int baseDamage, int currentStacks, int totalBuffBonus = 0, int enhancementBonus = 0)
         {
-            // 선형 증가: 기본 데미지 + 스택 수 + 공격력 버프 + 강화 보너스
-            return baseDamage + currentStacks + attackPotionBonus + enhancementBonus;
+            // 선형 증가: 기본 데미지 + 스택 수 + 버프 보너스(물약+집중) + 강화 보너스
+            return baseDamage + currentStacks + totalBuffBonus + enhancementBonus;
         }
     }
     

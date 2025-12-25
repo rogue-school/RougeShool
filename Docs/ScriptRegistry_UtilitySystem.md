@@ -3,7 +3,7 @@
 **루트 폴더**: `Assets/Script/UtilitySystem/`  
 **목적**: 공통 게임 흐름/씬 로딩/오브젝트 생존, 전투 슬롯 드랍 핸들러 주입, UI 애니메이션/호버 효과/Transform 확장 등 게임 전역에 걸친 보조 유틸리티를 제공  
 **비고**: CoreSystem/CombatSystem/StageSystem/UISystem/CharacterSystem/SkillCardSystem에서 직접 또는 간접적으로 사용  
-**최신 업데이트**: 리팩토링으로 UIAnimationHelper, HoverEffectHelper, TransformExtensions 추가됨
+**최신 업데이트**: 리팩토링으로 UIAnimationHelper, HoverEffectHelper, TransformExtensions, BaseTooltipManager 추가됨
 
 ---
 
@@ -18,8 +18,10 @@
 | **UIAnimationHelper** | `Game.UtilitySystem` | `UIAnimationHelper.cs` | UI 페이드 인/아웃 애니메이션 공통 헬퍼 (DOTween 기반) | `FadeIn(...)`, `FadeOut(...)` | - | 정적 클래스, DI 없음 | ItemTooltip, SkillCardTooltip, BuffDebuffTooltip, TutorialOverlayView 등 UI 컴포넌트 | ✅ 사용 중 |
 | **HoverEffectHelper** | `Game.UtilitySystem` | `HoverEffectHelper.cs` | 호버 스케일 효과 공통 헬퍼 (DOTween 기반) | `PlayHoverScale(...)`, `ResetScale(...)` | - | 정적 클래스, DI 없음 | SkillCardUI, ActiveItemUI, PassiveItemIcon, RewardSlotUIController, BuffDebuffIcon 등 UI 컴포넌트 | ✅ 사용 중 |
 | **TransformExtensions** | `Game.UtilitySystem` | `TransformExtensions.cs` | Transform 확장 메서드 (자식 찾기 등) | `FindChildByName(...)` | - | 정적 Extension 메서드, DI 없음 | SkillCardTooltip 등 UI 컴포넌트 | ✅ 사용 중 |
+| **BaseTooltipManager** | `Game.UtilitySystem` | `BaseTooltipManager.cs` | 모든 툴팁 매니저의 공통 기능을 제공하는 추상 베이스 클래스 (제네릭) | `Initialize()`, `ForceHideTooltip()` 등 | `tooltipPrefab`, `currentTooltip`, `showDelay`, `hideDelay` | 추상 클래스, 직접 DI 바인딩 없음 (상속용) | `ItemTooltipManager`, `SkillCardTooltipManager`, `BuffDebuffTooltipManager` 등 툴팁 매니저들의 베이스 | ✅ 사용 중 |
 
 > **사용 여부 메모**: UtilitySystem 폴더는 규모가 작고, 대부분 정적 헬퍼/인터페이스/컨텍스트 역할을 합니다.  
+> `BaseTooltipManager`는 추상 베이스 클래스로, 다른 시스템의 툴팁 매니저들이 공통 기능을 재사용할 수 있도록 제공됩니다.  
 > `DropHandlerInjector`는 새 Drag&Drop 시스템으로 인해 실제 로직이 대부분 이동했지만, 주석과 구조상 아직 레거시 호환/헬퍼로 남아 있으므로 `✅ 사용 중 (통합/정리 후보)`로 분류했습니다.
 
 ---
@@ -73,6 +75,7 @@ public class GameContext : IGameContext
 
 ```text
 Assets/Script/UtilitySystem/
+├── BaseTooltipManager.cs
 ├── DontDestroyOnLoadContainer.cs
 ├── DropHandlerInjector.cs
 ├── HoverEffectHelper.cs
