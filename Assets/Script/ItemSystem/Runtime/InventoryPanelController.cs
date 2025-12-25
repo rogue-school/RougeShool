@@ -15,6 +15,8 @@ namespace Game.ItemSystem.Runtime
 	public class InventoryPanelController : MonoBehaviour, IPointerClickHandler
 	{
 		[Inject] private IItemService _itemService;
+	[Inject(Optional = true)] private Game.ItemSystem.Manager.ItemTooltipManager itemTooltipManager;
+	[Inject(Optional = true)] private Game.CombatSystem.Manager.TurnManager turnManager;
 
 	[Header("인벤토리 슬롯")]
 	[SerializeField] private Transform[] slotTransforms = new Transform[4];
@@ -35,9 +37,6 @@ namespace Game.ItemSystem.Runtime
 
 	// 동적으로 생성된 아이템들
 	private ActiveItemUI[] itemUIs = new ActiveItemUI[4];
-
-	// 턴 매니저
-	private Game.CombatSystem.Manager.TurnManager turnManager;
 
 	// 패널 상태
 	private bool isPanelOpen = true;
@@ -271,13 +270,18 @@ namespace Game.ItemSystem.Runtime
 			}
 		}
 
-		// 한 프레임 동안 글로벌 닫기 억제 플래그
-		private bool _suppressGlobalCloseThisFrame;
-		public void SuppressGlobalCloseOneFrame()
-		{
-			_suppressGlobalCloseThisFrame = true;
-			StartCoroutine(ClearSuppressFlagEndOfFrame());
-		}
+	// 한 프레임 동안 글로벌 닫기 억제 플래그
+	private bool _suppressGlobalCloseThisFrame;
+	
+	/// <summary>
+	/// 한 프레임 동안 글로벌 닫기 동작을 억제합니다.
+	/// 팝업 전환 시 툴팁이 닫히지 않도록 보호하는 데 사용됩니다.
+	/// </summary>
+	public void SuppressGlobalCloseOneFrame()
+	{
+		_suppressGlobalCloseThisFrame = true;
+		StartCoroutine(ClearSuppressFlagEndOfFrame());
+	}
 
 		private System.Collections.IEnumerator ClearSuppressFlagEndOfFrame()
 		{
@@ -292,11 +296,10 @@ namespace Game.ItemSystem.Runtime
 		public void CloseAllPopupsAndTooltip()
 		{
 			HideAllActionPopups();
-			var tooltipMgr = FindFirstObjectByType<Game.ItemSystem.Manager.ItemTooltipManager>();
-			if (tooltipMgr != null)
+			if (itemTooltipManager != null)
 			{
-				tooltipMgr.UnpinTooltip();
-				tooltipMgr.ForceHideTooltip();
+				itemTooltipManager.UnpinTooltip();
+				itemTooltipManager.ForceHideTooltip();
 			}
 		}
 
@@ -414,7 +417,6 @@ namespace Game.ItemSystem.Runtime
 		/// </summary>
 		private void SubscribeToTurnChanges()
 		{
-			turnManager = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
 			if (turnManager != null)
 			{
 				turnManager.OnTurnChanged += HandleTurnChanged;

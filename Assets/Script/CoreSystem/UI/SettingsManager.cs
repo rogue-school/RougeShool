@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 using System;
 using System.Collections;
 using Game.CoreSystem.Interface;
@@ -34,7 +36,15 @@ namespace Game.CoreSystem.UI
         [InjectOptional] private Canvas mainCanvas;
         
         // 설정창 상태
+        
+        /// <summary>
+        /// 설정 매니저가 초기화되었는지 여부를 나타냅니다.
+        /// </summary>
         public bool IsInitialized { get; private set; }
+        
+        /// <summary>
+        /// 설정창이 현재 열려있는지 여부를 나타냅니다.
+        /// </summary>
         public bool IsSettingsOpen => currentSettingsPanel != null && currentSettingsPanel.activeInHierarchy;
         
         // 이벤트
@@ -50,17 +60,28 @@ namespace Game.CoreSystem.UI
         /// <summary>
         /// 자동 초기화 (CoreSystemInitializer와 독립적으로)
         /// </summary>
+        /// <returns>초기화 코루틴</returns>
         private IEnumerator AutoInitialize()
         {
             if (IsInitialized) yield break;
             
-            // 프리팹이 없으면 Resources에서 로드
+            // 프리팹이 없으면 Addressables에서 로드
             if (settingsPanelPrefab == null)
             {
-                settingsPanelPrefab = Resources.Load<GameObject>("Prefab/SettingsPanel");
-                if (settingsPanelPrefab == null)
+                var handle = Addressables.LoadAssetAsync<GameObject>("Prefab/SettingsPanel");
+                yield return handle;
+
+                if (handle.Status == AsyncOperationStatus.Succeeded && handle.Result != null)
+                {
+                    settingsPanelPrefab = handle.Result;
+                }
+                else
                 {
                     GameLogger.LogWarning("설정창 프리팹이 없어 설정 기능을 일시 비활성화합니다.", GameLogger.LogCategory.UI);
+                    if (handle.OperationException != null)
+                    {
+                        GameLogger.LogError($"Addressables 로드 오류: {handle.OperationException.Message}", GameLogger.LogCategory.Error);
+                    }
                     // 프리팹 없이도 초기화는 완료로 간주
                     IsInitialized = true;
                     yield break;
@@ -75,6 +96,10 @@ namespace Game.CoreSystem.UI
         
         #region ICoreSystemInitializable 구현
         
+        /// <summary>
+        /// 시스템을 초기화합니다
+        /// </summary>
+        /// <returns>초기화 코루틴</returns>
         public IEnumerator Initialize()
         {
             // 이미 자동 초기화가 완료되었으면 스킵

@@ -90,6 +90,7 @@ namespace Game.CharacterSystem.Core
         [Inject(Optional = true)] private Game.CombatSystem.Interface.ICombatExecutionManager executionManager;
         [Inject(Optional = true)] private Game.CombatSystem.Interface.ICardSlotRegistry slotRegistry;
         [Inject(Optional = true)] private Game.CombatSystem.Interface.ISlotMovementController slotMovementController;
+        [Inject(Optional = true)] private Game.StageSystem.Manager.StageManager stageManager;
         private Sequence deathSequence;
 
         #region 페이즈 시스템
@@ -300,75 +301,13 @@ namespace Game.CharacterSystem.Core
         {
             if (data == null) return;
 
-            // Portrait 프리팹이 설정되어 있으면 인스턴스화
-            if (data.PortraitPrefab != null)
-            {
-                // Portrait 부모 Transform 찾기
-                Transform parent = portraitParent;
-                if (parent == null)
-                {
-                    // 기존 Portrait GameObject의 부모를 찾기
-                    var existingPortrait = transform.Find("Portrait");
-                    if (existingPortrait != null)
-                    {
-                        parent = existingPortrait.parent;
-                        // 기존 Portrait 비활성화 (프리팹으로 교체)
-                        existingPortrait.gameObject.SetActive(false);
-                    }
-                    else
-                    {
-                        // Portrait 부모를 찾을 수 없으면 캐릭터 Transform 사용
-                        parent = transform;
-                    }
-                }
-
-                // Portrait 프리팹 인스턴스화
-                GameObject portraitInstance = Instantiate(data.PortraitPrefab, parent);
-                portraitInstance.name = "Portrait";
-
-                // Portrait Image 컴포넌트 찾기
-                if (portraitImage == null)
-                {
-                    portraitImage = portraitInstance.GetComponentInChildren<Image>(true);
-                    if (portraitImage == null)
-                    {
-                        GameLogger.LogWarning("[EnemyCharacter] Portrait 프리팹에서 Image 컴포넌트를 찾을 수 없습니다.", GameLogger.LogCategory.Character);
-                    }
-                }
-
-                // HP Text Anchor 찾기 (Portrait 프리팹 내부에 있을 수 있음)
-                if (hpTextAnchor == null)
-                {
-                    // "HPTectAnchor" 또는 "HPTextAnchor" 이름으로 찾기
-                    var hpAnchor = portraitInstance.transform.Find("HPTectAnchor");
-                    if (hpAnchor == null)
-                    {
-                        hpAnchor = portraitInstance.transform.Find("HPTextAnchor");
-                    }
-                    if (hpAnchor != null)
-                    {
-                        hpTextAnchor = hpAnchor;
-                    }
-                }
-
-            }
-            else
-            {
-                // Portrait 프리팹이 없으면 기존 Portrait GameObject 사용
-                if (portraitImage == null)
-                {
-                    var existingPortrait = transform.Find("Portrait");
-                    if (existingPortrait != null)
-                    {
-                        portraitImage = existingPortrait.GetComponent<Image>();
-                    }
-                }
-
-                if (portraitImage == null)
-                {
-                    GameLogger.LogWarning("[EnemyCharacter] Portrait Image를 찾을 수 없습니다.", GameLogger.LogCategory.Character);
-                }
-            }
+            InitializePortraitCommon(
+                data.PortraitPrefab,
+                portraitParent,
+                ref portraitImage,
+                ref hpTextAnchor,
+                transform,
+                GetCharacterName());
         }
 
         /// <summary>
@@ -753,8 +692,13 @@ namespace Game.CharacterSystem.Core
         {
             GameLogger.LogInfo($"[{GetCharacterName()}] 소환 요청 전달: {summonTarget.DisplayName}, 현재 체력: {currentHP}/{GetMaxHP()}", GameLogger.LogCategory.Character);
             
+            // StageManager 주입 시도
+            if (stageManager == null)
+            {
+                EnsureStageManagerInjected();
+            }
+            
             // StageManager에 소환 요청 전달 (상태 패턴에서 처리)
-            var stageManager = UnityEngine.Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
             if (stageManager != null)
             {
                 // 원본 적 정보 저장
@@ -774,6 +718,65 @@ namespace Game.CharacterSystem.Core
                 GameLogger.LogError($"[{GetCharacterName()}] StageManager를 찾을 수 없습니다", GameLogger.LogCategory.Character);
             }
         }
+        
+        /// <summary>
+        /// StageManager가 null이면 주입을 시도합니다.
+        /// </summary>
+        private void EnsureStageManagerInjected()
+        {
+            if (stageManager != null) return;
+
+            try
+            {
+                var projectContext = Zenject.ProjectContext.Instance;
+                if (projectContext != null && projectContext.Container != null)
+                {
+                    // SceneContext에서 먼저 시도
+                    Zenject.DiContainer sceneContainer = null;
+                    try
+                    {
+                        var sceneContextRegistry = projectContext.Container.Resolve<Zenject.SceneContextRegistry>();
+                        sceneContainer = sceneContextRegistry.TryGetContainerForScene(gameObject.scene);
+                    }
+                    catch (System.Exception ex)
+                    {
+                        GameLogger.LogWarning($"[EnemyCharacter] SceneContextRegistry를 찾을 수 없거나 씬 컨테이너 획득 중 오류: {ex.Message}", GameLogger.LogCategory.Character);
+                    }
+
+                    // SceneContext에서 먼저 시도
+                    if (sceneContainer != null)
+                    {
+                        var resolvedManager = sceneContainer.TryResolve<Game.StageSystem.Manager.StageManager>();
+                        if (resolvedManager != null)
+                        {
+                            stageManager = resolvedManager;
+                            GameLogger.LogInfo("[EnemyCharacter] StageManager 주입 완료 (SceneContext)", GameLogger.LogCategory.Character);
+                            return;
+                        }
+                    }
+
+                    // ProjectContext에서 시도
+                    var projectResolvedManager = projectContext.Container.TryResolve<Game.StageSystem.Manager.StageManager>();
+                    if (projectResolvedManager != null)
+                    {
+                        stageManager = projectResolvedManager;
+                        GameLogger.LogInfo("[EnemyCharacter] StageManager 주입 완료 (ProjectContext)", GameLogger.LogCategory.Character);
+                        return;
+                    }
+                }
+
+                var foundManager = UnityEngine.Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>(UnityEngine.FindObjectsInactive.Include);
+                if (foundManager != null)
+                {
+                    stageManager = foundManager;
+                    GameLogger.LogInfo("[EnemyCharacter] StageManager 직접 찾기 완료", GameLogger.LogCategory.Character);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogWarning($"[EnemyCharacter] StageManager 주입 시도 중 오류: {ex.Message}", GameLogger.LogCategory.Character);
+            }
+        }
 
         private void CleanupEffects()
         {
@@ -787,6 +790,17 @@ namespace Game.CharacterSystem.Core
                 effect.Cleanup(this);
             }
             characterEffects.Clear();
+        }
+
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+            // DOTween 시퀀스 정리
+            if (deathSequence != null && deathSequence.IsActive())
+            {
+                deathSequence.Kill();
+                deathSequence = null;
+            }
         }
 
         protected override void OnDestroy()
@@ -1455,15 +1469,8 @@ namespace Game.CharacterSystem.Core
                 }
             }
 
-            if (registry == null)
-            {
-                // 방법 2: Zenject 컨테이너에서 찾기
-                var sceneContext = FindFirstObjectByType<Zenject.SceneContext>();
-                if (sceneContext != null && sceneContext.Container != null)
-                {
-                    registry = sceneContext.Container.TryResolve<ICardSlotRegistry>();
-                }
-            }
+            // registry는 이미 DI로 주입받음 (slotRegistry)
+            // SceneContext는 더 이상 필요하지 않음
 
             if (registry == null)
             {

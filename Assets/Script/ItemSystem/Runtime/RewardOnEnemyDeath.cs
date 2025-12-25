@@ -92,6 +92,7 @@ namespace Game.ItemSystem.Runtime
 			// 부모 Transform이 없으면 Canvas를 찾아서 사용
 			if (rewardPanelParent == null)
 			{
+				// Canvas는 씬에 하나만 있으므로 FindFirstObjectByType 사용 (Unity 기본 컴포넌트)
 				var canvas = Object.FindFirstObjectByType<Canvas>();
 				if (canvas != null)
 				{

@@ -14,27 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   <DisplayName>k__BackingField: "\uCE74\uB974\uBA58 \uCD1D\uC7A5"
   <MaxHP>k__BackingField: 30
-  <Portrait>k__BackingField: {fileID: 5692228928022720828, guid: 9880d841690444d4c9622ca405a2c479, type: 3}
-  <IndexIcon>k__BackingField: {fileID: 0}
+  <IndexIcon>k__BackingField: {fileID: -6399496000068769004, guid: c69783d0f886e2044a94746cefa3c070, type: 3}
   <PortraitPrefab>k__BackingField: {fileID: 751987938129930587, guid: 525bcaad19e57b647b06a69ce612ae35, type: 3}
   <Prefab>k__BackingField: {fileID: 7769799778275336730, guid: 2c6e844c91775424681f573a6951211e, type: 3}
-  <EnemyDeck>k__BackingField: {fileID: 11400000, guid: 026d28617ccf61e4aab0eb69e8263640, type: 2}
+  <EnemyDeck>k__BackingField: {fileID: 11400000, guid: a5cd4db6d0443454b978aeee07e80ec0, type: 2}
   <CharacterEffects>k__BackingField: []
   <Phases>k__BackingField:
-  - phaseName: 2
-    healthThreshold: 0.2
+  - phaseName: "2\uD398\uC774\uC988"
+    healthThreshold: 0.9
     phaseDisplayName: "\uCE74\uB974\uBA58 \uAD50\uC7A5"
-    phaseIndexIcon: {fileID: 0}
-    phasePortrait: {fileID: -4549066492914507374, guid: 7ac1eb112e2b0044aa3a7e010b54eea9, type: 3}
+    phaseIndexIcon: {fileID: -3756981087397036905, guid: 5970d5be9e7c3d445a1f0d7cc3aa120e, type: 3}
     phasePortraitPrefab: {fileID: 751987938129930587, guid: 859c90ee4f06d7e4a8a974982196ecd3, type: 3}
-    phaseMaxHP: 50
-    phaseDeck: {fileID: 0}
-    phaseEffects:
-    - effectSO: {fileID: 0}
-      useCustomSettings: 0
-      customSettings:
-        healthThreshold: 0
-        summonTarget: {fileID: 0}
-      priority: 0
-    phaseTransitionVFX: {fileID: 0}
-    phaseTransitionSFX: {fileID: 0}
+    phaseMaxHP: 120
+    phaseDeck: {fileID: 11400000, guid: 5ae3f55aa1bd8fe47bd08c32133073da, type: 2}
+    phaseEffects: []
+    phaseTransitionVFX: {fileID: 158650, guid: 55f63c48150ecbb469e095dbde67c6e9, type: 3}
+    phaseTransitionSFX: {fileID: 8300000, guid: af66162561d2eed40ad49268cab318bb, type: 3}

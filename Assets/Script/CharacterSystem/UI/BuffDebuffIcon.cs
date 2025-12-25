@@ -67,12 +67,28 @@ namespace Game.CharacterSystem.UI
             InitializeIcon();
         }
 
+        private void OnDisable()
+        {
+            fadeTween?.Kill();
+            scaleTween?.Kill();
+            pulseTween?.Kill();
+            durationTween?.Kill();
+            fadeTween = null;
+            scaleTween = null;
+            pulseTween = null;
+            durationTween = null;
+        }
+
         private void OnDestroy()
         {
             fadeTween?.Kill();
             scaleTween?.Kill();
             pulseTween?.Kill();
             durationTween?.Kill();
+            fadeTween = null;
+            scaleTween = null;
+            pulseTween = null;
+            durationTween = null;
         }
 
         #endregion
@@ -174,7 +190,11 @@ namespace Game.CharacterSystem.UI
                 }
             }, 0f, duration)
             .SetEase(Ease.Linear)
-            .OnComplete(OnDurationExpired);
+            .SetAutoKill(true)
+            .OnComplete(() => {
+                durationTween = null;
+                OnDurationExpired();
+            });
         }
 
         /// <summary>
@@ -236,7 +256,8 @@ namespace Game.CharacterSystem.UI
         {
             fadeTween?.Kill();
             fadeTween = DOTween.To(() => GetAlpha(), x => SetAlpha(x), 1f, 1f / fadeSpeed)
-                .SetEase(Ease.OutQuad);
+                .SetEase(Ease.OutQuad)
+                .SetAutoKill(true);
         }
 
         /// <summary>
@@ -248,7 +269,11 @@ namespace Game.CharacterSystem.UI
             fadeTween?.Kill();
             fadeTween = DOTween.To(() => GetAlpha(), x => SetAlpha(x), 0f, 1f / fadeSpeed)
                 .SetEase(Ease.InQuad)
-                .OnComplete(() => onComplete?.Invoke());
+                .SetAutoKill(true)
+                .OnComplete(() => {
+                    fadeTween = null;
+                    onComplete?.Invoke();
+                });
         }
 
         /// <summary>
@@ -307,9 +332,11 @@ namespace Game.CharacterSystem.UI
         public void OnMouseEnter()
         {
             // 스케일 업 애니메이션
-            scaleTween?.Kill();
-            scaleTween = transform.DOScale(hoverScale, 0.2f)
-                .SetEase(Ease.OutQuad);
+            Game.UtilitySystem.HoverEffectHelper.PlayHoverScaleWithCleanup(
+                ref scaleTween,
+                transform,
+                hoverScale,
+                0.2f);
         }
 
         /// <summary>
@@ -318,9 +345,10 @@ namespace Game.CharacterSystem.UI
         public void OnMouseExit()
         {
             // 스케일 다운 애니메이션
-            scaleTween?.Kill();
-            scaleTween = transform.DOScale(1f, 0.2f)
-                .SetEase(Ease.OutQuad);
+            Game.UtilitySystem.HoverEffectHelper.ResetScaleWithCleanup(
+                ref scaleTween,
+                transform,
+                0.2f);
         }
 
         #endregion

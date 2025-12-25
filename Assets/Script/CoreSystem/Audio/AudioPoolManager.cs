@@ -94,8 +94,8 @@ namespace Game.CoreSystem.Audio
         /// 사운드 재생 (중복 방지 + 풀링)
         /// </summary>
         /// <param name="clip">재생할 오디오 클립</param>
-        /// <param name="volume">볼륨</param>
-        /// <param name="priority">우선순위 (높을수록 우선)</param>
+        /// <param name="volume">볼륨 (기본값: 1.0)</param>
+        /// <param name="priority">우선순위 (높을수록 우선, 기본값: 1)</param>
         public void PlaySound(AudioClip clip, float volume = 1.0f, int priority = 1)
         {
             if (clip == null || !isInitialized)
@@ -147,7 +147,7 @@ namespace Game.CoreSystem.Audio
         /// 사운드 재생 (우선순위 자동 설정)
         /// </summary>
         /// <param name="clip">재생할 오디오 클립</param>
-        /// <param name="volume">볼륨</param>
+        /// <param name="volume">볼륨 (기본값: 1.0)</param>
         public void PlaySound(AudioClip clip, float volume = 1.0f)
         {
             int priority = GetSoundPriority(clip.name);

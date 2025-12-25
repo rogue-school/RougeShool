@@ -7,6 +7,7 @@ using Game.SkillCardSystem.Interface;
 using Game.CharacterSystem.Manager;
 using Game.SkillCardSystem.UI.Mappers;
 using Game.ItemSystem.Constants;
+using Zenject;
 
 namespace Game.CharacterSystem.UI
 {
@@ -60,6 +61,9 @@ namespace Game.CharacterSystem.UI
 
         private Coroutine tooltipCoroutine;
         private bool isHovering = false;
+        
+        [Inject(Optional = true)]
+        private BuffDebuffTooltipManager tooltipManager;
 
         #endregion
 
@@ -218,8 +222,10 @@ namespace Game.CharacterSystem.UI
         {
             if (CurrentEffect == null) return;
 
+            // tooltipManager가 null이면 찾기 시도
+            EnsureTooltipManagerInjected();
+
             // 버프/디버프 툴팁 매니저를 통해 툴팁 표시
-            var tooltipManager = Object.FindFirstObjectByType<BuffDebuffTooltipManager>();
             if (tooltipManager != null)
             {
                 // 자신의 RectTransform을 전달하여 정확한 위치 계산
@@ -234,11 +240,65 @@ namespace Game.CharacterSystem.UI
         }
 
         /// <summary>
+        /// tooltipManager가 null이면 주입을 시도합니다.
+        /// </summary>
+        private void EnsureTooltipManagerInjected()
+        {
+            if (tooltipManager != null) return;
+
+            try
+            {
+                // 1. ProjectContext를 통해 Container에 접근하여 주입 시도
+                var projectContext = Zenject.ProjectContext.Instance;
+                if (projectContext != null && projectContext.Container != null)
+                {
+                    projectContext.Container.Inject(this);
+                    if (tooltipManager != null)
+                    {
+                        GameLogger.LogInfo("[BuffDebuffSlotView] BuffDebuffTooltipManager 주입 완료 (ProjectContext)", GameLogger.LogCategory.UI);
+                        return;
+                    }
+                }
+
+                // 2. SceneContextRegistry를 통해 현재 씬의 Container에 접근하여 주입 시도
+                try
+                {
+                    var sceneContextRegistry = projectContext.Container.Resolve<Zenject.SceneContextRegistry>();
+                    var sceneContainer = sceneContextRegistry.TryGetContainerForScene(gameObject.scene);
+                    if (sceneContainer != null)
+                    {
+                        sceneContainer.Inject(this);
+                        if (tooltipManager != null)
+                        {
+                            GameLogger.LogInfo("[BuffDebuffSlotView] BuffDebuffTooltipManager 주입 완료 (SceneContext)", GameLogger.LogCategory.UI);
+                            return;
+                        }
+                    }
+                }
+                catch
+                {
+                    // SceneContextRegistry를 찾을 수 없거나 씬 컨테이너가 없는 경우 무시
+                }
+
+                // 3. 직접 찾아서 할당 (최후의 수단)
+                var foundManager = UnityEngine.Object.FindFirstObjectByType<BuffDebuffTooltipManager>(UnityEngine.FindObjectsInactive.Include);
+                if (foundManager != null)
+                {
+                    tooltipManager = foundManager;
+                    GameLogger.LogInfo("[BuffDebuffSlotView] BuffDebuffTooltipManager 직접 찾기 완료 (FindFirstObjectByType)", GameLogger.LogCategory.UI);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogWarning($"[BuffDebuffSlotView] BuffDebuffTooltipManager 주입 시도 중 오류: {ex.Message}", GameLogger.LogCategory.UI);
+            }
+        }
+
+        /// <summary>
         /// 버프/디버프 툴팁을 숨깁니다.
         /// </summary>
         private void HideTooltip()
         {
-            var tooltipManager = Object.FindFirstObjectByType<BuffDebuffTooltipManager>();
             if (tooltipManager != null)
             {
                 tooltipManager.HideBuffDebuffTooltip();

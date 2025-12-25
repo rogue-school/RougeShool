@@ -112,30 +112,35 @@ namespace Game.CharacterSystem.Manager
     #region 조회
 
     /// <summary>
-    /// 현재 등록된 적 캐릭터를 반환합니다.
+    /// 현재 등록된 적 캐릭터를 반환합니다
     /// </summary>
+    /// <returns>현재 적 캐릭터, 없으면 null</returns>
     public override ICharacter GetCharacter() => currentCharacter;
 
     /// <summary>
-    /// 현재 등록된 적 캐릭터를 반환합니다. (호환성 유지)
+    /// 현재 등록된 적 캐릭터를 반환합니다 (호환성 유지)
     /// </summary>
+    /// <returns>현재 적 캐릭터, 없으면 null</returns>
     public ICharacter GetEnemy() => currentCharacter;
 
     /// <summary>
-    /// 현재 등록된 적 캐릭터를 반환합니다. (명시적 이름)
+    /// 현재 등록된 적 캐릭터를 반환합니다 (명시적 이름)
     /// </summary>
+    /// <returns>현재 적 캐릭터, 없으면 null</returns>
     public ICharacter GetCurrentEnemy() => currentCharacter;
 
     // 적 핸드 매니저 조회 메서드 제거됨 - 적 카드는 대기 슬롯에서 직접 관리
 
     /// <summary>
-    /// 적 캐릭터가 등록되어 있는지 여부를 확인합니다.
+    /// 적 캐릭터가 등록되어 있는지 여부를 확인합니다
     /// </summary>
+    /// <returns>적 캐릭터가 등록되어 있으면 true</returns>
     public bool HasEnemy() => currentCharacter != null;
 
     /// <summary>
-    /// 적 캐릭터가 배치될 슬롯을 반환합니다.
+    /// 적 캐릭터가 배치될 슬롯을 반환합니다
     /// </summary>
+    /// <returns>캐릭터 슬롯 Transform, 없으면 null</returns>
     public Transform GetCharacterSlot() => characterSlot;
 
     #endregion

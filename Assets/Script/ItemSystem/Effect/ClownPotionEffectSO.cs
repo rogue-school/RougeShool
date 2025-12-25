@@ -33,6 +33,9 @@ namespace Game.ItemSystem.Effect
         public override IItemEffectCommand CreateEffectCommand(int power)
         {
             // 기본값 사용: healChance=50, healAmount=defaultEffectAmount+power, damageAmount=defaultEffectAmount+power
+            // 의존성 찾기
+            var vfxManager = UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
+            var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
             return new ClownPotionEffectCommand(
                 50, 
                 defaultEffectAmount + power, 
@@ -40,7 +43,9 @@ namespace Game.ItemSystem.Effect
                 healSfxClip, 
                 damageSfxClip,
                 healVisualEffectPrefab,
-                damageVisualEffectPrefab
+                damageVisualEffectPrefab,
+                vfxManager,
+                audioManager as Game.CoreSystem.Interface.IAudioManager
             );
         }
 
@@ -51,9 +56,13 @@ namespace Game.ItemSystem.Effect
         /// <returns>효과 커맨드</returns>
         public IItemEffectCommand CreateEffectCommand(ClownPotionEffectCustomSettings customSettings)
         {
+            // 의존성 찾기
+            var vfxManager = UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
+            var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            
             if (customSettings == null)
             {
-                return new ClownPotionEffectCommand(50, 5, 5, healSfxClip, damageSfxClip, healVisualEffectPrefab, damageVisualEffectPrefab);
+                return new ClownPotionEffectCommand(50, 5, 5, healSfxClip, damageSfxClip, healVisualEffectPrefab, damageVisualEffectPrefab, vfxManager, audioManager as Game.CoreSystem.Interface.IAudioManager);
             }
 
             // Custom Settings에 SFX가 있으면 우선 사용, 없으면 SO의 기본값 사용
@@ -71,7 +80,9 @@ namespace Game.ItemSystem.Effect
                 finalHealSfx,
                 finalDamageSfx,
                 finalHealVfx,
-                finalDamageVfx
+                finalDamageVfx,
+                vfxManager,
+                audioManager as Game.CoreSystem.Interface.IAudioManager
             );
         }
 

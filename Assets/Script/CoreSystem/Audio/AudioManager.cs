@@ -7,6 +7,8 @@ using Game.CoreSystem.Utility;
 using Game.StageSystem.Data;
 using Game.CharacterSystem.Data;
 using Zenject;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace Game.CoreSystem.Audio
 {
@@ -58,7 +60,17 @@ namespace Game.CoreSystem.Audio
         }
 
         // 인터페이스 프로퍼티
+        
+        /// <summary>
+        /// 현재 BGM 볼륨을 반환합니다.
+        /// </summary>
+        /// <returns>BGM 볼륨 (0.0 ~ 1.0)</returns>
         public float BgmVolume => bgmVolume;
+        
+        /// <summary>
+        /// 현재 SFX 볼륨을 반환합니다.
+        /// </summary>
+        /// <returns>SFX 볼륨 (0.0 ~ 1.0)</returns>
         public float SfxVolume => sfxVolume;
 
         // 현재 재생 중인 BGM
@@ -66,12 +78,16 @@ namespace Game.CoreSystem.Audio
         private bool isFading = false;
 
         // 초기화 상태
+        
+        /// <summary>
+        /// 오디오 매니저가 초기화되었는지 여부를 나타냅니다.
+        /// </summary>
         public bool IsInitialized { get; private set; } = false;
 
         // 의존성 주입
         private ISaveManager saveManager;
 
-        // Resources.Load 캐싱
+        // Addressables 로드 캐싱
         private Dictionary<string, AudioClip> audioClipCache = new Dictionary<string, AudioClip>();
         
         
@@ -222,9 +238,9 @@ namespace Game.CoreSystem.Audio
         }
 
         /// <summary>
-        /// Resources에서 AudioClip 로드 (캐싱 적용)
+        /// Addressables에서 AudioClip 로드 (캐싱 적용)
         /// </summary>
-        /// <param name="resourcePath">Resources 폴더 내 경로</param>
+        /// <param name="resourcePath">Addressables 주소 경로 (예: "Sounds/BGM/MainMenu")</param>
         /// <returns>로드된 AudioClip (실패 시 null)</returns>
         public AudioClip LoadAudioClipCached(string resourcePath)
         {
@@ -239,15 +255,27 @@ namespace Game.CoreSystem.Audio
                 return cachedClip;
             }
 
-            AudioClip clip = Resources.Load<AudioClip>(resourcePath);
-            if (clip != null)
+            AudioClip clip = null;
+            try
             {
-                audioClipCache[resourcePath] = clip;
-                GameLogger.LogInfo($"AudioClip 캐싱 완료: {resourcePath}", GameLogger.LogCategory.Audio);
+                // Addressables 주소 형식: Sounds/{path}
+                string address = resourcePath.StartsWith("Sounds/") ? resourcePath : $"Sounds/{resourcePath}";
+                var handle = Addressables.LoadAssetAsync<AudioClip>(address);
+                clip = handle.WaitForCompletion();
+                
+                if (clip != null)
+                {
+                    audioClipCache[resourcePath] = clip;
+                    GameLogger.LogInfo($"AudioClip 캐싱 완료: {resourcePath}", GameLogger.LogCategory.Audio);
+                }
+                else
+                {
+                    GameLogger.LogWarning($"AudioClip을 찾을 수 없음: {address}", GameLogger.LogCategory.Audio);
+                }
             }
-            else
+            catch (System.Exception ex)
             {
-                GameLogger.LogWarning($"AudioClip을 찾을 수 없음: {resourcePath}", GameLogger.LogCategory.Audio);
+                GameLogger.LogError($"[AudioManager] AudioClip 로드 중 오류: {ex.Message}", GameLogger.LogCategory.Audio);
             }
 
             return clip;
@@ -437,6 +465,7 @@ namespace Game.CoreSystem.Audio
         /// <summary>
         /// 현재 재생 중인 BGM 이름 반환
         /// </summary>
+        /// <returns>BGM 이름 (재생 중이 아니면 "None")</returns>
         public string GetCurrentBGMName()
         {
             return currentBGM != null ? currentBGM.name : "None";
@@ -445,11 +474,13 @@ namespace Game.CoreSystem.Audio
         /// <summary>
         /// 현재 BGM 볼륨 반환
         /// </summary>
+        /// <returns>BGM 볼륨 (0.0 ~ 1.0)</returns>
         public float BGMVolume => bgmVolume;
         
         /// <summary>
         /// 현재 SFX 볼륨 반환
         /// </summary>
+        /// <returns>SFX 볼륨 (0.0 ~ 1.0)</returns>
         public float SFXVolume => sfxVolume;
 
         #region 전투 사운드
@@ -584,6 +615,7 @@ namespace Game.CoreSystem.Audio
         /// <summary>
         /// 오디오 풀 매니저 가져오기
         /// </summary>
+        /// <returns>오디오 풀 매니저 인스턴스</returns>
         public AudioPoolManager GetAudioPoolManager()
         {
             return audioPoolManager;
@@ -661,7 +693,7 @@ namespace Game.CoreSystem.Audio
         /// 씬별 BGM 레지스트리 추가
         /// </summary>
         /// <param name="sceneName">씬 이름</param>
-        /// <param name="resourcePath">Resources 폴더 내 경로</param>
+        /// <param name="resourcePath">Addressables 주소 경로 (예: "Sounds/BGM/MainMenu")</param>
         public void RegisterSceneBGM(string sceneName, string resourcePath)
         {
             if (string.IsNullOrEmpty(sceneName) || string.IsNullOrEmpty(resourcePath))
@@ -682,6 +714,7 @@ namespace Game.CoreSystem.Audio
         /// <summary>
         /// 시스템 초기화 수행
         /// </summary>
+        /// <returns>초기화 코루틴</returns>
         public IEnumerator Initialize()
         {
             GameLogger.LogInfo("AudioManager 초기화 시작", GameLogger.LogCategory.Audio);

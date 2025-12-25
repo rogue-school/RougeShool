@@ -948,20 +948,13 @@ namespace Game.CharacterSystem.UI
         /// </summary>
         private void FadeIn()
         {
-            if (fadeTween != null)
-            {
-                fadeTween.Kill();
-            }
-
             isVisible = true;
-            canvasGroup.interactable = true;
-            canvasGroup.blocksRaycasts = true;
-
-            fadeTween = canvasGroup.DOFade(1f, fadeInDuration)
-                .SetEase(fadeEase)
-                .OnComplete(() => {
-                    GameLogger.LogInfo("버프/디버프 툴팁 표시 완료", GameLogger.LogCategory.UI);
-                });
+            Game.UtilitySystem.UIAnimationHelper.FadeInWithCleanup(
+                ref fadeTween,
+                canvasGroup,
+                fadeInDuration,
+                fadeEase,
+                () => GameLogger.LogInfo("버프/디버프 툴팁 표시 완료", GameLogger.LogCategory.UI));
         }
 
         /// <summary>
@@ -969,18 +962,14 @@ namespace Game.CharacterSystem.UI
         /// </summary>
         private void FadeOut()
         {
-            if (fadeTween != null)
-            {
-                fadeTween.Kill();
-            }
-
             isVisible = false;
-            canvasGroup.interactable = false;
-            canvasGroup.blocksRaycasts = false;
-
-            fadeTween = canvasGroup.DOFade(0f, fadeOutDuration)
-                .SetEase(fadeEase)
-                .OnComplete(() => {
+            Game.UtilitySystem.UIAnimationHelper.FadeOutWithCleanup(
+                ref fadeTween,
+                canvasGroup,
+                fadeOutDuration,
+                fadeEase,
+                () =>
+                {
                     currentEffect = null;
                     GameLogger.LogInfo("버프/디버프 툴팁 숨김 완료", GameLogger.LogCategory.UI);
                 });
@@ -1005,11 +994,21 @@ namespace Game.CharacterSystem.UI
 
         #region Cleanup
 
+        private void OnDisable()
+        {
+            if (fadeTween != null)
+            {
+                fadeTween.Kill();
+                fadeTween = null;
+            }
+        }
+
         private void OnDestroy()
         {
             if (fadeTween != null)
             {
                 fadeTween.Kill();
+                fadeTween = null;
             }
         }
 

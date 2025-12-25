@@ -21,16 +21,19 @@ namespace Game.SkillCardSystem.Effect
 
         /// <summary>TurnManager 캐싱 (성능 최적화)</summary>
         private static Game.CombatSystem.Manager.TurnManager _cachedTurnManager;
+        private readonly Game.CombatSystem.Manager.TurnManager turnManager;
 
         /// <summary>
         /// 효과를 생성합니다.
         /// </summary>
         /// <param name="duration">지속 턴 수</param>
         /// <param name="icon">UI 아이콘</param>
-        protected OwnTurnEffectBase(int duration, Sprite icon = null)
+        /// <param name="turnManager">턴 매니저 (선택적)</param>
+        protected OwnTurnEffectBase(int duration, Sprite icon = null, Game.CombatSystem.Manager.TurnManager turnManager = null)
         {
             RemainingTurns = duration;
             Icon = icon;
+            this.turnManager = turnManager;
         }
 
         /// <summary>
@@ -42,18 +45,23 @@ namespace Game.SkillCardSystem.Effect
         {
             if (target == null) return;
 
-            // TurnManager 캐싱 (최초 1회만 검색)
-            if (_cachedTurnManager == null)
+            // TurnManager 사용 (주입받았으면 사용, 없으면 캐시 또는 찾기)
+            var tm = turnManager ?? _cachedTurnManager;
+            if (tm == null)
             {
-                _cachedTurnManager = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
+                tm = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
+                if (tm != null)
+                {
+                    _cachedTurnManager = tm; // 캐시
+                }
             }
 
-            if (_cachedTurnManager == null) return;
+            if (tm == null) return;
 
             // 자신의 턴에만 감소
             bool shouldDecrement = target.IsPlayerControlled()
-                ? _cachedTurnManager.IsPlayerTurn()
-                : _cachedTurnManager.IsEnemyTurn();
+                ? tm.IsPlayerTurn()
+                : tm.IsEnemyTurn();
 
             if (shouldDecrement)
             {

@@ -23,6 +23,8 @@ namespace Game.SkillCardSystem.Effect
         private readonly VFXManager vfxManager;
         private readonly string sourceEffectName;
 
+        private readonly Game.CoreSystem.Interface.IAudioManager audioManager;
+
         /// <summary>
         /// 출혈 효과 생성자
         /// </summary>
@@ -30,30 +32,11 @@ namespace Game.SkillCardSystem.Effect
         /// <param name="duration">지속 턴 수</param>
         /// <param name="icon">출혈 효과 아이콘</param>
         /// <param name="perTurnEffectPrefab">출혈 피해 발생 시 매 턴 재생할 이펙트 프리팹</param>
-        /// <param name="vfxManager">VFX 매니저 (선택적)</param>
+        /// <param name="perTurnSfxClip">출혈 피해 발생 시 매 턴 재생할 사운드 (선택적)</param>
         /// <param name="sourceEffectName">원본 효과 SO 이름 (툴팁 표시용)</param>
-        public BleedEffect(int amount, int duration, Sprite icon = null, GameObject perTurnEffectPrefab = null, VFXManager vfxManager = null, string sourceEffectName = null)
-        {
-            this.amount = amount;
-            this.remainingTurns = duration;
-            this.icon = icon;
-            this.perTurnEffectPrefab = perTurnEffectPrefab;
-            this.perTurnSfxClip = null;
-            this.vfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
-            this.sourceEffectName = sourceEffectName;
-        }
-
-        /// <summary>
-        /// 출혈 효과 생성자 (턴당 사운드 포함)
-        /// </summary>
-        /// <param name="amount">매 턴 입힐 피해량</param>
-        /// <param name="duration">지속 턴 수</param>
-        /// <param name="icon">출혈 효과 아이콘</param>
-        /// <param name="perTurnEffectPrefab">출혈 피해 발생 시 매 턴 재생할 이펙트 프리팹</param>
-        /// <param name="perTurnSfxClip">출혈 피해 발생 시 매 턴 재생할 사운드</param>
         /// <param name="vfxManager">VFX 매니저 (선택적)</param>
-        /// <param name="sourceEffectName">원본 효과 SO 이름 (툴팁 표시용)</param>
-        public BleedEffect(int amount, int duration, Sprite icon, GameObject perTurnEffectPrefab, AudioClip perTurnSfxClip, VFXManager vfxManager, string sourceEffectName = null)
+        /// <param name="audioManager">오디오 매니저 (선택적)</param>
+        public BleedEffect(int amount, int duration, Sprite icon = null, GameObject perTurnEffectPrefab = null, AudioClip perTurnSfxClip = null, string sourceEffectName = null, VFXManager vfxManager = null, Game.CoreSystem.Interface.IAudioManager audioManager = null)
         {
             this.amount = amount;
             this.remainingTurns = duration;
@@ -61,6 +44,7 @@ namespace Game.SkillCardSystem.Effect
             this.perTurnEffectPrefab = perTurnEffectPrefab;
             this.perTurnSfxClip = perTurnSfxClip;
             this.vfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
+            this.audioManager = audioManager;
             this.sourceEffectName = sourceEffectName;
         }
 
@@ -296,10 +280,10 @@ namespace Game.SkillCardSystem.Effect
                 return;
             }
 
-            var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
-            if (audioManager != null)
+            var am = audioManager ?? UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>() as Game.CoreSystem.Interface.IAudioManager;
+            if (am != null)
             {
-                audioManager.PlaySFXWithPool(perTurnSfxClip, 0.9f);
+                am.PlaySFXWithPool(perTurnSfxClip, 0.9f);
                 GameLogger.LogInfo($"[BleedEffect] 출혈 턴당 사운드 재생: {perTurnSfxClip.name}", GameLogger.LogCategory.SkillCard);
             }
             else

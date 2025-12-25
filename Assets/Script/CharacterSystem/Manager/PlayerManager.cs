@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using System.Linq;
 using Zenject;
 using Game.CharacterSystem.Interface;
 using Game.CharacterSystem.Core;
@@ -12,6 +13,8 @@ using Game.CoreSystem.Interface;
 using Game.CoreSystem.Manager;
 using Game.CoreSystem.Utility;
 using DG.Tweening;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace Game.CharacterSystem.Manager
 {
@@ -39,6 +42,9 @@ namespace Game.CharacterSystem.Manager
         private IPlayerHandManager handManager;
         private IGameStateManager gameStateManager;
         private PlayerCharacterData cachedSelectedCharacter;
+        
+        [Inject(Optional = true)]
+        private Game.SkillCardSystem.Service.SkillCardRegistry skillCardRegistry;
 
         // UI 컨트롤러 (선택적 의존성)
         private Game.CharacterSystem.UI.PlayerCharacterUIController playerCharacterUIController;
@@ -160,17 +166,15 @@ namespace Game.CharacterSystem.Manager
                 return gameStateManager;
             }
 
-            // 전역 객체에서 검색 (DontDestroyOnLoad 포함)
-            var found = UnityEngine.Object.FindFirstObjectByType<GameStateManager>(FindObjectsInactive.Include);
-            if (found != null)
+            // DI로 주입받은 gameStateManager가 없으면 null 반환
+            // FindFirstObjectByType 제거: DI로 주입받아야 하므로 fallback 제거
+            if (gameStateManager == null)
             {
-                gameStateManager = found; // 캐시
-                GameLogger.LogInfo("[PlayerManager] 전역에서 GameStateManager를 찾았습니다.", GameLogger.LogCategory.Character);
-                return gameStateManager;
+                GameLogger.LogWarning("[PlayerManager] GameStateManager가 DI로 주입되지 않았습니다. Installer에서 바인딩을 확인해주세요.", GameLogger.LogCategory.Character);
+                return null;
             }
 
-            GameLogger.LogWarning("GameStateManager를 찾지 못했습니다. 선택된 캐릭터를 가져올 수 없습니다.", GameLogger.LogCategory.Character);
-            return null;
+            return gameStateManager;
         }
 
         /// <summary>
@@ -199,15 +203,27 @@ namespace Game.CharacterSystem.Manager
                 if (!string.IsNullOrEmpty(typeStr) && System.Enum.TryParse<PlayerCharacterType>(typeStr, out var ct))
                 {
                     // 가능한 모든 PlayerCharacterData를 탐색하여 타입이 일치하는 첫 번째 자산을 선택
-                    var allDatas = Resources.LoadAll<PlayerCharacterData>(string.Empty);
-                    foreach (var d in allDatas)
+                    try
                     {
-                        if (d != null && d.CharacterType == ct)
+                        var handle = Addressables.LoadAssetsAsync<PlayerCharacterData>("CharacterData", null);
+                        var allDatas = handle.WaitForCompletion();
+                        foreach (var d in allDatas)
                         {
-                            cachedSelectedCharacter = d;
-                            GameLogger.LogInfo($"[PlayerManager] PlayerPrefs 폴백으로 캐릭터 복구: {d.DisplayName}", GameLogger.LogCategory.Character);
-                            return cachedSelectedCharacter;
+                            if (d != null && d.CharacterType == ct)
+                            {
+                                cachedSelectedCharacter = d;
+                                GameLogger.LogInfo($"[PlayerManager] PlayerPrefs 폴백으로 캐릭터 복구: {d.DisplayName}", GameLogger.LogCategory.Character);
+                                return cachedSelectedCharacter;
+                            }
                         }
+                    }
+                    catch (UnityEngine.AddressableAssets.InvalidKeyException ex)
+                    {
+                        GameLogger.LogError($"[PlayerManager] Addressables 키 오류: 'CharacterData' 키를 찾을 수 없습니다. Unity 에디터에서 Addressables Groups에 PlayerCharacterData 에셋들을 추가하고 'CharacterData' 라벨을 붙여주세요. 오류: {ex.Message}", GameLogger.LogCategory.Error);
+                    }
+                    catch (Exception loadEx)
+                    {
+                        GameLogger.LogWarning($"[PlayerManager] 캐릭터 데이터 로드 중 오류: {loadEx.Message}", GameLogger.LogCategory.Character);
                     }
                 }
             }
@@ -220,8 +236,9 @@ namespace Game.CharacterSystem.Manager
         }
 
         /// <summary>
-        /// 캐릭터 데이터를 캐시에 저장
+        /// 선택된 캐릭터 데이터를 캐시에 저장합니다
         /// </summary>
+        /// <param name="characterData">캐시할 플레이어 캐릭터 데이터</param>
         public void CacheSelectedCharacter(PlayerCharacterData characterData)
         {
             cachedSelectedCharacter = characterData;
@@ -416,8 +433,9 @@ namespace Game.CharacterSystem.Manager
         public override ICharacter GetCharacter() => currentCharacter;
 
         /// <summary>
-        /// 현재 플레이어 캐릭터를 반환합니다. (호환성 유지)
+        /// 현재 플레이어 캐릭터를 반환합니다 (호환성 유지)
         /// </summary>
+        /// <returns>현재 플레이어 캐릭터, 없으면 null</returns>
         public ICharacter GetPlayer() => currentCharacter;
 
         /// <summary>
@@ -433,14 +451,18 @@ namespace Game.CharacterSystem.Manager
         }
 
         /// <summary>
-        /// 지정 슬롯의 스킬 카드를 반환합니다.
+        /// 지정 슬롯의 스킬 카드를 반환합니다
         /// </summary>
+        /// <param name="pos">슬롯 위치</param>
+        /// <returns>해당 슬롯의 스킬 카드, 없으면 null</returns>
         public ISkillCard GetCardInSlot(SkillCardSlotPosition pos) =>
             handManager?.GetCardInSlot(pos);
 
         /// <summary>
-        /// 지정 슬롯의 카드 UI를 반환합니다.
+        /// 지정 슬롯의 카드 UI를 반환합니다
         /// </summary>
+        /// <param name="pos">슬롯 위치</param>
+        /// <returns>해당 슬롯의 카드 UI, 없으면 null</returns>
         public ISkillCardUI GetCardUIInSlot(SkillCardSlotPosition pos) =>
             handManager?.GetCardUIInSlot(pos);
 
@@ -463,18 +485,40 @@ namespace Game.CharacterSystem.Manager
 				Vector2 end = rt.anchoredPosition;
 				Vector2 start = new Vector2(fromLeft ? -1100f : 1100f, end.y);
 				rt.anchoredPosition = start;
-				return rt.DOAnchorPos(end, duration).SetEase(ease);
+				return rt.DOAnchorPos(end, duration)
+					.SetEase(ease)
+					.SetAutoKill(true);
 			}
 			else
 			{
 				Vector3 end = target.position;
 				Vector3 start = new Vector3(fromLeft ? -1100f : 1100f, end.y, end.z);
 				target.position = start;
-				return target.DOMove(end, duration).SetEase(ease);
+				return target.DOMove(end, duration)
+					.SetEase(ease)
+					.SetAutoKill(true);
 			}
 		}
 
 		#endregion
+
+        #region Cleanup
+
+        private void OnDisable()
+        {
+            // DOTween 애니메이션 정리
+            transform.DOKill();
+        }
+
+        protected override void OnDestroy()
+        {
+            // DOTween 애니메이션 정리
+            transform.DOKill();
+            
+            base.OnDestroy();
+        }
+
+        #endregion
 
         #region 초기화
 
@@ -570,7 +614,6 @@ namespace Game.CharacterSystem.Manager
         {
             try
             {
-                var skillCardRegistry = FindFirstObjectByType<Game.SkillCardSystem.Service.SkillCardRegistry>();
                 if (skillCardRegistry != null)
                 {
                     skillCardRegistry.ResetAllSkillCardStacks();

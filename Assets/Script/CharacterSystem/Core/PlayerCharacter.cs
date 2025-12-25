@@ -175,75 +175,13 @@ namespace Game.CharacterSystem.Core
         {
             if (data == null) return;
 
-            // Portrait 프리팹이 설정되어 있으면 인스턴스화
-            if (data.PortraitPrefab != null)
-            {
-                // Portrait 부모 Transform 찾기
-                Transform parent = portraitParent;
-                if (parent == null)
-                {
-                    // 기존 Portrait GameObject의 부모를 찾기
-                    var existingPortrait = transform.Find("Portrait");
-                    if (existingPortrait != null)
-                    {
-                        parent = existingPortrait.parent;
-                        // 기존 Portrait 비활성화 (프리팹으로 교체)
-                        existingPortrait.gameObject.SetActive(false);
-                    }
-                    else
-                    {
-                        // Portrait 부모를 찾을 수 없으면 캐릭터 Transform 사용
-                        parent = transform;
-                    }
-                }
-
-                // Portrait 프리팹 인스턴스화
-                GameObject portraitInstance = Instantiate(data.PortraitPrefab, parent);
-                portraitInstance.name = "Portrait";
-
-                // Portrait Image 컴포넌트 찾기
-                if (portraitImage == null)
-                {
-                    portraitImage = portraitInstance.GetComponentInChildren<Image>(true);
-                    if (portraitImage == null)
-                    {
-                        GameLogger.LogWarning("[PlayerCharacter] Portrait 프리팹에서 Image 컴포넌트를 찾을 수 없습니다.", GameLogger.LogCategory.Character);
-                    }
-                }
-
-                // HP Text Anchor 찾기 (Portrait 프리팹 내부에 있을 수 있음)
-                if (hpTextAnchor == null)
-                {
-                    // "HPTectAnchor" 또는 "HPTextAnchor" 이름으로 찾기
-                    var hpAnchor = portraitInstance.transform.Find("HPTectAnchor");
-                    if (hpAnchor == null)
-                    {
-                        hpAnchor = portraitInstance.transform.Find("HPTextAnchor");
-                    }
-                    if (hpAnchor != null)
-                    {
-                        hpTextAnchor = hpAnchor;
-                    }
-                }
-
-            }
-            else
-            {
-                // Portrait 프리팹이 없으면 기존 Portrait GameObject 사용
-                if (portraitImage == null)
-                {
-                    var existingPortrait = transform.Find("Portrait");
-                    if (existingPortrait != null)
-                    {
-                        portraitImage = existingPortrait.GetComponent<Image>();
-                    }
-                }
-
-                if (portraitImage == null)
-                {
-                    GameLogger.LogWarning("[PlayerCharacter] Portrait Image를 찾을 수 없습니다.", GameLogger.LogCategory.Character);
-                }
-            }
+            InitializePortraitCommon(
+                data.PortraitPrefab,
+                portraitParent,
+                ref portraitImage,
+                ref hpTextAnchor,
+                transform,
+                GetCharacterName());
         }
 
         #endregion
@@ -530,10 +468,6 @@ namespace Game.CharacterSystem.Core
             if (damageAmount <= 0) return;
 
             Camera mainCamera = Camera.main;
-            if (mainCamera == null)
-            {
-                mainCamera = UnityEngine.Object.FindFirstObjectByType<Camera>();
-            }
 
             if (mainCamera == null)
             {

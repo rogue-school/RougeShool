@@ -144,24 +144,27 @@ namespace Game.UISystem
         #region 유틸리티
 
         /// <summary>
-        /// 패널 상태를 확인합니다.
+        /// 패널 상태를 확인합니다
         /// </summary>
+        /// <returns>패널 A 활성화 여부</returns>
         public bool IsPanelAActive()
         {
             return panelA != null && panelA.activeInHierarchy;
         }
 
         /// <summary>
-        /// 패널 참조를 설정합니다.
+        /// 패널 참조를 설정합니다
         /// </summary>
+        /// <param name="panel">설정할 패널 GameObject</param>
         public void SetPanelA(GameObject panel)
         {
             panelA = panel;
         }
 
         /// <summary>
-        /// 비활성화할 패널을 설정합니다.
+        /// 비활성화할 패널을 설정합니다
         /// </summary>
+        /// <param name="panel">비활성화할 패널 GameObject</param>
         public void SetPanelToDisable(GameObject panel)
         {
             panelToDisable = panel;

@@ -31,8 +31,9 @@ namespace Game.CombatSystem.Interface
         IEnumerator AdvanceQueueAtTurnStartRoutine();
 
         /// <summary>
-        /// 4번 슬롯에 새로운 적 카드를 등록합니다.
+        /// 4번 슬롯에 새로운 적 카드를 등록합니다
         /// </summary>
+        /// <param name="card">등록할 적 카드</param>
         void RegisterEnemyCardInSlot4(ISkillCard card);
 
         /// <summary>

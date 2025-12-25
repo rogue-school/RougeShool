@@ -56,6 +56,7 @@ namespace Game.CoreSystem.Statistics
         [Inject(Optional = true)] private StageManager _stageManager;
         [Inject(Optional = true)] private Game.ItemSystem.Interface.IItemService _itemService;
         [Inject(Optional = true)] private IStatisticsManager _statisticsManager;
+        [Inject(Optional = true)] private CombatStatsAggregator _combatStatsAggregator;
 
         /// <summary>
         /// CombatStatsAggregator 캐시 (성능 최적화)
@@ -416,21 +417,17 @@ namespace Game.CoreSystem.Statistics
                 }
                 else
                 {
-                    // PlayerManager가 null이면 직접 찾기
-                    if (_playerManager == null)
+                    // PlayerManager는 DI로 주입받음
+                    if (_playerManager != null && _playerManager.GetPlayer() != null)
                     {
-                        _playerManager = FindFirstObjectByType<PlayerManager>(FindObjectsInactive.Include);
-                        if (_playerManager != null && _playerManager.GetPlayer() != null)
+                        var playerData = _playerManager.GetPlayer().CharacterData as Game.CharacterSystem.Data.PlayerCharacterData;
+                        if (playerData != null)
                         {
-                            var playerData = _playerManager.GetPlayer().CharacterData as Game.CharacterSystem.Data.PlayerCharacterData;
-                            if (playerData != null)
-                            {
-                                characterName = playerData.DisplayName ?? "Unknown";
-                            }
-                            else
-                            {
-                                characterName = _playerManager.GetPlayer().GetCharacterName();
-                            }
+                            characterName = playerData.DisplayName ?? "Unknown";
+                        }
+                        else
+                        {
+                            characterName = _playerManager.GetPlayer().GetCharacterName();
                         }
                     }
                 }
@@ -470,8 +467,7 @@ namespace Game.CoreSystem.Statistics
             }
             else
             {
-                // StageManager가 없으면 직접 찾기
-                _stageManager = FindFirstObjectByType<StageManager>(FindObjectsInactive.Include);
+                // StageManager는 DI로 주입받음
                 if (_stageManager != null)
                 {
                     _currentCombatStats.stageNumber = _stageManager.GetCurrentStageNumber();
@@ -517,33 +513,24 @@ namespace Game.CoreSystem.Statistics
             }
 
             // DI로 주입된 것이 있으면 사용
-            if (_combatStatsProvider != null && _combatStatsProvider is CombatStatsAggregator aggregator)
+            if (_combatStatsAggregator != null)
             {
-                _cachedCombatStatsAggregator = aggregator;
+                _cachedCombatStatsAggregator = _combatStatsAggregator;
+                _combatStatsProvider = _combatStatsAggregator;
                 GameLogger.LogInfo("[GameSessionStatistics] DI로 주입된 CombatStatsAggregator 캐시", GameLogger.LogCategory.Combat);
                 return;
             }
 
-            // 직접 찾기 시도 (여러 번 시도)
-            for (int attempt = 0; attempt < 3; attempt++)
+            // ICombatStatsProvider로 주입된 경우
+            if (_combatStatsProvider != null && _combatStatsProvider is CombatStatsAggregator aggregator)
             {
-                var found = FindFirstObjectByType<CombatStatsAggregator>(FindObjectsInactive.Include);
-                if (found != null)
-                {
-                    _cachedCombatStatsAggregator = found;
-                    _combatStatsProvider = found;
-                    GameLogger.LogInfo($"[GameSessionStatistics] CombatStatsAggregator 찾기 성공 (시도 {attempt + 1}회)", GameLogger.LogCategory.Combat);
-                    return;
-                }
-
-                // 다음 프레임까지 대기
-                if (attempt < 2)
-                {
-                    GameLogger.LogWarning($"[GameSessionStatistics] CombatStatsAggregator 찾기 실패 (시도 {attempt + 1}회) - 재시도 중...", GameLogger.LogCategory.Error);
-                }
+                _cachedCombatStatsAggregator = aggregator;
+                GameLogger.LogInfo("[GameSessionStatistics] DI로 주입된 CombatStatsAggregator 캐시 (ICombatStatsProvider)", GameLogger.LogCategory.Combat);
+                return;
             }
 
-            GameLogger.LogError("[GameSessionStatistics] CombatStatsAggregator를 찾을 수 없습니다. 통계 수집이 제한될 수 있습니다.", GameLogger.LogCategory.Error);
+            // DI로 주입되지 않은 경우 경고
+            GameLogger.LogWarning("[GameSessionStatistics] CombatStatsAggregator가 주입되지 않았습니다. 통계 수집이 제한될 수 있습니다.", GameLogger.LogCategory.Error);
         }
 
         /// <summary>

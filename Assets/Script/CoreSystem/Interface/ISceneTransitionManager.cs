@@ -25,31 +25,40 @@ namespace Game.CoreSystem.Interface
         /// <summary>
         /// 메인 씬으로 전환
         /// </summary>
+        /// <returns>전환 작업</returns>
         Task TransitionToMainScene();
         
         /// <summary>
         /// 전투 씬으로 전환
         /// </summary>
+        /// <returns>전환 작업</returns>
         Task TransitionToBattleScene();
         
         /// <summary>
         /// 스테이지 씬으로 전환
         /// </summary>
+        /// <returns>전환 작업</returns>
         Task TransitionToStageScene();
         
         /// <summary>
         /// 코어 씬으로 전환
         /// </summary>
+        /// <returns>전환 작업</returns>
         Task TransitionToCoreScene();
         
         /// <summary>
         /// 지정된 씬으로 전환
         /// </summary>
+        /// <param name="sceneName">전환할 씬 이름</param>
+        /// <returns>전환 작업</returns>
         Task TransitionToScene(string sceneName);
         
         /// <summary>
         /// 지정된 씬으로 전환 (전환 타입 지정)
         /// </summary>
+        /// <param name="sceneName">전환할 씬 이름</param>
+        /// <param name="transitionType">전환 효과 타입</param>
+        /// <returns>전환 작업</returns>
         Task TransitionToScene(string sceneName, TransitionType transitionType);
     }
     

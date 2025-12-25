@@ -20,6 +20,7 @@ namespace Game.SkillCardSystem.Effect
         private readonly GameObject visualEffectPrefab;
         private readonly GameObject perTurnEffectPrefab;
         private readonly VFXManager vfxManager;
+        private readonly Game.CoreSystem.Interface.IAudioManager audioManager;
 
         /// <summary>
         /// 출혈 커맨드를 초기화합니다.
@@ -44,6 +45,35 @@ namespace Game.SkillCardSystem.Effect
             this.visualEffectPrefab = visualEffectPrefab;
             this.perTurnEffectPrefab = perTurnEffectPrefab;
             this.vfxManager = vfxManager;
+            this.audioManager = null;
+        }
+
+        /// <summary>
+        /// 출혈 커맨드 생성자 (의존성 포함)
+        /// </summary>
+        /// <param name="amount">매 턴 입힐 피해량</param>
+        /// <param name="duration">지속 턴 수</param>
+        /// <param name="icon">출혈 효과 아이콘</param>
+        /// <param name="visualEffectPrefab">출혈 적용 시 재생할 이펙트 프리팹</param>
+        /// <param name="perTurnEffectPrefab">출혈 피해 발생 시 매 턴 재생할 이펙트 프리팹</param>
+        /// <param name="vfxManager">VFX 매니저 (선택적)</param>
+        /// <param name="audioManager">오디오 매니저 (선택적)</param>
+        public BleedEffectCommand(
+            int amount, 
+            int duration, 
+            Sprite icon, 
+            GameObject visualEffectPrefab,
+            GameObject perTurnEffectPrefab,
+            VFXManager vfxManager,
+            Game.CoreSystem.Interface.IAudioManager audioManager)
+        {
+            this.amount = amount;
+            this.duration = duration;
+            this.icon = icon;
+            this.visualEffectPrefab = visualEffectPrefab;
+            this.perTurnEffectPrefab = perTurnEffectPrefab;
+            this.vfxManager = vfxManager;
+            this.audioManager = audioManager;
         }
 
         /// <summary>
@@ -71,7 +101,7 @@ namespace Game.SkillCardSystem.Effect
             string sourceEffectName = GetSourceEffectName(context);
             
             // 출혈 효과 생성 (perTurnEffectPrefab 및 perTurnSfxClip 전달)
-            var bleedEffect = new BleedEffect(amount, duration, icon, perTurnEffectPrefab, perTurnSfxClip, vfxManager, sourceEffectName);
+            var bleedEffect = new BleedEffect(amount, duration, icon, perTurnEffectPrefab, perTurnSfxClip, sourceEffectName, vfxManager, audioManager);
             
             // 가드 상태 확인하여 상태이상 효과 등록
             if (context.Target.RegisterStatusEffect(bleedEffect))
@@ -115,6 +145,7 @@ namespace Game.SkillCardSystem.Effect
             }
 
             // VFXManager를 통한 이펙트 생성 (RectTransform 중심, UI 기반, 정확한 위치 지정)
+            // Fallback으로 FindFirstObjectByType 사용 (의존성 주입 실패 시 대비)
             var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
             if (finalVfxManager != null)
             {
@@ -345,10 +376,11 @@ namespace Game.SkillCardSystem.Effect
             // 가드 차단 사운드 재생
             if (guardBuff.BlockSfxClip != null)
             {
-                var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
-                if (audioManager != null)
+                // Fallback으로 FindFirstObjectByType 사용 (의존성 주입 실패 시 대비)
+                var am = audioManager ?? UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>() as Game.CoreSystem.Interface.IAudioManager;
+                if (am != null)
                 {
-                    audioManager.PlaySFXWithPool(guardBuff.BlockSfxClip, 0.9f);
+                    am.PlaySFXWithPool(guardBuff.BlockSfxClip, 0.9f);
                     GameLogger.LogInfo($"[BleedEffectCommand] 가드 차단 사운드 재생: {guardBuff.BlockSfxClip.name}", GameLogger.LogCategory.SkillCard);
                 }
             }

@@ -28,6 +28,7 @@ namespace Game.ItemSystem.Effect
 
         /// <summary>TurnManager 캐싱 (성능 최적화)</summary>
         private static Game.CombatSystem.Manager.TurnManager _cachedTurnManager;
+        private readonly Game.CombatSystem.Manager.TurnManager turnManager;
 
         /// <summary>
         /// 효과를 생성합니다.
@@ -36,12 +37,14 @@ namespace Game.ItemSystem.Effect
         /// <param name="turnPolicy">턴 감소 정책</param>
         /// <param name="icon">UI 아이콘</param>
         /// <param name="sourceItemName">원본 아이템 이름 (선택적)</param>
-        protected ItemEffectBase(int duration, ItemEffectTurnPolicy turnPolicy, Sprite icon = null, string sourceItemName = null)
+        /// <param name="turnManager">턴 매니저 (선택적)</param>
+        protected ItemEffectBase(int duration, ItemEffectTurnPolicy turnPolicy, Sprite icon = null, string sourceItemName = null, Game.CombatSystem.Manager.TurnManager turnManager = null)
         {
             RemainingTurns = duration;
             TurnPolicy = turnPolicy;
             Icon = icon;
             SourceItemName = sourceItemName;
+            this.turnManager = turnManager;
         }
 
         /// <summary>
@@ -53,20 +56,25 @@ namespace Game.ItemSystem.Effect
         {
             if (target == null) return;
 
-            // TurnManager 캐싱 (최초 1회만 검색)
-            if (_cachedTurnManager == null)
+            // TurnManager 사용 (주입받았으면 사용, 없으면 캐시 또는 찾기)
+            var tm = turnManager ?? _cachedTurnManager;
+            if (tm == null)
             {
-                _cachedTurnManager = Object.FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
+                tm = Object.FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
+                if (tm != null)
+                {
+                    _cachedTurnManager = tm; // 캐시
+                }
             }
 
-            if (_cachedTurnManager == null)
+            if (tm == null)
             {
                 GameLogger.LogWarning($"[{GetType().Name}] TurnManager를 찾을 수 없습니다", GameLogger.LogCategory.Core);
                 return;
             }
 
             // 정책에 따라 턴 감소 여부 결정
-            bool shouldDecrement = ShouldDecrementThisTurn(target, _cachedTurnManager);
+            bool shouldDecrement = ShouldDecrementThisTurn(target, tm);
 
             if (shouldDecrement)
             {

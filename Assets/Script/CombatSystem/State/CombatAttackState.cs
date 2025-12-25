@@ -30,6 +30,9 @@ namespace Game.CombatSystem.State
             // TurnManager가 슬롯 전진/생성/자동 실행을 처리합니다.
         }
 
+        /// <summary>
+        /// 상태 실행 중 특별한 작업 없음
+        /// </summary>
         public void ExecuteState() { }
 
         public void ExitState()

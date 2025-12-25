@@ -271,14 +271,13 @@ namespace Game.CombatSystem.State
             LogStateTransition("소환/복귀 트리거 즉시 체크 시작");
 
             // StageManager에서 소환 플래그 직접 확인
-            var stageManager = UnityEngine.Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
-            if (stageManager != null && stageManager.IsSummonedEnemyActive())
+            if (context.StageManager != null && context.StageManager.IsSummonedEnemyActive())
             {
                 LogStateTransition("소환 트리거 감지 - 즉시 SummonState로 전환");
                 
                 // 소환 데이터 가져오기
-                var summonData = stageManager.GetSummonTarget();
-                var originalHP = stageManager.GetOriginalEnemyHP();
+                var summonData = context.StageManager.GetSummonTarget();
+                var originalHP = context.StageManager.GetOriginalEnemyHP();
 
                 if (summonData != null)
                 {

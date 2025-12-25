@@ -16,10 +16,14 @@ namespace Game.CoreSystem.Manager
         [Header("선택된 캐릭터")]
         [SerializeField] private PlayerCharacterData selectedCharacterData;
         
-        // 초기화 상태
+        /// <summary>
+        /// 초기화 완료 여부
+        /// </summary>
         public bool IsInitialized { get; private set; } = false;
         
-        // 이벤트
+        /// <summary>
+        /// 캐릭터가 선택되었을 때 발생하는 이벤트 (선택된 캐릭터 데이터)
+        /// </summary>
         public System.Action<PlayerCharacterData> OnCharacterSelected { get; set; }
         
         // 의존성 주입
@@ -32,7 +36,7 @@ namespace Game.CoreSystem.Manager
         }
         
         /// <summary>
-        /// 선택된 캐릭터 데이터 반환
+        /// 선택된 캐릭터 데이터를 반환합니다
         /// </summary>
         public PlayerCharacterData SelectedCharacter => selectedCharacterData;
         
@@ -141,7 +145,7 @@ namespace Game.CoreSystem.Manager
         }
         
         /// <summary>
-        /// 선택 초기화
+        /// 선택을 초기화합니다
         /// </summary>
         public void ClearSelection()
         {
@@ -150,7 +154,7 @@ namespace Game.CoreSystem.Manager
         }
         
         /// <summary>
-        /// 캐릭터 선택 가능 여부 확인
+        /// 캐릭터 선택 가능 여부를 확인합니다
         /// </summary>
         /// <param name="characterData">선택할 캐릭터 데이터</param>
         /// <returns>선택 가능 여부</returns>
@@ -162,8 +166,9 @@ namespace Game.CoreSystem.Manager
         #region ICoreSystemInitializable 구현
         
         /// <summary>
-        /// 코어 시스템 초기화
+        /// 코어 시스템을 초기화합니다
         /// </summary>
+        /// <returns>초기화 코루틴</returns>
         public System.Collections.IEnumerator Initialize()
         {
             GameLogger.LogInfo("PlayerCharacterSelectionManager 초기화 시작", GameLogger.LogCategory.UI);

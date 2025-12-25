@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Linq;
 using DG.Tweening;
 using Game.CoreSystem.Interface;
 using Game.CoreSystem.UI;
@@ -14,6 +15,7 @@ using Game.CoreSystem.Utility;
  using Game.SkillCardSystem.Deck;
 using Game.SkillCardSystem.Factory;
 using Game.SkillCardSystem.UI;
+using Game.UtilitySystem;
 using Zenject;
 
 namespace Game.UISystem
@@ -30,6 +32,8 @@ namespace Game.UISystem
         [Inject] private IPlayerCharacterSelectionManager playerCharacterSelectionManager;
         [Inject(Optional = true)] private ISceneTransitionManager sceneTransitionManager;
         [Inject(Optional = true)] private Game.CoreSystem.Audio.AudioManager audioManager;
+        [Inject(Optional = true)] private Game.CombatSystem.UI.GameOverUI gameOverUI;
+        [Inject(Optional = true)] private Game.CombatSystem.UI.VictoryUI victoryUI;
 
         // 선택 캐릭터 공유 SO 제거됨
 
@@ -387,14 +391,34 @@ namespace Game.UISystem
         /// <summary>
         /// 캐릭터 데이터 로드
         /// </summary>
+        /// <remarks>
+        /// Addressables에서 "CharacterData" 라벨로 PlayerCharacterData 에셋들을 로드합니다.
+        /// Unity 에디터에서 Addressables Groups에 PlayerCharacterData 에셋들을 추가하고
+        /// "CharacterData" 라벨을 붙여야 합니다.
+        /// </remarks>
         private void LoadCharacterData()
         {
-            availableCharacters = Resources.LoadAll<PlayerCharacterData>("CharacterData");
-            
-            if (availableCharacters == null || availableCharacters.Length == 0)
+            try
             {
-                GameLogger.LogWarning("[MainMenuController] 캐릭터 데이터를 찾을 수 없습니다!", GameLogger.LogCategory.Error);
-                return;
+                var handle = UnityEngine.AddressableAssets.Addressables.LoadAssetsAsync<PlayerCharacterData>("CharacterData", null);
+                var result = handle.WaitForCompletion();
+                availableCharacters = result != null ? result.ToArray() : new PlayerCharacterData[0];
+                
+                if (availableCharacters == null || availableCharacters.Length == 0)
+                {
+                    GameLogger.LogWarning("[MainMenuController] 캐릭터 데이터를 찾을 수 없습니다! Addressables에 'CharacterData' 라벨이 붙은 PlayerCharacterData 에셋이 있는지 확인해주세요.", GameLogger.LogCategory.Error);
+                    return;
+                }
+            }
+            catch (UnityEngine.AddressableAssets.InvalidKeyException ex)
+            {
+                GameLogger.LogError($"[MainMenuController] Addressables 키 오류: 'CharacterData' 키를 찾을 수 없습니다. Unity 에디터에서 Addressables Groups에 PlayerCharacterData 에셋들을 추가하고 'CharacterData' 라벨을 붙여주세요. 오류: {ex.Message}", GameLogger.LogCategory.Error);
+                availableCharacters = new PlayerCharacterData[0];
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogError($"[MainMenuController] 캐릭터 데이터 로드 중 오류: {ex.Message}", GameLogger.LogCategory.Error);
+                availableCharacters = new PlayerCharacterData[0];
             }
         }
         
@@ -461,7 +485,41 @@ namespace Game.UISystem
             {
                 cardButton = cardObject.GetComponentInChildren<Button>(true);
             }
-            var characterImage = cardObject.GetComponentInChildren<Image>();
+            
+            // Image 컴포넌트 찾기 (여러 개가 있을 수 있으므로 더 정확하게 찾기)
+            Image characterImage = null;
+            
+            // 방법 1: 특정 이름으로 찾기 (CharacterImage, Portrait 등)
+            var allImages = cardObject.GetComponentsInChildren<Image>(true);
+            foreach (var img in allImages)
+            {
+                // Button의 Image는 제외 (배경용)
+                if (img.GetComponent<Button>() != null)
+                    continue;
+                    
+                // 이름으로 필터링 (캐릭터 이미지일 가능성이 높은 것)
+                string imgName = img.name.ToLower();
+                if (imgName.Contains("character") || imgName.Contains("portrait") || 
+                    imgName.Contains("face") || imgName.Contains("avatar"))
+                {
+                    characterImage = img;
+                    break;
+                }
+            }
+            
+            // 방법 2: 특정 이름으로 못 찾았으면, Button이 아닌 첫 번째 Image 사용
+            if (characterImage == null)
+            {
+                foreach (var img in allImages)
+                {
+                    if (img.GetComponent<Button>() == null)
+                    {
+                        characterImage = img;
+                        break;
+                    }
+                }
+            }
+            
             var characterNameText = cardObject.GetComponentInChildren<TextMeshProUGUI>();
             
             // 이벤트 연결
@@ -485,11 +543,16 @@ namespace Game.UISystem
                 if (portraitSprite != null)
                 {
                     characterImage.sprite = portraitSprite;
+                    GameLogger.LogInfo($"[MainMenuController] 캐릭터 이미지 설정 완료: {characterData.DisplayName} → {characterImage.name}", GameLogger.LogCategory.UI);
                 }
                 else
                 {
-                    GameLogger.LogWarning($"[MainMenuController] 캐릭터 이미지를 찾을 수 없습니다: {characterData.DisplayName}", GameLogger.LogCategory.UI);
+                    GameLogger.LogWarning($"[MainMenuController] 캐릭터 이미지를 찾을 수 없습니다: {characterData.DisplayName} (PortraitPrefab: {characterData.PortraitPrefab?.name ?? "null"}, PlayerUIPortrait: {characterData.PlayerUIPortrait?.name ?? "null"})", GameLogger.LogCategory.UI);
                 }
+            }
+            else
+            {
+                GameLogger.LogWarning($"[MainMenuController] 캐릭터 카드에서 Image 컴포넌트를 찾을 수 없습니다. 카드 오브젝트: {cardObject.name}", GameLogger.LogCategory.UI);
             }
             
             if (characterNameText != null)
@@ -656,9 +719,9 @@ namespace Game.UISystem
             
             if (mainMenuCanvasGroup != null)
             {
+                // Sequence 패턴이므로 UIAnimationHelper를 Sequence 내부에서 사용
                 Sequence fadeSequence = DOTween.Sequence()
-                    .Append(mainMenuCanvasGroup.DOFade(0f, 0.5f)
-                        .SetEase(Ease.InQuad))
+                    .Append(UIAnimationHelper.FadeOut(mainMenuCanvasGroup, 0.5f, Ease.InQuad, null, true))
                     .AppendCallback(() =>
                     {
                         if (mainMenuPanel != null)
@@ -666,8 +729,7 @@ namespace Game.UISystem
                         
                         creditsCanvasGroup.blocksRaycasts = true;
                     })
-                    .Append(creditsCanvasGroup.DOFade(1f, 0.5f)
-                        .SetEase(Ease.OutQuad))
+                    .Append(UIAnimationHelper.FadeIn(creditsCanvasGroup, 0.5f, Ease.OutQuad, null, true))
                     .SetAutoKill(true)
                     .OnComplete(() => creditsPanelTween = null);
                 
@@ -678,11 +740,12 @@ namespace Game.UISystem
                 if (mainMenuPanel != null)
                     mainMenuPanel.SetActive(false);
                 
-                creditsCanvasGroup.blocksRaycasts = true;
-                creditsPanelTween = creditsCanvasGroup.DOFade(1f, 0.5f)
-                    .SetEase(Ease.OutQuad)
-                    .SetAutoKill(true)
-                    .OnComplete(() => creditsPanelTween = null);
+                creditsPanelTween = UIAnimationHelper.FadeIn(
+                    creditsCanvasGroup,
+                    0.5f,
+                    Ease.OutQuad,
+                    () => creditsPanelTween = null,
+                    true);
             }
         }
         
@@ -702,9 +765,9 @@ namespace Game.UISystem
             
             if (mainMenuCanvasGroup != null)
             {
+                // Sequence 패턴이므로 UIAnimationHelper를 Sequence 내부에서 사용
                 Sequence fadeSequence = DOTween.Sequence()
-                    .Append(creditsCanvasGroup.DOFade(0f, 0.5f)
-                        .SetEase(Ease.InQuad))
+                    .Append(UIAnimationHelper.FadeOut(creditsCanvasGroup, 0.5f, Ease.InQuad, null, true))
                     .AppendCallback(() =>
                     {
                         creditsPanel.SetActive(false);
@@ -712,8 +775,7 @@ namespace Game.UISystem
                         if (mainMenuPanel != null)
                             mainMenuPanel.SetActive(true);
                     })
-                    .Append(mainMenuCanvasGroup.DOFade(1f, 0.5f)
-                        .SetEase(Ease.OutQuad))
+                    .Append(UIAnimationHelper.FadeIn(mainMenuCanvasGroup, 0.5f, Ease.OutQuad, null, true))
                     .SetAutoKill(true)
                     .OnComplete(() =>
                     {
@@ -854,7 +916,7 @@ namespace Game.UISystem
                 // 게임 시작 전 잔존할 수 있는 게임 오버 UI를 확실히 초기화
                 try
                 {
-                    var gameOverUI = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.UI.GameOverUI>(FindObjectsInactive.Include);
+                    // gameOverUI는 DI로 주입받음
                     if (gameOverUI != null)
                     {
                         gameOverUI.HideGameOver();
@@ -869,7 +931,6 @@ namespace Game.UISystem
                 // 게임 시작 전 잔존할 수 있는 승리 UI를 확실히 초기화
                 try
                 {
-                    var victoryUI = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.UI.VictoryUI>(FindObjectsInactive.Include);
                     if (victoryUI != null)
                     {
                         victoryUI.Hide();
@@ -881,19 +942,17 @@ namespace Game.UISystem
                     GameLogger.LogWarning($"[MainMenuController] VictoryUI 초기화 중 경고: {ex.Message}", GameLogger.LogCategory.UI);
                 }
 
-                // 스테이지 씬으로 전환 (DI 주입 또는 직접 찾기)
+                // 스테이지 씬으로 전환 (DI 주입)
                 ISceneTransitionManager transitionManager = sceneTransitionManager;
                 
+                // DI로 주입받지 못한 경우 전역에서 찾기 (fallback)
                 if (transitionManager == null)
                 {
-                    GameLogger.LogWarning("[MainMenuController] DI 주입된 SceneTransitionManager가 null입니다. 직접 찾아서 사용합니다.", GameLogger.LogCategory.UI);
-                    
-                    // 직접 찾아서 사용
-                    var foundTransitionManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Manager.SceneTransitionManager>();
-                    if (foundTransitionManager != null)
+                    GameLogger.LogWarning("[MainMenuController] DI 주입된 SceneTransitionManager가 null입니다. 전역에서 찾는 중...", GameLogger.LogCategory.UI);
+                    transitionManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Manager.SceneTransitionManager>(UnityEngine.FindObjectsInactive.Include);
+                    if (transitionManager != null)
                     {
-                        transitionManager = foundTransitionManager;
-                        GameLogger.LogInfo($"[MainMenuController] SceneTransitionManager를 직접 찾았습니다. 이름: {foundTransitionManager.name}", GameLogger.LogCategory.UI);
+                        GameLogger.LogInfo("[MainMenuController] SceneTransitionManager를 전역에서 찾았습니다.", GameLogger.LogCategory.UI);
                     }
                 }
                 
@@ -1138,23 +1197,25 @@ namespace Game.UISystem
                 messagePanel.SetActive(true);
                 if (messageCanvasGroup != null)
                 {
-                    messageCanvasGroup.alpha = 0f;
-                    messageCanvasGroup.blocksRaycasts = true;
-                    
-                    messageTween = messageCanvasGroup.DOFade(1f, 0.3f)
-                        .SetEase(Ease.OutQuad)
-                        .OnComplete(() =>
+                    messageTween = UIAnimationHelper.FadeIn(
+                        messageCanvasGroup,
+                        0.3f,
+                        Ease.OutQuad,
+                        () =>
                         {
-                            messageTween = messageCanvasGroup.DOFade(0f, 0.3f)
-                                .SetDelay(2f)
-                                .SetEase(Ease.InQuad)
-                                .OnComplete(() =>
+                            messageTween = UIAnimationHelper.FadeOut(
+                                messageCanvasGroup,
+                                0.3f,
+                                Ease.InQuad,
+                                () =>
                                 {
                                     messagePanel.SetActive(false);
-                                    messageCanvasGroup.blocksRaycasts = false;
                                     messageTween = null;
-                                });
-                        });
+                                },
+                                true)
+                                .SetDelay(2f);
+                        },
+                        true);
                 }
             }
             else if (messageText != null)
@@ -1164,36 +1225,41 @@ namespace Game.UISystem
                 
                 if (messageCanvasGroup != null)
                 {
-                    messageCanvasGroup.alpha = 0f;
-                    messageCanvasGroup.blocksRaycasts = true;
-                    
-                    messageTween = messageCanvasGroup.DOFade(1f, 0.3f)
-                        .SetEase(Ease.OutQuad)
-                        .OnComplete(() =>
+                    messageTween = UIAnimationHelper.FadeIn(
+                        messageCanvasGroup,
+                        0.3f,
+                        Ease.OutQuad,
+                        () =>
                         {
-                            messageTween = messageCanvasGroup.DOFade(0f, 0.3f)
-                                .SetDelay(2f)
-                                .SetEase(Ease.InQuad)
-                                .OnComplete(() =>
+                            messageTween = UIAnimationHelper.FadeOut(
+                                messageCanvasGroup,
+                                0.3f,
+                                Ease.InQuad,
+                                () =>
                                 {
                                     messageText.gameObject.SetActive(false);
-                                    messageCanvasGroup.blocksRaycasts = false;
                                     messageTween = null;
-                                });
-                        });
+                                },
+                                true)
+                                .SetDelay(2f);
+                        },
+                        true);
                 }
                 else
                 {
+                    // TextMeshPro는 UIAnimationHelper를 사용할 수 없으므로 기존 방식 유지
                     var textColor = messageText.color;
                     messageText.color = new Color(textColor.r, textColor.g, textColor.b, 0f);
                     
                     messageTween = messageText.DOFade(1f, 0.3f)
                         .SetEase(Ease.OutQuad)
+                        .SetAutoKill(true)
                         .OnComplete(() =>
                         {
                             messageTween = messageText.DOFade(0f, 0.3f)
                                 .SetDelay(2f)
                                 .SetEase(Ease.InQuad)
+                                .SetAutoKill(true)
                                 .OnComplete(() =>
                                 {
                                     messageText.gameObject.SetActive(false);

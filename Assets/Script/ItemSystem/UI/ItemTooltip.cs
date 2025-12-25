@@ -50,6 +50,7 @@ namespace Game.ItemSystem.UI
         private bool isRewardPanelContext = false; // 보상창 컨텍스트인지 여부
         private RectTransform rectTransform;
         private CanvasGroup canvasGroup;
+        private Tween fadeTween;
 
         #endregion
 
@@ -95,8 +96,11 @@ namespace Game.ItemSystem.UI
             UpdateTooltipContent();
             
             // 페이드 인 애니메이션
-            canvasGroup.blocksRaycasts = true;
-            canvasGroup.DOFade(1f, fadeInDuration).SetEase(fadeEase);
+            Game.UtilitySystem.UIAnimationHelper.FadeInWithCleanup(
+                ref fadeTween,
+                canvasGroup,
+                fadeInDuration,
+                fadeEase);
             
             GameLogger.LogInfo($"[ItemTooltip] 툴팁 표시: {item.DisplayName}", GameLogger.LogCategory.UI);
         }
@@ -125,8 +129,11 @@ namespace Game.ItemSystem.UI
             UpdatePassiveItemTooltipContent();
             
             // 페이드 인 애니메이션
-            canvasGroup.blocksRaycasts = true;
-            canvasGroup.DOFade(1f, fadeInDuration).SetEase(fadeEase);
+            Game.UtilitySystem.UIAnimationHelper.FadeInWithCleanup(
+                ref fadeTween,
+                canvasGroup,
+                fadeInDuration,
+                fadeEase);
             
             GameLogger.LogInfo($"[ItemTooltip] 패시브 아이템 툴팁 표시: {item.DisplayName}, 강화 단계: {currentEnhancementLevel}, 보상창: {isRewardPanel}", GameLogger.LogCategory.UI);
         }
@@ -152,10 +159,12 @@ namespace Game.ItemSystem.UI
         {
             if (gameObject == null) return;
 
-            canvasGroup.blocksRaycasts = false;
-            canvasGroup.DOFade(0f, fadeOutDuration)
-                .SetEase(fadeEase)
-                .OnComplete(() =>
+            Game.UtilitySystem.UIAnimationHelper.FadeOutWithCleanup(
+                ref fadeTween,
+                canvasGroup,
+                fadeOutDuration,
+                fadeEase,
+                () =>
                 {
                     if (gameObject != null)
                     {
@@ -459,9 +468,9 @@ namespace Game.ItemSystem.UI
         {
             if (effectConfig.useCustomSettings && effectConfig.customSettings is Game.ItemSystem.Data.AttackBuffEffectCustomSettings buffSettings)
             {
-                return $"공격력을 {buffSettings.buffAmount}만큼 {buffSettings.duration}턴 동안 증가시킵니다.";
+                return $"피해를 {buffSettings.buffAmount}만큼 {buffSettings.duration}턴 동안 증가시킵니다.";
             }
-            return "공격력을 증가시킵니다.";
+            return "피해를 증가시킵니다.";
         }
 
         /// <summary>
@@ -482,11 +491,21 @@ namespace Game.ItemSystem.UI
 
         #region Cleanup
 
+        private void OnDisable()
+        {
+            if (fadeTween != null)
+            {
+                fadeTween.Kill();
+                fadeTween = null;
+            }
+        }
+
         private void OnDestroy()
         {
-            if (canvasGroup != null)
+            if (fadeTween != null)
             {
-                canvasGroup.DOKill();
+                fadeTween.Kill();
+                fadeTween = null;
             }
         }
 

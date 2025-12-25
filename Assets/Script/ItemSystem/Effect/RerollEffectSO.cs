@@ -29,7 +29,8 @@ namespace Game.ItemSystem.Effect
         {
             var vfxManager = UnityEngine.Object.FindFirstObjectByType<VFXManager>();
             var audioManager = UnityEngine.Object.FindFirstObjectByType<AudioManager>();
-            return new RerollEffectCommand(rerollCount + power, sfxClip, visualEffectPrefab, vfxManager, audioManager);
+            var playerManager = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
+            return new RerollEffectCommand(rerollCount + power, sfxClip, visualEffectPrefab, vfxManager, audioManager, playerManager);
         }
 
         /// <summary>
@@ -39,14 +40,15 @@ namespace Game.ItemSystem.Effect
         {
             var vfxManager = UnityEngine.Object.FindFirstObjectByType<VFXManager>();
             var audioManager = UnityEngine.Object.FindFirstObjectByType<AudioManager>();
+            var playerManager = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
             if (customSettings == null)
             {
-                return new RerollEffectCommand(rerollCount, sfxClip, visualEffectPrefab, vfxManager, audioManager);
+                return new RerollEffectCommand(rerollCount, sfxClip, visualEffectPrefab, vfxManager, audioManager, playerManager);
             }
 
             AudioClip finalSfxClip = customSettings.sfxClip ?? sfxClip;
             GameObject finalVisualEffectPrefab = customSettings.visualEffectPrefab ?? visualEffectPrefab;
-            return new RerollEffectCommand(rerollCount, finalSfxClip, finalVisualEffectPrefab, vfxManager, audioManager);
+            return new RerollEffectCommand(rerollCount, finalSfxClip, finalVisualEffectPrefab, vfxManager, audioManager, playerManager);
         }
 
         public override void ApplyEffect(IItemUseContext context, int value)

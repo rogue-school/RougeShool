@@ -80,5 +80,15 @@ namespace Game.StageSystem.Interface
         /// EnemyDefeatedState의 정리 작업이 완료되었을 때 호출되는 메서드
         /// </summary>
         void OnEnemyDefeatedCleanupCompleted();
+
+        /// <summary>
+        /// 스테이지 BGM을 정리합니다.
+        /// </summary>
+        void CleanupStageBGM();
+
+        /// <summary>
+        /// 씬 전환 전 진행 상황을 저장합니다.
+        /// </summary>
+        System.Threading.Tasks.Task SaveProgressBeforeSceneTransition();
     }
 }

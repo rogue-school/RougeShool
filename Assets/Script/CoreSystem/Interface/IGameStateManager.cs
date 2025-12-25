@@ -26,11 +26,13 @@ namespace Game.CoreSystem.Interface
         /// <summary>
         /// 게임 상태 변경
         /// </summary>
+        /// <param name="newState">새로운 게임 상태</param>
         void ChangeGameState(GameState newState);
         
         /// <summary>
         /// 캐릭터 선택
         /// </summary>
+        /// <param name="characterData">선택할 캐릭터 데이터</param>
         void SelectCharacter(PlayerCharacterData characterData);
         
         /// <summary>
@@ -46,6 +48,7 @@ namespace Game.CoreSystem.Interface
         /// <summary>
         /// 진행 초기화
         /// </summary>
+        /// <returns>초기화 작업</returns>
         Task ResetProgress();
         
         /// <summary>

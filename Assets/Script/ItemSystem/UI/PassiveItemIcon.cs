@@ -6,6 +6,7 @@ using DG.Tweening;
 using Game.CoreSystem.Utility;
 using Game.ItemSystem.Data;
 using Game.ItemSystem.Manager;
+using Zenject;
 
 namespace Game.ItemSystem.UI
 {
@@ -55,6 +56,7 @@ namespace Game.ItemSystem.UI
         private Tween fadeTween;
         private Tween scaleTween;
 
+        [Inject(Optional = true)]
         private ItemTooltipManager tooltipManager;
         private RectTransform rectTransform;
 
@@ -70,17 +72,82 @@ namespace Game.ItemSystem.UI
 
         private void Start()
         {
-            tooltipManager = UnityEngine.Object.FindFirstObjectByType<ItemTooltipManager>();
+            // tooltipManager는 DI로 주입받음
             if (tooltipManager == null)
             {
                 GameLogger.LogWarning("[PassiveItemIcon] ItemTooltipManager를 찾을 수 없습니다", GameLogger.LogCategory.UI);
             }
         }
 
+        /// <summary>
+        /// tooltipManager가 null이면 주입을 시도합니다.
+        /// </summary>
+        private void EnsureTooltipManagerInjected()
+        {
+            if (tooltipManager != null) return;
+
+            try
+            {
+                // 1. ProjectContext를 통해 Container에 접근하여 주입 시도
+                var projectContext = Zenject.ProjectContext.Instance;
+                if (projectContext != null && projectContext.Container != null)
+                {
+                    projectContext.Container.Inject(this);
+                    if (tooltipManager != null)
+                    {
+                        GameLogger.LogInfo("[PassiveItemIcon] ItemTooltipManager 주입 완료 (ProjectContext)", GameLogger.LogCategory.UI);
+                        return;
+                    }
+                }
+
+                // 2. SceneContextRegistry를 통해 현재 씬의 Container에 접근하여 주입 시도
+                try
+                {
+                    var sceneContextRegistry = projectContext.Container.Resolve<Zenject.SceneContextRegistry>();
+                    var sceneContainer = sceneContextRegistry.TryGetContainerForScene(gameObject.scene);
+                    if (sceneContainer != null)
+                    {
+                        sceneContainer.Inject(this);
+                        if (tooltipManager != null)
+                        {
+                            GameLogger.LogInfo("[PassiveItemIcon] ItemTooltipManager 주입 완료 (SceneContext)", GameLogger.LogCategory.UI);
+                            return;
+                        }
+                    }
+                }
+                catch
+                {
+                    // SceneContextRegistry를 찾을 수 없거나 씬 컨테이너가 없는 경우 무시
+                }
+
+                // 3. 직접 찾아서 할당 (최후의 수단)
+                var foundManager = UnityEngine.Object.FindFirstObjectByType<ItemTooltipManager>(UnityEngine.FindObjectsInactive.Include);
+                if (foundManager != null)
+                {
+                    tooltipManager = foundManager;
+                    GameLogger.LogInfo("[PassiveItemIcon] ItemTooltipManager 직접 찾기 완료 (FindFirstObjectByType)", GameLogger.LogCategory.UI);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogWarning($"[PassiveItemIcon] ItemTooltipManager 주입 시도 중 오류: {ex.Message}", GameLogger.LogCategory.UI);
+            }
+        }
+
+        private void OnDisable()
+        {
+            fadeTween?.Kill();
+            scaleTween?.Kill();
+            fadeTween = null;
+            scaleTween = null;
+        }
+
         private void OnDestroy()
         {
             fadeTween?.Kill();
             scaleTween?.Kill();
+            fadeTween = null;
+            scaleTween = null;
 
             // 툴팁 매니저에서 등록 해제
             if (tooltipManager != null && itemDefinition != null)
@@ -132,11 +199,7 @@ namespace Game.ItemSystem.UI
 
             FadeIn();
 
-            // 툴팁 매니저에 등록 (없으면 찾기)
-            if (tooltipManager == null)
-            {
-                tooltipManager = UnityEngine.Object.FindFirstObjectByType<ItemTooltipManager>();
-            }
+            // tooltipManager는 DI로 주입받음
 
             if (tooltipManager != null && rectTransform != null)
             {
@@ -276,10 +339,11 @@ namespace Game.ItemSystem.UI
         /// </summary>
         public void OnMouseEnter()
         {
-            scaleTween?.Kill();
-            scaleTween = transform.DOScale(hoverScale, 0.2f)
-                .SetEase(Ease.OutQuad)
-                .SetAutoKill(true);
+            Game.UtilitySystem.HoverEffectHelper.PlayHoverScaleWithCleanup(
+                ref scaleTween,
+                transform,
+                hoverScale,
+                0.2f);
         }
 
         /// <summary>
@@ -287,10 +351,10 @@ namespace Game.ItemSystem.UI
         /// </summary>
         public void OnMouseExit()
         {
-            scaleTween?.Kill();
-            scaleTween = transform.DOScale(1f, 0.2f)
-                .SetEase(Ease.OutQuad)
-                .SetAutoKill(true);
+            Game.UtilitySystem.HoverEffectHelper.ResetScaleWithCleanup(
+                ref scaleTween,
+                transform,
+                0.2f);
         }
 
         /// <summary>
@@ -301,8 +365,14 @@ namespace Game.ItemSystem.UI
         {
             OnMouseEnter();
 
+            if (itemDefinition == null)
+                return;
+
+            // tooltipManager가 null이면 찾기 시도
+            EnsureTooltipManagerInjected();
+
             // 툴팁 표시
-            if (tooltipManager != null && itemDefinition != null)
+            if (tooltipManager != null)
             {
                 tooltipManager.OnPassiveItemHoverEnter(itemDefinition, rectTransform, enhancementLevel);
             }

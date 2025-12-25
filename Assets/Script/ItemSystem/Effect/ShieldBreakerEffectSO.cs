@@ -29,7 +29,8 @@ namespace Game.ItemSystem.Effect
         {
             var vfxManager = UnityEngine.Object.FindFirstObjectByType<VFXManager>();
             var audioManager = UnityEngine.Object.FindFirstObjectByType<AudioManager>();
-            return new ShieldBreakerEffectCommand(duration, sfxClip, visualEffectPrefab, vfxManager, audioManager);
+            var enemyManager = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
+            return new ShieldBreakerEffectCommand(duration, sfxClip, visualEffectPrefab, vfxManager, audioManager, enemyManager);
         }
 
         /// <summary>
@@ -39,14 +40,15 @@ namespace Game.ItemSystem.Effect
         {
             var vfxManager = UnityEngine.Object.FindFirstObjectByType<VFXManager>();
             var audioManager = UnityEngine.Object.FindFirstObjectByType<AudioManager>();
+            var enemyManager = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
             if (customSettings == null)
             {
-                return new ShieldBreakerEffectCommand(duration, sfxClip, visualEffectPrefab, vfxManager, audioManager);
+                return new ShieldBreakerEffectCommand(duration, sfxClip, visualEffectPrefab, vfxManager, audioManager, enemyManager);
             }
 
             AudioClip finalSfxClip = customSettings.sfxClip ?? sfxClip;
             GameObject finalVisualEffectPrefab = customSettings.visualEffectPrefab ?? visualEffectPrefab;
-            return new ShieldBreakerEffectCommand(customSettings.duration, finalSfxClip, finalVisualEffectPrefab, vfxManager, audioManager);
+            return new ShieldBreakerEffectCommand(customSettings.duration, finalSfxClip, finalVisualEffectPrefab, vfxManager, audioManager, enemyManager);
         }
 
         public override void ApplyEffect(IItemUseContext context, int value)

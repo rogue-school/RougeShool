@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using DG.Tweening;
 using Game.CoreSystem.Utility;
+using Game.UtilitySystem;
 
 namespace Game.CharacterSystem.UI
 {
@@ -40,6 +41,16 @@ namespace Game.CharacterSystem.UI
         private void Awake()
         {
             InitializeComponents();
+        }
+
+        private void OnDisable()
+        {
+            // DOTween 시퀀스 정리
+            if (currentSequence != null && currentSequence.IsActive())
+            {
+                currentSequence.Kill();
+                currentSequence = null;
+            }
         }
 
         private void OnDestroy()
@@ -174,13 +185,14 @@ namespace Game.CharacterSystem.UI
                 canvasGroup.blocksRaycasts = true;
                 canvasGroup.interactable = true;
 
+                // Sequence 패턴이므로 UIAnimationHelper를 Sequence 내부에서 사용
                 currentSequence = DOTween.Sequence()
-                    // 페이드 인
-                    .Append(canvasGroup.DOFade(1f, fadeInDuration).SetEase(Ease.OutQuad))
+                    // 페이드 인 (UIAnimationHelper 사용)
+                    .Append(UIAnimationHelper.FadeIn(canvasGroup, fadeInDuration, Ease.OutQuad, null, true))
                     // 표시 지속
                     .AppendInterval(displayDuration)
-                    // 페이드 아웃
-                    .Append(canvasGroup.DOFade(0f, fadeOutDuration).SetEase(Ease.InQuad))
+                    // 페이드 아웃 (UIAnimationHelper 사용)
+                    .Append(UIAnimationHelper.FadeOut(canvasGroup, fadeOutDuration, Ease.InQuad, null, true))
                     .SetAutoKill(true)
                     .OnComplete(() =>
                     {

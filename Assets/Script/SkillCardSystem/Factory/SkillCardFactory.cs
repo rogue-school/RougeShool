@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Game.SkillCardSystem.Data;
 using Game.SkillCardSystem.Runtime;
@@ -8,6 +10,8 @@ using Game.CombatSystem.Interface;
 using Game.CoreSystem.Utility;
 using Game.CoreSystem.Interface;
 using Zenject;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace Game.SkillCardSystem.Factory
 {
@@ -18,11 +22,16 @@ namespace Game.SkillCardSystem.Factory
     public class SkillCardFactory : ISkillCardFactory
     {
         private readonly IAudioManager audioManager;
+        private readonly Game.VFXSystem.Manager.VFXManager vfxManager;
+
+        private static readonly Dictionary<string, SkillCardDefinition> _cachedDefinitions = new Dictionary<string, SkillCardDefinition>();
+        private static readonly HashSet<string> _loadingDefinitions = new HashSet<string>();
 
         [Inject]
-        public SkillCardFactory(IAudioManager audioManager)
+        public SkillCardFactory(IAudioManager audioManager, [InjectOptional] Game.VFXSystem.Manager.VFXManager vfxManager = null)
         {
             this.audioManager = audioManager;
+            this.vfxManager = vfxManager;
         }
         /// <summary>
         /// 카드 정의로부터 스킬카드를 생성합니다.
@@ -64,7 +73,7 @@ namespace Game.SkillCardSystem.Factory
                 throw new InvalidOperationException($"카드 '{definition.displayName}'은 적 전용입니다. 현재 소유자: {owner}");
             }
             
-            var skillCard = new SkillCard(definition, owner, audioManager, damageOverride);
+            var skillCard = new SkillCard(definition, owner, audioManager, vfxManager, damageOverride);
             
             // GameLogger.LogInfo($"[SkillCardFactory] 카드 생성 완료: {definition.displayName} (Owner: {owner})", GameLogger.LogCategory.SkillCard);
             
@@ -85,7 +94,7 @@ namespace Game.SkillCardSystem.Factory
                 throw new ArgumentNullException(nameof(cardId), "카드 ID는 null이거나 비어있을 수 없습니다.");
             }
             
-            var definition = Resources.Load<SkillCardDefinition>($"SkillCards/{cardId}");
+            var definition = LoadDefinition(cardId);
             
             if (definition == null)
             {
@@ -182,28 +191,94 @@ namespace Game.SkillCardSystem.Factory
         /// <returns>카드 정의</returns>
         public SkillCardDefinition LoadDefinition(string cardId)
         {
-            var definition = Resources.Load<SkillCardDefinition>($"SkillCards/{cardId}");
-            
-            if (definition == null)
+            if (string.IsNullOrEmpty(cardId))
             {
-                GameLogger.LogError($"[SkillCardFactory] 카드 정의를 로드할 수 없습니다: {cardId}", GameLogger.LogCategory.SkillCard);
+                GameLogger.LogError("[SkillCardFactory] 카드 ID가 null이거나 비어있습니다.", GameLogger.LogCategory.SkillCard);
                 return null;
             }
-            
-            return definition;
+
+            // 캐시 확인
+            if (_cachedDefinitions.TryGetValue(cardId, out SkillCardDefinition cached))
+            {
+                return cached;
+            }
+
+            // 로딩 중인지 확인
+            if (_loadingDefinitions.Contains(cardId))
+            {
+                GameLogger.LogWarning($"[SkillCardFactory] 카드 정의가 이미 로딩 중입니다: {cardId}", GameLogger.LogCategory.SkillCard);
+                return null;
+            }
+
+            try
+            {
+                _loadingDefinitions.Add(cardId);
+                string address = $"SkillCards/{cardId}";
+                var handle = Addressables.LoadAssetAsync<SkillCardDefinition>(address);
+                SkillCardDefinition definition = handle.WaitForCompletion();
+
+                if (definition == null)
+                {
+                    GameLogger.LogError($"[SkillCardFactory] 카드 정의를 로드할 수 없습니다: {address}", GameLogger.LogCategory.SkillCard);
+                    return null;
+                }
+
+                _cachedDefinitions[cardId] = definition;
+                return definition;
+            }
+            catch (Exception ex)
+            {
+                GameLogger.LogError($"[SkillCardFactory] 카드 정의 로드 중 오류: {ex.Message}", GameLogger.LogCategory.SkillCard);
+                return null;
+            }
+            finally
+            {
+                _loadingDefinitions.Remove(cardId);
+            }
         }
         
+        private static SkillCardDefinition[] _cachedAllDefinitions;
+        private static bool _isLoadingAllDefinitions;
+
         /// <summary>
         /// 모든 카드 정의를 로드합니다.
         /// </summary>
         /// <returns>카드 정의 배열</returns>
         public SkillCardDefinition[] LoadAllDefinitions()
         {
-            var definitions = Resources.LoadAll<SkillCardDefinition>("SkillCards");
-            
-            GameLogger.LogInfo($"[SkillCardFactory] 총 {definitions.Length}개의 카드 정의를 로드했습니다.", GameLogger.LogCategory.SkillCard);
-            
-            return definitions;
+            if (_cachedAllDefinitions != null)
+            {
+                return _cachedAllDefinitions;
+            }
+
+            if (_isLoadingAllDefinitions)
+            {
+                GameLogger.LogWarning("[SkillCardFactory] 모든 카드 정의가 이미 로딩 중입니다.", GameLogger.LogCategory.SkillCard);
+                return new SkillCardDefinition[0];
+            }
+
+            try
+            {
+                _isLoadingAllDefinitions = true;
+                
+                // Addressables에서 라벨 "SkillCards"로 모든 카드 정의 로드
+                var handle = Addressables.LoadAssetsAsync<SkillCardDefinition>("SkillCards", null);
+                var result = handle.WaitForCompletion();
+                _cachedAllDefinitions = result != null ? result.ToArray() : new SkillCardDefinition[0];
+                
+                GameLogger.LogInfo($"[SkillCardFactory] 총 {_cachedAllDefinitions.Length}개의 카드 정의를 로드했습니다.", GameLogger.LogCategory.SkillCard);
+                
+                return _cachedAllDefinitions;
+            }
+            catch (Exception ex)
+            {
+                GameLogger.LogError($"[SkillCardFactory] 모든 카드 정의 로드 중 오류: {ex.Message}", GameLogger.LogCategory.SkillCard);
+                return new SkillCardDefinition[0];
+            }
+            finally
+            {
+                _isLoadingAllDefinitions = false;
+            }
         }
     }
 }

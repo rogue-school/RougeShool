@@ -8,9 +8,12 @@ using Game.SkillCardSystem.Effect;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem;
 using Game.CoreSystem.Utility;
+using Game.CoreSystem.Interface;
+using Game.VFXSystem.Manager;
 using System;
 using DG.Tweening;
 using UnityEngine.UI;
+using Zenject;
 
 namespace Game.CharacterSystem.Core
 {
@@ -40,6 +43,16 @@ namespace Game.CharacterSystem.Core
         protected List<IPerTurnEffect> perTurnEffects = new();
 
         public virtual Transform Transform => transform;
+
+        #endregion
+
+        #region 의존성 주입
+
+        [Inject(Optional = true)]
+        protected VFXManager _vfxManager;
+
+        [Inject(Optional = true)]
+        protected IAudioManager _audioManager;
 
         #endregion
 
@@ -413,10 +426,9 @@ namespace Game.CharacterSystem.Core
             // 가드 차단 이펙트 재생
             if (guardBuff != null && guardBuff.BlockEffectPrefab != null)
             {
-                var vfxManager = UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
-                if (vfxManager != null)
+                if (_vfxManager != null)
                 {
-                    var effectInstance = vfxManager.PlayEffectAtCharacterCenter(guardBuff.BlockEffectPrefab, transform);
+                    var effectInstance = _vfxManager.PlayEffectAtCharacterCenter(guardBuff.BlockEffectPrefab, transform);
                     if (effectInstance != null)
                     {
                         GameLogger.LogInfo($"[{GetCharacterDataName()}] 가드 차단 이펙트 재생: {guardBuff.BlockEffectPrefab.name}", GameLogger.LogCategory.Character);
@@ -427,10 +439,9 @@ namespace Game.CharacterSystem.Core
             // 가드 차단 사운드 재생
             if (guardBuff != null && guardBuff.BlockSfxClip != null)
             {
-                var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
-                if (audioManager != null)
+                if (_audioManager != null)
                 {
-                    audioManager.PlaySFXWithPool(guardBuff.BlockSfxClip, 0.9f);
+                    _audioManager.PlaySFXWithPool(guardBuff.BlockSfxClip, 0.9f);
                     GameLogger.LogInfo($"[{GetCharacterDataName()}] 가드 차단 사운드 재생: {guardBuff.BlockSfxClip.name}", GameLogger.LogCategory.Character);
                 }
                 else
@@ -464,6 +475,18 @@ namespace Game.CharacterSystem.Core
             OnBuffsChanged = null;
             // Idle 루프 정리
             StopIdleVisualLoop();
+            // 모든 DOTween 애니메이션 정리 (피격 효과 등)
+            transform.DOKill();
+            var spriteRenderers = GetComponentsInChildren<SpriteRenderer>(true);
+            foreach (var sr in spriteRenderers)
+            {
+                if (sr != null) sr.DOKill();
+            }
+            var images = GetComponentsInChildren<UnityEngine.UI.Image>(true);
+            foreach (var img in images)
+            {
+                if (img != null) img.DOKill();
+            }
         }
 
         #endregion
@@ -665,9 +688,129 @@ namespace Game.CharacterSystem.Core
 
         #endregion
 
-        private void OnDisable()
+        protected virtual void OnDisable()
         {
             StopIdleVisualLoop();
+            // 모든 DOTween 애니메이션 정리 (피격 효과 등)
+            transform.DOKill();
+            var spriteRenderers = GetComponentsInChildren<SpriteRenderer>(true);
+            foreach (var sr in spriteRenderers)
+            {
+                if (sr != null) sr.DOKill();
+            }
+            var images = GetComponentsInChildren<UnityEngine.UI.Image>(true);
+            foreach (var img in images)
+            {
+                if (img != null) img.DOKill();
+            }
         }
+
+        #region Portrait 초기화 공통 로직
+
+        /// <summary>
+        /// Portrait 프리팹을 초기화하는 공통 로직
+        /// </summary>
+        /// <param name="portraitPrefab">Portrait 프리팹</param>
+        /// <param name="portraitParent">Portrait 부모 Transform (null이면 자동 찾기)</param>
+        /// <param name="portraitImage">Portrait Image 컴포넌트 참조 (출력)</param>
+        /// <param name="hpTextAnchor">HP Text Anchor Transform 참조 (출력)</param>
+        /// <param name="characterTransform">캐릭터 Transform</param>
+        /// <param name="characterName">캐릭터 이름 (로깅용)</param>
+        protected void InitializePortraitCommon(
+            GameObject portraitPrefab,
+            Transform portraitParent,
+            ref Image portraitImage,
+            ref Transform hpTextAnchor,
+            Transform characterTransform,
+            string characterName)
+        {
+            if (portraitPrefab == null)
+            {
+                InitializePortraitFromExisting(ref portraitImage, characterTransform, characterName);
+                return;
+            }
+
+            Transform parent = GetPortraitParent(portraitParent, characterTransform);
+            GameObject portraitInstance = Instantiate(portraitPrefab, parent);
+            portraitInstance.name = "Portrait";
+
+            FindPortraitImage(portraitInstance, ref portraitImage, characterName);
+            FindHPTextAnchor(portraitInstance, ref hpTextAnchor);
+        }
+
+        /// <summary>
+        /// Portrait 부모 Transform을 찾습니다
+        /// </summary>
+        private Transform GetPortraitParent(Transform portraitParent, Transform characterTransform)
+        {
+            if (portraitParent != null)
+                return portraitParent;
+
+            var existingPortrait = characterTransform.Find("Portrait");
+            if (existingPortrait != null)
+            {
+                existingPortrait.gameObject.SetActive(false);
+                return existingPortrait.parent;
+            }
+
+            return characterTransform;
+        }
+
+        /// <summary>
+        /// Portrait Image 컴포넌트를 찾습니다
+        /// </summary>
+        private void FindPortraitImage(GameObject portraitInstance, ref Image portraitImage, string characterName)
+        {
+            if (portraitImage != null)
+                return;
+
+            portraitImage = portraitInstance.GetComponentInChildren<Image>(true);
+            if (portraitImage == null)
+            {
+                GameLogger.LogWarning($"[{characterName}] Portrait 프리팹에서 Image 컴포넌트를 찾을 수 없습니다.", GameLogger.LogCategory.Character);
+            }
+        }
+
+        /// <summary>
+        /// HP Text Anchor를 찾습니다
+        /// </summary>
+        private void FindHPTextAnchor(GameObject portraitInstance, ref Transform hpTextAnchor)
+        {
+            if (hpTextAnchor != null)
+                return;
+
+            var hpAnchor = portraitInstance.transform.Find("HPTectAnchor");
+            if (hpAnchor == null)
+            {
+                hpAnchor = portraitInstance.transform.Find("HPTextAnchor");
+            }
+
+            if (hpAnchor != null)
+            {
+                hpTextAnchor = hpAnchor;
+            }
+        }
+
+        /// <summary>
+        /// 기존 Portrait GameObject에서 Image를 찾습니다
+        /// </summary>
+        private void InitializePortraitFromExisting(ref Image portraitImage, Transform characterTransform, string characterName)
+        {
+            if (portraitImage != null)
+                return;
+
+            var existingPortrait = characterTransform.Find("Portrait");
+            if (existingPortrait != null)
+            {
+                portraitImage = existingPortrait.GetComponent<Image>();
+            }
+
+            if (portraitImage == null)
+            {
+                GameLogger.LogWarning($"[{characterName}] Portrait Image를 찾을 수 없습니다.", GameLogger.LogCategory.Character);
+            }
+        }
+
+        #endregion
     }
 }

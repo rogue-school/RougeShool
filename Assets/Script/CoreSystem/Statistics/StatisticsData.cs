@@ -4,6 +4,8 @@ using System.Linq;
 using UnityEngine;
 using Game.SkillCardSystem.Deck;
 using Game.CoreSystem.Utility;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace Game.CoreSystem.Statistics
 {
@@ -364,6 +366,12 @@ namespace Game.CoreSystem.Statistics
         /// 카드 이름 캐시
         /// </summary>
         private static Dictionary<string, string> _cardNameCache = new Dictionary<string, string>();
+
+        /// <summary>
+        /// 카드 정의 캐시
+        /// </summary>
+        private static Dictionary<string, Game.SkillCardSystem.Data.SkillCardDefinition> _cachedDefinitions = new Dictionary<string, Game.SkillCardSystem.Data.SkillCardDefinition>();
+        private static readonly HashSet<string> _loadingDefinitions = new HashSet<string>();
         
         /// <summary>
         /// 카드 ID로 스킬 이름 조회 (정적 메서드, 캐싱 지원)
@@ -380,27 +388,51 @@ namespace Game.CoreSystem.Statistics
 
             try
             {
-                // 먼저 직접 경로로 시도 (여러 가능한 경로)
-                var definition = Resources.Load<Game.SkillCardSystem.Data.SkillCardDefinition>($"SkillCards/{cardId}");
+                Game.SkillCardSystem.Data.SkillCardDefinition definition = null;
                 
-                // 실패 시 Data/SkillCard/Skill 경로에서 시도
-                if (definition == null)
-                    {
-                    definition = Resources.Load<Game.SkillCardSystem.Data.SkillCardDefinition>($"Data/SkillCard/Skill/{cardId}");
-                }
-
-                // 실패 시 모든 카드를 로드하여 찾기 (가장 확실한 방법)
-                if (definition == null)
+                // 캐시 확인
+                if (_cachedDefinitions.TryGetValue(cardId, out Game.SkillCardSystem.Data.SkillCardDefinition cachedDefinition))
                 {
-                    // 여러 경로에서 시도
-                    var allCards1 = Resources.LoadAll<Game.SkillCardSystem.Data.SkillCardDefinition>("SkillCards");
-                    var allCards2 = Resources.LoadAll<Game.SkillCardSystem.Data.SkillCardDefinition>("Data/SkillCard/Skill");
-                    
-                    definition = System.Array.Find(allCards1, c => c != null && c.cardId == cardId);
-                    if (definition == null)
+                    definition = cachedDefinition;
+                }
+                else
+                {
+                    // 로딩 중인지 확인
+                    if (_loadingDefinitions.Contains(cardId))
                     {
-                        definition = System.Array.Find(allCards2, c => c != null && c.cardId == cardId);
-            }
+                        return cardId; // 로딩 중이면 ID 반환
+                    }
+
+                    try
+                    {
+                        _loadingDefinitions.Add(cardId);
+                        
+                        // 먼저 SkillCards/{cardId} 경로로 시도
+                        string address = $"SkillCards/{cardId}";
+                        var handle = Addressables.LoadAssetAsync<Game.SkillCardSystem.Data.SkillCardDefinition>(address);
+                        definition = handle.WaitForCompletion();
+                        
+                        // 실패 시 Data/SkillCard/Skill/{cardId} 경로로 시도
+                        if (definition == null)
+                        {
+                            address = $"Data/SkillCard/Skill/{cardId}";
+                            handle = Addressables.LoadAssetAsync<Game.SkillCardSystem.Data.SkillCardDefinition>(address);
+                            definition = handle.WaitForCompletion();
+                        }
+                        
+                        if (definition != null)
+                        {
+                            _cachedDefinitions[cardId] = definition;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        GameLogger.LogError($"[StatisticsData] 카드 정의 로드 중 오류: {ex.Message}", GameLogger.LogCategory.Core);
+                    }
+                    finally
+                    {
+                        _loadingDefinitions.Remove(cardId);
+                    }
                 }
                 
                 if (definition != null)

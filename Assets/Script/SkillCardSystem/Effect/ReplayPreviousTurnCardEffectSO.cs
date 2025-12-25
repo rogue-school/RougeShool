@@ -1,6 +1,7 @@
 using UnityEngine;
 using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Interface;
+using Game.CombatSystem.Manager;
 
 namespace Game.SkillCardSystem.Effect
 {
@@ -23,7 +24,11 @@ namespace Game.SkillCardSystem.Effect
         public override ICardEffectCommand CreateEffectCommand(int power)
         {
             int finalRepeat = Mathf.Max(0, _repeatCount + power);
-            return new ReplayPreviousTurnCardCommand(finalRepeat);
+            // 의존성 찾기
+            // TODO: ScriptableObject 특성상 DI가 불가능하므로 FindFirstObjectByType 사용
+            // 향후 CreateEffectCommand에 의존성을 파라미터로 받도록 리팩토링 필요
+            var executionManager = UnityEngine.Object.FindFirstObjectByType<CombatExecutionManager>();
+            return new ReplayPreviousTurnCardCommand(finalRepeat, executionManager);
         }
 
         /// <summary>

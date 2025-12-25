@@ -6,6 +6,8 @@ using Game.CoreSystem.Utility;
 using Game.VFXSystem.Manager;
 using System;
 using UnityEngine.UI;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace Game.SkillCardSystem.Effect
 {
@@ -19,8 +21,12 @@ namespace Game.SkillCardSystem.Effect
         private readonly GameObject activateEffectPrefab;
         private readonly AudioClip activateSfxClip;
         private readonly VFXManager vfxManager;
+        private readonly Game.CoreSystem.Audio.AudioManager audioManager;
 
         private readonly Sprite icon;
+
+        private static Sprite _cachedShieldIcon;
+        private static bool _isLoadingShieldIcon;
 
         /// <summary>
         /// 가드 효과 커맨드 생성자
@@ -30,13 +36,15 @@ namespace Game.SkillCardSystem.Effect
         /// <param name="activateEffectPrefab">가드 버프 적용 시 이펙트 프리팹 (선택적)</param>
         /// <param name="activateSfxClip">가드 버프 적용 시 사운드 (선택적)</param>
         /// <param name="vfxManager">VFX 매니저 (선택적)</param>
-        public GuardEffectCommand(int duration = 1, Sprite icon = null, GameObject activateEffectPrefab = null, AudioClip activateSfxClip = null, VFXManager vfxManager = null)
+        /// <param name="audioManager">오디오 매니저 (선택적)</param>
+        public GuardEffectCommand(int duration = 1, Sprite icon = null, GameObject activateEffectPrefab = null, AudioClip activateSfxClip = null, VFXManager vfxManager = null, Game.CoreSystem.Audio.AudioManager audioManager = null)
         {
             this.duration = duration;
             this.icon = icon;
             this.activateEffectPrefab = activateEffectPrefab;
             this.activateSfxClip = activateSfxClip;
             this.vfxManager = vfxManager;
+            this.audioManager = audioManager;
         }
         
         /// <summary>
@@ -62,7 +70,7 @@ namespace Game.SkillCardSystem.Effect
                 // 아이콘이 없으면 기본 아이콘 시도 (폴백)
                 if (guardIcon == null)
                 {
-                    guardIcon = Resources.Load<Sprite>("Image/UI (1)/UI/shield_icon");
+                    guardIcon = LoadShieldIcon();
                     if (guardIcon != null)
                     {
                         GameLogger.LogInfo("[GuardEffectCommand] 대체 가드 아이콘 로드 성공", GameLogger.LogCategory.Combat);
@@ -137,10 +145,9 @@ namespace Game.SkillCardSystem.Effect
             GameLogger.LogInfo($"[GuardEffectCommand] 가드 VFX 생성 시작 - 프리팹: {activateEffectPrefab.name}, 위치: {spawnPos}", GameLogger.LogCategory.SkillCard);
 
             // VFXManager를 통한 이펙트 생성 (정확한 위치 지정)
-            var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
-            if (finalVfxManager != null)
+            if (vfxManager != null)
             {
-                var instance = finalVfxManager.PlayEffectAtCharacterCenter(activateEffectPrefab, context.Source.Transform);
+                var instance = vfxManager.PlayEffectAtCharacterCenter(activateEffectPrefab, context.Source.Transform);
                 if (instance != null)
                 {
                     SetEffectLayer(instance);
@@ -149,7 +156,7 @@ namespace Game.SkillCardSystem.Effect
             }
             else
             {
-                GameLogger.LogError("[GuardEffectCommand] VFXManager를 찾을 수 없습니다. 가드 VFX를 생성할 수 없습니다.", GameLogger.LogCategory.SkillCard);
+                GameLogger.LogWarning("[GuardEffectCommand] VFXManager가 주입되지 않았습니다. 가드 VFX를 생성할 수 없습니다.", GameLogger.LogCategory.SkillCard);
             }
         }
 
@@ -262,8 +269,6 @@ namespace Game.SkillCardSystem.Effect
                 return;
             }
 
-            // AudioManager 찾기
-            var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
             if (audioManager != null)
             {
                 audioManager.PlaySFXWithPool(activateSfxClip, 0.9f);
@@ -271,7 +276,7 @@ namespace Game.SkillCardSystem.Effect
             }
             else
             {
-                GameLogger.LogWarning("[GuardEffectCommand] AudioManager를 찾을 수 없습니다. 가드 버프 적용 사운드 재생을 건너뜁니다.", GameLogger.LogCategory.Combat);
+                GameLogger.LogWarning("[GuardEffectCommand] AudioManager가 주입되지 않았습니다. 가드 버프 적용 사운드 재생을 건너뜁니다.", GameLogger.LogCategory.Combat);
             }
         }
 
@@ -331,6 +336,45 @@ namespace Game.SkillCardSystem.Effect
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// 가드 아이콘을 Addressables에서 로드합니다 (캐싱 사용).
+        /// </summary>
+        private static Sprite LoadShieldIcon()
+        {
+            if (_cachedShieldIcon != null)
+            {
+                return _cachedShieldIcon;
+            }
+
+            if (_isLoadingShieldIcon)
+            {
+                return null;
+            }
+
+            try
+            {
+                _isLoadingShieldIcon = true;
+                var handle = Addressables.LoadAssetAsync<Sprite>("Image/UI (1)/UI/shield_icon");
+                _cachedShieldIcon = handle.WaitForCompletion();
+
+                if (_cachedShieldIcon == null)
+                {
+                    GameLogger.LogError("[GuardEffectCommand] 가드 아이콘 로드 실패: Image/UI (1)/UI/shield_icon", GameLogger.LogCategory.Combat);
+                }
+
+                return _cachedShieldIcon;
+            }
+            catch (Exception ex)
+            {
+                GameLogger.LogError($"[GuardEffectCommand] 가드 아이콘 로드 중 오류: {ex.Message}", GameLogger.LogCategory.Combat);
+                return null;
+            }
+            finally
+            {
+                _isLoadingShieldIcon = false;
+            }
         }
     }
 }

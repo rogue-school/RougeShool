@@ -4,6 +4,7 @@ using Game.CoreSystem.Utility;
 using Game.CombatSystem.DragDrop;
 using Game.CombatSystem.Manager;
 using Game.VFXSystem.Manager;
+using Zenject;
 
 namespace Game.SkillCardSystem.UI
 {
@@ -60,6 +61,20 @@ namespace Game.SkillCardSystem.UI
                 {
                     GameLogger.LogError("[SkillCardUIFactory] 프리팹 인스턴스화 실패", GameLogger.LogCategory.SkillCard);
                     return null;
+                }
+
+                // Object.Instantiate로 생성된 경우 Zenject 주입 보완
+                try
+                {
+                    var projectContext = ProjectContext.Instance;
+                    if (projectContext != null && projectContext.Container != null)
+                    {
+                        projectContext.Container.InjectGameObject(instance.gameObject);
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    GameLogger.LogWarning($"[SkillCardUIFactory] Zenject 주입 시도 실패 (무시 가능): {ex.Message}", GameLogger.LogCategory.SkillCard);
                 }
             }
 

@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using DG.Tweening;
+using Game.UtilitySystem;
 
 namespace Game.UISystem
 {
@@ -106,6 +107,8 @@ namespace Game.UISystem
 
             if (_rectTransform != null)
             {
+                // HoverEffectHelper는 1f 기준 스케일만 지원하므로, 원래 스케일을 고려한 직접 구현 필요
+                // 부분적 적용: HoverEffectHelper 패턴 참고, 원래 스케일 보존을 위해 직접 구현
                 _scaleTween = _rectTransform.DOScale(_originalScale * hoverScale, enterDuration)
                     .SetEase(enterEase)
                     .SetAutoKill(true);
@@ -127,6 +130,7 @@ namespace Game.UISystem
 
             if (_rectTransform != null)
             {
+                // 원래 스케일로 복귀 (HoverEffectHelper는 1f로만 리셋하므로 직접 구현)
                 _scaleTween = _rectTransform.DOScale(_originalScale, exitDuration)
                     .SetEase(exitEase)
                     .SetAutoKill(true);

@@ -48,8 +48,9 @@ namespace Game.SkillCardSystem.Effect
                 Game.CoreSystem.Utility.GameLogger.LogWarning($"[BleedEffectSO] Icon이 비어 있습니다. SO 이름='{name}'", Game.CoreSystem.Utility.GameLogger.LogCategory.SkillCard);
             }
             
-            // VFXManager 찾기 (DI 없이 직접 찾기)
+            // 의존성 찾기
             var vfxManager = UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
+            var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
             
             return new BleedEffectCommand(
                 bleedAmount + power, 
@@ -57,7 +58,8 @@ namespace Game.SkillCardSystem.Effect
                 soIcon, 
                 visualEffectPrefab,
                 perTurnEffectPrefab ?? visualEffectPrefab,
-                vfxManager
+                vfxManager,
+                audioManager as Game.CoreSystem.Interface.IAudioManager
             );
         }
 
@@ -75,9 +77,10 @@ namespace Game.SkillCardSystem.Effect
                 return;
             }
 
-            // VFXManager 찾기
+            // 의존성 찾기 (ApplyEffect는 직접 호출되므로 여기서 찾음)
             var vfxManager = UnityEngine.Object.FindFirstObjectByType<VFXManager>();
-            var bleed = new BleedEffect(value, duration, GetIcon(), perTurnEffectPrefab ?? visualEffectPrefab, vfxManager, GetEffectName());
+            var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            var bleed = new BleedEffect(value, duration, GetIcon(), perTurnEffectPrefab ?? visualEffectPrefab, null, GetEffectName(), vfxManager, audioManager as Game.CoreSystem.Interface.IAudioManager);
             
             // 가드 상태 확인하여 상태이상 효과 등록
             if (context.Target.RegisterStatusEffect(bleed))

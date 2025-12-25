@@ -1,8 +1,9 @@
 ## UtilitySystem 스크립트 레지스트리
 
 **루트 폴더**: `Assets/Script/UtilitySystem/`  
-**목적**: 공통 게임 흐름/씬 로딩/오브젝트 생존 및 전투 슬롯 드랍 핸들러 주입 등, 게임 전역에 걸친 보조 유틸리티를 제공  
-**비고**: CoreSystem/CombatSystem/StageSystem에서 직접 또는 간접적으로 사용
+**목적**: 공통 게임 흐름/씬 로딩/오브젝트 생존, 전투 슬롯 드랍 핸들러 주입, UI 애니메이션/호버 효과/Transform 확장 등 게임 전역에 걸친 보조 유틸리티를 제공  
+**비고**: CoreSystem/CombatSystem/StageSystem/UISystem/CharacterSystem/SkillCardSystem에서 직접 또는 간접적으로 사용  
+**최신 업데이트**: 리팩토링으로 UIAnimationHelper, HoverEffectHelper, TransformExtensions 추가됨
 
 ---
 
@@ -14,6 +15,9 @@
 | **DontDestroyOnLoadContainer** | `Game.UtilitySystem` | `DontDestroyOnLoadContainer.cs` | 씬 전환 시 유지되어야 하는 오브젝트들을 자식으로 두는 컨테이너 | `Awake()` 등 | 내부 Transform/리스트 | 씬 컴포넌트, DI 없음 | Core/Combat/Stage 등 전역 오브젝트 관리 | ✅ 사용 중 |
 | **IGameContext / ISceneLoader** | `Game.UtilitySystem.GameFlow` | `GameFlow/IGameContext.cs`, `GameFlow/ISceneLoader.cs` | 게임 컨텍스트/씬 로더 인터페이스 | `LoadSceneAsync(...)` 등 | - | 인터페이스 타입 | GameContext, SceneTransitionManager/Stage 흐름과 연계 가능 | ✅ 사용 중 |
 | **GameContext** | `Game.UtilitySystem.GameFlow` | `GameFlow/GameContext.cs` | 게임 전체 상태/컨텍스트를 나타내는 유틸리티(씬/모드/세션 정보 등) | `Initialize(...)` 등 | 현재 씬/모드/플래그 | DI 또는 정적 접근(코드 참조 있음) | Core/Stage/Combat 흐름 제어 보조 | ✅ 사용 중 |
+| **UIAnimationHelper** | `Game.UtilitySystem` | `UIAnimationHelper.cs` | UI 페이드 인/아웃 애니메이션 공통 헬퍼 (DOTween 기반) | `FadeIn(...)`, `FadeOut(...)` | - | 정적 클래스, DI 없음 | ItemTooltip, SkillCardTooltip, BuffDebuffTooltip, TutorialOverlayView 등 UI 컴포넌트 | ✅ 사용 중 |
+| **HoverEffectHelper** | `Game.UtilitySystem` | `HoverEffectHelper.cs` | 호버 스케일 효과 공통 헬퍼 (DOTween 기반) | `PlayHoverScale(...)`, `ResetScale(...)` | - | 정적 클래스, DI 없음 | SkillCardUI, ActiveItemUI, PassiveItemIcon, RewardSlotUIController, BuffDebuffIcon 등 UI 컴포넌트 | ✅ 사용 중 |
+| **TransformExtensions** | `Game.UtilitySystem` | `TransformExtensions.cs` | Transform 확장 메서드 (자식 찾기 등) | `FindChildByName(...)` | - | 정적 Extension 메서드, DI 없음 | SkillCardTooltip 등 UI 컴포넌트 | ✅ 사용 중 |
 
 > **사용 여부 메모**: UtilitySystem 폴더는 규모가 작고, 대부분 정적 헬퍼/인터페이스/컨텍스트 역할을 합니다.  
 > `DropHandlerInjector`는 새 Drag&Drop 시스템으로 인해 실제 로직이 대부분 이동했지만, 주석과 구조상 아직 레거시 호환/헬퍼로 남아 있으므로 `✅ 사용 중 (통합/정리 후보)`로 분류했습니다.
@@ -71,10 +75,15 @@ public class GameContext : IGameContext
 Assets/Script/UtilitySystem/
 ├── DontDestroyOnLoadContainer.cs
 ├── DropHandlerInjector.cs
+├── HoverEffectHelper.cs
+├── TransformExtensions.cs
+├── UIAnimationHelper.cs
 └── GameFlow/
     ├── GameContext.cs
     ├── IGameContext.cs
     └── ISceneLoader.cs
 ```
+
+**참고**: `SkillCardConfigExtensions.cs`는 `Assets/Script/SkillCardSystem/Utility/`에 위치하지만, UtilitySystem과 유사한 역할을 합니다.
 
 

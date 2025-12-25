@@ -26,7 +26,7 @@ namespace Game.ItemSystem.Runtime
 
         private int slotIndex = -1;
         private ActiveItemDefinition currentItem;
-        private Game.CombatSystem.Manager.TurnManager turnManager;
+        [Zenject.Inject(Optional = true)] private Game.CombatSystem.Manager.TurnManager turnManager;
 
         #endregion
 
@@ -54,7 +54,41 @@ namespace Game.ItemSystem.Runtime
         private void Start()
         {
             SetupButtons();
+            EnsureTurnManagerInjected();
             SubscribeToTurnChanges();
+        }
+
+        /// <summary>
+        /// TurnManager가 null이면 주입을 시도합니다.
+        /// </summary>
+        private void EnsureTurnManagerInjected()
+        {
+            if (turnManager != null) return;
+
+            try
+            {
+                var projectContext = Zenject.ProjectContext.Instance;
+                if (projectContext != null && projectContext.Container != null)
+                {
+                    projectContext.Container.Inject(this);
+                    if (turnManager != null)
+                    {
+                        GameLogger.LogInfo("[ActionPopupUI] TurnManager 주입 완료 (ProjectContext)", GameLogger.LogCategory.UI);
+                        return;
+                    }
+                }
+
+                var foundManager = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>(UnityEngine.FindObjectsInactive.Include);
+                if (foundManager != null)
+                {
+                    turnManager = foundManager;
+                    GameLogger.LogInfo("[ActionPopupUI] TurnManager 직접 찾기 완료", GameLogger.LogCategory.UI);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogWarning($"[ActionPopupUI] TurnManager 주입 시도 중 오류: {ex.Message}", GameLogger.LogCategory.UI);
+            }
         }
 
         private void OnDestroy()
@@ -168,7 +202,7 @@ namespace Game.ItemSystem.Runtime
         /// </summary>
         private void SubscribeToTurnChanges()
         {
-            turnManager = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
+            // turnManager는 DI로 주입받음
             if (turnManager != null)
             {
                 turnManager.OnTurnChanged += HandleTurnChanged;

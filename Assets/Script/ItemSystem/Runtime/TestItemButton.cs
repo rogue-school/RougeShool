@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Linq;
 using Game.ItemSystem.Service;
 using Game.ItemSystem.Data;
 using Game.ItemSystem.Interface;
@@ -126,8 +127,10 @@ namespace Game.ItemSystem.Runtime
         {
             try
             {
-                // 모든 액티브 아이템 로드
-                var allItems = Resources.LoadAll<ActiveItemDefinition>(itemResourcePath);
+                // Addressables에서 모든 액티브 아이템 로드
+                var handle = UnityEngine.AddressableAssets.Addressables.LoadAssetsAsync<ActiveItemDefinition>(itemResourcePath, null);
+                var result = handle.WaitForCompletion();
+                var allItems = result != null ? result.ToArray() : new ActiveItemDefinition[0];
                 
                 if (allItems == null || allItems.Length == 0)
                 {

@@ -31,8 +31,9 @@ namespace Game.CharacterSystem.Interface
         #region 정보 조회
 
         /// <summary>
-        /// 캐릭터의 이름을 반환합니다.
+        /// 캐릭터의 이름을 반환합니다
         /// </summary>
+        /// <returns>캐릭터 이름</returns>
         string GetCharacterName();
 
         /// <summary>
@@ -46,23 +47,27 @@ namespace Game.CharacterSystem.Interface
         object CharacterData { get; }
 
         /// <summary>
-        /// 현재 체력을 반환합니다.
+        /// 현재 체력을 반환합니다
         /// </summary>
+        /// <returns>현재 체력</returns>
         int GetHP();
 
         /// <summary>
-        /// 현재 체력을 반환합니다. (명시적 호출용)
+        /// 현재 체력을 반환합니다 (명시적 호출용)
         /// </summary>
+        /// <returns>현재 체력</returns>
         int GetCurrentHP();
 
         /// <summary>
-        /// 최대 체력을 반환합니다.
+        /// 최대 체력을 반환합니다
         /// </summary>
+        /// <returns>최대 체력</returns>
         int GetMaxHP();
 
         /// <summary>
-        /// 현재 적용 중인 버프/디버프 목록을 반환합니다.
+        /// 현재 적용 중인 버프/디버프 목록을 반환합니다
         /// </summary>
+        /// <returns>버프/디버프 목록</returns>
         System.Collections.Generic.IReadOnlyList<IPerTurnEffect> GetBuffs();
 
         /// <summary>

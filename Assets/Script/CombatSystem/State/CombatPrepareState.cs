@@ -105,6 +105,9 @@ namespace Game.CombatSystem.State
 
         #region 상태 실행 및 종료
 
+        /// <summary>
+        /// 상태 실행 중 특별한 작업 없음
+        /// </summary>
         public void ExecuteState() { }
 
         public void ExitState()

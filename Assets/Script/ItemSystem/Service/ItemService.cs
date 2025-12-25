@@ -37,19 +37,46 @@ namespace Game.ItemSystem.Service
 
         // 의존성 주입
         [Inject(Optional = true)] private PlayerManager playerManager;
-        [Inject] private IAudioManager audioManager;
+        [Inject(Optional = true)] private IAudioManager audioManager;
         [Inject(Optional = true)] private IVFXManager vfxManager;
+        [Inject(Optional = true)] private Game.CombatSystem.Manager.TurnManager turnManager;
+        [Inject(Optional = true)] private Game.CombatSystem.State.CombatStateMachine combatStateMachine;
+        [Inject(Optional = true)] private Game.CharacterSystem.Manager.EnemyManager enemyManager;
+        [Inject(Optional = true)] private InventoryPanelController inventoryController;
 
         #endregion
 
         #region 이벤트
 
+        /// <summary>
+        /// 액티브 아이템 사용 시 발생하는 이벤트 (아이템 정의, 슬롯 인덱스)
+        /// </summary>
         public event Action<ActiveItemDefinition, int> OnActiveItemUsed;
+        
+        /// <summary>
+        /// 스킬 강화 단계 업그레이드 시 발생하는 이벤트 (스킬 ID, 새로운 단계)
+        /// </summary>
         public event Action<string, int> OnEnhancementUpgraded;
+        
+        /// <summary>
+        /// 스킬 성급 업그레이드 시 발생하는 이벤트 (사용 중지됨, OnEnhancementUpgraded 사용 권장)
+        /// </summary>
         [System.Obsolete("Use OnEnhancementUpgraded instead")]
         public event Action<string, int> OnSkillStarUpgraded;
+        
+        /// <summary>
+        /// 액티브 아이템 추가 시 발생하는 이벤트 (아이템 정의, 슬롯 인덱스)
+        /// </summary>
         public event Action<ActiveItemDefinition, int> OnActiveItemAdded;
+        
+        /// <summary>
+        /// 액티브 아이템 제거 시 발생하는 이벤트 (아이템 정의, 슬롯 인덱스)
+        /// </summary>
         public event Action<ActiveItemDefinition, int> OnActiveItemRemoved;
+        
+        /// <summary>
+        /// 패시브 아이템 추가 시 발생하는 이벤트 (패시브 아이템 정의)
+        /// </summary>
         public event Action<PassiveItemDefinition> OnPassiveItemAdded;
 
         #endregion
@@ -60,19 +87,188 @@ namespace Game.ItemSystem.Service
         {
             InitializeActiveSlots();
 
-            // PlayerManager 주입 상태 확인
+            // PlayerManager 주입 상태 확인 및 폴백
+            EnsureDependenciesInjected();
+        }
+
+        /// <summary>
+        /// 의존성이 주입되지 않았으면 주입을 시도합니다.
+        /// </summary>
+        private void EnsureDependenciesInjected()
+        {
             if (playerManager == null)
             {
-                GameLogger.LogWarning("[ItemService] PlayerManager가 주입되지 않았습니다. 나중에 다시 시도합니다.", GameLogger.LogCategory.Core);
+                EnsurePlayerManagerInjected();
+            }
+            if (turnManager == null)
+            {
+                EnsureTurnManagerInjected();
+            }
+            if (combatStateMachine == null)
+            {
+                EnsureCombatStateMachineInjected();
+            }
+        }
+
+        /// <summary>
+        /// PlayerManager가 null이면 주입을 시도합니다.
+        /// </summary>
+        private void EnsurePlayerManagerInjected()
+        {
+            if (playerManager != null) return;
+
+            try
+            {
+                var projectContext = Zenject.ProjectContext.Instance;
+                if (projectContext != null && projectContext.Container != null)
+                {
+                    // 개별 의존성만 주입 (전체 Inject로 인한 의존성 체인 문제 방지)
+                    var resolvedManager = projectContext.Container.TryResolve<PlayerManager>();
+                    if (resolvedManager != null)
+                    {
+                        playerManager = resolvedManager;
+                        GameLogger.LogInfo("[ItemService] PlayerManager 주입 완료 (ProjectContext)", GameLogger.LogCategory.Core);
+                        return;
+                    }
+                }
+
+                var foundManager = UnityEngine.Object.FindFirstObjectByType<PlayerManager>(UnityEngine.FindObjectsInactive.Include);
+                if (foundManager != null)
+                {
+                    playerManager = foundManager;
+                    GameLogger.LogInfo("[ItemService] PlayerManager 직접 찾기 완료", GameLogger.LogCategory.Core);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogWarning($"[ItemService] PlayerManager 주입 시도 중 오류: {ex.Message}", GameLogger.LogCategory.Core);
+            }
+        }
+
+        /// <summary>
+        /// TurnManager가 null이면 주입을 시도합니다.
+        /// </summary>
+        private void EnsureTurnManagerInjected()
+        {
+            if (turnManager != null) return;
+
+            try
+            {
+                var projectContext = Zenject.ProjectContext.Instance;
+                if (projectContext != null && projectContext.Container != null)
+                {
+                    // SceneContext에서 먼저 시도
+                    Zenject.DiContainer sceneContainer = null;
+                    try
+                    {
+                        var sceneContextRegistry = projectContext.Container.Resolve<Zenject.SceneContextRegistry>();
+                        sceneContainer = sceneContextRegistry.TryGetContainerForScene(gameObject.scene);
+                    }
+                    catch (System.Exception ex)
+                    {
+                        GameLogger.LogWarning($"[ItemService] SceneContextRegistry를 찾을 수 없거나 씬 컨테이너 획득 중 오류: {ex.Message}", GameLogger.LogCategory.Core);
+                    }
+
+                    // SceneContext에서 먼저 시도
+                    if (sceneContainer != null)
+                    {
+                        var resolvedManager = sceneContainer.TryResolve<Game.CombatSystem.Manager.TurnManager>();
+                        if (resolvedManager != null)
+                        {
+                            turnManager = resolvedManager;
+                            GameLogger.LogInfo("[ItemService] TurnManager 주입 완료 (SceneContext)", GameLogger.LogCategory.Core);
+                            return;
+                        }
+                    }
+
+                    // ProjectContext에서 시도
+                    var projectResolvedManager = projectContext.Container.TryResolve<Game.CombatSystem.Manager.TurnManager>();
+                    if (projectResolvedManager != null)
+                    {
+                        turnManager = projectResolvedManager;
+                        GameLogger.LogInfo("[ItemService] TurnManager 주입 완료 (ProjectContext)", GameLogger.LogCategory.Core);
+                        return;
+                    }
+                }
+
+                var foundManager = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>(UnityEngine.FindObjectsInactive.Include);
+                if (foundManager != null)
+                {
+                    turnManager = foundManager;
+                    GameLogger.LogInfo("[ItemService] TurnManager 직접 찾기 완료", GameLogger.LogCategory.Core);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogWarning($"[ItemService] TurnManager 주입 시도 중 오류: {ex.Message}", GameLogger.LogCategory.Core);
+            }
+        }
+
+        /// <summary>
+        /// CombatStateMachine이 null이면 주입을 시도합니다.
+        /// </summary>
+        private void EnsureCombatStateMachineInjected()
+        {
+            if (combatStateMachine != null) return;
+
+            try
+            {
+                var projectContext = Zenject.ProjectContext.Instance;
+                if (projectContext != null && projectContext.Container != null)
+                {
+                    // SceneContext에서 먼저 시도
+                    Zenject.DiContainer sceneContainer = null;
+                    try
+                    {
+                        var sceneContextRegistry = projectContext.Container.Resolve<Zenject.SceneContextRegistry>();
+                        sceneContainer = sceneContextRegistry.TryGetContainerForScene(gameObject.scene);
+                    }
+                    catch (System.Exception ex)
+                    {
+                        GameLogger.LogWarning($"[ItemService] SceneContextRegistry를 찾을 수 없거나 씬 컨테이너 획득 중 오류: {ex.Message}", GameLogger.LogCategory.Core);
+                    }
+
+                    // SceneContext에서 먼저 시도
+                    if (sceneContainer != null)
+                    {
+                        var resolvedManager = sceneContainer.TryResolve<Game.CombatSystem.State.CombatStateMachine>();
+                        if (resolvedManager != null)
+                        {
+                            combatStateMachine = resolvedManager;
+                            GameLogger.LogInfo("[ItemService] CombatStateMachine 주입 완료 (SceneContext)", GameLogger.LogCategory.Core);
+                            return;
+                        }
+                    }
+
+                    // ProjectContext에서 시도
+                    var projectResolvedManager = projectContext.Container.TryResolve<Game.CombatSystem.State.CombatStateMachine>();
+                    if (projectResolvedManager != null)
+                    {
+                        combatStateMachine = projectResolvedManager;
+                        GameLogger.LogInfo("[ItemService] CombatStateMachine 주입 완료 (ProjectContext)", GameLogger.LogCategory.Core);
+                        return;
+                    }
+                }
+
+                var foundManager = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.State.CombatStateMachine>(UnityEngine.FindObjectsInactive.Include);
+                if (foundManager != null)
+                {
+                    combatStateMachine = foundManager;
+                    GameLogger.LogInfo("[ItemService] CombatStateMachine 직접 찾기 완료", GameLogger.LogCategory.Core);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogWarning($"[ItemService] CombatStateMachine 주입 시도 중 오류: {ex.Message}", GameLogger.LogCategory.Core);
             }
         }
 
         private void Start()
         {
-            // Start에서 PlayerManager 재확인
+            // playerManager는 DI로 주입받음
             if (playerManager == null)
             {
-                playerManager = FindFirstObjectByType<PlayerManager>();
+                GameLogger.LogWarning("[ItemService] PlayerManager가 주입되지 않았습니다.", GameLogger.LogCategory.Core);
             }
         }
 
@@ -87,6 +283,12 @@ namespace Game.ItemSystem.Service
         /// <returns>플레이어 캐릭터 또는 null</returns>
         private ICharacter GetPlayerCharacter()
         {
+            // PlayerManager가 null이면 주입 시도
+            if (playerManager == null)
+            {
+                EnsurePlayerManagerInjected();
+            }
+
             // 1. PlayerManager를 통해 가져오기 시도
             if (playerManager != null)
             {
@@ -492,6 +694,11 @@ namespace Game.ItemSystem.Service
             return skillStarRanks[skillId];
         }
 
+        /// <summary>
+        /// 스킬의 성급을 반환합니다 (사용 중지됨, GetSkillEnhancementLevel 사용 권장)
+        /// </summary>
+        /// <param name="skillId">스킬 ID</param>
+        /// <returns>성급 (0-3)</returns>
         [System.Obsolete("Use GetSkillEnhancementLevel instead")]
         public int GetSkillStarRank(string skillId) => GetSkillEnhancementLevel(skillId);
 
@@ -516,21 +723,27 @@ namespace Game.ItemSystem.Service
         private bool IsPlayerTurn()
         {
             // 1단계: TurnManager 턴 상태 확인
-            var turnManager = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
             if (turnManager == null)
             {
-                GameLogger.LogWarning("TurnManager를 찾을 수 없습니다. 아이템 사용을 차단합니다", GameLogger.LogCategory.Core);
-                return false; // TurnManager가 없으면 안전하게 차단
+                EnsureTurnManagerInjected();
+                if (turnManager == null)
+                {
+                    GameLogger.LogWarning("TurnManager를 찾을 수 없습니다. 아이템 사용을 차단합니다", GameLogger.LogCategory.Core);
+                    return false; // TurnManager가 없으면 안전하게 차단
+                }
             }
 
             bool isTurnPlayerTurn = turnManager.IsPlayerTurn();
 
             // 2단계: CombatStateMachine 전투 상태 확인
-            var combatStateMachine = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.State.CombatStateMachine>();
             if (combatStateMachine == null)
             {
-                GameLogger.LogWarning("CombatStateMachine을 찾을 수 없습니다. 아이템 사용을 차단합니다", GameLogger.LogCategory.Core);
-                return false;
+                EnsureCombatStateMachineInjected();
+                if (combatStateMachine == null)
+                {
+                    GameLogger.LogWarning("CombatStateMachine을 찾을 수 없습니다. 아이템 사용을 차단합니다", GameLogger.LogCategory.Core);
+                    return false;
+                }
             }
 
             var currentState = combatStateMachine.GetCurrentState();
@@ -572,8 +785,6 @@ namespace Game.ItemSystem.Service
 
                 case ItemTargetType.Enemy:
                     // 적에게 사용
-                    var enemyManager = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
-                    
                     var enemyCharacter = enemyManager?.GetCurrentEnemy();
 
                     if (enemyCharacter != null)
@@ -639,12 +850,11 @@ namespace Game.ItemSystem.Service
         {
             try
             {
-                // InventoryPanelController 찾기
-                    var inventoryController = FindFirstObjectByType<Game.ItemSystem.Runtime.InventoryPanelController>();
-                    if (inventoryController != null)
-                    {
-                        inventoryController.ClearAllItemPrefabs();
-                    }
+                // InventoryPanelController는 DI로 주입받음
+                if (inventoryController != null)
+                {
+                    inventoryController.ClearAllItemPrefabs();
+                }
                 else
                 {
                     GameLogger.LogWarning("[ItemService] InventoryPanelController를 찾을 수 없습니다", GameLogger.LogCategory.Core);

@@ -26,6 +26,9 @@ namespace Game.CombatSystem.State
             GameLogger.LogInfo("[STATE] Result 진입 - 실행 결과 정리는 ExecutionManager에서 처리됨", GameLogger.LogCategory.Combat);
         }
 
+        /// <summary>
+        /// 상태 실행 중 특별한 작업 없음
+        /// </summary>
         public void ExecuteState() { }
 
         public void ExitState()

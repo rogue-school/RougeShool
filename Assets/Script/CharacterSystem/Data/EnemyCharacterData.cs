@@ -25,6 +25,7 @@ namespace Game.CharacterSystem.Data
         /// <summary>
         /// 캐릭터 이름 (별칭)
         /// </summary>
+        /// <returns>캐릭터 이름</returns>
         public string CharacterName => DisplayName;
 
         /// <summary>
@@ -99,8 +100,9 @@ namespace Game.CharacterSystem.Data
         public List<EnemyPhaseData> Phases { get; private set; } = new List<EnemyPhaseData>();
 
         /// <summary>
-        /// 페이즈 시스템을 사용하는지 확인합니다.
+        /// 페이즈 시스템을 사용하는지 확인합니다
         /// </summary>
+        /// <returns>페이즈 시스템 사용 여부</returns>
         public bool HasPhases => Phases != null && Phases.Count > 0;
 
         #endregion

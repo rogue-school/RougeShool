@@ -185,8 +185,9 @@ namespace Game.SaveSystem.Manager
         #region 공개 메서드
 
         /// <summary>
-        /// 수동 자동 저장 실행
+        /// 수동 자동 저장을 실행합니다
         /// </summary>
+        /// <returns>저장 작업 Task</returns>
         public async Task TriggerManualAutoSave()
         {
             if (!autoSaveEnabled || !isInitialized) return;
@@ -202,16 +203,18 @@ namespace Game.SaveSystem.Manager
         }
 
         /// <summary>
-        /// 자동 저장 활성화/비활성화
+        /// 자동 저장을 활성화/비활성화합니다
         /// </summary>
+        /// <param name="enabled">활성화 여부</param>
         public void SetAutoSaveEnabled(bool enabled)
         {
             autoSaveEnabled = enabled;
         }
 
         /// <summary>
-        /// 마지막 저장 정보 반환
+        /// 마지막 저장 정보를 반환합니다
         /// </summary>
+        /// <returns>마지막 저장 정보 문자열</returns>
         public string GetLastSaveInfo()
         {
             return $"프레임: {lastSavedFrame}, 트리거: {lastSavedTrigger}";

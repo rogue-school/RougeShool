@@ -23,6 +23,13 @@ namespace Game.CombatSystem.State
         public ITurnController TurnController { get; set; }
         public ICardSlotRegistry SlotRegistry { get; set; }
         public ISlotMovementController SlotMovement { get; set; }
+        
+        // 추가 의존성
+        public Game.StageSystem.Manager.StageManager StageManager { get; set; }
+        public Game.ItemSystem.Service.ItemService ItemService { get; set; }
+        public Game.CharacterSystem.UI.EnemyCharacterUIController EnemyCharacterUIController { get; set; }
+        public Game.CharacterSystem.Manager.EnemyManager EnemyManagerForStates { get; set; }
+        public Game.CombatSystem.UI.GameOverUI GameOverUI { get; set; }
 
         // 상태 머신 참조
         public CombatStateMachine StateMachine { get; set; }
@@ -32,12 +39,34 @@ namespace Game.CombatSystem.State
         public Game.CombatSystem.Slot.CombatSlotPosition? CurrentExecutingSlot { get; set; }
 
         // 플래그들
+        
+        /// <summary>
+        /// 컨텍스트가 초기화되었는지 여부를 나타냅니다.
+        /// </summary>
         public bool IsInitialized { get; set; }
+        
+        /// <summary>
+        /// 전투가 일시정지되었는지 여부를 나타냅니다.
+        /// </summary>
         public bool IsPaused { get; set; }
 
         /// <summary>
         /// 컨텍스트 초기화 (레거시 + 새로운 인터페이스)
         /// </summary>
+        /// <param name="stateMachine">전투 상태 머신</param>
+        /// <param name="executionManager">카드 실행 매니저</param>
+        /// <param name="turnManager">턴 매니저</param>
+        /// <param name="playerManager">플레이어 매니저</param>
+        /// <param name="enemyManager">적 매니저</param>
+        /// <param name="handManager">핸드 매니저</param>
+        /// <param name="turnController">턴 컨트롤러</param>
+        /// <param name="slotRegistry">카드 슬롯 레지스트리</param>
+        /// <param name="slotMovement">슬롯 이동 컨트롤러</param>
+        /// <param name="stageManager">스테이지 매니저 (옵션)</param>
+        /// <param name="itemService">아이템 서비스 (옵션)</param>
+        /// <param name="enemyCharacterUIController">적 캐릭터 UI 컨트롤러 (옵션)</param>
+        /// <param name="enemyManagerForStates">상태용 적 매니저 (옵션)</param>
+        /// <param name="gameOverUI">게임 오버 UI (옵션)</param>
         public void Initialize(
             CombatStateMachine stateMachine,
             CombatExecutionManager executionManager,
@@ -47,7 +76,12 @@ namespace Game.CombatSystem.State
             PlayerHandManager handManager,
             ITurnController turnController,
             ICardSlotRegistry slotRegistry,
-            ISlotMovementController slotMovement)
+            ISlotMovementController slotMovement,
+            Game.StageSystem.Manager.StageManager stageManager = null,
+                Game.ItemSystem.Service.ItemService itemService = null,
+                Game.CharacterSystem.UI.EnemyCharacterUIController enemyCharacterUIController = null,
+                Game.CharacterSystem.Manager.EnemyManager enemyManagerForStates = null,
+                Game.CombatSystem.UI.GameOverUI gameOverUI = null)
         {
             StateMachine = stateMachine;
 
@@ -62,6 +96,13 @@ namespace Game.CombatSystem.State
             TurnController = turnController;
             SlotRegistry = slotRegistry;
             SlotMovement = slotMovement;
+            
+            // 추가 의존성
+            StageManager = stageManager;
+            ItemService = itemService;
+            EnemyCharacterUIController = enemyCharacterUIController;
+            EnemyManagerForStates = enemyManagerForStates;
+            GameOverUI = gameOverUI;
 
             IsInitialized = true;
             IsPaused = false;

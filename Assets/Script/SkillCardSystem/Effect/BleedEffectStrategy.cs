@@ -20,8 +20,9 @@ namespace Game.SkillCardSystem.Effect
             if (config.effectSO is not BleedEffectSO bleedEffectSO)
                 return null;
 
-            // VFXManager 찾기 (DI 없이 직접 찾기)
+            // 의존성 찾기
             var vfxManager = UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
             
             // visualEffectPrefab과 perTurnEffectPrefab 가져오기 (리플렉션 사용)
             var visualEffectPrefab = GetVisualEffectPrefab(bleedEffectSO);
@@ -34,14 +35,15 @@ namespace Game.SkillCardSystem.Effect
                 var perTurnEffect = config.customSettings.bleedPerTurnEffectPrefab ?? perTurnEffectPrefab ?? activateEffectPrefab;
                 var icon = config.customSettings.bleedIcon ?? bleedEffectSO.GetIcon();
                 
-                // BleedEffectCommand 생성 (턴당 사운드는 BleedEffectCommand에서 context로부터 가져옴)
+                // BleedEffectCommand 생성 (의존성 포함)
                 return new BleedEffectCommand(
                     config.customSettings.bleedAmount,
                     config.customSettings.bleedDuration,
                     icon,
                     activateEffectPrefab,
                     perTurnEffect,
-                    vfxManager
+                    vfxManager,
+                    audioManager as Game.CoreSystem.Interface.IAudioManager
                 );
             }
 

@@ -1,0 +1,453 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Default Local Group
+  m_EditorClassIdentifier: 
+  m_GroupName: Default Local Group
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 8decd692233ec534ba18e84326399e54
+  m_SerializeEntries:
+  - m_GUID: f549e84d3d1477745b75018dd1cf691a
+    m_Address: Assets/Resources
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 122d777589a1d0d408092d0999b166f0
+    m_Address: BuffDebuffTooltip
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dd8cb0a8e6cf7b34bbbbfe597c28aa49
+    m_Address: Prefab/SkillCard
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0ba7dd7ded049c942a65cbcc6eba6332
+    m_Address: Prefab/SettingsPanel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3d223c84e3f302d44a3898d59476bc0d
+    m_Address: "001_\uBCA0\uAE30"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 04abc0b37ae55144b9dd46479b287a04
+    m_Address: "002_2\uC5F0\uACA9"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c5921eae76219584398aaa75d7a34171
+    m_Address: "003_\uAE30\uC2B5"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ba4ed920ca6f56a4db4470228c4d2c4d
+    m_Address: "004_\uC5F4\uCC38"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2b4769eb1b4adb540a991305d8970fbb
+    m_Address: "005_\uAC15\uACF5"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8a0c82097ec50a646bc391177972f07b
+    m_Address: "006_\uC77C\uC12C"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f5c061a2e9e9bf04d8622e68fabd5444
+    m_Address: "007_\uC77C\uACA9"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3b352d671c7f55140b3e5dcb7c6a4afd
+    m_Address: "008_\uB2E8\uAC80 \uBCA0\uAE30"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b849f32ef7ef71241a4caa35ab88d71e
+    m_Address: "009_\uB354\uBE14 \uC0F7"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b46a1535db7bf02478dcc1b142a74232
+    m_Address: "010_\uD2B8\uB9AC\uD50C \uC0F7"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9204b4082f952c04ebba4d7c2c813ea4
+    m_Address: "011_\uACE1\uC0AC"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a1dde457b4738d44a8cf3b57036b3528
+    m_Address: "012_\uBC14\uB78C\uC758 \uACC4\uC0B0"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 09e3836a281e28b448bbda953e2a9f42
+    m_Address: "013_\uC708\uB4DC \uCEE4\uD130"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2496493c25382484c9ef8f7f971ceac7
+    m_Address: "015_\uB9E4\uC9C1\uBBF8\uC0AC\uC77C"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 65dc89114bb36854482b4a8dfa9a8585
+    m_Address: "016_\uB9C8\uB825 \uC5ED\uB958"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c566a562c96e1b1418ac9077f864b42e
+    m_Address: "017_\uCC9C\uBC8C"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4a032cef5ff5d304bb2caaf7678dbbd7
+    m_Address: "018_\uBA54\uD14C\uC624"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9565892daf720e84f884f043cad1b85a
+    m_Address: "019_\uACFC\uB85C"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8e09f8b5222a2224cb81d69daff22014
+    m_Address: "020_\uD30C\uC774\uC5B4\uBCFC"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ee33a97588651e44b8e788935e89faaf
+    m_Address: "021_\uC2EC\uAC80"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 446ab28b119d80841aa63d11a3a90721
+    m_Address: "22_\uD560\uD034\uAE30"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 131360b51293b4447a07db881a0d60d9
+    m_Address: "23_\uBB3C\uAE30"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0d5ea4e8899a7824a9b17ec85b28613b
+    m_Address: "24_\uB0B4\uB824\uCC0D\uAE30"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4a24e3a1761bce042b4cb403dc4601c4
+    m_Address: "101_\uBC29\uC5B4"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b79b3db7efd7cf84196717a3489d3f54
+    m_Address: "102_\uD68C\uD53C"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 485938abdf62a64419a0efb58b0517a3
+    m_Address: "103_\uC274\uB4DC"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: eb3a49d8d06fef145b6d11fa3594d1c7
+    m_Address: "104_\uBC18\uACA9"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 97f538267e6f2384eb1d3ff21efe0cde
+    m_Address: "106_\uACBD\uBA78"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6e11115518c87bd4da3c05af0f8d3350
+    m_Address: "108_\uACFC\uC81C\uD22C\uCC99"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6307ed38fe4e7c340971ec3eed5244ad
+    m_Address: "111_\uC9D1\uC911"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1b311d53285b0584896f6e2a2cf72618
+    m_Address: "201_\uC5F0\uACC4"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 976beb684f526f04980e7d954128fe82
+    m_Address: "401_\uD790"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4f78bf589e199544eaaafcc41ef11f7b
+    m_Address: "402_\uD790"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ea654114ed62db6418dd8378272169d2
+    m_Address: "404_\uD1F4\uADFC"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e8acbd95f5fa3c5499f3270986d25e7d
+    m_Address: "501_\uD654\uC0B4 \uC218\uAE09(\uC18C)"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 23bbd03172cb0ba4a9cf37fa27745383
+    m_Address: "502_\uD654\uC0B4 \uC218\uAE09(\uC911)"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 486bb8b2e802d634da2b88ebeeddc5aa
+    m_Address: "503_\uD654\uC0B4 \uC218\uAE09(\uB300)"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3cb5e3479510827458e2598a331e408e
+    m_Address: "001_\uD68C\uBCF5 \uBB3C\uC57D"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Data/Item
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a2552aaa7b5ddb241a0e3097e236f2de
+    m_Address: "002_\uACF5\uACA9\uB825 \uBB3C\uC57D"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Data/Item
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 39c1b6ba9f1aec848a4aad24c4892672
+    m_Address: "003_\uAD11\uB300 \uBB3C\uC57D"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Data/Item
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 30a6d292842a2c04b97c0f9f86f7dc4a
+    m_Address: "004_\uD0C0\uC784 \uC2A4\uD1B1 \uC2A4\uD06C\uB864"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Data/Item
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1caced4adf7cebf479de0eda33d605af
+    m_Address: "005_\uC6B4\uBA85\uC758 \uC8FC\uC0AC\uC704"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Data/Item
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 14c307b0a6a787c42a08ec5d01720ce4
+    m_Address: "006_\uC5ED\uD589\uC758 \uBAA8\uB798\uC2DC\uACC4"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Data/Item
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 362d0136b5a2d41478c223a118e81363
+    m_Address: "007_\uC2E4\uB4DC \uBE0C\uB808\uC774\uCEE4"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Data/Item
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 573205b8dee4a494e90c14e56750ba62
+    m_Address: "008_\uBD80\uD65C\uC758 \uC9D5\uD45C"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Data/Item
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c99a32792f42a79448cf650f44c4e07e
+    m_Address: "101_\uBCA0\uAE30"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Data/Item
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 41e0a9dd4c5a9b940a1dcfa406ff7e07
+    m_Address: "102_2\uC5F0\uACA9"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Data/Item
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0e7bfb3db8a181f43b4bdfc53fafdde4
+    m_Address: "103_\uAE30\uC2B5"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Data/Item
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f66dd7588bd4cf14d8c560b449e3793b
+    m_Address: "104_\uC5F4\uCC38"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Data/Item
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1300310cc7f1cf24cb3d7dcdc3ea3477
+    m_Address: "105_\uAC15\uACF5"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Data/Item
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 08b89723f0fb2d940b739cdfd8adc1c0
+    m_Address: "106_\uC77C\uC12C"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Data/Item
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 099a1e641accae0499de2fcd6a75e568
+    m_Address: "107_\uB2E8\uAC80\uBCA0\uAE30"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Data/Item
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 77afcf72f8c1b934a8f923eb2eafa587
+    m_Address: "108_\uB354\uBE14\uC0F7"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Data/Item
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7e0aea7a41578c141a7e4c19d38dc46d
+    m_Address: "109_\uD2B8\uB9AC\uD50C\uC0F7"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Data/Item
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e892a02c321ea7241a0bbf5ee246ab71
+    m_Address: "110_\uACE1\uC0AC"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Data/Item
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 034dc89a73768244b901eed0f1d978c3
+    m_Address: "111_\uB9C8\uB825 \uC911\uCCA9"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Data/Item
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b0a741b259f723c46af1d5d30e9191b3
+    m_Address: "112_\uB9C8\uB825 \uD3ED\uBC1C"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Data/Item
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 16fc3ae200b53d2458e298767f344865
+    m_Address: "113_\uB9E4\uC9C1 \uBBF8\uC0AC\uC77C"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Data/Item
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: de9daee7a4244784db291413d47a97c2
+    m_Address: "114_\uB9C8\uB825 \uC5ED\uB958"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Data/Item
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e62abd9e8094016428cfb38b2b14aaa5
+    m_Address: "115_\uCC9C\uBC8C"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Data/Item
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0ce1a923728e9b74a816b26679ceb346
+    m_Address: "116_\uB9DD\uD1A0"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Data/Item
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bc3d08c8c83ccf840a5fd9f6637ca751
+    m_Address: "117_\uD22C\uAD6C"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Data/Item
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bf2e73604ec6e694d8d4bd486a4bc16e
+    m_Address: "118_\uAC11\uC637"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Data/Item
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 17245acc61ddf3e47b3f4d1eb8997458
+    m_Address: RewardPool 1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Data/Reward
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ac8a9ee6a33301e4f895f60bf5dca85a
+    m_Address: RewardPool
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Data/Reward
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6ef45cb58dd5dd8458f635b269adad1d
+    m_Address: Serene
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - CharacterData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d193a01047fc92d49a9a9ec59bc0912a
+    m_Address: Amera
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - CharacterData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 09c242a71ef51f7479baa0e5ae122d6c
+    m_Address: Akein
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - CharacterData
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 43e69adad2e7fd146985fdec83211b07, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 2262943350bf06b468b24e39eb86d3bc, type: 2}
+    - {fileID: 11400000, guid: 6d340ab65a2dbea4ea1755cb961f6e5e, type: 2}

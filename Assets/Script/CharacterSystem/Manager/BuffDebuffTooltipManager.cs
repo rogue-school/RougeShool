@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 using Game.SkillCardSystem.Interface;
 using Game.CharacterSystem.UI;
 using Game.CoreSystem.Utility;
@@ -7,6 +9,7 @@ using Game.CoreSystem.Interface;
 using Game.ItemSystem.Constants;
 using Zenject;
 using System.Collections;
+using System.Threading.Tasks;
 
 namespace Game.CharacterSystem.Manager
 {
@@ -38,8 +41,8 @@ namespace Game.CharacterSystem.Manager
         private RectTransform pendingTargetRect; // 초기화 대기 중 첫 호버 대상 RectTransform 저장
 		private RectTransform currentTargetRect; // 현재 호버 대상 슬롯의 RectTransform
 
-        private float showTimer;
-        private float hideTimer;
+        private Coroutine showTooltipCoroutine;
+        private Coroutine hideTooltipCoroutine;
         private bool isShowingTooltip;
         private bool isHidingTooltip;
 
@@ -61,15 +64,22 @@ namespace Game.CharacterSystem.Manager
         private void Awake()
         {
             InitializeComponents();
+            
+            // 모든 씬에서 사용 가능하도록 DontDestroyOnLoad 설정
+            if (transform.parent == null)
+            {
+                DontDestroyOnLoad(gameObject);
+            }
         }
 
         private void Update()
         {
             if (!IsInitialized) return;
 
-            UpdateTooltipTimers();
-            
-            // 툴팁이 표시 중이면 지속적으로 위치 업데이트
+            // 대상 유효성 검사
+            ValidateTarget();
+
+            // 툴팁이 표시 중이면 지속적으로 위치 업데이트 (실시간 보간)
             if (currentTooltip != null && currentTooltip.gameObject != null && currentTooltip.gameObject.activeInHierarchy)
             {
                 Vector2 effectPosition = GetCurrentEffectPosition();
@@ -85,8 +95,9 @@ namespace Game.CharacterSystem.Manager
         #region ICoreSystemInitializable
 
         /// <summary>
-        /// 시스템을 초기화합니다.
+        /// 시스템을 초기화합니다
         /// </summary>
+        /// <returns>초기화 코루틴</returns>
         public IEnumerator Initialize()
         {
             if (IsInitialized) yield break;
@@ -104,6 +115,18 @@ namespace Game.CharacterSystem.Manager
 
             GameLogger.LogInfo("[BuffDebuffTooltipManager] 정리 시작", GameLogger.LogCategory.UI);
             
+            // 코루틴 정리
+            if (showTooltipCoroutine != null)
+            {
+                StopCoroutine(showTooltipCoroutine);
+                showTooltipCoroutine = null;
+            }
+            if (hideTooltipCoroutine != null)
+            {
+                StopCoroutine(hideTooltipCoroutine);
+                hideTooltipCoroutine = null;
+            }
+            
             // 툴팁 숨김
             HideTooltip();
             
@@ -114,6 +137,8 @@ namespace Game.CharacterSystem.Manager
                 currentTooltip = null;
             }
 
+            isShowingTooltip = false;
+            isHidingTooltip = false;
             IsInitialized = false;
             GameLogger.LogInfo("[BuffDebuffTooltipManager] 정리 완료", GameLogger.LogCategory.UI);
         }
@@ -158,7 +183,7 @@ namespace Game.CharacterSystem.Manager
             // 프리팹이 할당되지 않았으면 자동으로 찾기
             if (tooltipPrefab == null)
             {
-                FindTooltipPrefab();
+                yield return StartCoroutine(FindTooltipPrefab());
             }
 
             if (tooltipPrefab == null)
@@ -203,17 +228,23 @@ namespace Game.CharacterSystem.Manager
         /// <summary>
         /// 툴팁 프리팹을 자동으로 찾습니다.
         /// </summary>
-        private void FindTooltipPrefab()
+        private System.Collections.IEnumerator FindTooltipPrefab()
         {
-            var prefab = Resources.Load<BuffDebuffTooltip>("BuffDebuffTooltip");
-            if (prefab != null)
+            var handle = Addressables.LoadAssetAsync<BuffDebuffTooltip>("BuffDebuffTooltip");
+            yield return handle;
+
+            if (handle.Status == AsyncOperationStatus.Succeeded && handle.Result != null)
             {
-                tooltipPrefab = prefab;
+                tooltipPrefab = handle.Result;
                 GameLogger.LogInfo("[BuffDebuffTooltipManager] 툴팁 프리팹 자동 검색 성공", GameLogger.LogCategory.UI);
             }
             else
             {
                 GameLogger.LogWarning("[BuffDebuffTooltipManager] 툴팁 프리팹 자동 검색 실패", GameLogger.LogCategory.UI);
+                if (handle.OperationException != null)
+                {
+                    GameLogger.LogError($"[BuffDebuffTooltipManager] Addressables 로드 오류: {handle.OperationException.Message}", GameLogger.LogCategory.Error);
+                }
             }
         }
 
@@ -309,27 +340,43 @@ namespace Game.CharacterSystem.Manager
             }
 
             hoveredEffect = effect;
+            
+            // 숨김 코루틴 취소
+            if (hideTooltipCoroutine != null)
+            {
+                StopCoroutine(hideTooltipCoroutine);
+                hideTooltipCoroutine = null;
+            }
             isHidingTooltip = false;
-            hideTimer = 0f;
 
-            // currentTooltip이 null이면 ShowTooltip()에서 생성하므로 여기서는 체크하지 않음
+            // 표시 코루틴 시작 (이미 실행 중이면 재시작하지 않음)
             if (!isShowingTooltip)
             {
                 isShowingTooltip = true;
-                showTimer = 0f;
+                if (showTooltipCoroutine != null)
+                {
+                    StopCoroutine(showTooltipCoroutine);
+                }
+                showTooltipCoroutine = StartCoroutine(ShowTooltipCoroutine());
             }
         }
 
         /// <summary>
-        /// 효과에서 마우스가 이탈했을 때 호출됩니다.
+        /// 효과에서 마우스가 이탈했을 때 호출됩니다
         /// </summary>
         public void OnEffectHoverExit()
         {
             if (hoveredEffect == null) return;
             
             hoveredEffect = null;
+            
+            // 표시 코루틴 취소
+            if (showTooltipCoroutine != null)
+            {
+                StopCoroutine(showTooltipCoroutine);
+                showTooltipCoroutine = null;
+            }
             isShowingTooltip = false;
-            showTimer = 0f;
 
             // 초기화 대기 중이던 첫 호버도 해제
             pendingEffect = null;
@@ -337,10 +384,15 @@ namespace Game.CharacterSystem.Manager
             pendingShowPosition = Vector2.zero;
             pendingTargetRect = null;
 
+            // 숨김 코루틴 시작
             if (!isHidingTooltip)
             {
                 isHidingTooltip = true;
-                hideTimer = 0f;
+                if (hideTooltipCoroutine != null)
+                {
+                    StopCoroutine(hideTooltipCoroutine);
+                }
+                hideTooltipCoroutine = StartCoroutine(HideTooltipCoroutine());
             }
         }
 
@@ -360,7 +412,7 @@ namespace Game.CharacterSystem.Manager
         }
 
         /// <summary>
-        /// 버프/디버프 툴팁을 숨깁니다.
+        /// 버프/디버프 툴팁을 숨깁니다
         /// </summary>
         public void HideBuffDebuffTooltip()
         {
@@ -369,60 +421,70 @@ namespace Game.CharacterSystem.Manager
 
         #endregion
 
-        #region Timer Management
+        #region Timer Management (Coroutine-based)
 
         /// <summary>
-        /// 툴팁 타이머들을 업데이트합니다.
+        /// 툴팁 표시 타이머 코루틴입니다.
         /// </summary>
-        private void UpdateTooltipTimers()
+        private IEnumerator ShowTooltipCoroutine()
         {
-            // 표시 타이머 업데이트
-            if (isShowingTooltip)
+            yield return new WaitForSeconds(showDelay);
+            
+            // 코루틴이 취소되지 않았고 여전히 표시해야 하는 경우에만 실행
+            if (isShowingTooltip && hoveredEffect != null)
             {
-                showTimer += Time.deltaTime;
-                if (showTimer >= showDelay)
-                {
-                    ShowTooltip();
-                }
+                ShowTooltip();
             }
+            
+            isShowingTooltip = false;
+            showTooltipCoroutine = null;
+        }
 
-            // 숨김 타이머 업데이트
+        /// <summary>
+        /// 툴팁 숨김 타이머 코루틴입니다.
+        /// </summary>
+        private IEnumerator HideTooltipCoroutine()
+        {
+            yield return new WaitForSeconds(hideDelay);
+            
+            // 코루틴이 취소되지 않았고 여전히 숨겨야 하는 경우에만 실행
             if (isHidingTooltip)
             {
-                hideTimer += Time.deltaTime;
-                if (hideTimer >= hideDelay)
+                HideTooltip();
+            }
+            
+            isHidingTooltip = false;
+            hideTooltipCoroutine = null;
+        }
+
+        /// <summary>
+        /// 대상 유효성 검사를 수행합니다.
+        /// </summary>
+        private void ValidateTarget()
+        {
+            if (currentTooltip == null || currentTooltip.gameObject == null || !currentTooltip.gameObject.activeInHierarchy)
+                return;
+
+            bool targetValid = currentTargetRect != null && currentTargetRect && currentTargetRect.gameObject.activeInHierarchy;
+            if (!targetValid)
+            {
+                if (hoveredEffect != null || isShowingTooltip)
                 {
-                    HideTooltip();
+                    GameLogger.LogInfo("[BuffDebuffTooltipManager] 대상이 사라져서 툴팁 숨김", GameLogger.LogCategory.UI);
                 }
+                ForceHideTooltip();
+                return;
             }
 
-            // 대상 유효성 검사: 대상이 사라졌거나 비활성화되면 즉시 숨김
-            if (currentTooltip != null && currentTooltip.gameObject != null && currentTooltip.gameObject.activeInHierarchy)
+            if (hoveredEffect != null && hoveredEffect.IsExpired)
             {
-                bool targetValid = currentTargetRect != null && currentTargetRect && currentTargetRect.gameObject.activeInHierarchy;
-                if (!targetValid)
-                {
-                    // 이미 정리된 상태가 아니면 로그 출력 및 강제 숨김
-                    if (hoveredEffect != null || isShowingTooltip)
-                    {
-                        GameLogger.LogInfo("[BuffDebuffTooltipManager] 대상이 사라져서 툴팁 숨김", GameLogger.LogCategory.UI);
-                    }
-                    ForceHideTooltip();
-                    return;
-                }
-
-                // 효과가 여전히 유효한지 확인 (hoveredEffect가 null이거나 만료되었는지)
-                if (hoveredEffect != null && hoveredEffect.IsExpired)
-                {
-                    GameLogger.LogInfo("[BuffDebuffTooltipManager] 효과가 만료되어 툴팁 숨김", GameLogger.LogCategory.UI);
-                    ForceHideTooltip();
-                    return;
-                }
+                GameLogger.LogInfo("[BuffDebuffTooltipManager] 효과가 만료되어 툴팁 숨김", GameLogger.LogCategory.UI);
+                ForceHideTooltip();
             }
         }
 
         /// <summary>
-        /// 툴팁을 표시합니다.
+        /// 툴팁을 표시합니다
         /// </summary>
         public void ShowTooltip()
         {
@@ -494,7 +556,7 @@ namespace Game.CharacterSystem.Manager
         }
 
         /// <summary>
-        /// 툴팁을 숨깁니다.
+        /// 툴팁을 숨깁니다
         /// </summary>
         public void HideTooltip()
         {
@@ -505,7 +567,7 @@ namespace Game.CharacterSystem.Manager
         }
 
         /// <summary>
-        /// 툴팁을 강제로 숨깁니다.
+        /// 툴팁을 강제로 숨깁니다
         /// </summary>
         public void ForceHideTooltip()
         {
@@ -521,10 +583,21 @@ namespace Game.CharacterSystem.Manager
 
             hoveredEffect = null;
             currentTargetRect = null;
+            
+            // 코루틴 정리
+            if (showTooltipCoroutine != null)
+            {
+                StopCoroutine(showTooltipCoroutine);
+                showTooltipCoroutine = null;
+            }
+            if (hideTooltipCoroutine != null)
+            {
+                StopCoroutine(hideTooltipCoroutine);
+                hideTooltipCoroutine = null;
+            }
+            
             isShowingTooltip = false;
             isHidingTooltip = false;
-            showTimer = 0f;
-            hideTimer = 0f;
         }
 
         /// <summary>

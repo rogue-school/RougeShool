@@ -59,10 +59,10 @@ namespace Game.CharacterSystem.Manager
         #region 적 스폰 메서드
 
         /// <summary>
-        /// 지정된 데이터 기반으로 적을 스폰하고 슬롯에 배치합니다. (비동기)
+        /// 지정된 데이터 기반으로 적을 스폰하고 슬롯에 배치합니다 (비동기)
         /// </summary>
         /// <param name="data">적 캐릭터 데이터</param>
-        /// <param name="onComplete">스폰 완료 콜백</param>
+        /// <param name="onComplete">스폰 완료 콜백 (스폰 결과)</param>
         public void SpawnEnemy(EnemyCharacterData data, System.Action<EnemySpawnResult> onComplete)
         {
             StartCoroutine(SpawnEnemyWithAnimation(data, onComplete));
@@ -71,6 +71,9 @@ namespace Game.CharacterSystem.Manager
         /// <summary>
         /// 적 프리팹 생성/데이터 주입 → 등장 애니메이션(1.5초) → 슬롯/매니저 등록 → 콜백 호출까지 순차적으로 처리하는 코루틴
         /// </summary>
+        /// <param name="data">적 캐릭터 데이터</param>
+        /// <param name="onComplete">스폰 완료 콜백 (스폰 결과)</param>
+        /// <returns>스폰 코루틴</returns>
         public System.Collections.IEnumerator SpawnEnemyWithAnimation(EnemyCharacterData data, System.Action<EnemySpawnResult> onComplete)
         {
             if (data == null)
@@ -193,8 +196,9 @@ namespace Game.CharacterSystem.Manager
         #region 기타 유틸리티
 
         /// <summary>
-        /// 현재까지 스폰된 모든 적 캐릭터 리스트를 반환합니다.
+        /// 현재까지 스폰된 모든 적 캐릭터 리스트를 반환합니다
         /// </summary>
+        /// <returns>스폰된 적 캐릭터 리스트</returns>
         public List<EnemyCharacter> GetAllEnemies() => spawnedEnemies;
 
         #endregion

@@ -18,7 +18,12 @@ namespace Game.ItemSystem.Effect
 
         public override IItemEffectCommand CreateEffectCommand(int power)
         {
-            return new DiceOfFateEffectCommand(changeCount + power);
+            // 의존성 찾기
+            var vfxManager = UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
+            var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            var enemyManager = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
+            var sceneContext = UnityEngine.Object.FindFirstObjectByType<Zenject.SceneContext>();
+            return new DiceOfFateEffectCommand(changeCount + power, null, null, vfxManager, audioManager, enemyManager, sceneContext);
         }
 
         /// <summary>
@@ -28,20 +33,25 @@ namespace Game.ItemSystem.Effect
         /// <returns>효과 커맨드</returns>
         public IItemEffectCommand CreateEffectCommand(DiceOfFateEffectCustomSettings customSettings)
         {
-            if (customSettings == null)
-            {
-                return new DiceOfFateEffectCommand(changeCount);
-            }
-
+            // 의존성 찾기
             var vfxManager = UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
             var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            var enemyManager = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
+            var sceneContext = UnityEngine.Object.FindFirstObjectByType<Zenject.SceneContext>();
+            
+            if (customSettings == null)
+            {
+                return new DiceOfFateEffectCommand(changeCount, null, null, vfxManager, audioManager, enemyManager, sceneContext);
+            }
 
             return new DiceOfFateEffectCommand(
                 customSettings.changeCount,
                 customSettings.sfxClip,
                 customSettings.visualEffectPrefab,
                 vfxManager,
-                audioManager);
+                audioManager,
+                enemyManager,
+                sceneContext);
         }
 
         public override void ApplyEffect(IItemUseContext context, int value)

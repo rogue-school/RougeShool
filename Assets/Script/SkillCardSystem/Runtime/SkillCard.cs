@@ -36,6 +36,7 @@ namespace Game.SkillCardSystem.Runtime
 
         // 의존성 주입 (생성자에서 주입)
         private IAudioManager audioManager;
+        private Game.VFXSystem.Manager.VFXManager vfxManager;
         private static EffectCommandFactory effectFactory = new();
         
         // 데미지 오버라이드 (캐릭터별 데미지 설정용, -1이면 기본값 사용)
@@ -51,12 +52,14 @@ namespace Game.SkillCardSystem.Runtime
         /// <param name="definition">카드 정의</param>
         /// <param name="owner">소유자</param>
         /// <param name="audioManager">오디오 매니저</param>
+        /// <param name="vfxManager">VFX 매니저 (옵셔널)</param>
         /// <param name="damageOverride">데미지 오버라이드 (옵셔널, -1이면 기본값 사용)</param>
-        public SkillCard(SkillCardDefinition definition, Owner owner, IAudioManager audioManager, int damageOverride = -1)
+        public SkillCard(SkillCardDefinition definition, Owner owner, IAudioManager audioManager, Game.VFXSystem.Manager.VFXManager vfxManager = null, int damageOverride = -1)
         {
             this.definition = definition;
             this.owner = owner;
             this.audioManager = audioManager;
+            this.vfxManager = vfxManager;
             this.damageOverride = damageOverride;
             
             SetupEffectCommands();
@@ -413,7 +416,6 @@ namespace Game.SkillCardSystem.Runtime
             }
 
             // VFX 매니저를 통한 이펙트 생성
-            var vfxManager = UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
             if (vfxManager != null)
             {
                 // 캐릭터의 시각적 중심에서 이펙트 재생

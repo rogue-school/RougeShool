@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using DG.Tweening;
 using Zenject;
+using System;
 using System.Collections.Generic;
 using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Data;
@@ -13,6 +14,8 @@ using UnityEngine.Serialization;
 using Game.ItemSystem.Interface;
 using Game.ItemSystem.Data;
 using Game.ItemSystem.UI;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace Game.CharacterSystem.UI
 {
@@ -130,12 +133,26 @@ namespace Game.CharacterSystem.UI
             InitializeUI();
         }
 
+        private void OnDisable()
+        {
+            // DOTween 정리
+            hpBarTween?.Kill();
+            resourceBarTween?.Kill();
+            colorTween?.Kill();
+            hpBarTween = null;
+            resourceBarTween = null;
+            colorTween = null;
+        }
+
         private void OnDestroy()
         {
             // DOTween 정리
             hpBarTween?.Kill();
             resourceBarTween?.Kill();
             colorTween?.Kill();
+            hpBarTween = null;
+            resourceBarTween = null;
+            colorTween = null;
 
             UnsubscribeCharacterEvents();
             UnsubscribeItemServiceEvents();
@@ -541,9 +558,8 @@ namespace Game.CharacterSystem.UI
         /// <param name="type">캐릭터 타입</param>
         private void SetCharacterEmblemFallback(PlayerCharacterType type)
         {
-            // 타입별 기본 문양 스프라이트 로드 (Resources 폴더에서)
             string emblemPath = $"CharacterEmblems/{type}Emblem";
-            Sprite emblemSprite = Resources.Load<Sprite>(emblemPath);
+            Sprite emblemSprite = LoadCharacterEmblem(emblemPath);
             
             if (emblemSprite != null)
             {
@@ -552,6 +568,52 @@ namespace Game.CharacterSystem.UI
             else
             {
                 GameLogger.LogWarning($"[PlayerCharacterUIController] 기본 문양 스프라이트를 찾을 수 없습니다: {emblemPath}", GameLogger.LogCategory.Character);
+            }
+        }
+
+        private static readonly Dictionary<string, Sprite> _cachedEmblems = new Dictionary<string, Sprite>();
+        private static readonly HashSet<string> _loadingEmblems = new HashSet<string>();
+
+        /// <summary>
+        /// 캐릭터 문양을 Addressables에서 로드합니다 (캐싱 사용).
+        /// </summary>
+        private static Sprite LoadCharacterEmblem(string emblemPath)
+        {
+            if (_cachedEmblems.TryGetValue(emblemPath, out Sprite cached))
+            {
+                return cached;
+            }
+
+            if (_loadingEmblems.Contains(emblemPath))
+            {
+                return null;
+            }
+
+            try
+            {
+                _loadingEmblems.Add(emblemPath);
+                var handle = Addressables.LoadAssetAsync<Sprite>(emblemPath);
+                Sprite emblem = handle.WaitForCompletion();
+
+                if (emblem != null)
+                {
+                    _cachedEmblems[emblemPath] = emblem;
+                }
+                else
+                {
+                    GameLogger.LogError($"[PlayerCharacterUIController] 문양 로드 실패: {emblemPath}", GameLogger.LogCategory.Character);
+                }
+
+                return emblem;
+            }
+            catch (Exception ex)
+            {
+                GameLogger.LogError($"[PlayerCharacterUIController] 문양 로드 중 오류: {ex.Message}", GameLogger.LogCategory.Character);
+                return null;
+            }
+            finally
+            {
+                _loadingEmblems.Remove(emblemPath);
             }
         }
 
@@ -624,7 +686,8 @@ namespace Game.CharacterSystem.UI
         {
             hpBarTween?.Kill();
             hpBarTween = DOTween.To(() => hpBarFill.fillAmount, x => hpBarFill.fillAmount = x, 
-                targetRatio, 1f / barAnimationSpeed);
+                targetRatio, 1f / barAnimationSpeed)
+                .SetAutoKill(true);
         }
 
         /// <summary>
@@ -655,7 +718,8 @@ namespace Game.CharacterSystem.UI
 
             colorTween?.Kill();
             colorTween = DOTween.To(() => hpBarFill.color, x => hpBarFill.color = x, 
-                targetColor, 1f / colorAnimationSpeed);
+                targetColor, 1f / colorAnimationSpeed)
+                .SetAutoKill(true);
         }
 
         #endregion

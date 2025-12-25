@@ -6,6 +6,7 @@ using Game.CharacterSystem.Interface;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Effect;
 using Game.SkillCardSystem.Data;
+using Game.SkillCardSystem.Utility;
 using Game.CombatSystem.Slot;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Utility;
@@ -147,8 +148,10 @@ namespace Game.CombatSystem.Manager
         #region 카드 실행
 
         /// <summary>
-        /// 카드 즉시 실행
+        /// 카드를 즉시 실행합니다
         /// </summary>
+        /// <param name="card">실행할 스킬 카드</param>
+        /// <param name="slotPosition">카드가 위치한 슬롯 위치</param>
         public void ExecuteCardImmediately(ISkillCard card, CombatSlotPosition slotPosition)
         {
             if (!isInitialized)
@@ -243,8 +246,6 @@ namespace Game.CombatSystem.Manager
 
         private ExecutionResult ExecuteCard(ISkillCard card, CombatSlotPosition slotPosition)
         {
-            // StageManager 상태는 인터페이스에서 소환 진행 여부를 노출하지 않으므로 별도 차단 없음
-
             // 소스와 타겟 캐릭터 결정 (카드 소유자 기준)
             ICharacter sourceCharacter = GetSourceCharacter(card);
             ICharacter targetCharacter = GetTargetCharacter(card);
@@ -255,43 +256,22 @@ namespace Game.CombatSystem.Manager
                 return new ExecutionResult(false, null, "캐릭터를 찾을 수 없음");
             }
 
+            if (card == null)
+            {
+                GameLogger.LogError("카드가 null입니다.", GameLogger.LogCategory.Error);
+                return new ExecutionResult(false, null, "카드가 null입니다");
+            }
+
             try
             {
-                // 카드 실행
                 // 플레이어 카드의 자원 소모 처리 (선소모/부족 시 실패)
-                if (card != null && card.IsFromPlayer())
+                var resourceResult = ProcessResourceCost(card);
+                if (!resourceResult.isSuccess)
                 {
-                    var def = card.CardDefinition;
-                    var cfg = def?.configuration;
-                    if (cfg != null && cfg.hasResource && cfg.resourceConfig != null)
-                    {
-                        int cost = Mathf.Max(0, cfg.resourceConfig.cost);
-                        if (cost > 0)
-                        {
-                            if (playerManager == null)
-                            {
-                                GameLogger.LogError("PlayerManager가 없어 자원 소모를 처리할 수 없습니다.", GameLogger.LogCategory.Error);
-                                return new ExecutionResult(false, null, "자원 매니저 없음");
-                            }
-
-                            if (!playerManager.HasEnoughResource(cost))
-                            {
-                                GameLogger.LogWarning($"자원이 부족하여 카드를 사용할 수 없습니다. 필요: {cost}, 현재: {playerManager.CurrentResource}", GameLogger.LogCategory.SkillCard);
-                                return new ExecutionResult(false, null, "자원이 부족합니다");
-                            }
-
-                            // 선소모
-                            bool consumed = playerManager.ConsumeResource(cost);
-                            if (!consumed)
-                            {
-                                GameLogger.LogWarning($"자원 소모 실패: 필요 {cost}, 현재 {playerManager.CurrentResource}", GameLogger.LogCategory.SkillCard);
-                                return new ExecutionResult(false, null, "자원 소모 실패");
-                            }
-                            // 자원 소모 완료
-                        }
-                    }
+                    return resourceResult;
                 }
 
+                // 카드 실행
                 card.ExecuteSkill(sourceCharacter, targetCharacter);
 
                 // 카드 사용 히스토리 등록 (연계 스킬은 제외)
@@ -301,26 +281,7 @@ namespace Game.CombatSystem.Manager
                 OnCardExecuted?.Invoke(card, sourceCharacter, targetCharacter);
 
                 // 전투 통계 이벤트 발생
-                if (card != null && card.CardDefinition != null)
-                {
-                    string cardId = card.CardDefinition.cardId;
-                    GameObject cardObj = null;
-                    
-                    // 카드 UI GameObject 찾기 시도
-                    if (card is MonoBehaviour cardMono)
-                    {
-                        cardObj = cardMono.gameObject;
-                    }
-                    
-                    if (card.IsFromPlayer())
-                    {
-                        Game.CombatSystem.CombatEvents.RaisePlayerCardUse(cardId, cardObj);
-                    }
-                    else
-                    {
-                        Game.CombatSystem.CombatEvents.RaiseEnemyCardUse(cardId, cardObj);
-                    }
-                }
+                RaiseCombatStatisticsEvents(card);
 
                 return new ExecutionResult(true, null, "카드 실행 성공");
             }
@@ -329,6 +290,92 @@ namespace Game.CombatSystem.Manager
                 GameLogger.LogError($"카드 실행 중 오류 발생: {ex.Message}", GameLogger.LogCategory.Error);
                 return new ExecutionResult(false, null, ex.Message);
             }
+        }
+
+        /// <summary>
+        /// 플레이어 카드의 자원 소모를 처리합니다
+        /// </summary>
+        /// <param name="card">실행할 카드</param>
+        /// <returns>처리 결과</returns>
+        private ExecutionResult ProcessResourceCost(ISkillCard card)
+        {
+            if (card == null || !card.IsFromPlayer())
+            {
+                return new ExecutionResult(true, null, "자원 소모 불필요");
+            }
+
+            var def = card.CardDefinition;
+            var cfg = def?.configuration;
+            if (cfg == null || !cfg.HasResourceCost())
+            {
+                return new ExecutionResult(true, null, "자원 소모 불필요");
+            }
+
+            int cost = Mathf.Max(0, cfg.resourceConfig.cost);
+            if (cost <= 0)
+            {
+                return new ExecutionResult(true, null, "자원 소모 불필요");
+            }
+
+            if (playerManager == null)
+            {
+                GameLogger.LogError("PlayerManager가 없어 자원 소모를 처리할 수 없습니다.", GameLogger.LogCategory.Error);
+                return new ExecutionResult(false, null, "자원 매니저 없음");
+            }
+
+            if (!playerManager.HasEnoughResource(cost))
+            {
+                GameLogger.LogWarning($"자원이 부족하여 카드를 사용할 수 없습니다. 필요: {cost}, 현재: {playerManager.CurrentResource}", GameLogger.LogCategory.SkillCard);
+                return new ExecutionResult(false, null, "자원이 부족합니다");
+            }
+
+            // 선소모
+            bool consumed = playerManager.ConsumeResource(cost);
+            if (!consumed)
+            {
+                GameLogger.LogWarning($"자원 소모 실패: 필요 {cost}, 현재 {playerManager.CurrentResource}", GameLogger.LogCategory.SkillCard);
+                return new ExecutionResult(false, null, "자원 소모 실패");
+            }
+
+            return new ExecutionResult(true, null, "자원 소모 완료");
+        }
+
+        /// <summary>
+        /// 전투 통계 이벤트를 발생시킵니다
+        /// </summary>
+        /// <param name="card">실행된 카드</param>
+        private void RaiseCombatStatisticsEvents(ISkillCard card)
+        {
+            if (card == null || card.CardDefinition == null)
+            {
+                return;
+            }
+
+            string cardId = card.CardDefinition.cardId;
+            GameObject cardObj = GetCardGameObject(card);
+
+            if (card.IsFromPlayer())
+            {
+                Game.CombatSystem.CombatEvents.RaisePlayerCardUse(cardId, cardObj);
+            }
+            else
+            {
+                Game.CombatSystem.CombatEvents.RaiseEnemyCardUse(cardId, cardObj);
+            }
+        }
+
+        /// <summary>
+        /// 카드의 GameObject를 가져옵니다
+        /// </summary>
+        /// <param name="card">카드 인스턴스</param>
+        /// <returns>GameObject, 없으면 null</returns>
+        private GameObject GetCardGameObject(ISkillCard card)
+        {
+            if (card is MonoBehaviour cardMono)
+            {
+                return cardMono.gameObject;
+            }
+            return null;
         }
 
         /// <summary>
@@ -352,6 +399,11 @@ namespace Game.CombatSystem.Manager
         /// </summary>
         /// <param name="currentCard">현재 실행 중인 카드 (연계 스킬)</param>
         /// <returns>이전 턴에 사용된 비-연계 카드, 없으면 null</returns>
+        /// <summary>
+        /// 현재 카드의 소유자가 이전 턴에 사용한 비-연계 카드를 반환합니다
+        /// </summary>
+        /// <param name="currentCard">현재 카드</param>
+        /// <returns>이전 턴에 사용한 비-연계 카드, 없으면 null</returns>
         public ISkillCard GetPreviousNonLinkCardForOwner(ISkillCard currentCard)
         {
             if (currentCard == null || turnManager == null)
@@ -480,8 +532,9 @@ namespace Game.CombatSystem.Manager
         #region 실행 큐 관리
 
         /// <summary>
-        /// 실행 명령을 큐에 추가
+        /// 실행 명령을 큐에 추가합니다
         /// </summary>
+        /// <param name="command">추가할 실행 명령</param>
         public void QueueExecution(ExecutionCommand command)
         {
             executionQueue.Enqueue(command);
@@ -525,7 +578,7 @@ namespace Game.CombatSystem.Manager
         #region 슬롯 이동 (호환 API)
 
         /// <summary>
-        /// 슬롯 이동 (새로운 5슬롯 시스템)
+        /// 슬롯을 앞으로 이동시킵니다 (새로운 5슬롯 시스템)
         /// 상태 시스템으로 이관되어 직접 이동은 수행하지 않으며, TurnManager 어댑터를 통해 위임합니다.
         /// </summary>
         public void MoveSlotsForwardNew()
@@ -541,7 +594,7 @@ namespace Game.CombatSystem.Manager
         }
 
         /// <summary>
-        /// 슬롯 이동 (레거시 4슬롯 시스템)
+        /// 슬롯을 앞으로 이동시킵니다 (레거시 4슬롯 시스템 호환)
         /// 새로운 시스템에서도 동일 루틴을 사용합니다.
         /// </summary>
         public void MoveSlotsForward()
@@ -590,14 +643,29 @@ namespace Game.CombatSystem.Manager
 
         #region 공개 프로퍼티
 
+        /// <summary>
+        /// 현재 카드 실행 중인지 여부
+        /// </summary>
         public bool IsExecuting => isExecuting;
+        
+        /// <summary>
+        /// 초기화 완료 여부
+        /// </summary>
         public bool IsInitialized => isInitialized;
+        
+        /// <summary>
+        /// 실행 큐에 대기 중인 명령 개수
+        /// </summary>
         public int QueueCount => executionQueue.Count;
 
         #endregion
 
         #region 리셋
 
+        /// <summary>
+        /// 실행 상태를 초기화합니다
+        /// 실행 큐를 비우고 실행 상태를 리셋합니다
+        /// </summary>
         public void ResetExecution()
         {
             isExecuting = false;

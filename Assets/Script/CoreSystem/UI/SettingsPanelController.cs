@@ -22,10 +22,12 @@ namespace Game.CoreSystem.UI
         [SerializeField] private Button goToMainButton;
         [SerializeField] private Button exitGameButton;
         
-        // 직접 참조 (DI 대신)
-        private ISaveManager saveManager;
-        private ISceneTransitionManager sceneTransitionManager;
-        private SettingsManager settingsManager;
+        // DI로 주입
+        [Inject(Optional = true)] private ISaveManager saveManager;
+        [Inject(Optional = true)] private ISceneTransitionManager sceneTransitionManager;
+        [Inject(Optional = true)] private SettingsManager settingsManager;
+        [Inject(Optional = true)] private GameSessionStatistics gameSessionStatistics;
+        [Inject(Optional = true)] private IStatisticsManager statisticsManager;
         
         [Header("설정")]
         [SerializeField] private bool enableDebugLogging = false;
@@ -42,10 +44,7 @@ namespace Game.CoreSystem.UI
         /// </summary>
         private void FindManagers()
         {
-            saveManager = FindFirstObjectByType<SaveManager>();
-            sceneTransitionManager = FindFirstObjectByType<SceneTransitionManager>();
-            settingsManager = FindFirstObjectByType<SettingsManager>();
-            
+            // saveManager, sceneTransitionManager, settingsManager는 DI로 주입받음
             if (enableDebugLogging)
             {
             }
@@ -118,9 +117,7 @@ namespace Game.CoreSystem.UI
                 PlayerPrefs.Save();
                 
                 // 통계 세션 완전 종료 (다시하기는 완전 종료) - 게임 승리와 동일한 로직
-                var gameSessionStatistics = UnityEngine.Object.FindFirstObjectByType<GameSessionStatistics>(UnityEngine.FindObjectsInactive.Include);
-                var statisticsManager = UnityEngine.Object.FindFirstObjectByType<StatisticsManager>(UnityEngine.FindObjectsInactive.Include);
-                
+                // gameSessionStatistics와 statisticsManager는 DI로 주입받음
                 if (gameSessionStatistics != null && statisticsManager != null)
                 {
                     // 세션이 활성화되어 있으면 종료 처리 (완전 종료)

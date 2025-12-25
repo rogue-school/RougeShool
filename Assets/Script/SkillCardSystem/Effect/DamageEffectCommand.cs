@@ -51,6 +51,28 @@ namespace Game.SkillCardSystem.Effect
         }
 
         /// <summary>
+        /// 데미지 효과 명령을 생성합니다 (의존성 포함).
+        /// </summary>
+        /// <param name="damageAmount">데미지량</param>
+        /// <param name="hits">공격 횟수</param>
+        /// <param name="ignoreGuard">가드 무시 여부</param>
+        /// <param name="ignoreCounter">반격 무시 여부</param>
+        /// <param name="audioManager">오디오 매니저 (선택적)</param>
+        /// <param name="itemService">아이템 서비스 (선택적)</param>
+        public DamageEffectCommand(int damageAmount, int hits, bool ignoreGuard, bool ignoreCounter, IAudioManager audioManager, IItemService itemService)
+        {
+            this.damageAmount = damageAmount;
+            this.hits = hits;
+            this.ignoreGuard = ignoreGuard;
+            this.ignoreCounter = ignoreCounter;
+            this.useRandomBaseDamage = false;
+            this.minBaseDamage = 0;
+            this.maxBaseDamage = 0;
+            this.audioManager = audioManager;
+            this.itemService = itemService;
+        }
+
+        /// <summary>
         /// 랜덤 데미지 구간을 포함하는 데미지 효과 명령을 생성합니다.
         /// </summary>
         /// <param name="damageAmount">기본 데미지(랜덤을 사용하지 않을 때)</param>
@@ -525,7 +547,8 @@ namespace Game.SkillCardSystem.Effect
                 return;
             }
 
-            // VFXManager 찾기
+            // VFXManager는 Command 생성 시 주입받지 않으므로 여기서 찾기 (폴백)
+            // TODO: EffectCommandFactory에서 VFXManager도 주입받도록 리팩토링 필요
             var vfxManager = UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
             if (vfxManager != null)
             {

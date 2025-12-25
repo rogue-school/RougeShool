@@ -48,6 +48,8 @@ namespace Game.CombatSystem.UI
         // 스테이지 진행/전환 매니저 (DI)
         [Inject(Optional = true)] private Game.StageSystem.Manager.StageManager _stageManager;
         [Inject(Optional = true)] private Game.CoreSystem.Manager.SceneTransitionManager _sceneTransitionManager;
+        // 저장 매니저 (DI)
+        [Inject(Optional = true)] private ISaveManager _saveManager;
         // 통계 매니저 (DI)
         [Inject(Optional = true)] private GameSessionStatistics _gameSessionStatistics;
         [Inject(Optional = true)] private IStatisticsManager _statisticsManager;
@@ -207,15 +209,7 @@ namespace Game.CombatSystem.UI
                 return;
             }
 
-            if (_gameSessionStatistics == null)
-            {
-                _gameSessionStatistics = FindFirstObjectByType<GameSessionStatistics>(FindObjectsInactive.Include);
-            }
-
-            if (_leaderboardManager == null)
-            {
-                _leaderboardManager = FindFirstObjectByType<LeaderboardManager>(FindObjectsInactive.Include);
-            }
+            // _gameSessionStatistics와 _leaderboardManager는 DI로 주입받음
 
             if (_gameSessionStatistics == null)
             {
@@ -332,16 +326,7 @@ namespace Game.CombatSystem.UI
         /// </summary>
         private void ShowLeaderboard()
         {
-            if (_leaderboardManager == null)
-            {
-                _leaderboardManager = FindFirstObjectByType<LeaderboardManager>(FindObjectsInactive.Include);
-            }
-
-            if (_gameSessionStatistics == null)
-            {
-                _gameSessionStatistics = FindFirstObjectByType<GameSessionStatistics>(FindObjectsInactive.Include);
-            }
-
+            // _leaderboardManager와 _gameSessionStatistics는 DI로 주입받음
             if (_leaderboardManager == null || _gameSessionStatistics == null)
             {
                 GameLogger.LogWarning("[VictoryUI] ShowLeaderboard: LeaderboardManager 또는 GameSessionStatistics를 찾을 수 없습니다.", GameLogger.LogCategory.UI);
@@ -407,6 +392,9 @@ namespace Game.CombatSystem.UI
             }
         }
 
+        /// <summary>
+        /// 승리 UI 패널을 숨깁니다.
+        /// </summary>
         public void Hide()
         {
             if (panel != null) panel.SetActive(false);
@@ -423,23 +411,19 @@ namespace Game.CombatSystem.UI
             {
                 await SaveStatisticsSession(true);
                 
-                var stm = _sceneTransitionManager != null
-                    ? _sceneTransitionManager
-                    : FindFirstObjectByType<Game.CoreSystem.Manager.SceneTransitionManager>(FindObjectsInactive.Include);
-                if (stm != null)
+                // _sceneTransitionManager는 DI로 주입받음
+                if (_sceneTransitionManager != null)
                 {
-                    _ = stm.TransitionToMainScene();
+                    _ = _sceneTransitionManager.TransitionToMainScene();
                 }
                 return;
             }
             
             // 스테이지 클리어 시: 자동 진행이 이미 되었으면 패널만 숨기고, 아니면 다음 스테이지로 진행
-            var sm = _stageManager != null ? _stageManager :
-                FindFirstObjectByType<Game.StageSystem.Manager.StageManager>(FindObjectsInactive.Include);
-            
-            if (sm != null)
+            // _stageManager는 DI로 주입받음
+            if (_stageManager != null)
             {
-                var currentStage = sm.GetCurrentStage();
+                var currentStage = _stageManager.GetCurrentStage();
                 if (currentStage != null && currentStage.autoProgressToNext)
                 {
                     // 자동 진행이 이미 완료되었으므로 패널만 숨김
@@ -449,19 +433,18 @@ namespace Game.CombatSystem.UI
                 else
                 {
                     // 수동 진행: 다음 스테이지로 진행
-                    if (sm.ProgressToNextStage())
+                    if (_stageManager.ProgressToNextStage())
                     {
                         GameLogger.LogInfo("[VictoryUI] 다음 스테이지로 수동 진행", GameLogger.LogCategory.UI);
                         
                         // 진행 상황 저장
-                        var saveManager = FindFirstObjectByType<Game.CoreSystem.Save.SaveManager>(FindObjectsInactive.Include);
-                        if (saveManager != null)
+                        if (_saveManager != null)
                         {
-                            await saveManager.SaveCurrentProgress("ManualStageProgress");
+                            await _saveManager.SaveCurrentProgress("ManualStageProgress");
                         }
                         
                         // 스테이지 시작
-                        sm.StartStage();
+                        _stageManager.StartStage();
                         
                         // 패널 숨김
                         Hide();
@@ -485,16 +468,7 @@ namespace Game.CombatSystem.UI
         {
             GameLogger.LogInfo($"[VictoryUI] 통계 세션 저장 시도 (완전 종료: {finalEnd})", GameLogger.LogCategory.Save);
             
-            if (_gameSessionStatistics == null)
-            {
-                _gameSessionStatistics = FindFirstObjectByType<GameSessionStatistics>(FindObjectsInactive.Include);
-            }
-            
-            if (_statisticsManager == null)
-            {
-                _statisticsManager = FindFirstObjectByType<StatisticsManager>(FindObjectsInactive.Include);
-            }
-            
+            // _gameSessionStatistics와 _statisticsManager는 DI로 주입받음
             if (_gameSessionStatistics == null)
             {
                 GameLogger.LogWarning("[VictoryUI] GameSessionStatistics를 찾을 수 없습니다. 통계 저장을 건너뜁니다.", GameLogger.LogCategory.Save);
@@ -553,16 +527,14 @@ namespace Game.CombatSystem.UI
 
         private bool IsFinalVictory()
         {
-            // StageManager가 주입되지 않았으면 안전하게 찾아봅니다.
-            var sm = _stageManager != null ? _stageManager :
-                FindFirstObjectByType<Game.StageSystem.Manager.StageManager>(FindObjectsInactive.Include);
-            if (sm != null)
+            // _stageManager는 DI로 주입받음
+            if (_stageManager != null)
             {
                 // 1) 이미 게임 완료 플래그가 올라간 경우
-                if (sm.IsGameCompleted) return true;
+                if (_stageManager.IsGameCompleted) return true;
 
                 // 2) 현재 스테이지 데이터를 가져와서 IsLastStage 확인
-                var currentStageData = sm.GetCurrentStage();
+                var currentStageData = _stageManager.GetCurrentStage();
                 if (currentStageData != null && currentStageData.IsLastStage)
                 {
                     // 현재 스테이지가 마지막 스테이지인 경우

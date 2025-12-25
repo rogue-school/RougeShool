@@ -24,7 +24,7 @@ namespace Game.CombatSystem.Service
         private readonly CardDropRegistrar registrar;
         private readonly TurnManager turnManager;
         private readonly CombatExecutionManager executionManager;
-        private CombatStateMachine stateMachine;
+        private readonly CombatStateMachine stateMachine;
 
         /// <summary>
         /// 생성자. 필요한 의존성을 주입합니다.
@@ -33,30 +33,14 @@ namespace Game.CombatSystem.Service
             ICardValidator validator,
             CardDropRegistrar registrar,
             TurnManager turnManager,
-            CombatExecutionManager executionManager)
+            CombatExecutionManager executionManager,
+            CombatStateMachine stateMachine)
         {
             this.validator = validator;
             this.registrar = registrar;
             this.turnManager = turnManager;
             this.executionManager = executionManager;
-
-            // CombatStateMachine 찾기 (지연 초기화)
-            FindStateMachine();
-        }
-
-        /// <summary>
-        /// CombatStateMachine을 찾습니다 (지연 초기화)
-        /// </summary>
-        private void FindStateMachine()
-        {
-            if (stateMachine == null)
-            {
-                stateMachine = Object.FindFirstObjectByType<CombatStateMachine>();
-                if (stateMachine != null)
-                {
-                    GameLogger.LogInfo("[CardDropService] CombatStateMachine 연결 완료", GameLogger.LogCategory.Combat);
-                }
-            }
+            this.stateMachine = stateMachine;
         }
 
         /// <summary>
@@ -72,30 +56,23 @@ namespace Game.CombatSystem.Service
         {
             message = "";
 
-            // 상태 머신 확인 (지연 초기화)
+            // stateMachine은 생성자에서 주입받음
             if (stateMachine == null)
             {
-                FindStateMachine();
+                GameLogger.LogWarning("[CardDropService] CombatStateMachine이 null입니다.", GameLogger.LogCategory.Combat);
+                return false;
             }
 
             // 0. 상태 머신 검증 - 플레이어 카드 드래그 허용 여부 확인
-            if (stateMachine != null)
+            if (!stateMachine.CanPlayerDragCard())
             {
-                if (!stateMachine.CanPlayerDragCard())
-                {
-                    message = "현재 상태에서 카드 배치가 허용되지 않습니다.";
-                    GameLogger.LogWarning($"[CardDropService] {message} (상태: {stateMachine.GetCurrentState()?.StateName ?? "None"})", GameLogger.LogCategory.SkillCard);
-                    return false;
-                }
-            }
-            else
-            {
-                // 상태 머신이 없으면 기존 방식으로 폴백
-                GameLogger.LogWarning("[CardDropService] CombatStateMachine을 찾을 수 없음 - 기존 방식으로 검증", GameLogger.LogCategory.SkillCard);
+                message = "현재 상태에서 카드 배치가 허용되지 않습니다.";
+                GameLogger.LogWarning($"[CardDropService] {message} (상태: {stateMachine.GetCurrentState()?.StateName ?? "None"})", GameLogger.LogCategory.SkillCard);
+                return false;
             }
 
-            // 1. 플레이어 입력 턴 여부 확인 (기존 방식 - 폴백)
-            if (stateMachine == null && !turnManager.IsPlayerTurn())
+            // 1. 플레이어 입력 턴 여부 확인
+            if (!turnManager.IsPlayerTurn())
             {
                 message = "플레이어 입력 턴이 아닙니다.";
                 GameLogger.LogWarning($"[CardDropService] {message}", GameLogger.LogCategory.SkillCard);
@@ -182,7 +159,10 @@ namespace Game.CombatSystem.Service
                             Vector3 endWorldWithOffset = (target as RectTransform) != null
                                 ? (target as RectTransform).TransformPoint(new Vector3(0f, 4f, 0f))
                                 : endWorld + new Vector3(0f, 4f, 0f);
-                            uiRect.DOMove(endWorldWithOffset, 0.15f).SetEase(Ease.OutQuad).OnComplete(() =>
+                            uiRect.DOMove(endWorldWithOffset, 0.15f)
+                                .SetEase(Ease.OutQuad)
+                                .SetAutoKill(true)
+                                .OnComplete(() =>
                             {
                                 uiRect.SetParent(target, false);
                                 uiRect.anchoredPosition = new Vector2(0f, 4f);
@@ -204,7 +184,10 @@ namespace Game.CombatSystem.Service
                         Vector3 endWorldWithOffset = (target as RectTransform) != null
                             ? (target as RectTransform).TransformPoint(new Vector3(0f, 4f, 0f))
                             : endWorld + new Vector3(0f, 4f, 0f);
-                        uiRect.DOMove(endWorldWithOffset, 0.15f).SetEase(Ease.OutQuad).OnComplete(() =>
+                        uiRect.DOMove(endWorldWithOffset, 0.15f)
+                            .SetEase(Ease.OutQuad)
+                            .SetAutoKill(true)
+                            .OnComplete(() =>
                         {
                             uiRect.SetParent(target, false);
                             uiRect.anchoredPosition = new Vector2(0f, 4f);

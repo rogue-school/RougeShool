@@ -21,6 +21,7 @@ namespace Game.TutorialSystem
 
         private CanvasGroup _canvasGroup;
         private RectTransform _rootRect;
+        private Tween _fadeTween;
 
         // 하이라이트(사중 레이어) 제거 모드: 단순 페이지 시스템만 사용
 
@@ -70,6 +71,18 @@ namespace Game.TutorialSystem
             // 단순 페이지 모드에서는 추가 초기화 불필요
         }
 
+        private void OnDisable()
+        {
+            _fadeTween?.Kill();
+            _fadeTween = null;
+        }
+
+        private void OnDestroy()
+        {
+            _fadeTween?.Kill();
+            _fadeTween = null;
+        }
+
         /// <summary>
         /// 메시지를 설정하고 오버레이를 표시합니다.
         /// </summary>
@@ -88,9 +101,10 @@ namespace Game.TutorialSystem
                 }
             }
 
-            _canvasGroup.DOFade(1f, tweenTime);
-            _canvasGroup.blocksRaycasts = true;
-            _canvasGroup.interactable = true;
+            Game.UtilitySystem.UIAnimationHelper.FadeInWithCleanup(
+                ref _fadeTween,
+                _canvasGroup,
+                tweenTime);
             // 페이지 모드일 경우 첫 페이지로 초기화 (리스트 우선, 없으면 pagesRoot)
             if (GetPageCount() > 0)
                 SetActivePage(initialPageIndex);
@@ -106,9 +120,10 @@ namespace Game.TutorialSystem
                 _canvasGroup = GetComponent<CanvasGroup>();
                 if (_canvasGroup == null) _canvasGroup = gameObject.AddComponent<CanvasGroup>();
             }
-            _canvasGroup.DOFade(0f, tweenTime);
-            _canvasGroup.blocksRaycasts = false;
-            _canvasGroup.interactable = false;
+            Game.UtilitySystem.UIAnimationHelper.FadeOutWithCleanup(
+                ref _fadeTween,
+                _canvasGroup,
+                tweenTime);
             // 단순 페이지 모드: 추가 정리 없음
         }
 

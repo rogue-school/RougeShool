@@ -45,26 +45,21 @@ namespace Game.CoreSystem.Manager
 		#endregion
 		
 		// 초기화 상태는 베이스 클래스에서 관리
-		public bool IsTransitioning { get; private set; } = false; // 전환 상태 추가
+		
+		/// <summary>
+		/// 현재 씬 전환이 진행 중인지 여부를 나타냅니다.
+		/// </summary>
+		public bool IsTransitioning { get; private set; } = false;
 		
 		// 이벤트
 		public System.Action<string> OnSceneTransitionStart { get; set; }
 		public System.Action<string> OnSceneTransitionEnd { get; set; }
 
-		private AudioEventTrigger cachedAudioEventTrigger;
-
 		// 의존성 주입
-		private IAudioManager audioManager;
-
-		// FindObjectOfType 캐싱
-		private StageManager cachedStageManager;
-		private Game.CoreSystem.Save.SaveManager cachedSaveManager;
-		
-		[Inject]
-		public void Construct(IAudioManager audioManager)
-		{
-			this.audioManager = audioManager;
-		}
+		[Inject(Optional = true)] private IAudioManager audioManager;
+		[Inject(Optional = true)] private Game.StageSystem.Interface.IStageManager stageManager;
+		[Inject(Optional = true)] private AudioEventTrigger audioEventTrigger;
+		[Inject(Optional = true)] private Game.CombatSystem.UI.VictoryUI victoryUI;
 		
 		protected override void Awake()
 		{
@@ -136,45 +131,11 @@ namespace Game.CoreSystem.Manager
 			
 		}
 
-		/// <summary>
-		/// StageManager 캐시 가져오기 (지연 초기화)
-		/// </summary>
-		private StageManager GetCachedStageManager()
-		{
-			if (cachedStageManager == null)
-			{
-				cachedStageManager = FindFirstObjectByType<StageManager>();
-			}
-			return cachedStageManager;
-		}
-
-		/// <summary>
-		/// SaveManager 캐시 가져오기 (지연 초기화)
-		/// </summary>
-		private Game.CoreSystem.Save.SaveManager GetCachedSaveManager()
-		{
-			if (cachedSaveManager == null)
-			{
-				cachedSaveManager = FindFirstObjectByType<Game.CoreSystem.Save.SaveManager>();
-			}
-			return cachedSaveManager;
-		}
-
-		/// <summary>
-		/// AudioEventTrigger 캐시 가져오기 (지연 초기화)
-		/// </summary>
-		private AudioEventTrigger GetCachedAudioEventTrigger()
-		{
-			if (cachedAudioEventTrigger == null)
-			{
-				cachedAudioEventTrigger = FindFirstObjectByType<AudioEventTrigger>();
-			}
-			return cachedAudioEventTrigger;
-		}
 		
 		/// <summary>
 		/// 코어 씬으로 전환
 		/// </summary>
+		/// <returns>전환 작업</returns>
 		public async Task TransitionToCoreScene()
 		{
 			await TransitionToScene(coreSceneName, TransitionType.Fade);
@@ -183,22 +144,15 @@ namespace Game.CoreSystem.Manager
 		/// <summary>
 		/// 메인 씬으로 전환
 		/// </summary>
+		/// <returns>전환 작업</returns>
 		public async Task TransitionToMainScene()
 		{
-			// CoreScene에 있는 VictoryUI 패널 숨기기
-			try
-			{
-				var victoryUI = FindFirstObjectByType<Game.CombatSystem.UI.VictoryUI>(FindObjectsInactive.Include);
-				if (victoryUI != null)
-				{
-					victoryUI.Hide();
-					GameLogger.LogInfo("[SceneTransitionManager] 메인 씬 전환 전 VictoryUI 숨김", GameLogger.LogCategory.UI);
-				}
-			}
-			catch (System.Exception ex)
-			{
-				GameLogger.LogWarning($"[SceneTransitionManager] VictoryUI 숨김 중 경고: {ex.Message}", GameLogger.LogCategory.UI);
-			}
+		// CoreScene에 있는 VictoryUI 패널 숨기기
+		if (victoryUI != null)
+		{
+			victoryUI.Hide();
+			GameLogger.LogInfo("[SceneTransitionManager] 메인 씬 전환 전 VictoryUI 숨김", GameLogger.LogCategory.UI);
+		}
 
 			// 현재 씬이 StageScene이면 진행 상황 저장
 			if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == stageSceneName)
@@ -206,12 +160,11 @@ namespace Game.CoreSystem.Manager
 				await SaveProgressFromStageScene();
 			}
 
-			// 스테이지 매니저가 있으면 스테이지 BGM 정리
-			var stageManager = GetCachedStageManager();
-			if (stageManager != null)
-			{
-				stageManager.CleanupStageBGM();
-			}
+		// 스테이지 매니저가 있으면 스테이지 BGM 정리
+		if (stageManager != null)
+		{
+			stageManager.CleanupStageBGM();
+		}
 
 			// 기존 BGM 정지 (추가 안전장치)
 			StopCurrentBGM();
@@ -223,6 +176,7 @@ namespace Game.CoreSystem.Manager
 		/// <summary>
 		/// 전투 씬으로 전환
 		/// </summary>
+		/// <returns>전환 작업</returns>
 		public async Task TransitionToBattleScene()
 		{
 			await TransitionToScene(battleSceneName, TransitionType.Fade);
@@ -232,6 +186,7 @@ namespace Game.CoreSystem.Manager
 		/// <summary>
 		/// 스테이지 씬으로 전환
 		/// </summary>
+		/// <returns>전환 작업</returns>
 		public async Task TransitionToStageScene()
 		{
 			await TransitionToScene(stageSceneName, TransitionType.Fade);
@@ -241,6 +196,8 @@ namespace Game.CoreSystem.Manager
 		/// <summary>
 		/// 지정된 씬으로 전환
 		/// </summary>
+		/// <param name="sceneName">전환할 씬 이름</param>
+		/// <returns>전환 작업</returns>
 		public async Task TransitionToScene(string sceneName)
 		{
 			await TransitionToScene(sceneName, TransitionType.Fade);
@@ -251,6 +208,7 @@ namespace Game.CoreSystem.Manager
 		/// </summary>
 		/// <param name="sceneName">전환할 씬 이름</param>
 		/// <param name="transitionType">전환 효과 타입</param>
+		/// <returns>전환 작업</returns>
 		/// <exception cref="System.ArgumentNullException">sceneName이 null이거나 비어있을 경우</exception>
 		public async Task TransitionToScene(string sceneName, TransitionType transitionType)
 		{
@@ -321,25 +279,22 @@ namespace Game.CoreSystem.Manager
 		{
 			if (string.IsNullOrEmpty(sceneName)) return;
 
-			var audioEventTrigger = GetCachedAudioEventTrigger();
-			if (audioEventTrigger == null) return;
+		if (audioEventTrigger == null) return;
 
-			switch (sceneName)
-			{
-				case var s when s == mainSceneName:
-					audioEventTrigger.OnMainMenuBGM();
-					break;
-				case var s when s == battleSceneName:
-					audioEventTrigger.OnBattleBGM();
-					break;
-				case var s when s == stageSceneName:
-					// 스테이지 씬에서는 전투 BGM 재생 (적 전용 BGM은 적 생성 시 재생됨)
-					audioEventTrigger.OnBattleBGM();
-					break;
-				default:
-					// 리소스 경로 규칙이 있을 경우 OnSceneBGM으로 대체 가능
-					break;
-			}
+		switch (sceneName)
+		{
+			case var s when s == mainSceneName:
+				audioEventTrigger.OnMainMenuBGM();
+				break;
+			case var s when s == battleSceneName:
+				audioEventTrigger.OnBattleBGM();
+				break;
+			case var s when s == stageSceneName:
+				audioEventTrigger.OnBattleBGM();
+				break;
+			default:
+				break;
+		}
 		}
 		
 		/// <summary>
@@ -450,6 +405,11 @@ namespace Game.CoreSystem.Manager
 			await Task.Delay(Mathf.RoundToInt(transitionDuration * 1000));
 		}
 		
+		/// <summary>
+		/// 씬을 동기적으로 로드합니다.
+		/// 기존 SceneLoader와의 호환성을 위해 제공되는 메서드입니다.
+		/// </summary>
+		/// <param name="sceneName">로드할 씬 이름</param>
 		public void LoadScene(string sceneName)
 		{
 			// 동기적으로 씬 로드 (기존 SceneLoader와 호환성을 위해)
@@ -461,61 +421,6 @@ namespace Game.CoreSystem.Manager
 		/// <summary>
 		/// 씬 전환 전 현재 진행 상황 저장
 		/// </summary>
-		private async Task SaveCurrentProgressBeforeTransition()
-		{
-			try
-			{
-				var saveManager = GetCachedSaveManager();
-				if (saveManager != null)
-				{
-					await saveManager.SaveCurrentProgress("SceneTransition");
-					GameLogger.LogInfo("씬 전환 전 진행 상황 저장 완료", GameLogger.LogCategory.Save);
-				}
-				else
-				{
-					GameLogger.LogWarning("SaveManager를 찾을 수 없습니다", GameLogger.LogCategory.Save);
-				}
-			}
-			catch (System.Exception ex)
-			{
-				GameLogger.LogError($"전환 전 저장 실패: {ex.Message}", GameLogger.LogCategory.Error);
-			}
-		}
-
-		/// <summary>
-		/// 씬 전환 후 저장된 진행 상황 로드
-		/// </summary>
-		private async Task LoadProgressAfterTransition()
-		{
-			try
-			{
-				// 씬 로드 완료 후 잠시 대기 (매니저들이 초기화될 시간 확보)
-				await Task.Delay(100);
-
-				var saveManager = GetCachedSaveManager();
-				if (saveManager != null && saveManager.HasStageProgressSave())
-				{
-					bool loadSuccess = await saveManager.LoadStageProgress();
-					if (loadSuccess)
-					{
-						GameLogger.LogInfo("씬 전환 후 진행 상황 로드 완료", GameLogger.LogCategory.Save);
-					}
-					else
-					{
-						GameLogger.LogWarning("진행 상황 로드 실패", GameLogger.LogCategory.Save);
-					}
-				}
-				else
-				{
-					GameLogger.LogInfo("저장된 진행 상황이 없습니다", GameLogger.LogCategory.Save);
-				}
-			}
-			catch (System.Exception ex)
-			{
-				GameLogger.LogError($"전환 후 로드 실패: {ex.Message}", GameLogger.LogCategory.Error);
-			}
-		}
-
 		/// <summary>
 		/// StageScene에서 다른 씬으로 전환할 때 진행 상황 저장
 		/// </summary>
@@ -523,14 +428,9 @@ namespace Game.CoreSystem.Manager
 		{
 			try
 			{
-				var stageManager = GetCachedStageManager();
 				if (stageManager != null)
 				{
 					await stageManager.SaveProgressBeforeSceneTransition();
-				}
-				else
-				{
-					GameLogger.LogWarning("StageManager를 찾을 수 없습니다", GameLogger.LogCategory.Save);
 				}
 			}
 			catch (System.Exception ex)
@@ -577,6 +477,30 @@ namespace Game.CoreSystem.Manager
 			{
 				GameLogger.LogInfo("SceneTransitionManager 리셋 완료", GameLogger.LogCategory.UI);
 			}
+		}
+
+		#endregion
+
+		#region Cleanup
+
+		private void OnDisable()
+		{
+			// DOTween 애니메이션 정리
+			if (transitionCanvas != null)
+			{
+				transitionCanvas.DOKill();
+			}
+		}
+
+		protected override void OnDestroy()
+		{
+			// DOTween 애니메이션 정리
+			if (transitionCanvas != null)
+			{
+				transitionCanvas.DOKill();
+			}
+			
+			base.OnDestroy();
 		}
 
 		#endregion

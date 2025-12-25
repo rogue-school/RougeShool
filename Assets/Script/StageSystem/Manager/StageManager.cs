@@ -93,6 +93,9 @@ namespace Game.StageSystem.Manager
         [Zenject.Inject(Optional = true)] private GameSessionStatistics gameSessionStatistics;
         [Zenject.Inject(Optional = true)] private IStatisticsManager statisticsManager;
         [Zenject.Inject(Optional = true)] private ICardCirculationSystem cardCirculationSystem;
+        [Zenject.Inject(Optional = true)] private Game.ItemSystem.Service.ItemService itemService;
+        [Zenject.Inject(Optional = true)] private Game.CombatSystem.UI.VictoryUI victoryUI;
+        [Zenject.Inject(Optional = true)] private Game.CharacterSystem.UI.EnemyCharacterUIController enemyCharacterUIController;
 
         private bool isWaitingForPlayer = false;
 
@@ -174,8 +177,17 @@ namespace Game.StageSystem.Manager
             }
         }
 
+        private void OnDisable()
+        {
+            // DOTween 애니메이션 정리
+            transform.DOKill();
+        }
+
         private void OnDestroy()
         {
+            // DOTween 애니메이션 정리
+            transform.DOKill();
+            
             // 씬 전환/파괴 상태 표시
             isDestroyed = true;
             
@@ -192,7 +204,6 @@ namespace Game.StageSystem.Manager
         private void InitializeGameStateForNewGame()
         {
             // 인벤토리 초기화 (스킬카드 스택은 캐릭터 생성 시 초기화됨)
-            var itemService = FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
             if (itemService != null)
             {
                 itemService.ResetInventoryForNewGame();
@@ -367,8 +378,9 @@ namespace Game.StageSystem.Manager
         #region 적 생성 흐름
 
         /// <summary>
-        /// 다음 적을 생성하여 전투에 배치합니다. (async/await 기반)
+        /// 다음 적을 생성하여 전투에 배치합니다 (async/await 기반)
         /// </summary>
+        /// <returns>적 생성 성공 여부</returns>
         public async Task<bool> SpawnNextEnemyAsync()
         {
             // 씬 전환/파괴 상태 확인
@@ -483,7 +495,7 @@ namespace Game.StageSystem.Manager
         }
 
         /// <summary>
-        /// 기존 API 호환성을 위한 동기 메서드
+        /// 다음 적을 생성합니다 (기존 API 호환성을 위한 동기 메서드)
         /// </summary>
         public void SpawnNextEnemy()
         {
@@ -504,8 +516,9 @@ namespace Game.StageSystem.Manager
         }
 
         /// <summary>
-        /// 적 캐릭터를 시스템에 등록합니다.
+        /// 적 캐릭터를 시스템에 등록합니다
         /// </summary>
+        /// <param name="enemy">등록할 적 캐릭터</param>
         public void RegisterEnemy(ICharacter enemy)
         {
             enemyManager?.RegisterEnemy(enemy);
@@ -519,9 +532,10 @@ namespace Game.StageSystem.Manager
         }
 
         /// <summary>
-        /// 소환된 적 캐릭터를 시스템에 등록합니다.
-        /// 일반 적과 달리 사망 콜백을 덮어쓰지 않습니다.
+        /// 소환된 적 캐릭터를 시스템에 등록합니다
+        /// 일반 적과 달리 사망 콜백을 덮어쓰지 않습니다
         /// </summary>
+        /// <param name="enemy">등록할 소환된 적 캐릭터</param>
         public void RegisterSummonedEnemy(ICharacter enemy)
         {
             GameLogger.LogInfo($"[StageManager] RegisterSummonedEnemy 호출: {enemy?.GetCharacterName() ?? "null"}", GameLogger.LogCategory.Combat);
@@ -632,6 +646,20 @@ namespace Game.StageSystem.Manager
 			// 스테이지 1의 마지막 적 처치 시 스킬카드 보상 지급 시도
 			TryGiveStage1FinalEnemyCardReward();
 			
+			// rewardBridge가 null이면 씬에서 찾기
+			if (rewardBridge == null)
+			{
+				rewardBridge = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Runtime.RewardOnEnemyDeath>(UnityEngine.FindObjectsInactive.Include);
+				if (rewardBridge != null)
+				{
+					GameLogger.LogInfo("[StageManager] RewardOnEnemyDeath를 씬에서 찾아서 연결했습니다.", GameLogger.LogCategory.Combat);
+				}
+				else
+				{
+					GameLogger.LogWarning("[StageManager] RewardOnEnemyDeath를 찾을 수 없습니다. 적 처치 보상이 작동하지 않을 수 있습니다. CombatScene에 RewardOnEnemyDeath 컴포넌트가 있는지 확인하세요.", GameLogger.LogCategory.Combat);
+				}
+			}
+			
 			// 보상 UI 열기 및 완료 대기 (설정된 경우)
 			if (rewardBridge != null)
 			{
@@ -643,6 +671,7 @@ namespace Game.StageSystem.Manager
             else
             {
                 // 보상 브리지가 없으면 바로 다음 진행
+                GameLogger.LogWarning("[StageManager] rewardBridge가 null입니다. 보상 처리를 건너뜁니다.", GameLogger.LogCategory.Combat);
                 UpdateStageProgress(null);
             }
 		}
@@ -1040,10 +1069,16 @@ namespace Game.StageSystem.Manager
 
         #region 스테이지 정보
 
-        /// <inheritdoc />
+        /// <summary>
+        /// 현재 스테이지 데이터를 반환합니다
+        /// </summary>
+        /// <returns>현재 스테이지 데이터, 없으면 null</returns>
         public StageData GetCurrentStage() => currentStage;
 
-        /// <inheritdoc />
+        /// <summary>
+        /// 다음 적이 있는지 확인합니다
+        /// </summary>
+        /// <returns>다음 적이 있으면 true</returns>
         public bool HasNextEnemy() =>
             currentStage != null && currentEnemyIndex < currentStage.enemies.Count;
 
@@ -1055,7 +1090,10 @@ namespace Game.StageSystem.Manager
             return HasNextEnemy();
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// 다음 적 데이터를 미리 확인합니다 (제거하지 않음)
+        /// </summary>
+        /// <returns>다음 적 데이터, 없으면 null</returns>
         public EnemyCharacterData PeekNextEnemyData() =>
             HasNextEnemy() ? currentStage.enemies[currentEnemyIndex] : null;
 
@@ -1121,8 +1159,9 @@ namespace Game.StageSystem.Manager
         }
         
         /// <summary>
-        /// 다음 스테이지가 있는지 확인합니다.
+        /// 다음 스테이지가 있는지 확인합니다
         /// </summary>
+        /// <returns>다음 스테이지가 있으면 true</returns>
         public bool HasNextStage()
         {
             // 다음 스테이지 번호 계산 후 실제 데이터 존재 여부로 판단
@@ -1131,8 +1170,9 @@ namespace Game.StageSystem.Manager
         }
         
         /// <summary>
-        /// 다음 스테이지로 진행합니다.
+        /// 다음 스테이지로 진행합니다
         /// </summary>
+        /// <returns>진행 성공 여부</returns>
         public bool ProgressToNextStage()
         {
             if (!HasNextStage())
@@ -1219,11 +1259,19 @@ namespace Game.StageSystem.Manager
 
         #region 스테이지 진행 관리
 
+        /// <summary>
+        /// 현재 스테이지 진행 상태
+        /// </summary>
         public StageProgressState ProgressState => progressState;
+        
+        /// <summary>
+        /// 스테이지 완료 여부
+        /// </summary>
         public bool IsStageCompleted => isStageCompleted;
 
         /// <summary>
-        /// 스테이지를 시작합니다. 첫 번째 적을 생성합니다.
+        /// 스테이지를 시작합니다
+        /// 첫 번째 적을 생성합니다
         /// </summary>
         public void StartStage()
         {
@@ -1274,7 +1322,6 @@ namespace Game.StageSystem.Manager
             }
 
             // 승리 UI 숨기기
-            var victoryUI = FindFirstObjectByType<Game.CombatSystem.UI.VictoryUI>(FindObjectsInactive.Include);
             if (victoryUI != null)
             {
                 victoryUI.Hide();
@@ -1284,7 +1331,6 @@ namespace Game.StageSystem.Manager
             // 전투 상태 머신 리셋 (새 스테이지 시작 전)
             // 주의: 스테이지 1 처음 시작 시에는 _currentState가 이미 null이므로 리셋 불필요
             // 스테이지 전환 시에만 리셋 필요
-            var combatStateMachine = FindFirstObjectByType<Game.CombatSystem.State.CombatStateMachine>(FindObjectsInactive.Include);
             if (combatStateMachine != null)
             {
                 var currentState = combatStateMachine.GetCurrentState();
@@ -1462,22 +1508,11 @@ namespace Game.StageSystem.Manager
 
             if (gameSessionStatistics == null)
             {
-                gameSessionStatistics = FindFirstObjectByType<GameSessionStatistics>(FindObjectsInactive.Include);
-                GameLogger.LogInfo($"[StageManager] GameSessionStatistics 찾기: {(gameSessionStatistics != null ? "성공" : "실패")}", GameLogger.LogCategory.Save);
-            }
-
-            if (gameSessionStatistics == null)
-            {
                 GameLogger.LogWarning("[StageManager] GameSessionStatistics를 찾을 수 없습니다. 통계 수집을 시작할 수 없습니다.", GameLogger.LogCategory.Save);
                 return;
             }
 
-            // PlayerManager가 null이면 찾기
-            if (playerManager == null)
-            {
-                playerManager = FindFirstObjectByType<PlayerManager>(FindObjectsInactive.Include);
-                GameLogger.LogInfo($"[StageManager] PlayerManager 찾기: {(playerManager != null ? "성공" : "실패")}", GameLogger.LogCategory.Save);
-            }
+            // PlayerManager는 이미 DI로 주입받음
 
             string characterName = "Unknown";
             if (playerManager != null && playerManager.GetPlayer() != null)
@@ -1520,17 +1555,7 @@ namespace Game.StageSystem.Manager
         {
             GameLogger.LogDebug($"[StageManager] 통계 세션 저장 시작 (종료: {finalEnd})", GameLogger.LogCategory.Save);
 
-            if (gameSessionStatistics == null)
-            {
-                gameSessionStatistics = FindFirstObjectByType<GameSessionStatistics>(FindObjectsInactive.Include);
-                GameLogger.LogInfo($"[StageManager] GameSessionStatistics 찾기: {(gameSessionStatistics != null ? "성공" : "실패")}", GameLogger.LogCategory.Save);
-            }
-
-            if (statisticsManager == null)
-            {
-                statisticsManager = FindFirstObjectByType<StatisticsManager>(FindObjectsInactive.Include);
-                GameLogger.LogInfo($"[StageManager] StatisticsManager 찾기: {(statisticsManager != null ? "성공" : "실패")}", GameLogger.LogCategory.Save);
-            }
+            // gameSessionStatistics와 statisticsManager는 이미 DI로 주입받음
 
             if (gameSessionStatistics == null)
             {
@@ -1874,10 +1899,9 @@ namespace Game.StageSystem.Manager
                             enemyChar.ReinitializeHPBarController();
 
                             // EnemyCharacterUIController 재연결
-                            var uiController = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.UI.EnemyCharacterUIController>();
-                            if (uiController != null)
+                            if (enemyCharacterUIController != null)
                             {
-                                uiController.SetTarget(enemyChar);
+                                enemyCharacterUIController.SetTarget(enemyChar);
                             }
 
                             // UI 업데이트

@@ -9,6 +9,8 @@ using Game.VFXSystem.Manager;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace Game.ItemSystem.Effect
 {
@@ -69,10 +71,10 @@ namespace Game.ItemSystem.Effect
                 return;
             }
 
-            var finalAudioManager = audioManager ?? UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
-            if (finalAudioManager != null)
+            var am = audioManager ?? UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            if (am != null)
             {
-                finalAudioManager.PlaySFXWithPool(sfxClip, 0.9f);
+                am.PlaySFXWithPool(sfxClip, 0.9f);
                 GameLogger.LogInfo($"[HealEffectCommand] 회복 사운드 재생: {sfxClip.name}", GameLogger.LogCategory.Core);
             }
             else
@@ -100,10 +102,10 @@ namespace Game.ItemSystem.Effect
             }
 
             // VFXManager를 통한 이펙트 생성 (정확한 위치 지정)
-            var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
-            if (finalVfxManager != null)
+            var vm = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            if (vm != null)
             {
-                var effectInstance = finalVfxManager.PlayEffectAtCharacterCenter(visualEffectPrefab, userTransform);
+                var effectInstance = vm.PlayEffectAtCharacterCenter(visualEffectPrefab, userTransform);
                 if (effectInstance != null)
                 {
                     SetEffectLayer(effectInstance);
@@ -270,10 +272,10 @@ namespace Game.ItemSystem.Effect
                 return;
             }
 
-            var finalAudioManager = audioManager ?? UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
-            if (finalAudioManager != null)
+            var am = audioManager ?? UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            if (am != null)
             {
-                finalAudioManager.PlaySFXWithPool(sfxClip, 0.9f);
+                am.PlaySFXWithPool(sfxClip, 0.9f);
                 GameLogger.LogInfo($"[AttackBuffEffectCommand] 버프 사운드 재생: {sfxClip.name}", GameLogger.LogCategory.Core);
             }
             else
@@ -301,10 +303,10 @@ namespace Game.ItemSystem.Effect
             }
 
             // VFXManager를 통한 이펙트 생성 (정확한 위치 지정)
-            var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
-            if (finalVfxManager != null)
+            var vm = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            if (vm != null)
             {
-                var effectInstance = finalVfxManager.PlayEffectAtCharacterCenter(visualEffectPrefab, userTransform);
+                var effectInstance = vm.PlayEffectAtCharacterCenter(visualEffectPrefab, userTransform);
                 if (effectInstance != null)
                 {
                     SetEffectLayer(effectInstance);
@@ -417,6 +419,8 @@ namespace Game.ItemSystem.Effect
         private AudioClip damageSfxClip;
         private GameObject healVisualEffectPrefab;
         private GameObject damageVisualEffectPrefab;
+        private readonly VFXManager vfxManager;
+        private readonly Game.CoreSystem.Interface.IAudioManager audioManager;
 
         public ClownPotionEffectCommand(
             int healChance = 50, 
@@ -435,6 +439,34 @@ namespace Game.ItemSystem.Effect
             this.damageSfxClip = damageSfxClip;
             this.healVisualEffectPrefab = healVisualEffectPrefab;
             this.damageVisualEffectPrefab = damageVisualEffectPrefab;
+            this.vfxManager = null;
+            this.audioManager = null;
+        }
+
+        /// <summary>
+        /// 광대 물약 효과 커맨드 생성자 (의존성 포함)
+        /// </summary>
+        public ClownPotionEffectCommand(
+            int healChance, 
+            int healAmount, 
+            int damageAmount, 
+            AudioClip healSfxClip, 
+            AudioClip damageSfxClip,
+            GameObject healVisualEffectPrefab,
+            GameObject damageVisualEffectPrefab,
+            VFXManager vfxManager,
+            Game.CoreSystem.Interface.IAudioManager audioManager)
+            : base("광대 물약")
+        {
+            this.healChance = Mathf.Clamp(healChance, 0, 100);
+            this.healAmount = healAmount;
+            this.damageAmount = damageAmount;
+            this.healSfxClip = healSfxClip;
+            this.damageSfxClip = damageSfxClip;
+            this.healVisualEffectPrefab = healVisualEffectPrefab;
+            this.damageVisualEffectPrefab = damageVisualEffectPrefab;
+            this.vfxManager = vfxManager;
+            this.audioManager = audioManager;
         }
 
         protected override bool ExecuteInternal(IItemUseContext context)
@@ -480,11 +512,11 @@ namespace Game.ItemSystem.Effect
                 return;
             }
 
-            // AudioManager 찾기
-            var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
-            if (audioManager != null)
+            // AudioManager 사용 (주입받았으면 사용, 없으면 폴백)
+            var am = audioManager ?? UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>() as Game.CoreSystem.Interface.IAudioManager;
+            if (am != null)
             {
-                audioManager.PlaySFXWithPool(clip, 0.9f);
+                am.PlaySFXWithPool(clip, 0.9f);
                 GameLogger.LogInfo($"[ClownPotionEffectCommand] {type} SFX 재생: {clip.name}", GameLogger.LogCategory.Core);
             }
             else
@@ -521,10 +553,10 @@ namespace Game.ItemSystem.Effect
             }
 
             // VFXManager를 통한 이펙트 생성 (정확한 위치 지정)
-            var vfxManager = UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
-            if (vfxManager != null)
+            var vm = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
+            if (vm != null)
             {
-                var effectInstance = vfxManager.PlayEffectAtCharacterCenter(effectPrefab, userTransform);
+                var effectInstance = vm.PlayEffectAtCharacterCenter(effectPrefab, userTransform);
                 if (effectInstance != null)
                 {
                     SetEffectLayer(effectInstance);
@@ -728,10 +760,10 @@ namespace Game.ItemSystem.Effect
                 return;
             }
 
-            var finalAudioManager = audioManager ?? UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
-            if (finalAudioManager != null)
+            var am = audioManager ?? UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            if (am != null)
             {
-                finalAudioManager.PlaySFXWithPool(sfxClip, 0.9f);
+                am.PlaySFXWithPool(sfxClip, 0.9f);
                 GameLogger.LogInfo($"[ReviveEffectCommand] 부활 사운드 재생: {sfxClip.name}", GameLogger.LogCategory.Core);
             }
             else
@@ -759,10 +791,10 @@ namespace Game.ItemSystem.Effect
             }
 
             // VFXManager를 통한 이펙트 생성 (정확한 위치 지정)
-            var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
-            if (finalVfxManager != null)
+            var vm = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            if (vm != null)
             {
-                var effectInstance = finalVfxManager.PlayEffectAtCharacterCenter(visualEffectPrefab, userTransform);
+                var effectInstance = vm.PlayEffectAtCharacterCenter(visualEffectPrefab, userTransform);
                 if (effectInstance != null)
                 {
                     SetEffectLayer(effectInstance);
@@ -855,6 +887,7 @@ namespace Game.ItemSystem.Effect
         private readonly GameObject visualEffectPrefab;
         private readonly VFXManager vfxManager;
         private readonly Game.CoreSystem.Audio.AudioManager audioManager;
+        private readonly Game.CharacterSystem.Manager.EnemyManager enemyManager;
 
         public TimeStopEffectCommand(
             int sealCount = 1,
@@ -868,6 +901,26 @@ namespace Game.ItemSystem.Effect
             this.visualEffectPrefab = visualEffectPrefab;
             this.vfxManager = vfxManager;
             this.audioManager = audioManager;
+            this.enemyManager = null;
+        }
+
+        /// <summary>
+        /// 시간 정지 효과 커맨드 생성자 (의존성 포함)
+        /// </summary>
+        public TimeStopEffectCommand(
+            int sealCount,
+            AudioClip sfxClip,
+            GameObject visualEffectPrefab,
+            VFXManager vfxManager,
+            Game.CoreSystem.Audio.AudioManager audioManager,
+            Game.CharacterSystem.Manager.EnemyManager enemyManager) : base("시간 정지")
+        {
+            this.sealCount = Mathf.Max(1, sealCount);
+            this.sfxClip = sfxClip;
+            this.visualEffectPrefab = visualEffectPrefab;
+            this.vfxManager = vfxManager;
+            this.audioManager = audioManager;
+            this.enemyManager = enemyManager;
         }
 
         protected override bool ExecuteInternal(IItemUseContext context)
@@ -875,8 +928,8 @@ namespace Game.ItemSystem.Effect
             var itemIcon = context.ItemDefinition?.Icon;
 
             // 적 캐릭터를 직접 찾기 (context.Target 무시)
-            var enemyManager = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
-            if (enemyManager == null)
+            var em = enemyManager ?? UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
+            if (em == null)
             {
                 GameLogger.LogError($"[TimeStopEffect] EnemyManager를 찾을 수 없습니다", GameLogger.LogCategory.Core);
                 return false;
@@ -919,10 +972,10 @@ namespace Game.ItemSystem.Effect
                 return;
             }
 
-            var finalAudioManager = audioManager ?? UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
-            if (finalAudioManager != null)
+            var am = audioManager ?? UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            if (am != null)
             {
-                finalAudioManager.PlaySFXWithPool(sfxClip, 0.9f);
+                am.PlaySFXWithPool(sfxClip, 0.9f);
                 GameLogger.LogInfo($"[TimeStopEffectCommand] 시간 정지 사운드 재생: {sfxClip.name}", GameLogger.LogCategory.Core);
             }
             else
@@ -950,10 +1003,10 @@ namespace Game.ItemSystem.Effect
             }
 
             // VFXManager를 통한 이펙트 생성 (정확한 위치 지정)
-            var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
-            if (finalVfxManager != null)
+            var vm = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            if (vm != null)
             {
-                var effectInstance = finalVfxManager.PlayEffectAtCharacterCenter(visualEffectPrefab, targetTransform);
+                var effectInstance = vm.PlayEffectAtCharacterCenter(visualEffectPrefab, targetTransform);
                 if (effectInstance != null)
                 {
                     SetEffectLayer(effectInstance);
@@ -1046,6 +1099,8 @@ namespace Game.ItemSystem.Effect
         private readonly GameObject visualEffectPrefab;
         private readonly VFXManager vfxManager;
         private readonly Game.CoreSystem.Audio.AudioManager audioManager;
+        private readonly Game.CharacterSystem.Manager.EnemyManager enemyManager;
+        private readonly Zenject.SceneContext sceneContext;
 
         public DiceOfFateEffectCommand(
             int changeCount = 1,
@@ -1059,6 +1114,29 @@ namespace Game.ItemSystem.Effect
             this.visualEffectPrefab = visualEffectPrefab;
             this.vfxManager = vfxManager;
             this.audioManager = audioManager;
+            this.enemyManager = null;
+            this.sceneContext = null;
+        }
+
+        /// <summary>
+        /// 운명의 주사위 효과 커맨드 생성자 (의존성 포함)
+        /// </summary>
+        public DiceOfFateEffectCommand(
+            int changeCount,
+            AudioClip sfxClip,
+            GameObject visualEffectPrefab,
+            VFXManager vfxManager,
+            Game.CoreSystem.Audio.AudioManager audioManager,
+            Game.CharacterSystem.Manager.EnemyManager enemyManager,
+            Zenject.SceneContext sceneContext) : base("운명의 주사위")
+        {
+            this.changeCount = Mathf.Max(1, changeCount);
+            this.sfxClip = sfxClip;
+            this.visualEffectPrefab = visualEffectPrefab;
+            this.vfxManager = vfxManager;
+            this.audioManager = audioManager;
+            this.enemyManager = enemyManager;
+            this.sceneContext = sceneContext;
         }
 
         /// <summary>
@@ -1117,10 +1195,10 @@ namespace Game.ItemSystem.Effect
                 return;
             }
 
-            var finalAudioManager = audioManager ?? UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
-            if (finalAudioManager != null)
+            var am = audioManager ?? UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            if (am != null)
             {
-                finalAudioManager.PlaySFXWithPool(sfxClip, 0.9f);
+                am.PlaySFXWithPool(sfxClip, 0.9f);
                 GameLogger.LogInfo($"[DiceOfFate] 사운드 재생: {sfxClip.name}", GameLogger.LogCategory.Core);
             }
             else
@@ -1146,8 +1224,8 @@ namespace Game.ItemSystem.Effect
             if (targetTransform == null)
             {
                 // Fallback: EnemyManager에서 적 캐릭터 찾기
-                var enemyManager = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
-                var enemyCharacter = enemyManager?.GetCurrentEnemy();
+                var em = enemyManager ?? UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
+                var enemyCharacter = em?.GetCurrentEnemy();
                 targetTransform = (enemyCharacter as MonoBehaviour)?.transform;
             }
 
@@ -1158,10 +1236,10 @@ namespace Game.ItemSystem.Effect
             }
 
             // VFXManager를 통한 이펙트 생성 (정확한 위치 지정)
-            var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
-            if (finalVfxManager != null)
+            var vm = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            if (vm != null)
             {
-                var effectInstance = finalVfxManager.PlayEffectAtCharacterCenter(visualEffectPrefab, targetTransform);
+                var effectInstance = vm.PlayEffectAtCharacterCenter(visualEffectPrefab, targetTransform);
                 if (effectInstance != null)
                 {
                     SetEffectLayer(effectInstance);
@@ -1204,8 +1282,8 @@ namespace Game.ItemSystem.Effect
 
         private Game.SkillCardSystem.Interface.ISkillCard CreateRandomEnemyCard()
         {
-            var enemyManager = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
-            if (enemyManager?.GetCurrentEnemy() is not Game.CharacterSystem.Core.EnemyCharacter enemyCharacter)
+            var em = enemyManager ?? UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
+            if (em?.GetCurrentEnemy() is not Game.CharacterSystem.Core.EnemyCharacter enemyCharacter)
             {
                 GameLogger.LogError("[DiceOfFate] EnemyCharacter를 찾을 수 없습니다", GameLogger.LogCategory.Core);
                 return null;
@@ -1225,15 +1303,15 @@ namespace Game.ItemSystem.Effect
                 return null;
             }
 
-            // 직접 SkillCardFactory 인스턴스 생성 (DI 없이)
-            var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
-            if (audioManager == null)
+            // SkillCardFactory 생성 (의존성 사용)
+            var am = audioManager ?? UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            if (am == null)
             {
                 GameLogger.LogError("[DiceOfFate] AudioManager를 찾을 수 없습니다", GameLogger.LogCategory.Core);
                 return null;
             }
             
-            var skillCardFactory = new Game.SkillCardSystem.Factory.SkillCardFactory(audioManager);
+            var skillCardFactory = new Game.SkillCardSystem.Factory.SkillCardFactory(am as Game.CoreSystem.Interface.IAudioManager);
             // 데미지 오버라이드가 있으면 사용, 없으면 기본값 사용
             var newCard = randomEntry.HasDamageOverride()
                 ? skillCardFactory.CreateEnemyCard(randomEntry.definition, enemyCharacter.GetCharacterName(), randomEntry.damageOverride)
@@ -1300,7 +1378,7 @@ namespace Game.ItemSystem.Effect
             // 5단계: 새 카드 UI 생성 (최후의 수단)
             GameLogger.LogWarning("[DiceOfFate] 기존 카드 UI를 찾을 수 없어 새로 생성합니다", GameLogger.LogCategory.Core);
             
-            var prefab = Resources.Load<Game.SkillCardSystem.UI.SkillCardUI>("Prefab/SkillCard");
+            var prefab = LoadCardUIPrefab();
             if (prefab == null)
             {
                 GameLogger.LogError("[DiceOfFate] SkillCardUI 프리팹을 찾을 수 없습니다", GameLogger.LogCategory.Core);
@@ -1333,14 +1411,14 @@ namespace Game.ItemSystem.Effect
         private void UpdateCardSlotRegistry(Game.CombatSystem.Slot.CombatSlotPosition position, Game.SkillCardSystem.Interface.ISkillCard newCard)
         {
             // SceneContext를 통해 ICardSlotRegistry 직접 접근
-            var sceneContext = UnityEngine.Object.FindFirstObjectByType<Zenject.SceneContext>();
-            if (sceneContext == null)
+            var sc = sceneContext ?? UnityEngine.Object.FindFirstObjectByType<Zenject.SceneContext>();
+            if (sc == null)
             {
                 GameLogger.LogError("[DiceOfFate] SceneContext를 찾을 수 없습니다", GameLogger.LogCategory.Core);
                 return;
             }
 
-            var cardSlotRegistry = sceneContext.Container.TryResolve<Game.CombatSystem.Interface.ICardSlotRegistry>();
+            var cardSlotRegistry = sc.Container.TryResolve<Game.CombatSystem.Interface.ICardSlotRegistry>();
             if (cardSlotRegistry == null)
             {
                 GameLogger.LogError("[DiceOfFate] ICardSlotRegistry를 DI 컨테이너에서 찾을 수 없습니다", GameLogger.LogCategory.Core);
@@ -1430,6 +1508,48 @@ namespace Game.ItemSystem.Effect
                 pr.sortingOrder = 10;
             }
         }
+
+        private static Game.SkillCardSystem.UI.SkillCardUI _cachedCardUIPrefab;
+        private static bool _isLoadingCardUIPrefab;
+
+        /// <summary>
+        /// SkillCardUI 프리팹을 Addressables에서 로드합니다 (캐싱 사용).
+        /// </summary>
+        private static Game.SkillCardSystem.UI.SkillCardUI LoadCardUIPrefab()
+        {
+            if (_cachedCardUIPrefab != null)
+            {
+                return _cachedCardUIPrefab;
+            }
+
+            if (_isLoadingCardUIPrefab)
+            {
+                return null;
+            }
+
+            try
+            {
+                _isLoadingCardUIPrefab = true;
+                var handle = Addressables.LoadAssetAsync<Game.SkillCardSystem.UI.SkillCardUI>("Prefab/SkillCard");
+                _cachedCardUIPrefab = handle.WaitForCompletion();
+
+                if (_cachedCardUIPrefab == null)
+                {
+                    GameLogger.LogError("[DiceOfFate] SkillCardUI 프리팹 로드 실패: Prefab/SkillCard", GameLogger.LogCategory.Core);
+                }
+
+                return _cachedCardUIPrefab;
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogError($"[DiceOfFate] SkillCardUI 프리팹 로드 중 오류: {ex.Message}", GameLogger.LogCategory.Core);
+                return null;
+            }
+            finally
+            {
+                _isLoadingCardUIPrefab = false;
+            }
+        }
     }
 
     /// <summary>
@@ -1442,6 +1562,7 @@ namespace Game.ItemSystem.Effect
         private readonly GameObject visualEffectPrefab;
         private readonly VFXManager vfxManager;
         private readonly Game.CoreSystem.Audio.AudioManager audioManager;
+        private readonly Game.CharacterSystem.Manager.PlayerManager playerManager;
 
         public RerollEffectCommand(
             int rerollCount,
@@ -1455,19 +1576,39 @@ namespace Game.ItemSystem.Effect
             this.visualEffectPrefab = visualEffectPrefab;
             this.vfxManager = vfxManager;
             this.audioManager = audioManager;
+            this.playerManager = null;
+        }
+
+        /// <summary>
+        /// 리롤 효과 커맨드 생성자 (의존성 포함)
+        /// </summary>
+        public RerollEffectCommand(
+            int rerollCount,
+            AudioClip sfxClip,
+            GameObject visualEffectPrefab,
+            VFXManager vfxManager,
+            Game.CoreSystem.Audio.AudioManager audioManager,
+            Game.CharacterSystem.Manager.PlayerManager playerManager) : base("리롤")
+        {
+            this.rerollCount = rerollCount;
+            this.sfxClip = sfxClip;
+            this.visualEffectPrefab = visualEffectPrefab;
+            this.vfxManager = vfxManager;
+            this.audioManager = audioManager;
+            this.playerManager = playerManager;
         }
 
         protected override bool ExecuteInternal(IItemUseContext context)
         {
-            // PlayerManager를 씬에서 직접 찾기
-            var playerManager = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
-            if (playerManager == null)
+            // PlayerManager 사용 (주입받았으면 사용, 없으면 폴백)
+            var pm = playerManager ?? UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
+            if (pm == null)
             {
                 GameLogger.LogError("PlayerManager를 씬에서 찾을 수 없습니다", GameLogger.LogCategory.Core);
                 return false;
             }
 
-            var handManager = playerManager.GetPlayerHandManager();
+            var handManager = pm.GetPlayerHandManager();
             if (handManager == null)
             {
                 GameLogger.LogError("PlayerHandManager를 찾을 수 없습니다", GameLogger.LogCategory.Core);
@@ -1522,10 +1663,10 @@ namespace Game.ItemSystem.Effect
                 return;
             }
 
-            var finalAudioManager = audioManager ?? UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
-            if (finalAudioManager != null)
+            var am = audioManager ?? UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            if (am != null)
             {
-                finalAudioManager.PlaySFXWithPool(sfxClip, 0.9f);
+                am.PlaySFXWithPool(sfxClip, 0.9f);
                 GameLogger.LogInfo($"[RerollEffectCommand] 리롤 사운드 재생: {sfxClip.name}", GameLogger.LogCategory.Core);
             }
             else
@@ -1553,10 +1694,10 @@ namespace Game.ItemSystem.Effect
             }
 
             // VFXManager를 통한 이펙트 생성 (정확한 위치 지정)
-            var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
-            if (finalVfxManager != null)
+            var vm = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            if (vm != null)
             {
-                var effectInstance = finalVfxManager.PlayEffectAtCharacterCenter(visualEffectPrefab, userTransform);
+                var effectInstance = vm.PlayEffectAtCharacterCenter(visualEffectPrefab, userTransform);
                 if (effectInstance != null)
                 {
                     SetEffectLayer(effectInstance);
@@ -1648,6 +1789,7 @@ namespace Game.ItemSystem.Effect
         private readonly GameObject visualEffectPrefab;
         private readonly VFXManager vfxManager;
         private readonly Game.CoreSystem.Audio.AudioManager audioManager;
+        private readonly Game.CharacterSystem.Manager.EnemyManager enemyManager;
 
         public ShieldBreakerEffectCommand(
             int duration = 2,
@@ -1661,6 +1803,26 @@ namespace Game.ItemSystem.Effect
             this.visualEffectPrefab = visualEffectPrefab;
             this.vfxManager = vfxManager;
             this.audioManager = audioManager;
+            this.enemyManager = null;
+        }
+
+        /// <summary>
+        /// 실드 브레이커 효과 커맨드 생성자 (의존성 포함)
+        /// </summary>
+        public ShieldBreakerEffectCommand(
+            int duration,
+            AudioClip sfxClip,
+            GameObject visualEffectPrefab,
+            VFXManager vfxManager,
+            Game.CoreSystem.Audio.AudioManager audioManager,
+            Game.CharacterSystem.Manager.EnemyManager enemyManager) : base("실드 브레이커")
+        {
+            this.duration = duration;
+            this.sfxClip = sfxClip;
+            this.visualEffectPrefab = visualEffectPrefab;
+            this.vfxManager = vfxManager;
+            this.audioManager = audioManager;
+            this.enemyManager = enemyManager;
         }
 
         protected override bool ExecuteInternal(IItemUseContext context)
@@ -1671,14 +1833,14 @@ namespace Game.ItemSystem.Effect
             var itemIcon = context.ItemDefinition?.Icon;
 
             // 적 캐릭터를 직접 찾기 (context.Target 무시)
-            var enemyManager = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
-            if (enemyManager == null)
+            var em = enemyManager ?? UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
+            if (em == null)
             {
                 GameLogger.LogError($"[ShieldBreakerEffect] EnemyManager를 찾을 수 없습니다", GameLogger.LogCategory.Core);
                 return false;
             }
 
-            var enemyCharacter = enemyManager.GetCurrentEnemy();
+            var enemyCharacter = em.GetCurrentEnemy();
             if (enemyCharacter == null)
             {
                 GameLogger.LogError($"[ShieldBreakerEffect] 현재 적 캐릭터를 찾을 수 없습니다", GameLogger.LogCategory.Core);
@@ -1719,10 +1881,10 @@ namespace Game.ItemSystem.Effect
                 return;
             }
 
-            var finalAudioManager = audioManager ?? UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
-            if (finalAudioManager != null)
+            var am = audioManager ?? UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            if (am != null)
             {
-                finalAudioManager.PlaySFXWithPool(sfxClip, 0.9f);
+                am.PlaySFXWithPool(sfxClip, 0.9f);
                 GameLogger.LogInfo($"[ShieldBreakerEffectCommand] 실드 브레이커 사운드 재생: {sfxClip.name}", GameLogger.LogCategory.Core);
             }
             else
@@ -1750,10 +1912,10 @@ namespace Game.ItemSystem.Effect
             }
 
             // VFXManager를 통한 이펙트 생성 (정확한 위치 지정)
-            var finalVfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
-            if (finalVfxManager != null)
+            var vm = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            if (vm != null)
             {
-                var effectInstance = finalVfxManager.PlayEffectAtCharacterCenter(visualEffectPrefab, targetTransform);
+                var effectInstance = vm.PlayEffectAtCharacterCenter(visualEffectPrefab, targetTransform);
                 if (effectInstance != null)
                 {
                     SetEffectLayer(effectInstance);

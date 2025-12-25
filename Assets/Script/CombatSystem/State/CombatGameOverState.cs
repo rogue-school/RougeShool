@@ -20,6 +20,7 @@ namespace Game.CombatSystem.State
         private readonly PlayerManager playerManager;
         private readonly EnemyManager enemyManager;
         private readonly ICoroutineRunner coroutineRunner;
+        private readonly Game.CombatSystem.UI.GameOverUI gameOverUI;
 
         #endregion
 
@@ -32,13 +33,15 @@ namespace Game.CombatSystem.State
             TurnManager turnManager,
             PlayerManager playerManager,
             EnemyManager enemyManager,
-            ICoroutineRunner coroutineRunner
+            ICoroutineRunner coroutineRunner,
+            Game.CombatSystem.UI.GameOverUI gameOverUI = null
         )
         {
             this.turnManager = turnManager;
             this.playerManager = playerManager;
             this.enemyManager = enemyManager;
             this.coroutineRunner = coroutineRunner;
+            this.gameOverUI = gameOverUI;
         }
 
         #endregion
@@ -84,7 +87,6 @@ namespace Game.CombatSystem.State
             if (CheckPlayerDeath())
             {
                 // 게임 오버 UI 표시
-                var gameOverUI = Object.FindFirstObjectByType<Game.CombatSystem.UI.GameOverUI>();
                 if (gameOverUI != null)
                 {
                     gameOverUI.ShowGameOver();

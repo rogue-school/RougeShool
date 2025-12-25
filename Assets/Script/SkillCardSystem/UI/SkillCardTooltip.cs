@@ -5,8 +5,13 @@ using DG.Tweening;
 using UnityEngine.EventSystems;
 using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Data;
+using Game.SkillCardSystem.Utility;
+using Game.UtilitySystem;
 using Game.CoreSystem.Utility;
 using Game.SkillCardSystem.UI.Mappers;
+using Game.CharacterSystem.Manager;
+using Game.ItemSystem.Service;
+using Zenject;
 
 namespace Game.SkillCardSystem.UI
 {
@@ -122,29 +127,19 @@ namespace Game.SkillCardSystem.UI
 		private ContentSizeFitter _contentSizeFitter;
         private int _lastAttackPowerStack = -1;
 
-		private static Transform FindChildByName(Transform parent, string name)
-		{
-			if (parent == null || string.IsNullOrEmpty(name)) return null;
-			for (int i = 0; i < parent.childCount; i++)
-			{
-				var child = parent.GetChild(i);
-				if (child.name == name) return child;
-			}
-			return null;
-		}
 
 		private void EnsurePrefabStructure()
 		{
 			// Background/Border 자동 바인딩 시도
 			if (backgroundImage == null)
 			{
-				var bgTr = FindChildByName(transform, "Background");
+				var bgTr = transform.FindChildByName("Background");
 				if (bgTr != null) backgroundImage = bgTr.GetComponent<Image>();
 			}
             // Border 자동 바인딩 제거
 
 			// ContentRoot 확보(없으면 생성)
-			var existing = FindChildByName(transform, "ContentRoot");
+			var existing = transform.FindChildByName("ContentRoot");
 			if (existing == null)
 			{
 				var go = new GameObject("ContentRoot", typeof(RectTransform));
@@ -225,6 +220,12 @@ namespace Game.SkillCardSystem.UI
         private readonly System.Collections.Generic.Dictionary<EffectData, GameObject> effectToSubTooltip = new System.Collections.Generic.Dictionary<EffectData, GameObject>();
         private EffectData currentHoveredEffect;
         private System.Collections.IEnumerator subTooltipCoroutine;
+        
+        [Inject(Optional = true)]
+        private PlayerManager playerManager;
+        
+        [Inject(Optional = true)]
+        private ItemService itemService;
 
         #endregion
 
@@ -263,7 +264,7 @@ namespace Game.SkillCardSystem.UI
 
             rectTransform = GetComponent<RectTransform>();
             
-            // 레이아웃 컴포넌트 확보: 폭은 프리팹의 LayoutElement가 주도, 높이는 ContentSizeFitter로 자동
+            // 레이아웃 컴포넌트 확보: 폭은 LayoutElement가 주도, 높이는 ContentSizeFitter로 자동
             layoutElement = GetComponent<LayoutElement>();
             if (layoutElement == null)
             {
@@ -274,18 +275,10 @@ namespace Game.SkillCardSystem.UI
             {
                 contentSizeFitter = gameObject.AddComponent<ContentSizeFitter>();
             }
-            contentSizeFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
-            contentSizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-            // 최소/선호 레이아웃 값 적용(프리팹 값 보존 우선)
-            if (minLayoutHeight > 0f && layoutElement.minHeight < minLayoutHeight)
-            {
-                layoutElement.minHeight = minLayoutHeight;
-            }
-            if (preferredLayoutWidth > 0f)
-            {
-                layoutElement.preferredWidth = preferredLayoutWidth;
-            }
+            
+            // 프리팹의 크기/위치 설정을 그대로 사용
+            // ContentSizeFitter와 LayoutElement는 프리팹에 설정된 대로 사용
+            // 동적 크기 조절을 하지 않고 프리팹 설정 유지
 
             // 초기 상태 설정
             canvasGroup.alpha = 0f;
@@ -328,12 +321,13 @@ namespace Game.SkillCardSystem.UI
         /// <param name="cardPosition">스킬카드의 위치</param>
         private System.Collections.IEnumerator ShowTooltipWithLayout(Vector2 cardPosition)
         {
-            // 프리팹 크기를 사용하므로 레이아웃 대기 불필요
+            // 프리팹 설정을 그대로 사용하므로 한 프레임만 대기
             yield return null;
 
             // 툴팁 위치 계산
             UpdateTooltipPosition(cardPosition);
 
+            // 위치 계산 후 페이드 인 시작
             if (!isVisible)
             {
                 FadeIn();
@@ -410,9 +404,24 @@ namespace Game.SkillCardSystem.UI
         [System.Serializable]
         public class EffectData
         {
+            /// <summary>
+            /// 효과 이름
+            /// </summary>
             public string name;
+            
+            /// <summary>
+            /// 효과 설명
+            /// </summary>
             public string description;
+            
+            /// <summary>
+            /// 효과 아이콘 색상
+            /// </summary>
             public Color iconColor;
+            
+            /// <summary>
+            /// 효과 타입
+            /// </summary>
             public EffectType effectType;
         }
 
@@ -565,7 +574,6 @@ namespace Game.SkillCardSystem.UI
                     if (card != null && card.IsFromPlayer())
                     {
                         // 플레이어 카드인 경우에만 공격력 물약 버프 확인
-                        var playerManager = FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
                         if (playerManager != null)
                         {
                             var character = playerManager.GetCharacter();
@@ -576,7 +584,7 @@ namespace Game.SkillCardSystem.UI
                         }
                     }
                     
-                    var model = SkillCardTooltipMapper.FromWithStacks(definition, currentStacks, playerCharacter, card);
+                    var model = SkillCardTooltipMapper.FromWithStacks(definition, currentStacks, playerCharacter, card, playerManager, itemService);
                     descriptionText.text = model?.DescriptionRichText ?? string.Empty;
                 }
                 else
@@ -599,9 +607,23 @@ namespace Game.SkillCardSystem.UI
                 effectsContainer.gameObject.SetActive(hasAnyEffect);
             }
 
-			// 레이아웃 강제 갱신으로 0 높이 방지 및 후속 위치 계산 안정화
+			// 레이아웃 강제 갱신으로 동적 크기 조절 보장
+			// 1. 모든 자식 레이아웃 먼저 갱신
+			if (_contentRoot != null)
+			{
+				LayoutRebuilder.ForceRebuildLayoutImmediate(_contentRoot);
+			}
+			if (effectsContainer != null && effectsContainer.gameObject.activeSelf)
+			{
+				LayoutRebuilder.ForceRebuildLayoutImmediate(effectsContainer as RectTransform);
+			}
+			
+			// 2. 루트 레이아웃 갱신
 			Canvas.ForceUpdateCanvases();
 			LayoutRebuilder.ForceRebuildLayoutImmediate(rectTransform);
+			
+			// 3. ContentSizeFitter가 제대로 작동하도록 한 프레임 대기 후 재갱신
+			StartCoroutine(DelayedLayoutRebuild());
         }
 
         /// <summary>
@@ -688,10 +710,9 @@ namespace Game.SkillCardSystem.UI
                 if (isPlayerCard)
                 {
                     int level = 0;
-                    var itemSvc = FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
-                    if (itemSvc != null)
+                    if (itemService != null)
                     {
-                        level = itemSvc.GetSkillEnhancementLevel(definition.displayName);
+                        level = itemService.GetSkillEnhancementLevel(definition.displayName);
                     }
 
                     if (level > 0)
@@ -899,12 +920,11 @@ namespace Game.SkillCardSystem.UI
             var config = definition.configuration;
 
             // 자원 코스트 표시 (소모)
-            if (config.hasResource && config.resourceConfig != null && config.resourceConfig.cost > 0)
+            if (config.HasResourceCost())
             {
                 string resourceName = "자원";
-                var pm = FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
-                if (pm != null && !string.IsNullOrEmpty(pm.ResourceName))
-                    resourceName = pm.ResourceName;
+                if (playerManager != null && !string.IsNullOrEmpty(playerManager.ResourceName))
+                    resourceName = playerManager.ResourceName;
 
                 effects.Add(new EffectData
                 {
@@ -928,7 +948,6 @@ namespace Game.SkillCardSystem.UI
                 int attackPotionBonus = 0;
                 if (currentCard != null && currentCard.IsFromPlayer())
                 {
-                    var playerManager = FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
                     if (playerManager != null)
                     {
                         var character = playerManager.GetCharacter();
@@ -950,12 +969,11 @@ namespace Game.SkillCardSystem.UI
                 int enhancementBonus = 0;
                 if (currentCard != null && currentCard.IsFromPlayer())
                 {
-                    // ItemService 조회 (주입이 없을 수 있어 1회 안전 조회)
-                    var service = FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
-                    if (service != null)
+                    // ItemService는 DI로 주입받음
+                    if (itemService != null)
                     {
                         string skillId = definition.displayName;
-                        enhancementBonus = service.GetSkillDamageBonus(skillId);
+                        enhancementBonus = itemService.GetSkillDamageBonus(skillId);
                     }
                 }
 
@@ -1087,6 +1105,7 @@ namespace Game.SkillCardSystem.UI
                         if (customSettings.guardDuration > 0)
                         {
                             string effectName = GetEffectNameFromSO(effectConfig.effectSO, "가드");
+                            GameLogger.LogInfo($"[SkillCardTooltip] 가드 효과 이름 설정: SO={effectConfig.effectSO?.name}, GetEffectName()={effectConfig.effectSO?.GetEffectName()}, 최종 이름={effectName}", GameLogger.LogCategory.UI);
                             
                             effects.Add(new EffectData
                             {
@@ -1133,15 +1152,14 @@ namespace Game.SkillCardSystem.UI
                             // 플레이어 카드인 경우 PlayerManager에서 자원 이름 조회
                             if (currentCard != null && currentCard.IsFromPlayer())
                             {
-                                var pm = FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
-                                if (pm != null && !string.IsNullOrEmpty(pm.ResourceName))
+                                if (playerManager != null && !string.IsNullOrEmpty(playerManager.ResourceName))
                                 {
-                                    resourceName = pm.ResourceName;
+                                    resourceName = playerManager.ResourceName;
                                 }
                                 else
                                 {
                                     // 데이터 폴백
-                                    var ch = pm?.GetCharacter();
+                                    var ch = playerManager?.GetCharacter();
                                     if (ch != null && ch.CharacterData is Game.CharacterSystem.Data.PlayerCharacterData pcd && !string.IsNullOrEmpty(pcd.ResourceName))
                                     {
                                         resourceName = pcd.ResourceName;
@@ -1184,24 +1202,78 @@ namespace Game.SkillCardSystem.UI
 
         /// <summary>
         /// 이펙트 SO에서 이름을 가져옵니다.
+        /// 한글 이름이 없으면 기본 이름을 사용합니다.
         /// </summary>
         /// <param name="effectSO">이펙트 SO</param>
-        /// <param name="defaultName">기본 이름</param>
+        /// <param name="defaultName">기본 이름 (한글)</param>
         /// <returns>이펙트 이름</returns>
         private string GetEffectNameFromSO(SkillCardSystem.Effect.SkillCardEffectSO effectSO, string defaultName)
         {
             if (effectSO == null) return defaultName;
             
+            // 1. GetEffectName() 먼저 확인
             string soName = effectSO.GetEffectName();
             if (!string.IsNullOrWhiteSpace(soName))
             {
-                return soName;
+                // 한글이 포함되어 있는지 확인
+                if (ContainsKorean(soName))
+                {
+                    GameLogger.LogInfo($"[SkillCardTooltip] GetEffectNameFromSO: 한글 이름 사용 (GetEffectName): {soName}", GameLogger.LogCategory.UI);
+                    return soName; // 한글이 있으면 사용
+                }
+                // 영어만 있으면 기본 이름 사용
+                GameLogger.LogInfo($"[SkillCardTooltip] GetEffectNameFromSO: 영어 이름 감지 (GetEffectName): {soName} → 기본 이름 사용: {defaultName}", GameLogger.LogCategory.UI);
             }
-            else
+            
+            // 2. GetEffectName()이 비어있거나 영어만 있으면 SO의 name 필드 확인
+            string soObjectName = effectSO.name;
+            if (!string.IsNullOrWhiteSpace(soObjectName))
             {
-                // GetEffectName()이 비어있으면 SO의 name 사용
-                return effectSO.name;
+                // 한글이 포함되어 있는지 확인
+                if (ContainsKorean(soObjectName))
+                {
+                    GameLogger.LogInfo($"[SkillCardTooltip] GetEffectNameFromSO: 한글 이름 사용 (SO.name): {soObjectName}", GameLogger.LogCategory.UI);
+                    return soObjectName; // 한글이 있으면 사용
+                }
+                // 영어만 있으면 기본 이름 사용
+                GameLogger.LogInfo($"[SkillCardTooltip] GetEffectNameFromSO: 영어 이름 감지 (SO.name): {soObjectName} → 기본 이름 사용: {defaultName}", GameLogger.LogCategory.UI);
             }
+            
+            // 3. 모두 영어이거나 비어있으면 기본 한글 이름 사용
+            GameLogger.LogInfo($"[SkillCardTooltip] GetEffectNameFromSO: 기본 한글 이름 사용: {defaultName}", GameLogger.LogCategory.UI);
+            return defaultName;
+        }
+        
+        /// <summary>
+        /// 문자열에 한글이 포함되어 있는지 확인합니다.
+        /// </summary>
+        /// <param name="text">확인할 문자열</param>
+        /// <returns>한글 포함 여부</returns>
+        private bool ContainsKorean(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return false;
+            
+            // 알려진 영어 효과 이름 패턴 체크 (명시적 체크로 더 안전)
+            string lowerText = text.ToLower();
+            if (lowerText.Contains("guard") || lowerText.Contains("bleed") || 
+                lowerText.Contains("stun") || lowerText.Contains("counter") ||
+                lowerText.Contains("heal") || lowerText.Contains("damage") ||
+                lowerText.Contains("effect") || lowerText.Contains("buff") ||
+                lowerText.Contains("debuff") || lowerText.Contains("resource") ||
+                lowerText.Contains("stack") || lowerText.Contains("replay"))
+            {
+                return false; // 영어 효과 이름으로 간주
+            }
+            
+            // 한글 유니코드 범위: 0xAC00-0xD7A3 (가-힣)
+            foreach (char c in text)
+            {
+                if (c >= 0xAC00 && c <= 0xD7A3)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>
@@ -1274,9 +1346,8 @@ namespace Game.SkillCardSystem.UI
             float tooltipWidth = Mathf.Abs(tooltipRect.width);
             float tooltipHeight = Mathf.Abs(tooltipRect.height);
 
-            // 요구: 카드 오른쪽에 붙고, 카드 하단과 툴팁 하단이 일자 → Pivot을 좌하단(0,0)
+            // Pivot을 좌하단(0,0)으로 설정하여 위치 계산 단순화
             rectTransform.pivot = new Vector2(0f, 0f);
-            Vector2 tooltipPivot = rectTransform.pivot;
 
             // 캔버스의 실제 경계 (Canvas 중앙이 0,0인 좌표계)
             float canvasLeft = canvasRect.xMin;
@@ -1284,23 +1355,34 @@ namespace Game.SkillCardSystem.UI
             float canvasTop = canvasRect.yMax;
             float canvasBottom = canvasRect.yMin;
 
-            // cardLocalPoint는 카드 좌하단 포인트이므로 카드 폭을 고려하여 우측 경계 계산
+            // cardLocalPoint는 카드 좌하단 포인트이므로 카드 크기를 고려
             float cardWidth = 100f; // 기본값
+            float cardHeight = 150f; // 기본값
             if (currentCardRectTransform != null)
             {
                 cardWidth = Mathf.Abs(currentCardRectTransform.rect.width);
+                cardHeight = Mathf.Abs(currentCardRectTransform.rect.height);
             }
+            
+            // 카드의 중심점 및 경계 계산
+            float cardCenterX = cardLocalPoint.x + cardWidth * 0.5f;
+            float cardCenterY = cardLocalPoint.y + cardHeight * 0.5f;
+            float cardTop = cardLocalPoint.y + cardHeight;
             float cardRightEdge = cardLocalPoint.x + cardWidth;
             
+            // 화면 경계에서의 여유 공간 계산
             float rightSpace = canvasRight - cardRightEdge;
             float leftSpace = cardLocalPoint.x - canvasLeft;
+            float topSpace = canvasTop - cardTop;
+            float bottomSpace = cardLocalPoint.y - canvasBottom;
 
             // 툴팁이 들어갈 공간이 있는지 확인 (간격 포함)
             float tooltipRequiredWidth = tooltipWidth + alignPaddingX;
+            float tooltipRequiredHeight = tooltipHeight + alignPaddingY;
             bool canShowRight = rightSpace >= tooltipRequiredWidth;
             bool canShowLeft = leftSpace >= tooltipRequiredWidth;
 
-            Vector2 tooltipPosition = cardLocalPoint;
+            Vector2 tooltipPosition = Vector2.zero;
 
             // 수평 위치 결정 (오른쪽 우선, 부족 시 왼쪽 폴백)
             if (canShowRight)
@@ -1315,18 +1397,33 @@ namespace Game.SkillCardSystem.UI
             }
             else
             {
-                // 양쪽 모두 부족하면 화면 중앙 쪽으로 보정 (하단 정렬 유지)
-                var parentRect = rectTransform.parent as RectTransform;
-                tooltipPosition.x = Mathf.Clamp(cardLocalPoint.x, parentRect.rect.xMin, parentRect.rect.xMax - tooltipWidth);
+                // 양쪽 모두 부족하면 카드 중앙 기준으로 배치하되 화면 경계 내로 제한
+                tooltipPosition.x = Mathf.Clamp(cardCenterX - tooltipWidth * 0.5f, 
+                    canvasLeft + alignPaddingX, 
+                    canvasRight - tooltipWidth - alignPaddingX);
             }
 
-            // 수직 정렬: 카드 하단과 툴팁 하단을 일치 (Pivot.y=0)
-            tooltipPosition.y = cardLocalPoint.y + alignPaddingY;
+            // 수직 정렬: 카드 중앙과 툴팁 중앙을 맞추는 것이 가장 자연스러움
+            float tooltipCenterY = cardCenterY; // 기본값: 카드 중앙과 툴팁 중앙 정렬
+            float tooltipBottomY = tooltipCenterY - tooltipHeight * 0.5f;
+            float tooltipTopY = tooltipCenterY + tooltipHeight * 0.5f;
+
+            // 화면 경계를 벗어나면 조정
+            if (tooltipTopY > canvasTop - alignPaddingY)
+            {
+                // 상단 경계를 벗어나면 하단으로 이동
+                tooltipBottomY = canvasTop - tooltipHeight - alignPaddingY;
+            }
+            else if (tooltipBottomY < canvasBottom + alignPaddingY)
+            {
+                // 하단 경계를 벗어나면 상단으로 이동
+                tooltipBottomY = canvasBottom + alignPaddingY;
+            }
+
+            tooltipPosition.y = tooltipBottomY;
 
             // 툴팁을 최상단으로 이동 (다른 UI 요소 위에 표시)
             rectTransform.SetAsLastSibling();
-
-            // 수직 경계는 요청사항에 따라 하단 정렬을 유지하고 변경하지 않습니다
 
             return tooltipPosition;
         }
@@ -1442,19 +1539,23 @@ namespace Game.SkillCardSystem.UI
         /// </summary>
         private void FadeIn()
         {
-            if (fadeTween != null)
-            {
-                fadeTween.Kill();
-            }
-
             isVisible = true;
-            canvasGroup.interactable = true;
-            canvasGroup.blocksRaycasts = true;
-
-            fadeTween = canvasGroup.DOFade(1f, fadeInDuration)
-                .SetEase(fadeEase)
-                .OnComplete(() => {
-                    // 툴팁 표시 완료
+            
+            // 초기 상태 설정: 투명하고 약간 작게
+            canvasGroup.alpha = 0f;
+            rectTransform.localScale = new Vector3(0.95f, 0.95f, 1f);
+            
+            // 페이드 인과 스케일 애니메이션을 함께 실행
+            fadeTween?.Kill();
+            fadeTween = DOTween.Sequence()
+                .Append(canvasGroup.DOFade(1f, fadeInDuration).SetEase(fadeEase))
+                .Join(rectTransform.DOScale(Vector3.one, fadeInDuration).SetEase(fadeEase))
+                .SetAutoKill(true)
+                .OnComplete(() =>
+                {
+                    canvasGroup.interactable = true;
+                    canvasGroup.blocksRaycasts = true;
+                    fadeTween = null;
                 });
         }
 
@@ -1463,19 +1564,20 @@ namespace Game.SkillCardSystem.UI
         /// </summary>
         private void FadeOut()
         {
-            if (fadeTween != null)
-            {
-                fadeTween.Kill();
-            }
-
             isVisible = false;
-            canvasGroup.interactable = false;
-            canvasGroup.blocksRaycasts = false;
-
-            fadeTween = canvasGroup.DOFade(0f, fadeOutDuration)
-                .SetEase(fadeEase)
-                .OnComplete(() => {
+            
+            // 페이드 아웃과 스케일 애니메이션을 함께 실행
+            fadeTween?.Kill();
+            fadeTween = DOTween.Sequence()
+                .Append(canvasGroup.DOFade(0f, fadeOutDuration).SetEase(fadeEase))
+                .Join(rectTransform.DOScale(new Vector3(0.95f, 0.95f, 1f), fadeOutDuration).SetEase(fadeEase))
+                .SetAutoKill(true)
+                .OnComplete(() =>
+                {
+                    canvasGroup.interactable = false;
+                    canvasGroup.blocksRaycasts = false;
                     currentCard = null;
+                    fadeTween = null;
                 });
         }
 
@@ -1676,11 +1778,21 @@ namespace Game.SkillCardSystem.UI
 
         #region Cleanup
 
+        private void OnDisable()
+        {
+            if (fadeTween != null)
+            {
+                fadeTween.Kill();
+                fadeTween = null;
+            }
+        }
+
         private void OnDestroy()
         {
             if (fadeTween != null)
             {
                 fadeTween.Kill();
+                fadeTween = null;
             }
         }
 
@@ -1946,18 +2058,11 @@ namespace Game.SkillCardSystem.UI
             /// </summary>
             private void ShowTooltip()
             {
-                if (fadeTween != null)
-                {
-                    fadeTween.Kill();
-                }
-
-                canvasGroup.interactable = true;
-                canvasGroup.blocksRaycasts = true;
-
-                fadeTween = canvasGroup.DOFade(1f, fadeInDuration)
-                    .SetEase(fadeEase)
-                    .OnComplete(() => {
-                    });
+                Game.UtilitySystem.UIAnimationHelper.FadeInWithCleanup(
+                    ref fadeTween,
+                    canvasGroup,
+                    fadeInDuration,
+                    fadeEase);
             }
 
             /// <summary>
@@ -1965,17 +2070,13 @@ namespace Game.SkillCardSystem.UI
             /// </summary>
             public void HideTooltip()
             {
-                if (fadeTween != null)
-                {
-                    fadeTween.Kill();
-                }
-
-                canvasGroup.interactable = false;
-                canvasGroup.blocksRaycasts = false;
-
-                fadeTween = canvasGroup.DOFade(0f, fadeOutDuration)
-                    .SetEase(fadeEase)
-                    .OnComplete(() => {
+                Game.UtilitySystem.UIAnimationHelper.FadeOutWithCleanup(
+                    ref fadeTween,
+                    canvasGroup,
+                    fadeOutDuration,
+                    fadeEase,
+                    () =>
+                    {
                         if (Application.isPlaying)
                         {
                             Destroy(gameObject);
@@ -1983,11 +2084,21 @@ namespace Game.SkillCardSystem.UI
                     });
             }
 
+            private void OnDisable()
+            {
+                if (fadeTween != null)
+                {
+                    fadeTween.Kill();
+                    fadeTween = null;
+                }
+            }
+
             private void OnDestroy()
             {
                 if (fadeTween != null)
                 {
                     fadeTween.Kill();
+                    fadeTween = null;
                 }
             }
         }
@@ -2071,6 +2182,23 @@ namespace Game.SkillCardSystem.UI
         {
             var config = definition?.configuration;
             return config != null && config.hasEffects && config.effects != null && config.effects.Count > 0;
+        }
+
+        /// <summary>
+        /// 레이아웃을 지연하여 재구성합니다.
+        /// ContentSizeFitter가 제대로 작동하도록 한 프레임 대기 후 재갱신합니다.
+        /// </summary>
+        private System.Collections.IEnumerator DelayedLayoutRebuild()
+        {
+            yield return null; // 한 프레임 대기
+            
+            // 모든 레이아웃 강제 갱신
+            if (_contentRoot != null)
+            {
+                LayoutRebuilder.ForceRebuildLayoutImmediate(_contentRoot);
+            }
+            Canvas.ForceUpdateCanvases();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(rectTransform);
         }
     }
 }

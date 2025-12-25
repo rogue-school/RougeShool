@@ -20,11 +20,17 @@ namespace Game.SkillCardSystem.Effect
 
             if (config.useCustomSettings && config.customSettings != null)
             {
+                // 의존성 찾기
+                var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+                var itemService = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
+                
                 return new DamageEffectCommand(
                     config.customSettings.damageAmount,
                     config.customSettings.damageHits,
                     config.customSettings.ignoreGuard,
-                    config.customSettings.ignoreCounter
+                    config.customSettings.ignoreCounter,
+                    audioManager as Game.CoreSystem.Interface.IAudioManager,
+                    itemService as Game.ItemSystem.Interface.IItemService
                 );
             }
 

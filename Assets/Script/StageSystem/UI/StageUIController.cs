@@ -4,6 +4,7 @@ using TMPro;
 using DG.Tweening;
 using Game.CoreSystem.UI;
 using Game.CoreSystem.Utility;
+using Game.UtilitySystem;
 using Game.StageSystem.Data;
 using Game.StageSystem.Interface;
 using Game.StageSystem.Manager;
@@ -273,23 +274,25 @@ namespace Game.StageSystem.UI
                 messagePanel.SetActive(true);
                 if (messageCanvasGroup != null)
                 {
-                    messageCanvasGroup.alpha = 0f;
-                    messageCanvasGroup.blocksRaycasts = true;
-                    
-                    messageTween = messageCanvasGroup.DOFade(1f, 0.3f)
-                        .SetEase(Ease.OutQuad)
-                        .OnComplete(() =>
+                    messageTween = UIAnimationHelper.FadeIn(
+                        messageCanvasGroup,
+                        0.3f,
+                        Ease.OutQuad,
+                        () =>
                         {
-                            messageTween = messageCanvasGroup.DOFade(0f, 0.3f)
-                                .SetDelay(2f)
-                                .SetEase(Ease.InQuad)
-                                .OnComplete(() =>
+                            messageTween = UIAnimationHelper.FadeOut(
+                                messageCanvasGroup,
+                                0.3f,
+                                Ease.InQuad,
+                                () =>
                                 {
                                     messagePanel.SetActive(false);
-                                    messageCanvasGroup.blocksRaycasts = false;
                                     messageTween = null;
-                                });
-                        });
+                                },
+                                true)
+                                .SetDelay(2f);
+                        },
+                        true);
                 }
                 return;
             }
@@ -301,36 +304,41 @@ namespace Game.StageSystem.UI
                 
                 if (messageCanvasGroup != null)
                 {
-                    messageCanvasGroup.alpha = 0f;
-                    messageCanvasGroup.blocksRaycasts = true;
-                    
-                    messageTween = messageCanvasGroup.DOFade(1f, 0.3f)
-                        .SetEase(Ease.OutQuad)
-                        .OnComplete(() =>
+                    messageTween = UIAnimationHelper.FadeIn(
+                        messageCanvasGroup,
+                        0.3f,
+                        Ease.OutQuad,
+                        () =>
                         {
-                            messageTween = messageCanvasGroup.DOFade(0f, 0.3f)
-                                .SetDelay(2f)
-                                .SetEase(Ease.InQuad)
-                                .OnComplete(() =>
+                            messageTween = UIAnimationHelper.FadeOut(
+                                messageCanvasGroup,
+                                0.3f,
+                                Ease.InQuad,
+                                () =>
                                 {
                                     messageText.gameObject.SetActive(false);
-                                    messageCanvasGroup.blocksRaycasts = false;
                                     messageTween = null;
-                                });
-                        });
+                                },
+                                true)
+                                .SetDelay(2f);
+                        },
+                        true);
                 }
                 else
                 {
+                    // TextMeshPro는 UIAnimationHelper를 사용할 수 없으므로 기존 방식 유지
                     var textColor = messageText.color;
                     messageText.color = new Color(textColor.r, textColor.g, textColor.b, 0f);
                     
                     messageTween = messageText.DOFade(1f, 0.3f)
                         .SetEase(Ease.OutQuad)
+                        .SetAutoKill(true)
                         .OnComplete(() =>
                         {
                             messageTween = messageText.DOFade(0f, 0.3f)
                                 .SetDelay(2f)
                                 .SetEase(Ease.InQuad)
+                                .SetAutoKill(true)
                                 .OnComplete(() =>
                                 {
                                     messageText.gameObject.SetActive(false);

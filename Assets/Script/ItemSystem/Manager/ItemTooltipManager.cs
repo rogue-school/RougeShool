@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 using Game.ItemSystem.Data;
 using Game.ItemSystem.UI;
 using Game.CoreSystem.Utility;
@@ -11,6 +13,7 @@ using TMPro;
 using UnityEngine.UI;
 using Game.SkillCardSystem.Manager;
 using Game.CharacterSystem.Manager;
+using Zenject;
 
 namespace Game.ItemSystem.Manager
 {
@@ -23,7 +26,9 @@ namespace Game.ItemSystem.Manager
         #region Serialized Fields
 
         [Header("툴팁 설정")]
-        [Tooltip("툴팁 프리팹 (ItemTooltip 컴포넌트 포함)")]
+        [Tooltip("툴팁 프리팹 Addressables 주소")]
+        [SerializeField] private string tooltipPrefabAddress = "ItemTooltip.prefab";
+        [Tooltip("툴팁 프리팹 (Inspector 할당용, Addressables 로드 실패 시 폴백)")]
         [SerializeField] private GameObject tooltipPrefab;
         
         // 툴팁 지연 시간은 ItemConstants에서 관리 (코드로 제어)
@@ -53,8 +58,8 @@ namespace Game.ItemSystem.Manager
         private PassiveItemDefinition pendingPassiveItem;
         private int pendingPassiveItemEnhancementLevel = 1;
 
-        private float showTimer;
-        private float hideTimer;
+        private Coroutine showTooltipCoroutine;
+        private Coroutine hideTooltipCoroutine;
         private bool isShowingTooltip;
         private bool isHidingTooltip;
         private bool isPinned; // 팝업 등으로 고정된 동안 숨기지 않음
@@ -66,7 +71,17 @@ namespace Game.ItemSystem.Manager
         private EventSystem eventSystem;
         private System.Collections.Generic.Dictionary<ActiveItemDefinition, RectTransform> itemUICache = new();
         private System.Collections.Generic.Dictionary<PassiveItemDefinition, RectTransform> passiveItemUICache = new();
+        
+        private AsyncOperationHandle<GameObject> _loadOperation;
+        
+        [Inject(Optional = true)]
         private Game.ItemSystem.Service.ItemService itemService;
+        
+        [Inject(Optional = true)]
+        private SkillCardTooltipManager skillCardTooltipManager;
+        
+        [Inject(Optional = true)]
+        private BuffDebuffTooltipManager buffDebuffTooltipManager;
 
         #endregion
 
@@ -89,21 +104,46 @@ namespace Game.ItemSystem.Manager
         private void Awake()
         {
             InitializeComponents();
+            
+            // 모든 씬에서 사용 가능하도록 DontDestroyOnLoad 설정
+            if (transform.parent == null)
+            {
+                DontDestroyOnLoad(gameObject);
+            }
         }
 
         private void Update()
         {
             if (!IsInitialized) return;
 
-            UpdateTooltipTimers();
+            // 고정 대상 유효성 검사 및 위치 업데이트
+            ValidateTargetAndUpdatePosition();
         }
 
         private void OnDestroy()
         {
+            // 코루틴 정리
+            if (showTooltipCoroutine != null)
+            {
+                StopCoroutine(showTooltipCoroutine);
+                showTooltipCoroutine = null;
+            }
+            if (hideTooltipCoroutine != null)
+            {
+                StopCoroutine(hideTooltipCoroutine);
+                hideTooltipCoroutine = null;
+            }
+            
             // 이벤트 구독 해제
             if (itemService != null)
             {
                 itemService.OnEnhancementUpgraded -= OnEnhancementUpgradedHandler;
+            }
+
+            // Addressables 리소스 해제
+            if (_loadOperation.IsValid())
+            {
+                Addressables.Release(_loadOperation);
             }
 
             if (currentTooltip != null && currentTooltip.gameObject != null)
@@ -117,8 +157,9 @@ namespace Game.ItemSystem.Manager
         #region ICoreSystemInitializable
 
         /// <summary>
-        /// 시스템을 초기화합니다.
+        /// 시스템을 초기화합니다
         /// </summary>
+        /// <returns>초기화 코루틴</returns>
         public IEnumerator Initialize()
         {
             yield return InitializeTooltipSystem();
@@ -163,13 +204,32 @@ namespace Game.ItemSystem.Manager
         {
             GameLogger.LogInfo("[ItemTooltipManager] 툴팁 시스템 초기화 시작", GameLogger.LogCategory.UI);
             
+            // tooltipPrefab이 없으면 Addressables에서 로드 시도
+            if (tooltipPrefab == null && !string.IsNullOrEmpty(tooltipPrefabAddress))
+            {
+                GameLogger.LogInfo($"[ItemTooltipManager] Addressables에서 툴팁 프리팹 로드 시도: {tooltipPrefabAddress}", GameLogger.LogCategory.UI);
+                _loadOperation = Addressables.LoadAssetAsync<GameObject>(tooltipPrefabAddress);
+                yield return _loadOperation;
+
+                if (_loadOperation.Status == AsyncOperationStatus.Succeeded)
+                {
+                    tooltipPrefab = _loadOperation.Result;
+                    GameLogger.LogInfo($"[ItemTooltipManager] 툴팁 프리팹 로드 성공: {tooltipPrefab.name}", GameLogger.LogCategory.UI);
+                }
+                else
+                {
+                    GameLogger.LogError($"[ItemTooltipManager] Addressables에서 툴팁 프리팹 로드 실패: {tooltipPrefabAddress} - {_loadOperation.OperationException?.Message}", GameLogger.LogCategory.Error);
+                }
+            }
+            
             if (tooltipPrefab == null)
             {
-                GameLogger.LogWarning("[ItemTooltipManager] 툴팁 프리팹이 설정되지 않았습니다. Inspector에서 설정해주세요.", GameLogger.LogCategory.UI);
+                GameLogger.LogError("[ItemTooltipManager] 툴팁 프리팹이 할당되지 않았습니다. Inspector 또는 Addressables 설정을 확인해주세요.", GameLogger.LogCategory.Error);
+                OnInitializationFailed();
+                yield break;
             }
 
-            // ItemService 찾기 및 이벤트 구독
-            itemService = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
+            // ItemService 이벤트 구독
             if (itemService != null)
             {
                 itemService.OnEnhancementUpgraded += OnEnhancementUpgradedHandler;
@@ -347,26 +407,41 @@ namespace Game.ItemSystem.Manager
                 }
             }
 
-            // 숨김 타이머 취소 (다른 슬롯으로 전환 시)
+            // 숨김 코루틴 취소 (다른 슬롯으로 전환 시)
+            if (hideTooltipCoroutine != null)
+            {
+                StopCoroutine(hideTooltipCoroutine);
+                hideTooltipCoroutine = null;
+            }
             isHidingTooltip = false;
-            hideTimer = 0f;
 
             // 다른 아이템으로 전환하는 경우 즉시 표시
             if (isSwitchingItems)
             {
+                // 표시 코루틴 취소
+                if (showTooltipCoroutine != null)
+                {
+                    StopCoroutine(showTooltipCoroutine);
+                    showTooltipCoroutine = null;
+                }
                 isShowingTooltip = false;
-                showTimer = 0f;
                 ShowTooltip(); // 즉시 새 아이템 툴팁 표시
             }
             else if (!isShowingTooltip)
             {
                 isShowingTooltip = true;
-                showTimer = 0f;
+                if (showTooltipCoroutine != null)
+                {
+                    StopCoroutine(showTooltipCoroutine);
+                }
+                // 엑티브 아이템인 경우 더 긴 지연 시간 사용
+                float currentDelay = hoveredItem != null ? activeItemShowDelay : showDelay;
+                showTooltipCoroutine = StartCoroutine(ShowTooltipCoroutine(currentDelay));
             }
         }
 
         /// <summary>
-        /// 아이템에서 마우스가 이탈했을 때 호출됩니다.
+        /// 아이템에서 마우스가 이탈했을 때 호출됩니다
         /// </summary>
         public void OnItemHoverExit()
         {
@@ -374,27 +449,42 @@ namespace Game.ItemSystem.Manager
 
             if (isPinned)
             {
-                // 고정 상태에서는 숨김 타이머를 시작하지 않고 상태만 초기화
+                // 고정 상태에서는 숨김 코루틴을 시작하지 않고 상태만 초기화
                 hoveredItem = null;
                 hoveredPassiveItem = null;
+                if (showTooltipCoroutine != null)
+                {
+                    StopCoroutine(showTooltipCoroutine);
+                    showTooltipCoroutine = null;
+                }
                 isShowingTooltip = false;
-                showTimer = 0f;
                 return;
             }
 
             hoveredItem = null;
             hoveredPassiveItem = null;
+            
+            // 표시 코루틴 취소
+            if (showTooltipCoroutine != null)
+            {
+                StopCoroutine(showTooltipCoroutine);
+                showTooltipCoroutine = null;
+            }
             isShowingTooltip = false;
-            showTimer = 0f;
 
             pendingItem = null;
             pendingPassiveItem = null;
             pendingShow = false;
 
+            // 숨김 코루틴 시작
             if (!isHidingTooltip)
             {
                 isHidingTooltip = true;
-                hideTimer = 0f;
+                if (hideTooltipCoroutine != null)
+                {
+                    StopCoroutine(hideTooltipCoroutine);
+                }
+                hideTooltipCoroutine = StartCoroutine(HideTooltipCoroutine());
             }
         }
 
@@ -454,21 +544,35 @@ namespace Game.ItemSystem.Manager
                 }
             }
 
-            // 숨김 타이머 취소 (다른 슬롯으로 전환 시)
+            // 숨김 코루틴 취소 (다른 슬롯으로 전환 시)
+            if (hideTooltipCoroutine != null)
+            {
+                StopCoroutine(hideTooltipCoroutine);
+                hideTooltipCoroutine = null;
+            }
             isHidingTooltip = false;
-            hideTimer = 0f;
 
-            // 다른 아이템으로 전환하는 경우 즉시 표시
+            // 다른 패시브 아이템으로 전환하는 경우 즉시 표시
             if (isSwitchingItems)
             {
+                // 표시 코루틴 취소
+                if (showTooltipCoroutine != null)
+                {
+                    StopCoroutine(showTooltipCoroutine);
+                    showTooltipCoroutine = null;
+                }
                 isShowingTooltip = false;
-                showTimer = 0f;
-                ShowTooltip(); // 즉시 새 아이템 툴팁 표시
+                ShowTooltip(); // 즉시 새 패시브 아이템 툴팁 표시
             }
             else if (!isShowingTooltip)
             {
                 isShowingTooltip = true;
-                showTimer = 0f;
+                if (showTooltipCoroutine != null)
+                {
+                    StopCoroutine(showTooltipCoroutine);
+                }
+                // 패시브 아이템은 기본 지연 시간 사용
+                showTooltipCoroutine = StartCoroutine(ShowTooltipCoroutine(showDelay));
             }
         }
 
@@ -484,10 +588,20 @@ namespace Game.ItemSystem.Manager
 
             hoveredItem = null;
             hoveredPassiveItem = null;
+            // 코루틴 정리
+            if (showTooltipCoroutine != null)
+            {
+                StopCoroutine(showTooltipCoroutine);
+                showTooltipCoroutine = null;
+            }
+            if (hideTooltipCoroutine != null)
+            {
+                StopCoroutine(hideTooltipCoroutine);
+                hideTooltipCoroutine = null;
+            }
+            
             isShowingTooltip = false;
             isHidingTooltip = false;
-            showTimer = 0f;
-            hideTimer = 0f;
             isPinned = false;
             pinnedItem = null;
             pinnedPassiveItem = null;
@@ -515,7 +629,6 @@ namespace Game.ItemSystem.Manager
         private void HideOtherTooltips()
         {
             // 스킬카드 툴팁 숨김
-            var skillCardTooltipManager = UnityEngine.Object.FindFirstObjectByType<SkillCardTooltipManager>();
             if (skillCardTooltipManager != null)
             {
                 skillCardTooltipManager.ForceHideTooltip();
@@ -523,7 +636,6 @@ namespace Game.ItemSystem.Manager
             }
 
             // 버프/디버프 툴팁 숨김
-            var buffDebuffTooltipManager = UnityEngine.Object.FindFirstObjectByType<BuffDebuffTooltipManager>();
             if (buffDebuffTooltipManager != null)
             {
                 buffDebuffTooltipManager.ForceHideTooltip();
@@ -573,10 +685,19 @@ namespace Game.ItemSystem.Manager
 
                                 pendingShow = false;
 
+                                // 코루틴 정리
+                                if (hideTooltipCoroutine != null)
+                                {
+                                    StopCoroutine(hideTooltipCoroutine);
+                                    hideTooltipCoroutine = null;
+                                }
+                                if (showTooltipCoroutine != null)
+                                {
+                                    StopCoroutine(showTooltipCoroutine);
+                                    showTooltipCoroutine = null;
+                                }
                                 isHidingTooltip = false;
-                                hideTimer = 0f;
                                 isShowingTooltip = false;
-                                showTimer = 0f;
 
                                 ShowTooltip();
                             }
@@ -701,12 +822,47 @@ namespace Game.ItemSystem.Manager
 
         #endregion
 
-        #region Update Methods
+        #region Timer Management (Coroutine-based)
 
         /// <summary>
-        /// 툴팁 타이머들을 업데이트합니다.
+        /// 툴팁 표시 타이머 코루틴입니다.
         /// </summary>
-        private void UpdateTooltipTimers()
+        /// <param name="delay">지연 시간 (엑티브 아이템인 경우 더 긴 시간 사용)</param>
+        private IEnumerator ShowTooltipCoroutine(float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            
+            // 코루틴이 취소되지 않았고 여전히 표시해야 하는 경우에만 실행
+            if (isShowingTooltip && (hoveredItem != null || hoveredPassiveItem != null))
+            {
+                ShowTooltip();
+            }
+            
+            isShowingTooltip = false;
+            showTooltipCoroutine = null;
+        }
+
+        /// <summary>
+        /// 툴팁 숨김 타이머 코루틴입니다.
+        /// </summary>
+        private IEnumerator HideTooltipCoroutine()
+        {
+            yield return new WaitForSeconds(hideDelay);
+            
+            // 코루틴이 취소되지 않았고 여전히 숨겨야 하는 경우에만 실행
+            if (isHidingTooltip)
+            {
+                HideTooltip();
+            }
+            
+            isHidingTooltip = false;
+            hideTooltipCoroutine = null;
+        }
+
+        /// <summary>
+        /// 대상 유효성 검사 및 위치 업데이트를 수행합니다.
+        /// </summary>
+        private void ValidateTargetAndUpdatePosition()
         {
             // 고정 대상 유효성 검사: 보상 선택 등으로 대상 슬롯/오브젝트가 파괴되면 즉시 숨김
             if (isPinned)
@@ -719,28 +875,6 @@ namespace Game.ItemSystem.Manager
                 }
             }
 
-            if (isShowingTooltip && (hoveredItem != null || hoveredPassiveItem != null))
-            {
-                showTimer += Time.deltaTime;
-                // 엑티브 아이템인 경우 더 긴 지연 시간 사용
-                float currentDelay = hoveredItem != null ? activeItemShowDelay : showDelay;
-                if (showTimer >= currentDelay)
-                {
-                    ShowTooltip();
-                    isShowingTooltip = false;
-                }
-            }
-
-            if (isHidingTooltip)
-            {
-                hideTimer += Time.deltaTime;
-                if (hideTimer >= hideDelay)
-                {
-                    HideTooltip();
-                    isHidingTooltip = false;
-                }
-            }
-
             if (currentTooltip != null && currentTooltip.gameObject != null && currentTooltip.gameObject.activeInHierarchy)
             {
                 Vector2 itemPosition = GetCurrentItemPosition();
@@ -750,6 +884,8 @@ namespace Game.ItemSystem.Manager
                 }
             }
         }
+
+        #endregion
 
         /// <summary>
         /// 현재 호버된 아이템의 위치를 가져옵니다.
@@ -818,12 +954,10 @@ namespace Game.ItemSystem.Manager
             return currentTargetRect.GetComponentInParent<Canvas>();
         }
 
-        #endregion
-
         #region Tooltip Control
 
         /// <summary>
-        /// 툴팁을 표시합니다.
+        /// 툴팁을 표시합니다
         /// </summary>
         public void ShowTooltip()
         {
@@ -905,7 +1039,7 @@ namespace Game.ItemSystem.Manager
         }
 
         /// <summary>
-        /// 툴팁을 숨깁니다.
+        /// 툴팁을 숨깁니다
         /// </summary>
         public void HideTooltip()
         {
@@ -928,7 +1062,7 @@ namespace Game.ItemSystem.Manager
         }
 
         /// <summary>
-        /// 툴팁을 고정합니다. (팝업이 열리는 동안 유지)
+        /// 툴팁을 고정합니다 (팝업이 열리는 동안 유지)
         /// </summary>
         public void PinTooltip()
         {
@@ -952,8 +1086,10 @@ namespace Game.ItemSystem.Manager
         }
 
         /// <summary>
-        /// 특정 아이템/Rect 기준으로 툴팁을 고정합니다.
+        /// 특정 아이템/Rect 기준으로 툴팁을 고정합니다
         /// </summary>
+        /// <param name="item">고정할 아이템 정의</param>
+        /// <param name="rect">대상 RectTransform</param>
         public void PinTooltip(ActiveItemDefinition item, RectTransform rect)
         {
             isPinned = true;

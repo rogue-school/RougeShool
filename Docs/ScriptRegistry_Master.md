@@ -12,16 +12,17 @@
 | **CoreSystem** | `Assets/Script/CoreSystem/` | 오디오, 세이브, 통계, 씬 전환, 코어 매니저/유틸 | `CoreSystemInstaller`, `MainSceneInstaller`, `GameStateManager`, `AudioManager`, `SaveManager`, `GameLogger`, `ComponentInteractionOptimizer` | 36 | `Docs/ScriptRegistry_CoreSystem.md` |
 | **CharacterSystem** | `Assets/Script/CharacterSystem/` | 플레이어/적 캐릭터 데이터·코어 로직·매니저·UI·페이즈 시스템 | `EnemyCharacter`, `PlayerCharacter`, `EnemyPhaseData` | 41 | `Docs/ScriptRegistry_CharacterSystem.md` |
 | **CombatSystem** | `Assets/Script/CombatSystem/` | 전투 상태 머신, 턴/슬롯/실행, 전투 UI, 슬롯 이동/적 덱 캐시 관리 | `CombatInstaller`, `CombatStateMachine`, `SlotMovementController` | 63 | `Docs/ScriptRegistry_CombatSystem.md` |
-| **SkillCardSystem** | `Assets/Script/SkillCardSystem/` | 카드 정의/팩토리/이펙트/덱·핸드/슬롯/툴팁 | `SkillCardFactory`, `CardCirculationSystem` | 102 | `Docs/ScriptRegistry_SkillCardSystem.md` |
+| **SkillCardSystem** | `Assets/Script/SkillCardSystem/` | 카드 정의/팩토리/이펙트/덱·핸드/슬롯/툴팁 | `SkillCardFactory`, `CardCirculationSystem` | 103 | `Docs/ScriptRegistry_SkillCardSystem.md` |
 | **ItemSystem** | `Assets/Script/ItemSystem/` | 액티브/패시브 아이템, 보상, 인벤토리/UI | `ItemService`, `RewardGenerator` | 52 | `Docs/ScriptRegistry_ItemSystem.md` |
 | **StageSystem** | `Assets/Script/StageSystem/` | 스테이지 데이터/진행/적 생성·소환·보상 트리거 | `StageManager` | 8 | `Docs/ScriptRegistry_StageSystem.md` |
 | **SaveSystem** | `Assets/Script/SaveSystem/` | 진행/슬롯 저장·복원, 자동 저장 | `AutoSaveManager` | 5 | `Docs/ScriptRegistry_SaveSystem.md` |
 | **TutorialSystem** | `Assets/Script/TutorialSystem/` | 전투 튜토리얼, 오버레이 UI | `TutorialManager` | 3 | `Docs/ScriptRegistry_TutorialSystem.md` |
 | **UISystem** | `Assets/Script/UISystem/` | 메인 메뉴/설정/무기 선택 UI | `MainMenuController` | 11 | `Docs/ScriptRegistry_UISystem.md` |
-| **UtilitySystem** | `Assets/Script/UtilitySystem/` | 게임 컨텍스트, DontDestroy 컨테이너, 드랍 헬퍼 | `GameContext` | 5 | `Docs/ScriptRegistry_UtilitySystem.md` |
+| **UtilitySystem** | `Assets/Script/UtilitySystem/` | 게임 컨텍스트, DontDestroy 컨테이너, 드랍 헬퍼, 공통 헬퍼 클래스 | `GameContext`, `UIAnimationHelper`, `HoverEffectHelper`, `TransformExtensions` | 8 | `Docs/ScriptRegistry_UtilitySystem.md` |
 | **VFXSystem** | `Assets/Script/VFXSystem/` | VFX/데미지 텍스트/버프 아이콘/카드 UI 풀링 | `VFXManager` | 7 | `Docs/ScriptRegistry_VFXSystem.md` |
 
-> 스크립트 수는 `glob_file_search` 기준 실제 `.cs` 파일 개수입니다. 레지스트리 테이블은 여러 스크립트를 한 줄로 묶어 설명하는 경우가 있으므로, **행 수와 파일 수는 1:1이 아니지만 모든 파일이 최소 한 번 이상 문서에 등장**합니다.
+> **스크립트 수 안내**: 스크립트 수는 `glob_file_search` 기준 실제 `.cs` 파일 개수입니다 (2024년 검증 완료). 레지스트리 테이블은 여러 스크립트를 한 줄로 묶어 설명하는 경우가 있으므로, **행 수와 파일 수는 1:1이 아니지만 모든 파일이 최소 한 번 이상 문서에 등장**합니다.  
+> **최신 업데이트**: UtilitySystem에 최근 리팩토링으로 추가된 헬퍼 클래스들(UIAnimationHelper, HoverEffectHelper, TransformExtensions)이 반영되었습니다.
 
 ---
 

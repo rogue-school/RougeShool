@@ -109,12 +109,16 @@ namespace Game.CharacterSystem.UI
             Unsubscribe();
             hpBarTween?.Kill();
             glowTween?.Kill();
+            hpBarTween = null;
+            glowTween = null;
         }
 
         private void OnDestroy()
         {
             hpBarTween?.Kill();
             glowTween?.Kill();
+            hpBarTween = null;
+            glowTween = null;
         }
 
         #endregion
@@ -188,7 +192,8 @@ namespace Game.CharacterSystem.UI
 
             hpBarTween?.Kill();
             hpBarTween = hpBarFill.DOFillAmount(hpRatio, 1f / animationSpeed)
-                .SetEase(Ease.OutQuad);
+                .SetEase(Ease.OutQuad)
+                .SetAutoKill(true);
             
             // 시각적 효과 업데이트
             UpdateVisualEffects(hpRatio, targetColor);
@@ -322,7 +327,8 @@ namespace Game.CharacterSystem.UI
                     hpBarGlow.color = currentGlowColor;
                 }, baseAlpha * 1.2f, 1f))
                 .SetLoops(-1, LoopType.Yoyo)
-                .SetEase(Ease.InOutSine);
+                .SetEase(Ease.InOutSine)
+                .SetAutoKill(false);
         }
 
         #endregion

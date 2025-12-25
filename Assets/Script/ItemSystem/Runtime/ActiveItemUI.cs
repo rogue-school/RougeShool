@@ -37,9 +37,9 @@ namespace Game.ItemSystem.Runtime
 
         // 의존성 주입
         [Inject(Optional = true)] private Game.CombatSystem.Manager.TurnManager turnManager;
-        
-        // 툴팁 매니저
-        private Game.ItemSystem.Manager.ItemTooltipManager tooltipManager;
+        [Inject(Optional = true)] private Game.ItemSystem.Manager.ItemTooltipManager tooltipManager;
+        [Inject(Optional = true)] private InventoryPanelController inventoryPanelController;
+        [Inject(Optional = true)] private Game.CombatSystem.State.CombatStateMachine combatStateMachine;
         private RectTransform rectTransform;
 
         // 호버 효과 관련
@@ -104,12 +104,14 @@ namespace Game.ItemSystem.Runtime
         private void OnDisable()
         {
             scaleTween?.Kill();
+            scaleTween = null;
         }
         
         private void OnDestroy()
         {
             UnregisterFromTooltipManager();
             scaleTween?.Kill();
+            scaleTween = null;
         }
         
         /// <summary>
@@ -117,7 +119,7 @@ namespace Game.ItemSystem.Runtime
         /// </summary>
         private void FindTooltipManager()
         {
-            tooltipManager = FindFirstObjectByType<Game.ItemSystem.Manager.ItemTooltipManager>();
+            // DI로 주입받은 tooltipManager 사용
             if (tooltipManager != null)
             {
                 GameLogger.LogInfo("[ActiveItemUI] ItemTooltipManager 찾기 완료", GameLogger.LogCategory.UI);
@@ -125,6 +127,61 @@ namespace Game.ItemSystem.Runtime
             else
             {
                 GameLogger.LogWarning("[ActiveItemUI] ItemTooltipManager를 찾을 수 없습니다", GameLogger.LogCategory.UI);
+            }
+        }
+
+        /// <summary>
+        /// tooltipManager가 null이면 주입을 시도합니다.
+        /// </summary>
+        private void EnsureTooltipManagerInjected()
+        {
+            if (tooltipManager != null) return;
+
+            try
+            {
+                // 1. ProjectContext를 통해 Container에 접근하여 주입 시도
+                var projectContext = Zenject.ProjectContext.Instance;
+                if (projectContext != null && projectContext.Container != null)
+                {
+                    projectContext.Container.Inject(this);
+                    if (tooltipManager != null)
+                    {
+                        GameLogger.LogInfo("[ActiveItemUI] ItemTooltipManager 주입 완료 (ProjectContext)", GameLogger.LogCategory.UI);
+                        return;
+                    }
+                }
+
+                // 2. SceneContextRegistry를 통해 현재 씬의 Container에 접근하여 주입 시도
+                try
+                {
+                    var sceneContextRegistry = projectContext.Container.Resolve<Zenject.SceneContextRegistry>();
+                    var sceneContainer = sceneContextRegistry.TryGetContainerForScene(gameObject.scene);
+                    if (sceneContainer != null)
+                    {
+                        sceneContainer.Inject(this);
+                        if (tooltipManager != null)
+                        {
+                            GameLogger.LogInfo("[ActiveItemUI] ItemTooltipManager 주입 완료 (SceneContext)", GameLogger.LogCategory.UI);
+                            return;
+                        }
+                    }
+                }
+                catch
+                {
+                    // SceneContextRegistry를 찾을 수 없거나 씬 컨테이너가 없는 경우 무시
+                }
+
+                // 3. 직접 찾아서 할당 (최후의 수단)
+                var foundManager = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Manager.ItemTooltipManager>(UnityEngine.FindObjectsInactive.Include);
+                if (foundManager != null)
+                {
+                    tooltipManager = foundManager;
+                    GameLogger.LogInfo("[ActiveItemUI] ItemTooltipManager 직접 찾기 완료 (FindFirstObjectByType)", GameLogger.LogCategory.UI);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogWarning($"[ActiveItemUI] ItemTooltipManager 주입 시도 중 오류: {ex.Message}", GameLogger.LogCategory.UI);
             }
         }
         
@@ -522,8 +579,7 @@ namespace Game.ItemSystem.Runtime
                 }
                 if (hasOtherOpen)
                 {
-                    var panel = FindFirstObjectByType<InventoryPanelController>();
-                    if (panel != null)
+                    if (inventoryPanelController != null)
                     {
                         // 다른 슬롯 전환 시: 먼저 툴팁을 현재 슬롯으로 재고정하여
                         // 이전 슬롯 팝업 정리 과정에서 새 툴팁이 닫히지 않게 보호
@@ -535,7 +591,7 @@ namespace Game.ItemSystem.Runtime
 
                         // 그런 다음 다른 슬롯의 팝업만 닫기
                         // (툴팁은 유지, 다음 프레임에 팝업을 정상적으로 연다)
-                        panel.CloseAllPopupsOnly();
+                        inventoryPanelController.CloseAllPopupsOnly();
                     }
                     StartCoroutine(OpenAfterFrame());
                     return;
@@ -575,10 +631,9 @@ namespace Game.ItemSystem.Runtime
         {
             // 다음 프레임에서 글로벌 닫기 억제 후 정상 오픈
             yield return null;
-            var panel = FindFirstObjectByType<InventoryPanelController>();
-            if (panel != null)
+            if (inventoryPanelController != null)
             {
-                panel.SuppressGlobalCloseOneFrame();
+                inventoryPanelController.SuppressGlobalCloseOneFrame();
             }
             OnItemClicked?.Invoke(slotIndex);
             ShowActionPopup(IsPlayerTurn());
@@ -599,22 +654,12 @@ namespace Game.ItemSystem.Runtime
             }
             else
             {
-                // TurnManager가 없으면 씬에서 직접 찾기
-                var foundTurnManager = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
-                if (foundTurnManager != null)
-                {
-                    isTurnPlayerTurn = foundTurnManager.IsPlayerTurn();
-                }
-                else
-                {
-                    // TurnManager를 찾을 수 없으면 안전하게 false 반환 (아이템 사용 차단)
-                    GameLogger.LogWarning("[ActiveItemUI] TurnManager를 찾을 수 없습니다. 아이템 사용을 차단합니다.", GameLogger.LogCategory.UI);
-                    return false;
-                }
+                // TurnManager를 찾을 수 없으면 안전하게 false 반환 (아이템 사용 차단)
+                GameLogger.LogWarning("[ActiveItemUI] TurnManager를 찾을 수 없습니다. 아이템 사용을 차단합니다.", GameLogger.LogCategory.UI);
+                return false;
             }
 
             // 2단계: CombatStateMachine 전투 상태 확인
-            var combatStateMachine = FindFirstObjectByType<Game.CombatSystem.State.CombatStateMachine>();
             if (combatStateMachine == null)
             {
                 GameLogger.LogWarning("[ActiveItemUI] CombatStateMachine을 찾을 수 없습니다. 아이템 사용을 차단합니다.", GameLogger.LogCategory.UI);
@@ -760,12 +805,19 @@ namespace Game.ItemSystem.Runtime
         public void OnPointerEnter(PointerEventData eventData)
         {
             // 호버 확대 효과
-            scaleTween?.Kill();
-            scaleTween = transform.DOScale(hoverScale, 0.2f)
-                .SetEase(Ease.OutQuad)
-                .SetAutoKill(true);
+            Game.UtilitySystem.HoverEffectHelper.PlayHoverScaleWithCleanup(
+                ref scaleTween,
+                transform,
+                hoverScale,
+                0.2f);
 
-            if (currentItem == null || tooltipManager == null)
+            if (currentItem == null)
+                return;
+
+            // tooltipManager가 null이면 찾기 시도
+            EnsureTooltipManagerInjected();
+
+            if (tooltipManager == null)
                 return;
 
             // 인벤토리 슬롯에서도 자신의 RectTransform을 명시 전달
@@ -778,10 +830,10 @@ namespace Game.ItemSystem.Runtime
         public void OnPointerExit(PointerEventData eventData)
         {
             // 호버 확대 효과 해제
-            scaleTween?.Kill();
-            scaleTween = transform.DOScale(1f, 0.2f)
-                .SetEase(Ease.OutQuad)
-                .SetAutoKill(true);
+            Game.UtilitySystem.HoverEffectHelper.ResetScaleWithCleanup(
+                ref scaleTween,
+                transform,
+                0.2f);
 
             if (tooltipManager == null)
                 return;

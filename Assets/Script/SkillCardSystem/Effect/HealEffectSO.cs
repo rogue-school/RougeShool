@@ -42,7 +42,10 @@ namespace Game.SkillCardSystem.Effect
             // EffectCustomSettings의 이펙트/사운드가 있으면 우선 사용, 없으면 SO의 기본 이펙트 사용
             var effectPrefab = customSettings.healEffectPrefab ?? visualEffectPrefab;
             var sfxClip = customSettings.healSfxClip;
-            return new HealEffectCommand(customSettings.healAmount, maxHealAmount, effectPrefab, sfxClip);
+            // 의존성 찾기
+            var vfxManager = UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
+            var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            return new HealEffectCommand(customSettings.healAmount, maxHealAmount, effectPrefab, sfxClip, vfxManager, audioManager as Game.CoreSystem.Interface.IAudioManager);
         }
 
         /// <summary>

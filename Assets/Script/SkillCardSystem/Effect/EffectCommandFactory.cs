@@ -12,6 +12,9 @@ namespace Game.SkillCardSystem.Effect
     {
         private readonly List<IEffectCommandStrategy> strategies = new();
 
+        /// <summary>
+        /// 효과 커맨드 팩토리를 초기화하고 모든 전략을 등록합니다.
+        /// </summary>
         public EffectCommandFactory()
         {
             // 전략 등록

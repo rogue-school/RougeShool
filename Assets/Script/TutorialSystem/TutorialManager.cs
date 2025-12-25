@@ -89,20 +89,10 @@ namespace Game.TutorialSystem
                 _itemService.OnActiveItemUsed += HandleActiveItemUsed;
             }
 
-            // Fallback: TurnManager 어댑터에서도 구독 시도 (DI 미주입 대비)
+            // _turnController는 DI로 주입받음 (Optional)
             if (_turnController == null)
             {
-                var tm = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
-                if (tm != null)
-                {
-                    tm.OnTurnChanged += (t) => HandleTurnChanged(ConvertTurnType(t));
-                    tm.OnTurnCountChanged += (c) => HandleTurnCountChanged(c);
-                    GameLogger.LogWarning("[TutorialManager] ITurnController 미주입 → TurnManager에 직접 구독", GameLogger.LogCategory.UI);
-                }
-                else
-                {
-                    GameLogger.LogWarning("[TutorialManager] Turn 이벤트 소스를 찾지 못했습니다(디아보스?)", GameLogger.LogCategory.UI);
-                }
+                GameLogger.LogWarning("[TutorialManager] ITurnController가 주입되지 않았습니다", GameLogger.LogCategory.UI);
             }
         }
 
@@ -195,9 +185,8 @@ namespace Game.TutorialSystem
         {
             if (_overlay != null) return;
 
-            // 우선: 씬에 이미 존재하면 재사용
-            _overlay = FindFirstObjectByType<TutorialOverlayView>();
-            if (_overlay != null) return;
+            // _overlay는 프리팹에서 생성하거나 씬에 이미 존재하는 것을 사용
+            // FindFirstObjectByType 제거 (씬에 이미 존재하는 경우는 Inspector에서 설정)
 
             if (overlayPrefab == null)
             {
@@ -298,11 +287,7 @@ namespace Game.TutorialSystem
         {
             if (!_shouldRun || _isRunning || _startedOnce) return;
             bool isPlayer = _turnController != null ? _turnController.IsPlayerTurn() : false;
-            if (!isPlayer)
-            {
-                var tm = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
-                if (tm != null) isPlayer = tm.IsPlayerTurn();
-            }
+            // _turnController는 DI로 주입받음
             GameLogger.LogInfo($"[TutorialManager] 초기 상태 검사: isPlayerTurn={isPlayer}", GameLogger.LogCategory.UI);
             if (isPlayer) StartCoroutine(ShowNextFrame());
         }
@@ -353,7 +338,7 @@ namespace Game.TutorialSystem
 
         #region 편의 메서드
         /// <summary>
-        /// 인스펙터에서 강제로 다시 시작하고 싶을 때 호출합니다.
+        /// 인스펙터에서 강제로 다시 시작하고 싶을 때 호출합니다
         /// </summary>
         [ContextMenu("Restart Tutorial (Editor)")]
         public void RestartTutorial()

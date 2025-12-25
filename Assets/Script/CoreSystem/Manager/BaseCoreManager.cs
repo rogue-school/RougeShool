@@ -37,6 +37,9 @@ namespace Game.CoreSystem.Manager
 
         #region 초기화 상태
 
+        /// <summary>
+        /// 매니저가 초기화되었는지 여부를 나타냅니다.
+        /// </summary>
         public bool IsInitialized { get; protected set; } = false;
 
         #endregion
@@ -51,7 +54,12 @@ namespace Game.CoreSystem.Manager
             }
             else if (persistAcrossScenes)
             {
-                GameLogger.LogWarning("루트 오브젝트가 아니므로 DontDestroyOnLoad를 적용할 수 없습니다.", GameLogger.LogCategory.UI);
+                // 부모가 있으면 부모가 DontDestroyOnLoad되면 자동으로 함께 유지됨
+                // 경고를 Info로 변경 (실제 문제는 아님)
+                if (enableDebugLogging)
+                {
+                    GameLogger.LogInfo($"{GetType().Name}: 부모 오브젝트가 DontDestroyOnLoad되면 함께 유지됩니다.", GameLogger.LogCategory.UI);
+                }
             }
 
             if (enableDebugLogging)
@@ -72,6 +80,10 @@ namespace Game.CoreSystem.Manager
 
         #region ICoreSystemInitializable 구현
 
+        /// <summary>
+        /// 시스템을 초기화합니다
+        /// </summary>
+        /// <returns>초기화 코루틴</returns>
         public virtual System.Collections.IEnumerator Initialize()
         {
             if (IsInitialized)
@@ -95,6 +107,9 @@ namespace Game.CoreSystem.Manager
             }
         }
 
+        /// <summary>
+        /// 초기화 실패 시 호출됩니다
+        /// </summary>
         public virtual void OnInitializationFailed()
         {
             GameLogger.LogError($"{GetType().Name} 초기화 실패", GameLogger.LogCategory.Error);

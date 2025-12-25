@@ -31,11 +31,21 @@ namespace Game.CharacterSystem.Core
 		[Tooltip("선택 처리를 수행할 MainMenuController")]
 		[SerializeField] private Game.UISystem.MainMenuController mainMenuController;
 
+		[Zenject.Inject(Optional = true)]
+		private void Construct(Game.UISystem.MainMenuController mainMenuController)
+		{
+			if (mainMenuController != null)
+			{
+				this.mainMenuController = mainMenuController;
+			}
+		}
+
 		private void Awake()
 		{
+			// mainMenuController는 DI로 주입받거나 Inspector에서 설정
 			if (mainMenuController == null)
 			{
-				mainMenuController = FindFirstObjectByType<Game.UISystem.MainMenuController>();
+				GameLogger.LogWarning("[LobbyCharacterSelector] MainMenuController가 설정되지 않았습니다.", GameLogger.LogCategory.UI);
 			}
 		}
 

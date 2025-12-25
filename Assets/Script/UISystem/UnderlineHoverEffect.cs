@@ -58,10 +58,18 @@ namespace Game.UISystem
             // 비활성화 시 트윈/코루틴 정리 및 언더라인 접기
             if (animCoroutine != null) StopCoroutine(animCoroutine);
             animCoroutine = null;
-            if (underline != null) underline.DOKill(false);
             if (underline != null)
             {
+                underline.DOKill(false);
                 underline.localScale = new Vector3(0f, 1f, 1f);
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (underline != null)
+            {
+                underline.DOKill(false);
             }
         }
 
@@ -73,7 +81,9 @@ namespace Game.UISystem
             if (animCoroutine != null) StopCoroutine(animCoroutine);
             underline.DOKill(false);
             underline.localScale = new Vector3(Mathf.Clamp01(underline.localScale.x), 1f, 1f);
-            underline.DOScaleX(1f, expandDuration).SetEase(expandEase);
+            underline.DOScaleX(1f, expandDuration)
+                .SetEase(expandEase)
+                .SetAutoKill(true);
         }
 
         public void OnPointerExit(PointerEventData eventData)
@@ -82,7 +92,9 @@ namespace Game.UISystem
 
             if (animCoroutine != null) StopCoroutine(animCoroutine);
             underline.DOKill(false);
-            underline.DOScaleX(0f, collapseDuration).SetEase(collapseEase);
+            underline.DOScaleX(0f, collapseDuration)
+                .SetEase(collapseEase)
+                .SetAutoKill(true);
         }
 
         /// <summary>
@@ -102,7 +114,9 @@ namespace Game.UISystem
             underline.localScale = new Vector3(Mathf.Clamp01(from), 1f, 1f);
             float duration = to > from ? expandDuration : collapseDuration;
             Ease ease = to > from ? expandEase : collapseEase;
-            var tween = underline.DOScaleX(to, duration).SetEase(ease);
+            var tween = underline.DOScaleX(to, duration)
+                .SetEase(ease)
+                .SetAutoKill(true);
             yield return tween.WaitForCompletion();
         }
 

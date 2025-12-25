@@ -107,6 +107,9 @@ namespace Game.CoreSystem.Statistics
         /// <summary>
         /// 리더보드에 점수 추가
         /// </summary>
+        /// <param name="sessionData">세션 통계 데이터</param>
+        /// <param name="scoreData">점수 데이터</param>
+        /// <returns>추가 작업</returns>
         public async Task AddScore(SessionStatisticsData sessionData, ScoreData scoreData)
         {
             if (sessionData == null || scoreData == null)
@@ -173,6 +176,8 @@ namespace Game.CoreSystem.Statistics
         /// <summary>
         /// 캐릭터별 리더보드 가져오기
         /// </summary>
+        /// <param name="characterName">캐릭터 이름</param>
+        /// <returns>캐릭터별 리더보드 (없으면 새로 생성)</returns>
         public CharacterLeaderboard GetLeaderboard(string characterName)
         {
             if (string.IsNullOrEmpty(characterName))
@@ -201,6 +206,9 @@ namespace Game.CoreSystem.Statistics
         /// <summary>
         /// 캐릭터별 현재 순위 가져오기
         /// </summary>
+        /// <param name="characterName">캐릭터 이름</param>
+        /// <param name="score">점수</param>
+        /// <returns>현재 순위 (1부터 시작)</returns>
         public int GetCurrentRank(string characterName, int score)
         {
             var leaderboard = GetLeaderboard(characterName);
@@ -221,6 +229,8 @@ namespace Game.CoreSystem.Statistics
         /// <summary>
         /// 캐릭터별 총 클리어 횟수 가져오기
         /// </summary>
+        /// <param name="characterName">캐릭터 이름</param>
+        /// <returns>총 클리어 횟수</returns>
         public int GetTotalClearCount(string characterName)
         {
             var leaderboard = GetLeaderboard(characterName);
@@ -235,6 +245,7 @@ namespace Game.CoreSystem.Statistics
         /// <summary>
         /// 전체 캐릭터 통합 총 클리어 횟수 가져오기
         /// </summary>
+        /// <returns>전체 캐릭터 통합 총 클리어 횟수</returns>
         public int GetTotalClearCountAllCharacters()
         {
             if (_leaderboardData == null || _leaderboardData.characterLeaderboards == null)
@@ -254,6 +265,8 @@ namespace Game.CoreSystem.Statistics
         /// <summary>
         /// 캐릭터별 최고 점수 가져오기
         /// </summary>
+        /// <param name="characterName">캐릭터 이름</param>
+        /// <returns>최고 점수 (없으면 0)</returns>
         public int GetBestScore(string characterName)
         {
             var leaderboard = GetLeaderboard(characterName);
@@ -269,6 +282,9 @@ namespace Game.CoreSystem.Statistics
         /// <summary>
         /// 캐릭터별 상위 N개 항목 가져오기
         /// </summary>
+        /// <param name="characterName">캐릭터 이름</param>
+        /// <param name="count">가져올 항목 수 (기본값: 5)</param>
+        /// <returns>상위 N개 항목 리스트</returns>
         public List<LeaderboardEntry> GetTopEntries(string characterName, int count = 5)
         {
             var leaderboard = GetLeaderboard(characterName);
@@ -284,6 +300,8 @@ namespace Game.CoreSystem.Statistics
         /// <summary>
         /// 모든 캐릭터 통합 상위 N개 항목 가져오기
         /// </summary>
+        /// <param name="count">가져올 항목 수 (기본값: 10)</param>
+        /// <returns>통합 상위 N개 항목 리스트</returns>
         public List<LeaderboardEntry> GetTopEntriesAllCharacters(int count = 10)
         {
             if (_leaderboardData == null || _leaderboardData.characterLeaderboards == null)
@@ -315,6 +333,7 @@ namespace Game.CoreSystem.Statistics
         /// <summary>
         /// 모든 캐릭터 통합 최고 점수 가져오기
         /// </summary>
+        /// <returns>통합 최고 점수 (없으면 0)</returns>
         public int GetBestScoreAllCharacters()
         {
             if (_leaderboardData == null || _leaderboardData.characterLeaderboards == null)
@@ -358,6 +377,7 @@ namespace Game.CoreSystem.Statistics
         /// <summary>
         /// 리더보드 데이터 로드
         /// </summary>
+        /// <returns>로드 작업</returns>
         public async Task LoadLeaderboard()
         {
             try
@@ -413,6 +433,7 @@ namespace Game.CoreSystem.Statistics
         /// <summary>
         /// 리더보드 데이터 저장
         /// </summary>
+        /// <returns>저장 작업</returns>
         public async Task SaveLeaderboard()
         {
             try

@@ -70,9 +70,24 @@ namespace Game.CombatSystem.Manager
 
         #region ICombatTurnManager 구현 - 턴 관리 (Delegate to TurnController)
 
+        /// <summary>
+        /// 현재 턴 타입
+        /// </summary>
         public TurnType CurrentTurn => ConvertToLegacyTurnType(_turnController?.CurrentTurn ?? Interface.TurnType.Player);
+        
+        /// <summary>
+        /// 현재 턴 카운트
+        /// </summary>
         public int TurnCount => _turnController?.TurnCount ?? 1;
+        
+        /// <summary>
+        /// 게임 활성 상태 여부
+        /// </summary>
         public bool IsGameActive => _turnController?.IsGameActive ?? false;
+        
+        /// <summary>
+        /// 남은 턴 시간 (현재 미사용)
+        /// </summary>
         public float RemainingTurnTime => 0f;
 
         public event Action<TurnType> OnTurnChanged
@@ -157,41 +172,85 @@ namespace Game.CombatSystem.Manager
             }
         }
 
+        /// <summary>
+        /// 현재 턴 타입을 반환합니다
+        /// </summary>
+        /// <returns>현재 턴 타입</returns>
         public TurnType GetCurrentTurnType() => CurrentTurn;
+        
+        /// <summary>
+        /// 현재 턴 카운트를 반환합니다
+        /// </summary>
+        /// <returns>현재 턴 카운트</returns>
         public int GetTurnCount() => TurnCount;
+        
+        /// <summary>
+        /// 플레이어 턴인지 확인합니다
+        /// </summary>
+        /// <returns>플레이어 턴이면 true</returns>
         public bool IsPlayerTurn() => _turnController?.IsPlayerTurn() ?? true;
+        
+        /// <summary>
+        /// 적 턴인지 확인합니다
+        /// </summary>
+        /// <returns>적 턴이면 true</returns>
         public bool IsEnemyTurn() => _turnController?.IsEnemyTurn() ?? false;
 
+        /// <summary>
+        /// 턴을 설정하고 카운트를 증가시킵니다
+        /// </summary>
+        /// <param name="turnType">설정할 턴 타입</param>
         public void SetTurnAndIncrement(TurnType turnType)
         {
             _turnController?.SetTurnAndIncrement(ConvertToNewTurnType(turnType));
         }
 
+        /// <summary>
+        /// 턴을 설정합니다
+        /// </summary>
+        /// <param name="turnType">설정할 턴 타입</param>
         public void SetTurn(TurnType turnType)
         {
             _turnController?.SetTurn(ConvertToNewTurnType(turnType));
         }
 
+        /// <summary>
+        /// 턴을 초기화합니다
+        /// </summary>
         public void ResetTurn()
         {
             _turnController?.ResetTurn();
         }
 
+        /// <summary>
+        /// 게임을 시작합니다
+        /// </summary>
         public void StartGame()
         {
             _turnController?.StartGame();
         }
 
+        /// <summary>
+        /// 게임을 종료합니다
+        /// </summary>
         public void EndGame()
         {
             _turnController?.EndGame();
         }
 
+        /// <summary>
+        /// 모든 캐릭터의 턴 효과를 처리합니다
+        /// </summary>
         public void ProcessAllCharacterTurnEffects()
         {
             _turnController?.ProcessAllCharacterTurnEffects();
         }
 
+        /// <summary>
+        /// 턴 상태를 복원합니다 (세이브/로드용)
+        /// </summary>
+        /// <param name="turnCount">복원할 턴 카운트</param>
+        /// <param name="turnType">복원할 턴 타입</param>
         public void RestoreTurnState(int turnCount, TurnType turnType)
         {
             if (_turnController is TurnController controller)
@@ -200,6 +259,10 @@ namespace Game.CombatSystem.Manager
             }
         }
 
+        /// <summary>
+        /// 턴 카운트를 설정합니다
+        /// </summary>
+        /// <param name="count">설정할 턴 카운트</param>
         public void SetTurnCount(int count)
         {
             if (_turnController is TurnController controller)
@@ -232,46 +295,83 @@ namespace Game.CombatSystem.Manager
             }
         }
 
+        /// <summary>
+        /// 카드를 슬롯에 등록합니다
+        /// </summary>
+        /// <param name="position">슬롯 위치</param>
+        /// <param name="card">등록할 스킬 카드</param>
+        /// <param name="ui">카드 UI</param>
+        /// <param name="owner">카드 소유자</param>
         public void RegisterCard(CombatSlotPosition position, ISkillCard card, SkillCardUI ui, SlotOwner owner)
         {
             _slotRegistry?.RegisterCard(position, card, ui, owner);
         }
 
+        /// <summary>
+        /// 슬롯에 있는 카드를 반환합니다
+        /// </summary>
+        /// <param name="slot">슬롯 위치</param>
+        /// <returns>해당 슬롯의 카드, 없으면 null</returns>
         public ISkillCard GetCardInSlot(CombatSlotPosition slot)
         {
             return _slotRegistry?.GetCardInSlot(slot);
         }
 
+        /// <summary>
+        /// 슬롯을 비웁니다
+        /// </summary>
+        /// <param name="slot">비울 슬롯 위치</param>
         public void ClearSlot(CombatSlotPosition slot)
         {
             _slotRegistry?.ClearSlot(slot);
         }
 
+        /// <summary>
+        /// 모든 슬롯을 비웁니다
+        /// </summary>
         public void ClearAllSlots()
         {
             _slotRegistry?.ClearAllSlots();
         }
 
+        /// <summary>
+        /// 적 카드만 비웁니다
+        /// </summary>
         public void ClearEnemyCardsOnly()
         {
             _slotRegistry?.ClearEnemyCardsOnly();
         }
 
+        /// <summary>
+        /// 대기 슬롯을 비웁니다
+        /// </summary>
         public void ClearWaitSlots()
         {
             _slotRegistry?.ClearWaitSlots();
         }
 
+        /// <summary>
+        /// 플레이어 카드가 있는지 확인합니다
+        /// </summary>
+        /// <returns>플레이어 카드가 있으면 true</returns>
         public bool HasPlayerCard()
         {
             return _slotRegistry?.HasPlayerCard() ?? false;
         }
 
+        /// <summary>
+        /// 적 카드가 있는지 확인합니다
+        /// </summary>
+        /// <returns>적 카드가 있으면 true</returns>
         public bool HasEnemyCard()
         {
             return _slotRegistry?.HasEnemyCard() ?? false;
         }
 
+        /// <summary>
+        /// 예약된 적 슬롯을 반환합니다
+        /// </summary>
+        /// <returns>예약된 적 슬롯 위치, 없으면 null</returns>
         public CombatSlotPosition? GetReservedEnemySlot()
         {
             return _slotRegistry?.GetReservedEnemySlot();

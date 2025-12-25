@@ -104,14 +104,23 @@ namespace Game.CombatSystem.State
             LogStateTransition("적 처치 - 정리 작업 완료");
             
             // StageManager에 정리 완료 알림
-            var stageManager = Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
-            if (stageManager != null)
+            if (context.StageManager != null)
             {
-                stageManager.OnEnemyDefeatedCleanupCompleted();
+                context.StageManager.OnEnemyDefeatedCleanupCompleted();
             }
             else
             {
-                GameLogger.LogWarning("[EnemyDefeatedState] StageManager를 찾을 수 없습니다", GameLogger.LogCategory.Combat);
+                // StageManager를 직접 찾기 시도
+                var foundStageManager = UnityEngine.Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>(UnityEngine.FindObjectsInactive.Include);
+                if (foundStageManager != null)
+                {
+                    GameLogger.LogInfo("[EnemyDefeatedState] StageManager를 FindFirstObjectByType으로 찾아서 보상 처리를 진행합니다.", GameLogger.LogCategory.Combat);
+                    foundStageManager.OnEnemyDefeatedCleanupCompleted();
+                }
+                else
+                {
+                    GameLogger.LogWarning("[EnemyDefeatedState] StageManager를 찾을 수 없습니다. 보상 처리가 건너뛰어집니다.", GameLogger.LogCategory.Combat);
+                }
             }
             
             // 보상 처리가 완료될 때까지 대기 (StageManager에서 처리)
@@ -198,11 +207,10 @@ namespace Game.CombatSystem.State
             LogStateTransition("다음 적 확인 및 상태 전환");
 
             // StageManager에서 소환 상태 확인
-            var stageManager = UnityEngine.Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
-            if (stageManager != null)
+            if (context.StageManager != null)
             {
-                bool isSummonActive = stageManager.IsSummonedEnemyActive();
-                GameLogger.LogInfo($"[EnemyDefeatedState] 소환 플래그 확인: {isSummonActive}, 스택 크기: {stageManager.GetOriginalEnemyStackCount()}", GameLogger.LogCategory.Combat);
+                bool isSummonActive = context.StageManager.IsSummonedEnemyActive();
+                GameLogger.LogInfo($"[EnemyDefeatedState] 소환 플래그 확인: {isSummonActive}, 스택 크기: {context.StageManager.GetOriginalEnemyStackCount()}", GameLogger.LogCategory.Combat);
             }
 
             // StageManager가 다음 적을 생성했는지 확인

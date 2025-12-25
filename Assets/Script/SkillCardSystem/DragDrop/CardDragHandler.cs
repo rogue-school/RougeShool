@@ -6,6 +6,7 @@ using Game.SkillCardSystem.UI;
 using Game.CombatSystem.Manager;
 using Game.CombatSystem.Utility;
 using Game.CoreSystem.Utility;
+using Game.UtilitySystem;
 
 namespace Game.CombatSystem.DragDrop
 {
@@ -55,6 +56,26 @@ namespace Game.CombatSystem.DragDrop
 
             if (canvasGroup == null)
                 GameLogger.LogError("[CardDragHandler] CanvasGroup이 없습니다!", GameLogger.LogCategory.SkillCard);
+        }
+
+        private void OnDisable()
+        {
+            KillAllTweens();
+        }
+
+        private void OnDestroy()
+        {
+            KillAllTweens();
+        }
+
+        private void KillAllTweens()
+        {
+            moveTween?.Kill();
+            scaleTween?.Kill();
+            fadeTween?.Kill();
+            moveTween = null;
+            scaleTween = null;
+            fadeTween = null;
         }
 
         #endregion
@@ -119,8 +140,10 @@ namespace Game.CombatSystem.DragDrop
 				eventData.pressEventCamera,
 				out Vector3 worldPoint))
 			{
-				moveTween?.Kill(false);
-				moveTween = rectTransform.DOMove(worldPoint, 0.08f).SetEase(Ease.OutQuad);
+				moveTween?.Kill();
+				moveTween = rectTransform.DOMove(worldPoint, 0.08f)
+					.SetEase(Ease.OutQuad)
+					.SetAutoKill(true);
 			}
         }
 
@@ -237,21 +260,28 @@ namespace Game.CombatSystem.DragDrop
                 img.raycastTarget = false;
 			
 			// 월드 위치로 부드럽게 복귀 후 원상 복원
-			moveTween?.Kill(false);
-			scaleTween?.Kill(false);
-			fadeTween?.Kill(false);
+			moveTween?.Kill();
+			scaleTween?.Kill();
+			fadeTween?.Kill();
 			var duration = 0.18f;
-			moveTween = rectTransform.DOMove(OriginalWorldPosition, duration).SetEase(Ease.OutQuad);
-			scaleTween = rectTransform.DOScale(originalScale, duration).SetEase(Ease.OutQuad);
-			fadeTween = canvasGroup.DOFade(1f, duration * 0.8f).SetEase(Ease.OutQuad);
-			moveTween.onComplete = () =>
-			{
-				CardSlotHelper.ResetCardToOriginal(cardUI);
-				canvasGroup.alpha = 1f;
-				canvasGroup.blocksRaycasts = true;
-				foreach (var img in GetComponentsInChildren<Image>())
-					img.raycastTarget = true;
-			};
+			moveTween = rectTransform.DOMove(OriginalWorldPosition, duration)
+				.SetEase(Ease.OutQuad)
+				.SetAutoKill(true)
+				.OnComplete(() =>
+				{
+					CardSlotHelper.ResetCardToOriginal(cardUI);
+					canvasGroup.alpha = 1f;
+					canvasGroup.blocksRaycasts = true;
+					foreach (var img in GetComponentsInChildren<Image>())
+						img.raycastTarget = true;
+				});
+			scaleTween = rectTransform.DOScale(originalScale, duration)
+				.SetEase(Ease.OutQuad)
+				.SetAutoKill(true);
+			// 특수한 duration 계산(duration * 0.8f)이 필요하므로 UIAnimationHelper 대신 직접 구현
+			fadeTween = canvasGroup.DOFade(1f, duration * 0.8f)
+				.SetEase(Ease.OutQuad)
+				.SetAutoKill(true);
         }
 
         /// <summary>
@@ -266,11 +296,15 @@ namespace Game.CombatSystem.DragDrop
                 if (card != null)
                 {
 					// 확대 + 약간의 투명도 조정
-					moveTween?.Kill(false);
-					scaleTween?.Kill(false);
-					fadeTween?.Kill(false);
-					scaleTween = rectTransform.DOScale(originalScale * 1.08f, 0.12f).SetEase(Ease.OutQuad);
-					fadeTween = canvasGroup.DOFade(0.9f, 0.12f).SetEase(Ease.OutQuad);
+					moveTween?.Kill();
+					scaleTween?.Kill();
+					fadeTween?.Kill();
+					scaleTween = rectTransform.DOScale(originalScale * 1.08f, 0.12f)
+						.SetEase(Ease.OutQuad)
+						.SetAutoKill(true);
+					fadeTween = canvasGroup.DOFade(0.9f, 0.12f)
+						.SetEase(Ease.OutQuad)
+						.SetAutoKill(true);
                 }
             }
         }
@@ -287,10 +321,14 @@ namespace Game.CombatSystem.DragDrop
                 if (card != null)
                 {
 					// 원래 스케일/불투명도로 복귀 (작은 탄성)
-					scaleTween?.Kill(false);
-					fadeTween?.Kill(false);
-					scaleTween = rectTransform.DOScale(originalScale, 0.12f).SetEase(Ease.OutQuad);
-					fadeTween = canvasGroup.DOFade(1f, 0.1f).SetEase(Ease.OutQuad);
+					scaleTween?.Kill();
+					fadeTween?.Kill();
+					scaleTween = rectTransform.DOScale(originalScale, 0.12f)
+						.SetEase(Ease.OutQuad)
+						.SetAutoKill(true);
+					fadeTween = canvasGroup.DOFade(1f, 0.1f)
+						.SetEase(Ease.OutQuad)
+						.SetAutoKill(true);
                 }
             }
         }

@@ -25,6 +25,8 @@ namespace Game.ItemSystem.Runtime
 	{
 		[Inject] private IItemService _itemService;
 		[Inject(Optional = true)] private IRewardGenerator _rewardGenerator; // 주입 시 자동 생성 지원
+		[Inject(Optional = true)] private Game.SkillCardSystem.Manager.SkillCardTooltipManager skillCardTooltipManager;
+		[Inject(Optional = true)] private Game.ItemSystem.Manager.ItemTooltipManager itemTooltipManager;
 		// SkillCardFactory는 RewardOnEnemyDeath에서 수동으로 주입
 		[SerializeField] private ISkillCardFactory _cardFactory;
 
@@ -241,10 +243,9 @@ namespace Game.ItemSystem.Runtime
 			// 기존 툴팁 카드 등록 해제
 			if (tooltipCard != null)
 			{
-				var tooltipManager = UnityEngine.Object.FindFirstObjectByType<SkillCardTooltipManager>();
-				if (tooltipManager != null)
+				if (skillCardTooltipManager != null)
 				{
-					tooltipManager.UnregisterCardUI(tooltipCard);
+					skillCardTooltipManager.UnregisterCardUI(tooltipCard);
 				}
 				tooltipCard = null;
 			}
@@ -274,11 +275,10 @@ namespace Game.ItemSystem.Runtime
 						tooltipCard = _cardFactory.CreatePlayerCard(cardDefinition);
 						if (tooltipCard != null && skillCardSlot != null)
 						{
-							var tooltipManager = UnityEngine.Object.FindFirstObjectByType<SkillCardTooltipManager>();
-							if (tooltipManager != null)
+							if (skillCardTooltipManager != null)
 							{
 								var rt = skillCardSlot.GetComponent<RectTransform>();
-								tooltipManager.RegisterCardUI(tooltipCard, rt);
+								skillCardTooltipManager.RegisterCardUI(tooltipCard, rt);
 							}
 						}
 					}
@@ -784,10 +784,9 @@ namespace Game.ItemSystem.Runtime
 			// 스킬카드 툴팁 등록 해제
 			if (tooltipCard != null)
 			{
-				var tooltipManager = UnityEngine.Object.FindFirstObjectByType<SkillCardTooltipManager>();
-				if (tooltipManager != null)
+				if (skillCardTooltipManager != null)
 				{
-					tooltipManager.UnregisterCardUI(tooltipCard);
+					skillCardTooltipManager.UnregisterCardUI(tooltipCard);
 				}
 				tooltipCard = null;
 			}
@@ -933,10 +932,9 @@ namespace Game.ItemSystem.Runtime
 			_itemService.AddPassiveItem(selectedItem);
 			
 			// 툴팁 매니저에 툴팁 업데이트 요청
-			var tooltipManager = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Manager.ItemTooltipManager>();
-			if (tooltipManager != null)
+			if (itemTooltipManager != null)
 			{
-				tooltipManager.RefreshPassiveItemTooltip(selectedItem);
+				itemTooltipManager.RefreshPassiveItemTooltip(selectedItem);
 			}
 			
 			RemovePassiveSlot(slotIndex);
@@ -979,10 +977,9 @@ namespace Game.ItemSystem.Runtime
 					_itemService.AddPassiveItem(passiveItem);
 					
 					// 툴팁 매니저에 툴팁 업데이트 요청
-					var tooltipManager = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Manager.ItemTooltipManager>();
-					if (tooltipManager != null)
+					if (itemTooltipManager != null)
 					{
-						tooltipManager.RefreshPassiveItemTooltip(passiveItem);
+						itemTooltipManager.RefreshPassiveItemTooltip(passiveItem);
 					}
 
 					// 슬롯 인덱스 찾기
@@ -1006,10 +1003,9 @@ namespace Game.ItemSystem.Runtime
 						_itemService.AddPassiveItem(passiveItem);
 						
 						// 툴팁 매니저에 툴팁 업데이트 요청
-						var tooltipManager = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Manager.ItemTooltipManager>();
-						if (tooltipManager != null)
+						if (itemTooltipManager != null)
 						{
-							tooltipManager.RefreshPassiveItemTooltip(passiveItem);
+							itemTooltipManager.RefreshPassiveItemTooltip(passiveItem);
 						}
 
 						GameLogger.LogInfo($"[RewardPanel] 패시브 아이템 자동 선택 (후보 배열): {passiveItem.DisplayName}", GameLogger.LogCategory.UI);

@@ -40,6 +40,9 @@ namespace Game.CombatSystem.State
             GameLogger.LogInfo("승리 처리 완료", GameLogger.LogCategory.Combat);
         }
 
+        /// <summary>
+        /// 상태 실행 중 특별한 작업 없음
+        /// </summary>
         public void ExecuteState() { }
 
         public void ExitState()

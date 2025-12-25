@@ -231,14 +231,27 @@ namespace Game.CoreSystem.Audio
                 Debug.LogWarning("[AudioEventTrigger] 리소스 경로가 비어있습니다.");
                 return;
             }
-            var clip = Resources.Load<AudioClip>(bgmResourcePath);
-            if (clip != null)
+            
+            AudioClip clip = null;
+            try
             {
-                audioManager?.PlayBGM(clip, true);
+                // Addressables 주소 형식: Sounds/{path}
+                string address = bgmResourcePath.StartsWith("Sounds/") ? bgmResourcePath : $"Sounds/{bgmResourcePath}";
+                var handle = UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<AudioClip>(address);
+                clip = handle.WaitForCompletion();
+                
+                if (clip != null)
+                {
+                    audioManager?.PlayBGM(clip, true);
+                }
+                else
+                {
+                    Debug.LogWarning($"[AudioEventTrigger] AudioClip을 찾을 수 없습니다: {address}");
+                }
             }
-            else
+            catch (System.Exception ex)
             {
-                Debug.LogWarning($"[AudioEventTrigger] AudioClip을 찾을 수 없습니다: {bgmResourcePath}");
+                Debug.LogError($"[AudioEventTrigger] AudioClip 로드 중 오류: {ex.Message}");
             }
         }
 

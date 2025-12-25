@@ -30,7 +30,8 @@ namespace Game.ItemSystem.Effect
         {
             var vfxManager = UnityEngine.Object.FindFirstObjectByType<VFXManager>();
             var audioManager = UnityEngine.Object.FindFirstObjectByType<AudioManager>();
-            return new TimeStopEffectCommand(sealCount + power, sfxClip, visualEffectPrefab, vfxManager, audioManager);
+            var enemyManager = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
+            return new TimeStopEffectCommand(sealCount + power, sfxClip, visualEffectPrefab, vfxManager, audioManager, enemyManager);
         }
 
         /// <summary>
@@ -42,14 +43,15 @@ namespace Game.ItemSystem.Effect
         {
             var vfxManager = UnityEngine.Object.FindFirstObjectByType<VFXManager>();
             var audioManager = UnityEngine.Object.FindFirstObjectByType<AudioManager>();
+            var enemyManager = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
             if (customSettings == null)
             {
-                return new TimeStopEffectCommand(sealCount, sfxClip, visualEffectPrefab, vfxManager, audioManager);
+                return new TimeStopEffectCommand(sealCount, sfxClip, visualEffectPrefab, vfxManager, audioManager, enemyManager);
             }
 
             AudioClip finalSfxClip = customSettings.sfxClip ?? sfxClip;
             GameObject finalVisualEffectPrefab = customSettings.visualEffectPrefab ?? visualEffectPrefab;
-            return new TimeStopEffectCommand(customSettings.sealCount, finalSfxClip, finalVisualEffectPrefab, vfxManager, audioManager);
+            return new TimeStopEffectCommand(customSettings.sealCount, finalSfxClip, finalVisualEffectPrefab, vfxManager, audioManager, enemyManager);
         }
 
         public override void ApplyEffect(IItemUseContext context, int value)

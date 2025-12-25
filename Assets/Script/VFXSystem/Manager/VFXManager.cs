@@ -58,6 +58,7 @@ namespace Game.VFXSystem.Manager
             var mainCamera = Camera.main;
             if (mainCamera == null)
             {
+                // Fallback으로 FindFirstObjectByType 사용 (Camera.main이 null인 경우 대비)
                 mainCamera = FindFirstObjectByType<Camera>();
             }
 
@@ -134,14 +135,15 @@ namespace Game.VFXSystem.Manager
         #region 이펙트
 
         /// <summary>
-        /// 이펙트를 재생합니다. (간단 모드 - 풀링 없음)
-        /// 부모 Transform이 필수입니다. 이펙트는 부모의 자식으로 생성됩니다.
+        /// 이펙트를 재생합니다 (간단 모드 - 풀링 없음)
+        /// 부모 Transform이 필수입니다. 이펙트는 부모의 자식으로 생성됩니다
         /// </summary>
         /// <param name="effectPrefab">이펙트 프리팹</param>
         /// <param name="position">재생 위치</param>
         /// <param name="rotation">회전 (선택적)</param>
         /// <param name="parent">부모 Transform (필수)</param>
-            public GameObject PlayEffect(GameObject effectPrefab, Vector3 position, Quaternion? rotation = null, Transform parent = null)
+        /// <returns>생성된 이펙트 GameObject, 실패 시 null</returns>
+        public GameObject PlayEffect(GameObject effectPrefab, Vector3 position, Quaternion? rotation = null, Transform parent = null)
         {
             if (effectPrefab == null)
             {

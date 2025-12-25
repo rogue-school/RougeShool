@@ -58,6 +58,10 @@ namespace Game.SkillCardSystem.UI
 
         #region 의존성 주입
 
+        /// <summary>
+        /// Zenject를 통한 의존성 주입 메서드입니다.
+        /// </summary>
+        /// <param name="deckManager">플레이어 덱 매니저</param>
         [Inject]
         public void Construct(IPlayerDeckManager deckManager)
         {
@@ -145,11 +149,20 @@ namespace Game.SkillCardSystem.UI
 
         private void LoadAvailableCards()
         {
-            // Resources 폴더에서 모든 스킬카드 정의 로드
-            var allCards = Resources.LoadAll<SkillCardDefinition>("SkillCards");
-            availableCards = allCards.ToList();
-            
-            GameLogger.LogInfo($"사용 가능한 카드 {availableCards.Count}개 로드 완료", GameLogger.LogCategory.SkillCard);
+            // Addressables에서 라벨 "SkillCards"로 모든 스킬카드 정의 로드
+            try
+            {
+                var handle = UnityEngine.AddressableAssets.Addressables.LoadAssetsAsync<SkillCardDefinition>("SkillCards", null);
+                var result = handle.WaitForCompletion();
+                availableCards = result != null ? result.ToList() : new System.Collections.Generic.List<SkillCardDefinition>();
+                
+                GameLogger.LogInfo($"사용 가능한 카드 {availableCards.Count}개 로드 완료", GameLogger.LogCategory.SkillCard);
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogError($"[DeckEditorUI] 카드 로드 중 오류: {ex.Message}", GameLogger.LogCategory.SkillCard);
+                availableCards = new System.Collections.Generic.List<SkillCardDefinition>();
+            }
         }
 
         #endregion
@@ -391,6 +404,12 @@ namespace Game.SkillCardSystem.UI
         private System.Action<SkillCardDefinition, int> onQuantityChanged;
         private System.Action<SkillCardDefinition> onRemoveClicked;
 
+        /// <summary>
+        /// 카드 엔트리 UI를 설정합니다.
+        /// </summary>
+        /// <param name="entry">카드 엔트리 데이터</param>
+        /// <param name="onQuantityChanged">수량 변경 시 호출될 콜백</param>
+        /// <param name="onRemoveClicked">제거 버튼 클릭 시 호출될 콜백</param>
         public void Setup(PlayerSkillDeck.CardEntry entry, 
                          System.Action<SkillCardDefinition, int> onQuantityChanged,
                          System.Action<SkillCardDefinition> onRemoveClicked)
@@ -458,6 +477,11 @@ namespace Game.SkillCardSystem.UI
         private SkillCardDefinition cardDefinition;
         private System.Action<SkillCardDefinition> onCardSelected;
 
+        /// <summary>
+        /// 사용 가능한 카드 UI를 설정합니다.
+        /// </summary>
+        /// <param name="cardDefinition">카드 정의</param>
+        /// <param name="onCardSelected">카드 선택 시 호출될 콜백</param>
         public void Setup(SkillCardDefinition cardDefinition, System.Action<SkillCardDefinition> onCardSelected)
         {
             this.cardDefinition = cardDefinition;

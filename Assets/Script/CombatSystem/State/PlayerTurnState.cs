@@ -1,9 +1,11 @@
 using UnityEngine;
+using System.Linq;
 using Game.ItemSystem.Interface;
 using Game.ItemSystem.Service;
 using Game.ItemSystem.Data;
 using Game.ItemSystem.Data.Reward;
 using Game.ItemSystem.Service.Reward;
+using Game.CoreSystem.Utility;
 
 namespace Game.CombatSystem.State
 {
@@ -212,6 +214,8 @@ namespace Game.CombatSystem.State
         /// </summary>
         private void GiveActiveItemReward(CombatStateContext context)
         {
+            GameLogger.LogInfo($"[PlayerTurnState] GiveActiveItemReward 호출 - TurnCount: {context?.TurnController?.TurnCount ?? -1}", GameLogger.LogCategory.Combat);
+            
             // 첫 플레이어 턴인지 확인 (턴 카운트가 1이면 첫 턴이므로 보상 지급 안 함)
             if (context?.TurnController == null)
             {
@@ -234,8 +238,8 @@ namespace Game.CombatSystem.State
                 return;
             }
 
-            // ItemService 찾기
-            var itemService = UnityEngine.Object.FindFirstObjectByType<ItemService>();
+            // ItemService는 컨텍스트에서 가져옴
+            var itemService = context.ItemService;
             if (itemService == null)
             {
                 LogWarning("ItemService를 찾을 수 없습니다 - 액티브 아이템 보상 지급 건너뜀");
@@ -251,19 +255,28 @@ namespace Game.CombatSystem.State
 
             // 가중치가 적용된 보상 풀에서 액티브 아이템 1개 선택
             ActiveItemDefinition rewardItem = null;
-            var pools = Resources.LoadAll<RewardPool>("Data/Reward");
-            if (pools != null && pools.Length > 0)
+            try
             {
-                var tempConfig = ScriptableObject.CreateInstance<EnemyRewardConfig>();
-                tempConfig.activeCount = 1;
-                tempConfig.activePools = pools;
-
-                var generator = new RewardGenerator();
-                var generated = generator.GenerateActive(tempConfig, player: null, stageIndex: 0, runSeed: 0);
-                if (generated != null && generated.Length > 0)
+                var handle = UnityEngine.AddressableAssets.Addressables.LoadAssetsAsync<RewardPool>("Data/Reward", null);
+                var result = handle.WaitForCompletion();
+                var pools = result != null ? result.ToArray() : new RewardPool[0];
+                if (pools != null && pools.Length > 0)
                 {
-                    rewardItem = generated[0];
+                    var tempConfig = ScriptableObject.CreateInstance<EnemyRewardConfig>();
+                    tempConfig.activeCount = 1;
+                    tempConfig.activePools = pools;
+
+                    var generator = new RewardGenerator();
+                    var generated = generator.GenerateActive(tempConfig, player: null, stageIndex: 0, runSeed: 0);
+                    if (generated != null && generated.Length > 0)
+                    {
+                        rewardItem = generated[0];
+                    }
                 }
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogError($"[PlayerTurnState] 보상 풀 로드 중 오류: {ex.Message}", GameLogger.LogCategory.Combat);
             }
 
             // 풀을 찾지 못했거나 생성 실패 시 기본 랜덤 보상으로 폴백
@@ -284,14 +297,17 @@ namespace Game.CombatSystem.State
             }
 
             // 아이템 추가
+            GameLogger.LogInfo($"[PlayerTurnState] 액티브 아이템 추가 시도: {rewardItem.DisplayName} (턴 {context.TurnController.TurnCount})", GameLogger.LogCategory.Combat);
             bool success = itemService.AddActiveItem(rewardItem);
             if (success)
             {
                 LogStateTransition($"액티브 아이템 보상 지급 완료: {rewardItem.DisplayName} (턴 {context.TurnController.TurnCount})");
+                GameLogger.LogInfo($"[PlayerTurnState] 액티브 아이템 보상 지급 성공: {rewardItem.DisplayName}", GameLogger.LogCategory.Combat);
             }
             else
             {
                 LogWarning($"액티브 아이템 보상 지급 실패: {rewardItem.DisplayName}");
+                GameLogger.LogWarning($"[PlayerTurnState] 액티브 아이템 보상 지급 실패: {rewardItem.DisplayName} (인벤토리 가득 참 또는 기타 오류)", GameLogger.LogCategory.Combat);
             }
         }
 

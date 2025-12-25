@@ -46,6 +46,9 @@ namespace Game.CoreSystem.Statistics
         [Tooltip("통계 저장 파일 이름")]
         [SerializeField] private string statisticsFileName = "GameStatistics.json";
 
+        [Inject(Optional = true)]
+        private Game.CharacterSystem.Manager.PlayerManager playerManager;
+
         /// <summary>
         /// 통계 파일 전체 경로
         /// </summary>
@@ -101,10 +104,11 @@ namespace Game.CoreSystem.Statistics
                 Game.SkillCardSystem.Deck.PlayerSkillDeck playerDeck = null;
                 try
                 {
-                    var playerManager = UnityEngine.Object.FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>(UnityEngine.FindObjectsInactive.Include);
-                    if (playerManager != null && playerManager.GetPlayer() != null)
+                    // DI로 주입받은 playerManager 사용 (FindFirstObjectByType 제거)
+                    var pm = playerManager;
+                    if (pm != null && pm.GetPlayer() != null)
                     {
-                        var playerData = playerManager.GetPlayer().CharacterData as Game.CharacterSystem.Data.PlayerCharacterData;
+                        var playerData = pm.GetPlayer().CharacterData as Game.CharacterSystem.Data.PlayerCharacterData;
                         if (playerData != null && playerData.SkillDeck != null)
                         {
                             playerDeck = playerData.SkillDeck;
@@ -174,6 +178,7 @@ namespace Game.CoreSystem.Statistics
         /// <summary>
         /// 통계 파일 존재 여부 확인
         /// </summary>
+        /// <returns>파일 존재 여부</returns>
         public bool HasStatisticsFile()
         {
             return File.Exists(StatisticsFilePath);
@@ -182,6 +187,7 @@ namespace Game.CoreSystem.Statistics
         /// <summary>
         /// 통계 파일 경로 가져오기
         /// </summary>
+        /// <returns>통계 파일 전체 경로</returns>
         public string GetStatisticsFilePath()
         {
             return StatisticsFilePath;
@@ -304,6 +310,7 @@ namespace Game.CoreSystem.Statistics
         /// <summary>
         /// 통계 요약 정보 가져오기
         /// </summary>
+        /// <returns>통계 요약 정보</returns>
         public async Task<StatisticsSummary> GetStatisticsSummary()
         {
             var statisticsData = await LoadAllStatistics();

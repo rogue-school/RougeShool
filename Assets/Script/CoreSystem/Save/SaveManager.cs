@@ -30,23 +30,26 @@ namespace Game.CoreSystem.Save
 		private const string KEY_PLAYER_DECK_CONFIG = "player_deck_configuration";
 		
 		// 초기화 상태
+		
+		/// <summary>
+		/// 세이브 매니저가 초기화되었는지 여부를 나타냅니다.
+		/// </summary>
 		public bool IsInitialized { get; private set; } = false;
 		
 		// 의존성 주입
 		[Inject] private IGameStateManager gameStateManager;
+		[Inject(Optional = true)] private Game.StageSystem.Manager.StageManager stageManager;
+		[Inject(Optional = true)] private Game.CombatSystem.Manager.TurnManager turnManager;
+		[Inject(Optional = true)] private Game.CombatSystem.Manager.CombatFlowManager combatFlowManager;
+		[Inject(Optional = true)] private Game.CharacterSystem.Manager.PlayerManager playerManager;
+		[Inject(Optional = true)] private Game.CharacterSystem.Manager.EnemyManager enemyManager;
+		[Inject(Optional = true)] private Game.CombatSystem.Slot.SlotRegistry slotRegistry;
+		[Inject(Optional = true)] private Game.SkillCardSystem.Manager.PlayerHandManager playerHandManager;
+		[Inject(Optional = true)] private Game.CoreSystem.Audio.AudioManager audioManager;
+		[Inject(Optional = true)] private Game.SkillCardSystem.UI.SkillCardUI skillCardUIPrefab;
 
 		// 진행 상황 수집기
 		private StageProgressCollector progressCollector;
-
-		// FindObjectOfType 캐싱
-		private Game.StageSystem.Manager.StageManager cachedStageManager;
-		private Game.CombatSystem.Manager.TurnManager cachedTurnManager;
-		private Game.CombatSystem.Manager.CombatFlowManager cachedCombatFlowManager;
-		private Game.CharacterSystem.Manager.PlayerManager cachedPlayerManager;
-		private Game.CharacterSystem.Manager.EnemyManager cachedEnemyManager;
-		private Game.CombatSystem.Slot.SlotRegistry cachedSlotRegistry;
-		private Game.SkillCardSystem.Manager.PlayerHandManager cachedPlayerHandManager;
-		private Game.SkillCardSystem.UI.SkillCardUI cachedCardUIPrefab;
 		
 		private void Awake()
 		{
@@ -63,99 +66,73 @@ namespace Game.CoreSystem.Save
 		#region FindObjectOfType 캐싱 헬퍼
 
 		/// <summary>
-		/// StageManager 캐시 가져오기 (지연 초기화)
+		/// StageManager 가져오기 (DI로 주입받음)
 		/// </summary>
 		private Game.StageSystem.Manager.StageManager GetCachedStageManager()
 		{
-			if (cachedStageManager == null)
-			{
-				cachedStageManager = FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
-			}
-			return cachedStageManager;
+			return stageManager;
 		}
 
 		/// <summary>
-		/// TurnManager 캐시 가져오기 (지연 초기화)
+		/// TurnManager 가져오기 (DI로 주입받음)
 		/// </summary>
 		private Game.CombatSystem.Manager.TurnManager GetCachedTurnManager()
 		{
-			if (cachedTurnManager == null)
-			{
-				cachedTurnManager = FindFirstObjectByType<Game.CombatSystem.Manager.TurnManager>();
-			}
-			return cachedTurnManager;
+			return turnManager;
 		}
 
 		/// <summary>
-		/// CombatFlowManager 캐시 가져오기 (지연 초기화)
+		/// CombatFlowManager 가져오기 (DI로 주입받음)
 		/// </summary>
 		private Game.CombatSystem.Manager.CombatFlowManager GetCachedCombatFlowManager()
 		{
-			if (cachedCombatFlowManager == null)
-			{
-				cachedCombatFlowManager = FindFirstObjectByType<Game.CombatSystem.Manager.CombatFlowManager>();
-			}
-			return cachedCombatFlowManager;
+			return combatFlowManager;
 		}
 
 		/// <summary>
-		/// PlayerManager 캐시 가져오기 (지연 초기화)
+		/// PlayerManager 가져오기 (DI로 주입받음)
 		/// </summary>
 		private Game.CharacterSystem.Manager.PlayerManager GetCachedPlayerManager()
 		{
-			if (cachedPlayerManager == null)
-			{
-				cachedPlayerManager = FindFirstObjectByType<Game.CharacterSystem.Manager.PlayerManager>();
-			}
-			return cachedPlayerManager;
+			return playerManager;
 		}
 
 		/// <summary>
-		/// EnemyManager 캐시 가져오기 (지연 초기화)
+		/// EnemyManager 가져오기 (DI로 주입받음)
 		/// </summary>
 		private Game.CharacterSystem.Manager.EnemyManager GetCachedEnemyManager()
 		{
-			if (cachedEnemyManager == null)
-			{
-				cachedEnemyManager = FindFirstObjectByType<Game.CharacterSystem.Manager.EnemyManager>();
-			}
-			return cachedEnemyManager;
+			return enemyManager;
 		}
 
 		/// <summary>
-		/// SlotRegistry 캐시 가져오기 (지연 초기화)
+		/// SlotRegistry 가져오기 (DI로 주입받음)
 		/// </summary>
 		private Game.CombatSystem.Slot.SlotRegistry GetCachedSlotRegistry()
 		{
-			if (cachedSlotRegistry == null)
-			{
-				cachedSlotRegistry = FindFirstObjectByType<Game.CombatSystem.Slot.SlotRegistry>();
-			}
-			return cachedSlotRegistry;
+			return slotRegistry;
 		}
 
 		/// <summary>
-		/// PlayerHandManager 캐시 가져오기 (지연 초기화)
+		/// PlayerHandManager 가져오기 (DI로 주입받음)
 		/// </summary>
 		private Game.SkillCardSystem.Manager.PlayerHandManager GetCachedPlayerHandManager()
 		{
-			if (cachedPlayerHandManager == null)
-			{
-				cachedPlayerHandManager = FindFirstObjectByType<Game.SkillCardSystem.Manager.PlayerHandManager>();
-			}
-			return cachedPlayerHandManager;
+			return playerHandManager;
 		}
 
 		/// <summary>
-		/// SkillCardUI 프리팹 캐시 가져오기 (지연 초기화)
+		/// SkillCardUI 프리팹 가져오기 (DI로 주입받거나 폴백으로 찾기)
 		/// </summary>
 		private Game.SkillCardSystem.UI.SkillCardUI GetCachedCardUIPrefab()
 		{
-			if (cachedCardUIPrefab == null)
-			{
-				cachedCardUIPrefab = FindFirstObjectByType<Game.SkillCardSystem.UI.SkillCardUI>();
-			}
-			return cachedCardUIPrefab;
+			// DI로 주입받은 프리팹이 있으면 사용
+			if (skillCardUIPrefab != null)
+				return skillCardUIPrefab;
+			
+			// Fallback: DI로 주입받지 못한 경우 FindFirstObjectByType 사용
+			// TODO: 향후 Addressables로 프리팹을 로드하도록 개선 가능 (PlayerHandManager 참고)
+			return FindFirstObjectByType<Game.SkillCardSystem.UI.SkillCardUI>();
 		}
 
 		#endregion
@@ -941,23 +918,6 @@ namespace Game.CoreSystem.Save
 			}
 		}
 		
-		/// <summary>
-		/// 매니저를 재시도 로직으로 찾기
-		/// </summary>
-		private T FindManagerWithRetry<T>(int maxRetries = 3) where T : MonoBehaviour
-		{
-			for (int i = 0; i < maxRetries; i++)
-			{
-				var manager = FindFirstObjectByType<T>();
-				if (manager != null) return manager;
-				
-				// 잠시 대기 후 재시도
-				System.Threading.Thread.Sleep(100);
-			}
-			
-			GameLogger.LogError($"매니저를 찾을 수 없습니다: {typeof(T).Name}", GameLogger.LogCategory.Error);
-			return null;
-		}
 		
 		/// <summary>
 		/// 로드된 데이터의 일관성 검증
@@ -1098,8 +1058,8 @@ namespace Game.CoreSystem.Save
 				var slotRegistry = GetCachedSlotRegistry();
 				var handRegistry = slotRegistry != null ? slotRegistry.GetHandSlotRegistry() : null;
 				var combatRegistry = slotRegistry != null ? slotRegistry.GetCombatSlotRegistry() : null;
-				var audioMgr = FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
-				var cardFactory = new Game.SkillCardSystem.Factory.SkillCardFactory(audioMgr);
+				// audioManager는 DI로 주입받음
+				var cardFactory = new Game.SkillCardSystem.Factory.SkillCardFactory(audioManager);
 				var playerManager = GetCachedPlayerManager();
 				var handManager = GetCachedPlayerHandManager();
 				var turnManager = GetCachedTurnManager();
@@ -1234,8 +1194,19 @@ namespace Game.CoreSystem.Save
 	[System.Serializable]
 	public class SceneSaveData
 	{
+		/// <summary>
+		/// 씬 이름
+		/// </summary>
 		public string sceneName;
+		
+		/// <summary>
+		/// 게임 상태
+		/// </summary>
 		public Game.CoreSystem.Interface.GameState gameState;
+		
+		/// <summary>
+		/// 씬 내 GameObject 데이터 리스트
+		/// </summary>
 		public List<GameObjectData> gameObjects;
 	}
 	
@@ -1245,10 +1216,29 @@ namespace Game.CoreSystem.Save
 	[System.Serializable]
 	public class GameObjectData
 	{
+		/// <summary>
+		/// GameObject 이름
+		/// </summary>
 		public string name;
+		
+		/// <summary>
+		/// 위치
+		/// </summary>
 		public Vector3 position;
+		
+		/// <summary>
+		/// 회전
+		/// </summary>
 		public Quaternion rotation;
+		
+		/// <summary>
+		/// 스케일
+		/// </summary>
 		public Vector3 scale;
+		
+		/// <summary>
+		/// 활성화 여부
+		/// </summary>
 		public bool active;
 	}
 }

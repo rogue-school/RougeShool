@@ -9,6 +9,9 @@ using Game.ItemSystem.Manager;
 using DG.Tweening;
 using Game.SkillCardSystem.Data;
 using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.Manager;
+using Game.ItemSystem.Service;
+using Zenject;
 
 namespace Game.ItemSystem.Runtime
 {
@@ -40,7 +43,15 @@ namespace Game.ItemSystem.Runtime
         
         #region 툴팁 관련
         
+        [Inject(Optional = true)]
         private ItemTooltipManager tooltipManager;
+        
+        [Inject(Optional = true)]
+        private SkillCardTooltipManager skillCardTooltipManager;
+        
+        [Inject(Optional = true)]
+        private ItemService itemService;
+        
         private RectTransform rectTransform;
 
         // 호버 효과 관련
@@ -83,12 +94,14 @@ namespace Game.ItemSystem.Runtime
         private void OnDisable()
         {
             scaleTween?.Kill();
+            scaleTween = null;
         }
         
         private void OnDestroy()
         {
             UnregisterFromTooltipManager();
             scaleTween?.Kill();
+            scaleTween = null;
         }
 
         #endregion
@@ -133,10 +146,65 @@ namespace Game.ItemSystem.Runtime
         /// </summary>
         private void FindTooltipManager()
         {
-            tooltipManager = Object.FindFirstObjectByType<ItemTooltipManager>();
+            // tooltipManager는 DI로 주입받음
             if (tooltipManager == null)
             {
                 GameLogger.LogWarning("[RewardSlotUI] ItemTooltipManager를 찾을 수 없습니다", GameLogger.LogCategory.UI);
+            }
+        }
+
+        /// <summary>
+        /// tooltipManager가 null이면 주입을 시도합니다.
+        /// </summary>
+        private void EnsureTooltipManagerInjected()
+        {
+            if (tooltipManager != null) return;
+
+            try
+            {
+                // 1. ProjectContext를 통해 Container에 접근하여 주입 시도
+                var projectContext = Zenject.ProjectContext.Instance;
+                if (projectContext != null && projectContext.Container != null)
+                {
+                    projectContext.Container.Inject(this);
+                    if (tooltipManager != null)
+                    {
+                        GameLogger.LogInfo("[RewardSlotUI] ItemTooltipManager 주입 완료 (ProjectContext)", GameLogger.LogCategory.UI);
+                        return;
+                    }
+                }
+
+                // 2. SceneContextRegistry를 통해 현재 씬의 Container에 접근하여 주입 시도
+                try
+                {
+                    var sceneContextRegistry = projectContext.Container.Resolve<Zenject.SceneContextRegistry>();
+                    var sceneContainer = sceneContextRegistry.TryGetContainerForScene(gameObject.scene);
+                    if (sceneContainer != null)
+                    {
+                        sceneContainer.Inject(this);
+                        if (tooltipManager != null)
+                        {
+                            GameLogger.LogInfo("[RewardSlotUI] ItemTooltipManager 주입 완료 (SceneContext)", GameLogger.LogCategory.UI);
+                            return;
+                        }
+                    }
+                }
+                catch
+                {
+                    // SceneContextRegistry를 찾을 수 없거나 씬 컨테이너가 없는 경우 무시
+                }
+
+                // 3. 직접 찾아서 할당 (최후의 수단)
+                var foundManager = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Manager.ItemTooltipManager>(UnityEngine.FindObjectsInactive.Include);
+                if (foundManager != null)
+                {
+                    tooltipManager = foundManager;
+                    GameLogger.LogInfo("[RewardSlotUI] ItemTooltipManager 직접 찾기 완료 (FindFirstObjectByType)", GameLogger.LogCategory.UI);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogWarning($"[RewardSlotUI] ItemTooltipManager 주입 시도 중 오류: {ex.Message}", GameLogger.LogCategory.UI);
             }
         }
         
@@ -449,21 +517,24 @@ namespace Game.ItemSystem.Runtime
         public void OnPointerEnter(PointerEventData eventData)
         {
             // 호버 확대 효과
-            scaleTween?.Kill();
-            scaleTween = transform.DOScale(hoverScale, 0.2f)
-                .SetEase(Ease.OutQuad)
-                .SetAutoKill(true);
+            Game.UtilitySystem.HoverEffectHelper.PlayHoverScaleWithCleanup(
+                ref scaleTween,
+                transform,
+                hoverScale,
+                0.2f);
 
             // 스킬카드 슬롯이면 스킬카드 툴팁 매니저를 사용
             if (isSkillCardSlot && currentSkillCardInstance != null)
             {
-                var skillTooltipManager = UnityEngine.Object.FindFirstObjectByType<Game.SkillCardSystem.Manager.SkillCardTooltipManager>();
-                if (skillTooltipManager != null)
+                if (skillCardTooltipManager != null)
                 {
-                    skillTooltipManager.OnCardHoverEnter(currentSkillCardInstance);
+                    skillCardTooltipManager.OnCardHoverEnter(currentSkillCardInstance);
                 }
                 return;
             }
+
+            // tooltipManager가 null이면 찾기 시도
+            EnsureTooltipManagerInjected();
 
             if (tooltipManager == null)
                 return;
@@ -477,7 +548,6 @@ namespace Game.ItemSystem.Runtime
             {
                 // 보상창에서는 실제 강화 레벨을 조회 (아직 선택하지 않았으면 0)
                 int enhancementLevel = 0;
-                var itemService = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
                 if (itemService != null)
                 {
                     string skillId = GetPassiveItemSkillId(currentPassive);
@@ -519,18 +589,17 @@ namespace Game.ItemSystem.Runtime
         public void OnPointerExit(PointerEventData eventData)
         {
             // 호버 확대 효과 해제
-            scaleTween?.Kill();
-            scaleTween = transform.DOScale(1f, 0.2f)
-                .SetEase(Ease.OutQuad)
-                .SetAutoKill(true);
+            Game.UtilitySystem.HoverEffectHelper.ResetScaleWithCleanup(
+                ref scaleTween,
+                transform,
+                0.2f);
 
             // 스킬카드 슬롯이면 스킬카드 툴팁 매니저 사용
             if (isSkillCardSlot)
             {
-                var skillTooltipManager = UnityEngine.Object.FindFirstObjectByType<Game.SkillCardSystem.Manager.SkillCardTooltipManager>();
-                if (skillTooltipManager != null)
+                if (skillCardTooltipManager != null)
                 {
-                    skillTooltipManager.OnCardHoverExit();
+                    skillCardTooltipManager.OnCardHoverExit();
                 }
                 return;
             }

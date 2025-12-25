@@ -496,6 +496,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9a4fbfed6b4ff804b99c8f1567b7b66e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  tooltipPrefabAddress: ItemTooltip.prefab
   tooltipPrefab: {fileID: 3522811872384367802, guid: abeee521058f7584d920b1bb0a9668d6, type: 3}
   alignPaddingX: 12
   alignPaddingY: 0
@@ -3170,15 +3171,15 @@ MonoBehaviour:
   sceneTransitionManager: {fileID: 922812240}
   audioManager: {fileID: 1938332464}
   saveManager: {fileID: 1124059154}
-  settingsManager: {fileID: 0}
+  settingsManager: {fileID: 1104247997}
   coroutineRunner: {fileID: 789670093}
   playerCharacterSelectionManager: {fileID: 80656796}
   skillCardTooltipManager: {fileID: 1069046947}
-  buffDebuffTooltipManager: {fileID: 0}
+  buffDebuffTooltipManager: {fileID: 1881282653}
   itemTooltipManager: {fileID: 253123549}
   gameSessionStatistics: {fileID: 396162064}
   statisticsManager: {fileID: 787258894}
-  leaderboardManager: {fileID: 0}
+  leaderboardManager: {fileID: 308579431}
   playerManager: {fileID: 0}
   enableLazyInitialization: 0
   enableCircularDependencyCheck: 1

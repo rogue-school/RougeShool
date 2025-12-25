@@ -47,8 +47,9 @@ namespace Game.CoreSystem.Manager
         }
         
         /// <summary>
-        /// 게임 상태 변경
+        /// 게임 상태를 변경합니다
         /// </summary>
+        /// <param name="newState">변경할 게임 상태</param>
         public void ChangeGameState(GameState newState)
         {
             if (currentGameState == newState) return;
@@ -101,8 +102,9 @@ namespace Game.CoreSystem.Manager
         public PlayerCharacterData SelectedCharacter => selectedCharacter;
         
         /// <summary>
-        /// 캐릭터 선택
+        /// 플레이어 캐릭터를 선택합니다
         /// </summary>
+        /// <param name="characterData">선택할 플레이어 캐릭터 데이터</param>
         public void SelectCharacter(PlayerCharacterData characterData)
         {
             selectedCharacter = characterData;

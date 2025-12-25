@@ -4714,6 +4714,7 @@ MonoBehaviour:
     allStages:
     - {fileID: 11400000, guid: ebcb895c197bd934c92f968aea234a27, type: 2}
     - {fileID: 11400000, guid: 4602ef4ea0888594fb090e107cc04a64, type: 2}
+    - {fileID: 11400000, guid: 2a105adfcc265834e8a25cc94ef75cd2, type: 2}
   debugSettings:
     enableStageLogging: 1
     showEnemyStatus: 1
@@ -5290,6 +5291,7 @@ MonoBehaviour:
   displayMode: 2
   stageIndex: 0
   runSeed: 0
+  showSkillCardRewardInfo: 1
 --- !u!1 &1814860799
 GameObject:
   m_ObjectHideFlags: 0

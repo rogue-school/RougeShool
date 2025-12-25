@@ -30,7 +30,7 @@ namespace Game.CombatSystem.UI
         [SerializeField] private Button mainMenuButton;
 
         // 씬 전환 매니저
-        private ISceneTransitionManager sceneTransitionManager;
+        [Inject(Optional = true)] private ISceneTransitionManager sceneTransitionManager;
         
         // 통계 매니저
         [Inject(Optional = true)] private GameSessionStatistics gameSessionStatistics;
@@ -48,7 +48,7 @@ namespace Game.CombatSystem.UI
         /// </summary>
         private void FindSceneTransitionManager()
         {
-            sceneTransitionManager = FindFirstObjectByType<SceneTransitionManager>();
+            // sceneTransitionManager는 DI로 주입받음
             if (sceneTransitionManager != null)
             {
                 GameLogger.LogInfo("[GameOverUI] SceneTransitionManager 찾기 완료", GameLogger.LogCategory.UI);
@@ -113,16 +113,15 @@ namespace Game.CombatSystem.UI
         {
             GameLogger.LogInfo("[GameOverUI] 통계 세션 저장 시도 (완전 종료)", GameLogger.LogCategory.Save);
 
-            if (gameSessionStatistics == null)
+            // gameSessionStatistics와 statisticsManager는 DI로 주입받음
+            if (gameSessionStatistics != null)
             {
-                gameSessionStatistics = FindFirstObjectByType<GameSessionStatistics>(FindObjectsInactive.Include);
-                GameLogger.LogInfo($"[GameOverUI] GameSessionStatistics 찾기: {(gameSessionStatistics != null ? "성공" : "실패")}", GameLogger.LogCategory.Save);
+                GameLogger.LogInfo($"[GameOverUI] GameSessionStatistics 찾기: 성공", GameLogger.LogCategory.Save);
             }
 
-            if (statisticsManager == null)
+            if (statisticsManager != null)
             {
-                statisticsManager = FindFirstObjectByType<StatisticsManager>(FindObjectsInactive.Include);
-                GameLogger.LogInfo($"[GameOverUI] StatisticsManager 찾기: {(statisticsManager != null ? "성공" : "실패")}", GameLogger.LogCategory.Save);
+                GameLogger.LogInfo($"[GameOverUI] StatisticsManager 찾기: 성공", GameLogger.LogCategory.Save);
             }
 
             if (gameSessionStatistics == null)

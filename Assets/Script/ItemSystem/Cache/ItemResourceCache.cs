@@ -1,18 +1,22 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Game.ItemSystem.Data;
 using Game.CoreSystem.Utility;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace Game.ItemSystem.Cache
 {
     /// <summary>
     /// 아이템 리소스 캐싱 시스템
-    /// Resources.LoadAll 호출을 캐싱하여 성능을 최적화합니다.
+    /// Addressables.LoadAssetsAsync 호출을 캐싱하여 성능을 최적화합니다.
     /// </summary>
     public static class ItemResourceCache
     {
         private static readonly Dictionary<string, ActiveItemDefinition[]> activeItemCache = new Dictionary<string, ActiveItemDefinition[]>();
         private static readonly Dictionary<string, PassiveItemDefinition[]> passiveItemCache = new Dictionary<string, PassiveItemDefinition[]>();
+        private static readonly Dictionary<string, bool> loadingPaths = new Dictionary<string, bool>();
         private static readonly object cacheLock = new object();
 
         /// <summary>
@@ -24,13 +28,37 @@ namespace Game.ItemSystem.Cache
         {
             lock (cacheLock)
             {
-                if (!activeItemCache.ContainsKey(path))
+                if (activeItemCache.ContainsKey(path))
                 {
-                    var items = Resources.LoadAll<ActiveItemDefinition>(path);
-                    activeItemCache[path] = items ?? new ActiveItemDefinition[0];
-                    GameLogger.LogInfo($"[ItemResourceCache] 액티브 아이템 캐시 로드: {items?.Length ?? 0}개 (경로: {path})", GameLogger.LogCategory.Core);
+                    return activeItemCache[path];
                 }
-                return activeItemCache[path];
+
+                if (loadingPaths.ContainsKey(path) && loadingPaths[path])
+                {
+                    GameLogger.LogWarning($"[ItemResourceCache] 이미 로딩 중인 경로: {path}", GameLogger.LogCategory.Core);
+                    return new ActiveItemDefinition[0];
+                }
+
+                try
+                {
+                    loadingPaths[path] = true;
+                    var handle = Addressables.LoadAssetsAsync<ActiveItemDefinition>(path, null);
+                    var result = handle.WaitForCompletion();
+                    var items = result != null ? result.ToArray() : new ActiveItemDefinition[0];
+                    activeItemCache[path] = items;
+                    GameLogger.LogInfo($"[ItemResourceCache] 액티브 아이템 캐시 로드: {items.Length}개 (경로: {path})", GameLogger.LogCategory.Core);
+                    return items;
+                }
+                catch (System.Exception ex)
+                {
+                    GameLogger.LogError($"[ItemResourceCache] 액티브 아이템 로드 중 오류: {ex.Message}", GameLogger.LogCategory.Core);
+                    activeItemCache[path] = new ActiveItemDefinition[0];
+                    return activeItemCache[path];
+                }
+                finally
+                {
+                    loadingPaths[path] = false;
+                }
             }
         }
 
@@ -43,13 +71,38 @@ namespace Game.ItemSystem.Cache
         {
             lock (cacheLock)
             {
-                if (!passiveItemCache.ContainsKey(path))
+                if (passiveItemCache.ContainsKey(path))
                 {
-                    var items = Resources.LoadAll<PassiveItemDefinition>(path);
-                    passiveItemCache[path] = items ?? new PassiveItemDefinition[0];
-                    GameLogger.LogInfo($"[ItemResourceCache] 패시브 아이템 캐시 로드: {items?.Length ?? 0}개 (경로: {path})", GameLogger.LogCategory.Core);
+                    return passiveItemCache[path];
                 }
-                return passiveItemCache[path];
+
+                string loadingKey = $"passive_{path}";
+                if (loadingPaths.ContainsKey(loadingKey) && loadingPaths[loadingKey])
+                {
+                    GameLogger.LogWarning($"[ItemResourceCache] 이미 로딩 중인 경로: {path}", GameLogger.LogCategory.Core);
+                    return new PassiveItemDefinition[0];
+                }
+
+                try
+                {
+                    loadingPaths[loadingKey] = true;
+                    var handle = Addressables.LoadAssetsAsync<PassiveItemDefinition>(path, null);
+                    var result = handle.WaitForCompletion();
+                    var items = result != null ? result.ToArray() : new PassiveItemDefinition[0];
+                    passiveItemCache[path] = items;
+                    GameLogger.LogInfo($"[ItemResourceCache] 패시브 아이템 캐시 로드: {items.Length}개 (경로: {path})", GameLogger.LogCategory.Core);
+                    return items;
+                }
+                catch (System.Exception ex)
+                {
+                    GameLogger.LogError($"[ItemResourceCache] 패시브 아이템 로드 중 오류: {ex.Message}", GameLogger.LogCategory.Core);
+                    passiveItemCache[path] = new PassiveItemDefinition[0];
+                    return passiveItemCache[path];
+                }
+                finally
+                {
+                    loadingPaths[loadingKey] = false;
+                }
             }
         }
 

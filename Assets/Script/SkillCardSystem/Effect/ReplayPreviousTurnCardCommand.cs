@@ -13,10 +13,23 @@ namespace Game.SkillCardSystem.Effect
     public class ReplayPreviousTurnCardCommand : ICardEffectCommand
     {
         private readonly int _repeatCount;
+        private readonly CombatExecutionManager executionManager;
 
         public ReplayPreviousTurnCardCommand(int repeatCount)
         {
             _repeatCount = repeatCount < 0 ? 0 : repeatCount;
+            this.executionManager = null;
+        }
+
+        /// <summary>
+        /// 이전 턴 카드 재실행 명령 생성자 (의존성 포함)
+        /// </summary>
+        /// <param name="repeatCount">재실행 횟수</param>
+        /// <param name="executionManager">전투 실행 매니저 (선택적)</param>
+        public ReplayPreviousTurnCardCommand(int repeatCount, CombatExecutionManager executionManager)
+        {
+            _repeatCount = repeatCount < 0 ? 0 : repeatCount;
+            this.executionManager = executionManager;
         }
 
         public void Execute(ICardExecutionContext context, ICombatTurnManager turnManager)
@@ -42,8 +55,8 @@ namespace Game.SkillCardSystem.Effect
                 return;
             }
 
-            var executionManager = Object.FindFirstObjectByType<CombatExecutionManager>();
-            if (executionManager == null)
+            var em = executionManager ?? Object.FindFirstObjectByType<CombatExecutionManager>();
+            if (em == null)
             {
                 GameLogger.LogError("[ReplayPreviousTurnCardCommand] CombatExecutionManager를 찾을 수 없습니다.", GameLogger.LogCategory.Combat);
                 return;

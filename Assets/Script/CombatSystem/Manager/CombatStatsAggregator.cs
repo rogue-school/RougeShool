@@ -16,7 +16,15 @@ namespace Game.CombatSystem.Manager
     /// </summary>
     public interface ICombatStatsProvider
     {
+        /// <summary>
+        /// 현재 전투 통계 스냅샷을 가져옵니다.
+        /// </summary>
+        /// <returns>전투 통계 스냅샷</returns>
         CombatStatsSnapshot GetSnapshot();
+        
+        /// <summary>
+        /// 전투 통계를 초기화합니다.
+        /// </summary>
         void ResetStats();
     }
 
@@ -26,25 +34,94 @@ namespace Game.CombatSystem.Manager
     [Serializable]
     public class CombatStatsSnapshot
     {
+        /// <summary>
+        /// 전투 지속 시간 (초)
+        /// </summary>
         public float battleDurationSeconds;
+        
+        /// <summary>
+        /// 총 턴 수
+        /// </summary>
         public int totalTurns;
+        
+        /// <summary>
+        /// 적에게 가한 총 데미지
+        /// </summary>
         public int totalDamageDealtToEnemies;
+        
+        /// <summary>
+        /// 플레이어가 받은 총 데미지
+        /// </summary>
         public int totalDamageTakenByPlayer;
+        
+        /// <summary>
+        /// 플레이어가 받은 총 회복량
+        /// </summary>
         public int totalHealingToPlayer;
 
+        /// <summary>
+        /// 카드 ID별 스킬 사용 횟수
+        /// </summary>
         public Dictionary<string, int> playerSkillUsageByCardId = new Dictionary<string, int>();
-        public Dictionary<string, int> playerSkillUsageByName = new Dictionary<string, int>(); // 스킬 이름별 사용 횟수
-        public Dictionary<string, int> playerSkillCardSpawnByCardId = new Dictionary<string, int>(); // 스킬카드 생성 횟수
+        
+        /// <summary>
+        /// 스킬 이름별 사용 횟수
+        /// </summary>
+        public Dictionary<string, int> playerSkillUsageByName = new Dictionary<string, int>();
+        
+        /// <summary>
+        /// 카드 ID별 스킬카드 생성 횟수
+        /// </summary>
+        public Dictionary<string, int> playerSkillCardSpawnByCardId = new Dictionary<string, int>();
+        
+        /// <summary>
+        /// 아이템 이름별 액티브 아이템 사용 횟수
+        /// </summary>
         public Dictionary<string, int> activeItemUsageByName = new Dictionary<string, int>();
-        public Dictionary<string, int> activeItemSpawnByItemId = new Dictionary<string, int>(); // 액티브 아이템 생성 횟수
-        public Dictionary<string, int> activeItemDiscardByItemId = new Dictionary<string, int>(); // 액티브 아이템 버리기 횟수
-        public Dictionary<string, int> passiveItemAcquiredByItemId = new Dictionary<string, int>(); // 패시브 아이템 획득 횟수
+        
+        /// <summary>
+        /// 아이템 ID별 액티브 아이템 생성 횟수
+        /// </summary>
+        public Dictionary<string, int> activeItemSpawnByItemId = new Dictionary<string, int>();
+        
+        /// <summary>
+        /// 아이템 ID별 액티브 아이템 버리기 횟수
+        /// </summary>
+        public Dictionary<string, int> activeItemDiscardByItemId = new Dictionary<string, int>();
+        
+        /// <summary>
+        /// 아이템 ID별 패시브 아이템 획득 횟수
+        /// </summary>
+        public Dictionary<string, int> passiveItemAcquiredByItemId = new Dictionary<string, int>();
 
+        /// <summary>
+        /// 리소스 이름
+        /// </summary>
         public string resourceName;
+        
+        /// <summary>
+        /// 전투 시작 시 리소스
+        /// </summary>
         public int startResource;
+        
+        /// <summary>
+        /// 전투 종료 시 리소스
+        /// </summary>
         public int endResource;
+        
+        /// <summary>
+        /// 최대 리소스
+        /// </summary>
         public int maxResource;
+        
+        /// <summary>
+        /// 총 획득한 리소스
+        /// </summary>
         public int totalResourceGained;
+        
+        /// <summary>
+        /// 총 소모한 리소스
+        /// </summary>
         public int totalResourceSpent;
     }
 
@@ -138,12 +215,7 @@ namespace Game.CombatSystem.Manager
             }
 
             // Resource consume/restore from PlayerManager
-            // PlayerManager가 null이면 직접 찾기 시도
-            if (_playerManager == null)
-            {
-                _playerManager = FindFirstObjectByType<PlayerManager>(FindObjectsInactive.Include);
-            }
-
+            // PlayerManager는 DI로 주입받음
             if (_playerManager != null)
             {
                 _playerManager.OnResourceConsumed += HandleResourceConsumed;
@@ -195,29 +267,15 @@ namespace Game.CombatSystem.Manager
             ResetStats();
             _combatStartTime = Time.time;
 
-            // TurnController가 null이면 Zenject Container를 통해 찾기 시도
-            if (_turnController == null)
-            {
-                var sceneContext = FindFirstObjectByType<Zenject.SceneContext>(FindObjectsInactive.Include);
-                if (sceneContext != null && sceneContext.Container != null)
-                {
-                    _turnController = sceneContext.Container.TryResolve<ITurnController>();
-                }
-            }
-
+            // TurnController와 PlayerManager는 DI로 주입받음
             // 전투 시작 시점의 턴 수 저장
             _startTurnCount = _turnController != null ? _turnController.TurnCount : 1;
 
-            // PlayerManager가 null이면 직접 찾기 시도
-            if (_playerManager == null)
+            if (_playerManager != null)
             {
-                _playerManager = FindFirstObjectByType<PlayerManager>(FindObjectsInactive.Include);
-                if (_playerManager != null)
-                {
-                    // 이벤트 구독
-                    _playerManager.OnResourceConsumed += HandleResourceConsumed;
-                    _playerManager.OnResourceRestored += HandleResourceRestored;
-                }
+                // 이벤트 구독
+                _playerManager.OnResourceConsumed += HandleResourceConsumed;
+                _playerManager.OnResourceRestored += HandleResourceRestored;
             }
 
             if (_playerManager != null)
@@ -238,12 +296,7 @@ namespace Game.CombatSystem.Manager
             // 전투 종료 시점부터 인벤토리 정리로 발생하는 Remove는 버리기로 카운트하지 않음
             _suppressDiscardCounting = true;
 
-            // PlayerManager가 null이면 직접 찾기 시도
-            if (_playerManager == null)
-            {
-                _playerManager = FindFirstObjectByType<PlayerManager>(FindObjectsInactive.Include);
-            }
-
+            // PlayerManager는 DI로 주입받음
             if (_playerManager != null)
             {
                 _endResource = _playerManager.CurrentResource;
@@ -393,29 +446,11 @@ namespace Game.CombatSystem.Manager
         // API
         public CombatStatsSnapshot GetSnapshot()
         {
-            // TurnController가 null이면 Zenject Container를 통해 찾기 시도
-            if (_turnController == null)
+            // TurnController와 PlayerManager는 DI로 주입받음
+            if (_playerManager != null && string.IsNullOrEmpty(_resourceName))
             {
-                var sceneContext = FindFirstObjectByType<Zenject.SceneContext>(FindObjectsInactive.Include);
-                if (sceneContext != null && sceneContext.Container != null)
-                {
-                    _turnController = sceneContext.Container.TryResolve<ITurnController>();
-                    if (_turnController != null)
-                    {
-                        GameLogger.LogInfo("[CombatStatsAggregator] ITurnController를 Zenject Container에서 찾음", GameLogger.LogCategory.Combat);
-                    }
-                }
-            }
-
-            // PlayerManager가 null이면 직접 찾기 시도 (최신 자원 정보 가져오기)
-            if (_playerManager == null)
-            {
-                _playerManager = FindFirstObjectByType<PlayerManager>(FindObjectsInactive.Include);
-                if (_playerManager != null && string.IsNullOrEmpty(_resourceName))
-                {
-                    _resourceName = _playerManager.ResourceName;
-                    _maxResource = _playerManager.MaxResource;
-                }
+                _resourceName = _playerManager.ResourceName;
+                _maxResource = _playerManager.MaxResource;
             }
 
             // 최신 종료 자원 정보 업데이트
@@ -464,6 +499,9 @@ namespace Game.CombatSystem.Manager
             return snapshot;
         }
 
+        /// <summary>
+        /// 전투 통계를 초기화합니다.
+        /// </summary>
         public void ResetStats()
         {
             _combatStartTime = 0f;

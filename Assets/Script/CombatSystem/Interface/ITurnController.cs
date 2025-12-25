@@ -56,13 +56,15 @@ namespace Game.CombatSystem.Interface
         void ProcessAllCharacterTurnEffects();
 
         /// <summary>
-        /// 플레이어 턴인지 확인합니다.
+        /// 플레이어 턴인지 확인합니다
         /// </summary>
+        /// <returns>플레이어 턴이면 true</returns>
         bool IsPlayerTurn();
 
         /// <summary>
-        /// 적 턴인지 확인합니다.
+        /// 적 턴인지 확인합니다
         /// </summary>
+        /// <returns>적 턴이면 true</returns>
         bool IsEnemyTurn();
 
         /// <summary>

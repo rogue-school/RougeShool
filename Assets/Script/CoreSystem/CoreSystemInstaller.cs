@@ -97,28 +97,44 @@ namespace Game.CoreSystem
 
             foreach (var (instance, name, interfaceType) in managers)
             {
-                if (instance != null)
+                MonoBehaviour finalInstance = instance;
+                
+                // Inspector에 할당되지 않은 경우 씬에서 찾기
+                if (finalInstance == null)
                 {
-                    // 기본 바인딩
-                    Container.Bind(instance.GetType()).FromInstance(instance).AsSingle();
-                    
-                    // 인터페이스 바인딩 (있는 경우)
-                    if (interfaceType != null)
-                    {
-                        Container.Bind(interfaceType).FromInstance(instance).AsSingle();
-                    }
-                    
-                    // 의존성 주입 예약
-                    Container.QueueForInject(instance);
-                    
-                    if (enablePerformanceLogging)
-                    {
-                        GameLogger.LogInfo($"{name} 바인딩 완료", GameLogger.LogCategory.Core);
-                    }
+                    finalInstance = FindManagerInScene(name);
                 }
-                else
+                
+                // 여전히 null이면 경고만 출력 (일부 매니저는 선택적일 수 있음)
+                if (finalInstance == null)
                 {
-                    GameLogger.LogWarning($"{name}가 할당되지 않았습니다.", GameLogger.LogCategory.Core);
+                    // PlayerManager는 CombatScene에서 생성되므로 CoreScene에서는 없어도 정상
+                    if (name == "PlayerManager")
+                    {
+                        GameLogger.LogInfo($"{name}가 CoreScene에 없습니다. (CombatScene에서 생성됨 - 정상)", GameLogger.LogCategory.Core);
+                    }
+                    else
+                    {
+                        GameLogger.LogWarning($"{name}가 할당되지 않았습니다. (선택적 매니저일 수 있음)", GameLogger.LogCategory.Core);
+                    }
+                    continue;
+                }
+                
+                // 기본 바인딩
+                Container.Bind(finalInstance.GetType()).FromInstance(finalInstance).AsSingle();
+                
+                // 인터페이스 바인딩 (있는 경우)
+                if (interfaceType != null)
+                {
+                    Container.Bind(interfaceType).FromInstance(finalInstance).AsSingle();
+                }
+                
+                // 의존성 주입 예약
+                Container.QueueForInject(finalInstance);
+                
+                if (enablePerformanceLogging)
+                {
+                    GameLogger.LogInfo($"{name} 바인딩 완료", GameLogger.LogCategory.Core);
                 }
             }
         }
@@ -154,6 +170,18 @@ namespace Game.CoreSystem
                 {
                     return Object.FindFirstObjectByType<Game.CombatSystem.Manager.CombatStatsAggregator>(FindObjectsInactive.Include);
                 })
+                .AsSingle()
+                .NonLazy();
+
+            // AudioEventTrigger: 씬에 있는 컴포넌트를 찾아서 바인딩 (Optional)
+            Container.Bind<AudioEventTrigger>()
+                .FromComponentInHierarchy()
+                .AsSingle()
+                .NonLazy();
+
+            // VictoryUI: 씬에 있는 컴포넌트를 찾아서 바인딩 (Optional)
+            Container.Bind<Game.CombatSystem.UI.VictoryUI>()
+                .FromComponentInHierarchy()
                 .AsSingle()
                 .NonLazy();
         }
@@ -192,6 +220,7 @@ namespace Game.CoreSystem
                 .OfType<ICoreSystemInitializable>();
             
             // 이미 BindCoreManagers에서 바인딩된 매니저들을 제외
+            // BindCoreManagers()에서 바인딩하는 모든 매니저 타입을 포함해야 함
             var alreadyBoundTypes = new HashSet<System.Type>
             {
                 typeof(CoreSystemInitializer),
@@ -199,11 +228,15 @@ namespace Game.CoreSystem
                 typeof(GameStateManager),
                 typeof(AudioManager),
                 typeof(SaveManager),
+                typeof(SettingsManager),
                 typeof(PlayerCharacterSelectionManager),
                 typeof(SkillCardTooltipManager),
                 typeof(BuffDebuffTooltipManager),
                 typeof(Game.ItemSystem.Manager.ItemTooltipManager),
-                typeof(PlayerManager)
+                typeof(PlayerManager),
+                typeof(GameSessionStatistics),
+                typeof(StatisticsManager),
+                typeof(LeaderboardManager)
             };
             
             // 아직 바인딩되지 않은 ICoreSystemInitializable 컴포넌트만 바인딩
@@ -217,12 +250,21 @@ namespace Game.CoreSystem
             
             // ICoreSystemInitializable 리스트로 바인딩 (CoreSystemInitializer에서 사용)
             // CoreSystemInitializer는 자기 자신을 제외하고 바인딩
+            // 하지만 이미 바인딩된 매니저들도 coreSystems에 포함시켜야 초기화가 진행됨
             Container.Bind<List<ICoreSystemInitializable>>().FromMethod(context =>
             {
-                var systemsToInitialize = initializableComponents
-                    .Where(x => !ReferenceEquals(x, coreSystemInitializer) && !alreadyBoundTypes.Contains(x.GetType()))
+                // 이미 바인딩된 매니저들도 포함 (초기화를 위해)
+                var allSystems = initializableComponents
+                    .Where(x => !ReferenceEquals(x, coreSystemInitializer))
                     .ToList();
-                return new List<ICoreSystemInitializable>(systemsToInitialize);
+                
+                // 디버그 로그
+                if (enablePerformanceLogging)
+                {
+                    GameLogger.LogInfo($"[CoreSystemInstaller] coreSystems에 {allSystems.Count}개 시스템 포함", GameLogger.LogCategory.Core);
+                }
+                
+                return new List<ICoreSystemInitializable>(allSystems);
             }).AsSingle();
         }
 
@@ -269,6 +311,31 @@ namespace Game.CoreSystem
             
             // 의존성 주입 예약 (바인딩은 BindCoreInterfaces에서 처리)
             Container.QueueForInject(instance);
+        }
+
+        /// <summary>
+        /// 매니저 이름으로 씬에서 매니저를 찾습니다.
+        /// </summary>
+        private MonoBehaviour FindManagerInScene(string name)
+        {
+            return name switch
+            {
+                "CoreSystemInitializer" => FindFirstObjectByType<CoreSystemInitializer>(FindObjectsInactive.Include),
+                "SceneTransitionManager" => FindFirstObjectByType<SceneTransitionManager>(FindObjectsInactive.Include),
+                "GameStateManager" => FindFirstObjectByType<GameStateManager>(FindObjectsInactive.Include),
+                "AudioManager" => FindFirstObjectByType<AudioManager>(FindObjectsInactive.Include),
+                "SaveManager" => FindFirstObjectByType<SaveManager>(FindObjectsInactive.Include),
+                "SettingsManager" => FindFirstObjectByType<SettingsManager>(FindObjectsInactive.Include),
+                "PlayerCharacterSelectionManager" => FindFirstObjectByType<PlayerCharacterSelectionManager>(FindObjectsInactive.Include),
+                "SkillCardTooltipManager" => FindFirstObjectByType<SkillCardTooltipManager>(FindObjectsInactive.Include),
+                "BuffDebuffTooltipManager" => FindFirstObjectByType<BuffDebuffTooltipManager>(FindObjectsInactive.Include),
+                "ItemTooltipManager" => FindFirstObjectByType<Game.ItemSystem.Manager.ItemTooltipManager>(FindObjectsInactive.Include),
+                "PlayerManager" => FindFirstObjectByType<PlayerManager>(FindObjectsInactive.Include),
+                "GameSessionStatistics" => FindFirstObjectByType<GameSessionStatistics>(FindObjectsInactive.Include),
+                "StatisticsManager" => FindFirstObjectByType<StatisticsManager>(FindObjectsInactive.Include),
+                "LeaderboardManager" => FindFirstObjectByType<LeaderboardManager>(FindObjectsInactive.Include),
+                _ => null
+            };
         }
 
         #endregion

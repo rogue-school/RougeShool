@@ -28,9 +28,15 @@ namespace Game.CombatSystem.State
         [Inject] private ITurnController turnController;
         [Inject] private ICardSlotRegistry slotRegistry;
         [Inject] private ISlotMovementController slotMovement;
+        
+        [Inject(Optional = true)] private Game.StageSystem.Manager.StageManager stageManager;
+        [Inject(Optional = true)] private Game.ItemSystem.Service.ItemService itemService;
+        [Inject(Optional = true)] private Game.CharacterSystem.UI.EnemyCharacterUIController enemyCharacterUIController;
+        [Inject(Optional = true)] private Game.CharacterSystem.Manager.EnemyManager enemyManagerForStates;
+        [Inject(Optional = true)] private Game.CombatSystem.UI.GameOverUI gameOverUI;
 
         // PlayerHandManager는 Optional (씬에 없을 수 있음)
-        private PlayerHandManager handManager;
+        [Inject(Optional = true)] private PlayerHandManager handManager;
 
         #endregion
 
@@ -105,8 +111,7 @@ namespace Game.CombatSystem.State
 
         private void Start()
         {
-            // PlayerHandManager 찾기 (Optional)
-            handManager = FindFirstObjectByType<PlayerHandManager>();
+            // handManager는 DI로 주입받음
 
             // 사망 이펙트 완료 이벤트 구독
             CombatEvents.OnPlayerDeathEffectComplete += OnPlayerDeathEffectComplete;
@@ -182,7 +187,6 @@ namespace Game.CombatSystem.State
                     if (!(_currentState is EnemyDefeatedState))
                     {
                         // StageManager를 통해 소환된 적인지 확인하고 처리
-                        var stageManager = FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
                         if (stageManager != null)
                         {
                             GameLogger.LogInfo($"[CombatStateMachine] StageManager.OnEnemyDeath 호출 - 소환 여부 확인", GameLogger.LogCategory.Combat);
@@ -240,7 +244,6 @@ namespace Game.CombatSystem.State
                 if (enemy != null && !enemy.IsDead())
                 {
                     // StageManager에서 소환 플래그 확인
-                    var stageManager = FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
                     if (stageManager != null)
                     {
                         bool isSummonActive = stageManager.IsSummonedEnemyActive();
@@ -306,6 +309,140 @@ namespace Game.CombatSystem.State
         /// </summary>
         private void DelayedInitialize()
         {
+            // ItemService가 null이면 Zenject에서 찾아서 주입
+            if (itemService == null)
+            {
+                // 먼저 IItemService 인터페이스로 찾기 (ProjectContext)
+                var projectContext = Zenject.ProjectContext.Instance;
+                if (projectContext != null && projectContext.Container != null)
+                {
+                    var resolvedIItemService = projectContext.Container.TryResolve<Game.ItemSystem.Interface.IItemService>();
+                    if (resolvedIItemService is Game.ItemSystem.Service.ItemService concreteItemService)
+                    {
+                        itemService = concreteItemService;
+                        GameLogger.LogInfo("[CombatStateMachine] ItemService를 IItemService 인터페이스로 찾아서 주입했습니다.", GameLogger.LogCategory.Combat);
+                    }
+                    else
+                    {
+                        // 구체 클래스로 직접 찾기 시도
+                        var resolvedItemService = projectContext.Container.TryResolve<Game.ItemSystem.Service.ItemService>();
+                        if (resolvedItemService != null)
+                        {
+                            itemService = resolvedItemService;
+                            GameLogger.LogInfo("[CombatStateMachine] ItemService를 Zenject에서 찾아서 주입했습니다.", GameLogger.LogCategory.Combat);
+                        }
+                        else
+                        {
+                            // SceneContext에서도 시도
+                            try
+                            {
+                                var sceneContextRegistry = projectContext.Container.Resolve<Zenject.SceneContextRegistry>();
+                                var sceneContainer = sceneContextRegistry.TryGetContainerForScene(gameObject.scene);
+                                if (sceneContainer != null)
+                                {
+                                    var sceneItemService = sceneContainer.TryResolve<Game.ItemSystem.Interface.IItemService>();
+                                    if (sceneItemService is Game.ItemSystem.Service.ItemService sceneConcreteItemService)
+                                    {
+                                        itemService = sceneConcreteItemService;
+                                        GameLogger.LogInfo("[CombatStateMachine] ItemService를 SceneContext에서 찾아서 주입했습니다.", GameLogger.LogCategory.Combat);
+                                    }
+                                    else
+                                    {
+                                        GameLogger.LogWarning("[CombatStateMachine] ItemService를 Zenject에서 찾을 수 없습니다. 액티브 아이템 보상이 작동하지 않을 수 있습니다.", GameLogger.LogCategory.Combat);
+                                    }
+                                }
+                                else
+                                {
+                                    GameLogger.LogWarning("[CombatStateMachine] ItemService를 Zenject에서 찾을 수 없습니다. 액티브 아이템 보상이 작동하지 않을 수 있습니다.", GameLogger.LogCategory.Combat);
+                                }
+                            }
+                            catch
+                            {
+                                GameLogger.LogWarning("[CombatStateMachine] SceneContextRegistry를 찾을 수 없습니다. ItemService를 Zenject에서 찾을 수 없습니다.", GameLogger.LogCategory.Combat);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // StageManager가 null이면 Zenject에서 찾아서 주입
+            if (stageManager == null)
+            {
+                var projectContext = Zenject.ProjectContext.Instance;
+                if (projectContext != null && projectContext.Container != null)
+                {
+                    try
+                    {
+                        var sceneContextRegistry = projectContext.Container.Resolve<Zenject.SceneContextRegistry>();
+                        var sceneContainer = sceneContextRegistry.TryGetContainerForScene(gameObject.scene);
+                        if (sceneContainer != null)
+                        {
+                            var resolvedStageManager = sceneContainer.TryResolve<Game.StageSystem.Manager.StageManager>();
+                            if (resolvedStageManager != null)
+                            {
+                                stageManager = resolvedStageManager;
+                                GameLogger.LogInfo("[CombatStateMachine] StageManager를 SceneContext에서 찾아서 주입했습니다.", GameLogger.LogCategory.Combat);
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // SceneContextRegistry를 찾을 수 없는 경우 무시
+                    }
+                }
+                
+                // Zenject에서 찾지 못하면 직접 찾기
+                if (stageManager == null)
+                {
+                    stageManager = UnityEngine.Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>(UnityEngine.FindObjectsInactive.Include);
+                    if (stageManager != null)
+                    {
+                        GameLogger.LogInfo("[CombatStateMachine] StageManager를 FindFirstObjectByType으로 찾아서 주입했습니다.", GameLogger.LogCategory.Combat);
+                    }
+                }
+            }
+
+            // GameOverUI가 null이면 Zenject에서 찾아서 주입
+            if (gameOverUI == null)
+            {
+                var projectContext = Zenject.ProjectContext.Instance;
+                if (projectContext != null && projectContext.Container != null)
+                {
+                    try
+                    {
+                        var sceneContextRegistry = projectContext.Container.Resolve<Zenject.SceneContextRegistry>();
+                        var sceneContainer = sceneContextRegistry.TryGetContainerForScene(gameObject.scene);
+                        if (sceneContainer != null)
+                        {
+                            var resolvedGameOverUI = sceneContainer.TryResolve<Game.CombatSystem.UI.GameOverUI>();
+                            if (resolvedGameOverUI != null)
+                            {
+                                gameOverUI = resolvedGameOverUI;
+                                GameLogger.LogInfo("[CombatStateMachine] GameOverUI를 SceneContext에서 찾아서 주입했습니다.", GameLogger.LogCategory.Combat);
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // SceneContextRegistry를 찾을 수 없는 경우 무시
+                    }
+                }
+                
+                // Zenject에서 찾지 못하면 직접 찾기
+                if (gameOverUI == null)
+                {
+                    gameOverUI = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.UI.GameOverUI>(UnityEngine.FindObjectsInactive.Include);
+                    if (gameOverUI != null)
+                    {
+                        GameLogger.LogInfo("[CombatStateMachine] GameOverUI를 FindFirstObjectByType으로 찾아서 주입했습니다.", GameLogger.LogCategory.Combat);
+                    }
+                    else
+                    {
+                        GameLogger.LogWarning("[CombatStateMachine] GameOverUI를 찾을 수 없습니다. 게임 오버 UI가 표시되지 않을 수 있습니다.", GameLogger.LogCategory.Combat);
+                    }
+                }
+            }
+
             // 컨텍스트 초기화 (레거시 + 리팩토링된 인터페이스)
             _context.Initialize(
                 this,
@@ -316,7 +453,12 @@ namespace Game.CombatSystem.State
                 handManager,
                 turnController,
                 slotRegistry,
-                slotMovement);
+                slotMovement,
+                stageManager,
+                itemService,
+                enemyCharacterUIController,
+                enemyManagerForStates,
+                gameOverUI);
 
             // TurnController에 상태 머신 참조 설정 (턴 효과 처리 시 상태 확인용)
             if (turnController is Manager.TurnController turnControllerConcrete)
@@ -1093,7 +1235,6 @@ namespace Game.CombatSystem.State
         {
             try
             {
-                var itemService = FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
                 if (itemService == null)
                 {
                     return false;
@@ -1127,8 +1268,7 @@ namespace Game.CombatSystem.State
 
             try
             {
-                // ItemService 찾기
-                var itemService = FindFirstObjectByType<Game.ItemSystem.Service.ItemService>();
+                // itemService는 DI로 주입받음
                 if (itemService == null)
                 {
                     if (enableDebugLogging)

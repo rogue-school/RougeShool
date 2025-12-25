@@ -126,6 +126,10 @@ namespace Game.CombatSystem.Manager
 
         #region 초기화
 
+        /// <summary>
+        /// 전투 시스템을 초기화합니다
+        /// </summary>
+        /// <returns>초기화 코루틴</returns>
         public IEnumerator InitializeCombat()
         {
             if (isInitialized)
@@ -281,19 +285,25 @@ namespace Game.CombatSystem.Manager
             // TODO: 게임오버 UI 표시 및 재도전/로비 이동 버튼 처리
         }
 
-        // 외부(보상 UI)에서 호출: 보상 선택 완료
+        /// <summary>
+        /// 보상 선택 완료를 알립니다 (보상 UI에서 호출)
+        /// </summary>
         public void OnRewardsSelected()
         {
             TransitionTo(FlowState.StageTransition);
         }
 
-        // 외부(EnemyManager 등)에서 호출: 모든 적 처치
+        /// <summary>
+        /// 승리를 알립니다 (EnemyManager 등에서 호출)
+        /// </summary>
         public void NotifyVictory()
         {
             TransitionTo(FlowState.Victory);
         }
 
-        // 외부(PlayerManager 등)에서 호출: 플레이어 사망
+        /// <summary>
+        /// 게임 오버를 알립니다 (PlayerManager 등에서 호출)
+        /// </summary>
         public void NotifyGameOver()
         {
             TransitionTo(FlowState.GameOver);
@@ -304,7 +314,7 @@ namespace Game.CombatSystem.Manager
         #region 전투 플로우 관리
 
         /// <summary>
-        /// 전투 시작
+        /// 전투를 시작합니다
         /// </summary>
         public void StartCombat()
         {
@@ -371,7 +381,7 @@ namespace Game.CombatSystem.Manager
         }
 
         /// <summary>
-        /// 전투 종료
+        /// 전투를 종료합니다
         /// </summary>
         public void EndCombat()
         {
@@ -384,7 +394,7 @@ namespace Game.CombatSystem.Manager
         }
 
         /// <summary>
-        /// 다음 턴으로 진행
+        /// 다음 턴으로 진행합니다
         /// </summary>
         public void ProgressTurn()
         {
@@ -467,9 +477,10 @@ namespace Game.CombatSystem.Manager
         }
 
         /// <summary>
-        /// 적 처치 시 호출되는 메서드
-        /// GameStartupController에게 적 사망 알림
+        /// 적 처치 시 호출되는 메서드입니다
+        /// GameStartupController에게 적 사망 알림을 전달합니다
         /// </summary>
+        /// <param name="enemy">처치된 적 캐릭터</param>
         public void OnEnemyDeath(ICharacter enemy)
         {
             if (enemy == null) return;
@@ -487,8 +498,9 @@ namespace Game.CombatSystem.Manager
         }
 
         /// <summary>
-        /// 플레이어 사망 통지 → 게임오버 처리
+        /// 플레이어 사망 통지를 받아 게임오버 처리를 합니다
         /// </summary>
+        /// <param name="player">사망한 플레이어 캐릭터</param>
         public void OnPlayerDeath(ICharacter player)
         {
             if (player == null) return;
@@ -502,8 +514,9 @@ namespace Game.CombatSystem.Manager
         #region 전투 상태 관리
 
         /// <summary>
-        /// 전투 단계 변경
+        /// 전투 단계를 변경합니다
         /// </summary>
+        /// <param name="newPhase">변경할 전투 단계</param>
         public void ChangeCombatPhase(CombatPhase newPhase)
         {
             if (currentPhase == newPhase)
@@ -573,6 +586,9 @@ namespace Game.CombatSystem.Manager
 
         #region 리셋
 
+        /// <summary>
+        /// 전투 상태를 초기화합니다
+        /// </summary>
         public void ResetCombat()
         {
             isCombatActive = false;

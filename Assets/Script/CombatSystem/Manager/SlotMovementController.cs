@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 using Game.CombatSystem.Interface;
 using Game.CombatSystem.Slot;
 using Game.CombatSystem.Core;
@@ -49,8 +51,10 @@ namespace Game.CombatSystem.Manager
         private EnemyCharacterData _cachedEnemyData;
         private string _cachedEnemyName;
 
-        // Resources 캐싱
+        // Addressables 캐싱
         private SkillCardUI _cachedCardUIPrefab;
+        private AsyncOperationHandle<SkillCardUI> _cardUIPrefabHandle;
+        private bool _isLoadingCardUIPrefab = false;
 
         #endregion
 
@@ -160,9 +164,11 @@ namespace Game.CombatSystem.Manager
                     // 목적지 월드 좌표 계산 후 월드 기준 이동 트윈 (Y=4 오프셋 적용)
                     Vector3 endWorld = target.TransformPoint(new Vector3(0f, 4f, 0f));
                     var moveTween = uiRect.DOMove(endWorld, CombatConstants.AnimationDurations.CARD_MOVE)
-                        .SetEase(Ease.OutQuad);
+                        .SetEase(Ease.OutQuad)
+                        .SetAutoKill(true);
                     var scaleTween = uiRect.DOScale(1f, CombatConstants.AnimationDurations.CARD_MOVE)
-                        .SetEase(Ease.OutQuad);
+                        .SetEase(Ease.OutQuad)
+                        .SetAutoKill(true);
                     yield return moveTween.WaitForCompletion();
 
                     // 최종 부모로 설정하기 전에 다시 한 번 확인
@@ -202,7 +208,8 @@ namespace Game.CombatSystem.Manager
             }
 
             // 프리팹 로드 (캐시 사용)
-            var cardUIPrefab = GetCachedCardUIPrefab();
+            yield return GetCachedCardUIPrefab();
+            var cardUIPrefab = _cachedCardUIPrefab;
             if (cardUIPrefab == null)
             {
                 GameLogger.LogWarning(
@@ -363,7 +370,8 @@ namespace Game.CombatSystem.Manager
             }
 
             // SkillCardUI 프리팁 로드 (캐시 사용)
-            var cardUIPrefab = GetCachedCardUIPrefab();
+            yield return GetCachedCardUIPrefab();
+            var cardUIPrefab = _cachedCardUIPrefab;
             if (cardUIPrefab == null)
             {
                 GameLogger.LogWarning(
@@ -701,14 +709,18 @@ namespace Game.CombatSystem.Manager
             if (cardUI.TryGetComponent<CanvasGroup>(out var cg))
             {
                 cg.alpha = 0f;
-                cg.DOFade(1f, CombatConstants.AnimationDurations.CARD_SPAWN).SetEase(Ease.OutQuad);
+                cg.DOFade(1f, CombatConstants.AnimationDurations.CARD_SPAWN)
+                    .SetEase(Ease.OutQuad)
+                    .SetAutoKill(true);
             }
 
             var rt = cardUI.transform as RectTransform;
             if (rt != null)
             {
                 rt.localScale = Vector3.one * 0.7f;
-                return rt.DOScale(1f, CombatConstants.AnimationDurations.CARD_SPAWN).SetEase(Ease.OutBack);
+                return rt.DOScale(1f, CombatConstants.AnimationDurations.CARD_SPAWN)
+                    .SetEase(Ease.OutBack)
+                    .SetAutoKill(true);
             }
 
             return null;
@@ -788,19 +800,41 @@ namespace Game.CombatSystem.Manager
             };
         }
 
-        private SkillCardUI GetCachedCardUIPrefab()
+        private IEnumerator GetCachedCardUIPrefab()
         {
-            if (_cachedCardUIPrefab == null)
+            // 이미 로드되어 있으면 즉시 반환
+            if (_cachedCardUIPrefab != null)
             {
-                _cachedCardUIPrefab = Resources.Load<SkillCardUI>("Prefab/SkillCard");
-                if (_cachedCardUIPrefab == null)
+                yield break;
+            }
+
+            // 로딩 중이면 대기
+            while (_isLoadingCardUIPrefab)
+            {
+                yield return null;
+            }
+
+            // 로드 시작
+            if (_cachedCardUIPrefab == null && !_isLoadingCardUIPrefab)
+            {
+                _isLoadingCardUIPrefab = true;
+                var handle = Addressables.LoadAssetAsync<SkillCardUI>("Prefab/SkillCard");
+                yield return handle;
+
+                if (handle.Status == AsyncOperationStatus.Succeeded && handle.Result != null)
+                {
+                    _cachedCardUIPrefab = handle.Result;
+                    _cardUIPrefabHandle = handle;
+                    GameLogger.LogInfo("[SlotMovementController] SkillCardUI 프리팹 로드 성공", GameLogger.LogCategory.Combat);
+                }
+                else
                 {
                     GameLogger.LogError(
-                        "SkillCardUI 프리팹을 찾을 수 없습니다: Prefab/SkillCard",
+                        $"SkillCardUI 프리팹을 찾을 수 없습니다: Prefab/SkillCard. 오류: {handle.OperationException?.Message ?? "알 수 없는 오류"}",
                         GameLogger.LogCategory.Error);
                 }
+                _isLoadingCardUIPrefab = false;
             }
-            return _cachedCardUIPrefab;
         }
 
         private string FormatLogTag()

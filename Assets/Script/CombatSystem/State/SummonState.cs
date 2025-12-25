@@ -29,10 +29,9 @@ namespace Game.CombatSystem.State
             LogStateTransition($"소환 상태 진입: {summonTarget.DisplayName} (원본 HP: {originalHP})");
 
             // 즉시 소환 플래그 해제 (중복 소환 방지)
-            var stageManager = UnityEngine.Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
-            if (stageManager != null)
+            if (context.StageManager != null)
             {
-                stageManager.SetSummonedEnemyActive(false);
+                context.StageManager.SetSummonedEnemyActive(false);
             }
 
             StartSummonProcess(context);
@@ -73,14 +72,13 @@ namespace Game.CombatSystem.State
         private IEnumerator SummonProcessCoroutine(CombatStateContext context)
         {
             // 1단계: StageManager에서 원본 적 데이터 가져오기
-            var stageManager = UnityEngine.Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
-            if (stageManager == null)
+            if (context.StageManager == null)
             {
                 LogError("소환 실패 - StageManager 없음");
                 yield break;
             }
 
-            var originalEnemyData = stageManager.GetOriginalEnemyData();
+            var originalEnemyData = context.StageManager.GetOriginalEnemyData();
             if (originalEnemyData == null)
             {
                 LogError("소환 실패 - StageManager에서 원본 적 데이터 없음");
@@ -95,10 +93,10 @@ namespace Game.CombatSystem.State
                 {
                     // 비활성화 직전의 실제 현재 HP를 저장 (소환 트리거 시점 이후 체력 변화 반영)
                     int currentActualHP = currentEnemy.GetCurrentHP();
-                    // 상위 스코프에서 이미 선언된 stageManager 사용
-                    if (stageManager != null)
+                    // context.StageManager 사용
+                    if (context.StageManager != null)
                     {
-                        stageManager.SetOriginalEnemyHP(currentActualHP);
+                        context.StageManager.SetOriginalEnemyHP(currentActualHP);
                     }
                     
                     // 데미지 텍스트 정리 (소환 전에 남아있는 텍스트 제거)
@@ -158,8 +156,7 @@ namespace Game.CombatSystem.State
         private IEnumerator CreateSummonedEnemy(CombatStateContext context, EnemyCharacterData targetData, System.Action<ICharacter> onComplete)
         {
             // StageManager에서 적 생성 로직을 가져와서 사용
-            var stageManager = UnityEngine.Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
-            if (stageManager == null)
+            if (context.StageManager == null)
             {
                 LogError("StageManager를 찾을 수 없습니다");
                 onComplete?.Invoke(null);
@@ -167,7 +164,7 @@ namespace Game.CombatSystem.State
             }
 
             // 비동기 적 생성
-            var createTask = stageManager.CreateEnemyForSummonAsync(targetData);
+            var createTask = context.StageManager.CreateEnemyForSummonAsync(targetData);
             yield return new UnityEngine.WaitUntil(() => createTask.IsCompleted);
 
             if (createTask.IsFaulted)
@@ -198,10 +195,9 @@ namespace Game.CombatSystem.State
         private void RegisterSummonedEnemy(CombatStateContext context, ICharacter newEnemy, EnemyCharacterData originalData, int originalHP)
         {
             // StageManager를 통해 소환된 적 등록
-            var stageManager = UnityEngine.Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
-            if (stageManager != null)
+            if (context.StageManager != null)
             {
-                stageManager.RegisterSummonedEnemy(newEnemy);
+                context.StageManager.RegisterSummonedEnemy(newEnemy);
                 LogStateTransition($"소환된 적 StageManager 등록: {newEnemy.GetCharacterName()}");
                 
                 // EnemyManager에도 직접 등록하여 즉시 접근 가능하도록 함
@@ -241,11 +237,10 @@ namespace Game.CombatSystem.State
             LogStateTransition($"[소환 디버그] 복귀할 원본 데이터: {originalData?.DisplayName ?? "null"}, 파라미터 HP: {originalHP}");
 
             // StageManager에서 최신 원본 적 HP 가져오기 (비활성화 직전 업데이트된 값 사용)
-            var stageManager = UnityEngine.Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>();
             int latestOriginalHP = originalHP;
-            if (stageManager != null)
+            if (context.StageManager != null)
             {
-                latestOriginalHP = stageManager.GetOriginalEnemyHP();
+                latestOriginalHP = context.StageManager.GetOriginalEnemyHP();
                 LogStateTransition($"[소환 디버그] StageManager에서 최신 원본 HP 가져옴: {latestOriginalHP}");
             }
 

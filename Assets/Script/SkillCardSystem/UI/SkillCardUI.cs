@@ -56,28 +56,7 @@ namespace Game.SkillCardSystem.UI
 
         private ISkillCard card;
         
-        [Inject] private SkillCardTooltipManager tooltipManager;
-        
-        // 툴팁 매니저 지연 초기화
-        private SkillCardTooltipManager GetTooltipManager()
-        {
-            if (tooltipManager == null)
-            {
-                // Zenject 컨테이너에서 직접 가져오기
-                var container = FindFirstObjectByType<Zenject.SceneContext>()?.Container;
-                if (container != null)
-                {
-                    tooltipManager = container.TryResolve<SkillCardTooltipManager>();
-                }
-                
-                // 여전히 null이면 직접 찾기
-                if (tooltipManager == null)
-                {
-                    tooltipManager = FindFirstObjectByType<SkillCardTooltipManager>();
-                }
-            }
-            return tooltipManager;
-        }
+        [Inject(Optional = true)] private SkillCardTooltipManager tooltipManager;
         
         // 툴팁 관련 상태
         private bool isHovering = false;
@@ -99,11 +78,89 @@ namespace Game.SkillCardSystem.UI
             // DI를 통해 tooltipManager가 자동으로 주입됨
             // 툴팁 지연 시간을 상수에서 초기화
             tooltipDelay = ItemConstants.TOOLTIP_SHOW_DELAY;
+            
+            // Object.Instantiate로 생성된 경우 주입이 안 될 수 있으므로 보완
+            EnsureTooltipManagerInjected();
         }
 
         private void OnEnable()
         {
+            // OnEnable에서도 주입 확인 (초기화 순서 문제 대비)
+            EnsureTooltipManagerInjected();
             RegisterToTooltipManager();
+        }
+
+        /// <summary>
+        /// tooltipManager가 주입되지 않았으면 Zenject Container를 통해 주입을 시도합니다.
+        /// </summary>
+        private void EnsureTooltipManagerInjected()
+        {
+            if (tooltipManager != null) return;
+
+            try
+            {
+                // 1. ProjectContext를 통해 Container에 접근하여 주입 시도
+                var projectContext = Zenject.ProjectContext.Instance;
+                if (projectContext != null && projectContext.Container != null)
+                {
+                    projectContext.Container.Inject(this);
+                    if (tooltipManager != null)
+                    {
+                        GameLogger.LogInfo("[SkillCardUI] tooltipManager 주입 완료 (ProjectContext)", GameLogger.LogCategory.UI);
+                        return;
+                    }
+                }
+
+                // 2. SceneContextRegistry를 통해 현재 씬의 Container에 접근하여 주입 시도
+                try
+                {
+                    var sceneContextRegistry = projectContext.Container.Resolve<Zenject.SceneContextRegistry>();
+                    var sceneContainer = sceneContextRegistry.GetContainerForScene(gameObject.scene);
+                    if (sceneContainer != null)
+                    {
+                        sceneContainer.Inject(this);
+                        if (tooltipManager != null)
+                        {
+                            GameLogger.LogInfo("[SkillCardUI] tooltipManager 주입 완료 (SceneContext)", GameLogger.LogCategory.UI);
+                            return;
+                        }
+                    }
+                }
+                catch
+                {
+                    // SceneContextRegistry를 찾을 수 없거나 씬 컨테이너가 없는 경우 무시
+                }
+
+                // 3. 직접 찾아서 할당 (최후의 수단)
+                var foundManager = UnityEngine.Object.FindFirstObjectByType<SkillCardTooltipManager>(UnityEngine.FindObjectsInactive.Include);
+                if (foundManager != null)
+                {
+                    tooltipManager = foundManager;
+                    GameLogger.LogInfo("[SkillCardUI] tooltipManager 직접 찾기 완료 (FindFirstObjectByType)", GameLogger.LogCategory.UI);
+                    return;
+                }
+
+                GameLogger.LogWarning("[SkillCardUI] tooltipManager를 찾을 수 없습니다. CoreScene에 SkillCardTooltipManager가 있는지 확인하세요.", GameLogger.LogCategory.UI);
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogWarning($"[SkillCardUI] tooltipManager 주입 시도 실패: {ex.Message}", GameLogger.LogCategory.UI);
+                
+                // 예외 발생 시에도 직접 찾기 시도
+                try
+                {
+                    var foundManager = UnityEngine.Object.FindFirstObjectByType<SkillCardTooltipManager>(UnityEngine.FindObjectsInactive.Include);
+                    if (foundManager != null)
+                    {
+                        tooltipManager = foundManager;
+                        GameLogger.LogInfo("[SkillCardUI] tooltipManager 직접 찾기 완료 (예외 처리 중)", GameLogger.LogCategory.UI);
+                    }
+                }
+                catch
+                {
+                    // 무시
+                }
+            }
         }
 
         private void OnDisable()
@@ -288,16 +345,24 @@ namespace Game.SkillCardSystem.UI
             // 호버 확대 효과 (플레이어 카드만)
             if (card != null && card.IsFromPlayer())
             {
-                scaleTween?.Kill();
-                scaleTween = transform.DOScale(hoverScale, 0.2f)
-                    .SetEase(Ease.OutQuad)
-                    .SetAutoKill(true);
+                Game.UtilitySystem.HoverEffectHelper.PlayHoverScaleWithCleanup(
+                    ref scaleTween,
+                    transform,
+                    hoverScale,
+                    0.2f);
             }
 
-            var currentTooltipManager = GetTooltipManager();
+            // tooltipManager 주입 확인 (OnPointerEnter 시점에도 확인)
+            EnsureTooltipManagerInjected();
+            
+            var currentTooltipManager = tooltipManager;
 
             if (!enableTooltip || currentTooltipManager == null || card == null || isHovering)
             {
+                if (currentTooltipManager == null)
+                {
+                    GameLogger.LogWarning("[SkillCardUI] OnPointerEnter: tooltipManager가 null입니다. CoreScene에 SkillCardTooltipManager가 있는지 확인하세요.", GameLogger.LogCategory.UI);
+                }
                 return;
             }
 
@@ -329,13 +394,13 @@ namespace Game.SkillCardSystem.UI
             // 호버 확대 효과 해제 (플레이어 카드만)
             if (card != null && card.IsFromPlayer())
             {
-                scaleTween?.Kill();
-                scaleTween = transform.DOScale(1f, 0.2f)
-                    .SetEase(Ease.OutQuad)
-                    .SetAutoKill(true);
+                Game.UtilitySystem.HoverEffectHelper.ResetScaleWithCleanup(
+                    ref scaleTween,
+                    transform,
+                    0.2f);
             }
 
-            var currentTooltipManager = GetTooltipManager();
+            var currentTooltipManager = tooltipManager;
 
             if (!enableTooltip || currentTooltipManager == null || !isHovering)
             {
@@ -361,16 +426,19 @@ namespace Game.SkillCardSystem.UI
         /// <param name="eventData">포인터 이벤트 데이터</param>
         public void OnPointerClick(PointerEventData eventData)
         {
-            var currentTooltipManager = GetTooltipManager();
+            var currentTooltipManager = tooltipManager;
             if (!enableTooltip)
             {
                 GameLogger.LogWarning("툴팁이 비활성화되어 있습니다.", GameLogger.LogCategory.UI);
                 return;
             }
             
+            // tooltipManager 주입 확인 (OnPointerClick 시점에도 확인)
+            EnsureTooltipManagerInjected();
+            
             if (currentTooltipManager == null)
             {
-                GameLogger.LogWarning("tooltipManager를 찾을 수 없습니다.", GameLogger.LogCategory.UI);
+                GameLogger.LogWarning("[SkillCardUI] OnPointerClick: tooltipManager를 찾을 수 없습니다. CoreScene에 SkillCardTooltipManager가 있는지 확인하세요.", GameLogger.LogCategory.UI);
                 return;
             }
             
@@ -397,7 +465,7 @@ namespace Game.SkillCardSystem.UI
             // 지연 후에도 여전히 호버 중이고 드래그 중이 아니면 툴팁 표시
             if (isHovering && !isDragging)
             {
-                var currentTooltipManager = GetTooltipManager();
+                var currentTooltipManager = tooltipManager;
                 if (currentTooltipManager != null && card != null)
                 {
                     // 툴팁 표시
@@ -455,7 +523,7 @@ namespace Game.SkillCardSystem.UI
         /// </summary>
         private void RegisterToTooltipManager()
         {
-            var currentTooltipManager = GetTooltipManager();
+            var currentTooltipManager = tooltipManager;
             if (currentTooltipManager != null && card != null)
             {
                 RectTransform rectTransform = GetComponent<RectTransform>();
@@ -471,7 +539,7 @@ namespace Game.SkillCardSystem.UI
         /// </summary>
         private void UnregisterFromTooltipManager()
         {
-            var currentTooltipManager = GetTooltipManager();
+            var currentTooltipManager = tooltipManager;
             if (currentTooltipManager != null && card != null)
             {
                 currentTooltipManager.UnregisterCardUI(card);

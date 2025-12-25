@@ -6,6 +6,8 @@ using Game.SkillCardSystem.Slot;
 using Game.CharacterSystem.Interface;
 using Game.CoreSystem.Utility;
 using Game.CombatSystem.Slot;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace Game.SkillCardSystem.Manager
 {
@@ -22,6 +24,9 @@ namespace Game.SkillCardSystem.Manager
         [InjectOptional] private Game.SkillCardSystem.UI.SkillCardUI cardUIPrefab;
         [InjectOptional] private ICardCirculationSystem circulationSystem;
 
+        private static Game.SkillCardSystem.UI.SkillCardUI _cachedCardUIPrefab;
+        private static bool _isLoadingCardUIPrefab;
+
         #endregion
 
         #region DI
@@ -31,6 +36,9 @@ namespace Game.SkillCardSystem.Manager
         {
             this.handSlotRegistry = handSlotRegistry;
         }
+        
+        [Inject(Optional = true)]
+        private Game.CombatSystem.Slot.SlotRegistry slotRegistry;
 
         #endregion
 
@@ -82,7 +90,6 @@ namespace Game.SkillCardSystem.Manager
             if (handSlotRegistry == null)
             {
                 // SlotRegistry에서 가져오기 시도
-                var slotRegistry = Object.FindFirstObjectByType<Game.CombatSystem.Slot.SlotRegistry>();
                 handSlotRegistry = slotRegistry?.GetHandSlotRegistry();
                 if (handSlotRegistry == null)
                 {
@@ -97,11 +104,10 @@ namespace Game.SkillCardSystem.Manager
             }
             if (cardUIPrefab == null)
             {
-                // Resources에서 로드 시도
-                cardUIPrefab = Resources.Load<Game.SkillCardSystem.UI.SkillCardUI>("Prefab/SkillCard");
+                cardUIPrefab = LoadCardUIPrefab();
                 if (cardUIPrefab != null)
                 {
-                    GameLogger.LogInfo("핸드용 SkillCardUI 프리팹을 Resources에서 로드했습니다.", GameLogger.LogCategory.SkillCard);
+                    GameLogger.LogInfo("핸드용 SkillCardUI 프리팹을 Addressables에서 로드했습니다.", GameLogger.LogCategory.SkillCard);
                 }
                 else
                 {
@@ -166,8 +172,9 @@ namespace Game.SkillCardSystem.Manager
         }
 
         /// <summary>
-        /// 손패가 targetCount 미만이면 비파괴 샘플링으로 보충합니다.
+        /// 손패가 targetCount 미만이면 비파괴 샘플링으로 보충합니다
         /// </summary>
+        /// <param name="targetCount">목표 손패 개수</param>
         public void RefillHandTo(int targetCount)
         {
             if (handSlotRegistry == null || circulationSystem == null || cardUIPrefab == null)
@@ -396,6 +403,49 @@ namespace Game.SkillCardSystem.Manager
         private void Awake()
         {
             // GameLogger.LogInfo("PlayerHandManager 초기화", GameLogger.LogCategory.SkillCard);
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        /// <summary>
+        /// SkillCardUI 프리팹을 Addressables에서 로드합니다 (캐싱 사용).
+        /// </summary>
+        private static Game.SkillCardSystem.UI.SkillCardUI LoadCardUIPrefab()
+        {
+            if (_cachedCardUIPrefab != null)
+            {
+                return _cachedCardUIPrefab;
+            }
+
+            if (_isLoadingCardUIPrefab)
+            {
+                return null;
+            }
+
+            try
+            {
+                _isLoadingCardUIPrefab = true;
+                var handle = Addressables.LoadAssetAsync<Game.SkillCardSystem.UI.SkillCardUI>("Prefab/SkillCard");
+                _cachedCardUIPrefab = handle.WaitForCompletion();
+
+                if (_cachedCardUIPrefab == null)
+                {
+                    GameLogger.LogError("[PlayerHandManager] SkillCardUI 프리팹 로드 실패: Prefab/SkillCard", GameLogger.LogCategory.SkillCard);
+                }
+
+                return _cachedCardUIPrefab;
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogError($"[PlayerHandManager] SkillCardUI 프리팹 로드 중 오류: {ex.Message}", GameLogger.LogCategory.SkillCard);
+                return null;
+            }
+            finally
+            {
+                _isLoadingCardUIPrefab = false;
+            }
         }
 
         #endregion

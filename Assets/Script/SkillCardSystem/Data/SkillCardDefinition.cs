@@ -45,7 +45,10 @@ namespace Game.SkillCardSystem.Data
         [Tooltip("현재 공격력 스택 수")]
         [SerializeField] private int currentAttackPowerStacks = 0;
         
-        // 기존 시스템 호환성을 위한 메서드들
+        /// <summary>
+        /// 카드의 효과 목록을 생성합니다 (기존 시스템 호환성)
+        /// </summary>
+        /// <returns>효과 목록</returns>
         public List<SkillCardEffectSO> CreateEffects()
         {
             return configuration.hasEffects ? 
@@ -88,18 +91,55 @@ namespace Game.SkillCardSystem.Data
             GameLogger.LogDebug($"[SkillCardDefinition] '{displayName}' 스택 초기화", GameLogger.LogCategory.SkillCard);
         }
         
+        /// <summary>
+        /// 카드 정의 자기 자신을 반환합니다 (기존 시스템 호환성)
+        /// </summary>
         public SkillCardDefinition Definition => this;
+        
+        /// <summary>
+        /// 카드 정의 자기 자신을 반환합니다 (기존 시스템 호환성)
+        /// </summary>
         public SkillCardDefinition Card => this;
         
-        // 기존 시스템 호환성을 위한 추가 프로퍼티들 (데미지 설정에서 가져오기)
+        /// <summary>
+        /// 효과음 클립 (데미지 설정에서 가져옴, 기존 시스템 호환성)
+        /// </summary>
         public AudioClip SfxClip => configuration.hasDamage ? configuration.damageConfig.sfxClip : null;
+        
+        /// <summary>
+        /// 시각 효과 프리팹 (데미지 설정에서 가져옴, 기존 시스템 호환성)
+        /// </summary>
         public GameObject VisualEffectPrefab => configuration.hasDamage ? configuration.damageConfig.visualEffectPrefab : null;
+        
+        /// <summary>
+        /// 카드 이름 (기존 시스템 호환성)
+        /// </summary>
         public string Name => displayName;
+        
+        /// <summary>
+        /// 카드 ID (기존 시스템 호환성)
+        /// </summary>
         public string CardId => cardId;
+        
+        /// <summary>
+        /// 카드 이름 (기존 시스템 호환성)
+        /// </summary>
         public string CardName => displayName;
+        
+        /// <summary>
+        /// 카드 설명 (기존 시스템 호환성)
+        /// </summary>
         public string Description => description;
-        public int Cost => 0; // 비용 제거됨
-        public string CardType => "SkillCard"; // 기본 타입
+        
+        /// <summary>
+        /// 카드 비용 (현재 0, 기존 시스템 호환성)
+        /// </summary>
+        public int Cost => 0;
+        
+        /// <summary>
+        /// 카드 타입 (기본값: "SkillCard", 기존 시스템 호환성)
+        /// </summary>
+        public string CardType => "SkillCard";
     }
 
     /// <summary>
