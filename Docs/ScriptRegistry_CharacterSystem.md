@@ -22,7 +22,7 @@
 | **CharacterEffectSO** | `Game.CharacterSystem.Effect` | `Effect/CharacterEffectSO.cs` | 캐릭터에 적용되는 이펙트 ScriptableObject 베이스 | `Apply(...)` 등 | 효과 타입, 지속 턴 등 | 에셋, DI 없음 | 버프/디버프 시스템, `ICharacterEffect` 구현체 | ✅ 사용 중 |
 | **SummonEffectSO** | `Game.CharacterSystem.Effect` | `Effect/SummonEffectSO.cs` | 적 소환/교체 관련 이펙트 정의 SO | `Execute(...)` 등 | 소환 대상 데이터, 연출 정보 | 에셋, DI 없음 | `SummonEffect`, `SummonState`, `StageManager` | ✅ 사용 중 |
 | **SummonEffect** | `Game.CharacterSystem.Effect` | `Effect/SummonEffect.cs` | 소환 이펙트 런타임 로직 | `Execute(...)` | SummonEffectSO 참조 | DI 바인딩 없음, 카드/이펙트 실행 경로에서 사용 | CombatStateMachine, SkillCardSystem 이펙트 실행 | ✅ 사용 중 |
-| **EnemyCharacter** | `Game.CharacterSystem.Core` | `Core/EnemyCharacter.cs` | 적 캐릭터 구현 (HP, 덱, UI, 사망/소환/페이즈 전환 처리 등) | `Initialize(...)`, `GetCharacterName()`, `IsPlayerControlled()`, `CurrentPhaseIndex`, `CurrentPhaseName` 등 | `EnemyCharacterData`, HPBar/UI 참조, 효과 리스트, `currentPhaseIndex`, `isPhaseTransitionPending`, 페이즈 캐시 필드 | Combat/Stage에서 ICharacter로 취급, DI 직접 바인딩 없음 (프리팹/씬 배치) | `StageManager`(적 생성/소환), `HPBarController`, Combat/VFX 시스템, `SlotMovementController`(페이즈 전환 후 덱 캐시 업데이트) | ✅ 사용 중 |
+| **EnemyCharacter** | `Game.CharacterSystem.Core` | `Core/EnemyCharacter.cs` | 적 캐릭터 구현 (HP, 덱, UI, 사망/소환/페이즈 전환 처리 등) | `Initialize(...)`, `GetCharacterName()`, `IsPlayerControlled()`, `CurrentPhaseIndex`, `CurrentPhaseName`, `ShouldTransitionPhase()`, `IsPhaseTransitionPending()` 등 | `EnemyCharacterData`, HPBar/UI 참조, 효과 리스트, `currentPhaseIndex`, `isPhaseTransitionPending`, 페이즈 캐시 필드 | Combat/Stage에서 ICharacter로 취급, DI 직접 바인딩 없음 (프리팹/씬 배치) | `StageManager`(적 생성/소환), `HPBarController`, Combat/VFX 시스템, `SlotMovementController`(페이즈 전환 후 덱 캐시 업데이트 및 슬롯 재채우기), `CombatStateMachine`(페이즈 전환 안전 상태 확인) | ✅ 사용 중 |
 | **PlayerCharacter** | `Game.CharacterSystem.Core` | `Core/PlayerCharacter.cs` | 플레이어 캐릭터 구현 (HP, UI, 카드 핸들링) | `SetCharacterData(...)`, `SetCharacterData(object)`, `InitializeCharacter(...)` 등 | `PlayerCharacterData`, HPBar, `PlayerCharacterUIController` | Combat/Stage에서 ICharacter로 취급, 프리팹/씬 배치 기반 | `PlayerManager`, `HPBarController`, `PlayerCharacterUIController` | ✅ 사용 중 |
 | **LobbyCharacterSelector** | `Game.CharacterSystem.Core` | `Core/LobbyCharacterSelector.cs` | 로비에서 캐릭터 선택/프리뷰를 담당하는 컴포넌트 | `SelectCharacter(...)` 등 | 선택 UI 참조, 캐릭터 데이터 | 씬에 부착, DI 없음 | 로비/메인 메뉴 캐릭터 선택 화면 | ✅ 사용 중 (씬 부착 전제) |
 | **PlayerCharacterSelector** | `Game.CharacterSystem.Core` | `Core/PlayerCharacterSelector.cs` | 플레이어 캐릭터 선택 로직(런타임) | `SelectCharacter(...)` 등 | 선택된 데이터, UI 참조 | 씬 컴포넌트, DI 없음 | Stage/Combat 진입 전에 캐릭터 선택 | ✅ 사용 중 (씬 부착 전제) |
@@ -92,9 +92,11 @@ CharacterBase
 | `Die()` | `void` | 없음 | `private` | 1. `_isDead` 플래그 설정<br>2. EnemyManager/StageManager에 적 사망 알림<br>3. VFX/Audio 트리거<br>4. 오브젝트 비활성/파괴 | 적 사망 시 실제 정리/알림 로직 |
 | `CheckPhaseTransition(int currentHP, int maxHP)` | `void` | `int currentHP, int maxHP` | `private` | 1. 페이즈 시스템 유효성 검사<br>2. 현재 페이즈 인덱스 기준으로 다음 페이즈 체크<br>3. 체력 임계값 도달 시 `StartPhaseTransition()` 호출 | 체력 변경 시 페이즈 전환 조건 확인 |
 | `StartPhaseTransition(int phaseIndex)` | `void` | `int phaseIndex` | `private` | 1. 중복 전환 방지 플래그 설정<br>2. `TransitionToPhaseCoroutine()` 코루틴 시작 | 페이즈 전환 시작 |
-| `TransitionToPhaseCoroutine(int phaseIndex)` | `IEnumerator` | `int phaseIndex` | `private` | 1. 슬롯 이동 완료 대기<br>2. 페이즈 전환 연출 재생 (VFX/SFX)<br>3. 페이즈 설정 적용 (버프/디버프 제거, 체력 회복, 덱 교체, Portrait 프리팹 교체)<br>4. 슬롯 카드 제거 및 재생성 (SlotMovementController 자동 보충 활용) | 페이즈 전환 전체 프로세스 처리 |
+| `TransitionToPhaseCoroutine(int phaseIndex)` | `IEnumerator` | `int phaseIndex` | `private` | 1. `CombatStateMachine.WaitForSafeStateForPhaseTransition()` 호출로 안전한 상태 대기<br>2. 슬롯 이동 완료 대기<br>3. 페이즈 전환 연출 재생 (VFX/SFX)<br>4. 페이즈 설정 적용 (버프/디버프 제거, 체력 회복, 덱 교체, Portrait 프리팹 교체)<br>5. `SlotMovementController.RefillAllCombatSlotsWithEnemyDeckCoroutine()` 호출로 슬롯 재채우기<br>6. 페이즈 전환 완료 후 적 턴으로 자동 전환 (필요 시) | 페이즈 전환 전체 프로세스 처리 |
 | `ApplyPhaseSettings(EnemyPhaseData phase, bool isTransition, bool skipCardRegeneration)` | `void` | `EnemyPhaseData phase, bool isTransition, bool skipCardRegeneration` | `private` | 1. 페이즈별 기본 정보 캐시<br>2. 전환 시 버프/디버프 제거<br>3. 최대 체력 변경 및 회복<br>4. 덱 교체<br>5. 페이즈 이펙트 적용<br>6. Portrait 프리팹 교체<br>7. UI 갱신 | 페이즈별 설정 적용 |
-| `ClearEnemyCardsAndRegenerateCoroutine()` | `IEnumerator` | 없음 | `private` | 1. 적 카드가 있는 슬롯 찾기<br>2. 적 카드 제거<br>3. `SlotMovementController`의 적 덱 캐시 업데이트 (`UpdateEnemyCache`)<br>4. 자동 보충 로직이 빈 슬롯을 채우도록 대기 (다음 슬롯 이동 시 자동 처리) | 페이즈 전환 후 슬롯 카드 정리 및 재생성 준비 |
+| `ClearEnemyCardsAndRegenerateCoroutine()` | `IEnumerator` | 없음 | `private` | 1. 적 카드가 있는 슬롯 찾기<br>2. 적 카드 제거<br>3. `SlotMovementController`의 적 덱 캐시 업데이트 (`UpdateEnemyCache`)<br>4. `SlotMovementController.RefillAllCombatSlotsWithEnemyDeckCoroutine()` 호출로 슬롯 재채우기 | 페이즈 전환 후 슬롯 카드 정리 및 재생성 |
+| `ShouldTransitionPhase()` | `bool` | 없음 | `public` | 1. 페이즈 전환 대기 중이거나 사망 시 false 반환<br>2. 현재 체력과 최대 체력을 기준으로 다음 페이즈 임계값 확인<br>3. 임계값 도달 시 true 반환 | 페이즈 전환이 필요한지 확인 |
+| `IsPhaseTransitionPending()` | `bool` | 없음 | `public` | `isPhaseTransitionPending` 플래그 반환 | 페이즈 전환이 현재 진행 중인지 확인 |
 
 #### 로직 흐름도 (피해/사망/페이즈 전환)
 
@@ -142,7 +144,8 @@ _currentHP <= 0 ?
 | `EnemyManager` | 등록/해제 메서드 호출 | EnemyCharacter → 전역 적 레지스트리 | 현재 전투에서 활성화된 적 컬렉션 관리 |
 | `HPBarController` / `EnemyCharacterUIController` | SerializeField / Initialize | 캐릭터 상태 → UI | HP/이름/버프 등을 화면에 반영 |
 | `CombatEvents` | 정적 이벤트 호출 | 피해/사망 → 이벤트 브로드캐스트 | VFX/Audio/통계 시스템이 적 피해/사망에 반응 |
-| `SlotMovementController` | DI 주입 (`ISlotMovementController`) | 페이즈 전환 → 적 덱 캐시 업데이트 (`UpdateEnemyCache`) | 페이즈 전환 후 새로운 페이즈의 덱을 사용하도록 캐시 업데이트 |
+| `SlotMovementController` | DI 주입 (`ISlotMovementController`) | 페이즈 전환 → 적 덱 캐시 업데이트 (`UpdateEnemyCache`) → 슬롯 재채우기 (`RefillAllCombatSlotsWithEnemyDeckCoroutine`) | 페이즈 전환 후 새로운 페이즈의 덱을 사용하도록 캐시 업데이트 및 슬롯 재채우기 |
+| `CombatStateMachine` | DI 주입 (Optional) | 페이즈 전환 → 안전한 상태 확인 (`WaitForSafeStateForPhaseTransition`) | 페이즈 전환이 안전한 상태에서만 진행되도록 보장 |
 | `VFXManager` / `AudioManager` | DI 주입 (Optional) | 페이즈 전환 연출 → VFX/SFX 재생 | 페이즈 전환 시 시각/청각 피드백 제공 |
 
 ---
