@@ -149,8 +149,7 @@ Assets/Script/ItemSystem/
 │   ├── ReviveEffectSO.cs
 │   ├── ShieldBreakerDebuffEffect.cs
 │   ├── ShieldBreakerEffectSO.cs
-│   ├── TimeStopEffectSO.cs
-│   └── ResourceGainEffectSO.cs
+│   └── TimeStopEffectSO.cs
 ├── Editor/
 │   ├── PassiveItemDefinitionEditor.cs
 │   ├── RewardPoolEditor.cs

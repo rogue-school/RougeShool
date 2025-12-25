@@ -555,6 +555,98 @@ namespace Game.CombatSystem.Manager
             GameLogger.LogDebug($"[SlotMovementController] 적 덱 캐시 업데이트: {enemyName}", GameLogger.LogCategory.Combat);
         }
 
+        /// <summary>
+        /// 페이즈 전환 시 모든 전투/대기 슬롯을 초기화하고 새 덱으로 채웁니다.
+        /// </summary>
+        public IEnumerator RefillAllCombatSlotsWithEnemyDeckCoroutine()
+        {
+            GameLogger.LogInfo($"[SlotMovementController] 페이즈 전환: 모든 전투/대기 슬롯 초기화 및 재채우기 시작", GameLogger.LogCategory.Combat);
+
+            // 1. 모든 전투/대기 슬롯의 적 카드 제거
+            var combatSlots = new[]
+            {
+                CombatSlotPosition.BATTLE_SLOT,
+                CombatSlotPosition.WAIT_SLOT_1,
+                CombatSlotPosition.WAIT_SLOT_2,
+                CombatSlotPosition.WAIT_SLOT_3,
+                CombatSlotPosition.WAIT_SLOT_4
+            };
+
+            foreach (var slot in combatSlots)
+            {
+                var card = _registry.GetCardInSlot(slot);
+                if (card != null && !card.IsFromPlayer())
+                {
+                    _registry.ClearSlot(slot);
+                    GameLogger.LogDebug($"[SlotMovementController] 슬롯 초기화: {slot}", GameLogger.LogCategory.Combat);
+                }
+            }
+
+            // 2. 적 덱 정보 가져오기
+            var enemy = _enemyManager?.GetCharacter();
+            var runtimeData = enemy?.CharacterData as EnemyCharacterData;
+            var runtimeName = enemy?.GetCharacterName() ?? "Enemy";
+            var enemyData = _cachedEnemyData ?? runtimeData;
+            var enemyName = string.IsNullOrEmpty(_cachedEnemyName) ? runtimeName : _cachedEnemyName;
+
+            if (enemyData?.EnemyDeck == null)
+            {
+                GameLogger.LogWarning($"[SlotMovementController] 적 덱이 null입니다 - 슬롯 재채우기 건너뜀", GameLogger.LogCategory.Combat);
+                yield break;
+            }
+
+            // 3. 프리팹 로드
+            yield return GetCachedCardUIPrefab();
+            var cardUIPrefab = _cachedCardUIPrefab;
+            if (cardUIPrefab == null)
+            {
+                GameLogger.LogWarning($"[SlotMovementController] SkillCardUI 프리팹을 찾지 못함", GameLogger.LogCategory.Combat);
+                yield break;
+            }
+
+            // 4. 모든 전투/대기 슬롯을 적 카드로 채우기
+            foreach (var slot in combatSlots)
+            {
+                // 이미 플레이어 카드가 있으면 건너뜀
+                var existingCard = _registry.GetCardInSlot(slot);
+                if (existingCard != null && existingCard.IsFromPlayer())
+                {
+                    GameLogger.LogDebug($"[SlotMovementController] 슬롯 {slot}에 플레이어 카드가 있어 건너뜀", GameLogger.LogCategory.Combat);
+                    continue;
+                }
+
+                // 적 카드 생성
+                Game.SkillCardSystem.Deck.EnemySkillDeck.CardEntry entry = null;
+                for (int attempt = 0; attempt < CombatConstants.InitialSetup.ENEMY_CARD_RETRY_COUNT && entry == null; attempt++)
+                {
+                    entry = enemyData.EnemyDeck.GetRandomEntry();
+                }
+
+                if (entry?.definition != null)
+                {
+                    var card = entry.HasDamageOverride()
+                        ? _cardFactory.CreateEnemyCard(entry.definition, enemyName, entry.damageOverride)
+                        : _cardFactory.CreateEnemyCard(entry.definition, enemyName);
+                    var ui = CreateCardUIForSlot(card, slot, cardUIPrefab);
+                    var tween = PlaySpawnTween(ui);
+                    _registry.RegisterCard(slot, card, ui, SlotOwner.ENEMY);
+                    
+                    if (tween != null)
+                    {
+                        yield return tween.WaitForCompletion();
+                    }
+
+                    GameLogger.LogDebug($"[SlotMovementController] 슬롯 {slot}에 적 카드 생성: {entry.definition.displayName}", GameLogger.LogCategory.Combat);
+                }
+                else
+                {
+                    GameLogger.LogWarning($"[SlotMovementController] 슬롯 {slot}에 적 카드를 생성하지 못함", GameLogger.LogCategory.Combat);
+                }
+            }
+
+            GameLogger.LogInfo($"[SlotMovementController] 페이즈 전환: 모든 전투/대기 슬롯 재채우기 완료", GameLogger.LogCategory.Combat);
+        }
+
         public void ResetSlotStates()
         {
             // 슬롯 이동 상태 리셋

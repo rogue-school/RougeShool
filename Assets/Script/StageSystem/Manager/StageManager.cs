@@ -199,14 +199,65 @@ namespace Game.StageSystem.Manager
         /// </summary>
         private void InitializeGameStateForNewGame()
         {
+            // ItemService Fallback 주입 시도
+            EnsureItemServiceInjected();
+            
             // 인벤토리 초기화 (스킬카드 스택은 캐릭터 생성 시 초기화됨)
             if (itemService != null)
             {
                 itemService.ResetInventoryForNewGame();
+                GameLogger.LogInfo("[StageManager] 인벤토리 초기화 완료", GameLogger.LogCategory.Save);
             }
             else
             {
                 GameLogger.LogWarning("[StageManager] ItemService를 찾을 수 없습니다 - 인벤토리 초기화 건너뜀", GameLogger.LogCategory.Save);
+            }
+        }
+
+        /// <summary>
+        /// ItemService가 주입되지 않았으면 Fallback 주입을 시도합니다.
+        /// </summary>
+        private void EnsureItemServiceInjected()
+        {
+            if (itemService != null) return;
+
+            try
+            {
+                // 1. ProjectContext에서 SceneContextRegistry를 통해 찾기
+                var projectContext = Zenject.ProjectContext.Instance;
+                if (projectContext != null && projectContext.Container != null)
+                {
+                    try
+                    {
+                        var sceneContextRegistry = projectContext.Container.Resolve<Zenject.SceneContextRegistry>();
+                        var sceneContainer = sceneContextRegistry.TryGetContainerForScene(gameObject.scene);
+                        if (sceneContainer != null)
+                        {
+                            var resolvedItemService = sceneContainer.TryResolve<Game.ItemSystem.Service.ItemService>();
+                            if (resolvedItemService != null)
+                            {
+                                itemService = resolvedItemService;
+                                GameLogger.LogInfo("[StageManager] ItemService를 SceneContext에서 찾아서 주입했습니다.", GameLogger.LogCategory.Save);
+                                return;
+                            }
+                        }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        GameLogger.LogWarning($"[StageManager] SceneContext 주입 시도 실패: {ex.Message}", GameLogger.LogCategory.Save);
+                    }
+                }
+
+                // 2. FindFirstObjectByType을 사용한 폴백
+                itemService = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Service.ItemService>(UnityEngine.FindObjectsInactive.Include);
+                if (itemService != null)
+                {
+                    GameLogger.LogInfo("[StageManager] ItemService 직접 찾기 완료 (FindFirstObjectByType)", GameLogger.LogCategory.Save);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogError($"[StageManager] ItemService 주입 시도 중 오류: {ex.Message}", GameLogger.LogCategory.Error);
             }
         }
 
@@ -824,10 +875,47 @@ namespace Game.StageSystem.Manager
                 return null;
             }
             
+            // Zenject 의존성 주입 (Instantiate로 생성된 객체는 자동 주입되지 않음)
+            try
+            {
+                var projectContext = Zenject.ProjectContext.Instance;
+                if (projectContext != null && projectContext.Container != null)
+                {
+                    // SceneContext에서 먼저 시도
+                    Zenject.DiContainer sceneContainer = null;
+                    try
+                    {
+                        var sceneContextRegistry = projectContext.Container.Resolve<Zenject.SceneContextRegistry>();
+                        sceneContainer = sceneContextRegistry.TryGetContainerForScene(enemyInstance.scene);
+                    }
+                    catch (System.Exception ex)
+                    {
+                        GameLogger.LogDebug($"SceneContextRegistry를 찾을 수 없거나 씬 컨테이너 획득 중 오류: {ex.Message}", GameLogger.LogCategory.Combat);
+                    }
+
+                    // SceneContext에서 주입 시도
+                    if (sceneContainer != null)
+                    {
+                        sceneContainer.InjectGameObject(enemyInstance);
+                        GameLogger.LogDebug($"적 캐릭터 Zenject 주입 완료 (SceneContext): {data.CharacterName}", GameLogger.LogCategory.Combat);
+                    }
+                    else
+                    {
+                        // ProjectContext에서 주입 시도
+                        projectContext.Container.InjectGameObject(enemyInstance);
+                        GameLogger.LogDebug($"적 캐릭터 Zenject 주입 완료 (ProjectContext): {data.CharacterName}", GameLogger.LogCategory.Combat);
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogWarning($"적 캐릭터 Zenject 주입 중 오류 (계속 진행): {ex.Message}", GameLogger.LogCategory.Combat);
+            }
+            
             // 적 데이터 설정
             enemy.SetCharacterData(data);
 
-            // 등장 연출 (오른쪽 바깥에서 자리로) - Ease.InOutCubic 그래프
+            // 등장 연출 (오른쪽 바깥에서 자리로) - 플레이어와 동일한 방식으로 처리
             // 씬 전환/파괴 상태 확인
             if (isDestroyed || this == null || enemyInstance == null)
             {
@@ -837,17 +925,30 @@ namespace Game.StageSystem.Manager
             
             var entranceTween = TryPlayEntranceAnimation(enemyInstance.transform, fromLeft: false);
 
-            // 애니메이션 완료 대기
+            // 애니메이션 완료 대기 (플레이어와 동일한 방식: TaskCompletionSource 사용)
             if (entranceTween != null && !isDestroyed && this != null && enemyInstance != null)
             {
                 try
                 {
                     GameLogger.LogDebug($"적 등장 애니메이션 시작: {data.CharacterName}", GameLogger.LogCategory.Combat);
                     
-                    // 애니메이션 완료 대기 (타임아웃 설정)
-                    var timeoutTask = Task.Delay(TimeSpan.FromSeconds(2.0)); // 최대 2초 대기
-                    var animationTask = entranceTween.AsyncWaitForCompletion();
-                    var completedTask = await Task.WhenAny(animationTask, timeoutTask);
+                    // TaskCompletionSource를 사용하여 애니메이션 완료를 대기
+                    var tcs = new TaskCompletionSource<bool>();
+                    bool animationCompleted = false;
+                    
+                    entranceTween.OnComplete(() =>
+                    {
+                        if (!animationCompleted)
+                        {
+                            animationCompleted = true;
+                            tcs.TrySetResult(true);
+                            GameLogger.LogDebug($"적 등장 애니메이션 완료: {data.CharacterName}", GameLogger.LogCategory.Combat);
+                        }
+                    });
+                    
+                    // 타임아웃 설정 (최대 2초)
+                    var timeoutTask = Task.Delay(TimeSpan.FromSeconds(2.0));
+                    var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
                     
                     // 씬 전환/파괴 상태 재확인
                     if (isDestroyed || this == null || enemyInstance == null || characterSlot == null)
@@ -861,11 +962,7 @@ namespace Game.StageSystem.Manager
                         return null;
                     }
                     
-                    if (completedTask == animationTask)
-                    {
-                        GameLogger.LogDebug($"적 등장 애니메이션 완료: {data.CharacterName}", GameLogger.LogCategory.Combat);
-                    }
-                    else
+                    if (completedTask == timeoutTask && !animationCompleted)
                     {
                         GameLogger.LogDebug($"적 등장 애니메이션 타임아웃: {data.CharacterName}", GameLogger.LogCategory.Combat);
                         // 타임아웃 시 애니메이션 취소
@@ -1124,6 +1221,10 @@ namespace Game.StageSystem.Manager
             isStageCompleted = false;
             progressState = StageProgressState.NotStarted;
             
+            // 소환 데이터 초기화 (새 스테이지 시작 시 모든 소환 상태 리셋)
+            ClearSummonData();
+            isSummonInProgress = false;
+            
             // 스테이지 전환 이벤트 발생
             if (previousStage != null)
             {
@@ -1344,33 +1445,12 @@ namespace Game.StageSystem.Manager
                 GameLogger.LogDebug("[StageManager] 마지막 스테이지 완료 - 게임 완료 처리", GameLogger.LogCategory.Combat);
                 CompleteGame();
             }
-            else if (currentStage.autoProgressToNext)
-            {
-                // 다음 스테이지로 자동 진행 (즉시)
-                GameLogger.LogDebug(
-                    $"[StageManager] 다음 스테이지로 자동 진행 시도 - 현재 스테이지: {currentStage.stageNumber}, 다음 스테이지: {currentStage.stageNumber + 1}",
-                    GameLogger.LogCategory.Combat);
-                
-                if (ProgressToNextStage())
-                {
-                    GameLogger.LogDebug($"다음 스테이지로 진행: {currentStage.stageName}", GameLogger.LogCategory.Combat);
-                    
-                    // SaveSystem 제거됨
-                    
-                    StartStage();
-                }
-                else
-                {
-                    // 다음 스테이지 데이터 부재 시 치명적 에러가 아닌 안내 로그만 남기고 종료
-                    GameLogger.LogWarning(
-                        $"[StageManager] 다음 스테이지 데이터를 찾을 수 없어 자동 진행을 건너뜁니다 (현재 스테이지: {currentStage.stageNumber})",
-                        GameLogger.LogCategory.Combat);
-                }
-            }
             else
             {
+                // 승리 패널이 먼저 표시되도록 자동 진행을 하지 않음
+                // 승리 패널에서 "다음 스테이지" 버튼을 누르면 그때 진행됨
                 GameLogger.LogDebug(
-                    $"[StageManager] autoProgressToNext가 false이므로 다음 스테이지로 자동 진행하지 않습니다",
+                    $"[StageManager] 승리 패널 표시 대기 - 승리 패널에서 다음 스테이지 버튼을 눌러야 진행됩니다 (현재 스테이지: {currentStage.stageNumber})",
                     GameLogger.LogCategory.Combat);
             }
         }

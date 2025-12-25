@@ -858,6 +858,62 @@ namespace Game.CombatSystem.State
         }
 
         /// <summary>
+        /// 페이즈 전환이 허용되는 안전한 상태인지 확인합니다.
+        /// </summary>
+        /// <returns>페이즈 전환이 허용되면 true</returns>
+        public bool IsInSafeStateForPhaseTransition()
+        {
+            if (_currentState == null)
+                return false;
+
+            // 안전한 상태: PlayerTurn, EnemyTurn (카드 실행 전)
+            if (_currentState is PlayerTurnState || _currentState is EnemyTurnState)
+                return true;
+
+            // SlotMovingState는 완료되면 자동으로 다음 상태로 전환되므로, 완료될 때까지 대기
+            // (실제로는 SlotMovingState가 완료되면 PlayerTurnState나 EnemyTurnState로 전환됨)
+            if (_currentState is SlotMovingState)
+            {
+                // SlotMovingState가 완료되었는지 확인 (CanTransitionToNextState로 확인)
+                // 완료되면 다음 상태로 전환되므로 안전한 상태로 간주
+                return _currentState.CanTransitionToNextState(_context);
+            }
+
+            // 안전하지 않은 상태: CardExecution, BattleEndState, EnemyDefeatedState
+            if (_currentState is CardExecutionState || 
+                _currentState is BattleEndState || 
+                _currentState is EnemyDefeatedState)
+                return false;
+
+            // 기타 상태는 기본적으로 허용하지 않음
+            return false;
+        }
+
+        /// <summary>
+        /// 페이즈 전환을 위한 안전한 상태가 될 때까지 대기합니다.
+        /// </summary>
+        public System.Collections.IEnumerator WaitForSafeStateForPhaseTransition()
+        {
+            int maxWaitFrames = 600; // 최대 10초 (60fps 기준)
+            int waitFrames = 0;
+
+            while (!IsInSafeStateForPhaseTransition() && waitFrames < maxWaitFrames)
+            {
+                yield return null;
+                waitFrames++;
+            }
+
+            if (waitFrames >= maxWaitFrames)
+            {
+                GameLogger.LogWarning("[CombatStateMachine] 페이즈 전환을 위한 안전한 상태 대기 시간 초과", GameLogger.LogCategory.Combat);
+            }
+            else if (waitFrames > 0)
+            {
+                GameLogger.LogDebug($"[CombatStateMachine] 페이즈 전환을 위한 안전한 상태 대기 완료 ({waitFrames}프레임, 현재 상태: {_currentState?.StateName ?? "null"})", GameLogger.LogCategory.Combat);
+            }
+        }
+
+        /// <summary>
         /// 플레이어 카드 드래그가 허용되는지 확인
         /// </summary>
         public bool CanPlayerDragCard()

@@ -91,6 +91,7 @@ namespace Game.CharacterSystem.Core
         [Inject(Optional = true)] private Game.CombatSystem.Interface.ICardSlotRegistry slotRegistry;
         [Inject(Optional = true)] private Game.CombatSystem.Interface.ISlotMovementController slotMovementController;
         [Inject(Optional = true)] private Game.StageSystem.Manager.StageManager stageManager;
+        [Inject(Optional = true)] private Game.CombatSystem.State.CombatStateMachine combatStateMachine;
         private Sequence deathSequence;
 
         #region 페이즈 시스템
@@ -680,11 +681,37 @@ namespace Game.CharacterSystem.Core
                 effect.OnHealthChanged(this, previousHP, currentHP);
             }
             
-            // 페이즈 전환 체크 (카드 실행 완료 후 약간의 지연을 두고 체크)
-            // 코루틴으로 지연시켜서 카드 실행 완료 후에 체크하도록 함
+            // 페이즈 전환 체크 (즉시 조건 확인하여 플래그 설정, 이후 지연된 체크로 실제 전환 시작)
+            // 즉시 체크하여 SlotMovingState에서 적 턴으로 전환하는 것을 방지
             if (CharacterData != null && CharacterData.HasPhases && !isPhaseTransitionPending && !isDead)
             {
-                StartCoroutine(CheckPhaseTransitionDelayed(currentHP, GetMaxHP()));
+                int maxHP = GetMaxHP();
+                
+                // 즉시 페이즈 전환 조건 확인 (타이밍 문제 방지)
+                // ShouldTransitionPhase()는 isPhaseTransitionPending을 체크하므로, 여기서는 직접 체크
+                int startIndex = currentPhaseIndex < 0 ? 0 : currentPhaseIndex + 1;
+                bool shouldTransition = false;
+                
+                for (int i = startIndex; i < CharacterData.Phases.Count; i++)
+                {
+                    var phase = CharacterData.Phases[i];
+                    if (phase != null && phase.IsThresholdReached(currentHP, maxHP))
+                    {
+                        shouldTransition = true;
+                        GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환 조건 즉시 확인 - 플래그 설정 (체력: {currentHP}/{maxHP}, 페이즈: {phase.phaseName})", GameLogger.LogCategory.Character);
+                        break;
+                    }
+                }
+                
+                // 페이즈 전환이 필요하면 즉시 플래그 설정 (SlotMovingState에서 체크할 수 있도록)
+                // 실제 전환은 CheckPhaseTransitionDelayed에서 시작 (VFX/데미지 효과 완료 후)
+                if (shouldTransition)
+                {
+                    isPhaseTransitionPending = true;
+                }
+                
+                // 카드 실행 완료 후 약간의 지연을 두고 실제 페이즈 전환 시작
+                StartCoroutine(CheckPhaseTransitionDelayed(currentHP, maxHP));
             }
         }
 
@@ -775,6 +802,120 @@ namespace Game.CharacterSystem.Core
             catch (System.Exception ex)
             {
                 GameLogger.LogWarning($"[EnemyCharacter] StageManager 주입 시도 중 오류: {ex.Message}", GameLogger.LogCategory.Character);
+            }
+        }
+
+        /// <summary>
+        /// SlotMovementController가 null이면 주입을 시도합니다.
+        /// </summary>
+        private void EnsureSlotMovementControllerInjected()
+        {
+            if (slotMovementController != null) return;
+
+            try
+            {
+                var projectContext = Zenject.ProjectContext.Instance;
+                if (projectContext != null && projectContext.Container != null)
+                {
+                    // SceneContext에서 먼저 시도
+                    Zenject.DiContainer sceneContainer = null;
+                    try
+                    {
+                        var sceneContextRegistry = projectContext.Container.Resolve<Zenject.SceneContextRegistry>();
+                        sceneContainer = sceneContextRegistry.TryGetContainerForScene(gameObject.scene);
+                    }
+                    catch (System.Exception ex)
+                    {
+                        GameLogger.LogWarning($"[EnemyCharacter] SceneContextRegistry를 찾을 수 없거나 씬 컨테이너 획득 중 오류: {ex.Message}", GameLogger.LogCategory.Character);
+                    }
+
+                    // SceneContext에서 먼저 시도
+                    if (sceneContainer != null)
+                    {
+                        var resolvedController = sceneContainer.TryResolve<Game.CombatSystem.Interface.ISlotMovementController>();
+                        if (resolvedController != null)
+                        {
+                            slotMovementController = resolvedController;
+                            GameLogger.LogInfo("[EnemyCharacter] SlotMovementController 주입 완료 (SceneContext)", GameLogger.LogCategory.Character);
+                            return;
+                        }
+                    }
+
+                    // ProjectContext에서 시도
+                    var projectResolvedController = projectContext.Container.TryResolve<Game.CombatSystem.Interface.ISlotMovementController>();
+                    if (projectResolvedController != null)
+                    {
+                        slotMovementController = projectResolvedController;
+                        GameLogger.LogInfo("[EnemyCharacter] SlotMovementController 주입 완료 (ProjectContext)", GameLogger.LogCategory.Character);
+                        return;
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogWarning($"[EnemyCharacter] SlotMovementController 주입 시도 중 오류: {ex.Message}", GameLogger.LogCategory.Character);
+            }
+
+            GameLogger.LogWarning("[EnemyCharacter] SlotMovementController를 찾을 수 없습니다", GameLogger.LogCategory.Character);
+        }
+
+        /// <summary>
+        /// CombatStateMachine이 null이면 주입을 시도합니다.
+        /// </summary>
+        private void EnsureCombatStateMachineInjected()
+        {
+            if (combatStateMachine != null) return;
+
+            try
+            {
+                var projectContext = Zenject.ProjectContext.Instance;
+                if (projectContext != null && projectContext.Container != null)
+                {
+                    // SceneContext에서 먼저 시도
+                    Zenject.DiContainer sceneContainer = null;
+                    try
+                    {
+                        var sceneContextRegistry = projectContext.Container.Resolve<Zenject.SceneContextRegistry>();
+                        sceneContainer = sceneContextRegistry.TryGetContainerForScene(gameObject.scene);
+                    }
+                    catch (System.Exception ex)
+                    {
+                        GameLogger.LogWarning($"[EnemyCharacter] SceneContextRegistry를 찾을 수 없거나 씬 컨테이너 획득 중 오류: {ex.Message}", GameLogger.LogCategory.Character);
+                    }
+
+                    // SceneContext에서 먼저 시도
+                    if (sceneContainer != null)
+                    {
+                        var resolvedStateMachine = sceneContainer.TryResolve<Game.CombatSystem.State.CombatStateMachine>();
+                        if (resolvedStateMachine != null)
+                        {
+                            combatStateMachine = resolvedStateMachine;
+                            GameLogger.LogInfo("[EnemyCharacter] CombatStateMachine 주입 완료 (SceneContext)", GameLogger.LogCategory.Character);
+                            return;
+                        }
+                    }
+
+                    // ProjectContext에서 시도
+                    var projectResolvedStateMachine = projectContext.Container.TryResolve<Game.CombatSystem.State.CombatStateMachine>();
+                    if (projectResolvedStateMachine != null)
+                    {
+                        combatStateMachine = projectResolvedStateMachine;
+                        GameLogger.LogInfo("[EnemyCharacter] CombatStateMachine 주입 완료 (ProjectContext)", GameLogger.LogCategory.Character);
+                        return;
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogWarning($"[EnemyCharacter] CombatStateMachine 주입 시도 중 오류: {ex.Message}", GameLogger.LogCategory.Character);
+            }
+
+            // 직접 찾기
+            var foundStateMachine = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.State.CombatStateMachine>(UnityEngine.FindObjectsInactive.Include);
+            if (foundStateMachine != null)
+            {
+                combatStateMachine = foundStateMachine;
+                GameLogger.LogInfo("[EnemyCharacter] CombatStateMachine 직접 찾기 완료", GameLogger.LogCategory.Character);
             }
         }
 
@@ -1027,18 +1168,111 @@ namespace Game.CharacterSystem.Core
             yield return new WaitForSeconds(0.5f);
             
             // 다시 한 번 체크 (이미 전환 중이거나 죽었으면 스킵)
-            if (isPhaseTransitionPending || isDead || CharacterData == null || !CharacterData.HasPhases)
+            if (isDead || CharacterData == null || !CharacterData.HasPhases)
             {
+                // isPhaseTransitionPending이 false면 플래그를 해제하고 종료
+                if (isPhaseTransitionPending)
+                {
+                    GameLogger.LogWarning($"[{GetCharacterName()}] 페이즈 전환 플래그가 설정되어 있지만 전환 조건이 만족되지 않음 - 플래그 해제", GameLogger.LogCategory.Character);
+                    isPhaseTransitionPending = false;
+                }
                 yield break;
             }
             
-            // 현재 체력이 변경되었을 수 있으므로 다시 가져옴
-            int actualCurrentHP = GetCurrentHP();
-            int actualMaxHP = GetMaxHP();
-            
-            GameLogger.LogDebug($"[{GetCharacterName()}] 지연된 페이즈 전환 체크 시작 (체력: {actualCurrentHP}/{actualMaxHP})", GameLogger.LogCategory.Character);
-            
-            CheckPhaseTransition(actualCurrentHP, actualMaxHP);
+            // isPhaseTransitionPending이 true면 이미 NotifyHealthChanged에서 조건을 확인했으므로 실제 전환 시작
+            if (isPhaseTransitionPending)
+            {
+                // 현재 체력이 변경되었을 수 있으므로 다시 가져옴
+                int actualCurrentHP = GetCurrentHP();
+                int actualMaxHP = GetMaxHP();
+                
+                GameLogger.LogInfo($"[{GetCharacterName()}] 지연된 페이즈 전환 시작 (체력: {actualCurrentHP}/{actualMaxHP})", GameLogger.LogCategory.Character);
+                
+                // 페이즈 인덱스 찾기 (CheckPhaseTransition과 동일한 로직)
+                int startIndex = currentPhaseIndex < 0 ? 0 : currentPhaseIndex + 1;
+                int targetPhaseIndex = -1;
+                
+                for (int i = startIndex; i < CharacterData.Phases.Count; i++)
+                {
+                    var phase = CharacterData.Phases[i];
+                    if (phase != null && phase.IsThresholdReached(actualCurrentHP, actualMaxHP))
+                    {
+                        targetPhaseIndex = i;
+                        GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환 대상: {phase.phaseName} (인덱스: {i})", GameLogger.LogCategory.Character);
+                        break;
+                    }
+                }
+                
+                // 페이즈 전환 대상이 있으면 직접 코루틴 시작 (StartPhaseTransition은 플래그 체크 때문에 사용 불가)
+                if (targetPhaseIndex >= 0)
+                {
+                    GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환 코루틴 직접 시작: 페이즈 인덱스 {targetPhaseIndex}", GameLogger.LogCategory.Character);
+                    StartCoroutine(TransitionToPhaseCoroutine(targetPhaseIndex));
+                }
+                else
+                {
+                    GameLogger.LogWarning($"[{GetCharacterName()}] 페이즈 전환 플래그가 설정되어 있지만 전환 대상 페이즈를 찾을 수 없음 - 플래그 해제", GameLogger.LogCategory.Character);
+                    isPhaseTransitionPending = false;
+                }
+            }
+            else
+            {
+                // 플래그가 설정되지 않았으면 조건 재확인 (안전장치)
+                int actualCurrentHP = GetCurrentHP();
+                int actualMaxHP = GetMaxHP();
+                
+                if (ShouldTransitionPhase())
+                {
+                    GameLogger.LogInfo($"[{GetCharacterName()}] 지연된 페이즈 전환 체크에서 조건 만족 - 전환 시작 (체력: {actualCurrentHP}/{actualMaxHP})", GameLogger.LogCategory.Character);
+                    CheckPhaseTransition(actualCurrentHP, actualMaxHP);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 페이즈 전환이 진행 중인지 확인합니다 (외부에서 호출 가능).
+        /// </summary>
+        /// <returns>페이즈 전환이 진행 중이면 true</returns>
+        public bool IsPhaseTransitionPending()
+        {
+            return isPhaseTransitionPending;
+        }
+
+        /// <summary>
+        /// 페이즈 전환이 필요한지 확인합니다 (외부에서 호출 가능).
+        /// </summary>
+        /// <returns>페이즈 전환이 필요하면 true</returns>
+        public bool ShouldTransitionPhase()
+        {
+            if (isPhaseTransitionPending || isDead || CharacterData == null || !CharacterData.HasPhases)
+                return false;
+
+            int currentHP = GetCurrentHP();
+            int maxHP = GetMaxHP();
+            if (maxHP <= 0)
+                return false;
+
+            // 현재 페이즈 인덱스 확인
+            int startIndex = (currentPhaseIndex < 0) ? 0 : (currentPhaseIndex + 1);
+
+            // 다음 페이즈들 체크
+            for (int i = startIndex; i < CharacterData.Phases.Count; i++)
+            {
+                var phase = CharacterData.Phases[i];
+                if (phase == null)
+                    continue;
+
+                float currentHealthRatio = (float)currentHP / maxHP;
+                bool thresholdReached = phase.IsThresholdReached(currentHP, maxHP);
+
+                if (thresholdReached)
+                {
+                    GameLogger.LogDebug($"[{GetCharacterName()}] 페이즈 전환 필요 확인: {phase.phaseName} (체력: {currentHP}/{maxHP}, 비율: {currentHealthRatio:P2} <= {phase.healthThreshold:P2})", GameLogger.LogCategory.Character);
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -1099,10 +1333,16 @@ namespace Game.CharacterSystem.Core
         /// <param name="phaseIndex">전환할 페이즈 인덱스</param>
         private void StartPhaseTransition(int phaseIndex)
         {
+            // 이미 전환 중이면 중복 시작 방지
             if (isPhaseTransitionPending)
+            {
+                GameLogger.LogDebug($"[{GetCharacterName()}] 페이즈 전환이 이미 진행 중 - 중복 시작 방지", GameLogger.LogCategory.Character);
                 return;
+            }
 
+            // 플래그 설정 (NotifyHealthChanged에서 이미 설정했을 수 있지만, 안전을 위해 여기서도 설정)
             isPhaseTransitionPending = true;
+            GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환 코루틴 시작: 페이즈 인덱스 {phaseIndex}", GameLogger.LogCategory.Character);
             StartCoroutine(TransitionToPhaseCoroutine(phaseIndex));
         }
 
@@ -1183,6 +1423,21 @@ namespace Game.CharacterSystem.Core
 
             GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환 시작: {previousPhaseName} → {newPhase.phaseName} (체력: {GetCurrentHP()}/{GetMaxHP()})", GameLogger.LogCategory.Character);
 
+            // 상태 머신이 안전한 상태가 될 때까지 대기 (가장 중요)
+            EnsureCombatStateMachineInjected();
+            if (combatStateMachine != null)
+            {
+                GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환: 상태 머신 안전 상태 대기 시작 (현재 상태: {combatStateMachine.GetCurrentState()?.StateName ?? "null"})", GameLogger.LogCategory.Character);
+                yield return combatStateMachine.WaitForSafeStateForPhaseTransition();
+                GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환: 상태 머신 안전 상태 도달 (현재 상태: {combatStateMachine.GetCurrentState()?.StateName ?? "null"})", GameLogger.LogCategory.Character);
+            }
+            else
+            {
+                GameLogger.LogWarning($"[{GetCharacterName()}] CombatStateMachine를 찾을 수 없습니다 - 슬롯 이동 대기로 대체", GameLogger.LogCategory.Character);
+                // 상태 머신이 없으면 슬롯 이동 대기로 대체
+                yield return StartCoroutine(WaitForSlotMovementToComplete());
+            }
+
             // 슬롯 이동이 완료될 때까지 대기 (타이밍 충돌 방지)
             yield return StartCoroutine(WaitForSlotMovementToComplete());
 
@@ -1199,6 +1454,33 @@ namespace Game.CharacterSystem.Core
             GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환 완료: {newPhase.phaseName}", GameLogger.LogCategory.Character);
 
             isPhaseTransitionPending = false;
+
+            // 페이즈 전환 완료 후 적 턴으로 자동 전환 (SlotMovingState에서 적 턴으로 전환하려고 했던 경우)
+            // 상태 머신이 SlotMovingState이거나 적 턴으로 전환할 준비가 되어 있으면 적 턴으로 전환
+            EnsureCombatStateMachineInjected();
+            if (combatStateMachine != null)
+            {
+                var currentState = combatStateMachine.GetCurrentState();
+                // SlotMovingState에서 적 턴으로 전환하려고 했지만 페이즈 전환 때문에 건너뛴 경우
+                // 또는 현재 상태가 안전한 상태인 경우 적 턴으로 전환
+                if (currentState is Game.CombatSystem.State.SlotMovingState || 
+                    (currentState is Game.CombatSystem.State.PlayerTurnState && combatStateMachine.IsInSafeStateForPhaseTransition()))
+                {
+                    // 배틀 슬롯에 적 카드가 있는지 확인
+                    if (slotRegistry != null)
+                    {
+                        var battleCard = slotRegistry.GetCardInSlot(Game.CombatSystem.Slot.CombatSlotPosition.BATTLE_SLOT);
+                        if (battleCard != null && !battleCard.IsFromPlayer())
+                        {
+                            GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환 완료 후 적 턴으로 자동 전환 시작", GameLogger.LogCategory.Character);
+                            // 적 턴으로 전환
+                            var enemyTurnState = new Game.CombatSystem.State.EnemyTurnState();
+                            combatStateMachine.ChangeState(enemyTurnState);
+                            yield break;
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -1454,27 +1736,20 @@ namespace Game.CharacterSystem.Core
         /// </summary>
         private System.Collections.IEnumerator ClearEnemyCardsAndRegenerateCoroutine()
         {
-            // ICardSlotRegistry 찾기 (여러 방법 시도)
-            var registry = slotRegistry;
-            if (registry == null)
+            // SlotMovementController 주입 확인 및 수동 주입 시도
+            EnsureSlotMovementControllerInjected();
+            
+            // SlotMovementController가 없으면 슬롯 초기화 불가
+            if (slotMovementController == null)
             {
-                // 방법 1: slotMovementController를 통해 접근
-                if (slotMovementController != null)
-                {
-                    var slotMovementControllerImpl = slotMovementController as Game.CombatSystem.Manager.SlotMovementController;
-                    if (slotMovementControllerImpl != null)
-                    {
-                        registry = slotMovementControllerImpl.GetCardSlotRegistry();
-                    }
-                }
+                GameLogger.LogWarning($"[{GetCharacterName()}] SlotMovementController를 찾을 수 없습니다 - 슬롯 초기화 건너뜀", GameLogger.LogCategory.Character);
+                yield break;
             }
 
-            // registry는 이미 DI로 주입받음 (slotRegistry)
-            // SceneContext는 더 이상 필요하지 않음
-
-            if (registry == null)
+            var slotMovementControllerImpl = slotMovementController as Game.CombatSystem.Manager.SlotMovementController;
+            if (slotMovementControllerImpl == null)
             {
-                GameLogger.LogWarning($"[{GetCharacterName()}] ICardSlotRegistry를 찾을 수 없습니다 - 슬롯 카드 제거 건너뜀", GameLogger.LogCategory.Character);
+                GameLogger.LogWarning($"[{GetCharacterName()}] SlotMovementController를 구체 클래스로 캐스팅할 수 없습니다", GameLogger.LogCategory.Character);
                 yield break;
             }
 
@@ -1484,48 +1759,62 @@ namespace Game.CharacterSystem.Core
                 yield break;
             }
 
-            // 적 카드가 있는 슬롯 찾기
-            var enemySlots = new List<Game.CombatSystem.Slot.CombatSlotPosition>();
-            var allSlots = new[]
+            // ICardSlotRegistry 찾기 (여러 방법 시도)
+            var registry = slotRegistry;
+            if (registry == null)
             {
-                Game.CombatSystem.Slot.CombatSlotPosition.BATTLE_SLOT,
-                Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_1,
-                Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_2,
-                Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_3,
-                Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_4
-            };
+                // slotMovementController를 통해 접근
+                registry = slotMovementControllerImpl.GetCardSlotRegistry();
+            }
 
-            foreach (var slot in allSlots)
+            // 적 카드 제거 (registry가 있으면 직접 제거, 없으면 RefillAllCombatSlotsWithEnemyDeckCoroutine에서 처리)
+            if (registry != null)
             {
-                var card = registry.GetCardInSlot(slot);
-                if (card != null && !card.IsFromPlayer())
+                // 적 카드가 있는 슬롯 찾기
+                var enemySlots = new List<Game.CombatSystem.Slot.CombatSlotPosition>();
+                var allSlots = new[]
                 {
-                    enemySlots.Add(slot);
+                    Game.CombatSystem.Slot.CombatSlotPosition.BATTLE_SLOT,
+                    Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_1,
+                    Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_2,
+                    Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_3,
+                    Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_4
+                };
+
+                foreach (var slot in allSlots)
+                {
+                    var card = registry.GetCardInSlot(slot);
+                    if (card != null && !card.IsFromPlayer())
+                    {
+                        enemySlots.Add(slot);
+                    }
                 }
-            }
 
-            // 적 카드 제거
-            foreach (var slot in enemySlots)
+                // 적 카드 제거
+                foreach (var slot in enemySlots)
+                {
+                    registry.ClearSlot(slot);
+                    GameLogger.LogDebug($"[{GetCharacterName()}] 슬롯 카드 제거: {slot}", GameLogger.LogCategory.Character);
+                }
+
+                GameLogger.LogInfo($"[{GetCharacterName()}] 적 카드 제거 완료 ({enemySlots.Count}개 슬롯)", GameLogger.LogCategory.Character);
+            }
+            else
             {
-                registry.ClearSlot(slot);
-                GameLogger.LogDebug($"[{GetCharacterName()}] 슬롯 카드 제거: {slot}", GameLogger.LogCategory.Character);
+                GameLogger.LogWarning($"[{GetCharacterName()}] ICardSlotRegistry를 찾을 수 없지만 SlotMovementController를 통해 슬롯 초기화 진행", GameLogger.LogCategory.Character);
             }
-
-            GameLogger.LogInfo($"[{GetCharacterName()}] 적 카드 제거 완료 ({enemySlots.Count}개 슬롯)", GameLogger.LogCategory.Character);
 
             // SlotMovementController의 적 덱 캐시 업데이트
-            // 이후 자동 보충 로직이 빈 슬롯을 채우도록 함
-            if (slotMovementController != null)
-            {
-                var currentEnemyData = CharacterData;
-                var currentEnemyName = GetCharacterName();
-                slotMovementController.UpdateEnemyCache(currentEnemyData, currentEnemyName);
-                GameLogger.LogDebug($"[{GetCharacterName()}] SlotMovementController 적 덱 캐시 업데이트 완료", GameLogger.LogCategory.Character);
-            }
+            var currentEnemyData = CharacterData as Game.CharacterSystem.Data.EnemyCharacterData;
+            var currentEnemyName = GetCharacterName();
+            slotMovementController.UpdateEnemyCache(currentEnemyData, currentEnemyName);
+            GameLogger.LogDebug($"[{GetCharacterName()}] SlotMovementController 적 덱 캐시 업데이트 완료", GameLogger.LogCategory.Character);
 
-            // 빈 슬롯이 있으면 SlotMovementController의 자동 보충 로직이 처리하도록 함
-            // MoveAllSlotsForwardRoutine이 자동으로 RefillWaitSlot4IfNeededRoutine을 호출하여 빈 슬롯을 채움
-            GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환 후 슬롯 재채우기 완료 - SlotMovementController의 자동 보충 로직이 빈 슬롯을 채울 것입니다", GameLogger.LogCategory.Character);
+            // SlotMovementController를 통해 모든 전투/대기 슬롯을 새 덱으로 채우기
+            // 이 메서드는 내부에서 ICardSlotRegistry를 직접 사용하므로 registry가 null이어도 문제없음
+            GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환: 모든 전투/대기 슬롯을 새 덱으로 채우기 시작", GameLogger.LogCategory.Character);
+            yield return slotMovementControllerImpl.RefillAllCombatSlotsWithEnemyDeckCoroutine();
+            GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환: 모든 전투/대기 슬롯 재채우기 완료", GameLogger.LogCategory.Character);
         }
 
         #endregion

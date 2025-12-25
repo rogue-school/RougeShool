@@ -75,6 +75,18 @@ namespace Game.CombatSystem.State
                     LogStateTransition("턴별 효과 처리 후 적 사망 감지 - 카드 실행 건너뜀");
                     return;
                 }
+
+                // 페이즈 전환 조건 체크 (적 카드 실행 전)
+                if (currentEnemy is Game.CharacterSystem.Core.EnemyCharacter enemyChar)
+                {
+                    if (enemyChar.ShouldTransitionPhase())
+                    {
+                        LogStateTransition("페이즈 전환 조건 만족 - 적 카드 실행 건너뛰고 페이즈 전환 시작");
+                        // 페이즈 전환은 EnemyCharacter에서 자동으로 시작됨
+                        // 여기서는 적 카드 실행을 건너뛰기만 함
+                        return;
+                    }
+                }
             }
 
             // 플레이어 손패 정리 (적 턴에는 플레이어가 카드를 낼 수 없음)

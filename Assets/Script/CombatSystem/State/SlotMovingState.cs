@@ -221,7 +221,33 @@ namespace Game.CombatSystem.State
             }
             else if (isEnemySkillCard)
             {
-                // 적 스킬카드 → 적 턴
+                // 적 스킬카드 → 적 턴 전환 전에 페이즈 전환 체크
+                if (context?.EnemyManager != null)
+                {
+                    var currentEnemy = context.EnemyManager.GetCharacter();
+                    if (currentEnemy is Game.CharacterSystem.Core.EnemyCharacter enemyChar)
+                    {
+                        // 페이즈 전환이 진행 중이면 적 턴으로 전환하지 않음
+                        if (enemyChar.IsPhaseTransitionPending())
+                        {
+                            LogStateTransition($"페이즈 전환이 진행 중 - 적 턴 전환 건너뛰고 페이즈 전환 완료 대기");
+                            // 페이즈 전환이 완료되면 다시 적 턴으로 전환될 것임
+                            return;
+                        }
+
+                        // 페이즈 전환 조건이 만족되면 적 턴으로 전환하지 않음
+                        if (enemyChar.ShouldTransitionPhase())
+                        {
+                            LogStateTransition($"페이즈 전환 조건 만족 - 적 턴 전환 건너뛰고 페이즈 전환 시작");
+                            // 페이즈 전환은 EnemyCharacter에서 자동으로 시작됨
+                            // 여기서는 적 턴으로 전환하지 않음
+                            // 페이즈 전환이 완료되면 다시 적 턴으로 전환될 것임
+                            return;
+                        }
+                    }
+                }
+
+                // 페이즈 전환 조건이 없으면 정상적으로 적 턴으로 전환
                 LogStateTransition($"적 스킬카드 감지 → 적 턴 시작: {battleCard.GetCardName()}");
                 var enemyTurnState = new EnemyTurnState();
                 RequestTransition(context, enemyTurnState);

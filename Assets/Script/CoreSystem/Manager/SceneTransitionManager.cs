@@ -165,6 +165,21 @@ namespace Game.CoreSystem.Manager
 		{
 			stageManager.CleanupStageBGM();
 		}
+		
+		// ItemService 초기화 (DontDestroyOnLoad이므로 메인 메뉴로 이동 시 초기화 필요)
+		try
+		{
+			var itemService = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Service.ItemService>(UnityEngine.FindObjectsInactive.Include);
+			if (itemService != null)
+			{
+				itemService.ResetInventoryForNewGame();
+				GameLogger.LogInfo("[SceneTransitionManager] 메인 씬 전환 시 ItemService 초기화 완료", GameLogger.LogCategory.UI);
+			}
+		}
+		catch (System.Exception ex)
+		{
+			GameLogger.LogWarning($"[SceneTransitionManager] ItemService 초기화 중 오류: {ex.Message}", GameLogger.LogCategory.UI);
+		}
 
 			// 기존 BGM 정지 (추가 안전장치)
 			StopCurrentBGM();

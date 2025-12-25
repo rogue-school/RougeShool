@@ -589,19 +589,30 @@ namespace Game.ItemSystem.Service
                             if (add > 0)
                             {
                                 int prevHP = player.GetCurrentHP();
-                                int newMax = player.GetMaxHP() + add;
+                                int prevMax = player.GetMaxHP();
+                                int newMax = prevMax + add;
+                                
+                                GameLogger.LogInfo($"[ItemService] 패시브 아이템으로 최대 체력 증가: {prevMax} → {newMax} (+{add})", GameLogger.LogCategory.Core);
+                                
                                 // ICharacter는 SetMaxHP가 없으므로 CharacterBase로 캐스팅하여 적용
                                 if (player is Game.CharacterSystem.Core.CharacterBase cb)
                                 {
+                                    // SetMaxHP는 자동으로 현재 체력을 비례하여 증가시킴
+                                    // 추가로 증가한 만큼 회복 (이전 HP + 증가량, 단 최대치 초과 금지)
                                     cb.SetMaxHP(newMax);
-                                    // 증가한 만큼 즉시 회복 (이전 HP + 증가량, 단 최대치 초과 금지)
                                     int healed = Mathf.Min(prevHP + add, newMax);
                                     cb.SetCurrentHP(healed);
+                                    
+                                    GameLogger.LogInfo($"[ItemService] 체력 회복: {prevHP} → {healed}/{newMax}", GameLogger.LogCategory.Core);
                                 }
                                 else
                                 {
                                     GameLogger.LogWarning("[ItemService] SetMaxHP를 적용할 수 없습니다 (CharacterBase 아님)", GameLogger.LogCategory.Core);
                                 }
+                            }
+                            else
+                            {
+                                GameLogger.LogWarning($"[ItemService] 패시브 아이템 체력 증가량이 0입니다 (level: {level}, increments: {incs.Length})", GameLogger.LogCategory.Core);
                             }
                         }
                     }
@@ -854,10 +865,21 @@ namespace Game.ItemSystem.Service
                 if (inventoryController != null)
                 {
                     inventoryController.ClearAllItemPrefabs();
+                    GameLogger.LogInfo("[ItemService] 인벤토리 UI 정리 완료", GameLogger.LogCategory.Core);
                 }
                 else
                 {
-                    GameLogger.LogWarning("[ItemService] InventoryPanelController를 찾을 수 없습니다", GameLogger.LogCategory.Core);
+                    // Fallback: FindFirstObjectByType으로 찾기
+                    var foundController = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Runtime.InventoryPanelController>(UnityEngine.FindObjectsInactive.Include);
+                    if (foundController != null)
+                    {
+                        foundController.ClearAllItemPrefabs();
+                        GameLogger.LogInfo("[ItemService] InventoryPanelController를 FindFirstObjectByType으로 찾아서 UI 정리 완료", GameLogger.LogCategory.Core);
+                    }
+                    else
+                    {
+                        GameLogger.LogWarning("[ItemService] InventoryPanelController를 찾을 수 없습니다", GameLogger.LogCategory.Core);
+                    }
                 }
             }
             catch (System.Exception ex)

@@ -31,7 +31,7 @@
 | **SkillCardTooltip / SkillCardTooltipManager / Tooltip* (Model/Builder/PlacementPolicy) / Tooltip Mappers** | `Game.SkillCardSystem.UI` | `UI/*.cs`, `UI/Mappers/*.cs` | 카드 툴팁 데이터/빌더/배치/매핑/표시 전반 | `ShowTooltip(...)`, `HideTooltip()` 등 | 툴팁 텍스트/아이콘/모델 | `SkillCardTooltipManager`는 `CoreSystemInstaller`에서 매니저로 AsSingle 바인딩, 나머지는 컴포넌트/헬퍼 | 카드 UI, Character/Stage/Combat 툴팁 표시 | ✅ 사용 중 |
 | **Slot/Registry (SlotRegistry, HandSlotRegistry, CombatSlotRegistry, CharacterSlotRegistry)** | `Game.SkillCardSystem.Slot` | `Slot/*.cs` | 카드 슬롯 레지스트리/앵커/포지션 관리 | `RegisterSlot(...)`, `GetSlot(...)` 등 | 슬롯 컬렉션, 포지션 enum | CombatInstaller/카드 인스톨러에서 AsSingle 또는 씬 컴포넌트로 사용 | TurnManager, CardDropService, Drag&Drop, UI | ✅ 사용 중 |
 | **Slot Positions (SkillCardSlotPosition, CombatSlotPosition, CombatFieldSlotPosition)** | `Game.SkillCardSystem.Slot` | `Slot/*.cs` | 카드/전투 슬롯 위치 열거형/구조체 | - | enum/구조체 값 | DI 없음 | CardSlotRegistry, SlotMovementController, SkillCard/Tooltips | ✅ 사용 중 |
-| **Drag&Drop (CardDropService, CardDropToSlotHandler, CardDropToHandHandler, CardDragHandler)** | `Game.SkillCardSystem.DragDrop` | `DragDrop/*.cs` | 카드 드래그&드랍/슬롯 등록/입력 처리 | `RegisterHandlers(...)` 등 | 드랍 핸들러 참조, 카드 UI 참조 | `CardDropService`는 CombatInstaller에서 AsSingle (`SkillCardSystem`과 공유), 나머지는 씬 컴포넌트 | CombatSystem, SkillCard UI 상호작용 | ✅ 사용 중 |
+| **Drag&Drop (CardDropService, CardDropToSlotHandler, CardDropToHandHandler, CardDragHandler)** | `Game.CombatSystem.Service` (CardDropService), `Game.CombatSystem.DragDrop` (나머지) | `DragDrop/*.cs` (파일 위치는 SkillCardSystem이지만 네임스페이스는 CombatSystem) | 카드 드래그&드랍/슬롯 등록/입력 처리 | `RegisterHandlers(...)` 등 | 드랍 핸들러 참조, 카드 UI 참조 | `CardDropService`는 CombatInstaller에서 AsSingle (`SkillCardSystem`과 공유), 나머지는 씬 컴포넌트 | CombatSystem, SkillCard UI 상호작용 | ✅ 사용 중 |
 | **EffectCommandFactory / ICardEffectCommandFactory / ICardEffectCommand / ICardEffect / SkillCardEffectSO** | `Game.SkillCardSystem.Effect` / `Game.SkillCardSystem.Interface` | `Effect/EffectCommandFactory.cs`, `Interface/*.cs`, `Effect/SkillCardEffectSO.cs` | 카드 효과(명령/전략/SO) 생성/인터페이스/기본 SO | `CreateCommand(...)` 등 | 효과 SO, 명령 매핑 | `SkillCard` 내부의 static `EffectCommandFactory`로 사용 (DI 바인딩 없음) | SkillCard, 개별 효과 전략들 | ✅ 사용 중 |
 | **IEffectCommandStrategy** | `Game.SkillCardSystem.Effect` | `Effect/IEffectCommandStrategy.cs` | 효과 커맨드 생성 전략 인터페이스 | `CreateCommand(...)`, `CanHandle(...)` | - | 인터페이스 타입 | 각 효과 전략 구현체들 (DamageEffectStrategy, HealEffectStrategy 등) | ✅ 사용 중 |
 | **DamageEffectCommand/Strategy/SO, HealEffect*, GuardEffect*, BleedEffect*, CounterEffect*, ResourceGainEffect*, StunEffect*, CardUseStackEffect*, AttackPowerBuffSkillEffectSO/Strategy, ReplayPreviousTurnCardEffectSO/Strategy/Command, ResourceEffectStrategy** | `Game.SkillCardSystem.Effect` | `Effect/*.cs` | 개별 카드 효과(데미지/힐/가드/출혈/카운터/자원/스턴/사용스택/공격력버프/이전턴재실행 등) 구현 | `ExecuteAsync(...)`, `CreateEffectCommand(...)` 등 | 효과별 설정 필드 | 에셋(SO) + 런타임 명령, DI 없음 | SkillCard에서 효과 명령으로 사용, Combat/Character 상태 변화 | ✅ 사용 중 |
@@ -218,6 +218,8 @@ Assets/Script/SkillCardSystem/
 │       ├── EffectTooltipMapper.cs
 │       ├── PerTurnEffectTooltipMapper.cs
 │       └── SkillCardTooltipMapper.cs
+├── Utility/
+│   └── SkillCardConfigExtensions.cs
 ├── Validator/
 │   ├── CardDefinitionValidator.cs
 │   └── DefaultCardExecutionValidator.cs

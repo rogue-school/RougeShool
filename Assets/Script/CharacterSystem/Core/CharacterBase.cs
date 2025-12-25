@@ -220,9 +220,29 @@ namespace Game.CharacterSystem.Core
                 throw new ArgumentException($"최대 체력은 양수여야 합니다. 입력값: {value}", nameof(value));
             }
 
+            int oldMaxHP = maxHP;
             maxHP = value;
-            currentHP = maxHP;
+            
+            // 최대 체력이 증가한 경우, 현재 체력도 비례하여 증가 (단, 최대치 초과 금지)
+            if (value > oldMaxHP && oldMaxHP > 0)
+            {
+                // 비율 유지: (현재 체력 / 이전 최대 체력) * 새 최대 체력
+                float ratio = (float)currentHP / oldMaxHP;
+                currentHP = Mathf.Min(Mathf.RoundToInt(ratio * maxHP), maxHP);
+            }
+            // 최대 체력이 감소한 경우, 현재 체력을 새 최대치로 제한
+            else if (value < oldMaxHP)
+            {
+                currentHP = Mathf.Min(currentHP, maxHP);
+            }
+            // 최대 체력이 처음 설정되는 경우 (oldMaxHP == 0)
+            else if (oldMaxHP == 0)
+            {
+                currentHP = maxHP;
+            }
+            
             OnHPChanged?.Invoke(currentHP, maxHP);
+            GameLogger.LogInfo($"[{GetCharacterName()}] 최대 체력 변경: {oldMaxHP} → {maxHP}, 현재 체력: {currentHP}", GameLogger.LogCategory.Character);
         }
 
         /// <summary>현재 체력을 직접 설정합니다 (최대 체력을 초과할 수 없음)</summary>

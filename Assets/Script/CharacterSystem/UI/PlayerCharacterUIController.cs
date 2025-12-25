@@ -260,6 +260,10 @@ namespace Game.CharacterSystem.UI
                 return;
             }
 
+            // 이전 캐릭터의 이벤트 구독 해제 (중요: 새 캐릭터로 교체하기 전에 해제)
+            UnsubscribeCharacterEvents();
+            UnsubscribeItemServiceEvents();
+
             playerCharacter = character;
             characterType = (character.CharacterData as PlayerCharacterData)?.CharacterType ?? PlayerCharacterType.Sword;
             
@@ -277,11 +281,14 @@ namespace Game.CharacterSystem.UI
             UpdateHPBar();
             UpdateMPBar();
 
+            // 새 캐릭터의 이벤트 구독
             SubscribeCharacterEvents();
             SubscribeItemServiceEvents();
             
             // 초기 패시브 아이템 로드
             RefreshPassiveItemIcons();
+            
+            GameLogger.LogInfo($"[PlayerCharacterUIController] Initialize 완료: {character.GetCharacterName()}, HP: {character.GetCurrentHP()}/{character.GetMaxHP()}", GameLogger.LogCategory.UI);
         }
         
         /// <summary>
@@ -339,7 +346,19 @@ namespace Game.CharacterSystem.UI
         /// </summary>
         private void SubscribeCharacterEvents()
         {
-            if (isSubscribed || playerCharacter == null) return;
+            if (playerCharacter == null)
+            {
+                GameLogger.LogWarning("[PlayerCharacterUIController] SubscribeCharacterEvents: playerCharacter가 null입니다", GameLogger.LogCategory.UI);
+                return;
+            }
+            
+            // 이미 구독 중이면 먼저 해제 (중복 구독 방지)
+            if (isSubscribed)
+            {
+                GameLogger.LogWarning("[PlayerCharacterUIController] SubscribeCharacterEvents: 이미 구독 중입니다. 먼저 해제합니다", GameLogger.LogCategory.UI);
+                UnsubscribeCharacterEvents();
+            }
+            
             playerCharacter.OnHPChanged += OnHpChangedHandler;
             playerCharacter.OnBuffsChanged += OnBuffsChangedHandler;
             if (playerManager != null)
@@ -347,6 +366,8 @@ namespace Game.CharacterSystem.UI
                 playerManager.OnResourceChanged += OnResourceChangedByManager;
             }
             isSubscribed = true;
+            
+            GameLogger.LogDebug($"[PlayerCharacterUIController] 이벤트 구독 완료: {playerCharacter.GetCharacterName()}", GameLogger.LogCategory.UI);
         }
 
         /// <summary>
@@ -354,13 +375,25 @@ namespace Game.CharacterSystem.UI
         /// </summary>
         private void UnsubscribeCharacterEvents()
         {
-            if (!isSubscribed || playerCharacter == null) return;
-            playerCharacter.OnHPChanged -= OnHpChangedHandler;
-            playerCharacter.OnBuffsChanged -= OnBuffsChangedHandler;
+            if (!isSubscribed) return;
+            
+            // playerCharacter가 null이어도 이벤트 해제 시도 (파괴된 캐릭터의 경우)
+            if (playerCharacter != null)
+            {
+                playerCharacter.OnHPChanged -= OnHpChangedHandler;
+                playerCharacter.OnBuffsChanged -= OnBuffsChangedHandler;
+                GameLogger.LogDebug($"[PlayerCharacterUIController] 이벤트 구독 해제: {playerCharacter.GetCharacterName()}", GameLogger.LogCategory.UI);
+            }
+            else
+            {
+                GameLogger.LogDebug("[PlayerCharacterUIController] 이벤트 구독 해제: playerCharacter가 null입니다 (이미 파괴됨)", GameLogger.LogCategory.UI);
+            }
+            
             if (playerManager != null)
             {
                 playerManager.OnResourceChanged -= OnResourceChangedByManager;
             }
+            
             isSubscribed = false;
         }
 
@@ -467,6 +500,7 @@ namespace Game.CharacterSystem.UI
 
         private void OnHpChangedHandler(int current, int max)
         {
+            GameLogger.LogDebug($"[PlayerCharacterUIController] OnHpChangedHandler 호출: {current}/{max}, hpBarFill: {(hpBarFill != null ? "있음" : "null")}", GameLogger.LogCategory.UI);
             UpdateHPBar();
         }
 
@@ -659,14 +693,30 @@ namespace Game.CharacterSystem.UI
         /// </summary>
         public void UpdateHPBar()
         {
-            if (playerCharacter == null || hpBarFill == null) return;
+            if (playerCharacter == null)
+            {
+                GameLogger.LogWarning("[PlayerCharacterUIController] UpdateHPBar: playerCharacter가 null입니다", GameLogger.LogCategory.UI);
+                return;
+            }
+            
+            if (hpBarFill == null)
+            {
+                GameLogger.LogWarning("[PlayerCharacterUIController] UpdateHPBar: hpBarFill이 null입니다", GameLogger.LogCategory.UI);
+                return;
+            }
 
             int currentHP = playerCharacter.GetCurrentHP();
             int maxHP = playerCharacter.GetMaxHP();
             
-            if (maxHP <= 0) return;
+            if (maxHP <= 0)
+            {
+                GameLogger.LogWarning($"[PlayerCharacterUIController] UpdateHPBar: maxHP가 0 이하입니다 ({maxHP})", GameLogger.LogCategory.UI);
+                return;
+            }
 
             float hpRatio = (float)currentHP / maxHP;
+            
+            GameLogger.LogDebug($"[PlayerCharacterUIController] UpdateHPBar: {currentHP}/{maxHP} (ratio: {hpRatio:F2})", GameLogger.LogCategory.UI);
             
             // HP 바 애니메이션
             AnimateHPBar(hpRatio);
