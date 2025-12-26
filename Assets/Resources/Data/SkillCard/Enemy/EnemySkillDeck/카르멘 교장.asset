@@ -14,14 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cards:
   - definition: {fileID: 11400000, guid: f2635e717b64bee43975e02246883a88, type: 2}
-    probability: 1
+    probability: 0.5
     damageOverride: -1
   - definition: {fileID: 11400000, guid: 77e1b7ede55114b44a8389ab4652d650, type: 2}
-    probability: 1
+    probability: 0.3
     damageOverride: -1
   - definition: {fileID: 11400000, guid: 485938abdf62a64419a0efb58b0517a3, type: 2}
     probability: 1
     damageOverride: -1
   - definition: {fileID: 11400000, guid: 355e3a6f92d58754db2fdc98cee29739, type: 2}
-    probability: 1
+    probability: 0.1
     damageOverride: -1

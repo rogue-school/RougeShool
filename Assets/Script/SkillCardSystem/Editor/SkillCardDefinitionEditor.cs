@@ -303,6 +303,12 @@ namespace Game.SkillCardSystem.Editor
                 EditorGUILayout.LabelField("운명의 실 효과 설정", EditorStyles.boldLabel);
                 settings.threadOfFateDuration = EditorGUILayout.IntField("운명의 실 디버프 지속 턴 수", Mathf.Max(1, settings.threadOfFateDuration));
             }
+            else if (effectSO is StormOfSpaceTimeEffectSO)
+            {
+                EditorGUILayout.LabelField("시공의 폭풍 효과 설정", EditorStyles.boldLabel);
+                settings.stormOfSpaceTimeTargetDamage = EditorGUILayout.IntField("목표 데미지 수치", Mathf.Max(1, settings.stormOfSpaceTimeTargetDamage));
+                settings.stormOfSpaceTimeDuration = EditorGUILayout.IntField("지속 턴 수", Mathf.Max(1, settings.stormOfSpaceTimeDuration));
+            }
             // TODO: 향후 추가될 EffectSO 타입들을 위한 예약 공간
             // else if (effectSO is DrawEffectSO)
             // {

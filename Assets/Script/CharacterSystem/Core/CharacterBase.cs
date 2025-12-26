@@ -168,6 +168,22 @@ namespace Game.CharacterSystem.Core
             return false;
         }
 
+        /// <summary>
+        /// 특정 타입의 효과를 반환합니다.
+        /// </summary>
+        /// <typeparam name="T">효과 타입</typeparam>
+        /// <returns>효과 인스턴스 (없으면 null)</returns>
+        public T GetEffect<T>() where T : class, IPerTurnEffect
+        {
+            for (int i = 0; i < perTurnEffects.Count; i++)
+            {
+                var effect = perTurnEffects[i];
+                if (effect is T typedEffect)
+                    return typedEffect;
+            }
+            return null;
+        }
+
         /// <summary>체력을 회복시킵니다</summary>
         /// <param name="amount">회복량</param>
         public virtual void Heal(int amount)

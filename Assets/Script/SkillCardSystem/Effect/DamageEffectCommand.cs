@@ -267,6 +267,17 @@ namespace Game.SkillCardSystem.Effect
                 {
                     ApplyDamageCustom(target, effectiveDamage);
                     totalDamage += effectiveDamage;
+                    
+                    // 시공의 폭풍 디버프 추적: 플레이어가 적에게 데미지를 입힐 때
+                    // 주의: 시공의 폭풍은 플레이어에게 적용되는 디버프이므로, 플레이어가 적에게 데미지를 입힐 때 플레이어의 디버프를 확인해야 함
+                    if (source != null && source.IsPlayerControlled() && source is Game.CharacterSystem.Core.CharacterBase playerCharacter)
+                    {
+                        var stormDebuff = playerCharacter.GetEffect<StormOfSpaceTimeDebuff>();
+                        if (stormDebuff != null)
+                        {
+                            stormDebuff.AddDamage(effectiveDamage);
+                        }
+                    }
                 }
             }
 
@@ -454,6 +465,16 @@ namespace Game.SkillCardSystem.Effect
                 {
                     ApplyDamageCustom(target, perHitDamage);
                     totalDamage += perHitDamage;
+                    
+                    // 시공의 폭풍 디버프 추적: 플레이어가 적에게 데미지를 입힐 때 (다단 히트)
+                    if (source != null && source.IsPlayerControlled() && source is Game.CharacterSystem.Core.CharacterBase playerCharacterMulti)
+                    {
+                        var stormDebuff = playerCharacterMulti.GetEffect<StormOfSpaceTimeDebuff>();
+                        if (stormDebuff != null)
+                        {
+                            stormDebuff.AddDamage(perHitDamage);
+                        }
+                    }
                 }
 
                 GameLogger.LogDebug($"[DamageEffectCommand] 다단 히트 {i + 1}/{hitCount}: {perHitDamage} 데미지 (총 누적: {totalDamage})", GameLogger.LogCategory.Combat);

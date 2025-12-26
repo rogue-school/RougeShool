@@ -397,6 +397,13 @@ namespace Game.SkillCardSystem.Data
         [Tooltip("운명의 실 디버프 지속 턴 수")]
         public int threadOfFateDuration = 1;
         
+        [Header("시공의 폭풍 효과 설정")]
+        [Tooltip("목표 데미지 수치")]
+        public int stormOfSpaceTimeTargetDamage = 30;
+        
+        [Tooltip("시공의 폭풍 지속 턴 수")]
+        public int stormOfSpaceTimeDuration = 3;
+        
     }
 
     /// <summary>

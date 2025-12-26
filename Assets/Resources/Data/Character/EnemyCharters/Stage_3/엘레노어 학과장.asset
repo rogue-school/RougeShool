@@ -13,16 +13,10 @@ MonoBehaviour:
   m_Name: "\uC5D8\uB808\uB178\uC5B4 \uD559\uACFC\uC7A5"
   m_EditorClassIdentifier: 
   <DisplayName>k__BackingField: "\uC5D8\uB808\uB178\uC5B4 \uD559\uACFC\uC7A5"
-  <MaxHP>k__BackingField: 20
+  <MaxHP>k__BackingField: 100
   <IndexIcon>k__BackingField: {fileID: 5231088018152350553, guid: 87032b1ee4dc44b41af8ddfb98f175a8, type: 3}
   <PortraitPrefab>k__BackingField: {fileID: 751987938129930587, guid: 23c8a0dd52ddedf47803e7f5d3c1ed91, type: 3}
   <Prefab>k__BackingField: {fileID: 7769799778275336730, guid: 2c6e844c91775424681f573a6951211e, type: 3}
   <EnemyDeck>k__BackingField: {fileID: 11400000, guid: a44cb290574e5754ba5c3740abd769cf, type: 2}
-  <CharacterEffects>k__BackingField:
-  - effectSO: {fileID: 11400000, guid: 9bd8b68f1c3288d4aa58f88645777715, type: 2}
-    useCustomSettings: 0
-    customSettings:
-      healthThreshold: 0
-      summonTarget: {fileID: 0}
-    priority: 0
+  <CharacterEffects>k__BackingField: []
   <Phases>k__BackingField: []

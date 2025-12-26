@@ -427,6 +427,106 @@ MonoBehaviour:
     m_SerializedLabels:
     - CharacterData
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 89dc10c258d326f41847df14968cd3aa
+    m_Address: SkillCardTooltip
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: abeee521058f7584d920b1bb0a9668d6
+    m_Address: ItemTooltip.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 446ab28b119d80841aa63d11a3a90721
+    m_Address: "022_\uD560\uD034\uAE30"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 131360b51293b4447a07db881a0d60d9
+    m_Address: "023_\uBB3C\uAE30"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0d5ea4e8899a7824a9b17ec85b28613b
+    m_Address: "024_\uB0B4\uB824\uCC0D\uAE30"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f0de2887a4ca3e04298c6767db7a1a35
+    m_Address: "025_\uC131\uAD11\uC758 \uCC3D"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a1dfcaf29cdc63044bdd18ddec17d839
+    m_Address: "026_\uC2DC\uAC04 \uC65C\uACE1"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f2635e717b64bee43975e02246883a88
+    m_Address: "027_\uC2DC\uACF5\uAC04 \uBD95\uAD34"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 77e1b7ede55114b44a8389ab4652d650
+    m_Address: "028_\uC2DC\uAC04\uC758 \uC18C\uC6A9\uB3CC\uC774"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3f3755c2eb96f7143b3baf3b2c5f0100
+    m_Address: "105_\uAD74\uC808"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2621a0e5917a239468c9f99c6e2841d3
+    m_Address: "107_\uC2E0\uC131"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 780604919f47946468db03ef483ce0cc
+    m_Address: "109_\uC218\uD638\uC9C4"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1b34fb17fd388974ab0f345159a5acf1
+    m_Address: "110_\uBD84\uC2E0"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 355e3a6f92d58754db2fdc98cee29739
+    m_Address: "202_\uC2DC\uACF5\uAC04 \uC5ED\uD589"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6e029c50f988f1f4a906e9bd9daa72fb
+    m_Address: "203_\uC6B4\uBA85\uC758 \uC2E4"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e9a9ac9eb83099d4b9c75828f05d6ace
+    m_Address: "205_\uC2DC\uACF5\uC758 \uD3ED\uD48D"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fa3d4e63f2a8ab14b90a28c9ee5ed306
+    m_Address: "403_\uD790"
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillCards
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 43e69adad2e7fd146985fdec83211b07, type: 2}
   m_SchemaSet:
