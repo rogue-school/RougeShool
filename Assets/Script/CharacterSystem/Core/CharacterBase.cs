@@ -26,6 +26,7 @@ namespace Game.CharacterSystem.Core
         #region 이벤트
         public event Action<int, int> OnHPChanged;
         public event Action<bool> OnGuardStateChanged;
+        public event Action<bool> OnInvincibleStateChanged;
         public event Action<IReadOnlyList<IPerTurnEffect>> OnBuffsChanged;
         #endregion
         #region 캐릭터 상태 필드
@@ -38,6 +39,15 @@ namespace Game.CharacterSystem.Core
 
         /// <summary>현재 가드 상태 여부 (GuardBuff에 의해 관리됨)</summary>
         protected bool isGuarded = false;
+
+        /// <summary>현재 무적 상태 여부 (InvincibilityBuff에 의해 관리됨)</summary>
+        protected bool isInvincible = false;
+
+        /// <summary>분신 추가 체력 (CloneBuff에 의해 관리됨)</summary>
+        protected int cloneHP = 0;
+
+        /// <summary>과거 체력 히스토리 (시공간 역행용, 최대 10턴 저장)</summary>
+        protected List<int> hpHistory = new List<int>();
 
         /// <summary>턴마다 적용되는 효과 리스트</summary>
         protected List<IPerTurnEffect> perTurnEffects = new();
@@ -87,6 +97,12 @@ namespace Game.CharacterSystem.Core
         /// <summary>현재 가드 상태 여부 확인</summary>
         public virtual bool IsGuarded() => isGuarded;
 
+        /// <summary>현재 무적 상태 여부 확인</summary>
+        public virtual bool IsInvincible() => isInvincible;
+
+        /// <summary>분신 추가 체력 반환</summary>
+        public virtual int GetCloneHP() => cloneHP;
+
         /// <summary>캐릭터가 사망했는지 확인</summary>
         public virtual bool IsDead() => currentHP <= 0;
 
@@ -120,6 +136,23 @@ namespace Game.CharacterSystem.Core
             isGuarded = value;
             GameLogger.LogInfo($"[{GetCharacterName()}] 가드 상태: {isGuarded}", GameLogger.LogCategory.Character);
             OnGuardStateChanged?.Invoke(isGuarded);
+        }
+
+        /// <summary>무적 상태 설정</summary>
+        /// <param name="value">true면 무적 상태 활성</param>
+        public virtual void SetInvincible(bool value)
+        {
+            isInvincible = value;
+            GameLogger.LogInfo($"[{GetCharacterName()}] 무적 상태: {isInvincible}", GameLogger.LogCategory.Character);
+            OnInvincibleStateChanged?.Invoke(isInvincible);
+        }
+
+        /// <summary>분신 추가 체력 설정</summary>
+        /// <param name="value">설정할 추가 체력 값</param>
+        public virtual void SetCloneHP(int value)
+        {
+            cloneHP = Mathf.Max(0, value);
+            GameLogger.LogInfo($"[{GetCharacterName()}] 분신 추가 체력: {cloneHP}", GameLogger.LogCategory.Character);
         }
 
         /// <summary>
@@ -164,6 +197,13 @@ namespace Game.CharacterSystem.Core
                 throw new ArgumentException($"피해량은 양수여야 합니다. 입력값: {amount}", nameof(amount));
             }
 
+            // 무적 상태 확인 (가드보다 우선)
+            if (isInvincible)
+            {
+                GameLogger.LogInfo($"[{GetCharacterDataName()}] 무적으로 데미지 완전 차단: {amount}", GameLogger.LogCategory.Character);
+                return; // 무적 상태면 데미지 완전 무효화
+            }
+
             // 가드 상태 확인
             if (isGuarded)
             {
@@ -173,6 +213,40 @@ namespace Game.CharacterSystem.Core
                 PlayGuardBlockEffects();
                 
                 return; // 가드 상태면 데미지 무효화
+            }
+
+            // 분신 추가 체력이 있으면 먼저 소모
+            if (cloneHP > 0)
+            {
+                int remainingDamage = amount - cloneHP;
+                cloneHP = Mathf.Max(0, cloneHP - amount);
+                
+                // CloneBuff의 CloneHP도 동기화
+                foreach (var effect in perTurnEffects)
+                {
+                    if (effect is CloneBuff cloneBuff)
+                    {
+                        cloneBuff.SetCloneHP(cloneHP);
+                        break;
+                    }
+                }
+                
+                GameLogger.LogInfo($"[{GetCharacterDataName()}] 분신 추가 체력 소모: {amount} (남은 분신 체력: {cloneHP})", GameLogger.LogCategory.Character);
+                
+                // 분신 체력이 0이 되면 분신 버프 제거
+                if (cloneHP <= 0)
+                {
+                    RemoveCloneBuff();
+                }
+                
+                // 분신 체력으로 모든 데미지를 흡수했으면 종료
+                if (remainingDamage <= 0)
+                {
+                    return;
+                }
+                
+                // 남은 데미지를 일반 체력에 적용
+                amount = remainingDamage;
             }
 
             currentHP = Mathf.Max(currentHP - amount, 0);
@@ -185,6 +259,24 @@ namespace Game.CharacterSystem.Core
 
             if (IsDead())
                 Die();
+        }
+
+        /// <summary>
+        /// 분신 버프를 제거합니다.
+        /// </summary>
+        private void RemoveCloneBuff()
+        {
+            for (int i = perTurnEffects.Count - 1; i >= 0; i--)
+            {
+                if (perTurnEffects[i] is CloneBuff)
+                {
+                    perTurnEffects.RemoveAt(i);
+                    cloneHP = 0;
+                    OnBuffsChanged?.Invoke(perTurnEffects.AsReadOnly());
+                    GameLogger.LogInfo($"[{GetCharacterDataName()}] 분신 버프 제거됨", GameLogger.LogCategory.Character);
+                    break;
+                }
+            }
         }
 
         /// <summary>가드를 무시하고 피해를 받아 체력을 감소시킵니다</summary>
@@ -350,6 +442,9 @@ namespace Game.CharacterSystem.Core
                 return;
             }
 
+            // 체력 히스토리 저장 (시공간 역행용)
+            SaveHPToHistory();
+
             // 역순 순회로 GC 없이 안전하게 제거
             for (int i = perTurnEffects.Count - 1; i >= 0; i--)
             {
@@ -363,6 +458,55 @@ namespace Game.CharacterSystem.Core
             }
             // 매 턴 UI가 남은 턴 수를 갱신할 수 있도록 전체 리스트를 통지
             OnBuffsChanged?.Invoke(perTurnEffects.AsReadOnly());
+        }
+
+        /// <summary>
+        /// 현재 체력을 히스토리에 저장합니다 (시공간 역행용).
+        /// 최대 10턴까지 저장하며, 초과 시 가장 오래된 기록을 제거합니다.
+        /// </summary>
+        protected virtual void SaveHPToHistory()
+        {
+            hpHistory.Add(currentHP);
+            
+            // 최대 10턴까지만 저장 (메모리 관리)
+            const int MAX_HISTORY = 10;
+            if (hpHistory.Count > MAX_HISTORY)
+            {
+                hpHistory.RemoveAt(0);
+            }
+        }
+
+        /// <summary>
+        /// 지정된 턴 수 전의 체력을 반환합니다.
+        /// </summary>
+        /// <param name="turnsAgo">몇 턴 전인지 (1 = 1턴 전, 3 = 3턴 전)</param>
+        /// <returns>해당 턴의 체력, 히스토리가 부족하면 현재 체력 반환</returns>
+        public virtual int GetHPFromHistory(int turnsAgo)
+        {
+            if (turnsAgo <= 0 || turnsAgo > hpHistory.Count)
+            {
+                GameLogger.LogWarning($"[{GetCharacterDataName()}] 히스토리 부족: 요청 {turnsAgo}턴 전, 저장된 {hpHistory.Count}턴", GameLogger.LogCategory.Character);
+                return currentHP; // 히스토리가 부족하면 현재 체력 반환
+            }
+
+            // 가장 최근 기록이 리스트의 마지막이므로 역순으로 접근
+            int index = hpHistory.Count - turnsAgo;
+            return hpHistory[index];
+        }
+
+        /// <summary>
+        /// 지정된 턴 수 전의 체력으로 복원합니다.
+        /// </summary>
+        /// <param name="turnsAgo">몇 턴 전인지 (1 = 1턴 전, 3 = 3턴 전)</param>
+        public virtual void RestoreHPFromHistory(int turnsAgo)
+        {
+            int targetHP = GetHPFromHistory(turnsAgo);
+            int previousHP = currentHP;
+            
+            currentHP = Mathf.Clamp(targetHP, 0, maxHP);
+            OnHPChanged?.Invoke(currentHP, maxHP);
+            
+            GameLogger.LogInfo($"[{GetCharacterDataName()}] 시공간 역행: {previousHP} → {currentHP} ({turnsAgo}턴 전 체력으로 복원)", GameLogger.LogCategory.Character);
         }
 
         /// <summary>

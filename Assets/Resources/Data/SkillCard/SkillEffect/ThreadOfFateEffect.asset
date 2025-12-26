@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 286665fecf08c734dab356b1421be966, type: 3}
+  m_Name: ThreadOfFateEffect
+  m_EditorClassIdentifier: 
+  effectName: "\uC6B4\uBA85\uC758\uC2E4"
+  description: 
+  effectIcon: {fileID: 8933749813396638541, guid: b00db80c164406045a26f3629ea98a3c, type: 3}
+  duration: 1

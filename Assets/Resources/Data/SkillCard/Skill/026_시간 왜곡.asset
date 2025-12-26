@@ -10,28 +10,28 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 63917f595383ae84bafad72d7862ecd5, type: 3}
-  m_Name: "23_\uBB3C\uAE30"
+  m_Name: "026_\uC2DC\uAC04 \uC65C\uACE1"
   m_EditorClassIdentifier: 
-  cardId: 23
-  displayName: "\uBB3C\uAE30"
+  cardId: 026
+  displayName: "\uC2DC\uAC04 \uC65C\uACE1"
   displayNameKO: 
   description: 
-  artwork: {fileID: -6399496000068769004, guid: c69783d0f886e2044a94746cefa3c070, type: 3}
+  artwork: {fileID: 0}
   presentation:
-    sfxClip: {fileID: 8300000, guid: d4287fcb866b9f443aa0b9cc56a6295f, type: 3}
-    visualEffectPrefab: {fileID: 2663204648779552833, guid: 14e254c33e25d82499eb644e4cb9045c, type: 3}
+    sfxClip: {fileID: 0}
+    visualEffectPrefab: {fileID: 0}
   configuration:
     hasDamage: 1
     damageConfig:
-      baseDamage: 7
+      baseDamage: 12
       hits: 1
       ignoreGuard: 0
       ignoreCounter: 0
       useRandomDamage: 0
       minDamage: 0
       maxDamage: 0
-      sfxClip: {fileID: 8300000, guid: b2bf64a6413cd214c9b1b07e949d0c06, type: 3}
-      visualEffectPrefab: {fileID: 2663204648779552833, guid: 14e254c33e25d82499eb644e4cb9045c, type: 3}
+      sfxClip: {fileID: 0}
+      visualEffectPrefab: {fileID: 0}
     hasResource: 0
     resourceConfig:
       cost: 0

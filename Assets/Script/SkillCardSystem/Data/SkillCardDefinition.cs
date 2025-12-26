@@ -381,6 +381,22 @@ namespace Game.SkillCardSystem.Data
         [Tooltip("감지할 카드 ID (비어있으면 모든 카드)")]
         public string targetCardId = "";
         
+        [Header("무적 효과 설정")]
+        [Tooltip("무적 지속 턴 수")]
+        public int invincibilityDuration = 2;
+        
+        [Header("분신 효과 설정")]
+        [Tooltip("분신 추가 체력")]
+        public int cloneHP = 10;
+        
+        [Header("시공간 역행 효과 설정")]
+        [Tooltip("몇 턴 전의 HP로 되돌릴지")]
+        public int spaceTimeReversalTurnsAgo = 3;
+        
+        [Header("운명의 실 효과 설정")]
+        [Tooltip("운명의 실 디버프 지속 턴 수")]
+        public int threadOfFateDuration = 1;
+        
     }
 
     /// <summary>

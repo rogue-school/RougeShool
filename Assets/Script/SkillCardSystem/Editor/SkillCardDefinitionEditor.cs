@@ -283,6 +283,26 @@ namespace Game.SkillCardSystem.Editor
                 settings.guardDuration = EditorGUILayout.IntField("버프 지속 턴 수", Mathf.Max(1, settings.guardDuration));
                 settings.guardIcon = (Sprite)EditorGUILayout.ObjectField("버프 아이콘", settings.guardIcon, typeof(Sprite), false);
             }
+            else if (effectSO is InvincibilityEffectSO)
+            {
+                EditorGUILayout.LabelField("무적 효과 설정", EditorStyles.boldLabel);
+                settings.invincibilityDuration = EditorGUILayout.IntField("무적 지속 턴 수", Mathf.Max(1, settings.invincibilityDuration));
+            }
+            else if (effectSO is CloneEffectSO)
+            {
+                EditorGUILayout.LabelField("분신 효과 설정", EditorStyles.boldLabel);
+                settings.cloneHP = EditorGUILayout.IntField("분신 추가 체력", Mathf.Max(1, settings.cloneHP));
+            }
+            else if (effectSO is SpaceTimeReversalEffectSO)
+            {
+                EditorGUILayout.LabelField("시공간 역행 효과 설정", EditorStyles.boldLabel);
+                settings.spaceTimeReversalTurnsAgo = EditorGUILayout.IntField("몇 턴 전의 HP로 되돌릴지", Mathf.Max(1, settings.spaceTimeReversalTurnsAgo));
+            }
+            else if (effectSO is ThreadOfFateEffectSO)
+            {
+                EditorGUILayout.LabelField("운명의 실 효과 설정", EditorStyles.boldLabel);
+                settings.threadOfFateDuration = EditorGUILayout.IntField("운명의 실 디버프 지속 턴 수", Mathf.Max(1, settings.threadOfFateDuration));
+            }
             // TODO: 향후 추가될 EffectSO 타입들을 위한 예약 공간
             // else if (effectSO is DrawEffectSO)
             // {

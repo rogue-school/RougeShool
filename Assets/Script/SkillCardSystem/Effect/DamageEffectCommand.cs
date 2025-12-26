@@ -183,6 +183,19 @@ namespace Game.SkillCardSystem.Effect
 
             int effectiveDamage = baseDamageValue + attackBonus + itemAttackBonus + starBonus;
 
+            // 분신 버프 확인: 시전자가 분신 버프를 가지고 있으면 데미지 2배
+            bool sourceHasClone = false;
+            if (source is Game.CharacterSystem.Core.CharacterBase sourceCharacterBase)
+            {
+                sourceHasClone = sourceCharacterBase.HasEffect<CloneBuff>() && sourceCharacterBase.GetCloneHP() > 0;
+            }
+            
+            if (sourceHasClone)
+            {
+                effectiveDamage *= 2;
+                GameLogger.LogInfo($"[DamageEffectCommand] 분신 버프로 데미지 2배 적용: {effectiveDamage / 2} → {effectiveDamage}", GameLogger.LogCategory.Combat);
+            }
+
             // 반격 버프 처리: 대상이 CounterBuff 보유 시, 들어오는 피해의 100%를 공격자에게 반사
             // 대상은 데미지를 받지 않고, 공격자가 원래 데미지의 100%를 받음
             // 단일 히트/다단 히트 모두 동일 규칙 적용
@@ -398,10 +411,24 @@ namespace Game.SkillCardSystem.Effect
                 starBonus = itemService.GetSkillDamageBonus(skillId);
             }
 
+            // 분신 버프 확인: 시전자가 분신 버프를 가지고 있으면 데미지 2배
+            bool sourceHasClone = false;
+            if (source is Game.CharacterSystem.Core.CharacterBase sourceCharacterBase)
+            {
+                sourceHasClone = sourceCharacterBase.HasEffect<CloneBuff>() && sourceCharacterBase.GetCloneHP() > 0;
+            }
+
             for (int i = 0; i < hitCount; i++)
             {
                 int baseDamageValue = GetBaseDamageValue();
                 int perHitDamage = baseDamageValue + attackBonus + itemAttackBonus + starBonus;
+                
+                // 분신 버프 확인: 시전자가 분신 버프를 가지고 있으면 데미지 2배
+                if (sourceHasClone)
+                {
+                    perHitDamage *= 2;
+                }
+                
                 // 대상이 사망했으면 중단
                 if (target.IsDead())
                 {
