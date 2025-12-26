@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: "111_\uB9C8\uB825 \uC911\uCCA9"
   m_EditorClassIdentifier: 
   itemId: 111
-  displayName: "\uB9C8\uB825 \uC911\uCCA9"
+  displayName: "\uD30C\uC774\uC5B4 \uBCFC"
   description: 
   icon: {fileID: -2159488440411966432, guid: 3bc157032df44d644b00e3ac3dee798e, type: 3}
   targetSkill: {fileID: 11400000, guid: 8e09f8b5222a2224cb81d69daff22014, type: 2}

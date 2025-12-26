@@ -350,13 +350,13 @@ MonoBehaviour:
     - Data/Item
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 034dc89a73768244b901eed0f1d978c3
-    m_Address: "111_\uB9C8\uB825 \uC911\uCCA9"
+    m_Address: "111_\uD30C\uC774\uC5B4 \uBCFC"
     m_ReadOnly: 0
     m_SerializedLabels:
     - Data/Item
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b0a741b259f723c46af1d5d30e9191b3
-    m_Address: "112_\uB9C8\uB825 \uD3ED\uBC1C"
+    m_Address: "112_\uC708\uB4DC \uCEE4\uD130"
     m_ReadOnly: 0
     m_SerializedLabels:
     - Data/Item
