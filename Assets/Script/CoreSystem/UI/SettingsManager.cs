@@ -373,7 +373,14 @@ namespace Game.CoreSystem.UI
         /// </summary>
         private void OnExitGameClicked()
         {
-            Application.Quit();
+            GameLogger.LogInfo("[SettingsManager] 게임 종료 요청", GameLogger.LogCategory.UI);
+            
+            // Unity 에디터와 빌드 환경 구분
+            #if UNITY_EDITOR
+                UnityEditor.EditorApplication.isPlaying = false;
+            #else
+                Application.Quit();
+            #endif
         }
         
         #endregion
