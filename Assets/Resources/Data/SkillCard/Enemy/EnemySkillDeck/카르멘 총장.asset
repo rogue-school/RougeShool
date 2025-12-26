@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9cff11d00aca1ae41bcbc7a920f29d7e, type: 3}
+  m_Name: "\uCE74\uB974\uBA58 \uCD1D\uC7A5"
+  m_EditorClassIdentifier: 
+  cards:
+  - definition: {fileID: 11400000, guid: a1dfcaf29cdc63044bdd18ddec17d839, type: 2}
+    probability: 0.65
+    damageOverride: -1
+  - definition: {fileID: 11400000, guid: 485938abdf62a64419a0efb58b0517a3, type: 2}
+    probability: 0.2
+    damageOverride: -1
+  - definition: {fileID: 11400000, guid: 355e3a6f92d58754db2fdc98cee29739, type: 2}
+    probability: 0.1
+    damageOverride: -1
+  - definition: {fileID: 11400000, guid: 6e029c50f988f1f4a906e9bd9daa72fb, type: 2}
+    probability: 0.05
+    damageOverride: -1

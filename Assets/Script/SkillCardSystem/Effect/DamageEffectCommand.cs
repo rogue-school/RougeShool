@@ -183,8 +183,9 @@ namespace Game.SkillCardSystem.Effect
 
             int effectiveDamage = baseDamageValue + attackBonus + itemAttackBonus + starBonus;
 
-            // 분신 버프 확인: 시전자가 분신 버프를 가지고 있으면 데미지 2배
+            // 분신 버프 확인: 시전자가 분신 버프를 가지고 있으면 공격 횟수 2배
             bool sourceHasClone = false;
+            int finalHits = hits;
             if (source is Game.CharacterSystem.Core.CharacterBase sourceCharacterBase)
             {
                 sourceHasClone = sourceCharacterBase.HasEffect<CloneBuff>() && sourceCharacterBase.GetCloneHP() > 0;
@@ -192,8 +193,8 @@ namespace Game.SkillCardSystem.Effect
             
             if (sourceHasClone)
             {
-                effectiveDamage *= 2;
-                GameLogger.LogInfo($"[DamageEffectCommand] 분신 버프로 데미지 2배 적용: {effectiveDamage / 2} → {effectiveDamage}", GameLogger.LogCategory.Combat);
+                finalHits = hits * 2;
+                GameLogger.LogInfo($"[DamageEffectCommand] 분신 버프로 공격 횟수 2배 적용: {hits} → {finalHits}", GameLogger.LogCategory.Combat);
             }
 
             // 반격 버프 처리: 대상이 CounterBuff 보유 시, 들어오는 피해의 100%를 공격자에게 반사
@@ -230,18 +231,19 @@ namespace Game.SkillCardSystem.Effect
             }
 
             // 다단 히트 처리 (시간 간격을 두고 공격)
-            if (hits > 1)
+            // 분신 버프가 있으면 finalHits가 2배가 되므로, 단일 히트도 다단 히트로 처리됨
+            if (finalHits > 1)
             {
                 // 코루틴으로 다단 히트 실행
                 var sourceMono = source as MonoBehaviour;
                 if (sourceMono != null)
                 {
-                    sourceMono.StartCoroutine(ExecuteMultiHitDamage(context, hits));
+                    sourceMono.StartCoroutine(ExecuteMultiHitDamage(context, finalHits));
                 }
                 else
                 {
                     // MonoBehaviour가 아닌 경우 즉시 실행
-                    ExecuteImmediateDamage(target, hits);
+                    ExecuteImmediateDamage(target, finalHits);
                 }
             }
             else
@@ -411,7 +413,8 @@ namespace Game.SkillCardSystem.Effect
                 starBonus = itemService.GetSkillDamageBonus(skillId);
             }
 
-            // 분신 버프 확인: 시전자가 분신 버프를 가지고 있으면 데미지 2배
+            // 분신 버프 확인: 시전자가 분신 버프를 가지고 있으면 공격 횟수 2배
+            // (다단 히트 코루틴 진입 전에 이미 hitCount가 2배로 조정되었으므로 여기서는 추가 처리 불필요)
             bool sourceHasClone = false;
             if (source is Game.CharacterSystem.Core.CharacterBase sourceCharacterBase)
             {
@@ -423,11 +426,7 @@ namespace Game.SkillCardSystem.Effect
                 int baseDamageValue = GetBaseDamageValue();
                 int perHitDamage = baseDamageValue + attackBonus + itemAttackBonus + starBonus;
                 
-                // 분신 버프 확인: 시전자가 분신 버프를 가지고 있으면 데미지 2배
-                if (sourceHasClone)
-                {
-                    perHitDamage *= 2;
-                }
+                // 분신 버프는 공격 횟수로 처리되므로 여기서는 데미지 값 변경 없음
                 
                 // 대상이 사망했으면 중단
                 if (target.IsDead())

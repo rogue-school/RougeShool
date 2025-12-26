@@ -17,9 +17,9 @@ MonoBehaviour:
   <IndexIcon>k__BackingField: {fileID: 5231088018152350553, guid: 87032b1ee4dc44b41af8ddfb98f175a8, type: 3}
   <PortraitPrefab>k__BackingField: {fileID: 751987938129930587, guid: 23c8a0dd52ddedf47803e7f5d3c1ed91, type: 3}
   <Prefab>k__BackingField: {fileID: 7769799778275336730, guid: 2c6e844c91775424681f573a6951211e, type: 3}
-  <EnemyDeck>k__BackingField: {fileID: 11400000, guid: 45e2110f3ced1b84ea9a3665b8b5e78e, type: 2}
+  <EnemyDeck>k__BackingField: {fileID: 11400000, guid: a44cb290574e5754ba5c3740abd769cf, type: 2}
   <CharacterEffects>k__BackingField:
-  - effectSO: {fileID: 0}
+  - effectSO: {fileID: 11400000, guid: 9bd8b68f1c3288d4aa58f88645777715, type: 2}
     useCustomSettings: 0
     customSettings:
       healthThreshold: 0
