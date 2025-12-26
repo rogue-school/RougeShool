@@ -1167,8 +1167,43 @@ namespace Game.StageSystem.Manager
         public bool HasNextStage()
         {
             // 다음 스테이지 번호 계산 후 실제 데이터 존재 여부로 판단
-            int nextStageNumber = (currentStage?.stageNumber ?? 1) + 1;
-            return GetStageData(nextStageNumber) != null;
+            int currentStageNum = currentStage?.stageNumber ?? 1;
+            int nextStageNumber = currentStageNum + 1;
+            
+            // 디버깅: 현재 스테이지와 다음 스테이지 번호 로그
+            GameLogger.LogDebug($"[StageManager] HasNextStage 체크 - 현재 스테이지: {currentStageNum}, 다음 스테이지 번호: {nextStageNumber}", GameLogger.LogCategory.Combat);
+            
+            // 디버깅: 등록된 모든 스테이지 정보 로그
+            if (stageSettings.allStages != null && stageSettings.allStages.Count > 0)
+            {
+                var stageNumbers = new System.Text.StringBuilder("등록된 스테이지: ");
+                foreach (var stage in stageSettings.allStages)
+                {
+                    if (stage != null)
+                    {
+                        stageNumbers.Append($"스테이지 {stage.stageNumber} ({stage.stageName}), ");
+                    }
+                }
+                GameLogger.LogDebug($"[StageManager] {stageNumbers}", GameLogger.LogCategory.Combat);
+            }
+            else
+            {
+                GameLogger.LogWarning("[StageManager] 등록된 스테이지가 없습니다", GameLogger.LogCategory.Combat);
+            }
+            
+            var nextStage = GetStageData(nextStageNumber);
+            bool hasNext = nextStage != null;
+            
+            if (!hasNext)
+            {
+                GameLogger.LogWarning($"[StageManager] 스테이지 {nextStageNumber} 데이터를 찾을 수 없습니다", GameLogger.LogCategory.Combat);
+            }
+            else
+            {
+                GameLogger.LogDebug($"[StageManager] 다음 스테이지 발견: 스테이지 {nextStageNumber} ({nextStage.stageName})", GameLogger.LogCategory.Combat);
+            }
+            
+            return hasNext;
         }
         
         /// <summary>
@@ -1248,14 +1283,22 @@ namespace Game.StageSystem.Manager
                 return null;
             }
             
+            GameLogger.LogDebug($"[StageManager] GetStageData 호출 - 찾는 스테이지 번호: {stageNumber}", GameLogger.LogCategory.Combat);
+            
             foreach (var stage in stageSettings.allStages)
             {
-                if (stage != null && stage.stageNumber == stageNumber)
+                if (stage != null)
                 {
-                    return stage;
+                    GameLogger.LogDebug($"[StageManager] 스테이지 확인 - 번호: {stage.stageNumber}, 이름: {stage.stageName}, 일치: {stage.stageNumber == stageNumber}", GameLogger.LogCategory.Combat);
+                    if (stage.stageNumber == stageNumber)
+                    {
+                        GameLogger.LogDebug($"[StageManager] 스테이지 {stageNumber} 데이터 찾음: {stage.stageName}", GameLogger.LogCategory.Combat);
+                        return stage;
+                    }
                 }
             }
             
+            GameLogger.LogWarning($"[StageManager] 스테이지 {stageNumber} 데이터를 찾을 수 없습니다. 등록된 스테이지 수: {stageSettings.allStages.Count}", GameLogger.LogCategory.Combat);
             return null;
         }
 

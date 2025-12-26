@@ -61,7 +61,7 @@ namespace Game.SkillCardSystem.Effect
                 characterBase.SetCloneHP(finalCloneHP);
             }
             
-            GameLogger.LogInfo($"[CloneEffectCommand] {character.GetCharacterName()}에게 분신 버프 적용 (추가 체력: {finalCloneHP})", GameLogger.LogCategory.SkillCard);
+            GameLogger.LogInfo($"[CloneEffectCommand] {character.GetCharacterName()}에게 분신 버프 적용 (추가 체력: {finalCloneHP}, 아이콘: {(finalIcon != null ? finalIcon.name : "null")})", GameLogger.LogCategory.SkillCard);
         }
     }
 }

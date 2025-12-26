@@ -41,7 +41,7 @@ namespace Game.SkillCardSystem.Effect
         /// 자신의 턴에만 지속 시간이 감소합니다.
         /// </summary>
         /// <param name="target">효과가 적용된 캐릭터</param>
-        public void OnTurnStart(ICharacter target)
+        public virtual void OnTurnStart(ICharacter target)
         {
             if (target == null) return;
 

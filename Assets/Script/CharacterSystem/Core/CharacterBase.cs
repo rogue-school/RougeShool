@@ -421,7 +421,15 @@ namespace Game.CharacterSystem.Core
             }
 
             perTurnEffects.Add(effect);
+            
+            // 디버깅: 분신 버프 등록 확인
+            if (effect is CloneBuff cloneBuff)
+            {
+                GameLogger.LogInfo($"[{GetCharacterName()}] 분신 버프 등록 완료 (CloneHP: {cloneBuff.CloneHP}, Icon: {(cloneBuff.Icon != null ? cloneBuff.Icon.name : "null")})", GameLogger.LogCategory.Character);
+            }
+            
             OnBuffsChanged?.Invoke(perTurnEffects.AsReadOnly());
+            GameLogger.LogInfo($"[{GetCharacterName()}] OnBuffsChanged 이벤트 발생 (버프 수: {perTurnEffects.Count})", GameLogger.LogCategory.Character);
         }
 
         /// <summary>상태이상 효과 등록 (가드 상태 확인)</summary>
@@ -465,11 +473,21 @@ namespace Game.CharacterSystem.Core
             for (int i = perTurnEffects.Count - 1; i >= 0; i--)
             {
                 var effect = perTurnEffects[i];
+                if (effect == null) continue;
+                
                 effect.OnTurnStart(this);
 
                 if (effect.IsExpired)
                 {
+                    // CloneBuff는 CloneHP가 0이 되면 만료되므로 별도 처리
+                    if (effect is CloneBuff cloneBuff && cloneBuff.CloneHP > 0)
+                    {
+                        // CloneHP가 남아있으면 만료되지 않은 것으로 처리
+                        continue;
+                    }
+                    
                     perTurnEffects.RemoveAt(i);
+                    GameLogger.LogInfo($"[{GetCharacterName()}] 효과 만료로 제거: {effect.GetType().Name}", GameLogger.LogCategory.Character);
                 }
             }
             // 매 턴 UI가 남은 턴 수를 갱신할 수 있도록 전체 리스트를 통지

@@ -252,13 +252,15 @@ namespace Game.CharacterSystem.Core
             }
 
             // 데미지 텍스트 표시 (VFXManager를 통한 Object Pooling)
+            bool success = false;
             if (vfxManager != null && hpTextAnchor != null)
             {
-                vfxManager.ShowDamageText(amount, hpTextAnchor.position, hpTextAnchor);
+                success = vfxManager.ShowDamageText(amount, hpTextAnchor.position, hpTextAnchor);
             }
-            else if (damageTextPrefab != null && hpTextAnchor != null)
+
+            // VFXManager가 없거나 damageTextPool이 설정되지 않은 경우 fallback 사용
+            if (!success && damageTextPrefab != null && hpTextAnchor != null)
             {
-                // Fallback: VFXManager가 없으면 기존 방식 사용
                 var instance = Instantiate(damageTextPrefab);
                 instance.transform.SetParent(hpTextAnchor, false);
 
@@ -283,13 +285,15 @@ namespace Game.CharacterSystem.Core
             }
 
             // 회복 텍스트 표시 (VFXManager를 통한 Object Pooling)
+            bool success = false;
             if (vfxManager != null && hpTextAnchor != null)
             {
-                vfxManager.ShowDamageText(amount, hpTextAnchor.position, hpTextAnchor);
+                success = vfxManager.ShowDamageText(amount, hpTextAnchor.position, hpTextAnchor);
             }
-            else if (damageTextPrefab != null && hpTextAnchor != null)
+
+            // VFXManager가 없거나 damageTextPool이 설정되지 않은 경우 fallback 사용
+            if (!success && damageTextPrefab != null && hpTextAnchor != null)
             {
-                // Fallback: VFXManager가 없으면 기존 방식 사용
                 var instance = Instantiate(damageTextPrefab);
                 instance.transform.SetParent(hpTextAnchor, false);
 

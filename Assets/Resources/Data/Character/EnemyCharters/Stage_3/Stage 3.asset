@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6dab2d0769905148a9cec60b3b2a66f, type: 3}
   m_Name: Stage 3
   m_EditorClassIdentifier: 
-  stageNumber: 2
+  stageNumber: 3
   stageName: "\uC2A4\uD14C\uC774\uC9C0 3"
   stageDescription: "\uC2A4\uD14C\uC774\uC9C0 \uC124\uBA85"
   autoProgressToNext: 1

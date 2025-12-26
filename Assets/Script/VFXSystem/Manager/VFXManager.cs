@@ -98,12 +98,13 @@ namespace Game.VFXSystem.Manager
         /// <param name="damageAmount">데미지 양</param>
         /// <param name="position">표시 위치</param>
         /// <param name="parent">부모 Transform (선택적)</param>
-        public void ShowDamageText(int damageAmount, Vector3 position, Transform parent = null)
+        /// <returns>데미지 텍스트 표시 성공 여부</returns>
+        public bool ShowDamageText(int damageAmount, Vector3 position, Transform parent = null)
         {
             if (damageTextPool == null)
             {
                 GameLogger.LogWarning("DamageTextPool이 설정되지 않았습니다.", GameLogger.LogCategory.Combat);
-                return;
+                return false;
             }
 
             GameObject damageText = damageTextPool.Get(position, parent);
@@ -118,7 +119,10 @@ namespace Game.VFXSystem.Manager
 
                 // 자동 반환 (애니메이션 완료 후)
                 StartCoroutine(ReturnDamageTextAfterDelay(damageText, 1.5f));
+                return true;
             }
+
+            return false;
         }
 
         private System.Collections.IEnumerator ReturnDamageTextAfterDelay(GameObject damageText, float delay)
