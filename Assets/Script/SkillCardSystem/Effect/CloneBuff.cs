@@ -50,7 +50,7 @@ namespace Game.SkillCardSystem.Effect
         /// 분신 버프가 만료되었는지 확인합니다.
         /// 추가 체력이 0 이하면 만료된 것으로 간주합니다.
         /// </summary>
-        public new bool IsExpired => CloneHP <= 0;
+        public override bool IsExpired => CloneHP <= 0;
     }
 }
 

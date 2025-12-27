@@ -89,6 +89,36 @@ namespace Game.CombatSystem.State
                 }
             }
 
+            // 소환 트리거 확인 (턴 효과 처리 중에 소환이 트리거되었을 수 있음)
+            if (context.StageManager != null && context.EnemyManager != null)
+            {
+                var currentEnemy = context.EnemyManager.GetCharacter();
+                if (currentEnemy != null && !currentEnemy.IsDead())
+                {
+                    bool isSummonActive = context.StageManager.IsSummonedEnemyActive();
+                    if (isSummonActive)
+                    {
+                        LogStateTransition("턴 효과 처리 중 소환 트리거 감지 - 즉시 SummonState로 전환");
+                        
+                        var summonData = context.StageManager.GetSummonTarget();
+                        var originalHP = context.StageManager.GetOriginalEnemyHP();
+                        
+                        if (summonData != null)
+                        {
+                            var summonState = new SummonState(summonData, originalHP);
+                            RequestTransition(context, summonState);
+                            return; // 소환 상태로 전환했으므로 여기서 종료
+                        }
+                        else
+                        {
+                            Game.CoreSystem.Utility.GameLogger.LogError(
+                                "[EnemyTurnState] 소환 대상 데이터가 없습니다",
+                                Game.CoreSystem.Utility.GameLogger.LogCategory.Error);
+                        }
+                    }
+                }
+            }
+
             // 플레이어 손패 정리 (적 턴에는 플레이어가 카드를 낼 수 없음)
             if (context.HandManager != null)
             {

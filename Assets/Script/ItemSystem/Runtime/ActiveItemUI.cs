@@ -176,7 +176,6 @@ namespace Game.ItemSystem.Runtime
                 if (foundManager != null)
                 {
                     tooltipManager = foundManager;
-                    GameLogger.LogInfo("[ActiveItemUI] ItemTooltipManager 직접 찾기 완료 (FindFirstObjectByType)", GameLogger.LogCategory.UI);
                 }
             }
             catch (System.Exception ex)
@@ -450,7 +449,6 @@ namespace Game.ItemSystem.Runtime
             if (tooltipManager != null)
             {
                 tooltipManager.ForceHideIfPinnedTo(currentItem);
-                GameLogger.LogInfo("[ActiveItemUI] 사용 버튼 클릭 - 아이템 툴팁 숨김", GameLogger.LogCategory.UI);
             }
 
             OnUseButtonClicked?.Invoke(slotIndex);
@@ -466,7 +464,6 @@ namespace Game.ItemSystem.Runtime
             if (tooltipManager != null)
             {
                 tooltipManager.ForceHideIfPinnedTo(currentItem);
-                GameLogger.LogInfo("[ActiveItemUI] 버리기 버튼 클릭 - 아이템 툴팁 숨김", GameLogger.LogCategory.UI);
             }
 
             OnDiscardButtonClicked?.Invoke(slotIndex);

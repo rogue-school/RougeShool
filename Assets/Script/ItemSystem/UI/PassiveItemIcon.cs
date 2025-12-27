@@ -125,7 +125,6 @@ namespace Game.ItemSystem.UI
                 if (foundManager != null)
                 {
                     tooltipManager = foundManager;
-                    GameLogger.LogInfo("[PassiveItemIcon] ItemTooltipManager 직접 찾기 완료 (FindFirstObjectByType)", GameLogger.LogCategory.UI);
                 }
             }
             catch (System.Exception ex)

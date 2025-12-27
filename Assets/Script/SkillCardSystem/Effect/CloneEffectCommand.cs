@@ -52,6 +52,9 @@ namespace Game.SkillCardSystem.Effect
                 }
             }
 
+            // 버프/디버프는 중첩이 아니라 덧씌우는 방식
+            // RegisterPerTurnEffect가 동일 타입 효과를 자동으로 교체하므로
+            // 기존 분신 버프가 있으면 제거되고 새로운 버프로 교체됨
             var buff = new CloneBuff(finalCloneHP, finalIcon);
             character.RegisterPerTurnEffect(buff);
             

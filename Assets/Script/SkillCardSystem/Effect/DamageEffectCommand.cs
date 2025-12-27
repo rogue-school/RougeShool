@@ -463,7 +463,9 @@ namespace Game.SkillCardSystem.Effect
                 }
                 else
                 {
-                    ApplyDamageCustom(target, perHitDamage);
+                    // 다단 히트: 각 히트마다 Y 오프셋 적용 (0.10씩 증가)
+                    float yOffset = i * 0.10f;
+                    ApplyDamageCustom(target, perHitDamage, i, yOffset);
                     totalDamage += perHitDamage;
                     
                     // 시공의 폭풍 디버프 추적: 플레이어가 적에게 데미지를 입힐 때 (다단 히트)
@@ -541,23 +543,160 @@ namespace Game.SkillCardSystem.Effect
         /// <summary>
         /// 특정 수치로 즉시 데미지를 적용합니다.
         /// </summary>
-        private void ApplyDamageCustom(ICharacter target, int value)
+        /// <param name="target">대상 캐릭터</param>
+        /// <param name="value">데미지량</param>
+        /// <param name="hitIndex">히트 인덱스 (다단 히트용, 기본값: -1)</param>
+        /// <param name="yOffset">Y 좌표 오프셋 (다단 히트용, 기본값: 0)</param>
+        private void ApplyDamageCustom(ICharacter target, int value, int hitIndex = -1, float yOffset = 0f)
         {
             PlayHitSound();
-            if (ignoreGuard)
+            
+            // 다단 히트인 경우 데미지 텍스트를 직접 표시 (Y 오프셋 적용)
+            if (hitIndex >= 0)
             {
+                // 데미지 적용 (텍스트 표시는 건너뛰기 위해 플래그 설정)
                 if (target is CharacterBase characterBase)
                 {
-                    characterBase.TakeDamageIgnoreGuard(value);
+                    // 임시 플래그로 ShowDamageText 호출 건너뛰기
+                    characterBase.SetSkipDamageTextDisplay(true);
+                }
+                
+                if (ignoreGuard)
+                {
+                    if (target is CharacterBase characterBaseGuard)
+                    {
+                        characterBaseGuard.TakeDamageIgnoreGuard(value);
+                    }
+                    else
+                    {
+                        target.TakeDamage(value);
+                    }
+                }
+                else
+                {
+                    target.TakeDamage(value);
+                }
+                
+                // 플래그 해제
+                if (target is CharacterBase characterBaseReset)
+                {
+                    characterBaseReset.SetSkipDamageTextDisplay(false);
+                }
+                
+                // 데미지 텍스트 직접 표시 (Y 오프셋 적용)
+                ShowDamageTextWithOffset(target, value, yOffset);
+            }
+            else
+            {
+                // 단일 히트는 기존 방식 사용
+                if (ignoreGuard)
+                {
+                    if (target is CharacterBase characterBase)
+                    {
+                        characterBase.TakeDamageIgnoreGuard(value);
+                    }
+                    else
+                    {
+                        target.TakeDamage(value);
+                    }
                 }
                 else
                 {
                     target.TakeDamage(value);
                 }
             }
-            else
+        }
+
+        /// <summary>
+        /// 데미지 텍스트를 Y 오프셋과 함께 표시합니다.
+        /// </summary>
+        /// <param name="target">대상 캐릭터</param>
+        /// <param name="damageAmount">데미지량</param>
+        /// <param name="yOffset">Y 좌표 오프셋</param>
+        private void ShowDamageTextWithOffset(ICharacter target, int damageAmount, float yOffset)
+        {
+            if (damageAmount <= 0) return;
+
+            // VFXManager 찾기
+            var vfxManager = UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
+            if (vfxManager == null) return;
+
+            // 대상의 hpTextAnchor 찾기
+            Transform hpTextAnchor = null;
+            Vector3 position = Vector3.zero;
+
+            if (target is PlayerCharacter playerCharacter)
             {
-                target.TakeDamage(value);
+                // 리플렉션으로 hpTextAnchor 접근
+                var field = typeof(PlayerCharacter).GetField("hpTextAnchor", 
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (field != null)
+                {
+                    hpTextAnchor = field.GetValue(playerCharacter) as Transform;
+                }
+            }
+            else if (target is EnemyCharacter enemyCharacter)
+            {
+                // 리플렉션으로 hpTextAnchor 접근
+                var field = typeof(EnemyCharacter).GetField("hpTextAnchor", 
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (field != null)
+                {
+                    hpTextAnchor = field.GetValue(enemyCharacter) as Transform;
+                }
+            }
+
+            // hpTextAnchor가 없으면 Transform 위치 사용
+            if (hpTextAnchor != null)
+            {
+                position = hpTextAnchor.position;
+            }
+            else if (target.Transform != null)
+            {
+                position = target.Transform.position;
+            }
+
+            // Y 오프셋 적용
+            position = new Vector3(position.x, position.y + yOffset, position.z);
+
+            // 데미지 텍스트 표시 (Y 오프셋 적용)
+            bool success = vfxManager.ShowDamageText(damageAmount, position, hpTextAnchor, yOffset);
+            
+            // VFXManager가 실패하면 fallback 사용
+            if (!success)
+            {
+                GameObject damageTextPrefab = null;
+                
+                if (target is PlayerCharacter playerChar)
+                {
+                    // 리플렉션으로 damageTextPrefab 접근
+                    var prefabField = typeof(PlayerCharacter).GetField("damageTextPrefab", 
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (prefabField != null)
+                    {
+                        damageTextPrefab = prefabField.GetValue(playerChar) as GameObject;
+                    }
+                }
+                else if (target is EnemyCharacter enemyChar)
+                {
+                    // 리플렉션으로 damageTextPrefab 접근
+                    var prefabField = typeof(EnemyCharacter).GetField("damageTextPrefab", 
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (prefabField != null)
+                    {
+                        damageTextPrefab = prefabField.GetValue(enemyChar) as GameObject;
+                    }
+                }
+                
+                if (damageTextPrefab != null && hpTextAnchor != null)
+                {
+                    var instance = UnityEngine.Object.Instantiate(damageTextPrefab);
+                    instance.transform.SetParent(hpTextAnchor, false);
+                    instance.transform.position = position;
+
+                    var damageUI = instance.GetComponent<Game.CombatSystem.UI.DamageTextUI>();
+                    damageUI?.Show(damageAmount, Color.red, "-");
+                }
             }
         }
 

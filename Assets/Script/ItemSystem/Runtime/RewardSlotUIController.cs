@@ -325,7 +325,6 @@ namespace Game.ItemSystem.Runtime
                 if (foundManager != null)
                 {
                     tooltipManager = foundManager;
-                    GameLogger.LogInfo("[RewardSlotUI] ItemTooltipManager 직접 찾기 완료 (FindFirstObjectByType)", GameLogger.LogCategory.UI);
                 }
             }
             catch (System.Exception ex)

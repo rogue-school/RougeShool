@@ -1,6 +1,7 @@
 using UnityEngine;
 using Game.SkillCardSystem.Data;
 using Game.SkillCardSystem.Interface;
+using Game.VFXSystem.Manager;
 
 namespace Game.SkillCardSystem.Effect
 {
@@ -19,6 +20,10 @@ namespace Game.SkillCardSystem.Effect
             if (config.effectSO is not GuardEffectSO guardEffectSO)
                 return null;
 
+            // 의존성 찾기
+            var vfxManager = UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+
             int duration = 1;
             Sprite icon = null;
             GameObject activateEffectPrefab = null;
@@ -35,7 +40,7 @@ namespace Game.SkillCardSystem.Effect
             // 아이콘이 설정되지 않았으면 EffectSO에서 가져오기 (폴백)
             icon ??= guardEffectSO.GetIcon();
 
-            return new GuardEffectCommand(duration, icon, activateEffectPrefab, activateSfxClip);
+            return new GuardEffectCommand(duration, icon, activateEffectPrefab, activateSfxClip, vfxManager, audioManager);
         }
     }
 }

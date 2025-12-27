@@ -136,7 +136,6 @@ namespace Game.SkillCardSystem.UI
                 if (foundManager != null)
                 {
                     tooltipManager = foundManager;
-                    GameLogger.LogInfo("[SkillCardUI] tooltipManager 직접 찾기 완료 (FindFirstObjectByType)", GameLogger.LogCategory.UI);
                     return;
                 }
 
@@ -153,7 +152,6 @@ namespace Game.SkillCardSystem.UI
                     if (foundManager != null)
                     {
                         tooltipManager = foundManager;
-                        GameLogger.LogInfo("[SkillCardUI] tooltipManager 직접 찾기 완료 (예외 처리 중)", GameLogger.LogCategory.UI);
                     }
                 }
                 catch

@@ -632,14 +632,12 @@ namespace Game.ItemSystem.Manager
             if (skillCardTooltipManager != null)
             {
                 skillCardTooltipManager.ForceHideTooltip();
-                GameLogger.LogInfo("[ItemTooltipManager] 다른 툴팁 숨김 (SkillCardTooltipManager)", GameLogger.LogCategory.UI);
             }
 
             // 버프/디버프 툴팁 숨김
             if (buffDebuffTooltipManager != null)
             {
                 buffDebuffTooltipManager.ForceHideTooltip();
-                GameLogger.LogInfo("[ItemTooltipManager] 다른 툴팁 숨김 (BuffDebuffTooltipManager)", GameLogger.LogCategory.UI);
             }
         }
 
@@ -1049,11 +1047,9 @@ namespace Game.ItemSystem.Manager
             {
                 if (isPinned)
                 {
-                    GameLogger.LogInfo("[ItemTooltipManager] 툴팁 고정 상태 - 숨기지 않음", GameLogger.LogCategory.UI);
                     return;
                 }
                 currentTooltip.Hide();
-                GameLogger.LogInfo("툴팁 숨김 완료", GameLogger.LogCategory.UI);
             }
             catch (System.Exception ex)
             {

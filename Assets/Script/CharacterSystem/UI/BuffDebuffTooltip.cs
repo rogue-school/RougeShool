@@ -479,8 +479,16 @@ namespace Game.CharacterSystem.UI
                     return "치유";
                 case "AttackPowerBuffEffect":
                     return "공격력 증가";
+                case "CloneBuff":
+                    return "분신";
+                case "InvincibilityBuff":
+                    return "무적";
+                case "StormOfSpaceTimeDebuff":
+                    return "시공의 폭풍";
+                case "ThreadOfFateDebuff":
+                    return "운명의 실";
                 default:
-                    return effectTypeName.Replace("Effect", "").Replace("Buff", "");
+                    return effectTypeName.Replace("Effect", "").Replace("Buff", "").Replace("Debuff", "");
             }
         }
 
@@ -636,38 +644,65 @@ namespace Game.CharacterSystem.UI
             {
                 case "BleedEffect":
                     if (damageValue > 0)
-                        return $"매 턴이 시작할때마다 피해를 입힙니다.\n{damageValue}의 피해를 입히며 {remainingTurns}턴이 남았습니다.";
+                        return $"턴이 시작할 때마다 {damageValue}의 피해를 입힙니다.\n남은 턴: {remainingTurns}턴";
                     else
-                        return $"매 턴이 시작할때마다 피해를 입힙니다.\n피해를 입히며 {remainingTurns}턴이 남았습니다.";
+                        return $"턴이 시작할 때마다 피해를 입힙니다.\n남은 턴: {remainingTurns}턴";
                         
                 case "StunEffect":
                 case "StunDebuff":
-                    return $"매 턴이 시작할때마다 작동합니다.\n효과가 {remainingTurns}턴이 남았습니다.";
+                    return $"턴이 시작할 때마다 행동을 막습니다.\n남은 턴: {remainingTurns}턴";
                     
                 case "GuardBuff":
-                    return $"받는 모든 데미지와 상태이상을 무효화합니다.\n자신의 턴이 시작할 때마다 턴 수가 감소하며 {remainingTurns}턴이 남았습니다.";
+                    return $"받는 모든 데미지와 상태이상을 무효화합니다.\n자신의 턴이 시작할 때마다 지속 시간이 감소합니다.\n남은 턴: {remainingTurns}턴";
                     
                 case "CounterBuff":
-                    return $"공격을 받으면 반격합니다.\n자신의 턴이 시작할 때마다 턴 수가 감소하며 {remainingTurns}턴이 남았습니다.";
+                    return $"공격을 받으면 데미지를 반사하여 공격자에게 되돌립니다.\n자신의 턴이 시작할 때마다 지속 시간이 감소합니다.\n남은 턴: {remainingTurns}턴";
                     
                 case "HealEffect":
                     if (healValue > 0)
-                        return $"매 턴이 시작할때마다 작동합니다.\n{healValue}의 체력을 회복하며 {remainingTurns}턴이 남았습니다.";
+                        return $"턴이 시작할 때마다 {healValue}의 체력을 회복합니다.\n남은 턴: {remainingTurns}턴";
                     else
-                        return $"매 턴이 시작할때마다 작동합니다.\n체력을 회복하며 {remainingTurns}턴이 남았습니다.";
+                        return $"턴이 시작할 때마다 체력을 회복합니다.\n남은 턴: {remainingTurns}턴";
 
                 case "AttackPowerBuffEffect":
                 {
                     int bonus = GetEffectValue(effect, new[] { "AttackPowerBonus" });
                     if (bonus > 0)
                     {
-                        return $"피해가 {bonus} 증가한 상태가 {remainingTurns}턴 동안 유지됩니다.";
+                        return $"모든 공격의 피해가 {bonus} 증가합니다.\n남은 턴: {remainingTurns}턴";
                     }
-                    return $"피해가 증가한 상태가 {remainingTurns}턴 동안 유지됩니다.";
+                    return $"모든 공격의 피해가 증가합니다.\n남은 턴: {remainingTurns}턴";
                 }
+
+                case "CloneBuff":
+                {
+                    int cloneHP = GetEffectValue(effect, new[] { "CloneHP" });
+                    if (cloneHP > 0)
+                    {
+                        return $"추가 체력 {cloneHP}을 제공합니다.\n추가 체력이 있는 동안 자신의 스킬 공격 횟수가 2배가 됩니다.\n추가 체력이 모두 소모되면 버프가 해제됩니다.";
+                    }
+                    return $"추가 체력을 제공합니다.\n추가 체력이 있는 동안 자신의 스킬 공격 횟수가 2배가 됩니다.";
+                }
+
+                case "InvincibilityBuff":
+                    return $"받는 모든 데미지를 완전히 차단합니다.\n가드와 달리 어떤 공격으로도 데미지를 받지 않는 완전 무적 상태입니다.\n자신의 턴이 시작할 때마다 지속 시간이 감소합니다.\n남은 턴: {remainingTurns}턴";
+
+                case "StormOfSpaceTimeDebuff":
+                {
+                    int targetDamage = GetEffectValue(effect, new[] { "TargetDamage" });
+                    int accumulatedDamage = GetEffectValue(effect, new[] { "AccumulatedDamage" });
+                    if (targetDamage > 0)
+                    {
+                        return $"{remainingTurns}턴 동안 총 {targetDamage}의 데미지를 입혀야 합니다.\n현재 진행도: {accumulatedDamage}/{targetDamage}\n목표를 달성하지 못하면 페널티를 받습니다.";
+                    }
+                    return $"{remainingTurns}턴 동안 목표 데미지를 입혀야 합니다.\n목표를 달성하지 못하면 페널티를 받습니다.";
+                }
+
+                case "ThreadOfFateDebuff":
+                    return $"턴이 시작할 때 핸드에서 3장을 뽑고, 그 중 2장을 제거한 뒤 나머지 1장을 전투 슬롯으로 강제 이동시킵니다.\n자신의 턴이 시작할 때마다 지속 시간이 감소합니다.\n남은 턴: {remainingTurns}턴";
                         
                 default:
-                    return $"효과가 {remainingTurns}턴 동안 유지됩니다.";
+                    return $"효과가 {remainingTurns}턴 동안 지속됩니다.";
             }
         }
         
@@ -747,6 +782,27 @@ namespace Game.CharacterSystem.UI
                     break;
                 case "HealEffect":
                     items.Add(new TurnInfoItem { name = "회복량", value = "5", color = Color.green });
+                    break;
+                case "CloneBuff":
+                {
+                    int cloneHP = GetEffectValue(effect, new[] { "CloneHP" });
+                    items.Add(new TurnInfoItem { name = "추가 체력", value = cloneHP.ToString(), color = Color.cyan });
+                    items.Add(new TurnInfoItem { name = "효과", value = "공격 횟수 2배", color = Color.blue });
+                    break;
+                }
+                case "InvincibilityBuff":
+                    items.Add(new TurnInfoItem { name = "효과", value = "완전 무적", color = Color.blue });
+                    break;
+                case "StormOfSpaceTimeDebuff":
+                {
+                    int targetDamage = GetEffectValue(effect, new[] { "TargetDamage" });
+                    int accumulatedDamage = GetEffectValue(effect, new[] { "AccumulatedDamage" });
+                    items.Add(new TurnInfoItem { name = "목표 데미지", value = targetDamage.ToString(), color = Color.red });
+                    items.Add(new TurnInfoItem { name = "누적 데미지", value = $"{accumulatedDamage}/{targetDamage}", color = Color.yellow });
+                    break;
+                }
+                case "ThreadOfFateDebuff":
+                    items.Add(new TurnInfoItem { name = "효과", value = "카드 강제 선택", color = Color.red });
                     break;
             }
 

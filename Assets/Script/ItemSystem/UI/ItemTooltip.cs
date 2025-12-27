@@ -171,8 +171,6 @@ namespace Game.ItemSystem.UI
                         gameObject.SetActive(false);
                     }
                 });
-            
-            GameLogger.LogInfo("[ItemTooltip] 툴팁 숨김", GameLogger.LogCategory.UI);
         }
 
         /// <summary>

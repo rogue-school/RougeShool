@@ -46,6 +46,9 @@ namespace Game.CharacterSystem.Core
         /// <summary>분신 추가 체력 (CloneBuff에 의해 관리됨)</summary>
         protected int cloneHP = 0;
 
+        /// <summary>데미지 텍스트 표시 건너뛰기 플래그 (다단 히트용)</summary>
+        protected bool skipDamageTextDisplay = false;
+
         /// <summary>과거 체력 히스토리 (시공간 역행용, 최대 10턴 저장)</summary>
         protected List<int> hpHistory = new List<int>();
 
@@ -123,7 +126,8 @@ namespace Game.CharacterSystem.Core
 
         /// <summary>피해 시 호출되는 메서드</summary>
         /// <param name="amount">피해량</param>
-        protected virtual void OnDamaged(int amount) { }
+        /// <param name="skipVisualEffects">시각 효과(빨간색 플래시 등)를 건너뛸지 여부</param>
+        protected virtual void OnDamaged(int amount, bool skipVisualEffects = false) { }
 
         #endregion
 
@@ -134,7 +138,6 @@ namespace Game.CharacterSystem.Core
         public virtual void SetGuarded(bool value)
         {
             isGuarded = value;
-            GameLogger.LogInfo($"[{GetCharacterName()}] 가드 상태: {isGuarded}", GameLogger.LogCategory.Character);
             OnGuardStateChanged?.Invoke(isGuarded);
         }
 
@@ -153,6 +156,13 @@ namespace Game.CharacterSystem.Core
         {
             cloneHP = Mathf.Max(0, value);
             GameLogger.LogInfo($"[{GetCharacterName()}] 분신 추가 체력: {cloneHP}", GameLogger.LogCategory.Character);
+        }
+
+        /// <summary>데미지 텍스트 표시 건너뛰기 플래그 설정 (다단 히트용)</summary>
+        /// <param name="value">true면 데미지 텍스트 표시 건너뜀</param>
+        public virtual void SetSkipDamageTextDisplay(bool value)
+        {
+            skipDamageTextDisplay = value;
         }
 
         /// <summary>
@@ -231,10 +241,12 @@ namespace Game.CharacterSystem.Core
                 return; // 가드 상태면 데미지 무효화
             }
 
-            // 분신 추가 체력이 있으면 먼저 소모
+            // 분신 추가 체력이 있으면 먼저 소모 (현재 체력과 독립적으로 항상 먼저 소모됨)
             if (cloneHP > 0)
             {
+                int cloneDamageTaken = Mathf.Min(amount, cloneHP);
                 int remainingDamage = amount - cloneHP;
+                int previousCloneHP = cloneHP;
                 cloneHP = Mathf.Max(0, cloneHP - amount);
                 
                 // CloneBuff의 CloneHP도 동기화
@@ -247,7 +259,16 @@ namespace Game.CharacterSystem.Core
                     }
                 }
                 
-                GameLogger.LogInfo($"[{GetCharacterDataName()}] 분신 추가 체력 소모: {amount} (남은 분신 체력: {cloneHP})", GameLogger.LogCategory.Character);
+                GameLogger.LogInfo($"[{GetCharacterDataName()}] 분신 추가 체력 소모: {cloneDamageTaken} (남은 분신 체력: {cloneHP})", GameLogger.LogCategory.Character);
+                
+                // 분신 체력이 변경되었으면 UI 업데이트
+                if (previousCloneHP != cloneHP)
+                {
+                    OnBuffsChanged?.Invoke(perTurnEffects.AsReadOnly());
+                }
+                
+                // 분신 체력이 소모되었으므로 OnDamaged 호출 (빨간색 플래시 효과는 제외)
+                OnDamaged(cloneDamageTaken, skipVisualEffects: true);
                 
                 // 분신 체력이 0이 되면 분신 버프 제거
                 if (cloneHP <= 0)
@@ -271,7 +292,7 @@ namespace Game.CharacterSystem.Core
             GameLogger.LogInfo($"[{GetCharacterDataName()}] 피해: {amount}, 남은 체력: {currentHP}", GameLogger.LogCategory.Character);
 
             // 피해 이벤트 발행은 자식 클래스에서 처리
-            OnDamaged(amount);
+            OnDamaged(amount, skipVisualEffects: false);
 
             if (IsDead())
                 Die();
@@ -290,6 +311,10 @@ namespace Game.CharacterSystem.Core
                     cloneHP = 0;
                     OnBuffsChanged?.Invoke(perTurnEffects.AsReadOnly());
                     GameLogger.LogInfo($"[{GetCharacterDataName()}] 분신 버프 제거됨", GameLogger.LogCategory.Character);
+                    
+                    // 분신 제거 시 색상이 빨갛게 고정되는 현상 방지: 모든 색상 애니메이션 중단 및 원래 색상으로 복원
+                    RestoreVisualColor();
+                    
                     break;
                 }
             }
@@ -305,6 +330,58 @@ namespace Game.CharacterSystem.Core
                 throw new ArgumentException($"피해량은 양수여야 합니다. 입력값: {amount}", nameof(amount));
             }
 
+            // 무적 상태 확인 (가드 무시 데미지도 무적으로 차단)
+            if (isInvincible)
+            {
+                GameLogger.LogInfo($"[{GetCharacterDataName()}] 무적으로 데미지 완전 차단 (가드 무시): {amount}", GameLogger.LogCategory.Character);
+                return; // 무적 상태면 데미지 완전 무효화
+            }
+
+            // 분신 추가 체력이 있으면 먼저 소모 (가드 무시 데미지도 분신 체력이 먼저 소모됨)
+            if (cloneHP > 0)
+            {
+                int cloneDamageTaken = Mathf.Min(amount, cloneHP);
+                int remainingDamage = amount - cloneHP;
+                int previousCloneHP = cloneHP;
+                cloneHP = Mathf.Max(0, cloneHP - amount);
+                
+                // CloneBuff의 CloneHP도 동기화
+                foreach (var effect in perTurnEffects)
+                {
+                    if (effect is CloneBuff cloneBuff)
+                    {
+                        cloneBuff.SetCloneHP(cloneHP);
+                        break;
+                    }
+                }
+                
+                GameLogger.LogInfo($"[{GetCharacterDataName()}] 분신 추가 체력 소모 (가드 무시): {cloneDamageTaken} (남은 분신 체력: {cloneHP})", GameLogger.LogCategory.Character);
+                
+                // 분신 체력이 변경되었으면 UI 업데이트
+                if (previousCloneHP != cloneHP)
+                {
+                    OnBuffsChanged?.Invoke(perTurnEffects.AsReadOnly());
+                }
+                
+                // 분신 체력이 소모되었으므로 OnDamaged 호출 (빨간색 플래시 효과는 제외)
+                OnDamaged(cloneDamageTaken, skipVisualEffects: true);
+                
+                // 분신 체력이 0이 되면 분신 버프 제거
+                if (cloneHP <= 0)
+                {
+                    RemoveCloneBuff();
+                }
+                
+                // 분신 체력으로 모든 데미지를 흡수했으면 종료
+                if (remainingDamage <= 0)
+                {
+                    return;
+                }
+                
+                // 남은 데미지를 일반 체력에 적용
+                amount = remainingDamage;
+            }
+
             // 가드 체크 없이 직접 데미지 적용
             currentHP = Mathf.Max(currentHP - amount, 0);
             OnHPChanged?.Invoke(currentHP, maxHP);
@@ -312,7 +389,7 @@ namespace Game.CharacterSystem.Core
             GameLogger.LogInfo($"[{GetCharacterDataName()}] 가드 무시 피해: {amount}, 남은 체력: {currentHP}", GameLogger.LogCategory.Character);
 
             // 피해 이벤트 발행은 자식 클래스에서 처리
-            OnDamaged(amount);
+            OnDamaged(amount, skipVisualEffects: false);
 
             if (IsDead())
                 Die();
@@ -381,13 +458,13 @@ namespace Game.CharacterSystem.Core
                 return;
             }
 
-            // 공격력 증가 버프는 출처별로 동작 방식이 다르므로 별도 처리
+            // 공격력 증가 버프는 출처별로 덧씌우기 처리
             if (effect is Game.ItemSystem.Effect.AttackPowerBuffEffect attackPowerBuff)
             {
                 // 1) 아이템 유래 버프: SourceItemName이 있는 경우
-                //    → 동시에 하나만 유지, 새로운 아이템 버프로 기존 아이템 버프를 교체
+                //    → 기존 아이템 버프만 제거하고 새 아이템 버프로 교체
                 // 2) 스킬 유래 버프: SourceItemName이 비어 있고 SourceEffectName만 있는 경우
-                //    → 여러 스킬에서 온 버프가 동시에 존재할 수 있으므로 제거 없이 누적
+                //    → 기존 스킬 버프만 제거하고 새 스킬 버프로 교체
                 bool isItemBuff = !string.IsNullOrEmpty(attackPowerBuff.SourceItemName);
 
                 if (isItemBuff)
@@ -406,6 +483,23 @@ namespace Game.CharacterSystem.Core
                         $"[{GetCharacterDataName()}] 아이템 공격력 버프 재적용: {attackPowerBuff.SourceItemName ?? "Unknown"}",
                         GameLogger.LogCategory.Character);
                 }
+                else
+                {
+                    // 스킬 유래 버프: 기존 스킬 버프만 제거 (아이템 유래 버프는 유지)
+                    for (int i = perTurnEffects.Count - 1; i >= 0; i--)
+                    {
+                        if (perTurnEffects[i] is Game.ItemSystem.Effect.AttackPowerBuffEffect existingBuff &&
+                            string.IsNullOrEmpty(existingBuff.SourceItemName) &&
+                            !string.IsNullOrEmpty(existingBuff.SourceEffectName))
+                        {
+                            perTurnEffects.RemoveAt(i);
+                        }
+                    }
+
+                    GameLogger.LogInfo(
+                        $"[{GetCharacterDataName()}] 스킬 공격력 버프 재적용: {attackPowerBuff.SourceEffectName ?? "Unknown"}",
+                        GameLogger.LogCategory.Character);
+                }
             }
             else
             {
@@ -422,14 +516,7 @@ namespace Game.CharacterSystem.Core
 
             perTurnEffects.Add(effect);
             
-            // 디버깅: 분신 버프 등록 확인
-            if (effect is CloneBuff cloneBuff)
-            {
-                GameLogger.LogInfo($"[{GetCharacterName()}] 분신 버프 등록 완료 (CloneHP: {cloneBuff.CloneHP}, Icon: {(cloneBuff.Icon != null ? cloneBuff.Icon.name : "null")})", GameLogger.LogCategory.Character);
-            }
-            
             OnBuffsChanged?.Invoke(perTurnEffects.AsReadOnly());
-            GameLogger.LogInfo($"[{GetCharacterName()}] OnBuffsChanged 이벤트 발생 (버프 수: {perTurnEffects.Count})", GameLogger.LogCategory.Character);
         }
 
         /// <summary>상태이상 효과 등록 (가드 상태 확인)</summary>
@@ -472,22 +559,37 @@ namespace Game.CharacterSystem.Core
             // 역순 순회로 GC 없이 안전하게 제거
             for (int i = perTurnEffects.Count - 1; i >= 0; i--)
             {
+                // 인덱스 범위 체크 (리스트가 변경될 수 있으므로)
+                if (i < 0 || i >= perTurnEffects.Count) break;
+                
                 var effect = perTurnEffects[i];
                 if (effect == null) continue;
                 
                 effect.OnTurnStart(this);
 
+                // CloneBuff는 CloneHP가 0이 되면 만료되므로 별도 처리
+                if (effect is CloneBuff cloneBuff)
+                {
+                    // CloneHP가 0이면 제거
+                    if (cloneBuff.CloneHP <= 0)
+                    {
+                        // 인덱스 범위 다시 체크
+                        if (i >= 0 && i < perTurnEffects.Count)
+                        {
+                            perTurnEffects.RemoveAt(i);
+                        }
+                    }
+                    continue;
+                }
+
+                // 일반 효과 만료 체크
                 if (effect.IsExpired)
                 {
-                    // CloneBuff는 CloneHP가 0이 되면 만료되므로 별도 처리
-                    if (effect is CloneBuff cloneBuff && cloneBuff.CloneHP > 0)
-                    {
-                        // CloneHP가 남아있으면 만료되지 않은 것으로 처리
-                        continue;
-                    }
-                    
+                    // 인덱스 범위 다시 체크
+                    if (i >= 0 && i < perTurnEffects.Count)
+                {
                     perTurnEffects.RemoveAt(i);
-                    GameLogger.LogInfo($"[{GetCharacterName()}] 효과 만료로 제거: {effect.GetType().Name}", GameLogger.LogCategory.Character);
+                    }
                 }
             }
             // 매 턴 UI가 남은 턴 수를 갱신할 수 있도록 전체 리스트를 통지
@@ -626,11 +728,7 @@ namespace Game.CharacterSystem.Core
             {
                 if (_vfxManager != null)
                 {
-                    var effectInstance = _vfxManager.PlayEffectAtCharacterCenter(guardBuff.BlockEffectPrefab, transform);
-                    if (effectInstance != null)
-                    {
-                        GameLogger.LogInfo($"[{GetCharacterDataName()}] 가드 차단 이펙트 재생: {guardBuff.BlockEffectPrefab.name}", GameLogger.LogCategory.Character);
-                    }
+                    _vfxManager.PlayEffectAtCharacterCenter(guardBuff.BlockEffectPrefab, transform);
                 }
             }
 
@@ -640,7 +738,6 @@ namespace Game.CharacterSystem.Core
                 if (_audioManager != null)
                 {
                     _audioManager.PlaySFXWithPool(guardBuff.BlockSfxClip, 0.9f);
-                    GameLogger.LogInfo($"[{GetCharacterDataName()}] 가드 차단 사운드 재생: {guardBuff.BlockSfxClip.name}", GameLogger.LogCategory.Character);
                 }
                 else
                 {
@@ -780,6 +877,58 @@ namespace Game.CharacterSystem.Core
                         spriteRenderer.DOColor(originalColor, 0.15f)
                             .SetEase(Ease.InQuad);
                     });
+            }
+        }
+
+        /// <summary>
+        /// 시각적 색상을 원래 상태로 복원합니다.
+        /// 분신 제거 시 색상이 빨갛게 고정되는 현상을 방지하기 위해 사용됩니다.
+        /// </summary>
+        private void RestoreVisualColor()
+        {
+            // 비주얼 루트 기준으로 한정
+            Transform visualRoot = GetHitVisualRoot() != null ? GetHitVisualRoot() : transform;
+            if (visualRoot == null) return;
+
+            // Image 컴포넌트의 색상 애니메이션 중단 및 복원
+            var images = visualRoot.GetComponentsInChildren<Image>(true);
+            foreach (var image in images)
+            {
+                if (image == null) continue;
+
+                // DamageTextUI 하위는 제외
+                if (image.GetComponentInParent<Game.CombatSystem.UI.DamageTextUI>() != null)
+                    continue;
+                // HPTextAnchor/HPTectAnchor 하위는 제외
+                var t = image.transform;
+                bool underHpTextAnchor = false;
+                while (t != null && t != visualRoot)
+                {
+                    if (t.name == "HPTextAnchor" || t.name == "HPTectAnchor")
+                    {
+                        underHpTextAnchor = true;
+                        break;
+                    }
+                    t = t.parent;
+                }
+                if (underHpTextAnchor) continue;
+
+                // 색상 애니메이션 중단
+                image.DOKill(true);
+                // 원래 색상으로 즉시 복원 (흰색으로 복원)
+                image.color = Color.white;
+            }
+
+            // SpriteRenderer 컴포넌트의 색상 애니메이션 중단 및 복원
+            var spriteRenderers = visualRoot.GetComponentsInChildren<SpriteRenderer>(true);
+            foreach (var spriteRenderer in spriteRenderers)
+            {
+                if (spriteRenderer == null) continue;
+
+                // 색상 애니메이션 중단
+                spriteRenderer.DOKill(true);
+                // 원래 색상으로 즉시 복원 (흰색으로 복원)
+                spriteRenderer.color = Color.white;
             }
         }
 

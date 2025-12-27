@@ -194,12 +194,18 @@ namespace Game.SkillCardSystem.UI.Mappers
 
                         if (so is GuardEffectSO)
                         {
+                            int guardDuration = 1;
+                            if (cs != null && cs.guardDuration > 0)
+                            {
+                                guardDuration = cs.guardDuration;
+                            }
+                            
                             string effectName = GetEffectName(so, "가드");
-                            ruleLines.Add($"{effectName} 1을 얻습니다.");
+                            ruleLines.Add($"{guardDuration}턴 동안 {effectName}을 얻습니다.");
                             model.Effects.Add(new TooltipModel.EffectRow
                             {
                                 Name = effectName,
-                                Description = "+1",
+                                Description = $"{guardDuration}턴",
                                 Color = UnityEngine.Color.blue
                             });
                         }
@@ -592,7 +598,7 @@ namespace Game.SkillCardSystem.UI.Mappers
 
             if (so is GuardEffectSO)
             {
-                ProcessGuardEffect(so, ruleLines, model);
+                ProcessGuardEffect(so, cs, ruleLines, model);
                 return;
             }
 
@@ -620,8 +626,41 @@ namespace Game.SkillCardSystem.UI.Mappers
                 return;
             }
 
-            // 치유 효과는 항상 처리 (조건 없음)
-            ProcessHealEffect(so, cs, ruleLines, model);
+            if (so is CloneEffectSO)
+            {
+                ProcessCloneEffect(so, cs, ruleLines, model);
+                return;
+            }
+
+            if (so is InvincibilityEffectSO)
+            {
+                ProcessInvincibilityEffect(so, cs, ruleLines, model);
+                return;
+            }
+
+            if (so is SpaceTimeReversalEffectSO spaceTimeReversal)
+            {
+                ProcessSpaceTimeReversalEffect(spaceTimeReversal, cs, ruleLines, model);
+                return;
+            }
+
+            if (so is ThreadOfFateEffectSO threadOfFate)
+            {
+                ProcessThreadOfFateEffect(threadOfFate, cs, ruleLines, model);
+                return;
+            }
+
+            if (so is StormOfSpaceTimeEffectSO stormOfSpaceTime)
+            {
+                ProcessStormOfSpaceTimeEffect(stormOfSpaceTime, cs, ruleLines, model);
+                return;
+            }
+
+            if (so is HealEffectSO)
+            {
+                ProcessHealEffect(so, cs, ruleLines, model);
+                return;
+            }
 
             // 리소스 델타 처리
             if (cs != null && cs.resourceDelta != 0)
@@ -715,14 +754,31 @@ namespace Game.SkillCardSystem.UI.Mappers
         /// <summary>
         /// 가드 효과를 처리합니다
         /// </summary>
-        private static void ProcessGuardEffect(SkillCardEffectSO so, System.Collections.Generic.List<string> ruleLines, TooltipModel model)
+        private static void ProcessGuardEffect(SkillCardEffectSO so, EffectCustomSettings cs, System.Collections.Generic.List<string> ruleLines, TooltipModel model)
         {
             string effectName = GetEffectName(so, "가드");
-            ruleLines.Add($"{effectName} 1을 얻습니다.");
+            
+            int guardDuration = 1;
+            if (cs != null && cs.guardDuration > 0)
+            {
+                guardDuration = cs.guardDuration;
+            }
+            else if (so is GuardEffectSO guardEffectSO)
+            {
+                // 리플렉션으로 defaultDuration 가져오기
+                var field = typeof(GuardEffectSO).GetField("defaultDuration", 
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (field != null)
+                {
+                    guardDuration = (int)field.GetValue(guardEffectSO);
+                }
+            }
+            
+            ruleLines.Add($"{guardDuration}턴 동안 {effectName}을 얻습니다.");
             model.Effects.Add(new TooltipModel.EffectRow
             {
                 Name = effectName,
-                Description = "+1",
+                Description = $"{guardDuration}턴",
                 Color = UnityEngine.Color.blue
             });
         }
@@ -824,6 +880,177 @@ namespace Game.SkillCardSystem.UI.Mappers
                     Color = new Color(0.9f, 0.7f, 1f) // 보라색 계열
                 });
             }
+        }
+
+        /// <summary>
+        /// 분신 효과를 처리합니다
+        /// </summary>
+        private static void ProcessCloneEffect(SkillCardEffectSO so, EffectCustomSettings cs, System.Collections.Generic.List<string> ruleLines, TooltipModel model)
+        {
+            string effectName = GetEffectName(so, "분신");
+            
+            int cloneHP = 10; // 기본값
+            if (cs != null && cs.cloneHP > 0)
+            {
+                cloneHP = cs.cloneHP;
+            }
+            else if (so is CloneEffectSO cloneEffectSO)
+            {
+                // 리플렉션으로 cloneHP 가져오기
+                var field = typeof(CloneEffectSO).GetField("cloneHP", 
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (field != null)
+                {
+                    cloneHP = (int)field.GetValue(cloneEffectSO);
+                }
+            }
+            
+            ruleLines.Add($"추가 체력 {cloneHP}을 제공합니다. 추가 체력이 있는 동안 자신의 스킬 공격 횟수가 2배가 됩니다.");
+            model.Effects.Add(new TooltipModel.EffectRow
+            {
+                Name = effectName,
+                Description = $"추가 체력 {cloneHP}",
+                Color = new Color(0.4f, 0.8f, 1f) // 청록색 계열
+            });
+        }
+
+        /// <summary>
+        /// 무적 효과를 처리합니다
+        /// </summary>
+        private static void ProcessInvincibilityEffect(SkillCardEffectSO so, EffectCustomSettings cs, System.Collections.Generic.List<string> ruleLines, TooltipModel model)
+        {
+            string effectName = GetEffectName(so, "무적");
+            
+            int duration = 2; // 기본값
+            if (cs != null && cs.invincibilityDuration > 0)
+            {
+                duration = cs.invincibilityDuration;
+            }
+            else if (so is InvincibilityEffectSO invincibilityEffectSO)
+            {
+                // InvincibilityEffectCommand의 기본값은 2턴
+                duration = 2;
+            }
+            
+            ruleLines.Add($"{duration}턴 동안 받는 모든 데미지를 완전히 차단합니다.");
+            model.Effects.Add(new TooltipModel.EffectRow
+            {
+                Name = effectName,
+                Description = $"{duration}턴",
+                Color = new Color(1f, 0.9f, 0.2f) // 금색 계열
+            });
+        }
+
+        /// <summary>
+        /// 시공간 역행 효과를 처리합니다
+        /// </summary>
+        private static void ProcessSpaceTimeReversalEffect(SpaceTimeReversalEffectSO spaceTimeReversal, EffectCustomSettings cs, System.Collections.Generic.List<string> ruleLines, TooltipModel model)
+        {
+            string effectName = GetEffectName(spaceTimeReversal, "시공간 역행");
+            
+            int turnsAgo = 3; // 기본값
+            if (cs != null && cs.spaceTimeReversalTurnsAgo > 0)
+            {
+                turnsAgo = cs.spaceTimeReversalTurnsAgo;
+            }
+            else
+            {
+                // 리플렉션으로 turnsAgo 가져오기
+                var field = typeof(SpaceTimeReversalEffectSO).GetField("turnsAgo", 
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (field != null)
+                {
+                    turnsAgo = (int)field.GetValue(spaceTimeReversal);
+                }
+            }
+            
+            ruleLines.Add($"체력을 {turnsAgo}턴 전 상태로 복원합니다.");
+            model.Effects.Add(new TooltipModel.EffectRow
+            {
+                Name = effectName,
+                Description = $"{turnsAgo}턴 전",
+                Color = new Color(0.8f, 0.4f, 1f) // 보라색 계열
+            });
+        }
+
+        /// <summary>
+        /// 운명의 실 효과를 처리합니다
+        /// </summary>
+        private static void ProcessThreadOfFateEffect(ThreadOfFateEffectSO threadOfFate, EffectCustomSettings cs, System.Collections.Generic.List<string> ruleLines, TooltipModel model)
+        {
+            string effectName = GetEffectName(threadOfFate, "운명의 실");
+            
+            int duration = 1; // 기본값
+            if (cs != null && cs.threadOfFateDuration > 0)
+            {
+                duration = cs.threadOfFateDuration;
+            }
+            else
+            {
+                // 리플렉션으로 duration 가져오기
+                var field = typeof(ThreadOfFateEffectSO).GetField("duration", 
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (field != null)
+                {
+                    duration = (int)field.GetValue(threadOfFate);
+                }
+            }
+            
+            ruleLines.Add($"플레이어에게 {duration}턴 동안 운명의 실 디버프를 적용합니다. 턴이 시작할 때 핸드에서 3장을 뽑고 2개를 제거한 후 나머지 1개를 전투 슬롯으로 이동시킵니다.");
+            model.Effects.Add(new TooltipModel.EffectRow
+            {
+                Name = effectName,
+                Description = $"{duration}턴",
+                Color = new Color(0.6f, 0.3f, 0.8f) // 진한 보라색 계열
+            });
+        }
+
+        /// <summary>
+        /// 시공의 폭풍 효과를 처리합니다
+        /// </summary>
+        private static void ProcessStormOfSpaceTimeEffect(StormOfSpaceTimeEffectSO stormOfSpaceTime, EffectCustomSettings cs, System.Collections.Generic.List<string> ruleLines, TooltipModel model)
+        {
+            string effectName = GetEffectName(stormOfSpaceTime, "시공의 폭풍");
+            
+            int targetDamage = 30; // 기본값
+            int duration = 3; // 기본값
+            
+            if (cs != null)
+            {
+                if (cs.stormOfSpaceTimeTargetDamage > 0)
+                {
+                    targetDamage = cs.stormOfSpaceTimeTargetDamage;
+                }
+                if (cs.stormOfSpaceTimeDuration > 0)
+                {
+                    duration = cs.stormOfSpaceTimeDuration;
+                }
+            }
+            else
+            {
+                // 리플렉션으로 기본값 가져오기
+                var targetDamageField = typeof(StormOfSpaceTimeEffectSO).GetField("targetDamage", 
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (targetDamageField != null)
+                {
+                    targetDamage = (int)targetDamageField.GetValue(stormOfSpaceTime);
+                }
+                
+                var durationField = typeof(StormOfSpaceTimeEffectSO).GetField("duration", 
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (durationField != null)
+                {
+                    duration = (int)durationField.GetValue(stormOfSpaceTime);
+                }
+            }
+            
+            ruleLines.Add($"{duration}턴 동안 총 {targetDamage}의 데미지를 입혀야 합니다. 목표를 달성하지 못하면 페널티를 받습니다.");
+            model.Effects.Add(new TooltipModel.EffectRow
+            {
+                Name = effectName,
+                Description = $"{targetDamage} 데미지, {duration}턴",
+                Color = new Color(1f, 0.5f, 0.2f) // 주황색 계열
+            });
         }
 
         /// <summary>

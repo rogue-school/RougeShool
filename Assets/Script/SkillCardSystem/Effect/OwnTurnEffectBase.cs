@@ -17,7 +17,7 @@ namespace Game.SkillCardSystem.Effect
         public Sprite Icon { get; protected set; }
 
         /// <summary>효과 만료 여부</summary>
-        public bool IsExpired => RemainingTurns <= 0;
+        public virtual bool IsExpired => RemainingTurns <= 0;
 
         /// <summary>TurnManager 캐싱 (성능 최적화)</summary>
         private static Game.CombatSystem.Manager.TurnManager _cachedTurnManager;

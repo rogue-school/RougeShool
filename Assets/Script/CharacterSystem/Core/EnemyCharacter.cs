@@ -425,6 +425,9 @@ namespace Game.CharacterSystem.Core
             // 데미지가 0이면 텍스트 표시하지 않음
             if (amount <= 0) return;
 
+            // 다단 히트인 경우 텍스트 표시 건너뛰기 (DamageEffectCommand에서 직접 처리)
+            if (skipDamageTextDisplay) return;
+
             // 데미지 텍스트 표시 (VFXManager를 통한 Object Pooling)
             bool success = false;
             if (vfxManager != null && hpTextAnchor != null)
@@ -442,6 +445,7 @@ namespace Game.CharacterSystem.Core
                 damageUI?.Show(amount, Color.red, "-");
             }
         }
+
 
         /// <summary>
         /// 회복 처리 후 UI 갱신
@@ -646,15 +650,19 @@ namespace Game.CharacterSystem.Core
         }
 
         /// <summary>피해 시 이벤트 발행</summary>
-        protected override void OnDamaged(int amount)
+        protected override void OnDamaged(int amount, bool skipVisualEffects = false)
         {
             CombatEvents.RaiseEnemyCharacterDamaged(CharacterData, this.gameObject, amount);
 
-            // 피격 애니메이션 재생
-            PlayHitAnimation();
+            // 시각 효과를 건너뛰지 않는 경우에만 피격 효과 재생
+            if (!skipVisualEffects)
+            {
+                // 피격 애니메이션 재생
+                PlayHitAnimation();
 
-            // 피격 시각 효과 재생
-            PlayHitVisualEffects(amount);
+                // 피격 시각 효과 재생
+                PlayHitVisualEffects(amount);
+            }
         }
 
         /// <summary>

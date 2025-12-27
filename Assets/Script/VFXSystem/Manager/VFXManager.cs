@@ -98,8 +98,9 @@ namespace Game.VFXSystem.Manager
         /// <param name="damageAmount">데미지 양</param>
         /// <param name="position">표시 위치</param>
         /// <param name="parent">부모 Transform (선택적)</param>
+        /// <param name="yOffset">Y 좌표 오프셋 (다단 히트용, 기본값: 0)</param>
         /// <returns>데미지 텍스트 표시 성공 여부</returns>
-        public bool ShowDamageText(int damageAmount, Vector3 position, Transform parent = null)
+        public bool ShowDamageText(int damageAmount, Vector3 position, Transform parent = null, float yOffset = 0f)
         {
             if (damageTextPool == null)
             {
@@ -107,7 +108,14 @@ namespace Game.VFXSystem.Manager
                 return false;
             }
 
-            GameObject damageText = damageTextPool.Get(position, parent);
+            // Y 오프셋 적용
+            Vector3 finalPosition = position;
+            if (yOffset != 0f)
+            {
+                finalPosition = new Vector3(position.x, position.y + yOffset, position.z);
+            }
+
+            GameObject damageText = damageTextPool.Get(finalPosition, parent);
             if (damageText != null)
             {
                 // DamageText 컴포넌트 설정 (존재하는 경우)

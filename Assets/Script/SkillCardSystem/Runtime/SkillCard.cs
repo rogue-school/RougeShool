@@ -358,27 +358,45 @@ namespace Game.SkillCardSystem.Runtime
         /// <param name="context">실행 컨텍스트</param>
         private void StartPresentation(ICardExecutionContext context)
         {
-            // 데미지 설정에서 이펙트/사운드 가져오기
+            AudioClip sfxClip = null;
+            GameObject visualEffectPrefab = null;
+            
+            // 데미지 설정에서 이펙트/사운드 가져오기 (우선순위 1)
             if (definition.configuration.hasDamage)
             {
                 var damageConfig = definition.configuration.damageConfig;
-                
-                // 사운드 재생 (즉시, 풀링 우선)
-                if (damageConfig.sfxClip != null)
-                {
-                    PlaySFXPooled(damageConfig.sfxClip);
-                }
-                
-                // 비주얼 이펙트 생성 (즉시)
-                if (damageConfig.visualEffectPrefab != null)
-                {
-                    CreateVisualEffect(context, damageConfig);
-                }
-                else
-                {
-                    GameLogger.LogWarning("[SkillCard] 비주얼 이펙트 프리팹이 설정되지 않음", GameLogger.LogCategory.SkillCard);
-                }
+                sfxClip = damageConfig.sfxClip;
+                visualEffectPrefab = damageConfig.visualEffectPrefab;
             }
+            
+            // 데미지 설정에 없으면 presentation 섹션에서 가져오기 (우선순위 2)
+            if (sfxClip == null && definition.presentation != null)
+            {
+                sfxClip = definition.presentation.sfxClip;
+            }
+            
+            if (visualEffectPrefab == null && definition.presentation != null)
+            {
+                visualEffectPrefab = definition.presentation.visualEffectPrefab;
+            }
+            
+            // 사운드 재생 (즉시, 풀링 우선)
+            if (sfxClip != null)
+            {
+                PlaySFXPooled(sfxClip);
+            }
+            
+            // 비주얼 이펙트 생성 (즉시)
+            if (visualEffectPrefab != null)
+            {
+                CreateVisualEffectFromPrefab(context, visualEffectPrefab);
+            }
+            else if (definition.configuration.hasDamage)
+            {
+                // 데미지가 있는 카드인데 VFX가 없으면 경고만 출력 (기존 동작 유지)
+                GameLogger.LogWarning("[SkillCard] 비주얼 이펙트 프리팹이 설정되지 않음", GameLogger.LogCategory.SkillCard);
+            }
+            
             // 데미지가 없는 카드는 가드 이펙트를 여기서 재생하지 않음
             // 가드 차단 이펙트는 실제로 가드가 차단할 때만 재생됨:
             // - 데미지: CharacterBase.TakeDamage()에서 가드 차단 시 재생
@@ -392,7 +410,10 @@ namespace Game.SkillCardSystem.Runtime
             audioManager.PlaySFXWithPool(clip, 0.9f);
         }
         
-        private void CreateVisualEffect(ICardExecutionContext context, DamageConfiguration damageConfig)
+        /// <summary>
+        /// 프리팹을 직접 받아서 비주얼 이펙트를 생성합니다.
+        /// </summary>
+        private void CreateVisualEffectFromPrefab(ICardExecutionContext context, GameObject visualEffectPrefab)
         {
             var target = context.Target;
             var targetTransform = (target as MonoBehaviour)?.transform;
@@ -419,13 +440,22 @@ namespace Game.SkillCardSystem.Runtime
             if (vfxManager != null)
             {
                 // 캐릭터의 시각적 중심에서 이펙트 재생
-                var effectInstance = vfxManager.PlayEffectAtCharacterCenter(damageConfig.visualEffectPrefab, targetTransform);
+                var effectInstance = vfxManager.PlayEffectAtCharacterCenter(visualEffectPrefab, targetTransform);
                 if (effectInstance == null)
                 {
                     GameLogger.LogError("[SkillCard] 이펙트 인스턴스 생성 실패", GameLogger.LogCategory.SkillCard);
                 }
-
-                // 가드 차단 이펙트는 CharacterBase.TakeDamage()에서 실제 차단될 때만 재생됨
+            }
+        }
+        
+        /// <summary>
+        /// DamageConfiguration에서 비주얼 이펙트를 생성합니다 (기존 호환성).
+        /// </summary>
+        private void CreateVisualEffect(ICardExecutionContext context, DamageConfiguration damageConfig)
+        {
+            if (damageConfig?.visualEffectPrefab != null)
+            {
+                CreateVisualEffectFromPrefab(context, damageConfig.visualEffectPrefab);
             }
             else
             {

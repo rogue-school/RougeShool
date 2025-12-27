@@ -468,17 +468,12 @@ namespace Game.CharacterSystem.Manager
             bool targetValid = currentTargetRect != null && currentTargetRect && currentTargetRect.gameObject.activeInHierarchy;
             if (!targetValid)
             {
-                if (hoveredEffect != null || isShowingTooltip)
-                {
-                    GameLogger.LogInfo("[BuffDebuffTooltipManager] 대상이 사라져서 툴팁 숨김", GameLogger.LogCategory.UI);
-                }
                 ForceHideTooltip();
                 return;
             }
 
             if (hoveredEffect != null && hoveredEffect.IsExpired)
             {
-                GameLogger.LogInfo("[BuffDebuffTooltipManager] 효과가 만료되어 툴팁 숨김", GameLogger.LogCategory.UI);
                 ForceHideTooltip();
             }
         }

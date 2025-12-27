@@ -105,7 +105,15 @@ namespace Game.CharacterSystem.UI
                 if (iconImage != null)
                     iconImage.sprite = effect.Icon;
                 
-                UpdateTurns(effect.RemainingTurns);
+                // 분신 버프인 경우 추가 체력을 파란색으로 표시
+                if (effect is Game.SkillCardSystem.Effect.CloneBuff cloneBuff)
+                {
+                    UpdateCloneHP(cloneBuff.CloneHP);
+                }
+                else
+                {
+                    UpdateTurns(effect.RemainingTurns);
+                }
                 // SubTooltipModel에 값-페어를 전달할 준비(남은 턴 등)
             }
         }
@@ -122,11 +130,37 @@ namespace Game.CharacterSystem.UI
             {
                 // 10 이상이면 9+ 같은 방식이 필요하면 여기서 포맷 조정 가능
                 turnText.text = Mathf.Max(0, remainingTurns).ToString();
+                // 기본 색상을 빨간색으로 설정 (검은색 배경에 잘 보이도록)
+                turnText.color = Color.red;
             }
 
             if (autoHideOnZeroTurn)
             {
                 bool shouldShow = remainingTurns > 0;
+                if (gameObject.activeSelf != shouldShow)
+                    gameObject.SetActive(shouldShow);
+            }
+        }
+
+        /// <summary>
+        /// 분신 버프의 추가 체력을 파란색으로 표시한다.
+        /// </summary>
+        /// <param name="cloneHP">분신 추가 체력</param>
+        public void UpdateCloneHP(int cloneHP)
+        {
+            RemainingTurns = 0; // 분신은 턴 기반이 아니므로 0으로 설정
+
+            if (turnText != null)
+            {
+                // 분신 추가 체력을 파란색으로 표시
+                turnText.text = cloneHP.ToString();
+                turnText.color = Color.cyan; // 파란색 (cyan)
+            }
+
+            // 분신 버프는 추가 체력이 0이 될 때까지 표시
+            if (autoHideOnZeroTurn)
+            {
+                bool shouldShow = cloneHP > 0;
                 if (gameObject.activeSelf != shouldShow)
                     gameObject.SetActive(shouldShow);
             }
@@ -331,6 +365,8 @@ namespace Game.CharacterSystem.UI
                     return "반격";
                 case "HealEffect":
                     return "치유";
+                case "CloneBuff":
+                    return "분신";
                 default:
                     return effectTypeName.Replace("Effect", "").Replace("Buff", "");
             }
