@@ -197,9 +197,6 @@ namespace Game.CombatSystem.Manager
                 yield return new WaitForSeconds(animationWaitTime);
             }
 
-            // 실행 완료 이벤트 발생
-            OnExecutionCompleted?.Invoke(result);
-
             // 실행 후 처리: 배틀 슬롯에서 사용된 카드는 소유자와 무관하게 정리
             // (상태 머신이 있으면 턴 진행은 상태 머신이 담당)
             if (card != null && slotPosition == CombatSlotPosition.BATTLE_SLOT)
@@ -236,7 +233,11 @@ namespace Game.CombatSystem.Manager
                 }
             }
 
+            // 실행 상태를 false로 설정 (OnExecutionCompleted 이벤트 핸들러에서 ExecuteCardImmediately를 호출할 수 있도록)
             isExecuting = false;
+
+            // 실행 완료 이벤트 발생 (isExecuting을 false로 설정한 후 호출)
+            OnExecutionCompleted?.Invoke(result);
 
             // 카드 실행 완료
         }

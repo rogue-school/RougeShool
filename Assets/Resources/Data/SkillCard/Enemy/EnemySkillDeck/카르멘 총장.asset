@@ -25,3 +25,6 @@ MonoBehaviour:
   - definition: {fileID: 11400000, guid: 6e029c50f988f1f4a906e9bd9daa72fb, type: 2}
     probability: 0.05
     damageOverride: -1
+  - definition: {fileID: 11400000, guid: e9a9ac9eb83099d4b9c75828f05d6ace, type: 2}
+    probability: 1
+    damageOverride: -1

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   <DisplayName>k__BackingField: "\uC544\uCF00\uC778"
   <CharacterType>k__BackingField: 0
-  <MaxHP>k__BackingField: 200
+  <MaxHP>k__BackingField: 20
   <PortraitPrefab>k__BackingField: {fileID: 751987938129930587, guid: cfcaacc6ef976d04d9fd6fa07f74dd36, type: 3}
   <PlayerUIPortrait>k__BackingField: {fileID: 6111465266690084320, guid: f99d558af8f4a794690914664f4195ac, type: 3}
   <Emblem>k__BackingField: {fileID: -7375953187843166275, guid: e015805e0026ec1488e065859b39c164, type: 3}

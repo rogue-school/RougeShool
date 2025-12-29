@@ -31,18 +31,6 @@ MonoBehaviour:
       stormOfSpaceTimeTargetDamage: 30
       stormOfSpaceTimeDuration: 3
     priority: 0
-  - effectSO: {fileID: 11400000, guid: da5100f1ed63a024aaa087a53f0e92e6, type: 2}
-    useCustomSettings: 1
-    customSettings:
-      healthThreshold: 0
-      summonTarget: {fileID: 0}
-      skillHealthThreshold: 48
-      useSkillHealthRatio: 0
-      skillCardDefinition: {fileID: 11400000, guid: e9a9ac9eb83099d4b9c75828f05d6ace, type: 2}
-      skillCardId: 
-      stormOfSpaceTimeTargetDamage: 30
-      stormOfSpaceTimeDuration: 3
-    priority: 0
   <Phases>k__BackingField:
   - phaseName: "2\uD398\uC774\uC988"
     healthThreshold: 0.1
@@ -60,6 +48,18 @@ MonoBehaviour:
         skillHealthThreshold: 30
         useSkillHealthRatio: 0
         skillCardDefinition: {fileID: 0}
+        skillCardId: 
+        stormOfSpaceTimeTargetDamage: 30
+        stormOfSpaceTimeDuration: 3
+      priority: 0
+    - effectSO: {fileID: 11400000, guid: da5100f1ed63a024aaa087a53f0e92e6, type: 2}
+      useCustomSettings: 1
+      customSettings:
+        healthThreshold: 0
+        summonTarget: {fileID: 0}
+        skillHealthThreshold: 30
+        useSkillHealthRatio: 0
+        skillCardDefinition: {fileID: 11400000, guid: e9a9ac9eb83099d4b9c75828f05d6ace, type: 2}
         skillCardId: 
         stormOfSpaceTimeTargetDamage: 30
         stormOfSpaceTimeDuration: 3

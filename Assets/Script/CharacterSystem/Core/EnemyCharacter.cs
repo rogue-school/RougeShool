@@ -624,9 +624,9 @@ namespace Game.CharacterSystem.Core
             // 시공의 폭풍 버프가 존재하는지 먼저 확인 (강제 생성 모드 플래그와 무관하게 체크)
             // 남은 턴수만큼 시공의 폭풍 카드가 생성되도록 보장
             // 현재 슬롯에 있는 시공의 폭풍 카드 수를 계산하여 남은 턴수에서 빼야 함
-            var stormDebuff = GetEffect<Game.SkillCardSystem.Effect.StormOfSpaceTimeDebuff>();
-            if (stormDebuff != null && stormDebuff.RemainingTurns > 0)
-            {
+                var stormDebuff = GetEffect<Game.SkillCardSystem.Effect.StormOfSpaceTimeDebuff>();
+                if (stormDebuff != null && stormDebuff.RemainingTurns > 0)
+                {
                 // 현재 슬롯에 있는 시공의 폭풍 카드 수 카운트 (대기 슬롯 4개 + 배치 슬롯 1개)
                 int currentStormCardCount = CountStormOfSpaceTimeCardsInSlots();
                 
@@ -642,8 +642,8 @@ namespace Game.CharacterSystem.Core
                     {
                         GameLogger.LogInfo($"[EnemyCharacter] 덱에서 시공의 폭풍 카드 검색 중... (덱 카드 수: {allCards.Count})", GameLogger.LogCategory.Character);
                         
-                        foreach (var stormEntry in allCards)
-                        {
+                    foreach (var stormEntry in allCards)
+                    {
                             if (stormEntry?.definition != null)
                             {
                                 // 디버그: 모든 카드 ID 출력
@@ -660,8 +660,8 @@ namespace Game.CharacterSystem.Core
                                     GameLogger.LogInfo(
                                         $"[EnemyCharacter] 시공의 폭풍 카드 강제 생성 (버프 남은 턴: {stormDebuff.RemainingTurns}, 현재 슬롯에 있는 카드: {currentStormCardCount}개, 추가 생성 필요: {remainingCardsNeeded}개, 목표 달성: {stormDebuff.IsTargetAchieved}, 누적 데미지: {stormDebuff.AccumulatedDamage}/{stormDebuff.TargetDamage})",
                                         GameLogger.LogCategory.Character);
-                                    return stormEntry;
-                                }
+                            return stormEntry;
+                        }
                             }
                         }
                     }
@@ -686,8 +686,8 @@ namespace Game.CharacterSystem.Core
             else if (shouldForceStormOfSpaceTimeCard)
             {
                 // 강제 생성 모드가 활성화되어 있지만 버프가 만료된 경우 모드 해제
-                shouldForceStormOfSpaceTimeCard = false;
-                GameLogger.LogInfo($"[EnemyCharacter] 시공의 폭풍 버프가 만료되어 강제 생성 모드 종료", GameLogger.LogCategory.Character);
+                    shouldForceStormOfSpaceTimeCard = false;
+                    GameLogger.LogInfo($"[EnemyCharacter] 시공의 폭풍 버프가 만료되어 강제 생성 모드 종료", GameLogger.LogCategory.Character);
             }
 
             var randomEntry = skillDeck.GetRandomEntry();
@@ -934,7 +934,7 @@ namespace Game.CharacterSystem.Core
                 GameLogger.LogWarning($"[{GetCharacterName()}] 스킬 발동 요청: SkillCardDefinition이 null입니다", GameLogger.LogCategory.Character);
                 return;
             }
-
+            
             // SkillCardDefinition을 사용하여 카드 트리거
             StartCoroutine(TriggerSkillCardFromDefinitionCoroutine(cardDefinition));
         }
@@ -1136,7 +1136,7 @@ namespace Game.CharacterSystem.Core
 
                     // 시공의 폭풍 카드인지 확인 (특수 기믹 스킬은 우선적으로 배틀 슬롯에 배치)
                     bool isStormOfSpaceTimeCard = cardDefinition != null && cardDefinition.IsStormOfSpaceTimeCard();
-                    
+
                     if (targetSlot.HasValue)
                     {
                         // 기존 카드 교체
@@ -1289,10 +1289,10 @@ namespace Game.CharacterSystem.Core
                         else
                         {
                             // 일반 카드는 WAIT_SLOT_4에 배치
-                            yield return slotController.PlaceCardInWaitSlot4AndMoveRoutine(
-                                skillCard, 
-                                Game.CombatSystem.Data.SlotOwner.ENEMY, 
-                                null);
+                        yield return slotController.PlaceCardInWaitSlot4AndMoveRoutine(
+                            skillCard, 
+                            Game.CombatSystem.Data.SlotOwner.ENEMY, 
+                            null);
                         }
                         // 스킬 카드 배치 완료
                     }
@@ -1331,8 +1331,28 @@ namespace Game.CharacterSystem.Core
                 yield break;
             }
 
+            // 배틀 슬롯의 시공의 폭풍 카드가 레지스트리에 등록되도록 한 프레임 대기
+            // (반격 등으로 인해 배틀 슬롯에 카드가 배치된 직후 호출되는 경우를 대비)
+            yield return null;
+
             int targetCount = stormDebuff.RemainingTurns;
             int currentCount = CountStormOfSpaceTimeCardsInSlots();
+            
+            // 실행 중인 시공의 폭풍 카드도 카운트에 포함 (배틀 슬롯의 카드가 실행 중일 수 있음)
+            // 1번째 시공의 폭풍 카드 실행 시 배틀 슬롯의 카드가 실행 중이어서 레지스트리에 없을 수 있음
+            // 따라서 배틀 슬롯이 비어있고 실행 중이면 시공의 폭풍 카드일 가능성이 높으므로 카운트에 포함
+            if (slotRegistry != null && executionManager != null && executionManager.IsExecuting)
+            {
+                var battleSlotCard = slotRegistry.GetCardInSlot(Game.CombatSystem.Slot.CombatSlotPosition.BATTLE_SLOT);
+                if (battleSlotCard == null)
+                {
+                    // 배틀 슬롯이 비어있고 실행 중이면, 실행 중인 카드가 시공의 폭풍 카드일 가능성이 높음
+                    // (1번째 시공의 폭풍 카드 실행 시 배틀 슬롯의 카드가 실행 중이어서 레지스트리에서 제거됨)
+                    currentCount++;
+                    GameLogger.LogInfo($"[{GetCharacterName()}] 배틀 슬롯이 비어있고 실행 중이므로 실행 중인 시공의 폭풍 카드를 카운트에 포함 (현재: {currentCount}개)", GameLogger.LogCategory.Character);
+                }
+            }
+            
             int neededCount = targetCount - currentCount;
 
             if (neededCount <= 0)
@@ -1471,6 +1491,13 @@ namespace Game.CharacterSystem.Core
                 var existingCard = registry.GetCardInSlot(slot);
                 if (existingCard == null)
                 {
+                    // 배틀 슬롯이 비어있고 실행 중이면, 실행 중인 시공의 폭풍 카드가 배틀 슬롯에 있으므로 스킵
+                    if (slot == Game.CombatSystem.Slot.CombatSlotPosition.BATTLE_SLOT && 
+                        executionManager != null && executionManager.IsExecuting)
+                    {
+                        GameLogger.LogInfo($"[{GetCharacterName()}] 배틀 슬롯이 비어있지만 실행 중인 시공의 폭풍 카드가 있으므로 스킵", GameLogger.LogCategory.Character);
+                        continue;
+                    }
                     // 빈 슬롯에 시공의 폭풍 카드 생성
                     Game.SkillCardSystem.Interface.ISkillCard stormCard = null;
                     try
@@ -2345,24 +2372,24 @@ namespace Game.CharacterSystem.Core
             try
             {
                 // 덱에서 시공의 폭풍 카드 정의 찾기 (효과 기반)
-                if (skillDeck != null)
-                {
-                    var allCards = skillDeck.GetAllCards();
-                    foreach (var entry in allCards)
+                    if (skillDeck != null)
                     {
-                        if (entry?.definition != null && entry.definition.IsStormOfSpaceTimeCard())
+                        var allCards = skillDeck.GetAllCards();
+                        foreach (var entry in allCards)
                         {
-                            stormCard = cardFactory.CreateEnemyCard(entry.definition, GetCharacterName());
-                            GameLogger.LogInfo($"[{GetCharacterName()}] 시공의 폭풍 카드 생성 완료 (덱에서 찾음)", GameLogger.LogCategory.Character);
-                            break;
+                        if (entry?.definition != null && entry.definition.IsStormOfSpaceTimeCard())
+                            {
+                                stormCard = cardFactory.CreateEnemyCard(entry.definition, GetCharacterName());
+                                GameLogger.LogInfo($"[{GetCharacterName()}] 시공의 폭풍 카드 생성 완료 (덱에서 찾음)", GameLogger.LogCategory.Character);
+                                break;
+                            }
                         }
                     }
-                }
-                
-                if (stormCard == null)
-                {
+                    
+                    if (stormCard == null)
+                    {
                     GameLogger.LogError($"[{GetCharacterName()}] 시공의 폭풍 카드를 덱에서 찾을 수 없습니다.", GameLogger.LogCategory.Character);
-                    yield break;
+                        yield break;
                 }
             }
             catch (System.Exception e)
