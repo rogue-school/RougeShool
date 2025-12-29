@@ -73,10 +73,6 @@ namespace Game.CoreSystem.Manager
                 if (vui != null)
                 {
                     vui.Hide();
-                    if (enableDebugLogging)
-                    {
-                        GameLogger.LogInfo("[CoreSystemInitializer] CoreScene 로드 시 VictoryUI 패널 숨김", GameLogger.LogCategory.UI);
-                    }
                 }
             }
             catch (System.Exception ex)
@@ -239,10 +235,7 @@ namespace Game.CoreSystem.Manager
         {
             isInitializationComplete = true;
             
-            if (enableDebugLogging)
-            {
-                GameLogger.LogInfo("[CoreSystemInitializer] 모든 시스템 초기화 완료", GameLogger.LogCategory.Core);
-            }
+            // 모든 시스템 초기화 완료
             
             OnAllSystemsInitialized?.Invoke();
 
@@ -251,10 +244,6 @@ namespace Game.CoreSystem.Manager
                 if (sceneTransitionManager != null)
                 {
                     // 코어 초기화 완료 후 메인 씬으로 자동 전환(옵션)
-                    if (enableDebugLogging)
-                    {
-                        GameLogger.LogInfo("[CoreSystemInitializer] 메인 씬으로 자동 전환 시작", GameLogger.LogCategory.Core);
-                    }
                     StartCoroutine(GoToMainSceneNextFrame());
                 }
                 else
@@ -327,10 +316,7 @@ namespace Game.CoreSystem.Manager
             {
                 GameLogger.LogWarning("[CoreSystemInitializer] 메인 씬 전환이 취소되었습니다.", GameLogger.LogCategory.Core);
             }
-            else if (enableDebugLogging)
-            {
-                GameLogger.LogInfo("[CoreSystemInitializer] 메인 씬 전환 완료", GameLogger.LogCategory.Core);
-            }
+            // 메인 씬 전환 완료
         }
         #endregion
 

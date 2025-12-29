@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: "\uAD74\uC808"
   displayNameKO: 
   description: 
-  artwork: {fileID: 0}
+  artwork: {fileID: 8470695689447518132, guid: 49e04e00586ed84478377eb1c657bb6a, type: 3}
   presentation:
     sfxClip: {fileID: 0}
     visualEffectPrefab: {fileID: 0}
@@ -76,6 +76,8 @@ MonoBehaviour:
         cloneHP: 10
         spaceTimeReversalTurnsAgo: 3
         threadOfFateDuration: 1
+        stormOfSpaceTimeTargetDamage: 30
+        stormOfSpaceTimeDuration: 3
       executionOrder: 0
     ownerPolicy: 0
   currentAttackPowerStacks: 0

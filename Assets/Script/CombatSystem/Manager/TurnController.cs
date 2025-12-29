@@ -124,13 +124,9 @@ namespace Game.CombatSystem.Manager
             if (_currentTurn != turnType)
             {
                 _turnCount++;
-                GameLogger.LogInfo($"[TurnController] 턴 변경: {_currentTurn} → {turnType}, 턴 수: {_turnCount}", GameLogger.LogCategory.Combat);
                 OnTurnCountChanged?.Invoke(_turnCount);
             }
-            else
-            {
-                GameLogger.LogInfo($"[TurnController] 턴 유지: {turnType}, 턴 수: {_turnCount}", GameLogger.LogCategory.Combat);
-            }
+            // 턴 유지
 
             _currentTurn = turnType;
             OnTurnChanged?.Invoke(turnType);
@@ -138,7 +134,6 @@ namespace Game.CombatSystem.Manager
 
         public void SetTurn(TurnType turnType)
         {
-            GameLogger.LogInfo($"[TurnController] 턴 설정: {turnType} (턴 수: {_turnCount})", GameLogger.LogCategory.Combat);
             _currentTurn = turnType;
             OnTurnChanged?.Invoke(turnType);
         }
@@ -187,18 +182,14 @@ namespace Game.CombatSystem.Manager
                 var currentState = _stateMachine.GetCurrentState();
                 if (currentState is EnemyDefeatedState || currentState is BattleEndState)
                 {
-                    GameLogger.LogInfo($"[TurnController] 턴 효과 처리 건너뜀 - 현재 상태: {currentState?.StateName ?? "null"} (적 처치/전투 종료 상태)", GameLogger.LogCategory.Combat);
                     return;
                 }
             }
 
-            GameLogger.LogInfo($"[TurnController] 턴 효과 처리 시작 - 현재 턴: {_currentTurn}", GameLogger.LogCategory.Combat);
-            
             // 플레이어 턴 효과 처리
             var player = _playerManager?.GetCharacter();
             if (player != null)
             {
-                GameLogger.LogInfo($"[TurnController] 플레이어 턴 효과 처리: {player.GetCharacterName()}", GameLogger.LogCategory.Combat);
                 player.ProcessTurnEffects();
             }
 
@@ -206,11 +197,8 @@ namespace Game.CombatSystem.Manager
             var enemy = _enemyManager?.GetCharacter();
             if (enemy != null)
             {
-                GameLogger.LogInfo($"[TurnController] 적 턴 효과 처리: {enemy.GetCharacterName()}", GameLogger.LogCategory.Combat);
                 enemy.ProcessTurnEffects();
             }
-            
-            GameLogger.LogInfo($"[TurnController] 턴 효과 처리 완료", GameLogger.LogCategory.Combat);
         }
 
         #endregion

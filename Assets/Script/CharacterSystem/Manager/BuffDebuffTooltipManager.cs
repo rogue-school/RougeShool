@@ -483,8 +483,6 @@ namespace Game.CharacterSystem.Manager
         /// </summary>
         public void ShowTooltip()
         {
-            GameLogger.LogInfo($"[BuffDebuffTooltipManager] ShowTooltip 호출됨 - currentTooltip: {currentTooltip != null}, hoveredEffect: {hoveredEffect?.GetType().Name}", GameLogger.LogCategory.UI);
-            
             // 대상 캔버스를 찾지 못하면 표시를 건너뜁니다
             var targetCanvas = GetCanvasOfCurrentTarget();
             if (targetCanvas == null)
@@ -536,8 +534,6 @@ namespace Game.CharacterSystem.Manager
                     {
                         currentTooltip.transform.SetAsLastSibling();
                     }
-                    
-                    GameLogger.LogInfo($"버프/디버프 툴팁 표시: {hoveredEffect.GetType().Name} at {effectPosition}", GameLogger.LogCategory.UI);
                 }
                 else
                 {

@@ -303,10 +303,6 @@ namespace Game.SkillCardSystem.UI
                 if (itemService == null)
                 {
                     itemService = UnityEngine.Object.FindFirstObjectByType<ItemService>();
-                    if (itemService != null)
-                    {
-                        GameLogger.LogInfo("[SkillCardTooltip] itemService 직접 찾기 완료 (FindFirstObjectByType)", GameLogger.LogCategory.UI);
-                    }
                 }
             }
             catch (System.Exception ex)
@@ -806,7 +802,6 @@ namespace Game.SkillCardSystem.UI
                             if (character != null && character.IsPlayerControlled())
                             {
                                 playerCharacter = character;
-                                GameLogger.LogInfo($"[SkillCardTooltip] 플레이어 캐릭터 확인: {playerCharacter.GetCharacterName()}", GameLogger.LogCategory.UI);
                             }
                             else
                             {

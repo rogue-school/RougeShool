@@ -41,7 +41,6 @@ namespace Game.CombatSystem.Slot
                     .OfType<ICombatCardSlot>()
                     .ToList();
                 combatSlotRegistry.RegisterCombatSlots(slots);
-                GameLogger.LogInfo($"CombatSlotRegistry 자동 등록: {slots.Count}개", GameLogger.LogCategory.Combat);
             }
 
             // 씬 내 핸드 슬롯 자동 등록

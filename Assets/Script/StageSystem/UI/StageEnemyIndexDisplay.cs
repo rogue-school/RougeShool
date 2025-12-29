@@ -144,11 +144,6 @@ namespace Game.StageSystem.UI
         /// </summary>
         private void OnProgressChanged(StageProgressState state)
         {
-            if (enableDebugLogging)
-            {
-                GameLogger.LogInfo($"[StageEnemyIndexDisplay] 진행 상태 변경: {state}", GameLogger.LogCategory.UI);
-            }
-
             // 스테이지 시작 시 첫 번째 적 인덱스 표시
             if (state == StageProgressState.InProgress)
             {
@@ -176,11 +171,6 @@ namespace Game.StageSystem.UI
             var currentStage = stageManager.GetCurrentStage();
             if (currentStage == null || currentStage.enemies == null || currentStage.enemies.Count == 0)
             {
-                if (enableDebugLogging)
-                {
-                    GameLogger.LogInfo("[StageEnemyIndexDisplay] 스테이지 데이터가 없어 마커를 숨깁니다.", GameLogger.LogCategory.UI);
-                }
-
                 if (targetMarker != null)
                 {
                     targetMarker.gameObject.SetActive(false);
@@ -199,11 +189,6 @@ namespace Game.StageSystem.UI
             int maxIndexByStage = Mathf.Max(0, currentStage.enemies.Count - 1);
             int maxIndexByUI = Mathf.Max(0, indexPositions.Count - 1);
             int safeIndex = Mathf.Clamp(currentEnemyIndex, 0, Mathf.Min(maxIndexByStage, maxIndexByUI));
-
-            if (enableDebugLogging)
-            {
-                GameLogger.LogInfo($"[StageEnemyIndexDisplay] 표시 새로고침 - 현재 인덱스: {currentEnemyIndex + 1} (0-based: {currentEnemyIndex}), 사용 인덱스: {safeIndex + 1}", GameLogger.LogCategory.UI);
-            }
 
             // 타겟 마커를 현재 인덱스 위치로 이동
             UpdateTargetMarkerPosition(safeIndex);
@@ -269,11 +254,6 @@ namespace Game.StageSystem.UI
             targetMarker.anchoredPosition3D = new Vector3(0f, 0f, -1f);
 
             currentActiveIndex = enemyIndex;
-
-            if (enableDebugLogging)
-            {
-                GameLogger.LogInfo($"[StageEnemyIndexDisplay] 타겟 마커 이동: 인덱스 {enemyIndex + 1} 위치로 이동 (위치: {targetPosition.position})", GameLogger.LogCategory.UI);
-            }
         }
 
         /// <summary>

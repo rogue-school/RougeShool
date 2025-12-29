@@ -164,7 +164,6 @@ namespace Game.ItemSystem.Manager
         {
             yield return InitializeTooltipSystem();
             IsInitialized = true;
-            GameLogger.LogInfo("[ItemTooltipManager] 초기화 완료", GameLogger.LogCategory.UI);
         }
 
         /// <summary>
@@ -202,19 +201,15 @@ namespace Game.ItemSystem.Manager
         /// </summary>
         private IEnumerator InitializeTooltipSystem()
         {
-            GameLogger.LogInfo("[ItemTooltipManager] 툴팁 시스템 초기화 시작", GameLogger.LogCategory.UI);
-            
             // tooltipPrefab이 없으면 Addressables에서 로드 시도
             if (tooltipPrefab == null && !string.IsNullOrEmpty(tooltipPrefabAddress))
             {
-                GameLogger.LogInfo($"[ItemTooltipManager] Addressables에서 툴팁 프리팹 로드 시도: {tooltipPrefabAddress}", GameLogger.LogCategory.UI);
                 _loadOperation = Addressables.LoadAssetAsync<GameObject>(tooltipPrefabAddress);
                 yield return _loadOperation;
 
                 if (_loadOperation.Status == AsyncOperationStatus.Succeeded)
                 {
                     tooltipPrefab = _loadOperation.Result;
-                    GameLogger.LogInfo($"[ItemTooltipManager] 툴팁 프리팹 로드 성공: {tooltipPrefab.name}", GameLogger.LogCategory.UI);
                 }
                 else
                 {
@@ -233,14 +228,12 @@ namespace Game.ItemSystem.Manager
             if (itemService != null)
             {
                 itemService.OnEnhancementUpgraded += OnEnhancementUpgradedHandler;
-                GameLogger.LogInfo("[ItemTooltipManager] ItemService 이벤트 구독 완료", GameLogger.LogCategory.UI);
             }
             else
             {
                 GameLogger.LogWarning("[ItemTooltipManager] ItemService를 찾을 수 없습니다. 강화 레벨 업데이트가 작동하지 않을 수 있습니다.", GameLogger.LogCategory.UI);
             }
 
-            GameLogger.LogInfo("[ItemTooltipManager] 툴팁 시스템 초기화 완료", GameLogger.LogCategory.UI);
             yield return null;
         }
 
@@ -292,8 +285,6 @@ namespace Game.ItemSystem.Manager
 
                 tooltipInstance.SetActive(false);
                 tooltipInstance.transform.SetAsLastSibling();
-
-                GameLogger.LogInfo("[ItemTooltipManager] 툴팁 인스턴스 생성 완료", GameLogger.LogCategory.UI);
             }
             catch (System.Exception ex)
             {
@@ -385,7 +376,6 @@ namespace Game.ItemSystem.Manager
 
             if (!IsInitialized)
             {
-                GameLogger.LogInfo("[ItemTooltipManager] 초기화 안됨 - 즉시 초기화 시도", GameLogger.LogCategory.UI);
                 pendingItem = item;
                 pendingShow = true;
                 StartCoroutine(ForceInitialize());
@@ -518,7 +508,6 @@ namespace Game.ItemSystem.Manager
 
             if (!IsInitialized)
             {
-                GameLogger.LogInfo("[ItemTooltipManager] 초기화 안됨 - 즉시 초기화 시도", GameLogger.LogCategory.UI);
                 pendingPassiveItem = item;
                 pendingPassiveItemEnhancementLevel = enhancementLevel;
                 pendingShow = true;
@@ -646,14 +635,11 @@ namespace Game.ItemSystem.Manager
         /// </summary>
         private IEnumerator ForceInitialize()
         {
-            GameLogger.LogInfo("[ItemTooltipManager] 강제 초기화 시작", GameLogger.LogCategory.UI);
-            
             yield return InitializeTooltipSystem();
             
             if (tooltipPrefab != null)
             {
                 IsInitialized = true;
-                GameLogger.LogInfo($"[ItemTooltipManager] 강제 초기화 완료", GameLogger.LogCategory.UI);
 
                         if (pendingShow)
                         {
@@ -734,7 +720,6 @@ namespace Game.ItemSystem.Manager
                         // 강화 레벨 업데이트
                         hoveredPassiveItemEnhancementLevel = newLevel;
                         currentTooltip.UpdateEnhancementLevel(newLevel);
-                        GameLogger.LogInfo($"[ItemTooltipManager] 툴팁 강화 레벨 실시간 업데이트: {hoveredPassiveItem.DisplayName} → {newLevel}", GameLogger.LogCategory.UI);
                     }
                 }
             }
@@ -812,7 +797,6 @@ namespace Game.ItemSystem.Manager
                     if (currentTooltip != null && currentTooltip.gameObject != null && currentTooltip.gameObject.activeInHierarchy)
                     {
                         currentTooltip.UpdateEnhancementLevel(currentLevel);
-                        GameLogger.LogInfo($"[ItemTooltipManager] 보상창 선택 후 툴팁 강화 레벨 업데이트: {item.DisplayName} → {currentLevel}", GameLogger.LogCategory.UI);
                     }
                 }
             }
@@ -1009,12 +993,10 @@ namespace Game.ItemSystem.Manager
                     if (hoveredItem != null)
                     {
                         currentTooltip.Show(hoveredItem);
-                        GameLogger.LogInfo($"툴팁 표시: {hoveredItem.DisplayName}", GameLogger.LogCategory.UI);
                     }
                     else if (hoveredPassiveItem != null)
                     {
                         currentTooltip.Show(hoveredPassiveItem, hoveredPassiveItemEnhancementLevel, hoveredPassiveItemIsRewardPanel);
-                        GameLogger.LogInfo($"패시브 아이템 툴팁 표시: {hoveredPassiveItem.DisplayName}, 강화 단계: {hoveredPassiveItemEnhancementLevel}, 보상창: {hoveredPassiveItemIsRewardPanel}", GameLogger.LogCategory.UI);
                     }
                     else
                     {

@@ -68,12 +68,8 @@ namespace Game.CharacterSystem.Manager
         /// </summary>
         protected override System.Collections.IEnumerator OnInitialize()
         {
-            GameLogger.LogInfo($"{GetType().Name} 초기화 시작", GameLogger.LogCategory.Character);
-            
             // 캐릭터 매니저 특화 초기화 로직
             yield return InitializeCharacterManager();
-            
-            GameLogger.LogInfo($"{GetType().Name} 초기화 완료", GameLogger.LogCategory.Character);
         }
 
         /// <summary>

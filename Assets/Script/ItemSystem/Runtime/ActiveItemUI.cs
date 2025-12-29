@@ -70,35 +70,15 @@ namespace Game.ItemSystem.Runtime
 
         private void Start()
         {
-            GameLogger.LogInfo($"[ActiveItemUI] Start() 호출됨 - GameObject: {gameObject.name}", GameLogger.LogCategory.UI);
-
             // RectTransform 캐시
             rectTransform = GetComponent<RectTransform>();
 
             // 툴팁 매니저 찾기
             FindTooltipManager();
 
-            // 디버깅: 컴포넌트 상태 확인
-            var image = GetComponent<Image>();
-            var button = GetComponent<Button>();
-            var canvasGroup = GetComponent<CanvasGroup>();
-
-            GameLogger.LogInfo($"[ActiveItemUI] 컴포넌트 상태 - Image: {image != null}, Button: {button != null}, CanvasGroup: {canvasGroup != null}", GameLogger.LogCategory.UI);
-
-            if (image != null)
-            {
-                GameLogger.LogInfo($"[ActiveItemUI] Image 상태 - RaycastTarget: {image.raycastTarget}, Enabled: {image.enabled}", GameLogger.LogCategory.UI);
-            }
-
-            if (canvasGroup != null)
-            {
-                GameLogger.LogInfo($"[ActiveItemUI] CanvasGroup 상태 - Interactable: {canvasGroup.interactable}, BlocksRaycasts: {canvasGroup.blocksRaycasts}", GameLogger.LogCategory.UI);
-            }
-
             InitializeItemUI();
             SetupButtonEvent();
             RegisterToTooltipManager();
-            GameLogger.LogInfo($"[ActiveItemUI] Start() 완료 - GameObject: {gameObject.name}", GameLogger.LogCategory.UI);
         }
         
         private void OnDisable()
@@ -120,11 +100,7 @@ namespace Game.ItemSystem.Runtime
         private void FindTooltipManager()
         {
             // DI로 주입받은 tooltipManager 사용
-            if (tooltipManager != null)
-            {
-                GameLogger.LogInfo("[ActiveItemUI] ItemTooltipManager 찾기 완료", GameLogger.LogCategory.UI);
-            }
-            else
+            if (tooltipManager == null)
             {
                 GameLogger.LogWarning("[ActiveItemUI] ItemTooltipManager를 찾을 수 없습니다", GameLogger.LogCategory.UI);
             }
@@ -146,7 +122,6 @@ namespace Game.ItemSystem.Runtime
                     projectContext.Container.Inject(this);
                     if (tooltipManager != null)
                     {
-                        GameLogger.LogInfo("[ActiveItemUI] ItemTooltipManager 주입 완료 (ProjectContext)", GameLogger.LogCategory.UI);
                         return;
                     }
                 }
@@ -161,7 +136,6 @@ namespace Game.ItemSystem.Runtime
                         sceneContainer.Inject(this);
                         if (tooltipManager != null)
                         {
-                            GameLogger.LogInfo("[ActiveItemUI] ItemTooltipManager 주입 완료 (SceneContext)", GameLogger.LogCategory.UI);
                             return;
                         }
                     }
@@ -192,7 +166,6 @@ namespace Game.ItemSystem.Runtime
             if (tooltipManager != null && currentItem != null && rectTransform != null)
             {
                 tooltipManager.RegisterItemUI(currentItem, rectTransform);
-                GameLogger.LogInfo($"[ActiveItemUI] 툴팁 매니저에 등록: {currentItem.DisplayName}", GameLogger.LogCategory.UI);
             }
         }
         
@@ -204,7 +177,6 @@ namespace Game.ItemSystem.Runtime
             if (tooltipManager != null && currentItem != null)
             {
                 tooltipManager.UnregisterItemUI(currentItem);
-                GameLogger.LogInfo($"[ActiveItemUI] 툴팁 매니저에서 등록 해제: {currentItem.DisplayName}", GameLogger.LogCategory.UI);
             }
         }
 
@@ -225,7 +197,6 @@ namespace Game.ItemSystem.Runtime
                 if (buttonChild != null)
                 {
                     itemIcon = buttonChild.GetComponent<Image>();
-                    GameLogger.LogInfo("[ActiveItemUI] 자식 Button에서 Image 컴포넌트를 찾았습니다", GameLogger.LogCategory.UI);
                 }
 
                 // 자식에서 못 찾으면 자신에게서 찾기
@@ -236,7 +207,6 @@ namespace Game.ItemSystem.Runtime
                     {
                         // Image 컴포넌트가 없으면 자동으로 추가
                         itemIcon = gameObject.AddComponent<Image>();
-                        GameLogger.LogInfo("[ActiveItemUI] Image 컴포넌트를 자동으로 추가했습니다", GameLogger.LogCategory.UI);
                     }
                 }
             }
@@ -246,10 +216,7 @@ namespace Game.ItemSystem.Runtime
             if (button != null && button.targetGraphic != itemIcon)
             {
                 button.targetGraphic = itemIcon;
-                GameLogger.LogInfo("[ActiveItemUI] Button의 Target Graphic을 Image로 설정했습니다", GameLogger.LogCategory.UI);
             }
-
-            GameLogger.LogInfo("[ActiveItemUI] 아이템 UI 초기화 완료", GameLogger.LogCategory.UI);
         }
 
         /// <summary>
@@ -261,18 +228,14 @@ namespace Game.ItemSystem.Runtime
             if (itemIcon != null)
             {
                 itemIcon.raycastTarget = true;
-                GameLogger.LogInfo("[ActiveItemUI] Image의 Raycast Target 활성화", GameLogger.LogCategory.UI);
             }
 
             // 자식 Button의 Button 컴포넌트 제거 (Image만 사용)
             var childButton = transform.Find("Button")?.GetComponent<Button>();
             if (childButton != null)
             {
-                GameLogger.LogInfo("[ActiveItemUI] 자식 Button 컴포넌트 제거 - Image만 사용", GameLogger.LogCategory.UI);
                 DestroyImmediate(childButton);
             }
-
-            GameLogger.LogInfo("[ActiveItemUI] IPointerClickHandler 설정 완료", GameLogger.LogCategory.UI);
         }
 
         /// <summary>
@@ -408,8 +371,6 @@ namespace Game.ItemSystem.Runtime
             currentPopup.OnUseButtonClicked += HandleUseButtonClicked;
             currentPopup.OnDiscardButtonClicked += HandleDiscardButtonClicked;
             currentPopup.OnPopupClosed += HandlePopupClosed;
-
-            GameLogger.LogInfo($"[ActiveItemUI] 액션 팝업 표시: {currentItem.DisplayName} @ 슬롯 {slotIndex} (사용 허용: {allowUse})", GameLogger.LogCategory.UI);
         }
 
         /// <summary>
@@ -435,8 +396,6 @@ namespace Game.ItemSystem.Runtime
                     tooltipManager.ForceHideIfPinnedTo(currentItem);
                     tooltipManager.UnpinTooltip();
                 }
-
-                GameLogger.LogInfo($"[ActiveItemUI] 액션 팝업 닫힘: 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
             }
         }
 
@@ -452,7 +411,6 @@ namespace Game.ItemSystem.Runtime
             }
 
             OnUseButtonClicked?.Invoke(slotIndex);
-            GameLogger.LogInfo($"[ActiveItemUI] 사용 버튼 클릭: 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
         }
 
         /// <summary>
@@ -467,7 +425,6 @@ namespace Game.ItemSystem.Runtime
             }
 
             OnDiscardButtonClicked?.Invoke(slotIndex);
-            GameLogger.LogInfo($"[ActiveItemUI] 버리기 버튼 클릭: 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
         }
 
         /// <summary>
@@ -483,7 +440,6 @@ namespace Game.ItemSystem.Runtime
                 // 클릭으로 고정된 툴팁도 함께 닫기
                 tooltipManager.ForceHideTooltip();
             }
-            GameLogger.LogInfo($"[ActiveItemUI] 팝업 닫힘 이벤트 처리: 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
         }
 
         #endregion
@@ -537,13 +493,11 @@ namespace Game.ItemSystem.Runtime
             {
                 // UIUpdateHelper를 사용하여 빈 슬롯 설정
                 UIUpdateHelper.SetEmptySlot(itemIcon, null, null);
-                GameLogger.LogInfo($"[ActiveItemUI] 슬롯 {slotIndex} 빈 상태로 설정", GameLogger.LogCategory.UI);
                 return;
             }
 
             // UIUpdateHelper를 사용하여 아이템 UI 업데이트
             UIUpdateHelper.UpdateItemSlotUI(itemIcon, null, null, currentItem);
-            GameLogger.LogInfo($"[ActiveItemUI] 아이템 UI 업데이트: {currentItem.DisplayName} @ 슬롯 {slotIndex}", GameLogger.LogCategory.UI);
         }
 
         /// <summary>
@@ -559,7 +513,6 @@ namespace Game.ItemSystem.Runtime
                 // 아이템이 없으면 무시
                 if (currentItem == null)
                 {
-                    GameLogger.LogInfo($"[ActiveItemUI] 슬롯 {slotIndex}에 아이템이 없습니다", GameLogger.LogCategory.UI);
                     return;
                 }
 
@@ -612,14 +565,6 @@ namespace Game.ItemSystem.Runtime
 
                 // 액션 팝업 표시 (적턴에도 팝업은 열림, 버튼 활성화는 팝업 내부에서 처리)
                 bool isPlayerTurn = IsPlayerTurn();
-                if (isPlayerTurn)
-                {
-                    GameLogger.LogInfo($"[ActiveItemUI] ✅ 플레이어 턴 - 팝업 표시: {currentItem.DisplayName}", GameLogger.LogCategory.UI);
-                }
-                else
-                {
-                    GameLogger.LogInfo($"[ActiveItemUI] ⚠️ 적 턴 - 팝업 표시 (사용 불가, 버리기만 가능): {currentItem.DisplayName}", GameLogger.LogCategory.UI);
-                }
                 ShowActionPopup(isPlayerTurn);
             }
         }
@@ -674,11 +619,6 @@ namespace Game.ItemSystem.Runtime
             bool isCompletePlayerTurn = isTurnPlayerTurn && 
                                        currentState is Game.CombatSystem.State.PlayerTurnState &&
                                        currentState.AllowPlayerCardDrag;
-
-            if (!isCompletePlayerTurn)
-            {
-                GameLogger.LogInfo($"[ActiveItemUI] 아이템 사용 불가 - 턴상태: {isTurnPlayerTurn}, 전투상태: {currentState.StateName}, 드래그허용: {currentState.AllowPlayerCardDrag}", GameLogger.LogCategory.UI);
-            }
 
             return isCompletePlayerTurn;
         }

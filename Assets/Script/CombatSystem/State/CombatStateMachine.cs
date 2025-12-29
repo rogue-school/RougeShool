@@ -247,9 +247,6 @@ namespace Game.CombatSystem.State
                     if (stageManager != null)
                     {
                         bool isSummonActive = stageManager.IsSummonedEnemyActive();
-                        GameLogger.LogInfo(
-                            $"[CombatStateMachine] 소환 플래그 확인: {isSummonActive}, 현재 적: {enemy.GetCharacterName()}",
-                            GameLogger.LogCategory.Combat);
                         
                         if (isSummonActive)
                         {
@@ -344,7 +341,6 @@ namespace Game.CombatSystem.State
                                     if (sceneItemService is Game.ItemSystem.Service.ItemService sceneConcreteItemService)
                                     {
                                         itemService = sceneConcreteItemService;
-                                        GameLogger.LogInfo("[CombatStateMachine] ItemService를 SceneContext에서 찾아서 주입했습니다.", GameLogger.LogCategory.Combat);
                                     }
                                     else
                                     {
@@ -395,10 +391,7 @@ namespace Game.CombatSystem.State
                 if (stageManager == null)
                 {
                     stageManager = UnityEngine.Object.FindFirstObjectByType<Game.StageSystem.Manager.StageManager>(UnityEngine.FindObjectsInactive.Include);
-                    if (stageManager != null)
-                    {
-                        GameLogger.LogInfo("[CombatStateMachine] StageManager를 FindFirstObjectByType으로 찾아서 주입했습니다.", GameLogger.LogCategory.Combat);
-                    }
+                    // StageManager 주입 완료
                 }
             }
 
@@ -432,11 +425,7 @@ namespace Game.CombatSystem.State
                 if (gameOverUI == null)
                 {
                     gameOverUI = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.UI.GameOverUI>(UnityEngine.FindObjectsInactive.Include);
-                    if (gameOverUI != null)
-                    {
-                        GameLogger.LogInfo("[CombatStateMachine] GameOverUI를 FindFirstObjectByType으로 찾아서 주입했습니다.", GameLogger.LogCategory.Combat);
-                    }
-                    else
+                    if (gameOverUI == null)
                     {
                         GameLogger.LogWarning("[CombatStateMachine] GameOverUI를 찾을 수 없습니다. 게임 오버 UI가 표시되지 않을 수 있습니다.", GameLogger.LogCategory.Combat);
                     }

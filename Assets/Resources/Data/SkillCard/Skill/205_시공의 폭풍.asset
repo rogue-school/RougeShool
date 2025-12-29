@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: "\uC2DC\uACF5\uC758 \uD3ED\uD48D"
   displayNameKO: 
   description: 
-  artwork: {fileID: 0}
+  artwork: {fileID: -5119769062787467619, guid: 81b93b20564a1c041a99a12f2a46aca9, type: 3}
   presentation:
     sfxClip: {fileID: 0}
     visualEffectPrefab: {fileID: 0}
@@ -77,7 +77,7 @@ MonoBehaviour:
         spaceTimeReversalTurnsAgo: 3
         threadOfFateDuration: 1
         stormOfSpaceTimeTargetDamage: 30
-        stormOfSpaceTimeDuration: 3
+        stormOfSpaceTimeDuration: 4
       executionOrder: 0
     ownerPolicy: 0
   currentAttackPowerStacks: 0

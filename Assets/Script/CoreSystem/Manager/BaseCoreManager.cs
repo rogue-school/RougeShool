@@ -52,20 +52,7 @@ namespace Game.CoreSystem.Manager
             {
                 DontDestroyOnLoad(gameObject);
             }
-            else if (persistAcrossScenes)
-            {
                 // 부모가 있으면 부모가 DontDestroyOnLoad되면 자동으로 함께 유지됨
-                // 경고를 Info로 변경 (실제 문제는 아님)
-                if (enableDebugLogging)
-                {
-                    GameLogger.LogInfo($"{GetType().Name}: 부모 오브젝트가 DontDestroyOnLoad되면 함께 유지됩니다.", GameLogger.LogCategory.UI);
-                }
-            }
-
-            if (enableDebugLogging)
-            {
-                GameLogger.LogInfo($"{GetType().Name} 초기화 시작", GameLogger.LogCategory.UI);
-            }
         }
 
         protected virtual void Start()
@@ -91,20 +78,10 @@ namespace Game.CoreSystem.Manager
                 yield break;
             }
 
-            if (enableDebugLogging)
-            {
-                GameLogger.LogInfo($"{GetType().Name} 초기화 중...", GameLogger.LogCategory.UI);
-            }
-
             // 서브클래스에서 구현할 초기화 로직
             yield return StartCoroutine(OnInitialize());
 
             IsInitialized = true;
-
-            if (enableDebugLogging)
-            {
-                GameLogger.LogInfo($"{GetType().Name} 초기화 완료", GameLogger.LogCategory.UI);
-            }
         }
 
         /// <summary>

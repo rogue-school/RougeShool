@@ -33,8 +33,6 @@ namespace Game.CombatSystem.State
                 return;
             }
 
-            LogStateTransition("슬롯 이동 시작");
-
             // 코루틴 실행을 위한 MonoBehaviour 찾기
             _coroutineRunner = context.StateMachine;
 
@@ -53,7 +51,6 @@ namespace Game.CombatSystem.State
         {
             base.OnExit(context);
             _isMoving = false;
-            LogStateTransition("슬롯 이동 완료");
         }
 
         /// <summary>
@@ -95,10 +92,7 @@ namespace Game.CombatSystem.State
                     context.SlotMovement.MoveAllSlotsForwardRoutine()
                 );
 
-                LogStateTransition("슬롯 이동 완료");
-                
                 // 슬롯 이동 애니메이션이 완전히 끝날 때까지 대기
-                LogStateTransition("슬롯 이동 애니메이션 완료 대기 중...");
                 yield return new WaitForSeconds(0.1f); // 애니메이션 완료를 위한 추가 대기
             }
             else
@@ -119,7 +113,7 @@ namespace Game.CombatSystem.State
             _isMoving = false;
             
             // 다음 턴으로 전환
-            LogStateTransition("다음 턴으로 전환 시작");
+                // 다음 턴으로 전환 시작
             ProceedToNextTurn(context);
         }
 
@@ -239,8 +233,6 @@ namespace Game.CombatSystem.State
             bool isPlayerMarker = IsPlayerTurnMarker(battleCard);
             bool isEnemySkillCard = !battleCard.IsFromPlayer();
 
-            LogStateTransition($"슬롯 이동 완료 - 배틀 슬롯: {battleCard.GetCardName()}, 플레이어 마커: {isPlayerMarker}, 적 카드: {isEnemySkillCard}");
-
             if (isPlayerMarker)
             {
                 // 플레이어 턴 마커 → 플레이어 턴 전환 전에 페이즈 전환 체크
@@ -260,7 +252,6 @@ namespace Game.CombatSystem.State
                 }
 
                 // 플레이어 턴 마커 → 플레이어 턴
-                LogStateTransition("플레이어 턴 마커 감지 → 플레이어 턴 시작");
                 var playerTurnState = new PlayerTurnState();
                 RequestTransition(context, playerTurnState);
             }
@@ -293,7 +284,6 @@ namespace Game.CombatSystem.State
                 }
 
                 // 페이즈 전환 조건이 없으면 정상적으로 적 턴으로 전환
-                LogStateTransition($"적 스킬카드 감지 → 적 턴 시작: {battleCard.GetCardName()}");
                 var enemyTurnState = new EnemyTurnState();
                 RequestTransition(context, enemyTurnState);
             }
@@ -339,8 +329,6 @@ namespace Game.CombatSystem.State
         /// </summary>
         private bool CheckForSummonOrReturn(CombatStateContext context)
         {
-            LogStateTransition("소환/복귀 트리거 즉시 체크 시작");
-
             // StageManager에서 소환 플래그 직접 확인
             if (context.StageManager != null && context.StageManager.IsSummonedEnemyActive())
             {
@@ -363,7 +351,6 @@ namespace Game.CombatSystem.State
                 }
             }
 
-            LogStateTransition("소환 트리거 없음 - 정상 진행");
             return false;
         }
 

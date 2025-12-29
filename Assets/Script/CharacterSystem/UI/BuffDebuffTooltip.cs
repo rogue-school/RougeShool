@@ -1010,7 +1010,7 @@ namespace Game.CharacterSystem.UI
                 canvasGroup,
                 fadeInDuration,
                 fadeEase,
-                () => GameLogger.LogInfo("버프/디버프 툴팁 표시 완료", GameLogger.LogCategory.UI));
+                null);
         }
 
         /// <summary>
@@ -1027,7 +1027,6 @@ namespace Game.CharacterSystem.UI
                 () =>
                 {
                     currentEffect = null;
-                    GameLogger.LogInfo("버프/디버프 툴팁 숨김 완료", GameLogger.LogCategory.UI);
                 });
         }
 

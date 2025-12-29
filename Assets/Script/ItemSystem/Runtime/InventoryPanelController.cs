@@ -420,7 +420,6 @@ namespace Game.ItemSystem.Runtime
 			if (turnManager != null)
 			{
 				turnManager.OnTurnChanged += HandleTurnChanged;
-				GameLogger.LogInfo("[InventoryPanel] 턴 변경 이벤트 구독 완료", GameLogger.LogCategory.UI);
 			}
 		}
 

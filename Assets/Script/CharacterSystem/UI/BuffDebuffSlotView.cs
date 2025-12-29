@@ -265,7 +265,6 @@ namespace Game.CharacterSystem.UI
                 // 자신의 RectTransform을 전달하여 정확한 위치 계산
                 var rectTransform = GetComponent<RectTransform>();
                 tooltipManager.ShowBuffDebuffTooltip(CurrentEffect, transform.position, rectTransform);
-                GameLogger.LogInfo($"[BuffDebuffSlotView] 툴팁 표시: {GetEffectDisplayName(CurrentEffect)}", GameLogger.LogCategory.UI);
             }
             else
             {

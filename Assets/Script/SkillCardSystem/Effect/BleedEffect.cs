@@ -22,6 +22,7 @@ namespace Game.SkillCardSystem.Effect
         private readonly AudioClip perTurnSfxClip;
         private readonly VFXManager vfxManager;
         private readonly string sourceEffectName;
+        private readonly ICharacter sourceCharacter; // 출혈을 적용한 캐릭터 (플레이어인지 적인지 구분용)
 
         private readonly Game.CoreSystem.Interface.IAudioManager audioManager;
 
@@ -36,7 +37,8 @@ namespace Game.SkillCardSystem.Effect
         /// <param name="sourceEffectName">원본 효과 SO 이름 (툴팁 표시용)</param>
         /// <param name="vfxManager">VFX 매니저 (선택적)</param>
         /// <param name="audioManager">오디오 매니저 (선택적)</param>
-        public BleedEffect(int amount, int duration, Sprite icon = null, GameObject perTurnEffectPrefab = null, AudioClip perTurnSfxClip = null, string sourceEffectName = null, VFXManager vfxManager = null, Game.CoreSystem.Interface.IAudioManager audioManager = null)
+        /// <param name="sourceCharacter">출혈을 적용한 캐릭터 (플레이어인지 적인지 구분용, 선택적)</param>
+        public BleedEffect(int amount, int duration, Sprite icon = null, GameObject perTurnEffectPrefab = null, AudioClip perTurnSfxClip = null, string sourceEffectName = null, VFXManager vfxManager = null, Game.CoreSystem.Interface.IAudioManager audioManager = null, ICharacter sourceCharacter = null)
         {
             this.amount = amount;
             this.remainingTurns = duration;
@@ -46,6 +48,7 @@ namespace Game.SkillCardSystem.Effect
             this.vfxManager = vfxManager ?? UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
             this.audioManager = audioManager;
             this.sourceEffectName = sourceEffectName;
+            this.sourceCharacter = sourceCharacter;
         }
 
         /// <summary>
@@ -67,15 +70,93 @@ namespace Game.SkillCardSystem.Effect
                 return;
             }
             
+            // 시공의 폭풍 버프 추적을 위해 데미지 적용 전 시공의 폭풍 체력 확인
+            int stormHPBefore = 0;
+            if (sourceCharacter != null && sourceCharacter.IsPlayerControlled() && target is Game.CharacterSystem.Core.CharacterBase enemyCharacterBefore)
+            {
+                stormHPBefore = enemyCharacterBefore.GetStormHP();
+            }
+            
+            // 실제 일반 체력에 들어갈 데미지 계산 (시공의 폭풍 체력, 분신 체력 고려)
+            int actualDamageToNormalHP = CalculateActualDamageToNormalHP(target, amount);
+            
             // 가드에 영향을 받지 않는 지속 피해로 처리
             target.TakeDamageIgnoreGuard(amount);
             remainingTurns--;
-
+            
             GameLogger.LogInfo($"[BleedEffect] {target.GetCharacterName()} 출혈 피해: {amount} (남은 턴: {remainingTurns})", GameLogger.LogCategory.SkillCard);
+            
+            // 시공의 폭풍 버프 추적: 플레이어가 적에게 출혈 데미지를 입힐 때
+            // 출혈은 플레이어가 적용한 경우에만 시공의 폭풍 데미지에 누적
+            // 시공의 폭풍 체력을 소모하는 것도 데미지로 인정
+            if (sourceCharacter != null && sourceCharacter.IsPlayerControlled() && target is Game.CharacterSystem.Core.CharacterBase enemyCharacter)
+            {
+                var stormDebuff = enemyCharacter.GetEffect<Game.SkillCardSystem.Effect.StormOfSpaceTimeDebuff>();
+                if (stormDebuff != null)
+                {
+                    // 데미지 적용 후 시공의 폭풍 체력 확인
+                    int stormHPAfter = enemyCharacter.GetStormHP();
+                    int stormHPDamage = Mathf.Max(0, stormHPBefore - stormHPAfter);
+                    
+                    // 시공의 폭풍 체력 소모량 + 실제 일반 체력에 들어간 데미지
+                    int totalStormDamage = stormHPDamage + actualDamageToNormalHP;
+                    
+                    if (totalStormDamage > 0)
+                    {
+                        stormDebuff.AddDamage(totalStormDamage);
+                        GameLogger.LogInfo($"[BleedEffect] 시공의 폭풍 데미지 누적 (출혈): {totalStormDamage} (시공의 폭풍 체력 소모: {stormHPDamage}, 일반 체력 데미지: {actualDamageToNormalHP}, 총 누적: {stormDebuff.AccumulatedDamage}/{stormDebuff.TargetDamage}, 원래 데미지: {amount}, 시공의 폭풍 체력: {stormHPBefore} → {stormHPAfter})", GameLogger.LogCategory.Combat);
+                    }
+                }
+            }
             
             // 출혈 피해 발생 시 이펙트 및 사운드 재생
             TrySpawnPerTurnEffect(target);
             PlayPerTurnSound();
+        }
+
+        /// <summary>
+        /// 실제 일반 체력에 들어갈 데미지를 계산합니다.
+        /// 시공의 폭풍 체력과 분신 체력을 고려하여 실제 일반 체력에 들어갈 데미지만 반환합니다.
+        /// </summary>
+        /// <param name="target">대상 캐릭터</param>
+        /// <param name="damage">원래 데미지</param>
+        /// <returns>실제 일반 체력에 들어갈 데미지</returns>
+        private int CalculateActualDamageToNormalHP(ICharacter target, int damage)
+        {
+            if (target == null || damage <= 0)
+                return 0;
+
+            // CharacterBase가 아니면 전체 데미지 반환
+            if (!(target is Game.CharacterSystem.Core.CharacterBase characterBase))
+                return damage;
+
+            // 무적 상태면 0 반환
+            if (characterBase.IsInvincible())
+                return 0;
+
+            // 출혈은 가드 무시 데미지이므로 가드 체크 불필요
+
+            // 시공의 폭풍 체력 확인
+            int stormHP = characterBase.GetStormHP();
+            int remainingDamage = damage;
+
+            // 시공의 폭풍 체력이 있으면 먼저 소모
+            if (stormHP > 0)
+            {
+                remainingDamage = Mathf.Max(0, remainingDamage - stormHP);
+            }
+
+            // 분신 체력 확인
+            int cloneHP = characterBase.GetCloneHP();
+            
+            // 분신 체력이 있으면 소모
+            if (cloneHP > 0)
+            {
+                remainingDamage = Mathf.Max(0, remainingDamage - cloneHP);
+            }
+
+            // 실제 일반 체력에 들어갈 데미지 반환
+            return remainingDamage;
         }
 
         /// <summary>

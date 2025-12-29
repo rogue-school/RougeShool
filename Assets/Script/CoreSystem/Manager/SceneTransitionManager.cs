@@ -151,7 +151,6 @@ namespace Game.CoreSystem.Manager
 		if (victoryUI != null)
 		{
 			victoryUI.Hide();
-			GameLogger.LogInfo("[SceneTransitionManager] 메인 씬 전환 전 VictoryUI 숨김", GameLogger.LogCategory.UI);
 		}
 
 			// 현재 씬이 StageScene이면 진행 상황 저장
@@ -173,7 +172,6 @@ namespace Game.CoreSystem.Manager
 			if (itemService != null)
 			{
 				itemService.ResetInventoryForNewGame();
-				GameLogger.LogInfo("[SceneTransitionManager] 메인 씬 전환 시 ItemService 초기화 완료", GameLogger.LogCategory.UI);
 			}
 		}
 		catch (System.Exception ex)
@@ -240,8 +238,6 @@ namespace Game.CoreSystem.Manager
 				return;
 			}
 
-			GameLogger.LogInfo($"씬 전환 시작: {sceneName}", GameLogger.LogCategory.UI);
-
 			IsTransitioning = true; // 전환 시작
 			OnSceneTransitionStart?.Invoke(sceneName);
 
@@ -270,7 +266,6 @@ namespace Game.CoreSystem.Manager
 			{
 				// 전환 상태를 반드시 리셋
 				IsTransitioning = false;
-				GameLogger.LogInfo($"씬 전환 완료: {sceneName}", GameLogger.LogCategory.UI);
 			}
 		}
 		
@@ -410,8 +405,6 @@ namespace Game.CoreSystem.Manager
 				.SetEase(easeType)
 				.SetAutoKill(true)
 				.AsyncWaitForCompletion();
-
-			GameLogger.LogInfo($"페이드 전환 완료: {(fadeIn ? "페이드 인" : "페이드 아웃")}", GameLogger.LogCategory.UI);
 		}
 		
 		private async Task SlideTransition(bool slideIn)

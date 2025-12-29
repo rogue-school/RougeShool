@@ -20,14 +20,32 @@ MonoBehaviour:
   <EnemyDeck>k__BackingField: {fileID: 11400000, guid: 92b96ca4353753b4f9ccfe454ba495bc, type: 2}
   <CharacterEffects>k__BackingField:
   - effectSO: {fileID: 11400000, guid: 9bd8b68f1c3288d4aa58f88645777715, type: 2}
-    useCustomSettings: 0
+    useCustomSettings: 1
     customSettings:
       healthThreshold: 0
       summonTarget: {fileID: 0}
+      skillHealthThreshold: 30
+      useSkillHealthRatio: 0
+      skillCardDefinition: {fileID: 0}
+      skillCardId: 
+      stormOfSpaceTimeTargetDamage: 30
+      stormOfSpaceTimeDuration: 3
+    priority: 0
+  - effectSO: {fileID: 11400000, guid: da5100f1ed63a024aaa087a53f0e92e6, type: 2}
+    useCustomSettings: 1
+    customSettings:
+      healthThreshold: 0
+      summonTarget: {fileID: 0}
+      skillHealthThreshold: 48
+      useSkillHealthRatio: 0
+      skillCardDefinition: {fileID: 11400000, guid: e9a9ac9eb83099d4b9c75828f05d6ace, type: 2}
+      skillCardId: 
+      stormOfSpaceTimeTargetDamage: 30
+      stormOfSpaceTimeDuration: 3
     priority: 0
   <Phases>k__BackingField:
   - phaseName: "2\uD398\uC774\uC988"
-    healthThreshold: 0.4
+    healthThreshold: 0.1
     phaseDisplayName: "\uCE74\uB974\uBA58 \uAD50\uC7A5"
     phaseIndexIcon: {fileID: -3756981087397036905, guid: 5970d5be9e7c3d445a1f0d7cc3aa120e, type: 3}
     phasePortraitPrefab: {fileID: 751987938129930587, guid: 859c90ee4f06d7e4a8a974982196ecd3, type: 3}
@@ -35,10 +53,16 @@ MonoBehaviour:
     phaseDeck: {fileID: 11400000, guid: 66423acb15f55104b9c55ef9a99b5227, type: 2}
     phaseEffects:
     - effectSO: {fileID: 11400000, guid: 9bd8b68f1c3288d4aa58f88645777715, type: 2}
-      useCustomSettings: 0
+      useCustomSettings: 1
       customSettings:
         healthThreshold: 0
         summonTarget: {fileID: 0}
+        skillHealthThreshold: 30
+        useSkillHealthRatio: 0
+        skillCardDefinition: {fileID: 0}
+        skillCardId: 
+        stormOfSpaceTimeTargetDamage: 30
+        stormOfSpaceTimeDuration: 3
       priority: 0
     phaseTransitionVFX: {fileID: 7697830669745601185, guid: 74e235f7b8a3df94c976f5922b5a66f9, type: 3}
     phaseTransitionSFX: {fileID: 8300000, guid: af66162561d2eed40ad49268cab318bb, type: 3}

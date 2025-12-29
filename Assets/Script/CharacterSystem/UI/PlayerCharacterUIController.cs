@@ -287,8 +287,6 @@ namespace Game.CharacterSystem.UI
             
             // 초기 패시브 아이템 로드
             RefreshPassiveItemIcons();
-            
-            GameLogger.LogInfo($"[PlayerCharacterUIController] Initialize 완료: {character.GetCharacterName()}, HP: {character.GetCurrentHP()}/{character.GetMaxHP()}", GameLogger.LogCategory.UI);
         }
         
         /// <summary>

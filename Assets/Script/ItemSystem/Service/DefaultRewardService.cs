@@ -41,7 +41,6 @@ namespace Game.ItemSystem.Service
                 selected.Add(allItems[randomIndex]);
             }
 
-            GameLogger.LogInfo($"[DefaultRewardService] 기본 액티브 보상 생성: {selected.Count}개 (경로: {path})", GameLogger.LogCategory.UI);
             return selected.ToArray();
         }
 

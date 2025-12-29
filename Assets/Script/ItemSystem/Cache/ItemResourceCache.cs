@@ -46,7 +46,6 @@ namespace Game.ItemSystem.Cache
                     var result = handle.WaitForCompletion();
                     var items = result != null ? result.ToArray() : new ActiveItemDefinition[0];
                     activeItemCache[path] = items;
-                    GameLogger.LogInfo($"[ItemResourceCache] 액티브 아이템 캐시 로드: {items.Length}개 (경로: {path})", GameLogger.LogCategory.Core);
                     return items;
                 }
                 catch (System.Exception ex)

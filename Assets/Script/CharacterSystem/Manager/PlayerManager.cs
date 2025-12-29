@@ -212,7 +212,6 @@ namespace Game.CharacterSystem.Manager
                             if (d != null && d.CharacterType == ct)
                             {
                                 cachedSelectedCharacter = d;
-                                GameLogger.LogInfo($"[PlayerManager] PlayerPrefs 폴백으로 캐릭터 복구: {d.DisplayName}", GameLogger.LogCategory.Character);
                                 return cachedSelectedCharacter;
                             }
                         }
@@ -365,7 +364,6 @@ namespace Game.CharacterSystem.Manager
                 if (character is PlayerCharacter playerCharacter)
                 {
                     playerUIController.Initialize(playerCharacter);
-                    GameLogger.LogInfo($"플레이어 UI 연결 완료: {character.GetCharacterName()}", GameLogger.LogCategory.Character);
                 }
                 else
                 {
@@ -402,8 +400,6 @@ namespace Game.CharacterSystem.Manager
             // handManager.GenerateInitialHand(); // 기존 시스템 비활성화
             // 디버깅 로그 제거됨 (단순화)
             currentCharacter.InjectHandManager(handManager);
-            
-            GameLogger.LogInfo($"핸드 매니저 초기화 완료: {currentCharacter.GetCharacterName()}", GameLogger.LogCategory.Character);
         }
 
         /// <summary>

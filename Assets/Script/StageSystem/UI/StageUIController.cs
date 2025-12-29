@@ -139,7 +139,6 @@ namespace Game.StageSystem.UI
             if (illustratedManualButton != null)
             {
                 illustratedManualButton.onClick.AddListener(OnIllustratedManualButtonClicked);
-                GameLogger.LogInfo("[StageUIController] 도감 버튼 연결 완료", GameLogger.LogCategory.UI);
             }
             else
             {
@@ -229,18 +228,12 @@ namespace Game.StageSystem.UI
                 stageBackgroundImage.sprite = stageData.StageBackgroundSprite;
                 stageBackgroundImage.enabled = true;
 
-                if (enableDebugLogging)
-                {
-                    GameLogger.LogInfo($"[StageUIController] 스테이지 배경 업데이트: {stageData.stageName}", GameLogger.LogCategory.UI);
-                }
+                // 스테이지 배경 업데이트
             }
             else
             {
                 // 배경 스프라이트가 설정되지 않은 경우에는 기존 이미지를 유지하거나 비활성화만 처리
-                if (enableDebugLogging)
-                {
-                    GameLogger.LogInfo("[StageUIController] 스테이지 배경 스프라이트가 설정되지 않았습니다. 기본 배경을 유지합니다.", GameLogger.LogCategory.UI);
-                }
+                // 스테이지 배경 스프라이트가 설정되지 않음 - 기본 배경 유지
             }
         }
 

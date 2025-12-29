@@ -80,7 +80,8 @@ namespace Game.SkillCardSystem.Effect
             // 의존성 찾기 (ApplyEffect는 직접 호출되므로 여기서 찾음)
             var vfxManager = UnityEngine.Object.FindFirstObjectByType<VFXManager>();
             var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
-            var bleed = new BleedEffect(value, duration, GetIcon(), perTurnEffectPrefab ?? visualEffectPrefab, null, GetEffectName(), vfxManager, audioManager as Game.CoreSystem.Interface.IAudioManager);
+            // 출혈을 적용한 캐릭터 정보를 저장하여 시공의 폭풍 데미지 누적에 사용
+            var bleed = new BleedEffect(value, duration, GetIcon(), perTurnEffectPrefab ?? visualEffectPrefab, null, GetEffectName(), vfxManager, audioManager as Game.CoreSystem.Interface.IAudioManager, context.Source);
             
             // 가드 상태 확인하여 상태이상 효과 등록
             if (context.Target.RegisterStatusEffect(bleed))

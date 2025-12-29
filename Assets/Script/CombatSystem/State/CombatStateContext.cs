@@ -106,10 +106,6 @@ namespace Game.CombatSystem.State
 
             IsInitialized = true;
             IsPaused = false;
-
-            Game.CoreSystem.Utility.GameLogger.LogInfo(
-                "[CombatStateContext] 컨텍스트 초기화 완료 (레거시 + 리팩토링)",
-                Game.CoreSystem.Utility.GameLogger.LogCategory.Combat);
         }
 
         /// <summary>
@@ -160,10 +156,6 @@ namespace Game.CombatSystem.State
             CurrentExecutingCard = null;
             CurrentExecutingSlot = null;
             IsPaused = false;
-
-            Game.CoreSystem.Utility.GameLogger.LogInfo(
-                "[CombatStateContext] 컨텍스트 리셋 완료",
-                Game.CoreSystem.Utility.GameLogger.LogCategory.Combat);
         }
     }
 }

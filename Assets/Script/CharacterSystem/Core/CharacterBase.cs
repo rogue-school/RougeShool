@@ -46,6 +46,9 @@ namespace Game.CharacterSystem.Core
         /// <summary>분신 추가 체력 (CloneBuff에 의해 관리됨)</summary>
         protected int cloneHP = 0;
 
+        /// <summary>시공의 폭풍 추가 체력 (StormOfSpaceTimeDebuff에 의해 관리됨)</summary>
+        protected int stormHP = 0;
+
         /// <summary>데미지 텍스트 표시 건너뛰기 플래그 (다단 히트용)</summary>
         protected bool skipDamageTextDisplay = false;
 
@@ -106,6 +109,9 @@ namespace Game.CharacterSystem.Core
         /// <summary>분신 추가 체력 반환</summary>
         public virtual int GetCloneHP() => cloneHP;
 
+        /// <summary>시공의 폭풍 추가 체력 반환</summary>
+        public virtual int GetStormHP() => stormHP;
+
         /// <summary>캐릭터가 사망했는지 확인</summary>
         public virtual bool IsDead() => currentHP <= 0;
 
@@ -156,6 +162,13 @@ namespace Game.CharacterSystem.Core
         {
             cloneHP = Mathf.Max(0, value);
             GameLogger.LogInfo($"[{GetCharacterName()}] 분신 추가 체력: {cloneHP}", GameLogger.LogCategory.Character);
+        }
+
+        /// <summary>시공의 폭풍 추가 체력 설정</summary>
+        /// <param name="value">설정할 추가 체력 값</param>
+        public virtual void SetStormHP(int value)
+        {
+            stormHP = Mathf.Max(0, value);
         }
 
         /// <summary>데미지 텍스트 표시 건너뛰기 플래그 설정 (다단 히트용)</summary>
@@ -241,6 +254,51 @@ namespace Game.CharacterSystem.Core
                 return; // 가드 상태면 데미지 무효화
             }
 
+            // 시공의 폭풍 추가 체력이 있으면 먼저 소모 (분신보다 우선)
+            if (stormHP > 0)
+            {
+                int stormDamageTaken = Mathf.Min(amount, stormHP);
+                int remainingDamage = amount - stormHP;
+                int previousStormHP = stormHP;
+                stormHP = Mathf.Max(0, stormHP - amount);
+                
+                // StormOfSpaceTimeDebuff의 StormHP도 동기화
+                foreach (var effect in perTurnEffects)
+                {
+                    if (effect is StormOfSpaceTimeDebuff stormDebuff)
+                    {
+                        stormDebuff.SetStormHP(stormHP);
+                        break;
+                    }
+                }
+                
+                GameLogger.LogInfo($"[{GetCharacterDataName()}] 시공의 폭풍 추가 체력 소모: {stormDamageTaken} (남은 시공의 폭풍 체력: {stormHP})", GameLogger.LogCategory.Character);
+                
+                // 시공의 폭풍 체력이 변경되었으면 UI 업데이트
+                if (previousStormHP != stormHP)
+                {
+                    OnBuffsChanged?.Invoke(perTurnEffects.AsReadOnly());
+                }
+                
+                // 시공의 폭풍 체력이 소모되었으므로 OnDamaged 호출 (빨간색 플래시 효과는 제외)
+                OnDamaged(stormDamageTaken, skipVisualEffects: true);
+                
+                // 시공의 폭풍 체력이 0이 되면 시공의 폭풍 버프 제거
+                if (stormHP <= 0)
+                {
+                    RemoveStormOfSpaceTimeBuff();
+                }
+                
+                // 시공의 폭풍 체력으로 모든 데미지를 흡수했으면 종료
+                if (remainingDamage <= 0)
+                {
+                    return;
+                }
+                
+                // 남은 데미지를 다음 단계로 전달
+                amount = remainingDamage;
+            }
+
             // 분신 추가 체력이 있으면 먼저 소모 (현재 체력과 독립적으로 항상 먼저 소모됨)
             if (cloneHP > 0)
             {
@@ -289,8 +347,6 @@ namespace Game.CharacterSystem.Core
             currentHP = Mathf.Max(currentHP - amount, 0);
             OnHPChanged?.Invoke(currentHP, maxHP);
 
-            GameLogger.LogInfo($"[{GetCharacterDataName()}] 피해: {amount}, 남은 체력: {currentHP}", GameLogger.LogCategory.Character);
-
             // 피해 이벤트 발행은 자식 클래스에서 처리
             OnDamaged(amount, skipVisualEffects: false);
 
@@ -320,6 +376,24 @@ namespace Game.CharacterSystem.Core
             }
         }
 
+        /// <summary>
+        /// 시공의 폭풍 버프를 제거합니다.
+        /// </summary>
+        private void RemoveStormOfSpaceTimeBuff()
+        {
+            for (int i = perTurnEffects.Count - 1; i >= 0; i--)
+            {
+                if (perTurnEffects[i] is StormOfSpaceTimeDebuff)
+                {
+                    perTurnEffects.RemoveAt(i);
+                    stormHP = 0;
+                    OnBuffsChanged?.Invoke(perTurnEffects.AsReadOnly());
+                    GameLogger.LogInfo($"[{GetCharacterDataName()}] 시공의 폭풍 버프 제거됨", GameLogger.LogCategory.Character);
+                    break;
+                }
+            }
+        }
+
         /// <summary>가드를 무시하고 피해를 받아 체력을 감소시킵니다</summary>
         /// <param name="amount">피해량</param>
         public virtual void TakeDamageIgnoreGuard(int amount)
@@ -335,6 +409,51 @@ namespace Game.CharacterSystem.Core
             {
                 GameLogger.LogInfo($"[{GetCharacterDataName()}] 무적으로 데미지 완전 차단 (가드 무시): {amount}", GameLogger.LogCategory.Character);
                 return; // 무적 상태면 데미지 완전 무효화
+            }
+
+            // 시공의 폭풍 추가 체력이 있으면 먼저 소모 (가드 무시 데미지도 시공의 폭풍 체력이 먼저 소모됨, 분신보다 우선)
+            if (stormHP > 0)
+            {
+                int stormDamageTaken = Mathf.Min(amount, stormHP);
+                int remainingDamage = amount - stormHP;
+                int previousStormHP = stormHP;
+                stormHP = Mathf.Max(0, stormHP - amount);
+                
+                // StormOfSpaceTimeDebuff의 StormHP도 동기화
+                foreach (var effect in perTurnEffects)
+                {
+                    if (effect is StormOfSpaceTimeDebuff stormDebuff)
+                    {
+                        stormDebuff.SetStormHP(stormHP);
+                        break;
+                    }
+                }
+                
+                GameLogger.LogInfo($"[{GetCharacterDataName()}] 시공의 폭풍 추가 체력 소모 (가드 무시): {stormDamageTaken} (남은 시공의 폭풍 체력: {stormHP})", GameLogger.LogCategory.Character);
+                
+                // 시공의 폭풍 체력이 변경되었으면 UI 업데이트
+                if (previousStormHP != stormHP)
+                {
+                    OnBuffsChanged?.Invoke(perTurnEffects.AsReadOnly());
+                }
+                
+                // 시공의 폭풍 체력이 소모되었으므로 OnDamaged 호출 (빨간색 플래시 효과는 제외)
+                OnDamaged(stormDamageTaken, skipVisualEffects: true);
+                
+                // 시공의 폭풍 체력이 0이 되면 시공의 폭풍 버프 제거
+                if (stormHP <= 0)
+                {
+                    RemoveStormOfSpaceTimeBuff();
+                }
+                
+                // 시공의 폭풍 체력으로 모든 데미지를 흡수했으면 종료
+                if (remainingDamage <= 0)
+                {
+                    return;
+                }
+                
+                // 남은 데미지를 다음 단계로 전달
+                amount = remainingDamage;
             }
 
             // 분신 추가 체력이 있으면 먼저 소모 (가드 무시 데미지도 분신 체력이 먼저 소모됨)
@@ -577,6 +696,22 @@ namespace Game.CharacterSystem.Core
                         if (i >= 0 && i < perTurnEffects.Count)
                         {
                             perTurnEffects.RemoveAt(i);
+                        }
+                    }
+                    continue;
+                }
+
+                // StormOfSpaceTimeDebuff는 StormHP가 0이 되면 만료되므로 별도 처리
+                if (effect is StormOfSpaceTimeDebuff stormDebuff)
+                {
+                    // StormHP가 0이면 제거
+                    if (stormDebuff.StormHP <= 0)
+                    {
+                        // 인덱스 범위 다시 체크
+                        if (i >= 0 && i < perTurnEffects.Count)
+                        {
+                            perTurnEffects.RemoveAt(i);
+                            stormHP = 0;
                         }
                     }
                     continue;

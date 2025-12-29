@@ -100,8 +100,9 @@ namespace Game.SkillCardSystem.Effect
             // 원본 효과 SO 이름 가져오기 (툴팁 표시용)
             string sourceEffectName = GetSourceEffectName(context);
             
-            // 출혈 효과 생성 (perTurnEffectPrefab 및 perTurnSfxClip 전달)
-            var bleedEffect = new BleedEffect(amount, duration, icon, perTurnEffectPrefab, perTurnSfxClip, sourceEffectName, vfxManager, audioManager);
+            // 출혈 효과 생성 (perTurnEffectPrefab 및 perTurnSfxClip 전달, sourceCharacter 전달)
+            // 출혈을 적용한 캐릭터 정보를 저장하여 시공의 폭풍 데미지 누적에 사용
+            var bleedEffect = new BleedEffect(amount, duration, icon, perTurnEffectPrefab, perTurnSfxClip, sourceEffectName, vfxManager, audioManager, context.Source);
             
             // 가드 상태 확인하여 상태이상 효과 등록
             if (context.Target.RegisterStatusEffect(bleedEffect))

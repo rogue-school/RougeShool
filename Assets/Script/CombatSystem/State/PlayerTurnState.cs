@@ -34,8 +34,6 @@ namespace Game.CombatSystem.State
                 return;
             }
 
-            LogStateTransition("플레이어 턴 시작");
-
             // 소환 트리거 체크 (안전한 시점)
             context.StateMachine?.CheckSummonTriggerAtSafePoint();
 
@@ -83,7 +81,6 @@ namespace Game.CombatSystem.State
 
             if (isSummonMode)
             {
-                LogStateTransition("소환 모드 감지 - 소환 모드 해제 후 핸드 생성");
                 // 소환 모드 해제
                 context.SlotMovement?.ClearSummonMode();
             }
@@ -96,19 +93,13 @@ namespace Game.CombatSystem.State
                 if (player is Game.CharacterSystem.Core.CharacterBase playerBase)
                 {
                     var playerBuffs = playerBase.GetBuffs();
-                    LogStateTransition($"운명의 실 체크: 버프/디버프 총 {playerBuffs.Count}개");
                     foreach (var buff in playerBuffs)
                     {
                         if (buff is Game.SkillCardSystem.Effect.ThreadOfFateDebuff)
                         {
                             hasThreadOfFate = true;
-                            LogStateTransition($"운명의 실 디버프 감지: {buff.GetType().Name}");
                             break;
                         }
-                    }
-                    if (!hasThreadOfFate)
-                    {
-                        LogStateTransition("운명의 실 디버프 없음");
                     }
                 }
             }
@@ -117,7 +108,6 @@ namespace Game.CombatSystem.State
             if (context.HandManager != null)
             {
                 context.HandManager.GenerateInitialHand();
-                LogStateTransition("플레이어 손패 생성 완료");
             }
             else
             {
@@ -134,11 +124,8 @@ namespace Game.CombatSystem.State
                     // 코루틴을 시작하기 위해 StateMachine의 MonoBehaviour 사용
                     if (context.StateMachine != null && context.StateMachine is MonoBehaviour stateMachineMono)
                     {
-                        GameLogger.LogInfo("[PlayerTurnState] ProcessThreadOfFateEffectCoroutine 호출 시작", GameLogger.LogCategory.SkillCard);
                         // context.HandManager와 StateMachine을 파라미터로 전달
                         yield return stateMachineMono.StartCoroutine(playerCharacter.ProcessThreadOfFateEffectCoroutine(context.HandManager, context.StateMachine));
-                        GameLogger.LogInfo("[PlayerTurnState] ProcessThreadOfFateEffectCoroutine 완료", GameLogger.LogCategory.SkillCard);
-                        LogStateTransition("운명의 실 효과 처리 완료");
                     }
                     else
                     {
@@ -151,13 +138,12 @@ namespace Game.CombatSystem.State
                 }
             }
 
-            LogStateTransition("플레이어 턴 시작 - 카드 드래그 대기 중");
+            // 플레이어 턴 시작 - 카드 드래그 대기 중
         }
 
         public override void OnExit(CombatStateContext context)
         {
             base.OnExit(context);
-            LogStateTransition("플레이어 턴 종료");
         }
 
         /// <summary>
@@ -223,8 +209,6 @@ namespace Game.CombatSystem.State
         /// </summary>
         private void GiveActiveItemReward(CombatStateContext context)
         {
-            GameLogger.LogInfo($"[PlayerTurnState] GiveActiveItemReward 호출 - TurnCount: {context?.TurnController?.TurnCount ?? -1}", GameLogger.LogCategory.Combat);
-            
             // 첫 플레이어 턴인지 확인 (턴 카운트가 1이면 첫 턴이므로 보상 지급 안 함)
             if (context?.TurnController == null)
             {
@@ -236,14 +220,12 @@ namespace Game.CombatSystem.State
             bool isSummonMode = context.SlotMovement != null && context.SlotMovement.IsSummonMode;
             if (isSummonMode)
             {
-                LogStateTransition($"소환/복귀 모드이므로 액티브 아이템 보상 지급 건너뜀 (턴: {context.TurnController.TurnCount})");
                 return;
             }
 
             // 첫 턴(턴 카운트 1)에는 보상 지급 안 함
             if (context.TurnController.TurnCount <= 1)
             {
-                LogStateTransition("첫 플레이어 턴이므로 액티브 아이템 보상 지급 건너뜀");
                 return;
             }
 
@@ -306,12 +288,10 @@ namespace Game.CombatSystem.State
             }
 
             // 아이템 추가
-            GameLogger.LogInfo($"[PlayerTurnState] 액티브 아이템 추가 시도: {rewardItem.DisplayName} (턴 {context.TurnController.TurnCount})", GameLogger.LogCategory.Combat);
             bool success = itemService.AddActiveItem(rewardItem);
             if (success)
             {
-                LogStateTransition($"액티브 아이템 보상 지급 완료: {rewardItem.DisplayName} (턴 {context.TurnController.TurnCount})");
-                GameLogger.LogInfo($"[PlayerTurnState] 액티브 아이템 보상 지급 성공: {rewardItem.DisplayName}", GameLogger.LogCategory.Combat);
+                // 액티브 아이템 보상 지급 완료
             }
             else
             {
@@ -333,8 +313,6 @@ namespace Game.CombatSystem.State
                 LogError("StateMachine이 null입니다");
                 return;
             }
-
-            LogStateTransition($"카드 배치: {card?.GetCardName()} → {slot}");
 
             // 실행 컨텍스트 설정
             context.CurrentExecutingCard = card;

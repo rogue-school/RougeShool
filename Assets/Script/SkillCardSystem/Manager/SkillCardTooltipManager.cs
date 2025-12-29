@@ -111,8 +111,6 @@ namespace Game.SkillCardSystem.Manager
         /// <returns>초기화 코루틴</returns>
         public System.Collections.IEnumerator Initialize()
         {
-            GameLogger.LogInfo($"[SkillCardTooltipManager] 초기화 시작 - 현재 상태: IsInitialized={IsInitialized}, tooltipPrefab={tooltipPrefab != null}", GameLogger.LogCategory.UI);
-            
             yield return InitializeTooltipSystem();
             
             if (tooltipPrefab == null)
@@ -123,7 +121,6 @@ namespace Game.SkillCardSystem.Manager
             }
             
             IsInitialized = true;
-            GameLogger.LogInfo($"[SkillCardTooltipManager] 초기화 완료 - IsInitialized={IsInitialized}, tooltipPrefab={tooltipPrefab != null}", GameLogger.LogCategory.UI);
         }
 
         /// <summary>
@@ -164,15 +161,12 @@ namespace Game.SkillCardSystem.Manager
             // Inspector에서 할당되지 않았으면 Addressables에서 로드
             if (tooltipPrefab == null)
             {
-                GameLogger.LogInfo("[SkillCardTooltipManager] Inspector에서 프리팹이 할당되지 않았습니다. Addressables에서 로드를 시도합니다.", GameLogger.LogCategory.UI);
-                
                 var handle = Addressables.LoadAssetAsync<SkillCardTooltip>("SkillCardTooltip");
                 yield return handle;
                 
                 if (handle.Status == AsyncOperationStatus.Succeeded && handle.Result != null)
                 {
                     tooltipPrefab = handle.Result;
-                    GameLogger.LogInfo("[SkillCardTooltipManager] Addressables에서 툴팁 프리팹 로드 성공", GameLogger.LogCategory.UI);
                 }
                 else
                 {
@@ -208,12 +202,9 @@ namespace Game.SkillCardSystem.Manager
         /// </summary>
         private void CreateTooltipInstance()
         {
-            GameLogger.LogInfo($"[SkillCardTooltipManager] CreateTooltipInstance 시작 - currentTooltip: {currentTooltip != null}, tooltipPrefab: {tooltipPrefab != null}", GameLogger.LogCategory.UI);
-            
             // 기존 툴팁이 있으면 제거 (단일 인스턴스 방식에서 변경)
             if (currentTooltip != null)
             {
-                GameLogger.LogInfo("[SkillCardTooltipManager] 기존 툴팁 제거", GameLogger.LogCategory.UI);
                 DestroyImmediate(currentTooltip.gameObject);
                 currentTooltip = null;
             }
@@ -302,7 +293,6 @@ namespace Game.SkillCardSystem.Manager
             // 초기화 상태 확인
             if (!IsInitialized)
             {
-                GameLogger.LogInfo($"[SkillCardTooltipManager] 초기화 미완료 - 즉시 초기화 시도. card: {card.GetCardName()}", GameLogger.LogCategory.UI);
                 pendingCard = card;
                 pendingShow = true;
                 StartCoroutine(ForceInitialize());
@@ -654,7 +644,6 @@ namespace Game.SkillCardSystem.Manager
                 if (cardUICache.TryGetValue(hoveredCard, out var cachedRt) && cachedRt != null)
                 {
                     currentTargetRect = cachedRt;
-                    GameLogger.LogInfo($"[SkillCardTooltipManager] ShowTooltip: currentTargetRect 캐시에서 찾음 - {hoveredCard.GetCardName()}", GameLogger.LogCategory.UI);
                 }
                 else
                 {
@@ -665,14 +654,12 @@ namespace Game.SkillCardSystem.Manager
             // 첫 표시 시점에 툴팁 생성 (대상 캔버스/부모 확정 후)
             if (currentTooltip == null)
             {
-                GameLogger.LogInfo($"[SkillCardTooltipManager] ShowTooltip: 툴팁 인스턴스 생성 시작 - {hoveredCard.GetCardName()}", GameLogger.LogCategory.UI);
                 CreateTooltipInstance();
                 if (currentTooltip == null)
                 {
                     GameLogger.LogError("[SkillCardTooltipManager] ShowTooltip: 툴팁 인스턴스 생성 실패", GameLogger.LogCategory.Error);
                     return;
                 }
-                GameLogger.LogInfo("[SkillCardTooltipManager] ShowTooltip: 툴팁 인스턴스 생성 완료", GameLogger.LogCategory.UI);
             }
             else
             {

@@ -140,6 +140,26 @@ namespace Game.SkillCardSystem.Data
         /// 카드 타입 (기본값: "SkillCard", 기존 시스템 호환성)
         /// </summary>
         public string CardType => "SkillCard";
+        
+        /// <summary>
+        /// 이 카드가 시공의 폭풍 카드인지 확인합니다.
+        /// </summary>
+        /// <returns>시공의 폭풍 효과를 포함하면 true</returns>
+        public bool IsStormOfSpaceTimeCard()
+        {
+            if (!configuration.hasEffects || configuration.effects == null)
+                return false;
+            
+            foreach (var effectConfig in configuration.effects)
+            {
+                if (effectConfig?.effectSO is StormOfSpaceTimeEffectSO)
+                {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
     }
 
     /// <summary>
@@ -403,7 +423,6 @@ namespace Game.SkillCardSystem.Data
         
         [Tooltip("시공의 폭풍 지속 턴 수")]
         public int stormOfSpaceTimeDuration = 3;
-        
     }
 
     /// <summary>

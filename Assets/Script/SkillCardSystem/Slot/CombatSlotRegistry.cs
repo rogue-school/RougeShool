@@ -55,15 +55,9 @@ namespace Game.CombatSystem.Slot
                 _allSlots.Add(slot);
                 registeredCount++;
 
-                // 슬롯 등록 로그 추가
-                if (slot is UnityEngine.MonoBehaviour mb)
-                {
-                    GameLogger.LogInfo($"[CombatSlotRegistry] 슬롯 등록: {pos} (GameObject: {mb.gameObject.name})", GameLogger.LogCategory.Combat);
-                }
             }
 
             _isInitialized = true;
-            GameLogger.LogInfo($"[CombatSlotRegistry] 총 {registeredCount}개 슬롯 등록 완료", GameLogger.LogCategory.Combat);
 
         }
 

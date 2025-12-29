@@ -45,11 +45,7 @@ namespace Game.CombatSystem.UI
         private void FindSceneTransitionManager()
         {
             // sceneTransitionManager는 DI로 주입받음
-            if (sceneTransitionManager != null)
-            {
-                GameLogger.LogInfo("[GameOverUI] SceneTransitionManager 찾기 완료", GameLogger.LogCategory.UI);
-            }
-            else
+            if (sceneTransitionManager == null)
             {
                 GameLogger.LogWarning("[GameOverUI] SceneTransitionManager를 찾을 수 없습니다", GameLogger.LogCategory.UI);
             }
@@ -78,7 +74,7 @@ namespace Game.CombatSystem.UI
                 mainMenuButton.onClick.AddListener(OnMainMenuClicked);
             }
 
-            GameLogger.LogInfo("[GameOverUI] 게임 오버 UI 초기화 완료", GameLogger.LogCategory.UI);
+            // 게임 오버 UI 초기화 완료
         }
 
         /// <summary>

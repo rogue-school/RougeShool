@@ -113,18 +113,11 @@ namespace Game.CombatSystem.State
             // 적 데이터가 있으면 슬롯 셋업
             if (_enemyData != null && context.SlotMovement != null && !_skipSlotSetup)
             {
-                LogStateTransition($"초기 슬롯 셋업 시작: {_enemyName}");
-
                 yield return context.StateMachine.StartCoroutine(
                     context.SlotMovement.SetupInitialEnemyQueueRoutine(_enemyData, _enemyName)
                 );
-
-                LogStateTransition($"초기 슬롯 셋업 완료: {_enemyName}");
             }
-            else if (_skipSlotSetup)
-            {
-                LogStateTransition("슬롯 설정 건너뜀 (이미 설정됨)");
-            }
+            // 슬롯 설정 건너뜀 (이미 설정됨)
 
             // 플레이어 핸드 생성은 PlayerTurnState에서 처리 (중복 방지)
             // 게임 시작 순서: 배치 슬롯 생성 → 슬롯 이동 완료 → PlayerTurnState 진입 → 플레이어 핸드 생성
@@ -146,7 +139,6 @@ namespace Game.CombatSystem.State
             }
 
             // 플레이어 턴으로 전환
-            LogStateTransition($"{(_isSummonMode ? "소환 모드" : "일반 모드")} - 플레이어 턴으로 전환");
             StartPlayerTurn(context);
         }
 
@@ -278,11 +270,6 @@ namespace Game.CombatSystem.State
             if (context.TurnController != null && !_isSummonMode)
             {
                 context.TurnController.StartGame();
-                LogStateTransition("게임 시작");
-            }
-            else if (_isSummonMode)
-            {
-                LogStateTransition("소환/복귀 모드 - 게임 시작 건너뜀 (이미 진행 중)");
             }
 
             // 턴 리셋 (TurnController 사용)
@@ -290,17 +277,10 @@ namespace Game.CombatSystem.State
             if (context.TurnController != null && !_isSummonMode)
             {
                 context.TurnController.ResetTurn();
-                LogStateTransition("턴 리셋");
-            }
-            else if (_isSummonMode)
-            {
-                LogStateTransition("소환/복귀 모드 - 턴 리셋 건너뜀 (턴 수 유지)");
             }
 
             // 컨텍스트 리셋
             context.Reset();
-
-            LogStateTransition("전투 초기화 작업 완료");
         }
 
         /// <summary>
@@ -320,12 +300,8 @@ namespace Game.CombatSystem.State
                 return;
             }
 
-            LogStateTransition("플레이어 턴으로 전환");
-
             var playerTurnState = new PlayerTurnState();
             RequestTransition(context, playerTurnState);
-            
-            LogStateTransition($"RequestTransition 호출 완료 - 다음 상태: {playerTurnState.StateName}");
         }
 
         /// <summary>

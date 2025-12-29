@@ -247,7 +247,14 @@ namespace Game.CombatSystem.Manager
                 var enemyName = string.IsNullOrEmpty(_cachedEnemyName) ? runtimeName : _cachedEnemyName;
 
                 Game.SkillCardSystem.Deck.EnemySkillDeck.CardEntry entry = null;
-                if (enemyData?.EnemyDeck != null)
+                
+                // EnemyCharacter의 GetRandomCardEntry 사용 (시공의 폭풍 카드 강제 생성 지원)
+                if (enemy is Game.CharacterSystem.Core.EnemyCharacter enemyCharacter)
+                {
+                    entry = enemyCharacter.GetRandomCardEntry();
+                }
+                // 폴백: 직접 덱에서 가져오기
+                else if (enemyData?.EnemyDeck != null)
                 {
                     // GetRandomEntry가 간헐적으로 null을 반환할 수 있으므로 재시도
                     for (int attempt = 0; attempt < CombatConstants.InitialSetup.ENEMY_CARD_RETRY_COUNT && entry == null; attempt++)
@@ -298,13 +305,11 @@ namespace Game.CombatSystem.Manager
             {
                 if (IsPlayerTurnMarker(tailCard))
                 {
-                    GameLogger.LogInfo("[자동 보충] 꼬리 슬롯: 플레이어 마커 → 다음은 적 카드", GameLogger.LogCategory.Combat);
                     return false; // 적 카드 생성
                 }
 
                 if (!tailCard.IsFromPlayer())
                 {
-                    GameLogger.LogInfo("[자동 보충] 꼬리 슬롯: 적 카드 → 다음은 플레이어 마커", GameLogger.LogCategory.Combat);
                     return true; // 플레이어 마커 생성
                 }
             }
@@ -315,13 +320,11 @@ namespace Game.CombatSystem.Manager
             {
                 if (IsPlayerTurnMarker(battleCard))
                 {
-                    GameLogger.LogInfo("[자동 보충] 배틀 슬롯: 플레이어 마커 → 다음은 적 카드", GameLogger.LogCategory.Combat);
                     return false;
                 }
 
                 if (!battleCard.IsFromPlayer())
                 {
-                    GameLogger.LogInfo("[자동 보충] 배틀 슬롯: 적 카드 → 다음은 플레이어 마커", GameLogger.LogCategory.Combat);
                     return true;
                 }
             }
@@ -408,7 +411,6 @@ namespace Game.CombatSystem.Manager
                     var marker = CreatePlayerMarker();
                     if (marker != null)
                     {
-                        GameLogger.LogInfo($"[초기 셋업] {i + 1}번째: 플레이어 마커 생성", GameLogger.LogCategory.Combat);
                         yield return PlaceCardInWaitSlot4AndMoveRoutine(marker, SlotOwner.PLAYER, cardUIPrefab);
                     }
                     else
@@ -419,14 +421,24 @@ namespace Game.CombatSystem.Manager
                 else
                 {
                     // 적 스킬카드 생성 (정해진 확률대로 생성)
-                    var entry = enemyData.EnemyDeck.GetRandomEntry();
+                    // EnemyCharacter의 GetRandomCardEntry 사용 (시공의 폭풍 카드 강제 생성 지원)
+                    Game.SkillCardSystem.Deck.EnemySkillDeck.CardEntry entry = null;
+                    var enemy = _enemyManager?.GetCharacter();
+                    if (enemy is Game.CharacterSystem.Core.EnemyCharacter enemyCharacter)
+                    {
+                        entry = enemyCharacter.GetRandomCardEntry();
+                    }
+                    else if (enemyData?.EnemyDeck != null)
+                    {
+                        entry = enemyData.EnemyDeck.GetRandomEntry();
+                    }
+                    
                     if (entry?.definition != null)
                     {
                         // 데미지 오버라이드가 있으면 사용, 없으면 기본값 사용
                         var card = entry.HasDamageOverride()
                             ? _cardFactory.CreateEnemyCard(entry.definition, enemyName, entry.damageOverride)
                             : _cardFactory.CreateEnemyCard(entry.definition, enemyName);
-                        GameLogger.LogInfo($"[초기 셋업] {i + 1}번째: 적 스킬카드 생성 - {entry.definition.displayName}", GameLogger.LogCategory.Combat);
                         yield return PlaceCardInWaitSlot4AndMoveRoutine(card, SlotOwner.ENEMY, cardUIPrefab);
                     }
                     else
@@ -441,10 +453,6 @@ namespace Game.CombatSystem.Manager
 
             // 초기 셋업 완료 플래그 설정
             _initialSlotSetupCompleted = true;
-
-            // 초기 셋업 중에는 각 카드 배치 시 이미 슬롯 이동이 완료되었으므로
-            // 추가 슬롯 이동은 필요 없음 (각 카드 배치 시 이미 한 칸씩 이동됨)
-            GameLogger.LogInfo("[초기 셋업] 모든 카드 배치 및 슬롯 이동 완료", GameLogger.LogCategory.Combat);
 
             // 최종 이동/애니메이션이 모두 끝날 때까지 대기
             while (_isAdvancingQueue)
@@ -621,10 +629,20 @@ namespace Game.CombatSystem.Manager
                 else
                 {
                     // 적 스킬카드 생성 (새 페이즈의 덱 사용)
+                    // EnemyCharacter의 GetRandomCardEntry 사용 (시공의 폭풍 카드 강제 생성 지원)
                     Game.SkillCardSystem.Deck.EnemySkillDeck.CardEntry entry = null;
-                    for (int attempt = 0; attempt < CombatConstants.InitialSetup.ENEMY_CARD_RETRY_COUNT && entry == null; attempt++)
+                    // enemy는 위에서 이미 선언됨 (596줄)
+                    if (enemy is Game.CharacterSystem.Core.EnemyCharacter enemyCharacter)
                     {
-                        entry = enemyData.EnemyDeck.GetRandomEntry();
+                        entry = enemyCharacter.GetRandomCardEntry();
+                    }
+                    else if (enemyData?.EnemyDeck != null)
+                    {
+                        // GetRandomEntry가 간헐적으로 null을 반환할 수 있으므로 재시도
+                        for (int attempt = 0; attempt < CombatConstants.InitialSetup.ENEMY_CARD_RETRY_COUNT && entry == null; attempt++)
+                        {
+                            entry = enemyData.EnemyDeck.GetRandomEntry();
+                        }
                     }
 
                     if (entry?.definition != null)

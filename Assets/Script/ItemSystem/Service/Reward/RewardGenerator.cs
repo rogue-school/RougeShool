@@ -21,10 +21,7 @@ namespace Game.ItemSystem.Service.Reward
                 return GenerateDefaultActiveReward();
             }
 
-            if (player == null)
-            {
-                GameLogger.LogInfo("[RewardGenerator] PlayerRewardProfile이 null입니다. 필터링 없이 진행합니다.", GameLogger.LogCategory.UI);
-            }
+            // PlayerRewardProfile이 null이면 필터링 없이 진행
 
             var pool = MergePools(enemy.activePools);
             var candidates = FilterByStage(pool, stageIndex);

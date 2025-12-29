@@ -52,8 +52,6 @@ namespace Game.CharacterSystem.Effect
             
             // 이벤트 구독
             Game.CombatSystem.CombatEvents.OnEnemyCardMoved += OnEnemyCardMoved;
-            
-            GameLogger.LogInfo($"[OblivionEffectSO] {character.GetCharacterName()} 망각 패시브 초기화 완료", GameLogger.LogCategory.Character);
         }
 
         public override void OnHealthChanged(ICharacter character, int previousHP, int currentHP)

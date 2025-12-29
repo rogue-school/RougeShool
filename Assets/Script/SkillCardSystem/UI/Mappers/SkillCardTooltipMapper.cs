@@ -1346,8 +1346,6 @@ namespace Game.SkillCardSystem.UI.Mappers
                 return;
             }
             
-            GameLogger.LogInfo($"[SkillCardTooltipMapper] GetAttackPowerBuffs: {playerCharacter.GetCharacterName()}의 버프 수: {buffs.Count}", GameLogger.LogCategory.UI);
-            
             foreach (var effect in buffs)
             {
                 if (effect is Game.ItemSystem.Effect.AttackPowerBuffEffect attackBuff)
@@ -1361,26 +1359,20 @@ namespace Game.SkillCardSystem.UI.Mappers
                     if (hasItemName)
                     {
                         potionBonus += bonus;
-                        GameLogger.LogInfo($"[SkillCardTooltipMapper] 물약 버프 발견: +{bonus} (총: {potionBonus})", GameLogger.LogCategory.UI);
                     }
                     else if (hasEffectName)
                     {
                         focusBonus += bonus;
-                        GameLogger.LogInfo($"[SkillCardTooltipMapper] 집중 버프 발견: +{bonus} (총: {focusBonus})", GameLogger.LogCategory.UI);
                     }
                     else
                     {
                         // 둘 다 없으면 기본적으로 물약으로 간주
                         potionBonus += bonus;
-                        GameLogger.LogInfo($"[SkillCardTooltipMapper] 공격력 버프 발견 (출처 불명): +{bonus} (물약으로 분류, 총: {potionBonus})", GameLogger.LogCategory.UI);
                     }
                 }
             }
             
-            if (potionBonus == 0 && focusBonus == 0)
-            {
-                GameLogger.LogInfo($"[SkillCardTooltipMapper] GetAttackPowerBuffs: 공격력 버프가 없습니다. 버프 목록: {string.Join(", ", buffs.Select(b => b?.GetType().Name ?? "null"))}", GameLogger.LogCategory.UI);
-            }
+            // 공격력 버프 계산 완료
         }
         
         /// <summary>

@@ -39,8 +39,6 @@ namespace Game.CombatSystem.State
                 return;
             }
 
-            LogStateTransition($"카드 실행 시작: {context.CurrentExecutingCard.GetCardName()}");
-
             // 카드 실행 시작
             ExecuteCard(context);
         }
@@ -79,7 +77,6 @@ namespace Game.CombatSystem.State
                 if (context.HandManager != null)
                 {
                     context.HandManager.ClearAll();
-                    LogStateTransition("플레이어 손패 클리어 (카드 실행)");
                 }
             }
 
@@ -115,7 +112,7 @@ namespace Game.CombatSystem.State
         private void OnExecutionCompleted(CombatStateContext context,
             Game.CombatSystem.Interface.ExecutionResult result)
         {
-            LogStateTransition($"실행 결과: {(result.isSuccess ? "성공" : "실패")} - {result.resultMessage}");
+            // 실행 결과 처리
 
             // 카드 실행 완료 후 VFX/데미지 효과가 완료되었으므로 사망 체크를 명시적으로 트리거
             // 이렇게 하면 VFX/데미지 효과가 완료된 후에만 사망 체크가 이루어짐

@@ -449,7 +449,6 @@ public class CombatInstaller : MonoInstaller
         if (gameStateManager != null)
         {
             Container.Bind<IGameStateManager>().FromInstance(gameStateManager).AsSingle();
-            GameLogger.LogInfo(" GameStateManager 바인딩 완료 (전역에서 찾기)", GameLogger.LogCategory.Combat);
         }
         else
         {
@@ -460,7 +459,6 @@ public class CombatInstaller : MonoInstaller
         if (settingsManager != null)
         {
             Container.Bind<SettingsManager>().FromInstance(settingsManager).AsSingle();
-            GameLogger.LogInfo(" SettingsManager 바인딩 완료 (전역에서 찾기)", GameLogger.LogCategory.Combat);
         }
         else
         {
@@ -619,8 +617,6 @@ public class CombatInstaller : MonoInstaller
     /// </summary>
     private void BindAudioManager()
     {
-        GameLogger.LogInfo(" BindAudioManager 호출 시작");
-        
         // AudioManager를 씬에서 찾기
         var audioManager = FindFirstObjectByType<AudioManager>();
         
@@ -632,12 +628,8 @@ public class CombatInstaller : MonoInstaller
         }
         else
         {
-            GameLogger.LogInfo($"[CombatInstaller] AudioManager 발견: {audioManager.name}", GameLogger.LogCategory.Combat);
-            
             // IAudioManager 인터페이스로 바인딩
             Container.Bind<IAudioManager>().FromInstance(audioManager).AsSingle();
-            
-            GameLogger.LogInfo(" 오디오 시스템 바인딩 완료");
         }
     }
 

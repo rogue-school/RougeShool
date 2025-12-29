@@ -277,11 +277,27 @@ namespace Game.SkillCardSystem.UI
                 Sprite artwork = card.GetArtwork();
                 if (artwork != null)
                 {
+                    // 이미지 강제 업데이트: 항상 업데이트 (카드 교체 시 이미지 변경 보장)
+                    // 기존 스프라이트를 null로 설정하여 Unity가 변경을 감지하도록 함
+                    cardArtImage.sprite = null;
+                    // 즉시 새 스프라이트 설정
                     cardArtImage.sprite = artwork;
+                    // 이미지 컴포넌트 활성화 보장
+                    cardArtImage.enabled = true;
+                    // GameObject 활성화 보장
+                    if (!cardArtImage.gameObject.activeSelf)
+                    {
+                        cardArtImage.gameObject.SetActive(true);
+                    }
+                    // 강제 리프레시: GameObject를 비활성화 후 활성화하여 Unity가 변경을 감지하도록 함
+                    cardArtImage.gameObject.SetActive(false);
+                    cardArtImage.gameObject.SetActive(true);
                 }
                 else
                 {
-                    Debug.LogWarning("[SkillCardUI] 카드 아트워크가 null입니다. 기본 이미지를 설정해주세요.");
+                    GameLogger.LogWarning($"[SkillCardUI] 카드 아트워크가 null입니다. 카드 ID: {card.CardDefinition?.cardId}, 이름: {card.CardDefinition?.displayNameKO ?? card.CardDefinition?.displayName}", GameLogger.LogCategory.UI);
+                    // artwork가 null이어도 기존 스프라이트를 유지하지 않고 null로 설정
+                    cardArtImage.sprite = null;
                 }
             }
 

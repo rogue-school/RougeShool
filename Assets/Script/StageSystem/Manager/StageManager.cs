@@ -497,7 +497,6 @@ namespace Game.StageSystem.Manager
             GameLogger.LogInfo($"[StageManager] RegisterSummonedEnemy 호출: {enemy?.GetCharacterName() ?? "null"}", GameLogger.LogCategory.Combat);
             
             enemyManager?.RegisterEnemy(enemy);
-            GameLogger.LogInfo($"[StageManager] EnemyManager에 소환된 적 등록 완료", GameLogger.LogCategory.Combat);
 
             // 소환된 적은 소환 사망 콜백을 설정합니다
             if (enemy is EnemyCharacter concreteEnemy)
@@ -996,7 +995,6 @@ namespace Game.StageSystem.Manager
                 return null;
             }
 
-            GameLogger.LogInfo($"적 캐릭터 생성 및 배치 완료: {data.CharacterName} (슬롯: {characterSlot.name})", GameLogger.LogCategory.Combat);
             return enemy;
         }
 
@@ -1266,7 +1264,6 @@ namespace Game.StageSystem.Manager
                 OnStageTransition?.Invoke(previousStage, currentStage);
             }
             
-            GameLogger.LogInfo($"스테이지 {stageNumber} 로드 완료: {currentStage.stageName}", GameLogger.LogCategory.Combat);
             return true;
         }
         
@@ -1392,10 +1389,7 @@ namespace Game.StageSystem.Manager
                     StartCoroutine(WaitForStateResetAndContinue());
                     return; // 코루틴에서 나머지 작업 계속
                 }
-                else
-                {
-                    GameLogger.LogInfo("[StageManager] 전투 상태가 이미 None - 리셋 불필요", GameLogger.LogCategory.Combat);
-                }
+                // 전투 상태가 이미 None - 리셋 불필요
             }
 
             // 상태 리셋이 필요 없거나 완료된 경우 바로 계속
@@ -2001,7 +1995,6 @@ namespace Game.StageSystem.Manager
         public void SetSummonTarget(EnemyCharacterData target)
         {
             summonTargetData = target;
-            GameLogger.LogInfo($"[StageManager] 소환 대상 설정: {target?.DisplayName}", GameLogger.LogCategory.Combat);
         }
 
         /// <summary>

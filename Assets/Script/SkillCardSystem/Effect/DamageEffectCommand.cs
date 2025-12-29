@@ -261,21 +261,74 @@ namespace Game.SkillCardSystem.Effect
                         
                         // 반격 이펙트 재생: 적의 공격 이펙트가 적에게 반사되어 나타남
                         PlayCounterAttackEffect(context, source);
+                        
+                        // 시공의 폭풍 버프 추적: 반격으로 플레이어가 적에게 데미지를 입힐 때
+                        // 반격의 경우: target(플레이어)가 반격 버프를 가지고 있고, source(적)가 데미지를 받음
+                        // 이것도 플레이어가 적에게 데미지를 입힌 것으로 간주
+                        // 시공의 폭풍 체력을 소모하는 것도 데미지로 인정
+                        if (target != null && target.IsPlayerControlled() && source is Game.CharacterSystem.Core.CharacterBase enemyCharacterCounter)
+                        {
+                            // 데미지 적용 전 시공의 폭풍 체력 확인
+                            int stormHPBefore = enemyCharacterCounter.GetStormHP();
+                            
+                            int actualDamageToNormalHP = CalculateActualDamageToNormalHP(source, reflect, true); // 반격은 가드 무시
+                            
+                            // 데미지 적용 후 시공의 폭풍 체력 확인
+                            int stormHPAfter = enemyCharacterCounter.GetStormHP();
+                            int stormHPDamage = Mathf.Max(0, stormHPBefore - stormHPAfter);
+                            
+                            var stormDebuff = enemyCharacterCounter.GetEffect<StormOfSpaceTimeDebuff>();
+                            if (stormDebuff != null)
+                            {
+                                int totalStormDamage = stormHPDamage + actualDamageToNormalHP;
+                                if (totalStormDamage > 0)
+                                {
+                                    stormDebuff.AddDamage(totalStormDamage);
+                                    GameLogger.LogInfo($"[DamageEffectCommand] 시공의 폭풍 데미지 누적 (반격): {totalStormDamage} (시공의 폭풍 체력 소모: {stormHPDamage}, 일반 체력 데미지: {actualDamageToNormalHP}, 총 누적: {stormDebuff.AccumulatedDamage}/{stormDebuff.TargetDamage}, 원래 데미지: {reflect}, 시공의 폭풍 체력: {stormHPBefore} → {stormHPAfter})", GameLogger.LogCategory.Combat);
+                                }
+                            }
+                        }
                     }
                 }
                 else
                 {
+                    // 시공의 폭풍 버프 추적을 위해 데미지 적용 전 시공의 폭풍 체력 확인
+                    int stormHPBefore = 0;
+                    if (source != null && source.IsPlayerControlled() && target is Game.CharacterSystem.Core.CharacterBase enemyCharacterBefore)
+                    {
+                        stormHPBefore = enemyCharacterBefore.GetStormHP();
+                    }
+                    
+                    // 실제 일반 체력에 들어갈 데미지 계산 (시공의 폭풍 체력, 분신 체력 고려)
+                    int actualDamageToNormalHP = CalculateActualDamageToNormalHP(target, effectiveDamage, ignoreGuard);
+                    
                     ApplyDamageCustom(target, effectiveDamage);
                     totalDamage += effectiveDamage;
                     
-                    // 시공의 폭풍 디버프 추적: 플레이어가 적에게 데미지를 입힐 때
-                    // 주의: 시공의 폭풍은 플레이어에게 적용되는 디버프이므로, 플레이어가 적에게 데미지를 입힐 때 플레이어의 디버프를 확인해야 함
-                    if (source != null && source.IsPlayerControlled() && source is Game.CharacterSystem.Core.CharacterBase playerCharacter)
+                    // 시공의 폭풍 버프 추적: 플레이어가 적에게 데미지를 입힐 때
+                    // 시공의 폭풍은 적(본인)에게 적용되는 버프이므로, 플레이어가 적에게 데미지를 입힐 때 적의 버프를 확인해야 함
+                    // 시공의 폭풍 체력을 소모하는 것도 데미지로 인정 (시공의 폭풍 체력 소모량 + 실제 일반 체력에 들어간 데미지)
+                    if (source != null && source.IsPlayerControlled() && target is Game.CharacterSystem.Core.CharacterBase enemyCharacter)
                     {
-                        var stormDebuff = playerCharacter.GetEffect<StormOfSpaceTimeDebuff>();
+                        var stormDebuff = enemyCharacter.GetEffect<StormOfSpaceTimeDebuff>();
                         if (stormDebuff != null)
                         {
-                            stormDebuff.AddDamage(effectiveDamage);
+                            // 시공의 폭풍 체력 소모량 계산 (데미지 적용 전후 비교)
+                            int stormHPAfter = enemyCharacter.GetStormHP();
+                            int stormHPDamage = Mathf.Max(0, stormHPBefore - stormHPAfter);
+                            
+                            // 시공의 폭풍 체력 소모량 + 실제 일반 체력에 들어간 데미지
+                            int totalStormDamage = stormHPDamage + actualDamageToNormalHP;
+                            
+                            if (totalStormDamage > 0)
+                            {
+                                stormDebuff.AddDamage(totalStormDamage);
+                                GameLogger.LogInfo($"[DamageEffectCommand] 시공의 폭풍 데미지 누적: {totalStormDamage} (시공의 폭풍 체력 소모: {stormHPDamage}, 일반 체력 데미지: {actualDamageToNormalHP}, 총 누적: {stormDebuff.AccumulatedDamage}/{stormDebuff.TargetDamage}, 원래 데미지: {effectiveDamage}, 시공의 폭풍 체력: {stormHPBefore} → {stormHPAfter})", GameLogger.LogCategory.Combat);
+                            }
+                            else
+                            {
+                                GameLogger.LogDebug($"[DamageEffectCommand] 시공의 폭풍 데미지 누적 스킵: totalStormDamage={totalStormDamage} (시공의 폭풍 체력 소모: {stormHPDamage}, 일반 체력 데미지: {actualDamageToNormalHP}, 원래 데미지: {effectiveDamage}, 시공의 폭풍 체력: {stormHPBefore} → {stormHPAfter})", GameLogger.LogCategory.Combat);
+                            }
                         }
                     }
                 }
@@ -458,6 +511,33 @@ namespace Game.SkillCardSystem.Effect
                         
                         // 반격 이펙트 재생: 적의 공격 이펙트가 적에게 반사되어 나타남
                         PlayCounterAttackEffect(context, source);
+                        
+                        // 시공의 폭풍 버프 추적: 반격으로 플레이어가 적에게 데미지를 입힐 때 (다단 히트)
+                        // 반격의 경우: target(플레이어)가 반격 버프를 가지고 있고, source(적)가 데미지를 받음
+                        // 이것도 플레이어가 적에게 데미지를 입힌 것으로 간주
+                        // 시공의 폭풍 체력을 소모하는 것도 데미지로 인정
+                        if (target != null && target.IsPlayerControlled() && source is Game.CharacterSystem.Core.CharacterBase enemyCharacterCounterMulti)
+                        {
+                            // 데미지 적용 전 시공의 폭풍 체력 확인
+                            int stormHPBefore = enemyCharacterCounterMulti.GetStormHP();
+                            
+                            int actualDamageToNormalHP = CalculateActualDamageToNormalHP(source, reflect, true); // 반격은 가드 무시
+                            
+                            // 데미지 적용 후 시공의 폭풍 체력 확인
+                            int stormHPAfter = enemyCharacterCounterMulti.GetStormHP();
+                            int stormHPDamage = Mathf.Max(0, stormHPBefore - stormHPAfter);
+                            
+                            var stormDebuff = enemyCharacterCounterMulti.GetEffect<StormOfSpaceTimeDebuff>();
+                            if (stormDebuff != null)
+                            {
+                                int totalStormDamage = stormHPDamage + actualDamageToNormalHP;
+                                if (totalStormDamage > 0)
+                                {
+                                    stormDebuff.AddDamage(totalStormDamage);
+                                    GameLogger.LogInfo($"[DamageEffectCommand] 시공의 폭풍 데미지 누적 (반격, 다단 히트 {i + 1}/{hitCount}): {totalStormDamage} (시공의 폭풍 체력 소모: {stormHPDamage}, 일반 체력 데미지: {actualDamageToNormalHP}, 총 누적: {stormDebuff.AccumulatedDamage}/{stormDebuff.TargetDamage}, 원래 데미지: {reflect}, 시공의 폭풍 체력: {stormHPBefore} → {stormHPAfter})", GameLogger.LogCategory.Combat);
+                                }
+                            }
+                        }
                     }
                     GameLogger.LogDebug($"[DamageEffectCommand] 반격(멀티히트) step {i + 1}: 대상 0, 반사 {reflect}", GameLogger.LogCategory.Combat);
                 }
@@ -468,13 +548,29 @@ namespace Game.SkillCardSystem.Effect
                     ApplyDamageCustom(target, perHitDamage, i, yOffset);
                     totalDamage += perHitDamage;
                     
-                    // 시공의 폭풍 디버프 추적: 플레이어가 적에게 데미지를 입힐 때 (다단 히트)
-                    if (source != null && source.IsPlayerControlled() && source is Game.CharacterSystem.Core.CharacterBase playerCharacterMulti)
+                    // 시공의 폭풍 버프 추적: 플레이어가 적에게 데미지를 입힐 때 (다단 히트)
+                    // 시공의 폭풍은 적(본인)에게 적용되는 버프이므로, 플레이어가 적에게 데미지를 입힐 때 적의 버프를 확인해야 함
+                    // 시공의 폭풍 체력을 소모하는 것도 데미지로 인정
+                    if (source != null && source.IsPlayerControlled() && target is Game.CharacterSystem.Core.CharacterBase enemyCharacterMulti)
                     {
-                        var stormDebuff = playerCharacterMulti.GetEffect<StormOfSpaceTimeDebuff>();
+                        // 데미지 적용 전 시공의 폭풍 체력 확인
+                        int stormHPBefore = enemyCharacterMulti.GetStormHP();
+                        
+                        int actualDamageToNormalHP = CalculateActualDamageToNormalHP(target, perHitDamage, ignoreGuard);
+                        
+                        // 데미지 적용 후 시공의 폭풍 체력 확인
+                        int stormHPAfter = enemyCharacterMulti.GetStormHP();
+                        int stormHPDamage = Mathf.Max(0, stormHPBefore - stormHPAfter);
+                        
+                        var stormDebuff = enemyCharacterMulti.GetEffect<StormOfSpaceTimeDebuff>();
                         if (stormDebuff != null)
                         {
-                            stormDebuff.AddDamage(perHitDamage);
+                            int totalStormDamage = stormHPDamage + actualDamageToNormalHP;
+                            if (totalStormDamage > 0)
+                            {
+                                stormDebuff.AddDamage(totalStormDamage);
+                                GameLogger.LogInfo($"[DamageEffectCommand] 시공의 폭풍 데미지 누적 (다단 히트 {i + 1}/{hitCount}): {totalStormDamage} (시공의 폭풍 체력 소모: {stormHPDamage}, 일반 체력 데미지: {actualDamageToNormalHP}, 총 누적: {stormDebuff.AccumulatedDamage}/{stormDebuff.TargetDamage}, 원래 데미지: {perHitDamage}, 시공의 폭풍 체력: {stormHPBefore} → {stormHPAfter})", GameLogger.LogCategory.Combat);
+                            }
                         }
                     }
                 }
@@ -733,6 +829,54 @@ namespace Game.SkillCardSystem.Effect
                 // CharacterBase가 아닌 경우 일반 TakeDamage 사용
                 target.TakeDamage(damage);
             }
+        }
+
+        /// <summary>
+        /// 실제 일반 체력에 들어갈 데미지를 계산합니다.
+        /// 시공의 폭풍 체력과 분신 체력을 고려하여 실제 일반 체력에 들어갈 데미지만 반환합니다.
+        /// </summary>
+        /// <param name="target">대상 캐릭터</param>
+        /// <param name="damage">원래 데미지</param>
+        /// <param name="ignoreGuard">가드 무시 여부</param>
+        /// <returns>실제 일반 체력에 들어갈 데미지</returns>
+        private int CalculateActualDamageToNormalHP(ICharacter target, int damage, bool ignoreGuard)
+        {
+            if (target == null || damage <= 0)
+                return 0;
+
+            // CharacterBase가 아니면 전체 데미지 반환
+            if (!(target is CharacterBase characterBase))
+                return damage;
+
+            // 무적 상태면 0 반환
+            if (characterBase.IsInvincible())
+                return 0;
+
+            // 가드 상태이고 가드를 무시하지 않으면 0 반환
+            if (!ignoreGuard && characterBase.IsGuarded())
+                return 0;
+
+            // 시공의 폭풍 체력 확인
+            int stormHP = characterBase.GetStormHP();
+            int remainingDamage = damage;
+
+            // 시공의 폭풍 체력이 있으면 먼저 소모
+            if (stormHP > 0)
+            {
+                remainingDamage = Mathf.Max(0, remainingDamage - stormHP);
+            }
+
+            // 분신 체력 확인
+            int cloneHP = characterBase.GetCloneHP();
+            
+            // 분신 체력이 있으면 소모
+            if (cloneHP > 0)
+            {
+                remainingDamage = Mathf.Max(0, remainingDamage - cloneHP);
+            }
+
+            // 실제 일반 체력에 들어갈 데미지 반환
+            return remainingDamage;
         }
 
         /// <summary>

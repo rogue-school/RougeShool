@@ -87,10 +87,7 @@ namespace Game.CombatSystem.Manager
 
         private void Awake()
         {
-            if (enableDebugLogging)
-            {
-                GameLogger.LogInfo("CombatExecutionManager 초기화 시작", GameLogger.LogCategory.Combat);
-            }
+            // CombatExecutionManager 초기화
         }
 
         private void Start()

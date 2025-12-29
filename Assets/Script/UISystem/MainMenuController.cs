@@ -637,8 +637,6 @@ namespace Game.UISystem
         /// </summary>
         private void OnNewGameButtonClicked()
         {
-            GameLogger.LogInfo("[MainMenuController] 새 게임 버튼 클릭", GameLogger.LogCategory.UI);
-            
             // SaveSystem 제거됨
             // 저장 불사용/신규 시작 플래그 설정 (StageScene에서 저장 복원 루틴 우회)
             PlayerPrefs.SetInt("RESUME_REQUESTED", 0);
@@ -656,8 +654,6 @@ namespace Game.UISystem
         /// </summary>
         private void OnContinueButtonClicked()
         {
-            GameLogger.LogInfo("[MainMenuController] 이어하기 버튼 클릭 (SaveSystem 제거됨 - 새 게임으로 전환)", GameLogger.LogCategory.UI);
-            
             // SaveSystem 제거됨 - 이어하기 기능 비활성화, 새 게임으로 전환
             try
             {
@@ -876,8 +872,6 @@ namespace Game.UISystem
                 return;
             }
             
-            GameLogger.LogInfo($"[MainMenuController] 게임 시작: {startCharacter.DisplayName}", GameLogger.LogCategory.UI);
-            
             try
             {
                 // 코어 시스템에 선택 캐릭터 전달 (StageScene에서 사용할 수 있도록)
@@ -900,7 +894,6 @@ namespace Game.UISystem
                     if (gameOverUI != null)
                     {
                         gameOverUI.HideGameOver();
-                        GameLogger.LogInfo("[MainMenuController] 게임 시작 전 GameOverUI 초기화(숨김)", GameLogger.LogCategory.UI);
                     }
                 }
                 catch (System.Exception ex)
@@ -914,7 +907,6 @@ namespace Game.UISystem
                     if (victoryUI != null)
                     {
                         victoryUI.Hide();
-                        GameLogger.LogInfo("[MainMenuController] 게임 시작 전 VictoryUI 초기화(숨김)", GameLogger.LogCategory.UI);
                     }
                 }
                 catch (System.Exception ex)
@@ -930,10 +922,6 @@ namespace Game.UISystem
                 {
                     GameLogger.LogWarning("[MainMenuController] DI 주입된 SceneTransitionManager가 null입니다. 전역에서 찾는 중...", GameLogger.LogCategory.UI);
                     transitionManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Manager.SceneTransitionManager>(UnityEngine.FindObjectsInactive.Include);
-                    if (transitionManager != null)
-                    {
-                        GameLogger.LogInfo("[MainMenuController] SceneTransitionManager를 전역에서 찾았습니다.", GameLogger.LogCategory.UI);
-                    }
                 }
                 
                 if (transitionManager != null)
@@ -944,16 +932,13 @@ namespace Game.UISystem
                         int skip = (skipTutorialToggle != null && skipTutorialToggle.isOn) ? 1 : 0;
                         PlayerPrefs.SetInt("TUTORIAL_SKIP", skip);
                         PlayerPrefs.Save();
-                        GameLogger.LogInfo($"[MainMenuController] 튜토리얼 스킵 설정 저장: {(skip == 1 ? "ON" : "OFF")}", GameLogger.LogCategory.UI);
                     }
                     catch (System.Exception ex)
                     {
                         GameLogger.LogWarning($"[MainMenuController] 튜토리얼 스킵 설정 저장 실패: {ex.Message}", GameLogger.LogCategory.UI);
                     }
 
-                    GameLogger.LogInfo("[MainMenuController] SceneTransitionManager 발견됨, 스테이지 씬으로 전환 시작", GameLogger.LogCategory.UI);
                     await transitionManager.TransitionToStageScene();
-                    GameLogger.LogInfo("[MainMenuController] 스테이지 씬으로 전환 완료", GameLogger.LogCategory.UI);
                 }
                 else
                 {

@@ -125,7 +125,6 @@ namespace Game.CombatSystem.State
             if (context.HandManager != null)
             {
                 context.HandManager.ClearAll();
-                LogStateTransition("플레이어 손패 정리 완료");
             }
 
             // 배틀 슬롯의 적 카드를 즉시 실행
@@ -201,7 +200,6 @@ namespace Game.CombatSystem.State
             if (totalBleedEffectCount == 0)
             {
                 context.TurnController.ProcessAllCharacterTurnEffects();
-                LogStateTransition("출혈 효과 없음 - 즉시 처리 완료");
                 yield break;
             }
 
@@ -250,13 +248,23 @@ namespace Game.CombatSystem.State
                 return;
             }
 
+            // 카드가 실행 중인지 확인 (시공의 폭풍 등이 턴 효과 처리 중에 실행되었을 수 있음)
+            if (context.ExecutionManager != null && context.ExecutionManager.IsExecuting)
+            {
+                LogStateTransition("카드가 실행 중입니다 - 적 턴 종료 대기");
+                // 카드 실행이 완료되면 자동으로 적 턴이 종료되므로 여기서는 아무것도 하지 않음
+                return;
+            }
+
             var battleCard = context.SlotRegistry.GetCardInSlot(
                 Game.CombatSystem.Slot.CombatSlotPosition.BATTLE_SLOT);
 
             // 배틀 슬롯 상태 확인
             if (battleCard == null)
             {
-                LogWarning("배틀 슬롯이 비어있음 - 적 턴인데 실행할 카드가 없음");
+                // 배틀 슬롯이 비어있지만 카드가 실행 중이 아니면 정상적으로 적 턴 종료
+                // (시공의 폭풍 등이 턴 효과 처리 중에 실행되어 완료된 경우)
+                LogStateTransition("배틀 슬롯이 비어있음 - 적 턴 종료");
                 // 빈 슬롯 → 플레이어 턴으로 복귀
                 var playerTurnState = new PlayerTurnState();
                 RequestTransition(context, playerTurnState);
@@ -275,7 +283,6 @@ namespace Game.CombatSystem.State
             // 적 스킬카드인 경우 → 실행
             if (!battleCard.IsFromPlayer())
             {
-                LogStateTransition($"적 스킬카드 발견: {battleCard.GetCardName()} → 실행");
                 OnEnemyCardReady(context, battleCard);
                 return;
             }
@@ -316,7 +323,12 @@ namespace Game.CombatSystem.State
                 return;
             }
 
-            LogStateTransition($"적 카드 실행 준비: {card.GetCardName()}");
+            // 시공의 폭풍 카드가 실행될 때만 턴 감소
+            // 시공의 폭풍 카드는 특수 기믹이므로 실행될 때만 턴이 감소해야 함
+            if (card.CardDefinition != null && card.CardDefinition.IsStormOfSpaceTimeCard())
+            {
+                DecrementStormOfSpaceTimeTurn(context);
+            }
 
             // 실행 컨텍스트 설정
             context.CurrentExecutingCard = card;
@@ -325,6 +337,55 @@ namespace Game.CombatSystem.State
             // 카드 실행 상태로 전환
             var executionState = new CardExecutionState();
             RequestTransition(context, executionState);
+        }
+
+        /// <summary>
+        /// 시공의 폭풍 버프의 턴을 감소시킵니다.
+        /// 시공의 폭풍 카드가 실행될 때만 호출됩니다.
+        /// </summary>
+        private void DecrementStormOfSpaceTimeTurn(CombatStateContext context)
+        {
+            if (context?.EnemyManager == null)
+            {
+                return;
+            }
+
+            var enemyCharacter = context.EnemyManager.GetCharacter();
+            if (enemyCharacter == null)
+            {
+                return;
+            }
+
+            // 시공의 폭풍 버프 확인
+            if (enemyCharacter is Game.CharacterSystem.Core.CharacterBase characterBase)
+            {
+                var stormDebuff = characterBase.GetEffect<Game.SkillCardSystem.Effect.StormOfSpaceTimeDebuff>();
+                if (stormDebuff != null && stormDebuff.RemainingTurns > 0)
+                {
+                    // 턴 감소 (DecrementTurn 메서드 호출)
+                    stormDebuff.DecrementTurn(enemyCharacter);
+                    Game.CoreSystem.Utility.GameLogger.LogInfo(
+                        $"[EnemyTurnState] 시공의 폭풍 카드 실행 - 시공의 폭풍 버프 턴 감소 (남은 턴: {stormDebuff.RemainingTurns})",
+                        Game.CoreSystem.Utility.GameLogger.LogCategory.Combat);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 적의 턴 중에 시공의 폭풍 카드가 배틀 슬롯에 배치되었을 때 호출됩니다.
+        /// 외부에서 호출 가능하도록 public으로 선언합니다.
+        /// </summary>
+        /// <param name="context">전투 상태 컨텍스트</param>
+        public void CheckForStormOfSpaceTimeCard(CombatStateContext context)
+        {
+            if (context == null)
+            {
+                LogError("컨텍스트가 null입니다");
+                return;
+            }
+
+            // 카드 실행을 다시 체크
+            CheckAndExecuteEnemyCard(context);
         }
     }
 }

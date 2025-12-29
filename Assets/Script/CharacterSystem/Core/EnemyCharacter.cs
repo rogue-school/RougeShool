@@ -85,6 +85,22 @@ namespace Game.CharacterSystem.Core
 
         private System.Collections.Generic.List<ICharacterEffect> characterEffects = new System.Collections.Generic.List<ICharacterEffect>();
 
+        /// <summary>
+        /// 시공의 폭풍 카드 실행 횟수 추적 (1번째, 2번째, 3번째)
+        /// </summary>
+        private int stormOfSpaceTimeCardExecutionCount = 0;
+
+        /// <summary>
+        /// 시공의 폭풍 카드가 다음 2턴 동안 강제로 생성되어야 하는지 여부
+        /// </summary>
+        private bool shouldForceStormOfSpaceTimeCard = false;
+
+
+        /// <summary>
+        /// 시공의 폭풍 카드가 이미 트리거되었는지 여부 (중복 트리거 방지)
+        /// </summary>
+        private bool stormOfSpaceTimeCardTriggered = false;
+
         [Inject(Optional = true)] private VFXManager vfxManager;
         [Inject(Optional = true)] private Game.CoreSystem.Interface.IAudioManager audioManager;
         [Inject(Optional = true)] private Game.CombatSystem.Interface.ICombatExecutionManager executionManager;
@@ -92,6 +108,7 @@ namespace Game.CharacterSystem.Core
         [Inject(Optional = true)] private Game.CombatSystem.Interface.ISlotMovementController slotMovementController;
         [Inject(Optional = true)] private Game.StageSystem.Manager.StageManager stageManager;
         [Inject(Optional = true)] private Game.CombatSystem.State.CombatStateMachine combatStateMachine;
+        [Inject(Optional = true)] private Game.SkillCardSystem.Interface.ISkillCardFactory cardFactory;
         private Sequence deathSequence;
 
         #region 페이즈 시스템
@@ -289,6 +306,9 @@ namespace Game.CharacterSystem.Core
             
             // 카드 실행 완료 이벤트 구독
             SubscribeToExecutionEvents();
+            
+            // 카드 실행 이벤트 구독 (시공의 폭풍 카드 추적용)
+            SubscribeToCardExecutedEvents();
             
             // 기본 Idle 시각 효과 시작 (부드러운 호흡)
             StartIdleVisualLoop();
@@ -549,10 +569,23 @@ namespace Game.CharacterSystem.Core
                 characterEffects.Add(entry.effectSO);
 
                 // 커스텀 설정 사용 여부에 따라 초기화
-                if (entry.useCustomSettings && entry.effectSO is Effect.SummonEffectSO summonEffectWithCustom)
+                if (entry.useCustomSettings)
                 {
-                    summonEffectWithCustom.InitializeWithCustomSettings(this, entry.customSettings);
-                    summonEffectWithCustom.OnSummonTriggered += HandleSummonTriggered;
+                    if (entry.effectSO is Effect.SummonEffectSO summonEffectWithCustom)
+                    {
+                        summonEffectWithCustom.InitializeWithCustomSettings(this, entry.customSettings);
+                        summonEffectWithCustom.OnSummonTriggered += HandleSummonTriggered;
+                    }
+                    else if (entry.effectSO is Effect.TriggerSkillOnHealthEffectSO skillEffectWithCustom)
+                    {
+                        skillEffectWithCustom.InitializeWithCustomSettings(this, entry.customSettings);
+                        skillEffectWithCustom.OnSkillTriggered += HandleSkillTriggered;
+                        skillEffectWithCustom.OnSkillDefinitionTriggered += HandleSkillDefinitionTriggered;
+                    }
+                    else
+                    {
+                        entry.effectSO.Initialize(this);
+                    }
                 }
                 else
                 {
@@ -563,9 +596,16 @@ namespace Game.CharacterSystem.Core
                     {
                         summonEffectSO.OnSummonTriggered += HandleSummonTriggered;
                     }
+                    // TriggerSkillOnHealthEffectSO 지원
+                    else if (entry.effectSO is Effect.TriggerSkillOnHealthEffectSO skillEffect)
+                    {
+                        skillEffect.OnSkillTriggered += HandleSkillTriggered;
+                        skillEffect.OnSkillDefinitionTriggered += HandleSkillDefinitionTriggered;
+                        skillEffect.OnSkillDefinitionTriggered += HandleSkillDefinitionTriggered;
+                    }
                 }
 
-                GameLogger.LogInfo($"[{GetCharacterName()}] 캐릭터 이펙트 적용: {entry.effectSO.GetEffectName()} (커스텀: {entry.useCustomSettings})", GameLogger.LogCategory.Character);
+                // 캐릭터 이펙트 적용 완료
             }
         }
 
@@ -581,18 +621,118 @@ namespace Game.CharacterSystem.Core
                 return null;
             }
 
-            var entry = skillDeck.GetRandomEntry();
+            // 시공의 폭풍 버프가 존재하는지 먼저 확인 (강제 생성 모드 플래그와 무관하게 체크)
+            // 남은 턴수만큼 시공의 폭풍 카드가 생성되도록 보장
+            // 현재 슬롯에 있는 시공의 폭풍 카드 수를 계산하여 남은 턴수에서 빼야 함
+            var stormDebuff = GetEffect<Game.SkillCardSystem.Effect.StormOfSpaceTimeDebuff>();
+            if (stormDebuff != null && stormDebuff.RemainingTurns > 0)
+            {
+                // 현재 슬롯에 있는 시공의 폭풍 카드 수 카운트 (대기 슬롯 4개 + 배치 슬롯 1개)
+                int currentStormCardCount = CountStormOfSpaceTimeCardsInSlots();
+                
+                // 남은 턴수에서 현재 슬롯에 있는 시공의 폭풍 카드 수를 뺀 값
+                int remainingCardsNeeded = stormDebuff.RemainingTurns - currentStormCardCount;
+                
+                // 추가로 생성해야 할 카드가 있으면 시공의 폭풍 카드 생성
+                if (remainingCardsNeeded > 0)
+                {
+                    // 시공의 폭풍 카드 찾기 (효과 기반 검색)
+                    var allCards = skillDeck.GetAllCards();
+                    if (allCards != null)
+                    {
+                        GameLogger.LogInfo($"[EnemyCharacter] 덱에서 시공의 폭풍 카드 검색 중... (덱 카드 수: {allCards.Count})", GameLogger.LogCategory.Character);
+                        
+                        foreach (var stormEntry in allCards)
+                        {
+                            if (stormEntry?.definition != null)
+                            {
+                                // 디버그: 모든 카드 ID 출력
+                                if (stormEntry.definition.cardId != null)
+                                {
+                                    GameLogger.LogDebug($"[EnemyCharacter] 덱 카드 확인: ID={stormEntry.definition.cardId}, Name={stormEntry.definition.displayName}", GameLogger.LogCategory.Character);
+                                }
+                                
+                                // 효과 기반으로 시공의 폭풍 카드 확인
+                                if (stormEntry.definition.IsStormOfSpaceTimeCard())
+                                {
+                                    // 강제 생성 모드 플래그도 활성화 (다음 호출을 위해)
+                                    shouldForceStormOfSpaceTimeCard = true;
+                                    GameLogger.LogInfo(
+                                        $"[EnemyCharacter] 시공의 폭풍 카드 강제 생성 (버프 남은 턴: {stormDebuff.RemainingTurns}, 현재 슬롯에 있는 카드: {currentStormCardCount}개, 추가 생성 필요: {remainingCardsNeeded}개, 목표 달성: {stormDebuff.IsTargetAchieved}, 누적 데미지: {stormDebuff.AccumulatedDamage}/{stormDebuff.TargetDamage})",
+                                        GameLogger.LogCategory.Character);
+                                    return stormEntry;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        GameLogger.LogWarning("[EnemyCharacter] skillDeck.GetAllCards()가 null을 반환했습니다.", GameLogger.LogCategory.Character);
+                    }
+                    
+                    // 시공의 폭풍 카드를 찾지 못한 경우 경고
+                    GameLogger.LogWarning(
+                        $"[EnemyCharacter] 시공의 폭풍 카드를 덱에서 찾을 수 없습니다. 일반 카드 선택으로 폴백 (버프 남은 턴: {stormDebuff.RemainingTurns}, 현재 슬롯에 있는 카드: {currentStormCardCount}개)",
+                        GameLogger.LogCategory.Character);
+                }
+                else
+                {
+                    // 이미 남은 턴수만큼 시공의 폭풍 카드가 슬롯에 있으므로 일반 카드 생성
+                    GameLogger.LogInfo(
+                        $"[EnemyCharacter] 시공의 폭풍 카드 충분함 - 일반 카드 생성 (버프 남은 턴: {stormDebuff.RemainingTurns}, 현재 슬롯에 있는 카드: {currentStormCardCount}개)",
+                        GameLogger.LogCategory.Character);
+                }
+            }
+            else if (shouldForceStormOfSpaceTimeCard)
+            {
+                // 강제 생성 모드가 활성화되어 있지만 버프가 만료된 경우 모드 해제
+                shouldForceStormOfSpaceTimeCard = false;
+                GameLogger.LogInfo($"[EnemyCharacter] 시공의 폭풍 버프가 만료되어 강제 생성 모드 종료", GameLogger.LogCategory.Character);
+            }
 
-            if (entry?.definition == null)
+            var randomEntry = skillDeck.GetRandomEntry();
+
+            if (randomEntry?.definition == null)
             {
                 GameLogger.LogError("[EnemyCharacter] 카드 선택 실패: entry 또는 definition이 null입니다.", GameLogger.LogCategory.Character);
             }
-            else
+            // 카드 선택 완료
+
+            return randomEntry;
+        }
+
+        /// <summary>
+        /// 현재 슬롯에 있는 시공의 폭풍 카드 수를 카운트합니다.
+        /// 대기 슬롯 4개(WAIT_SLOT_1~4)와 배치 슬롯 1개(BATTLE_SLOT)를 확인합니다.
+        /// </summary>
+        /// <returns>현재 슬롯에 있는 시공의 폭풍 카드 수</returns>
+        private int CountStormOfSpaceTimeCardsInSlots()
+        {
+            if (slotRegistry == null)
             {
-                GameLogger.LogInfo($"[EnemyCharacter] 카드 선택 완료: {entry.definition.displayName} (확률: {entry.probability})", GameLogger.LogCategory.Character);
+                return 0;
             }
 
-            return entry;
+            int count = 0;
+            var allSlots = new[]
+            {
+                Game.CombatSystem.Slot.CombatSlotPosition.BATTLE_SLOT,
+                Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_1,
+                Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_2,
+                Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_3,
+                Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_4
+            };
+
+            foreach (var slot in allSlots)
+            {
+                var card = slotRegistry.GetCardInSlot(slot);
+                if (card != null && card.CardDefinition != null && card.CardDefinition.IsStormOfSpaceTimeCard())
+                {
+                    count++;
+                }
+            }
+
+            return count;
         }
 
         /// <summary>
@@ -625,13 +765,9 @@ namespace Game.CharacterSystem.Core
                 throw new ArgumentNullException(nameof(data), "적 캐릭터 데이터는 null일 수 없습니다.");
             }
             
-            GameLogger.LogDebug($"[EnemyCharacter] SetCharacterData 호출: {data.DisplayName}", GameLogger.LogCategory.Character);
-            
             CharacterData = data;
             this.gameObject.name = CharacterData.name;
             Initialize(data);
-            
-            GameLogger.LogDebug($"[EnemyCharacter] SetCharacterData 완료: {data.DisplayName}", GameLogger.LogCategory.Character);
         }
 
         /// <summary>
@@ -706,6 +842,14 @@ namespace Game.CharacterSystem.Core
                 effect.OnHealthChanged(this, previousHP, currentHP);
             }
             
+            // 시공의 폭풍 카드 트리거 체크 (2페이즈, 체력 30 이하)
+            if (!stormOfSpaceTimeCardTriggered && currentPhaseIndex == 0 && currentHP <= 30)
+            {
+                GameLogger.LogInfo($"[{GetCharacterName()}] 시공의 폭풍 카드 트리거 조건 만족 (2페이즈, 체력: {currentHP} <= 30)", GameLogger.LogCategory.Character);
+                stormOfSpaceTimeCardTriggered = true;
+                StartCoroutine(TriggerStormOfSpaceTimeCardCoroutine());
+            }
+            
             // 페이즈 전환 체크 (즉시 조건 확인하여 플래그 설정, 이후 지연된 체크로 실제 전환 시작)
             // 즉시 체크하여 SlotMovingState에서 적 턴으로 전환하는 것을 방지
             if (CharacterData != null && CharacterData.HasPhases && !isPhaseTransitionPending && !isDead)
@@ -768,6 +912,966 @@ namespace Game.CharacterSystem.Core
             else
             {
                 GameLogger.LogError($"[{GetCharacterName()}] StageManager를 찾을 수 없습니다", GameLogger.LogCategory.Character);
+            }
+        }
+
+        /// <summary>
+        /// 스킬 발동 이펙트에서 스킬이 트리거되었을 때 호출됩니다.
+        /// </summary>
+        private void HandleSkillTriggered(string cardId, int currentHP)
+        {
+            // 시공의 폭풍 카드 트리거와 동일한 방식으로 처리
+            StartCoroutine(TriggerSkillCardCoroutine(cardId));
+        }
+
+        /// <summary>
+        /// SkillCardDefinition을 사용한 스킬 발동 핸들러입니다.
+        /// </summary>
+        private void HandleSkillDefinitionTriggered(SkillCardSystem.Data.SkillCardDefinition cardDefinition, int currentHP)
+        {
+            if (cardDefinition == null)
+            {
+                GameLogger.LogWarning($"[{GetCharacterName()}] 스킬 발동 요청: SkillCardDefinition이 null입니다", GameLogger.LogCategory.Character);
+                return;
+            }
+
+            // SkillCardDefinition을 사용하여 카드 트리거
+            StartCoroutine(TriggerSkillCardFromDefinitionCoroutine(cardDefinition));
+        }
+
+        /// <summary>
+        /// 특정 스킬 카드를 트리거하여 강제로 생성하고 배치합니다.
+        /// </summary>
+        private System.Collections.IEnumerator TriggerSkillCardCoroutine(string cardId)
+        {
+            // SkillCardFactory 찾기
+            if (cardFactory == null)
+            {
+                // Zenject를 통해 resolve 시도
+                var projectContext = Zenject.ProjectContext.Instance;
+                if (projectContext != null)
+                {
+                    try
+                    {
+                        cardFactory = projectContext.Container.Resolve<Game.SkillCardSystem.Interface.ISkillCardFactory>();
+                    }
+                    catch (System.Exception e)
+                    {
+                        GameLogger.LogWarning($"[{GetCharacterName()}] SkillCardFactory resolve 실패: {e.Message}", GameLogger.LogCategory.Character);
+                    }
+                }
+            }
+
+            if (cardFactory == null)
+            {
+                GameLogger.LogError($"[{GetCharacterName()}] SkillCardFactory를 찾을 수 없습니다. 스킬 카드를 생성할 수 없습니다.", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            // SlotMovementController 찾기
+            if (slotMovementController == null)
+            {
+                EnsureSlotMovementControllerInjected();
+            }
+
+            if (slotMovementController == null)
+            {
+                GameLogger.LogError($"[{GetCharacterName()}] SlotMovementController를 찾을 수 없습니다. 스킬 카드를 배치할 수 없습니다.", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            // 스킬 카드 생성
+            Game.SkillCardSystem.Interface.ISkillCard skillCard = null;
+            try
+            {
+                // SkillCardFactory로 캐스팅하여 CreateFromId 사용
+                var factoryImpl = cardFactory as Game.SkillCardSystem.Factory.SkillCardFactory;
+                if (factoryImpl != null)
+                {
+                    skillCard = factoryImpl.CreateFromId(cardId, Game.SkillCardSystem.Data.Owner.Enemy);
+                    GameLogger.LogInfo($"[{GetCharacterName()}] 스킬 카드 생성 완료: {cardId}", GameLogger.LogCategory.Character);
+                }
+                else
+                {
+                    // 폴백: 덱에서 스킬 카드 정의 찾기
+                    if (skillDeck != null)
+                    {
+                        var allCards = skillDeck.GetAllCards();
+                        foreach (var entry in allCards)
+                        {
+                            if (entry?.definition != null && entry.definition.cardId == cardId)
+                            {
+                                skillCard = cardFactory.CreateEnemyCard(entry.definition, GetCharacterName());
+                                GameLogger.LogInfo($"[{GetCharacterName()}] 스킬 카드 생성 완료 (덱에서 찾음): {cardId}", GameLogger.LogCategory.Character);
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (skillCard == null)
+                    {
+                        GameLogger.LogError($"[{GetCharacterName()}] 스킬 카드를 생성할 수 없습니다. SkillCardFactory를 캐스팅할 수 없거나 덱에서 찾을 수 없습니다. (카드 ID: {cardId})", GameLogger.LogCategory.Character);
+                        yield break;
+                    }
+                }
+            }
+            catch (System.Exception e)
+            {
+                GameLogger.LogError($"[{GetCharacterName()}] 스킬 카드 생성 실패: {e.Message}", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            if (skillCard == null)
+            {
+                GameLogger.LogError($"[{GetCharacterName()}] 스킬 카드가 null입니다.", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            // 카드를 WAIT_SLOT_4에 배치
+            var slotController = slotMovementController as Game.CombatSystem.Manager.SlotMovementController;
+            if (slotController != null)
+            {
+                // 프리팹은 SlotMovementController 내부에서 처리
+                yield return slotController.PlaceCardInWaitSlot4AndMoveRoutine(
+                    skillCard, 
+                    Game.CombatSystem.Data.SlotOwner.ENEMY, 
+                    null); // 프리팹은 SlotMovementController에서 자동으로 로드
+                
+                // 스킬 카드 배치 완료
+            }
+            else
+            {
+                GameLogger.LogError($"[{GetCharacterName()}] SlotMovementController를 캐스팅할 수 없습니다.", GameLogger.LogCategory.Character);
+            }
+        }
+
+        /// <summary>
+        /// SkillCardDefinition을 사용하여 스킬 카드를 트리거하고 배치합니다.
+        /// </summary>
+        private System.Collections.IEnumerator TriggerSkillCardFromDefinitionCoroutine(SkillCardSystem.Data.SkillCardDefinition cardDefinition)
+        {
+            // SkillCardFactory 찾기
+            if (cardFactory == null)
+            {
+                // Zenject를 통해 resolve 시도
+                var projectContext = Zenject.ProjectContext.Instance;
+                if (projectContext != null)
+                {
+                    try
+                    {
+                        cardFactory = projectContext.Container.Resolve<Game.SkillCardSystem.Interface.ISkillCardFactory>();
+                    }
+                    catch (System.Exception e)
+                    {
+                        GameLogger.LogWarning($"[{GetCharacterName()}] SkillCardFactory resolve 실패: {e.Message}", GameLogger.LogCategory.Character);
+                    }
+                }
+            }
+
+            if (cardFactory == null)
+            {
+                GameLogger.LogError($"[{GetCharacterName()}] SkillCardFactory를 찾을 수 없습니다. 스킬 카드를 생성할 수 없습니다.", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            // SlotMovementController 찾기
+            if (slotMovementController == null)
+            {
+                EnsureSlotMovementControllerInjected();
+            }
+
+            if (slotMovementController == null)
+            {
+                GameLogger.LogError($"[{GetCharacterName()}] SlotMovementController를 찾을 수 없습니다. 스킬 카드를 배치할 수 없습니다.", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            // 스킬 카드 생성 (SkillCardDefinition 직접 사용)
+            Game.SkillCardSystem.Interface.ISkillCard skillCard = null;
+            try
+            {
+                skillCard = cardFactory.CreateFromDefinition(cardDefinition, Game.SkillCardSystem.Data.Owner.Enemy, GetCharacterName());
+            }
+            catch (System.Exception e)
+            {
+                GameLogger.LogError($"[{GetCharacterName()}] 스킬 카드 생성 실패: {e.Message}", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            if (skillCard == null)
+            {
+                GameLogger.LogError($"[{GetCharacterName()}] 스킬 카드가 null입니다.", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            // 전투/대기 슬롯에서 적 카드를 찾아 교체
+            var slotController = slotMovementController as Game.CombatSystem.Manager.SlotMovementController;
+            if (slotController != null)
+            {
+                // ICardSlotRegistry 가져오기
+                var registry = slotController.GetCardSlotRegistry();
+                
+                if (registry != null)
+                {
+                    // 교체할 슬롯 찾기: BATTLE_SLOT → WAIT_SLOT_1 → WAIT_SLOT_2 → WAIT_SLOT_3 → WAIT_SLOT_4 순서
+                    var slotsToCheck = new[]
+                    {
+                        Game.CombatSystem.Slot.CombatSlotPosition.BATTLE_SLOT,
+                        Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_1,
+                        Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_2,
+                        Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_3,
+                        Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_4
+                    };
+
+                    Game.CombatSystem.Slot.CombatSlotPosition? targetSlot = null;
+                    foreach (var slot in slotsToCheck)
+                    {
+                        var existingCard = registry.GetCardInSlot(slot);
+                        if (existingCard != null && !existingCard.IsFromPlayer())
+                        {
+                            targetSlot = slot;
+                            break;
+                        }
+                    }
+
+                    // 시공의 폭풍 카드인지 확인 (특수 기믹 스킬은 우선적으로 배틀 슬롯에 배치)
+                    bool isStormOfSpaceTimeCard = cardDefinition != null && cardDefinition.IsStormOfSpaceTimeCard();
+                    
+                    if (targetSlot.HasValue)
+                    {
+                        // 기존 카드 교체
+                        yield return ReplaceCardInSlotCoroutine(registry, targetSlot.Value, skillCard, slotController);
+                        // 스킬 카드 교체 완료
+                    }
+                    else
+                    {
+                        // 교체할 카드가 없으면 배치
+                        // 시공의 폭풍 카드는 우선적으로 배틀 슬롯에 배치 시도
+                        if (isStormOfSpaceTimeCard)
+                        {
+                            // 배틀 슬롯이 비어있으면 배틀 슬롯에 직접 배치
+                            var battleCard = registry.GetCardInSlot(Game.CombatSystem.Slot.CombatSlotPosition.BATTLE_SLOT);
+                            if (battleCard == null)
+                            {
+                                // 배틀 슬롯에 직접 배치 (리플렉션 사용)
+                                var createCardUIMethod = typeof(Game.CombatSystem.Manager.SlotMovementController)
+                                    .GetMethod("CreateCardUIForSlot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                                
+                                var getCachedCardUIPrefabMethod = typeof(Game.CombatSystem.Manager.SlotMovementController)
+                                    .GetMethod("GetCachedCardUIPrefab", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                                
+                                Game.SkillCardSystem.UI.SkillCardUI cardUIPrefab = null;
+                                if (getCachedCardUIPrefabMethod != null)
+                                {
+                                    // GetCachedCardUIPrefab이 코루틴을 반환하면 EnemyCharacter에서 시작
+                                    var prefabCoroutine = getCachedCardUIPrefabMethod.Invoke(slotController, null) as System.Collections.IEnumerator;
+                                    if (prefabCoroutine != null)
+                                    {
+                                        yield return prefabCoroutine;
+                                    }
+                                    var cachedPrefabField = typeof(Game.CombatSystem.Manager.SlotMovementController)
+                                        .GetField("_cachedCardUIPrefab", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                                    cardUIPrefab = cachedPrefabField?.GetValue(slotController) as Game.SkillCardSystem.UI.SkillCardUI;
+                                }
+                                
+                                if (createCardUIMethod != null && cardUIPrefab != null)
+                                {
+                                    var newCardUI = createCardUIMethod.Invoke(slotController, new object[] { skillCard, Game.CombatSystem.Slot.CombatSlotPosition.BATTLE_SLOT, cardUIPrefab }) as Game.SkillCardSystem.UI.SkillCardUI;
+                                    if (newCardUI != null)
+                                    {
+                                        registry.RegisterCard(Game.CombatSystem.Slot.CombatSlotPosition.BATTLE_SLOT, skillCard, newCardUI, Game.CombatSystem.Data.SlotOwner.ENEMY);
+                                        GameLogger.LogInfo($"[{GetCharacterName()}] 시공의 폭풍 카드를 배틀 슬롯에 직접 배치", GameLogger.LogCategory.Character);
+                                        
+                                        // 배틀 슬롯에 배치되었으므로 즉시 실행 시도
+                                        // 적의 턴 중에 시공의 폭풍이 발동하면 즉시 실행되도록 처리
+                                        var executionManager = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.Manager.CombatExecutionManager>();
+                                        var stateMachine = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.State.CombatStateMachine>();
+                                        
+                                        if (executionManager != null)
+                                        {
+                                            // 현재 상태가 EnemyTurnState인지 확인
+                                            bool isEnemyTurnState = false;
+                                            if (stateMachine != null)
+                                            {
+                                                var currentState = stateMachine.GetCurrentState();
+                                                isEnemyTurnState = currentState is Game.CombatSystem.State.EnemyTurnState;
+                                            }
+                                            
+                                            // SlotMovementController의 _turnController를 통해 턴 확인 (폴백)
+                                            bool isEnemyTurn = false;
+                                            var turnControllerField = typeof(Game.CombatSystem.Manager.SlotMovementController)
+                                                .GetField("_turnController", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                                            
+                                            if (turnControllerField != null)
+                                            {
+                                                var turnController = turnControllerField.GetValue(slotController) as Game.CombatSystem.Interface.ITurnController;
+                                                isEnemyTurn = turnController != null && turnController.IsEnemyTurn();
+                                            }
+                                            
+                                            // 적의 턴 중에 시공의 폭풍이 발동한 경우
+                                            if (isEnemyTurnState || isEnemyTurn)
+                                            {
+                                                if (executionManager.IsExecuting)
+                                                {
+                                                    // 실행 중이면 실행 완료 후 즉시 실행되도록 이벤트 구독
+                                                    System.Action<Game.CombatSystem.Interface.ExecutionResult> onExecutionCompleted = null;
+                                                    onExecutionCompleted = (result) =>
+                                                    {
+                                                        executionManager.OnExecutionCompleted -= onExecutionCompleted;
+                                                        GameLogger.LogInfo($"[{GetCharacterName()}] 실행 완료 후 시공의 폭풍 카드 즉시 실행: {skillCard.GetCardName()}", GameLogger.LogCategory.Character);
+                                                        executionManager.ExecuteCardImmediately(skillCard, Game.CombatSystem.Slot.CombatSlotPosition.BATTLE_SLOT);
+                                                    };
+                                                    executionManager.OnExecutionCompleted += onExecutionCompleted;
+                                                    GameLogger.LogInfo($"[{GetCharacterName()}] 적 턴 중 시공의 폭풍 카드 발동 - 다른 카드 실행 완료 후 즉시 실행 예약", GameLogger.LogCategory.Character);
+                                                }
+                                                    else
+                                                    {
+                                                        // 실행 중이 아니면 즉시 실행
+                                                        // EnemyTurnState가 활성화되어 있으면 CheckAndExecuteEnemyCard를 다시 호출하도록 함
+                                                        if (isEnemyTurnState && stateMachine != null)
+                                                        {
+                                                            // EnemyTurnState의 CheckForStormOfSpaceTimeCard를 호출하여 카드 실행을 다시 체크
+                                                            var currentState = stateMachine.GetCurrentState() as Game.CombatSystem.State.EnemyTurnState;
+                                                            if (currentState != null)
+                                                            {
+                                                                // CombatStateContext 가져오기 (리플렉션 사용)
+                                                                var contextField = typeof(Game.CombatSystem.State.CombatStateMachine)
+                                                                    .GetField("_context", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                                                                if (contextField != null)
+                                                                {
+                                                                    var context = contextField.GetValue(stateMachine) as Game.CombatSystem.State.CombatStateContext;
+                                                                    if (context != null)
+                                                                    {
+                                                                        GameLogger.LogInfo($"[{GetCharacterName()}] 적 턴 중 시공의 폭풍 카드 발동 - EnemyTurnState에 카드 실행 재체크 요청: {skillCard.GetCardName()}", GameLogger.LogCategory.Character);
+                                                                        currentState.CheckForStormOfSpaceTimeCard(context);
+                                                                        yield break; // EnemyTurnState가 처리하므로 여기서 종료
+                                                                    }
+                                                                }
+                                                            }
+                                                            
+                                                            // 리플렉션 실패 시 폴백: 직접 실행
+                                                            GameLogger.LogInfo($"[{GetCharacterName()}] 적 턴 중 시공의 폭풍 카드 발동 - 즉시 실행 (폴백): {skillCard.GetCardName()}", GameLogger.LogCategory.Character);
+                                                            executionManager.ExecuteCardImmediately(skillCard, Game.CombatSystem.Slot.CombatSlotPosition.BATTLE_SLOT);
+                                                        }
+                                                        else
+                                                        {
+                                                            // 상태 머신이 없거나 EnemyTurnState가 아니면 일반 실행
+                                                            GameLogger.LogInfo($"[{GetCharacterName()}] 배틀 슬롯에 배치된 시공의 폭풍 카드 즉시 실행: {skillCard.GetCardName()}", GameLogger.LogCategory.Character);
+                                                            executionManager.ExecuteCardImmediately(skillCard, Game.CombatSystem.Slot.CombatSlotPosition.BATTLE_SLOT);
+                                                        }
+                                                    }
+                                            }
+                                            else
+                                            {
+                                                // 적의 턴이 아니면 다음 적 턴에 실행되도록 로그만 남김
+                                                GameLogger.LogInfo($"[{GetCharacterName()}] 적 턴이 아니므로 시공의 폭풍 카드는 다음 적 턴에 실행됩니다: {skillCard.GetCardName()}", GameLogger.LogCategory.Character);
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        // 카드 UI 생성 실패 시 폴백
+                                        yield return slotController.PlaceCardInWaitSlot4AndMoveRoutine(skillCard, Game.CombatSystem.Data.SlotOwner.ENEMY, cardUIPrefab);
+                                    }
+                                }
+                                else
+                                {
+                                    // 리플렉션 실패 시 폴백
+                                    yield return slotController.PlaceCardInWaitSlot4AndMoveRoutine(skillCard, Game.CombatSystem.Data.SlotOwner.ENEMY, cardUIPrefab);
+                                }
+                            }
+                            else
+                            {
+                                // 배틀 슬롯이 비어있지 않으면 WAIT_SLOT_4에 배치
+                                yield return slotController.PlaceCardInWaitSlot4AndMoveRoutine(skillCard, Game.CombatSystem.Data.SlotOwner.ENEMY, null);
+                            }
+                        }
+                        else
+                        {
+                            // 일반 카드는 WAIT_SLOT_4에 배치
+                            yield return slotController.PlaceCardInWaitSlot4AndMoveRoutine(
+                                skillCard, 
+                                Game.CombatSystem.Data.SlotOwner.ENEMY, 
+                                null);
+                        }
+                        // 스킬 카드 배치 완료
+                    }
+                }
+                else
+                {
+                    // 폴백: WAIT_SLOT_4에 배치
+                    yield return slotController.PlaceCardInWaitSlot4AndMoveRoutine(
+                        skillCard, 
+                        Game.CombatSystem.Data.SlotOwner.ENEMY, 
+                        null);
+                    // 스킬 카드 배치 완료 (레지스트리 접근 실패)
+                }
+            }
+            else
+            {
+                GameLogger.LogError($"[{GetCharacterName()}] SlotMovementController를 캐스팅할 수 없습니다.", GameLogger.LogCategory.Character);
+            }
+        }
+
+        /// <summary>
+        /// 배치/대기 슬롯의 모든 적 카드를 시공의 폭풍으로 교체합니다.
+        /// </summary>
+        /// <param name="stormCardDefinition">시공의 폭풍 카드 정의 (null이면 덱에서 찾음)</param>
+        /// <summary>
+        /// 남은 턴수만큼 시공의 폭풍 카드를 생성합니다.
+        /// 빈 슬롯부터 채우고, 부족하면 기존 카드를 교체합니다.
+        /// </summary>
+        public System.Collections.IEnumerator GenerateStormOfSpaceTimeCardsForRemainingTurnsCoroutine(Game.SkillCardSystem.Data.SkillCardDefinition stormCardDefinition = null)
+        {
+            // 시공의 폭풍 버프 확인
+            var stormDebuff = GetEffect<Game.SkillCardSystem.Effect.StormOfSpaceTimeDebuff>();
+            if (stormDebuff == null || stormDebuff.RemainingTurns <= 0)
+            {
+                GameLogger.LogWarning($"[{GetCharacterName()}] 시공의 폭풍 버프가 없거나 턴이 남아있지 않습니다.", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            int targetCount = stormDebuff.RemainingTurns;
+            int currentCount = CountStormOfSpaceTimeCardsInSlots();
+            int neededCount = targetCount - currentCount;
+
+            if (neededCount <= 0)
+            {
+                GameLogger.LogInfo($"[{GetCharacterName()}] 시공의 폭풍 카드 충분함 (목표: {targetCount}개, 현재: {currentCount}개)", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            GameLogger.LogInfo($"[{GetCharacterName()}] 시공의 폭풍 카드 생성 시작 (목표: {targetCount}개, 현재: {currentCount}개, 필요: {neededCount}개)", GameLogger.LogCategory.Character);
+
+            // SlotMovementController 찾기
+            if (slotMovementController == null)
+            {
+                EnsureSlotMovementControllerInjected();
+            }
+
+            if (slotMovementController == null)
+            {
+                GameLogger.LogError($"[{GetCharacterName()}] SlotMovementController를 찾을 수 없습니다.", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            var slotController = slotMovementController as Game.CombatSystem.Manager.SlotMovementController;
+            if (slotController == null)
+            {
+                GameLogger.LogError($"[{GetCharacterName()}] SlotMovementController를 캐스팅할 수 없습니다.", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            // ICardSlotRegistry 가져오기
+            var registry = slotController.GetCardSlotRegistry();
+            if (registry == null)
+            {
+                GameLogger.LogError($"[{GetCharacterName()}] ICardSlotRegistry를 찾을 수 없습니다.", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            // SkillCardFactory 찾기
+            if (cardFactory == null)
+            {
+                var projectContext = Zenject.ProjectContext.Instance;
+                if (projectContext != null)
+                {
+                    try
+                    {
+                        cardFactory = projectContext.Container.Resolve<Game.SkillCardSystem.Interface.ISkillCardFactory>();
+                    }
+                    catch (System.Exception e)
+                    {
+                        GameLogger.LogWarning($"[{GetCharacterName()}] SkillCardFactory resolve 실패: {e.Message}", GameLogger.LogCategory.Character);
+                    }
+                }
+            }
+
+            if (cardFactory == null)
+            {
+                GameLogger.LogError($"[{GetCharacterName()}] SkillCardFactory를 찾을 수 없습니다.", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            // 시공의 폭풍 카드 정의 찾기 (파라미터가 없으면 덱에서 찾기)
+            if (stormCardDefinition == null)
+            {
+                if (skillDeck != null)
+                {
+                    var allCards = skillDeck.GetAllCards();
+                    foreach (var entry in allCards)
+                    {
+                        if (entry?.definition != null && entry.definition.IsStormOfSpaceTimeCard())
+                        {
+                            stormCardDefinition = entry.definition;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (stormCardDefinition == null)
+            {
+                GameLogger.LogWarning($"[{GetCharacterName()}] 시공의 폭풍 카드 정의를 찾을 수 없습니다.", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            // 배치/대기 슬롯 확인
+            var slotsToCheck = new[]
+            {
+                Game.CombatSystem.Slot.CombatSlotPosition.BATTLE_SLOT,
+                Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_1,
+                Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_2,
+                Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_3,
+                Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_4
+            };
+
+            int generatedCount = 0;
+
+            // 카드 UI 프리팹 가져오기 (리플렉션 사용)
+            Game.SkillCardSystem.UI.SkillCardUI cardUIPrefab = null;
+            var cardUIPrefabField = typeof(Game.CombatSystem.Manager.SlotMovementController)
+                .GetField("_cachedCardUIPrefab", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            
+            if (cardUIPrefabField != null)
+            {
+                cardUIPrefab = cardUIPrefabField.GetValue(slotController) as Game.SkillCardSystem.UI.SkillCardUI;
+            }
+
+            // 프리팹이 없으면 로드 시도
+            if (cardUIPrefab == null)
+            {
+                var getCachedCardUIPrefabMethod = typeof(Game.CombatSystem.Manager.SlotMovementController)
+                    .GetMethod("GetCachedCardUIPrefab", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (getCachedCardUIPrefabMethod != null)
+                {
+                    var prefabCoroutine = getCachedCardUIPrefabMethod.Invoke(slotController, null) as System.Collections.IEnumerator;
+                    if (prefabCoroutine != null)
+                    {
+                        yield return prefabCoroutine;
+                        // 코루틴 완료 후 다시 확인
+                        if (cardUIPrefabField != null)
+                        {
+                            cardUIPrefab = cardUIPrefabField.GetValue(slotController) as Game.SkillCardSystem.UI.SkillCardUI;
+                        }
+                    }
+                }
+            }
+
+            // CreateCardUIForSlot 메서드 가져오기 (리플렉션 사용)
+            var createCardUIMethod = typeof(Game.CombatSystem.Manager.SlotMovementController)
+                .GetMethod("CreateCardUIForSlot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+            // 1단계: 빈 슬롯에 시공의 폭풍 카드 배치
+            foreach (var slot in slotsToCheck)
+            {
+                if (generatedCount >= neededCount)
+                    break;
+
+                var existingCard = registry.GetCardInSlot(slot);
+                if (existingCard == null)
+                {
+                    // 빈 슬롯에 시공의 폭풍 카드 생성
+                    Game.SkillCardSystem.Interface.ISkillCard stormCard = null;
+                    try
+                    {
+                        stormCard = cardFactory.CreateFromDefinition(stormCardDefinition, Game.SkillCardSystem.Data.Owner.Enemy, GetCharacterName());
+                    }
+                    catch (System.Exception e)
+                    {
+                        GameLogger.LogError($"[{GetCharacterName()}] 시공의 폭풍 카드 생성 실패 (슬롯: {slot}): {e.Message}", GameLogger.LogCategory.Character);
+                        continue;
+                    }
+
+                    if (stormCard != null)
+                    {
+                        // 빈 슬롯에 직접 카드 UI 생성 및 배치
+                        if (createCardUIMethod != null && cardUIPrefab != null)
+                        {
+                            var newCardUI = createCardUIMethod.Invoke(slotController, new object[] { stormCard, slot, cardUIPrefab }) as Game.SkillCardSystem.UI.SkillCardUI;
+                            if (newCardUI != null)
+                            {
+                                registry.RegisterCard(slot, stormCard, newCardUI, Game.CombatSystem.Data.SlotOwner.ENEMY);
+                                generatedCount++;
+                                GameLogger.LogInfo($"[{GetCharacterName()}] 빈 슬롯에 시공의 폭풍 카드 배치: {slot} ({generatedCount}/{neededCount})", GameLogger.LogCategory.Character);
+                            }
+                            else
+                            {
+                                GameLogger.LogWarning($"[{GetCharacterName()}] 빈 슬롯 {slot}에 카드 UI 생성 실패", GameLogger.LogCategory.Character);
+                            }
+                        }
+                        else
+                        {
+                            // 폴백: PlaceCardInWaitSlot4AndMoveRoutine 사용
+                            yield return slotController.PlaceCardInWaitSlot4AndMoveRoutine(stormCard, Game.CombatSystem.Data.SlotOwner.ENEMY, cardUIPrefab);
+                            generatedCount++;
+                            GameLogger.LogInfo($"[{GetCharacterName()}] 빈 슬롯에 시공의 폭풍 카드 배치 (폴백): {slot} ({generatedCount}/{neededCount})", GameLogger.LogCategory.Character);
+                        }
+                    }
+                }
+            }
+
+            // 2단계: 부족하면 기존 적 카드를 시공의 폭풍 카드로 교체
+            if (generatedCount < neededCount)
+            {
+                foreach (var slot in slotsToCheck)
+                {
+                    if (generatedCount >= neededCount)
+                        break;
+
+                    var existingCard = registry.GetCardInSlot(slot);
+                    if (existingCard != null && !existingCard.IsFromPlayer())
+                    {
+                        // 이미 시공의 폭풍 카드면 스킵
+                        if (existingCard.CardDefinition != null && existingCard.CardDefinition.IsStormOfSpaceTimeCard())
+                        {
+                            continue;
+                        }
+
+                        // 시공의 폭풍 카드 생성
+                        Game.SkillCardSystem.Interface.ISkillCard stormCard = null;
+                        try
+                        {
+                            stormCard = cardFactory.CreateFromDefinition(stormCardDefinition, Game.SkillCardSystem.Data.Owner.Enemy, GetCharacterName());
+                        }
+                        catch (System.Exception e)
+                        {
+                            GameLogger.LogError($"[{GetCharacterName()}] 시공의 폭풍 카드 생성 실패 (슬롯: {slot}): {e.Message}", GameLogger.LogCategory.Character);
+                            continue;
+                        }
+
+                        if (stormCard != null)
+                        {
+                            yield return ReplaceCardInSlotCoroutine(registry, slot, stormCard, slotController);
+                            generatedCount++;
+                            GameLogger.LogInfo($"[{GetCharacterName()}] 기존 카드를 시공의 폭풍 카드로 교체: {slot} ({generatedCount}/{neededCount})", GameLogger.LogCategory.Character);
+                        }
+                    }
+                }
+            }
+
+            GameLogger.LogInfo($"[{GetCharacterName()}] 시공의 폭풍 카드 생성 완료 (생성: {generatedCount}개, 목표: {targetCount}개, 현재 총: {CountStormOfSpaceTimeCardsInSlots()}개)", GameLogger.LogCategory.Character);
+        }
+
+        public System.Collections.IEnumerator ReplaceAllEnemyCardsWithStormOfSpaceTimeCoroutine(Game.SkillCardSystem.Data.SkillCardDefinition stormCardDefinition = null)
+        {
+            // SlotMovementController 찾기
+            if (slotMovementController == null)
+            {
+                EnsureSlotMovementControllerInjected();
+            }
+
+            if (slotMovementController == null)
+            {
+                GameLogger.LogError($"[{GetCharacterName()}] SlotMovementController를 찾을 수 없습니다.", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            var slotController = slotMovementController as Game.CombatSystem.Manager.SlotMovementController;
+            if (slotController == null)
+            {
+                GameLogger.LogError($"[{GetCharacterName()}] SlotMovementController를 캐스팅할 수 없습니다.", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            // ICardSlotRegistry 가져오기
+            var registry = slotController.GetCardSlotRegistry();
+            if (registry == null)
+            {
+                GameLogger.LogError($"[{GetCharacterName()}] ICardSlotRegistry를 찾을 수 없습니다.", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            // SkillCardFactory 찾기
+            if (cardFactory == null)
+            {
+                var projectContext = Zenject.ProjectContext.Instance;
+                if (projectContext != null)
+                {
+                    try
+                    {
+                        cardFactory = projectContext.Container.Resolve<Game.SkillCardSystem.Interface.ISkillCardFactory>();
+                    }
+                    catch (System.Exception e)
+                    {
+                        GameLogger.LogWarning($"[{GetCharacterName()}] SkillCardFactory resolve 실패: {e.Message}", GameLogger.LogCategory.Character);
+                    }
+                }
+            }
+
+            if (cardFactory == null)
+            {
+                GameLogger.LogError($"[{GetCharacterName()}] SkillCardFactory를 찾을 수 없습니다.", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            // 시공의 폭풍 카드 정의 찾기 (파라미터가 없으면 덱에서 찾기)
+            if (stormCardDefinition == null)
+            {
+                if (skillDeck != null)
+                {
+                    var allCards = skillDeck.GetAllCards();
+                    foreach (var entry in allCards)
+                    {
+                        if (entry?.definition != null && entry.definition.IsStormOfSpaceTimeCard())
+                        {
+                            stormCardDefinition = entry.definition;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (stormCardDefinition == null)
+            {
+                GameLogger.LogWarning($"[{GetCharacterName()}] 시공의 폭풍 카드 정의를 찾을 수 없습니다.", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            // 배치/대기 슬롯 확인
+            var slotsToCheck = new[]
+            {
+                Game.CombatSystem.Slot.CombatSlotPosition.BATTLE_SLOT,
+                Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_1,
+                Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_2,
+                Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_3,
+                Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_4
+            };
+
+            int replacedCount = 0;
+            foreach (var slot in slotsToCheck)
+            {
+                var existingCard = registry.GetCardInSlot(slot);
+                if (existingCard != null && !existingCard.IsFromPlayer())
+                {
+                    // 이미 시공의 폭풍 카드면 스킵
+                    if (existingCard.CardDefinition != null && existingCard.CardDefinition.IsStormOfSpaceTimeCard())
+                    {
+                        continue;
+                    }
+
+                    // 시공의 폭풍 카드 생성
+                    Game.SkillCardSystem.Interface.ISkillCard stormCard = null;
+                    try
+                    {
+                        stormCard = cardFactory.CreateFromDefinition(stormCardDefinition, Game.SkillCardSystem.Data.Owner.Enemy, GetCharacterName());
+                    }
+                    catch (System.Exception e)
+                    {
+                        GameLogger.LogError($"[{GetCharacterName()}] 시공의 폭풍 카드 생성 실패 (슬롯: {slot}): {e.Message}", GameLogger.LogCategory.Character);
+                        continue;
+                    }
+
+                    if (stormCard != null)
+                    {
+                        yield return ReplaceCardInSlotCoroutine(registry, slot, stormCard, slotController);
+                        replacedCount++;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 슬롯의 카드를 새로운 카드로 교체합니다.
+        /// </summary>
+        private System.Collections.IEnumerator ReplaceCardInSlotCoroutine(
+            Game.CombatSystem.Interface.ICardSlotRegistry registry,
+            Game.CombatSystem.Slot.CombatSlotPosition slotPosition,
+            Game.SkillCardSystem.Interface.ISkillCard newCard,
+            Game.CombatSystem.Manager.SlotMovementController slotController)
+        {
+            // 기존 카드 UI 가져오기
+            var existingCardUI = registry.GetCardUIInSlot(slotPosition);
+            if (existingCardUI != null)
+            {
+                // 기존 카드 UI의 데이터만 교체 (GameObject는 재사용)
+                existingCardUI.SetCard(newCard);
+                
+                // UI 강제 업데이트: 이미지 컴포넌트를 명시적으로 활성화하고 업데이트
+                var cardUIComponent = existingCardUI as Game.SkillCardSystem.UI.SkillCardUI;
+                if (cardUIComponent != null)
+                {
+                    // 리플렉션으로 cardArtImage 필드에 접근하여 강제 업데이트
+                    var cardArtImageField = typeof(Game.SkillCardSystem.UI.SkillCardUI)
+                        .GetField("cardArtImage", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    
+                    if (cardArtImageField != null)
+                    {
+                        var cardArtImage = cardArtImageField.GetValue(cardUIComponent) as UnityEngine.UI.Image;
+                        if (cardArtImage != null)
+                        {
+                            // 이미지 강제 업데이트: 먼저 null로 설정한 후 새 스프라이트 설정
+                            var artwork = newCard.GetArtwork();
+                            if (artwork != null)
+                            {
+                                // 기존 스프라이트를 null로 설정하여 강제로 리프레시
+                                cardArtImage.sprite = null;
+                                // 한 프레임 대기 후 새 스프라이트 설정 (Unity가 스프라이트 변경을 감지하도록)
+                                yield return null;
+                                cardArtImage.sprite = artwork;
+                                cardArtImage.enabled = true;
+                                // 이미지 컴포넌트를 비활성화 후 활성화하여 강제 리프레시
+                                cardArtImage.gameObject.SetActive(false);
+                                cardArtImage.gameObject.SetActive(true);
+                            }
+                            else
+                            {
+                                GameLogger.LogWarning($"[{GetCharacterName()}] 카드 아트워크가 null입니다. 카드 ID: {newCard.CardDefinition?.cardId}, 이름: {newCard.CardDefinition?.displayNameKO ?? newCard.CardDefinition?.displayName}", GameLogger.LogCategory.Character);
+                                // artwork가 null이어도 기존 스프라이트를 null로 설정하여 UI를 초기화
+                                cardArtImage.sprite = null;
+                            }
+                        }
+                    }
+                }
+                
+                registry.RegisterCard(slotPosition, newCard, existingCardUI, Game.CombatSystem.Data.SlotOwner.ENEMY);
+                
+                // 배틀 슬롯에 교체한 경우, 적 턴이면 즉시 실행
+                if (slotPosition == Game.CombatSystem.Slot.CombatSlotPosition.BATTLE_SLOT)
+                {
+                    // SlotMovementController의 _turnController를 통해 턴 확인
+                    var turnControllerField = typeof(Game.CombatSystem.Manager.SlotMovementController)
+                        .GetField("_turnController", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    
+                    if (turnControllerField != null)
+                    {
+                        var turnController = turnControllerField.GetValue(slotController) as Game.CombatSystem.Interface.ITurnController;
+                        if (turnController != null && turnController.IsEnemyTurn())
+                        {
+                            // CombatExecutionManager를 통해 즉시 실행
+                            if (executionManager != null)
+                            {
+                                // 시공의 폭풍 카드인지 확인 (특수 기믹 스킬은 무조건 실행되어야 함)
+                                bool isStormOfSpaceTimeCard = newCard?.CardDefinition?.IsStormOfSpaceTimeCard() == true;
+                                
+                                // 현재 상태가 EnemyTurnState인지 확인
+                                var stateMachine = UnityEngine.Object.FindFirstObjectByType<Game.CombatSystem.State.CombatStateMachine>();
+                                bool isEnemyTurnState = false;
+                                if (stateMachine != null)
+                                {
+                                    var currentState = stateMachine.GetCurrentState();
+                                    isEnemyTurnState = currentState is Game.CombatSystem.State.EnemyTurnState;
+                                }
+                                
+                                // 이미 실행 중인지 확인
+                                if (executionManager.IsExecuting)
+                                {
+                                    if (isStormOfSpaceTimeCard)
+                                    {
+                                        // 시공의 폭풍 카드는 실행 완료 후 즉시 실행되도록 이벤트 구독
+                                        System.Action<Game.CombatSystem.Interface.ExecutionResult> onExecutionCompleted = null;
+                                        onExecutionCompleted = (result) =>
+                                        {
+                                            // 이벤트 구독 해제
+                                            executionManager.OnExecutionCompleted -= onExecutionCompleted;
+                                            
+                                            // 실행 완료 후 시공의 폭풍 카드 즉시 실행
+                                            GameLogger.LogInfo($"[{GetCharacterName()}] 실행 완료 후 시공의 폭풍 카드 즉시 실행: {newCard.GetCardName()}", GameLogger.LogCategory.Character);
+                                            executionManager.ExecuteCardImmediately(newCard, slotPosition);
+                                        };
+                                        
+                                        executionManager.OnExecutionCompleted += onExecutionCompleted;
+                                        GameLogger.LogInfo(
+                                            $"[{GetCharacterName()}] 배틀 슬롯에 교체된 시공의 폭풍 카드 ({newCard.GetCardName()})는 다른 카드 실행 완료 후 즉시 실행됩니다.",
+                                            GameLogger.LogCategory.Character);
+                                    }
+                                    else
+                                    {
+                                        // 일반 카드는 다음 적 턴에 자연스럽게 실행되도록 로그만 남김
+                                        GameLogger.LogInfo(
+                                            $"[{GetCharacterName()}] 배틀 슬롯에 교체된 카드 ({newCard.GetCardName()})는 이미 다른 카드가 실행 중이어서 다음 적 턴에 실행됩니다.",
+                                            GameLogger.LogCategory.Character);
+                                    }
+                                }
+                                else
+                                {
+                                    // 실행 중이 아니면 즉시 실행
+                                    // 적의 턴 중에 시공의 폭풍이 발동한 경우 EnemyTurnState에 알림
+                                    if (isStormOfSpaceTimeCard && isEnemyTurnState && stateMachine != null)
+                                    {
+                                        // EnemyTurnState의 CheckForStormOfSpaceTimeCard를 호출하여 카드 실행을 다시 체크
+                                        var enemyTurnState = stateMachine.GetCurrentState() as Game.CombatSystem.State.EnemyTurnState;
+                                        if (enemyTurnState != null)
+                                        {
+                                            // CombatStateContext 가져오기 (리플렉션 사용)
+                                            var contextField = typeof(Game.CombatSystem.State.CombatStateMachine)
+                                                .GetField("_context", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                                            if (contextField != null)
+                                            {
+                                                var context = contextField.GetValue(stateMachine) as Game.CombatSystem.State.CombatStateContext;
+                                                if (context != null)
+                                                {
+                                                    GameLogger.LogInfo($"[{GetCharacterName()}] 적 턴 중 시공의 폭풍 카드 교체 - EnemyTurnState에 카드 실행 재체크 요청: {newCard.GetCardName()}", GameLogger.LogCategory.Character);
+                                                    enemyTurnState.CheckForStormOfSpaceTimeCard(context);
+                                                    yield break; // EnemyTurnState가 처리하므로 여기서 종료
+                                                }
+                                            }
+                                        }
+                                        
+                                        // 리플렉션 실패 시 폴백: 직접 실행
+                                        GameLogger.LogInfo($"[{GetCharacterName()}] 적 턴 중 시공의 폭풍 카드 교체 - 즉시 실행 (폴백): {newCard.GetCardName()}", GameLogger.LogCategory.Character);
+                                        executionManager.ExecuteCardImmediately(newCard, slotPosition);
+                                    }
+                                    else
+                                    {
+                                        // 일반 실행
+                                        GameLogger.LogInfo($"[{GetCharacterName()}] 배틀 슬롯에 교체된 카드 즉시 실행: {newCard.GetCardName()}", GameLogger.LogCategory.Character);
+                                        executionManager.ExecuteCardImmediately(newCard, slotPosition);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                GameLogger.LogWarning($"[{GetCharacterName()}] CombatExecutionManager가 null입니다. 카드 자동 실행 불가", GameLogger.LogCategory.Character);
+                            }
+                        }
+                    }
+                }
+                
+                yield break;
+            }
+
+            // 기존 카드 UI가 없으면 새로 생성
+            // SlotMovementController의 private 메서드에 접근하기 위해 reflection 사용
+            var getCachedCardUIPrefabMethod = typeof(Game.CombatSystem.Manager.SlotMovementController)
+                .GetMethod("GetCachedCardUIPrefab", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            
+            if (getCachedCardUIPrefabMethod != null)
+            {
+                var prefabCoroutine = getCachedCardUIPrefabMethod.Invoke(slotController, null) as System.Collections.IEnumerator;
+                if (prefabCoroutine != null)
+                {
+                    yield return prefabCoroutine;
+                }
+            }
+
+            // 캐시된 프리팹 가져오기
+            var cachedPrefabField = typeof(Game.CombatSystem.Manager.SlotMovementController)
+                .GetField("_cachedCardUIPrefab", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var cardUIPrefab = cachedPrefabField?.GetValue(slotController) as Game.SkillCardSystem.UI.SkillCardUI;
+            
+            if (cardUIPrefab == null)
+            {
+                GameLogger.LogWarning($"[{GetCharacterName()}] SkillCardUI 프리팹을 찾을 수 없습니다.", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            // CreateCardUIForSlot 메서드 호출
+            var createCardUIMethod = typeof(Game.CombatSystem.Manager.SlotMovementController)
+                .GetMethod("CreateCardUIForSlot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            
+            if (createCardUIMethod != null)
+            {
+                var newCardUI = createCardUIMethod.Invoke(slotController, new object[] { newCard, slotPosition, cardUIPrefab }) as Game.SkillCardSystem.UI.SkillCardUI;
+                if (newCardUI != null)
+                {
+                    registry.RegisterCard(slotPosition, newCard, newCardUI, Game.CombatSystem.Data.SlotOwner.ENEMY);
+                    GameLogger.LogInfo($"[{GetCharacterName()}] 새 카드 UI 생성 및 교체 완료: {slotPosition}", GameLogger.LogCategory.Character);
+                }
+            }
+            else
+            {
+                GameLogger.LogWarning($"[{GetCharacterName()}] CreateCardUIForSlot 메서드를 찾을 수 없습니다.", GameLogger.LogCategory.Character);
             }
         }
         
@@ -953,6 +2057,11 @@ namespace Game.CharacterSystem.Core
                 {
                     summonEffectSO.OnSummonTriggered -= HandleSummonTriggered;
                 }
+                else if (effect is Effect.TriggerSkillOnHealthEffectSO skillEffect)
+                {
+                    skillEffect.OnSkillTriggered -= HandleSkillTriggered;
+                    skillEffect.OnSkillDefinitionTriggered -= HandleSkillDefinitionTriggered;
+                }
                 effect.Cleanup(this);
             }
             characterEffects.Clear();
@@ -980,6 +2089,7 @@ namespace Game.CharacterSystem.Core
             }
             CleanupEffects();
             UnsubscribeFromExecutionEvents();
+            UnsubscribeFromCardExecutedEvents();
         }
 
         /// <summary>
@@ -1114,7 +2224,7 @@ namespace Game.CharacterSystem.Core
                 phaseInfo += $", Phases[{i}]: {phase.phaseName} (임계값: {phase.healthThreshold:P0})";
             }
 
-            GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 초기화: {CurrentPhaseName} (기본 정보 사용, 체력: {currentHP}/{maxHP}, 비율: {currentHealthRatio:P0}, {phaseInfo})", GameLogger.LogCategory.Character);
+            // 페이즈 초기화 완료
         }
 
         /// <summary>
@@ -1129,7 +2239,6 @@ namespace Game.CharacterSystem.Core
             }
 
             executionManager.OnExecutionCompleted += OnCardExecutionCompleted;
-            GameLogger.LogInfo($"[{GetCharacterName()}] 카드 실행 완료 이벤트 구독 완료", GameLogger.LogCategory.Character);
         }
 
         /// <summary>
@@ -1140,6 +2249,150 @@ namespace Game.CharacterSystem.Core
             if (executionManager != null)
             {
                 executionManager.OnExecutionCompleted -= OnCardExecutionCompleted;
+            }
+        }
+
+        /// <summary>
+        /// 카드 실행 이벤트를 구독합니다 (시공의 폭풍 카드 추적용).
+        /// </summary>
+        private void SubscribeToCardExecutedEvents()
+        {
+            if (executionManager == null)
+            {
+                GameLogger.LogWarning($"[{GetCharacterName()}] ICombatExecutionManager가 null입니다 - 시공의 폭풍 카드 추적 불가", GameLogger.LogCategory.Character);
+                return;
+            }
+
+            executionManager.OnCardExecuted += OnCardExecuted;
+        }
+
+        /// <summary>
+        /// 카드 실행 이벤트 구독을 해제합니다.
+        /// </summary>
+        private void UnsubscribeFromCardExecutedEvents()
+        {
+            if (executionManager != null)
+            {
+                executionManager.OnCardExecuted -= OnCardExecuted;
+            }
+        }
+
+        /// <summary>
+        /// 카드 실행 시 호출되는 콜백입니다 (시공의 폭풍 카드 추적용).
+        /// 주의: 실행 횟수 증가는 StormOfSpaceTimeEffectCommand에서 처리하므로, 여기서는 로그만 남깁니다.
+        /// </summary>
+        private void OnCardExecuted(ISkillCard card, ICharacter source, ICharacter target)
+        {
+            // 적이 사용한 카드인지 확인
+            if (!ReferenceEquals(source, this) || card == null)
+            {
+                return;
+            }
+
+            // 시공의 폭풍 카드인지 확인 (효과 기반)
+            if (card.CardDefinition != null && card.CardDefinition.IsStormOfSpaceTimeCard())
+            {
+                // 실행 횟수는 StormOfSpaceTimeEffectCommand에서 이미 증가했으므로, 여기서는 현재 값만 로그
+                GameLogger.LogInfo($"[{GetCharacterName()}] 시공의 폭풍 카드 실행 감지 (현재 카운트: {stormOfSpaceTimeCardExecutionCount})", GameLogger.LogCategory.SkillCard);
+            }
+        }
+
+        /// <summary>
+        /// 시공의 폭풍 카드를 트리거하여 강제로 생성하고 배치합니다.
+        /// </summary>
+        private System.Collections.IEnumerator TriggerStormOfSpaceTimeCardCoroutine()
+        {
+            GameLogger.LogInfo($"[{GetCharacterName()}] 시공의 폭풍 카드 트리거 시작", GameLogger.LogCategory.Character);
+
+            // SkillCardFactory 찾기
+            if (cardFactory == null)
+            {
+                // Zenject를 통해 resolve 시도
+                var projectContext = Zenject.ProjectContext.Instance;
+                if (projectContext != null)
+                {
+                    try
+                    {
+                        cardFactory = projectContext.Container.Resolve<Game.SkillCardSystem.Interface.ISkillCardFactory>();
+                    }
+                    catch (System.Exception e)
+                    {
+                        GameLogger.LogWarning($"[{GetCharacterName()}] SkillCardFactory resolve 실패: {e.Message}", GameLogger.LogCategory.Character);
+                    }
+                }
+            }
+
+            if (cardFactory == null)
+            {
+                GameLogger.LogError($"[{GetCharacterName()}] SkillCardFactory를 찾을 수 없습니다. 시공의 폭풍 카드를 생성할 수 없습니다.", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            // SlotMovementController 찾기
+            if (slotMovementController == null)
+            {
+                EnsureSlotMovementControllerInjected();
+            }
+
+            if (slotMovementController == null)
+            {
+                GameLogger.LogError($"[{GetCharacterName()}] SlotMovementController를 찾을 수 없습니다. 시공의 폭풍 카드를 배치할 수 없습니다.", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            // 시공의 폭풍 카드 생성 (효과 기반)
+            Game.SkillCardSystem.Interface.ISkillCard stormCard = null;
+            try
+            {
+                // 덱에서 시공의 폭풍 카드 정의 찾기 (효과 기반)
+                if (skillDeck != null)
+                {
+                    var allCards = skillDeck.GetAllCards();
+                    foreach (var entry in allCards)
+                    {
+                        if (entry?.definition != null && entry.definition.IsStormOfSpaceTimeCard())
+                        {
+                            stormCard = cardFactory.CreateEnemyCard(entry.definition, GetCharacterName());
+                            GameLogger.LogInfo($"[{GetCharacterName()}] 시공의 폭풍 카드 생성 완료 (덱에서 찾음)", GameLogger.LogCategory.Character);
+                            break;
+                        }
+                    }
+                }
+                
+                if (stormCard == null)
+                {
+                    GameLogger.LogError($"[{GetCharacterName()}] 시공의 폭풍 카드를 덱에서 찾을 수 없습니다.", GameLogger.LogCategory.Character);
+                    yield break;
+                }
+            }
+            catch (System.Exception e)
+            {
+                GameLogger.LogError($"[{GetCharacterName()}] 시공의 폭풍 카드 생성 실패: {e.Message}", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            if (stormCard == null)
+            {
+                GameLogger.LogError($"[{GetCharacterName()}] 시공의 폭풍 카드가 null입니다.", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            // 카드를 WAIT_SLOT_4에 배치
+            // SlotMovementController의 PlaceCardInWaitSlot4AndMoveRoutine 사용
+            var slotController = slotMovementController as Game.CombatSystem.Manager.SlotMovementController;
+            if (slotController != null)
+            {
+                // 프리팹은 SlotMovementController 내부에서 처리
+                yield return slotController.PlaceCardInWaitSlot4AndMoveRoutine(
+                    stormCard, 
+                    Game.CombatSystem.Data.SlotOwner.ENEMY, 
+                    null); // 프리팹은 SlotMovementController에서 자동으로 로드
+                
+                GameLogger.LogInfo($"[{GetCharacterName()}] 시공의 폭풍 카드 배치 완료", GameLogger.LogCategory.Character);
+            }
+            else
+            {
+                GameLogger.LogError($"[{GetCharacterName()}] SlotMovementController를 캐스팅할 수 없습니다.", GameLogger.LogCategory.Character);
             }
         }
 
@@ -1463,15 +2716,15 @@ namespace Game.CharacterSystem.Core
             EnsureSlotMovementControllerInjected();
             if (slotMovementController != null)
             {
-                var slotMovementControllerImpl = slotMovementController as Game.CombatSystem.Manager.SlotMovementController;
-                if (slotMovementControllerImpl != null)
+                var slotController = slotMovementController as Game.CombatSystem.Manager.SlotMovementController;
+                if (slotController != null)
                 {
                     // 리플렉션을 사용하여 _suppressAutoRefill 필드에 접근
                     var suppressField = typeof(Game.CombatSystem.Manager.SlotMovementController).GetField("_suppressAutoRefill",
                         System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                     if (suppressField != null)
                     {
-                        suppressField.SetValue(slotMovementControllerImpl, true);
+                        suppressField.SetValue(slotController, true);
                         GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환: 자동 보충 억제 활성화", GameLogger.LogCategory.Character);
                     }
                 }
@@ -1543,15 +2796,15 @@ namespace Game.CharacterSystem.Core
             // 페이즈 전환 완료 후 자동 보충 억제 해제
             if (slotMovementController != null)
             {
-                var slotMovementControllerImpl = slotMovementController as Game.CombatSystem.Manager.SlotMovementController;
-                if (slotMovementControllerImpl != null)
+                var slotController = slotMovementController as Game.CombatSystem.Manager.SlotMovementController;
+                if (slotController != null)
                 {
                     // 리플렉션을 사용하여 _suppressAutoRefill 필드에 접근
                     var suppressField = typeof(Game.CombatSystem.Manager.SlotMovementController).GetField("_suppressAutoRefill",
                         System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                     if (suppressField != null)
                     {
-                        suppressField.SetValue(slotMovementControllerImpl, false);
+                        suppressField.SetValue(slotController, false);
                         GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환: 자동 보충 억제 해제", GameLogger.LogCategory.Character);
                     }
                 }
@@ -1761,10 +3014,22 @@ namespace Game.CharacterSystem.Core
                 characterEffects.Add(effectEntry.effectSO);
 
                 // 커스텀 설정 사용 여부에 따라 초기화
-                if (effectEntry.useCustomSettings && effectEntry.effectSO is Effect.SummonEffectSO summonEffectWithCustom)
+                if (effectEntry.useCustomSettings)
                 {
-                    summonEffectWithCustom.InitializeWithCustomSettings(this, effectEntry.customSettings);
-                    summonEffectWithCustom.OnSummonTriggered += HandleSummonTriggered;
+                    if (effectEntry.effectSO is Effect.SummonEffectSO summonEffectWithCustom)
+                    {
+                        summonEffectWithCustom.InitializeWithCustomSettings(this, effectEntry.customSettings);
+                        summonEffectWithCustom.OnSummonTriggered += HandleSummonTriggered;
+                    }
+                    else if (effectEntry.effectSO is Effect.TriggerSkillOnHealthEffectSO skillEffectWithCustom)
+                    {
+                        skillEffectWithCustom.InitializeWithCustomSettings(this, effectEntry.customSettings);
+                        skillEffectWithCustom.OnSkillTriggered += HandleSkillTriggered;
+                    }
+                    else
+                    {
+                        effectEntry.effectSO.Initialize(this);
+                    }
                 }
                 else
                 {
@@ -1774,6 +3039,12 @@ namespace Game.CharacterSystem.Core
                     if (effectEntry.effectSO is Effect.SummonEffectSO summonEffectSO)
                     {
                         summonEffectSO.OnSummonTriggered += HandleSummonTriggered;
+                    }
+                    // TriggerSkillOnHealthEffectSO 지원
+                    else if (effectEntry.effectSO is Effect.TriggerSkillOnHealthEffectSO skillEffect)
+                    {
+                        skillEffect.OnSkillTriggered += HandleSkillTriggered;
+                        skillEffect.OnSkillDefinitionTriggered += HandleSkillDefinitionTriggered;
                     }
                 }
 
@@ -1853,8 +3124,8 @@ namespace Game.CharacterSystem.Core
                 yield break;
             }
 
-            var slotMovementControllerImpl = slotMovementController as Game.CombatSystem.Manager.SlotMovementController;
-            if (slotMovementControllerImpl == null)
+            var slotController = slotMovementController as Game.CombatSystem.Manager.SlotMovementController;
+            if (slotController == null)
             {
                 GameLogger.LogWarning($"[{GetCharacterName()}] SlotMovementController를 구체 클래스로 캐스팅할 수 없습니다", GameLogger.LogCategory.Character);
                 yield break;
@@ -1871,7 +3142,7 @@ namespace Game.CharacterSystem.Core
             if (registry == null)
             {
                 // slotMovementController를 통해 접근
-                registry = slotMovementControllerImpl.GetCardSlotRegistry();
+                registry = slotController.GetCardSlotRegistry();
             }
 
             // 모든 카드 제거 (플레이어 마커 포함) - 초기 셋업 방식으로 재생성하기 위해
@@ -1915,7 +3186,7 @@ namespace Game.CharacterSystem.Core
             // SlotMovementController를 통해 모든 전투/대기 슬롯을 새 덱으로 채우기
             // 이 메서드는 내부에서 ICardSlotRegistry를 직접 사용하므로 registry가 null이어도 문제없음
             GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환: 모든 전투/대기 슬롯을 새 덱으로 채우기 시작", GameLogger.LogCategory.Character);
-            yield return slotMovementControllerImpl.RefillAllCombatSlotsWithEnemyDeckCoroutine();
+            yield return slotController.RefillAllCombatSlotsWithEnemyDeckCoroutine();
             GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환: 모든 전투/대기 슬롯 재채우기 완료", GameLogger.LogCategory.Character);
         }
 

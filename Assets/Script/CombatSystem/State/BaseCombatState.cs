@@ -22,7 +22,7 @@ namespace Game.CombatSystem.State
         /// </summary>
         public virtual void OnEnter(CombatStateContext context)
         {
-            LogStateTransition($"진입: {StateName}");
+            // 상태 진입
         }
 
         /// <summary>
@@ -38,7 +38,7 @@ namespace Game.CombatSystem.State
         /// </summary>
         public virtual void OnExit(CombatStateContext context)
         {
-            LogStateTransition($"종료: {StateName}");
+            // 상태 종료
         }
 
         /// <summary>
