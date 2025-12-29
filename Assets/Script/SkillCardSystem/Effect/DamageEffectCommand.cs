@@ -589,20 +589,20 @@ namespace Game.SkillCardSystem.Effect
             else
             {
                 // 단일 히트는 기존 방식 사용
-                if (ignoreGuard)
+            if (ignoreGuard)
+            {
+                if (target is CharacterBase characterBase)
                 {
-                    if (target is CharacterBase characterBase)
-                    {
-                        characterBase.TakeDamageIgnoreGuard(value);
-                    }
-                    else
-                    {
-                        target.TakeDamage(value);
-                    }
+                    characterBase.TakeDamageIgnoreGuard(value);
                 }
                 else
                 {
                     target.TakeDamage(value);
+                }
+            }
+            else
+            {
+                target.TakeDamage(value);
                 }
             }
         }
@@ -690,12 +690,25 @@ namespace Game.SkillCardSystem.Effect
                 
                 if (damageTextPrefab != null && hpTextAnchor != null)
                 {
+                    // 기존 텍스트 개수 확인 (VFXManager를 통해)
+                    float initialYOffset = 0f;
+                    if (vfxManager != null)
+                    {
+                        initialYOffset = vfxManager.GetExistingTextCount(hpTextAnchor) * vfxManager.GetDamageTextSpacing();
+                    }
+
                     var instance = UnityEngine.Object.Instantiate(damageTextPrefab);
                     instance.transform.SetParent(hpTextAnchor, false);
-                    instance.transform.position = position;
+                    // RectTransform은 Show()에서 anchoredPosition으로 설정되므로 position 설정 제거
 
                     var damageUI = instance.GetComponent<Game.CombatSystem.UI.DamageTextUI>();
-                    damageUI?.Show(damageAmount, Color.red, "-");
+                    damageUI?.Show(damageAmount, Color.red, "-", initialYOffset);
+
+                    // VFXManager에 등록 (쌓기 효과를 위해)
+                    if (vfxManager != null)
+                    {
+                        vfxManager.RegisterDamageText(instance, hpTextAnchor);
+                    }
                 }
             }
         }

@@ -67,17 +67,10 @@ namespace Game.SkillCardSystem.Effect
             var debuff = new ThreadOfFateDebuff(finalDuration, finalIcon);
             target.RegisterPerTurnEffect(debuff);
             
-            GameLogger.LogInfo($"[ThreadOfFateEffectCommand] {target.GetCharacterName()}에게 운명의 실 디버프 적용 ({finalDuration}턴)", GameLogger.LogCategory.SkillCard);
+            GameLogger.LogInfo($"[ThreadOfFateEffectCommand] {target.GetCharacterName()}에게 운명의 실 디버프 적용 ({finalDuration}턴). 플레이어 턴 시작 시 효과가 실행됩니다.", GameLogger.LogCategory.SkillCard);
 
-            // 핸드 카드 처리 (코루틴으로 실행)
-            if (target is MonoBehaviour targetMono)
-            {
-                targetMono.StartCoroutine(ProcessHandCardsCoroutine(target));
-            }
-            else
-            {
-                GameLogger.LogWarning("[ThreadOfFateEffectCommand] 대상이 MonoBehaviour가 아닙니다. 핸드 카드 처리를 건너뜁니다.", GameLogger.LogCategory.SkillCard);
-            }
+            // 핸드 카드 처리는 플레이어 턴 시작 시 ThreadOfFateDebuff의 OnTurnStart에서 처리됨
+            // (PlayerCharacter.ProcessTurnEffectsCoroutine에서 코루틴으로 실행)
         }
 
         /// <summary>

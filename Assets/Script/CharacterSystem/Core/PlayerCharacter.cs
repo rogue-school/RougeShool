@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
@@ -66,6 +67,8 @@ namespace Game.CharacterSystem.Core
         private IPlayerHandManager handManager;
 
         [Inject(Optional = true)] private VFXManager vfxManager;
+        [Inject(Optional = true)] private Game.CombatSystem.Interface.ISlotMovementController slotMovementController;
+        [Inject(Optional = true)] private Game.CombatSystem.Interface.ICardSlotRegistry slotRegistry;
 
         #endregion
 
@@ -264,12 +267,25 @@ namespace Game.CharacterSystem.Core
             // VFXManager가 없거나 damageTextPool이 설정되지 않은 경우 fallback 사용
             if (!success && damageTextPrefab != null && hpTextAnchor != null)
             {
+                // 기존 텍스트 개수 확인 (VFXManager를 통해)
+                float initialYOffset = 0f;
+                if (vfxManager != null)
+                {
+                    initialYOffset = vfxManager.GetExistingTextCount(hpTextAnchor) * vfxManager.GetDamageTextSpacing();
+                }
+
                 var instance = Instantiate(damageTextPrefab);
                 instance.transform.SetParent(hpTextAnchor, false);
 
                 var damageUI = instance.GetComponent<DamageTextUI>();
-                damageUI?.Show(amount, Color.red, "-");
+                damageUI?.Show(amount, Color.red, "-", initialYOffset);
+
+                // VFXManager가 있으면 등록 (쌓기 효과를 위해)
+                if (vfxManager != null)
+                {
+                    vfxManager.RegisterDamageText(instance, hpTextAnchor);
             }
+        }
         }
 
 
@@ -460,14 +476,14 @@ namespace Game.CharacterSystem.Core
             // 시각 효과를 건너뛰지 않는 경우에만 피격 효과 재생
             if (!skipVisualEffects)
             {
-                // 피격 애니메이션 재생
-                PlayHitAnimation();
+            // 피격 애니메이션 재생
+            PlayHitAnimation();
 
-                // 피격 시각 효과 재생
-                PlayHitVisualEffects(amount);
+            // 피격 시각 효과 재생
+            PlayHitVisualEffects(amount);
 
-                // 카메라 쉐이크 (플레이어만)
-                PlayCameraShake(amount);
+            // 카메라 쉐이크 (플레이어만)
+            PlayCameraShake(amount);
             }
         }
 
@@ -629,6 +645,202 @@ namespace Game.CharacterSystem.Core
             if (portraitImage != null) return portraitImage.transform;
             var portrait = transform.Find("Portrait");
             return portrait != null ? portrait : transform;
+        }
+
+        #endregion
+
+        #region Turn Effects Processing
+
+        /// <summary>
+        /// 등록된 턴 효과를 처리하고 출혈 이펙트 및 운명의 실 효과 완료를 기다립니다 (코루틴)
+        /// </summary>
+        public override System.Collections.IEnumerator ProcessTurnEffectsCoroutine()
+        {
+            // GameObject가 비활성화 상태면 턴 효과 처리 안 함
+            if (!gameObject.activeInHierarchy)
+            {
+                yield break;
+            }
+
+            // 출혈 효과 개수 카운트 (처리 전에 카운트)
+            int bleedEffectCount = 0;
+            bool hasThreadOfFate = false;
+            foreach (var effect in perTurnEffects)
+            {
+                if (effect is Game.SkillCardSystem.Effect.BleedEffect)
+                {
+                    bleedEffectCount++;
+                }
+                if (effect is Game.SkillCardSystem.Effect.ThreadOfFateDebuff)
+                {
+                    hasThreadOfFate = true;
+                }
+            }
+
+            // 출혈 효과가 없으면 즉시 처리
+            if (bleedEffectCount == 0 && !hasThreadOfFate)
+            {
+                ProcessTurnEffects();
+                yield break;
+            }
+
+            // 출혈 효과가 있으면 완료 이벤트 대기
+            int completedBleedEffects = 0;
+            System.Action onBleedComplete = () => completedBleedEffects++;
+
+            // 이벤트 구독 (ProcessTurnEffects 호출 전에 구독해야 함)
+            if (bleedEffectCount > 0)
+            {
+                Game.CombatSystem.CombatEvents.OnBleedTurnStartEffectComplete += onBleedComplete;
+            }
+
+            // 턴 효과 처리 (출혈 이펙트 재생 시작)
+            ProcessTurnEffects();
+
+            // 운명의 실 효과 처리 (플레이어 턴 시작 시)
+            if (hasThreadOfFate)
+            {
+                yield return StartCoroutine(ProcessThreadOfFateEffectCoroutine());
+            }
+
+            // 모든 출혈 이펙트 완료 대기 (타임아웃: 최대 1.5초)
+            if (bleedEffectCount > 0)
+            {
+                float timeout = 1.5f;
+                float elapsed = 0f;
+                
+                while (completedBleedEffects < bleedEffectCount && elapsed < timeout)
+                {
+                    elapsed += Time.deltaTime;
+                    yield return null;
+                }
+
+                // 이벤트 구독 해제
+                Game.CombatSystem.CombatEvents.OnBleedTurnStartEffectComplete -= onBleedComplete;
+
+                if (completedBleedEffects >= bleedEffectCount)
+                {
+                    GameLogger.LogInfo($"[{GetCharacterDataName()}] 모든 출혈 이펙트 완료 ({completedBleedEffects}/{bleedEffectCount})", GameLogger.LogCategory.Combat);
+                }
+                else
+                {
+                    GameLogger.LogWarning($"[{GetCharacterDataName()}] 출혈 이펙트 타임아웃 ({completedBleedEffects}/{bleedEffectCount})", GameLogger.LogCategory.Combat);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 운명의 실 효과를 처리하는 코루틴입니다.
+        /// 플레이어 턴 시작 시 핸드에서 3장을 뽑고 2개를 제거한 후 나머지 1개를 배치 슬롯으로 이동시킵니다.
+        /// </summary>
+        private System.Collections.IEnumerator ProcessThreadOfFateEffectCoroutine()
+        {
+            if (handManager == null)
+            {
+                GameLogger.LogWarning("[PlayerCharacter] 운명의 실 효과 처리 실패: HandManager가 null입니다.", GameLogger.LogCategory.SkillCard);
+                yield break;
+            }
+
+            // PlayerHandManager의 circulationSystem 접근
+            var handManagerType = typeof(Game.SkillCardSystem.Manager.PlayerHandManager);
+            var circulationSystemField = handManagerType.GetField("circulationSystem",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            
+            if (circulationSystemField == null)
+            {
+                GameLogger.LogWarning("[PlayerCharacter] circulationSystem 필드를 찾을 수 없습니다.", GameLogger.LogCategory.SkillCard);
+                yield break;
+            }
+
+            var circulationSystem = circulationSystemField.GetValue(handManager) as Game.SkillCardSystem.Interface.ICardCirculationSystem;
+            if (circulationSystem == null)
+            {
+                GameLogger.LogWarning("[PlayerCharacter] CardCirculationSystem을 찾을 수 없습니다.", GameLogger.LogCategory.SkillCard);
+                yield break;
+            }
+
+            // 3장 드로우
+            var drawnCards = circulationSystem.DrawCardsForTurn();
+            if (drawnCards == null || drawnCards.Count < 3)
+            {
+                GameLogger.LogWarning($"[PlayerCharacter] 3장을 드로우할 수 없습니다. (드로우된 카드 수: {drawnCards?.Count ?? 0})", GameLogger.LogCategory.SkillCard);
+                yield break;
+            }
+
+            // 3장을 핸드에 추가 (애니메이션과 함께)
+            foreach (var card in drawnCards)
+            {
+                handManager.AddCardToHand(card);
+            }
+
+            // 카드 등장 애니메이션 대기
+            yield return new WaitForSeconds(0.3f);
+
+            // 3장 중 랜덤으로 1장 선택 (나머지 2장은 제거)
+            var selectedCard = drawnCards[UnityEngine.Random.Range(0, Mathf.Min(3, drawnCards.Count))];
+            var cardsToRemove = drawnCards.Where(c => c != selectedCard).Take(2).ToList();
+
+            // 2장 제거 (핸드에서 제거만 하고 순환 시스템에는 그대로 유지)
+            foreach (var card in cardsToRemove)
+            {
+                handManager.RemoveCard(card);
+                GameLogger.LogInfo($"[PlayerCharacter] 운명의 실: 카드 제거 - {card.GetCardName()}", GameLogger.LogCategory.SkillCard);
+            }
+
+            // 카드 제거 애니메이션 대기
+            yield return new WaitForSeconds(0.3f);
+
+            // 선택된 카드를 배치 슬롯으로 이동 (SlotMovementController 사용)
+            if (selectedCard != null && slotMovementController != null && slotRegistry != null)
+            {
+                // 카드 UI 프리팹 가져오기
+                var cardUIPrefabField = handManagerType.GetField("cardUIPrefab",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                var cardUIPrefab = cardUIPrefabField?.GetValue(handManager) as Game.SkillCardSystem.UI.SkillCardUI;
+                
+                if (cardUIPrefab == null)
+                {
+                    // 캐시된 프리팹 확인
+                    var cachedPrefabField = handManagerType.GetField("_cachedCardUIPrefab",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+                    cardUIPrefab = cachedPrefabField?.GetValue(null) as Game.SkillCardSystem.UI.SkillCardUI;
+                }
+
+                if (cardUIPrefab != null)
+                {
+                    // 핸드에서 카드 제거
+                    handManager.RemoveCard(selectedCard);
+
+                    // SlotMovementController를 사용하여 배치 슬롯으로 이동 (자연스러운 애니메이션)
+                    var slotMovementControllerImpl = slotMovementController as Game.CombatSystem.Manager.SlotMovementController;
+                    if (slotMovementControllerImpl != null)
+                    {
+                        yield return slotMovementControllerImpl.PlaceCardInWaitSlot4AndMoveRoutine(
+                            selectedCard, 
+                            Game.CombatSystem.Data.SlotOwner.PLAYER, 
+                            cardUIPrefab);
+                        
+                        GameLogger.LogInfo($"[PlayerCharacter] 운명의 실: 카드를 배치 슬롯으로 이동 - {selectedCard.GetCardName()}", GameLogger.LogCategory.SkillCard);
+                    }
+                    else
+                    {
+                        // 폴백: 직접 배치 슬롯에 등록
+                        slotRegistry.RegisterCard(Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_4, selectedCard, null, Game.CombatSystem.Data.SlotOwner.PLAYER);
+                        GameLogger.LogWarning("[PlayerCharacter] SlotMovementController를 구체 클래스로 캐스팅할 수 없습니다. 직접 등록합니다.", GameLogger.LogCategory.SkillCard);
+                    }
+                }
+                else
+                {
+                    // 폴백: UI 없이 데이터만 등록
+                    handManager.RemoveCard(selectedCard);
+                    slotRegistry.RegisterCard(Game.CombatSystem.Slot.CombatSlotPosition.WAIT_SLOT_4, selectedCard, null, Game.CombatSystem.Data.SlotOwner.PLAYER);
+                    GameLogger.LogWarning("[PlayerCharacter] SkillCardUI 프리팹을 찾을 수 없습니다. UI 없이 등록합니다.", GameLogger.LogCategory.SkillCard);
+                }
+            }
+            else
+            {
+                GameLogger.LogWarning("[PlayerCharacter] 운명의 실 효과 처리 실패: 필요한 매니저가 null입니다.", GameLogger.LogCategory.SkillCard);
+            }
         }
 
         #endregion

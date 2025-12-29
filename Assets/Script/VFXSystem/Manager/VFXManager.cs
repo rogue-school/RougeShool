@@ -92,6 +92,13 @@ namespace Game.VFXSystem.Manager
 
         #region 데미지 텍스트
 
+        // 각 부모 Transform별로 활성화된 데미지 텍스트 리스트 관리 (메이플스토리 스타일 쌓기)
+        private Dictionary<Transform, List<GameObject>> activeDamageTextsByParent = new Dictionary<Transform, List<GameObject>>();
+
+        [Header("데미지 텍스트 쌓기 설정")]
+        [Tooltip("데미지 텍스트 간 수직 간격 (픽셀)")]
+        [SerializeField] private float damageTextSpacing = 30f;
+
         /// <summary>
         /// 데미지 텍스트를 표시합니다.
         /// </summary>
@@ -108,6 +115,24 @@ namespace Game.VFXSystem.Manager
                 return false;
             }
 
+            // 기존 텍스트 개수 확인 (새 텍스트를 위에 배치하기 위해)
+            int existingTextCount = 0;
+            if (parent != null && activeDamageTextsByParent.ContainsKey(parent))
+            {
+                var activeTexts = activeDamageTextsByParent[parent];
+                if (activeTexts != null)
+                {
+                    // 활성화된 텍스트 개수 계산
+                    foreach (var textObj in activeTexts)
+                    {
+                        if (textObj != null && textObj.activeInHierarchy)
+                        {
+                            existingTextCount++;
+                        }
+                    }
+                }
+            }
+
             // Y 오프셋 적용
             Vector3 finalPosition = position;
             if (yOffset != 0f)
@@ -118,11 +143,32 @@ namespace Game.VFXSystem.Manager
             GameObject damageText = damageTextPool.Get(finalPosition, parent);
             if (damageText != null)
             {
-                // DamageText 컴포넌트 설정 (존재하는 경우)
+                // DamageTextUI 컴포넌트 찾기
+                var damageTextUI = damageText.GetComponent<Game.CombatSystem.UI.DamageTextUI>();
+                
+                // 기존 텍스트 개수만큼 위에 배치하기 위한 초기 Y 오프셋 계산
+                // 메이플스토리 스타일: 새 텍스트가 기존 텍스트 위에 생성됨
+                float initialYOffset = existingTextCount * damageTextSpacing;
+                
+                if (damageTextUI != null)
+                {
+                    // Show() 메서드 호출 (초기 Y 오프셋 전달, 양수값으로 위에 배치)
+                    damageTextUI.Show(damageAmount, Color.red, "-", initialYOffset);
+                }
+                else
+                {
+                    // DamageTextUI가 없는 경우 텍스트 컴포넌트에 직접 설정
                 var textComponent = damageText.GetComponent<TMPro.TextMeshProUGUI>();
                 if (textComponent != null)
                 {
                     textComponent.text = damageAmount.ToString();
+                    }
+                }
+
+                // 부모가 있는 경우 새 텍스트 등록
+                if (parent != null)
+                {
+                    RegisterDamageTextInternal(damageText, parent);
                 }
 
                 // 자동 반환 (애니메이션 완료 후)
@@ -133,11 +179,99 @@ namespace Game.VFXSystem.Manager
             return false;
         }
 
+
+        /// <summary>
+        /// 데미지 텍스트를 등록합니다 (내부용)
+        /// </summary>
+        private void RegisterDamageTextInternal(GameObject damageText, Transform parent)
+        {
+            if (parent == null) return;
+
+            if (!activeDamageTextsByParent.ContainsKey(parent))
+            {
+                activeDamageTextsByParent[parent] = new List<GameObject>();
+            }
+
+            activeDamageTextsByParent[parent].Add(damageText);
+        }
+
+        /// <summary>
+        /// 데미지 텍스트를 등록 해제합니다
+        /// </summary>
+        private void UnregisterDamageText(GameObject damageText, Transform parent)
+        {
+            if (parent == null) return;
+            if (!activeDamageTextsByParent.ContainsKey(parent)) return;
+
+            activeDamageTextsByParent[parent].Remove(damageText);
+
+            // 리스트가 비어있으면 Dictionary에서 제거
+            if (activeDamageTextsByParent[parent].Count == 0)
+            {
+                activeDamageTextsByParent.Remove(parent);
+            }
+        }
+
+        /// <summary>
+        /// 외부에서 생성된 데미지 텍스트를 등록합니다 (fallback 사용 시)
+        /// Show()가 이미 호출되어 올바른 위치에 배치되었으므로 그냥 등록만 함
+        /// </summary>
+        /// <param name="damageText">데미지 텍스트 GameObject</param>
+        /// <param name="parent">부모 Transform</param>
+        public void RegisterDamageText(GameObject damageText, Transform parent)
+        {
+            if (damageText == null || parent == null) return;
+            
+            // 새 데미지 텍스트 등록 (Show()에서 이미 올바른 위치로 설정됨)
+            RegisterDamageTextInternal(damageText, parent);
+        }
+
+        /// <summary>
+        /// 기존 텍스트 개수를 반환합니다 (fallback 경로에서 사용)
+        /// </summary>
+        /// <param name="parent">부모 Transform</param>
+        /// <returns>기존 텍스트 개수</returns>
+        public int GetExistingTextCount(Transform parent)
+        {
+            if (parent == null) return 0;
+            if (!activeDamageTextsByParent.ContainsKey(parent)) return 0;
+
+            var activeTexts = activeDamageTextsByParent[parent];
+            if (activeTexts == null) return 0;
+
+            int count = 0;
+            foreach (var textObj in activeTexts)
+            {
+                if (textObj != null && textObj.activeInHierarchy)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        /// <summary>
+        /// 데미지 텍스트 간격을 반환합니다 (fallback 경로에서 사용)
+        /// </summary>
+        /// <returns>데미지 텍스트 간격</returns>
+        public float GetDamageTextSpacing()
+        {
+            return damageTextSpacing;
+        }
+
         private System.Collections.IEnumerator ReturnDamageTextAfterDelay(GameObject damageText, float delay)
         {
             yield return new WaitForSeconds(delay);
-            if (damageTextPool != null)
+            if (damageTextPool != null && damageText != null)
             {
+                // 부모 Transform 찾기
+                Transform parent = damageText.transform.parent;
+                
+                // 등록 해제
+                UnregisterDamageText(damageText, parent);
+                
+                // 풀에 반환
                 damageTextPool.Return(damageText);
             }
         }

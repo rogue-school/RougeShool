@@ -187,6 +187,20 @@ namespace Game.CombatSystem.State
                 return;
             }
 
+            // 페이즈 전환 중인지 확인 (페이즈 전환 중에는 자동 상태 전환 건너뜀)
+            if (context?.EnemyManager != null)
+            {
+                var currentEnemy = context.EnemyManager.GetCharacter();
+                if (currentEnemy is Game.CharacterSystem.Core.EnemyCharacter enemyChar)
+                {
+                    if (enemyChar.IsPhaseTransitionPending())
+                    {
+                        LogStateTransition("페이즈 전환이 진행 중 - 자동 상태 전환 건너뛰고 페이즈 전환 완료 대기");
+                        return;
+                    }
+                }
+            }
+
             // 소환/복귀 체크 (일반 사망 로직과 통합)
             if (CheckForSummonOrReturn(context))
             {
@@ -199,6 +213,21 @@ namespace Game.CombatSystem.State
             
             if (battleCard == null)
             {
+                // 배틀 슬롯이 비어있음 → 플레이어 턴으로 시작 전에 페이즈 전환 체크
+                if (context?.EnemyManager != null)
+                {
+                    var currentEnemy = context.EnemyManager.GetCharacter();
+                    if (currentEnemy is Game.CharacterSystem.Core.EnemyCharacter enemyChar)
+                    {
+                        // 페이즈 전환이 진행 중이면 플레이어 턴으로 전환하지 않음
+                        if (enemyChar.IsPhaseTransitionPending())
+                        {
+                            LogStateTransition($"페이즈 전환이 진행 중 - 배틀 슬롯 비어있음이지만 플레이어 턴 전환 건너뛰고 페이즈 전환 완료 대기");
+                            return;
+                        }
+                    }
+                }
+
                 // 배틀 슬롯이 비어있음 → 플레이어 턴으로 시작
                 LogStateTransition("배틀 슬롯 비어있음 → 플레이어 턴 시작");
                 var playerTurnState = new PlayerTurnState();
@@ -214,6 +243,22 @@ namespace Game.CombatSystem.State
 
             if (isPlayerMarker)
             {
+                // 플레이어 턴 마커 → 플레이어 턴 전환 전에 페이즈 전환 체크
+                if (context?.EnemyManager != null)
+                {
+                    var currentEnemy = context.EnemyManager.GetCharacter();
+                    if (currentEnemy is Game.CharacterSystem.Core.EnemyCharacter enemyChar)
+                    {
+                        // 페이즈 전환이 진행 중이면 플레이어 턴으로 전환하지 않음
+                        if (enemyChar.IsPhaseTransitionPending())
+                        {
+                            LogStateTransition($"페이즈 전환이 진행 중 - 플레이어 턴 전환 건너뛰고 페이즈 전환 완료 대기");
+                            // 페이즈 전환이 완료되면 다시 플레이어 턴으로 전환될 것임
+                            return;
+                        }
+                    }
+                }
+
                 // 플레이어 턴 마커 → 플레이어 턴
                 LogStateTransition("플레이어 턴 마커 감지 → 플레이어 턴 시작");
                 var playerTurnState = new PlayerTurnState();

@@ -108,7 +108,15 @@ namespace Game.VFXSystem.Pool
             }
 
             // 오브젝트 설정
-            obj.transform.position = position;
+            // RectTransform인 경우 position 설정을 건너뛰고 Show()에서 anchoredPosition으로 설정
+            // 일반 Transform인 경우에만 position 설정
+            var rectTransform = obj.GetComponent<RectTransform>();
+            if (rectTransform == null)
+            {
+                obj.transform.position = position;
+            }
+            // RectTransform은 Show() 메서드에서 anchoredPosition으로 설정됨
+            
             obj.transform.SetParent(parent);
             obj.SetActive(true);
 

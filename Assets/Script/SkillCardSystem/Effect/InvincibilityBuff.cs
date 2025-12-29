@@ -51,22 +51,6 @@ namespace Game.SkillCardSystem.Effect
                 GameLogger.LogInfo($"[InvincibilityBuff] 무적 상태 업데이트: {!IsExpired} (남은 턴: {RemainingTurns})", GameLogger.LogCategory.Character);
             }
         }
-        
-        /// <summary>
-        /// 효과가 등록될 때 무적 상태를 즉시 활성화합니다.
-        /// </summary>
-        /// <param name="target">무적 버프가 적용된 캐릭터</param>
-        public override void OnTurnStart(ICharacter target)
-        {
-            // 부모 클래스의 OnTurnStart를 먼저 호출하여 턴 감소 처리
-            base.OnTurnStart(target);
-            
-            // 무적 상태를 항상 업데이트 (등록 직후에도 작동하도록)
-            if (target is CharacterBase characterBase)
-            {
-                characterBase.SetInvincible(!IsExpired);
-            }
-        }
     }
 }
 

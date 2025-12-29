@@ -658,7 +658,7 @@ namespace Game.SkillCardSystem.UI.Mappers
 
             if (so is HealEffectSO)
             {
-                ProcessHealEffect(so, cs, ruleLines, model);
+            ProcessHealEffect(so, cs, ruleLines, model);
                 return;
             }
 

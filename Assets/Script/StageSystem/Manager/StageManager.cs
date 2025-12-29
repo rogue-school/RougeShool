@@ -1293,7 +1293,7 @@ namespace Game.StageSystem.Manager
                     if (stage.stageNumber == stageNumber)
                     {
                         GameLogger.LogDebug($"[StageManager] 스테이지 {stageNumber} 데이터 찾음: {stage.stageName}", GameLogger.LogCategory.Combat);
-                        return stage;
+                    return stage;
                     }
                 }
             }

@@ -81,9 +81,11 @@ namespace Game.CombatSystem.State
                 {
                     if (enemyChar.ShouldTransitionPhase())
                     {
-                        LogStateTransition("페이즈 전환 조건 만족 - 적 카드 실행 건너뛰고 페이즈 전환 시작");
+                        LogStateTransition("페이즈 전환 조건 만족 - 적 턴 종료 및 안전한 상태로 전환");
                         // 페이즈 전환은 EnemyCharacter에서 자동으로 시작됨
-                        // 여기서는 적 카드 실행을 건너뛰기만 함
+                        // 적 턴을 종료하고 SlotMovingState로 전환하여 페이즈 전환이 완료될 때까지 안전하게 대기
+                        var slotMovingState = new Game.CombatSystem.State.SlotMovingState();
+                        RequestTransition(context, slotMovingState);
                         return;
                     }
                 }

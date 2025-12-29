@@ -646,6 +646,20 @@ namespace Game.CharacterSystem.Core
         }
 
         /// <summary>
+        /// 페이즈 전환 시 체력 히스토리를 초기화하고 현재 체력을 히스토리 시작점으로 설정합니다.
+        /// 시간 역행 효과가 페이즈 전환 전 체력으로 되돌리지 않도록 합니다.
+        /// </summary>
+        protected virtual void ResetHPHistoryForPhaseTransition()
+        {
+            hpHistory.Clear();
+            
+            // 현재 체력을 히스토리의 시작점으로 저장 (새 페이즈의 체력)
+            hpHistory.Add(currentHP);
+            
+            GameLogger.LogInfo($"[{GetCharacterDataName()}] 페이즈 전환: 체력 히스토리 초기화 및 현재 체력 저장 ({currentHP})", GameLogger.LogCategory.Character);
+        }
+
+        /// <summary>
         /// 등록된 턴 효과를 처리하고 출혈 이펙트 완료를 기다립니다 (코루틴)
         /// </summary>
         public virtual System.Collections.IEnumerator ProcessTurnEffectsCoroutine()

@@ -438,12 +438,25 @@ namespace Game.CharacterSystem.Core
             // VFXManager가 없거나 damageTextPool이 설정되지 않은 경우 fallback 사용
             if (!success && damageTextPrefab != null && hpTextAnchor != null)
             {
+                // 기존 텍스트 개수 확인 (VFXManager를 통해)
+                float initialYOffset = 0f;
+                if (vfxManager != null)
+                {
+                    initialYOffset = vfxManager.GetExistingTextCount(hpTextAnchor) * vfxManager.GetDamageTextSpacing();
+                }
+
                 var instance = Instantiate(damageTextPrefab);
                 instance.transform.SetParent(hpTextAnchor, false);
 
                 var damageUI = instance.GetComponent<DamageTextUI>();
-                damageUI?.Show(amount, Color.red, "-");
+                damageUI?.Show(amount, Color.red, "-", initialYOffset);
+
+                // VFXManager가 있으면 등록 (쌓기 효과를 위해)
+                if (vfxManager != null)
+                {
+                    vfxManager.RegisterDamageText(instance, hpTextAnchor);
             }
+        }
         }
 
 
@@ -657,11 +670,11 @@ namespace Game.CharacterSystem.Core
             // 시각 효과를 건너뛰지 않는 경우에만 피격 효과 재생
             if (!skipVisualEffects)
             {
-                // 피격 애니메이션 재생
-                PlayHitAnimation();
+            // 피격 애니메이션 재생
+            PlayHitAnimation();
 
-                // 피격 시각 효과 재생
-                PlayHitVisualEffects(amount);
+            // 피격 시각 효과 재생
+            PlayHitVisualEffects(amount);
             }
         }
 
@@ -1435,11 +1448,59 @@ namespace Game.CharacterSystem.Core
 
             GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환 시작: {previousPhaseName} → {newPhase.phaseName} (체력: {GetCurrentHP()}/{GetMaxHP()})", GameLogger.LogCategory.Character);
 
+            // 페이즈 전환 시작 시 즉시 모든 배치/대기 슬롯 제거
+            if (slotRegistry != null)
+            {
+                slotRegistry.ClearAllSlots();
+                GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환: 모든 배치/대기 슬롯 제거 완료", GameLogger.LogCategory.Character);
+            }
+            else
+            {
+                GameLogger.LogWarning($"[{GetCharacterName()}] ICardSlotRegistry를 찾을 수 없습니다 - 슬롯 제거 건너뜀", GameLogger.LogCategory.Character);
+            }
+
+            // 페이즈 전환 중 자동 보충 억제 (RefillWaitSlot4IfNeededRoutine이 호출되지 않도록)
+            EnsureSlotMovementControllerInjected();
+            if (slotMovementController != null)
+            {
+                var slotMovementControllerImpl = slotMovementController as Game.CombatSystem.Manager.SlotMovementController;
+                if (slotMovementControllerImpl != null)
+                {
+                    // 리플렉션을 사용하여 _suppressAutoRefill 필드에 접근
+                    var suppressField = typeof(Game.CombatSystem.Manager.SlotMovementController).GetField("_suppressAutoRefill",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (suppressField != null)
+                    {
+                        suppressField.SetValue(slotMovementControllerImpl, true);
+                        GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환: 자동 보충 억제 활성화", GameLogger.LogCategory.Character);
+                    }
+                }
+            }
+
             // 상태 머신이 안전한 상태가 될 때까지 대기 (가장 중요)
             EnsureCombatStateMachineInjected();
             if (combatStateMachine != null)
             {
-                GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환: 상태 머신 안전 상태 대기 시작 (현재 상태: {combatStateMachine.GetCurrentState()?.StateName ?? "null"})", GameLogger.LogCategory.Character);
+                var currentState = combatStateMachine.GetCurrentState();
+                GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환: 상태 머신 안전 상태 대기 시작 (현재 상태: {currentState?.StateName ?? "null"})", GameLogger.LogCategory.Character);
+                
+                // 적 턴 또는 플레이어 턴 중에 페이즈 전환이 발생한 경우, 안전한 상태로 전환
+                if (currentState is Game.CombatSystem.State.EnemyTurnState || 
+                    currentState is Game.CombatSystem.State.PlayerTurnState)
+                {
+                    string stateType = currentState is Game.CombatSystem.State.EnemyTurnState ? "적 턴" : "플레이어 턴";
+                    GameLogger.LogInfo($"[{GetCharacterName()}] {stateType} 중 페이즈 전환 감지 - 상태 종료 및 안전한 상태로 전환", GameLogger.LogCategory.Character);
+                    
+                    // 현재 턴을 종료하고 SlotMovingState로 전환 (안전한 상태)
+                    // 이렇게 하면 페이즈 전환이 완료될 때까지 안전하게 대기할 수 있음
+                    var slotMovingState = new Game.CombatSystem.State.SlotMovingState();
+                    combatStateMachine.ChangeState(slotMovingState);
+                    
+                    // SlotMovingState가 완료될 때까지 대기
+                    yield return new WaitForSeconds(0.1f);
+                }
+                
+                // 안전한 상태가 될 때까지 대기
                 yield return combatStateMachine.WaitForSafeStateForPhaseTransition();
                 GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환: 상태 머신 안전 상태 도달 (현재 상태: {combatStateMachine.GetCurrentState()?.StateName ?? "null"})", GameLogger.LogCategory.Character);
             }
@@ -1460,34 +1521,65 @@ namespace Game.CharacterSystem.Core
             currentPhaseIndex = phaseIndex;
             ApplyPhaseSettings(newPhase, true, skipCardRegeneration: true);
 
-            // 슬롯의 적 카드 제거 후 새 카드 생성 (연출 완료 후 실행)
-            yield return StartCoroutine(ClearEnemyCardsAndRegenerateCoroutine());
+            // 슬롯 재생성 전에 상태 머신이 안전한 상태인지 다시 확인
+            EnsureCombatStateMachineInjected();
+            if (combatStateMachine != null)
+            {
+                var stateBeforeSetup = combatStateMachine.GetCurrentState();
+                // 플레이어 턴이나 적 턴 상태이면 SlotMovingState로 전환하여 슬롯 생성이 안전하게 진행되도록 함
+                if (stateBeforeSetup is Game.CombatSystem.State.PlayerTurnState || 
+                    stateBeforeSetup is Game.CombatSystem.State.EnemyTurnState)
+                {
+                    GameLogger.LogInfo($"[{GetCharacterName()}] 슬롯 재생성 전 상태 전환: {stateBeforeSetup.StateName} → SlotMovingState", GameLogger.LogCategory.Character);
+                    var slotMovingState = new Game.CombatSystem.State.SlotMovingState();
+                    combatStateMachine.ChangeState(slotMovingState);
+                    yield return new WaitForSeconds(0.1f);
+                }
+            }
+
+            // 새로운 적 생성처럼 자연스럽게 슬롯 재생성 (SetupInitialEnemyQueueRoutine 사용)
+            yield return StartCoroutine(SetupSlotsLikeNewEnemyCoroutine());
+
+            // 페이즈 전환 완료 후 자동 보충 억제 해제
+            if (slotMovementController != null)
+            {
+                var slotMovementControllerImpl = slotMovementController as Game.CombatSystem.Manager.SlotMovementController;
+                if (slotMovementControllerImpl != null)
+                {
+                    // 리플렉션을 사용하여 _suppressAutoRefill 필드에 접근
+                    var suppressField = typeof(Game.CombatSystem.Manager.SlotMovementController).GetField("_suppressAutoRefill",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (suppressField != null)
+                    {
+                        suppressField.SetValue(slotMovementControllerImpl, false);
+                        GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환: 자동 보충 억제 해제", GameLogger.LogCategory.Character);
+                    }
+                }
+            }
 
             GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환 완료: {newPhase.phaseName}", GameLogger.LogCategory.Character);
 
             isPhaseTransitionPending = false;
 
-            // 페이즈 전환 완료 후 적 턴으로 자동 전환 (SlotMovingState에서 적 턴으로 전환하려고 했던 경우)
-            // 상태 머신이 SlotMovingState이거나 적 턴으로 전환할 준비가 되어 있으면 적 턴으로 전환
+            // 페이즈 전환 완료 후 플레이어 턴으로 자동 전환 (초기 셋업처럼 플레이어 선턴)
+            // CombatInitState와 동일한 방식으로 처리
             EnsureCombatStateMachineInjected();
             if (combatStateMachine != null)
             {
                 var currentState = combatStateMachine.GetCurrentState();
-                // SlotMovingState에서 적 턴으로 전환하려고 했지만 페이즈 전환 때문에 건너뛴 경우
-                // 또는 현재 상태가 안전한 상태인 경우 적 턴으로 전환
-                if (currentState is Game.CombatSystem.State.SlotMovingState || 
-                    (currentState is Game.CombatSystem.State.PlayerTurnState && combatStateMachine.IsInSafeStateForPhaseTransition()))
+                // 안전한 상태이면 플레이어 턴으로 전환
+                if (combatStateMachine.IsInSafeStateForPhaseTransition())
                 {
-                    // 배틀 슬롯에 적 카드가 있는지 확인
+                    // 배틀 슬롯에 플레이어 마커가 있는지 확인 (초기 셋업처럼 플레이어 선턴)
                     if (slotRegistry != null)
                     {
                         var battleCard = slotRegistry.GetCardInSlot(Game.CombatSystem.Slot.CombatSlotPosition.BATTLE_SLOT);
-                        if (battleCard != null && !battleCard.IsFromPlayer())
+                        if (battleCard != null && battleCard.IsFromPlayer())
                         {
-                            GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환 완료 후 적 턴으로 자동 전환 시작", GameLogger.LogCategory.Character);
-                            // 적 턴으로 전환
-                            var enemyTurnState = new Game.CombatSystem.State.EnemyTurnState();
-                            combatStateMachine.ChangeState(enemyTurnState);
+                            GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환 완료 후 플레이어 턴으로 자동 전환 시작 (플레이어 선턴)", GameLogger.LogCategory.Character);
+                            // 플레이어 턴으로 전환 (CombatInitState와 동일한 방식)
+                            var playerTurnState = new Game.CombatSystem.State.PlayerTurnState();
+                            combatStateMachine.ChangeState(playerTurnState);
                             yield break;
                         }
                     }
@@ -1522,6 +1614,9 @@ namespace Game.CharacterSystem.Core
                 
                 // 현재 체력을 새 최대 체력으로 회복
                 SetCurrentHP(phase.phaseMaxHP);
+                
+                // 페이즈 전환 시 체력 히스토리 초기화 (시간 역행 효과가 페이즈 전환 전 체력으로 되돌리지 않도록)
+                ResetHPHistoryForPhaseTransition();
                 
                 GameLogger.LogInfo($"[{GetCharacterName()}] 최대 체력 변경: {oldMaxHP} → {phase.phaseMaxHP}, 현재 체력 회복: {phase.phaseMaxHP}/{phase.phaseMaxHP}", GameLogger.LogCategory.Character);
             }
@@ -1779,11 +1874,11 @@ namespace Game.CharacterSystem.Core
                 registry = slotMovementControllerImpl.GetCardSlotRegistry();
             }
 
-            // 적 카드 제거 (registry가 있으면 직접 제거, 없으면 RefillAllCombatSlotsWithEnemyDeckCoroutine에서 처리)
+            // 모든 카드 제거 (플레이어 마커 포함) - 초기 셋업 방식으로 재생성하기 위해
             if (registry != null)
             {
-                // 적 카드가 있는 슬롯 찾기
-                var enemySlots = new List<Game.CombatSystem.Slot.CombatSlotPosition>();
+                // 모든 슬롯의 카드 제거
+                var clearedSlots = new List<Game.CombatSystem.Slot.CombatSlotPosition>();
                 var allSlots = new[]
                 {
                     Game.CombatSystem.Slot.CombatSlotPosition.BATTLE_SLOT,
@@ -1796,20 +1891,15 @@ namespace Game.CharacterSystem.Core
                 foreach (var slot in allSlots)
                 {
                     var card = registry.GetCardInSlot(slot);
-                    if (card != null && !card.IsFromPlayer())
-                    {
-                        enemySlots.Add(slot);
+                    if (card != null)
+                {
+                    registry.ClearSlot(slot);
+                        clearedSlots.Add(slot);
+                    GameLogger.LogDebug($"[{GetCharacterName()}] 슬롯 카드 제거: {slot}", GameLogger.LogCategory.Character);
                     }
                 }
 
-                // 적 카드 제거
-                foreach (var slot in enemySlots)
-                {
-                    registry.ClearSlot(slot);
-                    GameLogger.LogDebug($"[{GetCharacterName()}] 슬롯 카드 제거: {slot}", GameLogger.LogCategory.Character);
-                }
-
-                GameLogger.LogInfo($"[{GetCharacterName()}] 적 카드 제거 완료 ({enemySlots.Count}개 슬롯)", GameLogger.LogCategory.Character);
+                GameLogger.LogInfo($"[{GetCharacterName()}] 모든 슬롯 카드 제거 완료 ({clearedSlots.Count}개 슬롯)", GameLogger.LogCategory.Character);
             }
             else
             {
@@ -1827,6 +1917,44 @@ namespace Game.CharacterSystem.Core
             GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환: 모든 전투/대기 슬롯을 새 덱으로 채우기 시작", GameLogger.LogCategory.Character);
             yield return slotMovementControllerImpl.RefillAllCombatSlotsWithEnemyDeckCoroutine();
             GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환: 모든 전투/대기 슬롯 재채우기 완료", GameLogger.LogCategory.Character);
+        }
+
+        /// <summary>
+        /// 새로운 적 생성처럼 자연스럽게 슬롯을 재생성합니다 (SetupInitialEnemyQueueRoutine 사용).
+        /// </summary>
+        private System.Collections.IEnumerator SetupSlotsLikeNewEnemyCoroutine()
+        {
+            // SlotMovementController 주입 확인 및 수동 주입 시도
+            EnsureSlotMovementControllerInjected();
+            
+            // SlotMovementController가 없으면 슬롯 재생성 불가
+            if (slotMovementController == null)
+            {
+                GameLogger.LogWarning($"[{GetCharacterName()}] SlotMovementController를 찾을 수 없습니다 - 슬롯 재생성 건너뜀", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            if (skillDeck == null)
+            {
+                GameLogger.LogWarning($"[{GetCharacterName()}] 적 덱이 null입니다 - 새 카드 생성 건너뜀", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            // 현재 적 데이터 가져오기 (새 페이즈의 덱 사용)
+            var currentEnemyData = CharacterData as Game.CharacterSystem.Data.EnemyCharacterData;
+            var currentEnemyName = GetCharacterName();
+            
+            if (currentEnemyData == null)
+            {
+                GameLogger.LogWarning($"[{GetCharacterName()}] 적 데이터를 가져올 수 없습니다 - 슬롯 재생성 건너뜀", GameLogger.LogCategory.Character);
+                yield break;
+            }
+
+            // 새로운 적 생성처럼 SetupInitialEnemyQueueRoutine 사용
+            // 이 메서드는 초기 셋업과 동일한 방식으로 슬롯을 생성합니다
+            GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환: 새로운 적 생성처럼 슬롯 초기 셋업 시작", GameLogger.LogCategory.Character);
+            yield return slotMovementController.SetupInitialEnemyQueueRoutine(currentEnemyData, currentEnemyName);
+            GameLogger.LogInfo($"[{GetCharacterName()}] 페이즈 전환: 슬롯 초기 셋업 완료", GameLogger.LogCategory.Character);
         }
 
         #endregion

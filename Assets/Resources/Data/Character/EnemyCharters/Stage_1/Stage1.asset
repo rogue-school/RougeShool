@@ -18,5 +18,6 @@ MonoBehaviour:
   autoProgressToNext: 1
   _stageBackgroundSprite: {fileID: 3991670537411118588, guid: d4389686b3d54cb46ad262fdc466030b, type: 3}
   enemies:
+  - {fileID: 11400000, guid: e619c2dabc164524da7641f006da6bac, type: 2}
   - {fileID: 11400000, guid: 108def2387b83ed419893e2db0906a67, type: 2}
   - {fileID: 11400000, guid: 8cadc1d0ca0290d459798eeaf8d20958, type: 2}

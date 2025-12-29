@@ -758,7 +758,7 @@ namespace Game.CoreSystem.UI
                 #if UNITY_EDITOR
                     UnityEditor.EditorApplication.isPlaying = false;
                 #else
-                    Application.Quit();
+                Application.Quit();
                 #endif
             }
             catch (System.Exception ex)

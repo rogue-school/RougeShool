@@ -72,10 +72,12 @@ MonoBehaviour:
         stackIncreasePerUse: 1
         maxStacks: 5
         targetCardId: 
-        invincibilityDuration: 2
+        invincibilityDuration: 1
         cloneHP: 10
         spaceTimeReversalTurnsAgo: 3
         threadOfFateDuration: 1
+        stormOfSpaceTimeTargetDamage: 30
+        stormOfSpaceTimeDuration: 3
       executionOrder: 0
     ownerPolicy: 0
   currentAttackPowerStacks: 0

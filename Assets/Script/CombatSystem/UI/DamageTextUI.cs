@@ -26,8 +26,10 @@ namespace Game.CombatSystem.UI
 
         private RectTransform rectTransform;
         private Sequence scaleSequence;
+        private Sequence positionSequence;
         private Color originalColor;
         private Color flashColor;
+        private Vector2 basePosition;
 
         private void Awake()
         {
@@ -40,7 +42,8 @@ namespace Game.CombatSystem.UI
         /// <param name="amount">표시할 수치</param>
         /// <param name="color">텍스트 색상</param>
         /// <param name="prefix">접두사 (+ 또는 -)</param>
-        public void Show(int amount, Color color, string prefix = "")
+        /// <param name="initialYOffset">초기 Y 오프셋 (기존 텍스트 개수에 따라 조정)</param>
+        public void Show(int amount, Color color, string prefix = "", float initialYOffset = 0f)
         {
             // GameObject가 비활성화 상태면 Coroutine 시작 불가
             if (!gameObject.activeInHierarchy)
@@ -73,7 +76,10 @@ namespace Game.CombatSystem.UI
                 }
             }
 
-            rectTransform.anchoredPosition = new Vector2(30f, 40f);
+            // 초기 Y 오프셋을 고려한 위치 설정
+            // 메이플스토리 스타일: 새 텍스트가 기존 텍스트 위에 생성됨 (Y값이 증가하면 위로)
+            basePosition = new Vector2(30f, 40f + initialYOffset);
+            rectTransform.anchoredPosition = basePosition;
             PlayPopScale();
             StopAllCoroutines();
             StartCoroutine(FloatAndFade(originalColor));
@@ -85,15 +91,18 @@ namespace Game.CombatSystem.UI
         private System.Collections.IEnumerator FloatAndFade(Color startColor)
         {
             float elapsed = 0f;
-            Vector2 startPos = rectTransform.anchoredPosition;
 
             while (elapsed < duration)
             {
                 float delta = Time.deltaTime;
                 elapsed += delta;
 
-                // 이동 없이 제자리 유지 (타격감 강화를 위해 상승 제거)
-                rectTransform.anchoredPosition = startPos;
+                // basePosition을 기준으로 위치 유지 (MoveUp으로 변경된 위치 반영)
+                // DOTween 애니메이션이 진행 중이면 그 위치를 유지
+                if (positionSequence == null || !positionSequence.IsActive())
+                {
+                    rectTransform.anchoredPosition = basePosition;
+                }
 
                 // 점점 투명하게 (현재 색상의 RGB는 유지하고 알파만 감소)
                 if (damageText != null)
@@ -148,6 +157,43 @@ namespace Game.CombatSystem.UI
                 scaleSequence.Kill();
                 scaleSequence = null;
             }
+            if (positionSequence != null && positionSequence.IsActive())
+            {
+                positionSequence.Kill();
+                positionSequence = null;
+            }
+        }
+
+        /// <summary>
+        /// 데미지 텍스트를 위로 이동시킵니다 (메이플스토리 스타일)
+        /// </summary>
+        /// <param name="offsetY">Y 오프셋 (위로 이동할 거리)</param>
+        public void MoveUp(float offsetY)
+        {
+            if (rectTransform == null) return;
+
+            // 기존 위치 이동 애니메이션 정리
+            if (positionSequence != null && positionSequence.IsActive())
+            {
+                positionSequence.Kill();
+            }
+
+            // 새로운 기준 위치 계산
+            basePosition = new Vector2(basePosition.x, basePosition.y + offsetY);
+
+            // 부드럽게 위로 이동
+            positionSequence = DOTween.Sequence()
+                .Append(rectTransform.DOAnchorPosY(basePosition.y, 0.2f).SetEase(Ease.OutQuad))
+                .SetAutoKill(true)
+                .OnComplete(() => { positionSequence = null; });
+        }
+
+        /// <summary>
+        /// 현재 기준 위치를 반환합니다
+        /// </summary>
+        public Vector2 GetBasePosition()
+        {
+            return basePosition;
         }
     }
 }
