@@ -66,14 +66,14 @@ namespace Game.CombatSystem.State
             // 턴별 효과 처리 (출혈 이펙트 완료 대기)
             yield return ProcessTurnEffectsCoroutine(context);
 
-            // 출혈 이펙트 완료 후 다음 동작 진행
-            ContinueAfterTurnEffects(context);
+            // 출혈 이펙트 완료 후 다음 동작 진행 (운명의 실 효과 포함)
+            yield return ContinueAfterTurnEffects(context);
         }
 
         /// <summary>
         /// 턴별 효과 처리 후 다음 동작 진행
         /// </summary>
-        private void ContinueAfterTurnEffects(CombatStateContext context)
+        private System.Collections.IEnumerator ContinueAfterTurnEffects(CombatStateContext context)
         {
             // 매 플레이어 턴마다 액티브 아이템 보상 지급 (첫 턴 제외)
             GiveActiveItemReward(context);
@@ -88,7 +88,32 @@ namespace Game.CombatSystem.State
                 context.SlotMovement?.ClearSummonMode();
             }
 
-            // 플레이어 손패 생성 (소환 모드 여부와 관계없이 항상 생성)
+            // 운명의 실 효과가 있는지 확인
+            bool hasThreadOfFate = false;
+            if (context.PlayerManager != null)
+            {
+                var player = context.PlayerManager.GetCharacter();
+                if (player is Game.CharacterSystem.Core.CharacterBase playerBase)
+                {
+                    var playerBuffs = playerBase.GetBuffs();
+                    LogStateTransition($"운명의 실 체크: 버프/디버프 총 {playerBuffs.Count}개");
+                    foreach (var buff in playerBuffs)
+                    {
+                        if (buff is Game.SkillCardSystem.Effect.ThreadOfFateDebuff)
+                        {
+                            hasThreadOfFate = true;
+                            LogStateTransition($"운명의 실 디버프 감지: {buff.GetType().Name}");
+                            break;
+                        }
+                    }
+                    if (!hasThreadOfFate)
+                    {
+                        LogStateTransition("운명의 실 디버프 없음");
+                    }
+                }
+            }
+
+            // 플레이어 손패 생성 (운명의 실 효과가 있어도 먼저 생성)
             if (context.HandManager != null)
             {
                 context.HandManager.GenerateInitialHand();
@@ -97,6 +122,33 @@ namespace Game.CombatSystem.State
             else
             {
                 LogWarning("HandManager가 null - 손패 생성 건너뜀");
+            }
+
+            // 운명의 실 효과 처리 (핸드 생성 후)
+            if (hasThreadOfFate && context.PlayerManager != null)
+            {
+                var player = context.PlayerManager.GetCharacter();
+                if (player is Game.CharacterSystem.Core.PlayerCharacter playerCharacter)
+                {
+                    LogStateTransition("운명의 실 효과 처리 시작 (핸드 생성 후)");
+                    // 코루틴을 시작하기 위해 StateMachine의 MonoBehaviour 사용
+                    if (context.StateMachine != null && context.StateMachine is MonoBehaviour stateMachineMono)
+                    {
+                        GameLogger.LogInfo("[PlayerTurnState] ProcessThreadOfFateEffectCoroutine 호출 시작", GameLogger.LogCategory.SkillCard);
+                        // context.HandManager와 StateMachine을 파라미터로 전달
+                        yield return stateMachineMono.StartCoroutine(playerCharacter.ProcessThreadOfFateEffectCoroutine(context.HandManager, context.StateMachine));
+                        GameLogger.LogInfo("[PlayerTurnState] ProcessThreadOfFateEffectCoroutine 완료", GameLogger.LogCategory.SkillCard);
+                        LogStateTransition("운명의 실 효과 처리 완료");
+                    }
+                    else
+                    {
+                        LogWarning("StateMachine이 MonoBehaviour가 아님 - 운명의 실 효과 처리 건너뜀");
+                    }
+                }
+                else
+                {
+                    LogWarning($"플레이어가 PlayerCharacter가 아님: {player?.GetType().Name ?? "null"}");
+                }
             }
 
             LogStateTransition("플레이어 턴 시작 - 카드 드래그 대기 중");
@@ -141,71 +193,28 @@ namespace Game.CombatSystem.State
             var player = context.PlayerManager.GetCharacter();
             var enemy = context.EnemyManager.GetCharacter();
 
-            // 모든 캐릭터의 출혈 효과 개수 카운트
-            int totalBleedEffectCount = 0;
-            if (player is Game.CharacterSystem.Core.CharacterBase playerBase)
+            // 플레이어가 PlayerCharacter인 경우 ProcessTurnEffectsCoroutine()을 호출
+            // (운명의 실 효과, 출혈 효과 등 코루틴 처리가 포함됨)
+            if (player is Game.CharacterSystem.Core.PlayerCharacter playerCharacter)
             {
-                var playerBuffs = playerBase.GetBuffs();
-                foreach (var buff in playerBuffs)
-                {
-                    if (buff is Game.SkillCardSystem.Effect.BleedEffect)
-                    {
-                        totalBleedEffectCount++;
-                    }
-                }
-            }
-
-            if (enemy is Game.CharacterSystem.Core.CharacterBase enemyBase)
-            {
-                var enemyBuffs = enemyBase.GetBuffs();
-                foreach (var buff in enemyBuffs)
-                {
-                    if (buff is Game.SkillCardSystem.Effect.BleedEffect)
-                    {
-                        totalBleedEffectCount++;
-                    }
-                }
-            }
-
-            // 출혈 효과가 없으면 즉시 처리
-            if (totalBleedEffectCount == 0)
-            {
-                context.TurnController.ProcessAllCharacterTurnEffects();
-                LogStateTransition("출혈 효과 없음 - 즉시 처리 완료");
-                yield break;
-            }
-
-            // 출혈 효과가 있으면 동시에 처리
-            int completedBleedEffects = 0;
-            System.Action onBleedComplete = () => completedBleedEffects++;
-
-            // 이벤트 구독 (ProcessTurnEffects 호출 전에 구독해야 함)
-            Game.CombatSystem.CombatEvents.OnBleedTurnStartEffectComplete += onBleedComplete;
-
-            // 모든 캐릭터의 턴 효과를 동시에 처리 (출혈 이펙트 재생 시작)
-            context.TurnController.ProcessAllCharacterTurnEffects();
-
-            // 모든 출혈 이펙트 완료 대기 (타임아웃: 최대 1.5초)
-            float timeout = 1.5f;
-            float elapsed = 0f;
-            
-            while (completedBleedEffects < totalBleedEffectCount && elapsed < timeout)
-            {
-                elapsed += Time.deltaTime;
-                yield return null;
-            }
-
-            // 이벤트 구독 해제
-            Game.CombatSystem.CombatEvents.OnBleedTurnStartEffectComplete -= onBleedComplete;
-
-            if (completedBleedEffects >= totalBleedEffectCount)
-            {
-                LogStateTransition($"모든 출혈 이펙트 완료 ({completedBleedEffects}/{totalBleedEffectCount})");
+                yield return playerCharacter.ProcessTurnEffectsCoroutine();
             }
             else
             {
-                LogWarning($"출혈 이펙트 완료 타임아웃 ({completedBleedEffects}/{totalBleedEffectCount}, {elapsed:F2}초 경과)");
+                // PlayerCharacter가 아닌 경우 기본 처리
+                if (player != null)
+                {
+                    player.ProcessTurnEffects();
+                }
             }
+
+            // 적 캐릭터의 턴 효과 처리 (적은 일반적으로 동기 처리)
+            if (enemy != null)
+            {
+                enemy.ProcessTurnEffects();
+            }
+
+            LogStateTransition("턴 효과 처리 완료");
         }
 
 
