@@ -16,8 +16,7 @@ MonoBehaviour:
   displayName: "\uAC11\uC637"
   description: 
   icon: {fileID: -4873556098337640773, guid: 99afcf6e12b34b54ca14a480c391828d, type: 3}
-  targetSkillId: 
   targetSkill: {fileID: 0}
-  enhancementIncrements: 010000000100000001000000
+  enhancementIncrements: 070000000700000007000000
   category: 3
   bonusType: 1

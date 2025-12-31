@@ -437,24 +437,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 446ab28b119d80841aa63d11a3a90721
-    m_Address: "022_\uD560\uD034\uAE30"
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - SkillCards
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 131360b51293b4447a07db881a0d60d9
-    m_Address: "023_\uBB3C\uAE30"
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - SkillCards
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 0d5ea4e8899a7824a9b17ec85b28613b
-    m_Address: "024_\uB0B4\uB824\uCC0D\uAE30"
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - SkillCards
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f0de2887a4ca3e04298c6767db7a1a35
     m_Address: "025_\uC131\uAD11\uC758 \uCC3D"
     m_ReadOnly: 0

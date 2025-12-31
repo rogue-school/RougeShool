@@ -19,4 +19,4 @@ MonoBehaviour:
   _stageBackgroundSprite: {fileID: -8480656827663139636, guid: 22afbf6e2dcabfa40ac1d3e478a0c670, type: 3}
   enemies:
   - {fileID: 11400000, guid: e619c2dabc164524da7641f006da6bac, type: 2}
-  - {fileID: 11400000, guid: 50162d6a562db924ea27f0ad5ebf451c, type: 2}
+  - {fileID: 11400000, guid: a874259bb5ec82e45982fe15210fde4e, type: 2}

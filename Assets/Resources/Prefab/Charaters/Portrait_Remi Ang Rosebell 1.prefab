@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 9166379552031055291}
   - component: {fileID: 7926107378854165607}
   m_Layer: 5
-  m_Name: Portrait_Remi elena
+  m_Name: Portrait_Remi Ang Rosebell 1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -67,7 +67,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -9043347127398575020, guid: 14b437001d4cd9e479e6f988a6b7ff13, type: 3}
+  m_Sprite: {fileID: 3202913818858339709, guid: 359a031285940df44aefd9e9da1f9255, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

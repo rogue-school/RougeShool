@@ -33,11 +33,11 @@ MonoBehaviour:
     priority: 0
   <Phases>k__BackingField:
   - phaseName: "2\uD398\uC774\uC988"
-    healthThreshold: 0.1
+    healthThreshold: 0.5
     phaseDisplayName: "\uCE74\uB974\uBA58 \uAD50\uC7A5"
     phaseIndexIcon: {fileID: -3756981087397036905, guid: 5970d5be9e7c3d445a1f0d7cc3aa120e, type: 3}
     phasePortraitPrefab: {fileID: 751987938129930587, guid: 859c90ee4f06d7e4a8a974982196ecd3, type: 3}
-    phaseMaxHP: 120
+    phaseMaxHP: 70
     phaseDeck: {fileID: 11400000, guid: 66423acb15f55104b9c55ef9a99b5227, type: 2}
     phaseEffects:
     - effectSO: {fileID: 11400000, guid: 9bd8b68f1c3288d4aa58f88645777715, type: 2}
