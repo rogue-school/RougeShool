@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: "\uC5F0\uACC4"
   displayNameKO: 
   description: 
-  artwork: {fileID: 7784363581341926264, guid: 9c096f5e2652cfd4faa8342b08733f32, type: 3}
+  artwork: {fileID: 5461351531166118866, guid: 4d3b24206d6b7e84d9d57541d41cdceb, type: 3}
   presentation:
     sfxClip: {fileID: 0}
     visualEffectPrefab: {fileID: 0}
@@ -27,6 +27,9 @@ MonoBehaviour:
       hits: 1
       ignoreGuard: 0
       ignoreCounter: 0
+      useRandomDamage: 0
+      minDamage: 0
+      maxDamage: 0
       sfxClip: {fileID: 0}
       visualEffectPrefab: {fileID: 0}
     hasResource: 0
@@ -69,6 +72,12 @@ MonoBehaviour:
         stackIncreasePerUse: 1
         maxStacks: 5
         targetCardId: 
+        invincibilityDuration: 2
+        cloneHP: 10
+        spaceTimeReversalTurnsAgo: 3
+        threadOfFateDuration: 1
+        stormOfSpaceTimeTargetDamage: 30
+        stormOfSpaceTimeDuration: 3
       executionOrder: 0
     ownerPolicy: 0
   currentAttackPowerStacks: 0
