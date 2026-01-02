@@ -11,6 +11,8 @@ using Game.CoreSystem.Utility;
 using Game.SkillCardSystem.UI.Mappers;
 using Game.CharacterSystem.Manager;
 using Game.ItemSystem.Service;
+using Game.CharacterSystem.Effect;
+using Game.CharacterSystem.Interface;
 using Zenject;
 using System.Linq;
 
@@ -231,6 +233,9 @@ namespace Game.SkillCardSystem.UI
         
         [Inject(Optional = true)]
         private ItemService itemService;
+        
+        [Inject(Optional = true)]
+        private EnemyManager enemyManager;
 
         #endregion
 
@@ -772,54 +777,70 @@ namespace Game.SkillCardSystem.UI
             // 툴팁 배경 및 보더 설정
             SetupTooltipBackground();
 
+            // 망각 효과 확인 (적 카드만) - 헤더 업데이트 전에 확인
+            bool isObfuscated = false;
+            if (!card.IsFromPlayer())
+            {
+                isObfuscated = CheckIfCardIsObfuscated(card);
+            }
+
             // 카드 헤더(아이콘/이름)만 갱신, 타입 비활성 처리
-            UpdateCardHeader(card, definition);
-            // 설명: 수동 설명 우선, 없으면 자동 설명
+            UpdateCardHeader(card, definition, isObfuscated);
+            
+            // 설명: 망각된 카드는 망각 설명 표시, 아니면 기존 로직
             if (descriptionText != null)
             {
-                string manual = definition.description;
-                if (preferManualDescription && !string.IsNullOrWhiteSpace(manual))
+                if (isObfuscated)
                 {
-                    descriptionText.text = manual.Trim();
-                }
-                else if (useAutoDescription)
-                {
-                    // 스택 기반 매퍼 사용 (실제 적용 데미지 표시)
-                    int currentStacks = 0;
-                    if (card is Game.SkillCardSystem.Interface.IAttackPowerStackProvider stackProvider)
-                    {
-                        currentStacks = stackProvider.GetAttackPowerStack();
-                    }
-                    
-                    // 플레이어 캐릭터 가져오기 (공격력 버프 확인용)
-                    Game.CharacterSystem.Interface.ICharacter playerCharacter = null;
-                    if (card != null && card.IsFromPlayer())
-                    {
-                        // 플레이어 카드인 경우에만 공격력 물약 버프 확인
-                        if (playerManager != null)
-                        {
-                            var character = playerManager.GetCharacter();
-                            if (character != null && character.IsPlayerControlled())
-                            {
-                                playerCharacter = character;
-                            }
-                            else
-                            {
-                                GameLogger.LogWarning("[SkillCardTooltip] playerManager.GetCharacter()가 null이거나 플레이어 캐릭터가 아닙니다.", GameLogger.LogCategory.UI);
-                            }
-                        }
-                        else
-                        {
-                            GameLogger.LogWarning("[SkillCardTooltip] playerManager가 null입니다. 공격력 물약 버프를 확인할 수 없습니다.", GameLogger.LogCategory.UI);
-                        }
-                    }
-                    
-                    var model = SkillCardTooltipMapper.FromWithStacks(definition, currentStacks, playerCharacter, card, playerManager, itemService);
-                    descriptionText.text = model?.DescriptionRichText ?? string.Empty;
+                    // 망각 설명 표시
+                    descriptionText.text = "망각: 적의 패시브 효과로 정보가 숨겨집니다.\n대기 슬롯 1에 도착하면 해제됩니다.";
                 }
                 else
                 {
-                    descriptionText.text = string.Empty;
+                    string manual = definition.description;
+                    if (preferManualDescription && !string.IsNullOrWhiteSpace(manual))
+                    {
+                        descriptionText.text = manual.Trim();
+                    }
+                    else if (useAutoDescription)
+                    {
+                        // 스택 기반 매퍼 사용 (실제 적용 데미지 표시)
+                        int currentStacks = 0;
+                        if (card is Game.SkillCardSystem.Interface.IAttackPowerStackProvider stackProvider)
+                        {
+                            currentStacks = stackProvider.GetAttackPowerStack();
+                        }
+                        
+                        // 플레이어 캐릭터 가져오기 (공격력 버프 확인용)
+                        Game.CharacterSystem.Interface.ICharacter playerCharacter = null;
+                        if (card != null && card.IsFromPlayer())
+                        {
+                            // 플레이어 카드인 경우에만 공격력 물약 버프 확인
+                            if (playerManager != null)
+                            {
+                                var character = playerManager.GetCharacter();
+                                if (character != null && character.IsPlayerControlled())
+                                {
+                                    playerCharacter = character;
+                                }
+                                else
+                                {
+                                    GameLogger.LogWarning("[SkillCardTooltip] playerManager.GetCharacter()가 null이거나 플레이어 캐릭터가 아닙니다.", GameLogger.LogCategory.UI);
+                                }
+                            }
+                            else
+                            {
+                                GameLogger.LogWarning("[SkillCardTooltip] playerManager가 null입니다. 공격력 물약 버프를 확인할 수 없습니다.", GameLogger.LogCategory.UI);
+                            }
+                        }
+                        
+                        var model = SkillCardTooltipMapper.FromWithStacks(definition, currentStacks, playerCharacter, card, playerManager, itemService);
+                        descriptionText.text = model?.DescriptionRichText ?? string.Empty;
+                    }
+                    else
+                    {
+                        descriptionText.text = string.Empty;
+                    }
                 }
             }
 
@@ -829,12 +850,22 @@ namespace Game.SkillCardSystem.UI
             if (resourceCostText != null) resourceCostText.gameObject.SetActive(false);
             if (resourceIconImage != null) resourceIconImage.gameObject.SetActive(false);
 
-			// 효과 정보 업데이트 (동적 생성). 없으면 컨테이너 숨김
-			UpdateEffectsInfo(definition);
-            if (effectsContainer != null)
+			// 효과 정보 업데이트 (동적 생성). 망각된 카드는 효과 정보 숨김
+			if (isObfuscated)
             {
-                bool hasAnyEffect = HasAnyEffect(definition);
-                effectsContainer.gameObject.SetActive(hasAnyEffect);
+                if (effectsContainer != null)
+                {
+                    effectsContainer.gameObject.SetActive(false);
+                }
+            }
+            else
+            {
+                UpdateEffectsInfo(definition);
+                if (effectsContainer != null)
+                {
+                    bool hasAnyEffect = HasAnyEffect(definition);
+                    effectsContainer.gameObject.SetActive(hasAnyEffect);
+                }
             }
 
 			// 레이아웃 강제 갱신으로 동적 크기 조절 보장
@@ -854,6 +885,53 @@ namespace Game.SkillCardSystem.UI
 			
 			// 3. ContentSizeFitter가 제대로 작동하도록 한 프레임 대기 후 재갱신
 			StartCoroutine(DelayedLayoutRebuild());
+        }
+        
+        /// <summary>
+        /// 카드가 망각 상태인지 확인합니다.
+        /// </summary>
+        private bool CheckIfCardIsObfuscated(ISkillCard card)
+        {
+            if (card == null || card.IsFromPlayer())
+            {
+                return false;
+            }
+            
+            // EnemyManager를 통해 현재 적 캐릭터 가져오기
+            if (enemyManager == null)
+            {
+                enemyManager = UnityEngine.Object.FindFirstObjectByType<EnemyManager>();
+            }
+            
+            if (enemyManager == null)
+            {
+                return false;
+            }
+            
+            var enemyCharacter = enemyManager.GetCharacter();
+            if (enemyCharacter == null)
+            {
+                return false;
+            }
+            
+            // 적 캐릭터의 CharacterEffects에서 OblivionEffectSO 찾기
+            if (enemyCharacter is Game.CharacterSystem.Core.EnemyCharacter enemyChar)
+            {
+                var enemyData = enemyChar.CharacterData as Game.CharacterSystem.Data.EnemyCharacterData;
+                if (enemyData?.CharacterEffects != null)
+                {
+                    foreach (var effectEntry in enemyData.CharacterEffects)
+                    {
+                        if (effectEntry.effectSO is OblivionEffectSO oblivionEffect)
+                        {
+                            // 망각 효과가 적용된 카드인지 확인
+                            return oblivionEffect.IsCardObfuscated(card);
+                        }
+                    }
+                }
+            }
+            
+            return false;
         }
 
         /// <summary>
@@ -923,37 +1001,67 @@ namespace Game.SkillCardSystem.UI
         /// </summary>
         /// <param name="card">툴팁을 요청한 카드 인스턴스</param>
         /// <param name="definition">카드 정의</param>
-        private void UpdateCardHeader(ISkillCard card, SkillCardDefinition definition)
+        /// <param name="isObfuscated">망각 효과가 적용되었는지 여부</param>
+        private void UpdateCardHeader(ISkillCard card, SkillCardDefinition definition, bool isObfuscated = false)
         {
             if (definition == null) return;
-            if (cardIconImage != null)
+            
+            // 망각된 카드인 경우 망각 이미지와 "망각" 이름 표시
+            if (isObfuscated)
             {
-                cardIconImage.sprite = definition.artwork;
-                cardIconImage.gameObject.SetActive(definition.artwork != null);
-            }
-            if (cardNameText != null)
-            {
-                var title = string.IsNullOrEmpty(definition.displayNameKO) ? definition.displayName : definition.displayNameKO;
-
-                // 플레이어 카드에만 강화 성급(★) 표기 적용
-                bool isPlayerCard = card != null && card.IsFromPlayer();
-                if (isPlayerCard)
+                // 망각 이미지 로드
+                var oblivionSprite = Resources.Load<Sprite>("Image/스킬 아이콘-1차 1/2. 기믹 스킬/Skill_204_망각");
+                if (cardIconImage != null)
                 {
-                    int level = 0;
-                    if (itemService != null)
+                    if (oblivionSprite != null)
                     {
-                        level = itemService.GetSkillEnhancementLevel(definition.displayName);
+                        cardIconImage.sprite = oblivionSprite;
+                        cardIconImage.gameObject.SetActive(true);
                     }
-
-                    if (level > 0)
+                    else
                     {
-                        int clampedLevel = Mathf.Clamp(level, 1, Game.ItemSystem.Constants.ItemConstants.MAX_ENHANCEMENT_LEVEL);
-                        title = $"{title} {new string('★', clampedLevel)}";
+                        cardIconImage.gameObject.SetActive(false);
                     }
                 }
-
-                cardNameText.text = title;
+                
+                if (cardNameText != null)
+                {
+                    cardNameText.text = "망각"; // 망각된 카드는 "망각"으로 표시
+                }
             }
+            else
+            {
+                // 원본 카드 정보 표시
+                if (cardIconImage != null)
+                {
+                    cardIconImage.sprite = definition.artwork;
+                    cardIconImage.gameObject.SetActive(definition.artwork != null);
+                }
+                if (cardNameText != null)
+                {
+                    var title = string.IsNullOrEmpty(definition.displayNameKO) ? definition.displayName : definition.displayNameKO;
+
+                    // 플레이어 카드에만 강화 성급(★) 표기 적용
+                    bool isPlayerCard = card != null && card.IsFromPlayer();
+                    if (isPlayerCard)
+                    {
+                        int level = 0;
+                        if (itemService != null)
+                        {
+                            level = itemService.GetSkillEnhancementLevel(definition.displayName);
+                        }
+
+                        if (level > 0)
+                        {
+                            int clampedLevel = Mathf.Clamp(level, 1, Game.ItemSystem.Constants.ItemConstants.MAX_ENHANCEMENT_LEVEL);
+                            title = $"{title} {new string('★', clampedLevel)}";
+                        }
+                    }
+
+                    cardNameText.text = title;
+                }
+            }
+            
             // 타입 텍스트는 사용하지 않음
             if (cardTypeText != null)
             {

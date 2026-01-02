@@ -189,6 +189,20 @@ namespace Game.CombatSystem.Manager
 
             // 데이터 재등록
             _registry.MoveCardData(fromSlot, toSlot);
+            
+            // 카드 이동 이벤트 발생
+            if (card != null)
+            {
+                var cardGameObject = ui?.gameObject;
+                if (card.IsFromPlayer())
+                {
+                    Game.CombatSystem.CombatEvents.RaisePlayerCardMoved(card.GetCardName(), cardGameObject, toSlot);
+                }
+                else
+                {
+                    Game.CombatSystem.CombatEvents.RaiseEnemyCardMoved(card.GetCardName(), cardGameObject, toSlot);
+                }
+            }
         }
 
         #endregion
@@ -272,6 +286,10 @@ namespace Game.CombatSystem.Manager
                     var ui = CreateCardUIForSlot(card, CombatSlotPosition.WAIT_SLOT_4, cardUIPrefab);
                     var tween = PlaySpawnTween(ui);
                     _registry.RegisterCard(CombatSlotPosition.WAIT_SLOT_4, card, ui, SlotOwner.ENEMY);
+                    
+                    // 적 카드 생성 이벤트 발생
+                    Game.CombatSystem.CombatEvents.RaiseEnemyCardSpawn(card.GetCardName(), ui?.gameObject);
+                    
                     if (tween != null)
                     {
                         yield return tween.WaitForCompletion();
@@ -507,6 +525,17 @@ namespace Game.CombatSystem.Manager
             var cardUI = CreateCardUIForSlot(card, CombatSlotPosition.WAIT_SLOT_4, cardUIPrefab);
             var spawnTween = PlaySpawnTween(cardUI);
             _registry.RegisterCard(CombatSlotPosition.WAIT_SLOT_4, card, cardUI, owner);
+            
+            // 카드 생성 이벤트 발생
+            if (owner == SlotOwner.ENEMY)
+            {
+                Game.CombatSystem.CombatEvents.RaiseEnemyCardSpawn(card.GetCardName(), cardUI?.gameObject);
+            }
+            else
+            {
+                Game.CombatSystem.CombatEvents.RaisePlayerCardSpawn(card.GetCardName(), cardUI?.gameObject);
+            }
+            
             if (spawnTween != null)
             {
                 yield return spawnTween.WaitForCompletion();
