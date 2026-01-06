@@ -15,9 +15,8 @@ MonoBehaviour:
   <DisplayName>k__BackingField: "\uC544\uBA54\uB77C"
   <CharacterType>k__BackingField: 2
   <MaxHP>k__BackingField: 15
-  <Portrait>k__BackingField: {fileID: -1986941848747793734, guid: cea6a74dbb62995498b5830c6c8a8709, type: 3}
   <PortraitPrefab>k__BackingField: {fileID: 751987938129930587, guid: 97fed038b9822464d91daefec0d4012f, type: 3}
-  <PlayerUIPortrait>k__BackingField: {fileID: 8631797052835628650, guid: 59e733207fb35314e9bb7096ec70fa92, type: 3}
+  <PlayerUIPortrait>k__BackingField: {fileID: -6686470675801019558, guid: 32ee81b34e8653c4e8fa8c0c764230c6, type: 3}
   <Emblem>k__BackingField: {fileID: 499279765919047262, guid: c86889f583372284193c699670515224, type: 3}
   <Description>k__BackingField: "\uC544\uBA54\uB77C\uB294 \uBCC0\uCE59\uC801\uC778
     \uB370\uBBF8\uC9C0 \uD328\uD134\uC744 \uC9C0\uB2CC \uCE90\uB9AD\uD130\uB85C,
