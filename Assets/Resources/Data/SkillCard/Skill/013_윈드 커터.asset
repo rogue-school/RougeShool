@@ -31,7 +31,7 @@ MonoBehaviour:
       minDamage: 0
       maxDamage: 0
       sfxClip: {fileID: 8300000, guid: 24fa1bf9fb23eba4a95474b7b8311792, type: 3}
-      visualEffectPrefab: {fileID: 4203527421569735854, guid: d189a9259cac7744d8baf4468fb85239, type: 3}
+      visualEffectPrefab: {fileID: 7436133904135058068, guid: 26b0366964c14404ba5268039d739f59, type: 3}
     hasResource: 0
     resourceConfig:
       cost: 0

@@ -52,9 +52,9 @@ MonoBehaviour:
         bleedPerTurnEffectPrefab: {fileID: 0}
         bleedPerTurnSfxClip: {fileID: 0}
         counterDuration: 1
-        counterIcon: {fileID: 0}
+        counterIcon: {fileID: -980193198989424114, guid: b49bf4f8242f54847af079973d77513d, type: 3}
         counterActivateEffectPrefab: {fileID: 0}
-        counterActivateSfxClip: {fileID: 0}
+        counterActivateSfxClip: {fileID: 8300000, guid: afce9a143d911d440ac0c7fd7b06495a, type: 3}
         guardDuration: 1
         guardIcon: {fileID: 0}
         guardActivateEffectPrefab: {fileID: 0}
