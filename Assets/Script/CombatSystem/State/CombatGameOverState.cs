@@ -1,27 +1,26 @@
 using UnityEngine;
 using System.Collections;
-using Game.CombatSystem.Interface;
-using Game.CombatSystem.Slot;
-using Game.Utility;
-using Game.CharacterSystem.Interface;
+using Game.CombatSystem.Manager;
 using Game.CharacterSystem.Manager;
-using Game.IManager;
+using Game.CoreSystem.Utility;
+using Game.CombatSystem.UI;
 
 namespace Game.CombatSystem.State
 {
     /// <summary>
     /// 전투 종료 상태. 게임 오버 루틴을 실행하고 UI를 표시합니다.
+    /// 새로운 싱글톤 기반 아키텍처로 단순화되었습니다.
     /// </summary>
-    public class CombatGameOverState : ICombatTurnState
+    public class CombatGameOverState
     {
         #region 필드
 
-        private readonly ICombatTurnManager turnManager;
-        private readonly ICombatFlowCoordinator flowCoordinator;
-        private readonly ICombatSlotRegistry slotRegistry;
+        private readonly TurnManager turnManager;
+        // CombatSlotManager 제거됨 - 슬롯 관리 기능을 CombatFlowManager로 통합
+        private readonly PlayerManager playerManager;
+        private readonly EnemyManager enemyManager;
         private readonly ICoroutineRunner coroutineRunner;
-        private readonly DeathUIManager deathUIManager;
-        private readonly IPlayerManager playerManager;
+        private readonly Game.CombatSystem.UI.GameOverUI gameOverUI;
 
         #endregion
 
@@ -31,20 +30,18 @@ namespace Game.CombatSystem.State
         /// CombatGameOverState 생성자
         /// </summary>
         public CombatGameOverState(
-            ICombatTurnManager turnManager,
-            ICombatFlowCoordinator flowCoordinator,
-            ICombatSlotRegistry slotRegistry,
+            TurnManager turnManager,
+            PlayerManager playerManager,
+            EnemyManager enemyManager,
             ICoroutineRunner coroutineRunner,
-            DeathUIManager deathUIManager,
-            IPlayerManager playerManager
+            Game.CombatSystem.UI.GameOverUI gameOverUI = null
         )
         {
             this.turnManager = turnManager;
-            this.flowCoordinator = flowCoordinator;
-            this.slotRegistry = slotRegistry;
-            this.coroutineRunner = coroutineRunner;
-            this.deathUIManager = deathUIManager;
             this.playerManager = playerManager;
+            this.enemyManager = enemyManager;
+            this.coroutineRunner = coroutineRunner;
+            this.gameOverUI = gameOverUI;
         }
 
         #endregion
@@ -56,7 +53,7 @@ namespace Game.CombatSystem.State
         /// </summary>
         public void EnterState()
         {
-            Debug.Log("<color=cyan>[STATE] CombatGameOverState 진입</color>");
+            GameLogger.LogError("CombatGameOverState 진입 - 게임 오버!", GameLogger.LogCategory.Combat);
             coroutineRunner.RunCoroutine(GameOverRoutine());
         }
 
@@ -70,7 +67,7 @@ namespace Game.CombatSystem.State
         /// </summary>
         public void ExitState() 
         { 
-            Debug.Log("<color=cyan>[STATE] CombatGameOverState 종료</color>"); 
+            GameLogger.LogInfo("CombatGameOverState 종료", GameLogger.LogCategory.Combat); 
         }
 
         #endregion
@@ -82,11 +79,27 @@ namespace Game.CombatSystem.State
         /// </summary>
         private IEnumerator GameOverRoutine()
         {
-            yield return flowCoordinator.PerformGameOverPhase();
+            GameLogger.LogError("게임 오버 처리 중...", GameLogger.LogCategory.Combat);
+            
+            // 게임 오버 애니메이션 대기
+            yield return new WaitForSeconds(1.0f);
 
             if (CheckPlayerDeath())
             {
-                deathUIManager.ShowDeathUI();
+                // 게임 오버 UI 표시
+                if (gameOverUI != null)
+                {
+                    gameOverUI.ShowGameOver();
+                    GameLogger.LogInfo("게임 오버 UI 표시 완료", GameLogger.LogCategory.Combat);
+                }
+                else
+                {
+                    GameLogger.LogWarning("GameOverUI를 찾을 수 없습니다", GameLogger.LogCategory.Combat);
+                }
+            }
+            else
+            {
+                GameLogger.LogInfo("적 사망 - 승리 처리", GameLogger.LogCategory.Combat);
             }
         }
 

@@ -2,7 +2,8 @@ using UnityEngine;
 using System.Collections.Generic;
 using Game.SkillCardSystem.Data;
 using Game.SkillCardSystem.Interface;
-using Game.SkillCardSystem.Effects;
+using Game.SkillCardSystem.Effect;
+using Game.CombatSystem.Data;
 using Game.CombatSystem.Slot;
 using Game.SkillCardSystem.Slot;
 using Game.CombatSystem.Context;
@@ -13,13 +14,13 @@ namespace Game.SkillCardSystem.Runtime
 {
     /// <summary>
     /// 런타임에서 실행되는 적 전용 스킬 카드 클래스입니다.
-    /// 카드 데이터, 이펙트 목록, 쿨타임 및 슬롯 정보를 포함하며,
+    /// 카드 데이터, 이펙트 목록 및 슬롯 정보를 포함하며,
     /// 카드 실행 시 ICardExecutionContext를 통해 동작합니다.
     /// </summary>
     public class EnemySkillCardRuntime : ISkillCard
     {
         /// <inheritdoc/>
-        public SkillCardData CardData { get; private set; }
+        public SkillCardDefinition CardDefinition { get; private set; }
 
         private readonly List<SkillCardEffectSO> effects;
         private readonly SlotOwner owner = SlotOwner.ENEMY;
@@ -27,24 +28,37 @@ namespace Game.SkillCardSystem.Runtime
         private SkillCardSlotPosition? handSlot;
         private CombatSlotPosition? combatSlot;
 
-        private int currentCoolTime = 0;
-
         /// <summary>
-        /// 생성자: 카드 데이터와 이펙트 리스트를 주입받아 초기화합니다.
+        /// 생성자: 카드 정의를 주입받아 초기화합니다.
         /// </summary>
-        public EnemySkillCardRuntime(SkillCardData cardData, List<SkillCardEffectSO> effects)
+        public EnemySkillCardRuntime(SkillCardDefinition definition)
         {
-            CardData = cardData ?? throw new System.ArgumentNullException(nameof(cardData));
-            this.effects = effects ?? new List<SkillCardEffectSO>();
+            CardDefinition = definition ?? throw new System.ArgumentNullException(nameof(definition));
+            this.effects = definition.configuration.hasEffects ? 
+                definition.configuration.effects.ConvertAll(e => e.effectSO) : 
+                new List<SkillCardEffectSO>();
         }
 
         #region 메타 정보
 
-        public string GetCardName() => CardData?.Name ?? "[Unnamed Enemy Card]";
-        public string GetDescription() => CardData?.Description ?? "[No Description]";
-        public Sprite GetArtwork() => CardData?.Artwork;
-        public int GetCoolTime() => CardData?.CoolTime ?? 0;
-        public int GetEffectPower(SkillCardEffectSO effect) => CardData?.Damage ?? 0;
+        public string GetCardName() => CardDefinition?.displayName ?? "[Unnamed Enemy Card]";
+        public string GetDescription() => CardDefinition?.description ?? "[No Description]";
+        public Sprite GetArtwork() => CardDefinition?.artwork;
+        public int GetEffectPower(SkillCardEffectSO effect) => CardDefinition?.configuration.hasDamage == true ? CardDefinition.configuration.damageConfig.baseDamage : 0;
+        
+        /// <summary>
+        /// 카드의 기본 데미지를 반환합니다 (데미지 오버라이드 포함).
+        /// EnemySkillCardRuntime은 오버라이드를 지원하지 않으므로 항상 기본 데미지를 반환합니다.
+        /// </summary>
+        /// <returns>기본 데미지 값</returns>
+        public int GetBaseDamage()
+        {
+            if (CardDefinition?.configuration?.hasDamage != true)
+                return 0;
+
+            return CardDefinition.configuration.damageConfig.baseDamage;
+        }
+        
         public List<SkillCardEffectSO> CreateEffects() => new List<SkillCardEffectSO>(effects);
 
         public SlotOwner GetOwner() => owner;
@@ -59,14 +73,6 @@ namespace Game.SkillCardSystem.Runtime
 
         public void SetCombatSlot(CombatSlotPosition slot) => combatSlot = slot;
         public CombatSlotPosition? GetCombatSlot() => combatSlot;
-
-        #endregion
-
-        #region 쿨타임 관리
-
-        public int GetMaxCoolTime() => CardData?.CoolTime ?? 0;
-        public int GetCurrentCoolTime() => currentCoolTime;
-        public void SetCurrentCoolTime(int value) => currentCoolTime = Mathf.Max(0, value);
 
         #endregion
 
@@ -116,8 +122,6 @@ namespace Game.SkillCardSystem.Runtime
                     Debug.LogWarning($"[EnemySkillCardRuntime] {GetCardName()} - 효과 명령 생성 실패: {effect?.name}");
                 }
             }
-
-            SetCurrentCoolTime(GetMaxCoolTime()); // 쿨타임 리셋
         }
 
         #endregion

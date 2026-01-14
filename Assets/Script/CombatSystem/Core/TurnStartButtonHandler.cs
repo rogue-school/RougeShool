@@ -1,6 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
+using Game.CoreSystem.Utility;
 using Game.CombatSystem.Interface;
+using Game.CombatSystem.Manager;
+using Game.CombatSystem.Service;
 
 namespace Game.CombatSystem.Core
 {
@@ -13,10 +16,8 @@ namespace Game.CombatSystem.Core
         [Header("전투 시작 버튼")]
         [SerializeField] private Button startButton;
 
-        private ITurnStartConditionChecker conditionChecker;
-        private ICombatTurnManager turnManager;
-        private ICombatStateFactory stateFactory;
-        private ITurnCardRegistry cardRegistry;
+        private DefaultTurnStartConditionChecker conditionChecker;
+        private TurnManager turnManager;
 
         private bool isInjected = false;
 
@@ -24,18 +25,11 @@ namespace Game.CombatSystem.Core
         /// Zenject 의존성 주입 메서드
         /// </summary>
         public void Inject(
-            ITurnStartConditionChecker conditionChecker,
-            ICombatTurnManager turnManager,
-            ICombatStateFactory stateFactory,
-            ITurnCardRegistry cardRegistry)
+            DefaultTurnStartConditionChecker conditionChecker,
+            TurnManager turnManager)
         {
             this.conditionChecker = conditionChecker;
             this.turnManager = turnManager;
-            this.stateFactory = stateFactory;
-            this.cardRegistry = cardRegistry;
-
-            if (this.cardRegistry != null)
-                this.cardRegistry.OnCardStateChanged += EvaluateButtonInteractable;
 
             isInjected = true;
         }
@@ -46,7 +40,7 @@ namespace Game.CombatSystem.Core
         {
             if (startButton == null)
             {
-                Debug.LogWarning("[TurnStartButtonHandler] startButton이 할당되지 않았습니다!");
+                GameLogger.LogWarning("[TurnStartButtonHandler] startButton이 할당되지 않았습니다!", GameLogger.LogCategory.Combat);
                 return;
             }
 
@@ -56,9 +50,6 @@ namespace Game.CombatSystem.Core
 
         private void OnDestroy()
         {
-            if (cardRegistry != null)
-                cardRegistry.OnCardStateChanged -= EvaluateButtonInteractable;
-
             if (startButton != null)
                 startButton.onClick.RemoveListener(OnStartButtonClicked);
         }
@@ -75,31 +66,28 @@ namespace Game.CombatSystem.Core
             if (!isInjected || conditionChecker == null || startButton == null)
                 return;
 
-            bool canStart = conditionChecker.CanStartTurn();
+            // TODO: conditionChecker가 object 타입이므로 적절한 캐스팅 필요
+            // bool canStart = conditionChecker.CanStartTurn();
+            bool canStart = conditionChecker?.CanStartTurn() ?? false;
             startButton.interactable = canStart;
         }
 
         /// <summary>
-        /// 버튼 클릭 시 상태 전이를 요청합니다.
+        /// 버튼 클릭 시 턴을 진행합니다.
         /// </summary>
         private void OnStartButtonClicked()
         {
-            if (!isInjected || conditionChecker == null || !conditionChecker.CanStartTurn())
+            // TODO: conditionChecker가 object 타입이므로 적절한 캐스팅 필요
+            // if (!isInjected || conditionChecker == null || !conditionChecker.CanStartTurn())
+            if (!isInjected || conditionChecker == null || !(conditionChecker?.CanStartTurn() ?? false))
             {
-                Debug.LogWarning("[TurnStartButtonHandler] 버튼 클릭 조건 불충족");
+                GameLogger.LogWarning("[TurnStartButtonHandler] 버튼 클릭 조건 불충족", GameLogger.LogCategory.Combat);
                 return;
             }
 
-            var nextState = stateFactory?.CreateFirstAttackState();
-            if (nextState != null)
-            {
-                turnManager?.RequestStateChange(nextState);
-                Debug.Log("<color=cyan>[TurnStartButtonHandler] 상태 전이 요청</color>");
-            }
-            else
-            {
-                Debug.LogError("[TurnStartButtonHandler] nextState 생성 실패");
-            }
+            // 레거시: 상태 패턴으로 전환되어 이 버튼은 사용되지 않음
+            // turnManager?.NextTurn(); // 제거됨
+            GameLogger.LogWarning("[TurnStartButtonHandler] 레거시 버튼 - 상태 패턴에서 자동으로 턴 진행됨", GameLogger.LogCategory.Combat);
         }
 
         #endregion

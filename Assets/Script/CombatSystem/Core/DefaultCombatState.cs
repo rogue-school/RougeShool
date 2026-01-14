@@ -1,5 +1,6 @@
 using UnityEngine;
 using Game.CombatSystem.Interface;
+using Game.CoreSystem.Utility;
 
 namespace Game.CombatSystem.Core
 {
@@ -8,7 +9,7 @@ namespace Game.CombatSystem.Core
     /// 기본 전투 턴 상태로, 아무런 게임 로직도 실행되지 않는 상태입니다.
     /// 주로 초기 상태나 디버깅, 상태 전이 흐름 확인을 위해 사용됩니다.
     /// </summary>
-    public class DefaultCombatState : ICombatTurnState
+    public class DefaultCombatState
     {
         #region Fields
 
@@ -36,7 +37,7 @@ namespace Game.CombatSystem.Core
         /// </summary>
         public void EnterState()
         {
-            Debug.Log("<color=cyan>[DefaultCombatState] 상태 진입</color>");
+            GameLogger.LogInfo("[DefaultCombatState] 상태 진입", GameLogger.LogCategory.Combat);
         }
 
         /// <summary>
@@ -44,7 +45,7 @@ namespace Game.CombatSystem.Core
         /// </summary>
         public void ExecuteState()
         {
-            Debug.Log("<color=cyan>[DefaultCombatState] 상태 실행 중 (기본 상태)</color>");
+            GameLogger.LogInfo("[DefaultCombatState] 상태 실행 중 (기본 상태)", GameLogger.LogCategory.Combat);
             // 필요 시 자동 상태 전이 가능
             // 예: turnManager.RequestStateChange(...);
         }
@@ -54,7 +55,7 @@ namespace Game.CombatSystem.Core
         /// </summary>
         public void ExitState()
         {
-            Debug.Log("<color=cyan>[DefaultCombatState] 상태 종료</color>");
+            GameLogger.LogInfo("[DefaultCombatState] 상태 종료", GameLogger.LogCategory.Combat);
         }
 
         #endregion

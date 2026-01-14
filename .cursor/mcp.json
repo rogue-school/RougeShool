@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "rougeshool-code-analysis": {
+      "command": "node",
+      "args": ["mcp_server/index.js"],
+      "cwd": "C:\\Users\\hjk73\\Documents\\GitHub\\RougeShool",
+      "env": {
+        "NODE_ENV": "development"
+      }
+    }
+  }
+}

@@ -1,0 +1,77 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63917f595383ae84bafad72d7862ecd5, type: 3}
+  m_Name: "102_\uD68C\uD53C"
+  m_EditorClassIdentifier: 
+  cardId: 102
+  displayName: "\uD68C\uD53C"
+  displayNameKO: 
+  description: 
+  artwork: {fileID: 7784363581341926264, guid: 9c096f5e2652cfd4faa8342b08733f32, type: 3}
+  presentation:
+    sfxClip: {fileID: 0}
+    visualEffectPrefab: {fileID: 0}
+  configuration:
+    hasDamage: 0
+    damageConfig:
+      baseDamage: 0
+      hits: 1
+      ignoreGuard: 0
+      ignoreCounter: 0
+      useRandomDamage: 0
+      minDamage: 0
+      maxDamage: 0
+      sfxClip: {fileID: 0}
+      visualEffectPrefab: {fileID: 0}
+    hasResource: 0
+    resourceConfig:
+      cost: 0
+    hasEffects: 1
+    effects:
+    - effectSO: {fileID: 11400000, guid: c2a4b772e4e133d4495e0147c4676449, type: 2}
+      useCustomSettings: 1
+      customSettings:
+        damageAmount: 0
+        damageHits: 1
+        ignoreGuard: 0
+        ignoreCounter: 0
+        bleedAmount: 0
+        bleedDuration: 0
+        bleedIcon: {fileID: 0}
+        bleedActivateEffectPrefab: {fileID: 0}
+        bleedActivateSfxClip: {fileID: 0}
+        bleedPerTurnEffectPrefab: {fileID: 0}
+        bleedPerTurnSfxClip: {fileID: 0}
+        counterDuration: 1
+        counterIcon: {fileID: 0}
+        counterActivateEffectPrefab: {fileID: 0}
+        counterActivateSfxClip: {fileID: 0}
+        guardDuration: 1
+        guardIcon: {fileID: 7784363581341926264, guid: 9c096f5e2652cfd4faa8342b08733f32, type: 3}
+        guardActivateEffectPrefab: {fileID: 8913217842006883145, guid: aee1face6295eee4abf08b6aabf93c63, type: 3}
+        guardActivateSfxClip: {fileID: 8300000, guid: 35a7ca011fc264e42ab6efca8e8e3ee4, type: 3}
+        guardBlockEffectPrefab: {fileID: 8913217842006883145, guid: aee1face6295eee4abf08b6aabf93c63, type: 3}
+        guardBlockSfxClip: {fileID: 8300000, guid: 8a93c82a0e32d0b48934ad56d87ab45f, type: 3}
+        stunDuration: 1
+        stunIcon: {fileID: 0}
+        healAmount: 0
+        healEffectPrefab: {fileID: 0}
+        healSfxClip: {fileID: 0}
+        drawCount: 0
+        resourceDelta: 0
+        resourceGainSfxClip: {fileID: 0}
+        stackIncreasePerUse: 1
+        maxStacks: 5
+        targetCardId: 
+      executionOrder: 0
+    ownerPolicy: 0
+  currentAttackPowerStacks: 0

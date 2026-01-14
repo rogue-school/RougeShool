@@ -1,7 +1,7 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
-using Game.SkillCardSystem.Core;
+using Game.SkillCardSystem.Data;
 
 namespace Game.SkillCardSystem.Deck
 {
@@ -18,16 +18,43 @@ namespace Game.SkillCardSystem.Deck
         [Serializable]
         public class CardEntry
         {
-            /// <summary>
-            /// 스킬 카드 객체
-            /// </summary>
-            public EnemySkillCard card;
+            [Header("카드 정의")]
+            [Tooltip("스킬카드 정의 (적 또는 공용 카드만 선택 가능)")]
+            public SkillCardDefinition definition;
+
+            [Header("등장 확률")]
+            [Tooltip("이 카드가 선택될 확률 (0~1)")]
+            [Range(0f, 1f)]
+            public float probability = 1.0f;
+
+            [Header("데미지 오버라이드 (선택적)")]
+            [Tooltip("이 캐릭터가 사용할 때 적용할 데미지 값\n-1이면 카드 정의의 기본 데미지를 사용\n양수면 해당 값으로 오버라이드")]
+            public int damageOverride = -1;
 
             /// <summary>
-            /// 이 카드가 선택될 확률 (0~1)
+            /// 카드 엔트리가 유효한지 확인합니다.
             /// </summary>
-            [Range(0f, 1f)]
-            public float probability;
+            public bool IsValid()
+            {
+                return definition != null && probability >= 0f;
+            }
+
+            /// <summary>
+            /// 데미지 오버라이드가 설정되어 있는지 확인합니다.
+            /// </summary>
+            public bool HasDamageOverride()
+            {
+                return damageOverride >= 0;
+            }
+
+            /// <summary>
+            /// 카드 엔트리의 문자열 표현을 반환합니다.
+            /// </summary>
+            public override string ToString()
+            {
+                string damageInfo = HasDamageOverride() ? $" 데미지:{damageOverride}" : "";
+                return definition != null ? $"{definition.displayName} (확률: {probability:F2}{damageInfo})" : "Invalid Entry";
+            }
         }
 
         [Header("적용될 카드 목록 (확률 기반)")]
@@ -61,5 +88,36 @@ namespace Game.SkillCardSystem.Deck
         /// 덱에 포함된 모든 카드 엔트리를 반환합니다.
         /// </summary>
         public List<CardEntry> GetAllCards() => cards;
+
+        /// <summary>
+        /// 적과 공용 카드만 필터링하여 반환합니다.
+        /// </summary>
+        public List<CardEntry> GetValidCards()
+        {
+            var validCards = new List<CardEntry>();
+            
+            foreach (var card in cards)
+            {
+                if (card.definition != null && 
+                    (card.definition.configuration.ownerPolicy == OwnerPolicy.Enemy || 
+                     card.definition.configuration.ownerPolicy == OwnerPolicy.Shared))
+                {
+                    validCards.Add(card);
+                }
+            }
+            
+            return validCards;
+        }
+
+        /// <summary>
+        /// 카드가 적 덱에 사용 가능한지 확인합니다.
+        /// </summary>
+        public bool IsCardValidForEnemy(SkillCardDefinition cardDefinition)
+        {
+            if (cardDefinition == null) return false;
+            
+            return cardDefinition.configuration.ownerPolicy == OwnerPolicy.Enemy || 
+                   cardDefinition.configuration.ownerPolicy == OwnerPolicy.Shared;
+        }
     }
 }

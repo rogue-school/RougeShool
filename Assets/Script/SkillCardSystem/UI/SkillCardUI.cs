@@ -1,51 +1,203 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.EventSystems;
 using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.Manager;
 using Game.CombatSystem.DragDrop;
+using Game.CoreSystem.Utility;
+using Game.ItemSystem.Constants;
+using Zenject;
+using DG.Tweening;
 
 namespace Game.SkillCardSystem.UI
 {
     /// <summary>
-    /// 스킬 카드의 이름, 설명, 이미지, 쿨타임 등 UI를 제어합니다.
+    /// 스킬 카드의 이름, 설명, 이미지 등 UI를 제어합니다.
     /// 카드가 드래그 가능한 상태인지 여부도 제어합니다.
+    /// 툴팁 기능도 포함합니다.
     /// </summary>
-    public class SkillCardUI : MonoBehaviour, ISkillCardUI
+    public class SkillCardUI : MonoBehaviour, ISkillCardUI, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
     {
         #region UI Components
 
         [Header("카드 정보 UI")]
-        [SerializeField] private TextMeshProUGUI cardNameText;
-        [SerializeField] private TextMeshProUGUI damageText;
-        [SerializeField] private TextMeshProUGUI descriptionText;
-        [SerializeField] private Image cardArtImage;
+        [SerializeField] private TextMeshProUGUI cardNameText;      // 선택사항: 카드명 표시
+        [SerializeField] private TextMeshProUGUI damageText;        // 선택사항: 데미지 표시
+        [SerializeField] private TextMeshProUGUI descriptionText;   // 선택사항: 설명 표시
+        [SerializeField] private Image cardArtImage;               // 필수: 카드 아트워크
 
-        [Header("쿨타임 UI")]
-        [SerializeField] private GameObject coolTimeOverlay;
-        [SerializeField] private TextMeshProUGUI coolTimeText;
+        [Header("카드 배경 이미지")]
+        [Tooltip("플레이어 카드 배경 이미지")]
+        [SerializeField] private Sprite playerCardBackground;
+        [Tooltip("적 카드 배경 이미지")]
+        [SerializeField] private Sprite enemyCardBackground;
+
+        [Header("UI 그룹")]
         [SerializeField] private CanvasGroup canvasGroup;
+
+        [Header("툴팁 설정")]
+        [Tooltip("툴팁 활성화 여부")]
+        [SerializeField] private bool enableTooltip = true;
+
+        // 툴팁 지연 시간은 ItemConstants에서 관리 (코드로 제어)
+        private float tooltipDelay;
+
+        [Tooltip("드래그 중 툴팁 숨김 여부")]
+        [SerializeField] private bool hideTooltipOnDrag = true;
+
+        [Header("호버 효과 설정")]
+        [Tooltip("호버 시 스케일 (플레이어 카드만 적용)")]
+        [SerializeField] private float hoverScale = 1.05f;
 
         #endregion
 
+        #region Private Fields
+
         private ISkillCard card;
+        
+        [Inject(Optional = true)] private SkillCardTooltipManager tooltipManager;
+        
+        // 툴팁 관련 상태
+        private bool isHovering = false;
+        private bool isDragging = false;
+        private Coroutine tooltipCoroutine;
 
         // 카드 애니메이션 상태 플래그
         public bool IsAnimating { get; private set; }
 
-        // 예시: 애니메이션 시작/종료 시점에 호출할 수 있는 메서드
+        // 호버 효과 관련
+        private Tween scaleTween;
+
+        #endregion
+
+        #region Unity Lifecycle
+
+        private void Awake()
+        {
+            // DI를 통해 tooltipManager가 자동으로 주입됨
+            // 툴팁 지연 시간을 상수에서 초기화
+            tooltipDelay = ItemConstants.TOOLTIP_SHOW_DELAY;
+            
+            // Object.Instantiate로 생성된 경우 주입이 안 될 수 있으므로 보완
+            EnsureTooltipManagerInjected();
+        }
+
+        private void OnEnable()
+        {
+            // OnEnable에서도 주입 확인 (초기화 순서 문제 대비)
+            EnsureTooltipManagerInjected();
+            RegisterToTooltipManager();
+        }
+
+        /// <summary>
+        /// tooltipManager가 주입되지 않았으면 Zenject Container를 통해 주입을 시도합니다.
+        /// </summary>
+        private void EnsureTooltipManagerInjected()
+        {
+            if (tooltipManager != null) return;
+
+            try
+            {
+                // 1. ProjectContext를 통해 Container에 접근하여 주입 시도
+                var projectContext = Zenject.ProjectContext.Instance;
+                if (projectContext != null && projectContext.Container != null)
+                {
+                    projectContext.Container.Inject(this);
+                    if (tooltipManager != null)
+                    {
+                        GameLogger.LogInfo("[SkillCardUI] tooltipManager 주입 완료 (ProjectContext)", GameLogger.LogCategory.UI);
+                        return;
+                    }
+                }
+
+                // 2. SceneContextRegistry를 통해 현재 씬의 Container에 접근하여 주입 시도
+                try
+                {
+                    var sceneContextRegistry = projectContext.Container.Resolve<Zenject.SceneContextRegistry>();
+                    var sceneContainer = sceneContextRegistry.GetContainerForScene(gameObject.scene);
+                    if (sceneContainer != null)
+                    {
+                        sceneContainer.Inject(this);
+                        if (tooltipManager != null)
+                        {
+                            GameLogger.LogInfo("[SkillCardUI] tooltipManager 주입 완료 (SceneContext)", GameLogger.LogCategory.UI);
+                            return;
+                        }
+                    }
+                }
+                catch
+                {
+                    // SceneContextRegistry를 찾을 수 없거나 씬 컨테이너가 없는 경우 무시
+                }
+
+                // 3. 직접 찾아서 할당 (최후의 수단)
+                var foundManager = UnityEngine.Object.FindFirstObjectByType<SkillCardTooltipManager>(UnityEngine.FindObjectsInactive.Include);
+                if (foundManager != null)
+                {
+                    tooltipManager = foundManager;
+                    return;
+                }
+
+                GameLogger.LogWarning("[SkillCardUI] tooltipManager를 찾을 수 없습니다. CoreScene에 SkillCardTooltipManager가 있는지 확인하세요.", GameLogger.LogCategory.UI);
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogWarning($"[SkillCardUI] tooltipManager 주입 시도 실패: {ex.Message}", GameLogger.LogCategory.UI);
+                
+                // 예외 발생 시에도 직접 찾기 시도
+                try
+                {
+                    var foundManager = UnityEngine.Object.FindFirstObjectByType<SkillCardTooltipManager>(UnityEngine.FindObjectsInactive.Include);
+                    if (foundManager != null)
+                    {
+                        tooltipManager = foundManager;
+                    }
+                }
+                catch
+                {
+                    // 무시
+                }
+            }
+        }
+
+        private void OnDisable()
+        {
+            UnregisterFromTooltipManager();
+            scaleTween?.Kill();
+        }
+
+        private void OnDestroy()
+        {
+            UnregisterFromTooltipManager();
+            scaleTween?.Kill();
+        }
+
+        #endregion
+
+        #region Public Methods
+
+        /// <summary>
+        /// 애니메이션 상태를 설정합니다.
+        /// </summary>
+        /// <param name="value">애니메이션 중 여부</param>
         public void SetAnimating(bool value)
         {
             IsAnimating = value;
         }
 
-        #region Public Methods
-
         /// <summary>
         /// 스킬 카드 데이터를 설정하고 UI를 초기화합니다.
+        /// 설명, 데미지, 카드명 필드는 선택사항이며 null이어도 정상 작동합니다.
         /// </summary>
         /// <param name="newCard">연결할 카드 인스턴스</param>
         public void SetCard(ISkillCard newCard)
         {
+            if (card != null)
+            {
+                UnregisterFromTooltipManager();
+            }
+
             card = newCard;
 
             if (card == null)
@@ -54,48 +206,118 @@ namespace Game.SkillCardSystem.UI
                 return;
             }
 
-            cardNameText.text = card.GetCardName();
-            descriptionText.text = card.GetDescription();
+            RegisterToTooltipManager();
 
-            if (cardArtImage != null && card.GetArtwork() != null)
-                cardArtImage.sprite = card.GetArtwork();
+            // 플레이어 마커 카드인 경우: 완전히 보이지 않게 처리
+            bool isPlayerMarker = card.CardDefinition?.cardId == "PLAYER_MARKER";
+            if (isPlayerMarker)
+            {
+                // 자식 텍스트 및 아트 오브젝트 비활성화
+                if (cardNameText != null) cardNameText.gameObject.SetActive(false);
+                if (damageText != null) damageText.gameObject.SetActive(false);
+                if (descriptionText != null) descriptionText.gameObject.SetActive(false);
+                if (cardArtImage != null) cardArtImage.gameObject.SetActive(false);
 
-            UpdateCoolTimeDisplay();
-        }
+                // 부모(Image) 컴포넌트 완전히 숨김 처리
+                var rootImage = GetComponent<UnityEngine.UI.Image>();
+                if (rootImage != null)
+                {
+                    // 투명하게 만들어서 보이지 않게 함
+                    rootImage.color = new Color(1f, 1f, 1f, 0f);
+                    rootImage.raycastTarget = false;
+                }
 
-        /// <summary>
-        /// 현재 카드의 쿨타임 정보를 바탕으로 UI를 갱신합니다.
-        /// </summary>
-        public void UpdateCoolTimeDisplay()
-        {
-            if (card == null) return;
+                // 마커는 상호작용/드래그 비활성화
+                if (canvasGroup != null)
+                {
+                    canvasGroup.interactable = false;
+                    canvasGroup.blocksRaycasts = false;
+                    canvasGroup.alpha = 0f; // 완전히 투명하게 설정
+                }
+                if (TryGetComponent(out Game.CombatSystem.DragDrop.CardDragHandler dragHandlerForMarker))
+                {
+                    dragHandlerForMarker.enabled = false;
+                }
 
-            int currentCoolTime = card.GetCurrentCoolTime();
-            bool isCooling = currentCoolTime > 0;
+                return;
+            }
 
-            if (coolTimeOverlay != null)
-                coolTimeOverlay.SetActive(isCooling);
+            // 카드명 설정 (선택사항)
+            if (cardNameText != null)
+            {
+                string cardName = card.GetCardName();
+                cardNameText.text = !string.IsNullOrEmpty(cardName) ? cardName : "";
+            }
 
-            if (coolTimeText != null)
-                coolTimeText.text = isCooling ? currentCoolTime.ToString() : "";
+            // 설명 설정 (선택사항)
+            if (descriptionText != null)
+            {
+                string description = card.GetDescription();
+                descriptionText.text = !string.IsNullOrEmpty(description) ? description : "";
+            }
 
+            // 데미지 설정 (선택사항)
+            if (damageText != null)
+            {
+                if (card.CardDefinition?.configuration?.hasDamage == true)
+                {
+                    // 카드 인스턴스의 실제 데미지 사용 (데미지 오버라이드 포함)
+                    int damage = card.GetBaseDamage();
+                    damageText.text = damage.ToString();
+                }
+                else
+                {
+                    damageText.text = ""; // 데미지가 없는 카드는 빈 문자열
+                }
+            }
+
+            // 카드 아트워크 설정 (필수)
             if (cardArtImage != null)
             {
-                // 회색 음영 처리: 쿨타임 중이면 회색, 아니면 원래 색
-                cardArtImage.color = isCooling ? new Color(0.3f, 0.3f, 0.3f, 1f) : Color.white;
+                Sprite artwork = card.GetArtwork();
+                if (artwork != null)
+                {
+                    // 이미지 강제 업데이트: 항상 업데이트 (카드 교체 시 이미지 변경 보장)
+                    // 기존 스프라이트를 null로 설정하여 Unity가 변경을 감지하도록 함
+                    cardArtImage.sprite = null;
+                    // 즉시 새 스프라이트 설정
+                    cardArtImage.sprite = artwork;
+                    // 이미지 컴포넌트 활성화 보장
+                    cardArtImage.enabled = true;
+                    // GameObject 활성화 보장
+                    if (!cardArtImage.gameObject.activeSelf)
+                    {
+                        cardArtImage.gameObject.SetActive(true);
+                    }
+                    // 강제 리프레시: GameObject를 비활성화 후 활성화하여 Unity가 변경을 감지하도록 함
+                    cardArtImage.gameObject.SetActive(false);
+                    cardArtImage.gameObject.SetActive(true);
+                }
+                else
+                {
+                    GameLogger.LogWarning($"[SkillCardUI] 카드 아트워크가 null입니다. 카드 ID: {card.CardDefinition?.cardId}, 이름: {card.CardDefinition?.displayNameKO ?? card.CardDefinition?.displayName}", GameLogger.LogCategory.UI);
+                    // artwork가 null이어도 기존 스프라이트를 유지하지 않고 null로 설정
+                    cardArtImage.sprite = null;
+                }
             }
 
-            if (card.IsFromPlayer())
+            // 카드 배경 이미지 설정 (플레이어/적 구분)
+            SetCardBackgroundImage(card);
+
+            // 소유자에 따라 드래그/상호작용 제어 (드래그는 플레이어만, 툴팁은 모든 카드)
+            bool isPlayerCard = card.IsFromPlayer();
+            if (canvasGroup != null)
             {
-                SetInteractable(!isCooling);
-                SetDraggable(!isCooling);
+                // 드래그는 플레이어 카드만 가능하지만, 툴팁을 위한 레이캐스트는 모든 카드에서 활성화
+                canvasGroup.interactable = true; // 모든 카드에서 상호작용 허용 (툴팁을 위해)
+                canvasGroup.blocksRaycasts = true; // 모든 카드에서 레이캐스트 허용 (툴팁을 위해)
             }
-            else
+            if (TryGetComponent(out Game.CombatSystem.DragDrop.CardDragHandler dragHandler))
             {
-                SetInteractable(false);
-                SetDraggable(false);
+                dragHandler.enabled = isPlayerCard; // 드래그는 플레이어 카드만
             }
         }
+
 
         /// <summary>
         /// 현재 UI에 설정된 카드를 반환합니다.
@@ -124,18 +346,267 @@ namespace Game.SkillCardSystem.UI
                 dragHandler.enabled = isEnabled;
         }
 
-        /// <summary>
-        /// 외부에서 강제로 쿨타임 UI를 갱신합니다. (디버깅 또는 테스트용)
-        /// </summary>
-        /// <param name="coolTime">표시할 쿨타임</param>
-        /// <param name="show">쿨타임 UI 표시 여부</param>
-        public void ShowCoolTime(int coolTime, bool show)
-        {
-            if (coolTimeOverlay != null)
-                coolTimeOverlay.SetActive(show);
+        #endregion
 
-            if (coolTimeText != null)
-                coolTimeText.text = show ? coolTime.ToString() : "";
+        #region Tooltip Events
+
+        /// <summary>
+        /// 마우스가 카드에 진입했을 때 호출됩니다.
+        /// </summary>
+        /// <param name="eventData">포인터 이벤트 데이터</param>
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            // 호버 확대 효과 (플레이어 카드만)
+            if (card != null && card.IsFromPlayer())
+            {
+                Game.UtilitySystem.HoverEffectHelper.PlayHoverScaleWithCleanup(
+                    ref scaleTween,
+                    transform,
+                    hoverScale,
+                    0.2f);
+            }
+
+            // tooltipManager 주입 확인 (OnPointerEnter 시점에도 확인)
+            EnsureTooltipManagerInjected();
+            
+            var currentTooltipManager = tooltipManager;
+
+            if (!enableTooltip || currentTooltipManager == null || card == null || isHovering)
+            {
+                if (currentTooltipManager == null)
+                {
+                    GameLogger.LogWarning("[SkillCardUI] OnPointerEnter: tooltipManager가 null입니다. CoreScene에 SkillCardTooltipManager가 있는지 확인하세요.", GameLogger.LogCategory.UI);
+                }
+                return;
+            }
+
+            // 카드가 등록되지 않았으면 등록
+            RegisterToTooltipManager();
+
+            isHovering = true;
+
+            // 드래그 중이면 무시
+            if (isDragging && hideTooltipOnDrag)
+            {
+                return;
+            }
+
+            // 지연된 툴팁 표시 시작
+            if (tooltipCoroutine != null)
+            {
+                StopCoroutine(tooltipCoroutine);
+            }
+            tooltipCoroutine = StartCoroutine(ShowTooltipDelayed());
+        }
+
+        /// <summary>
+        /// 마우스가 카드에서 이탈했을 때 호출됩니다.
+        /// </summary>
+        /// <param name="eventData">포인터 이벤트 데이터</param>
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            // 호버 확대 효과 해제 (플레이어 카드만)
+            if (card != null && card.IsFromPlayer())
+            {
+                Game.UtilitySystem.HoverEffectHelper.ResetScaleWithCleanup(
+                    ref scaleTween,
+                    transform,
+                    0.2f);
+            }
+
+            var currentTooltipManager = tooltipManager;
+
+            if (!enableTooltip || currentTooltipManager == null || !isHovering)
+            {
+                return;
+            }
+
+            isHovering = false;
+
+            // 진행 중인 툴팁 표시 코루틴 중지
+            if (tooltipCoroutine != null)
+            {
+                StopCoroutine(tooltipCoroutine);
+                tooltipCoroutine = null;
+            }
+
+            // 툴팁 숨김
+            currentTooltipManager.OnCardHoverExit();
+        }
+
+        /// <summary>
+        /// 마우스 클릭 이벤트를 처리합니다.
+        /// </summary>
+        /// <param name="eventData">포인터 이벤트 데이터</param>
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            var currentTooltipManager = tooltipManager;
+            if (!enableTooltip)
+            {
+                GameLogger.LogWarning("툴팁이 비활성화되어 있습니다.", GameLogger.LogCategory.UI);
+                return;
+            }
+            
+            // tooltipManager 주입 확인 (OnPointerClick 시점에도 확인)
+            EnsureTooltipManagerInjected();
+            
+            if (currentTooltipManager == null)
+            {
+                GameLogger.LogWarning("[SkillCardUI] OnPointerClick: tooltipManager를 찾을 수 없습니다. CoreScene에 SkillCardTooltipManager가 있는지 확인하세요.", GameLogger.LogCategory.UI);
+                return;
+            }
+            
+            if (card == null)
+            {
+                GameLogger.LogWarning("card가 null입니다.", GameLogger.LogCategory.UI);
+                return;
+            }
+            
+        }
+
+        #endregion
+
+        #region Tooltip Coroutines
+
+        /// <summary>
+        /// 지연된 툴팁 표시를 처리합니다.
+        /// </summary>
+        private System.Collections.IEnumerator ShowTooltipDelayed()
+        {
+            // 툴팁 지연 시작
+            yield return new WaitForSeconds(tooltipDelay);
+            
+            // 지연 후에도 여전히 호버 중이고 드래그 중이 아니면 툴팁 표시
+            if (isHovering && !isDragging)
+            {
+                var currentTooltipManager = tooltipManager;
+                if (currentTooltipManager != null && card != null)
+                {
+                    // 툴팁 표시
+                    currentTooltipManager.OnCardHoverEnter(card);
+                }
+                else
+                {
+                    GameLogger.LogWarning($"[SkillCardUI] 툴팁 표시 실패 - tooltipManager: {currentTooltipManager != null}, card: {card != null}", GameLogger.LogCategory.UI);
+                }
+            }
+            else
+            {
+                // 툴팁 표시 취소
+            }
+        }
+
+        #endregion
+
+        #region Drag State Management
+
+        /// <summary>
+        /// 드래그 시작 시 호출됩니다. (CardDragHandler에서 호출)
+        /// </summary>
+        public void OnDragStart()
+        {
+            isDragging = true;
+            
+            // 드래그 중 툴팁 숨김 설정이 활성화되어 있으면 툴팁 숨김
+            if (hideTooltipOnDrag && tooltipManager != null)
+            {
+                tooltipManager.OnCardHoverExit();
+            }
+        }
+
+        /// <summary>
+        /// 드래그 종료 시 호출됩니다. (CardDragHandler에서 호출)
+        /// </summary>
+        public void OnDragEnd()
+        {
+            isDragging = false;
+
+            // 드래그 종료 후 여전히 호버 중이면 툴팁 다시 표시
+            if (isHovering && enableTooltip && tooltipManager != null && card != null)
+            {
+                tooltipCoroutine = StartCoroutine(ShowTooltipDelayed());
+            }
+        }
+
+        #endregion
+
+        #region Tooltip Manager Registration
+
+        /// <summary>
+        /// 툴팁 매니저에 카드 UI를 등록합니다.
+        /// </summary>
+        private void RegisterToTooltipManager()
+        {
+            var currentTooltipManager = tooltipManager;
+            if (currentTooltipManager != null && card != null)
+            {
+                RectTransform rectTransform = GetComponent<RectTransform>();
+                if (rectTransform != null)
+                {
+                    currentTooltipManager.RegisterCardUI(card, rectTransform);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 툴팁 매니저에서 카드 UI 등록을 해제합니다.
+        /// </summary>
+        private void UnregisterFromTooltipManager()
+        {
+            var currentTooltipManager = tooltipManager;
+            if (currentTooltipManager != null && card != null)
+            {
+                currentTooltipManager.UnregisterCardUI(card);
+            }
+        }
+
+        /// <summary>
+        /// 카드의 소유자에 따라 배경 이미지를 설정합니다.
+        /// </summary>
+        /// <param name="card">설정할 카드</param>
+        private void SetCardBackgroundImage(ISkillCard card)
+        {
+            if (card == null) return;
+
+            // 루트 Image 컴포넌트 가져오기 (카드 배경)
+            var rootImage = GetComponent<UnityEngine.UI.Image>();
+            if (rootImage == null)
+            {
+                Debug.LogWarning("[SkillCardUI] 루트 Image 컴포넌트를 찾을 수 없습니다.");
+                return;
+            }
+
+            // 카드 소유자에 따라 배경 이미지 설정
+            bool isPlayerCard = card.IsFromPlayer();
+            Sprite backgroundSprite = isPlayerCard ? playerCardBackground : enemyCardBackground;
+
+            if (backgroundSprite != null)
+            {
+                rootImage.sprite = backgroundSprite;
+                
+                // 적 카드인 경우 이미지 색상을 #9D2933으로 설정
+                if (!isPlayerCard)
+                {
+                    if (ColorUtility.TryParseHtmlString("#9D2933", out Color enemyColor))
+                    {
+                        rootImage.color = enemyColor;
+                    }
+                    else
+                    {
+                        // 폴백: 직접 RGB 값 사용
+                        rootImage.color = new Color(157f / 255f, 41f / 255f, 51f / 255f, 1f);
+                    }
+                }
+                else
+                {
+                    // 플레이어 카드는 기본 색상(흰색) 유지
+                    rootImage.color = Color.white;
+                }
+            }
+            else
+            {
+                GameLogger.LogWarning($"[SkillCardUI] {(isPlayerCard ? "플레이어" : "적")} 카드 배경 이미지가 설정되지 않았습니다.", GameLogger.LogCategory.UI);
+            }
         }
 
         #endregion

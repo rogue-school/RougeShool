@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 187688c9866df8142ab8c540414b13d7, type: 3}
+  m_Name: SerenRewardProfile
+  m_EditorClassIdentifier: 
+  allowedTags: []
+  bannedTags: []
+  tagWeightAdjust: []
+  bannedActiveItems: []
+  bannedPassiveItems:
+  - {fileID: 11400000, guid: c99a32792f42a79448cf650f44c4e07e, type: 2}
+  - {fileID: 11400000, guid: 41e0a9dd4c5a9b940a1dcfa406ff7e07, type: 2}
+  - {fileID: 11400000, guid: 0e7bfb3db8a181f43b4bdfc53fafdde4, type: 2}
+  - {fileID: 11400000, guid: f66dd7588bd4cf14d8c560b449e3793b, type: 2}
+  - {fileID: 11400000, guid: 1300310cc7f1cf24cb3d7dcdc3ea3477, type: 2}
+  - {fileID: 11400000, guid: 08b89723f0fb2d940b739cdfd8adc1c0, type: 2}
+  - {fileID: 11400000, guid: 034dc89a73768244b901eed0f1d978c3, type: 2}
+  - {fileID: 11400000, guid: b0a741b259f723c46af1d5d30e9191b3, type: 2}
+  - {fileID: 11400000, guid: 16fc3ae200b53d2458e298767f344865, type: 2}
+  - {fileID: 11400000, guid: de9daee7a4244784db291413d47a97c2, type: 2}
+  - {fileID: 11400000, guid: e62abd9e8094016428cfb38b2b14aaa5, type: 2}
+  allowedPassiveTags: []
+  bannedPassiveTags: []

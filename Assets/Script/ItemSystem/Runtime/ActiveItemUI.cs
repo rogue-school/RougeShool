@@ -1,0 +1,783 @@
+using Game.CoreSystem.Utility;
+using Game.ItemSystem.Data;
+using Game.ItemSystem.Utility;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
+using Zenject;
+using DG.Tweening;
+
+namespace Game.ItemSystem.Runtime
+{
+    /// <summary>
+    /// 개별 액티브 아이템 UI를 관리하는 컴포넌트입니다.
+    /// 아이템 아이콘, 이름, 설명을 표시하는 역할만 담당합니다.
+    /// </summary>
+    public class ActiveItemUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
+    {
+        #region UI 참조
+
+        [Header("아이템 UI 구성 요소")]
+        [SerializeField] private Image itemIcon;
+
+        [Header("액션 팝업 프리팹")]
+        [SerializeField] private GameObject actionPopupPrefab;
+
+        [Header("호버 효과 설정")]
+        [Tooltip("호버 시 스케일")]
+        [SerializeField] private float hoverScale = 1.2f;
+
+        #endregion
+
+        #region 상태
+
+        [SerializeField] private ActiveItemDefinition currentItem;
+        private int slotIndex = -1;
+        private ActionPopupUI currentPopup;
+
+        // 의존성 주입
+        [Inject(Optional = true)] private Game.CombatSystem.Manager.TurnManager turnManager;
+        [Inject(Optional = true)] private Game.ItemSystem.Manager.ItemTooltipManager tooltipManager;
+        [Inject(Optional = true)] private InventoryPanelController inventoryPanelController;
+        [Inject(Optional = true)] private Game.CombatSystem.State.CombatStateMachine combatStateMachine;
+        private RectTransform rectTransform;
+
+        // 호버 효과 관련
+        private Tween scaleTween;
+
+        #endregion
+
+        #region 이벤트
+
+        /// <summary>
+        /// 아이템이 클릭되었을 때 발생하는 이벤트
+        /// </summary>
+        public event System.Action<int> OnItemClicked;
+
+        /// <summary>
+        /// 사용 버튼이 클릭되었을 때 발생하는 이벤트
+        /// </summary>
+        public event System.Action<int> OnUseButtonClicked;
+
+        /// <summary>
+        /// 버리기 버튼이 클릭되었을 때 발생하는 이벤트
+        /// </summary>
+        public event System.Action<int> OnDiscardButtonClicked;
+
+        #endregion
+
+        #region Unity 생명주기
+
+        private void Start()
+        {
+            // RectTransform 캐시
+            rectTransform = GetComponent<RectTransform>();
+
+            // 툴팁 매니저 찾기
+            FindTooltipManager();
+
+            InitializeItemUI();
+            SetupButtonEvent();
+            RegisterToTooltipManager();
+        }
+        
+        private void OnDisable()
+        {
+            scaleTween?.Kill();
+            scaleTween = null;
+        }
+        
+        private void OnDestroy()
+        {
+            UnregisterFromTooltipManager();
+            scaleTween?.Kill();
+            scaleTween = null;
+        }
+        
+        /// <summary>
+        /// 툴팁 매니저를 찾습니다.
+        /// </summary>
+        private void FindTooltipManager()
+        {
+            // DI로 주입받은 tooltipManager 사용
+            if (tooltipManager == null)
+            {
+                GameLogger.LogWarning("[ActiveItemUI] ItemTooltipManager를 찾을 수 없습니다", GameLogger.LogCategory.UI);
+            }
+        }
+
+        /// <summary>
+        /// tooltipManager가 null이면 주입을 시도합니다.
+        /// </summary>
+        private void EnsureTooltipManagerInjected()
+        {
+            if (tooltipManager != null) return;
+
+            try
+            {
+                // 1. ProjectContext를 통해 Container에 접근하여 주입 시도
+                var projectContext = Zenject.ProjectContext.Instance;
+                if (projectContext != null && projectContext.Container != null)
+                {
+                    projectContext.Container.Inject(this);
+                    if (tooltipManager != null)
+                    {
+                        return;
+                    }
+                }
+
+                // 2. SceneContextRegistry를 통해 현재 씬의 Container에 접근하여 주입 시도
+                try
+                {
+                    var sceneContextRegistry = projectContext.Container.Resolve<Zenject.SceneContextRegistry>();
+                    var sceneContainer = sceneContextRegistry.TryGetContainerForScene(gameObject.scene);
+                    if (sceneContainer != null)
+                    {
+                        sceneContainer.Inject(this);
+                        if (tooltipManager != null)
+                        {
+                            return;
+                        }
+                    }
+                }
+                catch
+                {
+                    // SceneContextRegistry를 찾을 수 없거나 씬 컨테이너가 없는 경우 무시
+                }
+
+                // 3. 직접 찾아서 할당 (최후의 수단)
+                var foundManager = UnityEngine.Object.FindFirstObjectByType<Game.ItemSystem.Manager.ItemTooltipManager>(UnityEngine.FindObjectsInactive.Include);
+                if (foundManager != null)
+                {
+                    tooltipManager = foundManager;
+                }
+            }
+            catch (System.Exception ex)
+            {
+                GameLogger.LogWarning($"[ActiveItemUI] ItemTooltipManager 주입 시도 중 오류: {ex.Message}", GameLogger.LogCategory.UI);
+            }
+        }
+        
+        /// <summary>
+        /// 툴팁 매니저에 아이템을 등록합니다.
+        /// </summary>
+        private void RegisterToTooltipManager()
+        {
+            if (tooltipManager != null && currentItem != null && rectTransform != null)
+            {
+                tooltipManager.RegisterItemUI(currentItem, rectTransform);
+            }
+        }
+        
+        /// <summary>
+        /// 툴팁 매니저에서 아이템 등록을 해제합니다.
+        /// </summary>
+        private void UnregisterFromTooltipManager()
+        {
+            if (tooltipManager != null && currentItem != null)
+            {
+                tooltipManager.UnregisterItemUI(currentItem);
+            }
+        }
+
+        #endregion
+
+        #region 초기화
+
+        /// <summary>
+        /// 아이템 UI를 초기화합니다.
+        /// </summary>
+        private void InitializeItemUI()
+        {
+            // 아이템 아이콘이 할당되지 않았으면 자식에서 찾기
+            if (itemIcon == null)
+            {
+                // 먼저 자식 Button에서 Image 찾기
+                var buttonChild = transform.Find("Button");
+                if (buttonChild != null)
+                {
+                    itemIcon = buttonChild.GetComponent<Image>();
+                }
+
+                // 자식에서 못 찾으면 자신에게서 찾기
+                if (itemIcon == null)
+                {
+                    itemIcon = GetComponent<Image>();
+                    if (itemIcon == null)
+                    {
+                        // Image 컴포넌트가 없으면 자동으로 추가
+                        itemIcon = gameObject.AddComponent<Image>();
+                    }
+                }
+            }
+
+            // Button의 Target Graphic을 Image로 설정
+            var button = GetComponent<Button>();
+            if (button != null && button.targetGraphic != itemIcon)
+            {
+                button.targetGraphic = itemIcon;
+            }
+        }
+
+        /// <summary>
+        /// 클릭 이벤트를 설정합니다. (Image + IPointerClickHandler 사용)
+        /// </summary>
+        private void SetupButtonEvent()
+        {
+            // Image 컴포넌트가 Raycast Target을 활성화해야 클릭 감지 가능
+            if (itemIcon != null)
+            {
+                itemIcon.raycastTarget = true;
+            }
+
+            // 자식 Button의 Button 컴포넌트 제거 (Image만 사용)
+            var childButton = transform.Find("Button")?.GetComponent<Button>();
+            if (childButton != null)
+            {
+                DestroyImmediate(childButton);
+            }
+        }
+
+        /// <summary>
+        /// 액션 팝업을 생성하고 표시합니다.
+        /// </summary>
+        /// <param name="allowUse">사용 버튼 활성화 여부</param>
+        private void ShowActionPopup(bool allowUse = true)
+        {
+            // 기존 팝업이 있으면 제거
+            CloseActionPopup();
+
+            if (actionPopupPrefab == null)
+            {
+                GameLogger.LogError("[ActiveItemUI] actionPopupPrefab이 설정되지 않았습니다!", GameLogger.LogCategory.UI);
+                return;
+            }
+
+            if (currentItem == null)
+            {
+                GameLogger.LogWarning("[ActiveItemUI] 현재 아이템이 null입니다!", GameLogger.LogCategory.UI);
+                return;
+            }
+
+            // 팝업 생성 (초기 부모는 슬롯이지만, 툴팁이 있으면 동일 캔버스로 이동)
+            GameObject popupInstance = Instantiate(actionPopupPrefab, transform);
+            currentPopup = popupInstance.GetComponent<ActionPopupUI>();
+
+            if (currentPopup == null)
+            {
+                GameLogger.LogError("[ActiveItemUI] ActionPopupUI 컴포넌트를 찾을 수 없습니다!", GameLogger.LogCategory.UI);
+                Destroy(popupInstance);
+                return;
+            }
+
+            // 레이어 정렬: 슬롯/팝업을 맨 앞으로 올려 가림 방지
+            transform.SetAsLastSibling();
+            currentPopup.transform.SetAsLastSibling();
+
+            // 팝업 전용 Canvas 설정(상단 렌더링 보장)
+            var popupCanvas = currentPopup.GetComponent<Canvas>();
+            if (popupCanvas == null)
+            {
+                popupCanvas = currentPopup.gameObject.AddComponent<Canvas>();
+            }
+            popupCanvas.overrideSorting = true;
+            popupCanvas.sortingOrder = 1000; // 인벤토리 내 최상단 보장
+
+            if (currentPopup.GetComponent<UnityEngine.UI.GraphicRaycaster>() == null)
+            {
+                currentPopup.gameObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+            }
+
+            // 먼저 툴팁을 현재 슬롯 기준으로 고정하고 즉시 표시 (아래 팝업 위치 계산에서 필요)
+            RectTransform rectTransform = GetComponent<RectTransform>();
+            if (tooltipManager != null)
+            {
+                tooltipManager.PinTooltip(currentItem, rectTransform);
+                tooltipManager.ShowTooltip();
+            }
+
+            // 팝업 위치 설정: 기본은 슬롯 위쪽, 가능하면 툴팁 오른편에 정렬(툴팁 활성 보장 후 계산)
+            Vector2 popupPosition = rectTransform.anchoredPosition + Vector2.up * 60f; // 기본값
+
+            var itemTooltip = tooltipManager != null ? tooltipManager.CurrentTooltip : null;
+            if (itemTooltip != null && itemTooltip.gameObject.activeInHierarchy)
+            {
+                var tooltipRT = itemTooltip.GetComponent<RectTransform>();
+                var tooltipParentRT = tooltipRT != null ? tooltipRT.parent as RectTransform : null;
+                if (tooltipRT != null && tooltipParentRT != null)
+                {
+                    // 팝업 부모를 툴팁과 동일한 캔버스로 이동
+                    currentPopup.transform.SetParent(tooltipParentRT, false);
+
+                    // 툴팁 좌/우 하단(World) 코너를 동일 부모 로컬로 변환
+                    Vector3[] corners = new Vector3[4];
+                    tooltipRT.GetWorldCorners(corners); // 0:BL, 1:TL, 2:TR, 3:BR
+                    Vector3 tooltipBLWorld = corners[0];
+                    Vector3 tooltipBRWorld = corners[3];
+
+                    var canvas = tooltipParentRT.GetComponentInParent<Canvas>();
+                    Camera cam = null;
+                    if (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay)
+                    {
+                        cam = canvas.worldCamera;
+                    }
+
+                    Vector2 brScreen = RectTransformUtility.WorldToScreenPoint(cam, tooltipBRWorld);
+                    Vector2 blScreen = RectTransformUtility.WorldToScreenPoint(cam, tooltipBLWorld);
+
+                    Vector2 brLocal, blLocal;
+                    bool gotBR = RectTransformUtility.ScreenPointToLocalPointInRectangle(tooltipParentRT, brScreen, cam, out brLocal);
+                    bool gotBL = RectTransformUtility.ScreenPointToLocalPointInRectangle(tooltipParentRT, blScreen, cam, out blLocal);
+                    if (gotBR && gotBL)
+                    {
+                        // 팝업 Rect 정보
+                        var popupRT = currentPopup.GetComponent<RectTransform>();
+                        if (popupRT != null)
+                        {
+                            // 좌하 피벗으로 정렬해 겹침 방지
+                            popupRT.pivot = new Vector2(0f, 0f);
+
+                            float tooltipRight = brLocal.x;
+                            float tooltipLeft = blLocal.x;
+                            float popupWidth = Mathf.Abs(popupRT.rect.width);
+                            const float popupOffsetX = 12f;
+
+                            var parentRect = tooltipParentRT.rect;
+                            bool canShowRight = (parentRect.xMax - tooltipRight) >= (popupWidth + popupOffsetX);
+
+                            float targetX = canShowRight
+                                ? tooltipRight + popupOffsetX
+                                : tooltipLeft - popupOffsetX - popupWidth;
+
+                            // 하단 정렬(y는 툴팁 하단과 동일)
+                            float targetY = brLocal.y;
+
+                            // 좌우 경계 클램프
+                            float minX = parentRect.xMin;
+                            float maxX = parentRect.xMax - popupWidth;
+                            if (targetX < minX) targetX = minX;
+                            else if (targetX > maxX) targetX = maxX;
+
+                            popupPosition = new Vector2(targetX, targetY);
+                        }
+                    }
+                }
+            }
+
+            // 팝업 설정 (최종 위치 반영)
+            currentPopup.SetupPopup(slotIndex, currentItem, popupPosition, allowUse);
+
+            // 이벤트 연결
+            currentPopup.OnUseButtonClicked += HandleUseButtonClicked;
+            currentPopup.OnDiscardButtonClicked += HandleDiscardButtonClicked;
+            currentPopup.OnPopupClosed += HandlePopupClosed;
+        }
+
+        /// <summary>
+        /// 액션 팝업을 닫습니다.
+        /// </summary>
+        private void CloseActionPopup()
+        {
+            if (currentPopup != null)
+            {
+                // 이벤트 해제
+                currentPopup.OnUseButtonClicked -= HandleUseButtonClicked;
+                currentPopup.OnDiscardButtonClicked -= HandleDiscardButtonClicked;
+                currentPopup.OnPopupClosed -= HandlePopupClosed;
+
+                // 팝업 제거
+                Destroy(currentPopup.gameObject);
+                currentPopup = null;
+
+                // 외부/내부 어떤 경로로든 팝업을 닫을 때 툴팁도 함께 종료하되,
+                // 현재 팝업의 아이템에 고정된 경우에만 닫도록 조건부 처리
+                if (tooltipManager != null)
+                {
+                    tooltipManager.ForceHideIfPinnedTo(currentItem);
+                    tooltipManager.UnpinTooltip();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 사용 버튼이 클릭되었을 때 호출됩니다.
+        /// </summary>
+        private void HandleUseButtonClicked(int slotIndex)
+        {
+            // 아이템 툴팁 강제 숨김 (현재 아이템에 고정된 경우에만)
+            if (tooltipManager != null)
+            {
+                tooltipManager.ForceHideIfPinnedTo(currentItem);
+            }
+
+            OnUseButtonClicked?.Invoke(slotIndex);
+        }
+
+        /// <summary>
+        /// 버리기 버튼이 클릭되었을 때 호출됩니다.
+        /// </summary>
+        private void HandleDiscardButtonClicked(int slotIndex)
+        {
+            // 아이템 툴팁 강제 숨김 (현재 아이템에 고정된 경우에만)
+            if (tooltipManager != null)
+            {
+                tooltipManager.ForceHideIfPinnedTo(currentItem);
+            }
+
+            OnDiscardButtonClicked?.Invoke(slotIndex);
+        }
+
+        /// <summary>
+        /// 팝업이 닫혔을 때 호출됩니다.
+        /// </summary>
+        private void HandlePopupClosed()
+        {
+            currentPopup = null;
+            // 팝업이 닫히면 툴팁 고정 해제
+            if (tooltipManager != null)
+            {
+                tooltipManager.UnpinTooltip();
+                // 클릭으로 고정된 툴팁도 함께 닫기
+                tooltipManager.ForceHideTooltip();
+            }
+        }
+
+        #endregion
+
+        #region 아이템 설정
+
+        /// <summary>
+        /// 슬롯 인덱스를 설정합니다.
+        /// </summary>
+        /// <param name="index">슬롯 인덱스</param>
+        public void SetSlotIndex(int index)
+        {
+            slotIndex = index;
+        }
+
+        /// <summary>
+        /// 아이템을 설정합니다.
+        /// </summary>
+        /// <param name="item">설정할 아이템</param>
+        public void SetItem(ActiveItemDefinition item)
+        {
+            // 기존 아이템 등록 해제
+            if (currentItem != null)
+            {
+                UnregisterFromTooltipManager();
+            }
+            
+            currentItem = item;
+            UpdateItemUI();
+            
+            // 새 아이템 등록
+            RegisterToTooltipManager();
+        }
+
+        /// <summary>
+        /// 슬롯을 빈 상태로 설정합니다.
+        /// </summary>
+        public void SetEmpty()
+        {
+            UnregisterFromTooltipManager();
+            currentItem = null;
+            UpdateItemUI();
+        }
+
+        /// <summary>
+        /// 아이템 UI를 업데이트합니다.
+        /// </summary>
+        private void UpdateItemUI()
+        {
+            if (currentItem == null)
+            {
+                // UIUpdateHelper를 사용하여 빈 슬롯 설정
+                UIUpdateHelper.SetEmptySlot(itemIcon, null, null);
+                return;
+            }
+
+            // UIUpdateHelper를 사용하여 아이템 UI 업데이트
+            UIUpdateHelper.UpdateItemSlotUI(itemIcon, null, null, currentItem);
+        }
+
+        /// <summary>
+        /// 포인터 클릭 이벤트를 처리합니다. (IPointerClickHandler 구현)
+        /// 플레이어 턴에만 팝업을 표시합니다.
+        /// </summary>
+        /// <param name="eventData">포인터 이벤트 데이터</param>
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            // 좌클릭만 처리
+            if (eventData.button == PointerEventData.InputButton.Left)
+            {
+                // 아이템이 없으면 무시
+                if (currentItem == null)
+                {
+                    return;
+                }
+
+                // 다른 슬롯의 팝업이 열려 있으면: 먼저 모두 닫고 다음 프레임에 현재 아이템을 정확히 열기
+                var openPopups = FindObjectsByType<ActionPopupUI>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+                bool hasOtherOpen = false;
+                for (int i = 0; i < openPopups.Length; i++)
+                {
+                    if (openPopups[i] != null && openPopups[i].GetSlotIndex() != slotIndex)
+                    {
+                        hasOtherOpen = true;
+                        break;
+                    }
+                }
+                if (hasOtherOpen)
+                {
+                    if (inventoryPanelController != null)
+                    {
+                        // 다른 슬롯 전환 시: 먼저 툴팁을 현재 슬롯으로 재고정하여
+                        // 이전 슬롯 팝업 정리 과정에서 새 툴팁이 닫히지 않게 보호
+                        if (tooltipManager != null)
+                        {
+                            tooltipManager.PinTooltip(currentItem, GetComponent<RectTransform>());
+                            tooltipManager.ShowTooltip();
+                        }
+
+                        // 그런 다음 다른 슬롯의 팝업만 닫기
+                        // (툴팁은 유지, 다음 프레임에 팝업을 정상적으로 연다)
+                        inventoryPanelController.CloseAllPopupsOnly();
+                    }
+                    StartCoroutine(OpenAfterFrame());
+                    return;
+                }
+
+                // 동일 아이템(동일 슬롯) 토글: 팝업이 열려 있으면 빈공간 클릭처럼 팝업/툴팁 모두 닫고 종료
+                if (currentPopup != null && currentPopup.gameObject != null && currentPopup.gameObject.activeInHierarchy)
+                {
+                    if (currentPopup.GetSlotIndex() == slotIndex)
+                    {
+                        CloseActionPopup();
+                        return;
+                    }
+                }
+
+                // 이벤트 발송
+                if (OnItemClicked != null)
+                {
+                    OnItemClicked.Invoke(slotIndex);
+                }
+
+                // 액션 팝업 표시 (적턴에도 팝업은 열림, 버튼 활성화는 팝업 내부에서 처리)
+                bool isPlayerTurn = IsPlayerTurn();
+                ShowActionPopup(isPlayerTurn);
+            }
+        }
+
+        private System.Collections.IEnumerator OpenAfterFrame()
+        {
+            // 다음 프레임에서 글로벌 닫기 억제 후 정상 오픈
+            yield return null;
+            if (inventoryPanelController != null)
+            {
+                inventoryPanelController.SuppressGlobalCloseOneFrame();
+            }
+            OnItemClicked?.Invoke(slotIndex);
+            ShowActionPopup(IsPlayerTurn());
+        }
+
+        /// <summary>
+        /// 현재 플레이어 턴인지 확인합니다.
+        /// 턴 상태와 전투 상태를 모두 확인하여 완전한 플레이어 턴에서만 사용 가능하도록 합니다.
+        /// </summary>
+        /// <returns>완전한 플레이어 턴이면 true, 아니면 false</returns>
+        private bool IsPlayerTurn()
+        {
+            // 1단계: TurnManager 턴 상태 확인
+            bool isTurnPlayerTurn = false;
+            if (turnManager != null)
+            {
+                isTurnPlayerTurn = turnManager.IsPlayerTurn();
+            }
+            else
+            {
+                // TurnManager를 찾을 수 없으면 안전하게 false 반환 (아이템 사용 차단)
+                GameLogger.LogWarning("[ActiveItemUI] TurnManager를 찾을 수 없습니다. 아이템 사용을 차단합니다.", GameLogger.LogCategory.UI);
+                return false;
+            }
+
+            // 2단계: CombatStateMachine 전투 상태 확인
+            if (combatStateMachine == null)
+            {
+                GameLogger.LogWarning("[ActiveItemUI] CombatStateMachine을 찾을 수 없습니다. 아이템 사용을 차단합니다.", GameLogger.LogCategory.UI);
+                return false;
+            }
+
+            var currentState = combatStateMachine.GetCurrentState();
+            if (currentState == null)
+            {
+                GameLogger.LogWarning("[ActiveItemUI] 현재 전투 상태가 없습니다. 아이템 사용을 차단합니다.", GameLogger.LogCategory.UI);
+                return false;
+            }
+
+            // 3단계: 완전한 플레이어 턴 상태인지 확인
+            bool isCompletePlayerTurn = isTurnPlayerTurn && 
+                                       currentState is Game.CombatSystem.State.PlayerTurnState &&
+                                       currentState.AllowPlayerCardDrag;
+
+            return isCompletePlayerTurn;
+        }
+
+        #endregion
+
+        #region 공개 메서드
+
+        /// <summary>
+        /// 현재 아이템을 반환합니다.
+        /// </summary>
+        /// <returns>현재 아이템 또는 null</returns>
+        public ActiveItemDefinition GetCurrentItem()
+        {
+            return currentItem;
+        }
+
+        /// <summary>
+        /// 아이템이 설정되어 있는지 확인합니다.
+        /// </summary>
+        /// <returns>아이템이 있으면 true</returns>
+        public bool HasItem()
+        {
+            return currentItem != null;
+        }
+
+        /// <summary>
+        /// 액션 팝업을 닫습니다. (외부에서 호출 가능)
+        /// </summary>
+        public void CloseActionPopupExternal()
+        {
+            CloseActionPopup();
+        }
+
+        /// <summary>
+        /// 현재 팝업이 열려있는지 확인합니다.
+        /// </summary>
+        /// <returns>팝업이 열려있으면 true, 아니면 false</returns>
+        public bool HasOpenPopup()
+        {
+            return currentPopup != null && currentPopup.gameObject.activeInHierarchy;
+        }
+
+        /// <summary>
+        /// 아이템 정보를 반환합니다. (툴팁용)
+        /// </summary>
+        /// <returns>아이템 정보 문자열</returns>
+        public string GetItemInfo()
+        {
+            if (currentItem == null)
+                return "[빈 아이템]";
+
+            return $"{currentItem.DisplayName}\n{currentItem.Description}";
+        }
+
+        /// <summary>
+        /// 현재 아이템의 ActiveItemDefinition을 반환합니다.
+        /// </summary>
+        /// <returns>ActiveItemDefinition 또는 null</returns>
+        public ActiveItemDefinition GetItemDefinition()
+        {
+            return currentItem;
+        }
+
+        /// <summary>
+        /// 아이템의 효과 정보를 반환합니다.
+        /// </summary>
+        /// <returns>효과 정보 문자열</returns>
+        public string GetEffectInfo()
+        {
+            if (currentItem == null)
+                return "효과 없음";
+
+            // UIUpdateHelper를 사용하여 효과 정보 생성
+            return UIUpdateHelper.GenerateItemInfo(currentItem, true);
+        }
+
+        /// <summary>
+        /// 아이템의 연출 정보를 반환합니다.
+        /// </summary>
+        /// <returns>연출 정보 문자열</returns>
+        public string GetPresentationInfo()
+        {
+            if (currentItem == null)
+                return "연출 없음";
+
+            // 연출은 각 효과 커스텀 설정에서 관리됨
+            return "연출: 효과별 커스텀 설정에서 관리";
+        }
+
+        /// <summary>
+        /// 아이템의 모든 정보를 반환합니다. (디버그용)
+        /// </summary>
+        /// <returns>완전한 아이템 정보 문자열</returns>
+        public string GetFullItemInfo()
+        {
+            if (currentItem == null)
+                return "[빈 아이템]";
+
+            var fullInfo = new System.Text.StringBuilder();
+            fullInfo.AppendLine($"=== {currentItem.DisplayName} ===");
+            fullInfo.AppendLine($"ID: {currentItem.ItemId}");
+            fullInfo.AppendLine($"설명: {currentItem.Description}");
+            fullInfo.AppendLine($"타입: {currentItem.Type}");
+            fullInfo.AppendLine($"아이콘: {(currentItem.Icon != null ? currentItem.Icon.name : "없음")}");
+            fullInfo.AppendLine();
+            fullInfo.Append(GetEffectInfo());
+            fullInfo.AppendLine();
+            fullInfo.Append(GetPresentationInfo());
+
+            return fullInfo.ToString();
+        }
+
+        #endregion
+
+        #region 툴팁 호버 이벤트
+
+        /// <summary>
+        /// 포인터가 오브젝트에 진입했을 때 호출됩니다.
+        /// </summary>
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            // 호버 확대 효과
+            Game.UtilitySystem.HoverEffectHelper.PlayHoverScaleWithCleanup(
+                ref scaleTween,
+                transform,
+                hoverScale,
+                0.2f);
+
+            if (currentItem == null)
+                return;
+
+            // tooltipManager가 null이면 찾기 시도
+            EnsureTooltipManagerInjected();
+
+            if (tooltipManager == null)
+                return;
+
+            // 인벤토리 슬롯에서도 자신의 RectTransform을 명시 전달
+            tooltipManager.OnItemHoverEnter(currentItem, rectTransform);
+        }
+
+        /// <summary>
+        /// 포인터가 오브젝트를 벗어났을 때 호출됩니다.
+        /// </summary>
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            // 호버 확대 효과 해제
+            Game.UtilitySystem.HoverEffectHelper.ResetScaleWithCleanup(
+                ref scaleTween,
+                transform,
+                0.2f);
+
+            if (tooltipManager == null)
+                return;
+
+            tooltipManager.OnItemHoverExit();
+        }
+
+        #endregion
+    }
+}

@@ -1,0 +1,381 @@
+---
+alwaysApply: true
+description: "Core development principles: SOLID, architecture patterns, performance optimization"
+---
+
+# RougeShool Core Development Rules
+
+## 🏆 SOLID Principles
+
+### Single Responsibility Principle (SRP)
+```csharp
+// ✅ Good: Single responsibility
+public class CardValidator
+{
+    public bool CanPlayCard(SkillCard card, IPlayer player)
+    {
+        return card != null && card.IsAvailable && player.CurrentMana >= card.ManaCost;
+    }
+}
+```
+
+### Open-Closed Principle (OCP)
+```csharp
+// ✅ Good: Open for extension, closed for modification
+public abstract class CardEffect
+{
+    public abstract void Apply(IPlayer player);
+}
+
+public class DamageEffect : CardEffect
+{
+    public override void Apply(IPlayer player) { /* damage logic */ }
+}
+```
+
+### Dependency Inversion Principle (DIP)
+```csharp
+// ✅ Good: Depend on abstractions
+public class CardProcessor
+{
+    private readonly ICardValidator validator;
+
+    [Inject]
+    public CardProcessor(ICardValidator validator)
+    {
+        this.validator = validator ?? throw new ArgumentNullException(nameof(validator));
+    }
+}
+```
+
+## 🔥 Critical Rules
+
+### 1. Code Reuse Priority
+```
+🚨 NEVER generate new code without reviewing existing code
+✅ ALWAYS: codebase_search → grep → read_file → evaluate reuse
+```
+
+### 2. Exception Handling Strategy
+
+#### Exception Handling Levels (3-Tier Strategy)
+
+```csharp
+// ✅ LEVEL 1: Validation Layer (throw only)
+// - Input validation at method entry
+// - Contract enforcement
+// - NO logging (caller handles it)
+
+public void ProcessCard(ISkillCard card)
+{
+    if (card == null)
+        throw new ArgumentNullException(nameof(card), "카드가 null입니다");
+
+    if (!card.IsValid())
+        throw new InvalidOperationException("카드 상태가 유효하지 않습니다");
+}
+
+// ✅ LEVEL 2: Operation Layer (log + wrap)
+// - Business logic execution
+// - Log error context
+// - Wrap exception with additional context
+
+public bool ExecuteCard(ISkillCard card)
+{
+    try
+    {
+        ProcessCard(card); // May throw from Level 1
+        return card.Execute();
+    }
+    catch (ArgumentNullException ex)
+    {
+        GameLogger.LogError($"카드 실행 실패 (null): {ex.Message}", GameLogger.LogCategory.Error);
+        throw; // Re-throw for caller to handle
+    }
+    catch (Exception ex)
+    {
+        GameLogger.LogError($"카드 실행 중 예상치 못한 오류: {ex.Message}", GameLogger.LogCategory.Error);
+        throw new InvalidOperationException("카드 실행 중 오류 발생", ex);
+    }
+}
+
+// ✅ LEVEL 3: Boundary Layer (log + handle gracefully)
+// - UI/Event handlers
+// - User-facing operations
+// - Catch and recover gracefully
+// - DON'T re-throw (prevent app crash)
+
+public void OnCardClicked(ISkillCard card)
+{
+    try
+    {
+        ExecuteCard(card);
+    }
+    catch (Exception ex)
+    {
+        GameLogger.LogError($"UI 카드 클릭 처리 오류: {ex.Message}", GameLogger.LogCategory.UI);
+        ShowErrorMessage("카드를 사용할 수 없습니다");
+        // DON'T re-throw at UI boundary
+    }
+}
+```
+
+#### Null-Safety Patterns
+
+```csharp
+// ✅ PREFERRED: Early return for optional dependencies
+public void PlaySound(AudioClip clip)
+{
+    if (clip == null)
+    {
+        GameLogger.LogWarning("AudioClip이 null입니다", GameLogger.LogCategory.Audio);
+        return; // Graceful degradation
+    }
+
+    audioSource.PlayOneShot(clip);
+}
+
+// ✅ REQUIRED: Throw for required dependencies
+public void Initialize(ICardManager cardManager)
+{
+    if (cardManager == null)
+        throw new ArgumentNullException(nameof(cardManager), "CardManager는 필수입니다");
+
+    this.cardManager = cardManager;
+}
+
+// ✅ REQUIRED: Zenject DI validation
+[Inject]
+public void Construct(IAudioManager audioManager, ICardValidator validator)
+{
+    this.audioManager = audioManager ?? throw new ArgumentNullException(nameof(audioManager));
+    this.validator = validator ?? throw new ArgumentNullException(nameof(validator));
+}
+```
+
+### 3. Korean Localization
+```csharp
+// ✅ All Inspector fields in Korean
+[Header("전투 설정")]
+[SerializeField] private int maxHealth = 100;
+
+[Tooltip("플레이어의 최대 체력입니다")]
+[SerializeField] private int playerMaxHealth = 100;
+```
+
+## 📋 Architecture Patterns
+
+### Zenject DI (NO Singleton)
+```csharp
+// ✅ Use Zenject DI
+public class CoreSystemInstaller : MonoInstaller<CoreSystemInstaller>
+{
+    [SerializeField] private AudioManager audioManager;
+
+    public override void InstallBindings()
+    {
+        Container.Bind<IAudioManager>().FromInstance(audioManager).AsSingle();
+    }
+}
+
+// ❌ DON'T use Singleton
+// public static MyManager Instance { get; private set; } // FORBIDDEN
+```
+
+### DOTween Pro (권장 + 메모리 안전 필수)
+
+#### Basic DOTween Usage
+```csharp
+// ✅ 권장: UI/오브젝트 애니메이션에 DOTween Pro 사용
+transform.DOMove(targetPosition, duration)
+    .SetEase(Ease.OutQuad)
+    .OnComplete(() => GameLogger.LogInfo("이동 완료", GameLogger.LogCategory.UI));
+
+// ⚠️ 허용: 캐릭터 애니메이션은 Unity Animator 사용 가능
+```
+
+#### DOTween Memory Safety (CRITICAL)
+
+```csharp
+// ✅ REQUIRED: Track and cleanup tweens
+public class SafeAnimationController : MonoBehaviour
+{
+    private List<Tween> activeTweens = new List<Tween>();
+
+    public void PlayCardAnimation(Transform cardTransform)
+    {
+        var tween = cardTransform.DOScale(1.2f, 0.3f)
+            .SetEase(Ease.OutBack)
+            .SetAutoKill(true)  // ✅ CRITICAL: Auto-cleanup when complete
+            .OnComplete(() => {
+                activeTweens.Remove(tween);
+                GameLogger.LogInfo("애니메이션 완료", GameLogger.LogCategory.UI);
+            });
+
+        activeTweens.Add(tween);
+    }
+
+    private void OnDisable()
+    {
+        // ✅ CRITICAL: Kill all tweens when component disabled
+        foreach (var tween in activeTweens)
+        {
+            if (tween != null && tween.IsActive())
+                tween.Kill();
+        }
+        activeTweens.Clear();
+    }
+
+    private void OnDestroy()
+    {
+        // ✅ CRITICAL: Kill all tweens when object destroyed
+        foreach (var tween in activeTweens)
+        {
+            if (tween != null && tween.IsActive())
+                tween.Kill();
+        }
+        activeTweens.Clear();
+    }
+}
+```
+
+#### DOTween Sequence Pattern
+
+```csharp
+// ✅ CORRECT: Sequence with proper cleanup
+public class CardAnimationManager : MonoBehaviour
+{
+    private Sequence currentSequence;
+
+    public void PlayCardSequence(Transform card)
+    {
+        // Kill previous sequence if exists
+        currentSequence?.Kill();
+
+        currentSequence = DOTween.Sequence()
+            .Append(card.DOScale(1.2f, 0.2f))
+            .Append(card.DOMove(targetPos, 0.3f))
+            .SetAutoKill(true)  // ✅ Auto-cleanup
+            .OnComplete(() => {
+                currentSequence = null;
+                GameLogger.LogInfo("시퀀스 완료", GameLogger.LogCategory.UI);
+            });
+    }
+
+    private void OnDisable()
+    {
+        currentSequence?.Kill();
+        currentSequence = null;
+    }
+}
+```
+
+#### DOTween Anti-Patterns
+
+```csharp
+// ❌ FORBIDDEN: No cleanup
+public void BadAnimation()
+{
+    transform.DOMove(targetPos, 1f);
+    // Missing: SetAutoKill, OnDisable cleanup
+    // Result: Memory leak on scene change
+}
+
+// ❌ FORBIDDEN: Lambda captures causing GC pressure
+public void BadLambda()
+{
+    for (int i = 0; i < 100; i++)
+    {
+        // ❌ Creates 100 lambda closures
+        transform.DOMove(positions[i], 1f)
+            .OnComplete(() => Debug.Log($"Animation {i} complete"));
+    }
+}
+
+// ✅ CORRECT: Reusable callback
+private TweenCallback cachedCallback;
+
+public void GoodLambda()
+{
+    cachedCallback ??= () => GameLogger.LogInfo("애니메이션 완료", GameLogger.LogCategory.UI);
+
+    transform.DOMove(targetPos, 1f)
+        .OnComplete(cachedCallback);  // ✅ No GC allocation
+}
+```
+
+#### DOTween Best Practices Checklist
+
+```
+✅ REQUIRED for all DOTween usage:
+├── [ ] SetAutoKill(true) called on all tweens
+├── [ ] OnDisable() kills all active tweens
+├── [ ] OnDestroy() kills all active tweens
+├── [ ] Sequences properly cleaned up
+├── [ ] Lambda captures minimized (cache callbacks)
+└── [ ] Tween references tracked in collections
+
+⚠️ WARNING: Scene transitions without cleanup
+→ Tweens continue running in destroyed objects
+→ Causes memory leaks and null reference exceptions
+```
+
+## ⚡ Performance Standards
+
+### Object Pooling
+```csharp
+public class CardPool : MonoBehaviour
+{
+    private Queue<SkillCard> availableCards = new Queue<SkillCard>();
+
+    public SkillCard GetCard()
+    {
+        if (availableCards.Count > 0)
+            return availableCards.Dequeue();
+
+        return Instantiate(cardPrefab, transform);
+    }
+}
+```
+
+### Unity Optimization
+- **Sprite Atlas**: Bundle all sprites
+- **2D Physics**: NO 3D Physics
+- **Draw Calls**: Minimize via batching
+- **Update()**: 가능한 이벤트 기반 사용, 아래 경우만 허용
+  - ✅ Physics 계산 (FixedUpdate)
+  - ✅ Input 폴링 (GetKey, GetAxis 등)
+  - ✅ 실시간 보간 (Lerp, Slerp)
+  - ❌ 타이머 (코루틴/DOTween 사용)
+  - ❌ 주기적 체크 (이벤트 사용)
+
+## 🚫 Strict Prohibitions
+
+### ❌ Architecture Violations
+- SOLID principle violations
+- Circular dependencies
+- Singleton pattern (use Zenject)
+
+### ❌ Performance Violations
+- FindObjectOfType 사용 (Zenject DI 사용 필수)
+- Heavy calculations every frame
+- Unlimited object instantiation
+- GC Alloc 최소화 (Profiler로 주기적 측정)
+
+### ❌ Code Quality Violations
+- Example code generation (unless explicitly requested)
+- Duplicate functionality
+- Dummy data generation
+- AnimationSystem references
+
+## ✅ Required Checklist
+
+- [ ] SOLID principles applied
+- [ ] Existing code reused
+- [ ] Zenject DI pattern used
+- [ ] Performance optimized (pooling, caching)
+- [ ] Exception handling complete
+- [ ] Korean localization applied
+- [ ] Inspector fields in Korean (Header, Tooltip)
+- [ ] XML documentation in Korean
+- [ ] Compilation: 0 warnings, 0 errors

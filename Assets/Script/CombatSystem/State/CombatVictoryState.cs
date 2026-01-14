@@ -1,59 +1,53 @@
 using UnityEngine;
 using System.Collections;
-using Game.CombatSystem.Interface;
-using Game.Utility;
+using Game.CombatSystem.Manager;
+using Game.UtilitySystem;
+using Game.CoreSystem.Utility;
 using Game.CombatSystem;
 
 namespace Game.CombatSystem.State
 {
-    public class CombatVictoryState : ICombatTurnState
+    public class CombatVictoryState
     {
-        private readonly ICombatTurnManager turnManager;
-        private readonly ICombatFlowCoordinator flowCoordinator;
+        private readonly TurnManager turnManager;
+        // CombatSlotManager 제거됨 - 슬롯 관리 기능을 CombatFlowManager로 통합
         private readonly ICoroutineRunner coroutineRunner;
 
         public CombatVictoryState(
-            ICombatTurnManager turnManager,
-            ICombatFlowCoordinator flowCoordinator,
+            TurnManager turnManager,
             ICoroutineRunner coroutineRunner)
         {
             this.turnManager = turnManager;
-            this.flowCoordinator = flowCoordinator;
             this.coroutineRunner = coroutineRunner;
         }
 
         public void EnterState()
         {
-            Debug.Log("<color=cyan>[STATE] CombatVictoryState 진입</color>");
+            GameLogger.LogInfo("CombatVictoryState 진입", GameLogger.LogCategory.Combat);
             CombatEvents.RaiseVictory();
             coroutineRunner.RunCoroutine(HandleVictory());
         }
 
         private IEnumerator HandleVictory()
         {
-            yield return flowCoordinator.PerformVictoryPhase();
+            GameLogger.LogInfo("승리 처리 중...", GameLogger.LogCategory.Combat);
+            yield return new WaitForSeconds(1.0f);
 
-            yield return flowCoordinator.CleanupAfterVictory();
-
-            if (flowCoordinator.CheckHasNextEnemy())
-            {
-                Debug.Log("<color=cyan>[STATE] CombatVictoryState → CombatPrepareState 전이 (다음 적 존재)</color>");
-                var next = turnManager.GetStateFactory().CreatePrepareState();
-                turnManager.RequestStateChange(next);
-            }
-            else
-            {
-                Debug.Log("<color=cyan>[STATE] CombatVictoryState → CombatGameOverState 전이 (모든 적 처치 완료)</color>");
-                var next = turnManager.GetStateFactory().CreateGameOverState();
-                turnManager.RequestStateChange(next);
-            }
+            // 승리 UI 표시 (향후 구현)
+            GameLogger.LogInfo("스테이지 완료 - 승리!", GameLogger.LogCategory.Combat);
+            
+            // 다음 스테이지로 진행하거나 메인 화면으로 복귀 (향후 구현)
+            GameLogger.LogInfo("승리 처리 완료", GameLogger.LogCategory.Combat);
         }
 
+        /// <summary>
+        /// 상태 실행 중 특별한 작업 없음
+        /// </summary>
         public void ExecuteState() { }
 
         public void ExitState()
         {
-            Debug.Log("<color=cyan>[STATE] CombatVictoryState 종료</color>");
+            GameLogger.LogInfo("CombatVictoryState 종료", GameLogger.LogCategory.Combat);
         }
     }
 }

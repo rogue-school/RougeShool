@@ -9,69 +9,342 @@ using Game.CombatSystem.Initialization;
 using Game.CombatSystem.Manager;
 using Game.SkillCardSystem.Executor;
 using Game.SkillCardSystem.Interface;
-using Game.IManager;
-using Game.CombatSystem.Executor;
 using Game.CombatSystem.Utility;
 using Game.CharacterSystem.Manager;
-using Game.SkillCardSystem.Core;
 using Game.SkillCardSystem.Factory;
 using Game.SkillCardSystem.Validator;
+using Game.CoreSystem.Interface;
+using Game.CoreSystem.UI;
+using Game.CoreSystem.Manager;
+using Game.CoreSystem.Utility;
+using Game.SkillCardSystem.Manager;
 using Game.CharacterSystem.Core;
 using Game.CharacterSystem.Interface;
-using Game.Utility.GameFlow;
+using Game.CharacterSystem.Initialization;
+using Game.UtilitySystem.GameFlow;
+using Game.StageSystem.Manager;
+using Game.StageSystem.Interface;
+using Game.StageSystem.State;
 using Game.SkillCardSystem.UI;
 using Game.CombatSystem.State;
 using Game.CombatSystem.Factory;
-using Game.Utility;
 using Game.CombatSystem.DragDrop;
-using Game.CombatSystem.CoolTime;
+using Game.UtilitySystem;
+using Game.CoreSystem.Audio;
 using Game.SkillCardSystem.Runtime;
+using Game.ItemSystem.Interface;
+using Game.ItemSystem.Service;
+using Game.ItemSystem.Service.Reward;
+ 
 
 /// <summary>
-/// 전투 씬에서 사용하는 Zenject 설치자입니다.
-/// 필요한 서비스, 매니저, 상태머신, 슬롯, UI 등을 바인딩합니다.
+/// 전투 씬용 Zenject 설치자 (역할 명확화됨)
+/// DI 바인딩만 담당하고 객체 생성은 다른 시스템에 위임합니다.
 /// </summary>
 public class CombatInstaller : MonoInstaller
 {
-    [Header("카드 UI 프리팹")]
+    [Header("전투 씬 프리팹")]
     [SerializeField] private SkillCardUI cardUIPrefab;
 
-    [Header("턴 시작 버튼 핸들러")]
-    [SerializeField] private TurnStartButtonHandler startButtonHandler;
+    [Header("DI 바인딩 설정")]
+#pragma warning disable CS0414 // 사용하지 않는 필드 경고 억제 (향후 사용 예정)
+    [SerializeField] private bool enableLazyInitialization = true;
+    [SerializeField] private bool enableCircularDependencyCheck = true;
+    [SerializeField] private bool enableAutoObjectCreation = false; // 객체 자동 생성 비활성화
+#pragma warning restore CS0414
+    [SerializeField] private bool enablePerformanceLogging = false;
 
     public override void InstallBindings()
     {
-        BindStateFactories();
-        BindMonoBehaviours();
-        BindServices();
-
-        Container.Bind<TurnContext>().AsSingle();
-
-        BindExecutionContext();
-        BindSlotSystem();
-        BindInitializerSteps();
-        BindSceneLoader();
-        BindUIPrefabs();
-        BindUIHandlers();
-        BindCooldownSystem();
-        BindDeathUI();
+        // 성능 측정 시작
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        
+        // 최적화된 바인딩 순서 (의존성 순서 고려)
+        BindCoreServices();          // 핵심 서비스 (의존성 없음)
+        BindAudioManager();          // 전역 오디오 시스템 바인딩 (BGM/SFX)
+        BindFactories();            // 팩토리 (서비스 의존)
+        BindSlotSystem();           // 슬롯 시스템 (팩토리 의존)
+        BindIntegratedManagers();   // 통합 매니저 (모든 것 의존)
+        BindUIPrefabs();            // UI 프리팹 (매니저 의존)
+        BindCombatStateMachine();   // 전투 상태 머신 (새로운 시스템)
+        BindStageFlowStateMachine();// 스테이지 상태 머신(뼈대) 연결
+        BindItemSystemServices();    // 아이템 시스템 (전역 미바인딩 대비 보강)
+        
+        stopwatch.Stop();
     }
+    
 
-    #region 상태머신
+    #region 통합 시스템 바인딩
 
     /// <summary>
-    /// 전투 상태별 StateFactory 바인딩
+    /// 새로운 통합 매니저들 바인딩
+    /// </summary>
+    private void BindIntegratedManagers()
+    {
+        // PlayerManager 바인딩 - 씬에 있으면 사용, 없으면 자동 생성
+        var playerManager = FindFirstObjectByType<PlayerManager>();
+        if (playerManager != null)
+        {
+            Container.Bind<PlayerManager>().FromInstance(playerManager).AsSingle();
+        }
+        else
+        {
+            // PlayerManager가 없으면 자동 생성
+            var playerManagerGO = new GameObject("PlayerManager");
+            playerManager = playerManagerGO.AddComponent<PlayerManager>();
+            Container.Bind<PlayerManager>().FromInstance(playerManager).AsSingle();
+            // 자동 생성된 컴포넌트에 의존성 주입
+            Container.Inject(playerManager);
+        }
+
+        // EnemyManager 바인딩 - 씬에 있으면 사용, 없으면 자동 생성
+        var enemyManager = FindFirstObjectByType<EnemyManager>();
+        if (enemyManager != null)
+        {
+            Container.Bind<EnemyManager>().FromInstance(enemyManager).AsSingle();
+        }
+        else
+        {
+            // EnemyManager가 없으면 자동 생성
+            var enemyManagerGO = new GameObject("EnemyManager");
+            enemyManager = enemyManagerGO.AddComponent<EnemyManager>();
+            Container.Bind<EnemyManager>().FromInstance(enemyManager).AsSingle();
+            // 자동 생성된 컴포넌트에 의존성 주입
+            Container.Inject(enemyManager);
+        }
+
+        // GameStartupController는 삭제됨 (상태 패턴으로 전환)
+
+        // CombatExecutionManager 바인딩 - PlayerManager와 EnemyManager 이후에 바인딩 (CombatFlowManager보다 먼저)
+        var combatExecutionManager = FindFirstObjectByType<CombatExecutionManager>();
+        if (combatExecutionManager != null)
+        {
+            Container.Bind<ICombatExecutionManager>().FromInstance(combatExecutionManager).AsSingle();
+        }
+        else
+        {
+            // CombatExecutionManager가 없으면 자동 생성
+            Container.BindInterfacesAndSelfTo<CombatExecutionManager>()
+                .FromNewComponentOnNewGameObject()
+                .AsSingle();
+        }
+
+        // CombatFlowManager 바인딩 - CombatExecutionManager 이후에 바인딩
+        var combatFlowManager = FindFirstObjectByType<CombatFlowManager>();
+        if (combatFlowManager != null)
+        {
+            Container.Bind<ICombatFlowManager>().FromInstance(combatFlowManager).AsSingle();
+        }
+        else
+        {
+            // CombatFlowManager가 없으면 자동 생성
+            Container.BindInterfacesAndSelfTo<CombatFlowManager>()
+                .FromNewComponentOnNewGameObject()
+                .AsSingle();
+        }
+
+        // CombatStatsAggregator 바인딩 (전투 통계 수집기)
+        // DontDestroyOnLoad로 설정하여 씬 전환 후에도 유지되도록 함
+        if (!Container.HasBinding<Game.CombatSystem.Manager.CombatStatsAggregator>())
+        {
+            var aggregatorGO = new GameObject("CombatStatsAggregator");
+            DontDestroyOnLoad(aggregatorGO);
+            var aggregator = aggregatorGO.AddComponent<Game.CombatSystem.Manager.CombatStatsAggregator>();
+            
+            Container.BindInterfacesAndSelfTo<Game.CombatSystem.Manager.CombatStatsAggregator>()
+                .FromInstance(aggregator)
+                .AsSingle();
+            
+            Container.QueueForInject(aggregator);
+        }
+    }
+
+
+    /// <summary>
+    /// UI 프리팹 바인딩
+    /// </summary>
+    private void BindUIPrefabs()
+    {
+        if (cardUIPrefab != null)
+        {
+            Container.Bind<SkillCardUI>().FromInstance(cardUIPrefab).AsSingle();
+        }
+        else
+        {
+            GameLogger.LogWarning(" SkillCardUI 프리팹이 설정되지 않았습니다.");
+        }
+    }
+
+    /// <summary>
+    /// 아이템 시스템 서비스 바인딩 (코어 전역 바인딩 누락 대비 안전망)
+    /// </summary>
+    private void BindItemSystemServices()
+    {
+        // IItemService: 전역에서 찾고 없으면 생성
+        var itemService = FindFirstObjectByType<ItemService>(FindObjectsInactive.Include);
+        if (itemService == null)
+        {
+            var go = new GameObject("ItemService");
+            DontDestroyOnLoad(go);
+            itemService = go.AddComponent<ItemService>();
+        }
+        Container.Bind<IItemService>().FromInstance(itemService).AsSingle();
+
+        // IRewardGenerator: 순수 서비스 싱글톤 (중복 바인딩 방지)
+        if (!Container.HasBinding<IRewardGenerator>())
+        {
+            Container.Bind<IRewardGenerator>().To<RewardGenerator>().AsSingle();
+        }
+    }
+
+    /// <summary>
+    /// 팩토리 및 서비스 바인딩
+    /// </summary>
+    private void BindFactories()
+    {
+        
+        // SkillCardFactory 바인딩 (인터페이스와 구체 클래스 동시 바인딩)
+        Container.BindInterfacesAndSelfTo<SkillCardFactory>().AsSingle();
+        
+        // CardCirculationSystem 바인딩
+        Container.Bind<ICardCirculationSystem>().To<CardCirculationSystem>().AsSingle();
+        
+        // TurnBasedCardManager 바인딩 (삭제됨 - CardCirculationSystem에 통합)
+        // Container.Bind<ITurnBasedCardManager>().To<TurnBasedCardManager>().AsSingle();
+        
+        // PlayerHandManager 바인딩 - PlayerManager 이후에 바인딩
+        Container.BindInterfacesAndSelfTo<PlayerHandManager>()
+            .FromNewComponentOnNewGameObject().AsSingle();
+        
+        // PlayerDeckManager 바인딩 - PlayerManager 이후에 바인딩
+        Container.BindInterfacesAndSelfTo<PlayerDeckManager>()
+            .FromNewComponentOnNewGameObject().AsSingle();
+        
+        // TurnContext 바인딩 (CharacterDeathHandler가 의존함)
+        Container.Bind<TurnContext>().AsSingle();
+        
+        // IStageManager 바인딩 - 씬에 있으면 사용, 없으면 자동 생성
+        var stageManager = FindFirstObjectByType<StageManager>();
+        if (stageManager != null)
+        {
+            Container.Bind<IStageManager>().FromInstance(stageManager).AsSingle();
+        }
+        else
+        {
+            // StageManager가 없으면 자동 생성
+            var stageManagerGO = new GameObject("StageManager");
+            stageManager = stageManagerGO.AddComponent<StageManager>();
+            Container.Bind<IStageManager>().FromInstance(stageManager).AsSingle();
+        }
+        
+        // CardDropService 바인딩 (CombatExecutionManager 의존성 추가)
+        // 주입 의존성은 사전 바인딩된 타입으로 자동 해결되도록 단순 바인딩
+        // (Install 중 Resolve 방지, 의존성 순서 문제 예방)
+        Container.Bind<CardDropService>().AsSingle();
+        
+        // VFXManager 바인딩 - 씬에 있으면 사용, 없으면 자동 생성
+        var vfxManager = FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
+        if (vfxManager != null)
+        {
+            Container.Bind<Game.VFXSystem.Manager.VFXManager>().FromInstance(vfxManager).AsSingle();
+        }
+        else
+        {
+            // VFXManager가 없으면 자동 생성
+            var vfxManagerGO = new GameObject("VFXManager");
+            vfxManager = vfxManagerGO.AddComponent<Game.VFXSystem.Manager.VFXManager>();
+            Container.Bind<Game.VFXSystem.Manager.VFXManager>().FromInstance(vfxManager).AsSingle();
+            // 자동 생성된 컴포넌트에 의존성 주입
+            Container.Inject(vfxManager);
+        }
+
+        // TurnManager 바인딩 - 자동 생성으로 최적화
+        Container.BindInterfacesAndSelfTo<TurnManager>()
+            .FromNewComponentOnNewGameObject().AsSingle();
+
+        // 새로운 리팩토링된 클래스들 바인딩
+        Container.Bind<ITurnController>().To<TurnController>().AsSingle();
+
+        Container.Bind<ICardSlotRegistry>().To<CardSlotRegistry>().AsSingle();
+
+        Container.Bind<ISlotMovementController>().To<SlotMovementController>().AsSingle();
+    }
+
+    #endregion
+
+    #region Combat State Machine (전투 상태 머신)
+
+    /// <summary>
+    /// 전투 상태 머신 바인딩 및 초기화
+    /// </summary>
+    private void BindCombatStateMachine()
+    {
+        // CombatStateMachine 컴포넌트를 보장
+        var existing = FindFirstObjectByType<CombatStateMachine>();
+        CombatStateMachine stateMachine;
+
+        if (existing != null)
+        {
+            stateMachine = existing;
+        }
+        else
+        {
+            // 자동 생성
+            var stateMachineGO = new GameObject("CombatStateMachine");
+            stateMachine = stateMachineGO.AddComponent<CombatStateMachine>();
+        }
+
+        // Zenject 바인딩
+        Container.Bind<CombatStateMachine>().FromInstance(stateMachine).AsSingle();
+
+        // 의존성 주입 예약 (설치 완료 후 자동 주입됨)
+        Container.QueueForInject(stateMachine);
+    }
+
+    #endregion
+
+    #region Stage Flow (상태 머신)
+
+    private void BindStageFlowStateMachine()
+    {
+        // StageFlowStateMachine 컴포넌트를 보장
+        var existing = FindFirstObjectByType<StageFlowStateMachine>();
+        StageFlowStateMachine flow;
+        if (existing != null)
+        {
+            flow = existing;
+        }
+        else
+        {
+            flow = new GameObject("StageFlowStateMachine").AddComponent<StageFlowStateMachine>();
+        }
+
+        // StageManager를 찾아 초기화
+        var stageMgr = FindFirstObjectByType<StageManager>();
+        if (stageMgr != null)
+        {
+            flow.Initialize(stageMgr);
+        }
+
+        // DI는 필요 없으므로 컨테이너 바인딩은 생략
+    }
+
+    #endregion
+
+    #region 상태머신 (레거시)
+
+    /// <summary>
+    /// 전투 상태별 StateFactory 바인딩 (레거시)
     /// </summary>
     private void BindStateFactories()
     {
         Container.Bind<IFactory<CombatPrepareState>>().To<CombatPrepareStateFactory>().AsTransient();
         Container.Bind<IFactory<CombatPlayerInputState>>().To<CombatPlayerInputStateFactory>().AsTransient();
-        Container.Bind<IFactory<CombatFirstAttackState>>().To<CombatFirstAttackStateFactory>().AsTransient();
-        Container.Bind<IFactory<CombatSecondAttackState>>().To<CombatSecondAttackStateFactory>().AsTransient();
+        Container.Bind<IFactory<CombatAttackState>>().To<CombatAttackStateFactory>().AsTransient();
         Container.Bind<IFactory<CombatResultState>>().To<CombatResultStateFactory>().AsTransient();
         Container.Bind<IFactory<CombatVictoryState>>().To<CombatVictoryStateFactory>().AsTransient();
         Container.Bind<IFactory<CombatGameOverState>>().To<CombatGameOverStateFactory>().AsTransient();
-        Container.Bind<ICombatStateFactory>().To<CombatStateFactory>().AsSingle();
+        // Container.Bind<ICombatStateFactory>().To<CombatStateFactory>().AsSingle(); // 삭제됨
     }
 
     #endregion
@@ -83,19 +356,56 @@ public class CombatInstaller : MonoInstaller
     /// </summary>
     private void BindMonoBehaviours()
     {
-        BindMono<ICombatFlowCoordinator, CombatFlowCoordinator>();
-        BindMono<IPlayerManager, PlayerManager>();
-        BindMono<IEnemyManager, EnemyManager>();
-        BindMono<IEnemyHandManager, EnemyHandManager>();
-        BindMono<IPlayerHandManager, PlayerHandManager>();
-        BindMono<ICombatSlotManager, CombatSlotManager>();
-        BindMono<IVictoryManager, VictoryManager>();
-        BindMono<IGameOverManager, GameOverManager>();
-        BindMono<IEnemySpawnerManager, EnemySpawnerManager>();
-        BindMono<IStageManager, StageManager>();
-        BindMono<ICharacterDeathListener, CharacterDeathHandler>();
-        BindMono<ICoroutineRunner, CoroutineRunner>();
-        BindMonoInterfaces<CombatTurnManager>();
+        // CombatSlotManager 제거됨 - 슬롯 관리 기능을 CombatFlowManager로 통합
+
+        // TurnManager는 BindFactories()에서 바인딩됨
+
+        // CombatExecutionManager 바인딩 (SlotExecutionSystem 대신 CombatExecutionManager 사용)
+        var executionManager = FindFirstObjectByType<CombatExecutionManager>();
+        if (executionManager != null)
+        {
+            Container.Bind<CombatExecutionManager>().FromInstance(executionManager).AsSingle();
+            Container.Bind<ICombatExecutionManager>().FromInstance(executionManager).AsSingle();
+            GameLogger.LogInfo(" CombatExecutionManager 바인딩 완료");
+        }
+        else
+        {
+            // CombatExecutionManager가 없으면 생성
+            var executionManagerGO = new GameObject("CombatExecutionManager");
+            executionManager = executionManagerGO.AddComponent<CombatExecutionManager>();
+            Container.Bind<CombatExecutionManager>().FromInstance(executionManager).AsSingle();
+            Container.Bind<ICombatExecutionManager>().FromInstance(executionManager).AsSingle();
+            GameLogger.LogInfo(" CombatExecutionManager 생성 및 바인딩 완료");
+        }
+
+        // 기존 매니저들 바인딩
+        // PlayerManager는 BindFactories()에서 바인딩됨 (씬에서 찾기)
+        // PlayerHandManager는 BindFactories()에서 바인딩됨
+        
+        // EnemyManager 바인딩 - 씬에 있으면 사용, 없으면 자동 생성
+        var enemyManager = FindFirstObjectByType<EnemyManager>();
+        if (enemyManager != null)
+        {
+            Container.BindInterfacesAndSelfTo<EnemyManager>().FromInstance(enemyManager).AsSingle();
+            GameLogger.LogInfo(" EnemyManager 바인딩 완료 (씬에서 찾기)");
+        }
+        else
+        {
+            // EnemyManager가 없으면 자동 생성
+            var enemyManagerGO = new GameObject("EnemyManager");
+            enemyManager = enemyManagerGO.AddComponent<EnemyManager>();
+            Container.BindInterfacesAndSelfTo<EnemyManager>().FromInstance(enemyManager).AsSingle();
+            GameLogger.LogInfo(" EnemyManager 자동 생성 및 바인딩 완료");
+        }
+        
+        // IStageManager는 BindFactories()에서 바인딩됨
+        
+        // CharacterDeathHandler 바인딩 - 자동 생성으로 최적화
+        Container.BindInterfacesAndSelfTo<CharacterDeathHandler>()
+            .FromNewComponentOnNewGameObject().AsSingle();
+        
+        // CoroutineRunner는 CoreSystemInstaller에서 바인딩됨
+        // PlayerCharacterSelectionManager는 CoreSystemInstaller에서 바인딩됨
     }
 
     #endregion
@@ -103,28 +413,65 @@ public class CombatInstaller : MonoInstaller
     #region 서비스 바인딩
 
     /// <summary>
-    /// 주요 서비스 클래스 바인딩
+    /// 핵심 서비스 클래스 바인딩 (중복 제거됨)
     /// </summary>
-    private void BindServices()
+    private void BindCoreServices()
     {
-        Container.Bind<ICombatPreparationService>().To<CombatPreparationService>().AsSingle();
-        Container.Bind<ICardPlacementService>().To<CardPlacementService>().AsSingle();
-        Container.Bind<ITurnCardRegistry>().To<TurnCardRegistry>().AsSingle();
-        Container.Bind<ISlotSelector>().To<SlotSelector>().AsSingle();
-        Container.BindInterfacesTo<CombatExecutorService>().AsSingle();
-        Container.Bind<ICardExecutor>().To<CardExecutor>().AsSingle();
-        Container.Bind<ICardExecutionContextProvider>().To<CardExecutionContextProvider>().AsSingle();
-        Container.Bind<ICardEffectCommandFactory>().To<CardEffectCommandFactory>().AsSingle();
-        Container.Bind<ICardExecutionValidator>().To<DefaultCardExecutionValidator>().AsSingle();
-        Container.Bind<IEnemySpawnValidator>().To<DefaultEnemySpawnValidator>().AsSingle();
-        Container.Bind<IPlayerInputController>().To<PlayerInputController>().AsSingle();
-        Container.Bind<ISkillCardFactory>().To<SkillCardFactory>().AsSingle();
-        Container.Bind<ICardDropValidator>().To<DefaultCardDropValidator>().AsSingle();
-        Container.Bind<ICardRegistrar>().To<DefaultCardRegistrar>().AsSingle();
-        Container.Bind<ICardReplacementHandler>().To<PlayerCardReplacementHandler>().AsSingle();
-        Container.Bind<CardDropService>().AsSingle();
-        Container.Bind<ITurnStartConditionChecker>().To<DefaultTurnStartConditionChecker>().AsSingle();
-        Container.Bind<ICoolTimeHandler>().To<CoolTimeHandler>().AsSingle();
+        // 서비스들을 배열로 관리하여 반복문으로 처리
+        var services = new (System.Type interfaceType, System.Type implementationType)[]
+        {
+            // (typeof(ICardPlacementService), typeof(CardPlacementService)), // 삭제됨
+            // (typeof(ISlotSelector), typeof(SlotSelector)), // 삭제됨
+            // (typeof(ICardExecutor), typeof(CardExecutor)), // 삭제됨
+            // (typeof(ICardExecutionContextProvider), typeof(CardExecutionContextProvider)), // 삭제됨
+            (typeof(ICardEffectCommandFactory), typeof(CardEffectCommandFactory)),
+            (typeof(ICardValidator), typeof(DefaultCardExecutionValidator)), // ICardExecutionValidator -> ICardValidator로 변경
+            // (typeof(IEnemySpawnValidator), typeof(DefaultEnemySpawnValidator)), // 삭제됨
+            // (typeof(IPlayerInputController), typeof(PlayerInputController)), // 삭제됨
+            // (typeof(ICardDropValidator), typeof(DefaultCardDropValidator)), // 삭제됨
+            // (typeof(ICardRegistrar), typeof(DefaultCardRegistrar)), // 삭제됨
+            // (typeof(ICardReplacementHandler), typeof(PlayerCardReplacementHandler)), // 삭제됨
+            // (typeof(ITurnStartConditionChecker), typeof(DefaultTurnStartConditionChecker)) // 삭제됨
+        };
+
+        foreach (var (interfaceType, implementationType) in services)
+        {
+            Container.Bind(interfaceType).To(implementationType).AsSingle();
+            
+            if (enablePerformanceLogging)
+            {
+                GameLogger.LogInfo($"{interfaceType.Name} 바인딩 완료", GameLogger.LogCategory.Combat);
+            }
+        }
+
+        // 코어 시스템 매니저들 바인딩 (DontDestroyOnLoad로 전역에서 찾기)
+        var gameStateManager = FindFirstObjectByType<GameStateManager>(FindObjectsInactive.Include);
+        if (gameStateManager != null)
+        {
+            Container.Bind<IGameStateManager>().FromInstance(gameStateManager).AsSingle();
+        }
+        else
+        {
+            GameLogger.LogWarning(" GameStateManager를 찾을 수 없습니다!", GameLogger.LogCategory.Combat);
+        }
+
+        var settingsManager = FindFirstObjectByType<SettingsManager>(FindObjectsInactive.Include);
+        if (settingsManager != null)
+        {
+            Container.Bind<SettingsManager>().FromInstance(settingsManager).AsSingle();
+        }
+        else
+        {
+            GameLogger.LogWarning(" SettingsManager를 찾을 수 없습니다!", GameLogger.LogCategory.Combat);
+        }
+
+        // 특별한 경우들
+        // Container.Bind<CardDropService>().AsSingle(); // 중복 바인딩 제거 - BindFactories에서 의존성 포함 바인딩
+        
+        if (enablePerformanceLogging)
+        {
+            GameLogger.LogInfo("핵심 서비스 바인딩 완료", GameLogger.LogCategory.Combat);
+        }
     }
 
     #endregion
@@ -149,20 +496,33 @@ public class CombatInstaller : MonoInstaller
     /// </summary>
     private void BindSlotSystem()
     {
-        var slotRegistry = Object.FindFirstObjectByType<SlotRegistry>();
-        if (slotRegistry == null)
+        // 슬롯 레지스트리들을 DI 컨테이너에서 자동 생성
+        Container.Bind<HandSlotRegistry>().AsSingle();
+        Container.Bind<CombatSlotRegistry>().AsSingle();
+        Container.Bind<CharacterSlotRegistry>().AsSingle();
+        
+        // SlotRegistry는 MonoBehaviour이므로 씬에서 찾아서 바인딩
+        var slotRegistry = FindFirstObjectByType<SlotRegistry>();
+        if (slotRegistry != null)
         {
-            Debug.LogError("[CombatInstaller] SlotRegistry를 찾을 수 없습니다.");
-            return;
+            Container.Bind<SlotRegistry>().FromInstance(slotRegistry).AsSingle();
+            GameLogger.LogInfo(" SlotRegistry 바인딩 완료");
+        }
+        else
+        {
+            // SlotRegistry가 없으면 자동 생성
+            Container.BindInterfacesAndSelfTo<SlotRegistry>()
+                .FromNewComponentOnNewGameObject().AsSingle();
+            GameLogger.LogInfo(" SlotRegistry 자동 생성 및 바인딩 완료");
         }
 
-        Container.Bind<SlotRegistry>().FromInstance(slotRegistry).AsSingle();
-        Container.Bind<ISlotRegistry>().FromInstance(slotRegistry).AsSingle();
-        Container.Bind<ICombatSlotRegistry>().FromInstance(slotRegistry.GetCombatSlotRegistry()).AsSingle();
-        Container.Bind<IHandSlotRegistry>().FromInstance(slotRegistry.GetHandSlotRegistry()).AsSingle();
-        Container.Bind<ICharacterSlotRegistry>().FromInstance(slotRegistry.GetCharacterSlotRegistry()).AsSingle();
+        // DefaultTurnStartConditionChecker 바인딩
+        Container.Bind<DefaultTurnStartConditionChecker>().AsSingle();
 
-        Container.BindInterfacesAndSelfTo<SlotInitializer>().FromComponentInHierarchy().AsSingle();
+        // CardDropRegistrar 바인딩
+        Container.Bind<CardDropRegistrar>().AsSingle();
+
+        GameLogger.LogInfo(" 슬롯 시스템 바인딩 완료");
     }
 
     #endregion
@@ -174,14 +534,13 @@ public class CombatInstaller : MonoInstaller
     /// </summary>
     private void BindInitializerSteps()
     {
-        BindMonoInterfaces<SlotInitializationStep>();
-        BindMonoInterfaces<FlowCoordinatorInitializationStep>();
-        BindMonoInterfaces<PlayerCharacterInitializer>();
-        BindMonoInterfaces<PlayerSkillCardInitializer>();
-        BindMonoInterfaces<EnemyCharacterInitializer>();
-        BindMonoInterfaces<EnemyHandInitializer>();
-
-        Container.Bind<CombatStartupManager>().FromComponentInHierarchy().AsSingle();
+        // Zenject DI가 자동으로 FromComponentInHierarchy()로 바인딩
+        // Container.Bind<ICombatInitializerStep>().To<Game.CombatSystem.Intialization.SlotInitializationStep>().AsSingle(); // 삭제됨
+        // Container.BindInterfacesAndSelfTo<PlayerCharacterInitializer>().FromComponentInHierarchy().AsSingle(); // 삭제됨
+        Container.BindInterfacesAndSelfTo<PlayerSkillCardInitializer>().FromComponentInHierarchy().AsSingle();
+        Container.BindInterfacesAndSelfTo<EnemyCharacterInitializer>().FromComponentInHierarchy().AsSingle();
+        
+        GameLogger.LogInfo(" 초기화 스텝들 바인딩 완료");
     }
 
     #endregion
@@ -190,71 +549,145 @@ public class CombatInstaller : MonoInstaller
 
     private void BindSceneLoader()
     {
-        var loader = Object.FindFirstObjectByType<SceneLoader>();
-        if (loader == null)
+        // SceneTransitionManager는 MonoBehaviour이므로 씬에서 찾아야 함
+        var transitionManager = FindFirstObjectByType<SceneTransitionManager>();
+        if (transitionManager == null)
         {
-            Debug.LogError("[CombatInstaller] SceneLoader가 없습니다.");
+            GameLogger.LogError(" SceneTransitionManager를 씬에서 찾을 수 없습니다.");
             return;
         }
 
-        Container.Bind<ISceneLoader>().FromInstance(loader).AsSingle();
+        // ISceneLoader 인터페이스로 바인딩
+        Container.Bind<ISceneLoader>().FromInstance(transitionManager).AsSingle();
+        Container.Bind<ISceneTransitionManager>().FromInstance(transitionManager).AsSingle();
+        
+        GameLogger.LogInfo(" 씬 로더 바인딩 완료");
     }
 
     #endregion
 
     #region UI 바인딩
 
-    /// <summary>
-    /// 카드 UI 프리팹 바인딩
-    /// </summary>
-    private void BindUIPrefabs()
-    {
-        if (cardUIPrefab == null)
-        {
-            Debug.LogWarning("[CombatInstaller] cardUIPrefab이 할당되지 않았습니다.");
-            return;
-        }
-
-        Container.Bind<SkillCardUI>().FromInstance(cardUIPrefab).AsSingle();
-    }
 
     /// <summary>
-    /// UI 핸들러 (버튼 등) 바인딩
+    /// UI 핸들러 바인딩 (즉시 실행 시스템에서는 스타트 버튼 불필요)
     /// </summary>
     private void BindUIHandlers()
     {
-        if (startButtonHandler == null)
-        {
-            Debug.LogError("[CombatInstaller] startButtonHandler가 인스펙터에 할당되지 않았습니다.");
-            return;
-        }
-
-        Container.Bind<TurnStartButtonHandler>().FromInstance(startButtonHandler).AsSingle();
+        // 새로운 즉시 실행 시스템에서는 스타트 버튼이 필요하지 않음
+        // 필요시 다른 UI 핸들러 바인딩을 여기에 추가
     }
 
     #endregion
 
-    #region 쿨타임 시스템
+    #region 카드 순환 시스템
 
-    private void BindCooldownSystem()
+    private void BindCardCirculationSystem()
     {
-        Container.Bind<SkillCardCooldownSystem>().AsSingle();
+        GameLogger.LogInfo(" BindCardCirculationSystem 호출 시작");
+        
+        // DI 서비스로 바인딩 (MonoBehaviour 제거됨)
+        Container.Bind<ICardCirculationSystem>().To<CardCirculationSystem>().AsSingle();
+        // Container.Bind<ITurnBasedCardManager>().To<TurnBasedCardManager>().AsSingle(); // 삭제됨
+        
+        GameLogger.LogInfo(" 카드 순환 시스템 바인딩 완료");
     }
 
     #endregion
 
-    #region 사망 UI
+    #region 애니메이션 시스템
 
-    private void BindDeathUI()
+    /// <summary>
+    /// 애니메이션 시스템 바인딩
+    /// </summary>
+    private void BindAnimationFacade()
     {
-        var deathUI = Object.FindFirstObjectByType<DeathUIManager>();
-        if (deathUI == null)
-        {
-            Debug.LogError("[CombatInstaller] DeathUIManager를 씬에서 찾지 못했습니다.");
-            return;
-        }
+        GameLogger.LogInfo(" BindAnimationFacade 호출 시작");
+        
+        // AnimationFacade를 씬에서 찾기
+        // AnimationFacade 바인딩 제거 (AnimationSystem 제거로 인해 비활성화)
+        GameLogger.LogInfo("AnimationFacade 바인딩을 건너뜁니다.", GameLogger.LogCategory.Combat);
+    }
 
-        Container.Bind<DeathUIManager>().FromInstance(deathUI).AsSingle();
+    /// <summary>
+    /// 저장 시스템 바인딩
+    /// </summary>
+    /// <summary>
+    /// 오디오 시스템 바인딩
+    /// </summary>
+    private void BindAudioManager()
+    {
+        // AudioManager를 씬에서 찾기
+        var audioManager = FindFirstObjectByType<AudioManager>();
+        
+        if (audioManager == null)
+        {
+            GameLogger.LogWarning(" AudioManager를 씬에서 찾을 수 없습니다. null로 바인딩합니다.");
+            // IAudioManager를 null로 바인딩
+            Container.Bind<IAudioManager>().FromInstance(null).AsSingle();
+        }
+        else
+        {
+            // IAudioManager 인터페이스로 바인딩
+            Container.Bind<IAudioManager>().FromInstance(audioManager).AsSingle();
+        }
+    }
+
+    /// <summary>
+    /// 코루틴 러너 바인딩
+    /// </summary>
+    private void BindCoroutineRunner()
+    {
+        GameLogger.LogInfo(" BindCoroutineRunner 호출 시작");
+        
+        // CoroutineRunner를 씬에서 찾기
+        var coroutineRunner = FindFirstObjectByType<CoroutineRunner>();
+        
+        if (coroutineRunner == null)
+        {
+            GameLogger.LogWarning(" CoroutineRunner를 씬에서 찾을 수 없습니다. null로 바인딩합니다.");
+            // ICoroutineRunner를 null로 바인딩
+            Container.Bind<ICoroutineRunner>().FromInstance(null).AsSingle();
+        }
+        else
+        {
+            GameLogger.LogInfo($"[CombatInstaller] CoroutineRunner 발견: {coroutineRunner.name}", GameLogger.LogCategory.Combat);
+            
+            // ICoroutineRunner 인터페이스로 바인딩
+            Container.Bind<ICoroutineRunner>().FromInstance(coroutineRunner).AsSingle();
+        }
+        
+        GameLogger.LogInfo(" 코루틴 러너 바인딩 완료");
+    }
+
+    /// <summary>
+    /// 슬롯 초기화기 바인딩
+    /// </summary>
+    private void BindSlotInitializer()
+    {
+        GameLogger.LogInfo(" BindSlotInitializer 호출 시작");
+        
+        // SlotInitializer가 제거되었으므로 바인딩 건너뜀
+        GameLogger.LogInfo(" SlotInitializer가 제거되어 바인딩을 건너뜁니다.");
+        
+        GameLogger.LogInfo(" 슬롯 초기화기 바인딩 완료");
+    }
+
+    #endregion
+
+    #region 덱 관리 시스템
+
+    /// <summary>
+    /// 덱 관리 관련 시스템 바인딩
+    /// </summary>
+    private void BindDeckManagementSystem()
+    {
+        GameLogger.LogInfo(" 덱 관리 시스템 바인딩 시작");
+        
+        // PlayerDeckManager는 BindFactories()에서 자동 생성으로 바인딩됨
+        // 여기서는 추가 설정만 수행
+        
+        GameLogger.LogInfo(" 덱 관리 시스템 바인딩 완료");
     }
 
     #endregion
@@ -275,6 +708,42 @@ public class CombatInstaller : MonoInstaller
     private void BindMonoInterfaces<T>() where T : Component
     {
         Container.BindInterfacesAndSelfTo<T>().FromComponentInHierarchy().AsSingle();
+    }
+
+
+    /// <summary>
+    /// 캐릭터 시스템 관련 컴포넌트들을 바인딩합니다.
+    /// </summary>
+    private void BindCharacterSystem()
+    {
+        GameLogger.LogInfo(" 캐릭터 시스템 바인딩 시작");
+        
+        // PlayerResourceManager 바인딩 (삭제됨 - PlayerManager에 통합)
+        // var playerResourceManager = FindFirstObjectByType<PlayerResourceManager>();
+        // if (playerResourceManager != null)
+        // {
+        //     Container.Bind<PlayerResourceManager>().FromInstance(playerResourceManager).AsSingle();
+        //     GameLogger.LogInfo(" PlayerResourceManager 바인딩 완료");
+        // }
+        // else
+        // {
+        //     GameLogger.LogWarning(" PlayerResourceManager를 찾을 수 없습니다.");
+        // }
+        
+        // GameStateManager 바인딩 (DontDestroyOnLoad로 유지되는 인스턴스)
+        var gameStateManager = FindFirstObjectByType<GameStateManager>();
+        if (gameStateManager != null)
+        {
+            Container.Bind<IGameStateManager>().FromInstance(gameStateManager).AsSingle();
+            Container.Bind<GameStateManager>().FromInstance(gameStateManager).AsSingle();
+            GameLogger.LogInfo(" GameStateManager 바인딩 완료");
+        }
+        else
+        {
+            GameLogger.LogWarning(" GameStateManager를 찾을 수 없습니다.");
+        }
+        
+        GameLogger.LogInfo(" 캐릭터 시스템 바인딩 완료");
     }
 
     #endregion

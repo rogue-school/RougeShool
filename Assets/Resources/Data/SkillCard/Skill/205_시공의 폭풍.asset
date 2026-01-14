@@ -1,0 +1,83 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63917f595383ae84bafad72d7862ecd5, type: 3}
+  m_Name: "205_\uC2DC\uACF5\uC758 \uD3ED\uD48D"
+  m_EditorClassIdentifier: 
+  cardId: 205
+  displayName: "\uC2DC\uACF5\uC758 \uD3ED\uD48D"
+  displayNameKO: 
+  description: 
+  artwork: {fileID: 4393669949365493713, guid: 543b660a4ab671b40bc1afc708994c4e, type: 3}
+  presentation:
+    sfxClip: {fileID: 0}
+    visualEffectPrefab: {fileID: 0}
+  configuration:
+    hasDamage: 0
+    damageConfig:
+      baseDamage: 0
+      hits: 1
+      ignoreGuard: 0
+      ignoreCounter: 0
+      useRandomDamage: 0
+      minDamage: 0
+      maxDamage: 0
+      sfxClip: {fileID: 0}
+      visualEffectPrefab: {fileID: 0}
+    hasResource: 0
+    resourceConfig:
+      cost: 0
+    hasEffects: 1
+    effects:
+    - effectSO: {fileID: 11400000, guid: dc8819676ea8be44b881d75cde85d2a4, type: 2}
+      useCustomSettings: 1
+      customSettings:
+        damageAmount: 0
+        damageHits: 1
+        ignoreGuard: 0
+        ignoreCounter: 0
+        bleedAmount: 0
+        bleedDuration: 0
+        bleedIcon: {fileID: 0}
+        bleedActivateEffectPrefab: {fileID: 0}
+        bleedActivateSfxClip: {fileID: 0}
+        bleedPerTurnEffectPrefab: {fileID: 0}
+        bleedPerTurnSfxClip: {fileID: 0}
+        counterDuration: 1
+        counterIcon: {fileID: 0}
+        counterActivateEffectPrefab: {fileID: 0}
+        counterActivateSfxClip: {fileID: 0}
+        guardDuration: 1
+        guardIcon: {fileID: 0}
+        guardActivateEffectPrefab: {fileID: 0}
+        guardActivateSfxClip: {fileID: 0}
+        guardBlockEffectPrefab: {fileID: 0}
+        guardBlockSfxClip: {fileID: 0}
+        stunDuration: 1
+        stunIcon: {fileID: 0}
+        healAmount: 0
+        healEffectPrefab: {fileID: 0}
+        healSfxClip: {fileID: 0}
+        drawCount: 0
+        resourceDelta: 0
+        resourceGainSfxClip: {fileID: 0}
+        stackIncreasePerUse: 1
+        maxStacks: 5
+        targetCardId: 
+        invincibilityDuration: 2
+        cloneHP: 10
+        spaceTimeReversalTurnsAgo: 3
+        threadOfFateDuration: 1
+        stormOfSpaceTimeTargetDamage: 30
+        stormOfSpaceTimeDuration: 4
+      executionOrder: 0
+    ownerPolicy: 0
+  currentAttackPowerStacks: 0

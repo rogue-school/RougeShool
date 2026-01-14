@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 861458062e34fcd4685dff11b945e1b9, type: 3}
+  m_Name: "\uB808\uC774 \uC559 \uB85C\uC988\uBCA8"
+  m_EditorClassIdentifier: 
+  <DisplayName>k__BackingField: "\uB808\uBBF8 \uC559 \uB85C\uC988\uBCA8"
+  <MaxHP>k__BackingField: 10
+  <IndexIcon>k__BackingField: {fileID: -8438309808490066926, guid: c60021cbd08b39b41a7207428e85e6fb, type: 3}
+  <PortraitPrefab>k__BackingField: {fileID: 751987938129930587, guid: 4a2ee47c03e65124996f499e8027a2a3, type: 3}
+  <Prefab>k__BackingField: {fileID: 7769799778275336730, guid: 2c6e844c91775424681f573a6951211e, type: 3}
+  <EnemyDeck>k__BackingField: {fileID: 11400000, guid: 45e2110f3ced1b84ea9a3665b8b5e78e, type: 2}
+  <CharacterEffects>k__BackingField:
+  - effectSO: {fileID: 11400000, guid: f3eb12010e56c0c4390cd56a0ea57ef8, type: 2}
+    useCustomSettings: 1
+    customSettings:
+      healthThreshold: 0.5
+      summonTarget: {fileID: 11400000, guid: e3919db64768fa44f92e4de1af2055a2, type: 2}
+      skillHealthThreshold: 30
+      useSkillHealthRatio: 0
+      skillCardDefinition: {fileID: 0}
+      skillCardId: 
+      stormOfSpaceTimeTargetDamage: 30
+      stormOfSpaceTimeDuration: 3
+    priority: 0
+  <Phases>k__BackingField: []

@@ -1,73 +1,284 @@
-using UnityEngine;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 using Game.SkillCardSystem.Data;
-using Game.SkillCardSystem.Effects;
-using Game.SkillCardSystem.Interface;
 using Game.SkillCardSystem.Runtime;
+using Game.SkillCardSystem.Interface;
+using Game.SkillCardSystem.Effect;
+using Game.CombatSystem.Interface;
+using Game.CoreSystem.Utility;
+using Game.CoreSystem.Interface;
+using Zenject;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace Game.SkillCardSystem.Factory
 {
     /// <summary>
-    /// 스킬 카드 런타임 인스턴스를 생성하는 팩토리 클래스입니다.
-    /// <para>SRP: 카드 인스턴스 생성만 담당</para>
-    /// <para>DIP: SkillCardData와 Effect 데이터에 의존</para>
+    /// 스킬카드 생성을 담당하는 팩토리 클래스입니다.
+    /// 새로운 통합 구조를 사용하여 카드를 생성합니다.
     /// </summary>
     public class SkillCardFactory : ISkillCardFactory
     {
+        private readonly IAudioManager audioManager;
+        private readonly Game.VFXSystem.Manager.VFXManager vfxManager;
+
+        private static readonly Dictionary<string, SkillCardDefinition> _cachedDefinitions = new Dictionary<string, SkillCardDefinition>();
+        private static readonly HashSet<string> _loadingDefinitions = new HashSet<string>();
+
+        [Inject]
+        public SkillCardFactory(IAudioManager audioManager, [InjectOptional] Game.VFXSystem.Manager.VFXManager vfxManager = null)
+        {
+            this.audioManager = audioManager;
+            this.vfxManager = vfxManager;
+        }
         /// <summary>
-        /// 적 캐릭터용 스킬 카드 런타임 인스턴스를 생성합니다.
+        /// 카드 정의로부터 스킬카드를 생성합니다.
         /// </summary>
-        /// <param name="data">카드 데이터</param>
-        /// <param name="effects">카드 효과 리스트</param>
-        /// <returns>생성된 적 카드 런타임 인스턴스</returns>
-        public ISkillCard CreateEnemyCard(SkillCardData data, List<SkillCardEffectSO> effects, string ownerCharacterName)
+        /// <param name="definition">카드 정의</param>
+        /// <param name="owner">소유자</param>
+        /// <param name="ownerCharacterName">소유 캐릭터 이름</param>
+        /// <returns>생성된 스킬카드</returns>
+        public ISkillCard CreateFromDefinition(SkillCardDefinition definition, Owner owner, string ownerCharacterName = null)
         {
-            if (data == null)
-            {
-                Debug.LogError("[SkillCardFactory] Enemy SkillCardData가 null입니다.");
-                return null;
-            }
-            if (effects == null)
-            {
-                Debug.LogWarning("[SkillCardFactory] EnemyCard 효과 리스트가 null입니다. 빈 리스트로 대체합니다.");
-                effects = new List<SkillCardEffectSO>();
-            }
-            data.OwnerCharacterName = ownerCharacterName;
-            return new EnemySkillCardRuntime(data, CloneEffects(effects));
-        }
-        public ISkillCard CreatePlayerCard(SkillCardData data, List<SkillCardEffectSO> effects, string ownerCharacterName)
-        {
-            if (data == null)
-            {
-                Debug.LogError("[SkillCardFactory] Player SkillCardData가 null입니다.");
-                return null;
-            }
-            if (effects == null)
-            {
-                Debug.LogWarning("[SkillCardFactory] PlayerCard 효과 리스트가 null입니다. 빈 리스트로 대체합니다.");
-                effects = new List<SkillCardEffectSO>();
-            }
-            data.OwnerCharacterName = ownerCharacterName;
-            return new PlayerSkillCardRuntime(data, CloneEffects(effects));
-        }
-        // 기존 시그니처도 유지 (ownerCharacterName 없이)
-        public ISkillCard CreateEnemyCard(SkillCardData data, List<SkillCardEffectSO> effects)
-        {
-            return CreateEnemyCard(data, effects, null);
-        }
-        public ISkillCard CreatePlayerCard(SkillCardData data, List<SkillCardEffectSO> effects)
-        {
-            return CreatePlayerCard(data, effects, null);
+            return CreateFromDefinition(definition, owner, -1);
         }
 
         /// <summary>
-        /// 효과 리스트를 복제합니다. 현재는 얕은 복사이며, 필요 시 깊은 복사로 확장 가능합니다.
+        /// 카드 정의로부터 스킬카드를 생성합니다 (데미지 오버라이드 지원).
         /// </summary>
-        /// <param name="original">원본 효과 리스트</param>
-        /// <returns>복제된 효과 리스트</returns>
-        private List<SkillCardEffectSO> CloneEffects(List<SkillCardEffectSO> original)
+        /// <param name="definition">카드 정의</param>
+        /// <param name="owner">소유자</param>
+        /// <param name="damageOverride">데미지 오버라이드 (옵셔널, -1이면 기본값 사용)</param>
+        /// <returns>생성된 스킬카드</returns>
+        public ISkillCard CreateFromDefinition(SkillCardDefinition definition, Owner owner, int damageOverride)
         {
-            return new List<SkillCardEffectSO>(original);
+            if (definition == null)
+            {
+                GameLogger.LogError("[SkillCardFactory] SkillCardDefinition이 null입니다.", GameLogger.LogCategory.SkillCard);
+                throw new ArgumentNullException(nameof(definition), "카드 정의는 null일 수 없습니다.");
+            }
+            
+            // 정책 확인
+            if (definition.configuration.ownerPolicy == OwnerPolicy.Player && owner != Owner.Player)
+            {
+                GameLogger.LogWarning($"[SkillCardFactory] 카드 '{definition.displayName}'은 플레이어 전용입니다.", GameLogger.LogCategory.SkillCard);
+                throw new InvalidOperationException($"카드 '{definition.displayName}'은 플레이어 전용입니다. 현재 소유자: {owner}");
+            }
+            
+            if (definition.configuration.ownerPolicy == OwnerPolicy.Enemy && owner != Owner.Enemy)
+            {
+                GameLogger.LogWarning($"[SkillCardFactory] 카드 '{definition.displayName}'은 적 전용입니다.", GameLogger.LogCategory.SkillCard);
+                throw new InvalidOperationException($"카드 '{definition.displayName}'은 적 전용입니다. 현재 소유자: {owner}");
+            }
+            
+            var skillCard = new SkillCard(definition, owner, audioManager, vfxManager, damageOverride);
+            
+            // GameLogger.LogInfo($"[SkillCardFactory] 카드 생성 완료: {definition.displayName} (Owner: {owner})", GameLogger.LogCategory.SkillCard);
+            
+            return skillCard;
+        }
+        
+        /// <summary>
+        /// 카드 ID로부터 스킬카드를 생성합니다.
+        /// </summary>
+        /// <param name="cardId">카드 ID</param>
+        /// <param name="owner">소유자</param>
+        /// <returns>생성된 스킬카드</returns>
+        public ISkillCard CreateFromId(string cardId, Owner owner)
+        {
+            if (string.IsNullOrEmpty(cardId))
+            {
+                GameLogger.LogError("[SkillCardFactory] 카드 ID가 null이거나 비어있습니다.", GameLogger.LogCategory.SkillCard);
+                throw new ArgumentNullException(nameof(cardId), "카드 ID는 null이거나 비어있을 수 없습니다.");
+            }
+            
+            var definition = LoadDefinition(cardId);
+            
+            if (definition == null)
+            {
+                GameLogger.LogError($"[SkillCardFactory] 카드 정의를 찾을 수 없습니다: {cardId}", GameLogger.LogCategory.SkillCard);
+                throw new InvalidOperationException($"카드 ID '{cardId}'에 해당하는 정의를 찾을 수 없습니다.");
+            }
+            
+            return CreateFromDefinition(definition, owner);
+        }
+        
+        /// <summary>
+        /// 플레이어 카드를 생성합니다.
+        /// </summary>
+        /// <param name="definition">카드 정의</param>
+        /// <param name="ownerCharacterName">소유 캐릭터 이름</param>
+        /// <returns>생성된 플레이어 스킬카드</returns>
+        public ISkillCard CreatePlayerCard(SkillCardDefinition definition, string ownerCharacterName = null)
+        {
+            var card = CreateFromDefinition(definition, Owner.Player);
+            return card;
+        }
+        
+        /// <summary>
+        /// 적 카드를 생성합니다.
+        /// </summary>
+        /// <param name="definition">카드 정의</param>
+        /// <param name="ownerCharacterName">소유 캐릭터 이름</param>
+        /// <param name="damageOverride">데미지 오버라이드 (옵셔널, -1이면 기본값 사용)</param>
+        /// <returns>생성된 적 스킬카드</returns>
+        public ISkillCard CreateEnemyCard(SkillCardDefinition definition, string ownerCharacterName = null, int damageOverride = -1)
+        {
+            var card = CreateFromDefinition(definition, Owner.Enemy, damageOverride);
+            
+            
+            return card;
+        }
+        
+        /// <summary>
+        /// 카드 정의의 유효성을 검증합니다.
+        /// </summary>
+        /// <param name="definition">카드 정의</param>
+        /// <returns>유효성 여부</returns>
+        public bool ValidateDefinition(SkillCardDefinition definition)
+        {
+            if (definition == null)
+            {
+                GameLogger.LogError("[SkillCardFactory] 카드 정의가 null입니다.", GameLogger.LogCategory.SkillCard);
+                return false;
+            }
+            
+            if (string.IsNullOrEmpty(definition.cardId))
+            {
+                GameLogger.LogError("[SkillCardFactory] 카드 ID가 비어있습니다.", GameLogger.LogCategory.SkillCard);
+                return false;
+            }
+            
+            if (string.IsNullOrEmpty(definition.displayName))
+            {
+                GameLogger.LogError("[SkillCardFactory] 카드 표시 이름이 비어있습니다.", GameLogger.LogCategory.SkillCard);
+                return false;
+            }
+            
+            if (definition.artwork == null)
+            {
+                GameLogger.LogWarning($"[SkillCardFactory] 카드 '{definition.displayName}'의 아트워크가 없습니다.", GameLogger.LogCategory.SkillCard);
+            }
+            
+            // 데미지와 효과가 모두 없는 경우 경고
+            if (!definition.configuration.hasDamage && !definition.configuration.hasEffects)
+            {
+                GameLogger.LogWarning($"[SkillCardFactory] 카드 '{definition.displayName}'에 데미지나 효과가 없습니다.", GameLogger.LogCategory.SkillCard);
+            }
+            
+            // 효과 구성 검증
+            if (definition.configuration.hasEffects)
+            {
+                foreach (var effectConfig in definition.configuration.effects)
+                {
+                    if (effectConfig.effectSO == null)
+                    {
+                        GameLogger.LogError($"[SkillCardFactory] 카드 '{definition.displayName}'에 null 효과가 있습니다.", GameLogger.LogCategory.SkillCard);
+                        return false;
+                    }
+                }
+            }
+            
+            return true;
+        }
+        
+        /// <summary>
+        /// 카드 정의를 로드합니다.
+        /// </summary>
+        /// <param name="cardId">카드 ID</param>
+        /// <returns>카드 정의</returns>
+        public SkillCardDefinition LoadDefinition(string cardId)
+        {
+            if (string.IsNullOrEmpty(cardId))
+            {
+                GameLogger.LogError("[SkillCardFactory] 카드 ID가 null이거나 비어있습니다.", GameLogger.LogCategory.SkillCard);
+                return null;
+            }
+
+            // 캐시 확인
+            if (_cachedDefinitions.TryGetValue(cardId, out SkillCardDefinition cached))
+            {
+                return cached;
+            }
+
+            // 로딩 중인지 확인
+            if (_loadingDefinitions.Contains(cardId))
+            {
+                GameLogger.LogWarning($"[SkillCardFactory] 카드 정의가 이미 로딩 중입니다: {cardId}", GameLogger.LogCategory.SkillCard);
+                return null;
+            }
+
+            try
+            {
+                _loadingDefinitions.Add(cardId);
+                string address = $"SkillCards/{cardId}";
+                var handle = Addressables.LoadAssetAsync<SkillCardDefinition>(address);
+                SkillCardDefinition definition = handle.WaitForCompletion();
+
+                if (definition == null)
+                {
+                    GameLogger.LogError($"[SkillCardFactory] 카드 정의를 로드할 수 없습니다: {address}", GameLogger.LogCategory.SkillCard);
+                    return null;
+                }
+
+                _cachedDefinitions[cardId] = definition;
+                return definition;
+            }
+            catch (Exception ex)
+            {
+                GameLogger.LogError($"[SkillCardFactory] 카드 정의 로드 중 오류: {ex.Message}", GameLogger.LogCategory.SkillCard);
+                return null;
+            }
+            finally
+            {
+                _loadingDefinitions.Remove(cardId);
+            }
+        }
+        
+        private static SkillCardDefinition[] _cachedAllDefinitions;
+        private static bool _isLoadingAllDefinitions;
+
+        /// <summary>
+        /// 모든 카드 정의를 로드합니다.
+        /// </summary>
+        /// <returns>카드 정의 배열</returns>
+        public SkillCardDefinition[] LoadAllDefinitions()
+        {
+            if (_cachedAllDefinitions != null)
+            {
+                return _cachedAllDefinitions;
+            }
+
+            if (_isLoadingAllDefinitions)
+            {
+                GameLogger.LogWarning("[SkillCardFactory] 모든 카드 정의가 이미 로딩 중입니다.", GameLogger.LogCategory.SkillCard);
+                return new SkillCardDefinition[0];
+            }
+
+            try
+            {
+                _isLoadingAllDefinitions = true;
+                
+                // Addressables에서 라벨 "SkillCards"로 모든 카드 정의 로드
+                var handle = Addressables.LoadAssetsAsync<SkillCardDefinition>("SkillCards", null);
+                var result = handle.WaitForCompletion();
+                _cachedAllDefinitions = result != null ? result.ToArray() : new SkillCardDefinition[0];
+                
+                GameLogger.LogInfo($"[SkillCardFactory] 총 {_cachedAllDefinitions.Length}개의 카드 정의를 로드했습니다.", GameLogger.LogCategory.SkillCard);
+                
+                return _cachedAllDefinitions;
+            }
+            catch (Exception ex)
+            {
+                GameLogger.LogError($"[SkillCardFactory] 모든 카드 정의 로드 중 오류: {ex.Message}", GameLogger.LogCategory.SkillCard);
+                return new SkillCardDefinition[0];
+            }
+            finally
+            {
+                _isLoadingAllDefinitions = false;
+            }
         }
     }
 }

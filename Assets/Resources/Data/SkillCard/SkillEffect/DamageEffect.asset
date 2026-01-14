@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c99f9986ee567b24f93ae39101e69206, type: 3}
   m_Name: DamageEffect
   m_EditorClassIdentifier: 
-  effectName: 
+  effectName: "\uB370\uBBF8\uC9C0"
   description: 
+  effectIcon: {fileID: 0}
   damageAmount: 0

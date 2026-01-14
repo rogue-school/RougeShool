@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43ef31a44bc88cc44a9cad613ea9fbd8, type: 3}
+  m_Name: Serene
+  m_EditorClassIdentifier: 
+  <DisplayName>k__BackingField: "\uC138\uB80C"
+  <CharacterType>k__BackingField: 1
+  <MaxHP>k__BackingField: 18
+  <Portrait>k__BackingField: {fileID: 3819783959163718824, guid: 035dd4f0c6a3f364a84a5c367ec56832, type: 3}
+  <PortraitPrefab>k__BackingField: {fileID: 751987938129930587, guid: 5032354642c7cf44a89c29b69944b7d0, type: 3}
+  <PlayerUIPortrait>k__BackingField: {fileID: 8631797052835628650, guid: 59e733207fb35314e9bb7096ec70fa92, type: 3}
+  <Emblem>k__BackingField: {fileID: -4871407646042427937, guid: e46bc396e9c57d44daa74d3318635db2, type: 3}
+  <Description>k__BackingField: "\uC138\uB80C\uC740 \uAC15\uB825\uD55C \uB370\uBBF8\uC9C0\uB97C
+    \uB0BC \uC218 \uC788\uB294 \uCE90\uB9AD\uD130\uC785\uB2C8\uB2E4.\n\uD558\uC9C0\uB9CC
+    \uADF8 \uB300\uC2E0 \uAC8C\uC774\uC9C0 \uAD00\uB9AC\uAC00 \uC911\uC694\uD569\uB2C8\uB2E4."
+  <MaxResource>k__BackingField: 15
+  <InitialResource>k__BackingField: 10
+  <ResourceName>k__BackingField: "\uD654\uC0B4"
+  <SkillDeck>k__BackingField: {fileID: 11400000, guid: dfb8f4cf70659d843936a523bdf72c21, type: 2}
+  <UniqueSkillCard>k__BackingField: {fileID: 11400000, guid: a1dde457b4738d44a8cf3b57036b3528, type: 2}

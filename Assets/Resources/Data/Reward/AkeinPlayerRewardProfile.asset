@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 187688c9866df8142ab8c540414b13d7, type: 3}
+  m_Name: AkeinPlayerRewardProfile
+  m_EditorClassIdentifier: 
+  allowedTags: []
+  bannedTags: []
+  tagWeightAdjust: []
+  bannedActiveItems: []
+  bannedPassiveItems:
+  - {fileID: 11400000, guid: 099a1e641accae0499de2fcd6a75e568, type: 2}
+  - {fileID: 11400000, guid: 77afcf72f8c1b934a8f923eb2eafa587, type: 2}
+  - {fileID: 11400000, guid: 7e0aea7a41578c141a7e4c19d38dc46d, type: 2}
+  - {fileID: 11400000, guid: e892a02c321ea7241a0bbf5ee246ab71, type: 2}
+  - {fileID: 11400000, guid: 034dc89a73768244b901eed0f1d978c3, type: 2}
+  - {fileID: 11400000, guid: b0a741b259f723c46af1d5d30e9191b3, type: 2}
+  - {fileID: 11400000, guid: 16fc3ae200b53d2458e298767f344865, type: 2}
+  - {fileID: 11400000, guid: de9daee7a4244784db291413d47a97c2, type: 2}
+  - {fileID: 11400000, guid: e62abd9e8094016428cfb38b2b14aaa5, type: 2}
+  allowedPassiveTags: []
+  bannedPassiveTags: []

@@ -9,6 +9,7 @@ namespace Game.CombatSystem.Utility
 {
     public static class CardSlotHelper
     {
+        private static readonly Vector2 kCardAnchoredOffset = new Vector2(0f, 4f);
         public static void ResetCardToOriginal(SkillCardUI cardUI)
         {
             if (cardUI == null)
@@ -24,11 +25,22 @@ namespace Game.CombatSystem.Utility
                 return;
             }
 
+            // 부모 변경
             cardUI.transform.SetParent(dragHandler.OriginalParent, false);
+            
+            // 원래 형제 순서로 복원 (리플렉션 사용)
+            var siblingIndexField = typeof(CardDragHandler).GetField("originalSiblingIndex", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            
+            if (siblingIndexField != null)
+            {
+                var originalIndex = (int)siblingIndexField.GetValue(dragHandler);
+                cardUI.transform.SetSiblingIndex(originalIndex);
+            }
 
             if (cardUI.TryGetComponent(out RectTransform rectTransform))
             {
-                rectTransform.anchoredPosition = Vector2.zero;
+                rectTransform.anchoredPosition = kCardAnchoredOffset;
                 rectTransform.localRotation = Quaternion.identity;
                 rectTransform.localScale = Vector3.one;
             }
@@ -57,6 +69,7 @@ namespace Game.CombatSystem.Utility
 
             rect.SetParent(slotTransform.transform, false);
             rect.localPosition = Vector3.zero;
+            rect.anchoredPosition = kCardAnchoredOffset;
             rect.localRotation = Quaternion.identity;
             rect.localScale = Vector3.one;
         }

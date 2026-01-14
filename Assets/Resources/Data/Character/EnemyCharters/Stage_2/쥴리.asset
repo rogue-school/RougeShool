@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 861458062e34fcd4685dff11b945e1b9, type: 3}
+  m_Name: "\uC974\uB9AC"
+  m_EditorClassIdentifier: 
+  <DisplayName>k__BackingField: "\uC974\uB9AC"
+  <MaxHP>k__BackingField: 10
+  <IndexIcon>k__BackingField: {fileID: 0}
+  <PortraitPrefab>k__BackingField: {fileID: 751987938129930587, guid: 90e79e77a60d7854bb426dfe2b586bcc, type: 3}
+  <Prefab>k__BackingField: {fileID: 7769799778275336730, guid: 2c6e844c91775424681f573a6951211e, type: 3}
+  <EnemyDeck>k__BackingField: {fileID: 11400000, guid: 026d28617ccf61e4aab0eb69e8263640, type: 2}
+  <CharacterEffects>k__BackingField: []
+  <Phases>k__BackingField: []

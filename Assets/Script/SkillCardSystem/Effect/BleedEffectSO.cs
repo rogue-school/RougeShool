@@ -1,10 +1,12 @@
 using UnityEngine;
 using Game.SkillCardSystem.Interface;
-using Game.SkillCardSystem.Effects;
+using UnityEngine.Serialization;
 using Game.SkillCardSystem.Effect;
 using Game.CombatSystem.Interface;
+using Game.CoreSystem.Utility;
+using Game.VFXSystem.Manager;
 
-namespace Game.SkillCardSystem.Effects
+namespace Game.SkillCardSystem.Effect
 {
     /// <summary>
     /// 출혈 효과를 정의하는 스킬 카드 이펙트 ScriptableObject입니다.
@@ -20,6 +22,19 @@ namespace Game.SkillCardSystem.Effects
         [Tooltip("출혈 지속 턴 수")]
         [SerializeField] private int duration;
 
+        [Header("이펙트 설정")]
+        [Tooltip("출혈 효과 적용 시 재생할 비주얼 이펙트 프리팹")]
+        [SerializeField] private GameObject visualEffectPrefab;
+
+        [Tooltip("출혈 피해 발생 시 매 턴 재생할 비주얼 이펙트 프리팹 (null이면 visualEffectPrefab 재사용)")]
+        [SerializeField] private GameObject perTurnEffectPrefab;
+
+        // 레거시 마이그레이션: 과거 자식 필드명(icon)에서 부모(effectIcon)로 이전
+        [FormerlySerializedAs("icon")]
+        [SerializeField, HideInInspector] private Sprite legacyIcon;
+
+        // 아이콘은 상위 SkillCardEffectSO.icon을 사용
+
         /// <summary>
         /// 출혈 이펙트 커맨드를 생성합니다. 파워 수치를 기반으로 피해량이 증가합니다.
         /// </summary>
@@ -27,7 +42,25 @@ namespace Game.SkillCardSystem.Effects
         /// <returns>출혈 커맨드 객체</returns>
         public override ICardEffectCommand CreateEffectCommand(int power)
         {
-            return new BleedEffectCommand(bleedAmount + power, duration);
+            var soIcon = GetIcon();
+            if (soIcon == null)
+            {
+                Game.CoreSystem.Utility.GameLogger.LogWarning($"[BleedEffectSO] Icon이 비어 있습니다. SO 이름='{name}'", Game.CoreSystem.Utility.GameLogger.LogCategory.SkillCard);
+            }
+            
+            // 의존성 찾기
+            var vfxManager = UnityEngine.Object.FindFirstObjectByType<Game.VFXSystem.Manager.VFXManager>();
+            var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            
+            return new BleedEffectCommand(
+                bleedAmount + power, 
+                duration, 
+                soIcon, 
+                visualEffectPrefab,
+                perTurnEffectPrefab ?? visualEffectPrefab,
+                vfxManager,
+                audioManager as Game.CoreSystem.Interface.IAudioManager
+            );
         }
 
         /// <summary>
@@ -40,14 +73,38 @@ namespace Game.SkillCardSystem.Effects
         {
             if (context?.Target == null)
             {
-                Debug.LogWarning("[BleedEffectSO] 대상이 null이므로 출혈 적용 불가");
+                GameLogger.LogWarning("[BleedEffectSO] 대상이 null이므로 출혈 적용 불가", GameLogger.LogCategory.SkillCard);
                 return;
             }
 
-            var bleed = new BleedEffect(value, duration);
-            context.Target.RegisterPerTurnEffect(bleed);
+            // 의존성 찾기 (ApplyEffect는 직접 호출되므로 여기서 찾음)
+            var vfxManager = UnityEngine.Object.FindFirstObjectByType<VFXManager>();
+            var audioManager = UnityEngine.Object.FindFirstObjectByType<Game.CoreSystem.Audio.AudioManager>();
+            // 출혈을 적용한 캐릭터 정보를 저장하여 시공의 폭풍 데미지 누적에 사용
+            var bleed = new BleedEffect(value, duration, GetIcon(), perTurnEffectPrefab ?? visualEffectPrefab, null, GetEffectName(), vfxManager, audioManager as Game.CoreSystem.Interface.IAudioManager, context.Source);
+            
+            // 가드 상태 확인하여 상태이상 효과 등록
+            if (context.Target.RegisterStatusEffect(bleed))
+            {
+                GameLogger.LogInfo($"[BleedEffectSO] {context.Target.GetCharacterName()}에게 출혈 {value} 적용 (지속 {duration}턴)", GameLogger.LogCategory.SkillCard);
+            }
+            else
+            {
+                GameLogger.LogInfo($"[BleedEffectSO] {context.Target.GetCharacterName()}의 가드로 출혈 효과 차단됨", GameLogger.LogCategory.SkillCard);
+            }
+        }
 
-            Debug.Log($"[BleedEffectSO] {context.Target.GetCharacterName()}에게 출혈 {value} 적용 (지속 {duration}턴)");
+        private void OnValidate()
+        {
+            // 에셋을 열었을 때 레거시 아이콘이 남아 있으면 부모 필드로 이관
+            if (effectIcon == null && legacyIcon != null)
+            {
+                effectIcon = legacyIcon;
+                legacyIcon = null;
+                #if UNITY_EDITOR
+                UnityEditor.EditorUtility.SetDirty(this);
+                #endif
+            }
         }
     }
 }

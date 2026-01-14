@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Select-Object -First 20 FullName)",
+      "Bash(cp:*)",
+      "Bash(ren:*)",
+      "Bash(for file in \"Assets/Resources/Data/Item/001_회복 물약.asset\" \"Assets/Resources/Data/Item/002_공격력 물약.asset\" \"Assets/Resources/Data/Item/004_타임 스톱 스크롤.asset\" \"Assets/Resources/Data/Item/007_실드 브레이커.asset\")",
+      "Bash(do echo \"=== $file ===\")",
+      "Bash(cat:*)",
+      "Bash(done)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

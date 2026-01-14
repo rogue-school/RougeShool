@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63917f595383ae84bafad72d7862ecd5, type: 3}
+  m_Name: "013_\uC708\uB4DC \uCEE4\uD130"
+  m_EditorClassIdentifier: 
+  cardId: 013
+  displayName: "\uC708\uB4DC \uCEE4\uD130"
+  displayNameKO: 
+  description: 
+  artwork: {fileID: 7289224234644523660, guid: cb723c95b3ec4054bbe615bb72bd1261, type: 3}
+  presentation:
+    sfxClip: {fileID: 0}
+    visualEffectPrefab: {fileID: 4203527421569735854, guid: d189a9259cac7744d8baf4468fb85239, type: 3}
+  configuration:
+    hasDamage: 1
+    damageConfig:
+      baseDamage: 3
+      hits: 1
+      ignoreGuard: 0
+      ignoreCounter: 0
+      useRandomDamage: 0
+      minDamage: 0
+      maxDamage: 0
+      sfxClip: {fileID: 8300000, guid: 24fa1bf9fb23eba4a95474b7b8311792, type: 3}
+      visualEffectPrefab: {fileID: 7436133904135058068, guid: 26b0366964c14404ba5268039d739f59, type: 3}
+    hasResource: 0
+    resourceConfig:
+      cost: 0
+    hasEffects: 0
+    effects: []
+    ownerPolicy: 0
+  currentAttackPowerStacks: 0

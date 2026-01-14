@@ -12,4 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 97a804dfa3cab074c86817b6284bc46e, type: 3}
   m_Name: GuardEffect
   m_EditorClassIdentifier: 
-  isPlayer: 1
+  effectName: "\uAC00\uB4DC"
+  description: 
+  effectIcon: {fileID: 0}

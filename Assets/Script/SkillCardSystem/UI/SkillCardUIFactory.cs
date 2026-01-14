@@ -1,7 +1,10 @@
 using UnityEngine;
 using Game.SkillCardSystem.Interface;
+using Game.CoreSystem.Utility;
 using Game.CombatSystem.DragDrop;
-using Game.CombatSystem.Interface;
+using Game.CombatSystem.Manager;
+using Game.VFXSystem.Manager;
+using Zenject;
 
 namespace Game.SkillCardSystem.UI
 {
@@ -16,27 +19,63 @@ namespace Game.SkillCardSystem.UI
         /// <param name="prefab">스킬 카드 UI 프리팹</param>
         /// <param name="parent">UI를 배치할 부모 트랜스폼</param>
         /// <param name="card">연결할 카드 데이터</param>
-        /// <param name="flowCoordinator">카드 실행을 조정하는 흐름 제어자</param>
+        /// <param name="animationFacade">애니메이션 파사드</param>
+        /// <param name="vfxManager">VFX 매니저 (선택적, Object Pooling용)</param>
         /// <returns>초기화된 SkillCardUI 인스턴스</returns>
         public static SkillCardUI CreateUI(
             SkillCardUI prefab,
             Transform parent,
             ISkillCard card,
-            ICombatFlowCoordinator flowCoordinator)
+            object animationFacade,
+            VFXManager vfxManager = null)
         {
             // === 유효성 검사 ===
-            if (prefab == null || parent == null || card == null)
+            if (parent == null || card == null)
             {
-                Debug.LogError("[SkillCardUIFactory] 카드 UI 생성 실패 - null 인자 존재");
+                GameLogger.LogError("[SkillCardUIFactory] 카드 UI 생성 실패 - null 인자 존재", GameLogger.LogCategory.SkillCard);
                 return null;
             }
 
-            // === 프리팹 인스턴스 생성 ===
-            var instance = Object.Instantiate(prefab, parent, false);
+            // === 프리팹 인스턴스 생성 (VFXManager 풀링 우선) ===
+            SkillCardUI instance = null;
+            if (vfxManager != null)
+            {
+                instance = vfxManager.GetSkillCardUI(parent);
+                if (instance != null)
+                {
+                    GameLogger.LogInfo("[SkillCardUIFactory] VFXManager 풀에서 카드 UI 재사용", GameLogger.LogCategory.SkillCard);
+                }
+            }
+
+            // Fallback: VFXManager가 없거나 풀이 비었으면 기존 방식 사용
             if (instance == null)
             {
-                Debug.LogError("[SkillCardUIFactory] 프리팹 인스턴스화 실패");
-                return null;
+                if (prefab == null)
+                {
+                    GameLogger.LogError("[SkillCardUIFactory] 프리팹과 VFXManager 모두 null입니다.", GameLogger.LogCategory.SkillCard);
+                    return null;
+                }
+
+                instance = Object.Instantiate(prefab, parent, false);
+                if (instance == null)
+                {
+                    GameLogger.LogError("[SkillCardUIFactory] 프리팹 인스턴스화 실패", GameLogger.LogCategory.SkillCard);
+                    return null;
+                }
+
+                // Object.Instantiate로 생성된 경우 Zenject 주입 보완
+                try
+                {
+                    var projectContext = ProjectContext.Instance;
+                    if (projectContext != null && projectContext.Container != null)
+                    {
+                        projectContext.Container.InjectGameObject(instance.gameObject);
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    GameLogger.LogWarning($"[SkillCardUIFactory] Zenject 주입 시도 실패 (무시 가능): {ex.Message}", GameLogger.LogCategory.SkillCard);
+                }
             }
 
             // === 카드 데이터 설정 ===
@@ -45,22 +84,46 @@ namespace Game.SkillCardSystem.UI
             // === 기본 Transform 초기화 ===
             if (instance.TryGetComponent(out RectTransform rect))
             {
-                rect.anchoredPosition = Vector2.zero;
+                rect.anchoredPosition = new Vector2(0f, 4f);
                 rect.localRotation = Quaternion.identity;
                 rect.localScale = Vector3.one;
             }
 
-            // === 드래그 핸들러 연결 ===
-            if (instance.TryGetComponent(out CardDragHandler dragHandler))
+            // === 필수 컴포넌트 보장 및 드래그 핸들러 연결 ===
+            // CanvasGroup이 없으면 추가 (CardDragHandler가 사용)
+            if (!instance.TryGetComponent<UnityEngine.CanvasGroup>(out var cg))
             {
-                if (flowCoordinator != null)
+                cg = instance.gameObject.AddComponent<UnityEngine.CanvasGroup>();
+            }
+
+            // CardDragHandler는 플레이어 카드에만 추가 (적 카드는 드래그 불가)
+            if (card.IsFromPlayer())
+            {
+                if (!instance.TryGetComponent<CardDragHandler>(out var dragHandler))
                 {
-                    dragHandler.Inject(flowCoordinator);
+                    dragHandler = instance.gameObject.AddComponent<CardDragHandler>();
                 }
-                else
+
+                if (dragHandler != null)
                 {
-                    Debug.LogWarning("[SkillCardUIFactory] flowCoordinator가 null입니다.");
+                    // CombatSlotManager 제거됨 - Inject 메서드 호출 제거
+                    dragHandler.Inject();
                 }
+            }
+            else
+            {
+                // 적 카드의 경우 기존 CardDragHandler 제거 (있다면)
+                var existingDragHandler = instance.GetComponent<CardDragHandler>();
+                if (existingDragHandler != null)
+                {
+                    Object.DestroyImmediate(existingDragHandler);
+                }
+            }
+
+            // === Raycast 설정: 모든 카드에서 레이캐스트 허용 (툴팁을 위해) ===
+            foreach (var img in instance.GetComponentsInChildren<UnityEngine.UI.Image>())
+            {
+                img.raycastTarget = true; // 모든 카드에서 툴팁을 위해 레이캐스트 허용
             }
 
             return instance;

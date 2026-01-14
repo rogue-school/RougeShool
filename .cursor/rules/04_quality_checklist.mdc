@@ -1,0 +1,216 @@
+---
+alwaysApply: false
+description: "Quality gates and performance standards: SOLID verification, optimization criteria, checklist"
+---
+
+# RougeShool Quality Checklist
+
+## 📋 Code Generation Checklist
+
+### 1. SOLID Principles
+- [ ] **Single Responsibility (SRP)**: One class, one reason to change
+- [ ] **Open-Closed (OCP)**: Open for extension, closed for modification
+- [ ] **Liskov Substitution (LSP)**: Subtypes can replace parent types
+- [ ] **Interface Segregation (ISP)**: No unused interface dependencies
+- [ ] **Dependency Inversion (DIP)**: Depend on abstractions, not concrete classes
+
+### 2. Code Quality
+- [ ] **Null safety**: All public methods validate parameters (또는 nullable reference types 사용)
+- [ ] **Complexity limits**: Cyclomatic complexity ≤ 10, Cognitive complexity ≤ 15
+- [ ] **Testability**: All external dependencies managed via DI
+- [ ] **Korean standard**: All user messages, logs, docs in Korean
+- [ ] **Inspector localization**: Header, Tooltip, field names in Korean
+- [ ] **XML documentation**: Complete documentation for public APIs
+
+### 3. Unity Performance
+- [ ] **Memory management**: Profiler로 주기적 GC 측정, 핫패스에서 allocation 최소화
+- [ ] **Rendering**: < 100 draw calls, batching applied
+- [ ] **Script optimization**: 가능한 이벤트 기반, Update() 사용 시 주석으로 이유 명시
+- [ ] **Object pooling**: Applied to frequently created/destroyed objects
+- [ ] **Caching strategy**: Repeated calculations cached (적절한 TTL 설정)
+
+### 4. Project-Specific
+- [ ] **Zenject DI**: Proper bindings and scopes, no circular dependencies
+- [ ] **DOTween Pro**: Cleanup code on animation complete
+- [ ] **CoreSystem**: ICoreSystemInitializable implemented
+- [ ] **Code reuse priority**: Existing code improved over new features
+- [ ] **Event lifecycle**: Subscribe/unsubscribe in OnEnable/OnDisable
+
+## 🎯 Quality Metrics
+
+### Architecture Standards
+```csharp
+// ✅ SOLID compliant
+public interface ICardValidator
+{
+    bool CanPlayCard(SkillCard card, IPlayer player);
+}
+
+public class CardProcessor
+{
+    private readonly ICardValidator validator;
+
+    [Inject]
+    public CardProcessor(ICardValidator validator)
+    {
+        this.validator = validator ?? throw new ArgumentNullException(nameof(validator));
+    }
+}
+```
+
+### Performance Standards
+```csharp
+// ✅ Memory-efficient object pooling
+public class CardPool : MonoBehaviour
+{
+    private Queue<SkillCard> availableCards = new Queue<SkillCard>();
+
+    public SkillCard GetCard()
+    {
+        if (availableCards.Count > 0)
+            return availableCards.Dequeue();
+        return Instantiate(cardPrefab, transform);
+    }
+
+    public void ReturnCard(SkillCard card)
+    {
+        card.gameObject.SetActive(false);
+        availableCards.Enqueue(card);
+    }
+}
+```
+
+## 🚫 Auto-Reject Criteria
+
+### ❌ Runtime Error Risks
+- Null reference exceptions possible
+- Array/List index out of bounds
+- Type casting failures possible
+- Infinite loop possibilities
+
+### ❌ Memory Leak Risks
+- Event subscription not unsubscribed
+- DOTween animation not cleaned up
+- Object pooling not used
+- Cache size unlimited
+
+### ❌ Performance Degradation
+- FindObjectOfType every frame
+- Heavy calculations every frame
+- Unnecessary object instantiation
+- Memory allocation not optimized
+
+### ❌ Architecture Violations
+- SOLID principles violated
+- Dependency inversion violated
+- Single responsibility violated
+- Duplicate functionality created
+
+## 🎯 Quality Targets
+
+### Quantitative Targets (플랫폼별)
+#### PC 타겟
+- **Code coverage**: Minimum 70% (핵심 로직 80%)
+- **Cyclomatic complexity**: Maximum 10 per method
+- **Memory usage**: Maximum 300MB per scene
+- **Frame rate**: Minimum 60fps maintained
+- **Loading time**: Scene transition < 2s
+- **GC pressure**: Profiler로 측정, 핫패스에서 최소화
+
+#### Mobile 타겟 (선택적)
+- **Memory usage**: Maximum 150MB per scene
+- **Frame rate**: Minimum 30fps maintained
+- **Loading time**: Scene transition < 3s
+
+### Qualitative Targets
+- **Architecture consistency**: 100% SOLID compliance
+- **Testability**: All external dependencies via DI
+- **Extensibility**: Minimal existing code changes for new features
+- **Maintainability**: Understandable by others within 5 minutes
+- **Documentation completeness**: API usage clear from code alone
+
+### AI Collaboration Quality
+- **Requirement understanding**: 95%+ accuracy in interpreting user intent
+- **Code reuse rate**: 80%+ utilization of existing code
+- **Consistency**: 100% alignment with project patterns
+- **Feedback response**: Complete reflection within 1 iteration
+
+## ✅ Final Verification Checklist
+
+### Before Code Submission
+- [ ] All public methods have null checks
+- [ ] All exception scenarios handled
+- [ ] Appropriate logging via GameLogger
+- [ ] Korean messages and documentation complete
+- [ ] Unity Inspector localized (Header, Tooltip, field names)
+- [ ] XML documentation complete
+- [ ] Performance optimization applied
+- [ ] Memory leak prevention implemented
+- [ ] Consistency with existing code verified
+- [ ] SOLID principles compliance verified
+- [ ] Testable structure designed
+
+### Auto-Reject Conditions
+- Runtime error risks present
+- Memory leak possibilities present
+- Severe performance issues present
+- Architecture principles violated
+- Duplicate functionality of existing code
+
+## 🔧 Validation Tools
+
+### Automated Validation
+```csharp
+// Quality validation extension methods
+public static class QualityValidationExtensions
+{
+    public static bool ValidateNullSafety(this object obj, string objectName)
+    {
+        if (obj == null)
+        {
+            GameLogger.LogError($"{objectName}이 null입니다", GameLogger.LogCategory.Error);
+            return false;
+        }
+        return true;
+    }
+
+    public static bool ValidateComponent<T>(this GameObject go) where T : Component
+    {
+        var component = go.GetComponent<T>();
+        if (component == null)
+        {
+            GameLogger.LogError($"{go.name}에 {typeof(T).Name} 컴포넌트가 없습니다", GameLogger.LogCategory.Error);
+            return false;
+        }
+        return true;
+    }
+}
+```
+
+### Performance Monitoring
+```csharp
+public class PerformanceMonitor : MonoBehaviour
+{
+    private Dictionary<string, float> operationTimes = new Dictionary<string, float>();
+
+    public void StartOperation(string operationName)
+    {
+        operationTimes[operationName] = Time.realtimeSinceStartup;
+    }
+
+    public void EndOperation(string operationName)
+    {
+        if (operationTimes.ContainsKey(operationName))
+        {
+            float duration = Time.realtimeSinceStartup - operationTimes[operationName];
+
+            if (duration > 0.016f) // 60fps = 16.6ms/frame
+            {
+                GameLogger.LogWarning($"성능 이슈: {operationName} ({duration:F3}초)", GameLogger.LogCategory.Performance);
+            }
+
+            operationTimes.Remove(operationName);
+        }
+    }
+}
+```

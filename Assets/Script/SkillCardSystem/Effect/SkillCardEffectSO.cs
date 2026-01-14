@@ -2,7 +2,7 @@ using UnityEngine;
 using Game.SkillCardSystem.Interface;
 using Game.CombatSystem.Interface;
 
-namespace Game.SkillCardSystem.Effects
+namespace Game.SkillCardSystem.Effect
 {
     /// <summary>
     /// 스킬 카드의 이펙트를 정의하는 ScriptableObject 기반의 추상 클래스입니다.
@@ -18,6 +18,13 @@ namespace Game.SkillCardSystem.Effects
         [Tooltip("이펙트 설명 (툴팁 또는 상세 정보에 사용)")]
         [TextArea]
         [SerializeField] private string description;
+
+        [Header("아이콘 (버프/디버프 UI용)")]
+        [Tooltip("이 효과를 나타낼 기본 아이콘")]
+        [UnityEngine.Serialization.FormerlySerializedAs("icon")]
+        [SerializeField] protected Sprite effectIcon;
+
+        public Sprite GetIcon() => effectIcon;
 
         /// <summary>
         /// 이펙트의 이름을 반환합니다.
