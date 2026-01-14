@@ -215,7 +215,7 @@
 - **CardInstaller**: 카드 시스템 DI 바인딩
 - **SkillCardFactory**: 카드 생성 팩토리
 - **CardExecutor**: 카드 실행 엔진
-- **CardCirculationSystem**: 카드 순환 시스템 (덱→핸드→묘지)
+- **CardCirculationSystem**: 카드 드로우 및 턴 관리 시스템 (덱에서 비파괴 샘플링으로 드로우, 턴별 카드 관리, 보상 카드 지급)
 - **PlayerHandManager**: 플레이어 핸드 관리
 - **PlayerDeckManager**: 플레이어 덱 관리
 - **SkillCardDefinition**: 카드 정의 (ScriptableObject)
@@ -225,6 +225,7 @@
 - 팩토리 패턴으로 카드 생성
 - 전략 패턴으로 효과 시스템 (`IEffectStrategy`)
 - 커맨드 패턴으로 효과 실행 (`IEffectCommand`)
+- **CardCirculationSystem**: 덱에서 비파괴 샘플링으로 카드 드로우, 턴별 카드 관리, 보상 카드 지급 (묘지 개념 없음, 턴 종료 시 카드 삭제)
 
 ---
 
